@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta name="author" content="SmartWiki" />
+    <link rel="shortcut icon" href="https://wiki.iminho.me/favicon.ico">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="renderer" content="webkit" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>首页-DocSys</title>    
+    
+    <meta name="keywords" content="docsys,Web文件系统,网页文件系统">
+   	<meta name="description" content="DocSys是一个开源、免费的web文件系统，为个人和企业用户提供便捷高效的文件管理服务！" />
+	
+	<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/styles/frontpage.css" rel="stylesheet">
+    <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <script src="static/scripts/jquery.min.js"></script>
+    <link href="http://fonts.css.network/css?family=Source+Sans+Pro:200,300,400,600,700,900" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<div class="header">
+    <div class="container">
+        <a class="navbar-brand" href="/DocSystem"><i class="fa fa-paper-plane"></i> DocSys</a>
+
+		<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">	
+            <ul class="nav navbar-nav navbar-right">
+				<li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" class="img-circle m5"/></li>
+				<li id="userInfoDiv" style="display:none">
+							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<!-- <li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp">我的主页</a></li>
+								<li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp&tohref=myOrder">仓库管理</a></li>
+								<li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp&tohref=myFriends">我的好友</a></li>
+								<li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp&toHref=myInfo">个人设置</a></li> -->
+								<li><a onclick="logout()">退出登录</a></li>
+							</ul>
+				</li>
+				<li id="loginBtn">
+                    <a onclick="showLoginPanel();">登录</a>
+                </li>
+                <li id="registerBtn">
+                    <a onclick="showRegisterPanel();">注册</a>
+                </li>
+                <li>
+                    <a target="_blank" href="http://gpio.me">更多</a>
+                </li>
+                <li style="list-style: none; display: inline">
+                    <div class="clear"></div>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+<div class="banner text-center">
+    <div class="container">
+        <div class="banner-info">
+            <h1>文件管理系统</h1>
+            <p>简单、方便就够了</p>
+            <a id="loginBannerBtn" class="banner_btn"  onclick="showLoginPanel();">登录</a>
+            <a id="enterSystemBtn" class="banner_btn"  href="projects.html" style="display:none">进入系统</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="content_white">
+        <h2>系统简介</h2>
+        <p>DocSys一个开源的文件管理系统，是用Java开发的WEB应用，采用的SSM框架，主要用于企业或个人的文件存储管理，方便随时查看和统一管理。</p>
+    </div>
+
+
+    <div class="featured_content" id="feature">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-mg-3 col-xs-3 feature_grid1">
+                    <i class="fa fa-bookmark fa-3x"></i>
+                    <h3 class="m_1"><a href="#">操作简单</a></h3>
+
+                    <p class="m_2">本地化操作习惯：查看、编辑、拖拽、复制、粘贴、新建、删除。</p>
+                </div>
+
+                <div class="col-md-3 col-xs-3 feature_grid1">
+                    <i class="fa fa-cog fa-3x"></i>
+                    <h3 class="m_1"><a href="#">使用方便</a></h3>
+                    <p class="m_2">想看就看，想改就改，前提是网络要通还要有台电脑（也许手机也行）</p>
+                </div>
+
+                <div class="col-mg-3 col-xs-3 feature_grid1">
+                    <i class="fa fa-paper-plane-o fa-3x"></i>
+                    <h3 class="m_1"><a href="#">功能并不强大</a></h3>
+                    <p class="m_2">历史版本查看、用户管理、其他功能等着你去扩展。</p>
+                </div>
+
+
+                <div class="col-md-3 col-xs-3 feature_grid2">
+                    <i class="fa fa-leaf fa-3x"></i>
+                    <h3 class="m_1"><a href="#">代码开源</a></h3>
+                    <p class="m_2">Java WEB项目、SSM框架、项目构建文档、详细设计文档，不够我再往上放。</p>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+    <div class="about-info">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="block-heading-two">
+                        <h2><span>DocSys DocSys</span></h2>
+                    </div>
+                    <p>自己的系统自己做主，把握主动性还是有必要的 ^__^。</p>
+                    <p><a class="banner_btn" href="#">Read More</a>
+                    </p>
+                </div>
+
+
+                <div class="col-md-4">
+                    <div class="block-heading-two">
+                        <h3><span>目标</span>
+                        </h3>
+                    </div>
+
+                    <div class="panel-group" id="accordion-alt3">
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">更简单</h4>
+                            </div>
+                        </div>
+
+
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">更方便
+                                </h4>
+                            </div>
+                        </div>
+
+
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">开源、免费</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="highlight-info">
+        <div class="overlay spacer">
+            <div class="container">
+                <div class="row text-center">
+                DocSys V2.02
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer_bottom">
+            <div class="follow-us">
+                <a class="fa fa-github social-icon" href="#"></a>
+                <a class="fa fa-weibo social-icon" href="#"></a>
+                <a class="fa fa-weixin social-icon" href="#"></a>
+                <a class="fa fa-qq social-icon" href="#"></a>
+            </div>
+
+
+            <div class="copy">
+                <p>Copyright &copy; 2017 DocSys</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<script type="text/javascript">
+	function showLoginPanel(){
+		//alert("showLoginPanel");
+		bootstrapQ.dialog({
+			title: '登录',
+			url: 'login.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
+	function showRegisterPanel(){
+		//alert("showRegisterPanel");
+		bootstrapQ.dialog({
+			url: 'register.html',
+			title: '注册',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
+	//退出登录
+	function logout()
+	{
+		console.log("logout");
+        $.ajax({
+            url : "/DocSystem/logout.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("已退出登录");
+                	window.location.reload();	//刷新页面
+                }else {
+                    alert("错误："+ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:退出登录失败");
+            }
+        });
+    }
+    
+    //页面初始化
+    function pageInit()
+    {
+    	console.log("pageInit");
+    	//确定当前登录用户是否已登录
+    	$.ajax({
+            url : "/DocSystem/getLoginUser.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                	//显示用户信息
+   					var user = ret.data;
+                	//显示用户信息
+                	console.log("id:" + user.id + " name:" + user.name + " img:" + user.img);
+                	if((typeof(user.img)=="undefined") || (user.img == ""))
+                	{
+                		//使用默认图片
+                		console.log("use default img");
+                		//$("#userImg").attr('src',"images/default/defaultHeadPic1.png"); 
+                	}
+                	else	//使用用户自定义头像
+                	{
+                		$("#userImg").attr('src',user.img); 
+                	}
+                	$('#userImgDiv').show();
+                	$('#userInfoDiv > a > span:first-child').text(user.name);
+                	$('#userInfoDiv').show();
+                	$('#loginBtn').hide();
+                	$('#registerBtn').hide();
+                	//显示进入系统按键
+                	$('#enterSystemBtn').show();
+                	$('#loginBannerBtn').hide();
+                	
+                }
+                else 
+                {
+                    console.log(ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:获取用户信息失败");
+            }
+        });
+    }
+    
+    pageInit();   
+</script>	
+</body>
+</html>

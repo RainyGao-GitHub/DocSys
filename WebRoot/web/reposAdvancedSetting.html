@@ -1,0 +1,173 @@
+<div>
+	<div class="panel-body eventset-list" id="reposSettingArea">
+       	<li class="eventset-tit" style="margin-top: 0px;">
+			<i class='cell  read w15'>设为公有</i>
+			<i class='cell  access w10'>仓库/目录</i>
+			<i class='cell  access w40'>默认访问权限</i>
+			<i class='cell op w10'>操作</i>				
+		</li>
+		<li>
+			<i class='cell  read w15'>
+				<input id='gPublic' onchange='enableReposConfig();' type='checkbox'>公开</input>
+			</i>
+			<i class='cell  name w10'>
+				<a href='javascript:void(0)' id='gName' >仓库名</a>
+			</i>
+			<i class='cell  read w10'>
+				<input id='gAccess' value='' type='checkbox' disabled='disabled'>读</input>
+			</i>
+			<i class='cell edit w10'>
+				<input id='gEditEn' value='' type='checkbox' disabled='disabled'>写</input>
+			</i>
+			<i class='cell add w10'>
+				<input id='gAddEn'  value='' type='checkbox' disabled='disabled'>增加</input>
+			</i>
+			<i class='cell delete w10'>
+				<input id='gDeleteEn'  value='' type='checkbox' disabled='disabled'>删除</input>
+			</i>
+			<i class='cell op w10'>
+				<a href='javascript:void(0)' onclick="saveReposSetting();" class='mybtn-primary'>保存</a>
+			</i>
+		</li>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function reposSettingPageInit()
+	{
+		getReposSetting();
+	}
+        
+    //页面初始化代码    
+    $(function(){
+		reposSettingPageInit();
+	});
+
+//显示仓库公开访问权限设置
+function getReposSetting(){
+   	console.log("getReposSetting()");
+   	var docId = curRightClickedTreeNode.id;
+	var docName = curRightClickedTreeNode.name;
+   	var vid = getQueryString("vid");
+	console.log("docId:" +docId + "docName:" +docName);
+
+    $.ajax({
+              url : "/DocSystem/Repos/getReposSetting.do",
+              type : "post",
+              dataType : "json",
+              data : {
+              	docId: docId,
+                reposId : vid,
+              },
+              success : function (ret) {
+                  if( "ok" == ret.status ){
+                      showReposSetting(ret.data);
+                  }
+                  else
+                  {
+                  	showErrorMessage("Error:" + ret.msgInfo);
+                  }
+              },
+              error : function () {
+                 showErrorMessage('服务器异常：获取仓库公开访问权限失败！');
+              }
+    });
+
+
+	//根据获取到的目录权限用户列表数据，绘制列表
+	function showReposSetting(data){
+		console.log(data);
+		var docId = curRightClickedTreeNode.id;
+		var docName = curRightClickedTreeNode.name;
+   		var vid = getQueryString("vid");
+		console.log("docId:" +docId + "docName:" +docName);
+		
+		//使能全局配置按键
+		$("#gPublic").attr("disabled",false);		
+		
+		if(data == null){	//参数为空
+			//获取仓库名称		
+			$("#gPublic").attr("checked",false);
+			$("#gName").text(docName);
+			return;
+		}
+		
+		$("#gName").text(docName);
+		$("#gPublic").attr("checked",true);
+		$("#gAccess").attr("disabled",false);
+		$("#gEditEn").attr("disabled",false);
+		$("#gAddEn").attr("disabled",false);
+		$("#gDeleteEn").attr("disabled",false);
+		if(data.access == 1) $("#gAccess").attr("checked",true);
+		if(data.editEn == 1) $("#gEditEn").attr("checked",true);
+		if(data.addEn == 1) $("#gAddEn").attr("checked",true);
+		if(data.deleteEn == 1) $("#gDeleteEn").attr("checked",true);
+	}
+}
+
+function enableReposConfig()
+{
+	//alert(index);
+	//alert($("#User"+index).prop("checked"));
+	if($("#gPublic").prop("checked") == true)
+	{
+		$("#gAccess").attr("disabled",false);
+		$("#gEditEn").attr("disabled",false);
+		$("#gAddEn").attr("disabled",false);
+		$("#gDeleteEn").attr("disabled",false);
+	}
+	else
+	{
+		$("#gAccess").attr("disabled",true);
+		$("#gEditEn").attr("disabled",true);
+		$("#gAddEn").attr("disabled",true);
+		$("#gDeleteEn").attr("disabled",true);
+	}
+}
+
+function saveReposSetting()
+{
+	console.log("saveReposSetting");
+	var docId = curRightClickedTreeNode.id;
+	var vid = getQueryString("vid");
+	var isPublic = $("#gPublic").prop("checked")? 1:0;
+	var access = $("#gAccess").prop("checked")? 1:0;
+	var editEn = $("#gEditEn").prop("checked")? 1:0;
+	var addEn = $("#gAddEn").prop("checked")? 1:0;
+	var deleteEn = $("#gDeleteEn").prop("checked")? 1:0;
+
+	$.ajax({
+              url : "/DocSystem/Repos/configReposSetting.do",
+              type : "post",
+              dataType : "json",
+              data : {
+              	docId: docId,
+                reposId : vid,
+                isPublic:isPublic,
+                isAdmin: 0,
+                access: access,
+                editEn: editEn,
+                addEn: addEn,
+                deleteEn: deleteEn,
+              },
+              success : function (ret) {
+                  if( "ok" == ret.status ){
+	                   	// 普通消息提示条
+						bootstrapQ.msg({
+								msg : '设置完成！',
+								type : 'success',
+								time : 2000,
+							    });                      
+                  }
+                  else
+                  {
+                  	showErrorMessage("Error:" + ret.msgInfo);
+                  }
+              },
+              error : function () {
+                 showErrorMessage('服务器异常：获取仓库公开访问权限失败！');
+              }
+    });
+}
+
+</script>

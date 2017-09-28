@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+    xmlns:p="http://www.springframework.org/schema/p"  
+    xmlns:c="http://www.springframework.org/schema/c"  
+    xmlns:util="http://www.springframework.org/schema/util"  
+    xmlns:aop="http://www.springframework.org/schema/aop"  
+    xmlns:mvc="http://www.springframework.org/schema/mvc"  
+    xmlns:tx="http://www.springframework.org/schema/tx"  
+    xmlns:context="http://www.springframework.org/schema/context"  
+    xmlns:ehcache="http://www.springmodules.org/schema/ehcache"  
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd  
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd  
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd  
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd  
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd  
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd  
+        http://www.springmodules.org/schema/ehcache http://www.springmodules.org/schema/cache/springmodules-ehcache.xsd">  
+    <mvc:annotation-driven>  
+        <mvc:message-converters>  
+            <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter" />  
+            <bean class="org.springframework.http.converter.FormHttpMessageConverter" />  
+            <bean class="org.springframework.http.converter.xml.SourceHttpMessageConverter" />  
+            <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter" />  
+        </mvc:message-converters>  
+    </mvc:annotation-driven>  
+    
+    
+    <!-- 使用annotation 自动注册bean,并保证@Required,@Autowired的属性被注入 -->  
+    <context:component-scan base-package="com.DocSystem" >
+    	<!--context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" /--> 
+ 		<!--context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service" /--> 
+ 	</context:component-scan>
+          
+    <aop:aspectj-autoproxy proxy-target-class="true">  
+        <aop:include name="controllerAspect"/>  
+    </aop:aspectj-autoproxy>  
+      
+  
+    <!-- 避免IE执行AJAX时,返回JSON出现下载文件 -->  
+    <!-- 支持JSON数据格式 -->  
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">  
+        <property name="messageConverters">  
+            <list>  
+                <ref bean="mappingJacksonHttpMessageConverter" />  
+            </list>  
+        </property>  
+    </bean>  
+    <bean id="mappingJacksonHttpMessageConverter"  
+        class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">  
+    </bean>  
+    
+    <!-- 文件上传表单的视图解析器 -->  
+    <bean id="multipartResolver"
+        class="org.springframework.web.multipart.commons.CommonsMultipartResolver">    
+        <!-- one of the properties available; the maximum file size in bytes -->    
+        <!-- <property name="maxUploadSize" value="204800" /> -->    
+    </bean>
+        
+    <!-- 对模型视图名称的解析，即在模型视图名称添加前后缀 -->  
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">  
+        <property name="prefix" value="/" /> <!--设置到根目录下，方便控制--> 
+        <property name="suffix" value=".jsp" /><!--为空,用户后台自己进行控制 -->  
+    </bean>  
+    
+	<!-- 拦截器 -->
+	<mvc:interceptors>
+	    <!-- 多个拦截器,顺序执行 -->
+	    <mvc:interceptor>
+	    	<!-- 如果不配置或/*,将拦截所有的Controller -->
+	       <mvc:mapping path="/**" />
+	       <bean class="com.DocSystem.controller.MyInterceptor"></bean>
+	    </mvc:interceptor>
+	</mvc:interceptors>      
+</beans>  

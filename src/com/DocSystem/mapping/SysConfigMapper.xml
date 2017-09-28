@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.SysConfigMapper">
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.SysConfig">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="REG_ENABLE" jdbcType="INTEGER" property="regEnable" />
+    <result column="PRIVATE_REPOS_ENABLE" jdbcType="INTEGER" property="privateReposEnable" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, REG_ENABLE, PRIVATE_REPOS_ENABLE
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from sys_config
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from sys_config
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.SysConfig">
+    insert into sys_config (ID, REG_ENABLE, PRIVATE_REPOS_ENABLE
+      )
+    values (#{id,jdbcType=INTEGER}, #{regEnable,jdbcType=INTEGER}, #{privateReposEnable,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.SysConfig">
+    insert into sys_config
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="regEnable != null">
+        REG_ENABLE,
+      </if>
+      <if test="privateReposEnable != null">
+        PRIVATE_REPOS_ENABLE,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="regEnable != null">
+        #{regEnable,jdbcType=INTEGER},
+      </if>
+      <if test="privateReposEnable != null">
+        #{privateReposEnable,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.SysConfig">
+    update sys_config
+    <set>
+      <if test="regEnable != null">
+        REG_ENABLE = #{regEnable,jdbcType=INTEGER},
+      </if>
+      <if test="privateReposEnable != null">
+        PRIVATE_REPOS_ENABLE = #{privateReposEnable,jdbcType=INTEGER},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.SysConfig">
+    update sys_config
+    set REG_ENABLE = #{regEnable,jdbcType=INTEGER},
+      PRIVATE_REPOS_ENABLE = #{privateReposEnable,jdbcType=INTEGER}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
