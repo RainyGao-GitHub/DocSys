@@ -1,0 +1,148 @@
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function LoginPageInit()
+	{
+		//console.log($.cookie("dsuser"));
+		//回车键监听函数
+		EnterKeyListener();
+		
+	}
+	
+	function showLogin(text){
+		$(".loginModal2").fadeIn("slow");
+		$("#userName").focus();
+	}
+	
+	function closeLogin(){
+		$(".loginModal2").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListener(){
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		login();
+	 	}  
+	}
+	
+	//设置checkbox
+	function setCheckBoxs(){
+		var s = $("input[type=checkbox]");
+		
+		$(s).each(function(i,item){
+			if($(item).hasClass("needSetVal")){
+				var hc = $(item).next();
+				var v = $(hc).val();
+				console.log($(item)[0].checked);
+				if(v=="1"){
+					$(item).attr("checked",true);
+				}else{
+					$(item).attr("checked",false);
+				}
+			}
+		})
+	}
+	
+	//登录按键处理函数
+	function login(){
+		//alert("11");
+        $.ajax({
+            url : "/DocSystem/login.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $('input[name="userName"]').val(),
+                 pwd : MD5($('input[name="pwd"]').val()),
+                 rememberMe : $('input[name="rememberMe"]').val(),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("登录成功");
+                	window.location.href = "projects.html";
+                }else {
+                    alert("错误："+ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("服务器异常:登录失败");
+            }
+        });
+    }
+        
+    //页面初始化代码    
+    $(function(){
+		LoginPageInit();
+		$("#userName").click().focus();
+	});
+</script>
+
+ <div id="ordLogin" class="row" style="display:block;">
+     <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').hide();$('#smsLogin').show();">用户登录</h4> -->
+     <!-- <form class="form-horizontal" id="login_form" method="POST" action="/DocSystem/login.do" novalidate="novalidate"> -->
+     <div class="form-horizontal">
+         <div class="form-group">
+             <label class="col-sm-2 control-label">邮箱/手机</label>
+             <div class="col-sm-9">
+                 <input type="text" id="userName" name="userName" value="" needvalicate=true class="form-control" valicate="_required _minlen=6 _emailOR_tel" maxlength="40" class="form-control" placeholder="请输入邮箱或者手机号" aria-required="true">
+             </div>
+         </div>
+         <div class="form-group">
+             <label class="col-sm-2 control-label">密 码</label>
+             <div class="col-sm-9">
+                 <input type="password" id="pwd" name="pwd" value="" class="form-control" valicate="_required _minlen=6" id="inputGroupSuccess2"  placeholder="密码">
+             </div>
+         </div>
+         <div class="form-group">
+             <label class="col-sm-2 control-label">&nbsp;</label>
+             <div class="col-sm-9">
+                 <div class="checkbox">
+                 	<input id="rememberMe_cb" type="checkbox" onchange="remember(this);" class="needSetVal" value="1" /> 记住我
+					<input id="rememberMe_vl" name="rememberMe" type="hidden" value="0" />
+                    <a class="f-right" href="toChangePwd.do">忘记密码？</a>
+                 </div>
+             </div>
+         </div>
+         <p class="text-warning"></p>
+         <div class="form-group">
+             <div class="col-sm-12 text-center">
+                 <button onclick="login()" class="btn btnPrimary" style="width: 258px;height: 42px;">登录</button>
+             </div>
+         </div>
+     </div>    
+ </div>
+ 
+ <div id="smsLogin" class="row" style="display: none;">
+     <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').show();$('#smsLogin').hide();"><em class="important">普通方式登录</em></a>用户登录</h4> -->
+     <div class="form-horizontal" id="_form_login_sms" method="POST" action="/DocSystem/smsLogin.do" novalidate="novalidate">
+         <div class="form-group">
+             <label class="col-sm-2 control-label">手机号码</label>
+             <div class="col-sm-9">
+                 <input type="number" name="account" required="true" digits="true" rangelength="11,11" class="form-control" placeholder="请输入注册的手机号" aria-required="true">
+             </div>
+         </div>
+         <div class="form-group" style="display:none">
+             <label class="col-sm-2 control-label">验证码</label>
+             <div class="col-sm-9">
+                 <span class="vercode-img"><img src="" title="点击刷新"></span> <!-- 验证码 -->
+                 <input type="hidden" name="captchaKey" required="true" aria-required="true">
+                 <input type="text" name="captchaCode" required="true" rangelength="4,4" class="form-control" placeholder="请输入右侧的验证码" aria-required="true">
+             </div>
+         </div>
+         <div class="form-group">
+             <label class="col-sm-2 control-label">短信验证码</label>
+             <div class="col-sm-9">
+                 <a class="vercode" href="javascript:void">获取验证码</a>
+                 <span class="vercode" style="display: none;"><em><i>60</i>秒后重新获取</em></span>
+                 <input type="hidden" name="trId">
+                 <input type="number" name="smsCode" digits="true" required="true" rangelength="4,6" class="form-control" placeholder="短信验证码" aria-required="true">
+             </div>
+         </div>
+         <p class="text-warning" style="display:none"></p>
+         <div class="form-group" style="margin-top: 30px;">
+             <label class="col-sm-2 control-label">&nbsp;</label>
+             <div class="col-sm-9 text-left">
+                 <button onclick="smsLogin()" class="btn btnPrimary">登录</button>
+             </div>
+         </div>
+     </div>
+ </div>
