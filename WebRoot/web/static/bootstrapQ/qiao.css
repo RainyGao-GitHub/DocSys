@@ -1,0 +1,103 @@
+@CHARSET "UTF-8";
+
+html,body {
+	height: 100%;
+}
+
+.bg-gray{
+	background-color: #f8f8f8 !important;
+}
+.bg-white{
+	background-color: #fff !important;
+}
+
+#wrap {
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	margin: 0 auto -60px;
+}
+
+#push,#footer {
+	height: 60px;
+}
+
+#footer {
+	background-color: #f5f5f5;
+	text-align: center;
+}
+
+@media ( max-width : 767px) {
+	#footer {
+		margin-left: -20px;
+		padding-left: 20px;
+	}
+}
+
+.table-responsive th,.table-responsive td {
+	white-space: nowrap;
+}
+
+.resume-show{
+	background-color: #00CCFF;
+}
+.resume-show img{
+	max-width: 100px;
+}
+.resume-show .txt{
+	display: block;
+	margin-top: 10px;
+	color: #fff;
+}
+.resume-show .desc{
+	color: rgba(255,255,255,0.8);
+}
+
+.orderform{
+	display: none;
+}
+.orderpanel{
+	text-align: center;
+	margin-top: 20px;
+}
+.ordericon{
+	display: block;
+	float: left;
+	width: 60px;
+	height: 60px;
+	margin: 5px;
+	color: #fff;
+	font-size: 20px;
+	line-height: 60px;
+	border-radius: 99px;
+	background-color: #e1e2e5;
+	cursor: pointer;
+}
+.orderimg{
+	display: block;
+	float: left;
+	width: 60px;
+	height: 60px;
+	margin: 5px;
+}
+.orderimg.f{
+	float: none;
+	margin: 0 auto;
+	margin-bottom: 20px;
+}
+.orderlink{
+	color: #999;
+	cursor: pointer;
+	text-decoration: underline;
+}
+.orderranktable th:first-child,
+.orderranktable td:first-child{
+	text-align: center;
+}
+.orderranktable .rankimg{
+	height: 1.5em !important;
+	margin: 0 auto;
+}
+.joinorderbtn{
+	background-color: #337ab7;
+}

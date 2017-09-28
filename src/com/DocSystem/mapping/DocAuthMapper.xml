@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.DocAuthMapper">
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.DocAuth">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="USER_ID" jdbcType="INTEGER" property="userId" />
+    <result column="DOC_ID" jdbcType="INTEGER" property="docId" />
+    <result column="REPOS_ID" jdbcType="INTEGER" property="reposId" />
+    <result column="IS_ADMIN" jdbcType="INTEGER" property="isAdmin" />
+    <result column="ACCESS" jdbcType="INTEGER" property="access" />
+    <result column="EDIT_EN" jdbcType="INTEGER" property="editEn" />
+    <result column="ADD_EN" jdbcType="INTEGER" property="addEn" />
+    <result column="DELETE_EN" jdbcType="INTEGER" property="deleteEn" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, USER_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from doc_auth
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.DocAuth">
+    insert into doc_auth (ID, USER_ID, DOC_ID, 
+      REPOS_ID, IS_ADMIN, ACCESS, 
+      EDIT_EN, ADD_EN, DELETE_EN
+      )
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{docId,jdbcType=INTEGER}, 
+      #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
+      #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.DocAuth">
+    insert into doc_auth
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="userId != null">
+        USER_ID,
+      </if>
+      <if test="docId != null">
+        DOC_ID,
+      </if>
+      <if test="reposId != null">
+        REPOS_ID,
+      </if>
+      <if test="isAdmin != null">
+        IS_ADMIN,
+      </if>
+      <if test="access != null">
+        ACCESS,
+      </if>
+      <if test="editEn != null">
+        EDIT_EN,
+      </if>
+      <if test="addEn != null">
+        ADD_EN,
+      </if>
+      <if test="deleteEn != null">
+        DELETE_EN,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="docId != null">
+        #{docId,jdbcType=INTEGER},
+      </if>
+      <if test="reposId != null">
+        #{reposId,jdbcType=INTEGER},
+      </if>
+      <if test="isAdmin != null">
+        #{isAdmin,jdbcType=INTEGER},
+      </if>
+      <if test="access != null">
+        #{access,jdbcType=INTEGER},
+      </if>
+      <if test="editEn != null">
+        #{editEn,jdbcType=INTEGER},
+      </if>
+      <if test="addEn != null">
+        #{addEn,jdbcType=INTEGER},
+      </if>
+      <if test="deleteEn != null">
+        #{deleteEn,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.DocAuth">
+    update doc_auth
+    <set>
+      <if test="userId != null">
+        USER_ID = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="docId != null">
+        DOC_ID = #{docId,jdbcType=INTEGER},
+      </if>
+      <if test="reposId != null">
+        REPOS_ID = #{reposId,jdbcType=INTEGER},
+      </if>
+      <if test="isAdmin != null">
+        IS_ADMIN = #{isAdmin,jdbcType=INTEGER},
+      </if>
+      <if test="access != null">
+        ACCESS = #{access,jdbcType=INTEGER},
+      </if>
+      <if test="editEn != null">
+        EDIT_EN = #{editEn,jdbcType=INTEGER},
+      </if>
+      <if test="addEn != null">
+        ADD_EN = #{addEn,jdbcType=INTEGER},
+      </if>
+      <if test="deleteEn != null">
+        DELETE_EN = #{deleteEn,jdbcType=INTEGER},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.DocAuth">
+    update doc_auth
+    set USER_ID = #{userId,jdbcType=INTEGER},
+      DOC_ID = #{docId,jdbcType=INTEGER},
+      REPOS_ID = #{reposId,jdbcType=INTEGER},
+      IS_ADMIN = #{isAdmin,jdbcType=INTEGER},
+      ACCESS = #{access,jdbcType=INTEGER},
+      EDIT_EN = #{editEn,jdbcType=INTEGER},
+      ADD_EN = #{addEn,jdbcType=INTEGER},
+      DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+    <select id="selectSelective" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth
+    where 1 = 1
+    <if test="id != null">
+      and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="userId != null">
+      and USER_ID = #{userId,jdbcType=INTEGER}
+    </if>
+    <if test="docId != null">
+      and DOC_ID = #{docId,jdbcType=INTEGER}
+    </if>
+    <if test="reposId != null">
+      and REPOS_ID = #{reposId,jdbcType=INTEGER}
+    </if>
+	<if test="isAdmin != null">
+      and IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
+    </if>
+    
+    <if test="access != null">
+      and ACCESS = #{access,jdbcType=INTEGER}
+    </if>
+    <if test="editEn != null">
+      and EDIT_EN = #{editEn,jdbcType=INTEGER}
+    </if>
+    <if test="addEn != null">
+      and ADD_EN = #{addEn,jdbcType=INTEGER}
+    </if>
+    <if test="deleteEn != null">
+      and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    </if>
+  </select>
+  <select id="getDocAuth" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth
+    where 1 = 1
+    <if test="id != null">
+      and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="userId != null">
+      and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0)
+    </if>
+    <if test="docId != null">
+      and DOC_ID = #{docId,jdbcType=INTEGER}
+    </if>
+    <if test="reposId != null">
+      and REPOS_ID = #{reposId,jdbcType=INTEGER}
+    </if>
+	<if test="isAdmin != null">
+      and IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
+    </if>
+    
+    <if test="access != null">
+      and ACCESS = #{access,jdbcType=INTEGER}
+    </if>
+    <if test="editEn != null">
+      and EDIT_EN = #{editEn,jdbcType=INTEGER}
+    </if>
+    <if test="addEn != null">
+      and ADD_EN = #{addEn,jdbcType=INTEGER}
+    </if>
+    <if test="deleteEn != null">
+      and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    </if>
+  </select>
+  
+  <delete id="deleteSelective" parameterType="com.DocSystem.entity.DocAuth">
+    delete from doc_auth
+      where 1 = 1
+      <if test="id != null">
+        and ID = #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        and USER_ID = #{userId,jdbcType=INTEGER}
+      </if>
+      <if test="docId != null">
+        and DOC_ID = #{docId,jdbcType=INTEGER}
+      </if>
+      <if test="reposId != null">
+        and REPOS_ID = #{reposId,jdbcType=INTEGER}
+      </if>
+  </delete>
+  
+  <select id="getDocAuthListForUser" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth 
+    where USER_ID = #{0} and DOC_ID IN (select ID from doc where PID = #{1} and VID = #{2})
+  </select>
+  
+</mapper>

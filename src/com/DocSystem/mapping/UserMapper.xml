@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.User">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="PWD" jdbcType="VARCHAR" property="pwd" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="ROLE" jdbcType="INTEGER" property="role" />
+    <result column="REAL_NAME" jdbcType="VARCHAR" property="realName" />
+    <result column="NICK_NAME" jdbcType="VARCHAR" property="nickName" />
+    <result column="IMG" jdbcType="VARCHAR" property="img" />
+    <result column="EMAIL" jdbcType="VARCHAR" property="email" />
+    <result column="EMAIL_VALID" jdbcType="INTEGER" property="emailValid" />
+    <result column="TEL" jdbcType="VARCHAR" property="tel" />
+    <result column="TEL_VALID" jdbcType="INTEGER" property="telValid" />
+    <result column="LAST_LOGIN_TIME" jdbcType="VARCHAR" property="lastLoginTime" />
+    <result column="LAST_LOGIN_IP" jdbcType="VARCHAR" property="lastLoginIp" />
+    <result column="LAST_LOGIN_CITY" jdbcType="VARCHAR" property="lastLoginCity" />
+    <result column="CREATE_TYPE" jdbcType="INTEGER" property="createType" />
+    <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.User">
+    <result column="INTRO" jdbcType="LONGVARCHAR" property="intro" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, NAME, PWD, TYPE, ROLE, REAL_NAME, NICK_NAME, IMG, EMAIL, EMAIL_VALID, TEL, TEL_VALID, 
+    LAST_LOGIN_TIME, LAST_LOGIN_IP, LAST_LOGIN_CITY, CREATE_TYPE, CREATE_TIME
+  </sql>
+  <sql id="Blob_Column_List">
+    INTRO
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from user
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from user
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.User">
+    insert into user (ID, NAME, PWD, 
+      TYPE, ROLE, REAL_NAME, 
+      NICK_NAME, IMG, EMAIL, 
+      EMAIL_VALID, TEL, TEL_VALID, 
+      LAST_LOGIN_TIME, LAST_LOGIN_IP, LAST_LOGIN_CITY, 
+      CREATE_TYPE, CREATE_TIME, INTRO
+      )
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, 
+      #{type,jdbcType=INTEGER}, #{role,jdbcType=INTEGER}, #{realName,jdbcType=VARCHAR}, 
+      #{nickName,jdbcType=VARCHAR}, #{img,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
+      #{emailValid,jdbcType=INTEGER}, #{tel,jdbcType=VARCHAR}, #{telValid,jdbcType=INTEGER}, 
+      #{lastLoginTime,jdbcType=VARCHAR}, #{lastLoginIp,jdbcType=VARCHAR}, #{lastLoginCity,jdbcType=VARCHAR}, 
+      #{createType,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{intro,jdbcType=LONGVARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.User">
+    insert into user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="pwd != null">
+        PWD,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="role != null">
+        ROLE,
+      </if>
+      <if test="realName != null">
+        REAL_NAME,
+      </if>
+      <if test="nickName != null">
+        NICK_NAME,
+      </if>
+      <if test="img != null">
+        IMG,
+      </if>
+      <if test="email != null">
+        EMAIL,
+      </if>
+      <if test="emailValid != null">
+        EMAIL_VALID,
+      </if>
+      <if test="tel != null">
+        TEL,
+      </if>
+      <if test="telValid != null">
+        TEL_VALID,
+      </if>
+      <if test="lastLoginTime != null">
+        LAST_LOGIN_TIME,
+      </if>
+      <if test="lastLoginIp != null">
+        LAST_LOGIN_IP,
+      </if>
+      <if test="lastLoginCity != null">
+        LAST_LOGIN_CITY,
+      </if>
+      <if test="createType != null">
+        CREATE_TYPE,
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME,
+      </if>
+      <if test="intro != null">
+        INTRO,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="role != null">
+        #{role,jdbcType=INTEGER},
+      </if>
+      <if test="realName != null">
+        #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="nickName != null">
+        #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="img != null">
+        #{img,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="emailValid != null">
+        #{emailValid,jdbcType=INTEGER},
+      </if>
+      <if test="tel != null">
+        #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="telValid != null">
+        #{telValid,jdbcType=INTEGER},
+      </if>
+      <if test="lastLoginTime != null">
+        #{lastLoginTime,jdbcType=VARCHAR},
+      </if>
+      <if test="lastLoginIp != null">
+        #{lastLoginIp,jdbcType=VARCHAR},
+      </if>
+      <if test="lastLoginCity != null">
+        #{lastLoginCity,jdbcType=VARCHAR},
+      </if>
+      <if test="createType != null">
+        #{createType,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=VARCHAR},
+      </if>
+      <if test="intro != null">
+        #{intro,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.User">
+    update user
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        PWD = #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="role != null">
+        ROLE = #{role,jdbcType=INTEGER},
+      </if>
+      <if test="realName != null">
+        REAL_NAME = #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="nickName != null">
+        NICK_NAME = #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="img != null">
+        IMG = #{img,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        EMAIL = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="emailValid != null">
+        EMAIL_VALID = #{emailValid,jdbcType=INTEGER},
+      </if>
+      <if test="tel != null">
+        TEL = #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="telValid != null">
+        TEL_VALID = #{telValid,jdbcType=INTEGER},
+      </if>
+      <if test="lastLoginTime != null">
+        LAST_LOGIN_TIME = #{lastLoginTime,jdbcType=VARCHAR},
+      </if>
+      <if test="lastLoginIp != null">
+        LAST_LOGIN_IP = #{lastLoginIp,jdbcType=VARCHAR},
+      </if>
+      <if test="lastLoginCity != null">
+        LAST_LOGIN_CITY = #{lastLoginCity,jdbcType=VARCHAR},
+      </if>
+      <if test="createType != null">
+        CREATE_TYPE = #{createType,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      </if>
+      <if test="intro != null">
+        INTRO = #{intro,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.DocSystem.entity.User">
+    update user
+    set NAME = #{name,jdbcType=VARCHAR},
+      PWD = #{pwd,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      ROLE = #{role,jdbcType=INTEGER},
+      REAL_NAME = #{realName,jdbcType=VARCHAR},
+      NICK_NAME = #{nickName,jdbcType=VARCHAR},
+      IMG = #{img,jdbcType=VARCHAR},
+      EMAIL = #{email,jdbcType=VARCHAR},
+      EMAIL_VALID = #{emailValid,jdbcType=INTEGER},
+      TEL = #{tel,jdbcType=VARCHAR},
+      TEL_VALID = #{telValid,jdbcType=INTEGER},
+      LAST_LOGIN_TIME = #{lastLoginTime,jdbcType=VARCHAR},
+      LAST_LOGIN_IP = #{lastLoginIp,jdbcType=VARCHAR},
+      LAST_LOGIN_CITY = #{lastLoginCity,jdbcType=VARCHAR},
+      CREATE_TYPE = #{createType,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      INTRO = #{intro,jdbcType=LONGVARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.User">
+    update user
+    set NAME = #{name,jdbcType=VARCHAR},
+      PWD = #{pwd,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      ROLE = #{role,jdbcType=INTEGER},
+      REAL_NAME = #{realName,jdbcType=VARCHAR},
+      NICK_NAME = #{nickName,jdbcType=VARCHAR},
+      IMG = #{img,jdbcType=VARCHAR},
+      EMAIL = #{email,jdbcType=VARCHAR},
+      EMAIL_VALID = #{emailValid,jdbcType=INTEGER},
+      TEL = #{tel,jdbcType=VARCHAR},
+      TEL_VALID = #{telValid,jdbcType=INTEGER},
+      LAST_LOGIN_TIME = #{lastLoginTime,jdbcType=VARCHAR},
+      LAST_LOGIN_IP = #{lastLoginIp,jdbcType=VARCHAR},
+      LAST_LOGIN_CITY = #{lastLoginCity,jdbcType=VARCHAR},
+      CREATE_TYPE = #{createType,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectSelective" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where 1 = 1
+    <if test="name != null">
+        and NAME = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="pwd != null">
+        and PWD = #{pwd,jdbcType=VARCHAR}
+      </if>
+      <if test="type != null">
+        and TYPE = #{type,jdbcType=INTEGER}
+      </if>
+      <if test="role != null">
+        and ROLE = #{role,jdbcType=INTEGER}
+      </if>
+      <if test="realName != null">
+        and REAL_NAME = #{realName,jdbcType=VARCHAR}
+      </if>
+      <if test="nickName != null">
+        and NICK_NAME = #{nickName,jdbcType=VARCHAR}
+      </if>
+      <if test="img != null">
+        and IMG = #{img,jdbcType=VARCHAR}
+      </if>
+      <if test="email != null">
+        and EMAIL = #{email,jdbcType=VARCHAR}
+      </if>
+      <if test="emailValid != null">
+        and EMAIL_VALID = #{emailValid,jdbcType=INTEGER}
+      </if>
+      <if test="tel != null">
+        and TEL = #{tel,jdbcType=VARCHAR}
+      </if>
+      <if test="telValid != null">
+        and TEL_VALID = #{telValid,jdbcType=INTEGER}
+      </if>
+      <if test="lastLoginTime != null">
+        and LAST_LOGIN_TIME = #{lastLoginTime,jdbcType=VARCHAR}
+      </if>
+      <if test="lastLoginIp != null">
+        and LAST_LOGIN_IP = #{lastLoginIp,jdbcType=VARCHAR}
+      </if>
+      <if test="lastLoginCity != null">
+        and LAST_LOGIN_CITY = #{lastLoginCity,jdbcType=VARCHAR}
+      </if>
+      <if test="createType != null">
+        and CREATE_TYPE = #{createType,jdbcType=INTEGER}
+      </if>
+      <if test="createTime != null">
+        and CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+      </if>
+      <if test="intro != null">
+        and INTRO = #{intro,jdbcType=LONGVARCHAR}
+      </if>
+  </select>
+  
+  <select id="queryUserByTelOrEmail" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
+  	select
+  		<include refid="Base_Column_List" />
+  	from user
+  	where 1 = 1
+  	<if test="tel!=null">
+  		and TEL = #{tel}
+  	</if>
+  	<if test="email!=null">
+  		and EMAIL = #{email} or TEL = #{email}
+  	</if>
+  </select>
+  
+  <select id="getDocAuthedUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+    select user.ID, NAME, REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn
+     from user
+    LEFT JOIN doc_auth on doc_auth.user_id = user.id WHERE doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
+  </select> 
+  
+  <select id="getReposAuthedUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+    select user.ID, NAME, REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn
+     from user
+    LEFT JOIN repos_auth on repos_auth.user_id = user.id WHERE repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
+
+  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+	select user.ID, NAME, REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn
+      from user
+    LEFT JOIN repos_auth ON repos_auth.USER_ID = user.ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectAll" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+  </select>
+</mapper>

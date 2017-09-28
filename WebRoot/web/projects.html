@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="SmartWiki" />
+    <link rel="shortcut icon" href="https://wiki.iminho.me/favicon.ico">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="renderer" content="webkit" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>仓库列表 - DocSys</title>
+
+    <!-- Bootstrap -->
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="static/styles/styles.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="static/bootstrap/js/html5shiv.min.js"></script>
+    <script src="static/bootstrap/js/respond.min.js"></script>
+    <![endif]-->
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="static/scripts/jquery.min.js"></script>
+
+</head>
+<body>
+<div class="manual-reader">
+    <header class="navbar navbar-static-top smart-nav navbar-fixed-top" role="banner">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/DocSystem"><i class="fa fa-paper-plane"></i> DocSys</a>
+                <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
+                    <form class="form-inline" action="/search" method="get">
+                        <input class="form-control" name="keyword" type="search" placeholder="请输入关键词...">
+                        <button class="search-btn">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
+                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
+                    <ul class="dropdown-menu" role="menu">
+						<li>
+							<a href="#" title="新建仓库" onclick="newRepos()">新建</a>
+						</li>
+                        <li>
+                            <a onclick="showLoginPanel()" title="用户登录">登录</a>
+                        </li>
+                    </ul>
+                </div>            
+             </div>
+
+            <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+                <ul class="nav navbar-nav navbar-right">
+				    <li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" class="img-circle m5"/></li>
+					<li id="userInfoDiv" style="display:none">
+							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<!-- <li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp">我的主页</a></li>
+								<li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp&tohref=myFriends">我的好友</a></li>
+								<li><a href="/DocSystem/pageTo.do?p=webPages/pages/freeTeam/myHostPage.jsp&toHref=myInfo">个人设置</a></li> -->
+								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
+								<li><a onclick="logout()">退出登录</a></li>
+							</ul>
+					</li>
+                    <li id="loginBtn">
+                        <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                    </li>
+                    <li id="newReposBtn" style="display:none">
+						<a href="#" title="新建仓库" onclick="newRepos()">新建</a>
+					</li>
+					<li id="goManagerBtn" style="display:none">
+						<a href="/DocSystem/manager/main.html" title="管理后台">管理后台</a>
+					</li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <div class="container smart-container">
+        <div class="row">
+            <div id="project-box" class="project-box"></div>
+            <div class="clearfix"></div>
+            <div class="manual-page">
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <footer class="footer">
+        <div class="container">
+            <div class="row text-center">
+                <ul>
+                    <li><a href="#">DocSys</a></li>
+                    <li>&nbsp;·&nbsp;</li>
+                    <li><a href="#" target="_blank">意见反馈</a> </li>
+                </ul>
+
+            </div>
+        </div>
+    </footer>
+</div>
+
+<!-- Share Modal -->
+<div id="new-repos" style="display:none">
+    <form class="form" onkeydown="if(event.keyCode==13)return false;">
+        <div class="form-group">
+            <label>名字</label>
+            <input class="form-control" type="text" name="name" style="width: 100%"/>
+            <label>介绍</label>
+            <input class="form-control" type="text" name="info" style="width: 100%"/>
+            <label>仓库类型</label>
+            <!-- <input class="form-control" type="text" name="type"  value="1" style="width: 100%"/> -->
+            <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
+            	<option value="0">虚拟文件系统</option>   
+            	<option value="1" selected="selected">实文件系统</option>   
+            	<option value="2">带版本管理的虚拟文件系统</option>
+            	<option value="3">带版本管理的实文件系统</option>   
+            </select>
+            <label>仓库位置</label>
+            <input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+            <label>svn路径</label>
+            <input class="form-control" type="text" name="svnPath"  value="" style="width: 100%"/>
+            <label>svn用户名</label>
+            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
+            <label>svn密码</label>
+            <input class="form-control" type="password" name="svnPwd"  value="" style="width: 100%"/>           
+        </div>
+    </form>
+</div>
+
+
+<script type="text/html" id="tmpl-projects">
+    <ul>
+        {{each list as value i}}
+    <li>
+        <a href="project.html?vid={{ value.id }}" class="box"
+           title="SmartWiki帮助手册" target="_blank">
+            <div class="pull-left imgbox">
+                <i class="fa fa-desktop"></i>
+            </div>
+            <h4>{{ value.name }}</h4>
+            <span></span>
+        </a>
+        <p class="summary hidden-xs hidden-sm hidden-md">
+            <a href="project.html?vid={{ value.id }}" class="text">
+                {{ value.info }}
+            </a>
+        </p>
+    </li>
+        {{/each}}
+    </ul>
+</script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="static/scripts/scripts.js" type="text/javascript"></script>
+<script src="static/scripts/template.js" type="text/javascript"></script>
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<script type="text/javascript">
+	function showLoginPanel(){
+		//alert("showLoginPanel");
+		bootstrapQ.dialog({
+			title: '登录',
+			url: 'login.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
+	function showRegisterPanel(){
+		//alert("showRegisterPanel");
+		bootstrapQ.dialog({
+			url: 'register.html',
+			title: '注册',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
+	//退出登录
+	function logout()
+	{
+		console.log("logout");
+        $.ajax({
+            url : "/DocSystem/logout.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("已退出登录");
+                	window.location.reload();	//刷新页面
+                }else {
+                    alert("错误："+ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:退出登录失败");
+            }
+        });
+    }
+    
+	
+	//页面初始化
+	var login_user = "";
+    function pageInit()
+    {
+    	console.log("pageInit");
+    	//确定当前登录用户是否已登录
+    	$.ajax({
+            url : "/DocSystem/getLoginUser.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                	var user = ret.data;
+                	login_user = user;
+                	//显示用户信息
+                	console.log("id:" + user.id + " name:" + user.name + " img:" + user.img);
+                	if((typeof(user.img)=="undefined") || (user.img == ""))
+                	{
+                		//使用默认图片
+                		console.log("use default img");
+                		//$("#userImg").attr('src',"images/default/defaultHeadPic1.png"); 
+                	}
+                	else	//使用用户自定义头像
+                	{
+                		$("#userImg").attr('src',user.img); 
+                	}
+                	$('#userImgDiv').show();
+                	$('#userInfoDiv > a >span:first-child').text(user.name);
+                	$('#userInfoDiv').show();
+                	
+                	$('#newReposBtn').show();
+
+                	if(user.type > 0) //超级管理员和管理员才能新建仓库，后台也徐亚进行控制，普通用户只能建立最多10个私人仓库
+                	{
+                		$('#goManagerBtn').show();
+                	}
+                	$('#loginBtn').hide();                	
+                }
+                else 
+                {
+                    console.log(ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:获取用户信息失败");
+            }
+        });
+    }
+
+    function showErrorMessage($msg) {
+        $("#error-message>span").text($msg).parent('div').show();
+    }
+    
+    function onChange(){
+
+        $.ajax({
+            url : "/DocSystem/Repos/getReposList.do",
+            type :"post",
+            dataType :"json",
+            data : null,
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+	                var html = template('tmpl-projects', {
+	                    list : ret.data
+	                });
+	                $("#project-box").html(html);
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            }
+            },
+            error : function () {
+                alert('服务器异常:获取仓库列表失败');
+            }
+        });
+    }
+
+    $(function () {
+    	pageInit();
+
+        var modalHtml = $("#create-project").find('.modal-body').html();
+        
+        onChange();
+
+
+
+        //弹出提示
+        $("[data-toggle='tooltip']").tooltip();
+
+        $("#projectName,#btn-project-passwd").on('focus',function () {
+            $(this).tooltip('destroy').parent('div').removeClass('has-error');;
+        });
+
+        $("#create-project").on('hidden.bs.modal',function () {
+            $("#create-project").find('.modal-body').html(modalHtml);
+        });
+
+        $("#create-project").on('click','#projectPasswd1,#projectPasswd2',function () {
+            $("#btn-project-passwd").hide();
+        });
+        $("#create-project").on('click','#projectPasswd3',function () {
+            $("#btn-project-passwd").show();
+        });
+
+        $("#btn-create").on('click',function () {
+            var $btn = $(this).button('loading');
+
+            var name = $.trim($("#projectName").val());
+
+            if(name == "") {
+                $("#projectName").tooltip({placement: "auto", title: "项目名称不能为空", trigger: 'manual'})
+                        .tooltip('show')
+                        .parent('div').addClass('has-error');
+                $btn.button('reset');
+                return false;
+            }
+            if($("#btn-project-passwd").css('display') == 'block'){
+                var passwd = $.trim($("#btn-project-passwd").val());
+                if(passwd == ""){
+                    $("#btn-project-passwd").tooltip({placement: "auto", title: "项目名称不能为空", trigger: 'manual'})
+                            .tooltip('show')
+                            .parent('div').addClass('has-error');
+                    $btn.button('reset');
+                    return false;
+                }
+            }
+            $.ajax({
+                url : "/DocSystem/Repos/doCreateRepos.do",
+                type :"post",
+                dataType :"json",
+                data : $("#create-form").serializeArray(),
+                success : function (res) {
+                    console.log(res);
+                    if(res.errcode == 20002){
+                        $(".project-box").prepend(res.data.body);
+                        $("#create-project").modal('hide');
+                    }else{
+                        alert(res.message);
+                    }
+                },
+                error : function () {
+                    alert('服务器异常:创建仓库失败');
+                }
+            });
+
+            return false;
+        });
+    });
+
+
+	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
+	function doSelectFS()
+	{
+		var type = $("#dialog-new-repos select[name='type']").val();
+		//alert(type);
+		if((type == 2) || (type == 3)) 			//show svn info
+		{
+			$("#dialog-new-repos input[name='svnPath']").attr("disabled",false);
+			$("#dialog-new-repos input[name='svnUser']").attr("disabled",false);
+			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",false);
+		}
+		else	//hide svn info
+		{
+			$("#dialog-new-repos input[name='svnPath']").attr("disabled",true);
+			$("#dialog-new-repos input[name='svnUser']").attr("disabled",true);
+			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",true);				
+		}   
+	}
+
+    function newRepos() {
+        qiao.bs.dialog({
+            id: "dialog-new-repos",
+            url: '#new-repos',
+            title: '新建仓库',
+            okbtn: "好了",
+            callback: function () {
+                setTimeout(function () {
+                    $("#dialog-new-repos input[name='name']").focus();
+                    //alert(login_user.type);
+                    if(login_user.type == 2) //超级管理员，可以设置仓库路径
+                    {
+                    	$("#dialog-new-repos input[name='path']").attr("disabled",false);
+                    }
+                    $("#dialog-new-repos input[name='svnPath']").val("");	//置空
+                    $("#dialog-new-repos input[name='svnUser']").val("");
+            		$("#dialog-new-repos input[name='svnPwd']").val("");
+                    doSelectFS(); //根据文件系统默认类型，控制显示svn信息
+                },100);
+
+            }
+        },function () {
+            var name = $("#dialog-new-repos input[name='name']").val();
+            var info = $("#dialog-new-repos input[name='info']").val();
+            var type = $("#dialog-new-repos select[name='type']").val();
+            var path = $("#dialog-new-repos input[name='path']").val();
+            var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
+            var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
+            var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
+            
+            var createTime = (new Date()).toLocaleDateString();
+            //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
+            if( name && info){
+                $.ajax({
+                    url : "/DocSystem/Repos/addRepos.do",
+                    type : "post",
+                    dataType : "json",
+                    data : {
+                        name:name,
+                        info:info,
+                        type:type,
+                        path:path,
+                        svnPath: svnPath,
+                        svnUser: svnUser,
+                        svnPwd: svnPwd,
+                        createTime:createTime
+                    },
+                    success : function (ret) {
+                    	if(ret.status == "ok")
+                    	{
+                    		console.log("创建仓库成功");
+                        	onChange();
+                        }
+                        else
+                        {
+                        	alert(ret.msgInfo);
+                        }
+                    },
+                    error : function () {
+                        alert('服务器异常: 创建仓库失败');
+                    }
+                });
+                return true;
+            }else{
+                alert("仓库信息不全，请重试！");
+                return false;
+            }
+        });
+
+    }
+
+</script>
+</body>
+</html>

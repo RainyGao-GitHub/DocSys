@@ -1,0 +1,176 @@
+<!-- Share Modal -->
+<div id="reposBasicSetting">
+        <div class="form-group">
+            <label>名字</label>
+            <input class="form-control" type="text" id="RBSname" value="" style="width: 100%" disabled="disabled"></input>
+            <label>介绍</label>
+            <input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
+            <label>仓库类型</label>
+            <select class="form-control" id="RBStype" onchange="doSelectFS();" style="width: 100%" disabled="disabled">   
+            	<option value="0">虚拟文件系统</option>   
+            	<option value="1"">实文件系统</option>   
+            	<option value="2">带版本管理的虚拟文件系统</option>
+            	<option value="3">带版本管理的实文件系统</option>   
+            </select>
+            <label>仓库位置</label>
+            <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
+            <label>svn路径</label>
+            <input class="form-control" type="text" id="RBSsvnPath"  value="" style="width: 100%" disabled="disabled"></input>
+            <label>svn用户名</label>
+            <input class="form-control" type="text" id="RBSsvnUser"  value="" style="width: 100%" disabled="disabled"></input>
+            <label>svn密码</label>
+            <input class="form-control" type="password" id="RBSsvnPwd"  value="" style="width: 100%" disabled="disabled"></input>          
+        </div>
+        <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
+</div>
+
+<script type="text/javascript">
+	function reposBasicSettingPageInit()
+	{
+	    console.log("reposBasicSettingPageInit");
+		getReposBasicSetting();
+	}
+        
+    //页面初始化代码    
+    $(function(){
+		reposBasicSettingPageInit();
+	});
+
+//显示仓库公开访问权限设置
+var gReposBasicSetting = [];
+function getReposBasicSetting()
+{
+	console.log("getReposBasicSetting");
+	var vid = getQueryString("vid");
+    $.ajax({
+           url : "/DocSystem/Repos/getRepos.do",
+           type : "post",
+           dataType : "json",
+           data : {
+               vid : vid,
+           },
+           success : function (ret) {
+               if( "ok" == ret.status ){
+               		gReposBasicSetting = ret.data;
+               		showReposBasicSetting(ret.data);
+               }else {
+					showErrorMessage(ret.msgInfo);
+               }
+           },
+           error : function () {
+               showErrorMessage("服务器异常:获取仓库信息失败");
+           }
+    });
+    
+	function showReposBasicSetting(reposInfo)
+	{
+		console.log(reposInfo);
+	   	$("#RBSname").val(reposInfo.name);
+	   	$("#RBSinfo").val(reposInfo.info);
+	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
+	   	$("#RBSpath").val(reposInfo.path);
+	   	if(reposInfo.type > 1)
+	   	{
+	   		$("#RBSsvnPath").val(reposInfo.svnPath);
+	   		$("#RBSsvnUser").val(reposInfo.svnUser);
+	   		$("#RBSsvnPwd").val(reposInfo.svnPwd);
+	   	}
+	}
+}
+
+function saveReposBasicSetting()
+{
+	console.log("saveReposBasicSetting");
+	var newReposSetting = [];
+	newReposSetting.vid = getQueryString("vid");
+	newReposSetting.name = $("#RBSname").val();
+	newReposSetting.info = $("#RBSinfo").val();
+	newReposSetting.type = $("#RBStype").val();
+	newReposSetting.path = $("#RBSpath").val();
+	newReposSetting.svnPath = $("#RBSsvnPath").val();
+	newReposSetting.svnUser = $("#RBSsvnUser").val();
+	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
+	console.log(newReposSetting);
+	
+	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
+	{
+   		$.ajax({
+                url : "/DocSystem/Repos/updateReposInfo.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                	reposId : newReposSetting.vid,
+                    name : newReposSetting.name,
+                    info : newReposSetting.info,
+                    type : newReposSetting.type,
+                    path : newReposSetting.path,
+                    svnPath : newReposSetting.svnPath,
+                    svnUser : newReposSetting.svnUser,
+                    svnPwd : newReposSetting.svnPwd,
+                },
+                success : function (ret) {
+                	if(ret.status == "ok")
+                	{
+                		console.log("创建仓库成功");
+	                 	// 普通消息提示条
+						bootstrapQ.msg({
+						msg : '设置完成！',
+						type : 'success',
+						time : 2000,
+					    });     
+	                }
+                    else
+                    {
+                    	alert(ret.msgInfo);
+                    }
+                },
+                error : function () {
+                    alert('服务器异常: 设置失败');
+                }
+            });
+            return true;
+       }
+       else
+       {
+            return false;
+       }    
+       
+       function verifyReposSetting(oldSetting, newSetting)
+       {
+       		if(oldSetting.name != newSetting.name)
+       		{
+       			alert("仓库名字不能修改");
+       			return false;
+       		}
+       		
+       		if(oldSetting.type != newSetting.type)
+       		{
+       			alert("仓库类型不能修改");
+       			return false;
+       		}
+       		
+       		if(oldSetting.path != newSetting.path)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.info != newSetting.info)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPath != newSetting.svnPath)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnUser != newSetting.svnUser)
+       		{
+       			return true;
+       		}if(oldSetting.svnPwd != newSetting.svnPwd)
+       		{
+       			return true;
+       		}
+       		alert("仓库信息未变化！");
+       		return false;
+       }  
+}
+
+</script>
