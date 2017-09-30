@@ -1,0 +1,367 @@
+/*====================================== 首页start ================================================*/
+body{
+	
+}
+
+.myactive{
+	border: solid 1px orange;
+}
+
+.mfBg{
+	background: rgba(255,255,255,0);
+}
+
+.b1{
+	background: whiteSmoke;
+	background: url(../images/jumu.jpg);
+}
+
+.b2{
+	background: url(../images/jumu2.jpg);
+}
+
+.b3{
+	background: url(../images/jumu3.jpg);
+}
+
+.logo{
+	padding:13px;
+	font-size: 16px;
+	text-shadow: 5 5 #28A4C9;
+	background-color: #000 ;
+	color:gold;
+	font-family: "微软雅黑";
+}
+
+.logo small{
+	color:#fff;
+}
+
+.logo small:hover{
+	color:gold;
+}
+
+.myheading{
+	background-color:#000;
+}
+
+.navOnMoble{
+	padding : 5;
+	background-color: #222222;
+}
+
+.navOnMoble:hover{
+	background-color: #080808;
+	color:whitesmoke;
+}
+
+.navOnMoble li a,.navOnMoble a{
+	display: block;
+	text-align: center;
+	padding: 5px;
+	color:#9D9D9D;
+	text-decoration: none;
+}
+
+.navOnMoble li a:hover,.navOnMoble a:hover{
+	color: #FFFFFF;
+}
+
+.ml10{
+	margin-left:10px;
+}
+
+
+.main-content{
+	
+}
+
+.left-menu{
+	padding: 20px 5px;
+	font-family: "微软雅黑";
+	font-size: 16px;
+	border: solid 2px skyblue;
+	background-color:#C4E3F3;
+	border-radius: 10px ;
+}
+
+
+.newMsg{
+	border:2px soild rgb(212, 36, 11) !important;
+}
+
+.left-menu div p{
+	cursor:pointer;
+	margin: 5 5 5 5;
+	background-color: whitesmoke;
+	border-radius:5px ;
+	padding: 5px 5px 5px 20px;
+	color:deepskyblue;
+	text-shadow:  lightgrey 10px 3px;
+	border-bottom: dashed 1px lightblue;
+	margin-top: 5px;
+	margin-bottom: 0px;
+	/*border: solid 1px gold;*/
+}
+
+#innerEmail{
+	font-size: 14px;
+	font-family: "黑体";
+	padding: 0px;
+	margin: 0px;
+}
+
+#innerEmail a{
+	text-decoration: none;
+}
+
+#innerEmail .badge{
+	background: rgba(255,0,0,0.8);
+}
+
+.badge{
+	background: rgb(255,0,0,0.8);
+}
+
+.left-menu div p a{
+	color:deepskyblue;
+	text-shadow:  lightgrey 10px 3px;
+	text-decoration: none;
+	
+	/*border: solid 1px gold;*/
+}
+
+.left-menu div p:hover{
+	background-color: #F5E79E;
+}
+
+.myul{
+	display: none;
+}
+
+.myli{
+	cursor:pointer;
+	margin: 0 5 5 5;
+	background-color: whitesmoke;
+	border-radius:5px ;
+	padding: 2px 2px 2px 35px;
+	color:skyblue;
+	/*text-shadow:  lightgrey 10px 3px;*/
+}
+
+.myli a{
+	color:dodgerblue;
+	font-size: 14px;
+}
+
+.myli:before{
+	content: ' > ';
+	color: red;
+}
+
+
+.myli a:hover{
+	color:deepskyblue;
+}
+
+.myli:hover{
+	background-color:#D5D5D5 ;
+}
+
+.main-content{
+	padding: 10px;
+	font-family: "微软雅黑";
+	font-size: 14px;
+	border: solid 2px skyblue;
+	background-color:#C4E3F3;
+	border-radius: 8px ;
+}
+
+.myfooter{
+	padding-top: 10px;
+	padding-bottom: 10px;
+	text-align: center;
+	background-color: #262626;
+	color:whitesmoke;
+	
+}
+
+.alert{
+	margin-bottom: 0px;
+}
+
+.my-jum{
+	background-color: #C4E3F3;
+	margin: 10px;
+}
+
+.cloud{
+	margin-top: 15px;
+	background-repeat: no-repeat;
+	background-position: -150px top;
+	min-height: 350px;
+	animation:myfirst 5s;
+	-moz-animation:myfirst 5s;
+	-webkit-animation:myfirst 5s;
+	
+}
+
+.jum-content{
+	display: none;
+}
+
+.jum-content h4{
+	font-size: 1.6em;
+	line-height: 1.6;
+	color:whitesmoke;
+	font-family:'楷体';
+}
+
+.jum-content h3{
+	color:gold;
+	font-family:'楷体';
+}
+
+@keyframes myfirst
+{
+from {background-position:-50px top;}
+to {background-position:-150px top;}
+}
+
+@-moz-keyframes myfirst /* Firefox */
+{
+from {background-position:-50px top;}
+to {background-position:-150px top;}
+}
+
+@-webkit-keyframes myfirst /* Safari and Chrome */
+{
+from {background-position:-50px top;}
+to {background-position:-150px top;}
+}
+
+@-o-keyframes myfirst /* Opera */
+{
+from {background-position:-50px top;}
+to {background-position:-150px top;}
+}
+
+
+/*===============================下面是展示部分的css=============================*/
+.imgshadow{
+	width:300px;
+	height:200px;
+}
+
+.myservice{
+	padding: 10px;
+	display:block;
+}
+
+.myservice p{
+	display: block;
+	padding: 10px;
+}
+
+.proInfo{
+	width: 300px;
+	background: whitesmoke;
+	padding: 5px;
+}
+
+.myservice div p{
+	margin-left: 10px;
+}
+
+.f16{
+	font-size: 16px;
+}
+
+.f10{
+	font-size: 12px;
+}
+
+
+.infoBorder{
+	border: solid 1px skyblue;
+	/* background: url(../images/featured_bg.jpg) repeat; */
+	background: rgba(255,255,255,0.5);
+	margin-bottom: 20px;
+}
+
+.blackBg{
+	background:rgba(125,125,125,0.1);
+	padding:5px 10px;
+}
+
+.pm{
+	margin:10px 2%;
+}
+
+.pm .thinBorder:hover{
+	background: #D1EEEE;
+}
+
+.infoBorder h4{
+	font-family: "黑体";
+	margin: 0px;
+	padding: 5px 10px;
+	background: rgba(255, 255, 255, 0.2) none repeat scroll 0 0;
+}
+
+h4 small{
+	padding: 5px;
+	float: right;
+	clear: both;
+}
+
+.infoBorder .row{
+	padding: 10px;
+}
+
+.opacityDiv{
+	background-color: rgba(0,0,0,0.2);
+	padding: 40px 20px 5px 20px;
+	max-width: 320px;
+}
+
+
+.login-form{
+	padding-top:30px ;
+	border-radius: 5px;
+	margin-top: 130px ;
+	background: skyblue;
+	border: solid 1px deepskyblue;
+}
+
+.login-submit{
+	margin-right: 20px;
+}
+.tooltip-inner {
+	background-color: #D9534F;
+}
+.tooltip.top .tooltip-arrow{
+	left:0px;
+	border-top-color: #D9534F;
+}
+
+.widthfull{
+	width:100%;
+}
+
+#lgHead{
+	display: none;
+	padding: 10px;
+	position: absolute;
+	z-index: 999;
+}
+
+.dropdown-menu li a{
+	color: silver;
+	padding :5px 40px;
+}
+
+.price{
+	color: orange;
+}
+/*======================================= 首页end ==================================================*/

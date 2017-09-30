@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <!-- Title and other stuffs -->
+  <title>后台管理系统</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="keywords" content="DocSys" />
+  <meta name="description" content="DocSys管理后台" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Cheney">
+  <!-- Stylesheets -->
+  <link href="./static/style/bootstrap.css" rel="stylesheet">
+  <!-- Font awesome icon -->
+  <link rel="stylesheet" href="./static/style/font-awesome.css">
+  <!-- jQuery UI -->
+  <link rel="stylesheet" href="./static/style/jquery-ui.css">
+  <!-- Calendar -->
+  <link rel="stylesheet" href="./static/style/fullcalendar.css">
+  <!-- prettyPhoto -->
+  <link rel="stylesheet" href="./static/style/prettyPhoto.css">
+  <!-- Star rating -->
+  <link rel="stylesheet" href="./static/style/rateit.css">
+  <!-- Date picker -->
+  <link rel="stylesheet" href="./static/style/bootstrap-datetimepicker.min.css">
+  <!-- CLEditor -->
+  <link rel="stylesheet" href="./static/style/jquery.cleditor.css">
+  <!-- Bootstrap toggle -->
+  <link rel="stylesheet" href="./static/style/bootstrap-switch.css">
+  <!-- Main stylesheet -->
+  <link href="./static/style/style.css" rel="stylesheet">
+  <!-- Widgets stylesheet -->
+  <link href="./static/style/widgets.css" rel="stylesheet">
+
+  <script src="./static/js/jquery.js"></script> <!-- jQuery -->
+
+  <!-- HTML5 Support for IE -->
+  <!--[if lt IE 9]>
+  <script src="./static/js/html5shim.js"></script>
+  <![endif]-->
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="./static/img/icons/metro.png">
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top bs-docs-nav" role="banner">
+
+  <div class="conjtainer">
+    <!-- Menu button for smallar screens -->
+    <div class="navbar-header">
+      <button class="navbar-toggle btn-navbar" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
+        <span>菜单</span>
+      </button>
+      <!-- Site name for smallar screens -->
+      <a href="./" class="navbar-brand hidden-lg">首页</a>
+    </div>
+
+
+
+    <!-- Navigation starts -->
+    <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+
+      <!-- Links -->
+      <ul class="nav navbar-nav pull-right" id="headbar" data-tmpl="headbar">
+
+      </ul>
+    </nav>
+
+  </div>
+</div>
+
+
+<!-- Header starts -->
+<header>
+  <div class="container">
+    <div class="row">
+
+      <!-- Logo section -->
+      <div class="col-md-4">
+        <!-- Logo. -->
+        <div class="logo">
+          <h1><a href="#">DocSys<span class="bold"></span></a></h1>
+          <p class="meta">后台管理系统</p>
+        </div>
+        <!-- Logo ends -->
+      </div>
+
+      <!-- Data section -->
+
+      <div class="col-md-5" style="float: right" id="metainfo">
+
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- Header ends -->
+
+<!-- Main content starts -->
+
+
+
+
+<div class="content">
+<div class="sidebar" id="sidebar" data-tmpl="sidebar"></div>
+
+<!-- Main bar -->
+<div class="mainbar" >
+    <!-- Page heading -->
+    <div class="page-head" id="pagehead">
+    </div>
+    <!-- Page heading ends -->
+
+
+  <!-- Matter -->
+  <div class="matter">
+    <div class="container" id="container">
+
+
+
+
+    </div>
+  </div>
+  <!-- Matter ends -->
+
+</div>
+
+
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="zoom: 1.5;">
+            <div class="modal-header">
+                <button type="button" class="close"
+                        data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    拒绝原因
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p><input name="reason" type="checkbox"  value="您提交的内容不完整，请补全。"  id="btn1"/> 您提交的内容不完整，请补全。</p>
+                <p><input name="reason" type="checkbox"  value="您提交的内容与实际不符，请修改。" id="btn2"/> 您提交的内容与实际不符，请修改。</p>
+                <p><input name="reason" type="checkbox" value="您提交的内容非法，请修改。" id="btn3"/> 您提交的内容非法，请修改。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default"
+                        data-dismiss="modal">关闭
+                </button>
+                <button type="button" class="btn btn-primary" onclick="conExamine()">
+                    提交
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="addUser" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="zoom: 1.5;">
+            <div class="modal-header">
+                <button type="button" class="close"
+                        data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title">
+                    手动添加用户
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p>昵称 ： <input style="width: 80%" id="nickname"/></p>
+                <p>全称 ： <input style="width: 80%" id="realname"/></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default"
+                        data-dismiss="modal">关闭
+                </button>
+                <button type="button" class="btn btn-primary" onclick="addUser()">
+                    提交
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+
+<!-- Mainbar ends -->
+<div class="clearfix"></div>
+
+</div>
+<!-- Content ends -->
+
+<!-- Footer starts -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <!-- Copyright info -->
+        <p class="copy">Copyright &copy; 2016 | <a href="http://www.gofreeteam.com/DocSystem">DocSys</a> </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Footer ends -->
+
+<!-- Scroll to top -->
+<span class="totop"><a href="#"><i class="icon-chevron-up"></i></a></span>
+<!-- JS -->
+<script src="./static/js/bootstrap.js"></script> <!-- Bootstrap -->
+<script src="./static/js/jquery-ui-1.9.2.custom.min.js"></script> <!-- jQuery UI -->
+<script src="./static/js/fullcalendar.min.js"></script> <!-- Full Google Calendar - Calendar -->
+<script src="./static/js/jquery.rateit.min.js"></script> <!-- RateIt - Star rating -->
+<script src="./static/js/jquery.prettyPhoto.js"></script> <!-- prettyPhoto -->
+<script src="./static/js/ajaxfileupload.js"></script>
+
+<!-- jQuery Flot -->
+<script src="./static/js/excanvas.min.js"></script>
+<script src="./static/js/jquery.flot.js"></script>
+<script src="./static/js/jquery.flot.resize.js"></script>
+<script src="./static/js/jquery.flot.pie.js"></script>
+<script src="./static/js/jquery.flot.stack.js"></script>
+
+<!-- jQuery Notification - Noty -->
+<script src="./static/js/jquery.noty.js"></script> <!-- jQuery Notify -->
+<script src="./static/js/themes/default.js"></script> <!-- jQuery Notify -->
+<script src="./static/js/layouts/bottom.js"></script> <!-- jQuery Notify -->
+<script src="./static/js/layouts/topRight.js"></script> <!-- jQuery Notify -->
+<script src="./static/js/layouts/top.js"></script> <!-- jQuery Notify -->
+<!-- jQuery Notification ends -->
+
+<script src="./static/js/sparklines.js"></script> <!-- Sparklines -->
+<script src="./static/js/jquery.cleditor.min.js"></script> <!-- CLEditor -->
+<script src="./static/js/bootstrap-datetimepicker.min.js"></script> <!-- Date picker -->
+<script src="./static/js/bootstrap-switch.min.js"></script> <!-- Bootstrap Toggle -->
+
+<script src="./static/js/jquery.raty.js"></script>
+<script src="./static/js/jquery.toastmessage-min.js"></script>
+<script src="./static/js/filter.js"></script> <!-- Filter for support page -->
+<script src="./static/js/custom.js"></script> <!-- Custom codes -->
+<script src="./static/js/md5.js"></script>
+<script src="./static/js/eb4js.js"></script>
+<script src="./static/js/config.js"></script>
+<script src="./static/js/tmpl.js"></script>
+
+<script type="application/javascript">
+
+  function addToUrlParam(key,value,url){
+    var ref = "";
+    if( url ){
+      ref = url;
+    }
+    else
+    {
+      ref = location.href;
+    }
+    if( ref.endsWith("#") ){
+      ref = ref.substr(0,ref.length -1);
+    }
+    if( ref.indexOf("?") > 0 ){
+      var p = getQuery(key);
+      if( p ){
+        var end = ref.replace(key + "=" + p,key + "=" + value);
+        return end;
+      }else{
+        return ref + "&"+ key +"=" + value;
+      }
+    }else{
+      return ref + "?" + key + "=" + value;
+    }
+  }
+
+  $(document).on("changePage",function(e,msg){
+    location.href = addToUrlParam("page",msg.page);
+  });
+</script>
+<script type="application/javascript">
+  var curPage = 1;
+
+</script>
+
+
+<script type="application/javascript">
+
+    /*
+    $(document).on("click",".has_sub",function(){
+        var title = $(this).children("a");
+        if( title.hasClass("subdrop") ){
+            title.removeClass("subdrop");
+            $(this).children("ul").hide();
+        }else{
+            title.addClass("subdrop");
+            $(this).children("ul").show();
+        }
+    });
+    */
+
+    $(document).on("click","[data-eb-event]", function () {
+        var bus = eb4js();
+        var event = $(this).attr("data-eb-event");
+        var params = $(this).attr("data-eb-params");
+        if( ! params ){
+            bus.trigger(event);
+        }else{
+            params = params.split("|");
+            params.splice(0,0,event);
+            bus.trigger.apply(bus,params);
+        }
+    })
+
+    $(document).on("click","li.has_sublist",function(){
+        var $this = $(this);
+        if( ! $this.children("a").hasClass("open") ){
+            $this.children("ul.sublist").toggle();
+        }
+
+    });
+
+</script>
+
+
+<script type="application/javascript">
+//var $Current = ${session.curUser};
+var $Current = {"editUrl":"http://www.gofreeteam.com:8080/SSM/toRecommend.do?userId=","payUrl":"http://www.gofreeteam.com:8080/SSM/alipay/payToUsers.do?token=$&orders=","user":{"id":36,"name":"huangqian","role":"普通管理员","auth":["pay","project","service","user","claim"]}};
+$Current.ajax = function () {
+    var args = Array.prototype.slice.call(arguments, 0);
+    var api = args[0].toLowerCase();
+    api = api.replace(".","/");
+    if( '/' !== api[0] ){
+        api = "/" + api;
+    }
+    api = "." + api;
+    args[0] = api;
+    $.post.apply(null,args);
+};
+var args;
+var bus = eb4js();
+
+function getConfig(cb) {
+    $Current.ajax("/statistics/config",function(ret){
+        ret.data.config.banner = JSON.parse(ret.data.config.banner);
+        ret.data.config.menu = JSON.parse(ret.data.config.menu);
+        $Current.config = ret.data;
+
+        cb && cb(ret);
+        //event.done();
+    });
+}
+
+bus.after("eventbus.init",function(){
+
+    setTimeout(function () {
+        $Func.render($("#sidebar"),"sidebar",$Current);
+        $Func.render($("#headbar"),"headbar",$Current);
+        bus.trigger("content.refresh","index");
+        bus.trigger("head.refresh");
+    },100);
+
+})
+
+// 刷新 pagehead
+bus.before("content.refresh", function (event) {
+    var curPath = arguments[1];
+    var title = "载入中...";
+    var subtitle = "载入中...";
+
+//    $Current.ajax("User.getById",{id:1},function(ret){
+//        console.log(ret);
+//    });
+
+
+    $("#container").html("载入中...");
+
+
+    $("#nav li>a").removeClass("open");
+    $("ul.sublist").hide();
+
+    switch ( curPath ){
+        case "index":
+            title = "首页";
+            getConfig(function (ret) {
+                $Func.render($("#container"),"index",ret.data, function () {
+                    $Func.render($("#banner_content"),"banner_content",ret.data);
+                    $Func.render($("#menu_content"),"menu_content",ret.data);
+                    $Func.render($("#hot_project_content"),"hot_project_content",ret.data);
+                    $Func.render($("#hot_service_content"),"hot_service_content",ret.data);
+                    $Func.render($("#hot_resource_content"),"hot_resource_content",ret.data);
+                    // service/list
+                });
+            })
+
+            $("#nav li:first>a").addClass("open");
+
+
+            break;
+        case "role":
+            title = "角色管理";
+            bus.trigger("Role.refresh");
+            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
+            $("ul.sublist").show();
+            break;
+        case "admin":
+            title = "成员管理";
+            bus.trigger("Admin.refresh");
+            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
+            $("ul.sublist").show();
+            break;
+        case "claim":
+            title = "认领审批";
+            $("#nav li[data-eb-params=claim]>a").addClass("open");
+            bus.trigger("Claim.refresh");
+            break;
+        case "deal":
+            title = "提现审批";
+            $("#nav li[data-eb-params=deal]>a").addClass("open");
+            bus.trigger("Deal.refresh");
+            break;
+        case "person":
+            title = "个人用户审批";
+            $("#nav li[data-eb-params=person]>a").addClass("open");
+            bus.trigger("Person.refresh");
+            break;
+        case "team":
+            title = "团队用户审批";
+            $("#nav li[data-eb-params=team]>a").addClass("open");
+            bus.trigger("Team.refresh");
+            break;
+        case "company":
+            $("#nav li[data-eb-params=company]>a").addClass("open");
+            title = "企业用户审批";
+            bus.trigger("Company.refresh");
+            break;
+        case "project":
+            title = "项目审批";
+            $("#nav li[data-eb-params=project]>a").addClass("open");
+            bus.trigger("Project.refresh");
+            break;
+        case "service":
+            title = "服务审批";
+            $("#nav li[data-eb-params=service]>a").addClass("open");
+            bus.trigger("Service.refresh");
+            break;
+        case "suggest":
+            title = "意见建议";
+            $("#nav li[data-eb-params=suggest]>a").addClass("open");
+            bus.trigger("Suggest.refresh");
+            break;
+    }
+
+
+
+
+    $Func.render($("#pagehead"),"pagehead",{
+        title : title,
+        subtitle : title
+    });
+});
+
+
+
+
+
+bus.on("head.refresh", function () {
+
+    $Current.ajax("/statistics/info",{},function(msg){
+        $Func.render($("#metainfo"),"metainfo",msg.data);
+    });
+
+})
+
+
+// 刷新 container
+bus.on("content.refresh", function () {
+
+//    var tmpl = arguments[1];
+//    $Func.render($("#container"),tmpl,{
+//    });
+
+
+})
+
+
+//
+bus.on("content.refresh.over",function(){
+    $(".switch").bootstrapSwitch();
+    $(".switch").on('switch-change', function (e, data) {
+        var $el = $(data.el)
+                , value = data.value;
+        //console.log(e, $el, value);
+        var event = $el.attr("data-eb-xevent");
+        var id = $el.attr("data-id");
+        $Current.ajax(event,{
+            event: event.substring(event.lastIndexOf(".") + 1),
+            id:id,
+            flag:value ? "1" : "0"
+        });
+    });
+
+    $(".star").raty({
+        starOff: './static/img/icons/star-off-big.png',
+        starOn : './static/img/icons/star-on-big.png',
+        number: 5,
+        //hints : ["10","20","30","40","50","60","70","80","90","100"],
+        score: function() {
+            return $(this).attr('data-score');
+        },
+        click: function(score, evt) {
+            //alert('ID: ' + this.id + "\nscore: " + score + "\nevent: " + evt);
+            var $this = $(this);
+            var event = $(this).attr("data-eb-xevent");
+            var id = $(this).attr("data-id");
+            $Current.ajax(event,{
+                event : event.substring(event.lastIndexOf(".") + 1),
+                id:id,flag:score},function(ret){
+                /*
+                if( event.startsWith("Service") ){
+                    bus.trigger("Service.refresh",$("#examine").val(),"0");
+                }else{
+                    bus.trigger("Project.refresh",$("#examine").val(),"0");
+                }*/
+            });
+        }
+    });
+})
+
+
+bus.on("Admin.refresh",function(){
+
+
+    $Current.ajax("Admin.list",{},function(ret){
+        $Current.ajax("Role.list",{},function(ret2){
+            bus.trigger("Admin.show",ret.data.list,ret2.data.list);
+        });
+    });
+
+
+
+
+});
+
+
+bus.on("Admin.show",function(){
+    $Func.render($("#container"),"admin",{
+        list:arguments[1],
+        rolelist:arguments[2]
+    },function(){
+        bus.trigger("content.refresh.over");
+    });
+});
+
+
+
+bus.on("Role.refresh",function(){
+
+
+    $Current.ajax("Role.list",{},function(ret){
+        console.log(ret);
+        bus.trigger("Role.show",ret.data);
+    });
+
+
+});
+
+
+bus.on("Role.show",function(){
+    $Func.render($("#container"),"role",arguments[1],function(){
+        bus.trigger("content.refresh.over");
+    });
+});
+
+bus.on("Company.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Company.list",{
+        type : "Company",
+        examine:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        console.log(ret);
+        curPage = ret.data.pageNumber;
+        ret.data.page.curExamine = examine;
+        bus.trigger("Company.show",ret.data.page);
+    });
+
+});
+
+
+bus.on("Company.show",function(){
+    var company = arguments[1];
+    company.baseimg = "//static.gofreeteam.com/webPages/upload/project/";
+    company.idimg = "//static.gofreeteam.com/webPages/upload/idCard/";
+    $Func.render($("#container"),"company",company,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+
+bus.on("Team.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Team.list",{
+        type : "Team",
+        examine:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        console.log(ret);
+        curPage = ret.data.pageNumber;
+        ret.data.page.curExamine = examine;
+        bus.trigger("Team.show",ret.data.page);
+    });
+
+});
+
+
+bus.on("Team.show",function(){
+    var team = arguments[1];
+    team.baseimg = "//static.gofreeteam.com/webPages/upload/headpic/";
+    team.idimg = "//static.gofreeteam.com/webPages/upload/idCard/";
+    $Func.render($("#container"),"team",team,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+
+
+bus.on("Claim.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Claim.list",{
+        status:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        console.log(ret);
+        curPage = ret.data.page.pageNumber;
+        ret.data.page.curExamine = examine;
+        $Func.render($("#container"),"claim",ret.data.page,function(){
+            bus.trigger("content.refresh.over");
+        });
+    });
+
+});
+
+
+bus.on("Deal.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Deal.list",{
+        status:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        console.log(ret);
+        curPage = ret.data.pageNumber;
+        ret.data.page.curExamine = examine;
+        bus.trigger("Deal.show",ret.data);
+    });
+
+});
+
+
+bus.on("Deal.show",function(){
+    var deals = arguments[1];
+    deals.baseimg = "//static.gofreeteam.com/webPages/upload/headpic/";
+    $Func.render($("#container"),"deal",deals,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+
+
+bus.on("Person.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Person.list",{
+        type : "Person",
+        examine:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        console.log(ret);
+        curPage = ret.data.pageNumber;
+        ret.data.page.curExamine = examine;
+        bus.trigger("Person.show",ret.data.page);
+    });
+
+});
+
+
+bus.on("Person.show",function(){
+    var persons = arguments[1];
+    persons.baseimg = "//static.gofreeteam.com/webPages/upload/headpic/";
+    persons.idimg = "//static.gofreeteam.com/webPages/upload/idCard/";
+    $Func.render($("#container"),"person",persons,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+bus.on("Project.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Project.list",{
+        examine:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        console.log(ret);
+        curPage = ret.data.pageNumber;
+        ret.data.page.curExamine = examine;
+        bus.trigger("Project.show",ret.data.page);
+    });
+
+});
+
+bus.on("Project.show",function(){
+    var projects = arguments[1];
+    projects.baseimg = "http://static.gofreeteam.com/webPages/upload/project/";
+    $Func.render($("#container"),"project",projects,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+
+bus.on("Service.refresh",function(){
+
+    var examine = arguments[1];
+    var curPage = arguments[2];
+    $Current.ajax("Service.list",{
+        examine:examine ? examine + "" : "0",
+        curPage:curPage ? curPage + "" : "1"
+        },function(ret){
+        curPage = ret.data.pageNumber;
+        console.log(ret);
+        ret.data.page.curExamine = examine;
+        bus.trigger("Service.show",ret.data.page);
+    });
+
+});
+
+
+bus.on("Service.show",function(){
+    var services = arguments[1];
+    services.baseimg = "http://static.gofreeteam.com/webPages/upload/service/";
+    $Func.render($("#container"),"service",services,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+bus.on("Suggest.refresh",function(){
+
+    var curPage = arguments[2];
+    $Current.ajax("Suggest.list",{
+        curPage:curPage ? curPage + "" : "1"
+    },function(ret){
+        curPage = ret.data.pageNumber;
+        console.log(ret);
+        ret.data.page.curExamine = examine;
+        bus.trigger("Suggest.show",ret.data.page);
+    });
+
+});
+
+
+bus.on("Suggest.show",function(){
+    var suggest = arguments[1];
+    $Func.render($("#container"),"suggest",suggest,function(){
+        bus.trigger("content.refresh.over");
+    });
+})
+
+// 快速查找指定的项
+function fastSearch(_this){
+    var $this = $(_this);
+    var event = $this.attr("data-eb-xevent");
+    var event2 = $("#examine").attr("data-eb-xparam");
+    var value = $this.val();
+    var type = $this.attr("data-type");
+
+    $Current.ajax(event,{name:value,type:type},function(ret){
+        console.log(ret);
+        ret.data.page.curExamine = "0";
+        bus.trigger(event2,ret.data.page);
+    });
+
+
+}
+
+
+function toPage(num){
+    var $this = $("#examine");
+    var event = $this.attr("data-eb-xevent");
+    var value = $this.val();
+    bus.trigger(event,value,num);
+
+}
+
+function examineChange(_this){
+    var $this = $(_this);
+    var event = $this.attr("data-eb-xevent");
+    var value = $this.val();
+    bus.trigger(event,value);
+}
+
+var msgServer = "//www.gofreeteam.com";
+var okTmpl = "1498000";
+var errTmpl = "1498002";
+function sendEmail(email,content){
+    try{
+        if(email){
+            $.get( msgServer +  "/email/sendEmail.do?token=$&toEmail=" + email + "&content=" + encodeURI(encodeURI(content)) + "&r=" + Math.random())
+        }
+    }catch (e){
+        console.log(e);
+    }
+
+}
+
+
+function sendSMS(tel,tmpl,type,content){
+    try{
+        if(tel){
+            var url = msgServer +  "/SMS/sendSms.do?token=$&code=&phone=" + tel
+                    +  "&tplId=" + tmpl + "&type=" + encodeURI(encodeURI(type)) + "&r=" + Math.random();
+            if( content ){
+                url += "&content=" + encodeURI(encodeURI(content));
+            }
+            $.get( url );
+        }
+    }
+    catch (e){
+        console.log(e);
+    }
+}
+
+function conExamine(){
+    $('#myModal').modal('hide')
+    var msg = ' ';
+    if ( $('#btn1').is(':checked') ){
+        msg += $('#btn1').val();
+    }
+    if ( $('#btn2').is(':checked') ){
+        msg += $('#btn2').val();
+    }
+    if ( $('#btn3').is(':checked') ){
+        msg += $('#btn3').val();
+    }
+    args[7] = msg;
+    //alert(msg);
+    $('#btn1').attr("checked",false);
+    $('#btn2').attr("checked",false);
+    $('#btn3').attr("checked",false);
+    examine.apply(this,args);
+}
+
+function examine(event,id,flag,nextEvent,tel,email,type,content){
+
+    if( flag != 2){
+        sendEmail(email,"您的" + type + "已通过审核");
+        sendSMS(tel,okTmpl,type,content);
+    }else {
+        if( ! content ){
+            // 保存参数
+            args = Array.prototype.slice.call(arguments);
+            return;
+        }else{
+            sendEmail(email,"您的" + type + "未通过审核,原因:" + content);
+            sendSMS(tel,errTmpl,type,content);
+        }
+    }
+
+    var dotIndex = event.indexOf(".");
+    var eventName = event;
+    if( dotIndex > 0 ){
+        eventName = event.substring(dotIndex+1);
+    }
+    $Current.ajax(event,{
+        id:id,
+        flag:flag,
+        event: eventName
+    },function(ret){
+        if( event.startsWith("Service") ){
+            bus.trigger("Service.refresh",$("#examine").val(),curPage);
+        }else if( event.startsWith("Project") ){
+            bus.trigger("Project.refresh",$("#examine").val(),curPage);
+        }else{
+            bus.trigger(nextEvent,$("#examine").val(),curPage);
+
+        }
+    });
+}
+
+
+function removeAuth(id,auth,name){
+    //alert(name)
+    var index = auth.indexOf(name)
+    if( index >=0 ){
+        auth.splice(index,1);
+    }
+    updateAuth(id,auth);
+}
+
+
+function addAuth(id,auth,name){
+    //alert(name)
+    if( auth.indexOf(name) <0 ){
+        auth.push(name);
+    }
+    updateAuth(id,auth);
+}
+
+
+function updateAuth(id,auth){
+    $Current.ajax("Role.updateAuth",{
+        id:id,
+        auth:JSON.stringify(auth.sort())
+    },function(ret){
+        bus.trigger("Role.refresh");
+    });
+}
+
+
+function addRole(){
+    var name = $("#role_name").val();
+    $Current.ajax("Role.add",{
+        name:name
+    },function(ret){
+        bus.trigger("Role.refresh");
+    });
+}
+
+function delRole(id){
+    $Current.ajax("Role.delete",{
+        id:id
+    },function(ret){
+        bus.trigger("Role.refresh");
+    });
+}
+
+function addAdmin(){
+    var name = $("#name").val();
+    var pwd = $("#password").val();
+    var role = $("#role").val();
+    $Current.ajax("Admin.add",{
+        name :name,
+        role : role,
+        pwd : MD5(pwd)
+    },function(ret){
+        bus.trigger("Admin.refresh");
+    });
+}
+
+
+function delAdmin(id){
+    $Current.ajax("Admin.delete",{
+        id :id
+    },function(ret){
+        bus.trigger("Admin.refresh");
+    });
+}
+
+function exit(){
+    $.post("./admin/logout", function () {
+        localStorage.session = '';
+        localStorage.curUser = '';
+        location.href = "./?r=" + Math.random();
+    });
+}
+
+
+function payToUsers(elem) {
+    var form = $(elem);
+    var deals = []
+    form.find("input:checked").each(function(n,e){
+
+        var id = $(e).attr("data-id");
+        try{
+            id = parseInt(id);
+            if( !isNaN(id) ){
+                deals.push(id);
+            }else{
+                throw id;
+            }
+
+        }catch (e){
+            alert("数据有误")
+        }
+    });
+
+    if( deals.length ==0 ){
+        alert("至少选一个");
+        return;
+    }
+    var a = $("<a href='" + $Current.payUrl + deals.join(",")
+            + "' target='_blank'>去批量付款</a>").get(0);
+
+    var e = document.createEvent('MouseEvents');
+
+    e.initEvent('click', true, true);
+    a.dispatchEvent(e);
+
+}
+
+
+
+function addUser(){
+    $('#addUser').modal('hide')
+    var type = $('#addUser').attr("data-type");
+    $Current.ajax("/user/add",{
+        nickname : $("#nickname").val(),
+        realname : $("#realname").val(),
+        type : type
+    },function(ret){
+        alert(JSON.stringify(ret))
+    });
+    $("#nickname").val("");
+    $("#realname").val("");
+
+}
+
+
+
+function showAddUser(type) {
+    switch (type){
+        case 'company' :
+						$('#addUser').attr("data-type","3");
+            $('#addUser').modal('show')
+            break;
+        case 'team' :
+						$('#addUser').attr("data-type","2");
+            $('#addUser').modal('show')
+            break;
+				case 'person' :
+						$('#addUser').attr("data-type","1");
+            $('#addUser').modal('show')
+            break;
+        default :
+            console.error("还不支持添加用户类型 " + type);
+            break
+    }
+}
+
+
+function toedit(id) {
+    $Current.ajax("/admin/getToken",{},function(ret){
+        console.log(ret);
+        window.open($Current.editUrl + id + "&token="+ ret.data.token);
+    });
+}
+
+
+
+function updateConfig(params , cb){
+    $Current.ajax("/statistics/update",params,function(ret){
+        cb && cb();
+        if ( "ok" == ret.status ){
+            $().toastmessage('showSuccessToast', "修改已保存");
+        }else{
+            $().toastmessage('showErrorToast', "通信出现错误");
+        }
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,722 @@
+
+<!-- Today status. jQuery Sparkline plugin used. -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- List starts -->
+        <ul class="today-datas row">
+            <!-- List #1 -->
+            <li class="col-md-2">
+                <!-- Graph -->
+                <div><span id="todayspark1" class="spark"></span></div>
+                <!-- Text -->
+                <div class="datas-text">12,000 点击/天</div>
+            </li>
+            <li class="col-md-2">
+                <div><span id="todayspark2" class="spark"></span></div>
+                <div class="datas-text">30,000 访问/天</div>
+            </li>
+            <li class="col-md-2">
+                <div><span id="todayspark3" class="spark"></span></div>
+                <div class="datas-text">15.66% CPU 负载</div>
+            </li>
+            <li class="col-md-2">
+                <div><span id="todayspark4" class="spark"></span></div>
+                <div class="datas-text">12.00% 内存负载</div>
+            </li>
+            <li>
+                <div><span id="todayspark5" class="spark"></span></div>
+                <div class="datas-text">15,000000 总访问量</div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Today status ends -->
+
+<!-- Chats, image upload and Recent Comments -->
+<div class="row">
+
+    <div class="col-md-12">
+        <!-- Widget -->
+        <div class="widget">
+            <div class="widget-head">
+                <div class="pull-left">广告条</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content" id="banner_content">
+                <!-- Widget content -->
+
+            </div>
+
+        </div>
+        <div class="widget">
+            <div class="widget-head">
+                <div class="pull-left">目录栏</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content" id="menu_content">
+
+            </div>
+
+        </div>
+
+        <div class="widget">
+            <div class="widget-head">
+                <div class="pull-left">热门项目</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content" id="hot_project_content">
+            </div>
+
+        </div>
+
+
+        <div class="widget">
+            <div class="widget-head">
+                <div class="pull-left">热门服务</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content" id="hot_service_content">
+            </div>
+
+        </div>
+
+
+        <div class="widget">
+            <div class="widget-head">
+                <div class="pull-left">热门资源</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content" id="hot_resource_content">
+            </div>
+
+        </div>
+
+
+        <div class="widget">
+
+
+            <div class="widget-head">
+                <div class="pull-left">最近状况</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content">
+                <!-- Widget content -->
+                <div class="padd">
+
+                    <ul class="recent">
+
+                        <li>
+
+                            <div class="recent-content">
+                                <div class="recent-meta">2015年12月14日 19:43:27</div>
+                                <div>Vivamus diam elit diam, consectetur fermentum sed dapibus eget, Vivamus consectetur dapibus adipiscing elit.
+                                </div>
+
+                                <button class="btn btn-xs btn-danger pull-right">Error</button>
+
+                                <div class="clearfix"></div>
+                            </div>
+                        </li>
+
+
+
+                        <li>
+
+                            <div class="recent-content">
+                                <div class="recent-meta">2015年12月14日 19:43:27</div>
+                                <div>Vivamus diam elit diam, consectetur fermentum sed dapibus eget, Vivamus consectetur dapibus adipiscing elit.
+                                </div>
+
+                                <button class="btn btn-xs btn-danger pull-right">Error</button>
+
+                                <div class="clearfix"></div>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </div>
+                <!--
+                <div class="widget-foot">
+
+                  <c:set var="curPage" value="${pager['curPage']}"/>
+                  <ul class="pagination pull-right" id="pager">
+                    <li class="prevPage"><a href="#">Prev</a></li>
+                    <c:forEach var="i" begin="1" end="${pager['pageCnt']}">
+                      <li ${ curPage.equals(i) ? "class='curPage'":"" }><a href="#">${i}</a></li>
+                    </c:forEach>
+                    <li data-maxpage="${pager['pageCnt']}" class="nextPage"><a href="#">Next</a></li>
+                  </ul>
+
+                  <div class="clearfix"></div>
+
+                </div>Widget footer -->
+            </div>
+
+        </div>
+        <div class="widget">
+            <!-- Widget title -->
+            <div class="widget-head">
+                <div class="pull-left">运行日志</div>
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                    
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content">
+                <!-- Widget content -->
+                <div class="padd">
+
+                    <ul class="recent">
+
+                    </ul>
+
+                </div>
+                <!--
+                <div class="widget-foot">
+
+                  <c:set var="curPage" value="${pager['curPage']}"/>
+                  <ul class="pagination pull-right" id="pager">
+                    <li class="prevPage"><a href="#">Prev</a></li>
+                    <c:forEach var="i" begin="1" end="${pager['pageCnt']}">
+                      <li ${ curPage.equals(i) ? "class='curPage'":"" }><a href="#">${i}</a></li>
+                    </c:forEach>
+                    <li data-maxpage="${pager['pageCnt']}" class="nextPage"><a href="#">Next</a></li>
+                  </ul>
+
+                  <div class="clearfix"></div>
+
+                </div>Widget footer -->
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+
+
+<script src="./static/js/charts.js"></script> <!-- Charts & Graphs -->
+<script type="application/javascript">
+    $(".widget").children(".widget-content").toggle("fast");
+    $(".widget-head").click(function () {
+        var i = $(this).find("i");
+        if( i.hasClass("icon-chevron-up") ){
+            i.removeClass("icon-chevron-up");
+            i.addClass("icon-chevron-down");
+        }else{
+            i.removeClass("icon-chevron-down");
+            i.addClass("icon-chevron-up");
+        }
+        $(this).parents(".widget").children(".widget-content").toggle("fast");
+    })
+
+
+    function updateImg(id , cb) {
+        var file = $("#" + id).val()
+        if( !file ){
+            $().toastmessage('showErrorToast', "没有选择文件");
+            return;
+        }
+        var type = "";
+        var index = file.lastIndexOf(".")
+        if( index >= 0 ){
+            type = file.substring(index);
+        }
+        $.ajaxFileUpload({
+            url: 'statistics/uploadFile',
+            type: 'post',
+            data : {
+                name : id,
+                type : type
+            },
+            secureuri: false, //一般设置为false
+            fileElementId: id, // 上传文件的id、name属性名
+            dataType: 'JSON', //返回值类型，一般设置为json、application/json 这里要用大写 不然会取不到返回的数据
+            success: cb,
+            error: function(data, status, e){
+                $().toastmessage('showErrorToast', "上传文件出错");
+            }
+        });
+    }
+
+
+    /////////////////////////////// banner /////////////////////////////////////
+
+
+    function editBanner(i, editDesc, editHref) {
+        $Func.render($("#banner_content"),"banner_content",{
+            config : $Current.config.config,
+            edit : i,
+            editDesc  :editDesc,
+            editHref : editHref
+        }, function () {
+            var h = $('#bannerImg').offset().top;
+            $('body,html').animate({scrollTop: h }, 500);
+        });
+    }
+    function saveEditBanner(no) {
+        var bannerTitle = $("#bannerTitle").val();
+        if( !bannerTitle ){
+            $().toastmessage('showErrorToast', "请填写一个 title");
+            return;
+        }
+        var bannerLink = $("bannerLink").val();
+        if( !bannerLink ){
+            $().toastmessage('showWarningToast', "链接没有填写");
+        }
+        var file = $("#bannerImg" ).val()
+        if(file){
+            // 编辑了 img
+            updateImg("bannerImg" , function(data, status){
+                var ret = JSON.parse($(data).text());
+                var url = ret.data.url;
+                var bar = $Current.config.config.banner[no];
+                bar.dsc = bannerTitle;
+                bar.href = bannerLink;
+                bar.url = url
+                updateBanner()
+            })
+        }else{
+            // 没有编辑 img
+            var bar = $Current.config.config.banner[no];
+            bar.dsc = bannerTitle;
+            bar.href = bannerLink;
+            updateBanner()
+        }
+        
+    }
+    function addBanner() {
+        var bannerTitle = $("#bannerTitle").val();
+        if( !bannerTitle ){
+            $().toastmessage('showErrorToast', "请填写一个 title");
+            return;
+        }
+        var bannerLink = $("bannerLink").val();
+        if( !bannerLink ){
+            $().toastmessage('showWarningToast', "链接没有填写");
+        }
+
+        updateImg("bannerImg" , function(data, status){
+            var ret = JSON.parse($(data).text());
+            var url = ret.data.url;
+            var newLink = {
+                dsc : bannerTitle,
+                href : bannerLink,
+                url : url
+            }
+            $Current.config.config.banner.push(newLink);
+            updateBanner()
+        })
+
+    }
+    
+    function updateBanner() {
+        var b = JSON.stringify($Current.config.config.banner);
+        // 通知后端
+        updateConfig({banner : b})
+        // 刷新页面
+        $Func.render($("#banner_content"),"banner_content", $Current.config);
+    }
+    function moveUpBanner(i) {
+        var b = $Current.config.config.banner;
+        if( i > 0 ){
+            var t = b[i-1];
+            b[i-1] = b[i];
+            b[i] = t;
+        }
+        updateBanner()
+    }
+    function moveDownBanner(i) {
+        var b = $Current.config.config.banner;
+        if( i < b.length-1 ){
+            var t = b[i+1];
+            b[i+1] = b[i];
+            b[i] = t;
+        }
+        updateBanner()
+    }
+
+    function deleteBanner(i) {
+        var b = $Current.config.config.banner;
+        if( i > -1 && i < b.length){
+            b.splice(i,1);
+        }
+        updateBanner()
+    }
+
+
+
+
+    /////////////////////////////// menu /////////////////////////////////////
+
+
+    function editMenu(i, editDesc, editHref) {
+        $Func.render($("#menu_content"),"menu_content",{
+            config : $Current.config.config,
+            edit : i,
+            editDesc  :editDesc,
+            editHref : editHref
+        }, function () {
+            var h = $('#menuImg').offset().top;
+            $('body,html').animate({scrollTop: h }, 500);
+        });
+    }
+    function saveEditMenu(no) {
+        var menuTitle = $("#menuTitle").val();
+        if( !menuTitle ){
+            $().toastmessage('showErrorToast', "请填写一个 title");
+            return;
+        }
+        var menuLink = $("menuLink").val();
+        if( !menuLink ){
+            $().toastmessage('showWarningToast', "链接没有填写");
+        }
+        var file = $("#menuImg" ).val()
+        if(file){
+            // 编辑了 img
+            updateImg("menuImg" , function(data, status){
+                var ret = JSON.parse($(data).text());
+                var url = ret.data.url;
+                var bar = $Current.config.config.menu[no];
+                bar.dsc = menuTitle;
+                bar.href = menuLink;
+                bar.url = url
+                updateMenu()
+            })
+        }else{
+            // 没有编辑 img
+            var bar = $Current.config.config.menu[no];
+            bar.dsc = menuTitle;
+            bar.href = menuLink;
+            updateMenu()
+        }
+
+    }
+    function addMenu() {
+        var menuTitle = $("#menuTitle").val();
+        if( !menuTitle ){
+            $().toastmessage('showErrorToast', "请填写一个 title");
+            return;
+        }
+        var menuLink = $("menuLink").val();
+        if( !menuLink ){
+            $().toastmessage('showWarningToast', "链接没有填写");
+        }
+
+        updateImg("menuImg" , function(data, status){
+            var ret = JSON.parse($(data).text());
+            var url = ret.data.url;
+            var newLink = {
+                dsc : menuTitle,
+                href : menuLink,
+                url : url
+            }
+            $Current.config.config.menu.push(newLink);
+            updateMenu()
+        })
+
+    }
+
+    function updateMenu() {
+        var b = JSON.stringify($Current.config.config.menu);
+        // 通知后端
+        updateConfig({menu : b})
+        // 刷新页面
+        $Func.render($("#menu_content"),"menu_content", $Current.config);
+    }
+    function moveUpBanner(i) {
+        var b = $Current.config.config.menu;
+        if( i > 0 ){
+            var t = b[i-1];
+            b[i-1] = b[i];
+            b[i] = t;
+        }
+        updateMenu()
+    }
+    function moveDownBanner(i) {
+        var b = $Current.config.config.menu;
+        if( i < b.length-1 ){
+            var t = b[i+1];
+            b[i+1] = b[i];
+            b[i] = t;
+        }
+        updateMenu()
+    }
+
+    function deleteBanner(i) {
+        var b = $Current.config.config.menu;
+        if( i > -1 && i < b.length){
+            b.splice(i,1);
+        }
+        updateMenu()
+    }
+
+
+    ////////////////////////////////// project//////////////////////////////////
+
+
+    function updateHotProjects(update, nid) {
+        var ps = $Current.config.config.hotProjects;
+        var pa = ""
+        for ( var i in  ps){
+            pa += ps[i].ID ;
+            pa += ","
+        }
+
+        if(nid){
+            pa += nid;
+        }
+
+        if( pa.endsWith(",") ){
+            pa = pa.substr(0, pa.length -1);
+        }
+
+
+
+        if(update){
+            // 通知后端
+            updateConfig({projects : pa}, function () {
+                // 需要重拉数据
+                getConfig(function (ret) {
+                    $Func.render($("#hot_project_content"),"hot_project_content",ret.data);
+                })
+            })
+
+        }else{
+            // 通知后端
+            updateConfig({projects : pa})
+            // 刷新页面
+            $Func.render($("#hot_project_content"), "hot_project_content", $Current.config);
+        }
+
+    }
+
+    function addHotProject() {
+        var id = $("#newHotProject").val();
+        updateHotProjects(true, id);
+    }
+
+    function editHotProject(no) {
+        var nid = $("input[data-ref='hp-" + no + "']").val();
+        var b = $Current.config.config.hotProjects;
+        if( b[no].ID != nid ){
+            b[no].ID = nid;
+            updateHotProjects(true);
+        }
+    }
+
+    function moveUpHotProjects(i) {
+        var b = $Current.config.config.hotProjects;
+        if( i > 0 ){
+            var t = b[i-1];
+            b[i-1] = b[i];
+            b[i] = t;
+        }
+        updateHotProjects()
+    }
+    function moveDownHotProjects(i) {
+        var b = $Current.config.config.hotProjects;
+        if( i < b.length-1 ){
+            var t = b[i+1];
+            b[i+1] = b[i];
+            b[i] = t;
+        }
+        updateHotProjects()
+    }
+
+    function deleteHotProjects(i) {
+        var b = $Current.config.config.hotProjects;
+        if( i > -1 && i < b.length){
+            b.splice(i,1);
+        }
+        updateHotProjects()
+    }
+
+
+
+    ////////////////////////////////// service //////////////////////////////////
+
+
+    function updateHotService(update, nid) {
+        var ps = $Current.config.config.hotService;
+        var pa = ""
+        for ( var i in  ps){
+            pa += ps[i].ID ;
+            pa += ","
+        }
+
+        if(nid){
+            pa += nid;
+        }
+
+        if( pa.endsWith(",") ){
+            pa = pa.substr(0, pa.length -1);
+        }
+
+
+
+        if(update){
+            // 通知后端
+            updateConfig({service : pa}, function () {
+                // 需要重拉数据
+                getConfig(function (ret) {
+                    $Func.render($("#hot_service_content"),"hot_service_content",ret.data);
+                })
+            })
+        }else{
+            updateConfig({service : pa})
+            // 刷新页面
+            $Func.render($("#hot_service_content"), "hot_service_content", $Current.config);
+        }
+
+    }
+
+    function addHotService() {
+        var id = $("#newHotService").val();
+        updateHotService(true, id);
+    }
+
+    function editHotService(no) {
+        var nid = $("input[data-ref='hs-" + no + "']").val();
+        var b = $Current.config.config.hotService;
+        if( b[no].ID != nid ){
+            b[no].ID = nid;
+            updateHotService(true);
+        }
+    }
+
+    function moveUpHotService(i) {
+        var b = $Current.config.config.hotService;
+        if( i > 0 ){
+            var t = b[i-1];
+            b[i-1] = b[i];
+            b[i] = t;
+        }
+        updateHotService()
+    }
+    function moveDownHotService(i) {
+        var b = $Current.config.config.hotService;
+        if( i < b.length-1 ){
+            var t = b[i+1];
+            b[i+1] = b[i];
+            b[i] = t;
+        }
+        updateHotService()
+    }
+
+    function deleteHotService(i) {
+        var b = $Current.config.config.hotService;
+        if( i > -1 && i < b.length){
+            b.splice(i,1);
+        }
+        updateHotService()
+    }
+
+
+
+    ////////////////////////////////// resource //////////////////////////////////
+
+
+    function updateHotResource(update, nid) {
+        var ps = $Current.config.config.hotResource;
+        var pa = ""
+        for ( var i in  ps){
+            pa += ps[i].ID ;
+            pa += ","
+        }
+
+        if(nid){
+            pa += nid;
+        }
+
+        if( pa.endsWith(",") ){
+            pa = pa.substr(0, pa.length -1);
+        }
+
+
+
+        if(update){
+            // 通知后端
+            updateConfig({resource : pa}, function () {
+                // 需要重拉数据
+                getConfig(function (ret) {
+                    $Func.render($("#hot_resource_content"),"hot_resource_content",ret.data);
+                })
+            })
+
+        }else{
+            // 通知后端
+            updateConfig({resource : pa})
+            // 刷新页面
+            $Func.render($("#hot_resource_content"), "hot_resource_content", $Current.config);
+        }
+
+    }
+
+    function addHotResource() {
+        var id = $("#newHotResource").val();
+        updateHotResource(true, id);
+    }
+
+    function editHotResource(no) {
+        var nid = $("input[data-ref='hr-" + no + "']").val();
+        var b = $Current.config.config.hotResource;
+        if( b[no].ID != nid ){
+            b[no].ID = nid;
+            updateHotResource(true);
+        }
+    }
+
+    function moveUpHotResource(i) {
+        var b = $Current.config.config.hotResource;
+        if( i > 0 ){
+            var t = b[i-1];
+            b[i-1] = b[i];
+            b[i] = t;
+        }
+        updateHotResource()
+    }
+    function moveDownHotResource(i) {
+        var b = $Current.config.config.hotResource;
+        if( i < b.length-1 ){
+            var t = b[i+1];
+            b[i+1] = b[i];
+            b[i] = t;
+        }
+        updateHotResource()
+    }
+
+    function deleteHotResource(i) {
+        var b = $Current.config.config.hotResource;
+        if( i > -1 && i < b.length){
+            b.splice(i,1);
+        }
+        updateHotResource()
+    }
+</script>
