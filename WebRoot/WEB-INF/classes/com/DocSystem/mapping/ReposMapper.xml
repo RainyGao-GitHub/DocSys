@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.ReposMapper">
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.Repos">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="PATH" jdbcType="VARCHAR" property="path" />
+    <result column="SVN_PATH" jdbcType="VARCHAR" property="svnPath" />
+    <result column="SVN_USER" jdbcType="VARCHAR" property="svnUser" />
+    <result column="SVN_PWD" jdbcType="VARCHAR" property="svnPwd" />
+    <result column="INFO" jdbcType="VARCHAR" property="info" />
+    <result column="MENU" jdbcType="VARCHAR" property="menu" />
+    <result column="PWD" jdbcType="VARCHAR" property="pwd" />
+    <result column="OWNER" jdbcType="INTEGER" property="owner" />
+    <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, NAME, TYPE, PATH, SVN_PATH, SVN_USER, SVN_PWD, INFO, MENU, PWD, OWNER, CREATE_TIME
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from repos
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from repos
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.Repos">
+    insert into repos (ID, NAME, TYPE, 
+      PATH, SVN_PATH, SVN_USER, 
+      SVN_PWD, INFO, MENU, 
+      PWD, OWNER, CREATE_TIME
+      )
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
+      #{path,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, #{svnUser,jdbcType=VARCHAR}, 
+      #{svnPwd,jdbcType=VARCHAR}, #{info,jdbcType=VARCHAR}, #{menu,jdbcType=VARCHAR}, 
+      #{pwd,jdbcType=VARCHAR}, #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.Repos">
+    insert into repos
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="path != null">
+        PATH,
+      </if>
+      <if test="svnPath != null">
+        SVN_PATH,
+      </if>
+      <if test="svnUser != null">
+        SVN_USER,
+      </if>
+      <if test="svnPwd != null">
+        SVN_PWD,
+      </if>
+      <if test="info != null">
+        INFO,
+      </if>
+      <if test="menu != null">
+        MENU,
+      </if>
+      <if test="pwd != null">
+        PWD,
+      </if>
+      <if test="owner != null">
+        OWNER,
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="path != null">
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="svnPath != null">
+        #{svnPath,jdbcType=VARCHAR},
+      </if>
+      <if test="svnUser != null">
+        #{svnUser,jdbcType=VARCHAR},
+      </if>
+      <if test="svnPwd != null">
+        #{svnPwd,jdbcType=VARCHAR},
+      </if>
+      <if test="info != null">
+        #{info,jdbcType=VARCHAR},
+      </if>
+      <if test="menu != null">
+        #{menu,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="owner != null">
+        #{owner,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.Repos">
+    update repos
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="path != null">
+        PATH = #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="svnPath != null">
+        SVN_PATH = #{svnPath,jdbcType=VARCHAR},
+      </if>
+      <if test="svnUser != null">
+        SVN_USER = #{svnUser,jdbcType=VARCHAR},
+      </if>
+      <if test="svnPwd != null">
+        SVN_PWD = #{svnPwd,jdbcType=VARCHAR},
+      </if>
+      <if test="info != null">
+        INFO = #{info,jdbcType=VARCHAR},
+      </if>
+      <if test="menu != null">
+        MENU = #{menu,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        PWD = #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="owner != null">
+        OWNER = #{owner,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.Repos">
+    update repos
+    set NAME = #{name,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      PATH = #{path,jdbcType=VARCHAR},
+      SVN_PATH = #{svnPath,jdbcType=VARCHAR},
+      SVN_USER = #{svnUser,jdbcType=VARCHAR},
+      SVN_PWD = #{svnPwd,jdbcType=VARCHAR},
+      INFO = #{info,jdbcType=VARCHAR},
+      MENU = #{menu,jdbcType=VARCHAR},
+      PWD = #{pwd,jdbcType=VARCHAR},
+      OWNER = #{owner,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Repos" useGeneratedKeys="true">
+    insert into repos
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="path != null">
+        PATH,
+      </if>
+      <if test="svnPath != null">
+        SVN_PATH,
+      </if>
+      <if test="svnUser != null">
+        SVN_USER,
+      </if>
+      <if test="svnPwd != null">
+        SVN_PWD,
+      </if>
+      <if test="info != null">
+        INFO,
+      </if>
+      <if test="menu != null">
+        MENU,
+      </if>
+      <if test="pwd != null">
+        PWD,
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="path != null">
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="svnPath != null">
+        #{svnPath,jdbcType=VARCHAR},
+      </if>
+      <if test="svnUser != null">
+        #{svnUser,jdbcType=VARCHAR},
+      </if>
+      <if test="svnPwd != null">
+        #{svnPwd,jdbcType=VARCHAR},
+      </if>
+      <if test="info != null">
+        #{info,jdbcType=VARCHAR},
+      </if>
+      <if test="menu != null">
+        #{menu,jdbcType=VARCHAR},
+      </if>
+      <if test="pwd != null">
+        #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="selectAuthedReposList" parameterType="java.lang.Integer" resultMap="BaseResultMap">  
+   	select 
+    <include refid="Base_Column_List" />
+    from repos 
+    where ID IN (select REPOS_ID from repos_auth where (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0) and ACCESS &gt; 0 ) 
+  </select>  
+  <select id="selectSelective" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from repos
+    where 1 = 1
+    <if test="id != null">
+      and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="name != null">
+      and NAME = #{name,jdbcType=VARCHAR}
+    </if>
+    <if test="type != null">
+      and TYPE = #{type,jdbcType=INTEGER}
+    </if>
+    <if test="path != null">
+      and PATH = #{path,jdbcType=VARCHAR}
+    </if>
+    <if test="svnPath != null">
+      and SVN_PATH = #{svnPath,jdbcType=VARCHAR}
+    </if>
+    <if test="svnUser != null">
+      and SVN_USER = #{svnUser,jdbcType=VARCHAR}
+    </if>
+    <if test="svnPwd != null">
+      and SVN_PWD = #{svnPwd,jdbcType=VARCHAR}
+    </if>
+    <if test="info != null">
+      and INFO = #{info,jdbcType=VARCHAR}
+    </if>
+    <if test="menu != null">
+      and MENU = #{menu,jdbcType=VARCHAR}
+    </if>
+    <if test="pwd != null">
+      and PWD = #{pwd,jdbcType=VARCHAR}
+    </if>
+	<if test="owner != null">
+      and OWNER = #{owner,jdbcType=INTEGER}
+    </if>  
+    <if test="createTime != null">
+      and CREATE_TIME = #{createTime,jdbcType=TIMESTAMP}
+    </if>
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">  
+   	select 
+    <include refid="Base_Column_List" />
+    from repos
+  </select>
+</mapper>

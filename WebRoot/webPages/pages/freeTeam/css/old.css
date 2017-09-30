@@ -1,0 +1,10 @@
+table.form-table {width: 100%;}.form-table td {padding: 10px;text-align: center;}
+.mydropdown {position: absolute;z-index: 2;background: white;width: 550px;}
+.mydropdown table td{border-color: rgba(196,217,243,1);border: none;}
+.mydropdown tr.active {background: whitesmoke;border: 1px gold solid;}
+#addp_ul{border-bottom: 1px #fa0 solid !important;}
+#addp_ul a{line-height: normal;padding: 10px;border-bottom: none;}
+#addp_ul li.active{border: 1px #fa0 solid !important;border-bottom: 2px white solid !important;color: #f80;}
+
+.imgWH200px{width: 200px; height: 200px;}
+.upimg-descripe {position: relative;height: 200px;background: rgba(255,255,255,0.9);top: -33px;}

@@ -55,10 +55,10 @@ public class UserController extends BaseController {
 		User tmp_user = new User();
 		if(c1!=null&&c2!=null&&c1.getValue()!=null&&c2.getValue()!=null&&!"".equals(c1.getValue())&&!"".equals(c2.getValue())){
 			System.out.println("自动登录");
-				
+			
 			tmp_user.setEmail(c1.getValue());
 			tmp_user.setPwd(c2.getValue());
-			List<User> uLists = userService.queryUserByTelOrEmail(tmp_user);	
+			List<User> uLists = getUserSelective(c1.getValue(),c2.getValue());
 			boolean f = loginCheck(rt, tmp_user, uLists, session,response);
 			if(f){
 				System.out.println("登录成功");
@@ -80,7 +80,7 @@ public class UserController extends BaseController {
 			tmp_user.setTel(userName);			
 		}
 		tmp_user.setPwd(pwd);
-		List<User> uLists = userService.queryUserByTelOrEmail(tmp_user);
+		List<User> uLists = getUserSelective(userName,pwd);
 		boolean f =loginCheck(rt, tmp_user, uLists, session,response);
 		if(f){
 			//如果用户点击了保存密码则保存cookies
@@ -100,6 +100,42 @@ public class UserController extends BaseController {
 		return;
 	}
 	
+	private List<User> getUserSelective(String userName,String pwd) {
+		// TODO Auto-generated method stub
+		User tmp_user = new User();
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			return null;
+		}
+		else if(RegularUtil.isEmail(userName))	//邮箱注册
+		{
+			tmp_user.setEmail(userName);
+			tmp_user.setPwd(pwd);
+			List<User> uList = userService.getUserListByUserInfo(tmp_user);
+			if(uList == null || uList.size() == 0)
+			{
+				return null;
+			}
+			return uList;
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			tmp_user.setTel(userName);
+			tmp_user.setPwd(pwd);
+			List<User> uList = userService.getUserListByUserInfo(tmp_user);
+			if(uList == null || uList.size() == 0)
+			{
+				return null;
+			}
+			return uList;
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	/**
 	 * 用户数据校验
 	 * @param uLists 根据条件从数据库中查出的user列表
@@ -203,6 +239,8 @@ public class UserController extends BaseController {
 		if(userName==null||"".equals(userName))
 		{
 			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
 		}
 		else if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
@@ -244,6 +282,8 @@ public class UserController extends BaseController {
 		if(userName==null||"".equals(userName))
 		{
 			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
 		}
 		else if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
@@ -275,7 +315,7 @@ public class UserController extends BaseController {
 		}
 		
 		//检查验证码是否正确
-		if(checkVerifyCode(session,"docsys_vcode", userName, verifyCode) == false)
+		if(checkVerifyCode(session,"docsys_vcode", userName, verifyCode,1) == false)
 		{
 			rt.setError("danger#验证码错误！");
 			writeJson(rt, response);
@@ -356,15 +396,14 @@ public class UserController extends BaseController {
 	/**
 	 * 发送邮箱验证信息
 	 * @param response
-	 * @param email
+	 * @param userName type
 	 */
 	@RequestMapping("/sendVerifyCode.do")
-	public void sendVerifyCode(String userName,HttpSession session,HttpServletResponse response)
+	public void sendVerifyCode(String userName,Integer type,HttpSession session,HttpServletResponse response)
 	{
-		System.out.println("sendVerifyCode userName:"+userName);
+		System.out.println("sendVerifyCode userName:"+userName + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		
 		if(userName == null || "".equals(userName))	//从session中取出用户名??
 		{
 			System.out.println("userName不能为空");
@@ -372,11 +411,26 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
+
+		//根据注册类型不同，验证码需要放置在不同的session里面
+		String sessionName = "";	//0 注册，1忘记密码
+		if(type == null || "".equals(type))	//默认用于注册
+		{
+			type = 0;	//默认验证码为用户注册
+		}
+		if(type == 0)
+		{
+			sessionName = "docsys_vcode";
+		}
+		else	
+		{
+			sessionName = "docsys_vcode" + type;			
+		}
 		
 		//如果是邮箱则发送到邮箱，否则发送到手机
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{	
-			String code = generateVerifyCode(session,"docsys_vcode",userName);
+			String code = generateVerifyCode(session,sessionName,userName);
 			String content =  "您收到了来自DocSys的验证码：" + code + ",15分钟内有效，请及时验证。";
 			emailService.sendEmail(rt,userName,content);
 			writeJson(rt, response);
@@ -384,8 +438,8 @@ public class UserController extends BaseController {
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			String code = generateVerifyCode(session,"docsys_vcode",userName);
-			smsService.sendSms(rt,userName, 1341175l, code, null, null); //注册短信模板id
+			String code = generateVerifyCode(session,sessionName,userName);
+			sendVerifyCodeSMS(rt,userName,type,code);
 			writeJson(rt, response);
 			return;
 		}
@@ -398,7 +452,21 @@ public class UserController extends BaseController {
 		}		
 	}
 	
-	
+	private void sendVerifyCodeSMS(ReturnAjax rt, String userName, Integer type, String code) {
+		// TODO Auto-generated method stub
+		switch(type.intValue())
+		{
+		case 0:
+			smsService.sendSms(rt,userName, 1341175l, code, null, null); //注册短信模板id
+			break;
+		case 1:
+			smsService.sendSms(rt,userName, 1341175l, code, null, null); //忘记密码短信模板id
+			break;
+		default:
+			smsService.sendSms(rt,userName, 1341175l, code, null, null); //注册短信模板id
+		}
+	}
+
 	//生成验证码: sessionVarName 保存验证码的session变量名
 	public String generateVerifyCode(HttpSession session,String sessionVarName,String userName)
 	{
@@ -412,16 +480,19 @@ public class UserController extends BaseController {
 		return code;
 	}
 	
-	//检查验证码：
-	public boolean checkVerifyCode(HttpSession session, String sessionVarName, String userName, String code)
+	//检查验证码：successClear设置的话，则验证通过会清除
+	public boolean checkVerifyCode(HttpSession session, String sessionVarName, String userName, String code,int successClear)
 	{
 		code = userName+code;
 		String code1 = (String) session.getAttribute(sessionVarName);
 		if(code1!=null&&!"".equals(code1)&&code!=null&&!"".equals(code1)){
 			if(code.equals(code1)){
-				//验证码用过一次后将不能再使用，将session改回24小时有效，session不需要一直有效，因为网页可能一直在线
-				session.removeAttribute(sessionVarName);
-				session.setMaxInactiveInterval(24*60*60);	
+				if(successClear == 1)
+				{
+					//验证码用过一次后将不能再使用，将session改回24小时有效，session不需要一直有效，因为网页可能一直在线
+					session.removeAttribute(sessionVarName);
+					session.setMaxInactiveInterval(24*60*60);	
+				}
 				return true;
 			}else{
 				return false;
@@ -430,5 +501,125 @@ public class UserController extends BaseController {
 			return false;
 		}
 	}
-
+	
+	@RequestMapping(value="checkVerifyCode")
+	public void checkVerifyCode(HttpSession session,String userName,Integer type, String verifyCode,HttpServletResponse response,ModelMap model)
+	{
+		System.out.println("checkVerifyCode userName:"+userName + " type:"+type + " verifyCode:"+verifyCode);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		User user = new User();
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//检查验证码是否正确
+		//根据注册类型不同，验证码需要放置在不同的session里面
+		String sessionName = "";	//0 注册，1忘记密码
+		if(type == null || "".equals(type))	//默认用于注册
+		{
+			type = 0;	//默认验证码为用户注册
+		}
+		if(type == 0)
+		{
+			sessionName = "docsys_vcode";
+		}
+		else	
+		{
+			sessionName = "docsys_vcode" + type;			
+		}
+		if(checkVerifyCode(session,sessionName, userName, verifyCode,0) == false)
+		{
+			rt.setError("danger#验证码错误！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//返回成功信息
+		writeJson(rt, response);
+		return;
+	}	
+	
+	@RequestMapping(value="changePwd")
+	public void changePwd(HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
+	{
+		System.out.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " verifyCode:"+verifyCode);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		User qUser = new User();
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		else if(RegularUtil.isEmail(userName))	//邮箱注册
+		{
+			qUser.setEmail(userName);
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			qUser.setTel(userName);
+		}
+		else
+		{
+			rt.setError("danger#账号格式不正确！");
+			writeJson(rt, response);
+			return;
+		}
+		List<User> uList = userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			rt.setError("用户不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//检查验证码是否正确
+		if(checkVerifyCode(session,"docsys_vcode1", userName, verifyCode,1) == false)
+		{
+			rt.setError("danger#验证码错误！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//检查密码是否为空
+		if(pwd==null||"".equals(pwd))
+		{
+			rt.setError("danger#密码不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
+		{
+			System.out.println("密码："+pwd);
+			System.out.println("确认密码："+pwd2);
+			rt.setError("danger#两次密码不一致，请重试！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//更新密码
+		User user = new User();
+		user.setId(uList.get(0).getId());	//设置UserId
+		user.setPwd(pwd);
+		if(userService.updateUserInfo(user) == 0)
+		{
+			System.out.println("设置密码失败!");
+			rt.setError("设置密码失败！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+		return;
+	}
 }

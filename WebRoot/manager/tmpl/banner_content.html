@@ -1,0 +1,82 @@
+<div class="padd">
+
+    <ul class="recent">
+        {{each config.banner as value i}}
+        <li>
+            <div class="recent-content">
+                <div class="recent-meta">位置 : {{ i + 1 }}</div>
+                <div class="recent-meta">描述 : {{ value.dsc }}</div>
+                <div class="recent-meta">链接 : {{ value.href }}</div>
+                <div>
+                    <img style="max-width: 800px; max-height: 300px" src="{{ value.url }}" alt="{{value.desc}}">
+                </div>
+
+                <div class="btn-group pull-right">
+                    <button class="btn btn-xs btn-danger" onclick="deleteBanner({{i}})">删除</button>
+                    <button class="btn btn-xs btn-info" onclick="editBanner({{i}},'{{ value.dsc }}','{{ value.href }}')">编辑</button>
+                    {{ if 0 != i }}
+                    <button class="btn btn-xs" onclick="moveUpBanner({{i}})">上移</button>
+                    {{/if}}
+                    {{ if config.banner.length-1 != i }}
+                    <button class="btn btn-xs" onclick="moveDownBanner({{i}})">下移</button>
+                    {{/if}}
+                </div>
+
+                <div class="clearfix"></div>
+            </div>
+        </li>
+        {{/each}}
+
+    </ul>
+
+</div>
+
+
+<div class="widget-foot">
+
+    <div class="form-horizontal">
+        {{if undefined != edit }}
+        <span>编辑位置 {{ edit + 1 }}</span>
+        {{else}}
+        <span>新增 Banner</span>
+        {{/if}}
+        <!-- Title -->
+        <div class="form-group">
+            <label class="control-label col-lg-3" for="bannerTitle">title</label>
+            <div class="col-lg-9">
+                <input type="text" class="form-control" id="bannerTitle" value="{{editDesc}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-lg-3" for="bannerLink">链接</label>
+            <div class="col-lg-9">
+                <input type="text" class="form-control" id="bannerLink" value="{{editHref}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-lg-3" for="bannerImg">图片</label>
+            <div class="col-lg-9">
+                <input type="file" class="form-control" id="bannerImg" name="bannerImg">
+            </div>
+            {{if undefined != edit }}
+            <span>选择新图片则替换老图片，不选择还是保留老图片</span>
+            {{/if}}
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-group">
+            <!-- Buttons -->
+            {{if undefined != edit }}
+            <div class="btn-group col-lg-offset-9 col-lg-2">
+                <button type="submit" class="btn btn-danger" onclick="updateBanner()">取消编辑</button>
+                <button type="submit" class="btn btn-success" id="btn_editBanner" onclick="saveEditBanner({{edit}})">编辑</button>
+            </div>
+            {{else}}
+            <div class="col-lg-offset-9 col-lg-2">
+                <button type="submit" class="btn btn-success" id="btn_updateBanner" onclick="addBanner()">添加</button>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+    <div class="clearfix"></div>
+</div>

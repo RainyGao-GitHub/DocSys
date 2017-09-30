@@ -1,0 +1,164 @@
+
+<div class="row">
+  <div class="col-md-12">
+  <div class="widget">
+    <div class="widget-head">
+      <div class="pull-left">角色表</div>
+      <div class="widget-icons pull-right">
+        <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+        <a href="#" class="wclose"><i class="icon-remove"></i></a>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+    <div class="widget-content">
+
+      <table class="table table-striped table-bordered table-hover" id="role_list">
+        <thead>
+        <tr>
+          <th>#</th>
+          <th title="角色的名字">角色</th>
+          <th title="不同的角色对应不同的权限" style="min-width: 10em">权限</th>
+          <th title="修改角色信息">编辑</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {{each list as value i}}
+        <tr>
+          <td>{{value.id}}</td>
+          <td>{{value.name}}</td>
+          <td>
+              {{# auth(value.id,value.auth) }}
+          </td>
+
+          <td>
+              {{ if value.cnt == 0}}
+              <button data-id="{{value.id}}" onclick="delRole({{value.id}})" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+              {{else}}
+              <p>{{value.cnt}} 个成员</p>
+              {{/if}}
+          </td>
+
+        </tr>
+        {{/each}}
+
+        </tbody>
+      </table>
+
+      <div class="widget-foot">
+
+        <div class="clearfix"></div>
+
+      </div>
+
+  </div>
+  <!-- Matter ends -->
+</div>
+
+
+  <!-- Matter -->
+
+    <div class="widget">
+      <div class="widget-head">
+        <div class="pull-left">添加角色</div>
+        <div class="widget-icons pull-right">
+          <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+          <a href="#" class="wclose"><i class="icon-remove"></i></a>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+      <div class="widget-content">
+        <div class="padd">
+
+          <div class="form quick-post">
+            <!-- Edit profile form (not working)-->
+            <form class="form-horizontal">
+              <!-- Title -->
+              <div class="form-group">
+                <label class="control-label col-lg-3" for="role_name">名字</label>
+                <div class="col-lg-9">
+                  <input type="text" class="form-control" id="role_name">
+                </div>
+                <button type="submit" class="btn btn-success" id="btn_addRole" onclick="addRole()">添加</button>
+              </div>
+            </form>
+          </div>
+
+
+        </div>
+        <div class="widget-foot">
+          <!-- Footer goes here -->
+        </div>
+      </div>
+
+    </div>
+    </div>
+</div>
+
+<script type="application/javascript">
+  /*
+  $(function(){
+
+    $("#role_list button").click(function(e){
+      var self = $(this);
+      var roleid = self.attr("data-roleid");
+      var role = self.attr("data-role");
+      var target = "/usr/addPower.do";
+
+      if( "delete" == role ){
+        $.post("/usr/deleteRole.do",{
+          roleid :roleid
+        },function(ret){
+          if("ok" == ret.status){
+            location.reload(true);
+          }else if( "error" == ret.status ){
+            alert(ret.msg)
+          }
+        })
+        return;
+      }
+
+      if( self.hasClass("btn-success") ){
+        target = "/usr/removePower.do";
+      }
+      $.post(target,{
+        roleid :roleid,
+        changerole:role
+      },function(ret){
+        if( "ok" == ret.status ){
+          if( self.hasClass("btn-success") ){
+            self.removeClass("btn-success").addClass("btn-default");
+            self.children("i").removeClass("icon-ok").addClass("icon-remove");
+          }
+          else{
+            self.removeClass("btn-default").addClass("btn-success");
+            self.children("i").removeClass("icon-remove").addClass("icon-ok");
+          }
+        }else if( "error" == ret.status ){
+          alert(ret.msg)
+        }
+      })
+
+    });
+
+    $("#btn_addRole").click(function(e){
+      e.preventDefault();
+      var name = $("#role_name").val()
+      $.post("/usr/addRole.do",{
+        name : name
+      },function(msg){
+        if( "ok" == msg.status ){
+          location.reload(true);
+        }
+        else if( "error" == msg.status ){
+          alert(msg.msg);
+        }
+        else{
+          window.location.href = "/";
+        }
+      });
+    });
+  })*/
+</script>
+

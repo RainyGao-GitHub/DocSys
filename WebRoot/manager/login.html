@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+
+    <title>后台管理系统 | DocSys</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="./static/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="./static/css/metisMenu.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="./static/css/sb-admin-2.css" rel="stylesheet">
+
+    <link href="./static/css/jquery.toastmessage-min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="./static/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="login-panel panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">后台管理系统</h3>
+                </div>
+                <div class="panel-body">
+                    <div>
+                        <fieldset>
+                            <div class="form-group">
+                                <input class="form-control" placeholder="管理员帐号" name="userName" type="text"  autofocus>
+                            </div>
+                            <div class="form-group">
+                                <input class="form-control" placeholder="密码" name="pwd" type="password" >
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input name="rememberMe" type="checkbox" value="0">记住我
+                                </label>
+                            </div>
+                            <!-- Change this to a button or input when using this as a form -->
+                            <a onclick="login()" class="btn btn-lg btn-success btn-block">登录</a>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="./static/js/jquery.min.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="./static/js/bootstrap.min.js"></script>
+
+<!-- Metis Menu Plugin JavaScript -->
+<script src="./static/js/metisMenu.min.js"></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="./static/js/sb-admin-2.js"></script>
+
+<script src="./static/js/jquery.toastmessage-min.js"></script>
+
+<script src="./static/js/md5.js"></script>
+
+<script src="./static/js/eb4js.js"></script>
+
+<script src="./static/js/config.js"></script>
+
+<script type="application/javascript">
+
+	//登录按键处理函数
+	function login(){
+		//alert("11");
+        $.ajax({
+            url : "/DocSystem/login.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $('input[name="userName"]').val(),
+                 pwd : MD5($('input[name="pwd"]').val()),
+                 rememberMe : $('input[name="rememberMe"]').val(),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("登录成功");
+                	window.location.href = "main.html";
+                }else {
+                    alert("错误："+ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:登录失败");
+            }
+        });
+    }
+    
+    //退出登录
+	function logout()
+	{
+		console.log("logout");
+        $.ajax({
+            url : "/DocSystem/logout.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("已退出登录");
+                	window.location.reload();	//刷新页面
+                }else {
+                    alert("错误："+ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:退出登录失败");
+            }
+        });
+    }
+    
+    //页面初始化
+    function pageInit()
+    {
+    	console.log("pageInit");
+    	//确定当前登录用户是否已登录
+    	$.ajax({
+            url : "/DocSystem/getLoginUser.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                	window.location.href="main.html";
+                }
+                else 
+                {
+                    console.log(ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:获取用户信息失败");
+            }
+        });
+    }
+    
+    pageInit();  
+</script>
+</body>
+
+</html>

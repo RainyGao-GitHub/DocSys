@@ -1,0 +1,121 @@
+<div class="row">
+  <div class="col-md-12">
+
+    <div class="widget">
+      <div class="widget-head">
+
+
+        <div class="uni pull-left" >
+          <select class="form-control" id="examine">
+            <option value="0" ${ "0".equals(examine) ? "selected":""}>未审核</option>
+            <option value="1" ${ "1".equals(examine) ? "selected":""}>已审核</option>
+            <option value="x" ${ "x".equals(examine) ? "selected":""}>全部</option>
+          </select>
+        </div>
+
+        <div class="widget-icons pull-right">
+          <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+          <a href="#" class="wclose"><i class="icon-remove"></i></a>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+      <div class="widget-content medias">
+
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>头像</th>
+            <th>昵称</th>
+            <th>真名</th>
+            <th>手机</th>
+            <th>邮箱</th>
+            <th>注册时间</th>
+            <th>审核</th>
+          </tr>
+          </thead>
+          <tbody>
+
+          <c:forEach var="item" items="${users}" varStatus="status">
+          <tr>
+            <td>${status.count + (pager['curPage']-1) *10}</td>
+            <td><img src="${baseimg}${item.img}" alt="头像" /></td>
+            <td>${item.nickName}</td>
+            <td>${item.realName}</td>
+            <td>${item.tel}</td>
+            <td>${item.email}</td>
+            <td>${item.registTime}</td>
+            <td>
+
+              <button data-userid="${item.id}" class="btn btn-xs ${ "1".equals(item.examine) ? "btn-success":"btn-default"} examine_pass"><i class="icon-ok"></i> </button>
+              <button data-userid="${item.id}" class="btn btn-xs ${ "0".equals(item.examine) ? "btn-danger":"btn-default"} examine_ban"><i class="icon-remove"></i> </button>
+
+            </td>
+          </tr>
+          </c:forEach>
+          </tbody>
+        </table>
+
+        <div class="widget-foot">
+
+          <c:set var="curPage" value="${pager['curPage']}"/>
+          <ul class="pagination pull-right" id="pager">
+            <li class="prevPage"><a href="#">Prev</a></li>
+            <c:forEach var="i" begin="1" end="${pager['pageCnt']}">
+              <li ${ curPage.equals(i) ? "class='curPage'":"" }><a href="#">${i}</a></li>
+            </c:forEach>
+            <li data-maxpage="${pager['pageCnt']}" class="nextPage"><a href="#">Next</a></li>
+          </ul>
+
+          <div class="clearfix"></div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="application/javascript">
+
+    $("#examine").change(function(){
+        var examine = $(this).val();
+        location.href = addToUrlParam("examine",examine);
+    });
+
+  $(".examine_pass").click(function(){
+    var $self = $(this);
+    var uid = $self.attr("data-userid");
+    $.post("/usr/pass.do",{uid:uid},function(ret){
+      if( "ok" == ret.status ){
+        location.reload(true);
+      }
+      else if( "error" == ret.status ){
+        alert(ret.msg);
+      }
+      else{
+        window.location.href = "/";
+      }
+    });
+
+  });
+
+
+  $(".examine_ban").click(function(){
+    var $self = $(this);
+    var uid = $self.attr("data-userid");
+    $.post("/usr/ban.do",{uid:uid},function(ret){
+      if( "ok" == ret.status ){
+        location.reload(true);
+      }
+      else if( "error" == ret.status ){
+        alert(ret.msg);
+      }
+      else{
+        window.location.href = "/";
+      }
+    });
+
+  });
+</script>
