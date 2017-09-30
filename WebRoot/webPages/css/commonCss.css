@@ -1,0 +1,192 @@
+body{
+	font-family: "宋体";
+	font-size: 12px;
+}
+
+.th{
+	font-weight: bold;
+}
+
+.floatDiv{
+	position: absolute;
+	z-index: 999;
+}
+
+.mypanel{
+	background-color: lightskyblue !important;
+}
+
+.panel-heading{
+	font-weight: bold;
+}
+
+.verlignMiddle{
+	vertical-align: middle;
+}
+
+.systemfont{
+	font-family: "宋体";
+	font-size: 12px;
+}
+
+.myfont{
+	font-size: 14px;
+	font-family: "宋体";
+}
+
+.ch_En_font{
+	font-family: "微软雅黑";
+}
+
+a:focus{
+	text-decoration: none;
+	outline:none;
+}
+
+a:hover{
+	color:deepskyblue;
+	text-decoration: none;
+}
+
+.mainFrame{
+	min-width: 1000px;
+	background: white;
+	padding: 20px;
+}
+
+.fLeft{
+	float: left;
+}
+
+.fRight{
+	float: right;
+}
+
+.clear{
+	clear: both;
+}
+
+
+.p0m0{
+	padding: 0px;
+	margin: 0px;
+}
+
+.p5{
+	padding: 5px;
+}
+
+.p10{
+	padding: 10px;
+}
+
+.m5{
+	margin: 5px;
+}
+
+.m1{
+	margin: 1px;
+}
+
+.m3{
+	margin: 3px;
+}
+
+/* 【bootstrap官网建议】
+ * 出于性能的考虑，所有图标都需要一个基类和对应每个图标的类。把下面的代码
+ * 放在任何地方都可以正常使用。注意，为了设置正确的内补（padding），
+ * 务必在图标和文本之间添加一个空格。
+ */
+.glyphicon:after{
+	content: ' ';
+}
+
+.p10_0{
+	padding: 10px 0px;
+}
+
+.p5_0{
+	padding: 5px 0px;
+}
+
+.pl10{
+	padding-left : 10px;
+}
+
+.pr10{
+	padding-right : 10px;
+}
+
+.mr10{
+	margin-right : 10px;
+}
+
+.margin10_0{
+	margin: 10px 0px;
+}
+
+.mt10{
+	margin-top: 10px ;
+}
+
+.mb10{
+	margin-bottom: 10px;
+}
+
+.redStar{
+	font-size: 14px;
+	color:lightcoral;
+}
+
+.whiteStar{
+	font-size: 14px;
+	color:#FAEBCC;
+}
+
+.blueStar{
+	font-size: 14px;
+	color: blueviolet;
+}
+
+.greenStar{
+	font-size: 14px;
+	color: green;
+}
+
+.redHeart{
+	font-size: 16px;
+	color: red;
+}
+
+.whiteHeart{
+	font-size: 16px;
+	color: white;
+}
+
+.li_img{
+	color:cornflowerblue;
+	padding: 0px 5px;
+}
+
+.li_img2{
+	color:red;
+	padding: 0px 5px;
+}
+.li_img_error{
+	color:red;
+}
+
+
+
+.li_img_success{
+	color: green;
+}
+
+.input-myStyle{
+	height: 36px;
+	font-size: 14px;
+}
+
+.select2-selection{border-color: lightgray !important;}
+.select2-selection .select2-selection__rendered{height: 30px;}
+

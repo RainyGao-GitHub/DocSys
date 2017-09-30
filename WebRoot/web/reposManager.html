@@ -500,8 +500,7 @@
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
-                        //reload the Page
-                        window.location.href = "/DocSystem/web/reposManager.html";
+                        //updateMenu(); //不再使用Repos的menu数据来表示zTree,因此updateMenu不需要再执行
                     }
                     else
                     {
@@ -807,16 +806,7 @@
 				}
 			},
 			{divider: true},
-			{text: '删除仓库', 
-			action: function(e){
-						e.preventDefault();
-						var vid = getQueryString("vid");
-	        			deleteRepos(vid);
-					}
-			},
-			{divider: true},
-			{text: '设置密码', 
-			action: function(e){
+			{text: '设置密码', action: function(e){
 						e.preventDefault();
 	        			alert("该功能未开通!");
 					}

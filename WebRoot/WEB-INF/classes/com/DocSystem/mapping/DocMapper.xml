@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.DocMapper">
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.Doc">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="PATH" jdbcType="VARCHAR" property="path" />
+    <result column="PID" jdbcType="INTEGER" property="pid" />
+    <result column="VID" jdbcType="INTEGER" property="vid" />
+    <result column="PWD" jdbcType="VARCHAR" property="pwd" />
+    <result column="CREATOR" jdbcType="INTEGER" property="creator" />
+    <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.Doc">
+    <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME
+  </sql>
+  <sql id="Blob_Column_List">
+    CONTENT
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from doc
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from doc
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.Doc">
+    insert into doc (ID, NAME, TYPE, 
+      PATH, PID, VID, PWD, 
+      CREATOR, CREATE_TIME, CONTENT
+      )
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
+      #{path,jdbcType=VARCHAR}, #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, 
+      #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{content,jdbcType=LONGVARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
+    insert into doc
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="path != null">
+        PATH,
+      </if>
+      <if test="pid != null">
+        PID,
+      </if>
+      <if test="vid != null">
+        VID,
+      </if>
+      <if test="pwd != null">
+        PWD,
+      </if>
+      <if test="creator != null">
+        CREATOR,
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME,
+      </if>
+      <if test="content != null">
+        CONTENT,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="path != null">
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="pid != null">
+        #{pid,jdbcType=INTEGER},
+      </if>
+      <if test="vid != null">
+        #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="pwd != null">
+        #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="creator != null">
+        #{creator,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.Doc">
+    update doc
+    <set>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="path != null">
+        PATH = #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="pid != null">
+        PID = #{pid,jdbcType=INTEGER},
+      </if>
+      <if test="vid != null">
+        VID = #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="pwd != null">
+        PWD = #{pwd,jdbcType=VARCHAR},
+      </if>
+      <if test="creator != null">
+        CREATOR = #{creator,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        CONTENT = #{content,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.DocSystem.entity.Doc">
+    update doc
+    set NAME = #{name,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      PATH = #{path,jdbcType=VARCHAR},
+      PID = #{pid,jdbcType=INTEGER},
+      VID = #{vid,jdbcType=INTEGER},
+      PWD = #{pwd,jdbcType=VARCHAR},
+      CREATOR = #{creator,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      CONTENT = #{content,jdbcType=LONGVARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.Doc">
+    update doc
+    set NAME = #{name,jdbcType=VARCHAR},
+      TYPE = #{type,jdbcType=INTEGER},
+      PATH = #{path,jdbcType=VARCHAR},
+      PID = #{pid,jdbcType=INTEGER},
+      VID = #{vid,jdbcType=INTEGER},
+      PWD = #{pwd,jdbcType=VARCHAR},
+      CREATOR = #{creator,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Doc" useGeneratedKeys="true">
+    insert into doc 
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="path != null">
+        path,
+      </if>
+      <if test="pid != null">
+        pid,
+      </if>
+      <if test="vid != null">
+        vid,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="path != null">
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="pid != null">
+        #{pid,jdbcType=INTEGER},
+      </if>
+      <if test="vid != null">
+        #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+    <select id="selectSelective" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc
+    where 1 = 1
+    <if test="id != null">
+        and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="name != null">
+    	and NAME = #{name,jdbcType=VARCHAR}
+    </if>
+    <if test="type != null">
+    	and TYPE = #{type,jdbcType=INTEGER}
+    </if>
+    <if test="path != null">
+        and PATH = #{path,jdbcType=VARCHAR}
+    </if>
+    <if test="pid != null">
+    	and PID = #{pid,jdbcType=INTEGER}
+    </if>
+    <if test="vid != null">
+        and VID = #{vid,jdbcType=INTEGER}
+    </if>
+    <if test="pwd != null">
+        and PWD = #{pwd,jdbcType=VARCHAR}
+    </if>
+    <if test="content != null">
+        and CONTENT = #{content,jdbcType=LONGVARCHAR}
+    </if>
+  </select>
+  <select id="getDocInfo" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getAuthedSubDocList" parameterType="com.DocSystem.entity.UserDocAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc
+    where PID = #{docId,jdbcType=INTEGER} and VID = #{reposId,jdbcType=INTEGER}
+    and ID IN (select DOC_ID from doc_auth where (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0) and ACCESS = 1 ) 
+  </select>  
+</mapper>

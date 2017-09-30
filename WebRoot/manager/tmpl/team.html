@@ -1,0 +1,114 @@
+
+<div class="row">
+    <div class="col-md-12">
+
+        <div class="widget">
+            <div class="widget-head">
+
+                <div class="uni pull-left" >
+
+
+
+                    <select class="form-control" id="examine" data-eb-xevent="Team.refresh" data-eb-xparam="Team.show" onchange="examineChange(this);">
+                        <option value="0" {{if "0"== curExamine}}  selected {{/if}}>未审核</option>
+                        <option value="1" {{if "1"== curExamine}}  selected {{/if}}>已通过</option>
+                        <option value="2" {{if "2"== curExamine}}  selected {{/if}}>未通过</option>
+                        <option value="x" {{if "x"== curExamine}}  selected {{/if}}>全部</option>
+                    </select>
+
+                </div>
+
+                <div class="uni pull-left" style="margin-left: 2em">
+                    <input type="text" data-type="Team" data-eb-xevent="Team.findByName" id="searchName" placeholder="查找指定人员" onkeydown='if(event.keyCode==13){fastSearch(this)}'/>
+
+                </div>
+
+                <div class="widget-icons pull-right">
+                    <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                    <a href="#" class="wclose"><i class="icon-remove"></i></a>
+                </div>
+                
+								<div class="uni pull-right" style="margin-left: 2em">
+                    <button type="button" class="btn btn-lg btn-info" onclick="showAddUser('team')">添加团队资源</button>
+                </div>
+                
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-content medias">
+
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th style="min-width: 11em">头像</th>
+                        <th style="min-width: 18em">团长身份证</th>
+                        <th style="max-width: 10em">名称</th>
+                        <th style="max-width: 10em">手机</th>
+                        <th style="max-width: 10em">邮箱</th>
+                        <th style="min-width: 10em">注册时间</th>
+                        <th style="min-width: 15em">审核</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                        {{each list as value i}}
+                        <tr>
+                            <td >{{value.id}}</td> <!-- {{i + (pageNumber-1) *10}} -->
+                            <td>
+                                <a target="_blank" href="http://www.gofreeteam.com/toUserDetail2.do?token=$&id={{value.id}}">
+                                <img src="{{baseimg}}{{value.img}}" alt="头像" />
+                                </a>
+                            </td>
+                            <td>
+                                <div class="card">
+                                    <img src="{{idimg}}{{value.idcard_fore}}" alt="正面" />
+                                </div>
+                                <div class="card">
+                                    <img src="{{idimg}}{{value.idcard_back}}" alt="反面" />
+                                </div>
+                            </td>
+
+                            <td>{{value.nickname}}</td>
+                            <td>{{value.tel}}</td>
+                            <td>{{value.email}}</td>
+
+                            <td>{{value.registTime}}</td>
+                            <td >
+                                
+                                <div class="star" data-eb-xevent="User.examineScore" data-id="{{value.id}}" data-score="{{value.examine_score}}" ></div>
+                                <div class="switch switch-large" data-on-label="推荐" data-off-label="没推荐" style="margin: 0.5em 0">
+                                    <input type="checkbox" data-eb-xevent="User.recommend" data-id="{{value.id}}" {{ value.recommend ? "checked" : "" }} />
+                                
+
+                                </div>
+
+                                {{if "1" != value.examine }}
+                                <button data-id="{{value.id}}" onclick="examine('User.examine',{{value.id}},1,'Team.refresh','{{value.tel }}','{{value.email }}','证件')" class="btn btn-lg btn-success examine_pass"><i class="icon-ok"></i>通过 </button>
+                                {{/if}}
+
+                                <button data-toggle="modal"
+                                        data-target="#myModal" data-id="{{value.id}}" onclick="examine('User.examine',{{value.id}},2,'Team.refresh','{{value.tel }}','{{value.email }}','证件')" class="btn btn-lg btn-danger examine_ban" ><i class="icon-remove"></i>拒绝 </button>
+
+
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+
+                <div class="widget-foot">
+
+                    <ul class="pagination pull-right" id="pager">
+                        {{# page(pageNumber,totalPage) }}
+
+                    </ul>
+
+                    <div class="clearfix"></div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>

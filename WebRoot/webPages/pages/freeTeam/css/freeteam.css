@@ -1,0 +1,30 @@
+.secrecyBox{border: 1px lightgray solid;}
+.lightred-hr{border-top: 1px red solid;border-bottom: 1px lightcoral solid;margin: 10px;}
+.mr15{margin-right: 15px;}
+.secrecy-content{padding: 30px;}.secrecy-content p{text-indent: 2em;}/*em是相对单位，2em即现在一个字大小的两倍*/
+
+.white-bg{background: white;}.whitesmoke-bg{background: whitesmoke;}
+.lightred{color: lightcoral;}.darkred{color: darkred;}
+input[type="checkbox"]{vertical-align: top;margin: 8px 0px;}
+.fLeft{float: left;}.fRight{float: right;}
+.p5{padding: 5px;}.p10{padding: 10px;}
+.p20_0{padding: 20px 0px;}
+
+.mt10{margin-top: 10px;}.mb10{margin-bottom: 10px;}
+.mt50{margin-top: 50px;}.mb50{margin-bottom: 50px;}
+
+.thinBorder{border: 1px lightgrey solid;}.thinBorder-bottom{border-bottom: 1px #E7E7E7 solid;}
+hr{margin-left: 10px;margin-right: 10px;}
+
+.inline-block{display: inline-block;}
+
+.btn i.glyphicon{margin-right: 5px;}
+
+.relative{position: relative;}
+
+.font-grey{color: #777;}
+
+.form-group label{text-align: center;}
+
+.project-demo{width:12%;float: left;padding: 10px 0px;text-align: center;overflow: hidden;}
+.project-demo:HOVER {background: whitesmoke;cursor: pointer;}
