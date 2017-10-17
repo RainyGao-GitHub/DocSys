@@ -14,6 +14,7 @@
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="static/highlight/styles/default.css" rel="stylesheet">
     <link href="static/highlight/styles/zenburn.css" rel="stylesheet">
+    <link href="static/fonts/font.css" rel="stylesheet">
     <link href="static/zTree/css/metroStyle/metroStyle.css" rel="stylesheet">
     <link href="static/nprogress/nprogress.css" rel="stylesheet">
     <link href="static/styles/kancloud.css" rel="stylesheet">
@@ -35,6 +36,23 @@
 
         .editor-content table thead tr {
             color: #111111 !important;
+        }
+        .manual-mask{
+	        position: absolute;
+		    left: 0;
+		    right: 0;
+		    background: #fafafa;
+		    top: 0;
+		    bottom: 0;
+		    z-index: 19;
+		    opacity: 0.5;
+		    display:none;
+        }
+        .closeBtn{
+        	position:absolute;
+        	top:15px;
+        	right:15px;
+        	font-size:13px;
         }
     </style>
 
@@ -95,10 +113,11 @@
         <div class="manual-left">
             <div class="manual-tab">
                 <div class="tab-navg">
-                    <span data-mode="view" class="navg-item active"><i class="fa fa-align-justify"></i><b class="text">目录</b></span>
+                    <span data-mode="view" class="navg-item main active"><i class="fa fa-align-justify"></i><b class="text">目录</b></span>
+                    <span data-mode="view" class="navg-item lookPro"><i class="el-icon-search"></i><b class="text">进度查看</b></span>
                 </div>
                 <div id="treeBody" class="tab-wrap">
-                    <div class="tab-item manual-catalog">
+                    <div class="tab-item manual-catalog" id="uuz">
 
                         <div class="catalog-list read-book-preview" id="tree">
                             <ul id="doctree" class="ztree"></ul>
@@ -106,12 +125,35 @@
 
                     </div>
                 </div>
+                <div  class="uploadBox ">
+		            <ul style="display:none" class="el-upload-list el-upload-list--text">
+		            	
+		            	<!--
+						<li class="el-upload-list__item is-success">
+							<a class="el-upload-list__item-name"><i class="el-icon-document"></i></a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close"></i>
+						</li> 
+						 <li class="el-upload-list__item is-uploading">
+							<a class="el-upload-list__item-name"></i><i class="el-icon-document"></i></a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close"></i>
+							<div class="el-progress el-progress--line">
+								<div class="el-progress-bar">
+									<div class="el-progress-bar__outer" >
+										<div class="el-progress-bar__inner">
+										</div>
+									</div>
+								</div>
+								<div class="el-progress__text" style="font-size: 12.8px;"></div>
+							</div>
+						</li>--> 
+					</ul>
+				</div>
             </div>
 
             <div id="container" class="m-copyright">
                 <p id="editTime">2017.7.7</p>   
             </div>
+            
         </div>
+        <div id="line" class="manual-line" ></div>
         <div class="manual-right">
             <div class="manual-article">
                 <div class="article-body editor-content"  id="doc" style="min-height: 650px">
@@ -242,6 +284,7 @@
  -->
 
 <script type="text/javascript">
+
 /*文件上传实现*/
 function download(){
 		
@@ -639,6 +682,7 @@ function uploadConfirm(obj)
 
 			//get the file from the fileList
     		var file = fileList[index];
+			if(!file) return 
     		//get file name from file
 			var name  = file.name;
     		console.log(name);
@@ -826,13 +870,27 @@ function uploadConfirm(obj)
 				var loaded = evt.loaded;
 				var tot = evt.total;
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比  
-				//$(statusDiv).text("上传中："+per+"%！");
+				$('.file'+index+' .el-progress__text').text(per+"%");
+				$('.file'+index+' .el-progress-bar__inner')[0].style.width=per+'%';
+				if(per=="100"){
+					$('.file'+index).removeClass('is-uploading');
+					$('.file'+index).addClass('is-success');
+				}
 				console.log("上传中："+per+"%！");
 			};
 			
 			//上传表单			
 			xhr.open("post", "/DocSystem/Doc/uploadDoc.do");
 			xhr.send(form);
+			$('.file'+index).delegate('.stopUpload','click',function(){
+				isUploading=false;
+    			xhr.abort();
+    			index++;
+	  	 		if(index < totalNum)
+	  	 		{
+	  	 			uploadDoc();	//go upload next Doc
+	  	 		}
+    		})
     	}
 
 		//多文件move接口
@@ -851,7 +909,13 @@ function uploadConfirm(obj)
 				successNum = 0;
 				failNum = 0;
 			}
-			
+			var str='<i class="el-icon-close closeBtn"></i>';
+			$(".el-upload-list").show();
+			for(var i=0;i<files.length;i++){
+				str+='<li class="el-upload-list__item file'+i+' is-uploading"><a class="el-upload-list__item-name"></i><i class="el-icon-document"></i>'+files[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
+			}
+			$('.el-upload-list').html(str);
+			console.log(files)
 			clearContext();	//清空Context缓存
 			
 			DocUploadSet(files,parentNode,parentId,vid);	//设置DocMove Parameters
@@ -875,6 +939,19 @@ function uploadConfirm(obj)
 </script>
 
 <script>
+	$(".el-upload-list").delegate(".closeBtn","click",function(){
+		$(".el-upload-list").hide();
+	});
+	$('.lookPro').on('click',function(){
+		$(".el-upload-list").show();
+		$('.main').removeClass('active');
+		$(this).addClass('active');
+	})
+	$('.main').on('click',function(){
+		$(".el-upload-list").hide();
+		$('.lookPro').removeClass('active');
+		$(this).addClass('active');
+	})
 	//通用函数接口
     function showErrorMessage($msg) {
         qiao.bs.alert($msg);
@@ -1194,7 +1271,6 @@ function uploadConfirm(obj)
 
 	//读取文件信息
     function getDoc(id) {
-    	console.log("getDoc id:" + id);
         $.ajax({
             url : "/DocSystem/Doc/getDoc.do",
             type : "post",
@@ -1208,7 +1284,7 @@ function uploadConfirm(obj)
                     
                     content = JSON.parse(ret.data.content);
                     curDoc = ret.data.id;
-					console.log(content);
+
 					
                     loadFirstContent();
                 }
@@ -2440,7 +2516,7 @@ function CompareObj(objA, objB, flag) {
         
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) {
-		  console.log("zTreeOnClick()");
+    	  
           if ( curDoc != treeNode.id ){
               debounce.clear();
               getDoc(treeNode.id);
@@ -2773,10 +2849,68 @@ function CompareObj(objA, objB, flag) {
               }
           });
    	}
+    var oDiv=document.getElementById('line')
+    oDiv.onmousedown=function(ev){
+      var disX=ev.clientX-oDiv.offsetLeft
+      var disY=ev.clientY-oDiv.offsetTop
 
+      document.onmousemove=function(ev){
+        var l=ev.clientX-disX
+
+        oDiv.style.left=l+'px'
+      }
+      document.onmouseup=function(ev){
+   	  	$(".manual-left")[0].style.width=ev.clientX+'px';
+   	 	$(".manual-right")[0].style.left=ev.clientX+'px';
+        document.onmousemove=null;
+        document.onmouseup=null
+      }
+    }
+    
     //页面加载完成处理函数    
     $(document).ready(function(){
-    	console.log("Page is ready");
+    	//拖拽上传
+    	var uuz = document.getElementById('uuz');  
+    	  
+        uuz.ondragenter = function(e){  
+            e.preventDefault();  
+        }  
+        uuz.ondragover = function(e){  
+            e.preventDefault();  
+            
+        }  
+  
+        uuz.ondrop = function(e){  
+            e.preventDefault();  
+            var upfile = e.dataTransfer.files; 
+            if(!e.dataTransfer.files.length) return 
+            if(e.target.tagName=="SPAN"){
+            	e.target.parentNode.click();
+            	
+            }
+			var parentId = 0;
+		
+			var vid = getQueryString("vid");
+			var treeObj = $.fn.zTree.getZTreeObj("doctree");
+			
+			var parentNode = treeObj.getSelectedNodes()[0];
+			
+			if(parentNode&&parentNode.type=="2"){
+				var parentId=parentNode.id;	
+			}else{
+				
+				if(parentNode&&parentNode.getParentNode()){
+					parentNode=parentNode.getParentNode();
+					parentId=parentNode.id;
+					console.log(parentId)
+				}else{
+					parentNode=null;
+				}
+			}
+			
+			//开始上传
+			DocUpload.uploadDocs(upfile,parentNode,parentId,vid);
+        }  
 		//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
         if( getQueryString("edit") ){
             var edit = {};
@@ -2824,7 +2958,6 @@ function CompareObj(objA, objB, flag) {
 			},
 			]
 		);
-		
 		//zTree上的右键菜单
 		context.attach('#tree', [
 			{text: '新建', subMenu: [
