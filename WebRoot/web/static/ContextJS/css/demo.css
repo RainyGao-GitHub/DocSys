@@ -4,7 +4,7 @@ body{
 	color:#333;
 	background:#eee url(http://subtlepatterns.subtlepatterns.netdna-cdn.com/patterns/retina_dust.png);
 	text-shadow:0 1px 0 #fff;
-	text-align:center;
+	/* text-align:center; */
 	font-family:arial;
 	cursor:default;
 	}

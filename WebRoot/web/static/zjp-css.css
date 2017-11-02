@@ -1,0 +1,32 @@
+.el-upload-list {
+    border: 1px solid #e3e3e3;
+    border-radius: 5px;
+    position: fixed;
+    max-height: 200px;
+    bottom: 0;
+    top: auto;
+    min-width: 320px;
+    width: 25%;
+    left: auto;
+    right: 0;
+    background: white;
+    z-index: 999;
+    margin: 5px;
+    padding: 10px 15px 25px 15px;
+    list-style: none;
+}
+.upload-list-title{
+    display: inline-block;
+    padding: 10px 0px;
+    margin-top: -5px;
+    width: 270px;
+}
+.uploadedFileList{
+	border-top: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+	max-height: 155px;
+    min-height: 100px;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-right: -5px;
+}
