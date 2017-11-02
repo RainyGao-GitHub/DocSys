@@ -23,7 +23,8 @@
 	<!-- context.js -->
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
-
+	<link rel="stylesheet" type="text/css" href="static/zjp-css.css">
+	
     <style type="text/css">
         .editormd-preview{
             left: 0 !important;
@@ -113,7 +114,7 @@
             <div class="manual-tab">
                 <div class="tab-navg">
                     <span data-mode="view" class="navg-item main active"><i class="fa fa-align-justify"></i><b class="text">目录</b></span>
-                    <span data-mode="view" class="navg-item lookPro"><i class="el-icon-search"></i><b class="text">进度查看</b></span>
+                    <!-- <span data-mode="view" class="navg-item lookPro"><i class="el-icon-search"></i><b class="text">进度查看</b></span> -->
                 </div>
                 <div id="treeBody" class="tab-wrap">
                     <div class="tab-item manual-catalog" id="uuz">
@@ -908,11 +909,13 @@ function uploadConfirm(obj)
 				successNum = 0;
 				failNum = 0;
 			}
-			var str='<i class="el-icon-close closeBtn"></i>';
+			var str='<div><span class="upload-list-title">上传进度</span><i class="el-icon-close closeBtn"></i></div>';
 			$(".el-upload-list").show();
+			str+='<div class="uploadedFileList">';
 			for(var i=0;i<files.length;i++){
 				str+='<li class="el-upload-list__item file'+i+' is-uploading"><a class="el-upload-list__item-name"></i><i class="el-icon-document"></i>'+files[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
 			}
+			str+='</div>'
 			$('.el-upload-list').html(str);
 			console.log(files)
 			clearContext();	//清空Context缓存
@@ -939,7 +942,13 @@ function uploadConfirm(obj)
 
 <script>
 	$(".el-upload-list").delegate(".closeBtn","click",function(){
-		$(".el-upload-list").hide();
+		//$(".el-upload-list").hide();
+		//收起进度
+		var height = - $(".el-upload-list").height()+"px";
+		$(".el-upload-list").animate({bottom: height});
+	});
+	$(".el-upload-list").delegate(".upload-list-title","click",function(){
+		$(".el-upload-list").animate({bottom: "0px"});
 	});
 	$('.lookPro').on('click',function(){
 		$(".el-upload-list").show();
