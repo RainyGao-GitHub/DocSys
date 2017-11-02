@@ -946,9 +946,11 @@ function uploadConfirm(obj)
 		//收起进度
 		var height = - $(".el-upload-list").height()+"px";
 		$(".el-upload-list").animate({bottom: height});
+		$(this).animate({opacity: 0});
 	});
 	$(".el-upload-list").delegate(".upload-list-title","click",function(){
 		$(".el-upload-list").animate({bottom: "0px"});
+		$(".closeBtn").animate({opacity: 1});
 	});
 	$('.lookPro').on('click',function(){
 		$(".el-upload-list").show();
