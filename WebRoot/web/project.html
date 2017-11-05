@@ -154,6 +154,11 @@
             
         </div>
         <div id="line" class="manual-line" ></div>
+        <div class="manual-middle">
+        	<span>搜索框</span>
+        </div>
+        <div id="line2" class="manual-line" ></div>
+        
         <div class="manual-right">
             <div class="manual-article">
                 <div class="article-body editor-content"  id="doc" style="min-height: 650px">
@@ -2871,6 +2876,25 @@ function CompareObj(objA, objB, flag) {
       }
       document.onmouseup=function(ev){
    	  	$(".manual-left")[0].style.width=ev.clientX+'px';
+   	 	$(".manual-middle")[0].style.left=ev.clientX+'px';
+        document.onmousemove=null;
+        document.onmouseup=null
+      }
+    }
+    
+    var oDiv2=document.getElementById('line2')
+    oDiv2.onmousedown=function(ev){
+      var disX=ev.clientX-oDiv2.offsetLeft
+      var disY=ev.clientY-oDiv2.offsetTop
+
+      document.onmousemove=function(ev){
+        var l=ev.clientX-disX
+
+        oDiv2.style.left=l+'px'
+      }
+      document.onmouseup=function(ev){
+    	var lw = $(".manual-left").width();
+   	  	$(".manual-middle")[0].style.width=(ev.clientX - lw )+'px';
    	 	$(".manual-right")[0].style.left=ev.clientX+'px';
         document.onmousemove=null;
         document.onmouseup=null
