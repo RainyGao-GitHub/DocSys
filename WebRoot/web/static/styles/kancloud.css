@@ -124,10 +124,21 @@ h6 {
     left: 0;
     right: 0
 }
-.manual-line{
+#line.manual-line{
         	position:absolute;
         	cursor: col-resize;
         	left:279px;
+        	top:55px;
+        	bottom:0;
+        	width:3px;
+        	background:#ddd;
+        	z-index:301
+        }
+        
+#line2.manual-line{
+        	position:absolute;
+        	cursor: col-resize;
+        	left:483px;
         	top:55px;
         	bottom:0;
         	width:3px;
@@ -231,9 +242,39 @@ h6 {
     text-align: center;
     line-height: 24px
 }
+
+.m-manual .manual-middle{
+	position: absolute;
+	left: 282px;
+	top: 55px;
+	z-index: 300;
+	overflow-y: auto;
+	bottom: 0;
+	right: 0;
+	transition-property: top;
+    transition-duration: .3s;
+    transition-timing-function: linear;
+    transition-delay: 0s;
+    -moz-transition-property: top;
+    -moz-transition-duration: .3s;
+    -moz-transition-timing-function: linear;
+    -moz-transition-delay: 0s;
+    -webkit-transition-property: top;
+    -webkit-transition-duration: .3s;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-delay: 0s;
+    -o-transition-property: top;
+    -o-transition-duration: .3s;
+    -o-transition-timing-function: linear;
+    -o-transition-delay: 0s;
+    background: #ffffff;
+    width: 200px;
+    padding: 10px;
+}
+
 .m-manual .manual-right {
     position: absolute;
-    left: 282px;
+    left: 482px;
     top: 55px;
     z-index: 300;
     overflow-y: auto;
