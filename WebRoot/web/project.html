@@ -154,10 +154,10 @@
             
         </div>
         <div id="line" class="manual-line" ></div>
-        <div class="manual-middle">
+        <div class="manual-middle" style="display:none">
         	<span>搜索框</span>
         </div>
-        <div id="line2" class="manual-line" ></div>
+        <div id="line2" class="manual-line" style="display:none"></div>
         
         <div class="manual-right">
             <div class="manual-article">
@@ -1398,6 +1398,12 @@ function uploadConfirm(obj)
                 success : function (ret) {
                     if( "ok" == ret.status ){
                         //updateMenu(); //不再使用Repos的menu数据来表示zTree,因此updateMenu不需要再执行
+                        // 普通消息提示条
+    					bootstrapQ.msg({
+    								msg : '删除成功！',
+    								type : 'success',
+    								time : 2000,
+    					});
                     }
                     else
                     {
@@ -2864,56 +2870,57 @@ function CompareObj(objA, objB, flag) {
               }
           });
    	}
-    var oDiv=document.getElementById('line')
+	
+	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
+    var oDiv=document.getElementById('line');
     oDiv.onmousedown=function(ev){
-      var disX=ev.clientX-oDiv.offsetLeft
-      var disY=ev.clientY-oDiv.offsetTop
+      var disX=ev.clientX-oDiv.offsetLeft;
+      var disY=ev.clientY-oDiv.offsetTop;
 
       document.onmousemove=function(ev){
-        var l=ev.clientX-disX
-
-        oDiv.style.left=l+'px'
-      }
+          var l=ev.clientX-disX;	//计算Line的位置
+          oDiv.style.left=l+'px';	//设置Line的位置
+     	  $(".manual-left")[0].style.width=ev.clientX+'px';
+       	  $(".manual-right")[0].style.left=ev.clientX+'px';
+   	  };
+      
       document.onmouseup=function(ev){
-   	  	$(".manual-left")[0].style.width=ev.clientX+'px';
-   	 	$(".manual-middle")[0].style.left=ev.clientX+'px';
-        document.onmousemove=null;
-        document.onmouseup=null
-      }
-    }
+   	  	//$(".manual-left")[0].style.width=ev.clientX+'px';
+   	 	//$(".manual-right")[0].style.left=ev.clientX+'px';
+   	 	document.onmousemove=null;
+   	  	document.onmouseup=null;
+      };
+    };
     
-    var oDiv2=document.getElementById('line2')
+    /*var oDiv2=document.getElementById('line2')
     oDiv2.onmousedown=function(ev){
-      var disX=ev.clientX-oDiv2.offsetLeft
-      var disY=ev.clientY-oDiv2.offsetTop
+      var disX=ev.clientX-oDiv2.offsetLeft;
+      var disY=ev.clientY-oDiv2.offsetTop;
 
       document.onmousemove=function(ev){
-        var l=ev.clientX-disX
+        var l=ev.clientX-disX;
 
         oDiv2.style.left=l+'px'
-      }
+      };
       document.onmouseup=function(ev){
     	var lw = $(".manual-left").width();
    	  	$(".manual-middle")[0].style.width=(ev.clientX - lw )+'px';
    	 	$(".manual-right")[0].style.left=ev.clientX+'px';
         document.onmousemove=null;
-        document.onmouseup=null
-      }
-    }
+        document.onmouseup=null;
+      };
+    };*/
     
     //页面加载完成处理函数    
     $(document).ready(function(){
     	//拖拽上传
     	var uuz = document.getElementById('uuz');  
-    	  
-        uuz.ondragenter = function(e){  
+    	uuz.ondragenter = function(e){  
             e.preventDefault();  
-        }  
+        };  
         uuz.ondragover = function(e){  
             e.preventDefault();  
-            
-        }  
-  
+        };  
         uuz.ondrop = function(e){  
             e.preventDefault();  
             var upfile = e.dataTransfer.files; 
@@ -2944,7 +2951,8 @@ function CompareObj(objA, objB, flag) {
 			
 			//开始上传
 			DocUpload.uploadDocs(upfile,parentNode,parentId,vid);
-        }  
+        };
+        
 		//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
         if( getQueryString("edit") ){
             var edit = {};

@@ -1,6 +1,7 @@
 package com.DocSystem.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +12,10 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.tmatesoft.svn.core.SVNException;
 
 import util.ReturnAjax;
+import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.Repos;
@@ -79,131 +82,11 @@ public class ReposController extends BaseController{
 		rt.setData(repos);
 		writeJson(rt, response);
 	}
-	/****************   set a Repository ******************/
-	@RequestMapping("/updateReposInfo.do")
-	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path,String svnPath,String svnUser,String svnPwd,
-							HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd);
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//检查是否是超级管理员或者仓库owner
-		if(login_user.getType() != 2)	//超级管理员 或 仓库的拥有者可以修改仓库
-		{
-			//getRepos
-			Repos repos = new Repos();
-			repos.setId(reposId);
-			repos.setOwner(login_user.getId());	//拥有人
-			List <Repos> list = reposService.getReposList(repos);
-			if(list == null || list.size() != 1)	//仓库拥有人
-			{
-				rt.setError("您无权修改该仓库!");				
-				writeJson(rt, response);	
-				return;
-			}
-		}
-		
-		//检查传入的参数
-		//update repos
-		if(reposId == null)
-		{
-			rt.setError("仓库ID不能为空!");				
-			writeJson(rt, response);	
-			return;
-		}
-		
-		//get old ReposInfo
-		Repos oldReposInfo = reposService.getRepos(reposId);
-		if(oldReposInfo == null)
-		{
-			rt.setError("仓库 " +reposId +" 不存在!");				
-			writeJson(rt, response);
-			return;
-		}
-		
-		//new ReposInfo
-		Repos newReposInfo = new Repos();
-		newReposInfo.setId(reposId);
-		if(info != null && !info.isEmpty())
-		{
-			newReposInfo.setInfo(info);
-		}	
-		
-		if(path != null && !path.isEmpty())
-		{
-			if(login_user.getType() != 2)
-			{
-				System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
-				rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
-				writeJson(rt, response);
-				return;							
-			}
-			//如果传入的Path没有带/,给他加一个
-			String endChar = path.substring(path.length()-1, path.length());
-			if(!endChar.equals("/"))	
-			{
-				path = path + "/";
-			}
-			newReposInfo.setPath(path);
-		}
-		
-		if(reposService.updateRepos(newReposInfo) == 0)
-		{
-			System.out.println("仓库信息更新失败");
-			rt.setError("仓库信息更新失败！");
-			writeJson(rt, response);
-			return;			
-		}
-		
-		//ReposMove
-		if(ReposMove(oldReposInfo.getName(), oldReposInfo.getPath(),path) == false)
-		{
-			System.out.println("仓库目录迁移失败,请手动迁移仓库！");
-			rt.setError("仓库目录迁移失败,请手动迁移仓库！");
-		}
-		writeJson(rt, response);	
-	}
-
-	
-	
-	private boolean ReposMove(String reposName, String oldReposRootPath, String newReposRootPath) {
-		// TODO Auto-generated method stub
-        if(!oldReposRootPath.equals(newReposRootPath))
-        {
-            File oldfile=new File(oldReposRootPath+reposName);
-            File newfile=new File(newReposRootPath+reposName);
-            System.out.println(oldReposRootPath+reposName);
-            System.out.println(newReposRootPath+reposName);
-            if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
-            {
-            	System.out.println(newReposRootPath+reposName + " 仓库已存在");
-            	return false;
-            }
-            else
-            {
-            	System.out.println("迁移仓库");
-            	return oldfile.renameTo(newfile);
-            }
-        }
-        else
-        {
-        	System.out.println("仓库根目录未变化");
-        	return true;	//同一个目录下不需要move
-        }
-	}
 
 	/****************   add a Repository ******************/
 	@RequestMapping("/addRepos.do")
-	public void addRepos(String name,String info, Integer type,String path,String svnPath,String svnUser,String svnPwd, String createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type  + " path: " + path + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd);
+	public void addRepos(String name,String info, Integer type, Integer verCtrl, String path,String svnPath,String svnUser,String svnPwd, String createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path + " verCtrl: " + verCtrl  + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -236,24 +119,12 @@ public class ReposController extends BaseController{
 		}
 		if((path == null) || path.equals(""))
 		{
-			String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
-				path = "D:/DocSysReposes/";
-			}
-			else
-			{
-				path = "/data/DocSysReposes/";	//Linux系统放在  /data	
-			}
+			path = getDefaultReposRootPath();
 		}
 		else
 		{
-			//如果传入的Path没有带/,给他加一个
-			String endChar = path.substring(path.length()-1, path.length());
-			if(!endChar.equals("/"))	
-			{
-				path = path + "/";
-			}
+			//检查path的格式并修正：必须以/结尾
+			path = reposRootPathFormat(path);
 		}
 
 		//确定是否存在相同路径的仓库
@@ -277,15 +148,26 @@ public class ReposController extends BaseController{
 		repos.setOwner(login_user.getId());
 		repos.setCreateTime(createTime);
 		
-		//带svn版本控制的仓库，还需要检查svn设置
-		if((type == 2) || (type ==3))
+		//如果是带版本控制的话，路径不能为空
+		if(verCtrl == 1)	//目前只处理svn
 		{
 			if((svnPath == null) || svnPath.equals(""))
 			{
-				rt.setError("svnPath不能为空");
-				writeJson(rt, response);	
-				return;
+				//Create a local SVN Repos
+				String localReposPath = getDefaultSvnLocalReposPath();
+				svnPath = SVNUtil.CreateRepos(name,localReposPath);
+				if(svnPath == null)
+				{
+					rt.setError("SVN仓库的创建失败");
+					writeJson(rt, response);	
+					return;
+				}
+				repos.setSvnPath(svnPath);
+				svnUser = "";
+				svnPwd = "";
 			}
+				
+			/* svnUser和svnPwd可以不设置，有些svn或git仓库不需要鉴权信息
 			if((svnUser == null) || svnUser.equals(""))
 			{
 				rt.setError("svnUser不能为空");
@@ -298,7 +180,8 @@ public class ReposController extends BaseController{
 				writeJson(rt, response);	
 				return;
 			}
-		
+			*/
+			
 			//检查SVN路径是否已使用
 			Repos tmpRepos1 = new Repos();
 			tmpRepos1.setSvnPath(svnPath);
@@ -310,15 +193,17 @@ public class ReposController extends BaseController{
 				return;
 			}
 			
+			repos.setVerCtrl(verCtrl);
 			repos.setSvnPath(svnPath);
 			repos.setSvnUser(svnUser);
 			repos.setSvnPwd(svnPwd);
 		}
 		
 		//新建目录
-		if(createDir(path + name) == true)
+		String reposDir = path + name;
+		if(createDir(reposDir) == true)
 		{
-			if(createDir(path+name+"/data") == false)
+			if(createDir(reposDir+"/data") == false)
 			{
 				rt.setError("创建data目录失败");
 				writeJson(rt, response);	
@@ -327,30 +212,36 @@ public class ReposController extends BaseController{
 			}
 			else
 			{
-				if(createDir(path+name+"/data/rdata") == false)
+				if(createDir(reposDir+"/data/rdata") == false)
 				{
 					rt.setError("创建rdata目录失败");
 					writeJson(rt, response);	
 					return;
 				}
-				if(createDir(path+name+"/data/vdata") == false)
+				if(createDir(reposDir+"/data/vdata") == false)
 				{
 					rt.setError("创建vdata目录失败");
 					writeJson(rt, response);	
 					return;
 				}
 			}
-			if(createDir(path+name+"/tmp") == false)
+			if(createDir(reposDir+"/tmp") == false)
 			{
 				rt.setError("创建tmp目录失败");
 				writeJson(rt, response);	
 				return;
 			}
-			
-			//如果是带版本控制的仓库，那么还需要将.svn check out 到根目录下
-			if((type == 2) || (type == 3))
-			{	
-				if(doSvnInit(path+name,svnPath,svnUser,svnPwd) == false)
+			if(createDir(reposDir+"/backup") == false)
+			{
+				rt.setError("创建backup目录失败");
+				writeJson(rt, response);	
+				return;
+			}			
+			//如果是带版本控制的仓库，需要checkout svnPath to 仓库的data目录，作为working copy
+			if(verCtrl == 1)
+			{					
+				String commitUser = login_user.getName();
+				if(doReposSvnInit(reposDir+"/data",repos,commitUser) == false)
 				{
 					rt.setError("仓库的SVN初始化失败");
 					writeJson(rt, response);	
@@ -386,18 +277,123 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
+			System.out.println("创建仓库根目录失败");
 			rt.setError("创建仓库根目录失败");
+			writeJson(rt, response);	
+			return;
 		}		
 		
 		writeJson(rt, response);	
 	}
 	
-	//初始化SVN信息
-	boolean doSvnInit(String localPath,String svnPath,String svnUser,String svnPwd)
-	{
-		return false;
+	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
+	private String getDefaultSvnLocalReposPath() {
+		// TODO Auto-generated method stub
+		String localReposPath = "";
+		String os = System.getProperty("os.name");  
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){  
+			localReposPath = "D:/DocSysSvnReposes/";
+		}
+		else
+		{
+			localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+		}
+		return localReposPath;
 	}
-	
+
+	//正确格式化仓库根路径
+	private String reposRootPathFormat(String path) {
+		// TODO Auto-generated method stub
+		//如果传入的Path没有带/,给他加一个
+		String endChar = path.substring(path.length()-1, path.length());
+		if(!endChar.equals("/"))	
+		{
+			path = path + "/";
+		}
+		return path;
+	}
+
+	//获取默认的仓库根路径
+	private String getDefaultReposRootPath() {
+		// TODO Auto-generated method stub
+		String path = null;
+		String os = System.getProperty("os.name");  
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){  
+			path = "D:/DocSysReposes/";
+		}
+		else
+		{
+			path = "/data/DocSysReposes/";	//Linux系统放在  /data	
+		}
+		return path;
+	}
+
+	//初始化SVN信息
+	boolean doReposSvnInit(String localPath, Repos repos, String commitUser)
+	{
+		String svnPath = repos.getSvnPath();
+		String svnUser = repos.getSvnUser();
+		String svnPwd = repos.getSvnPwd();
+		System.out.println("localPath:" + localPath + " svnPath:" + svnPath + " svnUser:" + svnUser + " svnPwd:" + svnPwd);
+		
+		if(svnUser == null || "".equals(svnUser))
+		{
+			svnUser = commitUser;
+		}
+		
+		try {
+			SVNUtil svnUtil = new SVNUtil();
+		
+			//svn初始化
+			if(svnUtil.Init(svnPath, svnUser, svnPwd) == false)
+			{
+				System.out.println("do Init Failed");
+				return false;
+			}
+
+			svnUtil.doSyncUpForDelete(localPath,"");
+			
+			if(svnUtil.doCheckOut("",localPath) == false)
+			{
+				System.out.println("CheckOut Failed");
+				return false;
+			}
+		
+			//将/rdata和vdata目录加入版本控制,理论上在syncup阶段已经被加上了，因此可以跳过该步骤
+			//if(svnUtil.doAdd(localPath + "/rdata") == false)
+			//{
+			//	System.out.println("add /rdata Failed");
+			//	return false;				
+			//}
+			//if(svnUtil.doAdd(localPath + "/vdata") == false)
+			//{
+			//	System.out.println("add /vdata Failed");
+			//	return false;				
+			//}
+			svnUtil.doScheduleForAdd(localPath,"");
+			
+			//do commit
+			if(svnUtil.doCommit(localPath, "仓库初始化") == false)
+			{
+				System.out.println("do Commit Failed");
+				return false;
+			}
+		} catch (SVNException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("doSvnInit 异常");
+			if(e.getErrorMessage().getErrorCode().getCode() == 170001)
+			{
+				System.out.println("Authentication Error, please check the svnUser and svnPwd");
+			}
+			return false;
+		}
+		
+		return true;
+	}
+		
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -434,6 +430,320 @@ public class ReposController extends BaseController{
 		}
 		
 		writeJson(rt, response);	
+	}
+	
+	/****************   set a Repository ******************/
+	@RequestMapping("/updateReposInfo.do")
+	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, Integer verCtrl,String svnPath,String svnUser,String svnPwd,
+							HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " verCtrl: " + verCtrl + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查是否是超级管理员或者仓库owner
+		if(login_user.getType() != 2)	//超级管理员 或 仓库的拥有者可以修改仓库
+		{
+			//getRepos
+			Repos repos = new Repos();
+			repos.setId(reposId);
+			repos.setOwner(login_user.getId());	//拥有人
+			List <Repos> list = reposService.getReposList(repos);
+			if(list == null || list.size() != 1)	//仓库拥有人
+			{
+				rt.setError("您无权修改该仓库!");				
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		
+		//检查传入的参数
+		//update repos
+		if(reposId == null)
+		{
+			rt.setError("仓库ID不能为空!");				
+			writeJson(rt, response);	
+			return;
+		}
+		
+		/*通过判断需要内容进行不同的操作，另外需要分阶段更新，优先更新与存储无关的参数*/
+		//修改仓库描述
+		if(info != null && !info.isEmpty())
+		{
+			//get old ReposInfo
+			Repos oldReposInfo = reposService.getRepos(reposId);
+			if(oldReposInfo == null)
+			{
+				rt.setError("仓库 " +reposId +" 不存在!");				
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(!info.equals(oldReposInfo.getInfo()))
+			{
+				//new ReposInfo
+				Repos newReposInfo = new Repos();
+				newReposInfo.setId(reposId);
+				newReposInfo.setInfo(info);
+				if(reposService.updateRepos(newReposInfo) == 0)
+				{
+					System.out.println("updateRepos for info failed");
+					rt.setError("设置仓库info失败！");
+					writeJson(rt, response);
+					return;			
+				}
+			}
+		}
+		
+		//rename仓库
+		if(name != null && !name.isEmpty())
+		{
+			//get old ReposInfo
+			Repos oldReposInfo = reposService.getRepos(reposId);
+			if(oldReposInfo == null)
+			{
+				rt.setError("仓库 " +reposId +" 不存在!");				
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(!name.equals(oldReposInfo.getName()))
+			{
+				if(login_user.getType() != 2)
+				{
+					System.out.println("普通用户无权重命名仓库，请联系管理员！");
+					rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
+					writeJson(rt, response);
+					return;							
+				}
+				
+				String oldReposDir = oldReposInfo.getPath() + oldReposInfo.getName();
+				String newReposDir = oldReposInfo.getPath() + name;
+				if(CopyReposDir(oldReposDir,newReposDir) == false)
+				{
+					System.out.println("RenameRepos failed");
+					rt.setError("重命名仓库失败！");
+					writeJson(rt, response);
+					return;			
+				}
+				
+				//new ReposInfo
+				Repos newReposInfo = new Repos();
+				newReposInfo.setId(reposId);
+				newReposInfo.setName(name);
+				if(reposService.updateRepos(newReposInfo) == 0)
+				{
+					System.out.println("updateRepos for name failed");
+					DeleteReposDir(newReposDir);					
+					rt.setError("设置仓库name失败！");
+					writeJson(rt, response);
+					return;			
+				}
+				//删除原来的仓库
+				DeleteReposDir(oldReposDir);
+			}
+		}
+		
+		//move仓库
+		if(path != null && !path.isEmpty())
+		{
+			//如果传入的Path没有带/,给他加一个
+			String endChar = path.substring(path.length()-1, path.length());
+			if(!endChar.equals("/"))	
+			{
+				path = path + "/";
+			}
+			
+			//get old ReposInfo
+			Repos oldReposInfo = reposService.getRepos(reposId);
+			if(oldReposInfo == null)
+			{
+				rt.setError("仓库 " +reposId +" 不存在!");				
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(!path.equals(oldReposInfo.getPath()))
+			{
+				
+				if(login_user.getType() != 2)
+				{
+					System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
+					rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
+					writeJson(rt, response);
+					return;							
+				}
+				
+				//为了保证仓库任何一步都能能够还原，我们总是先复制出一个新的
+				String oldReposDir = oldReposInfo.getPath() + oldReposInfo.getName();
+				String newReposDir = path + oldReposInfo.getName();
+				if(CopyReposDir(oldReposDir, newReposDir) == false)
+				{
+					//Remove the new created Repos
+					System.out.println("仓库目录迁移失败！");
+					rt.setError("修改仓库位置失败！");					
+					return;
+				}
+				
+				//new ReposInfo
+				Repos newReposInfo = new Repos();
+				newReposInfo.setId(reposId);
+				newReposInfo.setPath(path);
+				if(reposService.updateRepos(newReposInfo) == 0)
+				{
+					//删除新建的仓库目录
+					System.out.println("updateRepos for path failed");
+					DeleteReposDir(newReposDir);
+					rt.setError("设置仓库path失败！");
+					writeJson(rt, response);
+					return;			
+				}
+				//删除旧仓库的存储目录
+				DeleteReposDir(oldReposDir);
+			}
+		}
+		
+		//move svn仓库
+		if(verCtrl != null && verCtrl == 1)
+		{
+			//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
+			if((svnPath == null) || svnPath.equals(""))
+			{
+				//Create a local SVN Repos
+				String localReposPath = "";
+				String os = System.getProperty("os.name");  
+				System.out.println("OS:"+ os);  
+				if(os.toLowerCase().startsWith("win")){  
+					localReposPath = "D:/DocSysSvnReposes/";
+				}
+				else
+				{
+					localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+				}
+				svnPath = SVNUtil.CreateRepos(name,localReposPath);
+				if(svnPath == null)
+				{
+					rt.setError("SVN仓库的创建失败");
+					writeJson(rt, response);	
+					return;
+				}
+				svnUser = "";
+				svnPwd = "";
+			}			
+			
+			//get old ReposInfo
+			Repos oldReposInfo = reposService.getRepos(reposId);
+			if(oldReposInfo == null)
+			{
+				rt.setError("仓库 " +reposId +" 不存在!");				
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(!svnPath.equals(oldReposInfo.getSvnPath()) || !svnUser.equals(oldReposInfo.getSvnUser()) || !svnPwd.equals(oldReposInfo.getSvnPwd()))
+			{
+				//new ReposInfo
+				Repos newReposInfo = new Repos();
+				newReposInfo.setId(reposId);
+				newReposInfo.setVerCtrl(verCtrl);
+				newReposInfo.setSvnPath(svnPath);
+				newReposInfo.setSvnUser(svnUser);
+				newReposInfo.setSvnPwd(svnPwd);
+				
+				//copy the .svn to backup, if success then delete it, else copy it back
+				String reposDir = oldReposInfo.getPath() + oldReposInfo.getName();
+				File tmpDir = new File(reposDir + "/data/.svn");
+				if(tmpDir.exists())
+				{
+					if(changeDirectory(".svn",reposDir + "/data",reposDir + "/backup", false) == false)
+					{
+						rt.setError("备份 .svn 目录失败");				
+						writeJson(rt, response);
+						return;						
+					}
+				}
+				
+				String commitUser = login_user.getName();				
+				if(doReposSvnInit(reposDir + "/data",newReposInfo,commitUser) == false)
+				{
+					System.out.println("仓库的SVN初始化失败");
+					//恢复workingcopy
+					//delDir(reposDir + "/data/.svn");
+					//changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);
+					rt.setError("仓库的SVN初始化失败，请检查svnPath、svnUser、svnPwd");
+					writeJson(rt, response);	
+					return;
+				}
+				
+				if(reposService.updateRepos(newReposInfo) == 0)
+				{
+					System.out.println("仓库信息更新失败");
+					//恢复working copy
+					delDir(reposDir + "/data/.svn");
+					changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);
+					rt.setError("仓库信息更新失败！");
+					writeJson(rt, response);
+					return;			
+				}
+				//删除备份的workingcopy
+				delDir(reposDir + "/backup/.svn");
+			}
+		}
+		
+		writeJson(rt, response);	
+	}
+
+	private boolean CopyReposDir(String oldReposDir, String newReposDir) {
+		// TODO Auto-generated method stub
+		System.out.println("CopyReposDir oldReposDir " + oldReposDir +" newReposDir " + newReposDir);
+        if(!oldReposDir.equals(newReposDir))
+        {
+            File oldfile=new File(oldReposDir);
+            File newfile=new File(newReposDir);
+            if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
+            {
+            	System.out.println(newReposDir + " 仓库已存在");
+            	return false;
+            }
+            else
+            {
+            	System.out.println("迁移仓库");
+            	try {
+					return copyFile(oldReposDir, newReposDir, false);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return false;
+				}
+            }
+        }
+        else
+        {
+        	System.out.println("仓库根目录未变化");
+        	return false;	//同一个目录下不需要
+        }
+	}
+	
+	private boolean DeleteReposDir(String reposDir) {
+		// TODO Auto-generated method stub
+		System.out.println("DeleteReposDir reposDir " + reposDir);
+        File file = new File(reposDir);
+        if(file.exists()) 
+        {
+        	return delDir(reposDir);
+        }
+        else
+        {
+        	System.out.println(reposDir + "目录不存在!");
+        }
+        return true;
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/

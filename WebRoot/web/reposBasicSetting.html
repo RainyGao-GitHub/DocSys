@@ -2,18 +2,22 @@
 <div id="reposBasicSetting">
         <div class="form-group">
             <label>名字</label>
-            <input class="form-control" type="text" id="RBSname" value="" style="width: 100%" disabled="disabled"></input>
+            <input class="form-control" type="text" id="RBSname" value="" style="width: 100%"></input>
             <label>介绍</label>
             <input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
             <label>仓库类型</label>
             <select class="form-control" id="RBStype" onchange="doSelectFS();" style="width: 100%" disabled="disabled">   
             	<option value="0">虚拟文件系统</option>   
             	<option value="1"">实文件系统</option>   
-            	<option value="2">带版本管理的虚拟文件系统</option>
-            	<option value="3">带版本管理的实文件系统</option>   
             </select>
             <label>仓库位置</label>
             <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
+            <label>版本管理</label>
+            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
+            	<option value="0">无</option>   
+            	<option value="1">SVN</option>   
+            	<option value="2">GIT</option>   
+            </select>
             <label>svn路径</label>
             <input class="form-control" type="text" id="RBSsvnPath"  value="" style="width: 100%" disabled="disabled"></input>
             <label>svn用户名</label>
@@ -36,6 +40,25 @@
 		reposBasicSettingPageInit();
 	});
 
+	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
+	function doSelectVerCtrl()
+	{
+		var verCtrl = $("#RBSverCtrl").val();
+		//alert(verCtrl);
+		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		{
+			$("#RBSsvnPath").attr("disabled",false);
+			$("#RBSsvnUser").attr("disabled",false);
+			$("#RBSsvnPwd").attr("disabled",false);
+		}
+		else	//hide svn info
+		{
+			$("#RBSsvnPath").attr("disabled",true);
+			$("#RBSsvnUser").attr("disabled",true);
+			$("#RBSsvnPwd").attr("disabled",true);
+		}   
+	}
+	
 //显示仓库公开访问权限设置
 var gReposBasicSetting = [];
 function getReposBasicSetting()
@@ -52,7 +75,9 @@ function getReposBasicSetting()
            success : function (ret) {
                if( "ok" == ret.status ){
                		gReposBasicSetting = ret.data;
+               		console.log(gReposBasicSetting);
                		showReposBasicSetting(ret.data);
+               		doSelectVerCtrl();
                }else {
 					showErrorMessage(ret.msgInfo);
                }
@@ -69,12 +94,10 @@ function getReposBasicSetting()
 	   	$("#RBSinfo").val(reposInfo.info);
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#RBSpath").val(reposInfo.path);
-	   	if(reposInfo.type > 1)
-	   	{
-	   		$("#RBSsvnPath").val(reposInfo.svnPath);
-	   		$("#RBSsvnUser").val(reposInfo.svnUser);
-	   		$("#RBSsvnPwd").val(reposInfo.svnPwd);
-	   	}
+	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
+	   	$("#RBSsvnPath").val(reposInfo.svnPath);
+	   	$("#RBSsvnUser").val(reposInfo.svnUser);
+	   	$("#RBSsvnPwd").val(reposInfo.svnPwd);
 	}
 }
 
@@ -87,6 +110,7 @@ function saveReposBasicSetting()
 	newReposSetting.info = $("#RBSinfo").val();
 	newReposSetting.type = $("#RBStype").val();
 	newReposSetting.path = $("#RBSpath").val();
+	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.svnPath = $("#RBSsvnPath").val();
 	newReposSetting.svnUser = $("#RBSsvnUser").val();
 	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
@@ -104,6 +128,7 @@ function saveReposBasicSetting()
                     info : newReposSetting.info,
                     type : newReposSetting.type,
                     path : newReposSetting.path,
+                    verCtrl: newReposSetting.verCtrl,
                     svnPath : newReposSetting.svnPath,
                     svnUser : newReposSetting.svnUser,
                     svnPwd : newReposSetting.svnPwd,
@@ -111,13 +136,14 @@ function saveReposBasicSetting()
                 success : function (ret) {
                 	if(ret.status == "ok")
                 	{
-                		console.log("创建仓库成功");
-	                 	// 普通消息提示条
+                		console.log("更新仓库设置成功");
+                		getReposBasicSetting();     
+                		// 普通消息提示条
 						bootstrapQ.msg({
 						msg : '设置完成！',
 						type : 'success',
 						time : 2000,
-					    });     
+					    });
 	                }
                     else
                     {
@@ -139,8 +165,8 @@ function saveReposBasicSetting()
        {
        		if(oldSetting.name != newSetting.name)
        		{
-       			alert("仓库名字不能修改");
-       			return false;
+       			//alert("仓库名字不能修改");
+       			return true;
        		}
        		
        		if(oldSetting.type != newSetting.type)
@@ -164,7 +190,8 @@ function saveReposBasicSetting()
        		if(oldSetting.svnUser != newSetting.svnUser)
        		{
        			return true;
-       		}if(oldSetting.svnPwd != newSetting.svnPwd)
+       		}
+       		if(oldSetting.svnPwd != newSetting.svnPwd)
        		{
        			return true;
        		}
