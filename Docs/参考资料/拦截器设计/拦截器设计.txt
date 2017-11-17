@@ -1,0 +1,42 @@
+1、配置
+	<mvc:interceptors>
+	    <!-- 多个拦截器,顺序执行 -->
+	    <mvc:interceptor>
+	    	<!-- 如果不配置或/*,将拦截所有的Controller -->
+	       <mvc:mapping path="/**" />
+	       <bean class="com.DocSystem.controller.MyInterceptor"></bean>
+	    </mvc:interceptor>
+	</mvc:interceptors>   
+
+2、后台代码（判断放行的条件）
+	public boolean preHandle(HttpServletRequest request,
+			HttpServletResponse response, Object handler) throws Exception {
+		
+		String uri = request.getRequestURI();
+		String params = request.getQueryString();
+		User user;
+		
+		HttpSession session = request.getSession();
+		System.out.println(uri);
+		user = (User) session.getAttribute("login_user");
+		
+		if(isAjaxRequest(request)){
+			return true;
+		}
+		if(user!=null){
+			return true;
+		}
+		
+		for(String s:allowedUrl){
+			if(uri.contains(s)){
+				return true;
+			}
+			if(params!=null&&params.contains(s)){
+				return true;
+			}
+		}
+		
+		// TODO Auto-generated method stub
+		response.sendRedirect("tologin.do?option=reload");
+		return false;
+	}

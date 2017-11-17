@@ -1,5 +1,0 @@
-1、首先保证安装了jdk，并配置环境变量
-2、根据自己需要，修改docsystem.xml
-3、修改数据库url、用户名，密码及路径等。
-4、双击运行go.bat
-5、生成的文件会更新 DocSys\src\com\DocSystem 目录下的Dao、Entity和Mapping

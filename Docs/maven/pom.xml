@@ -106,6 +106,25 @@
 	    <artifactId>ant</artifactId>
 	    <version>1.6.5</version>
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.tmatesoft.svnkit/svnkit -->
+	<dependency>
+	    <groupId>org.tmatesoft.svnkit</groupId>
+	    <artifactId>svnkit</artifactId>
+	    <version>1.9.0</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+	<dependency>
+	    <groupId>com.fasterxml.jackson.core</groupId>
+	    <artifactId>jackson-core</artifactId>
+	    <version>2.9.2</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.tmatesoft.sqljet/sqljet -->
+	<dependency>
+	    <groupId>org.tmatesoft.sqljet</groupId>
+	    <artifactId>sqljet</artifactId>
+	    <version>1.1.10</version>
+	</dependency>
+
   </dependencies>
   <build>
     <finalName>maven</finalName>

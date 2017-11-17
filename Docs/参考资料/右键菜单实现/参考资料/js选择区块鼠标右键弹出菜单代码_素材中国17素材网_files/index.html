@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!-- saved from url=(0059)http://www.17sucai.com/preview/1/2017-03-05/Menu/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	<title></title>
+	<link rel="stylesheet" href="./web.contextmenu.css">
+</head>
+<body>
+	
+	<div id="div1" style="width:300px;height:300px;background:#036;color:#fff;text-align:center;line-height:300px" data-menu-index="0">
+		在这里鼠标右键
+	</div>
+	<div id="div2" style="width:300px;height:300px;background:#036;color:#fff;text-align:center;line-height:300px;margin-top:10px" data-menu-index="1">
+		在这里鼠标右键
+	</div>
+
+<script type="text/javascript" src="./web.contextmenu.js.下载"></script>
+<script>
+	var menuJson = [
+		{
+			name:"添加",
+			id:"menu1",
+			callback: function() {
+				alert("添加");
+			}
+		},
+		{
+			name:"修改",
+			id:"menu2",
+			callback: function() {
+				alert("修改");
+			}
+		},
+		{
+			name:"删除",
+			id:"menu-delete",
+			callback: function() {
+				alert("删除");
+			}
+		},
+		{
+			name:"查询",
+			id:"menu-query",
+			callback: function() {
+				alert("查询");
+			}
+		},
+		
+		// 2
+		{
+			name:"二层子菜单一",
+			id:"menu1Submenu1",
+			parent:"menu1"
+		},
+		{
+			name:"二层子菜单二",
+			id:"menu1Submenu2",
+			parent:"menu1",
+			callback: function() {
+				alert("天才");
+			}
+		},
+		{
+			name:"二层查询菜单",
+			id:"second-level-menu-query",
+			parent:"menu-query",
+			callback: function() {
+				alert("查询第二层");
+			}
+		},
+		
+		
+		// 3
+		{
+			name:"三层子菜单",
+			id:"menu1Submenu1Submenu",
+			parent:"menu1Submenu1",
+			callback: function() {
+				alert("第三层子菜单");
+			}
+		},
+		
+		// 4
+		{
+			name:"第四层子菜单",
+			id:"fourth-menu1",
+			parent:"menu1Submenu1Submenu",
+			callback: function() {
+				alert("第四层子菜单");
+			}
+		},
+	];
+	
+	window.contextMenu(document.querySelector("#div1"), menuJson);
+	
+	window.contextMenu(document.querySelector("#div2"), [
+		// 1
+		{
+			name:"第二个菜单1",
+			id: "sec-menu-1",
+			callback: function() {
+				alert("大天才");
+			}
+		},
+		{
+			name:"第二个菜单2",
+			id: "sec-menu-2",
+			callback: function() {
+				alert("小天才");
+			}
+		},
+		// 1 end
+		// 2
+		{
+			name:"第二个子菜单1",
+			id: "sec-s-menu-1",
+			parent:"sec-menu-1",
+			callback: function() {
+				alert("大天才中的小天才");
+			}
+		},
+	]);
+	
+</script>
+
+
+<div class="web-context-menu" id="web-context-menu-0" style="left: 272px; top: 170px; display: none;"><div class="web-context-menu-items"><div class="web-context-menu-item" id="menu1"><span class="menu-item-name">添加<i>▲</i></span><div class="web-context-menu-items"><div class="web-context-menu-item" id="menu1Submenu1"><span class="menu-item-name">二层子菜单一<i>▲</i></span><div class="web-context-menu-items"><div class="web-context-menu-item" id="menu1Submenu1Submenu"><span class="menu-item-name">三层子菜单<i>▲</i></span><div class="web-context-menu-items"><div class="web-context-menu-item" id="fourth-menu1"><span class="menu-item-name">第四层子菜单</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div></div></div><div class="menu-item-line"></div></div></div><div class="menu-item-line"></div><div class="web-context-menu-item" id="menu1Submenu2"><span class="menu-item-name">二层子菜单二</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div></div></div><div class="menu-item-line"></div><div class="web-context-menu-item" id="menu2"><span class="menu-item-name">修改</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div><div class="web-context-menu-item" id="menu-delete"><span class="menu-item-name">删除</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div><div class="web-context-menu-item" id="menu-query"><span class="menu-item-name">查询<i>▲</i></span><div class="web-context-menu-items"><div class="web-context-menu-item" id="second-level-menu-query"><span class="menu-item-name">二层查询菜单</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div></div></div><div class="menu-item-line"></div></div></div><div class="web-context-menu" id="web-context-menu-1" style="left: 233px; top: 381px; display: none;"><div class="web-context-menu-items"><div class="web-context-menu-item" id="sec-menu-1"><span class="menu-item-name">第二个菜单1<i>▲</i></span><div class="web-context-menu-items"><div class="web-context-menu-item" id="sec-s-menu-1"><span class="menu-item-name">第二个子菜单1</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div></div></div><div class="menu-item-line"></div><div class="web-context-menu-item" id="sec-menu-2"><span class="menu-item-name">第二个菜单2</span><div class="web-context-menu-items"></div></div><div class="menu-item-line"></div></div></div></body></html>

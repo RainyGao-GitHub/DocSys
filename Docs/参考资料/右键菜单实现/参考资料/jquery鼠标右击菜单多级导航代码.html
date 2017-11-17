@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0091)http://www.17sucai.com/preview/1/2015-07-11/%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95/index.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>jquery鼠标右击菜单多级导航代码</title>
+	
+<link rel="stylesheet" href="./jquery鼠标右击菜单多级导航代码_files/base.css">
+
+<!--右键菜单样式-->
+<link rel="stylesheet" href="./jquery鼠标右击菜单多级导航代码_files/gizmoMenu.css">
+	
+<script type="text/javascript" src="./jquery鼠标右击菜单多级导航代码_files/jquery-2.1.3.min.js.下载"></script>
+<script type="text/javascript" src="./jquery鼠标右击菜单多级导航代码_files/gizmoMenu.js.下载"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+	$('body').gizmoMenu({
+		'menu':'gizmoDropDown'	
+	});
+	
+	$('#hamburger_example').gizmoMenu({
+		'menu':'gizmoBurger'
+	});
+	
+	$('#horizontal_example').gizmoMenu({
+		'menu':'gizmoHorizontal'
+	});			
+});
+</script>  
+  
+</head>
+<body>
+<div class="gizmoMenu gizmoDropDown gizmoMenu_close_me" style="opacity: 0; display: none;">
+	<ul>
+		<li><i class="fa fa-camera-retro"></i><a href="http://www.17sucai.com/" target="_blank">17素材网</a></li>
+		<li><i class="fa fa-bars"></i><a href="http://www.17sucai.com/" target="_blank">右键菜单</a></li>            
+		<li><i class="fa fa-arrow-right"></i><a href="http://www.17sucai.com/">jQuery特效</a>
+			<ul>
+				<li><i class="fa fa-bullseye"></i><a href="http://www.17sucai.com/" target="_blank">第一</a></li>
+				<li><i class="fa fa-cubes"></i><a href="http://www.17sucai.com/" target="_blank">第二</a></li>
+				<li><i class="fa fa-text-height"></i><a href="http://www.17sucai.com/" target="_blank">第三</a></li>
+				<li><i class="fa fa-star"></i><a href="http://www.17sucai.com/" target="_blank">第四</a></li>
+				<li><i class="fa fa-cube"></i><a href="http://www.17sucai.com/" target="_blank">第五</a></li>
+				<li><i class="fa fa-location-arrow"></i><a href="http://www.17sucai.com/" target="_blank">第六</a></li>                                                
+			</ul>
+		</li>
+		<li><i class="fa fa-arrow-right"></i><a href="http://www.17sucai.com/preview/1/2015-07-11/%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95/index.html#">网页特效</a>
+			<ul>
+				<li><i class="fa fa-table"></i><a href="http://www.17sucai.com/" target="_blank">HTML5特效</a></li>
+				<li><i class="fa fa-table"></i><a href="http://www.17sucai.com/" target="_blank">CSS3特效</a></li>
+			</ul>
+		</li>
+		<li><i class="fa fa-arrow-right"></i><a href="http://www.17sucai.com/preview/1/2015-07-11/%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95/index.html#">HTML5特效</a>
+			<ul>
+				<li><i class="fa fa-image"></i><a href="http://www.17sucai.com/" target="_blank">HTML5特效</a></li>
+				<li><i class="fa fa-gamepad"></i><a href="http://www.17sucai.com/" target="_blank">CSS3特效</a></li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="container">
+	<h1>鼠标右击看看</h1>
+	<p>适用浏览器：360、FireFox、Chrome、Safari、Opera、傲游、搜狗、世界之窗. <br>不支持IE8及以下浏览器。</p>
+</div>
+
+
+
+</body></html>

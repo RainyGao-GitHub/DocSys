@@ -1,2 +1,51 @@
-1、docsystem20170914.sql
-	 1.00版本使用的数据库表结构
+1、docsystem20170814.sql  
+   2.01版本使用的数据库
+
+2、docsystem20170822.sql  
+   2.02版本使用的数据库
+   数据库字段全部使用了大写;
+   细化了用户表;
+   增加了角色表、仓库权限表、文件节点权限表、系统配置表
+
+3、docsystem20170822-1.sql  
+   2.02版本使用的数据库
+	 doc 和 repos表的PWD字段默认置空，否则系统报错
+	 
+4、docsystem20170822-1.sql  
+   2.02版本使用的数据库
+	 user表字段默认置空，否则系统报错
+	 
+5、docsystem20170904.sql
+	 2.02版本使用的数据库
+	 repos_auth表字段增加EDIT\ADD\DELETE控制
+
+6、docsystem20170905.sql
+	 2.02版本使用的数据库
+	 doc_auth 和 repos_auth的 EDIT ADD DELETE 改为 EDIT_EN 。。。	 
+	 
+7、docsystem20170905-1.sql
+	 2.02版本使用的数据库
+	repos的PATH等字段长度调整（原来是想删除menu的，结果一堆代码需要处理，所以又加了回来，汗）	 
+	
+8、docsystem20170905-2.sql
+	 2.02版本使用的数据库
+	 docAuth的EDIT ADD DELET均使用INT，避免类型转换 
+	 
+9、docsystem20170905-2.sql
+	 2.02版本使用的数据库
+	 wiki_project增加owner字段用于放owner id
+	 
+10、docsystem20170912.sql
+	 2.02版本使用的数据库
+	 wiki_doc改为doc\wiki_project改为repos
+	 doc_auth和repos_auth增加is_amdin字段
+
+10、docsystem20170914.sql
+	 2.02版本使用的数据库
+	 doc增加 creator和create_time字段
+	 repos的create_time改为String类型
+
+10、docsystem2017116.sql 
+		2.04版本使用的数据库
+	  repos增加了VER_CTRL，版本控制类型
+	  SVN_PATH将不再单指SVN，还可能是GIT仓库路径，当然也包括SVN_USER和SVN_PWD

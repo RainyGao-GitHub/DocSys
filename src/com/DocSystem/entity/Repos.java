@@ -7,6 +7,8 @@ public class Repos {
 
     private Integer type;
 
+    private Integer verCtrl;
+
     private String path;
 
     private String svnPath;
@@ -47,6 +49,14 @@ public class Repos {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public Integer getVerCtrl() {
+        return verCtrl;
+    }
+
+    public void setVerCtrl(Integer verCtrl) {
+        this.verCtrl = verCtrl;
     }
 
     public String getPath() {

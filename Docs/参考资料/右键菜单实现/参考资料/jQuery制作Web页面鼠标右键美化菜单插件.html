@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0195)http://www.17sucai.com/preview/194574/2015-04-09/jQuery%E5%88%B6%E4%BD%9CWeb%E9%A1%B5%E9%9D%A2%E9%BC%A0%E6%A0%87%E5%8F%B3%E9%94%AE%E7%BE%8E%E5%8C%96%E8%8F%9C%E5%8D%95%E6%8F%92%E4%BB%B6/index.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript" src="./jQuery制作Web页面鼠标右键美化菜单插件_files/jquery-1.8.2.min.js.下载"></script>
+<title>jQuery制作Web页面鼠标右键美化菜单插件</title>
+
+<style type="text/css">
+body{ position:relative;}
+ul,li{ margin:0; padding:0; list-style:none; font-size:12px;}
+.popup_menu{position:absolute; z-index:90; border:1px solid #AEAEAE; padding:2px; width:120px;}
+.popup_menu a{ display:block; color:#325B8E; text-indent:12px; text-decoration:none; height:26px; line-height:25px; padding-right:5px;}
+.popup_menu a:hover{ background:#57B4E4; color:#fff; border-radius:5px;}
+</style>
+</head>
+<body>
+<script type="text/javascript">
+var kyoPopupMenu={};
+	kyoPopupMenu = (function(){
+    return {
+        sys: function (obj) {
+			$('.popup_menu').remove();
+            popupMenuApp = $('<div class="popup_menu app-menu"><ul><li><a menu="menu1">17素材网</a></li><li><a menu="menu2">百度</a></li><li><a menu="menu3">新浪</a></li></ul></div>')
+			.find('a').attr('href','javascript:;')
+			.end().appendTo('body');
+			//绑定事件
+			$('.app-menu a[menu="menu1"]').on('click', function (){
+				window.location.href="http://www.17sucai.com";
+            });
+			$('.app-menu a[menu="menu2"]').on('click', function (){
+				window.location.href="http://www.baidu.com";
+            });
+			$('.app-menu a[menu="menu3"]').on('click', function (){
+				 window.location.href="http://www.sina.com.cn";
+            });
+			return popupMenuApp;
+		}
+	}})();
+	//取消右键
+	$('html').on('contextmenu', function (){return false;}).click(function(){
+		$('.popup_menu').hide();
+	});
+	//桌面点击右击
+    $('html').on('contextmenu',function (e){
+    	var popupmenu = kyoPopupMenu.sys();
+      	l = ($(document).width() - e.clientX) < popupmenu.width() ? (e.clientX - popupmenu.width()) : e.clientX;
+      	t = ($(document).height() - e.clientY) < popupmenu.height() ? (e.clientY - popupmenu.height()) : e.clientY;
+      	popupmenu.css({left: l,top: t}).show();
+      	return false;
+    });
+</script>
+
+
+<div class="popup_menu app-menu" style="left: 780px; top: 131px; display: none;"><ul><li><a menu="menu1" href="javascript:;">17素材网</a></li><li><a menu="menu2" href="javascript:;">百度</a></li><li><a menu="menu3" href="javascript:;">新浪</a></li></ul></div></body></html>

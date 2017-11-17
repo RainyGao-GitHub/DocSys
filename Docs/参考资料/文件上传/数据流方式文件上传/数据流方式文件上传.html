@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件上传测试页</title>
+</head>
+<body>
+
+<img src="" id="show">
+
+<input type="file" id="in">
+<button onclick="up()" >base64 格式上传</button>
+
+<script type="application/javascript" src="jquery.js"></script>
+<script type="application/javascript">
+    /**
+     * 回调函数
+     * @param image_base64
+     */
+    var callback = function(image_base64) {
+        $.post('../upload/', {
+            file: image_base64
+        }, function (ret) {
+            alert("ok")
+            console.log(ret)
+        }, function (e) {
+            alert("err")
+            console.log(e)
+        });
+    }
+
+    /**
+     * 头像选择触发事件
+     */
+    function up() {
+        fileUpload(document.getElementById("in").files[0], callback);
+    };
+
+    /**
+     * 将文件转成base64
+     * @param obj
+     * @param callback
+     * @returns {boolean}
+     */
+    var fileUpload = function(obj, callback){
+        var file = obj;
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(e){
+            callback && callback(e.target.result);
+        };
+    }
+</script>

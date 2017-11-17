@@ -1,0 +1,47 @@
+异步请求：
+project/add --> addRepos
+参数：req
+操作：insert into wiki_project(name,info) values(#{name},#{info})
+返回：ret
+
+project/list  --> getReposList
+参数：req
+操作：SELECT * from wiki_version
+返回：ret project list
+
+project/menu/get  --> getReposMenu
+参数：req
+操作：SELECT menu from wiki_version WHERE id=#{vid}
+			record 
+返回：ret (record --> menu)
+
+project/menu/update  --> updateReposMenu
+参数：req
+操作：update wiki_version set menu = #{menu} WHERE id = #{vid}
+返回：ret
+
+project/version --> addReposVer
+参数：req
+操作：insert into wiki_version(project,name,menu,edit_time) values(#{project},#{name},#{menu},#{edit_time})
+返回：ret 目录列表
+
+doc/create  --> addDoc
+参数：req
+操作：INSERT wiki_doc SET content = #{content}  
+返回：ret 文件列表
+
+doc/get --> getDoc
+参数：req
+操作：SELECT * from wiki_doc WHERE id = #{id} 
+			doc 文件内容
+返回：ret json格式文件内容
+
+doc/update --> updateDoc
+参数：req
+操作：UPDATE wiki_doc SET content = #{content} WHERE id= #{id} 
+返回：ret 文件列表
+
+doc/delete --> deleteDoc
+参数：req
+操作：DELETE FROM wiki_doc WHERE id = #{id} 
+返回：ret 文件列表

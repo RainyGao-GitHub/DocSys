@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0081)http://www.17sucai.com/preview/397065/2015-09-22/disabledOnContextMenu/index.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta http-equiv="X-UA-Compatible" content="IE=7">
+<title>右键</title>
+
+<script type="text/javascript" src="./右键_files/jquery-1.11.2.min.js.下载"></script>
+<script type="text/javascript" src="./右键_files/jquery.notice.js.下载"></script>
+
+<style type="text/css">
+.document-class {
+	width:200px;
+	border: 1px solid #CCCCCC;
+	position: absolute;
+	display: none;
+	background: #ffffff;
+	z-index: 9999;
+}
+
+.document-class ul {
+	padding: 0px;
+	margin: 0px;
+	list-style: none;
+}
+
+.document-class ul li {
+	line-height: 30px;
+	text-indent: 20px;
+}
+.document-class ul li a {
+	color: #000000;
+	text-decoration: none;
+}
+</style>
+
+</head>
+<body>
+
+<div style="text-align: center; line-height: 30px;">右击，查看效果</div>
+
+<div class="document-class">
+    <ul>
+        <li><a href="http://www.baidu.com/" target="_blank">百度</a></li>
+        <li><a href="http://www.thinkphp.cn/" target="_blank">ThinkPHP官方</a></li>
+        <li><a href="http://www.17sucai.com/" target="_blank">17素材网</a></li>
+    </ul>
+</div>
+
+<script type="text/javascript">
+$(function () {
+	 $.mouseMoveShow('.document-class');
+	 $.disabledContextMenu();
+});
+</script>
+
+</body></html>
