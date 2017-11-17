@@ -114,11 +114,15 @@
             <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
             	<option value="0">虚拟文件系统</option>   
             	<option value="1" selected="selected">实文件系统</option>   
-            	<option value="2">带版本管理的虚拟文件系统</option>
-            	<option value="3">带版本管理的实文件系统</option>   
             </select>
             <label>仓库位置</label>
             <input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+            <label>版本管理</label>
+            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
+            	<option value="0">无</option>   
+            	<option value="1">SVN</option>   
+            	<option value="2">GIT</option>   
+            </select>
             <label>svn路径</label>
             <input class="form-control" type="text" name="svnPath"  value="" style="width: 100%"/>
             <label>svn用户名</label>
@@ -361,9 +365,15 @@
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
 	function doSelectFS()
 	{
-		var type = $("#dialog-new-repos select[name='type']").val();
-		//alert(type);
-		if((type == 2) || (type == 3)) 			//show svn info
+		//var type = $("#dialog-new-repos select[name='type']").val();   
+	}
+
+	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
+	function doSelectVerCtrl()
+	{
+		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+		//alert(verCtrl);
+		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
 			$("#dialog-new-repos input[name='svnPath']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnUser']").attr("disabled",false);
@@ -376,7 +386,7 @@
 			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",true);				
 		}   
 	}
-
+	
     function newRepos() {
         qiao.bs.dialog({
             id: "dialog-new-repos",
@@ -394,7 +404,7 @@
                     $("#dialog-new-repos input[name='svnPath']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser']").val("");
             		$("#dialog-new-repos input[name='svnPwd']").val("");
-                    doSelectFS(); //根据文件系统默认类型，控制显示svn信息
+                    doSelectVerCtrl(); //根据文件系统版本控制默认类型，控制显示svn信息
                 },100);
 
             }
@@ -403,6 +413,7 @@
             var info = $("#dialog-new-repos input[name='info']").val();
             var type = $("#dialog-new-repos select[name='type']").val();
             var path = $("#dialog-new-repos input[name='path']").val();
+            var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
             var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
             var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
@@ -419,6 +430,7 @@
                         info:info,
                         type:type,
                         path:path,
+                        verCtrl: verCtrl,
                         svnPath: svnPath,
                         svnUser: svnUser,
                         svnPwd: svnPwd,

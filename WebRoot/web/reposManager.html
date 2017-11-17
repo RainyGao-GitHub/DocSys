@@ -109,6 +109,7 @@
                 <p id="editTime"></p>   
             </div>
         </div>
+        <div id="line" class="manual-line" ></div>
         <div class="manual-right">
             <div class="manual-article">
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
@@ -339,6 +340,27 @@
         initHighlighting();
 
     });
+    
+    //目录列表区域拖放功能：预览区和子目录区域需要一起变化
+    var oDiv=document.getElementById('line');
+    oDiv.onmousedown=function(ev){
+      var disX=ev.clientX-oDiv.offsetLeft;
+      var disY=ev.clientY-oDiv.offsetTop;
+
+      document.onmousemove=function(ev){
+          var l=ev.clientX-disX;	//计算Line的位置
+          oDiv.style.left=l+'px';	//设置Line的位置
+     	  $(".manual-left")[0].style.width=ev.clientX+'px';
+       	  $(".manual-right")[0].style.left=ev.clientX+'px';
+   	  };
+      
+      document.onmouseup=function(ev){
+   	  	//$(".manual-left")[0].style.width=ev.clientX+'px';
+   	 	//$(".manual-right")[0].style.left=ev.clientX+'px';
+   	 	document.onmousemove=null;
+   	  	document.onmouseup=null;
+      };
+    };
 
 </script>
 
@@ -500,7 +522,12 @@
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
-                        //updateMenu(); //不再使用Repos的menu数据来表示zTree,因此updateMenu不需要再执行
+                        bootstrapQ.msg({
+    							msg : '删除成功！',
+    							type : 'success',
+    							time : 2000,
+    					});
+    					window.location.reload();	//刷新页面
                     }
                     else
                     {
@@ -809,6 +836,19 @@
 			{text: '设置密码', action: function(e){
 						e.preventDefault();
 	        			alert("该功能未开通!");
+					}
+			},
+			{divider: true},
+			{text: '删除仓库', action: function(e){
+						currentNode = curRightClickedTreeNode.getParentNode();
+						if(curRightClickedTreeNode.id != 0)
+						{
+							alert("请选择仓库目录进行删除！");
+							return;
+						}
+						var vid = getQueryString("vid");
+						console.log("删除仓库：" + vid);	
+						deleteRepos(vid);
 					}
 			},
 		]);

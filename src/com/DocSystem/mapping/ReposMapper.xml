@@ -5,6 +5,7 @@
     <id column="ID" jdbcType="INTEGER" property="id" />
     <result column="NAME" jdbcType="VARCHAR" property="name" />
     <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="VER_CTRL" jdbcType="INTEGER" property="verCtrl" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
     <result column="SVN_PATH" jdbcType="VARCHAR" property="svnPath" />
     <result column="SVN_USER" jdbcType="VARCHAR" property="svnUser" />
@@ -16,7 +17,8 @@
     <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, PATH, SVN_PATH, SVN_USER, SVN_PWD, INFO, MENU, PWD, OWNER, CREATE_TIME
+    ID, NAME, TYPE, VER_CTRL, PATH, SVN_PATH, SVN_USER, SVN_PWD, INFO, MENU, PWD, OWNER, 
+    CREATE_TIME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -30,14 +32,14 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.Repos">
     insert into repos (ID, NAME, TYPE, 
-      PATH, SVN_PATH, SVN_USER, 
-      SVN_PWD, INFO, MENU, 
-      PWD, OWNER, CREATE_TIME
+      VER_CTRL, PATH, SVN_PATH, 
+      SVN_USER, SVN_PWD, INFO, 
+      MENU, PWD, OWNER, CREATE_TIME
       )
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{path,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, #{svnUser,jdbcType=VARCHAR}, 
-      #{svnPwd,jdbcType=VARCHAR}, #{info,jdbcType=VARCHAR}, #{menu,jdbcType=VARCHAR}, 
-      #{pwd,jdbcType=VARCHAR}, #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}
+      #{verCtrl,jdbcType=INTEGER}, #{path,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, 
+      #{svnUser,jdbcType=VARCHAR}, #{svnPwd,jdbcType=VARCHAR}, #{info,jdbcType=VARCHAR}, 
+      #{menu,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Repos">
@@ -51,6 +53,9 @@
       </if>
       <if test="type != null">
         TYPE,
+      </if>
+      <if test="verCtrl != null">
+        VER_CTRL,
       </if>
       <if test="path != null">
         PATH,
@@ -90,6 +95,9 @@
       <if test="type != null">
         #{type,jdbcType=INTEGER},
       </if>
+      <if test="verCtrl != null">
+        #{verCtrl,jdbcType=INTEGER},
+      </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
@@ -128,6 +136,9 @@
       <if test="type != null">
         TYPE = #{type,jdbcType=INTEGER},
       </if>
+      <if test="verCtrl != null">
+        VER_CTRL = #{verCtrl,jdbcType=INTEGER},
+      </if>
       <if test="path != null">
         PATH = #{path,jdbcType=VARCHAR},
       </if>
@@ -162,6 +173,7 @@
     update repos
     set NAME = #{name,jdbcType=VARCHAR},
       TYPE = #{type,jdbcType=INTEGER},
+      VER_CTRL = #{verCtrl,jdbcType=INTEGER},
       PATH = #{path,jdbcType=VARCHAR},
       SVN_PATH = #{svnPath,jdbcType=VARCHAR},
       SVN_USER = #{svnUser,jdbcType=VARCHAR},
@@ -184,6 +196,9 @@
       </if>
       <if test="type != null">
         TYPE,
+      </if>
+      <if test="verCtrl != null">
+        VER_CTRL,
       </if>
       <if test="path != null">
         PATH,
@@ -219,6 +234,9 @@
       </if>
       <if test="type != null">
         #{type,jdbcType=INTEGER},
+      </if>
+      <if test="verCtrl != null">
+        #{verCtrl,jdbcType=INTEGER},
       </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
