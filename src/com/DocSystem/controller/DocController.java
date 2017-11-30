@@ -186,7 +186,10 @@ public class DocController extends BaseController{
 		String reposVirtualPath = getReposVirtualPath(repos);
 		if(createVirtualDoc(reposVirtualPath,doc.getId(),"#"+name) == true)
 		{
-			svnVirtualDocAdd(repos, doc.getId(), commitMsg, commitUser);
+			if(repos.getVerCtrl() == 1)
+			{
+				svnVirtualDocAdd(repos, doc.getId(), commitMsg, commitUser);
+			}
 		}
 		
 		writeJson(rt, response);	
