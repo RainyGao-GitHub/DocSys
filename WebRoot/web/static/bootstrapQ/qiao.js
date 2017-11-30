@@ -377,8 +377,22 @@ qiao.bs.dialog = function(options, func){
 	
 	// append
 	$('body').append(qiao.bs.modalstr(opt));
-
-	if( options.url.startsWith("#") ){
+	
+	//Rainy added to make the startsWith and endsWith functions can work under IE 
+	if(typeof String.prototype.startsWith != 'function') {
+		 String.prototype.startsWith = function (prefix){
+		  return this.slice(0, prefix.length) === prefix;
+		 };
+	}
+	//if (typeof String.prototype.endsWith != 'function') {
+	//	 String.prototype.endsWith = function(suffix) {
+	//	  return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	//	 };
+	//}
+	//Rainy added to make the startsWith and endsWith functions can work under IE 
+	
+	var url = options.url;
+	if( url.startsWith("#") ){
 		var html = $(options.url).html();
 		$('#' + opt.id + ' div.modal-body').empty().append(html);
 		if(options.callback) options.callback();

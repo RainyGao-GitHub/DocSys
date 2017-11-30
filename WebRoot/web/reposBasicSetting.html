@@ -19,11 +19,11 @@
             	<option value="2">GIT</option>   
             </select>
             <label>svn路径</label>
-            <input class="form-control" type="text" id="RBSsvnPath"  value="" style="width: 100%" disabled="disabled"></input>
+            <input class="form-control" type="text" id="RBSsvnPath"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%" disabled="disabled"></input>
             <label>svn用户名</label>
-            <input class="form-control" type="text" id="RBSsvnUser"  value="" style="width: 100%" disabled="disabled"></input>
+            <input class="form-control" type="text" id="RBSsvnUser"   placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%" disabled="disabled"></input>
             <label>svn密码</label>
-            <input class="form-control" type="password" id="RBSsvnPwd"  value="" style="width: 100%" disabled="disabled"></input>          
+            <input class="form-control" type="password" id="RBSsvnPwd" placeholder="置空表明版本仓库访问不需要密码！" value="" style="width: 100%" disabled="disabled"></input>          
         </div>
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
 </div>
@@ -180,6 +180,10 @@ function saveReposBasicSetting()
        			return true;
        		}
        		if(oldSetting.info != newSetting.info)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.verCtrl != newSetting.verCtrl)
        		{
        			return true;
        		}

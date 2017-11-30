@@ -155,6 +155,14 @@ public class ReposController extends BaseController{
 			{
 				//Create a local SVN Repos
 				String localReposPath = getDefaultSvnLocalReposPath();
+				File dir = new File(localReposPath,name);
+				if(dir.exists())
+				{
+					rt.setError("SVN仓库:"+localReposPath+name + "已存在，请直接设置！");
+					writeJson(rt, response);	
+					return;
+				}
+				
 				svnPath = SVNUtil.CreateRepos(name,localReposPath);
 				if(svnPath == null)
 				{
@@ -241,7 +249,7 @@ public class ReposController extends BaseController{
 			if(verCtrl == 1)
 			{					
 				String commitUser = login_user.getName();
-				if(doReposSvnInit(reposDir+"/data",repos,commitUser) == false)
+				if(doReposSvnInit(reposDir,repos,commitUser) == false)
 				{
 					rt.setError("仓库的SVN初始化失败");
 					writeJson(rt, response);	
@@ -331,16 +339,31 @@ public class ReposController extends BaseController{
 	}
 
 	//初始化SVN信息
-	boolean doReposSvnInit(String localPath, Repos repos, String commitUser)
+	boolean doReposSvnInit(String reposDir, Repos repos, String commitUser)
 	{
 		String svnPath = repos.getSvnPath();
 		String svnUser = repos.getSvnUser();
 		String svnPwd = repos.getSvnPwd();
-		System.out.println("localPath:" + localPath + " svnPath:" + svnPath + " svnUser:" + svnUser + " svnPwd:" + svnPwd);
+		System.out.println("doReposSvnInit reposDir:" + reposDir + " svnPath:" + svnPath + " svnUser:" + svnUser + " svnPwd:" + svnPwd);
 		
+		String localPath = reposDir + "/data"; //working copy dir
+		//String backupPath = reposDir + "/backup";	//backup dir
 		if(svnUser == null || "".equals(svnUser))
 		{
 			svnUser = commitUser;
+		}
+		
+		//备份.svn目录
+		File tmpDir = new File(reposDir + "/data/.svn");
+		if(tmpDir.exists())
+		{
+			delDir(reposDir + "/backup/.svn");	//删除backup目录的.svn
+			if(changeDirectory(".svn",reposDir + "/data",reposDir + "/backup", false) == false)
+			{
+				System.out.println("备份 .svn 目录失败");				
+				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);	//恢复.svn目录
+				return false;						
+			}
 		}
 		
 		try {
@@ -353,13 +376,44 @@ public class ReposController extends BaseController{
 				return false;
 			}
 
+			System.out.println("doSyncUpForDelete");
 			svnUtil.doSyncUpForDelete(localPath,"");
 			
+			//move rdata and vdata to backup dir to make sure there is no tree conflict when checkout
+			System.out.println("Backup /rdata and /vdata");
+			delDir(reposDir + "/backup/rdata");	//删除backup目录的rdata
+			delDir(reposDir + "/backup/vdata");	//删除backup目录的vdata
+			if(changeDirectory("rdata",reposDir + "/data",reposDir + "/backup", false) == false)
+			{
+				System.out.println("备份rdata目录失败");
+				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);	//恢复.svn目录
+				return false;						
+			}
+			if(changeDirectory("vdata",reposDir + "/data",reposDir + "/backup", false) == false)
+			{
+				System.out.println("备份vdata目录失败");	
+				changeDirectory("rdata",reposDir + "/backup",reposDir + "/data", false);	//恢复rdata目录
+				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);		//恢复.svn目录
+				return false;						
+			}
+			
+			//check out to localPath
+			System.out.println("doCheckOut");
 			if(svnUtil.doCheckOut("",localPath) == false)
 			{
 				System.out.println("CheckOut Failed");
+				changeDirectory("vdata",reposDir + "/backup",reposDir + "/data", false);	//恢复vdata目录
+				changeDirectory("rdata",reposDir + "/backup",reposDir + "/data", false);	//恢复rdata目录
+				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);		//恢复.svn目录
 				return false;
 			}
+			
+			//remove the checkouted rdata and vdata dir, and move the rdata and vdata back
+			System.out.println("Recover /rdata and /vdata");
+			delDir(localPath+"/vdata");
+			delDir(localPath+"/rdata");
+			changeDirectory("vdata",reposDir + "/backup",reposDir + "/data", false);	//恢复vdata目录
+			changeDirectory("rdata",reposDir + "/backup",reposDir + "/data", false);	//恢复rdata目录
 		
 			//将/rdata和vdata目录加入版本控制,理论上在syncup阶段已经被加上了，因此可以跳过该步骤
 			//if(svnUtil.doAdd(localPath + "/rdata") == false)
@@ -372,9 +426,13 @@ public class ReposController extends BaseController{
 			//	System.out.println("add /vdata Failed");
 			//	return false;				
 			//}
+			
+			//将working copy的所有文件加入版本控制
+			System.out.println("doScheduleForAdd()");
 			svnUtil.doScheduleForAdd(localPath,"");
 			
 			//do commit
+			System.out.println("doCommit()");
 			if(svnUtil.doCommit(localPath, "仓库初始化") == false)
 			{
 				System.out.println("do Commit Failed");
@@ -611,7 +669,11 @@ public class ReposController extends BaseController{
 		}
 		
 		//move svn仓库
-		if(verCtrl != null && verCtrl == 1)
+		if(verCtrl == null)
+		{
+			//用户没有切换版本控制类型，do nothing
+		}
+		else if(verCtrl == 1)
 		{
 			//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
 			if((svnPath == null) || svnPath.equals(""))
@@ -627,6 +689,15 @@ public class ReposController extends BaseController{
 				{
 					localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
 				}
+				
+				File dir = new File(localReposPath,name);
+				if(dir.exists())
+				{
+					rt.setError("SVN仓库:"+localReposPath+name + "已存在，请直接设置！");
+					writeJson(rt, response);	
+					return;
+				}
+				
 				svnPath = SVNUtil.CreateRepos(name,localReposPath);
 				if(svnPath == null)
 				{
@@ -658,23 +729,12 @@ public class ReposController extends BaseController{
 				newReposInfo.setSvnPwd(svnPwd);
 				
 				//copy the .svn to backup, if success then delete it, else copy it back
-				String reposDir = oldReposInfo.getPath() + oldReposInfo.getName();
-				File tmpDir = new File(reposDir + "/data/.svn");
-				if(tmpDir.exists())
-				{
-					if(changeDirectory(".svn",reposDir + "/data",reposDir + "/backup", false) == false)
-					{
-						rt.setError("备份 .svn 目录失败");				
-						writeJson(rt, response);
-						return;						
-					}
-				}
-				
+				String reposDir = oldReposInfo.getPath() + oldReposInfo.getName();				
 				String commitUser = login_user.getName();				
-				if(doReposSvnInit(reposDir + "/data",newReposInfo,commitUser) == false)
+				if(doReposSvnInit(reposDir,newReposInfo,commitUser) == false)
 				{
 					System.out.println("仓库的SVN初始化失败");
-					//恢复workingcopy
+					//恢复workingcopy,that have been done in doReposSvnInit
 					//delDir(reposDir + "/data/.svn");
 					//changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);
 					rt.setError("仓库的SVN初始化失败，请检查svnPath、svnUser、svnPwd");
@@ -694,6 +754,21 @@ public class ReposController extends BaseController{
 				}
 				//删除备份的workingcopy
 				delDir(reposDir + "/backup/.svn");
+			}
+		}
+		else //if(verCtrl == 0 || verCtrl == 2)	
+		{
+			//不要修改原来的仓库路径、用户名和密码信息
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setVerCtrl(verCtrl);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("仓库信息更新失败");
+				//恢复working copy
+				rt.setError("仓库信息更新失败！");
+				writeJson(rt, response);
+				return;			
 			}
 		}
 		

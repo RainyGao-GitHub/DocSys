@@ -105,9 +105,9 @@
 <div id="new-repos" style="display:none">
     <form class="form" onkeydown="if(event.keyCode==13)return false;">
         <div class="form-group">
-            <label>名字</label>
+            <label>名字<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="name" style="width: 100%"/>
-            <label>介绍</label>
+            <label>介绍<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="info" style="width: 100%"/>
             <label>仓库类型</label>
             <!-- <input class="form-control" type="text" name="type"  value="1" style="width: 100%"/> -->
@@ -115,20 +115,20 @@
             	<option value="0">虚拟文件系统</option>   
             	<option value="1" selected="selected">实文件系统</option>   
             </select>
-            <label>仓库位置</label>
-            <input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+            <label>仓库位置<span style="color:#F00">*</span></label>
+            <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
             <label>版本管理</label>
             <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
             	<option value="2">GIT</option>   
             </select>
-            <label>svn路径</label>
-            <input class="form-control" type="text" name="svnPath"  value="" style="width: 100%"/>
+            <label>svn路径<span style="color:#F00">*</span></label>
+            <input class="form-control" type="text" name="svnPath"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
             <label>svn用户名</label>
-            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
+            <input class="form-control" type="text" name="svnUser"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
             <label>svn密码</label>
-            <input class="form-control" type="password" name="svnPwd"  value="" style="width: 100%"/>           
+            <input class="form-control" type="password" name="svnPwd" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
         </div>
     </form>
 </div>

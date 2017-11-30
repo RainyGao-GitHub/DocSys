@@ -176,7 +176,8 @@ public class SVNUtil {
 				System.out.println("创建svn仓库失败");
 				return null;			   
 		}
-		return tgtURL.toString();
+		//return tgtURL.toString();	//直接将tatURL转成String会导致中文乱码
+		return "file:///"+path+name; 
 	}
 	
 	//检查仓库指定revision的节点是否存在
@@ -471,8 +472,14 @@ public class SVNUtil {
         try {
             checkout(url, SVNRevision.HEAD, wcDir, true);
         } catch (SVNException svne) {
-            error("error while checking out a working copy for the location '" + url + "'", svne);
-            return false;
+        	error("error while checking out a working copy for the location '" + url + "'", svne);
+            svne.printStackTrace();
+            if(svne.getErrorMessage().getErrorCode().getCode() == 155027)
+            {
+            	System.out.println("Tree Conflict");
+            	return true;
+            }
+        	return false;
         }
         System.out.println("Check Out ok");
         return true;
@@ -583,18 +590,28 @@ public class SVNUtil {
             svne.printStackTrace();
             int errCode = svne.getErrorMessage().getErrorCode().getCode();
             System.out.println("error code:" + errCode);  
-            if(errCode == 160006)
+            if(errCode == 160006)	//Working copy is out of date
             {
-            	System.out.println("error code:" + errCode);	
-            }  
-            commitFail = 1;
+            	commitFail = 1;
+                System.out.println("working copy is out of date");
+                update(aNewFile, SVNRevision.HEAD, true);
+            }
+            else if(errCode == 155015)
+            {
+            	commitFail = 2;
+                System.out.println("there is commit conflict");
+                solveCommitConflict();
+            }
+            else
+            {
+            	return false;
+            }
         }
         System.out.println("Committed to revision " + committedRevision);
         
         //删除时如果发生commit失败，则update一下再重新commit试一下
-        if(commitFail == 1)
+        if(commitFail != 0)
         {
-        	update(aNewFile, SVNRevision.HEAD, true);
         	try {
                 /*
                  * commits changes in wcDir to the repository with not leaving items 
@@ -634,14 +651,31 @@ public class SVNUtil {
         } catch (SVNException svne) {
             System.out.println("error while committing changes to the working copy at '" + wcDir.getAbsolutePath()+ "'");
             svne.printStackTrace();
-            commitFail = 1;
+            int errCode = svne.getErrorMessage().getErrorCode().getCode();
+            System.out.println("error code:" + errCode);  
+            if(errCode == 160006)	//Working copy is out of date
+            {
+            	commitFail = 1;
+                System.out.println("working copy is out of date");
+                update(wcDir, SVNRevision.HEAD, true);
+            }
+            else if(errCode == 155015)
+            {
+            	commitFail = 2;
+                System.out.println("there is commit conflict");
+                solveCommitConflict();
+            }
+            else
+            {
+            	return false;
+            }
         }
         System.out.println("Committed to revision " + committedRevision);
         
+        
         //删除时如果发生commit失败，则update一下再重新commit试一下
-        if(commitFail == 1)
+        if(commitFail != 0)
         {
-        	update(wcDir, SVNRevision.HEAD, true);
         	try {
                 /*
                  * commits changes in wcDir to the repository with not leaving items 
@@ -657,7 +691,13 @@ public class SVNUtil {
             System.out.println("Committed to revision " + committedRevision);
         }
         return true;
-    }
+	}
+    
+    private void solveCommitConflict() {
+		// TODO Auto-generated method stub
+    	
+		
+	}
     
     //delete and commit
     public boolean doDeleteCommit(String filePath,String commitMsg) throws SVNException {        
@@ -690,14 +730,30 @@ public class SVNUtil {
         } catch (SVNException svne) {
             System.out.println("error while committing changes to the working copy at '" + deleteFile.getAbsolutePath()+ "'");
             svne.printStackTrace();
-            commitFail = 1;
+            int errCode = svne.getErrorMessage().getErrorCode().getCode();
+            System.out.println("error code:" + errCode);  
+            if(errCode == 160006)	//Working copy is out of date
+            {
+            	commitFail = 1;
+                System.out.println("working copy is out of date");
+                update(deleteFile, SVNRevision.HEAD, true);
+            }
+            else if(errCode == 155015)
+            {
+            	commitFail = 2;
+                System.out.println("there is commit conflict");
+                solveCommitConflict();
+            }
+            else
+            {
+            	return false;
+            }
         }
         System.out.println("Committed to revision " + committedRevision);
         
         //删除时如果发生commit失败，则update一下再重新commit试一下
-        if(commitFail == 1)
+        if(commitFail != 0)
         {
-        	update(deleteFile, SVNRevision.HEAD, true);
         	try {
                 /*
                  * commits changes in wcDir to the repository with not leaving items 
