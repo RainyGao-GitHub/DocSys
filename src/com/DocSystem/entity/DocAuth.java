@@ -19,6 +19,8 @@ public class DocAuth {
 
     private Integer deleteEn;
 
+    private Integer heritable;
+
     public Integer getId() {
         return id;
     }
@@ -89,5 +91,13 @@ public class DocAuth {
 
     public void setDeleteEn(Integer deleteEn) {
         this.deleteEn = deleteEn;
+    }
+
+    public Integer getHeritable() {
+        return heritable;
+    }
+
+    public void setHeritable(Integer heritable) {
+        this.heritable = heritable;
     }
 }

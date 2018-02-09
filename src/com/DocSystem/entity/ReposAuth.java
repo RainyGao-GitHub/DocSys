@@ -17,6 +17,8 @@ public class ReposAuth {
 
     private Integer deleteEn;
 
+    private Integer heritable;
+
     public Integer getId() {
         return id;
     }
@@ -79,5 +81,13 @@ public class ReposAuth {
 
     public void setDeleteEn(Integer deleteEn) {
         this.deleteEn = deleteEn;
+    }
+
+    public Integer getHeritable() {
+        return heritable;
+    }
+
+    public void setHeritable(Integer heritable) {
+        this.heritable = heritable;
     }
 }

@@ -36,4 +36,9 @@ public class UserServiceImpl implements UserService {
 		return userDao.selectAll();
 	}
 
+	public User getUser(Integer userID) {
+		// TODO Auto-generated method stub
+		return userDao.selectByPrimaryKey(userID);
+	}
+
 }  
