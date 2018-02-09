@@ -626,7 +626,6 @@ public class DocController extends BaseController{
 		//get parentPath
 		String parentPath = getParentPath(parentId);
 		String reposRPath = getReposRealPath(repos);
-		String docRPath = parentPath + name;
 		String localDocRPath = reposRPath + parentPath + name;
 		
 		//虚拟文静系统不支持新建实体文件
@@ -722,7 +721,7 @@ public class DocController extends BaseController{
 		String localDocVPath = reposVPath + docVPath;
 		if(createVirtualDoc(localDocVPath,"#"+name) == true)
 		{
-			if(svnVirtualDocAdd(repos, docVPath, commitMsg, commitUser, login_user) ==false)
+			if(svnVirtualDocAdd(repos, docVPath, commitMsg, commitUser) ==false)
 			{
 				System.out.println("addDoc() svnVirtualDocAdd Failed " + docVPath);
 				rt.setMsgInfo("svnVirtualDocAdd Failed");			
@@ -1206,7 +1205,7 @@ public class DocController extends BaseController{
 		String srcDocFullVPath = reposVPath + srcDocVPath;
 		if(copyFolder(srcDocFullVPath,dstDocFullVPath) == true)
 		{
-			svnVirtualDocCopy(repos, reposVPath,srcDocVPath,reposVPath,dstDocVPath, commitMsg, commitUser, login_user);
+			svnVirtualDocCopy(repos, reposVPath,srcDocVPath,reposVPath,dstDocVPath, commitMsg, commitUser);
 		}
 		
 		//启用doc
@@ -1267,7 +1266,7 @@ public class DocController extends BaseController{
 			{
 				if(repos.getVerCtrl() == 1)
 				{
-					svnVirtualDocCommit(repos, docVPath, commitMsg, commitUser,login_user);
+					svnVirtualDocCommit(repos, docVPath, commitMsg, commitUser);
 				}
 			}
 		}
@@ -1278,7 +1277,7 @@ public class DocController extends BaseController{
 			{
 				if(repos.getVerCtrl() == 1)
 				{
-					svnVirtualDocCommit(repos, docVPath, commitMsg, commitUser,login_user);
+					svnVirtualDocCommit(repos, docVPath, commitMsg, commitUser);
 				}
 			}
 		}
@@ -2032,6 +2031,7 @@ public class DocController extends BaseController{
 	
 	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
 			String commitMsg, String commitUser) {
+		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
 		if(repos.getVerCtrl() == 1)
 		{
 		
@@ -2072,6 +2072,8 @@ public class DocController extends BaseController{
 
 	private boolean svnRealDocCommit(Repos repos, String parentPath,
 			String name, String commitMsg, String commitUser) {
+		
+		System.out.println("svnRealDocCommit() parentPath:" + parentPath + " name:" + name);
 		if(repos.getVerCtrl() == 1)
 		{
 			String reposURL = repos.getSvnPath();
@@ -2120,7 +2122,9 @@ public class DocController extends BaseController{
 	
 	private boolean svnRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
 			String dstParentPath, String dstEntryName, String commitMsg, String commitUser) {
-		System.out.println("svnRealDocMove()");
+		
+		System.out.println("svnRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		
 		if(repos.getVerCtrl() == 1)
 		{	
 			String reposURL = repos.getSvnPath();
@@ -2146,7 +2150,8 @@ public class DocController extends BaseController{
 	
 	private boolean svnRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
 			String dstParentPath, String dstEntryName, String commitMsg, String commitUser) {
-		// TODO: 该接口用在非空目录上时会导致，文件目录与仓库目录不一致因此目前不能使用
+		
+		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(repos.getVerCtrl() == 1)
 		{				
 		
@@ -2170,7 +2175,10 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private boolean svnVirtualDocAdd(Repos repos, String docVPath,String commitMsg, String commitUser, User login_user) {
+	private boolean svnVirtualDocAdd(Repos repos, String docVPath,String commitMsg, String commitUser) {
+		
+		System.out.println("svnVirtualDocAdd() docVPath:" + docVPath);
+		
 		if(repos.getVerCtrl1() == 1)
 		{
 			String reposURL = repos.getSvnPath1();
@@ -2201,6 +2209,7 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean svnVirtualDocDelete(Repos repos, String docVPath, String commitMsg, String commitUser) {
+		System.out.println("svnVirtualDocDelete() docVPath:" + docVPath);
 		if(repos.getVerCtrl1() == 1)
 		{
 		
@@ -2240,7 +2249,8 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean svnVirtualDocCommit(Repos repos, String docVPath,String commitMsg, String commitUser,User login_user) {
+	private boolean svnVirtualDocCommit(Repos repos, String docVPath,String commitMsg, String commitUser) {
+		System.out.println("svnVirtualDocCommit() docVPath:" + docVPath);
 		if(repos.getVerCtrl1() == 1)
 		{
 			String reposURL = repos.getSvnPath1();
@@ -2276,7 +2286,7 @@ public class DocController extends BaseController{
 
 	private boolean svnVirtualDocMove(Repos repos,  String srcParentPath, String srcEntryName,
 			String dstParentPath, String dstEntryName, String commitMsg, String commitUser) {
-		System.out.println("svnVirtualDocMove()");
+		System.out.println("svnVirtualDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(repos.getVerCtrl1() == 1)
 		{	
 			String reposURL = repos.getSvnPath1();
@@ -2301,9 +2311,9 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean svnVirtualDocCopy(Repos repos,String srcParentPath,String srcEntryName,
-		String dstParentPath,String dstEntryName, String commitMsg, String commitUser,
-			User login_user) {
-		// TODO: 该接口用在非空目录上时会导致，文件目录与仓库目录不一致因此目前不能使用
+		String dstParentPath,String dstEntryName, String commitMsg, String commitUser) {
+
+		System.out.println("svnVirtualDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(repos.getVerCtrl1() == 1)
 		{				
 			String reposURL = repos.getSvnPath1();
@@ -2328,6 +2338,7 @@ public class DocController extends BaseController{
 	
 	private boolean svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type) 
 	{
+		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		String localDocPath = localParentPath + entryName;
 
@@ -2356,6 +2367,8 @@ public class DocController extends BaseController{
 	
 
 	private boolean svnRevertVirtualDoc(Repos repos, String docVPath) {
+		System.out.println("svnRevertVirtualDoc() docVPath:" + docVPath);
+		
 		String localDocVParentPath = getReposVirtualPath(repos);
 		String localDocVPath = localDocVParentPath + docVPath;
 		String localDocVRefParentPath = getReposVirtualRefPath(repos);
