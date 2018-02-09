@@ -1,5 +1,6 @@
 package com.DocSystem.dao;
 
+import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.entity.DocAuth;
@@ -24,5 +25,5 @@ public interface DocAuthMapper {
 
 	int deleteSelective(DocAuth docAuth);
 
-	List<DocAuth> getDocAuthListForUser(Integer userId, Integer pDocId,Integer reposId);
+	List<DocAuth> getUserDocAuthList(HashMap<String, Object> params);
 }

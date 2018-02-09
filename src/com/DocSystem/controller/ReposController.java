@@ -24,7 +24,9 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.UserDocAuth;
 
+import com.DocSystem.service.UserService;
 import com.DocSystem.service.impl.ReposServiceImpl;
+import com.DocSystem.service.impl.UserServiceImpl;
 
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSON;
@@ -34,7 +36,9 @@ import com.alibaba.fastjson.JSON;
 public class ReposController extends BaseController{
 	@Autowired
 	private ReposServiceImpl reposService;
-
+	@Autowired
+	private UserServiceImpl userService;
+	
 	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
 	/****************** get Repository List **************/
 	@RequestMapping("/getReposList.do")
@@ -85,8 +89,9 @@ public class ReposController extends BaseController{
 
 	/****************   add a Repository ******************/
 	@RequestMapping("/addRepos.do")
-	public void addRepos(String name,String info, Integer type, Integer verCtrl, String path,String svnPath,String svnUser,String svnPwd, String createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path + " verCtrl: " + verCtrl  + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd);
+	public void addRepos(String name,String info, Integer type, String path, Integer verCtrl, String svnPath,String svnUser,String svnPwd, 
+			Integer verCtrl1, String svnPath1,String svnUser1,String svnPwd1, String createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path + " verCtrl: " + verCtrl  + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -147,23 +152,31 @@ public class ReposController extends BaseController{
 		repos.setPath(path);
 		repos.setOwner(login_user.getId());
 		repos.setCreateTime(createTime);
+		if(reposService.addRepos(repos) == 0)
+		{
+			rt.setError("新增仓库记录失败");
+			writeJson(rt, response);		
+			return;
+		}
+		System.out.println("new ReposId" + repos.getId());
 		
-		//如果是带版本控制的话，路径不能为空
+		//如果RealDoc是带版本控制的话，路径不能为空
 		if(verCtrl == 1)	//目前只处理svn
 		{
 			if((svnPath == null) || svnPath.equals(""))
 			{
 				//Create a local SVN Repos
 				String localReposPath = getDefaultSvnLocalReposPath();
-				File dir = new File(localReposPath,name);
+				String reposName = repos.getId() + "";
+				File dir = new File(localReposPath,reposName);
 				if(dir.exists())
 				{
-					rt.setError("SVN仓库:"+localReposPath+name + "已存在，请直接设置！");
+					rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
 					writeJson(rt, response);	
 					return;
 				}
 				
-				svnPath = SVNUtil.CreateRepos(name,localReposPath);
+				svnPath = SVNUtil.CreateRepos(reposName,localReposPath);
 				if(svnPath == null)
 				{
 					rt.setError("SVN仓库的创建失败");
@@ -207,8 +220,68 @@ public class ReposController extends BaseController{
 			repos.setSvnPwd(svnPwd);
 		}
 		
+		//如果VirtualDoc是带版本控制的话，路径不能为空
+		if(verCtrl1 == 1)	//目前只处理svn
+		{
+			if((svnPath1 == null) || svnPath1.equals(""))
+			{
+				//Create a local SVN Repos
+				String localReposPath = getDefaultSvnLocalReposPath();
+				String reposName = repos.getId() + "_VRepos";
+				File dir = new File(localReposPath,reposName);
+				if(dir.exists())
+				{
+					rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
+					writeJson(rt, response);	
+					return;
+				}
+				
+				svnPath1 = SVNUtil.CreateRepos(reposName,localReposPath);
+				if(svnPath1 == null)
+				{
+					rt.setError("SVN仓库的创建失败");
+					writeJson(rt, response);	
+					return;
+				}
+				repos.setSvnPath1(svnPath1);
+				svnUser1 = "";
+				svnPwd1 = "";
+			}
+				
+			/* svnUser和svnPwd可以不设置，有些svn或git仓库不需要鉴权信息
+			if((svnUser1 == null) || svnUser1.equals(""))
+			{
+				rt.setError("svnUser1不能为空");
+				writeJson(rt, response);	
+				return;
+			}
+			if((svnPwd1 == null) || svnPwd1.equals(""))
+			{
+				rt.setError("svnPwd1不能为空");
+				writeJson(rt, response);	
+				return;
+			}
+			*/
+			
+			//检查SVN路径是否已使用
+			Repos tmpRepos1 = new Repos();
+			tmpRepos1.setSvnPath1(svnPath1);
+			List<Repos> list1= reposService.getReposList(tmpRepos1);
+			if((list1 != null) && (list1.size() > 0))
+			{
+				rt.setError("仓库的SvnPath1已使用:" + svnPath1);
+				writeJson(rt, response);	
+				return;
+			}
+			
+			repos.setVerCtrl1(verCtrl1);
+			repos.setSvnPath1(svnPath1);
+			repos.setSvnUser1(svnUser1);
+			repos.setSvnPwd1(svnPwd1);
+		}
+		
 		//新建目录
-		String reposDir = path + name;
+		String reposDir = path + repos.getId();
 		if(createDir(reposDir) == true)
 		{
 			if(createDir(reposDir+"/data") == false)
@@ -233,6 +306,30 @@ public class ReposController extends BaseController{
 					return;
 				}
 			}
+			
+			if(createDir(reposDir+"/refData") == false)
+			{
+				rt.setError("创建refData目录失败");
+				writeJson(rt, response);	
+				return;
+				
+			}
+			else
+			{
+				if(createDir(reposDir+"/refData/rdata") == false)
+				{
+					rt.setError("创建refData/rdata目录失败");
+					writeJson(rt, response);	
+					return;
+				}
+				if(createDir(reposDir+"/refData/vdata") == false)
+				{
+					rt.setError("创建refData/vdata目录失败");
+					writeJson(rt, response);	
+					return;
+				}
+			}
+			
 			if(createDir(reposDir+"/tmp") == false)
 			{
 				rt.setError("创建tmp目录失败");
@@ -245,26 +342,41 @@ public class ReposController extends BaseController{
 				writeJson(rt, response);	
 				return;
 			}			
-			//如果是带版本控制的仓库，需要checkout svnPath to 仓库的data目录，作为working copy
+			//Real Doc 带版本控制，则需要同步本地和版本仓库
 			if(verCtrl == 1)
 			{					
+				String reposRPath = getReposRealPath(repos);
 				String commitUser = login_user.getName();
-				if(doReposSvnInit(reposDir,repos,commitUser) == false)
+				String commitMsg = "RealDoc版本仓库初始化";
+				if(svnAutoCommit(svnPath,svnUser,svnPwd,reposRPath,commitMsg,commitUser,false,null) == false)
 				{
-					rt.setError("仓库的SVN初始化失败");
+					rt.setError("RealDoc版本仓库初始化失败");
 					writeJson(rt, response);	
 					return;
 				}
 			}
 			
-			//repos.setCreateTime(createTime);
-			if(reposService.addRepos(repos) == 0)
+			//Virtual Doc 带版本控制，则需要同步本地和版本仓库
+			if(verCtrl1 == 1)
+			{					
+				String reposVPath = getReposVirtualPath(repos);
+				String commitUser = login_user.getName();
+				String commitMsg = "VirtualDoc版本仓库初始化";
+				if(svnAutoCommit(svnPath1,svnUser1,svnPwd1,reposVPath,commitMsg,commitUser,false,null) == false)
+				{
+					rt.setError("VirtualDoc版本仓库初始化失败");
+					writeJson(rt, response);	
+					return;
+				}
+			}
+			
+			//更新仓库的信息: svnPath 和 path
+			if(reposService.updateRepos(repos) == 0)
 			{
 				rt.setError("新增仓库记录失败");
 				writeJson(rt, response);		
 				return;
 			}
-			System.out.println("new ReposId" + repos.getId());
 			
 			//将当前用户加入到仓库的访问权限列表中
 			ReposAuth reposAuth = new ReposAuth();
@@ -296,7 +408,6 @@ public class ReposController extends BaseController{
 	
 	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
 	private String getDefaultSvnLocalReposPath() {
-		// TODO Auto-generated method stub
 		String localReposPath = "";
 		String os = System.getProperty("os.name");  
 		System.out.println("OS:"+ os);  
@@ -312,7 +423,6 @@ public class ReposController extends BaseController{
 
 	//正确格式化仓库根路径
 	private String reposRootPathFormat(String path) {
-		// TODO Auto-generated method stub
 		//如果传入的Path没有带/,给他加一个
 		String endChar = path.substring(path.length()-1, path.length());
 		if(!endChar.equals("/"))	
@@ -324,7 +434,6 @@ public class ReposController extends BaseController{
 
 	//获取默认的仓库根路径
 	private String getDefaultReposRootPath() {
-		// TODO Auto-generated method stub
 		String path = null;
 		String os = System.getProperty("os.name");  
 		System.out.println("OS:"+ os);  
@@ -338,120 +447,27 @@ public class ReposController extends BaseController{
 		return path;
 	}
 
-	//初始化SVN信息
-	boolean doReposSvnInit(String reposDir, Repos repos, String commitUser)
-	{
-		String svnPath = repos.getSvnPath();
-		String svnUser = repos.getSvnUser();
-		String svnPwd = repos.getSvnPwd();
-		System.out.println("doReposSvnInit reposDir:" + reposDir + " svnPath:" + svnPath + " svnUser:" + svnUser + " svnPwd:" + svnPwd);
-		
-		String localPath = reposDir + "/data"; //working copy dir
-		//String backupPath = reposDir + "/backup";	//backup dir
+
+	//Commit the localPath to svnPath
+	boolean svnAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
+	{	
+		//If the svnUser was not set, use the commitUser
 		if(svnUser == null || "".equals(svnUser))
 		{
 			svnUser = commitUser;
 		}
 		
-		//备份.svn目录
-		File tmpDir = new File(reposDir + "/data/.svn");
-		if(tmpDir.exists())
+		SVNUtil svnUtil = new SVNUtil();
+		//svn初始化
+		if(svnUtil.Init(svnPath, svnUser, svnPwd) == false)
 		{
-			delDir(reposDir + "/backup/.svn");	//删除backup目录的.svn
-			if(changeDirectory(".svn",reposDir + "/data",reposDir + "/backup", false) == false)
-			{
-				System.out.println("备份 .svn 目录失败");				
-				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);	//恢复.svn目录
-				return false;						
-			}
-		}
-		
-		try {
-			SVNUtil svnUtil = new SVNUtil();
-		
-			//svn初始化
-			if(svnUtil.Init(svnPath, svnUser, svnPwd) == false)
-			{
-				System.out.println("do Init Failed");
-				return false;
-			}
-
-			System.out.println("doSyncUpForDelete");
-			svnUtil.doSyncUpForDelete(localPath,"");
-			
-			//move rdata and vdata to backup dir to make sure there is no tree conflict when checkout
-			System.out.println("Backup /rdata and /vdata");
-			delDir(reposDir + "/backup/rdata");	//删除backup目录的rdata
-			delDir(reposDir + "/backup/vdata");	//删除backup目录的vdata
-			if(changeDirectory("rdata",reposDir + "/data",reposDir + "/backup", false) == false)
-			{
-				System.out.println("备份rdata目录失败");
-				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);	//恢复.svn目录
-				return false;						
-			}
-			if(changeDirectory("vdata",reposDir + "/data",reposDir + "/backup", false) == false)
-			{
-				System.out.println("备份vdata目录失败");	
-				changeDirectory("rdata",reposDir + "/backup",reposDir + "/data", false);	//恢复rdata目录
-				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);		//恢复.svn目录
-				return false;						
-			}
-			
-			//check out to localPath
-			System.out.println("doCheckOut");
-			if(svnUtil.doCheckOut("",localPath) == false)
-			{
-				System.out.println("CheckOut Failed");
-				changeDirectory("vdata",reposDir + "/backup",reposDir + "/data", false);	//恢复vdata目录
-				changeDirectory("rdata",reposDir + "/backup",reposDir + "/data", false);	//恢复rdata目录
-				changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);		//恢复.svn目录
-				return false;
-			}
-			
-			//remove the checkouted rdata and vdata dir, and move the rdata and vdata back
-			System.out.println("Recover /rdata and /vdata");
-			delDir(localPath+"/vdata");
-			delDir(localPath+"/rdata");
-			changeDirectory("vdata",reposDir + "/backup",reposDir + "/data", false);	//恢复vdata目录
-			changeDirectory("rdata",reposDir + "/backup",reposDir + "/data", false);	//恢复rdata目录
-		
-			//将/rdata和vdata目录加入版本控制,理论上在syncup阶段已经被加上了，因此可以跳过该步骤
-			//if(svnUtil.doAdd(localPath + "/rdata") == false)
-			//{
-			//	System.out.println("add /rdata Failed");
-			//	return false;				
-			//}
-			//if(svnUtil.doAdd(localPath + "/vdata") == false)
-			//{
-			//	System.out.println("add /vdata Failed");
-			//	return false;				
-			//}
-			
-			//将working copy的所有文件加入版本控制
-			System.out.println("doScheduleForAdd()");
-			svnUtil.doScheduleForAdd(localPath,"");
-			
-			//do commit
-			System.out.println("doCommit()");
-			if(svnUtil.doCommit(localPath, "仓库初始化") == false)
-			{
-				System.out.println("do Commit Failed");
-				return false;
-			}
-		} catch (SVNException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("doSvnInit 异常");
-			if(e.getErrorMessage().getErrorCode().getCode() == 170001)
-			{
-				System.out.println("Authentication Error, please check the svnUser and svnPwd");
-			}
+			System.out.println("do Init Failed");
 			return false;
 		}
 		
-		return true;
+		return svnUtil.doAutoCommit(localPath,commitMsg,modifyEnable,localRefPath);		
 	}
-		
+	
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -493,9 +509,9 @@ public class ReposController extends BaseController{
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
 	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, Integer verCtrl,String svnPath,String svnUser,String svnPwd,
-							HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			Integer verCtrl1,String svnPath1,String svnUser1,String svnPwd1,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " verCtrl: " + verCtrl + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd);
+		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " verCtrl: " + verCtrl + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -535,136 +551,66 @@ public class ReposController extends BaseController{
 		//修改仓库描述
 		if(info != null && !info.isEmpty())
 		{
-			//get old ReposInfo
-			Repos oldReposInfo = reposService.getRepos(reposId);
-			if(oldReposInfo == null)
+			if(UpdateReposInfo(reposId,info,rt) == false)
 			{
-				rt.setError("仓库 " +reposId +" 不存在!");				
 				writeJson(rt, response);
 				return;
-			}
-			
-			if(!info.equals(oldReposInfo.getInfo()))
-			{
-				//new ReposInfo
-				Repos newReposInfo = new Repos();
-				newReposInfo.setId(reposId);
-				newReposInfo.setInfo(info);
-				if(reposService.updateRepos(newReposInfo) == 0)
-				{
-					System.out.println("updateRepos for info failed");
-					rt.setError("设置仓库info失败！");
-					writeJson(rt, response);
-					return;			
-				}
 			}
 		}
 		
 		//rename仓库
 		if(name != null && !name.isEmpty())
 		{
-			//get old ReposInfo
-			Repos oldReposInfo = reposService.getRepos(reposId);
-			if(oldReposInfo == null)
+			if(UpdateReposName(reposId,name,rt) == false)
 			{
-				rt.setError("仓库 " +reposId +" 不存在!");				
 				writeJson(rt, response);
 				return;
 			}
-			
-			if(!name.equals(oldReposInfo.getName()))
+		}
+		
+		if(svnUser != null)
+		{
+			if(UpdateReposSvnUser(reposId,svnUser,rt) == false)
 			{
-				if(login_user.getType() != 2)
-				{
-					System.out.println("普通用户无权重命名仓库，请联系管理员！");
-					rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
-					writeJson(rt, response);
-					return;							
-				}
-				
-				String oldReposDir = oldReposInfo.getPath() + oldReposInfo.getName();
-				String newReposDir = oldReposInfo.getPath() + name;
-				if(CopyReposDir(oldReposDir,newReposDir) == false)
-				{
-					System.out.println("RenameRepos failed");
-					rt.setError("重命名仓库失败！");
-					writeJson(rt, response);
-					return;			
-				}
-				
-				//new ReposInfo
-				Repos newReposInfo = new Repos();
-				newReposInfo.setId(reposId);
-				newReposInfo.setName(name);
-				if(reposService.updateRepos(newReposInfo) == 0)
-				{
-					System.out.println("updateRepos for name failed");
-					DeleteReposDir(newReposDir);					
-					rt.setError("设置仓库name失败！");
-					writeJson(rt, response);
-					return;			
-				}
-				//删除原来的仓库
-				DeleteReposDir(oldReposDir);
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		if(svnPwd != null)
+		{
+			if(UpdateReposSvnPwd(reposId,svnPwd,rt) == false)
+			{
+				writeJson(rt, response);
+				return;
+			}
+		}
+
+		if(svnUser1 != null)
+		{
+			if(UpdateReposSvnUser1(reposId,svnUser1,rt) == false)
+			{
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		if(svnPwd1 != null)
+		{
+			if(UpdateReposSvnPwd1(reposId,svnPwd1,rt) == false)
+			{
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
 		//move仓库
 		if(path != null && !path.isEmpty())
 		{
-			//如果传入的Path没有带/,给他加一个
-			String endChar = path.substring(path.length()-1, path.length());
-			if(!endChar.equals("/"))	
+			if(UpdateReposPath(reposId,path,login_user,rt) == false)
 			{
-				path = path + "/";
-			}
-			
-			//get old ReposInfo
-			Repos oldReposInfo = reposService.getRepos(reposId);
-			if(oldReposInfo == null)
-			{
-				rt.setError("仓库 " +reposId +" 不存在!");				
 				writeJson(rt, response);
 				return;
-			}
-			
-			if(!path.equals(oldReposInfo.getPath()))
-			{
-				
-				if(login_user.getType() != 2)
-				{
-					System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
-					rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
-					writeJson(rt, response);
-					return;							
-				}
-				
-				//为了保证仓库任何一步都能能够还原，我们总是先复制出一个新的
-				String oldReposDir = oldReposInfo.getPath() + oldReposInfo.getName();
-				String newReposDir = path + oldReposInfo.getName();
-				if(CopyReposDir(oldReposDir, newReposDir) == false)
-				{
-					//Remove the new created Repos
-					System.out.println("仓库目录迁移失败！");
-					rt.setError("修改仓库位置失败！");					
-					return;
-				}
-				
-				//new ReposInfo
-				Repos newReposInfo = new Repos();
-				newReposInfo.setId(reposId);
-				newReposInfo.setPath(path);
-				if(reposService.updateRepos(newReposInfo) == 0)
-				{
-					//删除新建的仓库目录
-					System.out.println("updateRepos for path failed");
-					DeleteReposDir(newReposDir);
-					rt.setError("设置仓库path失败！");
-					writeJson(rt, response);
-					return;			
-				}
-				//删除旧仓库的存储目录
-				DeleteReposDir(oldReposDir);
 			}
 		}
 		
@@ -675,85 +621,10 @@ public class ReposController extends BaseController{
 		}
 		else if(verCtrl == 1)
 		{
-			//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
-			if((svnPath == null) || svnPath.equals(""))
+			if(UpdateReposVerCtrl(reposId,verCtrl,svnPath,login_user,rt) == false)
 			{
-				//Create a local SVN Repos
-				String localReposPath = "";
-				String os = System.getProperty("os.name");  
-				System.out.println("OS:"+ os);  
-				if(os.toLowerCase().startsWith("win")){  
-					localReposPath = "D:/DocSysSvnReposes/";
-				}
-				else
-				{
-					localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
-				}
-				
-				File dir = new File(localReposPath,name);
-				if(dir.exists())
-				{
-					rt.setError("SVN仓库:"+localReposPath+name + "已存在，请直接设置！");
-					writeJson(rt, response);	
-					return;
-				}
-				
-				svnPath = SVNUtil.CreateRepos(name,localReposPath);
-				if(svnPath == null)
-				{
-					rt.setError("SVN仓库的创建失败");
-					writeJson(rt, response);	
-					return;
-				}
-				svnUser = "";
-				svnPwd = "";
-			}			
-			
-			//get old ReposInfo
-			Repos oldReposInfo = reposService.getRepos(reposId);
-			if(oldReposInfo == null)
-			{
-				rt.setError("仓库 " +reposId +" 不存在!");				
 				writeJson(rt, response);
 				return;
-			}
-			
-			if(!svnPath.equals(oldReposInfo.getSvnPath()) || !svnUser.equals(oldReposInfo.getSvnUser()) || !svnPwd.equals(oldReposInfo.getSvnPwd()))
-			{
-				//new ReposInfo
-				Repos newReposInfo = new Repos();
-				newReposInfo.setId(reposId);
-				newReposInfo.setVerCtrl(verCtrl);
-				newReposInfo.setSvnPath(svnPath);
-				newReposInfo.setSvnUser(svnUser);
-				newReposInfo.setSvnPwd(svnPwd);
-				
-				//copy the .svn to backup, if success then delete it, else copy it back
-				String reposDir = oldReposInfo.getPath() + oldReposInfo.getName();				
-				String commitUser = login_user.getName();				
-				if(doReposSvnInit(reposDir,newReposInfo,commitUser) == false)
-				{
-					System.out.println("仓库的SVN初始化失败");
-					//恢复workingcopy,that have been done in doReposSvnInit
-					//delDir(reposDir + "/data/.svn");
-					//changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);
-					rt.setError("仓库的SVN初始化失败，请检查svnPath、svnUser、svnPwd");
-					writeJson(rt, response);	
-					return;
-				}
-				
-				if(reposService.updateRepos(newReposInfo) == 0)
-				{
-					System.out.println("仓库信息更新失败");
-					//恢复working copy
-					delDir(reposDir + "/data/.svn");
-					changeDirectory(".svn",reposDir + "/backup",reposDir + "/data", false);
-					rt.setError("仓库信息更新失败！");
-					writeJson(rt, response);
-					return;			
-				}
-				//删除备份的workingcopy
-				delDir(reposDir + "/backup/.svn");
 			}
 		}
 		else //if(verCtrl == 0 || verCtrl == 2)	
@@ -772,15 +643,441 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		//move svn仓库
+		if(verCtrl1 == null)
+		{
+			//用户没有切换版本控制类型，do nothing
+		}
+		else if(verCtrl1 == 1)
+		{
+			if(UpdateReposVerCtrl1(reposId,verCtrl1,svnPath1,login_user,rt) == false)
+			{
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else //if(verCtrl1 == 0 || verCtrl1 == 2)	
+		{
+			//不要修改原来的仓库路径、用户名和密码信息
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setVerCtrl1(verCtrl1);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("仓库信息更新失败");
+				//恢复working copy
+				rt.setError("仓库信息更新失败！");
+				writeJson(rt, response);
+				return;			
+			}
+		}
+		
 		writeJson(rt, response);	
 	}
 
+	private boolean UpdateReposVerCtrl1(Integer reposId, Integer verCtrl1,
+			String svnPath1, User login_user, ReturnAjax rt) {
+		//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
+		if((svnPath1 == null) || svnPath1.equals(""))
+		{
+			//Create a local SVN Repos
+			String localReposPath = "";
+			String os = System.getProperty("os.name");  
+			System.out.println("OS:"+ os);  
+			if(os.toLowerCase().startsWith("win")){  
+				localReposPath = "D:/DocSysSvnReposes/";
+			}
+			else
+			{
+				localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+			}
+			
+			//get old ReposInfo
+			Repos oldReposInfo = reposService.getRepos(reposId);
+			if(oldReposInfo == null)
+			{
+				rt.setError("仓库 " +reposId +" 不存在!");				
+				//writeJson(rt, response);
+				return false;
+			}
+			String reposName = oldReposInfo.getId() + "_VRepos";
+			File dir = new File(localReposPath,reposName);
+			if(dir.exists())
+			{
+				rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
+				//writeJson(rt, response);	
+				return false;
+			}
+			
+			svnPath1 = SVNUtil.CreateRepos(reposName,localReposPath);
+			if(svnPath1 == null)
+			{
+				rt.setError("SVN仓库的创建失败");
+				//writeJson(rt, response);	
+				return false;
+			}
+		}			
+		
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		//如果VirtualDoc版本控制设置切换、svnPath1都需要重新同步本地目录和仓库(SVNUser、svnPwd修改不用管，直接改即可)
+		if(oldReposInfo.getVerCtrl1() != verCtrl1 || !svnPath1.equals(oldReposInfo.getSvnPath1()))
+		{
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setVerCtrl1(verCtrl1);
+			newReposInfo.setSvnPath1(svnPath1);
+			
+			//Get the repos virtual data Path
+			String reposVPath = getReposVirtualPath(oldReposInfo);
+			String commitUser = login_user.getName();
+			String commitMsg = "Virtual Doc SvnRepository Init svnPath:" + svnPath1 + " reposRPath:" + reposVPath;
+			String svnUser1 = oldReposInfo.getSvnUser1();
+			String svnPwd1 = oldReposInfo.getSvnPwd1();
+			
+			
+			if(svnAutoCommit(svnPath1, svnUser1, svnPwd1, reposVPath, commitMsg, commitUser, false, null) == false)
+			{
+				System.out.println("仓库的SVN初始化失败");
+				rt.setError("仓库的SVN初始化失败，请检查svnPath1、svnUser1、svnPwd1 " + svnPath1 + " " + svnUser1 + " " + svnPwd1);
+				//writeJson(rt, response);	
+				return false;
+			}
+			
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("仓库信息更新失败");
+				rt.setError("仓库信息更新失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+
+	private boolean UpdateReposVerCtrl(Integer reposId, Integer verCtrl,String svnPath,User login_user, ReturnAjax rt) {
+		//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
+		if((svnPath == null) || svnPath.equals(""))
+		{
+			//Create a local SVN Repos
+			String localReposPath = "";
+			String os = System.getProperty("os.name");  
+			System.out.println("OS:"+ os);  
+			if(os.toLowerCase().startsWith("win")){  
+				localReposPath = "D:/DocSysSvnReposes/";
+			}
+			else
+			{
+				localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+			}
+			
+			//get old ReposInfo
+			Repos oldReposInfo = reposService.getRepos(reposId);
+			if(oldReposInfo == null)
+			{
+				rt.setError("仓库 " +reposId +" 不存在!");				
+				//writeJson(rt, response);
+				return false;
+			}
+			
+			String reposName = oldReposInfo.getId()+"";
+			File dir = new File(localReposPath,reposName);
+			if(dir.exists())
+			{
+				rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
+				//writeJson(rt, response);	
+				return false;
+			}
+			
+			svnPath = SVNUtil.CreateRepos(reposName,localReposPath);
+			if(svnPath == null)
+			{
+				rt.setError("SVN仓库的创建失败");
+				//writeJson(rt, response);	
+				return false;
+			}
+		}			
+		
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		//如果版本控制设置切换、svnPath、SVNUser、svnPwd修改都需要重新同步本地目录和仓库
+		if(oldReposInfo.getVerCtrl() != verCtrl || !svnPath.equals(oldReposInfo.getSvnPath()))
+		{
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setVerCtrl(verCtrl);
+			newReposInfo.setSvnPath(svnPath);
+			
+			//Init the svn Repository
+			String reposRPath = getReposRealPath(oldReposInfo);			
+			String commitUser = login_user.getName();
+			String commitMsg = "Real Doc SvnRepository Init svnPath:" + svnPath + " reposRPath:" + reposRPath;
+			String svnUser = oldReposInfo.getSvnUser();
+			String svnPwd = oldReposInfo.getSvnPwd();					
+			if(svnAutoCommit(svnPath,svnUser,svnPwd,reposRPath,commitMsg,commitUser,false,null) == false)
+			{
+				System.out.println("仓库的SVN初始化失败");
+				rt.setError("仓库的SVN初始化失败，请检查svnPath、svnUser、svnPwd"+ svnPath + " " + svnUser + " " + svnPwd);
+				//writeJson(rt, response);	
+				return false;
+			}
+			
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
+				rt.setError("仓库信息更新失败！");
+				//writeJson(rt, response);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean UpdateReposPath(Integer reposId, String path,User login_user,ReturnAjax rt) {
+		//如果传入的Path没有带/,给他加一个
+		String endChar = path.substring(path.length()-1, path.length());
+		if(!endChar.equals("/"))	
+		{
+			path = path + "/";
+		}
+		
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!path.equals(oldReposInfo.getPath()))
+		{
+			if(login_user.getType() != 2)
+			{
+				System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
+				rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
+				//writeJson(rt, response);
+				return false;							
+			}
+			
+			//
+			String oldReposDir = oldReposInfo.getPath();
+			String newReposDir = path;
+			String reposName = oldReposInfo.getId()+"";
+			if(changeDirectory(reposName,oldReposDir, newReposDir,false) == false)
+			{
+				System.out.println("仓库目录迁移失败！");
+				rt.setError("修改仓库位置失败！");					
+				return false;
+			}
+			
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setPath(path);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				//删除新建的仓库目录
+				System.out.println("updateRepos for path failed");
+				changeDirectory(reposName, newReposDir,oldReposDir,false);	//还原回去
+				rt.setError("设置仓库path失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+
+	//更新repos的svnUser信息
+	private boolean UpdateReposSvnUser(Integer reposId, String svnUser,ReturnAjax rt) {
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!svnUser.equals(oldReposInfo.getSvnUser()))
+		{								
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setSvnUser(svnUser);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("updateRepos for svnUser failed");
+				rt.setError("设置仓库svnUser失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+	
+	private boolean UpdateReposSvnPwd(Integer reposId, String svnPwd,
+			ReturnAjax rt) {
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!svnPwd.equals(oldReposInfo.getSvnPwd()))
+		{								
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setSvnPwd(svnPwd);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("updateRepos for svnPwd failed");
+				rt.setError("设置仓库svnPwd失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+	
+	//更新repos的svnUser信息
+	private boolean UpdateReposSvnUser1(Integer reposId, String svnUser1,ReturnAjax rt) {
+		System.out.println("UpdateReposSvnPwd1() reposId:" + reposId + " svnUser1:" + svnUser1);
+
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!svnUser1.equals(oldReposInfo.getSvnUser1()))
+		{								
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setSvnUser1(svnUser1);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("updateRepos for svnUser1 failed");
+				rt.setError("设置仓库svnUser1失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+	
+	private boolean UpdateReposSvnPwd1(Integer reposId, String svnPwd1,ReturnAjax rt) {
+		System.out.println("UpdateReposSvnPwd1() reposId:" + reposId + " svnPwd1:" + svnPwd1);
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!svnPwd1.equals(oldReposInfo.getSvnPwd1()))
+		{								
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setSvnPwd1(svnPwd1);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("updateRepos for svnPwd1 failed");
+				rt.setError("设置仓库svnPwd1失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+
+	private boolean UpdateReposName(Integer reposId, String name, ReturnAjax rt) {
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!name.equals(oldReposInfo.getName()))
+		{								
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setName(name);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("updateRepos for name failed");
+				rt.setError("设置仓库name失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+
+	private boolean UpdateReposInfo(Integer reposId, String info, ReturnAjax rt) {
+		//get old ReposInfo
+		Repos oldReposInfo = reposService.getRepos(reposId);
+		if(oldReposInfo == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			//writeJson(rt, response);
+			return false;
+		}
+		
+		if(!info.equals(oldReposInfo.getInfo()))
+		{
+			//new ReposInfo
+			Repos newReposInfo = new Repos();
+			newReposInfo.setId(reposId);
+			newReposInfo.setInfo(info);
+			if(reposService.updateRepos(newReposInfo) == 0)
+			{
+				System.out.println("updateRepos for info failed");
+				rt.setError("设置仓库info失败！");
+				//writeJson(rt, response);
+				return false;			
+			}
+		}
+		return true;
+	}
+
+
 	private boolean CopyReposDir(String oldReposDir, String newReposDir) {
-		// TODO Auto-generated method stub
 		System.out.println("CopyReposDir oldReposDir " + oldReposDir +" newReposDir " + newReposDir);
         if(!oldReposDir.equals(newReposDir))
         {
-            File oldfile=new File(oldReposDir);
+            //File oldfile=new File(oldReposDir);
             File newfile=new File(newReposDir);
             if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
             {
@@ -790,13 +1087,7 @@ public class ReposController extends BaseController{
             else
             {
             	System.out.println("迁移仓库");
-            	try {
-					return copyFile(oldReposDir, newReposDir, false);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return false;
-				}
+            	return copyFolder(oldReposDir, newReposDir);
             }
         }
         else
@@ -807,7 +1098,6 @@ public class ReposController extends BaseController{
 	}
 	
 	private boolean DeleteReposDir(String reposDir) {
-		// TODO Auto-generated method stub
 		System.out.println("DeleteReposDir reposDir " + reposDir);
         File file = new File(reposDir);
         if(file.exists()) 
@@ -834,32 +1124,15 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		//获取用户可访问文件列表
+		List <Doc> docList = getReposMenu(vid,login_user);
+		if(docList == null)
 		{
-			System.out.println("超级管理员");
-			//get the data from doc
-			Doc doc = new Doc();
-			doc.setVid(vid);
-			List <Doc> docList = reposService.getDocList(doc);
-			rt.setData(docList);
+			rt.setData("");
 		}
 		else
 		{
-			System.out.println("普通用户");
-			//从根目录开始
-			Integer pid = 0;
-			DocAuth reposAuth = getReposAuth(login_user.getId(),vid);
-			System.out.println("reposAuth access:" + reposAuth.getAccess());
-
-			DocAuth pDocAuth = getDocAuth(login_user.getId(),pid,vid,reposAuth);			
-			System.out.println("pDocAuth access:" + pDocAuth.getAccess());
-
-			//get authedDocList: 需要从根目录开始递归往下查询目录权限
-			List <Doc> authedDocList = getAuthedDocList(login_user.getId(),pid,vid,pDocAuth);
-			String json = JSON.toJSONStringWithDateFormat(authedDocList, "yyy-MM-dd HH:mm:ss");
-			System.out.println("authedDocList:" + json);
-			rt.setData(authedDocList);
-			
+			rt.setData(docList);	
 		}
 		writeJson(rt, response);
 	}
@@ -873,72 +1146,108 @@ public class ReposController extends BaseController{
 		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
 		if(reposAuth == null)
 		{
-			qReposAuth.setUserId(0);	//获取仓库的公开属性
-			reposAuth = reposService.getReposAuth(qReposAuth);	
-		}
-
-		if(reposAuth == null)
-		{
 			return null;
 		}
 		//Convert reposAuth to docAuth
 		DocAuth docAuth = new DocAuth();
 		docAuth.setUserId(UserID);
 		docAuth.setReposId(ReposID);
+		docAuth.setIsAdmin(reposAuth.getIsAdmin());
 		docAuth.setAccess(reposAuth.getAccess());
 		docAuth.setEditEn(reposAuth.getEditEn());
 		docAuth.setAddEn(reposAuth.getAddEn());
 		docAuth.setDeleteEn(reposAuth.getDeleteEn());
+		docAuth.setHeritable(reposAuth.getHeritable());
 		return docAuth;
 	}
 	
-	//获取用户的文件权限
-	public DocAuth getDocAuth(Integer UserID,Integer DocID,Integer ReposID,DocAuth parentDocAuth)
+	//This function will get DocAuth from the bottom to top
+	//这个函数只能获取真实存在的doc的权限，docId = 0（根目录是虚拟的doc）实际上就是仓库的权限，跟是否继承无关 
+	private DocAuth recurGetDocAuth(Integer docId, DocAuth reposAuth,List<DocAuth> userDocAuthList) {
+		//docId表示已经递归到了最上层
+		if(docId == null || docId == 0)
+		{
+			if(reposAuth != null && reposAuth.getHeritable() == 1)
+			{					
+				return reposAuth;
+			}
+		}
+		
+		DocAuth docAuth = getDocAuthByDocId(docId,userDocAuthList);
+		if(docAuth == null)
+		{
+			Doc doc = reposService.getDoc(docId);
+			if(doc == null)
+			{
+				System.out.println("recurGetDocAuth: doc with ID " + docId + "不存在！");
+				return null;
+			}
+			Integer pDocId = doc.getPid();
+			return recurGetDocAuth(pDocId,reposAuth,userDocAuthList);
+		}
+		return docAuth;
+	}
+	
+	//This function will get DocAuth from top to bottom
+	public DocAuth getDocAuth(Integer DocID,DocAuth parentDocAuth,List<DocAuth> userDocAuthList)
 	{
 		if((DocID == null) || (DocID == 0))	//根目录直接取parentDocAuth的属性
 		{
+			if(parentDocAuth.getHeritable() == 0)	//不让继承的话，则返回null
+			{
+				return null;
+			}
 			return parentDocAuth;
 		}
 		
-		//Convert reposAuth to docAuth
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(UserID);
-		qDocAuth.setReposId(ReposID);
-		qDocAuth.setDocId(DocID);
-		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		if(docAuth == null)	//没有设置的话默认使用父节点的权限
+		//从数据库中获取用户的 DocAuth
+		//DocAuth qDocAuth = new DocAuth();
+		//qDocAuth.setUserId(UserID);
+		//qDocAuth.setReposId(ReposID);
+		//qDocAuth.setDocId(DocID);
+		//DocAuth docAuth = reposService.getDocAuth(qDocAuth);
+		
+		//从用户的权限列表中读取DocAuth
+		DocAuth docAuth = getDocAuthByDocId(DocID, userDocAuthList);
+		if(docAuth == null)
 		{
-			qDocAuth.setUserId(0);	//取目录公有权限设置
-			docAuth = reposService.getDocAuth(qDocAuth);
-			if(docAuth == null)
+			if(parentDocAuth.getHeritable() == 0)	//不让继承的话，则返回null
 			{
-				return parentDocAuth;
+				return null;
 			}
+			return parentDocAuth;
 		}
 		return docAuth;
 	}
 	
 	//这是个递归调用函数
-	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth)
+	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, List<DocAuth> userDocAuthList)
 	{
-		List <Doc> docList = getAuthedSubDocList(userId,pid,vid,pDocAuth);
+		//System.out.println("getAuthedDocList userId:" + userId + " pid:" + pid + " vid:" + vid);
+		//获取pid目录下User能访问的所有doc
+		List <Doc> docList = getAuthedSubDocList(userId,pid,vid,pDocAuth,userDocAuthList);
 		if(docList != null)
 		{
 			//copy docList the resultList
 			List <Doc> resultList = new ArrayList<Doc>();
 			resultList.addAll(docList); 
 			
+			//遍历docList,如果是目录的则递归获取该目录下User能访问的所有doc
 			for(int i = 0 ; i < docList.size() ; i++) 
 			{
 				Doc subDoc = docList.get(i);
 				Integer subDocId = subDoc.getId();
 				if(subDoc.getType() == 2)	//只有目录才需要查询
 				{
-					DocAuth subDocAuth = getDocAuth(userId,subDocId,vid,pDocAuth);
-					List <Doc> subDocList = getAuthedDocList(userId,subDocId,vid,subDocAuth);
-					if(subDocList != null)
+					//获取用户的目录访问权限
+					DocAuth subDocAuth = getDocAuth(subDocId,pDocAuth,userDocAuthList);
+					if(subDocAuth != null)	//减少数据库查询次数
 					{
-						resultList.addAll(subDocList);
+						List <Doc> subDocList = getAuthedDocList(userId,subDocId,vid,subDocAuth,userDocAuthList);
+						if(subDocList != null)
+						{
+							resultList.addAll(subDocList);
+						}
 					}
 				}
 			}
@@ -948,69 +1257,30 @@ public class ReposController extends BaseController{
 	}
 
 	//获取目录pid下的子节点（且当前用户有权限访问的文件）
-	List <Doc> getAuthedSubDocList(Integer userId,Integer pDocId,Integer reposId,DocAuth pDocAuth)
+	List <Doc> getAuthedSubDocList(Integer userId,Integer pDocId,Integer reposId,DocAuth pDocAuth, List<DocAuth> userDocAuthList)
 	{
-		//当前父节点的权限检查
+		List <Doc> docList = null;
+		//父节点的权限检查
 		if(pDocAuth != null && pDocAuth.getAccess() != null && pDocAuth.getAccess() == 1)
 		{
-			//get All doclist under pDocId in reposId
-			Doc doc = new Doc();
-			doc.setPid(pDocId);
-			doc.setVid(reposId);
-			List <Doc> docList = reposService.getDocList(doc);	
-			if(docList != null)
+			if(pDocAuth.getHeritable() == 1)
 			{
-				//get the DocAuthList for current user and public user of docs under pDocId
-				List <DocAuth> userDocAuthList = reposService.getDocAuthListForUser(userId,pDocId,reposId);
-				List <DocAuth> publicDocAuthList = reposService.getDocAuthListForUser(0,pDocId,reposId);
-				if(userDocAuthList == null && publicDocAuthList == null)
-				{
-					return docList;	//如果没有设置直接沿用父节点权限，因此全部可以访问
-				}
-				
-				//pickup the docs which can be accessed
-				List <Doc> resultList = new ArrayList<Doc>();
-				for(int i = 0 ; i < docList.size() ; i++) 
-				{
-					Doc subDoc = docList.get(i);
-					Integer subDocId = subDoc.getId();
-					Integer access = 1;	//默认是可以访问
-					DocAuth subUserDocAuth = getDocAuthById(subDocId,userDocAuthList);
-					if(subUserDocAuth != null)	//优先有用户权限确定
-					{
-						Integer userAccess = subUserDocAuth.getAccess();
-						if(userAccess == null || userAccess == 0) 
-						{
-							access = 0;
-						}
-					}	
-					else
-					{
-						DocAuth subPublicDocAuth = getDocAuthById(subDocId,publicDocAuthList);
-						if(subPublicDocAuth != null)	//优先有用户权限确定
-						{
-							Integer PublicAccess = subPublicDocAuth.getAccess();
-							if(PublicAccess == null || PublicAccess == 0)
-							{
-								access = 0;
-							}
-						}
-					}
-					
-					//if the subDoc can be accessed, then add it to the list
-					if(access == 1)
-					{
-						resultList.add(subDoc);
-					}
-				}
-				return resultList;
+				//获取pDocId下所有直接授权和继承授权的子文件列表
+				docList = reposService.getAuthedDocListHeritable(null,pDocId,reposId,userId);	//获取user.access==1 和 docAuth为null的所有子节点				
+			}
+			else
+			{
+				//获取pDocId下所有直接授权的子文件列表
+				docList = reposService.getAuthedDocList(null,pDocId,reposId,userId);	//获取user.access==1的所有子节点
 			}
 		}
-		return null;
+		//String json = JSON.toJSONStringWithDateFormat(docList, "yyy-MM-dd HH:mm:ss");
+		//System.out.println("docList["+ pDocId +"] " + json);
+		return docList;
 	}
 	
-	private DocAuth getDocAuthById(Integer subDocId,List<DocAuth> docAuthList) {
-		// TODO Auto-generated method stub
+	//根据DocId从docAuthList中找出对应的docAuth
+	private DocAuth getDocAuthByDocId(Integer subDocId,List<DocAuth> docAuthList) {
 		for(int i = 0 ; i < docAuthList.size() ; i++) 
 		{
 			DocAuth docAuth = docAuthList.get(i);
@@ -1039,7 +1309,7 @@ public class ReposController extends BaseController{
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getReposMenu vid: " + vid);
+		System.out.println("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1049,23 +1319,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{			
-			DocAuth reposAuth = getReposAuth(login_user.getId(),vid);
-			System.out.println("reposAuth access:" + reposAuth.getAccess());
-			if(reposAuth.getIsAdmin() != 1)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		
+		//获取的仓库权限
 		//获取整个仓库的目录结构，包括仓库本身（作为ID=0的存在）
 		//获取仓库信息，并转换成rootDoc
 		Repos repos = reposService.getRepos(vid);
@@ -1075,22 +1329,91 @@ public class ReposController extends BaseController{
 		rootDoc.setType(2);
 		rootDoc.setPid(0);	//设置成自己
 		
-		//获取仓库文件列表
-		Doc doc = new Doc();
-		doc.setVid(vid);
-		List <Doc> docList = reposService.getDocList(doc);
-
+		//获取用户可见仓库文件列表
+		List <Doc> docList = getReposMenu(vid,login_user);
+		
 		//合并列表
 		docList.add(rootDoc);
 		rt.setData(docList);
 		writeJson(rt, response);
 	}
 	
-	/****************   get Repos Authed Users  ******************/
-	@RequestMapping("/getReposAuthedUsers.do")
-	public void getReposAuthedUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	private List<Doc> getReposMenu(Integer vid, User login_user) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			//get the data from doc
+			Doc doc = new Doc();
+			doc.setVid(vid);
+			List <Doc> docList = reposService.getDocList(doc);
+			//rt.setData(docList);
+			return docList;
+
+		}
+		else
+		{
+			System.out.println("普通用户");
+			//获取用户仓库权限
+			Integer userID = login_user.getId();
+			DocAuth reposAuth = getReposAuth(userID,vid);
+			if(reposAuth == null)
+			{
+				System.out.println("非仓库直接用户，使用任意用户权限");
+				userID = 0;
+				reposAuth = getReposAuth(0,vid);
+				if(reposAuth == null)
+				{
+					System.out.println("任意用户无权访问该仓库");
+					//rt.setData("");
+					//writeJson(rt, response);
+					return null;
+				}
+			}
+			System.out.println("reposAuth.access " + reposAuth.getAccess() + " reposAuth.heritable " + reposAuth.getHeritable());
+			
+			//获取用户的仓库的所有权限列表，后续的目录权限将从该列表中读取，避免每次查询数据库
+			List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
+			if(userDocAuthList == null)
+			{
+				System.out.println("userDocAuthList is NULL for " + userID);
+				//用户在该仓库下没有设置权限，需要根据仓库的权限设置来确定访问范围
+				if(reposAuth != null && reposAuth.getAccess()==1 && reposAuth.getHeritable() == 1)
+				{					
+					//继承仓库的访问权限，可以访问全部目录
+					System.out.println("用户可访问仓库所有文件！");
+					Doc doc = new Doc();
+					doc.setVid(vid);
+					List <Doc> docList = reposService.getDocList(doc);
+					//rt.setData(docList);
+					//writeJson(rt, response);
+					return docList;
+				}
+				
+				System.out.println("用户无权访问该仓库的所有文件");
+				//rt.setData("");
+				//writeJson(rt, response);
+				return null;
+			}
+
+			//用户在仓库中有权限设置，需要一层一层递归来获取文件列表
+			Integer pid = 0; //获取最上层的DocAuth,用于后续的递归获取文件列表
+			DocAuth pDocAuth = reposAuth;	//根目录直接取仓库的权限即可
+			System.out.println("pDocAuth.access " + pDocAuth.getAccess() + " pDocAuth.heritable " + pDocAuth.getHeritable());
+			
+			//get authedDocList: 需要从根目录开始递归往下查询目录权限
+			List <Doc> authedDocList = getAuthedDocList(userID,pid,vid,pDocAuth,userDocAuthList);
+			//String json = JSON.toJSONStringWithDateFormat(authedDocList, "yyy-MM-dd HH:mm:ss");
+			//System.out.println("authedDocList:" + json);
+			//rt.setData(authedDocList);
+			return authedDocList;
+		}
+	}
+
+	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户***************/
+	@RequestMapping("/getReposAllUsers.do")
+	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getReposAuthedUsers vid: " + reposId);
+		System.out.println("getReposAllUsers vid: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1099,91 +1422,39 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-
-		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}			
-		}
 		
-		//获取DocAuthedUserList
-		List <UserDocAuth> UserList = getReposAuthedUserList(reposId);
+		//获取All UserList
+		List <UserDocAuth> UserList = getReposAllUserList(reposId);
 		String json = JSON.toJSONStringWithDateFormat(UserList, "yyy-MM-dd HH:mm:ss");
 		System.out.println("UserList:" + json);
 		rt.setData(UserList);
 		writeJson(rt, response);
 		
-	}
-	private List<UserDocAuth> getReposAuthedUserList(Integer reposId) {
-		// TODO Auto-generated method stub
-		List <UserDocAuth> ReposUserList = reposService.getReposAuthedUserList(reposId);
-		return ReposUserList;
 	}
 	
-	/****************   get Repos Not Authed Users  ******************/
-	@RequestMapping("/getReposNotAuthedUsers.do")
-	public void getReposNotAuthedUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("getReposNotAuthedUsers vid: " + reposId);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}			
-		}
-		
-		//获取DocAuthedUserList
-		List <UserDocAuth> UserList = getReposNotAuthedUserList(reposId);
-		String json = JSON.toJSONStringWithDateFormat(UserList, "yyy-MM-dd HH:mm:ss");
-		System.out.println("UserList:" + json);
-		rt.setData(UserList);
-		writeJson(rt, response);
-		
-	}
-
-	private List<UserDocAuth> getReposNotAuthedUserList(Integer reposId) {
-		// TODO Auto-generated method stub
+	private List<UserDocAuth> getReposAllUserList(Integer reposId) {
 		List <UserDocAuth> UserList = reposService.getReposAllUsers(reposId);	//取出系统所有用户
-		List <UserDocAuth> ReposUserList = reposService.getReposAuthedUserList(reposId);
-		UserList.removeAll(ReposUserList); //删除授权部分的用户
+		//获取任意用户的DocAuth
+		UserDocAuth anyUserReposAuth = getAnyUserReposAuth(reposId); //获取任意用户的权限表
+		if(anyUserReposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
+		{
+			anyUserReposAuth = new UserDocAuth();
+			anyUserReposAuth.setUserId(0);
+			anyUserReposAuth.setUserName("任意用户");			
+			UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList
+		}
+		else
+		{
+			UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList			
+		}
 		return UserList;
 	}
 
-	/****************   get Doc Auth UserList  ******************/
-	@RequestMapping("/getDocAuthedUsers.do")
-	public void getDocAuthedUsers(Integer docId, Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	/****************  get ReposAuthList and DocAuthList of Repos  ******************/
+	@RequestMapping("/getReposAuthList.do")
+	public void getReposAuthList(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getDocAuthedUsers vid: " + vid + " docId:" + docId);
+		System.out.println("getReposAuthList reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1194,83 +1465,291 @@ public class ReposController extends BaseController{
 		}
 
 		//检查当前用户的权限
+		if(isAdminOfRepos(login_user,reposId) == false)
+		{
+			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//获取ReposAuthList
+		List <UserDocAuth> ReposAuthList = getReposAuthList(reposId);
+		if(ReposAuthList == null)
+		{
+			ReposAuthList = getDocAuthList(0,reposId);	//docId=0,表示获取仓库下所有Doc的DocAuth
+		}
+		else
+		{
+			List <UserDocAuth> DocAuthList = getDocAuthList(0,reposId);	//docId=0,表示获取仓库下所有Doc的DocAuth
+			if(DocAuthList != null)
+			{
+				ReposAuthList.addAll(DocAuthList);
+			}
+		}
+		String json = JSON.toJSONStringWithDateFormat(ReposAuthList, "yyy-MM-dd HH:mm:ss");
+		System.out.println("ReposAuthList:" + json);
+		rt.setData(ReposAuthList);
+		writeJson(rt, response);
+		
+	}
+	
+	private boolean isAdminOfRepos(User login_user,Integer reposId) {
 		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
 			System.out.println("超级管理员");
+			return true;
 		}
 		else 
 		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),vid);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
+			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
+			if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
 			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
+				return true;
 			}			
+		}
+		return false;
+	}
+
+	private List<UserDocAuth> getDocAuthList(Integer docId, Integer reposId) {
+		if(docId == null || docId == 0)
+		{
+			//获取仓库的所有doc的docAuth
+			return reposService.getDocAuthList(0,reposId);
+		}
+		else
+		{
+			return reposService.getDocAuthList(docId,reposId);
+		}
+	}
+
+	private List<UserDocAuth> getReposAuthList(Integer reposId) {
+		List <UserDocAuth> ReposAuthList = reposService.getReposAuthList(reposId);	//注意已经包括了任意用户
+		return ReposAuthList;
+	}
+	
+	/****************   get DocAuthList of Doc 包括继承的权限 ******************/
+	@RequestMapping("/getDocAuthList.do")
+	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getDocAuthList docId: " + docId + " reposId:" + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+
+		//检查当前用户的权限
+		if(isAdminOfDoc(login_user,docId,reposId) == false)
+		{
+			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//获取DocAuthedUserList
-		List <UserDocAuth> UserList = getDocAuthedUserList(docId,vid);
-		String json = JSON.toJSONStringWithDateFormat(UserList, "yyy-MM-dd HH:mm:ss");
-		System.out.println("UserList:" + json);
-		rt.setData(UserList);
+		List <UserDocAuth> docAuthList = getAllDocAuthList(docId,reposId);
+		String json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
+		System.out.println("docAuthList:" + json);
+		rt.setData(docAuthList);
 		writeJson(rt, response);
 	}
 	
-	//获取当前Doc的用户列表 with DocAuth Info
-	List <UserDocAuth> getDocAuthedUserList(Integer docId, Integer vid)
+	private boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
+		//任意用户的管理员权限无效，避免混乱
+		DocAuth docAuth = getUserDocAuth(login_user.getId(), docId, reposId);
+		if(docAuth != null && docAuth.getIsAdmin() == 1)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	//获取当前Doc的权限列表
+	List <UserDocAuth> getAllDocAuthList(Integer docId, Integer vid)
 	{
 		//获取该仓库的所有用户列表
-		List <UserDocAuth> ReposUserList = reposService.getReposAuthedUserList(vid);
-		if(docId == null || docId == 0)	//表示要获取仓库的权限用户
+		List <UserDocAuth> ReposAuthList = reposService.getReposAuthList(vid);
+		
+		//Get DocName and DocPath
+		String docName = "";
+		String docPath = "";
+		Doc doc = null;
+		if(docId == null || docId == 0)
 		{
-			System.out.println("docId = 0");
-			return ReposUserList;
+			System.out.println("docId 未设置");
+			return null;
+		}
+		else
+		{
+			doc = reposService.getDoc(docId);
+			if(doc == null)
+			{
+				System.out.println("doc not exists");
+				return null;
+			}
+			docName = doc.getName();
+			docPath = doc.getPath();
 		}
 		
-		//遍历仓库的用户（如果docID==0则不需要修改，对应的docID有相应 的设置DocAuth来更新ReposUser中的DocAuth部分，否则需要取该用户针对该docId父节点的属性）
-		for(int i = 0 ; i < ReposUserList.size() ; i++) 
+		
+		//遍历仓库的用户的docAuth，如果非空则设置其  docAuthId，并修改其权限
+		for(int i = 0 ; i < ReposAuthList.size() ; i++) 
 		{
-			UserDocAuth user = ReposUserList.get(i);
-			DocAuth docAuth = getUserDocAuth(user.getId(),docId,vid);
-			if(docAuth != null)	//递归获取其父节点的属性
+			UserDocAuth user = ReposAuthList.get(i);
+			//更新文件路径和文件名字信息
+			user.setDocName(docName);
+			user.setDocPath(docPath);
+			
+			//获取该用户关于docId的直接权限
+			DocAuth qDocAuth = new DocAuth();
+			qDocAuth.setUserId(user.getUserId());
+			qDocAuth.setDocId(docId);
+			qDocAuth.setReposId(vid);
+			DocAuth docAuth = reposService.getDocAuth(qDocAuth);
+			if(docAuth != null)
 			{
+				//设置docAuthId并更新权限
+				user.setDocAuthId(docAuth.getId());
 				user.setIsAdmin(docAuth.getIsAdmin());
 				user.setAccess(docAuth.getAccess());
 				user.setEditEn(docAuth.getEditEn());
 				user.setAddEn(docAuth.getAddEn());
 				user.setDeleteEn(docAuth.getDeleteEn());
+				user.setHeritable(docAuth.getHeritable());
+
+			}
+			else	//没有直接的文件权限设置则获取其继承权限
+			{
+				//递归获取继承权限，继承过来的权限不要设置docAuthId,只更新权限
+				docAuth = getUserDocAuth(user.getUserId(),doc.getPid(),vid);
+				if(docAuth != null)	//递归获取其父节点的属性
+				{
+					user.setIsAdmin(docAuth.getIsAdmin());
+					user.setAccess(docAuth.getAccess());
+					user.setEditEn(docAuth.getEditEn());
+					user.setAddEn(docAuth.getAddEn());
+					user.setDeleteEn(docAuth.getDeleteEn());
+					user.setHeritable(docAuth.getHeritable());
+				}
+				else
+				{
+					//继承仓库权限
+					if(user.getHeritable() == 0)	//不让继承，则清空其权限
+					{
+						user.setIsAdmin(0);
+						user.setAccess(0);
+						user.setEditEn(0);
+						user.setAddEn(0);
+						user.setDeleteEn(0);
+						user.setHeritable(0);
+					}
+				}
 			}
 		}		
-		return ReposUserList;
+		return ReposAuthList;
 	}
 	
-	DocAuth getUserDocAuth(Integer userId, Integer docId, Integer vid)
-	{
-		if(docId == 0)	//表示已经遍历所有节点
+	private UserDocAuth getAnyUserReposAuth(Integer vid) {
+		//需要查询该仓库是否设置了对userID=0的访问权限，也就是对任意用户的权限（任意用户是一个虚拟的用户，没有用户实体）
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setReposId(vid);
+		qReposAuth.setUserId(0);
+		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
+		if(reposAuth != null)	//仓库设置了任意用户的访问权限
 		{
+			//将任意用户加入到用户列表中
+			UserDocAuth userDocAuth = new UserDocAuth();
+			userDocAuth.setReposAuthId(reposAuth.getId());	//仓库权限记录ID
+			userDocAuth.setReposId(vid);
+			userDocAuth.setUserId(0);	//任意用户使用虚拟的userID
+			userDocAuth.setUserName("任意用户");
+			userDocAuth.setAccess(reposAuth.getAccess());
+			userDocAuth.setAddEn(reposAuth.getAddEn());
+			userDocAuth.setDeleteEn(reposAuth.getDeleteEn());
+			userDocAuth.setEditEn(reposAuth.getEditEn());
+			return userDocAuth;
+		}
+		return null;
+	}
+
+	//递归获取用户的目录访问权限
+	DocAuth getUserDocAuth(Integer userID,Integer docId, Integer vid)
+	{
+		Integer userType = 0;
+		if(userID == null)
+		{
+			System.out.println("getUserDocAuth() userID is null");
 			return null;
+		}
+	
+		//虚拟用户：任意用户
+		if(userID != 0)
+		{
+			User user = userService.getUser(userID);
+			if(user == null)
+			{
+				System.out.println("getUserDocAuth() 用户" + userID +"不存在");
+				return null;
+			
+			}
+			userType = user.getType();
 		}
 		
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(userId);
-		qDocAuth.setDocId(docId);
-		qDocAuth.setReposId(vid);
-		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		if(docAuth == null)
+		//超级管理员可以访问所有目录
+		if(userType == 2)
 		{
-			Doc doc = reposService.getDocInfo(docId);
-			Integer pDocId = doc.getPid();
-			if(pDocId > 0)
-			{
-				return getUserDocAuth(userId, pDocId, vid);
-			}
-			return null;
+			System.out.println("超级管理员" + userID);
+			DocAuth docAuth = new DocAuth();
+			docAuth.setAccess(1);
+			docAuth.setAddEn(1);
+			docAuth.setDeleteEn(1);
+			docAuth.setEditEn(1);
+			docAuth.setHeritable(1);
+			docAuth.setIsAdmin(1);
+			return docAuth;
 		}
-		return docAuth;
+		else
+		{
+			System.out.println("普通用户" + userID);
+			//获取用户仓库权限
+			DocAuth reposAuth = getReposAuth(userID,vid);
+			if(reposAuth == null)
+			{
+				System.out.println("用户无权访问该仓库");
+				return null;
+			}
+			System.out.println("reposAuth.access " + reposAuth.getAccess() + " reposAuth.heritable " + reposAuth.getHeritable());
+			
+			if(docId == 0)	//根目录权限直接使用仓库权限
+			{
+				System.out.println("根目录权限直接使用仓库权限");
+				return reposAuth;
+			}
+			
+			//获取用户的仓库的所有权限列表，后续的目录权限将从该列表中读取，避免每次查询数据库
+			List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
+			if(userDocAuthList == null)
+			{
+				System.out.println("userDocAuthList is NULL for " + userID);
+				//用户在该仓库下没有设置权限，需要根据仓库的权限设置来确定访问范围
+				if(reposAuth != null && reposAuth.getHeritable() == 1)
+				{					
+					return reposAuth;
+				}
+				
+				System.out.println("用户无权访问该仓库的所有文件");
+				return null;
+			}
+
+			//从docId开始递归往上获取用户权限
+			DocAuth userDocAuth = recurGetDocAuth(docId,reposAuth,userDocAuthList);
+			return userDocAuth;
+		}
 	}
-	
+
 	/****************   Add User ReposAuth ******************/
 	@RequestMapping("/addUserReposAuth.do")
 	public void addUserReposAuth(Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1285,21 +1764,16 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		//检查是否是仓库的管理员
+		if(isAdminOfRepos(login_user,reposId) == false)
 		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
+			//检查是否在仓库下的目录拥有管理员权限
+			if(hasAdminUnderRepos(login_user,reposId) == false)
 			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+				rt.setError("您没有该仓库的管理权限，无法添加用户 ！");
 				writeJson(rt, response);			
 				return;
-			}			
+			}
 		}
 		
 		//检查该用户是否设置了仓库权限
@@ -1320,11 +1794,46 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 	}
 	
+	private boolean hasAdminUnderRepos(User login_user, Integer reposId) {
+		
+		Integer userID = login_user.getId();
+		Integer userType = login_user.getType();
+		
+		//超级管理员可以访问所有目录
+		if(userType == 2)
+		{
+			System.out.println("hasAdminUnderRepos() 超级管理员 " + userID);
+			return true;
+		}
+		else
+		{
+			System.out.println("hasAdminUnderRepos()  普通用户 " + userID);
+			//获取用户的仓库的所有权限列表，后续的目录权限将从该列表中读取，避免每次查询数据库
+			List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,reposId);
+			if(userDocAuthList == null)
+			{
+				System.out.println("hasAdminUnderRepos() userDocAuthList is NULL for " + userID);
+				return false;
+			}
+			
+			//go through the userDocAuthList
+			for(int i = 0 ; i < userDocAuthList.size() ; i++) 
+			{
+				DocAuth docAuth = userDocAuthList.get(i);
+				if(docAuth.getIsAdmin() == 1)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/****************   delete User ReposAuth ******************/
 	@RequestMapping("/deleteUserReposAuth.do")
-	public void deleteUserReposAuth(Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("deleteUserReposAuth userId: " + userId  + " reposId:" + reposId);
+		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1335,50 +1844,42 @@ public class ReposController extends BaseController{
 		}
 
 		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		if(isAdminOfRepos(login_user,reposId) == false)
 		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}			
+			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//检查该用户是否设置了仓库权限
 		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setId(reposAuthId);
 		qReposAuth.setUserId(userId);
 		qReposAuth.setReposId(reposId);
 		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
 		if(reposAuth != null)
 		{
-			if(reposService.deleteReposAuth(reposAuth.getId()) == 0)
+			if(reposService.deleteReposAuth(reposAuthId) == 0)
 			{
 				rt.setError("用户仓库权限删除失败！");
 				writeJson(rt, response);			
 				return;
 			}	
 
-			DocAuth docAuth = new DocAuth();
-			docAuth.setUserId(userId);
-			docAuth.setReposId(reposId);
-			reposService.deleteDocAuthSelective(docAuth);	
+			//删除该用户在该仓库的所有的目录权限设置
+			//DocAuth docAuth = new DocAuth();
+			//docAuth.setUserId(userId);
+			//docAuth.setReposId(reposId);
+			//reposService.deleteDocAuthSelective(docAuth);	
 		}
 		writeJson(rt, response);			
 	}
 	
-	/****************   config User Auth ******************/
-	@RequestMapping("/configUserAuth.do")
-	public void configUserAuth(Integer userId, Integer docId, Integer reposId,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	/****************   delete User ReposAuth ******************/
+	@RequestMapping("/deleteUserDocAuth.do")
+	public void deleteUserDocAuth(Integer docAuthId,Integer userId,Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("configUserAuth userId: " + userId + " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn);
+		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " docId: " + docId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1389,22 +1890,66 @@ public class ReposController extends BaseController{
 		}
 
 		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		if(isAdminOfDoc(login_user,docId,reposId) == false)
 		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}			
+			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
 		}
 		
+		//检查该用户是否设置了目录权限
+		DocAuth qDocAuth = new DocAuth();
+		qDocAuth.setId(docAuthId);
+		qDocAuth.setUserId(userId);
+		qDocAuth.setDocId(docId);
+		qDocAuth.setReposId(reposId);
+		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
+		if(docAuth != null)
+		{
+			if(reposService.deleteDocAuth(docAuthId) == 0)
+			{
+				rt.setError("用户的目录权限设置删除失败！");
+				writeJson(rt, response);			
+				return;
+			}	
+		}
+		writeJson(rt, response);			
+	}
+	
+	/****************   config User Auth ******************/
+	@RequestMapping("/configUserAuth.do")
+	public void configUserAuth(Integer userId, Integer docId, Integer reposId,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("configUserAuth userId: " + userId + " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+
+		//检查当前用户的权限
+		DocAuth adminDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
+		if(adminDocAuth == null ||adminDocAuth.getIsAdmin()==null || adminDocAuth.getIsAdmin() == 0)
+		{
+			System.out.println("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
+			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//login_user不得设置超过自己的权限：超过了则无效
+		if(isUserAuthExpanded(isAdmin,access,editEn,addEn,deleteEn,heritable,adminDocAuth,rt) == true)
+		{
+			System.out.println("超过设置者的权限 ！");
+			writeJson(rt, response);			
+			return;			
+		}
+		
+		System.out.println("检查设置的用户是否是仓库的访问用户 ");
 		//检查该用户是否设置了仓库权限
 		ReposAuth qReposAuth = new ReposAuth();
 		qReposAuth.setUserId(userId);
@@ -1425,6 +1970,7 @@ public class ReposController extends BaseController{
 			reposAuth.setEditEn(editEn);
 			reposAuth.setAddEn(addEn);
 			reposAuth.setDeleteEn(deleteEn);
+			reposAuth.setHeritable(heritable);
 			if(reposService.setReposAuth(reposAuth) == 0)
 			{
 				rt.setError("用户仓库权限更新失败");
@@ -1446,6 +1992,7 @@ public class ReposController extends BaseController{
 				qDocAuth.setEditEn(editEn);
 				qDocAuth.setAddEn(addEn);
 				qDocAuth.setDeleteEn(deleteEn);
+				qDocAuth.setHeritable(heritable);
 				if(reposService.addDocAuth(qDocAuth) == 0)
 				{
 					rt.setError("用户文件权限增加失败");
@@ -1460,6 +2007,7 @@ public class ReposController extends BaseController{
 				docAuth.setEditEn(editEn);
 				docAuth.setAddEn(addEn);
 				docAuth.setDeleteEn(deleteEn);
+				docAuth.setHeritable(heritable);
 				if(reposService.updateDocAuth(docAuth) == 0)
 				{
 					rt.setError("用户文件权限增加失败");
@@ -1471,232 +2019,42 @@ public class ReposController extends BaseController{
 		
 		writeJson(rt, response);
 	}
-	
-	
-	/****************   getReposSetting for doc or repos ******************/
-	@RequestMapping("/getReposSetting.do")
-	public void getReposSetting(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("getReposSetting docId: " + docId + " reposId:" + reposId);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
 
-		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+	private boolean isUserAuthExpanded(Integer isAdmin, Integer access,
+			Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,
+			DocAuth adminDocAuth, ReturnAjax rt) {
+		if(isAdmin > adminDocAuth.getIsAdmin())
 		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}			
-		}
-		
-		DocAuth docAuth = getPublicDocAuth(docId,reposId);
-		rt.setData(docAuth);
-		writeJson(rt, response);
-	}
-	
-	//获取公有权限设置，反向递归到最上层
-	DocAuth getPublicDocAuth(Integer docId,Integer reposId)
-	{
-		if(docId == null || docId == 0)
-		{
-			ReposAuth qReposAuth = new ReposAuth();
-			qReposAuth.setUserId(0);
-			qReposAuth.setReposId(reposId);
-			ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-			if(reposAuth == null)
-			{
-				return null;
-			}
-			//Convert the reposAuth to docAuth
-			DocAuth tempDocAuth = new DocAuth();
-			tempDocAuth.setAccess(reposAuth.getAccess());
-			tempDocAuth.setEditEn(reposAuth.getEditEn());
-			tempDocAuth.setAddEn(reposAuth.getAddEn());
-			tempDocAuth.setDeleteEn(reposAuth.getDeleteEn());
-			return tempDocAuth;
-		}
-		
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(0);	//取目录公有权限设置
-		qDocAuth.setReposId(reposId);
-		qDocAuth.setDocId(docId);
-		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		if(docAuth == null)
-		{
-			Doc doc = reposService.getDoc(docId);
-			docAuth = getPublicDocAuth(doc.getPid(),reposId);
-		}
-		return docAuth;
-	}
-	
-	/****************   configReposSetting for doc or repos ******************/
-	@RequestMapping("/configReposSetting.do")
-	public void configReposSetting(Integer docId, Integer reposId,Integer isPublic,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response, Integer ReturnAjax)
-	{
-		System.out.println("configReposSetting docId: " + docId + " reposId:" + reposId + " isPublic:" + isPublic + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//检查当前用户的权限
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-		}
-		else 
-		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			System.out.println("reposAuth isAdmin:" + reposAuth.getIsAdmin());
-			if(reposAuth == null || reposAuth.getIsAdmin() == null || reposAuth.getIsAdmin() == 0)
-			{
-				rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-				writeJson(rt, response);			
-				return;
-			}			
-		}
-		
-		if(docId == 0)	//获取仓库公开设置，
-		{
-			if(setReposPublicAuth(reposId,isPublic,isAdmin,access,editEn,addEn,deleteEn) == false)
-			{
-				rt.setError("设置仓库公有权限失败");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{
-			if(setDocPublicAuth(docId,reposId,isPublic,isAdmin,access,editEn,addEn,deleteEn) == false)
-			{
-				rt.setError("设置目录公有权限失败");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		writeJson(rt, response);
-	}
-	
-	private boolean setDocPublicAuth(Integer docId,  Integer reposId, Integer isPublic,
-			Integer isAdmin, Integer access, Integer editEn, Integer addEn,
-			Integer deleteEn) {
-		// TODO Auto-generated method stub
-		DocAuth docAuth = getPublicDocAuth(docId,reposId);
-		if(isPublic == 0)	//直接删除会导致继承父节点权限，因此如果父节点有权限的情况下不能直接删除，而是设置一个不能访问的公有权限
-		{
-			isAdmin = 0;
-			access = 0;
-			editEn = 0;
-			addEn = 0;
-			deleteEn = 0;
-		}
-		
-		//获取节点的直接权限
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(0); //userId == 0的表示是公有设置参数
-		qDocAuth.setReposId(reposId);
-		qDocAuth.setDocId(docId);
-		DocAuth selfDocAuth = reposService.getDocAuth(qDocAuth);
-		if(selfDocAuth == null)	//新增一个，否则更新参数
-		{
-			qDocAuth.setIsAdmin(isAdmin);
-			qDocAuth.setAccess(access);
-			qDocAuth.setEditEn(editEn);
-			qDocAuth.setAddEn(addEn);
-			qDocAuth.setDeleteEn(deleteEn);
-			if(reposService.addDocAuth(qDocAuth) == 0)
-			{
-				System.out.println("addDocAuth failed");
-				return false;
-			}
+			rt.setError("您无权设置管理员权限");
 			return true;
 		}
-		else	//更新设置
+		if(access > adminDocAuth.getAccess())
 		{
-			selfDocAuth.setIsAdmin(isAdmin);
-			selfDocAuth.setAccess(access);
-			selfDocAuth.setEditEn(editEn);
-			selfDocAuth.setAddEn(addEn);
-			selfDocAuth.setDeleteEn(deleteEn);
-			if(reposService.updateDocAuth(selfDocAuth) == 0)
-			{
-				System.out.println("updateDocAuth failed");
-				return false;
-			}
+			rt.setError("您无权设置读权限");
 			return true;
 		}
-	}
-
-	private boolean setReposPublicAuth(Integer reposId, Integer isPublic,
-			Integer isAdmin, Integer access, Integer editEn, Integer addEn,
-			Integer deleteEn) {
-		// TODO Auto-generated method stub
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setUserId(0); //userId == 0的表示是公有设置参数
-		qReposAuth.setReposId(reposId);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(isPublic == 0)	//私有的话删除该公有设置即可
+		if(editEn > adminDocAuth.getEditEn())
 		{
-			if(reposAuth != null)
-			{
-				if(reposService.deleteReposAuth(reposAuth.getId()) == 0)
-				{
-					System.out.println("deleteReposAuth failed");
-					return false;
-				}
-			}
+			rt.setError("您无权设置写权限");
+			return true;
+		}
+		if(addEn > adminDocAuth.getAddEn())
+		{
+			rt.setError("您无权设置新增权限");
+			return true;
+		}
+		if(deleteEn > adminDocAuth.getDeleteEn())
+		{
+			rt.setError("您无权设置删除权限");
+			return true;
+		}
+		if(heritable > adminDocAuth.getHeritable())
+		{
+			rt.setError("您无权设置权限继承");
 			return true;
 		}
 		
-		//公有的话：如果不存在则新增，否则更新
-		if(reposAuth == null)	//新增一个，否则更新参数
-		{
-			qReposAuth.setIsAdmin(isAdmin);
-			qReposAuth.setAccess(access);
-			qReposAuth.setEditEn(editEn);
-			qReposAuth.setAddEn(addEn);
-			qReposAuth.setDeleteEn(deleteEn);
-			if(reposService.addReposAuth(qReposAuth) == 0)
-			{
-				System.out.println("addReposAuth failed");
-				return false;
-			}
-			return true;
-		}
-		else	//更新设置
-		{
-			reposAuth.setIsAdmin(isAdmin);
-			reposAuth.setAccess(access);
-			reposAuth.setEditEn(editEn);
-			reposAuth.setAddEn(addEn);
-			reposAuth.setDeleteEn(deleteEn);
-			if(reposService.updateReposAuth(reposAuth) == 0)
-			{
-				System.out.println("updateReposAuth failed");
-				return false;
-			}
-			return true;
-		}
+		return false;
 	}
 
 	/****************   update Repository Menu Info (Directory structure) ******************/

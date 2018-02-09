@@ -7,15 +7,23 @@ public class Repos {
 
     private Integer type;
 
-    private Integer verCtrl;
-
     private String path;
+
+    private Integer verCtrl;
 
     private String svnPath;
 
     private String svnUser;
 
     private String svnPwd;
+
+    private Integer verCtrl1;
+
+    private String svnPath1;
+
+    private String svnUser1;
+
+    private String svnPwd1;
 
     private String info;
 
@@ -51,20 +59,20 @@ public class Repos {
         this.type = type;
     }
 
-    public Integer getVerCtrl() {
-        return verCtrl;
-    }
-
-    public void setVerCtrl(Integer verCtrl) {
-        this.verCtrl = verCtrl;
-    }
-
     public String getPath() {
         return path;
     }
 
     public void setPath(String path) {
         this.path = path == null ? null : path.trim();
+    }
+
+    public Integer getVerCtrl() {
+        return verCtrl;
+    }
+
+    public void setVerCtrl(Integer verCtrl) {
+        this.verCtrl = verCtrl;
     }
 
     public String getSvnPath() {
@@ -89,6 +97,38 @@ public class Repos {
 
     public void setSvnPwd(String svnPwd) {
         this.svnPwd = svnPwd == null ? null : svnPwd.trim();
+    }
+
+    public Integer getVerCtrl1() {
+        return verCtrl1;
+    }
+
+    public void setVerCtrl1(Integer verCtrl1) {
+        this.verCtrl1 = verCtrl1;
+    }
+
+    public String getSvnPath1() {
+        return svnPath1;
+    }
+
+    public void setSvnPath1(String svnPath1) {
+        this.svnPath1 = svnPath1 == null ? null : svnPath1.trim();
+    }
+
+    public String getSvnUser1() {
+        return svnUser1;
+    }
+
+    public void setSvnUser1(String svnUser1) {
+        this.svnUser1 = svnUser1 == null ? null : svnUser1.trim();
+    }
+
+    public String getSvnPwd1() {
+        return svnPwd1;
+    }
+
+    public void setSvnPwd1(String svnPwd1) {
+        this.svnPwd1 = svnPwd1 == null ? null : svnPwd1.trim();
     }
 
     public String getInfo() {

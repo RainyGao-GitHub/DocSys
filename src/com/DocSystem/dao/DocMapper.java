@@ -1,5 +1,6 @@
 package com.DocSystem.dao;
 
+import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.entity.Doc;
@@ -27,5 +28,9 @@ public interface DocMapper {
 
 	Doc getDocInfo(Integer docId);
 
-	List<Doc> getAuthedSubDocList(UserDocAuth userDocAuth);
+	//获取给用户直接授权的文件列表
+	List<Doc> getAuthedDocList(HashMap<String, Object> params);
+	
+	//获取给用户直接授权和继承的文件列表
+	List<Doc> getAuthedDocListHeritable(HashMap<String, Object> params);
 }

@@ -19,6 +19,10 @@ public class Doc {
 
     private String createTime;
 
+    private Integer state;
+
+    private Integer lockBy;
+
     private String content;
 
     public Integer getId() {
@@ -91,6 +95,22 @@ public class Doc {
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime == null ? null : createTime.trim();
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
+    }
+
+    public Integer getLockBy() {
+        return lockBy;
+    }
+
+    public void setLockBy(Integer lockBy) {
+        this.lockBy = lockBy;
     }
 
     public String getContent() {

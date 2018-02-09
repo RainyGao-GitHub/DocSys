@@ -1,33 +1,17 @@
 package com.DocSystem.entity;
 
 public class UserDocAuth {
-    private Integer id;
-
-    private String name;
-
-    private Integer type;
-
-    private String realName;
-
-    private String nickName;
-
-    private String img;
-
-    private String email;
-
-    private Integer emailValid;
-
-    private String tel;
-
-    private Integer telValid;
-
-    private String intro;
-
+    private Integer reposAuthId;	
+    private Integer docAuthId;
+   
     //DocAuth Part
-    private Integer userId;
-
+    private Integer userId=0;
+    private String  userName="任意用户";	//from user Table
+    
     private Integer docId;
-
+    private String docName="";		//from doc Table
+    private String docPath="";		//from doc Table
+    
     private Integer reposId;
 
     private Integer access;
@@ -39,96 +23,25 @@ public class UserDocAuth {
     private Integer deleteEn;
 
 	private Integer isAdmin;
-	
-    public Integer getId() {
-        return id;
+
+	private Integer heritable;
+
+    public Integer getReposAuthId() {
+        return reposAuthId;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setReposAuthId(Integer reposAuthId) {
+        this.reposAuthId = reposAuthId;
     }
 
-    public String getName() {
-        return name;
+    public Integer getDocAuthId() {
+        return docAuthId;
     }
 
-    public void setName(String name) {
-        this.name = name == null ? null : name.trim();
+    public void setDocAuthId(Integer docAuthId) {
+        this.docAuthId = docAuthId;
     }
 
-    public Integer getType() {
-        return type;
-    }
-
-    public void setType(Integer type) {
-        this.type = type;
-    }
-
-
-    public String getRealName() {
-        return realName;
-    }
-
-    public void setRealName(String realName) {
-        this.realName = realName == null ? null : realName.trim();
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName == null ? null : nickName.trim();
-    }
-
-    public String getImg() {
-        return img;
-    }
-
-    public void setImg(String img) {
-        this.img = img == null ? null : img.trim();
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email == null ? null : email.trim();
-    }
-
-    public Integer getEmailValid() {
-        return emailValid;
-    }
-
-    public void setEmailValid(Integer emailValid) {
-        this.emailValid = emailValid;
-    }
-
-    public String getTel() {
-        return tel;
-    }
-
-    public void setTel(String tel) {
-        this.tel = tel == null ? null : tel.trim();
-    }
-
-    public Integer getTelValid() {
-        return telValid;
-    }
-
-    public void setTelValid(Integer telValid) {
-        this.telValid = telValid;
-    }
-
-    public String getIntro() {
-        return intro;
-    }
-
-    public void setIntro(String intro) {
-        this.intro = intro == null ? null : intro.trim();
-    }
-    
     public Integer getUserId() {
         return userId;
     }
@@ -136,6 +49,15 @@ public class UserDocAuth {
     public void setUserId(Integer userId) {
         this.userId = userId;
     }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName == null ? null : userName.trim();
+    }
+   
 
     public Integer getDocId() {
         return docId;
@@ -145,6 +67,22 @@ public class UserDocAuth {
         this.docId = docId;
     }
 
+    public String getDocName() {
+        return docName;
+    }
+
+    public void setDocName(String docName) {
+        this.docName = docName;
+    }
+    
+    public String getDocPath() {
+        return docPath;
+    }
+
+    public void setDocPath(String docPath) {
+        this.docPath = docPath;
+    }
+    
     public Integer getReposId() {
         return reposId;
     }
@@ -194,4 +132,15 @@ public class UserDocAuth {
 		// TODO Auto-generated method stub
 		return isAdmin;
 	}
+	
+	public void setHeritable(Integer heritable) {
+		// TODO Auto-generated method stub
+		this.heritable = heritable;
+	}
+
+	public Integer getHeritable() {
+		// TODO Auto-generated method stub
+		return heritable;
+	}
+
 }
