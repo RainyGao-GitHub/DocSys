@@ -11,12 +11,14 @@
     <result column="PWD" jdbcType="VARCHAR" property="pwd" />
     <result column="CREATOR" jdbcType="INTEGER" property="creator" />
     <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
+    <result column="STATE" jdbcType="INTEGER" property="state" />
+    <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.Doc">
     <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME
+    ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE, LOCK_BY
   </sql>
   <sql id="Blob_Column_List">
     CONTENT
@@ -36,12 +38,12 @@
   <insert id="insert" parameterType="com.DocSystem.entity.Doc">
     insert into doc (ID, NAME, TYPE, 
       PATH, PID, VID, PWD, 
-      CREATOR, CREATE_TIME, CONTENT
-      )
+      CREATOR, CREATE_TIME, STATE, 
+      LOCK_BY, CONTENT)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
       #{path,jdbcType=VARCHAR}, #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, 
-      #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{content,jdbcType=LONGVARCHAR}
-      )
+      #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{state,jdbcType=INTEGER}, 
+      #{lockBy,jdbcType=INTEGER}, #{content,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
     insert into doc
@@ -72,6 +74,12 @@
       </if>
       <if test="createTime != null">
         CREATE_TIME,
+      </if>
+      <if test="state != null">
+        STATE,
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY,
       </if>
       <if test="content != null">
         CONTENT,
@@ -105,6 +113,12 @@
       <if test="createTime != null">
         #{createTime,jdbcType=VARCHAR},
       </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        #{lockBy,jdbcType=INTEGER},
+      </if>
       <if test="content != null">
         #{content,jdbcType=LONGVARCHAR},
       </if>
@@ -137,6 +151,12 @@
       <if test="createTime != null">
         CREATE_TIME = #{createTime,jdbcType=VARCHAR},
       </if>
+      <if test="state != null">
+        STATE = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      </if>
       <if test="content != null">
         CONTENT = #{content,jdbcType=LONGVARCHAR},
       </if>
@@ -153,6 +173,8 @@
       PWD = #{pwd,jdbcType=VARCHAR},
       CREATOR = #{creator,jdbcType=INTEGER},
       CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      STATE = #{state,jdbcType=INTEGER},
+      LOCK_BY = #{lockBy,jdbcType=INTEGER},
       CONTENT = #{content,jdbcType=LONGVARCHAR}
     where ID = #{id,jdbcType=INTEGER}
   </update>
@@ -165,32 +187,40 @@
       VID = #{vid,jdbcType=INTEGER},
       PWD = #{pwd,jdbcType=VARCHAR},
       CREATOR = #{creator,jdbcType=INTEGER},
-      CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+      CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      STATE = #{state,jdbcType=INTEGER},
+      LOCK_BY = #{lockBy,jdbcType=INTEGER}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Doc" useGeneratedKeys="true">
     insert into doc 
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
-        id,
+        ID,
       </if>
       <if test="name != null">
-        name,
+        NAME,
       </if>
       <if test="type != null">
-        type,
+        TYPE,
       </if>
       <if test="path != null">
-        path,
+        PATH,
       </if>
       <if test="pid != null">
-        pid,
+        PID,
       </if>
       <if test="vid != null">
-        vid,
+        VID,
+      </if>
+      <if test="state != null">
+        STATE,
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY,
       </if>
       <if test="content != null">
-        content,
+        CONTENT,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -211,6 +241,12 @@
       </if>
       <if test="vid != null">
         #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        #{lockBy,jdbcType=INTEGER},
       </if>
       <if test="content != null">
         #{content,jdbcType=LONGVARCHAR},
@@ -241,6 +277,12 @@
     <if test="vid != null">
         and VID = #{vid,jdbcType=INTEGER}
     </if>
+    <if test="state != null">
+        and STATE = #{state,jdbcType=INTEGER},
+    </if>
+    <if test="lockBy != null">
+        and LOCK_BY = #{lockBy,jdbcType=INTEGER},
+    </if>
     <if test="pwd != null">
         and PWD = #{pwd,jdbcType=VARCHAR}
     </if>
@@ -254,11 +296,36 @@
     from doc
     where ID = #{id,jdbcType=INTEGER}
   </select>
-  <select id="getAuthedSubDocList" parameterType="com.DocSystem.entity.UserDocAuth" resultMap="BaseResultMap">
+  <select id="getAuthedDocList" parameterType="java.util.Map" resultMap="BaseResultMap">
     select 
-    <include refid="Base_Column_List" />
+    	doc.ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE
     from doc
-    where PID = #{docId,jdbcType=INTEGER} and VID = #{reposId,jdbcType=INTEGER}
-    and ID IN (select DOC_ID from doc_auth where (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0) and ACCESS = 1 ) 
+    LEFT JOIN doc_auth on doc.ID = doc_auth.DOC_ID and doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
+    where doc_auth.ACCESS = 1
+    <if test="docId != null">
+    	and doc.ID = #{docId,jdbcType=INTEGER}
+    </if>
+    <if test="pDocId != null">
+    	and doc.PID = #{pDocId,jdbcType=INTEGER}
+    </if>
+    <if test="reposId != null">
+		and doc.VID = #{reposId,jdbcType=INTEGER}
+    </if>
+  </select>
+  <select id="getAuthedDocListHeritable" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select 
+    	doc.ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE
+    from doc
+    LEFT JOIN doc_auth on doc.ID = doc_auth.DOC_ID and  doc_auth.USER_ID = #{userId,jdbcType=INTEGER} 
+    where (doc_auth.ACCESS = 1 or doc_auth.ACCESS is null)
+    <if test="docId != null">
+    	and doc.ID = #{docId,jdbcType=INTEGER}
+    </if>
+    <if test="pDocId != null">
+    	and doc.PID = #{pDocId,jdbcType=INTEGER}
+    </if>
+    <if test="reposId != null">
+		and doc.VID = #{reposId,jdbcType=INTEGER}
+    </if>
   </select>  
 </mapper>
