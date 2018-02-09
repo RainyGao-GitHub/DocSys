@@ -115,13 +115,15 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell select w15">选择</i>
+							<i class="cell select w10"> 选择</i>
 							<i class="cell username w15">用户名</i>
-							<i class="cell access w10">管理员权限</i>
-							<i class="cell read w10">读权限</i>
-							<i class="cell edit w10">写权限</i>
-							<i class="cell add w10">增加权限</i>
-							<i class="cell delete w10">删除权限</i>
+							<i class="cell docpath w15">路径</i>
+							<i class="cell access w8">管理员权限</i>
+							<i class="cell read w8">读权限</i>
+							<i class="cell edit w8">写权限</i>
+							<i class="cell add w8">增加权限</i>
+							<i class="cell delete w8">删除权限</i>
+							<i class="cell delete w8">可继承</i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
@@ -191,43 +193,6 @@
     </form>
 </div>
 
-<div id="uploadConfirmDialog" style="display:none">
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">文件：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="uploadContent" title="上传文件">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-  	<div class="modal-footer">
-    	<div class="form-group">
-            <label class="col-sm-2 control-label">上传至：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="remoteDir" title="目标地址">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-
-<!-- multiple file and dir upload triger div -->
-<div style="display:none">
-	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="uploadConfirm(this)" style="margin-top: 90px;" multiple="multiple"/>
-	<input id="uploadDir" type="file" onchange="uploadConfirm(this)" webkitdirectory>
-</div>
-
-<!-- single file upload form -->
-<div style="display:none">
-	<form id="FileUploadForm" action="/DocSystem/Doc/uploadDoc.do" method="post" enctype="multipart/form-data">  
-		<input id="uploadFile" name="uploadFile" type="file" class="fLeft" style="margin-top: 90px;" multiple="multiple"/>
-		<input type="text" value="0" id="reposId" name="reposId" title="所在仓库"/>
-		<input type="text" value="0" id="parentId" name="parentId" title="父节点"/>	
-		<input type="text" value="-1" id="docId" name="docId" title="文件节点"/>
-		<input type="text" value="1" id="uploadType" name="uploadType" title="上传类型：1文件 2文件夹"/>
-	</form>
-</div>
            
 <!-- Include all compiled plugins (below), or include individual file	s as needed -->
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
@@ -369,8 +334,17 @@
 	/******************************** Repos Interfaces***************************************/
 	//获取仓库信息
 	var reposType = 1; //默认是普通文件系统
+	var reposName = "";
     function getReposInfo(callback){
 		console.log("getReposInfo");
+        //set the vid in upload form
+		var reposId = getQueryString("vid");
+		if(reposId == null)
+		{
+			showErrorMessage("请选择仓库！");
+			return;
+		}
+		
         $.ajax({
             url : "/DocSystem/Repos/getRepos.do",
             type : "post",
@@ -385,6 +359,7 @@
                     
                     //设置仓库信息
                     reposType = ret.data.type;
+                    reposName = ret.data.name;
                     $("#projectName").text(ret.data.name);
                     var time=getDate(ret.data.createTime);
                     $("#editTime").text(time);
@@ -596,6 +571,7 @@
 				user.editEn = $("#EditEn"+index).prop("checked")?1:0;
 				user.addEn = $("#AddEn"+index).prop("checked")?1:0;
 				user.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
+				user.heritable = $("#Heritable"+index).prop("checked")?1:0;
 				users.push(user);	//将用户加入到列表中
 		    }
 		});
@@ -615,7 +591,7 @@
         //disable用户列表的第一个复选框
         $(".UserEnable").attr("disabled",true);
         //刷新用户列表
-        showDocAuthedUserList();
+        showAuthList();
     }
 
     function getDate(tm){
@@ -664,7 +640,7 @@
 	    console.log("zTreeOnClick()");
         if ( curDoc != treeNode.id ){
         	curDoc = treeNode.id;
-        	showDocAuthedUserList();
+        	showAuthList();
         }
         //alert(curDoc);
     };
@@ -745,7 +721,7 @@
 		//绘制zTree
 		syncUpMenu();	    
 	    //仓库获取成功后再获取仓库用户列表
-		showDocAuthedUserList();
+		showAuthList();
 		//初始化zTree的右键菜单 
 		zTreeContextMenuInit();
 	}
@@ -789,18 +765,7 @@
     	console.log("Page is ready");
 
 		//getReposList
-		showReposSelectList(); //获取当前用户可管理仓库列表
-
-		//set the vid in upload form
-		var reposId = getQueryString("vid");
-		if(reposId == null)
-		{
-			alert("请选择仓库！");
-			return;
-		}
-    	//获取仓库信息
-		getReposInfo(SysInit);
-		
+		showReposSelectList(); //获取当前用户可管理仓库列表		
     });
     
     //zTree部分的右键菜单初始化
@@ -822,7 +787,7 @@
 					}
 				}
 			},
-			{text: '高级设置', action: function(e){
+			/*{text: '高级设置', action: function(e){
 					e.preventDefault();
 					var treeObj = $.fn.zTree.getZTreeObj("doctree");
 					if(curRightClickedTreeNode !== null)
@@ -832,6 +797,7 @@
 					}
 				}
 			},
+			*/
 			{divider: true},
 			{text: '设置密码', action: function(e){
 						e.preventDefault();
@@ -869,19 +835,145 @@
 </SCRIPT>
 
 <script>
-function showDocAuthedUserList(){
-   	console.log("showDocAuthedUserList()");
+function showAuthList()
+{
+	console.log("showAuthList()");
+	var docId = curDoc;
+	console.log("docId:" + docId);
+	if(docId > 0)
+	{
+		showDocAuthList();
+	}
+	else
+	{
+		showReposAuthList();
+	}
+}
+
+//List the ReposAuthList and DocAuthList of Repos
+function showReposAuthList(){
+   	console.log("showReposAuthList()");
    	var docId = curDoc;
    	var vid = getQueryString("vid");
 	console.log(docId);
 
     $.ajax({
-                url : "/DocSystem/Repos/getDocAuthedUsers.do",
+                url : "/DocSystem/Repos/getReposAuthList.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    reposId : vid,
+                },
+                success : function (ret) {
+                    if( "ok" == ret.status ){
+                        //显示编辑按键和增加用户按键
+                        $("#btnAddReposUser").show();
+				    	$("#btnEditAuth").show();
+				        $("#btnSaveAuth").hide();
+				        $("#btnCancelSaveAuth").hide();
+                    	showUserList(ret.data);
+                    }
+                    else
+                    {
+                        //隐藏编辑按键和增加用户按键
+                        $("#btnAddReposUser").hide();
+				    	$("#btnEditAuth").hide();
+				        $("#btnSaveAuth").hide();
+				        $("#btnCancelSaveAuth").hide();
+                    	showErrorMessage("Error:" + ret.msgInfo);
+                    }
+                },
+                error : function () {
+                    //隐藏编辑按键和增加用户按键
+                    $("#btnAddReposUser").hide();
+			    	$("#btnEditAuth").hide();
+			        $("#btnSaveAuth").hide();
+			        $("#btnCancelSaveAuth").hide();
+                   	showErrorMessage('服务器异常：获取仓库用户列表失败！');
+                }
+    });
+
+
+	//根据获取到的目录权限用户列表数据，绘制列表
+	function showUserList(data){
+		console.log("showUserList");
+		console.log(data);
+		
+		var c = $("#reposAuthArea").children();
+		$(c).remove();
+		if(data.length==0)
+		{
+			$("#reposAuthArea").append("<p>暂无数据</p>");
+		}
+				
+		for(var i=0;i<data.length;i++){
+			var d = data[i];
+			var adminChecked = d.isAdmin == 1? "checked":"";
+			var readChecked = d.access == 1? "checked":"";
+			var editChecked = d.editEn == 1? "checked":"";
+			var addChecked = d.addEn == 1? "checked":"";
+			var deleteChecked = d.deleteEn == 1? "checked":"";
+			var heritableChecked = d.heritable == 1? "checked":"";
+			var opBtn = "<a href='javascript:void(0)' onclick='deleteReposAuth("+d.reposAuthId+");' class='mybtn-primary'>删除</a>"; //
+			if(d.docAuthId > 0) //docAuthId > 0,表示这一条是docAuth
+			{
+				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuth("+d.docAuthId+");' class='mybtn-primary'>删除</a>";
+			}
+			var se = "<li value="+ i +">"
+				+"	<i class='cell select w10'>"
+				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" onchange='EnableUserConfig("+i+");' type='checkbox' disabled='disabled'/>"
+				+"	</i> "
+				+"	<i class='cell username w15'>"
+				+"		<span class='name'>"
+				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
+				+"		</span>"
+				+"	</i>"
+				+"	<i class='cell docpath w15'>"
+				+"		<span class='name'>"
+				+"			<a id='DocPath"+i+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
+				+"		</span>"
+				+"	</i>"
+				+"	<i class='cell access w8'>"
+				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " disabled='disabled'>管理员</input>"
+				+"	</i>"
+				+"	<i class='cell  read w8'>"
+				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " disabled='disabled'>读</input>"
+				+"	</i>"
+				+"	<i class='cell edit w8'>"
+				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " disabled='disabled'>写</input>"
+				+"	</i>"
+				+"	<i class='cell add w8'>"
+				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " disabled='disabled'>增加</input>"
+				+"	</i>"
+				+"	<i class='cell delete w8'>"
+				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " disabled='disabled'>删除</input>"
+				+"	</i>"
+				+"	<i class='cell heritable w8'>"
+				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " disabled='disabled'>可继承</input>"
+				+"	</i>"
+				+"	<i class='cell operation w10'>"
+				+		opBtn
+				+"	</i>"
+				+"</li>";
+			
+			$("#reposAuthArea").append(se);
+		}
+	}
+}
+
+function showDocAuthList(){
+   	console.log("showDocAuthList()");
+   	var docId = curDoc;
+   	var vid = getQueryString("vid");
+	console.log(docId);
+
+    $.ajax({
+                url : "/DocSystem/Repos/getDocAuthList.do",
                 type : "post",
                 dataType : "json",
                 data : {
                 	docId: docId,
-                    vid : vid,
+                    reposId : vid,
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
@@ -934,33 +1026,47 @@ function showDocAuthedUserList(){
 			var editChecked = d.editEn == 1? "checked":"";
 			var addChecked = d.addEn == 1? "checked":"";
 			var deleteChecked = d.deleteEn == 1? "checked":"";
-			
+			var heritableChecked = d.heritable == 1? "checked":"";
+			//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+d.docAuthId+");' class='mybtn'>设置</a>";
+			var opBtn = "";
+			if(d.docAuthId > 0) //docAuthId > 0 表示这不是继承的权限
+			{
+				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuth("+d.docAuthId+");' class='mybtn-primary'>删除</a>";
+			}
 			var se = "<li value="+ i +">"
-				+"	<i class='cell select w15'>"
-				+"		<input class='UserEnable' id='User"+i+"' value="+d.id+" onchange='EnableUserConfig("+i+");' type='checkbox' disabled='disabled'/>"
+				+"	<i class='cell select w10'>"
+				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" onchange='EnableUserConfig("+i+");' type='checkbox' disabled='disabled'/>"
 				+"	</i> "
 				+"	<i class='cell username w15'>"
 				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.name+"</a>"
+				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell access w10'>"
+				+"	<i class='cell docpath w15'>"
+				+"		<span class='name'>"
+				+"			<a id='DocPath"+i+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
+				+"		</span>"
+				+"	</i>"
+				+"	<i class='cell access w8'>"
 				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " disabled='disabled'>管理员</input>"
 				+"	</i>"
-				+"	<i class='cell  read w10'>"
+				+"	<i class='cell  read w8'>"
 				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " disabled='disabled'>读</input>"
 				+"	</i>"
-				+"	<i class='cell edit w10'>"
+				+"	<i class='cell edit w8'>"
 				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " disabled='disabled'>写</input>"
 				+"	</i>"
-				+"	<i class='cell add w10'>"
+				+"	<i class='cell add w8'>"
 				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " disabled='disabled'>增加</input>"
 				+"	</i>"
-				+"	<i class='cell delete w10'>"
+				+"	<i class='cell delete w8'>"
 				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " disabled='disabled'>删除</input>"
 				+"	</i>"
+				+"	<i class='cell heritable w8'>"
+				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " disabled='disabled'>可继承</input>"
+				+"	</i>"
 				+"	<i class='cell operation w10'>"
-				+"		<a href='javascript:void(0)' onclick='deleteReposUser("+d.id+");' class='mybtn-primary'>删除</a>"
+				+ 		opBtn
 				+"	</i>"
 				+"</li>";
 			
@@ -979,6 +1085,7 @@ function EnableUserConfig(index){
 		$("#EditEn"+index).attr("disabled",false);
 		$("#AddEn"+index).attr("disabled",false);
 		$("#DeleteEn"+index).attr("disabled",false);
+		$("#Heritable"+index).attr("disabled",false);
 	}
 	else
 	{
@@ -987,31 +1094,32 @@ function EnableUserConfig(index){
 		$("#EditEn"+index).attr("disabled",true);
 		$("#AddEn"+index).attr("disabled",true);
 		$("#DeleteEn"+index).attr("disabled",true);
+		$("#Heritable"+index).attr("disabled",true);		
 	}
 }
 
-function deleteReposUser(userId)
+function deleteReposAuth(reposAuthId)
 {
-
-	if(confirm("是否删除该用户的仓库访问权限！") == false)
+	if(confirm("是否删除该用户的仓库权限设置！") == false)
 	{
 		return;
 	}
 	
-   	console.log("deleteReposUser()");
+   	console.log("deleteReposAuth()");
+   	
    	var vid = getQueryString("vid");
-
     $.ajax({
             url : "/DocSystem/Repos/deleteUserReposAuth.do",
             type : "post",
             dataType : "json",
             data : {
-            	userId: userId,
-                reposId : vid,
+                reposAuthId: reposAuthId,
+                //userId: userId,
+                reposId: vid,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    showDocAuthedUserList();
+                    showAuthList();
                 }
                 else
                 {
@@ -1019,12 +1127,47 @@ function deleteReposUser(userId)
                 }
             },
             error : function () {
-               showErrorMessage('服务器异常：删除仓库用户失败！');
+               showErrorMessage('服务器异常：删除用户的仓库权限设置失败！');
             }
     });
 }
 
-function showReposSelectList()
+function deleteDocAuth(docAuthId)
+{
+	if(confirm("是否删除该用户的目录权限设置！") == false)
+	{
+		return;
+	}
+	
+   	console.log("deleteDocAuth()");
+   	
+   	var vid = getQueryString("vid");
+   	$.ajax({
+            url : "/DocSystem/Repos/deleteUserDocAuth.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                docAuthId: docAuthId,
+                //userId: userId,
+                //docId: docId,
+                reposId: vid,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showAuthList();
+                }
+                else
+                {
+                	showErrorMessage("Error:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               showErrorMessage('服务器异常：删除用户的目录权限设置失败！');
+            }
+    });
+}
+
+function showReposSelectList(callback)
 {
    	console.log("showReposSelectList()");
    	
@@ -1036,6 +1179,9 @@ function showReposSelectList()
                 success : function (ret) {
                     if( "ok" == ret.status ){
                         showReposList(ret.data);
+                        
+    					//获取仓库信息
+						getReposInfo(SysInit);
                     }
                     else
                     {
@@ -1110,8 +1256,11 @@ function showReposSettingPanel(){
         var index = 0;
         var userList = null; //userId, isAdmin, access, editEn, addEn, deleteEn
         var totalNum = 0;
+        var failNum =0;
+        var successNum = 0;
         var docId = 0;
         var vid = 0;
+        var configErrorConfirmSet = 0;
         //Context Cache
         var indexCache = [];
         var userListCache =[];
@@ -1217,7 +1366,10 @@ function showReposSettingPanel(){
 				totalNum = userList.length;
 			}
 			setTotalNum(totalNum);
-
+			failNum = 0;
+			successNum = 0;
+			configErrorConfirmSet = 0;
+			
 			setDocId(docId);
 			setVid(vid);			
       	}
@@ -1247,6 +1399,7 @@ function showReposSettingPanel(){
 				         editEn: user.editEn, 
 				         addEn: user.addEn, 
 				         deleteEn: user.deleteEn, 
+				         heritable: user.heritable,
 				     },
 				     success : function (ret) {
 				         if( "ok" == ret.status){
@@ -1255,7 +1408,7 @@ function showReposSettingPanel(){
 				                {
 				                	configUserAuth();	//设置完成继续设置下一个
 				                }else{
-					                showDocAuthedUserList();
+					                showAuthList();
 			                    	// 普通消息提示条
 									bootstrapQ.msg({
 											msg : '设置完成！',
@@ -1264,46 +1417,152 @@ function showReposSettingPanel(){
 										    });
 				                }
  				          }else{
-								if(confirm(userName + "权限设置失败,是否继续设置其他用户？") == true)
-								{
-									 	index++;
-						                if(index < totalNum)
-						                {
-						                	configUserAuth();	//更新完继续上传下一个
-						                }else{
-							                showDocAuthedUserList();
-						      	        	// 普通消息提示条
-											bootstrapQ.msg({
-													msg : '设置完成！',
-													type : 'success',
-													time : 2000,
-												    });
-						                }
-						         }
-						         return;
+								//设置失败
+								configErrorConfirmHandler(userName, ret.msgInfo);
+								return;
 				            }
 				      },
 				      error : function () {
-						  if(confirm(userName + "权限设置异常,是否继续设置其他用户？")  == true)
-						   {
-							 	index++;
-				                if(index < totalNum)
-				                {
-				                	configUserAuth();	//更新完继续上传下一个
-				                }else{
-				                	showDocAuthedUserList();
-				      	        	// 普通消息提示条
-									bootstrapQ.msg({
-											msg : '设置完成！',
-											type : 'success',
-											time : 2000,
-										    });
-				                }
-					        }
-					   }
-			
+						  		//设置失败
+						  		configErrorConfirmHandler(userName, "设置异常");
+								return;
+					 }	
 				});				
     	}
+    	
+    	//获取错误处理设置 
+    	function getConfigErrorConfirmSetting()
+      	{
+	 		return configErrorConfirmSet;
+      	}
+      	
+    	//config Error Confirm
+      	function configErrorConfirm(UserName,errMsg)
+      	{
+      		var configErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接继续
+            	console.log("用户确认超时,继续配置其他用户");
+            	configErrorConfirmSet = 1; //全局继续
+            	closeBootstrapDialog("configErrorConfirm");
+            	configErrorHanlder(UserName,errMsg);
+            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+      		
+			//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: 'configErrorConfirm',
+    	        msg: UserName + "权限设置失败（"+errMsg+"）,是否继续设置其他用户？",
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "退出",
+    	    },function () {
+    	    	//alert("点击了确定");
+				clearTimeout(configErrorTimer);			
+    	 		if(index < (totalNum-1))	//后续还有用户
+                {
+    	      		var configErrorTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+    	            	console.log("用户确认超时,后续错误都继续设置");
+    	            	configErrorConfirmSet = 1; //全局继续上传
+    	            	closeBootstrapDialog("takeSameActionConfirm");
+    	            	configErrorHanlder(UserName,errMsg);
+    	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+    	 			
+  	 	    	    qiao.bs.confirm({
+  	 	    	    	id: 'takeSameActionConfirm3',
+  	 	    	        msg: "后续错误是否执行此操作？",
+  	 	    	        close: false,		
+  	 	    	        okbtn: "是",
+  	 	    	        qubtn: "否",
+  	 	    	    },function () {
+  	 	    	    	//后续错误将不再弹出窗口
+  	 	    	    	clearTimeout(configErrorTimer1);
+  	 	    	    	configErrorConfirmSet = 1;	//全局覆盖
+  	 	    	    	configErrorHandler(UserName,errMsg); //reEnter config
+  	  	 				return true;
+  	 				},function(){
+  	 					//后续错误将继续弹出错误确认窗口
+  	 					clearTimeout(configErrorTimer1);
+  	 	    	    	configErrorHandler(UserName,errMsg);
+  	  	 				return true;
+  	 				});	
+                }
+    	 		else
+    	 		{
+             		configErrorHandler(UserName,errMsg);
+             		return;
+    	 		}
+    		},function(){
+    	    	//alert("点击了取消");
+    	    	clearTimeout(configErrorTimer);
+          		configErrorConfirmSet = 2; //全局取消上传    	 		
+		 		configErrorAbortHandler(UserName,errMsg);
+      		});
+      	}
+      	
+      	//configErrorConfirmHandler
+      	function configErrorConfirmHandler(UserName,errMsg)
+      	{
+			console.log("设置失败" + errMsg);
+			var confirm = getConfigErrorConfirmSetting();
+			if(confirm == 1)
+			{
+				configErrorHandler(UserName, errMsg);
+			}
+			else if(confirm == 2)	//结束上传
+			{
+				configErrorAbortHandler(UserName, errMsg);
+				return;
+			}
+			else
+			{
+				configErrorConfirm(UserName, errMsg);
+			}
+      	}
+      	
+      	//configErrorHandler
+      	function configErrorHandler(UserName,errMsg)
+      	{
+      		failNum++;
+    		configNextUser();		 	
+      	}
+      	
+      	//configErrorAbortHandler
+      	function configErrorAbortHandler(UserName,errMsg)
+      	{
+      		failNum++;
+    		configEndHandler();
+      	}
+
+      	//uploadSuccessHandler
+      	function configSuccessHandler(name,msgInfo)
+      	{
+      		successNum++;
+			configNextUser();
+      	}
+      	
+      	//configEndHandler
+      	function configEndHandler()
+      	{
+      		console.log("设置结束，共"+ totalNum +"，成功"+successNum+"个，失败"+failNum+"个！");
+      		// 普通消息提示条
+			bootstrapQ.msg({
+					msg : '设置完成！',
+					type : 'success',
+					time : 2000,
+				    });
+      	}
+      	
+      	//configNextDoc，如果后续有未上传文件则上传下一个文件 
+		function configNextUser()
+		{
+			index++;
+			if(index < totalNum)
+			{
+				configUserAuth(); 
+			}
+			else
+			{
+				configEndHandler();
+			}
+		}
 
 		//多文件move接口
 		function configUserAuths(users,docId,vid)	//多用户设置函数

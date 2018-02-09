@@ -129,6 +129,18 @@
             <input class="form-control" type="text" name="svnUser"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
             <label>svn密码</label>
             <input class="form-control" type="password" name="svnPwd" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
+            <label>版本管理1</label>
+            <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+            	<option value="0">无</option>   
+            	<option value="1">SVN</option>   
+            	<option value="2">GIT</option>   
+            </select>
+            <label>svn路径1<span style="color:#F00">*</span></label>
+            <input class="form-control" type="text" name="svnPath1"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
+            <label>svn用户名1</label>
+            <input class="form-control" type="text" name="svnUser1"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
+            <label>svn密码1</label>
+            <input class="form-control" type="password" name="svnPwd1" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
         </div>
     </form>
 </div>
@@ -246,7 +258,10 @@
                 	{
                 		$('#goManagerBtn').show();
                 	}
-                	$('#loginBtn').hide();                	
+                	$('#loginBtn').hide();
+                	
+                	//用戶已經登錄才能看到倉庫
+                	getReposList();                	
                 }
                 else 
                 {
@@ -263,8 +278,8 @@
         $("#error-message>span").text($msg).parent('div').show();
     }
     
-    function onChange(){
-
+    function getReposList()
+    {
         $.ajax({
             url : "/DocSystem/Repos/getReposList.do",
             type :"post",
@@ -288,15 +303,17 @@
             }
         });
     }
+    
+    function onChange(){
+    	getReposList();
+    }
 
     $(function () {
     	pageInit();
 
         var modalHtml = $("#create-project").find('.modal-body').html();
         
-        onChange();
-
-
+        //getReposList();
 
         //弹出提示
         $("[data-toggle='tooltip']").tooltip();
@@ -368,7 +385,7 @@
 		//var type = $("#dialog-new-repos select[name='type']").val();   
 	}
 
-	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
+	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
@@ -384,6 +401,25 @@
 			$("#dialog-new-repos input[name='svnPath']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnUser']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",true);				
+		}   
+	}
+	
+	//According verCtrl1 value to disale the svnPath1 or not
+	function doSelectVerCtrl1()
+	{
+		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
+		//alert(verCtrl);
+		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		{
+			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",false);
+			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",false);
+			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",false);
+		}
+		else	//hide svn info
+		{
+			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",true);
+			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",true);
+			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",true);				
 		}   
 	}
 	
@@ -405,6 +441,11 @@
                     $("#dialog-new-repos input[name='svnUser']").val("");
             		$("#dialog-new-repos input[name='svnPwd']").val("");
                     doSelectVerCtrl(); //根据文件系统版本控制默认类型，控制显示svn信息
+                    $("#dialog-new-repos input[name='svnPath1']").val("");	//置空
+                    $("#dialog-new-repos input[name='svnUser1']").val("");
+            		$("#dialog-new-repos input[name='svnPwd1']").val("");
+                    doSelectVerCtrl1(); //根据文件系统版本控制默认类型，控制显示svn信息
+                    
                 },100);
 
             }
@@ -417,7 +458,11 @@
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
             var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
             var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
-            
+            //For Virtual Doc Version Control
+            var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
+            var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
+            var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
+            var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
             var createTime = (new Date()).toLocaleDateString();
             //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
             if( name && info){
@@ -434,6 +479,10 @@
                         svnPath: svnPath,
                         svnUser: svnUser,
                         svnPwd: svnPwd,
+                        verCtrl1: verCtrl1,
+                        svnPath1: svnPath1,
+                        svnUser1: svnUser1,
+                        svnPwd1: svnPwd1,
                         createTime:createTime
                     },
                     success : function (ret) {

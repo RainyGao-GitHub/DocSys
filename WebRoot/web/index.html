@@ -4,8 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
-    <meta name="author" content="SmartWiki" />
-    <link rel="shortcut icon" href="https://wiki.iminho.me/favicon.ico">
+    <meta name="author" content="DocSys" />
+    <!--  link rel="shortcut icon" href="https://wiki.iminho.me/favicon.ico"-->
+    <link rel="shortcut icon" href="static/smartwiki/favicon.ico">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="renderer" content="webkit" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,14 +19,24 @@
     <link href="static/styles/frontpage.css" rel="stylesheet">
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <script src="static/scripts/jquery.min.js"></script>
-    <link href="http://fonts.css.network/css?family=Source+Sans+Pro:200,300,400,600,700,900" rel="stylesheet" type="text/css">
+    <!-- link href="http://fonts.css.network/css?family=Source+Sans+Pro:200,300,400,600,700,900" rel="stylesheet" type="text/css"-->
 </head>
 
 <body>
 <div class="header">
     <div class="container">
         <a class="navbar-brand" href="/DocSystem"><i class="fa fa-paper-plane"></i> DocSys</a>
-
+                <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
+                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
+                    <ul class="dropdown-menu" role="menu">
+						<li>
+                            <a onclick="showLoginPanel()" title="用户登录">登录</a>
+                        </li>
+                        <li>
+                            <a onclick="showRegisterPanel()" title="用户注册">注册</a>
+                        </li>
+                    </ul>
+                </div>    
 		<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">	
             <ul class="nav navbar-nav navbar-right">
 				<li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" class="img-circle m5"/></li>
@@ -161,7 +172,7 @@
         <div class="overlay spacer">
             <div class="container">
                 <div class="row text-center">
-                DocSys V1.02
+                DocSys V1.03
                 </div>
             </div>
         </div>
@@ -187,6 +198,8 @@
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript">
+	var loginUser = "";	//用来保存刚注册的用户、或刚才登录的用户
+	
 	function showLoginPanel(){
 		//alert("showLoginPanel");
 		bootstrapQ.dialog({
