@@ -24,11 +24,15 @@ public interface UserMapper {
 
 	List<User> queryUserByTelOrEmail(User user);
 
-	List<UserDocAuth> getReposAuthedUsers(Integer vid);
-
-	List<UserDocAuth> getDocAuthedUsers(Integer docId);
-
+	List<User> selectAll();
+	
+	//For Repos Auth Manage
 	List<UserDocAuth> getReposAllUsers(Integer reposId);
 
-	List<User> selectAll();	
+	List<UserDocAuth> getReposAuthList(Integer reposId);	
+
+	List<UserDocAuth> getReposDocAuthList(Integer reposId);
+
+	List<UserDocAuth> getDocAuthList(Integer docId);
+
 }

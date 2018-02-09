@@ -19,27 +19,34 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
+import org.tmatesoft.svn.core.SVNNodeKind;
 
 import util.CompressPic;
 import util.DateFormat;
-import util.PropertiesUtil;
 import util.ReturnAjax;
 import util.UUid;
 
+import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.service.impl.ReposServiceImpl;
+import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 
 import util.Base64File;
+import util.Encrypt.MD5;
 @SuppressWarnings("rawtypes")
 public class BaseController{
-		
+	@Autowired
+	private ReposServiceImpl reposService;
+	@Autowired
+	private UserServiceImpl userService;
+	
 	protected Map session;
 	protected static String SUCCESS = "success";
 	protected static String FAIL = "fail";
@@ -50,7 +57,73 @@ public class BaseController{
 	protected static String[] IMGALLOWDTYPES = {"JPG","JPEG","PNG","GIF","BMP"};
 	
 	public static String uploadBasePath = "";
-		
+
+
+	/***************************Basic Functions For Application Level  **************************/
+	//获取仓库的实文件的本地存储根路径
+	protected String getReposRealPath(Repos repos)
+	{
+		String reposRPath = repos.getPath() + repos.getId() + "/data/rdata/";	//实文件系统的存储数据放在data目录下 
+		System.out.println("getReposRealPath() " + reposRPath);
+		return reposRPath;
+	}
+
+	//获取仓库的LastVersion实文件的本地存储根路径
+	protected String getReposRealRefPath(Repos repos)
+	{
+		String reposRPath = repos.getPath() + repos.getId() + "/refData/rdata/";	//实文件系统的存储数据放在data目录下 
+		System.out.println("getReposRealRefPath() " + reposRPath);
+		return reposRPath;
+	}
+	
+	//获取仓库的虚拟文件的本地存储根路径
+	protected String getReposVirtualPath(Repos repos)
+	{
+		String reposVPath = repos.getPath() + repos.getId() + "/data/vdata/";	//实文件系统的存储数据放在data目录下 
+		System.out.println("getReposVirtualPath() " + reposVPath);
+		return reposVPath;
+	}
+
+	//获取仓库的LastVersion虚拟文件的本地存储根路径
+	protected String getReposVirtualRefPath(Repos repos)
+	{
+		String reposVPath = repos.getPath() + repos.getId() + "/refData/vdata/";	//实文件系统的存储数据放在data目录下 
+		System.out.println("getReposVirtualRefPath() " + reposVPath);
+		return reposVPath;
+	}
+	
+	//获取Parentpath: 如果是File则返回其parentPath，如果是Directory则返回全路径
+	protected String getParentPath(Integer id)
+	{
+		String parentPath = "";
+		Doc doc = reposService.getDocInfo(id); //获取当前doc的信息
+		if(doc != null)
+		{
+			if(doc.getType() == 2)
+			{
+				parentPath = getParentPath(doc.getPid()) + doc.getName() + "/";
+			}
+			else
+			{
+				parentPath = getParentPath(doc.getPid());				
+			}
+		}
+		return parentPath;
+	}	
+	
+	protected String getDocVPath(String parentPath,String docName) 
+	{
+		String HashValue = MD5.md5(parentPath) + "_" + docName;
+		System.out.println("getDocVPath() " + HashValue + " for " + parentPath + docName);
+		return HashValue;
+	}
+	
+	protected String getReposUserTmpPath(Repos repos, String userName) {
+		String reposTmpVirtualPath = repos.getPath() + "tmp/" + userName + "/"; 
+		return reposTmpVirtualPath;
+	}
+	
+	/***************************Basic Functions For Driver Level  **************************/
 	protected boolean addLog(String logContent, String logCode) {
 		
 		return true;
@@ -343,7 +416,7 @@ public class BaseController{
     				InputStream inStream = new FileInputStream(oldPath); //读入原文件 
     				FileOutputStream fs = new FileOutputStream(newPath); 
     				byte[] buffer = new byte[1444]; 
-    				int length; 
+    				//int length; 
     				while ( (byteread = inStream.read(buffer)) != -1) { 
     					bytesum += byteread; //字节数 文件大小 
     					System.out.println(bytesum); 
@@ -360,23 +433,24 @@ public class BaseController{
     	return false;
     }
     
-    public boolean copyFile(String src,String dest,boolean cover) throws IOException{
-        FileInputStream in=new FileInputStream(src);
-        File file=new File(dest);
-        if(!file.exists())
+    public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover) throws IOException{
+        File dstFile=new File(dstFilePath);
+        if(!dstFile.exists())
         {
-        	file.createNewFile();
+        	dstFile.createNewFile();
         }
         else
         {
         	if(cover == false)
         	{
-        		in.close();
         		//不允许覆盖
+        		System.out.println(dstFilePath + " 已存在!");
         		return false;
         	}
         }
-        FileOutputStream out=new FileOutputStream(file);
+        
+        FileInputStream in=new FileInputStream(srcFilePath);
+        FileOutputStream out=new FileOutputStream(dstFilePath);
         int c;
         byte buffer[]=new byte[1024];
         while((c=in.read(buffer))!=-1){
@@ -388,7 +462,210 @@ public class BaseController{
         return true;
     }
     
-    //Rename File
+    /** 
+    * 复制整个文件夹内容 
+    * @param oldPath String 原文件路径 如：c:/fqf 
+    * @param newPath String 复制后路径 如：f:/fqf/ff 
+    * @return boolean 
+    */ 
+    public boolean copyFolder(String oldPath, String newPath) 
+    {
+	    try { 
+		    (new File(newPath)).mkdirs(); //如果文件夹不存在 则建立新文件夹 
+		    File a=new File(oldPath); 
+		    String[] file=a.list(); 
+		    File temp=null; 
+		    for (int i = 0; i < file.length; i++) 
+		    { 
+		    	if(oldPath.endsWith(File.separator))
+		    	{ 
+		    		temp=new File(oldPath+file[i]); 
+		    	} 
+		    	else
+		    	{ 
+		    		temp=new File(oldPath+File.separator+file[i]); 
+		    	} 
+		    	
+		    	if(temp.isFile())
+		    	{ 
+		    		FileInputStream input = new FileInputStream(temp); 
+		    		FileOutputStream output = new FileOutputStream(newPath + "/" + (temp.getName()).toString()); 
+		    		byte[] b = new byte[1024 * 5]; 
+		    		int len; 
+		    		while ( (len = input.read(b)) != -1) { 
+		    			output.write(b, 0, len); 
+		    		} 
+		    		output.flush(); 
+		    		output.close(); 
+		    		input.close(); 
+		    	} 
+		    	if(temp.isDirectory()){//如果是子文件夹 
+		    		copyFolder(oldPath+"/"+file[i],newPath+"/"+file[i]); 
+		    	} 
+		    } 
+	    } 
+	    catch (Exception e) 
+	    { 
+	    	System.out.println("复制整个文件夹内容操作出错"); 
+	    	e.printStackTrace(); 
+	    	return false;
+	    }
+	    return true;
+    }
+    
+    //将dstDirPath同步成srcDirPath
+	protected boolean syncUpFolder(String srcParentPath,String srcName, String dstParentPath, String dstName,boolean modifyEnable) 
+	{
+		String srcPath =  srcParentPath + srcName;
+		String dstPath =  dstParentPath + dstName;
+		
+		//If the dstDirPath 不存在则，直接复制整个目录
+		File dstFolder = new File(dstPath);
+		if(!dstFolder.exists())
+		{
+			return copyFolder(srcPath,dstPath);
+		}
+	
+		if(dstFolder.isFile())
+		{
+			System.out.println(dstPath + " 不是目录！");
+			return false;
+		}
+
+		try {
+			
+			//SyncUpForDelete
+			syncUpForDelete(srcParentPath,srcName,dstParentPath,dstName);
+			
+			//SyncUpForAddAndModify
+			if(modifyEnable)
+			{
+				syncUpForAddAndModify(srcParentPath,srcName,dstParentPath,dstName);
+			}
+			else
+			{
+				syncUpForAdd(srcParentPath,srcName,dstParentPath,dstName);
+			}
+		} catch (IOException e) {
+			System.out.println("syncUpFolder() Exception!");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+    
+    private void syncUpForAdd(String srcParentPath,String srcName, String dstParentPath, String dstName) throws IOException {
+    	System.out.println("syncUpForAddAndModify() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
+    	String srcPath = srcParentPath + srcName;
+    	String dstPath = dstParentPath + dstName;
+    	
+    	File srcFile = new File(srcPath);
+    	File dstFile = new File(dstPath);
+        if(srcFile.exists())
+        {
+        	if(!dstFile.exists())
+        	{
+        		if(srcFile.isDirectory())
+        		{
+        			dstFile.mkdir();	//新建目录
+        		}
+        		else
+        		{
+        			copyFile(srcPath,dstPath,false);
+        		}
+        	}
+        	
+            //Go through the subEntries
+        	if(srcFile.isDirectory())
+        	{
+    			File[] tmp=srcFile.listFiles();
+        		for(int i=0;i<tmp.length;i++)
+        		{
+        			String subEntryName = tmp[i].getName();
+        			syncUpForAdd(srcPath+"/", subEntryName, dstPath + "/", subEntryName);
+                }
+            }
+       }	
+	}
+
+	private void syncUpForAddAndModify(String srcParentPath,String srcName, String dstParentPath, String dstName) throws IOException {
+    	System.out.println("syncUpForAddAndModify() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
+    	String srcPath = srcParentPath + srcName;
+    	String dstPath = dstParentPath + dstName;
+    	
+    	File srcFile = new File(srcPath);
+    	File dstFile = new File(dstPath);
+        if(srcFile.exists())
+        {
+        	if(!dstFile.exists())
+        	{
+        		if(srcFile.isDirectory())
+        		{
+        			dstFile.mkdir();	//新建目录
+        		}
+        		else
+        		{
+        			copyFile(srcPath,dstPath,false);
+        		}
+        	}
+        	else
+        	{
+        		if(srcFile.isFile())
+        		{
+        			copyFile(srcPath,dstPath,true);
+        		}
+        	}
+        	
+            //Go through the subEntries
+        	if(srcFile.isDirectory())
+        	{
+    			File[] tmp=srcFile.listFiles();
+        		for(int i=0;i<tmp.length;i++)
+        		{
+        			String subEntryName = tmp[i].getName();
+        			syncUpForAddAndModify(srcPath+"/", subEntryName, dstPath + "/", subEntryName);
+                }
+            }
+       }	
+	}
+
+	private void syncUpForDelete(String srcParentPath, String srcName, String dstParentPath, String dstName) {
+    	System.out.println("syncUpForDelete() srcParentPath:" + srcParentPath + " srcName:" + srcName + " dstParentPath:" + dstParentPath + " dstName:" + dstName );
+    	String srcPath = srcParentPath + srcName;
+    	String dstPath = dstParentPath + dstName;
+    	
+    	File srcFile = new File(srcPath);
+    	File dstFile = new File(dstPath);
+        if(dstFile.exists())
+        {
+        	if(!srcFile.exists())
+        	{
+        		delDir(dstPath);	//删除目录或文件
+        		return;
+        	}
+        	else
+        	{
+        		if(dstFile.isDirectory() != srcFile.isDirectory())	//类型不同
+        		{
+        			delDir(dstPath); //删除目录或文件
+            		return;
+        		}
+        	}
+        	
+            //Go through the subEntries
+        	if(dstFile.isDirectory())
+        	{
+    			File[] tmp=dstFile.listFiles();
+        		for(int i=0;i<tmp.length;i++)
+        		{
+        			String subEntryName = tmp[i].getName();
+        			syncUpForDelete(srcPath+"/", subEntryName, dstPath + "/", subEntryName);
+                }
+            }
+       }
+	}
+
+	//Rename File
     public boolean renameFile(String path,String oldname,String newname){
         if(!oldname.equals(newname)){//新的文件名和以前文件名不同时,才有必要进行重命名
             File oldfile=new File(path+"/"+oldname);
@@ -463,7 +740,6 @@ public class BaseController{
         	try {
 				return file.createNewFile();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
@@ -490,21 +766,48 @@ public class BaseController{
         return true;
     }
     
-    //Delete Directory
+    //Delete File and Directory with path
+    //该接口不会去影响其子节点
+    public boolean deleteFile(String path){
+        File file=new File(path);
+        if(file.exists()){
+        	return file.delete();	
+        }
+        System.out.println(path + " 不存在！");
+        return false;
+    }
+    
+    //Delete Directory, path must be dir path
     public boolean delDir(String path){
         File dir=new File(path);
-        if(dir.exists()){
-            File[] tmp=dir.listFiles();
-            
-            for(int i=0;i<tmp.length;i++){
-                if(tmp[i].isDirectory()){
-                    delDir(path+"/"+tmp[i].getName());
+        if(dir.exists())
+        {
+            File[] tmp=dir.listFiles();            
+            for(int i=0;i<tmp.length;i++)
+            {
+            	String subDirPath = path+"/"+tmp[i].getName();
+                if(tmp[i].isDirectory())
+                {
+                    if(delDir(subDirPath) == false)
+                    {
+                    	System.out.println("delDir() delete subDir Failed:" + subDirPath);
+                    	return false;
+                    }
                 }
-                else{
-                    tmp[i].delete();
+                else
+                {
+                    if(tmp[i].delete() == false)
+                    {
+                    	System.out.println("delDir() delete subFile Failed:" + subDirPath);
+                    	return false;
+                    }
                 }
             }
-            return dir.delete();
+            if(dir.delete() == false)
+            {
+            	System.out.println("delDir() delete Dir Failed:" + path);
+                return false;
+            }
         }
         return true;
     }
@@ -515,40 +818,36 @@ public class BaseController{
         return file.exists();
     }
     
-	public String saveFile(MultipartFile srcFile,String path)throws Exception{
-		String fileName = srcFile.getOriginalFilename();
-		String ext = fileName.substring(fileName.lastIndexOf('.')+1);
-		ext = ext.toLowerCase();
-		//可以上传的文件类型
-		//定义一个数组，用于保存可上传的文件类型
-			
+	public String saveFile(MultipartFile srcFile,String path,String fileName)throws Exception{
+		
 		long fileSize = srcFile.getSize();
 		if(fileSize==0){
+			System.out.println("saveFile() fileSize 0");
+			//return null;
+		}
+		
+		if(fileName==null || "".equals(fileName))
+		{
+			System.out.println("saveFile() fileName is empty!");
 			return null;
 		}
-		System.out.println("文件大小：" + Math.floor(fileSize/1024));
-		if(fileSize>200*1024*1024){
-			throw new FileUploadException("上传文件过大");
-		}
 		
-		File _imgFile = null;
-		String _fileName = "";
-		
-		if(fileName!=null&&!"".equals(fileName)){
-			File forder1 = new File(path);
-			if(forder1.exists()){
-			}else{
-				forder1.mkdirs();
-			}
-			_fileName = fileName;
-			_imgFile = new File(path,_fileName);
-			try {
-				srcFile.transferTo(_imgFile);
-			} catch (Exception e) {
-				throw new Exception("文件保存到本地失败，源文件名：" + fileName);
-			}
+		//底层接口不能主动创建上层目录，不存在上层目录则直接报错
+		File forder1 = new File(path);
+		if(!forder1.exists())
+		{
+			System.out.println("saveFile() path:" + path + " not exists!");
+			//forder1.mkdirs(); //创建目录
+			return null;
 		}
-		return _fileName;
+			
+		File dstFile = new File(path,fileName);
+		try {
+			srcFile.transferTo(dstFile);
+		} catch (Exception e) {
+			throw new Exception("文件保存到本地失败，源文件名：" + fileName);
+		}
+		return fileName;
 	}
 
 

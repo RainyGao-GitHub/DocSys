@@ -342,28 +342,59 @@
   		and EMAIL = #{email} or TEL = #{email}
   	</if>
   </select>
-  
-  <select id="getDocAuthedUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
-    select user.ID, NAME, REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn
-     from user
-    LEFT JOIN doc_auth on doc_auth.user_id = user.id WHERE doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
-  </select> 
-  
-  <select id="getReposAuthedUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
-    select user.ID, NAME, REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn
-     from user
-    LEFT JOIN repos_auth on repos_auth.user_id = user.id WHERE repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
-  </select>
-
-  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
-	select user.ID, NAME, REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn
-      from user
-    LEFT JOIN repos_auth ON repos_auth.USER_ID = user.ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
-  </select>
-  
+     
   <select id="selectAll" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from user
+  </select>
+  
+   
+  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+	select 
+		repos_auth.ID as reposAuthId, 
+		user.ID as userId, user.NAME as userName, 
+		REPOS_ID as reposId, 
+		IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn,  HERITABLE as heritable
+      from user
+    LEFT JOIN repos_auth ON repos_auth.USER_ID = user.ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
+  
+  
+  <select id="getReposAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+    select 
+    	repos_auth.ID as reposAuthId,
+    	user.ID as userId, user.NAME as userName, 
+    	REPOS_ID as reposId, 
+    	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE as heritable
+     from repos_auth
+    LEFT JOIN user on user.id = repos_auth.user_id  
+    WHERE repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
+ 
+  <select id="getDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+    select 
+    	doc_auth.ID as docAuthId,
+    	user.ID as userId, user.NAME as userName, 
+    	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
+    	REPOS_ID as reposId, 
+    	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn,HERITABLE as heritable
+     from doc_auth
+    LEFT JOIN user on user.id = doc_auth.user_id 
+    LEFT JOIN doc on doc.id = doc_auth.doc_id
+    WHERE doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
+  </select> 
+  
+  <select id="getReposDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+    select 
+    	doc_auth.ID as docAuthId,
+    	user.ID as userId, user.NAME as userName, 
+    	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
+    	REPOS_ID as reposId, 
+    	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE as heritable
+     from doc_auth
+    LEFT JOIN user on user.id = doc_auth.user_id 
+    LEFT JOIN doc on doc.id = doc_auth.doc_id
+    WHERE doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
 </mapper>

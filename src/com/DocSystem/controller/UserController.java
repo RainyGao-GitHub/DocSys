@@ -48,29 +48,9 @@ public class UserController extends BaseController {
 		System.out.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
 		ReturnAjax rt = new ReturnAjax();
-		Cookie c1 = getCookieByName(request, "dsuser");
-		Cookie c2 = getCookieByName(request, "dstoken");
 		
 		//tmp_user is used for store the query condition
 		User tmp_user = new User();
-		if(c1!=null&&c2!=null&&c1.getValue()!=null&&c2.getValue()!=null&&!"".equals(c1.getValue())&&!"".equals(c2.getValue())){
-			System.out.println("自动登录");
-			
-			tmp_user.setEmail(c1.getValue());
-			tmp_user.setPwd(c2.getValue());
-			List<User> uLists = getUserSelective(c1.getValue(),c2.getValue());
-			boolean f = loginCheck(rt, tmp_user, uLists, session,response);
-			if(f){
-				System.out.println("登录成功");
-				session.setAttribute("login_user", uLists.get(0));
-				rt.setMsgInfo("success#您已保存本站账户密码，自动登录成功！");
-				rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台??
-			}
-			writeJson(rt, response);	
-			return;
-		}
-		
-		System.out.println("登陆密码："+pwd);
 		if(RegularUtil.isEmail(userName))
 		{
 			tmp_user.setEmail(userName);
@@ -83,23 +63,23 @@ public class UserController extends BaseController {
 		List<User> uLists = getUserSelective(userName,pwd);
 		boolean f =loginCheck(rt, tmp_user, uLists, session,response);
 		if(f){
+			System.out.println("登录成功");
+			session.setAttribute("login_user", uLists.get(0));
+			rt.setMsgInfo("success#登录成功！");
+			rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
 			//如果用户点击了保存密码则保存cookies
 			if(rememberMe!=null&&rememberMe.equals("1")){
 				addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
 				addCookie(response, "dstoken", pwd, 7*24*60*60);
 				System.out.println("用户cookie保存成功");
 			}
-			System.out.println("登录成功1");
-			session.setAttribute("login_user", uLists.get(0));
-			rt.setMsgInfo("success#登录成功！");
-			rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台??
 		}
 		System.out.println("SESSION ID:" + session.getId());
 		
 		writeJson(rt, response);	
 		return;
 	}
-	
+		
 	private List<User> getUserSelective(String userName,String pwd) {
 		// TODO Auto-generated method stub
 		User tmp_user = new User();
@@ -193,14 +173,48 @@ public class UserController extends BaseController {
 	
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
-	public void getLoginUser(HttpSession session,HttpServletResponse response){
+	public void getLoginUser(HttpServletRequest request,HttpSession session,HttpServletResponse response){
 		System.out.println("getLoginUser SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
 		User user = (User) session.getAttribute("login_user");
 		if(user == null)
 		{
-			rt.setError("info#用户未登录。");
+			//尝试自动登录
+			Cookie c1 = getCookieByName(request, "dsuser");
+			Cookie c2 = getCookieByName(request, "dstoken");
+			if(c1!=null&&c2!=null&&c1.getValue()!=null&&c2.getValue()!=null&&!"".equals(c1.getValue())&&!"".equals(c2.getValue())){
+				System.out.println("自动登录");
+				String userName = c1.getValue();
+				String pwd = c2.getValue();
+				//tmp_user is used for store the query condition
+				User tmp_user = new User();
+				if(RegularUtil.isEmail(userName))
+				{
+					tmp_user.setEmail(userName);
+				}
+				else
+				{
+					tmp_user.setTel(userName);			
+				}
+				tmp_user.setPwd(pwd);
+				List<User> uLists = getUserSelective(userName,pwd);
+				boolean f =loginCheck(rt, tmp_user, uLists, session,response);
+				if(f){
+					System.out.println("登录成功");
+					session.setAttribute("login_user", uLists.get(0));
+					rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
+					//延长cookie的有效期
+					addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
+					addCookie(response, "dstoken", pwd, 7*24*60*60);
+					System.out.println("用户cookie保存成功");
+				}
+				System.out.println("SESSION ID:" + session.getId());
+			}
+			else
+			{
+					rt.setError("用户未登录");
+			}
 		}
 		else
 		{

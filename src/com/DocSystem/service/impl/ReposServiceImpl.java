@@ -1,5 +1,6 @@
 package com.DocSystem.service.impl;  
   
+import java.util.HashMap;
 import java.util.List;  
   
 import org.springframework.beans.factory.annotation.Autowired;  
@@ -110,7 +111,6 @@ public class ReposServiceImpl implements ReposService {
     }
 
 	public int addReposAuth(ReposAuth reposAuth) {
-		// TODO Auto-generated method stub
 		return reposAuthDao.insertSelective(reposAuth);
 	}
 	
@@ -126,78 +126,84 @@ public class ReposServiceImpl implements ReposService {
     	return docAuthDao.selectSelective(docAuth);
     }
 
-	public List<UserDocAuth> getDocAuthedUserList(Integer docId, Integer vid) {
-		// TODO Auto-generated method stub
+	public List<UserDocAuth> getReposAuthList(Integer reposId) {
+		return userDao.getReposAuthList(reposId);
+	}
+	
+	public List<UserDocAuth> getDocAuthList(Integer docId, Integer reposId) {
 		if(docId == 0)
 		{
-			return userDao.getReposAuthedUsers(vid);
+			return userDao.getReposDocAuthList(reposId);	//获取仓库所有的DocAuthList
 		}
 		else
 		{
-			return userDao.getDocAuthedUsers(docId);
+			return userDao.getDocAuthList(docId);	//获取Doc所有的DocAuthList
 		}
-		
 	}
-
+	
 	public int setReposAuth(ReposAuth reposAuth) {
-		// TODO Auto-generated method stub
 		return reposAuthDao.updateByPrimaryKeySelective(reposAuth);
 	}
 
 	public int addDocAuth(DocAuth docAuth) {
-		// TODO Auto-generated method stub
 		return docAuthDao.insertSelective(docAuth);
 	}
 
 	public int updateDocAuth(DocAuth docAuth) {
-		// TODO Auto-generated method stub
 		return docAuthDao.updateByPrimaryKeySelective(docAuth);
-	}
-
-	public List<UserDocAuth> getReposAuthedUserList(Integer reposId) {
-		// TODO Auto-generated method stub
-		return userDao.getReposAuthedUsers(reposId);
 	}
 
 	//仓库的所有用户（包括有授权和没授权的）
 	public List<UserDocAuth> getReposAllUsers(Integer reposId) {
-		// TODO Auto-generated method stub
 		return userDao.getReposAllUsers(reposId);		
 	}
 
 	public int deleteReposAuth(Integer id) {
-		// TODO Auto-generated method stub
 		return reposAuthDao.deleteByPrimaryKey(id);
 	}
 
 	public int updateReposAuth(ReposAuth qReposAuth) {
-		// TODO Auto-generated method stub
 		return reposAuthDao.updateByPrimaryKeySelective(qReposAuth);
 	}
 
 	public int deleteDocAuth(Integer id) {
-		// TODO Auto-generated method stub
 		return docAuthDao.deleteByPrimaryKey(id);
 	}
 
 	public Doc getDocInfo(Integer docId) {
-		// TODO Auto-generated method stub
 		return docDao.getDocInfo(docId);	//只获取文件的信息但不包括内容
 	}
 
 	public void deleteDocAuthSelective(DocAuth docAuth) {
-		// TODO Auto-generated method stub
 		docAuthDao.deleteSelective(docAuth);
 	}
 
-	public List<Doc> getAuthedSubDocList(UserDocAuth userDocAuth) {
-		// TODO Auto-generated method stub
-		return docDao.getAuthedSubDocList(userDocAuth);
+	public List<DocAuth> getUserDocAuthList(Integer userId, Integer docId,Integer pDocId,
+			Integer reposId) {
+		HashMap<String,Object> params = new HashMap<String,Object>();
+        params.put("docId", docId);
+        params.put("pDocId", pDocId);
+        params.put("reposId", reposId);
+        params.put("userId", userId);
+		return docAuthDao.getUserDocAuthList(params);
 	}
 
-	public List<DocAuth> getDocAuthListForUser(Integer userId, Integer pDocId,
-			Integer reposId) {
-		// TODO Auto-generated method stub
-		return docAuthDao.getDocAuthListForUser(userId,pDocId,reposId);
+	public List<Doc> getAuthedDocList(Integer docId, Integer pDocId, Integer reposId,Integer userId) {
+		HashMap<String,Object> params = new HashMap<String,Object>();
+        params.put("docId", docId);
+        params.put("pDocId", pDocId);
+        params.put("reposId", reposId);
+        params.put("userId", userId);
+		return docDao.getAuthedDocList(params);
+	}
+
+	public List<Doc> getAuthedDocListHeritable(Integer docId, Integer pDocId,
+			Integer reposId, Integer userId) {
+		HashMap<String,Object> params = new HashMap<String,Object>();
+        params.put("docId", docId);
+        params.put("pDocId", pDocId);
+        params.put("reposId", reposId);
+        params.put("userId", userId);
+        return docDao.getAuthedDocListHeritable(params);
 	}
 }  
