@@ -162,9 +162,10 @@ public class SVNUtil {
 	//localPath是需要自动commit的目录
 	//modifyEnable: 表示是否commit已经存在的文件
 	//refLocalPath是存放参考文件的目录，如果对应文件存在且modifyEnable=true的话，则增量commit
-	public boolean doAutoCommit(String localPath,String commitMsg,boolean modifyEnable,String localRefPath){
+	public boolean doAutoCommit(String parentPath, String entryName,String localPath,String commitMsg,boolean modifyEnable,String localRefPath){
 		System.out.println("doAutoCommit() localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
 	
+		String entryPath = parentPath + entryName;
 		try {
 			File wcDir = new File(localPath);
 			if(!wcDir.exists())
@@ -173,27 +174,28 @@ public class SVNUtil {
 			}
 		
 		
-			SVNNodeKind nodeKind = repository.checkPath("", -1);
-
-	        if (nodeKind == SVNNodeKind.NONE) {
-	        	System.out.println("仓库不存在");
-	            return false;
-	        } else if (nodeKind == SVNNodeKind.FILE) {
-	        	System.out.println("仓库根目录是文件");
+			SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
+	        if (nodeKind == SVNNodeKind.NONE) 
+	        {
+	        	System.out.println(entryPath + " 不存在");
+	        } 
+	        else if (nodeKind == SVNNodeKind.FILE) 
+	        {
+	        	System.out.println(entryPath + " 是文件");
 	            return false;
 	        }
 	        
 	        List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 	        System.out.println("doAutoCommit() scheduleForDelete Start");
 	        try {
-	        	scheduleForDelete(commitActionList,localPath,"");
+	        	scheduleForDelete(commitActionList,localPath,entryPath);
 	        } catch (SVNException svne) {
 	            error("doAutoCommit() error while scheduleForDelete '" + localPath + "'", svne);
 	            return false;
 	        }
 	        
 	        System.out.println("doAutoCommit() scheduleForAdd and Modify Start");
-	        scheduleForAddAndModify(commitActionList,"","",localPath,localRefPath,modifyEnable,false);
+	        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
 	        
 	        if(commitActionList == null || commitActionList.size() ==0)
 	        {
