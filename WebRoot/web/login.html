@@ -1,5 +1,40 @@
 <script src="js/md5.js"></script>
 <script type="text/javascript">
+	//cookie操作接口
+	function setCookie(name, value, iDay) 
+	{
+	    var oDate=new Date();
+	     
+	    oDate.setDate(oDate.getDate()+iDay);
+	     
+	    document.cookie=name+'='+encodeURIComponent(value)+';expires='+oDate;
+	}
+	 
+	function getCookie(name)
+	{
+	    var arr=document.cookie.split('; ');
+	    var i=0;
+	    for(i=0;i<arr.length;i++)
+	    {
+	        //arr2->['username', 'abc']
+	        var arr2=arr[i].split('=');
+	         
+	        if(arr2[0]==name)
+	        {  
+	            var getC = decodeURIComponent(arr2[1]);
+	            return getC;
+	        }
+	    }
+	     
+	    return '';
+	}
+	 
+	function removeCookie(name)
+	{
+	    setCookie(name, '1', -1);
+	}
+	
+	//登录页面初始化操作
 	function LoginPageInit()
 	{
 		//console.log($.cookie("dsuser"));
@@ -40,7 +75,25 @@
 					$(item).attr("checked",false);
 				}
 			}
-		})
+		});
+	}
+	
+	//设置rememberMe value
+	function remember(item){
+		console.log($(item));
+		
+		var hc = $(item).next();
+		var rememberMe = $(hc).val();
+		if(rememberMe == "0")
+		{
+			$(hc).val("1");
+		}
+		else
+		{
+			$(hc).val("0");
+		}
+		console.log($("#rememberMe_vl").val());
+		
 	}
 	
 	//登录按键处理函数
@@ -58,6 +111,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("登录成功");
+                	loginUser = $('input[name="userName"]').val();
                 	window.location.href = "projects.html";
                 }else {
                     alert("错误："+ret.msgInfo);
@@ -72,7 +126,8 @@
     //页面初始化代码    
     $(function(){
 		LoginPageInit();
-		$("#userName").click().focus();
+		$("#userName").val(loginUser);
+		//$("#userName").click().focus();
 	});
 </script>
 
@@ -96,7 +151,7 @@
              <label class="col-sm-2 control-label">&nbsp;</label>
              <div class="col-sm-9">
                  <div class="checkbox">
-                 	<input id="rememberMe_cb" type="checkbox" onchange="remember(this);" class="needSetVal" value="1" /> 记住我
+                 	<input id="rememberMe_cb" type="checkbox" onchange="remember(this);" class="needSetVal" value="1" />下次自动登录
 					<input id="rememberMe_vl" name="rememberMe" type="hidden" value="0" />
                     <a class="f-right" href="/DocSystem/web/getPassword.html">忘记密码？</a>
                  </div>

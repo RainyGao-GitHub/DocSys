@@ -23,8 +23,8 @@
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
-               		<div class="panel-body eventset-list" id="reposNotAuthedUsers">
-			 			<!-- 仓库权限列表区域-->
+               		<div class="panel-body eventset-list" id="reposAllUsers">
+			 			<!-- 用户列表区域-->
 					</div>
 			 </div>
 			</div>
@@ -34,9 +34,8 @@
 <script type="text/javascript">
 	function addReposUserPageInit()
 	{
-		//alert("addReposUserPageInit");
-		//showReposAuthedUserList();
-		showReposNotAuthedUserList();		
+		console.log("addReposUserPageInit");
+		showReposAllUserList();		
 	}
 
         
@@ -45,12 +44,13 @@
 		addReposUserPageInit();
 	});
 
-function showReposAuthedUserList(){
-   	console.log("showReposAuthedUserList()");
+
+function showReposAllUserList(){
+   	console.log("showReposAllUserList()");
    	var vid = getQueryString("vid");
 
     $.ajax({
-            url : "/DocSystem/Repos/getReposAuthedUsers.do",
+            url : "/DocSystem/Repos/getReposAllUsers.do",
             type : "post",
             dataType : "json",
             data : {
@@ -74,72 +74,15 @@ function showReposAuthedUserList(){
 	//根据获取到的目录权限用户列表数据，绘制列表
 	function showUserList(data){
 		console.log(data);
-		var c = $("#reposAuthedUsers").children();
+		var c = $("#reposAllUsers").children();
 		$(c).remove();
 		if(data.length==0){
-			$("#reposAuthedUsers").append("<p>暂无数据</p>");
+			$("#reposAllUsers").append("<p>暂无数据</p>");
 		}
-		
-		var vid = getQueryString("vid");
 		
 		for(var i=0;i<data.length;i++){
 			var d = data[i];
-			var se = "<li value="+ i +">"
-				+"	<i class='cell username w15'>"
-				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.name+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell operation w10'>"
-				+"		<a href='javascript:void(0)' onclick='deleteReposUser("+d.id+");' class='mybtn-primary'>删除</a>"
-				+"	</i>"
-				+"</li>";
-			
-			$("#reposAuthedUsers").append(se);
-		}
-	}
-}
-
-function showReposNotAuthedUserList(){
-   	console.log("showReposNotAuthedUserList()");
-   	var vid = getQueryString("vid");
-
-    $.ajax({
-            url : "/DocSystem/Repos/getReposNotAuthedUsers.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposId : vid,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    showUserList(ret.data);
-                }
-                else
-                {
-                	alert("Error:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-               alert('服务器异常：获取仓库用户列表失败！');
-            }
-    });
-
-
-	//根据获取到的目录权限用户列表数据，绘制列表
-	function showUserList(data){
-		console.log(data);
-		var c = $("#reposNotAuthedUsers").children();
-		$(c).remove();
-		if(data.length==0){
-			$("#reposNotAuthedUsers").append("<p>暂无数据</p>");
-		}
-		
-		var vid = getQueryString("vid");
-		
-		for(var i=0;i<data.length;i++){
-			var d = data[i];
-			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.id+");' class='mybtn-primary'>添加</a>";
+			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
 			if(d.reposId > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
 				opBtn = "		<a href='javascript:void(0)' class='mybtn' disabled='disabled'>已添加</a>";
@@ -148,7 +91,7 @@ function showReposNotAuthedUserList(){
 			var se = "<li value="+ i +">"
 				+"	<i class='cell username w15'>"
 				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.name+"</a>"
+				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell operation w10'>"
@@ -156,14 +99,14 @@ function showReposNotAuthedUserList(){
 				+"	</i>"
 				+"</li>";
 			
-			$("#reposNotAuthedUsers").append(se);
+			$("#reposAllUsers").append(se);
 		}
 	}
 }
 
 function addReposUser(userId)
 {
-   	console.log("showReposNotAuthedUserList()");
+   	console.log("addReposUser()");
    	var vid = getQueryString("vid");
 
     $.ajax({
@@ -176,9 +119,8 @@ function addReposUser(userId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    //showReposAuthedUserList();
-                    showDocAuthedUserList();
-                    showReposNotAuthedUserList();
+                    showAuthList();		//这个 接口是更新reposManager页面的权限列表用户的
+                    showReposAllUserList();		//更新显示
                 }
                 else
                 {

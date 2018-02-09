@@ -23,7 +23,19 @@
             <label>svn用户名</label>
             <input class="form-control" type="text" id="RBSsvnUser"   placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%" disabled="disabled"></input>
             <label>svn密码</label>
-            <input class="form-control" type="password" id="RBSsvnPwd" placeholder="置空表明版本仓库访问不需要密码！" value="" style="width: 100%" disabled="disabled"></input>          
+            <input class="form-control" type="password" id="RBSsvnPwd" placeholder="置空表明版本仓库访问不需要密码！" value="" style="width: 100%" disabled="disabled"></input>
+            <label>版本管理1</label>
+            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+            	<option value="0">无</option>   
+            	<option value="1">SVN</option>   
+            	<option value="2">GIT</option>   
+            </select>
+            <label>svn路径1</label>
+            <input class="form-control" type="text" id="RBSsvnPath1"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%" disabled="disabled"></input>
+            <label>svn用户名1</label>
+            <input class="form-control" type="text" id="RBSsvnUser1"   placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%" disabled="disabled"></input>
+            <label>svn密码1</label>
+            <input class="form-control" type="password" id="RBSsvnPwd1" placeholder="置空表明版本仓库访问不需要密码！" value="" style="width: 100%" disabled="disabled"></input>              
         </div>
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
 </div>
@@ -59,6 +71,24 @@
 		}   
 	}
 	
+	function doSelectVerCtrl1()
+	{
+		var verCtrl1 = $("#RBSverCtrl1").val();
+		//alert(verCtrl);
+		if((verCtrl1 == 1) || (verCtrl1 == 2)) 			//show svn info
+		{
+			$("#RBSsvnPath1").attr("disabled",false);
+			$("#RBSsvnUser1").attr("disabled",false);
+			$("#RBSsvnPwd1").attr("disabled",false);
+		}
+		else	//hide svn info
+		{
+			$("#RBSsvnPath1").attr("disabled",true);
+			$("#RBSsvnUser1").attr("disabled",true);
+			$("#RBSsvnPwd1").attr("disabled",true);
+		}   
+	}
+	
 //显示仓库公开访问权限设置
 var gReposBasicSetting = [];
 function getReposBasicSetting()
@@ -78,6 +108,7 @@ function getReposBasicSetting()
                		console.log(gReposBasicSetting);
                		showReposBasicSetting(ret.data);
                		doSelectVerCtrl();
+               		doSelectVerCtrl1();
                }else {
 					showErrorMessage(ret.msgInfo);
                }
@@ -98,6 +129,10 @@ function getReposBasicSetting()
 	   	$("#RBSsvnPath").val(reposInfo.svnPath);
 	   	$("#RBSsvnUser").val(reposInfo.svnUser);
 	   	$("#RBSsvnPwd").val(reposInfo.svnPwd);
+	   	$("#RBSverCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
+	   	$("#RBSsvnPath1").val(reposInfo.svnPath1);
+	   	$("#RBSsvnUser1").val(reposInfo.svnUser1);
+	   	$("#RBSsvnPwd1").val(reposInfo.svnPwd1);
 	}
 }
 
@@ -114,6 +149,10 @@ function saveReposBasicSetting()
 	newReposSetting.svnPath = $("#RBSsvnPath").val();
 	newReposSetting.svnUser = $("#RBSsvnUser").val();
 	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
+	newReposSetting.verCtrl1 = $("#RBSverCtrl1").val();
+	newReposSetting.svnPath1 = $("#RBSsvnPath1").val();
+	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
+	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
 	console.log(newReposSetting);
 	
 	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
@@ -132,6 +171,10 @@ function saveReposBasicSetting()
                     svnPath : newReposSetting.svnPath,
                     svnUser : newReposSetting.svnUser,
                     svnPwd : newReposSetting.svnPwd,
+                    verCtrl1: newReposSetting.verCtrl1,
+                    svnPath1 : newReposSetting.svnPath1,
+                    svnUser1 : newReposSetting.svnUser1,
+                    svnPwd1 : newReposSetting.svnPwd1,
                 },
                 success : function (ret) {
                 	if(ret.status == "ok")
@@ -199,6 +242,22 @@ function saveReposBasicSetting()
        		{
        			return true;
        		}
+       		if(oldSetting.verCtrl1 != newSetting.verCtrl1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPath1 != newSetting.svnPath1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnUser1 != newSetting.svnUser1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.svnPwd1 != newSetting.svnPwd1)
+       		{
+       			return true;
+       		}       		
        		alert("仓库信息未变化！");
        		return false;
        }  
