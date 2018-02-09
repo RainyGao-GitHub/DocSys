@@ -193,7 +193,7 @@ body a {
 	color: #777;
 	font-size: 1.2em;
 	font-weight: 300;
-	line-height: 0.6em;
+	/*line-height: 0.6em;*/
 }
 .featured_content {
 	background: #2ABB9B;

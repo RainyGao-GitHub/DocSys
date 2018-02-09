@@ -50,7 +50,10 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	window.location.href = "index.html";	//跳转到主页
+                	//window.location.href = "index.html";	//跳转到主页
+                	//弹出登录对话框
+                	showLoginPanel();
+                	loginUser =  $('input[name="userName"]').val();
                 }else {
                     alert("错误：" + ret.msgInfo);
                 }
