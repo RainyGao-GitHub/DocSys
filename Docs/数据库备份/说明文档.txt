@@ -49,3 +49,24 @@
 		2.04版本使用的数据库
 	  repos增加了VER_CTRL，版本控制类型
 	  SVN_PATH将不再单指SVN，还可能是GIT仓库路径，当然也包括SVN_USER和SVN_PWD
+	  
+11、docsystem20171225.sql
+		2.06版版本使用
+		repos_auth 增加 HERITABLE字段	 
+		doc_auth 增加 HERITABLE字段	
+		doc 增加 STATE字段	 
+		
+12、docsystem20180102.sql		
+	2.06版版本使用
+	repos_auth HERITABLE字段默认改为：不继承 0	 
+	doc_auth HERITABLE字段：不继承 0	
+	doc STATE字段默认改为：启用1
+
+13、docsystem20180126.sql
+	2.06版本使用
+	repos增加 verCtrl1 svnPath1 svnUser1 svnPwd1	
+
+
+14、docsystem20180129.sql
+	2.06版本使用
+	doc增加 lockBy字段,用于确定doc最终getLock的人		
