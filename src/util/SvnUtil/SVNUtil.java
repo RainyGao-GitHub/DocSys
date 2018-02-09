@@ -279,15 +279,19 @@ public class SVNUtil {
 		
 		InputStream oldData = getFileInputStream(localRefPath + parentPath + entryName);
     	InputStream newData = getFileInputStream(localPath + parentPath + entryName);
+    	boolean ret = false;
 		if(action.isSubAction)
 		{
 			//subAction no need to openRoot and Parent
-			return modifyFile(editor,parentPath, entryName, oldData, newData,false,false);
+			ret = modifyFile(editor,parentPath, entryName, oldData, newData,false,false);
 		}
 		else
 		{
-   			return modifyFile(editor,parentPath, entryName, oldData, newData,false,true);       			
+   			ret = modifyFile(editor,parentPath, entryName, oldData, newData,false,true);       			
 		}
+		closeFileInputStream(oldData);
+		closeFileInputStream(newData);
+		return ret;
 	}
 
 	private boolean executeDeleteAction(ISVNEditor editor, CommitAction action) {
@@ -312,15 +316,18 @@ public class SVNUtil {
     	{
     		String localEntryPath = localPath + parentPath + entryName;
     		InputStream fileData = getFileInputStream(localEntryPath);
+    		boolean ret = false;
     		if(action.isSubAction)
     		{
     			//No need to openParent
-    			return addEntry(editor, parentPath, entryName, true, fileData, false, false, false);
+    			ret = addEntry(editor, parentPath, entryName, true, fileData, false, false, false);
     		}
     		else
     		{	
-    			return addEntry(editor, parentPath, entryName, true, fileData, false, true, false);
+    			ret = addEntry(editor, parentPath, entryName, true, fileData, false, true, false);
     		}
+    		closeFileInputStream(fileData);
+    		return ret;
     	}
 		
 		//If entry is Dir we need to check if it have subActionList
@@ -386,6 +393,7 @@ public class SVNUtil {
     		}
     	}
 	}
+
 
 	public void scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath) throws SVNException
 	{
@@ -575,6 +583,18 @@ public class SVNUtil {
 		}  
 		return fileInputStream;
 	}
+	
+
+	private boolean closeFileInputStream(InputStream fileData) {
+		try {
+			fileData.close();
+		} catch (IOException e) {
+			System.out.println("closeFileInputStream() close failed");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
 
 	public byte[] remoteGetFile(String filePath,long revision)
 	{
@@ -649,7 +669,9 @@ public class SVNUtil {
 		}	
 	    
 		InputStream localFile = getFileInputStream(localFilePath);
-		if(addFile(editor, parentPath,entryName, localFile) == false)
+		boolean ret = addFile(editor, parentPath,entryName, localFile);
+		closeFileInputStream(localFile);
+		if(ret == false)
 		{
 			return false;
 		}	
@@ -676,7 +698,10 @@ public class SVNUtil {
 	    
 		InputStream oldFile = getFileInputStream(oldFilePath);
 		InputStream newFile = getFileInputStream(newFilePath);
-		if(modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true) == false)
+		boolean ret = modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true);
+		closeFileInputStream(oldFile);
+		closeFileInputStream(newFile);
+		if(ret == false)
 		{
 			return false;
 		}
