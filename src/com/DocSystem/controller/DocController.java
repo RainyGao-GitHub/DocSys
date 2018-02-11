@@ -1171,7 +1171,7 @@ public class DocController extends BaseController{
 		String MsgInfo = "";
 		if(type == 1) 
 		{
-			ret = svnRealDocCopy(repos,parentPath,name,dstParentPath,name,commitMsg, commitUser);
+			ret = svnRealDocCopy(repos,parentPath,name,dstParentPath,name,type,commitMsg, commitUser);
 			MsgInfo = "svnRealDocCopy Failed";
 		}
 		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
@@ -2168,7 +2168,7 @@ public class DocController extends BaseController{
 	}
 
 	private boolean svnRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
-			String dstParentPath, String dstEntryName, String commitMsg, String commitUser) {
+			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser) {
 		
 		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(repos.getVerCtrl() == 1)
@@ -2186,6 +2186,11 @@ public class DocController extends BaseController{
 				System.out.println("文件: " + srcEntryName + " svnCopy失败");
 				return false;
 			}
+			
+			//create Ref RealDoc
+			String reposRPath = getReposRealPath(repos);
+			String reposRefRPath = getReposRealRefPath(repos);
+			createRefRealDoc(reposRPath, reposRefRPath, dstParentPath, dstEntryName, type);
 			return true;
 		}
 		else
@@ -2350,6 +2355,9 @@ public class DocController extends BaseController{
 				System.out.println("文件: " + srcEntryName + " svnCopy失败");
 				return false;
 			}
+			
+			//create Ref Virtual Doc
+			
 			return true;
 		}
 		else
