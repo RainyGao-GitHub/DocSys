@@ -2190,9 +2190,9 @@ public class DocController extends BaseController{
 			svnUtil.Init(reposURL, svnUser, svnPwd);
 			
 			String localRefParentPath	= getReposVirtualRefPath(repos);
-			String localRefPath = localRefParentPath+ docVPath;
+			String localRefPath = localRefParentPath;
 			//modifyEnable set to false
-			if(svnUtil.doAutoCommit("",docVPath,reposVPath + docVPath,commitMsg,false,localRefPath) == false)
+			if(svnUtil.doAutoCommit("",docVPath,reposVPath,commitMsg,false,localRefPath) == false)
 			{
 				System.out.println(docVPath + " doAutoCommit失败！");
 				return false;
@@ -2267,8 +2267,8 @@ public class DocController extends BaseController{
 			}
 			
 			String localRefParentPath	= getReposVirtualRefPath(repos);
-			String localRefPath = localRefParentPath+ docVPath;
-			if(svnUtil.doAutoCommit("",docVPath,reposVPath + docVPath,commitMsg,true,localRefPath) == false)
+			String localRefPath = localRefParentPath;
+			if(svnUtil.doAutoCommit("",docVPath,reposVPath,commitMsg,true,localRefPath) == false)
 			{
 				System.out.println(docVPath + " doCommit失败！");
 				return false;
