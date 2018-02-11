@@ -163,14 +163,15 @@ public class SVNUtil {
 	//modifyEnable: 表示是否commit已经存在的文件
 	//refLocalPath是存放参考文件的目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	public boolean doAutoCommit(String parentPath, String entryName,String localPath,String commitMsg,boolean modifyEnable,String localRefPath){
-		System.out.println("doAutoCommit() localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
+		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
 	
 		String entryPath = parentPath + entryName;
 		try {
 			File wcDir = new File(localPath);
 			if(!wcDir.exists())
 			{
-				System.out.println(localPath + "不存在");
+				System.out.println("doAutoCommit() localPath " + localPath + " not exists");
+				return false;
 			}
 		
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -178,6 +179,8 @@ public class SVNUtil {
 	        if (nodeKind == SVNNodeKind.NONE) 
 	        {
 	        	System.out.println(entryPath + " 不存在");
+	        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
+		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
 	        } 
 	        else if (nodeKind == SVNNodeKind.FILE) 
 	        {
@@ -187,16 +190,11 @@ public class SVNUtil {
 	        else
 	        {
 	        	System.out.println("doAutoCommit() scheduleForDelete Start");
-	        	try {
-		        	scheduleForDelete(commitActionList,localPath,entryPath);
-		        } catch (SVNException svne) {
-		            error("doAutoCommit() error while scheduleForDelete '" + localPath + "'", svne);
-		            return false;
-		        }
+	        	scheduleForDelete(commitActionList,localPath,entryPath);
+		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
+			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
 	        }
 	        
-	        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-	        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
 	        
 	        if(commitActionList == null || commitActionList.size() ==0)
 	        {
@@ -398,48 +396,57 @@ public class SVNUtil {
 	}
 
 
-	public void scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath) throws SVNException
+	public boolean scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath)
 	{
         //遍历仓库所有子目录
-        Collection entries = repository.getDir(parentPath, -1, null,(Collection) null);
-        Iterator iterator = entries.iterator();
-        while (iterator.hasNext()) 
-        {
-            SVNDirEntry entry = (SVNDirEntry) iterator.next();
-            String entryName = entry.getName();
-            if(entryName.isEmpty() == false)
-            {
-	            String entryPath = parentPath + entryName;            
-	            String localEntryPath = localPath + entryPath;
+		try {
+			Collection entries;
+			entries = repository.getDir(parentPath, -1, null,(Collection) null);
 	
-	            //System.out.println("localEnntryPath " + localEntryPath);
-	            File localFile = new File(localEntryPath);
-	            
-	            SVNNodeKind entryKind = entry.getKind();
-	            if(entryKind == SVNNodeKind.FILE)
+	        Iterator iterator = entries.iterator();
+	        while (iterator.hasNext()) 
+	        {
+	            SVNDirEntry entry = (SVNDirEntry) iterator.next();
+	            String entryName = entry.getName();
+	            if(entryName.isEmpty() == false)
 	            {
-	            	if(!localFile.exists() || localFile.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
-	                {
-	                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
-	                    //deleteEntry(editor,entryPath);
-	                    insertDeleteAction(actionList,parentPath,entryName);
-	                }
+		            String entryPath = parentPath + entryName;            
+		            String localEntryPath = localPath + entryPath;
+		
+		            //System.out.println("localEnntryPath " + localEntryPath);
+		            File localFile = new File(localEntryPath);
+		            
+		            SVNNodeKind entryKind = entry.getKind();
+		            if(entryKind == SVNNodeKind.FILE)
+		            {
+		            	if(!localFile.exists() || localFile.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
+		                {
+		                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
+		                    //deleteEntry(editor,entryPath);
+		                    insertDeleteAction(actionList,parentPath,entryName);
+		                }
+		            }
+		            else if(entry.getKind() == SVNNodeKind.DIR) 
+		            {
+		            	if(!localFile.exists() || localFile.isFile())	//本地目录不存在或者类型不符，则删除该目录
+		                {
+		                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
+		                    //deleteEntry(editor,entryPath);
+		                    insertDeleteAction(actionList,parentPath,entryName);
+		                }
+		           	    else
+		           	    {
+		           	    	scheduleForDelete(actionList,localPath, entryPath+"/");
+		           	    }
+		            }
 	            }
-	            else if(entry.getKind() == SVNNodeKind.DIR) 
-	            {
-	            	if(!localFile.exists() || localFile.isFile())	//本地目录不存在或者类型不符，则删除该目录
-	                {
-	                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
-	                    //deleteEntry(editor,entryPath);
-	                    insertDeleteAction(actionList,parentPath,entryName);
-	                }
-	           	    else
-	           	    {
-	           	    	scheduleForDelete(actionList,localPath, entryPath+"/");
-	           	    }
-	            }
-            }
-        }
+	        }
+		} catch (SVNException e) {
+			System.out.println("scheduleForDelete() Exception");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction) throws SVNException {
