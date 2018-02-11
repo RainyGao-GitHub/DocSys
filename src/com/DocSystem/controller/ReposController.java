@@ -465,7 +465,7 @@ public class ReposController extends BaseController{
 			return false;
 		}
 		
-		return svnUtil.doAutoCommit(localPath,commitMsg,modifyEnable,localRefPath);		
+		return svnUtil.doAutoCommit("","",localPath,commitMsg,modifyEnable,localRefPath);		
 	}
 	
 	/****************   delete a Repository ******************/
