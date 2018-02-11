@@ -941,8 +941,6 @@ public class DocController extends BaseController{
 		String reposRPath = getReposRealPath(repos);
 		String parentPath = getParentPath(parentId);
 		String oldname = doc.getName();
-		//String srcDocRPath = parentPath + oldname;
-		//String dstDocRPath = parentPath + newname;
 		
 		//修改实文件名字	
 		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname) == false)
@@ -1533,10 +1531,13 @@ public class DocController extends BaseController{
 		}		
 	}
 	
-	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName) {
-		
-		String oldFilePath = reposRPath + srcParentPath + srcName;
-		String newFilePath = reposRPath + dstParentPath + dstName;
+	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName) 
+	{
+		System.out.println("moveRealDoc() " + " srcParentPath:"+srcParentPath + " srcName:"+srcName + " dstParentPath:"+dstParentPath + " dstName:"+dstName);
+		String localOldParentPath = reposRPath + srcParentPath;
+		String oldFilePath = localOldParentPath+ srcName;
+		String localNewParentPath = reposRPath + dstParentPath;
+		String newFilePath = localNewParentPath + dstName;
 		//检查orgFile是否存在
 		if(isFileExist(oldFilePath) == false)
 		{
@@ -1552,7 +1553,7 @@ public class DocController extends BaseController{
 		}
 	
 		/*移动文件或目录*/		
-		if(moveFile(reposRPath + srcParentPath,srcName,reposRPath + srcParentPath,dstName,false) == false)	//强制覆盖
+		if(moveFile(localOldParentPath,srcName,localNewParentPath,dstName,false) == false)	//强制覆盖
 		{
 			System.out.println("moveRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
 			return false;
