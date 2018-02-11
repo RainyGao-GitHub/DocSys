@@ -2184,22 +2184,25 @@ public class DocController extends BaseController{
 			String reposURL = repos.getSvnPath1();
 			String svnUser = repos.getSvnUser1();
 			String svnPwd = repos.getSvnPwd1();
-			String reposVPath =  getReposVirtualPath(repos);
-			
 			SVNUtil svnUtil = new SVNUtil();
-			svnUtil.Init(reposURL, svnUser, svnPwd);
+			if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
+			{
+				System.out.println("svnVirtualDocAdd() svnUtil Init Failed!");
+				return false;
+			}
 			
-			String localRefParentPath	= getReposVirtualRefPath(repos);
-			String localRefPath = localRefParentPath;
+			String localPath =  getReposVirtualPath(repos);
+			String localRefPath	= getReposVirtualRefPath(repos);
+			
 			//modifyEnable set to false
-			if(svnUtil.doAutoCommit("",docVPath,reposVPath,commitMsg,false,localRefPath) == false)
+			if(svnUtil.doAutoCommit("",docVPath,localPath,commitMsg,false,localRefPath) == false)
 			{
 				System.out.println(docVPath + " doAutoCommit失败！");
 				return false;
 			}
 			
 			//同步两个目录,modifyEnable set to false
-			syncUpFolder(reposVPath,docVPath,localRefParentPath,docVPath,false);
+			syncUpFolder(localPath,docVPath,localRefPath,docVPath,false);
 			return true;
 		}
 		else
