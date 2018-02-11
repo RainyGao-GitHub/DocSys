@@ -1515,7 +1515,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean deleteRefRealDoc(Repos reposRefRPath, String parentPath, String name, Integer type) {
+	private boolean deleteRefRealDoc(String reposRefRPath, String parentPath, String name, Integer type) {
 		//String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
 		String localRefDocPath = reposRefRPath + parentPath + name;
 
@@ -2078,7 +2078,8 @@ public class DocController extends BaseController{
 			}
 			
 			//delete the ref real doc
-			deleteRefRealDoc(repos,parentPath,name,type);
+			String reposRefRPath = getReposRealRefPath(repos);
+			deleteRefRealDoc(reposRefRPath,parentPath,name,type);
 			return true;
 		}
 		else
