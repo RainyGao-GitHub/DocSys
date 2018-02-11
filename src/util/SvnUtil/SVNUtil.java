@@ -280,8 +280,8 @@ public class SVNUtil {
 		String localRefPath = action.getLocalRefPath();
 		System.out.println("executeModifyAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		
-		InputStream oldData = getFileInputStream(localRefPath + parentPath + entryName);
-    	InputStream newData = getFileInputStream(localPath + parentPath + entryName);
+		InputStream oldData = getFileInputStream(localRefPath + entryName);
+    	InputStream newData = getFileInputStream(localPath + entryName);
     	boolean ret = false;
 		if(action.isSubAction)
 		{
@@ -317,7 +317,7 @@ public class SVNUtil {
 
 		if(entryType == 1)	//File
     	{
-    		String localEntryPath = localPath + parentPath + entryName;
+    		String localEntryPath = localPath + entryName;
     		InputStream fileData = getFileInputStream(localEntryPath);
     		boolean ret = false;
     		if(action.isSubAction)
