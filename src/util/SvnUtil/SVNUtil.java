@@ -195,7 +195,7 @@ public class SVNUtil {
 		        }
 	        }
 	        
-	        System.out.println("doAutoCommit() scheduleForAdd and Modify Start");
+	        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
 	        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
 	        
 	        if(commitActionList == null || commitActionList.size() ==0)
@@ -445,25 +445,27 @@ public class SVNUtil {
 	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction) throws SVNException {
     	System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
-    	String entryPath = parentPath + entryName;
-    	String localEntryPath = localPath + entryPath;
+    	String remoteEntryPath = parentPath + entryName;
+    	String localEntryPath = localPath + entryName;
+    	String localRefEntryPath = localRefPath + entryName;
+    	
     	File file = new File(localEntryPath);
-    	boolean addDirFlag = false;
+    	boolean addDirFlag = false;	//this flag is for the subList of the new added dir
         if(file.exists())
         {
         	if(!entryName.isEmpty())
         	{
         		//If Remote path not exist
-        		SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
+        		SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, -1);
         		if (nodeKind == SVNNodeKind.NONE) {
-	            	System.out.println("scheduleForAddAndModify() insert " + entryPath + " to actionList for Add" );
+	            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
 	            	if(file.isDirectory())
 	            	{
 	            		addDirFlag = true;
 	            	}
 	            	else
 	            	{
-	            		insertAddFileAction(actionList,parentPath, entryName,localPath,isSubAction);
+	            		insertAddFileAction(actionList,parentPath, entryName,localEntryPath,isSubAction);
 	            		return;
 	            	}
 	            }
@@ -474,20 +476,26 @@ public class SVNUtil {
 	            		//版本仓库文件已存在也暂时不处理，除非能够判断出两者不一致
 	            		if(!file.isDirectory())
 	            		{
-	            			System.out.println("scheduleForAddAndModify() insert " + entryPath + " to actionList for Modify" );
-	            			insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
+	            			System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
+	            			insertModifyFile(actionList,parentPath, entryName, localEntryPath, localRefEntryPath);
 	            			return;
 	            		}
 	            	}
 	            }
         	}
-                
+            
+        	//IF the entry is directory, we need to go through its subEntries
         	if(file.isDirectory())
         	{
     			String subParentPath = parentPath;
+    			String subLocalPath = localPath;
+    			String subLocalRefPath = localRefPath;
     			if(!entryName.isEmpty())
     			{
-    				subParentPath = entryPath + "/";
+    				subParentPath = remoteEntryPath + "/";
+    				subLocalPath = localEntryPath + "/";
+    				subLocalRefPath = localRefEntryPath + "/";
+    				
     			}
     			File[] tmp=file.listFiles();
     			List<CommitAction> subActionList = new ArrayList<CommitAction>();
@@ -496,15 +504,15 @@ public class SVNUtil {
         			String subEntryName = tmp[i].getName();
         			if(addDirFlag)
             		{
-            			scheduleForAddAndModify(subActionList,subParentPath, subEntryName,localPath, localRefPath,modifyEnable, true);
+            			scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true);
         			}
         			else
         			{
-            			scheduleForAddAndModify(actionList,subParentPath, subEntryName, localPath, localRefPath,modifyEnable, false);        				
+            			scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false);        				
         			}
                 }
         		
-        		if(addDirFlag)
+        		if(addDirFlag)	//because we need the subActionList, so it must be inserted after the we get the subActionLsit
         		{
         			//Insert the DirAdd Action
         			insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
