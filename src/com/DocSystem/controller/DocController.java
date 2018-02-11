@@ -945,7 +945,7 @@ public class DocController extends BaseController{
 		//String dstDocRPath = parentPath + newname;
 		
 		//修改实文件名字	
-		if(renameRealDoc(reposRPath,parentPath,oldname,newname) == false)
+		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname) == false)
 		{
 			if(unlockDoc(docId,login_user) == false)
 			{
@@ -967,7 +967,7 @@ public class DocController extends BaseController{
 				System.out.println("svnRealDocMove Failed");
 				String MsgInfo = "svnRealDocMove Failed";
 				
-				if(renameFile(reposRPath + parentPath,newname,oldname) == false)
+				if(moveFile(reposRPath + parentPath,newname,reposRPath + parentPath,oldname,false) == false)
 				{
 					MsgInfo += " and renameFile Failed";
 				}
@@ -984,7 +984,7 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVPath = getDocVPath(parentPath,oldname);
 		String dstDocVPath = getDocVPath(parentPath,newname);
-		if(renameFile(reposVPath,srcDocVPath,dstDocVPath) == false)
+		if(moveFile(reposVPath,srcDocVPath,reposVPath,dstDocVPath,false) == false)
 		{
 			System.out.println("renameDoc() renameFile Failed " + srcDocVPath + " to " + dstDocVPath);
 			svnVirtualDocMove(repos,"",srcDocVPath, "",dstDocVPath, commitMsg, commitUser);
@@ -1041,7 +1041,7 @@ public class DocController extends BaseController{
 		if(!orgPid.equals(dstPid))
 		{
 			System.out.println("moveDoc() docId:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
-			if(moveRealDoc(filename,reposRPath + srcParentPath,reposRPath + dstParentPath) == false)
+			if(moveRealDoc(reposRPath,srcParentPath,filename,dstParentPath,filename) == false)
 			{
 				System.out.println("moveDoc() 文件: " + filename + " 移动失败");
 				rt.setError("文件移动失败！");
@@ -1057,7 +1057,7 @@ public class DocController extends BaseController{
 			{
 				System.out.println("moveDoc() svnRealDocMove Failed");
 				String MsgInfo = "svnRealDocMove Failed";
-				if(changeDirectory(filename,reposRPath + dstParentPath,reposRPath + srcParentPath,false) == false)
+				if(moveRealDoc(reposRPath,dstParentPath,filename,srcParentPath,filename) == false)
 				{
 					MsgInfo += "and changeDirectory Failed";
 				}
@@ -1075,7 +1075,7 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVPath = getDocVPath(srcParentPath,doc.getName());
 		String dstDocVPath = getDocVPath(dstParentPath,doc.getName());
-		if(renameFile(reposVPath,srcDocVPath,dstDocVPath) == false)
+		if(moveFile(reposVPath,srcDocVPath,reposVPath,dstDocVPath,false) == false)
 		{
 			System.out.println("moveDoc() renameFile Failed " + srcDocVPath + " to " + dstDocVPath);
 			//提交修改到版本仓库
@@ -1465,10 +1465,12 @@ public class DocController extends BaseController{
 	}
 	
 	//Create Reference Real Doc
-	private boolean createRefRealDoc(Repos repos,String parentPath, String name, Integer type)
+	private boolean createRefRealDoc(String reposRPath,String reposRefRPath,String parentPath, String name, Integer type)
 	{
-		String localParentPath =  getReposRealPath(repos) + parentPath;
-		String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
+		//String localParentPath =  getReposRealPath(repos) + parentPath;
+		//String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
+		String localParentPath =  reposRPath + parentPath;
+		String localRefParentPath =  reposRefRPath + parentPath;
 		String localDocPath = localParentPath + name;
 		String localRefDocPath = localRefParentPath + name;
 		System.out.println("localDocPath:" + localDocPath + " localRefDocPath:" + localRefDocPath);
@@ -1515,9 +1517,9 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean deleteRefRealDoc(Repos repos, String parentPath, String name, Integer type) {
-		String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
-		String localRefDocPath = localRefParentPath + name;
+	private boolean deleteRefRealDoc(Repos reposRefRPath, String parentPath, String name, Integer type) {
+		//String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
+		String localRefDocPath = reposRefRPath + parentPath + name;
 
 		System.out.println("deleteRefRealDoc() localRefDocPath:" + localRefDocPath);
 		if(isFileExist(localRefDocPath) == false)
@@ -1530,43 +1532,55 @@ public class DocController extends BaseController{
 			return deleteFile(localRefDocPath);
 		}		
 	}
-
-	private boolean renameRealDoc(String reposRPath, String parentPath,String oldname, String newname) {
-		/*rename文件或目录*/
-		if(isFileExist(reposRPath + parentPath + newname) == true)
-		{
-			System.out.println(newname + "已存在！");	
-			return false;
-		}
-		
-		if(isFileExist(reposRPath + parentPath + oldname) == false)
-		{
-			System.out.println(oldname + "不存在！");
-			return false;
-		}
-		
-		return renameFile(reposRPath + parentPath,oldname,newname);
-	}
 	
-	private boolean moveRealDoc(String filename, String orgPath, String dstPath) {
+	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName) {
+		
+		String oldFilePath = reposRPath + srcParentPath + srcName;
+		String newFilePath = reposRPath + dstParentPath + dstName;
 		//检查orgFile是否存在
-		if(isFileExist(orgPath+filename) == false)
+		if(isFileExist(oldFilePath) == false)
 		{
-			System.out.println("文件: " + filename + " 不存在");
+			System.out.println("moveRealDoc() " + oldFilePath + " not exists");
 			return false;
 		}
 		
 		//检查dstFile是否存在
-		if(isFileExist(dstPath+filename) == true)
+		if(isFileExist(newFilePath) == true)
 		{
-			System.out.println("文件: " + filename + " 已存在");
+			System.out.println("moveRealDoc() " + newFilePath + " already exists");
 			return false;
 		}
 	
 		/*移动文件或目录*/		
-		if(changeDirectory(filename,orgPath,dstPath,false) == false)	//强制覆盖
+		if(moveFile(reposRPath + srcParentPath,srcName,reposRPath + srcParentPath,dstName,false) == false)	//强制覆盖
 		{
-			System.out.println("文件: " + filename + " 移动失败");
+			System.out.println("moveRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean moveRefRealDoc(String reposRefRPath, String srcParentPath,String srcName, String dstParentPath, String dstName) {
+		String oldFilePath = reposRefRPath + srcParentPath + srcName;
+		String newFilePath = reposRefRPath + dstParentPath + dstName;
+		//检查orgFile是否存在
+		if(isFileExist(oldFilePath) == false)
+		{
+			System.out.println("moveRefRealDoc() " + oldFilePath + " not exists");
+			return false;
+		}
+		
+		//检查dstFile是否存在
+		if(isFileExist(newFilePath) == true)
+		{
+			System.out.println("moveRefRealDoc() " + newFilePath + " already exists");
+			return false;
+		}
+	
+		/*移动文件或目录*/		
+		if(moveFile(reposRefRPath + srcParentPath,srcName,reposRefRPath + dstParentPath,dstName,false) == false)	//强制覆盖
+		{
+			System.out.println("moveRefRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
 			return false;
 		}
 		return true;
@@ -1746,7 +1760,7 @@ public class DocController extends BaseController{
 		{
 			String srcDocVPath = getDocVPath(srcParentPath,oldname);
 			String dstDocVPath = getDocVPath(dstParentPath,doc.getName());
-			if(renameFile(reposVPath,srcDocVPath,dstDocVPath) == false)
+			if(moveFile(reposVPath,srcDocVPath,reposVPath,dstDocVPath,false) == false)
 			{
 				System.out.println("docPathRecurUpdate() renameFile failed " + srcDocVPath + " to " + dstDocVPath);
 			}
@@ -1974,6 +1988,8 @@ public class DocController extends BaseController{
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser) 
 	{
 		String remotePath = parentPath + entryName;
+		String reposRPath = getReposRealPath(repos);
+		String reposRefRPath = getReposRealRefPath(repos);
 		if(repos.getVerCtrl() == 1)
 		{
 			String reposURL = repos.getSvnPath();
@@ -1992,7 +2008,7 @@ public class DocController extends BaseController{
 				{
 					if(type == 1)
 					{
-						String localFilePath = getReposRealPath(repos) +remotePath;
+						String localFilePath = reposRPath + remotePath;
 						if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg) == false)
 						{
 							System.out.println(remotePath + " remoteAddFile失败！");	
@@ -2020,7 +2036,7 @@ public class DocController extends BaseController{
 			}
 			
 			//Create the ref real doc, so that we can commit the diff later
-			createRefRealDoc(repos,parentPath,entryName,type);
+			createRefRealDoc(reposRPath,reposRefRPath,parentPath,entryName,type);
 			return true;
 		}
 		else
@@ -2124,7 +2140,7 @@ public class DocController extends BaseController{
 			String dstParentPath, String dstEntryName, String commitMsg, String commitUser) {
 		
 		System.out.println("svnRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
-		
+		String reposRefRPath = getReposRealRefPath(repos);
 		if(repos.getVerCtrl() == 1)
 		{	
 			String reposURL = repos.getSvnPath();
@@ -2139,6 +2155,9 @@ public class DocController extends BaseController{
 				System.out.println("svnMove Failed！");
 				return false;
 			}
+			
+			//rename the ref real doc
+			moveRefRealDoc(reposRefRPath,srcParentPath,srcEntryName,dstParentPath,dstEntryName);
 			return true;
 		}
 		else
@@ -2147,7 +2166,7 @@ public class DocController extends BaseController{
 			return true;
 		}
 	}
-	
+
 	private boolean svnRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
 			String dstParentPath, String dstEntryName, String commitMsg, String commitUser) {
 		

@@ -664,33 +664,20 @@ public class BaseController{
             }
        }
 	}
-
-	//Rename File
-    public boolean renameFile(String path,String oldname,String newname){
-        if(!oldname.equals(newname)){//新的文件名和以前文件名不同时,才有必要进行重命名
-            File oldfile=new File(path+"/"+oldname);
-            File newfile=new File(path+"/"+newname);
-            if(newfile.exists()){//若在该目录下已经有一个文件和新文件名相同，则不允许重命名
-                System.out.println(newname+"已经存在！");
-            	return false;
-            }
-            else
-            {
-                return oldfile.renameTo(newfile);
-            }
-        }
-        return false;
-    }
 	
     //Move File
-    public boolean changeDirectory(String filename,String oldpath,String newpath,boolean cover){
-        if(!oldpath.equals(newpath))
+    public boolean moveFile(String oldpath,String oldName,String newpath,String newName,boolean cover){
+    	
+    	String oldFilePath = oldpath + oldName;
+    	String newFilePath = newpath + newName;
+    	
+    	if(!oldFilePath.equals(newFilePath))
         {
-            File oldfile=new File(oldpath+"/"+filename);
-            File newfile=new File(newpath+"/"+filename);
+            File oldfile=new File(oldFilePath);
+            File newfile=new File(newFilePath);
             if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
             {
-                System.out.println(newpath+"/"+filename+" 已经存在");
+            	System.out.println(newFilePath + " already exists");
                 if(cover)//覆盖
                 {
                 	System.out.println("强制覆盖！");
@@ -708,8 +695,8 @@ public class BaseController{
         }
         else
         {
-        	//同一个目录，只改变目录结构，但不需要复制文件
-        	return true;	//同一个目录下不需要move
+        	System.out.println(newFilePath + " is same to " + oldFilePath);
+        	return true;
         }
     }
     
