@@ -985,7 +985,10 @@ public class DocController extends BaseController{
 		if(moveFile(reposVPath,srcDocVPath,reposVPath,dstDocVPath,false) == false)
 		{
 			System.out.println("renameDoc() renameFile Failed " + srcDocVPath + " to " + dstDocVPath);
-			svnVirtualDocMove(repos,"",srcDocVPath, "",dstDocVPath, commitMsg, commitUser);
+			if(svnVirtualDocMove(repos,"",srcDocVPath, "",dstDocVPath, commitMsg, commitUser) == false)
+			{
+				System.out.println("svnVirtualDocMove() Failed");
+			}
 		}
 		
 		//更新doc记录并启用
@@ -1462,27 +1465,25 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	//Create Reference Real Doc
-	private boolean createRefRealDoc(String reposRPath,String reposRefRPath,String parentPath, String name, Integer type)
+	//Create Ref Data (File or Dir), both support Real Doc and Virtual Doc
+	private boolean createRefDoc(String path,String refPath,String parentPath, String name, Integer type)
 	{
-		//String localParentPath =  getReposRealPath(repos) + parentPath;
-		//String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
-		String localParentPath =  reposRPath + parentPath;
-		String localRefParentPath =  reposRefRPath + parentPath;
+		String localParentPath =  path + parentPath;
+		String localRefParentPath =  refPath + parentPath;
 		String localDocPath = localParentPath + name;
 		String localRefDocPath = localRefParentPath + name;
-		System.out.println("localDocPath:" + localDocPath + " localRefDocPath:" + localRefDocPath);
+		System.out.println("createRefDoc() localDocPath:" + localDocPath + " localRefDocPath:" + localRefDocPath);
 		if(type == 2) //目录
 		{
 			if(isFileExist(localRefDocPath) == true)
 			{
-				System.out.println("createRefRealDoc() 目录 " + localRefDocPath + "　已存在！");
+				System.out.println("createRefDoc() 目录 " + localRefDocPath + "　已存在！");
 				return false;
 			}
 			
 			if(false == createDir(localRefDocPath))
 			{
-				System.out.println("createRefRealDoc() 目录 " +localRefDocPath + " 创建失败！");
+				System.out.println("createRefDoc() 目录 " +localRefDocPath + " 创建失败！");
 				return false;
 			}				
 		}
@@ -1490,13 +1491,13 @@ public class DocController extends BaseController{
 		{
 			if(isFileExist(localRefDocPath) == true)
 			{
-				System.out.println("createRefRealDoc() 文件 " +localRefDocPath + " 已存在！");
+				System.out.println("createRefDoc() 文件 " +localRefDocPath + " 已存在！");
 				return false;
 			}
 			try {
 				copyFile(localDocPath, localRefDocPath, false);
 			} catch (IOException e) {
-				System.out.println("createRefRealDoc() copy " + localDocPath + " to " + localRefDocPath + "Failed!");
+				System.out.println("createRefDoc() copy " + localDocPath + " to " + localRefDocPath + "Failed!");
 				e.printStackTrace();
 				return false;
 			}
@@ -2038,7 +2039,7 @@ public class DocController extends BaseController{
 			}
 			
 			//Create the ref real doc, so that we can commit the diff later
-			createRefRealDoc(reposRPath,reposRefRPath,parentPath,entryName,type);
+			createRefDoc(reposRPath,reposRefRPath,parentPath,entryName,type);
 			return true;
 		}
 		else
@@ -2193,7 +2194,7 @@ public class DocController extends BaseController{
 			//create Ref RealDoc
 			String reposRPath = getReposRealPath(repos);
 			String reposRefRPath = getReposRealRefPath(repos);
-			createRefRealDoc(reposRPath, reposRefRPath, dstParentPath, dstEntryName, type);
+			createRefDoc(reposRPath, reposRefRPath, dstParentPath, dstEntryName, type);
 			return true;
 		}
 		else
@@ -2331,6 +2332,12 @@ public class DocController extends BaseController{
 				System.out.println("svnMove Failed！");
 				return false;
 			}
+			
+			//move the ref virtual doc
+			String reposRefVPath = getReposVirtualRefPath(repos);
+			String localSrcParentPath = reposRefVPath + srcParentPath;
+			String localDstParentPath = reposRefVPath + dstParentPath;
+			moveFile(localSrcParentPath, srcEntryName, localDstParentPath, dstEntryName, false);
 			return true;
 		}
 		else
@@ -2360,7 +2367,9 @@ public class DocController extends BaseController{
 			}
 			
 			//create Ref Virtual Doc
-			
+			String reposVPath = getReposVirtualPath(repos);
+			String reposRefVPath = getReposVirtualRefPath(repos);
+			createRefDoc(reposVPath,reposRefVPath,dstParentPath,dstEntryName,2);
 			return true;
 		}
 		else
