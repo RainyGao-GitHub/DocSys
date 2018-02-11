@@ -880,7 +880,7 @@ public class ReposController extends BaseController{
 			String oldReposDir = oldReposInfo.getPath();
 			String newReposDir = path;
 			String reposName = oldReposInfo.getId()+"";
-			if(changeDirectory(reposName,oldReposDir, newReposDir,false) == false)
+			if(moveFile(oldReposDir, reposName,newReposDir,reposName,false) == false)
 			{
 				System.out.println("仓库目录迁移失败！");
 				rt.setError("修改仓库位置失败！");					
@@ -895,7 +895,7 @@ public class ReposController extends BaseController{
 			{
 				//删除新建的仓库目录
 				System.out.println("updateRepos for path failed");
-				changeDirectory(reposName, newReposDir,oldReposDir,false);	//还原回去
+				moveFile(newReposDir,reposName, oldReposDir,reposName,false);	//还原回去
 				rt.setError("设置仓库path失败！");
 				//writeJson(rt, response);
 				return false;			
