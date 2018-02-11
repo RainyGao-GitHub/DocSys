@@ -398,6 +398,7 @@ public class SVNUtil {
 
 	public boolean scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath)
 	{
+		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " localPath:" + localPath);
         //遍历仓库所有子目录
 		try {
 			Collection entries;
@@ -411,9 +412,8 @@ public class SVNUtil {
 	            if(entryName.isEmpty() == false)
 	            {
 		            String entryPath = parentPath + entryName;            
-		            String localEntryPath = localPath + entryPath;
+		            String localEntryPath = localPath + entryName;
 		
-		            //System.out.println("localEnntryPath " + localEntryPath);
 		            File localFile = new File(localEntryPath);
 		            
 		            SVNNodeKind entryKind = entry.getKind();
@@ -431,12 +431,11 @@ public class SVNUtil {
 		            	if(!localFile.exists() || localFile.isFile())	//本地目录不存在或者类型不符，则删除该目录
 		                {
 		                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
-		                    //deleteEntry(editor,entryPath);
 		                    insertDeleteAction(actionList,parentPath,entryName);
 		                }
 		           	    else
 		           	    {
-		           	    	scheduleForDelete(actionList,localPath, entryPath+"/");
+		           	    	scheduleForDelete(actionList,localEntryPath+"/", entryPath+"/");
 		           	    }
 		            }
 	            }
@@ -472,7 +471,7 @@ public class SVNUtil {
 	            	}
 	            	else
 	            	{
-	            		insertAddFileAction(actionList,parentPath, entryName,localEntryPath,isSubAction);
+	            		insertAddFileAction(actionList,parentPath, entryName,localPath,isSubAction);
 	            		return;
 	            	}
 	            }
@@ -484,7 +483,7 @@ public class SVNUtil {
 	            		if(!file.isDirectory())
 	            		{
 	            			System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
-	            			insertModifyFile(actionList,parentPath, entryName, localEntryPath, localRefEntryPath);
+	            			insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
 	            			return;
 	            		}
 	            	}
