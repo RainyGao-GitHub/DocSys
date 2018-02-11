@@ -428,7 +428,7 @@ public class DocController extends BaseController{
 		String docVPath = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String reposUserTmpPath = getReposUserTmpPath(repos,login_user.getName());
-		tmpSaveVirtualDoc(reposUserTmpPath,docVPath,content);
+		tmpSaveVirtualDocContent(reposUserTmpPath,docVPath,content);
 		
 		writeJson(rt, response);
 	}
@@ -1260,7 +1260,7 @@ public class DocController extends BaseController{
 		System.out.println("docFullVPath: " + docFullVPath);
 		if(isFileExist(docFullVPath) == true)
 		{
-			if(saveVirtualDoc(docFullVPath, content) == true)
+			if(saveVirtualDocContent(docFullVPath, content) == true)
 			{
 				if(repos.getVerCtrl() == 1)
 				{
@@ -1516,7 +1516,8 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean deleteRefRealDoc(String reposRefRPath, String parentPath, String name, Integer type) {
-		//String localRefParentPath =  getReposRealRefPath(repos) + parentPath;
+
+		System.out.println("deleteRefRealDoc() " + " reposRefRPath:" + reposRefRPath + " parentPath:" + parentPath + " name:" + name);
 		String localRefDocPath = reposRefRPath + parentPath + name;
 
 		System.out.println("deleteRefRealDoc() localRefDocPath:" + localRefDocPath);
@@ -1653,13 +1654,46 @@ public class DocController extends BaseController{
 		}
 		if(content !=null && !"".equals(content))
 		{
-			saveVirtualDoc(vDocPath, content);
+			saveVirtualDocContent(vDocPath, content);
 		}
 		
 		return true;
 	}
 	
-	private boolean saveVirtualDoc(String docVPath, String content) {
+	private boolean createTmpVirtualDoc(String reposUserTmpPath, String docVPath,
+			String content) {
+		String vTmpDocPath = reposUserTmpPath	+ docVPath + "/";
+		System.out.println("vTmpDocPath: " + vTmpDocPath);
+		if(isFileExist(vTmpDocPath) == true)
+		{
+			System.out.println("目录 " +vTmpDocPath + "　已存在！");
+			return false;
+		}
+			
+		if(false == createDir(vTmpDocPath))
+		{
+			System.out.println("目录 " + vTmpDocPath + " 创建失败！");
+			return false;
+		}
+		if(createDir(vTmpDocPath + "res") == false)
+		{
+			System.out.println("目录 " + vTmpDocPath + "/res" + " 创建失败！");
+			return false;
+		}
+		if(createFile(vTmpDocPath,"content.md") == false)
+		{
+			System.out.println("目录 " + vTmpDocPath + "/content.md" + " 创建失败！");
+			return false;			
+		}
+		if(content !=null && !"".equals(content))
+		{
+			tmpSaveVirtualDocContent(reposUserTmpPath,docVPath, content);
+		}
+		
+		return true;
+	}
+	
+	private boolean saveVirtualDocContent(String docVPath, String content) {
 		String mdFilePath = docVPath + "/content.md";
 		//创建文件输入流
 		FileOutputStream out = null;
@@ -1680,7 +1714,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean tmpSaveVirtualDoc(String reposUserTmpPath , String docVPath, String content)
+	private boolean tmpSaveVirtualDocContent(String reposUserTmpPath , String docVPath, String content)
 	{
 		String virtualDocTmpPath = reposUserTmpPath + docVPath + "/";
 		File tmpDir = new File(virtualDocTmpPath);
@@ -1710,39 +1744,6 @@ public class DocController extends BaseController{
 			e.printStackTrace();
 			return false;
 		}
-		return true;
-	}
-
-	private boolean createTmpVirtualDoc(String reposUserTmpPath, String docVPath,
-			String content) {
-		String vTmpDocPath = reposUserTmpPath	+ docVPath + "/";
-		System.out.println("vTmpDocPath: " + vTmpDocPath);
-		if(isFileExist(vTmpDocPath) == true)
-		{
-			System.out.println("目录 " +vTmpDocPath + "　已存在！");
-			return false;
-		}
-			
-		if(false == createDir(vTmpDocPath))
-		{
-			System.out.println("目录 " + vTmpDocPath + " 创建失败！");
-			return false;
-		}
-		if(createDir(vTmpDocPath + "res") == false)
-		{
-			System.out.println("目录 " + vTmpDocPath + "/res" + " 创建失败！");
-			return false;
-		}
-		if(createFile(vTmpDocPath,"content.md") == false)
-		{
-			System.out.println("目录 " + vTmpDocPath + "/content.md" + " 创建失败！");
-			return false;			
-		}
-		if(content !=null && !"".equals(content))
-		{
-			saveVirtualDoc(vTmpDocPath, content);
-		}
-		
 		return true;
 	}
 	
