@@ -173,8 +173,8 @@ public class SVNUtil {
 				System.out.println(localPath + "不存在");
 			}
 		
-		
-			SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
+			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 	        if (nodeKind == SVNNodeKind.NONE) 
 	        {
 	        	System.out.println(entryPath + " 不存在");
@@ -184,14 +184,15 @@ public class SVNUtil {
 	        	System.out.println(entryPath + " 是文件");
 	            return false;
 	        }
-	        
-	        List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-	        System.out.println("doAutoCommit() scheduleForDelete Start");
-	        try {
-	        	scheduleForDelete(commitActionList,localPath,entryPath);
-	        } catch (SVNException svne) {
-	            error("doAutoCommit() error while scheduleForDelete '" + localPath + "'", svne);
-	            return false;
+	        else
+	        {
+	        	System.out.println("doAutoCommit() scheduleForDelete Start");
+	        	try {
+		        	scheduleForDelete(commitActionList,localPath,entryPath);
+		        } catch (SVNException svne) {
+		            error("doAutoCommit() error while scheduleForDelete '" + localPath + "'", svne);
+		            return false;
+		        }
 	        }
 	        
 	        System.out.println("doAutoCommit() scheduleForAdd and Modify Start");
