@@ -1202,13 +1202,13 @@ public class DocController extends BaseController{
 		
 		//创建虚拟文件目录
 		String reposVPath = getReposVirtualPath(repos);
-		String srcDocVPath = getDocVPath(parentPath,name);
-		String dstDocVPath = getDocVPath(dstParentPath,name);
-		String dstDocFullVPath = reposVPath + dstDocVPath;
-		String srcDocFullVPath = reposVPath + srcDocVPath;
+		String srcDocVName = getDocVPath(parentPath,name);
+		String dstDocVName = getDocVPath(dstParentPath,name);
+		String dstDocFullVPath = reposVPath + srcDocVName;
+		String srcDocFullVPath = reposVPath + dstDocVName;
 		if(copyFolder(srcDocFullVPath,dstDocFullVPath) == true)
 		{
-			svnVirtualDocCopy(repos, reposVPath,srcDocVPath,reposVPath,dstDocVPath, commitMsg, commitUser);
+			svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser);
 		}
 		
 		//启用doc
@@ -2256,10 +2256,9 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private boolean svnVirtualDocCopy(Repos repos,String srcParentPath,String srcEntryName,
-		String dstParentPath,String dstEntryName, String commitMsg, String commitUser) {
+	private boolean svnVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser) {
 
-		System.out.println("svnVirtualDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		System.out.println("svnVirtualDocCopy() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
 		if(repos.getVerCtrl1() == 1)
 		{				
 			String reposURL = repos.getSvnPath1();
@@ -2269,16 +2268,16 @@ public class DocController extends BaseController{
 				svnUser = commitUser;
 			}
 			String svnPwd = repos.getSvnPwd1();
-			if(svnCopy(reposURL,svnUser,svnPwd,srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg) == false)
+			if(svnCopy(reposURL,svnUser,svnPwd,"",srcDocVName,"",dstDocVName,commitMsg) == false)
 			{
-				System.out.println("文件: " + srcEntryName + " svnCopy失败");
+				System.out.println("文件: " + srcDocVName + " svnCopy失败");
 				return false;
 			}
 			
 			//create Ref Virtual Doc
 			String reposVPath = getReposVirtualPath(repos);
 			String reposRefVPath = getReposVirtualRefPath(repos);
-			createRefVirtualDoc(reposVPath,reposRefVPath,dstEntryName);
+			createRefVirtualDoc(reposVPath,reposRefVPath,dstDocVName);
 			return true;
 		}
 		else
