@@ -57,7 +57,7 @@ import com.alibaba.fastjson.JSONObject;
  reposRPath: 仓库实文件存储根路径,reposPath + "data/rdata/"
  reposVPath: 仓库虚文件存储根路径,reposPath + "data/vdata/" 
 (2) parentPath: 该变量通过getParentPath获取，如果是文件则获取的是其父节点的目录路径，如果是目录则获取到的是目录路径，以空格开头，以"/"结尾
-(3) 文件/目录相对路径: docRPath = parentPath + doc.name docVPath = HashValue(docRPath)  末尾不带"/"
+(3) 文件/目录相对路径: docRPath = parentPath + doc.name docVName = HashValue(docRPath)  末尾不带"/"
 (4) 文件/目录本地全路径: docFullRPath = reposRPath + parentPath + doc.name  docFullVPath = repoVPath + HashValue(docRPath) 末尾不带"/"
  */
 @Controller
@@ -425,10 +425,10 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(doc.getVid());
 		String parentPath = getParentPath(doc.getPid());
 		//String docRPath = parentPath + doc.getName();	
-		String docVPath = getDocVPath(parentPath,doc.getName());
+		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String reposUserTmpPath = getReposUserTmpPath(repos,login_user.getName());
-		saveVirtualDocContent(reposUserTmpPath,docVPath,content);
+		saveVirtualDocContent(reposUserTmpPath,docVName,content);
 		
 		writeJson(rt, response);
 	}
@@ -802,8 +802,8 @@ public class DocController extends BaseController{
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
-		String docVPath = getDocVPath(parentPath,doc.getName());
-		String localDocVPath = reposVPath + docVPath;
+		String docVName = getDocVPath(parentPath,doc.getName());
+		String localDocVPath = reposVPath + docVName;
 		if(delDir(localDocVPath) == false)	//递归删除整个目录
 		{
 			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
@@ -811,11 +811,11 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(svnVirtualDocDelete(repos,docVPath,commitMsg,commitUser) == false)
+			if(svnVirtualDocDelete(repos,docVName,commitMsg,commitUser) == false)
 			{
 				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
 				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-				svnRevertVirtualDoc(repos,docVPath);
+				svnRevertVirtualDoc(repos,docVName);
 			}
 		}
 		
@@ -2110,9 +2110,9 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private boolean svnVirtualDocAdd(Repos repos, String docVPath,String commitMsg, String commitUser) {
+	private boolean svnVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser) {
 		
-		System.out.println("svnVirtualDocAdd() docVPath:" + docVPath);
+		System.out.println("svnVirtualDocAdd() docVName:" + docVName);
 		
 		if(repos.getVerCtrl1() == 1)
 		{
@@ -2126,18 +2126,18 @@ public class DocController extends BaseController{
 				return false;
 			}
 			
-			String localPath =  getReposVirtualPath(repos);
-			String localRefPath	= getReposVirtualRefPath(repos);
+			String reposVPath =  getReposVirtualPath(repos);
+			String reposRefVPath = getReposVirtualRefPath(repos);
 			
 			//modifyEnable set to false
-			if(svnUtil.doAutoCommit("",docVPath,localPath,commitMsg,false,localRefPath) == false)
+			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,false,reposRefVPath) == false)
 			{
-				System.out.println(docVPath + " doAutoCommit失败！");
+				System.out.println(docVName + " doAutoCommit失败！");
 				return false;
 			}
 			
 			//同步两个目录,modifyEnable set to false
-			syncUpFolder(localPath,docVPath,localRefPath,docVPath,false);
+			createRefVirtualDoc(reposVPath,reposRefVPath,docVName);
 			return true;
 		}
 		else
@@ -2146,8 +2146,8 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private boolean svnVirtualDocDelete(Repos repos, String docVPath, String commitMsg, String commitUser) {
-		System.out.println("svnVirtualDocDelete() docVPath:" + docVPath);
+	private boolean svnVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser) {
+		System.out.println("svnVirtualDocDelete() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
 		{
 		
@@ -2162,23 +2162,23 @@ public class DocController extends BaseController{
 			try {
 				SVNUtil svnUtil = new SVNUtil();
 				svnUtil.Init(reposURL, svnUser, svnPwd);
-				if(svnUtil.doCheckPath(docVPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
+				if(svnUtil.doCheckPath(docVName,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
 				{
-					if(svnUtil.svnDelete("",docVPath,commitMsg) == false)
+					if(svnUtil.svnDelete("",docVName,commitMsg) == false)
 					{
-						System.out.println(docVPath + " remoteDeleteEntry失败！");
+						System.out.println(docVName + " remoteDeleteEntry失败！");
 						return false;
 					}
 				}
 			} catch (SVNException e) {
 				e.printStackTrace();
-				System.out.println("系统异常：" + docVPath + " remoteDeleteEntry异常！");
+				System.out.println("系统异常：" + docVName + " remoteDeleteEntry异常！");
 				return false;
 			}
 			
 			//delete Ref Virtual Doc
-			String localRefVirtualParentPath = getReposVirtualRefPath(repos);
-			delDir(localRefVirtualParentPath+docVPath);
+			String reposRefVPath = getReposVirtualRefPath(repos);
+			delDir(reposRefVPath+docVName);
 			return true;
 		}
 		else
@@ -2187,8 +2187,8 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean svnVirtualDocCommit(Repos repos, String docVPath,String commitMsg, String commitUser) {
-		System.out.println("svnVirtualDocCommit() docVPath:" + docVPath);
+	private boolean svnVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser) {
+		System.out.println("svnVirtualDocCommit() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
 		{
 			String reposURL = repos.getSvnPath1();
@@ -2201,19 +2201,18 @@ public class DocController extends BaseController{
 				
 			if(commitMsg == null || "".equals(commitMsg))
 			{
-				commitMsg = "Commit virtual doc " + docVPath + " by " + commitUser;
+				commitMsg = "Commit virtual doc " + docVName + " by " + commitUser;
 			}
 			
-			String localRefParentPath	= getReposVirtualRefPath(repos);
-			String localRefPath = localRefParentPath;
-			if(svnUtil.doAutoCommit("",docVPath,reposVPath,commitMsg,true,localRefPath) == false)
+			String reposRefVPath = getReposVirtualRefPath(repos);
+			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,true,reposRefVPath) == false)
 			{
-				System.out.println(docVPath + " doCommit失败！");
+				System.out.println(docVName + " doCommit失败！");
 				return false;
 			}
 			
 			//同步两个目录
-			syncUpFolder(reposVPath,docVPath,localRefParentPath,docVPath,true);
+			syncUpFolder(reposVPath,docVName,reposRefVPath,docVName,true);
 			return true;
 		}
 		else
@@ -2315,13 +2314,13 @@ public class DocController extends BaseController{
 	}
 	
 
-	private boolean svnRevertVirtualDoc(Repos repos, String docVPath) {
-		System.out.println("svnRevertVirtualDoc() docVPath:" + docVPath);
+	private boolean svnRevertVirtualDoc(Repos repos, String docVName) {
+		System.out.println("svnRevertVirtualDoc() docVName:" + docVName);
 		
 		String localDocVParentPath = getReposVirtualPath(repos);
-		String localDocVPath = localDocVParentPath + docVPath;
+		String localDocVPath = localDocVParentPath + docVName;
 		String localDocVRefParentPath = getReposVirtualRefPath(repos);
-		String localRefDocVPath = localDocVRefParentPath + docVPath;
+		String localRefDocVPath = localDocVRefParentPath + docVName;
 
 		//only revert the file
 		File file = new File(localDocVPath);
@@ -2334,7 +2333,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(syncUpFolder(localDocVRefParentPath,docVPath,localDocVParentPath,docVPath,true) == true)
+			if(syncUpFolder(localDocVRefParentPath,docVName,localDocVParentPath,docVName,true) == true)
 			{
 				return true;
 			}
@@ -2344,7 +2343,7 @@ public class DocController extends BaseController{
 		String reposURL = repos.getSvnPath1();
 		String svnUser = repos.getSvnUser1();
 		String svnPwd = repos.getSvnPwd1();
-		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVPath, localDocVParentPath, docVPath);
+		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName);
 	}
 	
 	private boolean svnGetEntry(String reposURL, String svnUser, String svnPwd,
