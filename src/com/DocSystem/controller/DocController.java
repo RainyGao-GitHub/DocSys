@@ -55,7 +55,10 @@ import com.alibaba.fastjson.JSONObject;
 (1) 仓库路径
  reposPath: 仓库根路径，以"/"结尾
  reposRPath: 仓库实文件存储根路径,reposPath + "data/rdata/"
- reposVPath: 仓库虚文件存储根路径,reposPath + "data/vdata/" 
+ reposVPath: 仓库虚文件存储根路径,reposPath + "data/vdata/"
+ reposRefRPath: 仓库实文件存储根路径,reposPath + "refData/rdata/"
+ reposRefVPath: 仓库虚文件存储根路径,reposPath + "refData/vdata/"
+ reposUserTempPath: 仓库虚文件存储根路径,reposPath + "tmp/userId/" 
 (2) parentPath: 该变量通过getParentPath获取，如果是文件则获取的是其父节点的目录路径，如果是目录则获取到的是目录路径，以空格开头，以"/"结尾
 (3) 文件/目录相对路径: docRPath = parentPath + doc.name docVName = HashValue(docRPath)  末尾不带"/"
 (4) 文件/目录本地全路径: localDocRPath = reposRPath + parentPath + doc.name  localVDocPath = repoVPath + HashValue(docRPath) 末尾不带"/"
