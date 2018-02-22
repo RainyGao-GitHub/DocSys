@@ -33,8 +33,6 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-import com.DocSystem.entity.Doc;
-
 public class SVNUtil {
 	
 	//For Low Level APIs
@@ -738,6 +736,7 @@ public class SVNUtil {
 	{
 		//判断文件类型
 		boolean isDir = false;
+		long latestRevision = -1;
 		SVNNodeKind nodeKind;
 		try {
 			nodeKind = repository.checkPath(srcParentPath + srcEntryName,-1);
@@ -747,6 +746,7 @@ public class SVNUtil {
 		    } else if (nodeKind == SVNNodeKind.DIR) {
 		        	isDir = true;
 		    }
+			latestRevision = repository.getLatestRevision();
 		} catch (SVNException e) {
 			System.out.println("remoteCopyEntry() Exception");
 			e.printStackTrace();
@@ -769,7 +769,8 @@ public class SVNUtil {
         	return false;
         }
         
-        if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName, isMove) == false)
+        if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName,true,latestRevision,isMove) == false)
+        //if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName,isDir,latestRevision,isMove) == false)
         {
         	return false;
         }
@@ -857,6 +858,7 @@ public class SVNUtil {
 	    		editor.applyTextDelta(entryPath, null);
 	    		SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 	    		String checksum = deltaGenerator.sendDelta(entryPath, fileData, editor, true);
+	    		System.out.println("addEntry() checksum[" + checksum +"]");
 	    		//close new added File
 	    		editor.closeFile(entryPath, checksum);
 	    	}
@@ -976,7 +978,7 @@ public class SVNUtil {
     }
     
     //doCopyFile
-    private boolean copyEntry(ISVNEditor editor,String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName,boolean isMove) 
+    private boolean copyEntry(ISVNEditor editor,String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName,boolean isDir,long revision,boolean isMove) 
     {
         try {
 			editor.openRoot(-1);
@@ -984,10 +986,23 @@ public class SVNUtil {
 			editor.openDir(dstParentPath, -1);
 	        
 	    	//Copy the file
-			String dstEntryPath = dstParentPath + dstEntryName;
+		    String dstEntryPath = dstParentPath + dstEntryName;
 	    	String srcEntryPath = srcParentPath + srcEntryName;
-			editor.addFile(dstEntryPath, srcEntryPath, -1);
-	    	editor.closeFile(dstEntryPath, "");
+	    	//addFileSmartly(dstEntryPath, srcEntryPath);
+	    	if(isDir)
+			{
+				editor.addDir(dstEntryPath, srcEntryPath, revision);
+				editor.closeDir();				
+			}
+			else
+			{	
+				editor.addFile(dstEntryPath, srcEntryPath, revision);
+	    		editor.applyTextDelta(srcEntryPath, null);
+	    		//SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
+	    		String checksum = "d41d8cd98f00b204e9800998ecf8427e";
+				editor.closeFile(dstEntryPath, checksum);	//CheckSum need to be given
+			}	
+	    	
 
 	        //close the parent Dir
 	        editor.closeDir();
