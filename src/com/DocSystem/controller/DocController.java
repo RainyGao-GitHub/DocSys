@@ -984,7 +984,7 @@ public class DocController extends BaseController{
 		}
 		
 		//更新所有子目录的Path信息,path好像有人在用
-		docPathRecurUpdate(docId,doc.getPid(),oldname,reposVPath,parentPath,parentPath);	
+		docPathRecurUpdate(repos,docId,doc.getPid(),oldname,reposVPath,parentPath,parentPath,commitMsg,commitUser);	
 	}
 	
 	//底层moveDoc接口
@@ -1077,7 +1077,7 @@ public class DocController extends BaseController{
 		}
 		
 		//更新所有子目录的Path信息,path好像有人在用
-		docPathRecurUpdate(docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath);
+		docPathRecurUpdate(repos,docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath,commitMsg,commitUser);
 	}
 	
 	//底层copyDoc接口
@@ -1679,7 +1679,7 @@ public class DocController extends BaseController{
 	}
 	
 	//更新doc和其所有子节点的Path:该函数只更新Path信息，不会改变节点间的逻辑关系
-	void docPathRecurUpdate(Integer id,Integer dstPid,String oldname,String reposVPath,String srcParentPath,String dstParentPath)
+	void docPathRecurUpdate(Repos repos,Integer id,Integer dstPid,String oldname,String reposVPath,String srcParentPath,String dstParentPath,String commitMsg,String commitUser)
 	{
 		//移动当前节点
 		Doc doc = reposService.getDocInfo(id);
@@ -1691,11 +1691,16 @@ public class DocController extends BaseController{
 		String dstDocRPath = dstParentPath + doc.getName();
 		if(!dstDocRPath.equals(srcDocRPath))
 		{
-			String srcDocVPath = getDocVPath(srcParentPath,oldname);
-			String dstDocVPath = getDocVPath(dstParentPath,doc.getName());
-			if(moveFile(reposVPath,srcDocVPath,reposVPath,dstDocVPath,false) == false)
+			//修改虚拟文件的目录名称
+			String srcDocVName = getDocVPath(srcParentPath,oldname);
+			String dstDocVName = getDocVPath(dstParentPath,doc.getName());
+			if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == false)
 			{
-				System.out.println("docPathRecurUpdate() renameFile failed " + srcDocVPath + " to " + dstDocVPath);
+				System.out.println("renameDoc() rename" + srcDocVName + " to " + dstDocVName + " Failed");
+				if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+				{
+					System.out.println("docPathRecurUpdate() svnVirtualDocMove Failed");
+				}
 			}
 		}
 		
@@ -1717,7 +1722,7 @@ public class DocController extends BaseController{
 				Doc subDoc = list.get(i);
 				Integer subDocId = subDoc.getId();
 				Integer suDocDstPid = id;
-				docPathRecurUpdate(subDocId,suDocDstPid,subDoc.getName(),reposVPath,srcDocRPath+"/",dstDocRPath+"/");
+				docPathRecurUpdate(repos,subDocId,suDocDstPid,subDoc.getName(),reposVPath,srcDocRPath+"/",dstDocRPath+"/",commitMsg,commitUser);
 			};
 		}
 	}
