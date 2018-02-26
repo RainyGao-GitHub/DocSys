@@ -338,6 +338,7 @@ public class WorkingCopy {
         SVNURL repositoryURL = null;
         try {
             repositoryURL = SVNURL.parseURIEncoded("svn://localhost/testRep");
+            repositoryURL = SVNURL.parseURIEncoded("file:///D:/DocSysSvnReposes/7");
         } catch (SVNException e) {
             //
         }

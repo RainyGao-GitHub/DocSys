@@ -470,9 +470,20 @@ public class BaseController{
     */ 
     public boolean copyFolder(String oldPath, String newPath) 
     {
-	    try { 
-		    (new File(newPath)).mkdirs(); //如果文件夹不存在 则建立新文件夹 
-		    File a=new File(oldPath); 
+	    try {
+	    	//Check the newPath
+	    	File newFile = new File(newPath);
+	    	if(newFile.exists() == false)
+	    	{
+	    		//mkdirs will create the no exists parent dir, so I use the mkdir
+	    		if(newFile.mkdir() == false)
+	    		{
+	    			System.out.println("copyFolder() Failed to create dir:"+newPath);
+	    			return false;
+	    		}
+	    	}
+	    	//Check the oldPath
+	    	File a=new File(oldPath); 
 		    String[] file=a.list(); 
 		    File temp=null; 
 		    for (int i = 0; i < file.length; i++) 
