@@ -685,13 +685,19 @@ public class BaseController{
     	if(!oldFilePath.equals(newFilePath))
         {
             File oldfile=new File(oldFilePath);
+            if(oldfile.exists() == false)
+            {
+            	System.out.println("moveFile() oldFilePath:" + oldFilePath + " does not exist");
+            	return false;
+            }
+            
             File newfile=new File(newFilePath);
             if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
             {
-            	System.out.println(newFilePath + " already exists");
-                if(cover)//覆盖
+            	System.out.println("moveFile() newFilePath:" + newFilePath + " already exists");
+            	if(cover)//覆盖
                 {
-                	System.out.println("强制覆盖！");
+                	System.out.println("moveFile() 强制覆盖！");
                     return oldfile.renameTo(newfile);
                 }
                 else
@@ -706,7 +712,7 @@ public class BaseController{
         }
         else
         {
-        	System.out.println(newFilePath + " is same to " + oldFilePath);
+        	System.out.println("moveFile() newFilePath:" + newFilePath + " is same to oldFilePath:" + oldFilePath);
         	return true;
         }
     }

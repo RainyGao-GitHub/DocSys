@@ -1478,7 +1478,7 @@ public class DocController extends BaseController{
 	
 	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName,Integer type) 
 	{
-		System.out.println("moveRealDoc() " + " srcParentPath:"+srcParentPath + " srcName:"+srcName + " dstParentPath:"+dstParentPath + " dstName:"+dstName);
+		System.out.println("moveRealDoc() " + " reposRPath:"+reposRPath + " srcParentPath:"+srcParentPath + " srcName:"+srcName + " dstParentPath:"+dstParentPath + " dstName:"+dstName);
 		String localOldParentPath = reposRPath + srcParentPath;
 		String oldFilePath = localOldParentPath+ srcName;
 		String localNewParentPath = reposRPath + dstParentPath;
@@ -1693,13 +1693,16 @@ public class DocController extends BaseController{
 			//修改虚拟文件的目录名称
 			String srcDocVName = getDocVPath(srcParentPath,oldname);
 			String dstDocVName = getDocVPath(dstParentPath,doc.getName());
-			if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == false)
+			if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
 			{
-				System.out.println("renameDoc() rename" + srcDocVName + " to " + dstDocVName + " Failed");
 				if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
 				{
 					System.out.println("docPathRecurUpdate() svnVirtualDocMove Failed");
 				}
+			}
+			else
+			{
+				System.out.println("docPathRecurUpdate() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");
 			}
 		}
 		
