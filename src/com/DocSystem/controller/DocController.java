@@ -964,13 +964,16 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVName = getDocVPath(parentPath,oldname);
 		String dstDocVName = getDocVPath(parentPath,newname);
-		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == false)
+		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
 		{
-			System.out.println("renameDoc() rename" + srcDocVName + " to " + dstDocVName + " Failed");
 			if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
 			{
 				System.out.println("renameDoc() svnVirtualDocMove Failed");
 			}
+		}
+		else
+		{
+			System.out.println("renameDoc() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");
 		}
 		
 		//更新doc记录并启用
@@ -1058,11 +1061,17 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVName = getDocVPath(srcParentPath,doc.getName());
 		String dstDocVName = getDocVPath(dstParentPath,doc.getName());
-		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == false)
+		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
 		{
-			System.out.println("moveDoc() renameFile Failed " + srcDocVName + " to " + dstDocVName);
 			//提交修改到版本仓库
-			svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser);
+			if(svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+			{
+				System.out.println("moveDoc() svnVirtualDocMove " + srcDocVName + " to " + dstDocVName + " Failed");							
+			}
+		}
+		else
+		{
+			System.out.println("moveDoc() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");			
 		}
 		
 		//更新doc记录并还原状态
