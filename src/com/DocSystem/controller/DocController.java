@@ -1590,10 +1590,9 @@ public class DocController extends BaseController{
 		return moveFile(reposRefVPath, srcDocVName, reposRefVPath, dstDocVName, false);		
 	}
 	
-	private boolean copyVirtualDoc(String reposVPath, String srcDocVName,
-			String dstDocVName) {
-		String dstDocFullVPath = reposVPath + srcDocVName;
-		String srcDocFullVPath = reposVPath + dstDocVName;
+	private boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName) {
+		String srcDocFullVPath = reposVPath + srcDocVName;
+		String dstDocFullVPath = reposVPath + dstDocVName;
 		return copyFolder(srcDocFullVPath,dstDocFullVPath);
 	}
 
