@@ -1421,8 +1421,14 @@ public class DocController extends BaseController{
 			System.out.println("unlockDoc() doc is null " + docId);
 			return false;
 		}
-		Integer lockBy = curDoc.getLockBy();
 		
+		if(curDoc.getState() == 0)
+		{
+			System.out.println("unlockDoc() doc was not locked" + curDoc.getState());			
+			return true;
+		}
+		
+		Integer lockBy = curDoc.getLockBy();
 		if(lockBy != null && lockBy == login_user.getId())
 		{
 			//Try to unlock
