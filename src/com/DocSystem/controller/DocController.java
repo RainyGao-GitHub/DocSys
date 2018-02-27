@@ -1042,7 +1042,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Try to lock dstPid
-		if(lockDoc(dstPid,2,login_user,rt) == null)
+		if(dstPid !=0 && lockDoc(dstPid,2,login_user,rt) == null)
 		{
 			System.out.println("moveDoc() fail to lock dstPid" + dstPid);
 			unlockDoc(docId,login_user);	//Try to unlock the doc
@@ -1076,7 +1076,7 @@ public class DocController extends BaseController{
 				{
 					MsgInfo += " and unlockDoc " + docId+ " failed ";
 				}
-				if(unlockDoc(dstPid,login_user) == false)
+				if(dstPid !=0 && unlockDoc(dstPid,login_user) == false)
 				{
 					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 				}
@@ -1098,7 +1098,7 @@ public class DocController extends BaseController{
 				{
 					MsgInfo += " and unlockDoc " + docId+ " failed ";
 				}
-				if(unlockDoc(dstPid,login_user) == false)
+				if(dstPid !=0 && unlockDoc(dstPid,login_user) == false)
 				{
 					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 				}
@@ -1144,7 +1144,7 @@ public class DocController extends BaseController{
 		{
 			MsgInfo = "unlockDoc " + docId+ " failed ";
 		}
-		if(unlockDoc(dstPid,login_user) == false)
+		if(dstPid !=0 && unlockDoc(dstPid,login_user) == false)
 		{
 			MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 		}
