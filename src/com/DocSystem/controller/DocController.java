@@ -1082,16 +1082,20 @@ public class DocController extends BaseController{
 		//更新doc记录并还原状态
 		doc.setPath(dstParentPath);
 		doc.setPid(dstPid);
-		doc.setState(0);
-		doc.setLockBy(0);
 		if(reposService.updateDoc(doc) == 0)
 		{
-			rt.setError("不可恢复系统错误：updateDoc Failed");
+			rt.setError("不可恢复系统错误：Failed to update doc pid and path");
 			return;				
 		}
 		
 		//更新所有子目录的Path信息,path好像有人在用
 		docPathRecurUpdate(repos,docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath,commitMsg,commitUser);
+		
+		if(unlockDoc(docId,login_user) == false)
+		{
+			rt.setError("unlockDoc failed");			
+		}
+		return;
 	}
 	
 	//底层copyDoc接口
