@@ -1027,20 +1027,28 @@ public class DocController extends BaseController{
 	private void moveDoc(Integer docId, Integer reposId,Integer parentId,Integer dstPid,  
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
+		//Try to lock Doc
 		if(isSubDocLocked(docId,rt) == true)
 		{
 			System.out.println("subDoc of " + docId +" Locked！");
 			return;
 		}
 		
-		//Try to  lock Doc
 		Doc doc = lockDoc(docId,2,login_user,rt);
 		if(doc == null)
 		{
 			System.out.println("lockDoc " + docId +" Failed！");
 			return;
 		}
-				
+		
+		//Try to lock dstPid
+		if(lockDoc(dstPid,2,login_user,rt) == null)
+		{
+			System.out.println("moveDoc() fail to lock dstPid" + dstPid);
+			unlockDoc(docId,login_user);	//Try to unlock the doc
+			return;			
+		}
+		
 		//移动当前节点
 		Integer orgPid = doc.getPid();
 		System.out.println("moveDoc id:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
@@ -1062,12 +1070,17 @@ public class DocController extends BaseController{
 			System.out.println("moveDoc() docId:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
 			if(moveRealDoc(reposRPath,srcParentPath,filename,dstParentPath,filename,doc.getType()) == false)
 			{
+				String MsgInfo = "文件移动失败！";
 				System.out.println("moveDoc() 文件: " + filename + " 移动失败");
-				rt.setError("文件移动失败！");
 				if(unlockDoc(docId,login_user) == false)
 				{
-					rt.setError("文件移动失败！ and unlockDoc failed");
+					MsgInfo += " and unlockDoc " + docId+ " failed ";
 				}
+				if(unlockDoc(dstPid,login_user) == false)
+				{
+					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+				}
+				rt.setError(MsgInfo);
 				return;
 			}
 			
@@ -1083,7 +1096,11 @@ public class DocController extends BaseController{
 				
 				if(unlockDoc(docId,login_user) == false)
 				{
-					MsgInfo += " and unlockDoc Failed";						
+					MsgInfo += " and unlockDoc " + docId+ " failed ";
+				}
+				if(unlockDoc(dstPid,login_user) == false)
+				{
+					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 				}
 				rt.setError(MsgInfo);
 				return;					
@@ -1120,10 +1137,20 @@ public class DocController extends BaseController{
 		
 		//更新所有子目录的Path信息,path好像有人在用
 		docPathRecurUpdate(repos,docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath,commitMsg,commitUser);
-		
+
+		//Unlock Docs
+		String MsgInfo = null; 
 		if(unlockDoc(docId,login_user) == false)
 		{
-			rt.setError("unlockDoc failed");			
+			MsgInfo = "unlockDoc " + docId+ " failed ";
+		}
+		if(unlockDoc(dstPid,login_user) == false)
+		{
+			MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+		}
+		if(MsgInfo!=null)
+		{
+			rt.setError(MsgInfo);
 		}
 		return;
 	}
@@ -1153,14 +1180,15 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		//新建doc记录
-		//Doc doc = new Doc();
-		Doc doc = reposService.getDoc(docId);
+		//Try to lock the srcDoc
+		Doc doc = lockDoc(docId,1,login_user,rt);
 		if(doc == null)
 		{
-			rt.setError("文件不存在");
-			return;			
+			System.out.println("copyDoc lock " + docId + " Failed");
+			return;
 		}
+		
+		//新建doc记录
 		doc.setId(null);	//置空id,以便新建一个doc
 		//doc.setName(name);
 		//doc.setType(type);
@@ -1178,6 +1206,7 @@ public class DocController extends BaseController{
 		if(reposService.addDoc(doc) == 0)
 		{
 			rt.setError("Add Node: " + name +" Failed！");
+			unlockDoc(docId,login_user);
 			return;
 		}
 		System.out.println("id: " + doc.getId());
@@ -1191,7 +1220,11 @@ public class DocController extends BaseController{
 			if(reposService.deleteDoc(doc.getId()) == 0)	
 			{
 				System.out.println("Delete Node: " + doc.getId() +" failed!");
-				rt.setError(" and delete Node Failed");
+				MsgInfo += " and delete Node Failed";
+			}
+			if(unlockDoc(docId,login_user) == false)
+			{
+				MsgInfo += " and unlock " + docId +" Failed";	
 			}
 			rt.setError(MsgInfo);
 			return;
@@ -1224,6 +1257,10 @@ public class DocController extends BaseController{
 			{
 				MsgInfo += " and delete Node Failed";						
 			}
+			if(unlockDoc(docId,login_user) == false)
+			{
+				MsgInfo += " and unlock " + docId +" Failed";	
+			}
 			rt.setError(MsgInfo);
 			return;
 		}				
@@ -1245,12 +1282,21 @@ public class DocController extends BaseController{
 		}
 		
 		//启用doc
+		MsgInfo = null;
 		if(unlockDoc(doc.getId(),login_user) == false)
 		{	
-			rt.setError("unlockDoc Failed");
-			return;
+			MsgInfo ="unlockDoc " +doc.getId() + " Failed";;
 		}
-
+		//Unlock srcDoc 
+		if(unlockDoc(docId,login_user) == false)
+		{
+			MsgInfo += " and unlock " + docId +" Failed";	
+		}
+		if(MsgInfo != null)
+		{
+			rt.setError(MsgInfo);
+		}
+		
 		//只返回最上层的doc记录
 		if(rt.getData() == null)
 		{
