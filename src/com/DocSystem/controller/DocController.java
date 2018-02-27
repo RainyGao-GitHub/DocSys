@@ -978,16 +978,21 @@ public class DocController extends BaseController{
 		
 		//更新doc记录并启用
 		doc.setName(newname);
-		doc.setState(0);
-		doc.setLockBy(0);
 		if(reposService.updateDoc(doc) == 0)
 		{
-			rt.setError("不可恢复系统错误：updateDoc Failed");
+			rt.setError("不可恢复系统错误：Failed to update doc name");
 			return;
 		}
 		
 		//更新所有子目录的Path信息,path好像有人在用
 		docPathRecurUpdate(repos,docId,doc.getPid(),oldname,reposVPath,parentPath,parentPath,commitMsg,commitUser);	
+	
+		//unlock doc
+		if(unlockDoc(docId,login_user) == false)
+		{
+			rt.setError("unlockDoc failed");	
+		}
+		return;
 	}
 	
 	//底层moveDoc接口
