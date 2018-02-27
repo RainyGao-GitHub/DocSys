@@ -1002,9 +1002,11 @@ public class DocController extends BaseController{
 			System.out.println("renameDoc() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");
 		}
 		
-		//更新doc记录并启用
-		doc.setName(newname);
-		if(reposService.updateDoc(doc) == 0)
+		//更新doc name
+		Doc tempDoc = new Doc();
+		tempDoc.setId(docId);
+		tempDoc.setName(newname);
+		if(reposService.updateDoc(tempDoc) == 0)
 		{
 			rt.setError("不可恢复系统错误：Failed to update doc name");
 			return;
@@ -1105,10 +1107,12 @@ public class DocController extends BaseController{
 			System.out.println("moveDoc() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");			
 		}
 		
-		//更新doc记录并还原状态
-		doc.setPath(dstParentPath);
-		doc.setPid(dstPid);
-		if(reposService.updateDoc(doc) == 0)
+		//更新doc pid and path
+		Doc tempDoc = new Doc();
+		tempDoc.setId(docId);
+		tempDoc.setPath(dstParentPath);
+		tempDoc.setPid(dstPid);
+		if(reposService.updateDoc(tempDoc) == 0)
 		{
 			rt.setError("不可恢复系统错误：Failed to update doc pid and path");
 			return;				
