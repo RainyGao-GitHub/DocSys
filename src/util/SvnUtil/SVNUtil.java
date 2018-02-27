@@ -213,10 +213,13 @@ public class SVNUtil {
 	        	return false;
 	        }
 	        
-	        if(commit(editor) == null)
+	        SVNCommitInfo commitInfo = commit(editor);
+	        if(commitInfo == null)
 	        {
 	        	return false;
 	        }
+	        System.out.println("doAutoCommit() commit success: " + commitInfo);
+			
 		} catch (SVNException e) {
 			System.out.println("doAutoCommit() Exception");
 			e.printStackTrace();
