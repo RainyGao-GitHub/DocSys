@@ -1333,13 +1333,13 @@ public class DocController extends BaseController{
 		}	
 		
 		//Save the content to virtual file
-		String parentPath = getParentPath(id);
+		String parentPath = getParentPath(doc.getPid());
 		//String docRPath = parentPath + doc.getName();
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getDocVPath(parentPath,doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		
-		System.out.println("docFullVPath: " + localVDocPath);
+		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
 		if(isFileExist(localVDocPath) == true)
 		{
 			if(saveVirtualDocContent(reposVPath,docVName, content) == true)
