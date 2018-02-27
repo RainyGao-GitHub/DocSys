@@ -76,7 +76,7 @@ public class DocController extends BaseController{
 		System.out.println("addDoc name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId);
 		//System.out.println(Charset.defaultCharset());
 		//System.out.println("黄谦");
-
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -94,6 +94,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "addDoc " + name;
+		}
 		addDoc(name,type,null,reposId,parentId,commitMsg,commitUser,login_user,rt);
 		
 		writeJson(rt, response);	
@@ -133,6 +137,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "deleteDoc " + doc.getName();
+		}
 		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);	
 	}
@@ -228,7 +236,11 @@ public class DocController extends BaseController{
 			//替换路径分隔符windows下自动替换为"\" linux 下为"/"
 			//savePath = savePath.replace("\\", File.separator).replace("/", File.separator);
 			System.out.println(localDocParentPath);
-
+			
+			if(commitMsg == null)
+			{
+				commitMsg = "uploadDoc " + fileName;
+			}
 			if(uploadType == 1)	//新建文件则新建记录，否则
 			{
 				addDoc(fileName, 1, uploadFile, reposId, parentId, commitMsg, commitUser, login_user, rt);
@@ -279,6 +291,11 @@ public class DocController extends BaseController{
 		//开始更改名字了
 		Integer reposId = doc.getVid();
 		Integer parentId = doc.getPid();
+		
+		if(commitMsg == null)
+		{
+			commitMsg = "renameDoc " + doc.getName();
+		}
 		renameDoc(id,newname,reposId,parentId,commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);	
 	}
@@ -323,6 +340,10 @@ public class DocController extends BaseController{
 		}
 		
 		//开始移动了
+		if(commitMsg == null)
+		{
+			commitMsg = "moveDoc " + doc.getName();
+		}
 		moveDoc(id,vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);		
 		writeJson(rt, response);	
 	}
@@ -357,7 +378,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		
+		if(commitMsg == null)
+		{
+			commitMsg = "copyDoc " + doc.getName();
+		}
 		copyDoc(id,doc.getName(),doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);	
 	}
@@ -392,6 +416,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "updateDocContent " + doc.getName();
+		}
 		updateDocContent(id, content, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);
 	}
