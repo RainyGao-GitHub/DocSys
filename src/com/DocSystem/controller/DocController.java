@@ -1453,6 +1453,8 @@ public class DocController extends BaseController{
 			System.out.println("unlockDoc() doc was not locked by " + login_user.getName());
 			return false;
 		}
+		
+		System.out.println("unlockDoc() success:" + docId);
 		return true;
 	}
 	
