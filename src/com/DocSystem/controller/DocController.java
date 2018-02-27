@@ -1322,6 +1322,7 @@ public class DocController extends BaseController{
 	 * @param rt *******************************/
 	//Lock Doc
 	private Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt) {
+		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName());
 		//确定文件节点是否可用
 		Doc doc = reposService.getDoc(docId);
 		if(doc == null)
@@ -1355,6 +1356,7 @@ public class DocController extends BaseController{
 		{
 			return null;
 		}
+		System.out.println("lockDoc() success docId:" + docId + " lockType:" + lockType + " by " + login_user.getName());
 		return doc;
 	}
 	
@@ -1424,7 +1426,7 @@ public class DocController extends BaseController{
 		
 		if(curDoc.getState() == 0)
 		{
-			System.out.println("unlockDoc() doc was not locked" + curDoc.getState());			
+			System.out.println("unlockDoc() doc was not locked:" + curDoc.getState());			
 			return true;
 		}
 		
