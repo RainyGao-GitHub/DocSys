@@ -765,11 +765,9 @@ public class DocController extends BaseController{
 		
 		
 		//启用doc
-		doc.setState(0);
-		doc.setLockBy(0);
-		if(reposService.updateDoc(doc) == 0)
-		{	
-			rt.setError("update Node Failed, Doc was forever locked!");
+		if(unlockDoc(doc.getId(),login_user) == false)
+		{
+			rt.setError("unlockDoc Failed");
 			//writeJson(rt, response);	
 			return;
 		}
