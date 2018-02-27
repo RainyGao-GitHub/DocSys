@@ -1113,8 +1113,8 @@ public class DocController extends BaseController{
 		//远程仓库相对路径
 		//String srcDocRPath = parentPath  + name;
 		//String dstDocRPath = dstParentPath + name;
-		String srcDocFullRPath = reposRPath + parentPath + name;
-		String dstDocFullRPath = reposRPath + dstParentPath + name;
+		//String srcDocFullRPath = reposRPath + parentPath + name;
+		//String dstDocFullRPath = reposRPath + dstParentPath + name;
 		
 		//判断节点是否已存在
 		if(isNodeExist(name,dstPid,reposId) == true)
@@ -1204,15 +1204,20 @@ public class DocController extends BaseController{
 		String dstDocVName = getDocVPath(dstParentPath,name);
 		if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
 		{
-			svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser);
+			if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+			{
+				System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
+			}
+		}
+		else
+		{
+			System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
 		}
 		
 		//启用doc
-		doc.setState(0);
-		doc.setLockBy(0);
-		if(reposService.updateDoc(doc) == 0)
+		if(unlockDoc(doc.getId(),login_user) == false)
 		{	
-			rt.setError("不可恢复系统错误：updateDoc Failed");
+			rt.setError("unlockDoc Failed");
 			return;
 		}
 
