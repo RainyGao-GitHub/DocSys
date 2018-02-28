@@ -576,6 +576,7 @@ public class SVNUtil {
     	action.setAction(2);
     	action.setEntryParentPath(parentPath);
     	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
     	actionList.add(action);
 	}
     
@@ -583,7 +584,8 @@ public class SVNUtil {
     	CommitAction action = new CommitAction();
     	action.setAction(3);
     	action.setEntryParentPath(parentPath);
-    	action.setEntryPath(entryName);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
     	action.setLocalPath(localPath);
     	action.setLocalRefPath(localRefPath);
     	actionList.add(action);	
