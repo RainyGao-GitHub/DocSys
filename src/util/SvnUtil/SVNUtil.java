@@ -188,7 +188,7 @@ public class SVNUtil {
 	        else
 	        {
 	        	System.out.println("doAutoCommit() scheduleForDelete Start");
-	        	scheduleForDelete(commitActionList,localPath,entryPath);
+	        	scheduleForDelete(commitActionList,localPath,parentPath,entryName);
 		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
 			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
 	        }
@@ -397,48 +397,60 @@ public class SVNUtil {
 	}
 
 
-	public boolean scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath)
+	public boolean scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath, String entryName)
 	{
-		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " localPath:" + localPath);
-        //遍历仓库所有子目录
+		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath);
+
+		//遍历仓库所有子目录
 		try {
-			Collection entries;
-			entries = repository.getDir(parentPath, -1, null,(Collection) null);
-	
-	        Iterator iterator = entries.iterator();
-	        while (iterator.hasNext()) 
+	        if(entryName.isEmpty())	//If the entryName is empty, means we need to go through the subNodes directly
 	        {
-	            SVNDirEntry entry = (SVNDirEntry) iterator.next();
-	            String entryName = entry.getName();
-	            if(entryName.isEmpty() == false)
+    			Collection entries;
+    			entries = repository.getDir(parentPath, -1, null,(Collection) null);
+    	        Iterator iterator = entries.iterator();
+    	        while (iterator.hasNext()) 
+    	        {
+    	            SVNDirEntry entry = (SVNDirEntry) iterator.next();
+    	            String subEntryName = entry.getName();
+       	    	    scheduleForDelete(actionList,localPath, parentPath,subEntryName);
+    	        }   
+	        }
+	        else
+	        {
+	            String entryPath = parentPath + entryName;            
+	            String localEntryPath = localPath + entryName;
+	
+	            File localFile = new File(localEntryPath);
+	            
+				SVNNodeKind entryKind = repository.checkPath(entryPath, -1);
+	            if(entryKind == SVNNodeKind.FILE)
 	            {
-		            String entryPath = parentPath + entryName;            
-		            String localEntryPath = localPath + entryName;
-		
-		            File localFile = new File(localEntryPath);
-		            
-		            SVNNodeKind entryKind = entry.getKind();
-		            if(entryKind == SVNNodeKind.FILE)
-		            {
-		            	if(!localFile.exists() || localFile.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
-		                {
-		                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
-		                    //deleteEntry(editor,entryPath);
-		                    insertDeleteAction(actionList,parentPath,entryName);
-		                }
-		            }
-		            else if(entry.getKind() == SVNNodeKind.DIR) 
-		            {
-		            	if(!localFile.exists() || localFile.isFile())	//本地目录不存在或者类型不符，则删除该目录
-		                {
-		                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
-		                    insertDeleteAction(actionList,parentPath,entryName);
-		                }
-		           	    else
-		           	    {
-		           	    	scheduleForDelete(actionList,localEntryPath+"/", entryPath+"/");
-		           	    }
-		            }
+	            	if(!localFile.exists() || localFile.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
+	                {
+	                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
+	                    //deleteEntry(editor,entryPath);
+	                    insertDeleteAction(actionList,parentPath,entryName);
+	                }
+	            }
+	            else if(entryKind == SVNNodeKind.DIR) 
+	            {
+	            	if(!localFile.exists() || localFile.isFile())	//本地目录不存在或者类型不符，则删除该目录
+	                {
+	                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
+	                    insertDeleteAction(actionList,parentPath,entryName);
+	                }
+	           	    else	//If it is dir, go through the subNodes for delete
+	           	    {
+	        			Collection entries;
+	        			entries = repository.getDir(parentPath, -1, null,(Collection) null);
+	        	        Iterator iterator = entries.iterator();
+	        	        while (iterator.hasNext()) 
+	        	        {
+	        	            SVNDirEntry entry = (SVNDirEntry) iterator.next();
+	        	            String subEntryName = entry.getName();
+	           	    	    scheduleForDelete(actionList,localEntryPath+"/", entryPath+"/",subEntryName);
+	        	        }   
+	           	    }
 	            }
 	        }
 		} catch (SVNException e) {
