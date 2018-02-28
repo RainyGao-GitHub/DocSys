@@ -679,10 +679,16 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//TODO:
+		//lock(); //线程锁
+		
 		//Check if parentDoc was absolutely locked (LockState == 2)
 		Integer parentLockState = getParentLockState(parentId,rt);
 		if(parentLockState == 2)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("ParentNode: " + parentId +" is locked！");
 			//writeJson(rt, response);
 			return;			
@@ -705,10 +711,16 @@ public class DocController extends BaseController{
 		doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
 		if(reposService.addDoc(doc) == 0)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			rt.setError("Add Node: " + name +" Failed！");
 			//writeJson(rt, response);
 			return;
 		}
+		//TODO:
+		//unlock(); //线程锁
+		
 		System.out.println("id: " + doc.getId());
 		
 		/*创建实文件Entry：新建文件或目录*/
@@ -778,16 +790,25 @@ public class DocController extends BaseController{
 	//底层deleteDoc接口
 	private void deleteDoc(Integer docId, Integer reposId,Integer parentId, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
-		
+
+		//TODO:
+		//lock(); //线程锁
+
 		//是否需要检查subDoc is locked? 不需要！ 因为如果doc有subDoc那么deleteRealDoc会抱错
 		
 		//Try to lock the Doc
 		Doc doc = lockDoc(docId,2,login_user,rt);
 		if(doc == null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("Failed to lock Doc: " + docId);
 			return;			
 		}
+		//TODO:
+		//unlock(); //线程锁
+
 		
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
@@ -860,15 +881,23 @@ public class DocController extends BaseController{
 	//底层updateDoc接口
 	private void updateDoc(Integer docId, MultipartFile uploadFile,Integer reposId,Integer parentId, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
-		
+
+		//TODO:
+		//lock(); //线程锁
+
 		//Try to lock the doc
 		Doc doc = lockDoc(docId, 1, login_user, rt);
 		if(doc == null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("updateDoc() lockDoc " + docId +" Failed！");
 			return;
 		}
-				
+		//TODO:
+		//unlock(); //线程锁
+						
 		Repos repos = reposService.getRepos(reposId);
 		//get RealDoc Full ParentPath
 		String reposRPath =  getReposRealPath(repos);
@@ -929,10 +958,16 @@ public class DocController extends BaseController{
 	//底层renameDoc接口
 	private void renameDoc(Integer docId, String newname,Integer reposId,Integer parentId, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
-		
+
+		//TODO:
+		//lock(); //线程锁
+
 		//Renmae Dir 需要检查其子目录是否上锁
 		if(isSubDocLocked(docId,rt) == true)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("renameDoc() subDoc of " + docId +" was locked！");
 			return;
 		}
@@ -941,9 +976,14 @@ public class DocController extends BaseController{
 		Doc doc = lockDoc(docId,2,login_user,rt);
 		if(doc == null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+			
 			System.out.println("renameDoc() lockDoc " + docId +" Failed！");
 			return;
 		}
+		//TODO:
+		//unlock(); //线程锁
 				
 		Repos repos = reposService.getRepos(reposId);
 		String reposRPath = getReposRealPath(repos);
@@ -1027,9 +1067,15 @@ public class DocController extends BaseController{
 	private void moveDoc(Integer docId, Integer reposId,Integer parentId,Integer dstPid,  
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
+		//TODO:
+		//lock(); //线程锁
+
 		//Try to lock Doc
 		if(isSubDocLocked(docId,rt) == true)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("subDoc of " + docId +" Locked！");
 			return;
 		}
@@ -1037,6 +1083,9 @@ public class DocController extends BaseController{
 		Doc doc = lockDoc(docId,2,login_user,rt);
 		if(doc == null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("lockDoc " + docId +" Failed！");
 			return;
 		}
@@ -1044,10 +1093,15 @@ public class DocController extends BaseController{
 		//Try to lock dstPid
 		if(dstPid !=0 && lockDoc(dstPid,2,login_user,rt) == null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("moveDoc() fail to lock dstPid" + dstPid);
 			unlockDoc(docId,login_user);	//Try to unlock the doc
 			return;			
 		}
+		//TODO:
+		//unlock(); //线程锁
 		
 		//移动当前节点
 		Integer orgPid = doc.getPid();
@@ -1180,10 +1234,16 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		//TODO:
+		//lock(); //线程锁
+
 		//Try to lock the srcDoc
 		Doc doc = lockDoc(docId,1,login_user,rt);
 		if(doc == null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("copyDoc lock " + docId + " Failed");
 			return;
 		}
@@ -1205,10 +1265,16 @@ public class DocController extends BaseController{
 		doc.setLockBy(login_user.getId());	//set LockBy
 		if(reposService.addDoc(doc) == 0)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			rt.setError("Add Node: " + name +" Failed！");
 			unlockDoc(docId,login_user);
 			return;
 		}
+		//TODO:
+		//unlock(); //线程锁
+
 		System.out.println("id: " + doc.getId());
 		
 		//复制文件或目录，注意这个接口只会复制单个文件
@@ -1305,15 +1371,23 @@ public class DocController extends BaseController{
 	}
 
 	private void updateDocContent(Integer id,String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
+		//TODO:
+		//lock(); //线程锁
+
 		//Try to lock Doc
 		Doc doc = lockDoc(id,1,login_user,rt);
 		if(doc== null)
 		{
+			//TODO:
+			//unlock(); //线程锁
+
 			System.out.println("updateDocContent() lockDoc Failed");
 			//writeJson(rt, response);			
 			return;
 		}
-		
+		//TODO:
+		//unlock(); //线程锁
+
 		Repos repos = reposService.getRepos(doc.getVid());
 		
 		//只更新内容部分
