@@ -464,80 +464,81 @@ public class SVNUtil {
 	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction) throws SVNException {
     	System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
-    	String remoteEntryPath = parentPath + entryName;
-    	String localEntryPath = localPath + entryName;
-    	String localRefEntryPath = localRefPath + entryName;
-    	
-    	File file = new File(localEntryPath);
-    	boolean addDirFlag = false;	//this flag is for the subList of the new added dir
-        if(file.exists())
-        {
-        	if(!entryName.isEmpty())
-        	{
-        		//If Remote path not exist
-        		SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, -1);
-        		if (nodeKind == SVNNodeKind.NONE) {
-	            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
-	            	if(file.isDirectory())
-	            	{
-	            		addDirFlag = true;
-	            	}
-	            	else
-	            	{
-	            		insertAddFileAction(actionList,parentPath, entryName,localPath,isSubAction);
-	            		return;
-	            	}
-	            }
-	            else
-	            {
-	            	if(modifyEnable)
-	            	{
-	            		//版本仓库文件已存在也暂时不处理，除非能够判断出两者不一致
-	            		if(!file.isDirectory())
-	            		{
-	            			System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
-	            			insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
-	            			return;
-	            		}
-	            	}
-	            }
-        	}
-            
-        	//IF the entry is directory, we need to go through its subEntries
-        	if(file.isDirectory())
-        	{
-    			String subParentPath = parentPath;
-    			String subLocalPath = localPath;
-    			String subLocalRefPath = localRefPath;
-    			if(!entryName.isEmpty())
-    			{
-    				subParentPath = remoteEntryPath + "/";
-    				subLocalPath = localEntryPath + "/";
-    				subLocalRefPath = localRefEntryPath + "/";
-    				
-    			}
-    			File[] tmp=file.listFiles();
-    			List<CommitAction> subActionList = new ArrayList<CommitAction>();
-        		for(int i=0;i<tmp.length;i++)
-        		{
-        			String subEntryName = tmp[i].getName();
-        			if(addDirFlag)
-            		{
-            			scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true);
-        			}
-        			else
-        			{
-            			scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false);        				
-        			}
-                }
-        		
-        		if(addDirFlag)	//because we need the subActionList, so it must be inserted after the we get the subActionLsit
-        		{
-        			//Insert the DirAdd Action
-        			insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
-        		}
+    	if(entryName.isEmpty())	//Go through the sub files directly
+    	{
+    		File file = new File(localPath);
+    		File[] tmp=file.listFiles();
+    		for(int i=0;i<tmp.length;i++)
+    		{
+    			String subEntryName = tmp[i].getName();
+    			scheduleForAddAndModify(actionList,parentPath, subEntryName, localPath, localRefPath,modifyEnable, false);
             }
-       }		
+    		return;
+    	}
+    	else
+    	{
+	    	String remoteEntryPath = parentPath + entryName;
+	    	String localEntryPath = localPath + entryName;
+	    	String localRefEntryPath = localRefPath + entryName;
+	    	
+	    	File file = new File(localEntryPath);
+	    	boolean addDirFlag = false;	//this flag is for the subList of the new added dir
+	        if(file.exists())
+	        {
+	        	SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, -1);
+	        	
+	        	if(file.isDirectory())
+	        	{
+	        		//If Remote path not exist
+	        		if (nodeKind == SVNNodeKind.NONE) {
+		            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
+		            	//Because we need to get subActionList firstly, so for dir add we just mark flag, and insert the aciton later
+		            	addDirFlag = true;
+		            }
+	        			
+	        		//Go Through the sub Files
+		    		String subParentPath = remoteEntryPath + "/";
+		    		String subLocalPath = localEntryPath + "/";
+		    		String subLocalRefPath = localRefEntryPath + "/";
+		    		File[] tmp=file.listFiles();
+		    		List<CommitAction> subActionList = new ArrayList<CommitAction>();
+		        	for(int i=0;i<tmp.length;i++)
+		        	{
+		        		String subEntryName = tmp[i].getName();
+		        		if(addDirFlag)
+		            	{
+		            		scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true);
+		        		}
+		        		else
+		        		{
+		            		scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false);        				
+		        		}
+		            }
+		        		
+		        	if(addDirFlag)	//because we need the subActionList, so it must be inserted after the we get the subActionLsit
+		        	{
+		        		//Insert the DirAdd Action
+		        		insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
+		        	}	        		
+	        	}
+	        	else	//If the entry is file, do insert
+            	{
+            		if (nodeKind == SVNNodeKind.NONE) {
+    	            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
+    	            	insertAddFileAction(actionList,parentPath, entryName,localPath,isSubAction);
+    	            	return;
+    	            }
+            		
+		            if(modifyEnable)
+		            {
+	            		//版本仓库文件已存在也暂时不处理，除非能够判断出两者不一致
+	            		System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
+	            		insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
+	            		return;
+	            	}	
+            	}
+	       }
+    	}
 	}
 	
     private void insertAddFileAction(List<CommitAction> actionList,
