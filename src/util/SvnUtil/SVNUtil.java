@@ -464,7 +464,7 @@ public class SVNUtil {
 	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction) throws SVNException {
     	System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
-    	if(entryName.isEmpty())	//Go through the sub files directly
+    	if(entryName.isEmpty())	//Go through the sub files for add and modify
     	{
     		File file = new File(localPath);
     		File[] tmp=file.listFiles();
@@ -482,44 +482,45 @@ public class SVNUtil {
 	    	String localRefEntryPath = localRefPath + entryName;
 	    	
 	    	File file = new File(localEntryPath);
-	    	boolean addDirFlag = false;	//this flag is for the subList of the new added dir
-	        if(file.exists())
+	    	if(file.exists())
 	        {
 	        	SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, -1);
 	        	
-	        	if(file.isDirectory())
+	        	if(file.isDirectory())	//IF the entry is dir and need to add, we need to get the subActionList Firstly
 	        	{
-	        		//If Remote path not exist
-	        		if (nodeKind == SVNNodeKind.NONE) {
-		            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
-		            	//Because we need to get subActionList firstly, so for dir add we just mark flag, and insert the aciton later
-		            	addDirFlag = true;
-		            }
-	        			
-	        		//Go Through the sub Files
-		    		String subParentPath = remoteEntryPath + "/";
+	        		
+	        		String subParentPath = remoteEntryPath + "/";
 		    		String subLocalPath = localEntryPath + "/";
 		    		String subLocalRefPath = localRefEntryPath + "/";
-		    		File[] tmp=file.listFiles();
-		    		List<CommitAction> subActionList = new ArrayList<CommitAction>();
-		        	for(int i=0;i<tmp.length;i++)
-		        	{
-		        		String subEntryName = tmp[i].getName();
-		        		if(addDirFlag)
-		            	{
-		            		scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true);
-		        		}
-		        		else
-		        		{
-		            		scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false);        				
-		        		}
+		    		
+	    	        //If Remote path not exist
+	        		if (nodeKind == SVNNodeKind.NONE) {
+		            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
+		            	
+		            	//Go through the sub files to Get the subActionList
+			    		File[] tmp=file.listFiles();
+			    		List<CommitAction> subActionList = new ArrayList<CommitAction>();
+			        	for(int i=0;i<tmp.length;i++)
+			        	{
+			        		String subEntryName = tmp[i].getName();
+			        		scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true);
+			            }
+			        	
+			        	//Insert the DirAdd Action
+			        	insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
+			        	return;
 		            }
-		        		
-		        	if(addDirFlag)	//because we need the subActionList, so it must be inserted after the we get the subActionLsit
-		        	{
-		        		//Insert the DirAdd Action
-		        		insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
-		        	}	        		
+	        		else
+	        		{
+	        			//Go through the sub Files For Add and Modify
+	        			File[] tmp=file.listFiles();
+	        			for(int i=0;i<tmp.length;i++)
+	        			{
+	        				String subEntryName = tmp[i].getName();
+		        			scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false);        				
+		        		}
+	        			return;
+		            }
 	        	}
 	        	else	//If the entry is file, do insert
             	{
