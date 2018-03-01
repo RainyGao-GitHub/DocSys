@@ -709,6 +709,7 @@ public class DocController extends BaseController{
 		doc.setCreateTime(createTime);
 		doc.setState(2);	//doc的状态为不可用
 		doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
+		doc.setLockTime(new Date().getTime());	//Set lockTime
 		if(reposService.addDoc(doc) == 0)
 		{
 			//TODO:
@@ -1263,6 +1264,7 @@ public class DocController extends BaseController{
 		doc.setCreateTime(createTime);
 		doc.setState(1);	//doc的状态为不可用
 		doc.setLockBy(login_user.getId());	//set LockBy
+		doc.setLockTime(new Date().getTime());	//Set lockTime
 		if(reposService.addDoc(doc) == 0)
 		{
 			//TODO:
@@ -1460,13 +1462,19 @@ public class DocController extends BaseController{
 		if(doc.getState() != 0)
 		{
 			//TODO:check if the lock was out of date
-			//long curTime = new Date().getTime();
-			//if((doc.getLockTime() - curTime) < 24*60*60*1000)
-			//{
+			long curTime = new Date().getTime();
+			long lockTime = doc.getLockTime();
+			if((curTime - lockTime) < 24*60*60*1000)
+			{
 				rt.setError("Doc " + docId + " " + doc.getName() +" was locked:" + doc.getState());
 				System.out.println("Doc: " + docId +" was locked！");
 				return null;
-			//}
+			}
+			else
+			{
+				//Lock 自动失效设计
+				System.out.println("Doc: " + docId +" lock is out of date！");
+			}
 		}
 		
 		//检查其父节点是否进行了递归锁定
@@ -1477,10 +1485,12 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
+		//get the current time as the lockTime
 		Doc lockDoc= new Doc();
 		lockDoc.setId(docId);
 		lockDoc.setState(lockType);	//doc的状态为不可用
 		lockDoc.setLockBy(login_user.getId());
+		doc.setLockTime(new Date().getTime());	//Set lockTime
 		if(reposService.updateDoc(lockDoc) == 0)
 		{
 			return null;
@@ -1567,6 +1577,7 @@ public class DocController extends BaseController{
 			revertDoc.setId(docId);	
 			revertDoc.setState(0);	//
 			revertDoc.setLockBy(0);	//
+			revertDoc.setLockTime(0);	//Set lockTime
 			if(reposService.updateDoc(revertDoc) == 0)
 			{
 				System.out.println("unlockDoc() updateDoc Failed!");
