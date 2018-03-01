@@ -1455,21 +1455,26 @@ public class DocController extends BaseController{
 			System.out.println("Doc: " + docId +" 不存在！");
 			return null;
 		}
-		else if(doc.getState() != 0)
+		
+		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
+		if(doc.getState() != 0)
 		{
-			rt.setError("Doc " + docId + " " + doc.getName() +" was locked:" + doc.getState());
-			System.out.println("Doc: " + docId +" was locked！");
-			return null;
-		}
-		else
-		{
-			//检查其父节点是否进行了递归锁定
-			Integer lockState = getParentLockState(doc.getPid(),rt);
-			if(lockState == 2)	//2: 全目录锁定
-			{
-				System.out.println("Parent Doc of " + docId +" was locked！");				
+			//TODO:check if the lock was out of date
+			//long curTime = new Date().getTime();
+			//if((doc.getLockTime() - curTime) < 24*60*60*1000)
+			//{
+				rt.setError("Doc " + docId + " " + doc.getName() +" was locked:" + doc.getState());
+				System.out.println("Doc: " + docId +" was locked！");
 				return null;
-			}
+			//}
+		}
+		
+		//检查其父节点是否进行了递归锁定
+		Integer lockState = getParentLockState(doc.getPid(),rt);
+		if(lockState == 2)	//2: 全目录锁定
+		{
+			System.out.println("Parent Doc of " + docId +" was locked！");				
+			return null;
 		}
 		
 		Doc lockDoc= new Doc();
