@@ -13,12 +13,13 @@
     <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
     <result column="STATE" jdbcType="INTEGER" property="state" />
     <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
+    <result column="LOCK_TIME" jdbcType="INTEGER" property="lockTime" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.Doc">
     <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE, LOCK_BY
+    ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE, LOCK_BY, LOCK_TIME
   </sql>
   <sql id="Blob_Column_List">
     CONTENT
@@ -39,11 +40,13 @@
     insert into doc (ID, NAME, TYPE, 
       PATH, PID, VID, PWD, 
       CREATOR, CREATE_TIME, STATE, 
-      LOCK_BY, CONTENT)
+      LOCK_BY, LOCK_TIME, CONTENT
+      )
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
       #{path,jdbcType=VARCHAR}, #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, 
       #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{state,jdbcType=INTEGER}, 
-      #{lockBy,jdbcType=INTEGER}, #{content,jdbcType=LONGVARCHAR})
+      #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=INTEGER}, #{content,jdbcType=LONGVARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
     insert into doc
@@ -80,6 +83,9 @@
       </if>
       <if test="lockBy != null">
         LOCK_BY,
+      </if>
+      <if test="lockTime != null">
+        LOCK_TIME,
       </if>
       <if test="content != null">
         CONTENT,
@@ -119,6 +125,9 @@
       <if test="lockBy != null">
         #{lockBy,jdbcType=INTEGER},
       </if>
+      <if test="lockTime != null">
+        #{lockTime,jdbcType=INTEGER},
+      </if>
       <if test="content != null">
         #{content,jdbcType=LONGVARCHAR},
       </if>
@@ -157,6 +166,9 @@
       <if test="lockBy != null">
         LOCK_BY = #{lockBy,jdbcType=INTEGER},
       </if>
+      <if test="lockTime != null">
+        LOCK_TIME = #{lockTime,jdbcType=INTEGER},
+      </if>
       <if test="content != null">
         CONTENT = #{content,jdbcType=LONGVARCHAR},
       </if>
@@ -175,6 +187,7 @@
       CREATE_TIME = #{createTime,jdbcType=VARCHAR},
       STATE = #{state,jdbcType=INTEGER},
       LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      LOCK_TIME = #{lockTime,jdbcType=INTEGER},
       CONTENT = #{content,jdbcType=LONGVARCHAR}
     where ID = #{id,jdbcType=INTEGER}
   </update>
@@ -189,7 +202,8 @@
       CREATOR = #{creator,jdbcType=INTEGER},
       CREATE_TIME = #{createTime,jdbcType=VARCHAR},
       STATE = #{state,jdbcType=INTEGER},
-      LOCK_BY = #{lockBy,jdbcType=INTEGER}
+      LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      LOCK_TIME = #{lockTime,jdbcType=INTEGER}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Doc" useGeneratedKeys="true">
@@ -219,6 +233,9 @@
       <if test="lockBy != null">
         LOCK_BY,
       </if>
+      <if test="lockTime != null">
+        LOCK_TIME,
+      </if>
       <if test="content != null">
         CONTENT,
       </if>
@@ -247,6 +264,9 @@
       </if>
       <if test="lockBy != null">
         #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        #{lockTime,jdbcType=INTEGER},
       </if>
       <if test="content != null">
         #{content,jdbcType=LONGVARCHAR},
@@ -282,6 +302,9 @@
     </if>
     <if test="lockBy != null">
         and LOCK_BY = #{lockBy,jdbcType=INTEGER},
+    </if>
+    <if test="lockTime != null">
+        and LOCK_TIME = #{lockTime,jdbcType=INTEGER},
     </if>
     <if test="pwd != null">
         and PWD = #{pwd,jdbcType=VARCHAR}
