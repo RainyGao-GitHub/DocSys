@@ -459,8 +459,10 @@ public class DocController extends BaseController{
 		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String reposUserTmpPath = getReposUserTmpPath(repos,login_user);
-		saveVirtualDocContent(reposUserTmpPath,docVName,content);
-		
+		if(saveVirtualDocContent(reposUserTmpPath,docVName,content) == false)
+		{
+			rt.setError("saveVirtualDocContent Error!");
+		}
 		writeJson(rt, response);
 	}
 	
@@ -1796,7 +1798,20 @@ public class DocController extends BaseController{
 	}
 
 	private boolean saveVirtualDocContent(String reposVPath, String docVName, String content) {
-		String mdFilePath = reposVPath + docVName + "/content.md";
+		String vDocPath = reposVPath + docVName + "/";
+		File folder = new File(vDocPath);
+		if(!folder.exists())
+		{
+			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
+			if(folder.mkdir() == false)
+			{
+				System.out.println("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");				
+				return false;
+			}
+		}
+		
+		//set the md file Path
+		String mdFilePath = vDocPath + "content.md";
 		//创建文件输入流
 		FileOutputStream out = null;
 		try {
