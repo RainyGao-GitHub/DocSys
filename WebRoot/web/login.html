@@ -131,10 +131,7 @@
 	});
 </script>
 
- <div id="ordLogin" class="row" style="display:block;">
-     <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').hide();$('#smsLogin').show();">用户登录</h4> -->
-     <!-- <form class="form-horizontal" id="login_form" method="POST" action="/DocSystem/login.do" novalidate="novalidate"> -->
-     <div class="form-horizontal">
+     <form id="ordLogin" class="form-horizontal">
          <div class="form-group">
              <label class="col-sm-2 control-label">邮箱/手机</label>
              <div class="col-sm-9">
@@ -148,8 +145,7 @@
              </div>
          </div>
          <div class="form-group">
-             <label class="col-sm-2 control-label">&nbsp;</label>
-             <div class="col-sm-9">
+             <div class="col-sm-9 text-center">
                  <div class="checkbox">
                  	<input id="rememberMe_cb" type="checkbox" onchange="remember(this);" class="needSetVal" value="1" />下次自动登录
 					<input id="rememberMe_vl" name="rememberMe" type="hidden" value="0" />
@@ -163,9 +159,8 @@
                  <button onclick="login()" class="btn btnPrimary" style="width: 258px;height: 42px;">登录</button>
              </div>
          </div>
-     </div>    
- </div>
- 
+     </form>    
+      
  <div id="smsLogin" class="row" style="display: none;">
      <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').show();$('#smsLogin').hide();"><em class="important">普通方式登录</em></a>用户登录</h4> -->
      <div class="form-horizontal" id="_form_login_sms" method="POST" action="/DocSystem/smsLogin.do" novalidate="novalidate">
