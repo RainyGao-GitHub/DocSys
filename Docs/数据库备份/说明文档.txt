@@ -1,72 +1,76 @@
 1、docsystem20170814.sql  
-   2.01版本使用的数据库
+   	1.00版本使用的数据库
 
 2、docsystem20170822.sql  
-   2.02版本使用的数据库
-   数据库字段全部使用了大写;
-   细化了用户表;
-   增加了角色表、仓库权限表、文件节点权限表、系统配置表
+   	1.00版本使用的数据库
+   	数据库字段全部使用了大写;
+   	细化了用户表;
+   	增加了角色表、仓库权限表、文件节点权限表、系统配置表
 
 3、docsystem20170822-1.sql  
-   2.02版本使用的数据库
-	 doc 和 repos表的PWD字段默认置空，否则系统报错
+	1.00版本使用的数据库
+	doc 和 repos表的PWD字段默认置空，否则系统报错
 	 
 4、docsystem20170822-1.sql  
-   2.02版本使用的数据库
-	 user表字段默认置空，否则系统报错
+        1.00版本使用的数据库
+	user表字段默认置空，否则系统报错
 	 
 5、docsystem20170904.sql
-	 2.02版本使用的数据库
-	 repos_auth表字段增加EDIT\ADD\DELETE控制
+	1.00版本使用的数据库
+	repos_auth表字段增加EDIT\ADD\DELETE控制
 
 6、docsystem20170905.sql
-	 2.02版本使用的数据库
-	 doc_auth 和 repos_auth的 EDIT ADD DELETE 改为 EDIT_EN 。。。	 
+	1.00版本使用的数据库
+	doc_auth 和 repos_auth的 EDIT ADD DELETE 改为 EDIT_EN 。。。	 
 	 
 7、docsystem20170905-1.sql
-	 2.02版本使用的数据库
+	1.00版本使用的数据库
 	repos的PATH等字段长度调整（原来是想删除menu的，结果一堆代码需要处理，所以又加了回来，汗）	 
 	
 8、docsystem20170905-2.sql
-	 2.02版本使用的数据库
-	 docAuth的EDIT ADD DELET均使用INT，避免类型转换 
+	1.00版本使用的数据库
+	docAuth的EDIT ADD DELET均使用INT，避免类型转换 
 	 
 9、docsystem20170905-2.sql
-	 2.02版本使用的数据库
-	 wiki_project增加owner字段用于放owner id
+	1.00版本使用的数据库
+	wiki_project增加owner字段用于放owner id
 	 
 10、docsystem20170912.sql
-	 2.02版本使用的数据库
-	 wiki_doc改为doc\wiki_project改为repos
-	 doc_auth和repos_auth增加is_amdin字段
+	1.00版本使用的数据库
+	wiki_doc改为doc\wiki_project改为repos
+	doc_auth和repos_auth增加is_amdin字段
 
 10、docsystem20170914.sql
-	 2.02版本使用的数据库
-	 doc增加 creator和create_time字段
-	 repos的create_time改为String类型
+	1.00版本使用的数据库
+	doc增加 creator和create_time字段
+	repos的create_time改为String类型
 
 10、docsystem2017116.sql 
-		2.04版本使用的数据库
-	  repos增加了VER_CTRL，版本控制类型
-	  SVN_PATH将不再单指SVN，还可能是GIT仓库路径，当然也包括SVN_USER和SVN_PWD
+	1.01版本使用的数据库
+	repos增加了VER_CTRL，版本控制类型
+	SVN_PATH将不再单指SVN，还可能是GIT仓库路径，当然也包括SVN_USER和SVN_PWD
 	  
 11、docsystem20171225.sql
-		2.06版版本使用
-		repos_auth 增加 HERITABLE字段	 
-		doc_auth 增加 HERITABLE字段	
-		doc 增加 STATE字段	 
+	1.03版版本使用
+	repos_auth 增加 HERITABLE字段	 
+	doc_auth 增加 HERITABLE字段	
+	doc 增加 STATE字段	 
 		
 12、docsystem20180102.sql		
-	2.06版版本使用
+	1.03版版本使用
 	repos_auth HERITABLE字段默认改为：不继承 0	 
 	doc_auth HERITABLE字段：不继承 0	
 	doc STATE字段默认改为：启用1
 
 13、docsystem20180126.sql
-	2.06版本使用
+	1.03版本使用
 	repos增加 verCtrl1 svnPath1 svnUser1 svnPwd1	
 
 
 14、docsystem20180129.sql
-	2.06版本使用
+	1.03版本使用
 	doc增加 lockBy字段,用于确定doc最终getLock的人		
+
+15、docsystem20180302.sql
+	1.04版本使用
+	doc增加 lockBy字段,用于确定doc最终getLock的人	
