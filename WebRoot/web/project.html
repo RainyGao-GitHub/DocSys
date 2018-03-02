@@ -1815,12 +1815,47 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                     console.log("保存成功 : " , (new Date()).toLocaleDateString());
+                    bootstrapQ.msg({
+								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
+								type : 'success',
+								time : 1000,
+					});
                 }else {
-                    bootstrapQ.alert("保存异常"+ret.msgInfo);
+                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
                 }
             },
             error : function () {
                 bootstrapQ.alert("保存异常");
+            }
+        });
+
+    }
+    
+    //文件临时保存操作
+    function tmpSaveDoc(id, content){
+		console.log("tmpSaveDoc: " + content);
+        $.ajax({
+            url : "/DocSystem/Doc/tmpSaveDocContent.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                id : id,
+                content : content
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    console.log("临时保存成功 :" , (new Date()).toLocaleDateString());
+                    bootstrapQ.msg({
+								msg : "临时保存成功 :" + (new Date()).toLocaleDateString(),
+								type : 'success',
+								time : 1000,
+					});
+                }else {
+                    bootstrapQ.alert("临时保存失败:"+ret.msgInfo);
+                }
+            },
+            error : function () {
+                bootstrapQ.alert("临时保存异常");
             }
         });
 
@@ -2677,28 +2712,31 @@
     	console.log("saveWiki");
     	if(debounce.getStatus() == 1)
     	{
+    		debounce.clearStatus();
     		saveDoc(curDoc, debounce.get());
     	}
     }
 	
+	//定时自动保存接口
+	var timer = setInterval(function () {
+        console.log("autoTmpSaveWiki");
+    	if(debounce.getStatus1() == 1)
+    	{
+    	    debounce.clearStatus1();
+    		tmpSaveDoc(curDoc, debounce.get());
+    	}
+    },10000);
+        
 	//debounce文件编辑缓存类
     var debounce = (function () {
         //var cache = [];
         var latestcopy = "";
-        var status = 0;
-        
-        /*var timer = setInterval(function () {
-            if ( cache.length > 0 ){	
-                var tmp = cache.pop();
-                cache = [];
-                cache.push(tmp);                
-            }
-        },3000);*/
+        var status = 0; //For save
+        var status1 = 0; //For tmpSave
         
 		function getLatestCopy()
 		{
-			status = 0;
-            return latestcopy;
+		    return latestcopy;
 		}
 		
 		function getStatus()
@@ -2709,6 +2747,24 @@
             return 0;
 		}
 		
+		function clearStatus()
+		{
+			status = 0;
+		}
+		
+		function getStatus1()
+		{
+			if ( status1 == 1 ){	
+            	return 1;
+            }
+            return 0;
+		}
+		
+		function clearStatus1()
+		{
+			status1 = 0;
+		}
+		
         return {
             get: function(){
             	return getLatestCopy();
@@ -2716,13 +2772,23 @@
             getStatus: function(){
             	return getStatus();
             },
+            getStatus1: function(){
+            	return getStatus1();
+            },
+            clearStatus: function(){
+            	return clearStatus();
+            },
+            clearStatus1: function(){
+            	return clearStatus1();
+            },
             call : function (c) {
                 latestcopy = c;
                 status = 1;
+                status1 = 1;
             },
             clear : function () {
-                //cache = [];
                 status = 0;
+                status1 = 0;
                 latestcopy = "";
             }
         };
