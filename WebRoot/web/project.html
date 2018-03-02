@@ -2689,6 +2689,14 @@
 	/********************* 文件编辑接口 *********************************************/
 	//退出文件编辑状态
     function exitEdit() {
+    	if(debounce.getStatus() == 1)
+    	{
+    		if(confirm("修改未保存，是否退出？") == false)
+    		{
+    			return;
+    		}
+    	}
+    
         var params = {
             vid : getQueryString("vid"),
             doc : curDoc,
