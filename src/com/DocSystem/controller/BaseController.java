@@ -118,8 +118,8 @@ public class BaseController{
 		return HashValue;
 	}
 	
-	protected String getReposUserTmpPath(Repos repos, String userName) {
-		String reposTmpVirtualPath = repos.getPath() + "tmp/" + userName + "/"; 
+	protected String getReposUserTmpPath(Repos repos, User login_user) {
+		String reposTmpVirtualPath = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
 		return reposTmpVirtualPath;
 	}
 	
