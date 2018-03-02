@@ -1577,7 +1577,7 @@ public class DocController extends BaseController{
 			revertDoc.setId(docId);	
 			revertDoc.setState(0);	//
 			revertDoc.setLockBy(0);	//
-			revertDoc.setLockTime(0);	//Set lockTime
+			revertDoc.setLockTime((long) 0);	//Set lockTime
 			if(reposService.updateDoc(revertDoc) == 0)
 			{
 				System.out.println("unlockDoc() updateDoc Failed!");
