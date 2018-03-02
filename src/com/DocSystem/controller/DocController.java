@@ -427,7 +427,7 @@ public class DocController extends BaseController{
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
 	public void tmpSaveVirtualDocContent(Integer id,String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("updateDocContent id: " + id);
+		System.out.println("tmpSaveVirtualDocContent() id: " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -458,7 +458,7 @@ public class DocController extends BaseController{
 		//String docRPath = parentPath + doc.getName();	
 		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
-		String reposUserTmpPath = getReposUserTmpPath(repos,login_user.getName());
+		String reposUserTmpPath = getReposUserTmpPath(repos,login_user);
 		saveVirtualDocContent(reposUserTmpPath,docVName,content);
 		
 		writeJson(rt, response);
@@ -533,7 +533,7 @@ public class DocController extends BaseController{
 		if(doc.getType() == 2) //目录
 		{
 			//判断用户临时空间是否存在，不存在则创建，存在则将压缩文件保存在临时空间里
-			String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId();
+			String userTmpDir = getReposUserTmpPath(repos,login_user);
 			File userDir = new File(userTmpDir);
 			if(!userDir.exists())
 			{
