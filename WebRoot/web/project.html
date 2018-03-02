@@ -1801,8 +1801,8 @@
 	}
 
 	/******************************** Doc Interfaces***************************************/
-	//文件保存操作
-    function saveDoc(id, content){
+	//文件保存操作: callback是指成功后的回调函数
+    function saveDoc(id, content,callback){
 		console.log("saveDoc: " + content);
         $.ajax({
             url : "/DocSystem/Doc/updateDocContent.do",
@@ -1820,6 +1820,7 @@
 								type : 'success',
 								time : 1000,
 					});
+					callback && callback();
                 }else {
                     bootstrapQ.alert("保存失败:"+ret.msgInfo);
                 }
@@ -2691,12 +2692,17 @@
     function exitEdit() {
     	if(debounce.getStatus() == 1)
     	{
-    		if(confirm("修改未保存，是否退出？") == false)
+    		if(confirm("修改未保存，是否保存？") == true)
     		{
+    			saveWikiAndExit();
     			return;
     		}
     	}
-    
+    	
+    	exitEditWiki();
+	}
+	
+    function exitEditWiki() {
         var params = {
             vid : getQueryString("vid"),
             doc : curDoc,
@@ -2722,6 +2728,16 @@
     	{
     		debounce.clearStatus();
     		saveDoc(curDoc, debounce.get());
+    	}
+    }
+    
+    //将编辑中的文件保存到后台
+    function saveWikiAndExit() {
+    	console.log("saveWikiAndExit");
+    	if(debounce.getStatus() == 1)
+    	{
+    		debounce.clearStatus();
+    		saveDoc(curDoc, debounce.get(),exitEditWiki);
     	}
     }
 	
