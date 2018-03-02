@@ -23,7 +23,7 @@ public class Doc {
 
     private Integer lockBy;
 
-    private long lockTime;
+    private Long lockTime;
 
     private String content;
 
@@ -115,11 +115,11 @@ public class Doc {
         this.lockBy = lockBy;
     }
 
-    public long getLockTime() {
+    public Long getLockTime() {
         return lockTime;
     }
 
-    public void setLockTime(long lockTime) {
+    public void setLockTime(Long lockTime) {
         this.lockTime = lockTime;
     }
 
