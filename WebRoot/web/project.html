@@ -2690,16 +2690,27 @@
 	/********************* 文件编辑接口 *********************************************/
 	//退出文件编辑状态
     function exitEdit() {
+    	console.log("exitEdit");
     	if(debounce.getStatus() == 1)
     	{
-    		if(confirm("修改未保存，是否保存？") == true)
-    		{
-    			saveWikiAndExit();
-    			return;
-    		}
+    		qiao.bs.confirm({
+  	 	    		id: 'saveDocConfirm',
+  	 	    		msg: "修改未保存，是否保存？",
+  	 	    		close: false,		
+  	 	    		okbtn: "保存",
+  	 	    		qubtn: "直接退出",
+  	 	    	},function () {
+  	 	    	    saveWikiAndExit();
+  	  	 			return true;
+  	 			},function(){
+  	 				exitEditWikit();
+  	 				return true;
+  	 		});
+  	 	}
+  	 	else
+  	 	{
+    		exitEditWiki();
     	}
-    	
-    	exitEditWiki();
 	}
 	
     function exitEditWiki() {
