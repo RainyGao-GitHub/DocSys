@@ -2066,75 +2066,59 @@ public class DocController extends BaseController{
 	
 	//该接口根据用户是否有仓库的直接权限分开两条支线来获取用户权限
 	private DocAuth getDocUserAuth(Integer userId, Integer docId, Integer reposId) {
-		//确定用户是否为仓库的直接访问用户
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setReposId(reposId);
-		qReposAuth.setUserId(userId);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth == null)	//该用户没有该仓库的直接权限设置，获取是否设置任意用户的访问权限
+		
+		//Get UserDocAuth	
+		DocAuth docAuth = recurGetDocAuth(userId,docId,reposId);
+		if(docAuth != null)
 		{
-			System.out.println("用户不是该仓库的直接访问用户，检查该仓库是否开放了任意用户访问");
-			qReposAuth.setUserId(0);	//获取任意用户的仓库访问权限
-			reposAuth = reposService.getReposAuth(qReposAuth);
-			if(reposAuth == null)
+			//If the docAuth is parentDocAuth we need to check if the docAuth is Heritale
+			if(docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
 			{
-				System.out.println("该仓库未开放了任意用户访问");				
+				System.out.println("getDocUserAuth() " + docAuth.getDocId() + " User权限不可继承");
 				return null;
 			}
-			
-			//递归任意用户的文件的访问权限
-			System.out.println("该仓库开放了任意用户访问，递归获取任意用户的目录访问权限");				
-			userId = 0;	//任意用户
 		}
 		
+		//TODO: Get GroupDocAuth
 		
-		//取用户的直接权限，注意这个时候userId有可能被改成了0
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(userId);
-		qDocAuth.setReposId(reposId);
-		qDocAuth.setDocId(docId);
-		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		if(docAuth == null)	//没有设置的话默认使用父节点的权限
+		
+		//Get AnyUserDocAuth
+		docAuth = recurGetDocAuth(0,docId,reposId);
+		if(docAuth != null)
 		{
-			return recurGetDocAuth(userId,docId,reposId,reposAuth);
+			//If the docAuth is parentDocAuth we need to check if the docAuth is Heritale
+			if(docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
+			{
+				System.out.println("getDocUserAuth() " + docAuth.getDocId() + " anyUser权限不可继承");
+				return null;
+			}
 		}
 		return docAuth;
 	}
 	
 	//该接口是递归获取父节点直接根据用户ID递归获取文件权限，注意该接口必须是在自己的权限没有设置的时候调用
-	private DocAuth recurGetDocAuth(Integer userId, Integer docId,
-			Integer reposId,ReposAuth reposAuth) {
+	private DocAuth recurGetDocAuth(Integer userId, Integer docId,Integer reposId) {
+		
 		DocAuth qDocAuth = new DocAuth();
 		qDocAuth.setUserId(userId);
 		qDocAuth.setReposId(reposId);
 		qDocAuth.setDocId(docId);
-		if((docId == null) || (docId == 0))	//根目录直接取reposAuth的属性
-		{
-			if(reposAuth.getHeritable() == 1)
-			{
-				qDocAuth.setAccess(reposAuth.getAccess());
-				qDocAuth.setEditEn(reposAuth.getEditEn());
-				qDocAuth.setAddEn(reposAuth.getAddEn());
-				qDocAuth.setDeleteEn(reposAuth.getDeleteEn());
-				qDocAuth.setHeritable(1);
-				return qDocAuth;
-			}
-			return null;	
-		}
 		
 		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
+		if(docId == null || docId == 0)
+		{
+			//we have reached the top, return the docAuth whatever
+			return docAuth;
+		}
+		
+		//If it is not the root doc and docAuth is null, we need to go get parentDocAuth
 		if(docAuth == null)	//没有设置的话默认使用父节点的权限
 		{
 			Doc doc = reposService.getDocInfo(docId);
 			Integer pDocId = doc.getPid();
-			return recurGetDocAuth(userId,pDocId,reposId,reposAuth);
+			return recurGetDocAuth(userId,pDocId,reposId);
 		}
 		
-		if(docAuth.getHeritable() == 0)
-		{
-			System.out.println("权限不可继承");
-			return null;
-		}
 		return docAuth;
 	}
 	
