@@ -1138,42 +1138,36 @@ public class ReposController extends BaseController{
 	}
 	
 	//获取用户的仓库权限
-	public DocAuth getReposAuth(Integer UserID,Integer ReposID)
+	public ReposAuth getReposAuth(Integer UserID,Integer ReposID)
 	{
 		ReposAuth qReposAuth = new ReposAuth();
 		qReposAuth.setReposId(ReposID);
 		qReposAuth.setUserId(UserID);
 		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth == null)
+		if(reposAuth != null)
 		{
-			return null;
+			reposAuth.setType(1);
+			return reposAuth;
 		}
-		//Convert reposAuth to docAuth
-		DocAuth docAuth = new DocAuth();
-		docAuth.setUserId(UserID);
-		docAuth.setReposId(ReposID);
-		docAuth.setIsAdmin(reposAuth.getIsAdmin());
-		docAuth.setAccess(reposAuth.getAccess());
-		docAuth.setEditEn(reposAuth.getEditEn());
-		docAuth.setAddEn(reposAuth.getAddEn());
-		docAuth.setDeleteEn(reposAuth.getDeleteEn());
-		docAuth.setHeritable(reposAuth.getHeritable());
-		return docAuth;
+		
+		//TODO:Try to get the groupReposAuth
+		
+		
+		//Try to get any UserReposAuth
+		qReposAuth.setReposId(ReposID);
+		qReposAuth.setUserId(0);
+		reposAuth = reposService.getReposAuth(qReposAuth);
+		if(reposAuth != null)
+		{
+			reposAuth.setType(3);
+			return reposAuth;
+		}
+		return null;
 	}
 	
 	//This function will get DocAuth from the bottom to top
-	//这个函数只能获取真实存在的doc的权限，docId = 0（根目录是虚拟的doc）实际上就是仓库的权限，跟是否继承无关 
-	private DocAuth recurGetDocAuth(Integer docId, DocAuth reposAuth,List<DocAuth> userDocAuthList) {
-		//docId表示已经递归到了最上层
-		if(docId == null || docId == 0)
-		{
-			if(reposAuth != null && reposAuth.getHeritable() == 1)
-			{					
-				return reposAuth;
-			}
-		}
-		
-		DocAuth docAuth = getDocAuthByDocId(docId,userDocAuthList);
+	private DocAuth recurGetDocAuth(Integer docId,List<DocAuth> docAuthList) {
+		DocAuth docAuth = getDocAuthByDocId(docId,docAuthList);
 		if(docAuth == null)
 		{
 			Doc doc = reposService.getDoc(docId);
@@ -1183,7 +1177,7 @@ public class ReposController extends BaseController{
 				return null;
 			}
 			Integer pDocId = doc.getPid();
-			return recurGetDocAuth(pDocId,reposAuth,userDocAuthList);
+			return recurGetDocAuth(pDocId,docAuthList);
 		}
 		return docAuth;
 	}
@@ -1229,7 +1223,7 @@ public class ReposController extends BaseController{
 	List <Doc> getAuthedSubDocList(Integer userId,Integer pDocId,Integer reposId,DocAuth pDocAuth)
 	{
 		List <Doc> docList = null;
-		Integer pDocAuthType = pDocAuth.getDocAuthType();
+		Integer pDocAuthType = pDocAuth.getType();
 		if(pDocAuth.getHeritable() == 1)
 		{
 			if(pDocAuthType == 1) 
@@ -1386,7 +1380,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//用户在仓库中有权限设置，需要一层一层递归来获取文件列表
-		System.out.println("getAccessableDocList() rootDocAuth access:" + rootDocAuth.getAccess() + " docAuthType:" + rootDocAuth.getDocAuthType() + " heritable:" + rootDocAuth.getHeritable());
+		System.out.println("getAccessableDocList() rootDocAuth access:" + rootDocAuth.getAccess() + " docAuthType:" + rootDocAuth.getType() + " heritable:" + rootDocAuth.getHeritable());
 				
 		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
 		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
@@ -1405,21 +1399,21 @@ public class ReposController extends BaseController{
 			docAuth = getDocAuthByDocId(docId,userDocAuthList);
 			if(docAuth != null)
 			{
-				docAuth.setDocAuthType(1);
+				docAuth.setType(1);
 			}
 			else
 			{
 				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
 				if(docAuth != null)
 				{
-					docAuth.setDocAuthType(2);					
+					docAuth.setType(2);					
 				}
 				else
 				{
 					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
 					if(docAuth != null)
 					{
-						docAuth.setDocAuthType(2);					
+						docAuth.setType(2);					
 					}
 				}
 			}
@@ -1435,13 +1429,13 @@ public class ReposController extends BaseController{
 		
 		//Not root Doc and parentDocAuth is set
 		docAuth = null;
-		Integer pDocAuthType = parentDocAuth.getDocAuthType();
+		Integer pDocAuthType = parentDocAuth.getType();
 		if(pDocAuthType == 1)
 		{
 			docAuth = getDocAuthByDocId(docId,userDocAuthList);
 			if(docAuth != null)
 			{
-				docAuth.setDocAuthType(1);
+				docAuth.setType(1);
 			}
 			else if(docAuth == null && parentDocAuth.getHeritable() == 1)
 			{
@@ -1453,14 +1447,14 @@ public class ReposController extends BaseController{
 			docAuth = getDocAuthByDocId(docId,userDocAuthList);
 			if(docAuth != null)
 			{
-				docAuth.setDocAuthType(1);
+				docAuth.setType(1);
 			}
 			else
 			{
 				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
 				if(docAuth != null)
 				{
-					docAuth.setDocAuthType(2);
+					docAuth.setType(2);
 				}
 				else if(docAuth == null && parentDocAuth.getHeritable() == 1)
 				{
@@ -1473,21 +1467,21 @@ public class ReposController extends BaseController{
 			docAuth = getDocAuthByDocId(docId,userDocAuthList);
 			if(docAuth != null)
 			{
-				docAuth.setDocAuthType(1);
+				docAuth.setType(1);
 			}
 			else
 			{
 				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
 				if(docAuth != null)
 				{
-					docAuth.setDocAuthType(2);
+					docAuth.setType(2);
 				}
 				else
 				{
 					docAuth = getDocAuthByDocId(docId,groupDocAuthList);
 					if(docAuth != null)
 					{
-						docAuth.setDocAuthType(3);
+						docAuth.setType(3);
 					}					
 					else if(docAuth == null && parentDocAuth.getHeritable() == 1)
 					{
@@ -1601,7 +1595,7 @@ public class ReposController extends BaseController{
 		}
 		else 
 		{
-			DocAuth reposAuth = getReposAuth(login_user.getId(),reposId);
+			ReposAuth reposAuth = getReposAuth(login_user.getId(),reposId);
 			if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
 			{
 				return true;
@@ -1814,39 +1808,73 @@ public class ReposController extends BaseController{
 		else
 		{
 			System.out.println("普通用户" + userID);
-			//获取用户仓库权限
-			DocAuth reposAuth = getReposAuth(userID,vid);
-			if(reposAuth == null)
-			{
-				System.out.println("用户无权访问该仓库");
-				return null;
-			}
-			System.out.println("reposAuth.access " + reposAuth.getAccess() + " reposAuth.heritable " + reposAuth.getHeritable());
-			
-			if(docId == 0)	//根目录权限直接使用仓库权限
-			{
-				System.out.println("根目录权限直接使用仓库权限");
-				return reposAuth;
-			}
 			
 			//获取用户的仓库的所有权限列表，后续的目录权限将从该列表中读取，避免每次查询数据库
-			List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
-			if(userDocAuthList == null)
+			List <DocAuth> anyUserDocAuthList = reposService.getUserDocAuthList(0,null,null,vid);
+			List <DocAuth> userDocAuthList = null;
+			List <DocAuth> groupDocAuthList = null;
+			if(userID != 0)
 			{
-				System.out.println("userDocAuthList is NULL for " + userID);
-				//用户在该仓库下没有设置权限，需要根据仓库的权限设置来确定访问范围
-				if(reposAuth != null && reposAuth.getHeritable() == 1)
-				{					
-					return reposAuth;
-				}
-				
-				System.out.println("用户无权访问该仓库的所有文件");
+				userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
+				groupDocAuthList = getGroupDocAuthList(userID,null,null,vid);
+			}
+			
+			if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
+			{
+				System.out.println("getUserDocAuth() 用户 " + userID + " 无权访问该仓库的所有文件");
 				return null;
 			}
 
 			//从docId开始递归往上获取用户权限
-			DocAuth userDocAuth = recurGetDocAuth(docId,reposAuth,userDocAuthList);
-			return userDocAuth;
+			DocAuth userDocAuth = recurGetDocAuth(docId,userDocAuthList);
+			if(userDocAuth != null)
+			{
+				//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+				if(!docId.equals(userDocAuth.getDocId()) && userDocAuth.getHeritable() == 0)
+				{
+					return null;
+				}
+				else
+				{
+					userDocAuth.setType(1);
+					return userDocAuth;
+				}
+			}
+			else
+			{
+				userDocAuth = recurGetDocAuth(docId,groupDocAuthList);
+				if(userDocAuth != null)
+				{
+					//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+					if(!docId.equals(userDocAuth.getDocId()) && userDocAuth.getHeritable() == 0)
+					{
+						return null;
+					}
+					else
+					{
+						userDocAuth.setType(2);
+						return userDocAuth;
+					}
+				}
+				else
+				{
+					userDocAuth = recurGetDocAuth(docId,groupDocAuthList);
+					if(userDocAuth != null)
+					{
+						//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+						if(!docId.equals(userDocAuth.getDocId()) && userDocAuth.getHeritable() == 0)
+						{
+							return null;
+						}
+						else
+						{
+							userDocAuth.setType(3);
+							return userDocAuth;
+						}
+					}
+				}
+			}
+			return null;
 		}
 	}
 
@@ -1867,13 +1895,9 @@ public class ReposController extends BaseController{
 		//检查是否是仓库的管理员
 		if(isAdminOfRepos(login_user,reposId) == false)
 		{
-			//检查是否在仓库下的目录拥有管理员权限
-			if(hasAdminUnderRepos(login_user,reposId) == false)
-			{
-				rt.setError("您没有该仓库的管理权限，无法添加用户 ！");
-				writeJson(rt, response);			
-				return;
-			}
+			rt.setError("您没有该仓库的管理权限，无法添加用户 ！");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//检查该用户是否设置了仓库权限
@@ -1894,41 +1918,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 	}
 	
-	private boolean hasAdminUnderRepos(User login_user, Integer reposId) {
-		
-		Integer userID = login_user.getId();
-		Integer userType = login_user.getType();
-		
-		//超级管理员可以访问所有目录
-		if(userType == 2)
-		{
-			System.out.println("hasAdminUnderRepos() 超级管理员 " + userID);
-			return true;
-		}
-		else
-		{
-			System.out.println("hasAdminUnderRepos()  普通用户 " + userID);
-			//获取用户的仓库的所有权限列表，后续的目录权限将从该列表中读取，避免每次查询数据库
-			List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,reposId);
-			if(userDocAuthList == null)
-			{
-				System.out.println("hasAdminUnderRepos() userDocAuthList is NULL for " + userID);
-				return false;
-			}
-			
-			//go through the userDocAuthList
-			for(int i = 0 ; i < userDocAuthList.size() ; i++) 
-			{
-				DocAuth docAuth = userDocAuthList.get(i);
-				if(docAuth.getIsAdmin() == 1)
-				{
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	/****************   delete User ReposAuth ******************/
 	@RequestMapping("/deleteUserReposAuth.do")
 	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1964,15 +1953,16 @@ public class ReposController extends BaseController{
 				rt.setError("用户仓库权限删除失败！");
 				writeJson(rt, response);			
 				return;
-			}	
-
-			//删除该用户在该仓库的所有的目录权限设置
-			//DocAuth docAuth = new DocAuth();
-			//docAuth.setUserId(userId);
-			//docAuth.setReposId(reposId);
-			//reposService.deleteDocAuthSelective(docAuth);	
+			}
 		}
-		writeJson(rt, response);			
+		
+		//删除该用户在该仓库的所有的目录权限设置
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(userId);
+		docAuth.setReposId(reposId);
+		reposService.deleteDocAuthSelective(docAuth);
+		
+		writeJson(rt, response);
 	}
 	
 	/****************   delete User ReposAuth ******************/
@@ -1992,7 +1982,7 @@ public class ReposController extends BaseController{
 		//检查当前用户的权限
 		if(isAdminOfDoc(login_user,docId,reposId) == false)
 		{
-			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			rt.setError("您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -2032,8 +2022,8 @@ public class ReposController extends BaseController{
 		}
 
 		//检查当前用户的权限
-		DocAuth adminDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
-		if(adminDocAuth == null ||adminDocAuth.getIsAdmin()==null || adminDocAuth.getIsAdmin() == 0)
+		DocAuth userDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
+		if(userDocAuth == null ||userDocAuth.getIsAdmin()==null || userDocAuth.getIsAdmin() == 0)
 		{
 			System.out.println("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
@@ -2042,78 +2032,47 @@ public class ReposController extends BaseController{
 		}
 		
 		//login_user不得设置超过自己的权限：超过了则无效
-		if(isUserAuthExpanded(isAdmin,access,editEn,addEn,deleteEn,heritable,adminDocAuth,rt) == true)
+		if(isUserAuthExpanded(isAdmin,access,editEn,addEn,deleteEn,heritable,userDocAuth,rt) == true)
 		{
 			System.out.println("超过设置者的权限 ！");
 			writeJson(rt, response);			
 			return;			
 		}
 		
-		System.out.println("检查设置的用户是否是仓库的访问用户 ");
-		//检查该用户是否设置了仓库权限
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setUserId(userId);
-		qReposAuth.setReposId(reposId);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth == null)
+		//获取用户的权限设置，如果不存在则增加，否则修改
+		DocAuth qDocAuth = new DocAuth();
+		qDocAuth.setUserId(userId);
+		qDocAuth.setDocId(docId);
+		qDocAuth.setReposId(reposId);
+		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
+		if(docAuth == null)
 		{
-			rt.setError("请先添加该用户为仓库的访问用户！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//获取DocAuthedUserList
-		if(docId == 0)
-		{
-			reposAuth.setIsAdmin(isAdmin);
-			reposAuth.setAccess(access);
-			reposAuth.setEditEn(editEn);
-			reposAuth.setAddEn(addEn);
-			reposAuth.setDeleteEn(deleteEn);
-			reposAuth.setHeritable(heritable);
-			if(reposService.setReposAuth(reposAuth) == 0)
+			qDocAuth.setIsAdmin(isAdmin);
+			qDocAuth.setAccess(access);
+			qDocAuth.setEditEn(editEn);
+			qDocAuth.setAddEn(addEn);
+			qDocAuth.setDeleteEn(deleteEn);
+			qDocAuth.setHeritable(heritable);
+			if(reposService.addDocAuth(qDocAuth) == 0)
 			{
-				rt.setError("用户仓库权限更新失败");
+				rt.setError("用户文件权限增加失败");
 				writeJson(rt, response);			
 				return;
-			}			
+			}
 		}
 		else
 		{
-			DocAuth qDocAuth = new DocAuth();
-			qDocAuth.setUserId(userId);
-			qDocAuth.setDocId(docId);
-			qDocAuth.setReposId(reposId);
-			DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-			if(docAuth == null)
+			docAuth.setIsAdmin(isAdmin);
+			docAuth.setAccess(access);
+			docAuth.setEditEn(editEn);
+			docAuth.setAddEn(addEn);
+			docAuth.setDeleteEn(deleteEn);
+			docAuth.setHeritable(heritable);
+			if(reposService.updateDocAuth(docAuth) == 0)
 			{
-				qDocAuth.setIsAdmin(isAdmin);
-				qDocAuth.setAccess(access);
-				qDocAuth.setEditEn(editEn);
-				qDocAuth.setAddEn(addEn);
-				qDocAuth.setDeleteEn(deleteEn);
-				qDocAuth.setHeritable(heritable);
-				if(reposService.addDocAuth(qDocAuth) == 0)
-				{
-					rt.setError("用户文件权限增加失败");
-					writeJson(rt, response);			
-					return;
-				}
-			}
-			else
-			{
-				docAuth.setIsAdmin(isAdmin);
-				docAuth.setAccess(access);
-				docAuth.setEditEn(editEn);
-				docAuth.setAddEn(addEn);
-				docAuth.setDeleteEn(deleteEn);
-				docAuth.setHeritable(heritable);
-				if(reposService.updateDocAuth(docAuth) == 0)
-				{
-					rt.setError("用户文件权限增加失败");
-					writeJson(rt, response);			
-					return;
-				}
+				rt.setError("用户文件权限更新失败");
+				writeJson(rt, response);			
+				return;
 			}
 		}
 		
