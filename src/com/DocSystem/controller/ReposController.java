@@ -1214,11 +1214,13 @@ public class ReposController extends BaseController{
 	}
 	
 	//这是个递归调用函数
-	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, Integer pDocAuthType, List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList, List<DocAuth> anyUserDocAuthList)
+	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList, List<DocAuth> anyUserDocAuthList)
 	{
 		//System.out.println("getAuthedDocList userId:" + userId + " pid:" + pid + " vid:" + vid);
+		Integer pDocAuthType = pDocAuth.getDocAuthType();
+		
 		//获取pid目录下User能访问的所有doc
-		List <Doc> docList = getAuthedSubDocList(userId,pid,vid,pDocAuth,pDocAuthType);
+		List <Doc> docList = getAuthedSubDocList(userId,pid,vid,pDocAuth);
 		if(docList != null)
 		{
 			//copy docList the resultList
@@ -1232,73 +1234,11 @@ public class ReposController extends BaseController{
 				Integer subDocId = subDoc.getId();
 				if(subDoc.getType() == 2)	//只有目录才需要查询
 				{
-					DocAuth subDocAuth = null;
-					Integer subDocAuthType = pDocAuthType;
-					if(pDocAuthType == 1)
-					{
-						subDocAuth = getDocAuth(subDocId,pDocAuth,userDocAuthList);
-						if(subDocAuth != null)	//减少数据库查询次数
-						{
-							subDocAuthType = 1;
-						}
-						else if(subDocAuth == null && pDocAuth.getHeritable() == 1)
-						{
-							subDocAuth = pDocAuth;
-						}
-					}
-					else if(pDocAuthType == 2)
-					{
-						subDocAuth = getDocAuth(subDocId,pDocAuth,userDocAuthList);
-						if(subDocAuth != null)
-						{
-							subDocAuthType = 1;
-						}
-						else
-						{
-							subDocAuth = getDocAuth(subDocId,pDocAuth,groupDocAuthList);
-							if(subDocAuth != null)
-							{
-								subDocAuthType = 2;
-							}
-							else if(subDocAuth == null && pDocAuth.getHeritable() == 1)
-							{
-								subDocAuth = pDocAuth;
-							}
-						}
-					}
-					else if(pDocAuthType == 3)
-					{
-						subDocAuth = getDocAuth(subDocId,pDocAuth,userDocAuthList);
-						if(subDocAuth != null)
-						{
-								subDocAuthType = 1;
-						}
-						else
-						{
-							subDocAuth = getDocAuth(subDocId,pDocAuth,groupDocAuthList);
-							if(subDocAuth != null)
-							{
-								subDocAuthType = 2;
-							}
-							else if(subDocAuth == null)
-							{
-								subDocAuth = getDocAuth(subDocId,pDocAuth,anyUserDocAuthList);
-								if(subDocAuth != null)
-								{
-									subDocAuthType = 3;
-								}
-								else if(subDocAuth == null && pDocAuth.getHeritable() == 1)
-								{
-									subDocAuth = pDocAuth;
-								}
-							}
-						}
-					}
-					
+					DocAuth subDocAuth = getDocAuthFromList(subDocId,pDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 					//目录可访问，则进行访问
 					if(subDocAuth != null)
 					{
-						List <Doc> subDocList = getAuthedDocList(userId,subDocId,vid,subDocAuth,subDocAuthType,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
+						List <Doc> subDocList = getAuthedDocList(userId,subDocId,vid,subDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 						if(subDocList != null)
 						{
 							resultList.addAll(subDocList);
@@ -1313,9 +1253,10 @@ public class ReposController extends BaseController{
 	}
 
 	//获取目录pid下的子节点（且当前用户有权限访问的文件）
-	List <Doc> getAuthedSubDocList(Integer userId,Integer pDocId,Integer reposId,DocAuth pDocAuth, Integer pDocAuthType)
+	List <Doc> getAuthedSubDocList(Integer userId,Integer pDocId,Integer reposId,DocAuth pDocAuth)
 	{
 		List <Doc> docList = null;
+		Integer pDocAuthType = pDocAuth.getDocAuthType();
 		if(pDocAuth.getHeritable() == 1)
 		{
 			if(pDocAuthType == 1) 
@@ -1454,36 +1395,15 @@ public class ReposController extends BaseController{
 		//Get AnyUserDocAuthList
 		List <DocAuth> anyUserDocAuthList = reposService.getUserDocAuthList(0,null,null,vid);
 		
-		if(userDocAuthList == null && anyUserDocAuthList == null)
+		if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
 		{
 			System.out.println("用户无权访问该仓库的所有文件");
 			return null;
 		}
 		
 		
-		//get the rootDocAuth and rootDocAuthType
-		Integer rootDocAuthType = 0; 
-		DocAuth rootDocAuth = getDocAuthByDocId(0,userDocAuthList);
-		if(rootDocAuth != null)
-		{
-			rootDocAuthType = 1;
-		}
-		else
-		{
-			rootDocAuth = getDocAuthByDocId(0,groupDocAuthList);
-			if(rootDocAuth != null)
-			{
-				rootDocAuthType = 2;
-			}
-			else{
-				rootDocAuth = getDocAuthByDocId(0,anyUserDocAuthList);
-				if(rootDocAuth != null)
-				{
-					rootDocAuthType = 3;
-				}
-			}
-		}
-		
+		//get the rootDocAuth and set rootDocAuthType
+		DocAuth rootDocAuth = getDocAuthFromList(0,null,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 		if(rootDocAuth == null)
 		{
 			System.out.println("用户根目录权限未设置");
@@ -1491,11 +1411,115 @@ public class ReposController extends BaseController{
 		}
 		
 		//用户在仓库中有权限设置，需要一层一层递归来获取文件列表
-		System.out.println("rootDocAuth.access " + rootDocAuth.getAccess() + " rootDocAuth.heritable " + rootDocAuth.getHeritable());
+		System.out.println("rootDocAuth access:" + rootDocAuth.getAccess() + " docAuthType:" + rootDocAuth.getDocAuthType() + " heritable:" + rootDocAuth.getHeritable());
 				
 		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
-		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth, rootDocAuthType,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
+		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 		return authedDocList;
+	}
+
+	private DocAuth getDocAuthFromList(int docId, DocAuth parentDocAuth,
+			List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList,List<DocAuth> anyUserDocAuthList) {
+		
+		DocAuth docAuth = null;
+		//root Doc
+		if(docId == 0)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setDocAuthType(1);
+			}
+			else
+			{
+				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					docAuth.setDocAuthType(2);					
+				}
+				else
+				{
+					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
+					if(docAuth != null)
+					{
+						docAuth.setDocAuthType(2);					
+					}
+				}
+			}
+			return docAuth;
+		}
+		
+		//Not root Doc, if parentDocAuth is null, return null
+		if(parentDocAuth == null)
+		{
+			System.out.println("getDocAuthFromList() docId:" + docId + " parentDocAuth is null");
+			return null;
+		}
+		
+		//Not root Doc and parentDocAuth is set
+		docAuth = null;
+		Integer pDocAuthType = parentDocAuth.getDocAuthType();
+		if(pDocAuthType == 1)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setDocAuthType(1);
+			}
+			else if(docAuth == null && parentDocAuth.getHeritable() == 1)
+			{
+				docAuth = parentDocAuth;
+			}
+		}
+		else if(pDocAuthType == 2)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setDocAuthType(1);
+			}
+			else
+			{
+				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					docAuth.setDocAuthType(2);
+				}
+				else if(docAuth == null && parentDocAuth.getHeritable() == 1)
+				{
+					docAuth = parentDocAuth;
+				}
+			}
+		}
+		else if(pDocAuthType == 3)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setDocAuthType(1);
+			}
+			else
+			{
+				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					docAuth.setDocAuthType(2);
+				}
+				else
+				{
+					docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+					if(docAuth != null)
+					{
+						docAuth.setDocAuthType(3);
+					}					
+					else if(docAuth == null && parentDocAuth.getHeritable() == 1)
+					{
+						docAuth = parentDocAuth;
+					}
+				}
+			}
+		}
+		return docAuth;
 	}
 
 	//getGroupDocAuthList 用于获取用户的组权限(用户组权限所有所在组的并集)
