@@ -1421,6 +1421,8 @@ public class ReposController extends BaseController{
 	private DocAuth getDocAuthFromList(int docId, DocAuth parentDocAuth,
 			List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList,List<DocAuth> anyUserDocAuthList) {
 		
+		System.out.println("getDocAuthFromList() docId:" + docId);
+		
 		DocAuth docAuth = null;
 		//root Doc
 		if(docId == 0)
