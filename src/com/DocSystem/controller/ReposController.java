@@ -1188,31 +1188,6 @@ public class ReposController extends BaseController{
 		return docAuth;
 	}
 	
-	//This function will get DocAuth from top to bottom
-	public DocAuth getDocAuth(Integer DocID,DocAuth parentDocAuth,List<DocAuth> userDocAuthList)
-	{
-		if((DocID == null) || (DocID == 0))	//根目录直接取parentDocAuth的属性
-		{
-			if(parentDocAuth.getHeritable() == 0)	//不让继承的话，则返回null
-			{
-				return null;
-			}
-			return parentDocAuth;
-		}
-		
-		//从用户的权限列表中读取DocAuth
-		DocAuth docAuth = getDocAuthByDocId(DocID, userDocAuthList);
-		if(docAuth == null)
-		{
-			if(parentDocAuth.getHeritable() == 0)	//不让继承的话，则返回null
-			{
-				return null;
-			}
-			return parentDocAuth;
-		}
-		return docAuth;
-	}
-	
 	//这是个递归调用函数
 	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList, List<DocAuth> anyUserDocAuthList)
 	{
