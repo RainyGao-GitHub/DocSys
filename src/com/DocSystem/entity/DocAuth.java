@@ -102,12 +102,11 @@ public class DocAuth {
     }
 
     //1: 用户直接权限  2: 用户所在组权限  3: 任意用户权限
-    private Integer docAuthType = 0;
-    public Integer getDocAuthType() {
-        return docAuthType;
+    private Integer type = 0;
+    public Integer getType() {
+        return type;
     }
-    public void setDocAuthType(Integer docAuthType) {
-		// TODO Auto-generated method stub
-		this.docAuthType = docAuthType;
+    public void setType(Integer type) {
+		this.type = type;
 	}
 }

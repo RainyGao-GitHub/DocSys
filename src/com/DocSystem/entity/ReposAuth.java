@@ -90,4 +90,12 @@ public class ReposAuth {
     public void setHeritable(Integer heritable) {
         this.heritable = heritable;
     }
+    
+    private Integer type = 0;
+    public Integer getType() {
+        return type;
+    }
+    public void setType(Integer type) {
+        this.type = type;
+    }
 }
