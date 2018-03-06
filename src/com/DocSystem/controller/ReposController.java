@@ -1200,13 +1200,6 @@ public class ReposController extends BaseController{
 			return parentDocAuth;
 		}
 		
-		//从数据库中获取用户的 DocAuth
-		//DocAuth qDocAuth = new DocAuth();
-		//qDocAuth.setUserId(UserID);
-		//qDocAuth.setReposId(ReposID);
-		//qDocAuth.setDocId(DocID);
-		//DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		
 		//从用户的权限列表中读取DocAuth
 		DocAuth docAuth = getDocAuthByDocId(DocID, userDocAuthList);
 		if(docAuth == null)
@@ -1221,7 +1214,7 @@ public class ReposController extends BaseController{
 	}
 	
 	//这是个递归调用函数
-	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, Integer pDocAuthType, List<DocAuth> userDocAuthList, List<DocAuth> anyUserDocAuthList)
+	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, Integer pDocAuthType, List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList, List<DocAuth> anyUserDocAuthList)
 	{
 		//System.out.println("getAuthedDocList userId:" + userId + " pid:" + pid + " vid:" + vid);
 		//获取pid目录下User能访问的所有doc
@@ -1253,22 +1246,19 @@ public class ReposController extends BaseController{
 							subDocAuth = pDocAuth;
 						}
 					}
-					//else if(pDocAuthType == 2)	//TODO:
-					else if(pDocAuthType == 3)
+					else if(pDocAuthType == 2)
 					{
 						subDocAuth = getDocAuth(subDocId,pDocAuth,userDocAuthList);
-						if(subDocAuth != null)	//减少数据库查询次数
+						if(subDocAuth != null)
 						{
-								subDocAuthType = 1;
+							subDocAuthType = 1;
 						}
 						else
 						{
-							//TODO: getGroupDocAuth
-							
-							subDocAuth = getDocAuth(subDocId,pDocAuth,anyUserDocAuthList);
-							if(subDocAuth != null)	//减少数据库查询次数
+							subDocAuth = getDocAuth(subDocId,pDocAuth,groupDocAuthList);
+							if(subDocAuth != null)
 							{
-								subDocAuthType = 3;
+								subDocAuthType = 2;
 							}
 							else if(subDocAuth == null && pDocAuth.getHeritable() == 1)
 							{
@@ -1276,11 +1266,39 @@ public class ReposController extends BaseController{
 							}
 						}
 					}
+					else if(pDocAuthType == 3)
+					{
+						subDocAuth = getDocAuth(subDocId,pDocAuth,userDocAuthList);
+						if(subDocAuth != null)
+						{
+								subDocAuthType = 1;
+						}
+						else
+						{
+							subDocAuth = getDocAuth(subDocId,pDocAuth,groupDocAuthList);
+							if(subDocAuth != null)
+							{
+								subDocAuthType = 2;
+							}
+							else if(subDocAuth == null)
+							{
+								subDocAuth = getDocAuth(subDocId,pDocAuth,anyUserDocAuthList);
+								if(subDocAuth != null)
+								{
+									subDocAuthType = 3;
+								}
+								else if(subDocAuth == null && pDocAuth.getHeritable() == 1)
+								{
+									subDocAuth = pDocAuth;
+								}
+							}
+						}
+					}
 					
 					//目录可访问，则进行访问
 					if(subDocAuth != null)
 					{
-						List <Doc> subDocList = getAuthedDocList(userId,subDocId,vid,subDocAuth,subDocAuthType,userDocAuthList,anyUserDocAuthList);
+						List <Doc> subDocList = getAuthedDocList(userId,subDocId,vid,subDocAuth,subDocAuthType,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 						if(subDocList != null)
 						{
 							resultList.addAll(subDocList);
@@ -1302,43 +1320,36 @@ public class ReposController extends BaseController{
 		{
 			if(pDocAuthType == 1) 
 			{
-				//SubDocList = 获取所有SubDocAuth.access=1或SubDocAuth==null的节点;
-				//获取pDocId下所有直接授权和继承授权的子文件列表
-				docList = reposService.getAuthedDocListHeritable(null,pDocId,reposId,userId);	//获取user.access==1 和 docAuth为null的所有子节点
-				//docList = reposService.getAuthedDocListHeritable1(null,pDocId,reposId,userId);	//获取user.access==1 和 docAuth为null的所有子节点
+				//获取所有User's DocAuth.access=1或 DocAuth==null的节点
+				docList = reposService.getAuthedDocListHeritable(null,pDocId,reposId,userId);	
 			}
 			else if(pDocAuthType == 2)
 			{
-				//TODO: 
-				//SubDocList = 获取所有SubDocAuth.access=1或SubDocAuth==null的节点;
-				//			   或者SubGroupDocAuth.access=1或SubGroupDocAuth==null的节点；
-				//docList = reposService.getAuthedDocListHeritable2(null,pDocId,reposId,userId);	//获取user.access==1 和 docAuth为null的所有子节点
-							}
+				//获取所有User's DocAuth.access=1或SubDocAuth==null 或者 Group's DocAuth.access=1或DocAuth==null的节点；
+				//docList = reposService.getAuthedDocListHeritable2(null,pDocId,reposId,userId);
+			}
 			else
 			{
-				//SubDocList = 获取所有SubDocAuth.access=1或SubDocAuth==null的节点;
-				//			   或者SubGroupDocAuth.access=1或SubGroupDocAuth==null的节点；
-				//			或者SubAnyUserDocAuth.access=1或SubAnyUserDocAuth==null的节点；
-				//docList = reposService.getAuthedDocListHeritable3(null,pDocId,reposId,userId);	//获取user.access==1 和 docAuth为null的所有子节点
+				//获取所有User's DocAuth.access=1或DocAuth==null 或者 Group's DocAuth.access=1或DocAuth==null 或者AnyUser's DocAuth.access=1或DocAuth==null的节点；
+				//docList = reposService.getAuthedDocListHeritable3(null,pDocId,reposId,userId);			
 			}
 		}
 		else
 		{
 			if(pDocAuthType == 1) 
 			{
-				//SubDocList = 获取所有SubDocAuth.access=1的节点;
-				//获取pDocId下所有直接授权的子文件列表
-				docList = reposService.getAuthedDocList(null,pDocId,reposId,userId);	//获取user.access==1的所有子节点
-				//docList = reposService.getAuthedDocList1(null,pDocId,reposId,userId);	//获取user.access==1的所有子节点			
+				//获取所有User's DocAuth.access=1的节点
+				docList = reposService.getAuthedDocList(null,pDocId,reposId,userId);
+				//docList = reposService.getAuthedDocList1(null,pDocId,reposId,userId);			
 			}
 			else if(pDocAuthType == 2)
 			{
-				//SubDocList = 获取所有SubDocAuth.access=1或者SubGroupDocAuth.access=1节点;
+				//获取所有User's DocAuth.access=1  或者  Group's DocAuth.access=1的节点；
 				//docList = reposService.getAuthedDocList2(null,pDocId,reposId,userId);
 			}
 			else
 			{
-				//SubDocList = 获取所有SubDocAuth.access=1或者SubGroupDocAuth.access=1或者SubAnyUserDocAuth.access=1的的节点;
+				//获取所有User's DocAuth.access=1 或者 Group's DocAuth.access=1或DocAuth==null 或者AnyUser's DocAuth.access=1的节点；
 				//docList = reposService.getAuthedDocList3(null,pDocId,reposId,userId);
 			}
 		}
@@ -1350,6 +1361,11 @@ public class ReposController extends BaseController{
 	
 	//根据DocId从docAuthList中找出对应的docAuth
 	private DocAuth getDocAuthByDocId(Integer docId,List<DocAuth> docAuthList) {
+		if(docAuthList == null)
+		{
+			return null;
+		}
+		
 		for(int i = 0 ; i < docAuthList.size() ; i++) 
 		{
 			DocAuth docAuth = docAuthList.get(i);
@@ -1424,19 +1440,17 @@ public class ReposController extends BaseController{
 			System.out.println("普通用户");
 			//获取用户仓库权限
 			Integer userID = login_user.getId();
-			List <Doc> authedDocList = getAuthedDocList(userID,vid);
+			List <Doc> authedDocList = getAccessableDocList(userID,vid);
 			return authedDocList;
 		}
 	}
 	
 	//获取仓库下用户可访问的doclist
-	private List<Doc> getAccessableDocList(Integer userID, Integer vid) {
-		// TODO Auto-generated method stub
-		
+	private List<Doc> getAccessableDocList(Integer userID, Integer vid) {		
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
 		List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
-		//TODO: get groupDocAuthList
-		//List <DocAuth> groupDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
+		//get groupDocAuthList
+		List <DocAuth> groupDocAuthList = getGroupDocAuthList(userID,null,null,vid);
 		//Get AnyUserDocAuthList
 		List <DocAuth> anyUserDocAuthList = reposService.getUserDocAuthList(0,null,null,vid);
 		
@@ -1456,23 +1470,22 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			//TODO: get GroupDocAuth 
-			//rootDocAuth = getDocAuthByDocId(0,groupDocAuthList);
-			//if(rootDocAuth != null)
-			//{
-			//	rootDocAuthType = 2;
-			//}
-			//else{
+			rootDocAuth = getDocAuthByDocId(0,groupDocAuthList);
+			if(rootDocAuth != null)
+			{
+				rootDocAuthType = 2;
+			}
+			else{
 				rootDocAuth = getDocAuthByDocId(0,anyUserDocAuthList);
 				if(rootDocAuth != null)
 				{
 					rootDocAuthType = 3;
 				}
-			//}
+			}
 		}
+		
 		if(rootDocAuth == null)
 		{
-			//
 			System.out.println("用户根目录权限未设置");
 			return null;
 		}
@@ -1481,8 +1494,18 @@ public class ReposController extends BaseController{
 		System.out.println("rootDocAuth.access " + rootDocAuth.getAccess() + " rootDocAuth.heritable " + rootDocAuth.getHeritable());
 				
 		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
-		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth, rootDocAuthType,userDocAuthList,anyUserDocAuthList);
+		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth, rootDocAuthType,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 		return authedDocList;
+	}
+
+	//getGroupDocAuthList 用于获取用户的组权限(用户组权限所有所在组的并集)
+	//docId parentDocId reposId是查询的限制条件
+	private List<DocAuth> getGroupDocAuthList(Integer userID, Integer docId,Integer parentDocId, Integer reposId) {
+		//TODO: Auto-generated method stub
+		//Get GroupList
+		//Go through the GroupList to get the GroupDocAuthList[] one by one
+		//Combine all GroupAuthList to unique groupDocAuthList by docId
+		return null;
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户***************/
