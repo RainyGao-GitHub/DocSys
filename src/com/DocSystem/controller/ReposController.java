@@ -1216,9 +1216,7 @@ public class ReposController extends BaseController{
 	//这是个递归调用函数
 	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList, List<DocAuth> anyUserDocAuthList)
 	{
-		//System.out.println("getAuthedDocList userId:" + userId + " pid:" + pid + " vid:" + vid);
-		Integer pDocAuthType = pDocAuth.getDocAuthType();
-		
+		System.out.println("getAuthedDocList() userId:" + userId + " pid:" + pid + " vid:" + vid);
 		//获取pid目录下User能访问的所有doc
 		List <Doc> docList = getAuthedSubDocList(userId,pid,vid,pDocAuth);
 		if(docList != null)
@@ -1388,6 +1386,8 @@ public class ReposController extends BaseController{
 	
 	//获取仓库下用户可访问的doclist
 	private List<Doc> getAccessableDocList(Integer userID, Integer vid) {		
+		System.out.println("getAccessableDocList() userId:" + userID + " vid:" + vid);
+		
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
 		List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
 		//get groupDocAuthList
@@ -1397,7 +1397,7 @@ public class ReposController extends BaseController{
 		
 		if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
 		{
-			System.out.println("用户无权访问该仓库的所有文件");
+			System.out.println("getAccessableDocList() 用户无权访问该仓库的所有文件");
 			return null;
 		}
 		
@@ -1406,12 +1406,12 @@ public class ReposController extends BaseController{
 		DocAuth rootDocAuth = getDocAuthFromList(0,null,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 		if(rootDocAuth == null)
 		{
-			System.out.println("用户根目录权限未设置");
+			System.out.println("getAccessableDocList() 用户根目录权限未设置");
 			return null;
 		}
 		
 		//用户在仓库中有权限设置，需要一层一层递归来获取文件列表
-		System.out.println("rootDocAuth access:" + rootDocAuth.getAccess() + " docAuthType:" + rootDocAuth.getDocAuthType() + " heritable:" + rootDocAuth.getHeritable());
+		System.out.println("getAccessableDocList() rootDocAuth access:" + rootDocAuth.getAccess() + " docAuthType:" + rootDocAuth.getDocAuthType() + " heritable:" + rootDocAuth.getHeritable());
 				
 		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
 		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
