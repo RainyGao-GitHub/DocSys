@@ -74,3 +74,8 @@
 15、docsystem20180302.sql
 	1.04版本使用
 	doc增加 lockBy字段,用于确定doc最终getLock的人	
+
+15、docsystem20180313.sql
+	1.04版本使用
+	增加表UserGroup\GroupMember
+	reposAuth和docAuth增加GroupID字段
