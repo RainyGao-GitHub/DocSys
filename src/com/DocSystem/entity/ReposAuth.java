@@ -5,6 +5,8 @@ public class ReposAuth {
 
     private Integer userId;
 
+    private Integer groupId;
+
     private Integer reposId;
 
     private Integer isAdmin;
@@ -33,6 +35,14 @@ public class ReposAuth {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    public Integer getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
     }
 
     public Integer getReposId() {

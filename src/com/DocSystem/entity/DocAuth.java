@@ -5,6 +5,8 @@ public class DocAuth {
 
     private Integer userId;
 
+    private Integer groupId;
+
     private Integer docId;
 
     private Integer reposId;
@@ -35,6 +37,14 @@ public class DocAuth {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    public Integer getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
     }
 
     public Integer getDocId() {
