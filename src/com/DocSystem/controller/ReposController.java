@@ -22,7 +22,6 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.entity.UserDocAuth;
 
 import com.DocSystem.service.UserService;
 import com.DocSystem.service.impl.ReposServiceImpl;
@@ -1518,7 +1517,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取All UserList
-		List <UserDocAuth> UserList = getReposAllUserList(reposId);
+		List <ReposAuth> UserList = getReposAllUserList(reposId);
 		String json = JSON.toJSONStringWithDateFormat(UserList, "yyy-MM-dd HH:mm:ss");
 		System.out.println("UserList:" + json);
 		rt.setData(UserList);
@@ -1526,13 +1525,13 @@ public class ReposController extends BaseController{
 		
 	}
 	
-	private List<UserDocAuth> getReposAllUserList(Integer reposId) {
-		List <UserDocAuth> UserList = reposService.getReposAllUsers(reposId);	//取出系统所有用户
+	private List<ReposAuth> getReposAllUserList(Integer reposId) {
+		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	//取出系统所有用户
 		//获取任意用户的DocAuth
-		UserDocAuth anyUserReposAuth = getAnyUserReposAuth(reposId); //获取任意用户的权限表
+		ReposAuth anyUserReposAuth = getAnyUserReposAuth(reposId); //获取任意用户的权限表
 		if(anyUserReposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
 		{
-			anyUserReposAuth = new UserDocAuth();
+			anyUserReposAuth = new ReposAuth();
 			anyUserReposAuth.setUserId(0);
 			anyUserReposAuth.setUserName("任意用户");			
 			UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList
@@ -1544,83 +1543,6 @@ public class ReposController extends BaseController{
 		return UserList;
 	}
 
-	/****************  get ReposAuthList and DocAuthList of Repos  ******************/
-	@RequestMapping("/getReposAuthList.do")
-	public void getReposAuthList(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("getReposAuthList reposId: " + reposId);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//检查当前用户的权限
-		if(isAdminOfRepos(login_user,reposId) == false)
-		{
-			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//获取ReposAuthList
-		List <UserDocAuth> ReposAuthList = getReposAuthList(reposId);
-		if(ReposAuthList == null)
-		{
-			ReposAuthList = getDocAuthList(0,reposId);	//docId=0,表示获取仓库下所有Doc的DocAuth
-		}
-		else
-		{
-			List <UserDocAuth> DocAuthList = getDocAuthList(0,reposId);	//docId=0,表示获取仓库下所有Doc的DocAuth
-			if(DocAuthList != null)
-			{
-				ReposAuthList.addAll(DocAuthList);
-			}
-		}
-		String json = JSON.toJSONStringWithDateFormat(ReposAuthList, "yyy-MM-dd HH:mm:ss");
-		System.out.println("ReposAuthList:" + json);
-		rt.setData(ReposAuthList);
-		writeJson(rt, response);
-		
-	}
-	
-	private boolean isAdminOfRepos(User login_user,Integer reposId) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			return true;
-		}
-		else 
-		{
-			ReposAuth reposAuth = getReposAuth(login_user.getId(),reposId);
-			if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
-			{
-				return true;
-			}			
-		}
-		return false;
-	}
-
-	private List<UserDocAuth> getDocAuthList(Integer docId, Integer reposId) {
-		if(docId == null || docId == 0)
-		{
-			//获取仓库的所有doc的docAuth
-			return reposService.getDocAuthList(0,reposId);
-		}
-		else
-		{
-			return reposService.getDocAuthList(docId,reposId);
-		}
-	}
-
-	private List<UserDocAuth> getReposAuthList(Integer reposId) {
-		List <UserDocAuth> ReposAuthList = reposService.getReposAuthList(reposId);	//注意已经包括了任意用户
-		return ReposAuthList;
-	}
-	
 	/****************   get DocAuthList of Doc 包括继承的权限 ******************/
 	@RequestMapping("/getDocAuthList.do")
 	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1644,7 +1566,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取DocAuthedUserList
-		List <UserDocAuth> docAuthList = getAllDocAuthList(docId,reposId);
+		List <DocAuth> docAuthList = getDocAuthList(docId,reposId);
 		String json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
 		System.out.println("docAuthList:" + json);
 		rt.setData(docAuthList);
@@ -1660,93 +1582,39 @@ public class ReposController extends BaseController{
 		}
 		return false;
 	}
-
-	//获取当前Doc的权限列表
-	List <UserDocAuth> getAllDocAuthList(Integer docId, Integer vid)
-	{
-		//获取该仓库的所有用户列表
-		List <UserDocAuth> ReposAuthList = reposService.getReposAuthList(vid);
-		
-		//Get DocName and DocPath
-		String docName = "";
-		String docPath = "";
-		Doc doc = null;
-		if(docId == null || docId == 0)
+	
+	private boolean isAdminOfRepos(User login_user,Integer reposId) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
-			System.out.println("docId 未设置");
-			return null;
+			System.out.println("超级管理员");
+			return true;
 		}
-		else
+		else 
 		{
-			doc = reposService.getDoc(docId);
-			if(doc == null)
+			ReposAuth reposAuth = getReposAuth(login_user.getId(),reposId);
+			if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
 			{
-				System.out.println("doc not exists");
-				return null;
-			}
-			docName = doc.getName();
-			docPath = doc.getPath();
+				return true;
+			}			
 		}
-		
-		
-		//遍历仓库的用户的docAuth，如果非空则设置其  docAuthId，并修改其权限
-		for(int i = 0 ; i < ReposAuthList.size() ; i++) 
-		{
-			UserDocAuth user = ReposAuthList.get(i);
-			//更新文件路径和文件名字信息
-			user.setDocName(docName);
-			user.setDocPath(docPath);
-			
-			//获取该用户关于docId的直接权限
-			DocAuth qDocAuth = new DocAuth();
-			qDocAuth.setUserId(user.getUserId());
-			qDocAuth.setDocId(docId);
-			qDocAuth.setReposId(vid);
-			DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-			if(docAuth != null)
-			{
-				//设置docAuthId并更新权限
-				user.setDocAuthId(docAuth.getId());
-				user.setIsAdmin(docAuth.getIsAdmin());
-				user.setAccess(docAuth.getAccess());
-				user.setEditEn(docAuth.getEditEn());
-				user.setAddEn(docAuth.getAddEn());
-				user.setDeleteEn(docAuth.getDeleteEn());
-				user.setHeritable(docAuth.getHeritable());
+		return false;
+	}
 
-			}
-			else	//没有直接的文件权限设置则获取其继承权限
-			{
-				//递归获取继承权限，继承过来的权限不要设置docAuthId,只更新权限
-				docAuth = getUserDocAuth(user.getUserId(),doc.getPid(),vid);
-				if(docAuth != null)	//递归获取其父节点的属性
-				{
-					user.setIsAdmin(docAuth.getIsAdmin());
-					user.setAccess(docAuth.getAccess());
-					user.setEditEn(docAuth.getEditEn());
-					user.setAddEn(docAuth.getAddEn());
-					user.setDeleteEn(docAuth.getDeleteEn());
-					user.setHeritable(docAuth.getHeritable());
-				}
-				else
-				{
-					//继承仓库权限
-					if(user.getHeritable() == 0)	//不让继承，则清空其权限
-					{
-						user.setIsAdmin(0);
-						user.setAccess(0);
-						user.setEditEn(0);
-						user.setAddEn(0);
-						user.setDeleteEn(0);
-						user.setHeritable(0);
-					}
-				}
-			}
-		}		
+	private List<DocAuth> getDocAuthList(Integer docId, Integer reposId) {
+		DocAuth docAuth = new DocAuth();
+		docAuth.setDocId(docId);
+		docAuth.setReposId(reposId);
+		return reposService.getDocAuthList(docAuth);
+	}
+
+	private List<ReposAuth> getReposAuthList(Integer reposId) {
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setReposId(reposId);
+		List <ReposAuth> ReposAuthList = reposService.getReposAuthList(reposAuth);	//注意已经包括了任意用户
 		return ReposAuthList;
 	}
 	
-	private UserDocAuth getAnyUserReposAuth(Integer vid) {
+	private ReposAuth getAnyUserReposAuth(Integer vid) {
 		//需要查询该仓库是否设置了对userID=0的访问权限，也就是对任意用户的权限（任意用户是一个虚拟的用户，没有用户实体）
 		ReposAuth qReposAuth = new ReposAuth();
 		qReposAuth.setReposId(vid);
@@ -1755,16 +1623,8 @@ public class ReposController extends BaseController{
 		if(reposAuth != null)	//仓库设置了任意用户的访问权限
 		{
 			//将任意用户加入到用户列表中
-			UserDocAuth userDocAuth = new UserDocAuth();
-			userDocAuth.setReposAuthId(reposAuth.getId());	//仓库权限记录ID
-			userDocAuth.setReposId(vid);
-			userDocAuth.setUserId(0);	//任意用户使用虚拟的userID
-			userDocAuth.setUserName("任意用户");
-			userDocAuth.setAccess(reposAuth.getAccess());
-			userDocAuth.setAddEn(reposAuth.getAddEn());
-			userDocAuth.setDeleteEn(reposAuth.getDeleteEn());
-			userDocAuth.setEditEn(reposAuth.getEditEn());
-			return userDocAuth;
+			reposAuth.setUserName("任意用户");
+			return reposAuth;
 		}
 		return null;
 	}

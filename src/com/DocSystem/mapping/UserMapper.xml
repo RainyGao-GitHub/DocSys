@@ -350,7 +350,7 @@
   </select>
   
    
-  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
 		repos_auth.ID as reposAuthId, 
 		user.ID as userId, user.NAME as userName, 
