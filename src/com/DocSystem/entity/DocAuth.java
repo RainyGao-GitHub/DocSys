@@ -119,4 +119,43 @@ public class DocAuth {
     public void setType(Integer type) {
 		this.type = type;
 	}
+    
+    //DocAuth 附加信息: 需要通过joint doc and user or group Table to get these info
+    private String  userName="任意用户";	//from user Table
+    private String  groupName="";	//from group Table
+    
+    private String docName="";		//from doc Table
+    private String docPath="";		//from doc Table
+    
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName == null ? null : userName.trim();
+    }
+    
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName == null ? null : groupName.trim();
+    }
+   
+    public String getDocName() {
+        return docName;
+    }
+
+    public void setDocName(String docName) {
+        this.docName = docName;
+    }
+    
+    public String getDocPath() {
+        return docPath;
+    }
+
+    public void setDocPath(String docPath) {
+        this.docPath = docPath;
+    }    
 }
