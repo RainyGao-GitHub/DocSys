@@ -2,8 +2,9 @@ package com.DocSystem.dao;
 
 import java.util.List;
 
+import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
-import com.DocSystem.entity.UserDocAuth;
 
 public interface UserMapper {
     int deleteByPrimaryKey(Integer id);
@@ -27,12 +28,9 @@ public interface UserMapper {
 	List<User> selectAll();
 	
 	//For Repos Auth Manage
-	List<UserDocAuth> getReposAllUsers(Integer reposId);
+	List<ReposAuth> getReposAllUsers(Integer reposId);
 
-	List<UserDocAuth> getReposAuthList(Integer reposId);	
+	List<ReposAuth> getReposAuthList(Integer reposId);	
 
-	List<UserDocAuth> getReposDocAuthList(Integer reposId);
-
-	List<UserDocAuth> getDocAuthList(Integer docId);
-
+	List<DocAuth> getDocAuthList(Integer docId,Integer reposId);
 }
