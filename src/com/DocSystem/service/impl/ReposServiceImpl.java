@@ -18,7 +18,6 @@ import com.DocSystem.entity.DocAuth;
 import com.DocSystem.dao.DocAuthMapper;
 import com.DocSystem.entity.User;
 import com.DocSystem.dao.UserMapper;
-import com.DocSystem.entity.UserDocAuth;
 
 
 //ReposService is for all operations of Repository
@@ -126,19 +125,12 @@ public class ReposServiceImpl implements ReposService {
     	return docAuthDao.selectSelective(docAuth);
     }
 
-	public List<UserDocAuth> getReposAuthList(Integer reposId) {
-		return userDao.getReposAuthList(reposId);
+	public List<ReposAuth> getReposAuthList(ReposAuth reposAuth) {
+		return userDao.getReposAuthList(reposAuth);
 	}
 	
-	public List<UserDocAuth> getDocAuthList(Integer docId, Integer reposId) {
-		if(docId == 0)
-		{
-			return userDao.getReposDocAuthList(reposId);	//获取仓库所有的DocAuthList
-		}
-		else
-		{
-			return userDao.getDocAuthList(docId);	//获取Doc所有的DocAuthList
-		}
+	public List<DocAuth> getDocAuthList(DocAuth docAuth) {
+		return userDao.getDocAuthList(docAuth);	//获取Doc所有的DocAuthList
 	}
 	
 	public int setReposAuth(ReposAuth reposAuth) {
@@ -154,7 +146,7 @@ public class ReposServiceImpl implements ReposService {
 	}
 
 	//仓库的所有用户（包括有授权和没授权的）
-	public List<UserDocAuth> getReposAllUsers(Integer reposId) {
+	public List<ReposAuth> getReposAllUsers(Integer reposId) {
 		return userDao.getReposAllUsers(reposId);		
 	}
 

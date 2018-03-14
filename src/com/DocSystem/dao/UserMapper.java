@@ -30,7 +30,7 @@ public interface UserMapper {
 	//For Repos Auth Manage
 	List<ReposAuth> getReposAllUsers(Integer reposId);
 
-	List<ReposAuth> getReposAuthList(Integer reposId);	
+	List<ReposAuth> getReposAuthList(ReposAuth reposAuth);	
 
-	List<DocAuth> getDocAuthList(Integer docId,Integer reposId);
+	List<DocAuth> getDocAuthList(DocAuth docAuth);
 }
