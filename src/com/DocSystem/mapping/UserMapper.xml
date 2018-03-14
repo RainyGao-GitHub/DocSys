@@ -372,28 +372,34 @@
     WHERE repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
  
-  <select id="getDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+  <select id="getDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.DocAuth">
     select 
-    	doc_auth.ID as docAuthId,
+        doc_auth.ID as docAuthId,
     	user.ID as userId, user.NAME as userName, 
+    	group.ID as groupId, group.NAME as groupName, 
     	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
     	REPOS_ID as reposId, 
     	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn,HERITABLE as heritable
      from doc_auth
     LEFT JOIN user on user.id = doc_auth.user_id 
+    LEFT JOIN group on group.id = doc_auth.group_id 
     LEFT JOIN doc on doc.id = doc_auth.doc_id
     WHERE doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
+and doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+    
   </select> 
   
-  <select id="getReposDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+  <select id="getReposDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.DocAuth">
     select 
     	doc_auth.ID as docAuthId,
     	user.ID as userId, user.NAME as userName, 
+    	group.ID as groupId, group.NAME as groupName, 
     	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
     	REPOS_ID as reposId, 
     	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE as heritable
      from doc_auth
     LEFT JOIN user on user.id = doc_auth.user_id 
+    LEFT JOIN group on group.id = doc_auth.group_id 
     LEFT JOIN doc on doc.id = doc_auth.doc_id
     WHERE doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
