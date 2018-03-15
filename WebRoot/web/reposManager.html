@@ -76,7 +76,7 @@
 					</li>
             	</ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <button id="btnAddReposUser" onclick="showAddReposUserPanel()" class="btn btn-default" type="button" onclick="addReposUser()" style="display:none">添加访问用户</button>
+                    <button id="btnAddReposUser"  class="btn btn-default" type="button" onclick="showAddReposUserPanel()" style="display:none">添加访问用户</button>
                     <button id="btnEditAuth" class="btn btn-default" type="button" onclick="editAuth()" style="display:none">编辑</button>
                     <button id="btnSaveAuth" class="btn btn-default" type="button" onclick="saveAuth()" style="display:none">保存</button>
                     <button id="btnCancelSaveAuth" class="btn btn-default" type="button" onclick="cancelSaveAuth()" style="display:none">取消</button>
@@ -528,11 +528,6 @@
             edit : false
         }
         window.location.href = makeUrl(params)
-    }
-	
-	//进入弹出添加用户页面
-    function addReposUser() {
-    	console.log("addReposUser");
     }
 	
 	//进入权限编辑状态
