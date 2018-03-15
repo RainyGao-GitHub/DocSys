@@ -830,130 +830,13 @@
 </SCRIPT>
 
 <script>
+//显示curDoc对应的用户权限列表
 function showAuthList()
 {
 	console.log("showAuthList()");
 	var docId = curDoc;
 	console.log("docId:" + docId);
-	if(docId > 0)
-	{
-		showDocAuthList();
-	}
-	else
-	{
-		showReposAuthList();
-	}
-}
-
-//List the ReposAuthList and DocAuthList of Repos
-function showReposAuthList(){
-   	console.log("showReposAuthList()");
-   	var docId = curDoc;
-   	var vid = getQueryString("vid");
-	console.log(docId);
-
-    $.ajax({
-                url : "/DocSystem/Repos/getReposAuthList.do",
-                type : "post",
-                dataType : "json",
-                data : {
-                    reposId : vid,
-                },
-                success : function (ret) {
-                    if( "ok" == ret.status ){
-                        //显示编辑按键和增加用户按键
-                        $("#btnAddReposUser").show();
-				    	$("#btnEditAuth").show();
-				        $("#btnSaveAuth").hide();
-				        $("#btnCancelSaveAuth").hide();
-                    	showUserList(ret.data);
-                    }
-                    else
-                    {
-                        //隐藏编辑按键和增加用户按键
-                        $("#btnAddReposUser").hide();
-				    	$("#btnEditAuth").hide();
-				        $("#btnSaveAuth").hide();
-				        $("#btnCancelSaveAuth").hide();
-                    	showErrorMessage("Error:" + ret.msgInfo);
-                    }
-                },
-                error : function () {
-                    //隐藏编辑按键和增加用户按键
-                    $("#btnAddReposUser").hide();
-			    	$("#btnEditAuth").hide();
-			        $("#btnSaveAuth").hide();
-			        $("#btnCancelSaveAuth").hide();
-                   	showErrorMessage('服务器异常：获取仓库用户列表失败！');
-                }
-    });
-
-
-	//根据获取到的目录权限用户列表数据，绘制列表
-	function showUserList(data){
-		console.log("showUserList");
-		console.log(data);
-		
-		var c = $("#reposAuthArea").children();
-		$(c).remove();
-		if(data.length==0)
-		{
-			$("#reposAuthArea").append("<p>暂无数据</p>");
-		}
-				
-		for(var i=0;i<data.length;i++){
-			var d = data[i];
-			var adminChecked = d.isAdmin == 1? "checked":"";
-			var readChecked = d.access == 1? "checked":"";
-			var editChecked = d.editEn == 1? "checked":"";
-			var addChecked = d.addEn == 1? "checked":"";
-			var deleteChecked = d.deleteEn == 1? "checked":"";
-			var heritableChecked = d.heritable == 1? "checked":"";
-			var opBtn = "<a href='javascript:void(0)' onclick='deleteReposAuth("+d.reposAuthId+");' class='mybtn-primary'>删除</a>"; //
-			if(d.docAuthId > 0) //docAuthId > 0,表示这一条是docAuth
-			{
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuth("+d.docAuthId+");' class='mybtn-primary'>删除</a>";
-			}
-			var se = "<li value="+ i +">"
-				+"	<i class='cell select w10'>"
-				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" onchange='EnableUserConfig("+i+");' type='checkbox' disabled='disabled'/>"
-				+"	</i> "
-				+"	<i class='cell username w15'>"
-				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell docpath w15'>"
-				+"		<span class='name'>"
-				+"			<a id='DocPath"+i+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell access w8'>"
-				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " disabled='disabled'>管理员</input>"
-				+"	</i>"
-				+"	<i class='cell  read w8'>"
-				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " disabled='disabled'>读</input>"
-				+"	</i>"
-				+"	<i class='cell edit w8'>"
-				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " disabled='disabled'>写</input>"
-				+"	</i>"
-				+"	<i class='cell add w8'>"
-				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " disabled='disabled'>增加</input>"
-				+"	</i>"
-				+"	<i class='cell delete w8'>"
-				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " disabled='disabled'>删除</input>"
-				+"	</i>"
-				+"	<i class='cell heritable w8'>"
-				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " disabled='disabled'>可继承</input>"
-				+"	</i>"
-				+"	<i class='cell operation w10'>"
-				+		opBtn
-				+"	</i>"
-				+"</li>";
-			
-			$("#reposAuthArea").append(se);
-		}
-	}
+	showDocAuthList();
 }
 
 function showDocAuthList(){
