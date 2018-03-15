@@ -83,9 +83,9 @@ function showReposAllUserList(){
 		for(var i=0;i<data.length;i++){
 			var d = data[i];
 			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
-			if(d.reposId > 0) //已是仓库用户的，操作按键显示为，已添加
+			if(d.reposAuthId > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' disabled='disabled'>已添加</a>";
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuth("+d.reposAuthId+");' disabled='disabled'>删除</a>";
 			}
 												
 			var se = "<li value="+ i +">"
