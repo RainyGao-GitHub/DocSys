@@ -353,8 +353,7 @@
 	select 
 		user.ID as userId,user.NAME as userName,
 		repos_auth.ID as id, 
-		repos_auth.REPOS_ID as reposId, 
-		repos_auth.IS_ADMIN as isAdmin, repos_auth.ACCESS as access,repos_auth.EDIT_EN as editEn, repos_auth.ADD_EN as addEn,repos_auth.DELETE_EN as deleteEn,  repos_auth.HERITABLE as heritable
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
@@ -363,8 +362,7 @@
 	select 
 		user_group.ID as groupId,user_group.NAME as groupName,
 		repos_auth.ID as id, 
-		repos_auth.REPOS_ID as reposId, 
-		repos_auth.IS_ADMIN as isAdmin, repos_auth.ACCESS as access,repos_auth.EDIT_EN as editEn, repos_auth.ADD_EN as addEn,repos_auth.DELETE_EN as deleteEn,  repos_auth.HERITABLE as heritable
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
       from user_group
     LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
@@ -372,10 +370,9 @@
   <select id="getReposAuthList" parameterType="com.DocSystem.entity.ReposAuth" resultType="com.DocSystem.entity.ReposAuth">
     select 
     	repos_auth.ID as id,
-    	repos_auth.REPOS_ID as reposId, 
-    	repos_auth.IS_ADMIN as isAdmin, repos_auth.ACCESS as access,repos_auth.EDIT_EN as editEn, repos_auth.ADD_EN as addEn,repos_auth.DELETE_EN as deleteEn, repos_auth.HERITABLE as heritable,
-     	repos_auth.USER_ID as userId,user.NAME as userName
-     	repos_auth.GROUP_ID as groupId, user_group.NAME as groupName, 
+    	REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
+     	USER_ID, user.NAME as userName
+     	GROUP_ID, user_group.NAME as groupName, 
      from repos_auth
     LEFT JOIN user on repos_auth.user_id = user.id  
     LEFT JOIN user_group on repos_auth.group_id = user_group.id
