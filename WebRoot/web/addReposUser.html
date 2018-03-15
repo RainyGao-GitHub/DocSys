@@ -85,7 +85,7 @@ function showReposAllUserList(){
 			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
 			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuth("+d.id+");' disabled='disabled'>删除</a>";
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+");' disabled='disabled'>删除</a>";
 			}
 												
 			var se = "<li value="+ i +">"
@@ -133,13 +133,28 @@ function addReposUser(userId)
     });
 }
 
-function deleteReposAuth(reposAuthId)
+
+function deleteReposAuthConfirm(reposAuthId)
 {
-	if(confirm("是否删除该用户的仓库权限设置！") == false)
-	{
-		return;
-	}
-	
+		qiao.bs.confirm({
+ 	    	id: 'deleteReposAuthConfirm',
+ 	        msg: "是否删除该用户的仓库权限设置?",
+ 	        close: false,		
+ 	        okbtn: "删除",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	
+ 	    	//alert("点击了确定");
+ 	    	deleteReposAuth(reposAuthId);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteReposAuth(reposAuthId)
+{	
    	console.log("deleteReposAuth()");
    	
    	var vid = getQueryString("vid");
