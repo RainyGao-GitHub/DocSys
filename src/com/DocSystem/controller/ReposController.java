@@ -1502,11 +1502,11 @@ public class ReposController extends BaseController{
 		return null;
 	}
 
-	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户***************/
+	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getReposAllUsers vid: " + reposId);
+		System.out.println("getReposAllUsers reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1526,8 +1526,10 @@ public class ReposController extends BaseController{
 	}
 	
 	private List<ReposAuth> getReposAllUserList(Integer reposId) {
-		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	//取出系统所有用户
-		//获取任意用户的DocAuth
+		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓库权限），结果实际是reposAuth列表
+		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	
+		
+		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
 		ReposAuth anyUserReposAuth = getAnyUserReposAuth(reposId); //获取任意用户的权限表
 		if(anyUserReposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
 		{
@@ -1543,6 +1545,22 @@ public class ReposController extends BaseController{
 		return UserList;
 	}
 
+	//获取任意用户的reposAuth
+	private ReposAuth getAnyUserReposAuth(Integer vid) {
+		//需要查询该仓库是否设置了对userID=0的访问权限，也就是对任意用户的权限（任意用户是一个虚拟的用户，没有用户实体）
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setReposId(vid);
+		qReposAuth.setUserId(0);
+		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
+		if(reposAuth != null)	//仓库设置了任意用户的访问权限
+		{
+			//将任意用户加入到用户列表中
+			reposAuth.setUserName("任意用户");
+			return reposAuth;
+		}
+		return null;
+	}
+	
 	/****************   get DocAuthList of Doc 包括继承的权限 ******************/
 	@RequestMapping("/getDocAuthList.do")
 	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -1614,20 +1632,6 @@ public class ReposController extends BaseController{
 		return ReposAuthList;
 	}
 	
-	private ReposAuth getAnyUserReposAuth(Integer vid) {
-		//需要查询该仓库是否设置了对userID=0的访问权限，也就是对任意用户的权限（任意用户是一个虚拟的用户，没有用户实体）
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setReposId(vid);
-		qReposAuth.setUserId(0);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth != null)	//仓库设置了任意用户的访问权限
-		{
-			//将任意用户加入到用户列表中
-			reposAuth.setUserName("任意用户");
-			return reposAuth;
-		}
-		return null;
-	}
 
 	//递归获取用户的目录访问权限
 	DocAuth getUserDocAuth(Integer userID,Integer docId, Integer vid)
