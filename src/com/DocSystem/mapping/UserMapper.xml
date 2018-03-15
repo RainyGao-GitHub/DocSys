@@ -384,12 +384,11 @@
  
   <select id="getDocAuthList" parameterType="com.DocSystem.entity.DocAuth" resultType="com.DocSystem.entity.DocAuth">
     select 
-    	doc_auth.ID as docAuthId, 
-    	doc_auth.REPOS_ID as reposId, 
-    	doc_auth.IS_ADMIN as isAdmin, doc_auth.ACCESS as access,oc_auth.EDIT_EN as editEn, doc_auth.ADD_EN as addEn, doc_auth.DELETE_EN as deleteEn,doc_auth.HERITABLE as heritable,
-    	doc_auth.USER_ID as userId, user.NAME as userName, 
-    	doc_auth.GROUP_ID as groupId, user_group.NAME as groupName, 
-    	doc_auth.DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
+    	doc_auth.ID as id, 
+    	REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
+    	USER_ID, user.NAME as userName, 
+    	GROUP_ID, user_group.NAME as groupName, 
+    	DOC_ID, doc.NAME as docName, doc.PATH as docPath
     	from doc_auth
     LEFT JOIN user on doc_auth.user_id = user.id 
     LEFT JOIN user_group on doc_auth.group_id = user_group.id 
