@@ -83,9 +83,9 @@ function showReposAllUserList(){
 		for(var i=0;i<data.length;i++){
 			var d = data[i];
 			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
-			if(d.reposAuthId > 0) //已是仓库用户的，操作按键显示为，已添加
+			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuth("+d.reposAuthId+");' disabled='disabled'>删除</a>";
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuth("+d.id+");' disabled='disabled'>删除</a>";
 			}
 												
 			var se = "<li value="+ i +">"
@@ -106,7 +106,7 @@ function showReposAllUserList(){
 
 function addReposUser(userId)
 {
-   	console.log("addReposUser()");
+   	console.log("addReposUser(" + userId+")");
    	var vid = getQueryString("vid");
 
     $.ajax({
@@ -129,6 +129,41 @@ function addReposUser(userId)
             },
             error : function () {
                showErrorMessage('服务器异常：获取仓库用户列表失败！');
+            }
+    });
+}
+
+function deleteReposAuth(reposAuthId)
+{
+	if(confirm("是否删除该用户的仓库权限设置！") == false)
+	{
+		return;
+	}
+	
+   	console.log("deleteReposAuth()");
+   	
+   	var vid = getQueryString("vid");
+    $.ajax({
+            url : "/DocSystem/Repos/deleteUserReposAuth.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                reposAuthId: reposAuthId,
+                //userId: userId,
+                reposId: vid,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showAuthList();
+                    showReposAllUserList();		//更新显示
+                }
+                else
+                {
+                	showErrorMessage("Error:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               showErrorMessage('服务器异常：删除用户的仓库权限设置失败！');
             }
     });
 }
