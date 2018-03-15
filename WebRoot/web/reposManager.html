@@ -332,7 +332,7 @@
 
 <script type="text/javascript">
 	/******************************** Repos Interfaces***************************************/
-	//获取仓库信息
+	//获取仓库信息,callback是成功后的回调函数
 	var reposType = 1; //默认是普通文件系统
 	var reposName = "";
     function getReposInfo(callback){
@@ -341,7 +341,7 @@
 		var reposId = getQueryString("vid");
 		if(reposId == null)
 		{
-			showErrorMessage("请选择仓库！");
+			bootstrapQ.alert("请选择仓库！");
 			return;
 		}
 		
