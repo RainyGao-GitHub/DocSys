@@ -1746,7 +1746,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/addUserReposAuth.do")
 	public void addUserReposAuth(Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addUserAuth userId: " + userId  + " reposId:" + reposId);
+		System.out.println("addUserReposAuth userId: " + userId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
