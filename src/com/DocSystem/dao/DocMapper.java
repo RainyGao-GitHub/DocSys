@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.entity.Doc;
-import com.DocSystem.entity.UserDocAuth;
 
 public interface DocMapper {
     int deleteByPrimaryKey(Integer id);
