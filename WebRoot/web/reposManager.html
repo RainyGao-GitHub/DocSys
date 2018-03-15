@@ -976,40 +976,6 @@ function EnableUserConfig(index){
 	}
 }
 
-function deleteReposAuth(reposAuthId)
-{
-	if(confirm("是否删除该用户的仓库权限设置！") == false)
-	{
-		return;
-	}
-	
-   	console.log("deleteReposAuth()");
-   	
-   	var vid = getQueryString("vid");
-    $.ajax({
-            url : "/DocSystem/Repos/deleteUserReposAuth.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposAuthId: reposAuthId,
-                //userId: userId,
-                reposId: vid,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    showAuthList();
-                }
-                else
-                {
-                	showErrorMessage("Error:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-               showErrorMessage('服务器异常：删除用户的仓库权限设置失败！');
-            }
-    });
-}
-
 function deleteDocAuth(docAuthId)
 {
 	if(confirm("是否删除该用户的目录权限设置！") == false)
