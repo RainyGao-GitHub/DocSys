@@ -371,8 +371,8 @@
     select 
     	repos_auth.ID as id,
     	REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
-     	USER_ID, user.NAME as userName
-     	GROUP_ID, user_group.NAME as groupName, 
+     	USER_ID, user.NAME as userName,
+     	GROUP_ID, user_group.NAME as groupName 
      from repos_auth
     LEFT JOIN user on repos_auth.user_id = user.id  
     LEFT JOIN user_group on repos_auth.group_id = user_group.id
