@@ -532,7 +532,11 @@ public class BaseController{
 	//获取用户组在仓库上所有doc的权限设置（权限设置为所有group的并集-每个docId只有一个docAuth设置）
 	protected List<DocAuth> getDocAuthListForGroups(List<UserGroup> groupList,Integer reposId) 
 	{
-		//TODO: Auto-generated method stub
+		if(groupList == null)
+		{
+			return null;
+		}
+		
 		//Go through the GroupList to get the docAuthList for group one by one
 		List <DocAuth> tmpGroupDocAuthList = new ArrayList<DocAuth>();
 		for(int i=0;i<groupList.size();i++)
