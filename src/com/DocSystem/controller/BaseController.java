@@ -229,10 +229,58 @@ public class BaseController{
 	}
 	
 	private ReposAuth getReposAuthForGroups(List<UserGroup> groupList,Integer reposID) {
-		// TODO Auto-generated method stub
 		// go Through the groupList to get all reposAuth
+		List <ReposAuth> reposAuthList = new ArrayList<ReposAuth>();
+		for(int i=0;i<groupList.size();i++)
+		{
+			UserGroup group = groupList.get(i);
+			Integer groupId = group.getId();
+			ReposAuth qReposAuth = new ReposAuth();
+			qReposAuth.setReposId(reposID);
+			qReposAuth.setGroupId(groupId);
+			ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
+			if(reposAuth!=null)
+			{
+				reposAuthList.add(reposAuth);
+			}
+		}
+		
 		// caculate the really reposAuth
-		return null;
+		if(reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		ReposAuth groupReposAuth = reposAuthList.get(0);
+		for(int i = 1;i<reposAuthList.size();i++)
+		{
+			ReposAuth tmpReposAuth = reposAuthList.get(i);
+			if(tmpReposAuth.getIsAdmin().equals(1))
+			{
+				groupReposAuth.setIsAdmin(1);
+			}
+			if(tmpReposAuth.getAccess().equals(1))
+			{
+				groupReposAuth.setAccess(1);
+			}
+			if(tmpReposAuth.getAddEn().equals(1))
+			{
+				groupReposAuth.setAddEn(1);
+			}
+			if(tmpReposAuth.getDeleteEn().equals(1))
+			{
+				groupReposAuth.setDeleteEn(1);
+			}
+			if(tmpReposAuth.getEditEn().equals(1))
+			{
+				groupReposAuth.setEditEn(1);
+			}
+			if(tmpReposAuth.getHeritable().equals(1))
+			{
+				groupReposAuth.setHeritable(1);
+			}			
+		}
+		return groupReposAuth;
 	}
 	
 	//Function:getUserDocAuth 
@@ -320,17 +368,6 @@ public class BaseController{
 						return docAuth;
 					}
 				}
-			}
-		}
-		
-		//用户的实际权限
-		if(docAuth != null)
-		{
-			//If the docAuth is parentDocAuth we need to check if the docAuth is Heritale
-			if(docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
-			{
-				System.out.println("getDocUserAuth() " + docAuth.getDocId() + " anyUser权限不可继承");
-				return null;
 			}
 		}
 		return docAuth;
@@ -497,8 +534,76 @@ public class BaseController{
 	{
 		//TODO: Auto-generated method stub
 		//Go through the GroupList to get the GroupDocAuthList[] one by one
-		//Combine all GroupAuthList to unique groupDocAuthList by docId
-		return null;
+		List <DocAuth> tmpGroupDocAuthList = new ArrayList<DocAuth>();
+		for(int i=0;i<groupList.size();i++)
+		{
+			UserGroup group = groupList.get(i);
+			Integer groupId = group.getId();
+			DocAuth qDocAuth = new DocAuth();
+			qDocAuth.setReposId(reposId);
+			qDocAuth.setGroupId(groupId);
+			List<DocAuth> docAuthList = reposService.getDocAuth(qDocAuth);
+			if(docAuthList!=null)
+			{
+				tmpGroupDocAuthList.addAll(docAuthList);
+			}
+		}
+		
+		// go Through the groupList to get all reposAuth
+		List <DocAuth> groupDocAuthList = new ArrayList<DocAuth>();
+		
+		// caculate the really reposAuth
+		if(tmpGroupDocAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		for(int i = 1;i<tmpGroupDocAuthList.size();i++)
+		{
+			DocAuth tmpDocAuth = tmpGroupDocAuthList.get(i);
+			//Check if there is docAuth in groupDocAuthList with the same docId
+			int matchedFlag = 0;
+			for(int j=0;j<groupDocAuthList.size();j++)
+			{
+				DocAuth groupDocAuth = groupDocAuthList.get(j);
+				if(groupDocAuth.getDocId().equals(tmpDocAuth.getDocId()))
+				{
+					matchedFlag = 1;
+					if(tmpDocAuth.getIsAdmin().equals(1))
+					{
+						groupDocAuth.setIsAdmin(1);
+					}
+					if(tmpDocAuth.getAccess().equals(1))
+					{
+						groupDocAuth.setAccess(1);
+					}
+					if(tmpDocAuth.getAddEn().equals(1))
+					{
+						groupDocAuth.setAddEn(1);
+					}
+					if(tmpDocAuth.getDeleteEn().equals(1))
+					{
+						groupDocAuth.setDeleteEn(1);
+					}
+					if(tmpDocAuth.getEditEn().equals(1))
+					{
+						groupDocAuth.setEditEn(1);
+					}
+					if(tmpDocAuth.getHeritable().equals(1))
+					{
+						groupDocAuth.setHeritable(1);
+					}			
+					break;
+				}
+				
+				if(matchedFlag == 0)
+				{
+					groupDocAuthList.add(tmpDocAuth);
+				}
+			}
+			
+		}
+		return groupDocAuthList;
 	}
 	
 	/***************************Basic Functions For Driver Level  **************************/
