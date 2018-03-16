@@ -2047,15 +2047,16 @@ public class DocController extends BaseController{
 	
 	private boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId,
 			Integer reposId) {
-		DocAuth docUserAuth = getUserRealDocAuth(userId,docId,reposId);
-		if(docUserAuth == null)
+		DocAuth docAuth = getUserRealDocAuth(userId,docId,reposId);
+		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
 		{
-			if(docUserAuth.getAccess() == null || docUserAuth.getAccess() == 0)
+			Integer access = docAuth.getAccess();
+			if(access == null || access.equals(0))
 			{
 				rt.setError("您无权访问该文件，请联系管理员");
 				return false;
