@@ -1975,7 +1975,7 @@ public class DocController extends BaseController{
 	//检查用户的新增权限
 	private boolean checkUserAddRight(ReturnAjax rt, Integer userId,
 			Integer parentId, Integer reposId) {
-		DocAuth docUserAuth = getDocUserAuth(userId,parentId,reposId);
+		DocAuth docUserAuth = getUserRealDocAuth(userId,parentId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -1999,7 +1999,7 @@ public class DocController extends BaseController{
 
 	private boolean checkUserDeleteRight(ReturnAjax rt, Integer userId,
 			Integer parentId, Integer reposId) {
-		DocAuth docUserAuth = getDocUserAuth(userId,parentId,reposId);
+		DocAuth docUserAuth = getUserRealDocAuth(userId,parentId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -2023,7 +2023,7 @@ public class DocController extends BaseController{
 	
 	private boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId,
 			Integer reposId) {
-		DocAuth docUserAuth = getDocUserAuth(userId,docId,reposId);
+		DocAuth docUserAuth = getUserRealDocAuth(userId,docId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -2047,7 +2047,7 @@ public class DocController extends BaseController{
 	
 	private boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId,
 			Integer reposId) {
-		DocAuth docUserAuth = getDocUserAuth(userId,docId,reposId);
+		DocAuth docUserAuth = getUserRealDocAuth(userId,docId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -2063,65 +2063,6 @@ public class DocController extends BaseController{
 		}
 		return true;
 	}
-	
-	//该接口根据用户是否有仓库的直接权限分开两条支线来获取用户权限
-	private DocAuth getDocUserAuth(Integer userId, Integer docId, Integer reposId) {
-		
-		//Get UserDocAuth	
-		DocAuth docAuth = recurGetDocAuth(userId,docId,reposId);
-		if(docAuth != null)
-		{
-			//If the docAuth is parentDocAuth we need to check if the docAuth is Heritale
-			if(docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
-			{
-				System.out.println("getDocUserAuth() " + docAuth.getDocId() + " User权限不可继承");
-				return null;
-			}
-		}
-		
-		//TODO: Get GroupDocAuth
-		
-		
-		//Get AnyUserDocAuth
-		docAuth = recurGetDocAuth(0,docId,reposId);
-		if(docAuth != null)
-		{
-			//If the docAuth is parentDocAuth we need to check if the docAuth is Heritale
-			if(docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
-			{
-				System.out.println("getDocUserAuth() " + docAuth.getDocId() + " anyUser权限不可继承");
-				return null;
-			}
-		}
-		return docAuth;
-	}
-	
-	//该接口是递归获取父节点直接根据用户ID递归获取文件权限，注意该接口必须是在自己的权限没有设置的时候调用
-	private DocAuth recurGetDocAuth(Integer userId, Integer docId,Integer reposId) {
-		
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(userId);
-		qDocAuth.setReposId(reposId);
-		qDocAuth.setDocId(docId);
-		
-		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		if(docId == null || docId == 0)
-		{
-			//we have reached the top, return the docAuth whatever
-			return docAuth;
-		}
-		
-		//If it is not the root doc and docAuth is null, we need to go get parentDocAuth
-		if(docAuth == null)	//没有设置的话默认使用父节点的权限
-		{
-			Doc doc = reposService.getDocInfo(docId);
-			Integer pDocId = doc.getPid();
-			return recurGetDocAuth(userId,pDocId,reposId);
-		}
-		
-		return docAuth;
-	}
-	
 	/*************** Functions For SVN *********************/
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser) 
 	{

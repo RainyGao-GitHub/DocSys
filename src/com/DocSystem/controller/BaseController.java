@@ -32,8 +32,11 @@ import util.ReturnAjax;
 import util.UUid;
 
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
+import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
@@ -121,6 +124,381 @@ public class BaseController{
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
 		String reposTmpVirtualPath = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
 		return reposTmpVirtualPath;
+	}
+	
+	//获取用户真正的权限：权限已经考虑了继承用户组权限和任意用户权限
+	public ReposAuth getUserRealReposAuth(Integer UserID,Integer ReposID)
+	{
+		List <UserGroup> groupList = getGroupListForUser(UserID);
+		return getUserReposAuth(UserID,groupList,ReposID);
+	}
+	
+	//获取用户组真正的权限：权限以及考虑继承了任意用户
+	public ReposAuth getGroupRealReposAuth(Integer GroupID,Integer ReposID)
+	{
+		List <UserGroup> groupList = getGroupListForGroup(GroupID);
+		return getUserReposAuth(0,groupList,ReposID);
+	}
+	
+	//获取用户真正的权限 From Bottom To Top
+	public DocAuth getUserRealDocAuth(Integer UserID,Integer DocID,Integer ReposID)
+	{
+		List <UserGroup> groupList = getGroupListForUser(UserID);
+		return getUserDocAuth(UserID,groupList,DocID,ReposID);
+	}
+	
+	//获取用户组真正的权限 From Bottom To Top
+	public DocAuth getGroupRealDocAuth(Integer GroupID,Integer DocID,Integer ReposID)
+	{
+		List <UserGroup> groupList = getGroupListForGroup(GroupID);
+		return getUserDocAuth(0,groupList,DocID,ReposID);
+	}
+	
+	//获取用户真正的权限 From Top To Bottom（该接口只应用于展示用户可见目录或可见管理目录，用于减少查询次数，提高效率）
+	public DocAuth getUserRealDocAuthT2B(Integer UserID,Integer DocID, Integer ReposID, DocAuth parentDocAuth)
+	{
+		//Get groupList
+		List <UserGroup> groupList = getGroupListForUser(UserID);
+		
+		//Get the userDocAuthList\groupDocAuthList\anyUserDocAuthList
+		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
+		List <DocAuth> userDocAuthList = getDocAuthListForUser(UserID,ReposID);
+		//get groupDocAuthList
+		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,ReposID);
+		//Get AnyUserDocAuthList
+		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,ReposID);
+		
+		return getDocAuthFromList(DocID,parentDocAuth,userDocAuthList, groupDocAuthList, anyUserDocAuthList); 
+	}
+	
+	protected List<UserGroup> getGroupListForUser(Integer userID) 
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private List<UserGroup> getGroupListForGroup(Integer groupID) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	//Function:getUserReposAuth
+	//Parameters:
+	//	userId: 用户ID
+	//	groupList: 用户所在的groups
+	//Description: 该接口用户获取用户的实际仓库权限，有三种情况：
+	//		case 1: userId > 0   递归获取用户的权限，递归获取组权限，递归获取任意用户的权限（用途：用于用户访问权限控制，和仓库权限管理时使用）
+	//		case 2: userId = 0  递归获取组权限，递归获取任意用户的权限（用途：用于计算组的权限或者任意用户的权限，主要在仓库权限管理时使用）
+	//		case 3: userId == null 递归获取组权限（似乎没有使用场景）
+	protected ReposAuth getUserReposAuth(Integer UserID,List <UserGroup> groupList,Integer ReposID)
+	{
+		//Try to get the userReposAuth
+		ReposAuth reposAuth = getReposAuthForUser(UserID, ReposID);
+		if(reposAuth != null)
+		{
+			reposAuth.setType(1);
+			return reposAuth;
+		}
+		
+		//Try to get the groupReposAuth
+		reposAuth = getReposAuthForGroups(groupList,ReposID);
+		if(reposAuth != null)
+		{
+			reposAuth.setType(2);
+			return reposAuth;
+		}
+		
+		//Try to get any UserReposAuth
+		reposAuth = getReposAuthForUser(0, ReposID);
+		if(reposAuth != null)
+		{
+			reposAuth.setType(3);
+			return reposAuth;
+		}
+		return null;
+	}
+
+	
+	private ReposAuth getReposAuthForUser(Integer UserID,Integer reposID) 
+	{
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setReposId(reposID);
+		qReposAuth.setUserId(UserID);
+		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
+		return reposAuth;		
+	}
+	
+	private ReposAuth getReposAuthForGroups(List<UserGroup> groupList,Integer reposID) {
+		// TODO Auto-generated method stub
+		// go Through the groupList to get all reposAuth
+		// caculate the really reposAuth
+		return null;
+	}
+	
+	//Function:getUserDocAuth 
+	//Parameters:
+	//	userId: 用户ID
+	//	groupList: 用户所在的groups
+	//Description: 该接口用户获取用户的实际仓库权限，有三种情况：
+	//		case 1: userId > 0   递归获取用户的权限，递归获取组权限，递归获取任意用户的权限（用途：用于用户访问权限控制，和仓库权限管理时使用）
+	//		case 2: userId = 0  递归获取组权限，递归获取任意用户的权限（用途：用于计算组的权限或者任意用户的权限，主要在仓库权限管理时使用）
+	//		case 3: userId == null 递归获取组权限（似乎没有使用场景）
+	protected DocAuth getUserDocAuth(Integer userId,List <UserGroup> groupList, Integer docId, Integer reposId) 
+	{
+		//Get the userDocAuthList\groupDocAuthList\anyUserDocAuthList
+		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
+		List <DocAuth> userDocAuthList = getDocAuthListForUser(userId,reposId);
+		//get groupDocAuthList
+		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,reposId);
+		//Get AnyUserDocAuthList
+		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,reposId);
+		
+		if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
+		{
+			System.out.println("getUserDocAuth() 用户无权访问该仓库的所有文件");
+			return null;
+		}
+		
+		//Get UserDocAuth	
+		DocAuth docAuth = null;
+		if(userId !=null && userId > 0)
+		{
+			docAuth = recurGetDocAuth(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+				if(!docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
+				{
+					return null;
+				}
+				else
+				{
+					docAuth.setType(1);
+					return docAuth;
+				}
+			}
+		}
+		
+		//Get GroupDocAuth
+		if(docAuth == null)
+		{
+			if(groupList != null)
+			{
+				docAuth = recurGetDocAuth(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+					if(!docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
+					{
+						return null;
+					}
+					else
+					{
+						docAuth.setType(2);
+						return docAuth;
+					}
+				}
+			}
+		}
+		
+		//Get AnyUserDocAuth
+		if(docAuth == null)
+		{
+			if(userId != null)
+			{
+				docAuth = recurGetDocAuth(docId,anyUserDocAuthList);
+				if(docAuth != null)
+				{
+					//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+					if(!docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
+					{
+						return null;
+					}
+					else
+					{
+						docAuth.setType(3);
+						return docAuth;
+					}
+				}
+			}
+		}
+		
+		//用户的实际权限
+		if(docAuth != null)
+		{
+			//If the docAuth is parentDocAuth we need to check if the docAuth is Heritale
+			if(docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
+			{
+				System.out.println("getDocUserAuth() " + docAuth.getDocId() + " anyUser权限不可继承");
+				return null;
+			}
+		}
+		return docAuth;
+	}
+
+	//Function: getDocAuthFromList
+	//Parameters: 
+	//	docId: doc Id
+	//	parentDocAuth: docAuth of parentDoc
+	//	docAuthList: docAuth Setting of user group and anyUser
+	//Description: 该接口能够快速获取当前doc的权限，不需要再查询数据库，但需要事先知道其父节点的权限，以及提前取出用户在仓库上的所有文件的权限设置信息
+	protected DocAuth getDocAuthFromList(int docId, DocAuth parentDocAuth,
+			List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList,List<DocAuth> anyUserDocAuthList) {
+		
+		System.out.println("getDocAuthFromList() docId:" + docId);
+		
+		DocAuth docAuth = null;
+		//root Doc
+		if(docId == 0)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setType(1);
+			}
+			else
+			{
+				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					docAuth.setType(2);					
+				}
+				else
+				{
+					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
+					if(docAuth != null)
+					{
+						docAuth.setType(2);					
+					}
+				}
+			}
+			return docAuth;
+		}
+		
+		//Not root Doc, if parentDocAuth is null, return null
+		if(parentDocAuth == null)
+		{
+			System.out.println("getDocAuthFromList() docId:" + docId + " parentDocAuth is null");
+			return null;
+		}
+		
+		//Not root Doc and parentDocAuth is set
+		docAuth = null;
+		Integer pDocAuthType = parentDocAuth.getType();
+		if(pDocAuthType == 1)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setType(1);
+			}
+			else if(docAuth == null && parentDocAuth.getHeritable() == 1)
+			{
+				docAuth = parentDocAuth;
+			}
+		}
+		else if(pDocAuthType == 2)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setType(1);
+			}
+			else
+			{
+				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					docAuth.setType(2);
+				}
+				else if(docAuth == null && parentDocAuth.getHeritable() == 1)
+				{
+					docAuth = parentDocAuth;
+				}
+			}
+		}
+		else if(pDocAuthType == 3)
+		{
+			docAuth = getDocAuthByDocId(docId,userDocAuthList);
+			if(docAuth != null)
+			{
+				docAuth.setType(1);
+			}
+			else
+			{
+				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+				if(docAuth != null)
+				{
+					docAuth.setType(2);
+				}
+				else
+				{
+					docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+					if(docAuth != null)
+					{
+						docAuth.setType(3);
+					}					
+					else if(docAuth == null && parentDocAuth.getHeritable() == 1)
+					{
+						docAuth = parentDocAuth;
+					}
+				}
+			}
+		}
+		return docAuth;
+	}
+
+	//getDocAuth from the bottom to top
+	private DocAuth recurGetDocAuth(Integer docId,List<DocAuth> docAuthList) {
+		DocAuth docAuth = getDocAuthByDocId(docId,docAuthList);
+		if(docAuth == null)
+		{
+			Doc doc = reposService.getDoc(docId);
+			if(doc == null)
+			{
+				System.out.println("recurGetDocAuth: doc with ID " + docId + "不存在！");
+				return null;
+			}
+			Integer pDocId = doc.getPid();
+			return recurGetDocAuth(pDocId,docAuthList);
+		}
+		return docAuth;
+	}
+	
+	//根据DocId从docAuthList中找出对应的docAuth
+	private DocAuth getDocAuthByDocId(Integer docId,List<DocAuth> docAuthList) 
+	{
+			if(docAuthList == null)
+			{
+				return null;
+			}
+			
+			for(int i = 0 ; i < docAuthList.size() ; i++) 
+			{
+				DocAuth docAuth = docAuthList.get(i);
+				if(docId.equals(docAuth.getDocId()))
+				{
+					//如果需要优化的话，可以考虑把已经找到的docAuth从docAuthList中删除，从而提高下一个doc的筛选速度
+					return docAuth;
+				}
+			}
+			return null;
+	}
+	
+	//获取用户在仓库上所有doc的权限设置
+	protected List<DocAuth> getDocAuthListForUser(Integer UserID,Integer reposID) 
+	{
+		List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(UserID,null,null,reposID);
+		return userDocAuthList;
+	}
+	
+	//获取用户组在仓库上所有doc的权限设置（权限设置为所有group的并集-每个docId只有一个docAuth设置）
+	protected List<DocAuth> getDocAuthListForGroups(List<UserGroup> groupList,Integer reposId) 
+	{
+		//TODO: Auto-generated method stub
+		//Go through the GroupList to get the GroupDocAuthList[] one by one
+		//Combine all GroupAuthList to unique groupDocAuthList by docId
+		return null;
 	}
 	
 	/***************************Basic Functions For Driver Level  **************************/
