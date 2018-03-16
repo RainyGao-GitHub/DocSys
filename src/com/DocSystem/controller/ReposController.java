@@ -22,6 +22,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.entity.UserGroup;
 
 import com.DocSystem.service.UserService;
 import com.DocSystem.service.impl.ReposServiceImpl;
@@ -1136,51 +1137,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	//获取用户的仓库权限
-	public ReposAuth getReposAuth(Integer UserID,Integer ReposID)
-	{
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setReposId(ReposID);
-		qReposAuth.setUserId(UserID);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth != null)
-		{
-			reposAuth.setType(1);
-			return reposAuth;
-		}
-		
-		//TODO:Try to get the groupReposAuth
-		
-		
-		//Try to get any UserReposAuth
-		qReposAuth.setReposId(ReposID);
-		qReposAuth.setUserId(0);
-		reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth != null)
-		{
-			reposAuth.setType(3);
-			return reposAuth;
-		}
-		return null;
-	}
-	
-	//This function will get DocAuth from the bottom to top
-	private DocAuth recurGetDocAuth(Integer docId,List<DocAuth> docAuthList) {
-		DocAuth docAuth = getDocAuthByDocId(docId,docAuthList);
-		if(docAuth == null)
-		{
-			Doc doc = reposService.getDoc(docId);
-			if(doc == null)
-			{
-				System.out.println("recurGetDocAuth: doc with ID " + docId + "不存在！");
-				return null;
-			}
-			Integer pDocId = doc.getPid();
-			return recurGetDocAuth(pDocId,docAuthList);
-		}
-		return docAuth;
-	}
-	
 	//这是个递归调用函数
 	List <Doc> getAuthedDocList(Integer userId,Integer pid,Integer vid,DocAuth pDocAuth, List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList, List<DocAuth> anyUserDocAuthList)
 	{
@@ -1265,25 +1221,6 @@ public class ReposController extends BaseController{
 		//System.out.println("docList["+ pDocId +"] " + json);
 		return docList;
 	}
-	
-	//根据DocId从docAuthList中找出对应的docAuth
-	private DocAuth getDocAuthByDocId(Integer docId,List<DocAuth> docAuthList) {
-		if(docAuthList == null)
-		{
-			return null;
-		}
-		
-		for(int i = 0 ; i < docAuthList.size() ; i++) 
-		{
-			DocAuth docAuth = docAuthList.get(i);
-			if(docId.equals(docAuth.getDocId()))
-			{
-				//如果需要优化的话，可以考虑把已经找到的docAuth从docAuthList中删除，从而提高下一个doc的筛选速度
-				return docAuth;
-			}
-		}
-		return null;
-	}
 
 	//获取目录pid下的子节点
 	List <Doc> getSubDocList(Integer pid,Integer vid,DocAuth pDocAuth)
@@ -1356,10 +1293,12 @@ public class ReposController extends BaseController{
 	private List<Doc> getAccessableDocList(Integer userID, Integer vid) {		
 		System.out.println("getAccessableDocList() userId:" + userID + " vid:" + vid);
 		
+		List <UserGroup> groupList = getGroupListForUser(userID);
+		
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
-		List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
+		List <DocAuth> userDocAuthList = getDocAuthListForUser(userID,vid);
 		//get groupDocAuthList
-		List <DocAuth> groupDocAuthList = getGroupDocAuthList(userID,null,null,vid);
+		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,vid);
 		//Get AnyUserDocAuthList
 		List <DocAuth> anyUserDocAuthList = reposService.getUserDocAuthList(0,null,null,vid);
 		
@@ -1368,7 +1307,6 @@ public class ReposController extends BaseController{
 			System.out.println("getAccessableDocList() 用户无权访问该仓库的所有文件");
 			return null;
 		}
-		
 		
 		//get the rootDocAuth and set rootDocAuthType
 		DocAuth rootDocAuth = getDocAuthFromList(0,null,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
@@ -1384,122 +1322,6 @@ public class ReposController extends BaseController{
 		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
 		List <Doc> authedDocList = getAuthedDocList(userID,0,vid,rootDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 		return authedDocList;
-	}
-
-	private DocAuth getDocAuthFromList(int docId, DocAuth parentDocAuth,
-			List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList,List<DocAuth> anyUserDocAuthList) {
-		
-		System.out.println("getDocAuthFromList() docId:" + docId);
-		
-		DocAuth docAuth = null;
-		//root Doc
-		if(docId == 0)
-		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else
-			{
-				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-				if(docAuth != null)
-				{
-					docAuth.setType(2);					
-				}
-				else
-				{
-					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
-					if(docAuth != null)
-					{
-						docAuth.setType(2);					
-					}
-				}
-			}
-			return docAuth;
-		}
-		
-		//Not root Doc, if parentDocAuth is null, return null
-		if(parentDocAuth == null)
-		{
-			System.out.println("getDocAuthFromList() docId:" + docId + " parentDocAuth is null");
-			return null;
-		}
-		
-		//Not root Doc and parentDocAuth is set
-		docAuth = null;
-		Integer pDocAuthType = parentDocAuth.getType();
-		if(pDocAuthType == 1)
-		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else if(docAuth == null && parentDocAuth.getHeritable() == 1)
-			{
-				docAuth = parentDocAuth;
-			}
-		}
-		else if(pDocAuthType == 2)
-		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else
-			{
-				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-				if(docAuth != null)
-				{
-					docAuth.setType(2);
-				}
-				else if(docAuth == null && parentDocAuth.getHeritable() == 1)
-				{
-					docAuth = parentDocAuth;
-				}
-			}
-		}
-		else if(pDocAuthType == 3)
-		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else
-			{
-				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-				if(docAuth != null)
-				{
-					docAuth.setType(2);
-				}
-				else
-				{
-					docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-					if(docAuth != null)
-					{
-						docAuth.setType(3);
-					}					
-					else if(docAuth == null && parentDocAuth.getHeritable() == 1)
-					{
-						docAuth = parentDocAuth;
-					}
-				}
-			}
-		}
-		return docAuth;
-	}
-
-	//getGroupDocAuthList 用于获取用户的组权限(用户组权限所有所在组的并集)
-	//docId parentDocId reposId是查询的限制条件
-	private List<DocAuth> getGroupDocAuthList(Integer userID, Integer docId,Integer parentDocId, Integer reposId) {
-		//TODO: Auto-generated method stub
-		//Get GroupList
-		//Go through the GroupList to get the GroupDocAuthList[] one by one
-		//Combine all GroupAuthList to unique groupDocAuthList by docId
-		return null;
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
@@ -1583,8 +1405,31 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//获取DocAuthedUserList
-		List <DocAuth> docAuthList = getDocAuthList(docId,reposId);
+		//获取DocAuthList
+		//Step1: get reposAuthList (包含了user和group)
+		List <ReposAuth> reposAuthList = getReposAuthList(reposId);		
+		//Step2: go through the reposAuthList and get the docAuth for the user or group on doc one by one
+		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
+		for(int i=0;i<reposAuthList.size();i++)
+		{
+			ReposAuth reposAuth = reposAuthList.get(i);
+			DocAuth docAuth = null;
+			Integer userId = reposAuth.getUserId();
+			Integer groupId = reposAuth.getGroupId();
+			if(userId!= null)	//It is user
+			{
+				docAuth = getUserRealDocAuth(userId,docId,reposId);
+			}
+			else if(groupId != null)
+			{
+				docAuth = getGroupRealDocAuth(groupId,docId,reposId);
+			}
+			if(docAuth !=null)
+			{
+				docAuthList.add(docAuth);
+			}	
+		}
+		
 		String json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
 		System.out.println("docAuthList:" + json);
 		rt.setData(docAuthList);
@@ -1609,20 +1454,13 @@ public class ReposController extends BaseController{
 		}
 		else 
 		{
-			ReposAuth reposAuth = getReposAuth(login_user.getId(),reposId);
+			ReposAuth reposAuth = getUserRealReposAuth(login_user.getId(),reposId);
 			if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
 			{
 				return true;
 			}			
 		}
 		return false;
-	}
-
-	private List<DocAuth> getDocAuthList(Integer docId, Integer reposId) {
-		DocAuth docAuth = new DocAuth();
-		docAuth.setDocId(docId);
-		docAuth.setReposId(reposId);
-		return reposService.getDocAuthList(docAuth);
 	}
 
 	private List<ReposAuth> getReposAuthList(Integer reposId) {
@@ -1673,72 +1511,8 @@ public class ReposController extends BaseController{
 		{
 			System.out.println("普通用户" + userID);
 			
-			//获取用户的仓库的所有权限列表，后续的目录权限将从该列表中读取，避免每次查询数据库
-			List <DocAuth> anyUserDocAuthList = reposService.getUserDocAuthList(0,null,null,vid);
-			List <DocAuth> userDocAuthList = null;
-			List <DocAuth> groupDocAuthList = null;
-			if(userID != 0)
-			{
-				userDocAuthList = reposService.getUserDocAuthList(userID,null,null,vid);
-				groupDocAuthList = getGroupDocAuthList(userID,null,null,vid);
-			}
-			
-			if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
-			{
-				System.out.println("getUserDocAuth() 用户 " + userID + " 无权访问该仓库的所有文件");
-				return null;
-			}
-
-			//从docId开始递归往上获取用户权限
-			DocAuth userDocAuth = recurGetDocAuth(docId,userDocAuthList);
-			if(userDocAuth != null)
-			{
-				//如果获取的是本parentDoc的权限，则需要判断是否支持继承
-				if(!docId.equals(userDocAuth.getDocId()) && userDocAuth.getHeritable() == 0)
-				{
-					return null;
-				}
-				else
-				{
-					userDocAuth.setType(1);
-					return userDocAuth;
-				}
-			}
-			else
-			{
-				userDocAuth = recurGetDocAuth(docId,groupDocAuthList);
-				if(userDocAuth != null)
-				{
-					//如果获取的是本parentDoc的权限，则需要判断是否支持继承
-					if(!docId.equals(userDocAuth.getDocId()) && userDocAuth.getHeritable() == 0)
-					{
-						return null;
-					}
-					else
-					{
-						userDocAuth.setType(2);
-						return userDocAuth;
-					}
-				}
-				else
-				{
-					userDocAuth = recurGetDocAuth(docId,groupDocAuthList);
-					if(userDocAuth != null)
-					{
-						//如果获取的是本parentDoc的权限，则需要判断是否支持继承
-						if(!docId.equals(userDocAuth.getDocId()) && userDocAuth.getHeritable() == 0)
-						{
-							return null;
-						}
-						else
-						{
-							userDocAuth.setType(3);
-							return userDocAuth;
-						}
-					}
-				}
-			}
-			return null;
+			DocAuth userDocAuth = getUserRealDocAuth(userID,docId,vid);
+			return userDocAuth;
 		}
 	}
 
