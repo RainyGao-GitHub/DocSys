@@ -1407,15 +1407,18 @@ public class ReposController extends BaseController{
 		
 		//获取DocAuthList
 		//Step1: get reposAuthList (包含了user和group)
-		List <ReposAuth> reposAuthList = getReposAuthList(reposId);		
+		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
+		
 		//Step2: go through the reposAuthList and get the docAuth for the user or group on doc one by one
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		for(int i=0;i<reposAuthList.size();i++)
 		{
 			ReposAuth reposAuth = reposAuthList.get(i);
-			DocAuth docAuth = null;
 			Integer userId = reposAuth.getUserId();
 			Integer groupId = reposAuth.getGroupId();
+
+			System.out.println("getDocAuthList() userId:" + userId + " groupId:" + groupId);
+			DocAuth docAuth = null;
 			if(userId!= null)	//It is user
 			{
 				docAuth = getUserRealDocAuth(userId,docId,reposId);
@@ -1497,7 +1500,7 @@ public class ReposController extends BaseController{
 		//超级管理员可以访问所有目录
 		if(userType == 2)
 		{
-			System.out.println("超级管理员" + userID);
+			System.out.println("超级管理员:" + userID);
 			DocAuth docAuth = new DocAuth();
 			docAuth.setAccess(1);
 			docAuth.setAddEn(1);
