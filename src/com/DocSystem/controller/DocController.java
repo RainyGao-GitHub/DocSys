@@ -636,6 +636,7 @@ public class DocController extends BaseController{
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(rt,login_user.getId(),id,doc.getVid()) == false)
 		{
+			System.out.println("getDoc() you have no access right on doc:" + id);
 			writeJson(rt, response);	
 			return;
 		}
