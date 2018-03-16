@@ -1881,6 +1881,10 @@
 					
                     loadFirstContent();
                 }
+                else
+                {
+                	showErrorMessage("getDoc Error:"+ret.msgInfo);              	
+                }
             },
             error : function () {
                 showErrorMessage('服务器异常：获取文件信息失败');
@@ -2649,7 +2653,7 @@
 	                   else	//后台报错，结束移动
 	                   {
 	                    	syncUpMenu();
-	                    	showErrorMessage("Error:" + ret.msgInfo);
+	                    	showErrorMessage("moveDoc Error:" + ret.msgInfo);
 	                   }
 	                },
 	                error : function () {	//后台异常
@@ -3567,7 +3571,7 @@ function CompareObj(objA, objB, flag) {
                 	console.log("已退出登录");
                 	window.location.reload();	//刷新页面
                 }else {
-                    alert("错误："+ret.msgInfo);
+                    showErrorMsg("logout Error:"+ret.msgInfo);
                 }
             },
             error : function () {
