@@ -490,6 +490,12 @@ public class BaseController{
 		DocAuth docAuth = getDocAuthByDocId(docId,docAuthList);
 		if(docAuth == null)
 		{
+			if(docId == 0)
+			{
+				//we have reached to top of repos
+				return null;
+			}
+			
 			Doc doc = reposService.getDoc(docId);
 			if(doc == null)
 			{
