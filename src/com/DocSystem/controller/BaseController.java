@@ -533,7 +533,7 @@ public class BaseController{
 	protected List<DocAuth> getDocAuthListForGroups(List<UserGroup> groupList,Integer reposId) 
 	{
 		//TODO: Auto-generated method stub
-		//Go through the GroupList to get the GroupDocAuthList[] one by one
+		//Go through the GroupList to get the docAuthList for group one by one
 		List <DocAuth> tmpGroupDocAuthList = new ArrayList<DocAuth>();
 		for(int i=0;i<groupList.size();i++)
 		{
@@ -542,22 +542,20 @@ public class BaseController{
 			DocAuth qDocAuth = new DocAuth();
 			qDocAuth.setReposId(reposId);
 			qDocAuth.setGroupId(groupId);
-			List<DocAuth> docAuthList = reposService.getDocAuth(qDocAuth);
+			List<DocAuth> docAuthList = reposService.getDocAuthList(qDocAuth);
 			if(docAuthList!=null)
 			{
 				tmpGroupDocAuthList.addAll(docAuthList);
 			}
 		}
 		
-		// go Through the groupList to get all reposAuth
-		List <DocAuth> groupDocAuthList = new ArrayList<DocAuth>();
-		
-		// caculate the really reposAuth
+		//To Generate the real groupDocAuthList base on tmpGroupDocAuthList, need to combine the docAuth which have the same docId
 		if(tmpGroupDocAuthList.size() == 0)
 		{
 			return null;
 		}
 		
+		List <DocAuth> groupDocAuthList = new ArrayList<DocAuth>();
 		for(int i = 1;i<tmpGroupDocAuthList.size();i++)
 		{
 			DocAuth tmpDocAuth = tmpGroupDocAuthList.get(i);
