@@ -11,17 +11,17 @@ public class DocAuth {
 
     private Integer reposId;
 
-    private Integer isAdmin;
+    private Integer isAdmin = 0;
 
-    private Integer access;
+    private Integer access = 0;
 
-    private Integer editEn;
+    private Integer editEn = 0;
 
-    private Integer addEn;
+    private Integer addEn = 0;
 
-    private Integer deleteEn;
+    private Integer deleteEn = 0;
 
-    private Integer heritable;
+    private Integer heritable = 0;
 
     public Integer getId() {
         return id;

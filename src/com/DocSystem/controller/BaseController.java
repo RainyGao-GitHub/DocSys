@@ -152,6 +152,9 @@ public class BaseController{
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
+			docAuth.setUserId(UserID);
+			docAuth.setDocId(DocID);
+			docAuth.setReposId(ReposID);
 		}
 		return docAuth;
 	}
@@ -165,6 +168,9 @@ public class BaseController{
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
+			docAuth.setGroupId(GroupID);
+			docAuth.setDocId(DocID);
+			docAuth.setReposId(ReposID);
 		}
 		return docAuth;
 
@@ -184,7 +190,9 @@ public class BaseController{
 		//Get AnyUserDocAuthList
 		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,ReposID);
 		
-		return getDocAuthFromList(DocID,parentDocAuth,userDocAuthList, groupDocAuthList, anyUserDocAuthList); 
+		DocAuth docAuth = getDocAuthFromList(DocID,parentDocAuth,userDocAuthList, groupDocAuthList, anyUserDocAuthList);
+		return docAuth;
+
 	}
 	
 	protected List<UserGroup> getGroupListForUser(Integer userID) 
