@@ -370,9 +370,9 @@
   <select id="getReposAuthList" parameterType="com.DocSystem.entity.ReposAuth" resultType="com.DocSystem.entity.ReposAuth">
     select 
     	repos_auth.ID as id,
-    	REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
-     	USER_ID, user.NAME as userName,
-     	GROUP_ID, user_group.NAME as groupName 
+    	REPOS_ID as reposId, IS_ADMIN as isAmdin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE,
+     	USER_ID as userId, user.NAME as userName,
+     	GROUP_ID as groupId, user_group.NAME as groupName 
      from repos_auth
     LEFT JOIN user on repos_auth.user_id = user.id  
     LEFT JOIN user_group on repos_auth.group_id = user_group.id
@@ -382,10 +382,10 @@
   <select id="getDocAuthList" parameterType="com.DocSystem.entity.DocAuth" resultType="com.DocSystem.entity.DocAuth">
     select 
     	doc_auth.ID as id, 
-    	REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
-    	USER_ID, user.NAME as userName, 
-    	GROUP_ID, user_group.NAME as groupName, 
-    	DOC_ID, doc.NAME as docName, doc.PATH as docPath
+    	REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE,
+    	USER_ID as userId, user.NAME as userName, 
+    	GROUP_ID as groupId, user_group.NAME as groupName, 
+    	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath
     	from doc_auth
     LEFT JOIN user on doc_auth.user_id = user.id 
     LEFT JOIN user_group on doc_auth.group_id = user_group.id 

@@ -1411,7 +1411,9 @@ public class ReposController extends BaseController{
 		//Step1: get reposAuthList (包含了user和group)
 		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
 		System.out.println("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
-
+		String json = JSON.toJSONStringWithDateFormat(reposAuthList, "yyy-MM-dd HH:mm:ss");
+		System.out.println("reposAuthList:" + json);
+		
 		//Step2: go through the reposAuthList and get the docAuth for the user or group on doc one by one
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		for(int i=0;i<reposAuthList.size();i++)
@@ -1436,7 +1438,7 @@ public class ReposController extends BaseController{
 			}	
 		}
 		
-		String json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
+		json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
 		System.out.println("docAuthList:" + json);
 		rt.setData(docAuthList);
 		writeJson(rt, response);
@@ -1653,10 +1655,10 @@ public class ReposController extends BaseController{
 	
 	/****************   config User Auth ******************/
 	@RequestMapping("/configUserAuth.do")
-	public void configUserAuth(Integer userId, Integer docId, Integer reposId,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+	public void configUserAuth(Integer userId, Integer groupId, Integer docId, Integer reposId,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("configUserAuth userId: " + userId + " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		System.out.println("configUserAuth userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1687,6 +1689,7 @@ public class ReposController extends BaseController{
 		//获取用户的权限设置，如果不存在则增加，否则修改
 		DocAuth qDocAuth = new DocAuth();
 		qDocAuth.setUserId(userId);
+		qDocAuth.setGroupId(groupId);
 		qDocAuth.setDocId(docId);
 		qDocAuth.setReposId(reposId);
 		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
