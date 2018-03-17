@@ -1392,6 +1392,7 @@ public class ReposController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
+			System.out.println("getDocAuthList() 用户未登录，请先登录！");
 			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
 			return;
@@ -1400,6 +1401,7 @@ public class ReposController extends BaseController{
 		//检查当前用户的权限
 		if(isAdminOfDoc(login_user,docId,reposId) == false)
 		{
+			System.out.println("getDocAuthList() isAdminOfDoc return false");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
@@ -1408,7 +1410,8 @@ public class ReposController extends BaseController{
 		//获取DocAuthList
 		//Step1: get reposAuthList (包含了user和group)
 		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
-		
+		System.out.println("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
+
 		//Step2: go through the reposAuthList and get the docAuth for the user or group on doc one by one
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		for(int i=0;i<reposAuthList.size();i++)
@@ -1467,6 +1470,7 @@ public class ReposController extends BaseController{
 	}
 
 	private List<ReposAuth> getReposAuthList(Integer reposId) {
+		System.out.println("getReposAuthList() reposId:" + reposId);
 		ReposAuth reposAuth = new ReposAuth();
 		reposAuth.setReposId(reposId);
 		List <ReposAuth> ReposAuthList = reposService.getReposAuthList(reposAuth);	//注意已经包括了任意用户
