@@ -129,6 +129,7 @@ public class BaseController{
 	//获取用户真正的权限：权限已经考虑了继承用户组权限和任意用户权限
 	public ReposAuth getUserRealReposAuth(Integer UserID,Integer ReposID)
 	{
+		System.out.println("getUserRealReposAuth() UserID:"+UserID);
 		List <UserGroup> groupList = getGroupListForUser(UserID);
 		return getUserReposAuth(UserID,groupList,ReposID);
 	}
@@ -136,6 +137,7 @@ public class BaseController{
 	//获取用户组真正的权限：权限以及考虑继承了任意用户
 	public ReposAuth getGroupRealReposAuth(Integer GroupID,Integer ReposID)
 	{
+		System.out.println("getGroupRealReposAuth() GroupID:"+GroupID);
 		List <UserGroup> groupList = getGroupListForGroup(GroupID);
 		return getUserReposAuth(0,groupList,ReposID);
 	}
@@ -143,15 +145,29 @@ public class BaseController{
 	//获取用户真正的权限 From Bottom To Top
 	public DocAuth getUserRealDocAuth(Integer UserID,Integer DocID,Integer ReposID)
 	{
+		System.out.println("getUserRealDocAuth() UserID:"+UserID);
+
 		List <UserGroup> groupList = getGroupListForUser(UserID);
-		return getUserDocAuth(UserID,groupList,DocID,ReposID);
+		DocAuth docAuth = getUserDocAuth(UserID,groupList,DocID,ReposID);
+		if(docAuth == null)
+		{
+			docAuth = new DocAuth();
+		}
+		return docAuth;
 	}
 	
 	//获取用户组真正的权限 From Bottom To Top
 	public DocAuth getGroupRealDocAuth(Integer GroupID,Integer DocID,Integer ReposID)
 	{
+		System.out.println("getGroupRealDocAuth() GroupID:"+GroupID);
 		List <UserGroup> groupList = getGroupListForGroup(GroupID);
-		return getUserDocAuth(0,groupList,DocID,ReposID);
+		DocAuth docAuth = getUserDocAuth(0,groupList,DocID,ReposID);
+		if(docAuth == null)
+		{
+			docAuth = new DocAuth();
+		}
+		return docAuth;
+
 	}
 	
 	//获取用户真正的权限 From Top To Bottom（该接口只应用于展示用户可见目录或可见管理目录，用于减少查询次数，提高效率）
@@ -192,6 +208,7 @@ public class BaseController{
 	//		case 3: userId == null 递归获取组权限（似乎没有使用场景）
 	protected ReposAuth getUserReposAuth(Integer UserID,List <UserGroup> groupList,Integer ReposID)
 	{
+		System.out.println("getUserReposAuth() UserID:" + UserID);
 		//Try to get the userReposAuth
 		ReposAuth reposAuth = getReposAuthForUser(UserID, ReposID);
 		if(reposAuth != null)
@@ -293,6 +310,8 @@ public class BaseController{
 	//		case 3: userId == null 递归获取组权限（似乎没有使用场景）
 	protected DocAuth getUserDocAuth(Integer userId,List <UserGroup> groupList, Integer docId, Integer reposId) 
 	{
+		System.out.println("getUserDocAuth() userId:"+userId);
+		
 		//Get the userDocAuthList\groupDocAuthList\anyUserDocAuthList
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
 		List <DocAuth> userDocAuthList = getDocAuthListForUser(userId,reposId);
