@@ -238,7 +238,7 @@
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
-      and HERITABLE = #{heritable,jdbcType=INTEGER},
+      and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
   

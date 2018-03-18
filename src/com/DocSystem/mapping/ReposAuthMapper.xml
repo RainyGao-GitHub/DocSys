@@ -169,7 +169,6 @@
 	<if test="isAdmin != null">
       IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
     </if>
-    
     <if test="access != null">
       ACCESS = #{access,jdbcType=INTEGER}
     </if>
@@ -183,7 +182,7 @@
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
-      and HERITABLE = #{heritable,jdbcType=INTEGER},
+      and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
   <select id="getReposAuth" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
