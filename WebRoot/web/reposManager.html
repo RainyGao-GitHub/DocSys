@@ -907,9 +907,9 @@ function showDocAuthList(){
 			var heritableChecked = d.heritable == 1? "checked":"";
 			//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+d.docAuthId+");' class='mybtn'>设置</a>";
 			var opBtn = "";
-			if(d.docAuthId > 0) //docAuthId > 0 表示这不是继承的权限
+			if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
 			{
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuth("+d.docAuthId+");' class='mybtn-primary'>删除</a>";
+				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuth("+d.id+");' class='mybtn-primary'>删除</a>";
 			}
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w10'>"
