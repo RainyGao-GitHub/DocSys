@@ -224,7 +224,6 @@
 	<if test="isAdmin != null">
       and IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
     </if>
-    
     <if test="access != null">
       and ACCESS = #{access,jdbcType=INTEGER}
     </if>
