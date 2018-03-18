@@ -1383,7 +1383,7 @@ public class ReposController extends BaseController{
 		return null;
 	}
 	
-	/****************   get DocAuthList of Doc 包括继承的权限 ******************/
+	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
 	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -1427,11 +1427,48 @@ public class ReposController extends BaseController{
 			if(userId!= null)	//It is user
 			{
 				docAuth = getUserRealDocAuth(userId,docId,reposId);
+				if(docAuth == null)
+				{
+					if(docId == null || docId == 0)
+					{
+						docAuth = new DocAuth();
+						docAuth.setUserId(userId);
+						docAuth.setUserName(reposAuth.getUserName());
+						docAuth.setDocId(docId);
+						docAuth.setReposId(reposId);
+						docAuth.setIsAdmin(0);
+						docAuth.setAccess(0);
+						docAuth.setEditEn(0);
+						docAuth.setAddEn(0);
+						docAuth.setDeleteEn(0);
+						docAuth.setHeritable(0);			
+					}
+				}
+				
 			}
 			else if(groupId != null)
 			{
 				docAuth = getGroupRealDocAuth(groupId,docId,reposId);
+				if(docAuth == null)
+				{
+					if(docId == null || docId == 0)
+					{
+						docAuth = new DocAuth();
+						docAuth.setUserId(groupId);
+						docAuth.setGroupName(reposAuth.getGroupName());
+						docAuth.setDocId(docId);
+						docAuth.setReposId(reposId);
+						docAuth.setIsAdmin(0);
+						docAuth.setAccess(0);
+						docAuth.setEditEn(0);
+						docAuth.setAddEn(0);
+						docAuth.setDeleteEn(0);
+						docAuth.setHeritable(0);			
+					}
+				}
 			}
+			
+
 			if(docAuth !=null)
 			{
 				docAuthList.add(docAuth);
