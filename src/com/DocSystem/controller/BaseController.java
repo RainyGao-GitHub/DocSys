@@ -146,16 +146,8 @@ public class BaseController{
 	public DocAuth getUserRealDocAuth(Integer UserID,Integer DocID,Integer ReposID)
 	{
 		System.out.println("getUserRealDocAuth() UserID:"+UserID);
-
 		List <UserGroup> groupList = getGroupListForUser(UserID);
 		DocAuth docAuth = getUserDocAuth(UserID,groupList,DocID,ReposID);
-		if(docAuth == null)
-		{
-			docAuth = new DocAuth();
-			docAuth.setUserId(UserID);
-			docAuth.setDocId(DocID);
-			docAuth.setReposId(ReposID);
-		}
 		return docAuth;
 	}
 	
@@ -165,20 +157,15 @@ public class BaseController{
 		System.out.println("getGroupRealDocAuth() GroupID:"+GroupID);
 		List <UserGroup> groupList = getGroupListForGroup(GroupID);
 		DocAuth docAuth = getUserDocAuth(0,groupList,DocID,ReposID);
-		if(docAuth == null)
-		{
-			docAuth = new DocAuth();
-			docAuth.setGroupId(GroupID);
-			docAuth.setDocId(DocID);
-			docAuth.setReposId(ReposID);
-		}
 		return docAuth;
 
 	}
 	
 	//获取用户真正的权限 From Top To Bottom（该接口只应用于展示用户可见目录或可见管理目录，用于减少查询次数，提高效率）
+	//但如果调用户这个接口,每次需要重新获取docAuthList，有什么用，所以这个接口的用途实在搞不清楚
 	public DocAuth getUserRealDocAuthT2B(Integer UserID,Integer DocID, Integer ReposID, DocAuth parentDocAuth)
 	{
+		System.out.println("getUserRealDocAuthT2B() UserID:"+UserID);
 		//Get groupList
 		List <UserGroup> groupList = getGroupListForUser(UserID);
 		
@@ -192,7 +179,6 @@ public class BaseController{
 		
 		DocAuth docAuth = getDocAuthFromList(DocID,parentDocAuth,userDocAuthList, groupDocAuthList, anyUserDocAuthList);
 		return docAuth;
-
 	}
 	
 	protected List<UserGroup> getGroupListForUser(Integer userID) 
