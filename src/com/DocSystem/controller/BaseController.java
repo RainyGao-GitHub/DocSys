@@ -151,20 +151,17 @@ public class BaseController{
 		DocAuth docAuth = getUserDocAuth(UserID,groupList,DocID,ReposID);
 		if(docAuth == null)
 		{
-			if(DocID == null || DocID == 0)
-			{
-				docAuth = new DocAuth();
-				docAuth.setUserId(UserID);
-				docAuth.setUserName(UserName);
-				docAuth.setDocId(DocID);
-				docAuth.setReposId(ReposID);
-				docAuth.setIsAdmin(0);
-				docAuth.setAccess(0);
-				docAuth.setEditEn(0);
-				docAuth.setAddEn(0);
-				docAuth.setDeleteEn(0);
-				docAuth.setHeritable(0);			
-			}
+			docAuth = new DocAuth();
+			docAuth.setUserId(UserID);
+			docAuth.setUserName(UserName);
+			docAuth.setDocId(DocID);
+			docAuth.setReposId(ReposID);
+			docAuth.setIsAdmin(0);
+			docAuth.setAccess(0);
+			docAuth.setEditEn(0);
+			docAuth.setAddEn(0);
+			docAuth.setDeleteEn(0);
+			docAuth.setHeritable(0);			
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
@@ -188,20 +185,17 @@ public class BaseController{
 		DocAuth docAuth = getUserDocAuth(0,groupList,DocID,ReposID);
 		if(docAuth == null)
 		{
-			if(DocID == null || DocID == 0)
-			{
-				docAuth = new DocAuth();
-				docAuth.setUserId(GroupID);
-				docAuth.setGroupName(GroupName);
-				docAuth.setDocId(DocID);
-				docAuth.setReposId(ReposID);
-				docAuth.setIsAdmin(0);
-				docAuth.setAccess(0);
-				docAuth.setEditEn(0);
-				docAuth.setAddEn(0);
-				docAuth.setDeleteEn(0);
-				docAuth.setHeritable(0);			
-			}
+			docAuth = new DocAuth();
+			docAuth.setUserId(GroupID);
+			docAuth.setGroupName(GroupName);
+			docAuth.setDocId(DocID);
+			docAuth.setReposId(ReposID);
+			docAuth.setIsAdmin(0);
+			docAuth.setAccess(0);
+			docAuth.setEditEn(0);
+			docAuth.setAddEn(0);
+			docAuth.setDeleteEn(0);
+			docAuth.setHeritable(0);			
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
@@ -566,6 +560,7 @@ public class BaseController{
 			if(docId == 0)
 			{
 				//we have reached to top of repos
+				System.out.println("recurGetDocAuth: we have reached the top of repos");
 				return null;
 			}
 			
@@ -594,10 +589,10 @@ public class BaseController{
 		for(int i = 0 ; i < docAuthList.size() ; i++) 
 		{
 			DocAuth docAuth = docAuthList.get(i);
-			System.out.println("getDocAuthByDocId() docAuth[" + i + "] " + docAuth.getDocId());
+			System.out.println("getDocAuthByDocId() docAuth[" + i + "] of docId:" + docAuth.getDocId());
 			if(docId.equals(docAuth.getDocId()))
 			{
-				
+				System.out.println("getDocAuthByDocId() docAuth was found for docId:" + docId);			
 				return docAuth;
 			}
 		}
