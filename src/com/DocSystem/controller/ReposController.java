@@ -1439,6 +1439,26 @@ public class ReposController extends BaseController{
 			}	
 		}
 		
+		//If docId == null or docId == 0, we need also to get all docAuth under the root doc
+		if(docId == null || docId == 0)
+		{
+			DocAuth docAuth = new DocAuth();
+			docAuth.setReposId(reposId);
+			List <DocAuth> allDocAuthList = reposService.getDocAuthList(docAuth);
+			if(allDocAuthList != null)
+			{
+				//add the docAuth to docAuthList which docId is not 0
+				for(int i=0;i<allDocAuthList.size();i++)
+				{
+					DocAuth tmpDocAuth = allDocAuthList.get(i);
+					if(!tmpDocAuth.getDocId().equals(0))
+					{
+						docAuthList.add(tmpDocAuth);						
+					}
+				}
+			}
+		}
+		
 		json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
 		System.out.println("docAuthList:" + json);
 		rt.setData(docAuthList);
