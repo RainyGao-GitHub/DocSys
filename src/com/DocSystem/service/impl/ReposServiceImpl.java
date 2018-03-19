@@ -170,6 +170,8 @@ public class ReposServiceImpl implements ReposService {
 		docAuthDao.deleteSelective(docAuth);
 	}
 
+	//Please use the getDocAuthList, This Interface can not be used again
+	//I keep leave it here, because it is good example to show how to take parameters to mybatis
 	public List<DocAuth> getUserDocAuthList(Integer userId, Integer docId,Integer pDocId,
 			Integer reposId) {
 		HashMap<String,Object> params = new HashMap<String,Object>();

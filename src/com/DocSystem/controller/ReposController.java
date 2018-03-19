@@ -1300,7 +1300,7 @@ public class ReposController extends BaseController{
 		//get groupDocAuthList
 		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,vid);
 		//Get AnyUserDocAuthList
-		List <DocAuth> anyUserDocAuthList = reposService.getUserDocAuthList(0,null,null,vid);
+		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,vid);
 		
 		if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
 		{
