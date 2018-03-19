@@ -324,6 +324,7 @@ public class BaseController{
 		DocAuth docAuth = null;
 		if(userId !=null && userId > 0)
 		{
+			System.out.println("getUserDocAuth() recurGetDocAuth from userDocAuthList for:" + userId);
 			docAuth = recurGetDocAuth(docId,userDocAuthList);
 			if(docAuth != null)
 			{
@@ -345,6 +346,7 @@ public class BaseController{
 		{
 			if(groupList != null)
 			{
+				System.out.println("getUserDocAuth() recurGetDocAuth from groupDocAuthList for:" + userId);
 				docAuth = recurGetDocAuth(docId,groupDocAuthList);
 				if(docAuth != null)
 				{
@@ -367,6 +369,7 @@ public class BaseController{
 		{
 			if(userId != null)
 			{
+				System.out.println("getUserDocAuth() recurGetDocAuth from anyUserDocAuthList for:" + userId);
 				docAuth = recurGetDocAuth(docId,anyUserDocAuthList);
 				if(docAuth != null)
 				{
@@ -500,6 +503,7 @@ public class BaseController{
 
 	//getDocAuth from the bottom to top
 	private DocAuth recurGetDocAuth(Integer docId,List<DocAuth> docAuthList) {
+		System.out.println("recurGetDocAuth() docId:" + docId);
 		DocAuth docAuth = getDocAuthByDocId(docId,docAuthList);
 		if(docAuth == null)
 		{
@@ -524,27 +528,33 @@ public class BaseController{
 	//根据DocId从docAuthList中找出对应的docAuth
 	private DocAuth getDocAuthByDocId(Integer docId,List<DocAuth> docAuthList) 
 	{
-			if(docAuthList == null)
-			{
-				return null;
-			}
-			
-			for(int i = 0 ; i < docAuthList.size() ; i++) 
-			{
-				DocAuth docAuth = docAuthList.get(i);
-				if(docId.equals(docAuth.getDocId()))
-				{
-					//如果需要优化的话，可以考虑把已经找到的docAuth从docAuthList中删除，从而提高下一个doc的筛选速度
-					return docAuth;
-				}
-			}
+		System.out.println("getDocAuthByDocId() docId:" + docId);
+		if(docAuthList == null)
+		{
+			System.out.println("getDocAuthByDocId() docAuthList is null");			
 			return null;
+		}
+		
+		for(int i = 0 ; i < docAuthList.size() ; i++) 
+		{
+			DocAuth docAuth = docAuthList.get(i);
+			System.out.println("getDocAuthByDocId() docAuth[" + i + "] " + docAuth.getDocId());
+			if(docId.equals(docAuth.getDocId()))
+			{
+				
+				return docAuth;
+			}
+		}
+		return null;
 	}
 	
 	//获取用户在仓库上所有doc的权限设置
 	protected List<DocAuth> getDocAuthListForUser(Integer UserID,Integer reposID) 
 	{
-		List <DocAuth> userDocAuthList = reposService.getUserDocAuthList(UserID,null,null,reposID);
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(UserID);
+		docAuth.setReposId(reposID);
+		List <DocAuth> userDocAuthList = reposService.getDocAuthList(docAuth);
 		return userDocAuthList;
 	}
 	
