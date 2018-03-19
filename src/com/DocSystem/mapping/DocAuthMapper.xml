@@ -245,7 +245,7 @@
     delete from doc_auth
       where 1 = 1
       <if test="id != null">
-        and ID = #{id,jdbcType=INTEGER},
+        and ID = #{id,jdbcType=INTEGER}
       </if>
       <if test="userId != null">
         and USER_ID = #{userId,jdbcType=INTEGER}
