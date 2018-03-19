@@ -131,7 +131,8 @@ public class BaseController{
 	{
 		System.out.println("getUserRealReposAuth() UserID:"+UserID);
 		List <UserGroup> groupList = getGroupListForUser(UserID);
-		return getUserReposAuth(UserID,groupList,ReposID);
+		ReposAuth reposAuth =getUserReposAuth(UserID,groupList,ReposID);
+		return reposAuth;
 	}
 	
 	//获取用户组真正的权限：权限以及考虑继承了任意用户
@@ -143,20 +144,75 @@ public class BaseController{
 	}
 	
 	//获取用户真正的权限 From Bottom To Top
-	public DocAuth getUserRealDocAuth(Integer UserID,Integer DocID,Integer ReposID)
+	public DocAuth getUserRealDocAuth(Integer UserID,String UserName,Integer DocID,Integer ReposID)
 	{
 		System.out.println("getUserRealDocAuth() UserID:"+UserID);
 		List <UserGroup> groupList = getGroupListForUser(UserID);
 		DocAuth docAuth = getUserDocAuth(UserID,groupList,DocID,ReposID);
+		if(docAuth == null)
+		{
+			if(DocID == null || DocID == 0)
+			{
+				docAuth = new DocAuth();
+				docAuth.setUserId(UserID);
+				docAuth.setUserName(UserName);
+				docAuth.setDocId(DocID);
+				docAuth.setReposId(ReposID);
+				docAuth.setIsAdmin(0);
+				docAuth.setAccess(0);
+				docAuth.setEditEn(0);
+				docAuth.setAddEn(0);
+				docAuth.setDeleteEn(0);
+				docAuth.setHeritable(0);			
+			}
+		}
+		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
+		{
+			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
+			{
+				System.out.println("getUserRealDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
+				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
+				docAuth.setUserId(UserID);
+				docAuth.setUserName(UserName);			
+			}
+		}
+		
 		return docAuth;
 	}
 	
 	//获取用户组真正的权限 From Bottom To Top
-	public DocAuth getGroupRealDocAuth(Integer GroupID,Integer DocID,Integer ReposID)
+	public DocAuth getGroupRealDocAuth(Integer GroupID,String GroupName, Integer DocID,Integer ReposID)
 	{
 		System.out.println("getGroupRealDocAuth() GroupID:"+GroupID);
 		List <UserGroup> groupList = getGroupListForGroup(GroupID);
 		DocAuth docAuth = getUserDocAuth(0,groupList,DocID,ReposID);
+		if(docAuth == null)
+		{
+			if(DocID == null || DocID == 0)
+			{
+				docAuth = new DocAuth();
+				docAuth.setUserId(GroupID);
+				docAuth.setGroupName(GroupName);
+				docAuth.setDocId(DocID);
+				docAuth.setReposId(ReposID);
+				docAuth.setIsAdmin(0);
+				docAuth.setAccess(0);
+				docAuth.setEditEn(0);
+				docAuth.setAddEn(0);
+				docAuth.setDeleteEn(0);
+				docAuth.setHeritable(0);			
+			}
+		}
+		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
+		{
+			if(docAuth.getGroupId() == null || !docAuth.getDocId().equals(DocID))
+			{
+				System.out.println("getGroupRealDocAuth() docAuth为继承的权限,需要删除docAuthId并设置groupID、groupName");
+				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
+				docAuth.setUserId(GroupID);
+				docAuth.setUserName(GroupName);			
+			}
+		}
 		return docAuth;
 
 	}
@@ -421,7 +477,7 @@ public class BaseController{
 					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
 					if(docAuth != null)
 					{
-						docAuth.setType(2);					
+						docAuth.setType(3);					
 					}
 				}
 			}
@@ -486,7 +542,7 @@ public class BaseController{
 				}
 				else
 				{
-					docAuth = getDocAuthByDocId(docId,groupDocAuthList);
+					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
 					if(docAuth != null)
 					{
 						docAuth.setType(3);
