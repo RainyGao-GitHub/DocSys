@@ -1426,48 +1426,12 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = null;
 			if(userId!= null)	//It is user
 			{
-				docAuth = getUserRealDocAuth(userId,docId,reposId);
-				if(docAuth == null)
-				{
-					if(docId == null || docId == 0)
-					{
-						docAuth = new DocAuth();
-						docAuth.setUserId(userId);
-						docAuth.setUserName(reposAuth.getUserName());
-						docAuth.setDocId(docId);
-						docAuth.setReposId(reposId);
-						docAuth.setIsAdmin(0);
-						docAuth.setAccess(0);
-						docAuth.setEditEn(0);
-						docAuth.setAddEn(0);
-						docAuth.setDeleteEn(0);
-						docAuth.setHeritable(0);			
-					}
-				}
-				
+				docAuth = getUserRealDocAuth(userId,reposAuth.getUserName(),docId,reposId);
 			}
 			else if(groupId != null)
 			{
-				docAuth = getGroupRealDocAuth(groupId,docId,reposId);
-				if(docAuth == null)
-				{
-					if(docId == null || docId == 0)
-					{
-						docAuth = new DocAuth();
-						docAuth.setUserId(groupId);
-						docAuth.setGroupName(reposAuth.getGroupName());
-						docAuth.setDocId(docId);
-						docAuth.setReposId(reposId);
-						docAuth.setIsAdmin(0);
-						docAuth.setAccess(0);
-						docAuth.setEditEn(0);
-						docAuth.setAddEn(0);
-						docAuth.setDeleteEn(0);
-						docAuth.setHeritable(0);			
-					}
-				}
+				docAuth = getGroupRealDocAuth(groupId,reposAuth.getGroupName(),docId,reposId);
 			}
-			
 
 			if(docAuth !=null)
 			{
@@ -1527,7 +1491,7 @@ public class ReposController extends BaseController{
 			return null;
 		}
 	
-		//虚拟用户：任意用户
+		String userName = null;
 		if(userID != 0)
 		{
 			User user = userService.getUser(userID);
@@ -1538,6 +1502,7 @@ public class ReposController extends BaseController{
 			
 			}
 			userType = user.getType();
+			userName = user.getName();
 		}
 		
 		//超级管理员可以访问所有目录
@@ -1557,7 +1522,7 @@ public class ReposController extends BaseController{
 		{
 			System.out.println("普通用户" + userID);
 			
-			DocAuth userDocAuth = getUserRealDocAuth(userID,docId,vid);
+			DocAuth userDocAuth = getUserRealDocAuth(userID,userName,docId,vid);
 			return userDocAuth;
 		}
 	}
@@ -1649,7 +1614,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	/****************   delete User ReposAuth ******************/
+	/****************   delete User DocAuth ******************/
 	@RequestMapping("/deleteUserDocAuth.do")
 	public void deleteUserDocAuth(Integer docAuthId,Integer userId,Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
