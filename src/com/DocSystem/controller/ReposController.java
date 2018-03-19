@@ -1217,8 +1217,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//String json = JSON.toJSONStringWithDateFormat(docList, "yyy-MM-dd HH:mm:ss");
-		//System.out.println("docList["+ pDocId +"] " + json);
+		//printObject("docList["+ pDocId +"] ",docList);
 		return docList;
 	}
 
@@ -1340,8 +1339,8 @@ public class ReposController extends BaseController{
 		
 		//获取All UserList
 		List <ReposAuth> UserList = getReposAllUserList(reposId);
-		String json = JSON.toJSONStringWithDateFormat(UserList, "yyy-MM-dd HH:mm:ss");
-		System.out.println("UserList:" + json);
+		printObject("UserList:",UserList);
+		
 		rt.setData(UserList);
 		writeJson(rt, response);
 		
@@ -1411,8 +1410,7 @@ public class ReposController extends BaseController{
 		//Step1: get reposAuthList (包含了user和group)
 		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
 		System.out.println("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
-		String json = JSON.toJSONStringWithDateFormat(reposAuthList, "yyy-MM-dd HH:mm:ss");
-		System.out.println("reposAuthList:" + json);
+		printObject("reposAuthList:", reposAuthList);
 		
 		//Step2: go through the reposAuthList and get the docAuth for the user or group on doc one by one
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
@@ -1458,9 +1456,8 @@ public class ReposController extends BaseController{
 				}
 			}
 		}
-		
-		json = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
-		System.out.println("docAuthList:" + json);
+		printObject("docAuthList:",docAuthList);
+
 		rt.setData(docAuthList);
 		writeJson(rt, response);
 	}
