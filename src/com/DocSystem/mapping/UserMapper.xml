@@ -390,9 +390,18 @@
     LEFT JOIN user on doc_auth.user_id = user.id 
     LEFT JOIN user_group on doc_auth.group_id = user_group.id 
     LEFT JOIN doc on doc_auth.doc_id = doc.id
-    WHERE doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
-      	<if test="docId!=null">
+    WHERE 1=1
+    	<if test="reposId!=null">
+  			and doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+      	</if>
+  		<if test="docId!=null">
   			and doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
+  		</if>
+  		<if test="userId!=null">
+  			and doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
+  		</if>
+  		<if test="groupId!=null">
+  			and doc_auth.GROUP_ID = #{groupId,jdbcType=INTEGER}
   		</if>
   </select>
 </mapper>
