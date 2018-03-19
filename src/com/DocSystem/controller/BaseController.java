@@ -63,6 +63,13 @@ public class BaseController{
 
 
 	/***************************Basic Functions For Application Level  **************************/
+	//To print the obj by convert it to json format
+	protected void printObject(String Head,Object obj)
+	{
+		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
+		System.out.println(Head + json);		
+	}
+	
 	//获取仓库的实文件的本地存储根路径
 	protected String getReposRealPath(Repos repos)
 	{
@@ -222,11 +229,16 @@ public class BaseController{
 		//Get the userDocAuthList\groupDocAuthList\anyUserDocAuthList
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
 		List <DocAuth> userDocAuthList = getDocAuthListForUser(UserID,ReposID);
+		printObject("userDocAuthList:",userDocAuthList);
+
 		//get groupDocAuthList
 		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,ReposID);
+		printObject("groupDocAuthList:",groupDocAuthList);
+
 		//Get AnyUserDocAuthList
 		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,ReposID);
-		
+		printObject("anyUserDocAuthList:",anyUserDocAuthList);
+
 		DocAuth docAuth = getDocAuthFromList(DocID,parentDocAuth,userDocAuthList, groupDocAuthList, anyUserDocAuthList);
 		return docAuth;
 	}
@@ -359,10 +371,15 @@ public class BaseController{
 		//Get the userDocAuthList\groupDocAuthList\anyUserDocAuthList
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
 		List <DocAuth> userDocAuthList = getDocAuthListForUser(userId,reposId);
+		printObject("getUserDocAuth() userDocAuthList:", userDocAuthList);
+		
 		//get groupDocAuthList
 		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,reposId);
+		printObject("getUserDocAuth() groupDocAuthList:", groupDocAuthList);
+		
 		//Get AnyUserDocAuthList
 		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,reposId);
+		printObject("getUserDocAuth() anyUserDocAuthList:", anyUserDocAuthList);
 		
 		if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
 		{
