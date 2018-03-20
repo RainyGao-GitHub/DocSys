@@ -538,7 +538,7 @@
         $("#btnSaveAuth").show();
         $("#btnCancelSaveAuth").show();
         //使能用户列表的第一个复选框
-        $(".UserEnable").attr("disabled",false);
+        //$(".UserEnable").attr("disabled",false);
     }
     
     //将权限保存到后台
@@ -909,11 +909,11 @@ function showDocAuthList(){
 			var opBtn = "";
 			if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
 			{
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuth("+d.id+");' class='mybtn-primary'>删除</a>";
+				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+d.id+");' class='mybtn-primary'>删除</a>";
 			}
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w10'>"
-				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" onchange='EnableUserConfig("+i+");' type='checkbox' disabled='disabled'/>"
+				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" type='checkbox' onclick='editAuth()'/>"
 				+"	</i> "
 				+"	<i class='cell username w15'>"
 				+"		<span class='name'>"
@@ -925,23 +925,23 @@ function showDocAuthList(){
 				+"			<a id='DocPath"+i+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell access w8'>"
-				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " disabled='disabled'>管理员</input>"
+				+"	<i class='cell access w8' >"
+				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
 				+"	</i>"
 				+"	<i class='cell  read w8'>"
-				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " disabled='disabled'>读</input>"
+				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
 				+"	</i>"
 				+"	<i class='cell edit w8'>"
-				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " disabled='disabled'>写</input>"
+				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + "onchange='EnableUserConfig("+i+");'>写</input>"
 				+"	</i>"
 				+"	<i class='cell add w8'>"
-				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " disabled='disabled'>增加</input>"
+				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>增加</input>"
 				+"	</i>"
 				+"	<i class='cell delete w8'>"
-				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " disabled='disabled'>删除</input>"
+				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
 				+"	</i>"
 				+"	<i class='cell heritable w8'>"
-				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " disabled='disabled'>可继承</input>"
+				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>可继承</input>"
 				+"	</i>"
 				+"	<i class='cell operation w10'>"
 				+ 		opBtn
@@ -956,33 +956,35 @@ function showDocAuthList(){
 function EnableUserConfig(index){
 	//alert(index);
 	//alert($("#User"+index).prop("checked"));
-	if($("#User"+index).prop("checked") == true)
+	editAuth();
+	if($("#User"+index).prop("checked") == false)
 	{
-		$(".IsAdmin"+index).attr("disabled",false);
-		$("#Access"+index).attr("disabled",false);
-		$("#EditEn"+index).attr("disabled",false);
-		$("#AddEn"+index).attr("disabled",false);
-		$("#DeleteEn"+index).attr("disabled",false);
-		$("#Heritable"+index).attr("disabled",false);
-	}
-	else
-	{
-		$(".IsAdmin"+index).attr("disabled",true);
-		$("#Access"+index).attr("disabled",true);
-		$("#EditEn"+index).attr("disabled",true);
-		$("#AddEn"+index).attr("disabled",true);
-		$("#DeleteEn"+index).attr("disabled",true);
-		$("#Heritable"+index).attr("disabled",true);		
+		$("#User"+index).prop("checked",true);
 	}
 }
 
-function deleteDocAuth(docAuthId)
+
+function deleteDocAuthConfirm(docAuthId)
 {
-	if(confirm("是否删除该用户的目录权限设置！") == false)
-	{
-		return;
-	}
-	
+   	console.log("deleteDocAuthAuthConfirm()");
+		qiao.bs.confirm({
+ 	    	id: 'deleteDocAuthConfirm',
+ 	        msg: "是否删除该用户的目录权限设置?",
+ 	        close: false,		
+ 	        okbtn: "删除",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	//alert("点击了确定");
+ 	    	deleteDocAuth(docAuthId);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteDocAuth(docAuthId)
+{	
    	console.log("deleteDocAuth()");
    	
    	var vid = getQueryString("vid");
