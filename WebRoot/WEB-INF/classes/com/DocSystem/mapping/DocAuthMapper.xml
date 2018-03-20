@@ -4,6 +4,7 @@
   <resultMap id="BaseResultMap" type="com.DocSystem.entity.DocAuth">
     <id column="ID" jdbcType="INTEGER" property="id" />
     <result column="USER_ID" jdbcType="INTEGER" property="userId" />
+    <result column="GROUP_ID" jdbcType="INTEGER" property="groupId" />
     <result column="DOC_ID" jdbcType="INTEGER" property="docId" />
     <result column="REPOS_ID" jdbcType="INTEGER" property="reposId" />
     <result column="IS_ADMIN" jdbcType="INTEGER" property="isAdmin" />
@@ -14,7 +15,8 @@
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, USER_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+    ID, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, 
+    HERITABLE
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -27,14 +29,14 @@
     where ID = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.DocAuth">
-    insert into doc_auth (ID, USER_ID, DOC_ID, 
-      REPOS_ID, IS_ADMIN, ACCESS, 
-      EDIT_EN, ADD_EN, DELETE_EN, 
-      HERITABLE)
-    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{docId,jdbcType=INTEGER}, 
-      #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
-      #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, 
-      #{heritable,jdbcType=INTEGER})
+    insert into doc_auth (ID, USER_ID, GROUP_ID, 
+      DOC_ID, REPOS_ID, IS_ADMIN, 
+      ACCESS, EDIT_EN, ADD_EN, 
+      DELETE_EN, HERITABLE)
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
+      #{docId,jdbcType=INTEGER}, #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, 
+      #{access,jdbcType=INTEGER}, #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, 
+      #{deleteEn,jdbcType=INTEGER}, #{heritable,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.DocAuth">
     insert into doc_auth
@@ -44,6 +46,9 @@
       </if>
       <if test="userId != null">
         USER_ID,
+      </if>
+      <if test="groupId != null">
+        GROUP_ID,
       </if>
       <if test="docId != null">
         DOC_ID,
@@ -77,6 +82,9 @@
       <if test="userId != null">
         #{userId,jdbcType=INTEGER},
       </if>
+      <if test="groupId != null">
+        #{groupId,jdbcType=INTEGER},
+      </if>
       <if test="docId != null">
         #{docId,jdbcType=INTEGER},
       </if>
@@ -109,6 +117,9 @@
       <if test="userId != null">
         USER_ID = #{userId,jdbcType=INTEGER},
       </if>
+      <if test="groupId != null">
+        GROUP_ID = #{groupId,jdbcType=INTEGER},
+      </if>
       <if test="docId != null">
         DOC_ID = #{docId,jdbcType=INTEGER},
       </if>
@@ -139,6 +150,7 @@
   <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.DocAuth">
     update doc_auth
     set USER_ID = #{userId,jdbcType=INTEGER},
+      GROUP_ID = #{groupId,jdbcType=INTEGER},
       DOC_ID = #{docId,jdbcType=INTEGER},
       REPOS_ID = #{reposId,jdbcType=INTEGER},
       IS_ADMIN = #{isAdmin,jdbcType=INTEGER},
@@ -159,6 +171,9 @@
     </if>
     <if test="userId != null">
       and USER_ID = #{userId,jdbcType=INTEGER}
+    </if>
+    <if test="groupId != null">
+      and GROUP_ID = #{groupId,jdbcType=INTEGER}
     </if>
     <if test="docId != null">
       and DOC_ID = #{docId,jdbcType=INTEGER}
@@ -197,6 +212,9 @@
     <if test="userId != null">
       and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0)
     </if>
+    <if test="groupId != null">
+      and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
+    </if>
     <if test="docId != null">
       and DOC_ID = #{docId,jdbcType=INTEGER}
     </if>
@@ -206,7 +224,6 @@
 	<if test="isAdmin != null">
       and IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
     </if>
-    
     <if test="access != null">
       and ACCESS = #{access,jdbcType=INTEGER}
     </if>
@@ -220,7 +237,7 @@
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
-      and HERITABLE = #{heritable,jdbcType=INTEGER},
+      and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
   
@@ -228,10 +245,13 @@
     delete from doc_auth
       where 1 = 1
       <if test="id != null">
-        and ID = #{id,jdbcType=INTEGER},
+        and ID = #{id,jdbcType=INTEGER}
       </if>
       <if test="userId != null">
         and USER_ID = #{userId,jdbcType=INTEGER}
+      </if>
+      <if test="groupId != null">
+        and GROUP_ID = #{groupId,jdbcType=INTEGER}
       </if>
       <if test="docId != null">
         and DOC_ID = #{docId,jdbcType=INTEGER}
@@ -243,7 +263,7 @@
     
   <select id="getUserDocAuthList" parameterType="java.util.Map" resultMap="BaseResultMap">
     select 
-    	doc_auth.ID, USER_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+    	doc_auth.ID, USER_ID,GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
     from doc_auth 
     LEFT JOIN doc on doc.ID = doc_auth.DOC_ID
     where doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
