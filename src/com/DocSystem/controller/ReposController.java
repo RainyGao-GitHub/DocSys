@@ -1188,12 +1188,12 @@ public class ReposController extends BaseController{
 			}
 			else if(pDocAuthType == 2)
 			{
-				//获取所有User's DocAuth.access=1或SubDocAuth==null 或者 Group's DocAuth.access=1或DocAuth==null的节点；
+				//获取所有User's DocAuth.access=1 或者 Group's DocAuth.access=1或DocAuth==null的节点；
 				//docList = reposService.getAuthedDocListHeritable2(null,pDocId,reposId,userId);
 			}
 			else
 			{
-				//获取所有User's DocAuth.access=1或DocAuth==null 或者 Group's DocAuth.access=1或DocAuth==null 或者AnyUser's DocAuth.access=1或DocAuth==null的节点；
+				//获取所有User's DocAuth.access=1  或者 Group's DocAuth.access=1 或者AnyUser's DocAuth.access=1或DocAuth==null的节点；
 				//docList = reposService.getAuthedDocListHeritable3(null,pDocId,reposId,userId);			
 			}
 		}
@@ -1212,7 +1212,7 @@ public class ReposController extends BaseController{
 			}
 			else
 			{
-				//获取所有User's DocAuth.access=1 或者 Group's DocAuth.access=1或DocAuth==null 或者AnyUser's DocAuth.access=1的节点；
+				//获取所有User's DocAuth.access=1 或者 Group's DocAuth.access=1 或者AnyUser's DocAuth.access=1的节点；
 				//docList = reposService.getAuthedDocList3(null,pDocId,reposId,userId);
 			}
 		}
@@ -1276,19 +1276,21 @@ public class ReposController extends BaseController{
 			List <Doc> docList = reposService.getDocList(doc);
 			//rt.setData(docList);
 			return docList;
-
 		}
 		else
 		{
 			System.out.println("普通用户");
-			//获取用户仓库权限
-			Integer userID = login_user.getId();
-			List <Doc> authedDocList = getAccessableDocList(userID,vid);
+			//Integer userID = login_user.getId();
+			//List <Doc> authedDocList = getAccessableDocList(userID,vid);
+			Doc doc = new Doc();
+			doc.setVid(vid);
+			List <Doc> authedDocList = reposService.getDocList(doc);
 			return authedDocList;
 		}
 	}
 	
 	//获取仓库下用户可访问的doclist
+	//已被证实一口气获取所有文件列表是不现实的，因此采用目录动态加载的方式，该接口将不再使用
 	private List<Doc> getAccessableDocList(Integer userID, Integer vid) {		
 		System.out.println("getAccessableDocList() userId:" + userID + " vid:" + vid);
 		
