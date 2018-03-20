@@ -85,7 +85,7 @@ function showReposAllUserList(){
 			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
 			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+");' disabled='disabled'>删除</a>";
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
 			}
 												
 			var se = "<li value="+ i +">"
@@ -134,7 +134,7 @@ function addReposUser(userId)
 }
 
 
-function deleteReposAuthConfirm(reposAuthId)
+function deleteReposAuthConfirm(reposAuthId,userId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteReposAuthConfirm',
@@ -145,7 +145,7 @@ function deleteReposAuthConfirm(reposAuthId)
  	    },function () {
  	    	
  	    	//alert("点击了确定");
- 	    	deleteReposAuth(reposAuthId);
+ 	    	deleteReposAuth(reposAuthId,userId);
  	    	return true;   
  	    },function(){
  	    	//alert("点击了取消");
@@ -153,7 +153,7 @@ function deleteReposAuthConfirm(reposAuthId)
  	    }); 
 }
 
-function deleteReposAuth(reposAuthId)
+function deleteReposAuth(reposAuthId,userId)
 {	
    	console.log("deleteReposAuth()");
    	
@@ -164,7 +164,7 @@ function deleteReposAuth(reposAuthId)
             dataType : "json",
             data : {
                 reposAuthId: reposAuthId,
-                //userId: userId,
+                userId: userId,
                 reposId: vid,
             },
             success : function (ret) {
