@@ -1623,11 +1623,13 @@ public class ReposController extends BaseController{
 		}
 		
 		//删除该用户在该仓库的所有的目录权限设置
-		DocAuth docAuth = new DocAuth();
-		docAuth.setUserId(userId);
-		docAuth.setReposId(reposId);
-		reposService.deleteDocAuthSelective(docAuth);
-		
+		if(userId != null)
+		{
+			DocAuth docAuth = new DocAuth();
+			docAuth.setUserId(userId);
+			docAuth.setReposId(reposId);
+			reposService.deleteDocAuthSelective(docAuth);
+		}
 		writeJson(rt, response);
 	}
 	
