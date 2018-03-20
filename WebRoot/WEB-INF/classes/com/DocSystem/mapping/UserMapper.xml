@@ -348,53 +348,60 @@
     <include refid="Base_Column_List" />
     from user
   </select>
-  
    
-  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
-		repos_auth.ID as reposAuthId, 
-		user.ID as userId, user.NAME as userName, 
-		REPOS_ID as reposId, 
-		IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn,  HERITABLE as heritable
+		user.ID as userId,user.NAME as userName,
+		repos_auth.ID as id, 
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
       from user
-    LEFT JOIN repos_auth ON repos_auth.USER_ID = user.ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+    LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
   
+  <select id="getReposAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+	select 
+		user_group.ID as groupId,user_group.NAME as groupName,
+		repos_auth.ID as id, 
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+      from user_group
+    LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
   
-  <select id="getReposAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+  <select id="getReposAuthList" parameterType="com.DocSystem.entity.ReposAuth" resultType="com.DocSystem.entity.ReposAuth">
     select 
-    	repos_auth.ID as reposAuthId,
-    	user.ID as userId, user.NAME as userName, 
-    	REPOS_ID as reposId, 
-    	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE as heritable
+    	repos_auth.ID as id,
+    	REPOS_ID as reposId, IS_ADMIN as isAmdin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE,
+     	USER_ID as userId, user.NAME as userName,
+     	GROUP_ID as groupId, user_group.NAME as groupName 
      from repos_auth
-    LEFT JOIN user on user.id = repos_auth.user_id  
+    LEFT JOIN user on repos_auth.user_id = user.id  
+    LEFT JOIN user_group on repos_auth.group_id = user_group.id
     WHERE repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
  
-  <select id="getDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
+  <select id="getDocAuthList" parameterType="com.DocSystem.entity.DocAuth" resultType="com.DocSystem.entity.DocAuth">
     select 
-    	doc_auth.ID as docAuthId,
-    	user.ID as userId, user.NAME as userName, 
-    	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
-    	REPOS_ID as reposId, 
-    	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn,HERITABLE as heritable
-     from doc_auth
-    LEFT JOIN user on user.id = doc_auth.user_id 
-    LEFT JOIN doc on doc.id = doc_auth.doc_id
-    WHERE doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
-  </select> 
-  
-  <select id="getReposDocAuthList" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.UserDocAuth">
-    select 
-    	doc_auth.ID as docAuthId,
-    	user.ID as userId, user.NAME as userName, 
-    	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath,
-    	REPOS_ID as reposId, 
-    	IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE as heritable
-     from doc_auth
-    LEFT JOIN user on user.id = doc_auth.user_id 
-    LEFT JOIN doc on doc.id = doc_auth.doc_id
-    WHERE doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+    	doc_auth.ID as id, 
+    	REPOS_ID as reposId, IS_ADMIN as isAdmin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE,
+    	USER_ID as userId, user.NAME as userName, 
+    	GROUP_ID as groupId, user_group.NAME as groupName, 
+    	DOC_ID as docId, doc.NAME as docName, doc.PATH as docPath
+    	from doc_auth
+    LEFT JOIN user on doc_auth.user_id = user.id 
+    LEFT JOIN user_group on doc_auth.group_id = user_group.id 
+    LEFT JOIN doc on doc_auth.doc_id = doc.id
+    WHERE 1=1
+    	<if test="reposId!=null">
+  			and doc_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+      	</if>
+  		<if test="docId!=null">
+  			and doc_auth.DOC_ID = #{docId,jdbcType=INTEGER}
+  		</if>
+  		<if test="userId!=null">
+  			and doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
+  		</if>
+  		<if test="groupId!=null">
+  			and doc_auth.GROUP_ID = #{groupId,jdbcType=INTEGER}
+  		</if>
   </select>
 </mapper>
