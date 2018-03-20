@@ -77,6 +77,7 @@
             	</ul>
                 <ul class="nav navbar-nav navbar-right">
                     <button id="btnAddReposUser"  class="btn btn-default" type="button" onclick="showAddReposUserPanel()" style="display:none">添加/删除访问用户</button>
+                    <button id="btnAddReposGroup"  class="btn btn-default" type="button" onclick="showAddReposGroupPanel()" style="display:none">添加/删除访问用户组</button>
                     <button id="btnEditAuth" class="btn btn-default" type="button" onclick="editAuth()" style="display:none">编辑</button>
                     <button id="btnSaveAuth" class="btn btn-default" type="button" onclick="saveAuth()" style="display:none">保存</button>
                     <button id="btnCancelSaveAuth" class="btn btn-default" type="button" onclick="cancelSaveAuth()" style="display:none">取消</button>
@@ -373,7 +374,7 @@
                     callback && callback();
                     //显示编辑按键和增加用户按键
                     $("#btnAddReposUser").show();
-				    $("#btnEditAuth").show();
+                    $("#btnAddReposGroup").show();
                 }else {
                     $("#projectName").text("项目名");
                     $("#editTime").text((new Date()).toLocaleTimeString());
@@ -381,7 +382,7 @@
                     window.location.href = "index.html";
                     //隐藏编辑按键和增加用户按键
                     $("#btnAddReposUser").hide();
-				    $("#btnEditAuth").hide();
+				    $("#btnAddReposGroup").hide();
 				    $("#btnSaveAuth").hide();
 				    $("#btnCancelSaveAuth").hide();
                 }
@@ -389,7 +390,7 @@
             error : function () {
                 //隐藏编辑按键和增加用户按键
                 $("#btnAddReposUser").hide();
-			    $("#btnEditAuth").hide();
+			    $("#btnAddReposGroup").hide();
 			    $("#btnSaveAuth").hide();
 			    $("#btnCancelSaveAuth").hide();
                 showErrorMessage("服务器异常:获取仓库信息失败");
@@ -534,7 +535,7 @@
     function editAuth() {
     	console.log("editAuth");
     	$("#btnAddReposUser").hide();
-    	$("#btnEditAuth").hide();
+    	$("#btnAddReposGroup").hide();
         $("#btnSaveAuth").show();
         $("#btnCancelSaveAuth").show();
         //使能用户列表的第一个复选框
@@ -545,7 +546,7 @@
     function saveAuth() {
     	console.log("saveAuth");
     	$("#btnAddReposUser").show();
-    	$("#btnEditAuth").show();
+    	$("#btnAddReposGroup").show();
         $("#btnSaveAuth").hide();
         $("#btnCancelSaveAuth").hide();
         //Disable用户列表的第一个复选框
@@ -580,7 +581,7 @@
     function cancelSaveAuth() {
     	console.log("cancelSaveAuth");
     	$("#btnAddReposUser").show();
-    	$("#btnEditAuth").show();
+    	$("#btnAddReposGroup").show();
         $("#btnSaveAuth").hide();
         $("#btnCancelSaveAuth").hide();
         //disable用户列表的第一个复选框
@@ -857,7 +858,7 @@ function showDocAuthList(){
                     if( "ok" == ret.status ){
                         //显示编辑按键和增加用户按键
                         $("#btnAddReposUser").show();
-				    	$("#btnEditAuth").show();
+				    	$("#btnAddReposGroup").show();
 				        $("#btnSaveAuth").hide();
 				        $("#btnCancelSaveAuth").hide();
                     	showUserList(ret.data);
@@ -866,7 +867,7 @@ function showDocAuthList(){
                     {
                         //隐藏编辑按键和增加用户按键
                         $("#btnAddReposUser").hide();
-				    	$("#btnEditAuth").hide();
+				    	$("#btnAddReposGroup").hide();
 				        $("#btnSaveAuth").hide();
 				        $("#btnCancelSaveAuth").hide();
                     	showErrorMessage("Error:" + ret.msgInfo);
@@ -875,7 +876,7 @@ function showDocAuthList(){
                 error : function () {
                     //隐藏编辑按键和增加用户按键
                     $("#btnAddReposUser").hide();
-			    	$("#btnEditAuth").hide();
+			    	$("#btnAddReposGroup").hide();
 			        $("#btnSaveAuth").hide();
 			        $("#btnCancelSaveAuth").hide();
                    	showErrorMessage('服务器异常：获取仓库用户列表失败！');
@@ -925,7 +926,7 @@ function showDocAuthList(){
 				+"			<a id='DocPath"+i+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell access w8' >"
+				+"	<i class='cell access w8'>"
 				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
 				+"	</i>"
 				+"	<i class='cell  read w8'>"
