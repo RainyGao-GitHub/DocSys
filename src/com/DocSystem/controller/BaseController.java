@@ -516,6 +516,11 @@ public class BaseController{
 			{
 				docAuth = parentDocAuth;
 			}
+			else
+			{
+				docAuth = null;
+			}
+			return docAuth;
 		}
 		else if(pDocAuthType == 2)
 		{
@@ -535,7 +540,12 @@ public class BaseController{
 				{
 					docAuth = parentDocAuth;
 				}
+				else
+				{
+					docAuth = null;
+				}
 			}
+			return docAuth;
 		}
 		else if(pDocAuthType == 3)
 		{
@@ -562,10 +572,15 @@ public class BaseController{
 					{
 						docAuth = parentDocAuth;
 					}
+					else
+					{
+						docAuth = null;
+					}
 				}
 			}
+			return docAuth;
 		}
-		return docAuth;
+		return null;
 	}
 
 	//getDocAuth from the bottom to top
