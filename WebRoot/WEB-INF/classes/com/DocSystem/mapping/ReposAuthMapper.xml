@@ -4,6 +4,7 @@
   <resultMap id="BaseResultMap" type="com.DocSystem.entity.ReposAuth">
     <id column="ID" jdbcType="INTEGER" property="id" />
     <result column="USER_ID" jdbcType="INTEGER" property="userId" />
+    <result column="GROUP_ID" jdbcType="INTEGER" property="groupId" />
     <result column="REPOS_ID" jdbcType="INTEGER" property="reposId" />
     <result column="IS_ADMIN" jdbcType="INTEGER" property="isAdmin" />
     <result column="ACCESS" jdbcType="INTEGER" property="access" />
@@ -13,7 +14,7 @@
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, USER_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+    ID, USER_ID, GROUP_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -26,14 +27,14 @@
     where ID = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.ReposAuth">
-    insert into repos_auth (ID, USER_ID, REPOS_ID, 
-      IS_ADMIN, ACCESS, EDIT_EN, 
-      ADD_EN, DELETE_EN, HERITABLE
-      )
-    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{reposId,jdbcType=INTEGER}, 
-      #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, #{editEn,jdbcType=INTEGER}, 
-      #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, #{heritable,jdbcType=INTEGER}
-      )
+    insert into repos_auth (ID, USER_ID, GROUP_ID, 
+      REPOS_ID, IS_ADMIN, ACCESS, 
+      EDIT_EN, ADD_EN, DELETE_EN, 
+      HERITABLE)
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
+      #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
+      #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, 
+      #{heritable,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.ReposAuth">
     insert into repos_auth
@@ -43,6 +44,9 @@
       </if>
       <if test="userId != null">
         USER_ID,
+      </if>
+      <if test="groupId != null">
+        GROUP_ID,
       </if>
       <if test="reposId != null">
         REPOS_ID,
@@ -73,6 +77,9 @@
       <if test="userId != null">
         #{userId,jdbcType=INTEGER},
       </if>
+      <if test="groupId != null">
+        #{groupId,jdbcType=INTEGER},
+      </if>
       <if test="reposId != null">
         #{reposId,jdbcType=INTEGER},
       </if>
@@ -102,6 +109,9 @@
       <if test="userId != null">
         USER_ID = #{userId,jdbcType=INTEGER},
       </if>
+      <if test="groupId != null">
+        GROUP_ID = #{groupId,jdbcType=INTEGER},
+      </if>
       <if test="reposId != null">
         REPOS_ID = #{reposId,jdbcType=INTEGER},
       </if>
@@ -129,6 +139,7 @@
   <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.ReposAuth">
     update repos_auth
     set USER_ID = #{userId,jdbcType=INTEGER},
+      GROUP_ID = #{groupId,jdbcType=INTEGER},
       REPOS_ID = #{reposId,jdbcType=INTEGER},
       IS_ADMIN = #{isAdmin,jdbcType=INTEGER},
       ACCESS = #{access,jdbcType=INTEGER},
@@ -149,13 +160,15 @@
     <if test="userId != null">
       and USER_ID = #{userId,jdbcType=INTEGER}
     </if>
+    <if test="groupId != null">
+      and GROUP_ID = #{groupId,jdbcType=INTEGER}
+    </if>
     <if test="reposId != null">
       and REPOS_ID = #{reposId,jdbcType=INTEGER}
     </if>
 	<if test="isAdmin != null">
       IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
     </if>
-    
     <if test="access != null">
       ACCESS = #{access,jdbcType=INTEGER}
     </if>
@@ -169,7 +182,7 @@
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
-      and HERITABLE = #{heritable,jdbcType=INTEGER},
+      and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
   <select id="getReposAuth" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
@@ -182,6 +195,9 @@
     </if>
     <if test="userId != null">
       and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0)
+    </if>
+    <if test="groupId != null">
+      and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
     </if>
     <if test="reposId != null">
       and REPOS_ID = #{reposId,jdbcType=INTEGER}
