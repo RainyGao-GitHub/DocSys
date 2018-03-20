@@ -2757,15 +2757,19 @@
     }
 	
 	//定时自动保存接口
-	var timer = setInterval(function () {
-        console.log("autoTmpSaveWiki");
-    	if(debounce.getStatus1() == 1)
-    	{
-    	    debounce.clearStatus1();
-    		tmpSaveDoc(curDoc, debounce.get());
-    	}
-    },10000);
-        
+	function startAutoTmpSaveTimer()
+	{ 
+		console.log("startAutoTmpSaveTimer");
+		var timer = setInterval(function () {
+	        if(debounce.getStatus1() == 1)
+	    	{
+	    		console.log("autoTmpSaveWiki");
+	    	    debounce.clearStatus1();
+	    		tmpSaveDoc(curDoc, debounce.get());
+	    	}
+	    },10000);
+	}     
+	
 	//debounce文件编辑缓存类
     var debounce = (function () {
         //var cache = [];
@@ -2976,10 +2980,6 @@
 
     if ( ! getQueryString("edit") ){
         seajs.request("static/markdown/css/add.css",function(){});
-    }else{
-        $("#btnExitEdit").show();
-        $("#btnSaveWiki").show();      
-        
     }
     
     seajs.use(deps, function($, editormd) {
@@ -3626,9 +3626,23 @@ function CompareObj(objA, objB, flag) {
 		
 		syncUpMenu();
 		var doc = getQueryString("doc");
+		console.log("doc:"+doc);
 	    if(doc)
 	    {
 	    	getDoc(doc);
+	    	var edit = getQueryString("edit");
+	    	console.log("edit:"+edit);
+	    	if(edit)
+	    	{
+	    		//启动自动保存定时器
+        		startAutoTmpSaveTimer();
+        		$("#btnExitEdit").show();
+        		$("#btnSaveWiki").show();  
+        	}
+        	else
+        	{
+        		$("#btnEditWiki").show();
+        	}
 	    }
 	}
 	
