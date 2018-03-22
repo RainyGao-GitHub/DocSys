@@ -133,6 +133,45 @@ public class BaseController{
 		return reposTmpVirtualPath;
 	}
 	
+	protected Integer getAuthType(Integer userId, Integer groupId) {
+
+		if(userId == null)
+		{
+			if(groupId != null)
+			{
+				return 2;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		else if(userId > 0)
+		{
+			return 1; //权限类型：用户权限
+		}
+		else
+		{
+			return 3; //权限类型：任意用户权限
+		}
+	}
+	
+	protected Integer getPriorityByAuthType(Integer type) {
+		if(type == 1)
+		{
+			return 10;
+		}
+		else if(type == 2)
+		{
+			return 1;
+		}
+		else if(type ==3)
+		{
+			return 0;
+		}
+		return null;
+	}
+	
 	//获取用户真正的权限：权限已经考虑了继承用户组权限和任意用户权限
 	public ReposAuth getUserRealReposAuth(Integer UserID,Integer ReposID)
 	{
