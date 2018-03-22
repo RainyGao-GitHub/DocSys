@@ -990,7 +990,7 @@ function deleteDocAuth(docAuthId)
    	
    	var vid = getQueryString("vid");
    	$.ajax({
-            url : "/DocSystem/Repos/deleteUserDocAuth.do",
+            url : "/DocSystem/Repos/deleteDocAuth.do",
             type : "post",
             dataType : "json",
             data : {
@@ -1234,7 +1234,7 @@ function showReposSettingPanel(){
     		console.log(user);
     		
     		$.ajax({
-				  url : "/DocSystem/Repos/configUserAuth.do",
+				  url : "/DocSystem/Repos/configDocAuth.do",
 				  	type : "post",
 				    dataType : "json",
 				    data : {
