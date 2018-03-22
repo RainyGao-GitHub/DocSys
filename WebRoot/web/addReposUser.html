@@ -110,7 +110,7 @@ function addReposUser(userId)
    	var vid = getQueryString("vid");
 
     $.ajax({
-            url : "/DocSystem/Repos/addUserReposAuth.do",
+            url : "/DocSystem/Repos/configReposAuth.do",
             type : "post",
             dataType : "json",
             data : {
@@ -159,7 +159,7 @@ function deleteReposAuth(reposAuthId,userId)
    	
    	var vid = getQueryString("vid");
     $.ajax({
-            url : "/DocSystem/Repos/deleteUserReposAuth.do",
+            url : "/DocSystem/Repos/deleteReposAuth.do",
             type : "post",
             dataType : "json",
             data : {
