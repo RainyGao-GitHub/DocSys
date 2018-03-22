@@ -131,15 +131,6 @@ public class DocAuth {
         this.heritable = heritable;
     }
 
-    //1: 用户直接权限  2: 用户所在组权限  3: 任意用户权限
-    private Integer type = 0;
-    public Integer getType() {
-        return type;
-    }
-    public void setType(Integer type) {
-		this.type = type;
-	}
-    
     //DocAuth 附加信息: 需要通过joint doc and user or group Table to get these info
     private String  userName="任意用户";	//from user Table
     private String  groupName="";	//from group Table
