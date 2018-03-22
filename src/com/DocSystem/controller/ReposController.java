@@ -73,6 +73,8 @@ public class ReposController extends BaseController{
 	private List<Repos> getAccessableReposList(Integer userId) {
 		System.out.println("getAccessableReposList() userId:" + userId);
 		
+		//取出用户在系统上的所有仓库权限列表
+		//将仓库权限列表转换成HashMap,方便快速从列表中取出仓库的用户权限
 		HashMap<Integer,ReposAuth> reposAuthList = getUserReposAuthList(userId);
 		
 		//get all reposAuthList to pick up the accessable List
@@ -404,9 +406,10 @@ public class ReposController extends BaseController{
 			ReposAuth reposAuth = new ReposAuth();
 			reposAuth.setReposId(repos.getId());
 			reposAuth.setUserId(login_user.getId());
+			reposAuth.setType(1); //权限类型：用户权限
+			reposAuth.setPriority(10); //将用户的权限优先级为10(group是1-9),anyUser是0
 			reposAuth.setIsAdmin(1); //设置为管理员，可以管理仓库，修改描述、设置密码、设置用户访问权限
 			reposAuth.setAccess(1);	//0：不可访问  1：可访问
-			//当用户操作仓库下的文件时，首先检查当前用户对当前文件的操作权限，否则继承其父节点的访问权限，如果所有的父节点都没有设置的话，则沿用仓库的访问权限
 			reposAuth.setEditEn(1);	//可以修改仓库中的文件和目录
 			reposAuth.setAddEn(1);		//可以往仓库中增加文件或目录
 			reposAuth.setDeleteEn(1);	//可以删除仓库中的文件或目录
@@ -1568,11 +1571,11 @@ public class ReposController extends BaseController{
 		}
 	}
 
-	/****************   Add User ReposAuth ******************/
-	@RequestMapping("/addUserReposAuth.do")
-	public void addUserReposAuth(Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	/****************   Add User or Group or anyUser ReposAuth ******************/
+	@RequestMapping("/addReposAuth.do")
+	public void addReposAuth(Integer userId,Integer groupId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addUserReposAuth userId: " + userId  + " reposId:" + reposId);
+		System.out.println("addUserReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1590,13 +1593,27 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		
+		//Confirm the ReposAuth Type and Priority
+		Integer type = getAuthType(userId,groupId);
+		Integer priority = getPriorityByAuthType(type);
+		
 		//检查该用户是否设置了仓库权限
 		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setUserId(userId);
+		if(type == 2)
+		{
+			qReposAuth.setUserId(groupId);		
+		}
+		else
+		{
+			qReposAuth.setUserId(userId);
+		}
 		qReposAuth.setReposId(reposId);
 		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
 		if(reposAuth == null)
 		{
+			qReposAuth.setType(type);
+			qReposAuth.setPriority(priority);
 			if(reposService.addReposAuth(qReposAuth) == 0)
 			{
 				rt.setError("用户仓库权限新增失败！");
@@ -1607,12 +1624,51 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);			
 	}
+
+	private Integer getAuthType(Integer userId, Integer groupId) {
+
+		if(userId == null)
+		{
+			if(groupId != null)
+			{
+				return 2;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		else if(userId > 0)
+		{
+			return 1; //权限类型：用户权限
+		}
+		else
+		{
+			return 3; //权限类型：任意用户权限
+		}
+	}
 	
-	/****************   delete User ReposAuth ******************/
-	@RequestMapping("/deleteUserReposAuth.do")
-	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	private Integer getPriorityByAuthType(Integer type) {
+		if(type == 1)
+		{
+			return 10;
+		}
+		else if(type == 2)
+		{
+			return 1;
+		}
+		else if(type ==3)
+		{
+			return 0;
+		}
+		return null;
+	}
+
+	/****************   delete User or Group or anyUser ReposAuth ******************/
+	@RequestMapping("/deleteReposAuth.do")
+	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " reposId:" + reposId);
+		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1630,38 +1686,37 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//检查该用户是否设置了仓库权限
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setId(reposAuthId);
-		qReposAuth.setUserId(userId);
-		qReposAuth.setReposId(reposId);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		if(reposAuth != null)
+		if(reposService.deleteReposAuth(reposAuthId) == 0)
 		{
-			if(reposService.deleteReposAuth(reposAuthId) == 0)
-			{
-				rt.setError("用户仓库权限删除失败！");
-				writeJson(rt, response);			
-				return;
-			}
+			rt.setError("用户仓库权限删除失败！");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//删除该用户在该仓库的所有的目录权限设置
-		if(userId != null)
+		Integer type = getAuthType(userId,groupId);
+		if(type != null)
 		{
 			DocAuth docAuth = new DocAuth();
-			docAuth.setUserId(userId);
+			if(type == 2)
+			{
+				docAuth.setUserId(groupId);		
+			}
+			else
+			{
+				docAuth.setUserId(userId);
+			}
 			docAuth.setReposId(reposId);
 			reposService.deleteDocAuthSelective(docAuth);
 		}
 		writeJson(rt, response);
 	}
-	
+		
 	/****************   delete User DocAuth ******************/
-	@RequestMapping("/deleteUserDocAuth.do")
-	public void deleteUserDocAuth(Integer docAuthId,Integer userId,Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	@RequestMapping("/deleteDocAuth.do")
+	public void deleteUserDocAuth(Integer docAuthId,Integer userId, Integer groupId, Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " docId: " + docId  + " reposId:" + reposId);
+		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1680,26 +1735,17 @@ public class ReposController extends BaseController{
 		}
 		
 		//检查该用户是否设置了目录权限
-		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setId(docAuthId);
-		qDocAuth.setUserId(userId);
-		qDocAuth.setDocId(docId);
-		qDocAuth.setReposId(reposId);
-		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
-		if(docAuth != null)
+		if(reposService.deleteDocAuth(docAuthId) == 0)
 		{
-			if(reposService.deleteDocAuth(docAuthId) == 0)
-			{
-				rt.setError("用户的目录权限设置删除失败！");
-				writeJson(rt, response);			
-				return;
-			}	
+			rt.setError("用户的目录权限设置删除失败！");
+			writeJson(rt, response);			
+			return;	
 		}
 		writeJson(rt, response);			
 	}
 	
 	/****************   config User Auth ******************/
-	@RequestMapping("/configUserAuth.do")
+	@RequestMapping("/configDocAuth.do")
 	public void configUserAuth(Integer userId, Integer groupId, Integer docId, Integer reposId,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -1731,15 +1777,27 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
+		
+		Integer type = getAuthType(userId,groupId);
+		Integer priority = getPriorityByAuthType(type);
+		
 		//获取用户的权限设置，如果不存在则增加，否则修改
 		DocAuth qDocAuth = new DocAuth();
-		qDocAuth.setUserId(userId);
-		qDocAuth.setGroupId(groupId);
+		if(type == 2)
+		{
+			qDocAuth.setGroupId(groupId);	
+		}
+		else
+		{
+			qDocAuth.setUserId(userId);
+		}
 		qDocAuth.setDocId(docId);
 		qDocAuth.setReposId(reposId);
 		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
 		if(docAuth == null)
 		{
+			qDocAuth.setType(type);
+			qDocAuth.setPriority(priority);
 			qDocAuth.setIsAdmin(isAdmin);
 			qDocAuth.setAccess(access);
 			qDocAuth.setEditEn(editEn);
