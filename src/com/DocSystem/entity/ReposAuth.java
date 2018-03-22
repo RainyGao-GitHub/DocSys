@@ -7,6 +7,10 @@ public class ReposAuth {
 
     private Integer groupId;
 
+    private Integer type;
+
+    private Integer priority;
+
     private Integer reposId;
 
     private Integer isAdmin;
@@ -43,6 +47,22 @@ public class ReposAuth {
 
     public void setGroupId(Integer groupId) {
         this.groupId = groupId;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 
     public Integer getReposId() {
