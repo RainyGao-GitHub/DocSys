@@ -1571,11 +1571,13 @@ public class ReposController extends BaseController{
 		}
 	}
 
-	/****************   Add User or Group or anyUser ReposAuth ******************/
-	@RequestMapping("/addReposAuth.do")
-	public void addReposAuth(Integer userId,Integer groupId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	/****************   Config User or Group or anyUser ReposAuth ******************/
+	@RequestMapping("/configReposAuth.do")
+	public void configReposAuth(Integer userId,Integer groupId, Integer reposId,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addUserReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId);
+		System.out.println("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1614,6 +1616,12 @@ public class ReposController extends BaseController{
 		{
 			qReposAuth.setType(type);
 			qReposAuth.setPriority(priority);
+			qReposAuth.setIsAdmin(isAdmin);
+			qReposAuth.setAccess(access);
+			qReposAuth.setEditEn(editEn);
+			qReposAuth.setAddEn(addEn);
+			qReposAuth.setDeleteEn(deleteEn);
+			qReposAuth.setHeritable(heritable);
 			if(reposService.addReposAuth(qReposAuth) == 0)
 			{
 				rt.setError("用户仓库权限新增失败！");
@@ -1622,131 +1630,28 @@ public class ReposController extends BaseController{
 			}	
 			
 		}
-		writeJson(rt, response);			
-	}
-
-	private Integer getAuthType(Integer userId, Integer groupId) {
-
-		if(userId == null)
-		{
-			if(groupId != null)
-			{
-				return 2;
-			}
-			else
-			{
-				return null;
-			}
-		}
-		else if(userId > 0)
-		{
-			return 1; //权限类型：用户权限
-		}
 		else
 		{
-			return 3; //权限类型：任意用户权限
-		}
-	}
-	
-	private Integer getPriorityByAuthType(Integer type) {
-		if(type == 1)
-		{
-			return 10;
-		}
-		else if(type == 2)
-		{
-			return 1;
-		}
-		else if(type ==3)
-		{
-			return 0;
-		}
-		return null;
-	}
-
-	/****************   delete User or Group or anyUser ReposAuth ******************/
-	@RequestMapping("/deleteReposAuth.do")
-	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//检查当前用户的权限
-		if(isAdminOfRepos(login_user,reposId) == false)
-		{
-			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(reposService.deleteReposAuth(reposAuthId) == 0)
-		{
-			rt.setError("用户仓库权限删除失败！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//删除该用户在该仓库的所有的目录权限设置
-		Integer type = getAuthType(userId,groupId);
-		if(type != null)
-		{
-			DocAuth docAuth = new DocAuth();
-			if(type == 2)
+			reposAuth.setIsAdmin(isAdmin);
+			reposAuth.setAccess(access);
+			reposAuth.setEditEn(editEn);
+			reposAuth.setAddEn(addEn);
+			reposAuth.setDeleteEn(deleteEn);
+			reposAuth.setHeritable(heritable);
+			if(reposService.updateReposAuth(reposAuth) == 0)
 			{
-				docAuth.setUserId(groupId);		
+				rt.setError("用户仓库权限更新失败");
+				writeJson(rt, response);			
+				return;
 			}
-			else
-			{
-				docAuth.setUserId(userId);
-			}
-			docAuth.setReposId(reposId);
-			reposService.deleteDocAuthSelective(docAuth);
-		}
-		writeJson(rt, response);
-	}
-		
-	/****************   delete User DocAuth ******************/
-	@RequestMapping("/deleteDocAuth.do")
-	public void deleteUserDocAuth(Integer docAuthId,Integer userId, Integer groupId, Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//检查当前用户的权限
-		if(isAdminOfDoc(login_user,docId,reposId) == false)
-		{
-			rt.setError("您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//检查该用户是否设置了目录权限
-		if(reposService.deleteDocAuth(docAuthId) == 0)
-		{
-			rt.setError("用户的目录权限设置删除失败！");
-			writeJson(rt, response);			
-			return;	
 		}
 		writeJson(rt, response);			
 	}
 	
-	/****************   config User Auth ******************/
+	/****************  Config User or Group or anyUser DocAuth ******************/
 	@RequestMapping("/configDocAuth.do")
-	public void configUserAuth(Integer userId, Integer groupId, Integer docId, Integer reposId,Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+	public void configUserAuth(Integer userId, Integer groupId, Integer docId, Integer reposId,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("configUserAuth userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
@@ -1830,6 +1735,88 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	/****************   delete User or Group or anyUser ReposAuth ******************/
+	@RequestMapping("/deleteReposAuth.do")
+	public void deleteUserReposAuth(Integer reposAuthId,Integer userId, Integer groupId, Integer reposId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+
+		//检查当前用户的权限
+		if(isAdminOfRepos(login_user,reposId) == false)
+		{
+			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(reposService.deleteReposAuth(reposAuthId) == 0)
+		{
+			rt.setError("用户仓库权限删除失败！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//删除该用户在该仓库的所有的目录权限设置
+		Integer type = getAuthType(userId,groupId);
+		if(type != null)
+		{
+			DocAuth docAuth = new DocAuth();
+			if(type == 2)
+			{
+				docAuth.setUserId(groupId);		
+			}
+			else
+			{
+				docAuth.setUserId(userId);
+			}
+			docAuth.setReposId(reposId);
+			reposService.deleteDocAuthSelective(docAuth);
+		}
+		writeJson(rt, response);
+	}
+		
+	/****************   delete User or Group or anyUser  DocAuth ******************/
+	@RequestMapping("/deleteDocAuth.do")
+	public void deleteUserDocAuth(Integer docAuthId,Integer userId, Integer groupId, Integer docId, Integer reposId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+
+		//检查当前用户的权限
+		if(isAdminOfDoc(login_user,docId,reposId) == false)
+		{
+			rt.setError("您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查该用户是否设置了目录权限
+		if(reposService.deleteDocAuth(docAuthId) == 0)
+		{
+			rt.setError("用户的目录权限设置删除失败！");
+			writeJson(rt, response);			
+			return;	
+		}
+		writeJson(rt, response);			
+	}
+
 	private boolean isUserAuthExpanded(Integer isAdmin, Integer access,
 			Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,
 			DocAuth adminDocAuth, ReturnAjax rt) {
@@ -1867,23 +1854,4 @@ public class ReposController extends BaseController{
 		return false;
 	}
 
-	/****************   update Repository Menu Info (Directory structure) ******************/
-	@RequestMapping("/updateReposMenu.do")
-	public void updateReposMenu(Integer vid,String menu,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("updateReposMenu vid: " + vid);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		Repos repos = new Repos();
-		repos.setId(vid);
-		repos.setMenu(menu);
-		reposService.updateRepos(repos);
-
-		writeJson(rt, response);
-	}
 }
