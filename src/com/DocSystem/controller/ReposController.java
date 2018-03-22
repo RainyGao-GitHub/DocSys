@@ -3,6 +3,7 @@ package com.DocSystem.controller;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -63,12 +64,33 @@ public class ReposController extends BaseController{
 		{
 			Integer UserId = login_user.getId();
 			System.out.println("UserId:" + UserId);
-			List<Repos> authedReposList = reposService.getAuthedReposList(UserId);
-			rt.setData(authedReposList);
+			List <Repos> accessableReposList = getAccessableReposList(UserId);
+			rt.setData(accessableReposList);
 		}
 		writeJson(rt, response);
 	}
 	
+	private List<Repos> getAccessableReposList(Integer userId) {
+		System.out.println("getAccessableReposList() userId:" + userId);
+		
+		HashMap<Integer,ReposAuth> reposAuthList = getUserReposAuthList(userId);
+		
+		//get all reposAuthList to pick up the accessable List
+		List<Repos> resultList = new ArrayList<Repos>();
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0;i<reposList.size();i++)
+		{
+			Repos repos = reposList.get(i);
+			ReposAuth reposAuth = reposAuthList.get(repos.getId());
+			if(reposAuth != null && reposAuth.getAccess().equals(1))
+			{
+				resultList.add(repos);
+			}
+		}
+		
+		return resultList;
+	}
+
 	/****************** get Repository **************/
 	@RequestMapping("/getRepos.do")
 	public void getRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
