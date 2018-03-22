@@ -219,4 +219,24 @@ public class ReposServiceImpl implements ReposService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public List<DocAuth> getGroupDocAuthListForUser(DocAuth docAuth) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<DocAuth> getAllRelatedDocAuthListForUser(DocAuth docAuth) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<ReposAuth> getGroupDocAuthListForUser(ReposAuth reposAuth) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<ReposAuth> getAllRelatedReposAuthListForUser(ReposAuth reposAuth) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }  

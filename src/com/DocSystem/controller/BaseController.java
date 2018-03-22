@@ -403,22 +403,19 @@ public class BaseController{
 	//		case 1: userId > 0   递归获取用户的权限，递归获取组权限，递归获取任意用户的权限（用途：用于用户访问权限控制，和仓库权限管理时使用）
 	//		case 2: userId = 0  递归获取组权限，递归获取任意用户的权限（用途：用于计算组的权限或者任意用户的权限，主要在仓库权限管理时使用）
 	//		case 3: userId == null 递归获取组权限（似乎没有使用场景）
-	protected DocAuth getUserDocAuth(Integer userId,List <UserGroup> groupList, Integer docId, Integer reposId) 
+	protected DocAuth getUserDocAuth(Integer userId,Integer docId, Integer reposId) 
 	{
 		System.out.println("getUserDocAuth() userId:"+userId);
 		
 		//Get the userDocAuthList\groupDocAuthList\anyUserDocAuthList
 		//获取user在仓库下的所有权限设置，避免后续多次查询数据库
-		List <DocAuth> userDocAuthList = getDocAuthListForUser(userId,reposId);
-		printObject("getUserDocAuth() userDocAuthList:", userDocAuthList);
+		HashMap <Integer,DocAuth> userDocAuthList = getDocAuthListForUser(userId,reposId);
 		
 		//get groupDocAuthList
-		List <DocAuth> groupDocAuthList = getDocAuthListForGroups(groupList,reposId);
-		printObject("getUserDocAuth() groupDocAuthList:", groupDocAuthList);
+		HashMap <Integer,DocAuth> groupDocAuthList = getGroupDocAuthListForUser(userId,reposId);
 		
 		//Get AnyUserDocAuthList
-		List <DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,reposId);
-		printObject("getUserDocAuth() anyUserDocAuthList:", anyUserDocAuthList);
+		HashMap <Integer,DocAuth> anyUserDocAuthList = getDocAuthListForUser(0,reposId);
 		
 		if(userDocAuthList == null && groupDocAuthList == null && anyUserDocAuthList == null)
 		{
@@ -445,12 +442,7 @@ public class BaseController{
 					return docAuth;
 				}
 			}
-		}
-		
-		//Get GroupDocAuth
-		if(docAuth == null)
-		{
-			if(groupList != null)
+			else
 			{
 				System.out.println("getUserDocAuth() recurGetDocAuth from groupDocAuthList for:" + userId);
 				docAuth = recurGetDocAuth(docId,groupDocAuthList);
@@ -473,64 +465,33 @@ public class BaseController{
 		//Get AnyUserDocAuth
 		if(docAuth == null)
 		{
-			if(userId != null)
+			System.out.println("getUserDocAuth() recurGetDocAuth from anyUserDocAuthList for:" + userId);
+			docAuth = recurGetDocAuth(docId,anyUserDocAuthList);
+			if(docAuth != null)
 			{
-				System.out.println("getUserDocAuth() recurGetDocAuth from anyUserDocAuthList for:" + userId);
-				docAuth = recurGetDocAuth(docId,anyUserDocAuthList);
-				if(docAuth != null)
+				//如果获取的是本parentDoc的权限，则需要判断是否支持继承
+				if(!docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
 				{
-					//如果获取的是本parentDoc的权限，则需要判断是否支持继承
-					if(!docId.equals(docAuth.getDocId()) && docAuth.getHeritable() == 0)
-					{
-						return null;
-					}
-					else
-					{
-						docAuth.setType(3);
-						return docAuth;
-					}
+					return null;
+				}
+				else
+				{
+					return docAuth;
 				}
 			}
 		}
 		return docAuth;
 	}
 
-	//Function: getDocAuthFromList
-	//Parameters: 
-	//	docId: doc Id
-	//	parentDocAuth: docAuth of parentDoc
-	//	docAuthList: docAuth Setting of user group and anyUser
-	//Description: 该接口能够快速获取当前doc的权限，不需要再查询数据库，但需要事先知道其父节点的权限，以及提前取出用户在仓库上的所有文件的权限设置信息
-	protected DocAuth getDocAuthFromList(int docId, DocAuth parentDocAuth,
-			List<DocAuth> userDocAuthList, List<DocAuth> groupDocAuthList,List<DocAuth> anyUserDocAuthList) {
-		
+	//Function: getDocAuthFromB2T
+	protected DocAuth getDocAuthFromB2T(int docId, DocAuth parentDocAuth,HashMap<Integer,DocAuth> userRealDocAuthList)
+	{
 		System.out.println("getDocAuthFromList() docId:" + docId);
-		
 		DocAuth docAuth = null;
 		//root Doc
 		if(docId == 0)
 		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else
-			{
-				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-				if(docAuth != null)
-				{
-					docAuth.setType(2);					
-				}
-				else
-				{
-					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
-					if(docAuth != null)
-					{
-						docAuth.setType(3);					
-					}
-				}
-			}
+			docAuth = getDocAuthByDocId(docId,userRealDocAuthList);
 			return docAuth;
 		}
 		
@@ -543,87 +504,26 @@ public class BaseController{
 		
 		//Not root Doc and parentDocAuth is set
 		docAuth = null;
-		Integer pDocAuthType = parentDocAuth.getType();
-		if(pDocAuthType == 1)
+		Integer parentPriority = parentDocAuth.getPriority();
+		docAuth = getDocAuthByDocId(docId,userRealDocAuthList);
+		if(docAuth == null)
 		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else if(docAuth == null && parentDocAuth.getHeritable() == 1)
-			{
-				docAuth = parentDocAuth;
-			}
-			else
-			{
-				docAuth = null;
-			}
-			return docAuth;
+			//继承父节点权限
+			return parentDocAuth;
 		}
-		else if(pDocAuthType == 2)
+		else
 		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
+			if(docAuth.getPriority() >= parentPriority)
 			{
-				docAuth.setType(1);
+				//Use the docAuth
+				return docAuth;
 			}
-			else
-			{
-				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-				if(docAuth != null)
-				{
-					docAuth.setType(2);
-				}
-				else if(docAuth == null && parentDocAuth.getHeritable() == 1)
-				{
-					docAuth = parentDocAuth;
-				}
-				else
-				{
-					docAuth = null;
-				}
-			}
-			return docAuth;
+			return parentDocAuth;
 		}
-		else if(pDocAuthType == 3)
-		{
-			docAuth = getDocAuthByDocId(docId,userDocAuthList);
-			if(docAuth != null)
-			{
-				docAuth.setType(1);
-			}
-			else
-			{
-				docAuth = getDocAuthByDocId(docId,groupDocAuthList);
-				if(docAuth != null)
-				{
-					docAuth.setType(2);
-				}
-				else
-				{
-					docAuth = getDocAuthByDocId(docId,anyUserDocAuthList);
-					if(docAuth != null)
-					{
-						docAuth.setType(3);
-					}					
-					else if(docAuth == null && parentDocAuth.getHeritable() == 1)
-					{
-						docAuth = parentDocAuth;
-					}
-					else
-					{
-						docAuth = null;
-					}
-				}
-			}
-			return docAuth;
-		}
-		return null;
 	}
 
 	//getDocAuth from the bottom to top
-	private DocAuth recurGetDocAuth(Integer docId,List<DocAuth> docAuthList) {
+	private DocAuth recurGetDocAuth(Integer docId,HashMap<Integer,DocAuth> docAuthList) {
 		System.out.println("recurGetDocAuth() docId:" + docId);
 		DocAuth docAuth = getDocAuthByDocId(docId,docAuthList);
 		if(docAuth == null)
@@ -648,7 +548,7 @@ public class BaseController{
 	}
 	
 	//根据DocId从docAuthList中找出对应的docAuth
-	private DocAuth getDocAuthByDocId(Integer docId,List<DocAuth> docAuthList) 
+	private DocAuth getDocAuthByDocId(Integer docId,HashMap<Integer,DocAuth> docAuthList) 
 	{
 		System.out.println("getDocAuthByDocId() docId:" + docId);
 		if(docAuthList == null)
@@ -657,17 +557,7 @@ public class BaseController{
 			return null;
 		}
 		
-		for(int i = 0 ; i < docAuthList.size() ; i++) 
-		{
-			DocAuth docAuth = docAuthList.get(i);
-			System.out.println("getDocAuthByDocId() docAuth[" + i + "] of docId:" + docAuth.getDocId());
-			if(docId.equals(docAuth.getDocId()))
-			{
-				System.out.println("getDocAuthByDocId() docAuth was found for docId:" + docId);			
-				return docAuth;
-			}
-		}
-		return null;
+		return docAuthList.get(docId);
 	}
 	
 	//获取用户在系统上的仓库权限设置，已经过去重和合并，查找该HashMap可以快速找出用户仓库权限
@@ -772,29 +662,27 @@ public class BaseController{
 	}
 
 	//获取用户在系统上的所有仓库权限设置
-	private List<ReposAuth> getReposAuthListForUser(Integer userId) {
+	private HashMap<Integer,ReposAuth> getReposAuthListForUser(Integer userId) {
 		if(userId == null)
 		{
 			return null;
 		}
 		ReposAuth reposAuth = new ReposAuth();
 		reposAuth.setUserId(userId);
-		List<ReposAuth> userReposAuthList = reposService.getReposAuthList(reposAuth);
-		return userReposAuthList;
-	}
-	
-	//获取用户在系统上的所有仓库权限设置
-	private List<ReposAuth> getGroupsReposAuthListForUser(Integer userId) {
-		if(userId == null)
+		List<ReposAuth> reposAuthList = reposService.getReposAuthList(reposAuth);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
 		{
 			return null;
 		}
-		List<ReposAuth> groupsReposAuthList = reposService.getGroupReposAuthListForUser(userId);
-		return groupsReposAuthList;
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;
 	}
 	
+	
 	//获取组在系统上的所有仓库权限设置
-	private List<ReposAuth> getReposAuthListForGroup(Integer groupId) {
+	private HashMap<Integer,ReposAuth> getReposAuthListForGroup(Integer groupId) {
 		if(groupId == null)
 		{
 			return null;
@@ -802,109 +690,235 @@ public class BaseController{
 		
 		ReposAuth reposAuth = new ReposAuth();
 		reposAuth.setUserId(groupId);
-		List<ReposAuth> groupReposAuthList = reposService.getReposAuthList(reposAuth);
-		return groupReposAuthList;
-	}
-
-	//获取用户组的所有仓库权限设置
-	private List<ReposAuth> getReposAuthListForGroups(List<UserGroup> groupList) {
-		if(groupList == null)
+		List<ReposAuth> reposAuthList = reposService.getReposAuthList(reposAuth);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
 		{
 			return null;
-		}		
-		List<ReposAuth> groupsReposAuthList = reposService.getReposAuthListByGroupList(groupList);
-		return groupsReposAuthList;
+		}
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;
+	}
+	
+	//获取用户在系统上的所有仓库权限设置
+	private HashMap<Integer,ReposAuth> getGroupReposAuthListForUser(Integer userId) {
+		if(userId == null)
+		{
+			return null;
+		}
+		
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setUserId(userId);
+		List <ReposAuth> reposAuthList = reposService.getGroupDocAuthListForUser(reposAuth);
+		printObject("getGroupReposAuthListForUser() userID[" + userId +"] reposAuthList:", reposAuthList);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;	
+	}
+	
+	//获取用户所有相关的权限设置，适用于From Top to Bottom的计算方法
+	protected HashMap<Integer,ReposAuth> getRealDocAuthListForUser(Integer userId)
+	{	
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setUserId(userId);
+		List <ReposAuth> reposAuthList = reposService.getAllRelatedReposAuthListForUser(reposAuth);
+		printObject("getRealDocAuthListForUser() userID[" + userId +"] reposAuthList:", reposAuthList);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;
 	}
 	
 	//获取用户在仓库上所有doc的权限设置
-	protected List<DocAuth> getDocAuthListForUser(Integer UserID,Integer reposID) 
+	protected HashMap<Integer,DocAuth> getDocAuthListForUser(Integer UserID,Integer reposID) 
 	{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setUserId(UserID);
 		docAuth.setReposId(reposID);
-		List <DocAuth> userDocAuthList = reposService.getDocAuthList(docAuth);
-		return userDocAuthList;
+		List <DocAuth> docAuthList = reposService.getDocAuthList(docAuth);
+		printObject("getUserDocAuth() userID[" + UserID +"] docAuthList:", docAuthList);
+		
+		if(docAuthList == null || docAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		return hashMap;
+	}
+	
+	//获取用户在仓库上所有doc的权限设置: 仅用于显示group的权限
+	protected HashMap<Integer,DocAuth> getDocAuthListForGroup(Integer GroupID,Integer reposID) 
+	{
+		DocAuth docAuth = new DocAuth();
+		docAuth.setGroupId(GroupID);
+		docAuth.setReposId(reposID);
+		List <DocAuth> docAuthList = reposService.getDocAuthList(docAuth);
+		printObject("getUserDocAuth() GroupID[" + GroupID +"] docAuthList:", docAuthList);
+		
+		if(docAuthList == null || docAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		return hashMap;
 	}
 	
 	//获取用户组在仓库上所有doc的权限设置（权限设置为所有group的并集-每个docId只有一个docAuth设置）
-	protected List<DocAuth> getDocAuthListForGroups(List<UserGroup> groupList,Integer reposId) 
-	{
-		if(groupList == null)
+	protected HashMap<Integer,DocAuth> getGroupDocAuthListForUser(Integer userId,Integer reposId) 
+	{	
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(userId);
+		docAuth.setReposId(reposId);
+		List <DocAuth> groupDocAuthList = reposService.getGroupDocAuthListForUser(docAuth);
+		printObject("getUserDocAuth() userID[" + userId +"] groupDocAuthList:", groupDocAuthList);
+		
+		if(groupDocAuthList == null || groupDocAuthList.size() == 0)
 		{
 			return null;
 		}
 		
-		//Go through the GroupList to get the docAuthList for group one by one
-		List <DocAuth> tmpGroupDocAuthList = new ArrayList<DocAuth>();
-		for(int i=0;i<groupList.size();i++)
+		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(groupDocAuthList);
+		return hashMap;
+	}
+	
+	//获取用户所有相关的权限设置，适用于From Top to Bottom的计算方法
+	protected HashMap<Integer,DocAuth> getRealDocAuthListForUser(Integer userId,Integer reposId)
+	{	
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(userId);
+		docAuth.setReposId(reposId);
+		List <DocAuth> docAuthList = reposService.getAllRelatedDocAuthListForUser(docAuth);
+		printObject("getRealDocAuthListForUser() userID[" + userId +"] docAuthList:", docAuthList);
+		
+		if(docAuthList == null || docAuthList.size() == 0)
 		{
-			UserGroup group = groupList.get(i);
-			Integer groupId = group.getId();
-			DocAuth qDocAuth = new DocAuth();
-			qDocAuth.setReposId(reposId);
-			qDocAuth.setGroupId(groupId);
-			List<DocAuth> docAuthList = reposService.getDocAuthList(qDocAuth);
-			if(docAuthList!=null)
+			return null;
+		}
+		
+		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		return hashMap;
+	}
+	
+	private HashMap<Integer,ReposAuth> BuildHashMapByReposAuthList(List<ReposAuth> reposAuthList) {
+		//去重并将参数放入HashMap
+		HashMap<Integer,ReposAuth> hashMap = new HashMap<Integer,ReposAuth>();
+		for(int i=0;i<reposAuthList.size();i++)
+		{
+			ReposAuth reposAuth = reposAuthList.get(i);
+			Integer reposId = reposAuth.getReposId();
+			ReposAuth hashEntry = hashMap.get(reposId);
+			if(hashEntry == null)
 			{
-				tmpGroupDocAuthList.addAll(docAuthList);
+				hashMap.put(reposId, reposAuth);
 			}
-		}
-		
-		//To Generate the real groupDocAuthList base on tmpGroupDocAuthList, need to combine the docAuth which have the same docId
-		if(tmpGroupDocAuthList.size() == 0)
-		{
-			return null;
-		}
-		
-		List <DocAuth> groupDocAuthList = new ArrayList<DocAuth>();
-		for(int i = 1;i<tmpGroupDocAuthList.size();i++)
-		{
-			DocAuth tmpDocAuth = tmpGroupDocAuthList.get(i);
-			//Check if there is docAuth in groupDocAuthList with the same docId
-			int matchedFlag = 0;
-			for(int j=0;j<groupDocAuthList.size();j++)
+			else
 			{
-				DocAuth groupDocAuth = groupDocAuthList.get(j);
-				if(groupDocAuth.getDocId().equals(tmpDocAuth.getDocId()))
+				Integer oldPriority = hashEntry.getPriority();
+				Integer newPriority = reposAuth.getPriority();
+				if(newPriority > oldPriority)
 				{
-					matchedFlag = 1;
-					if(tmpDocAuth.getIsAdmin().equals(1))
-					{
-						groupDocAuth.setIsAdmin(1);
-					}
-					if(tmpDocAuth.getAccess().equals(1))
-					{
-						groupDocAuth.setAccess(1);
-					}
-					if(tmpDocAuth.getAddEn().equals(1))
-					{
-						groupDocAuth.setAddEn(1);
-					}
-					if(tmpDocAuth.getDeleteEn().equals(1))
-					{
-						groupDocAuth.setDeleteEn(1);
-					}
-					if(tmpDocAuth.getEditEn().equals(1))
-					{
-						groupDocAuth.setEditEn(1);
-					}
-					if(tmpDocAuth.getHeritable().equals(1))
-					{
-						groupDocAuth.setHeritable(1);
-					}			
-					break;
+					//Update to new ReposAuth
+					hashMap.put(reposId, reposAuth);
 				}
-				
-				if(matchedFlag == 0)
+				else if(newPriority == oldPriority)
 				{
-					groupDocAuthList.add(tmpDocAuth);
+					if(reposAuth.getIsAdmin().equals(1))
+					{
+						hashEntry.setIsAdmin(1);
+					}
+					if(reposAuth.getAccess().equals(1))
+					{
+						hashEntry.setAccess(1);
+					}
+					if(reposAuth.getAddEn().equals(1))
+					{
+						hashEntry.setAddEn(1);
+					}
+					if(reposAuth.getDeleteEn().equals(1))
+					{
+						hashEntry.setDeleteEn(1);
+					}
+					if(reposAuth.getEditEn().equals(1))
+					{
+						hashEntry.setEditEn(1);
+					}
+					if(reposAuth.getHeritable().equals(1))
+					{
+						hashEntry.setHeritable(1);
+					}			
 				}
 			}
 			
-		}
-		return groupDocAuthList;
+		}		
+		return hashMap;
 	}
 	
+	private HashMap<Integer,DocAuth> BuildHashMapByDocAuthList(List<DocAuth> docAuthList) {
+		//去重并将参数放入HashMap
+		HashMap<Integer,DocAuth> hashMap = new HashMap<Integer,DocAuth>();
+		for(int i=0;i<docAuthList.size();i++)
+		{
+			DocAuth docAuth = docAuthList.get(i);
+			Integer docId = docAuth.getDocId();
+			DocAuth hashEntry = hashMap.get(docId);
+			if(hashEntry == null)
+			{
+				hashMap.put(docId, docAuth);
+			}
+			else
+			{
+				Integer oldPriority = hashEntry.getPriority();
+				Integer newPriority = docAuth.getPriority();
+				if(newPriority > oldPriority)
+				{
+					//Update to new DocAuth
+					hashMap.put(docId, docAuth);
+				}
+				else if(newPriority == oldPriority)
+				{
+					if(docAuth.getIsAdmin().equals(1))
+					{
+						hashEntry.setIsAdmin(1);
+					}
+					if(docAuth.getAccess().equals(1))
+					{
+						hashEntry.setAccess(1);
+					}
+					if(docAuth.getAddEn().equals(1))
+					{
+						hashEntry.setAddEn(1);
+					}
+					if(docAuth.getDeleteEn().equals(1))
+					{
+						hashEntry.setDeleteEn(1);
+					}
+					if(docAuth.getEditEn().equals(1))
+					{
+						hashEntry.setEditEn(1);
+					}
+					if(docAuth.getHeritable().equals(1))
+					{
+						hashEntry.setHeritable(1);
+					}			
+				}
+			}
+			
+		}		
+		return hashMap;
+	}
+		
 	/***************************Basic Functions For Driver Level  **************************/
 	protected boolean addLog(String logContent, String logCode) {
 		
