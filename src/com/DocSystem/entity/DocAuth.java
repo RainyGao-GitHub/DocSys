@@ -7,6 +7,10 @@ public class DocAuth {
 
     private Integer groupId;
 
+    private Integer type;
+
+    private Integer priority;
+
     private Integer docId;
 
     private Integer reposId;
@@ -45,6 +49,22 @@ public class DocAuth {
 
     public void setGroupId(Integer groupId) {
         this.groupId = groupId;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 
     public Integer getDocId() {
