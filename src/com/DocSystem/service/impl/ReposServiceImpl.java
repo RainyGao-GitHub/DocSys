@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.DocSystem.service.ReposService;
 
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.UserGroup;
 import com.DocSystem.dao.ReposMapper;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.dao.ReposAuthMapper;
@@ -199,5 +200,23 @@ public class ReposServiceImpl implements ReposService {
         params.put("reposId", reposId);
         params.put("userId", userId);
         return docDao.getAuthedDocListHeritable(params);
+	}
+
+	//根据groupList的所有reposAuthList
+	public List<ReposAuth> getReposAuthListByGroupList(List<UserGroup> groupList) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	//获取用户所在组的所有权限设置
+	public List<ReposAuth> getGroupReposAuthListForUser(Integer userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	//根据userId获取所有跟用户有关的仓库权限设置：包括用户的直接设置、所在组的设置、任意用户的设置
+	public List<ReposAuth> getAllRelatedReposAuthListForUser(Integer userId) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }  

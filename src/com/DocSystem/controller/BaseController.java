@@ -631,6 +631,152 @@ public class BaseController{
 		return null;
 	}
 	
+	//获取用户在系统上的仓库权限设置，已经过去重和合并，查找该HashMap可以快速找出用户仓库权限
+	protected HashMap<Integer,ReposAuth> getUserReposAuthList(Integer userId) {
+		//取出跟用户有关的所有仓库权限设置列表
+		List<ReposAuth> reposAuthList = reposService.getAllRelatedReposAuthListForUser(userId);
+		
+		//去重并将参数放入HashMap
+		HashMap<Integer,ReposAuth> reposAuthHashMap = new HashMap<Integer,ReposAuth>();
+		for(int i=0;i<reposAuthList.size();i++)
+		{
+			ReposAuth reposAuth = reposAuthList.get(i);
+			Integer reposId = reposAuth.getReposId();
+			ReposAuth hashEntry = reposAuthHashMap.get(reposId);
+			if(hashEntry == null)
+			{
+				Integer type =getReposAuthType(reposAuth);
+				if(type != null)
+				{
+					//Put the reposAuht to hashMap
+					reposAuth.setType(type);
+					reposAuthHashMap.put(reposId, reposAuth);
+				}
+			}
+			else
+			{
+				Integer oldType = hashEntry.getType(); 
+				if(oldType == null)
+				{
+					System.out.println("getUserReposAuthList() hashEntry type is null");
+					continue;
+				}
+				else
+				{
+					Integer newType = getReposAuthType(reposAuth);
+					reposAuth.setType(newType);
+					if(newType > oldType)	//更新为新的
+					{
+						reposAuthHashMap.put(reposId, reposAuth);
+					}
+					else if(newType == oldType)	//取并集
+					{
+						if(reposAuth.getIsAdmin().equals(1))
+						{
+							hashEntry.setIsAdmin(1);
+						}
+						if(reposAuth.getAccess().equals(1))
+						{
+							hashEntry.setAccess(1);
+						}
+						if(reposAuth.getAddEn().equals(1))
+						{
+							hashEntry.setAddEn(1);
+						}
+						if(reposAuth.getDeleteEn().equals(1))
+						{
+							hashEntry.setDeleteEn(1);
+						}
+						if(reposAuth.getEditEn().equals(1))
+						{
+							hashEntry.setEditEn(1);
+						}
+						if(reposAuth.getHeritable().equals(1))
+						{
+							hashEntry.setHeritable(1);
+						}			
+						break;
+					}
+				}
+			}
+		}
+		
+		return reposAuthHashMap;
+	}
+
+	//计算用户权限类型，怎么感觉应该直接设置成指定类型呢，数据库增加priority字段，确定等级差别，值越大优先级越高
+	private Integer getReposAuthType(ReposAuth reposAuth) {
+		//confirm the type of reposAuth
+		Integer userId = reposAuth.getUserId();
+		Integer groupId = reposAuth.getGroupId();
+		
+		if(userId == null)
+		{
+			if(groupId != null)
+			{
+				return 2;
+			}
+			else
+			{
+				System.out.println("getReposAuthType() userId and groupId are null, unable to confirm the type");
+				return null;
+			}
+		}
+		else if(userId > 0)
+		{
+			return 1;
+		}
+		else
+		{
+			return 3;
+		}
+	}
+
+	//获取用户在系统上的所有仓库权限设置
+	private List<ReposAuth> getReposAuthListForUser(Integer userId) {
+		if(userId == null)
+		{
+			return null;
+		}
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setUserId(userId);
+		List<ReposAuth> userReposAuthList = reposService.getReposAuthList(reposAuth);
+		return userReposAuthList;
+	}
+	
+	//获取用户在系统上的所有仓库权限设置
+	private List<ReposAuth> getGroupsReposAuthListForUser(Integer userId) {
+		if(userId == null)
+		{
+			return null;
+		}
+		List<ReposAuth> groupsReposAuthList = reposService.getGroupReposAuthListForUser(userId);
+		return groupsReposAuthList;
+	}
+	
+	//获取组在系统上的所有仓库权限设置
+	private List<ReposAuth> getReposAuthListForGroup(Integer groupId) {
+		if(groupId == null)
+		{
+			return null;
+		}
+		
+		ReposAuth reposAuth = new ReposAuth();
+		reposAuth.setUserId(groupId);
+		List<ReposAuth> groupReposAuthList = reposService.getReposAuthList(reposAuth);
+		return groupReposAuthList;
+	}
+
+	//获取用户组的所有仓库权限设置
+	private List<ReposAuth> getReposAuthListForGroups(List<UserGroup> groupList) {
+		if(groupList == null)
+		{
+			return null;
+		}		
+		List<ReposAuth> groupsReposAuthList = reposService.getReposAuthListByGroupList(groupList);
+		return groupsReposAuthList;
+	}
+	
 	//获取用户在仓库上所有doc的权限设置
 	protected List<DocAuth> getDocAuthListForUser(Integer UserID,Integer reposID) 
 	{
