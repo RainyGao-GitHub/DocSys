@@ -1181,7 +1181,7 @@ public class ReposController extends BaseController{
 				Integer subDocId = subDoc.getId();
 				if(subDoc.getType() == 2)	//只有目录才需要查询
 				{
-					DocAuth subDocAuth = getDocAuthFromList(subDocId,pDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
+					DocAuth subDocAuth = getDocAuthFromHashMap(subDocId,pDocAuth,userDocAuthList,groupDocAuthList,anyUserDocAuthList);
 					//目录可访问，则进行访问
 					if(subDocAuth != null)
 					{
