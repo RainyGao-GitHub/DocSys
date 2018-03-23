@@ -1,5 +1,7 @@
 package com.DocSystem.dao;
 
+import java.util.List;
+
 import com.DocSystem.entity.ReposAuth;
 
 public interface ReposAuthMapper {
@@ -18,4 +20,6 @@ public interface ReposAuthMapper {
     ReposAuth selectSelective(ReposAuth reposAuth);
 
 	ReposAuth getReposAuth(ReposAuth reposAuth);
+
+	List<ReposAuth> getReposAuthForUser(ReposAuth reposAuth);
 }

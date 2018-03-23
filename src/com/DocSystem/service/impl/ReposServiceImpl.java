@@ -202,58 +202,8 @@ public class ReposServiceImpl implements ReposService {
         return docDao.getAuthedDocListHeritable(params);
 	}
 
-	//根据groupList的所有reposAuthList
-	public List<ReposAuth> getReposAuthListByGroupList(List<UserGroup> groupList) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	//获取用户所在组的所有权限设置
-	public List<ReposAuth> getGroupReposAuthListForUser(Integer userId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	//根据userId获取所有跟用户有关的仓库权限设置：包括用户的直接设置、所在组的设置、任意用户的设置
-	public List<ReposAuth> getAllRelatedReposAuthListForUser(Integer userId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<DocAuth> getGroupDocAuthListForUser(DocAuth docAuth) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<DocAuth> getAllRelatedDocAuthListForUser(DocAuth docAuth) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<ReposAuth> getGroupDocAuthListForUser(ReposAuth reposAuth) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<ReposAuth> getAllRelatedReposAuthListForUser(ReposAuth reposAuth) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<ReposAuth> getAllRelatedReposAuthListForUser(Integer userID,
-			Integer reposID) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<ReposAuth> getAllRelatedReposAuthListForGroup(Integer groupID,
-			Integer reposID) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<ReposAuth> getAllRelatedReposAuthListForGroup(Integer groupId) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<ReposAuth> getReposAuthListForUser(ReposAuth reposAuth) {
+		//To get the reposAuth with userId=userId and groupId in (groups) and userId=0
+		return reposAuthDao.getReposAuthForUser(reposAuth);
 	}
 }  
