@@ -1976,7 +1976,7 @@ public class DocController extends BaseController{
 	//检查用户的新增权限
 	private boolean checkUserAddRight(ReturnAjax rt, Integer userId,
 			Integer parentId, Integer reposId) {
-		DocAuth docUserAuth = getUserRealDocAuth(userId,null,parentId,reposId);
+		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -2000,7 +2000,7 @@ public class DocController extends BaseController{
 
 	private boolean checkUserDeleteRight(ReturnAjax rt, Integer userId,
 			Integer parentId, Integer reposId) {
-		DocAuth docUserAuth = getUserRealDocAuth(userId,null,parentId,reposId);
+		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -2024,7 +2024,7 @@ public class DocController extends BaseController{
 	
 	private boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId,
 			Integer reposId) {
-		DocAuth docUserAuth = getUserRealDocAuth(userId,null,docId,reposId);
+		DocAuth docUserAuth = getUserDocAuth(userId,docId,reposId);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -2048,7 +2048,7 @@ public class DocController extends BaseController{
 	
 	private boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId,
 			Integer reposId) {
-		DocAuth docAuth = getUserRealDocAuth(userId,null,docId,reposId);
+		DocAuth docAuth = getUserDocAuth(userId,docId,reposId);
 		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");

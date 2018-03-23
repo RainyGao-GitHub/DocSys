@@ -253,7 +253,10 @@ public class BaseController{
 	public ReposAuth getUserReposAuth(Integer UserID,Integer ReposID)
 	{
 		System.out.println("getUserReposAuth() UserID:"+UserID);
-		List<ReposAuth> reposAuthList = reposService.getAllRelatedReposAuthListForUser(UserID,ReposID);
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setUserId(UserID);
+		qReposAuth.setReposId(ReposID);
+		List<ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
 		if(reposAuthList == null || reposAuthList.size() == 0)
 		{
 			return null;
@@ -448,7 +451,7 @@ public class BaseController{
 		return hashMap;
 	}
 		
-	private HashMap<Integer,ReposAuth> BuildHashMapByReposAuthList(List<ReposAuth> reposAuthList) {
+	protected HashMap<Integer,ReposAuth> BuildHashMapByReposAuthList(List<ReposAuth> reposAuthList) {
 		//去重并将参数放入HashMap
 		HashMap<Integer,ReposAuth> hashMap = new HashMap<Integer,ReposAuth>();
 		for(int i=0;i<reposAuthList.size();i++)
