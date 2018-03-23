@@ -215,7 +215,7 @@
     <include refid="Base_Column_List" />
     from repos_auth
     where 
-    USER_ID = userId and USER_ID = 0 and GROUP_ID IN (select ID from group_member where USER_ID = userId)
+    USER_ID = userId and USER_ID = 0 and GROUP_ID IN (select GROUP_ID from group_member where USER_ID = userId)
     <if test="reposId != null">
       and REPOS_ID = #{reposId,jdbcType=INTEGER}
     </if>  
