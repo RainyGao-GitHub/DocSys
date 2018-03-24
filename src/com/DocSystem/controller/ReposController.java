@@ -55,18 +55,18 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		if(login_user.getType() == 2)	//超级管理员
-		{
-			List<Repos> reposList = reposService.getAllReposList();
-			rt.setData(reposList);
-		}
-		else
-		{
+		//if(login_user.getType() == 2)	//超级管理员
+		//{
+		//	List<Repos> reposList = reposService.getAllReposList();
+		//	rt.setData(reposList);
+		//}
+		//else
+		//{
 			Integer UserId = login_user.getId();
 			System.out.println("UserId:" + UserId);
 			List <Repos> accessableReposList = getAccessableReposList(UserId);
 			rt.setData(accessableReposList);
-		}
+		//}
 		writeJson(rt, response);
 	}
 	
@@ -1185,23 +1185,23 @@ public class ReposController extends BaseController{
 	}
 	
 	private List<Doc> getReposMenu(Integer vid, User login_user) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			//get the data from doc
-			Doc doc = new Doc();
-			doc.setVid(vid);
-			List <Doc> docList = reposService.getDocList(doc);
-			//rt.setData(docList);
-			return docList;
-		}
-		else
-		{
-			System.out.println("普通用户");
+		//if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		//{
+		//	System.out.println("超级管理员");
+		//	//get the data from doc
+		//	Doc doc = new Doc();
+		//	doc.setVid(vid);
+		//	List <Doc> docList = reposService.getDocList(doc);
+		//	//rt.setData(docList);
+		//	return docList;
+		//}
+		//else
+		//{
+			//System.out.println("普通用户");
 			Integer userID = login_user.getId();
 			List <Doc> docList = getAccessableDocList(userID,vid);
 			return docList;
-		}
+		//}
 	}
 	
 	//获取仓库下用户可访问的doclist
@@ -1301,6 +1301,25 @@ public class ReposController extends BaseController{
 		docList.add(rootDoc);
 		rt.setData(docList);
 		writeJson(rt, response);
+	}
+	
+	private List<Doc> getReposManagerMenu(Integer vid, User login_user) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			//get the data from doc
+			Doc doc = new Doc();
+			doc.setVid(vid);
+			List <Doc> docList = reposService.getDocList(doc);
+			return docList;
+		}
+		else
+		{
+			System.out.println("普通用户");
+			Integer userID = login_user.getId();
+			List <Doc> docList = getAccessableDocList(userID,vid);
+			return docList;
+		}
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/

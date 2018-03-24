@@ -172,57 +172,57 @@ public class BaseController{
 		return null;
 	}
 	
-	private void xorReposAuth(ReposAuth reposAuth, ReposAuth tmpReposAuth) {
-		if(tmpReposAuth.getIsAdmin().equals(1))
+	private void xorReposAuth(ReposAuth auth, ReposAuth tmpAuth) {
+		if(tmpAuth.getIsAdmin()!=null && tmpAuth.getIsAdmin().equals(1))
 		{
-			reposAuth.setIsAdmin(1);
+			auth.setIsAdmin(1);
 		}
-		if(tmpReposAuth.getAccess().equals(1))
+		if(tmpAuth.getAccess()!=null && tmpAuth.getAccess().equals(1))
 		{
-			reposAuth.setAccess(1);
+			auth.setAccess(1);
 		}
-		if(tmpReposAuth.getAddEn().equals(1))
+		if(tmpAuth.getAddEn()!=null && tmpAuth.getAddEn().equals(1))
 		{
-			reposAuth.setAddEn(1);
+			auth.setAddEn(1);
 		}
-		if(tmpReposAuth.getDeleteEn().equals(1))
+		if(tmpAuth.getDeleteEn()!=null && tmpAuth.getDeleteEn().equals(1))
 		{
-			reposAuth.setDeleteEn(1);
+			auth.setDeleteEn(1);
 		}
-		if(tmpReposAuth.getEditEn().equals(1))
+		if(tmpAuth.getEditEn()!=null && tmpAuth.getEditEn().equals(1))
 		{
-			reposAuth.setEditEn(1);
+			auth.setEditEn(1);
 		}
-		if(tmpReposAuth.getHeritable().equals(1))
+		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
 		{
-			reposAuth.setHeritable(1);
+			auth.setHeritable(1);
 		}	
 	}
 	
-	private void xorDocAuth(DocAuth docAuth, DocAuth tmpDocAuth) {
-		if(tmpDocAuth.getIsAdmin().equals(1))
+	private void xorDocAuth(DocAuth auth, DocAuth tmpAuth) {
+		if(tmpAuth.getIsAdmin()!=null && tmpAuth.getIsAdmin().equals(1))
 		{
-			docAuth.setIsAdmin(1);
+			auth.setIsAdmin(1);
 		}
-		if(tmpDocAuth.getAccess().equals(1))
+		if(tmpAuth.getAccess()!=null && tmpAuth.getAccess().equals(1))
 		{
-			docAuth.setAccess(1);
+			auth.setAccess(1);
 		}
-		if(tmpDocAuth.getAddEn().equals(1))
+		if(tmpAuth.getAddEn()!=null && tmpAuth.getAddEn().equals(1))
 		{
-			docAuth.setAddEn(1);
+			auth.setAddEn(1);
 		}
-		if(tmpDocAuth.getDeleteEn().equals(1))
+		if(tmpAuth.getDeleteEn()!=null && tmpAuth.getDeleteEn().equals(1))
 		{
-			docAuth.setDeleteEn(1);
+			auth.setDeleteEn(1);
 		}
-		if(tmpDocAuth.getEditEn().equals(1))
+		if(tmpAuth.getEditEn()!=null && tmpAuth.getEditEn().equals(1))
 		{
-			docAuth.setEditEn(1);
+			auth.setEditEn(1);
 		}
-		if(tmpDocAuth.getHeritable().equals(1))
+		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
 		{
-			docAuth.setHeritable(1);
+			auth.setHeritable(1);
 		}	
 	}
 	
