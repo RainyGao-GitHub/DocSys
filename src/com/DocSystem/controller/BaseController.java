@@ -366,6 +366,10 @@ public class BaseController{
 	protected DocAuth getDocAuthFromHashMap(int docId, DocAuth parentDocAuth,HashMap<Integer,DocAuth> docAuthHashMap)
 	{
 		System.out.println("getDocAuthFromHashMap() docId:" + docId);
+		if(docAuthHashMap == null)
+		{
+			return null;
+		}
 		
 		//For rootDoc parentDocAuth is useless
 		if(docId == 0)
