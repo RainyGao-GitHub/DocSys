@@ -419,14 +419,22 @@ public class BaseController{
 		}
 	}
 	
-	//获取用户在仓库上所有doc的权限设置
 	protected HashMap<Integer,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
 		DocAuth docAuth = new DocAuth();
-		docAuth.setUserId(UserID);
+		docAuth.setUserId(UserID);			
 		docAuth.setReposId(reposID);
-		List <DocAuth> docAuthList = reposService.getDocAuthList(docAuth);
-		printObject("getUserDocAuth() userID[" + UserID +"] docAuthList:", docAuthList);
+	
+		List <DocAuth> docAuthList = null;
+		if(UserID == 0)
+		{
+			docAuthList = reposService.getDocAuthForAnyUser(docAuth);
+		}
+		else
+		{
+			docAuthList = reposService.getDocAuthForUser(docAuth);
+		}
+		printObject("getUserDocAuth() "+ "userID:" + UserID + " docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -443,7 +451,7 @@ public class BaseController{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setGroupId(GroupID);
 		docAuth.setReposId(reposID);
-		List <DocAuth> docAuthList = reposService.getDocAuthList(docAuth);
+		List <DocAuth> docAuthList = reposService.getDocAuthForGroup(docAuth);
 		printObject("getUserDocAuth() GroupID[" + GroupID +"] docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)

@@ -26,11 +26,4 @@ public interface UserMapper {
 	List<User> queryUserByTelOrEmail(User user);
 
 	List<User> selectAll();
-	
-	//For Repos Auth Manage
-	List<ReposAuth> getReposAuthForAllUsers(Integer reposId);
-
-	List<ReposAuth> getReposAuthList(ReposAuth reposAuth);	
-
-	List<DocAuth> getDocAuthList(DocAuth docAuth);
 }

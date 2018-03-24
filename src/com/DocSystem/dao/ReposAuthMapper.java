@@ -21,5 +21,10 @@ public interface ReposAuthMapper {
 
 	ReposAuth getReposAuth(ReposAuth reposAuth);
 
+	//获取所有用户的reposAuth
+	List<ReposAuth> getReposAuthForAllUsers(Integer reposId);
+
+	List<ReposAuth> getReposAuthList(ReposAuth reposAuth);	
+	
 	List<ReposAuth> getReposAuthForUser(ReposAuth reposAuth);
 }

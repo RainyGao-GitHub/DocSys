@@ -214,12 +214,21 @@
     select 
     <include refid="Base_Column_List" />
     from repos_auth
-    where 1 = 1
-    	<if test="reposId != null">
-		    and REPOS_ID = #{reposId,jdbcType=INTEGER}
-	    </if>
-    	and (USER_ID = #{userId,jdbcType=INTEGER} 
-    		or USER_ID = 0 
-    		or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
+    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+		and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0 or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
+  </select>
+  <select id="getReposAuthForGroup" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from repos_auth
+    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+		and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
+  </select>
+  <select id="getReposAuthForAnyUser" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from repos_auth
+    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+		and USER_ID = 0
   </select>
 </mapper>
