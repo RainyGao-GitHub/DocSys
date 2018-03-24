@@ -210,20 +210,16 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
-  <select id="getReposAuthForGroups" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
-    from repos_auth
-    where GROUP_ID IN <foreach collection="list" item="groupList" open="(" seperator="," close=")">#{groupList}</foreach>> 
-  </select>
   <select id="getReposAuthForUser" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from repos_auth
     where 
-    USER_ID = userId and USER_ID = 0 and GROUP_ID IN (select GROUP_ID from group_member where USER_ID = userId)
-    <if test="reposId != null">
-      and REPOS_ID = #{reposId,jdbcType=INTEGER}
-    </if>  
+    	USER_ID = #{userId,jdbcType=INTEGER} 
+    	and USER_ID = 0 
+    	and GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER})
+	    <if test="reposId != null">
+	    and REPOS_ID = #{reposId,jdbcType=INTEGER}
+	    </if>  
   </select>
 </mapper>
