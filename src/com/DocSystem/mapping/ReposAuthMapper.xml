@@ -210,7 +210,43 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
-    <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+    <select id="getReposAuth" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from repos_auth
+    where 1 = 1
+    <if test="id != null">
+      and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="userId != null">
+      and USER_ID = #{userId,jdbcType=INTEGER}
+    </if>
+    <if test="groupId != null">
+      and GROUP_ID = #{groupId,jdbcType=INTEGER}
+    </if>
+    <if test="reposId != null">
+      and REPOS_ID = #{reposId,jdbcType=INTEGER}
+    </if>
+	<if test="isAdmin != null">
+      IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
+    </if>
+    <if test="access != null">
+      ACCESS = #{access,jdbcType=INTEGER}
+    </if>
+    <if test="editEn != null">
+      and EDIT_EN = #{editEn,jdbcType=INTEGER}
+    </if>
+    <if test="addEn != null">
+      and ADD_EN = #{addEn,jdbcType=INTEGER}
+    </if>
+    <if test="deleteEn != null">
+      and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    </if>
+    <if test="heritable != null">
+      and HERITABLE = #{heritable,jdbcType=INTEGER}
+    </if>
+  </select>
+  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
 		user.ID as userId,user.NAME as userName,
 		repos_auth.ID as id, 
@@ -218,19 +254,13 @@
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
-  <select id="getAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+  <select id="getReposAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
 		user_group.ID as groupId,user_group.NAME as groupName,
 		repos_auth.ID as id, 
 		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
       from user_group
     LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
-  </select>
-  <select id="getReposAuthList" parameterType="Integer" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
-    from repos_auth
-    where REPOS_ID = #{reposId}
   </select>
   <select id="getReposAuthForUser" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
     select 
