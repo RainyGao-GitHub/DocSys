@@ -147,8 +147,8 @@ public class ReposServiceImpl implements ReposService {
 	}
 
 	//仓库的所有用户（包括有授权和没授权的）
-	public List<ReposAuth> getReposAllUsers(Integer reposId) {
-		return userDao.getReposAllUsers(reposId);		
+	public List<ReposAuth> getReposAuthForAllUsers(Integer reposId) {
+		return userDao.getReposAuthForAllUsers(reposId);		
 	}
 
 	public int deleteReposAuth(Integer id) {

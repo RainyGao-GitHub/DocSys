@@ -28,7 +28,7 @@ public interface UserMapper {
 	List<User> selectAll();
 	
 	//For Repos Auth Manage
-	List<ReposAuth> getReposAllUsers(Integer reposId);
+	List<ReposAuth> getReposAuthForAllUsers(Integer reposId);
 
 	List<ReposAuth> getReposAuthList(ReposAuth reposAuth);	
 
