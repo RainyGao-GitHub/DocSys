@@ -1336,32 +1336,20 @@ public class ReposController extends BaseController{
 		printObject("UserList:",UserList);
 		
 		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
-		ReposAuth anyUserReposAuth = getAnyUserDispReposAuth(reposId); //获取任意用户的权限表
+		ReposAuth anyUserReposAuth = getUserReposAuth(0,reposId); //获取任意用户的权限表
+		if(anyUserReposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
+		{
+			anyUserReposAuth = new ReposAuth();
+			anyUserReposAuth.setUserId(0);
+			anyUserReposAuth.setUserName("任意用户");
+		}
+		else
+		{
+			anyUserReposAuth.setUserName("任意用户");
+		}
 		UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList			
 		return UserList;
-	}
-
-	//获取任意用户的reposAuth
-	private ReposAuth getAnyUserDispReposAuth(Integer vid) {
-		ReposAuth reposAuth =getAnyUserReposAuth(vid);
-		if(reposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
-		{
-			reposAuth = new ReposAuth();
-			reposAuth.setUserId(0);
-			reposAuth.setUserName("任意用户");
-		}
-		return reposAuth;
-	}
-	
-	//获取任意用户的reposAuth
-	private ReposAuth getAnyUserReposAuth(Integer vid) {
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setUserId(0);
-		qReposAuth.setReposId(vid);
-		ReposAuth reposAuth = reposService.getReposAuth(qReposAuth);
-		return reposAuth;
-	}
-	
+	}	
 	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
 	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
