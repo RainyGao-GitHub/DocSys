@@ -1500,9 +1500,7 @@ public class ReposController extends BaseController{
 
 	private List<ReposAuth> getReposAuthList(Integer reposId) {
 		System.out.println("getReposAuthList() reposId:" + reposId);
-		ReposAuth reposAuth = new ReposAuth();
-		reposAuth.setReposId(reposId);
-		List <ReposAuth> ReposAuthList = reposService.getReposAuthList(reposAuth);	//注意已经包括了任意用户
+		List <ReposAuth> ReposAuthList = reposService.getReposAuthList(reposId);	//注意已经包括了任意用户
 		return ReposAuthList;
 	}
 	
