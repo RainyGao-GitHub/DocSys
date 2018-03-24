@@ -55,18 +55,18 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//if(login_user.getType() == 2)	//超级管理员
-		//{
-		//	List<Repos> reposList = reposService.getAllReposList();
-		//	rt.setData(reposList);
-		//}
-		//else
-		//{
+		if(login_user.getType() == 2)	//超级管理员
+		{
+			List<Repos> reposList = reposService.getAllReposList();
+			rt.setData(reposList);
+		}
+		else
+		{
 			Integer UserId = login_user.getId();
 			System.out.println("UserId:" + UserId);
 			List <Repos> accessableReposList = getAccessableReposList(UserId);
 			rt.setData(accessableReposList);
-		//}
+		}
 		writeJson(rt, response);
 	}
 	
@@ -1185,23 +1185,9 @@ public class ReposController extends BaseController{
 	}
 	
 	private List<Doc> getReposMenu(Integer vid, User login_user) {
-		//if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		//{
-		//	System.out.println("超级管理员");
-		//	//get the data from doc
-		//	Doc doc = new Doc();
-		//	doc.setVid(vid);
-		//	List <Doc> docList = reposService.getDocList(doc);
-		//	//rt.setData(docList);
-		//	return docList;
-		//}
-		//else
-		//{
-			//System.out.println("普通用户");
-			Integer userID = login_user.getId();
-			List <Doc> docList = getAccessableDocList(userID,vid);
-			return docList;
-		//}
+		Integer userID = login_user.getId();
+		List <Doc> docList = getAccessableDocList(userID,vid);
+		return docList;
 	}
 	
 	//获取仓库下用户可访问的doclist
@@ -1295,7 +1281,7 @@ public class ReposController extends BaseController{
 		rootDoc.setPid(0);	//设置成自己
 		
 		//获取用户可见仓库文件列表
-		List <Doc> docList = getReposMenu(vid,login_user);
+		List <Doc> docList = getReposManagerMenu(vid,login_user);
 		
 		//合并列表
 		docList.add(rootDoc);
