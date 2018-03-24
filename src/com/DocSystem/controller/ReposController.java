@@ -1332,8 +1332,8 @@ public class ReposController extends BaseController{
 	}
 	
 	private List<ReposAuth> getReposAllUserList(Integer reposId) {
-		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓库权限），结果实际是reposAuth列表
-		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	
+		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓t库权限），结果实际是reposAuth列表
+		List <ReposAuth> UserList = reposService.getReposAuthForAllUsers(reposId);	
 		
 		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
 		ReposAuth anyUserReposAuth = getAnyUserDispReposAuth(reposId); //获取任意用户的权限表
