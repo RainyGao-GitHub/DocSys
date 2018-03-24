@@ -126,8 +126,8 @@ public class ReposServiceImpl implements ReposService {
     	return docAuthDao.selectSelective(docAuth);
     }
 
-	public List<ReposAuth> getReposAuthList(ReposAuth reposAuth) {
-		return reposAuthDao.getReposAuthList(reposAuth);
+	public List<ReposAuth> getReposAuthList(Integer reposId) {
+		return reposAuthDao.getReposAuthList(reposId);
 	}
 	
 	public List<DocAuth> getDocAuthForUser(DocAuth docAuth) {
@@ -154,7 +154,7 @@ public class ReposServiceImpl implements ReposService {
 
 	//仓库的所有用户（包括有授权和没授权的）
 	public List<ReposAuth> getReposAuthForAllUsers(Integer reposId) {
-		return reposAuthDao.getReposAuthForAllUsers(reposId);		
+		return reposAuthDao.getAllUsers(reposId);		
 	}
 
 	public int deleteReposAuth(Integer id) {

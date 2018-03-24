@@ -210,6 +210,13 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
+  
+  <select id="getReposAuthList" parameterType="Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from repos_auth
+    where REPOS_ID = #{reposId}
+  </select>
   <select id="getReposAuthForUser" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
