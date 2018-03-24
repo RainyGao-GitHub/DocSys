@@ -214,12 +214,12 @@
     select 
     <include refid="Base_Column_List" />
     from repos_auth
-    where 
-    	USER_ID = #{userId,jdbcType=INTEGER} 
-    	and USER_ID = 0 
-    	and GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER})
-	    <if test="reposId != null">
-	    and REPOS_ID = #{reposId,jdbcType=INTEGER}
-	    </if>  
+    where 1 = 1
+    	<if test="reposId != null">
+		    and REPOS_ID = #{reposId,jdbcType=INTEGER}
+	    </if>
+    	and (USER_ID = #{userId,jdbcType=INTEGER} 
+    		or USER_ID = 0 
+    		or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
   </select>
 </mapper>

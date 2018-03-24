@@ -13,17 +13,17 @@ public class ReposAuth {
 
     private Integer reposId;
 
-    private Integer isAdmin;
+    private Integer isAdmin=0;
 
-    private Integer access;
+    private Integer access=0;
 
-    private Integer editEn;
+    private Integer editEn=0;
 
-    private Integer addEn;
+    private Integer addEn=0;
 
-    private Integer deleteEn;
+    private Integer deleteEn=0;
 
-    private Integer heritable;
+    private Integer heritable=0;
 
     public Integer getId() {
         return id;
@@ -122,7 +122,7 @@ public class ReposAuth {
     }
     
     //ReposAuth 附加信息: 需要通过joint doc and user or group Table to get these info
-    private String  userName="任意用户";	//from user Table
+    private String  userName="";	//from user Table
     private String  groupName="";	//from group Table
     
     private String docName="";		//from doc Table
