@@ -1437,9 +1437,7 @@ public class ReposController extends BaseController{
 		//如果是根目录，则将仓库下其他所有的值直接设置显示出来
 		if(docId == null || docId == 0)
 		{
-			DocAuth docAuth = new DocAuth();
-			docAuth.setReposId(reposId);
-			List <DocAuth> allDocAuthList = reposService.getDocAuthList(docAuth);
+			List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(reposId);
 			if(allDocAuthList != null)
 			{
 				//add the docAuth to docAuthList which docId is not 0
