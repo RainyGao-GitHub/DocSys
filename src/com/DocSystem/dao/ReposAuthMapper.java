@@ -17,12 +17,12 @@ public interface ReposAuthMapper {
 
     int updateByPrimaryKey(ReposAuth record);
     
-    ReposAuth selectSelective(ReposAuth reposAuth);
+    List<ReposAuth> selectSelective(ReposAuth reposAuth);
 
 	ReposAuth getReposAuth(ReposAuth reposAuth);
 
 	//获取所有用户列表（包含授权信息，但这个函数名定义确实有点奇怪）
-	List<ReposAuth> getAllUsers(Integer reposId);
+	List<ReposAuth> getReposAllUsers(Integer reposId);
 	
 	//获取仓库的所有授权信息
 	List<ReposAuth> getReposAuthList(Integer reposId);

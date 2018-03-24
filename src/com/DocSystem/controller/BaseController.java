@@ -281,6 +281,40 @@ public class BaseController{
 		return reposAuth;
 	}
 	
+	
+	//应该考虑将获取Group、User的合并到一起
+	protected DocAuth getGroupDispDocAuth(Integer groupId, String groupName,Integer docId, Integer reposId) {
+		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
+		DocAuth docAuth = getGroupDocAuth(groupId,docId,reposId);	//获取用户真实的权限
+		
+		//转换成可显示的权限
+		if(docAuth == null)
+		{
+			docAuth = new DocAuth();
+			docAuth.setGroupId(groupId);
+			docAuth.setGroupName(groupName);
+			docAuth.setDocId(docId);
+			docAuth.setReposId(reposId);
+			docAuth.setIsAdmin(0);
+			docAuth.setAccess(0);
+			docAuth.setEditEn(0);
+			docAuth.setAddEn(0);
+			docAuth.setDeleteEn(0);
+			docAuth.setHeritable(0);			
+		}
+		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
+		{
+			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(docId))
+			{
+				System.out.println("getGroupDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置groupId、groupName");
+				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
+				docAuth.setUserId(groupId);
+				docAuth.setUserName(groupName);			
+			}
+		}
+		return docAuth;
+	}
+	
 	//获取用户的用于显示的docAuth
 	public DocAuth getUserDispDocAuth(Integer UserID,String UserName,Integer DocID,Integer ReposID)
 	{
@@ -315,10 +349,20 @@ public class BaseController{
 		return docAuth;
 	}
 	
-	//Function:getUserDocAuth
+	protected DocAuth getGroupDocAuth(Integer groupId,Integer docId, Integer reposId)
+	{
+		return getRealDocAuth(null, groupId, docId, reposId);
+	}
+	
 	protected DocAuth getUserDocAuth(Integer userId,Integer docId, Integer reposId) 
 	{
-		System.out.println("getUserDocAuth() userId:"+userId + " docId:"+docId  + " reposId:"+reposId);
+		return getRealDocAuth(userId, null, docId, reposId);
+	}
+	
+	//Function:getUserDocAuth
+	protected DocAuth getRealDocAuth(Integer userId,Integer groupId,Integer docId, Integer reposId) 
+	{
+		System.out.println("getRealDocAuth() userId:"+userId + " groupId:"+ groupId + " docId:"+docId  + " reposId:"+reposId);
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Integer> docIdList = new ArrayList<Integer>();
@@ -329,7 +373,15 @@ public class BaseController{
 		}
 		
 		//Get UserDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(userId,reposId);
+		HashMap<Integer,DocAuth> docAuthHashMap = null;
+		if(userId != null)
+		{
+			docAuthHashMap = getUserDocAuthHashMap(userId,reposId);
+		}
+		else
+		{
+			docAuthHashMap = getGroupDocAuthHashMap(groupId,reposId);
+		}
 		
 		//go throug the docIdList to get the UserDocAuthFromHashMap
 		DocAuth parentDocAuth = null;
