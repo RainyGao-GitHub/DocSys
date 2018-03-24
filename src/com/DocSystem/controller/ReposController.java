@@ -1471,7 +1471,12 @@ public class ReposController extends BaseController{
 	}
 
 	private boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
-		//任意用户的管理员权限无效，避免混乱
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			return true;
+		}
+		
 		DocAuth docAuth = getUserDocAuth(login_user.getId(), docId, reposId);
 		if(docAuth != null && docAuth.getIsAdmin() == 1)
 		{
@@ -1486,14 +1491,12 @@ public class ReposController extends BaseController{
 			System.out.println("超级管理员");
 			return true;
 		}
-		else 
+		
+		ReposAuth reposAuth = getUserReposAuth(login_user.getId(),reposId);
+		if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
 		{
-			ReposAuth reposAuth = getUserReposAuth(login_user.getId(),reposId);
-			if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
-			{
-				return true;
-			}			
-		}
+			return true;
+		}			
 		return false;
 	}
 
