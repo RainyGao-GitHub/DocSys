@@ -1323,7 +1323,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取All UserList
-		List <ReposAuth> UserList = getReposAllUserList(reposId);
+		List <ReposAuth> UserList = getReposAllUsers(reposId);
 		printObject("UserList:",UserList);
 		
 		rt.setData(UserList);
@@ -1331,9 +1331,9 @@ public class ReposController extends BaseController{
 		
 	}
 	
-	private List<ReposAuth> getReposAllUserList(Integer reposId) {
+	private List<ReposAuth> getReposAllUsers(Integer reposId) {
 		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓t库权限），结果实际是reposAuth列表
-		List <ReposAuth> UserList = reposService.getReposAuthForAllUsers(reposId);	
+		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	
 		
 		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
 		ReposAuth anyUserReposAuth = getAnyUserDispReposAuth(reposId); //获取任意用户的权限表
@@ -1414,14 +1414,7 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = null;
 			if(userId!= null)	//It is user
 			{
-				if(userId == 0)
-				{
-					docAuth = getAnyUserDispDocAuth(docId,reposId);
-				}
-				else
-				{
-					docAuth = getUserDispDocAuth(userId,reposAuth.getUserName(),docId,reposId);	
-				}
+				docAuth = getUserDispDocAuth(userId,reposAuth.getUserName(),docId,reposId);	
 			}
 			else if(groupId != null)
 			{
@@ -1455,17 +1448,6 @@ public class ReposController extends BaseController{
 
 		rt.setData(docAuthList);
 		writeJson(rt, response);
-	}
-	
-	private DocAuth getGroupDispDocAuth(Integer groupId, String groupName,
-			Integer docId, Integer reposId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private DocAuth getAnyUserDispDocAuth(Integer docId, Integer reposId) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	private boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {

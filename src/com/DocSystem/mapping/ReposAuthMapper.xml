@@ -210,7 +210,7 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
-    <select id="getAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+    <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
 		user.ID as userId,user.NAME as userName,
 		repos_auth.ID as id, 
