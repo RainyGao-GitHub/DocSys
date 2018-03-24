@@ -210,7 +210,22 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
-  
+    <select id="getAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+	select 
+		user.ID as userId,user.NAME as userName,
+		repos_auth.ID as id, 
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+      from user
+    LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
+  <select id="getAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+	select 
+		user_group.ID as groupId,user_group.NAME as groupName,
+		repos_auth.ID as id, 
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+      from user_group
+    LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>
   <select id="getReposAuthList" parameterType="Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
