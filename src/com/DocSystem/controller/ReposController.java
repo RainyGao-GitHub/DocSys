@@ -1324,7 +1324,6 @@ public class ReposController extends BaseController{
 		
 		//获取All UserList
 		List <ReposAuth> UserList = getReposAllUsers(reposId);
-		printObject("UserList:",UserList);
 		
 		rt.setData(UserList);
 		writeJson(rt, response);
@@ -1334,33 +1333,24 @@ public class ReposController extends BaseController{
 	private List<ReposAuth> getReposAllUsers(Integer reposId) {
 		//获取user表（通过reposId来joint reposAuht表，以确定用户的仓t库权限），结果实际是reposAuth列表
 		List <ReposAuth> UserList = reposService.getReposAllUsers(reposId);	
+		printObject("UserList:",UserList);
 		
 		//获取任意用户的ReposAuth，因为任意用户是虚拟用户在数据库中不存在，因此需要单独获取
 		ReposAuth anyUserReposAuth = getAnyUserDispReposAuth(reposId); //获取任意用户的权限表
-		if(anyUserReposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
-		{
-			anyUserReposAuth = new ReposAuth();
-			anyUserReposAuth.setUserId(0);
-			anyUserReposAuth.setUserName("任意用户");			
-			UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList
-		}
-		else
-		{
-			UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList			
-		}
+		UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList			
 		return UserList;
 	}
 
 	//获取任意用户的reposAuth
 	private ReposAuth getAnyUserDispReposAuth(Integer vid) {
 		ReposAuth reposAuth =getAnyUserReposAuth(vid);
-		if(reposAuth != null)	//仓库设置了任意用户的访问权限
+		if(reposAuth == null)	//用户未设置，则将任意用户加入到用户未授权用户列表中去
 		{
-			//将任意用户加入到用户列表中
+			reposAuth = new ReposAuth();
+			reposAuth.setUserId(0);
 			reposAuth.setUserName("任意用户");
-			return reposAuth;
 		}
-		return null;
+		return reposAuth;
 	}
 	
 	//获取任意用户的reposAuth
