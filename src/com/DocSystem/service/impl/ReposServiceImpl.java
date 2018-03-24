@@ -127,11 +127,17 @@ public class ReposServiceImpl implements ReposService {
     }
 
 	public List<ReposAuth> getReposAuthList(ReposAuth reposAuth) {
-		return userDao.getReposAuthList(reposAuth);
+		return reposAuthDao.getReposAuthList(reposAuth);
 	}
 	
-	public List<DocAuth> getDocAuthList(DocAuth docAuth) {
-		return userDao.getDocAuthList(docAuth);	//获取Doc所有的DocAuthList
+	public List<DocAuth> getDocAuthForUser(DocAuth docAuth) {
+		return docAuthDao.getDocAuthForUser(docAuth);
+	}
+	public List<DocAuth> getDocAuthForGroup(DocAuth docAuth) {
+		return docAuthDao.getDocAuthForGroup(docAuth);
+	}
+	public List<DocAuth> getDocAuthForAnyUser(DocAuth docAuth) {
+		return docAuthDao.getDocAuthForAnyUser(docAuth);
 	}
 	
 	public int setReposAuth(ReposAuth reposAuth) {
@@ -148,7 +154,7 @@ public class ReposServiceImpl implements ReposService {
 
 	//仓库的所有用户（包括有授权和没授权的）
 	public List<ReposAuth> getReposAuthForAllUsers(Integer reposId) {
-		return userDao.getReposAuthForAllUsers(reposId);		
+		return reposAuthDao.getReposAuthForAllUsers(reposId);		
 	}
 
 	public int deleteReposAuth(Integer id) {
@@ -173,33 +179,14 @@ public class ReposServiceImpl implements ReposService {
 
 	//Please use the getDocAuthList, This Interface can not be used again
 	//I keep leave it here, because it is good example to show how to take parameters to mybatis
-	public List<DocAuth> getUserDocAuthList(Integer userId, Integer docId,Integer pDocId,
-			Integer reposId) {
+	public List<DocAuth> getAllDocAuthList(Integer reposId) 
+	{
 		HashMap<String,Object> params = new HashMap<String,Object>();
-        params.put("docId", docId);
-        params.put("pDocId", pDocId);
+        //params.put("docId", docId);
+        //params.put("pDocId", pDocId);
         params.put("reposId", reposId);
-        params.put("userId", userId);
-		return docAuthDao.getUserDocAuthList(params);
-	}
-
-	public List<Doc> getAuthedDocList(Integer docId, Integer pDocId, Integer reposId,Integer userId) {
-		HashMap<String,Object> params = new HashMap<String,Object>();
-        params.put("docId", docId);
-        params.put("pDocId", pDocId);
-        params.put("reposId", reposId);
-        params.put("userId", userId);
-		return docDao.getAuthedDocList(params);
-	}
-
-	public List<Doc> getAuthedDocListHeritable(Integer docId, Integer pDocId,
-			Integer reposId, Integer userId) {
-		HashMap<String,Object> params = new HashMap<String,Object>();
-        params.put("docId", docId);
-        params.put("pDocId", pDocId);
-        params.put("reposId", reposId);
-        params.put("userId", userId);
-        return docDao.getAuthedDocListHeritable(params);
+        //params.put("userId", userId);
+		return docAuthDao.getAllDocAuthList(params);
 	}
 
 	public List<ReposAuth> getReposAuthListForUser(ReposAuth reposAuth) {

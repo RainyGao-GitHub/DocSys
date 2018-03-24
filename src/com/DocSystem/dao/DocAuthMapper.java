@@ -24,5 +24,10 @@ public interface DocAuthMapper {
 
 	int deleteSelective(DocAuth docAuth);
 
-	List<DocAuth> getUserDocAuthList(HashMap<String, Object> params);
+	List<DocAuth> getDocAuthForUser(DocAuth docAuth);
+	List<DocAuth> getDocAuthForGroup(DocAuth docAuth);
+	List<DocAuth> getDocAuthForAnyUser(DocAuth docAuth);
+	
+	//这个接口是故意这么实现的 
+	List<DocAuth> getAllDocAuthList(HashMap<String, Object> params);
 }
