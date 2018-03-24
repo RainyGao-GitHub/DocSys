@@ -76,7 +76,11 @@ public class ReposController extends BaseController{
 		//取出用户在系统上的所有仓库权限列表
 		//将仓库权限列表转换成HashMap,方便快速从列表中取出仓库的用户权限
 		HashMap<Integer,ReposAuth> reposAuthHashMap = getUserReposAuthHashMap(userId);
-		printObject("reposAuthHashMap",reposAuthHashMap);
+		printObject("reposAuthHashMap:",reposAuthHashMap);
+		if(reposAuthHashMap == null || reposAuthHashMap.size() == 0)
+		{
+			return null;
+		}
 		
 		//get all reposAuthList to pick up the accessable List
 		List<Repos> resultList = new ArrayList<Repos>();
@@ -84,7 +88,7 @@ public class ReposController extends BaseController{
 		for(int i=0;i<reposList.size();i++)
 		{
 			Repos repos = reposList.get(i);
-			printObject("repos",repos);
+			//printObject("repos",repos);
 			ReposAuth reposAuth = reposAuthHashMap.get(repos.getId());
 			if(reposAuth != null && reposAuth.getAccess().equals(1))
 			{
