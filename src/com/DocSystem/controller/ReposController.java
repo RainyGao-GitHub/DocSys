@@ -1236,7 +1236,7 @@ public class ReposController extends BaseController{
 			Doc doc = docList.get(i);
 			Integer docId = doc.getId();
 			DocAuth docAuth = docAuthHashMap.get(docId);
-			if(docAuth.getAccess() == 1)
+			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 			{
 				resultList.add(doc);
 				if(doc.getType() == 2)
