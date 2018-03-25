@@ -359,7 +359,7 @@ public class BaseController{
 		return docAuth;
 	}
 
-	private Doc getDocInfo(Integer docId) {
+	protected Doc getDocInfo(Integer docId) {
 		if(docId == 0)
 		{
 			return null;
@@ -395,7 +395,7 @@ public class BaseController{
 		{
 			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
 			{
-				System.out.println("getUserRealDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
+				System.out.println("getUserDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
 				docAuth.setId(null);	//clear docAuthID, so that we know this setting was not on user directly
 			}
 			
@@ -422,7 +422,7 @@ public class BaseController{
 		return group.getName();
 	}
 	
-	private String getUserName(Integer userId) {
+	protected String getUserName(Integer userId) {
 		if(userId == 0)
 		{
 			return "任意用户";
@@ -462,6 +462,7 @@ public class BaseController{
 		{
 			return null;
 		}
+		printObject("getRealDocAuth() docIdList:",docIdList); 
 		
 		//Get UserDocAuthHashMap
 		HashMap<Integer,DocAuth> docAuthHashMap = null;
@@ -477,9 +478,10 @@ public class BaseController{
 		//go throug the docIdList to get the UserDocAuthFromHashMap
 		DocAuth parentDocAuth = null;
 		DocAuth docAuth = null;
-		for(int i=0;i<docIdList.size();i++)
+		for(int i=docIdList.size();i>0;i--)
 		{
 			Integer curDocId = docIdList.get(i);
+			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
 			docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
 			parentDocAuth = docAuth;
 		}		
@@ -524,7 +526,7 @@ public class BaseController{
 		//Not root Doc, if parentDocAuth is null, return null
 		if(parentDocAuth == null)
 		{
-			System.out.println("getDocAuthFromList() docId:" + docId + " parentDocAuth is null");
+			System.out.println("getDocAuthFromHashMap() docId:" + docId + " parentDocAuth is null");
 			return null;
 		}
 		
@@ -577,7 +579,7 @@ public class BaseController{
 		{
 			docAuthList = reposService.getDocAuthForUser(docAuth);
 		}
-		printObject("getUserDocAuth() "+ "userID:" + UserID + " docAuthList:", docAuthList);
+		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -585,6 +587,7 @@ public class BaseController{
 		}
 		
 		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
 		return hashMap;
 	}
 	
@@ -595,7 +598,7 @@ public class BaseController{
 		docAuth.setGroupId(GroupID);
 		docAuth.setReposId(reposID);
 		List <DocAuth> docAuthList = reposService.getDocAuthForGroup(docAuth);
-		printObject("getUserDocAuth() GroupID[" + GroupID +"] docAuthList:", docAuthList);
+		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -603,6 +606,7 @@ public class BaseController{
 		}
 		
 		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
 		return hashMap;
 	}
 		

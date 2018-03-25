@@ -1415,8 +1415,17 @@ public class ReposController extends BaseController{
 				for(int i=0;i<allDocAuthList.size();i++)
 				{
 					DocAuth tmpDocAuth = allDocAuthList.get(i);
-					if(!tmpDocAuth.getDocId().equals(0))
+					Integer tmpDocId = tmpDocAuth.getDocId();
+					if(!tmpDocId.equals(0))
 					{
+						String userName = getUserName(tmpDocAuth.getUserId());
+						Doc doc = getDocInfo(tmpDocId);
+						tmpDocAuth.setUserName(userName);
+						if(doc != null)
+						{
+							tmpDocAuth.setDocName(doc.getName());
+							tmpDocAuth.setDocPath(doc.getPath());
+						}
 						docAuthList.add(tmpDocAuth);						
 					}
 				}
