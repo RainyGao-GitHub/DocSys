@@ -1392,13 +1392,14 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = null;
 			if(userId!= null)	//It is user
 			{
-				docAuth = getUserDispDocAuth(userId,docId,reposId);	
+				docAuth = getUserDispDocAuth(userId,docId,reposId);
 			}
 			else if(groupId != null)
 			{
 				docAuth = getGroupDispDocAuth(groupId,docId,reposId);
 			}
-
+			printObject("docAuth:", docAuth);
+			
 			if(docAuth !=null)
 			{
 				docAuthList.add(docAuth);
