@@ -1556,6 +1556,13 @@ public class ReposController extends BaseController{
 		
 		
 		Integer type = getAuthType(userId,groupId);
+		if(type == null)
+		{
+			System.out.println("getAuthType failed");
+			rt.setError("getAuthType Failed");
+			writeJson(rt, response);			
+			return;
+		}
 		Integer priority = getPriorityByAuthType(type);
 		
 		//获取用户的权限设置，如果不存在则增加，否则修改
