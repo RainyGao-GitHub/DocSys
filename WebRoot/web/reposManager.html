@@ -918,18 +918,28 @@ function showDocAuthList(){
 			{
 				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+d.id+");' class='mybtn-primary'>删除</a>";
 			}
+			var userId = "";
+			if(d.userId >= 0)
+			{
+				userId = d.userId;
+			}
+			var groupId = "";
+			if(d.groupId > 0)
+			{
+				groupId = d.groupId;
+			}
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w5'>"
 				+"		<input class='DocAuthEnable' id='DocAuth"+i+"' value="+d.id+" type='checkbox' onclick='editAuth()'/>"
 				+"	</i> "
 				+"	<i class='cell username w10'>"
 				+"		<span class='name'>"
-				+"			<a id='User"+i+"' value='"+d.userId+"' href='javascript:void(0)'>"+d.userName+"</a>"
+				+"			<a id='User"+i+"' value='"+userId+"' href='javascript:void(0)'>"+d.userName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell groupname w10'>"
 				+"		<span class='name'>"
-				+"			<a id='Group"+i+"' value='"+d.groupId+"' href='javascript:void(0)'>"+d.groupName+"</a>"
+				+"			<a id='Group"+i+"' value='"+groupId+"' href='javascript:void(0)'>"+d.groupName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell docpath w15'>"
