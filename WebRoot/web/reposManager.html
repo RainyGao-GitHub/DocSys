@@ -558,25 +558,28 @@
 		$("#reposAuthArea >li").each(function(){
           	var index =$(this).val();  //获取li的索引
           	//alert(index);
-          	if($("#User"+index).prop("checked") == true)
+          	if($("#DocAuth"+index).prop("checked") == true)
           	{
-          		var user = [];
-				user.userId = $("#User"+index).val();
-				user.userName =  $("#UserName"+index).text();
-				user.groupName =  $("#GroupName"+index).text();
-				user.isAdmin = $(".IsAdmin"+index).prop("checked")?1:0;
-				user.access = $("#Access"+index).prop("checked")?1:0;
-				user.editEn = $("#EditEn"+index).prop("checked")?1:0;
-				user.addEn = $("#AddEn"+index).prop("checked")?1:0;
-				user.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
-				user.heritable = $("#Heritable"+index).prop("checked")?1:0;
-				users.push(user);	//将用户加入到列表中
+          		var docAuth = [];
+				docAuth.id = $("#DocAuth"+index).val();
+				docAuth.userId = $("#User"+index).val();
+				docAuth.userName =  $("#UserName"+index).text();
+				docAuth.groupId = $("#Group"+index).val();
+				docAuth.groupName =  $("#GroupName"+index).text();
+				docAuth.docId = $("#DocId"+index).val();
+				docAuth.isAdmin = $(".IsAdmin"+index).prop("checked")?1:0;
+				docAuth.access = $("#Access"+index).prop("checked")?1:0;
+				docAuth.editEn = $("#EditEn"+index).prop("checked")?1:0;
+				docAuth.addEn = $("#AddEn"+index).prop("checked")?1:0;
+				docAuth.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
+				docAuth.heritable = $("#Heritable"+index).prop("checked")?1:0;
+				docAuths.push(docAuth);	//将用户加入到列表中
 		    }
 		});
-		console.log(users);
+		console.log(docAuths);
 		
 		var vid = getQueryString("vid");
-		ConfigUserAuth.configUserAuths(users,curDoc,vid);
+		ConfigUserAuth.configUserAuths(docAuths,vid);
     }
 	
 	//将权限保存到后台
@@ -916,7 +919,7 @@ function showDocAuthList(){
 			}
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w5'>"
-				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" type='checkbox' onclick='editAuth()'/>"
+				+"		<input class='DocAuthEnable' id='DocAuth"+i+"' value="+d.id+" type='checkbox' onclick='editAuth()'/>"
 				+"	</i> "
 				+"	<i class='cell username w10'>"
 				+"		<span class='name'>"
@@ -1206,7 +1209,7 @@ function showReposSettingPanel(){
 		}
       	
       	//初始化ConfigUserAuth设置
-      	function ConfigUserAuthSet(users,docId,vid)	//多用户设置函数
+      	function ConfigUserAuthSet(users,vid)	//多用户设置函数
 		{
 			console.log("ConfigUserAuthSet");
 
@@ -1224,7 +1227,6 @@ function showReposSettingPanel(){
 			successNum = 0;
 			configErrorConfirmSet = 0;
 			
-			setDocId(docId);
 			setVid(vid);			
       	}
       		
@@ -1421,13 +1423,13 @@ function showReposSettingPanel(){
 		}
 
 		//多文件move接口
-		function configUserAuths(users,docId,vid)	//多用户设置函数
+		function configUserAuths(users,vid)	//多用户设置函数
 		{
 			console.log("configUserAuths");
 
 			clearContext();	//清空Context缓存
 			
-			ConfigUserAuthSet(users,docId,vid);	//设置configUserAuth Parameters
+			ConfigUserAuthSet(users,vid);	//设置configUserAuth Parameters
 
 			//启动复制操作      		
 			configUserAuth();	//start set
@@ -1435,8 +1437,8 @@ function showReposSettingPanel(){
 		
 		//开放给外部的调用接口
         return {
-            configUserAuths: function(users,docId,vid){
-            	configUserAuths(users,docId,vid);
+            configUserAuths: function(users,vid){
+            	configUserAuths(users,vid);
             },
             configUserAuth: function(){
             	configUserAuth();
