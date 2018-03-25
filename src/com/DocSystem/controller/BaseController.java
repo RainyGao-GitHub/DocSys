@@ -372,6 +372,7 @@ public class BaseController{
 	{
 		System.out.println("getUserDispDocAuth() UserID:"+UserID);
 		DocAuth docAuth = getUserDocAuth(UserID,DocID,ReposID);	//获取用户真实的权限
+		printObject("getUserDispDocAuth() docAuth:",docAuth);
 		
 		//Get UserName
 		String UserName = getUserName(UserID);
@@ -383,9 +384,9 @@ public class BaseController{
 			docAuth = new DocAuth();
 			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
+			docAuth.setDocId(DocID);
 			if(doc != null)
 			{
-				docAuth.setDocId(DocID);
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
@@ -393,6 +394,7 @@ public class BaseController{
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
+			printObject("getUserDispDocAuth() docAuth:",docAuth);
 			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
 			{
 				System.out.println("getUserDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
@@ -401,9 +403,9 @@ public class BaseController{
 			
 			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
+			docAuth.setDocId(DocID);
 			if(doc != null)
 			{
-				docAuth.setDocId(DocID);
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
@@ -479,7 +481,7 @@ public class BaseController{
 		DocAuth parentDocAuth = null;
 		DocAuth docAuth = null;
 		int docPathDeepth = docIdList.size();
-		for(int i=(docPathDeepth-1);i>0;i--)
+		for(int i=(docPathDeepth-1);i>=0;i--)
 		{
 			Integer curDocId = docIdList.get(i);
 			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
