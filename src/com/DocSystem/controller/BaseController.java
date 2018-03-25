@@ -227,9 +227,11 @@ public class BaseController{
 	}
 	
 	//获取用户真正的仓库权限(已考虑了所在组以及任意用户权限)
-	public ReposAuth getUserDispReposAuth(Integer UserID,String userName,Integer ReposID)
+	public ReposAuth getUserDispReposAuth(Integer UserID,Integer ReposID)
 	{
 		ReposAuth reposAuth = getUserReposAuth(UserID,ReposID);
+		
+		String userName = getUserName(UserID);
 		if(reposAuth!=null)
 		{
 			reposAuth.setUserName(userName);
@@ -237,15 +239,15 @@ public class BaseController{
 		else
 		{
 			reposAuth = new ReposAuth();
-			reposAuth.setUserId(UserID);
+			//reposAuth.setUserId(UserID);
 			reposAuth.setUserName(userName);
-			reposAuth.setReposId(ReposID);
-			reposAuth.setIsAdmin(0);
-			reposAuth.setAccess(0);
-			reposAuth.setEditEn(0);
-			reposAuth.setAddEn(0);
-			reposAuth.setDeleteEn(0);
-			reposAuth.setHeritable(0);	
+			//reposAuth.setReposId(ReposID);
+			//reposAuth.setIsAdmin(0);
+			//reposAuth.setAccess(0);
+			//reposAuth.setEditEn(0);
+			//reposAuth.setAddEn(0);
+			//reposAuth.setDeleteEn(0);
+			//reposAuth.setHeritable(0);	
 		}
 		return reposAuth;
 	}
@@ -283,72 +285,100 @@ public class BaseController{
 	
 	
 	//应该考虑将获取Group、User的合并到一起
-	protected DocAuth getGroupDispDocAuth(Integer groupId, String groupName,Integer docId, Integer reposId) {
+	protected DocAuth getGroupDispDocAuth(Integer groupId,Integer docId, Integer reposId) {
 		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
 		DocAuth docAuth = getGroupDocAuth(groupId,docId,reposId);	//获取用户真实的权限
 		
+		 String groupName = getGroupName(groupId);
+		 Doc doc = getDocInfo(docId);
 		//转换成可显示的权限
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
-			docAuth.setGroupId(groupId);
 			docAuth.setGroupName(groupName);
-			docAuth.setDocId(docId);
-			docAuth.setReposId(reposId);
-			docAuth.setIsAdmin(0);
-			docAuth.setAccess(0);
-			docAuth.setEditEn(0);
-			docAuth.setAddEn(0);
-			docAuth.setDeleteEn(0);
-			docAuth.setHeritable(0);			
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
+			docAuth.setUserName(groupName);			
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
+
 			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(docId))
 			{
 				System.out.println("getGroupDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置groupId、groupName");
 				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
-				docAuth.setUserId(groupId);
-				docAuth.setUserName(groupName);			
 			}
 		}
 		return docAuth;
 	}
-	
+
+	private Doc getDocInfo(Integer docId) {
+		return reposService.getDocInfo(docId);
+	}
+
 	//获取用户的用于显示的docAuth
-	public DocAuth getUserDispDocAuth(Integer UserID,String UserName,Integer DocID,Integer ReposID)
+	public DocAuth getUserDispDocAuth(Integer UserID,Integer DocID,Integer ReposID)
 	{
 		System.out.println("getUserDispDocAuth() UserID:"+UserID);
 		DocAuth docAuth = getUserDocAuth(UserID,DocID,ReposID);	//获取用户真实的权限
+		
+		//Get UserName
+		String UserName = getUserName(UserID);
+		Doc doc = getDocInfo(DocID);
 		
 		//转换成可显示的权限
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
-			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
-			docAuth.setDocId(DocID);
-			docAuth.setReposId(ReposID);
-			docAuth.setIsAdmin(0);
-			docAuth.setAccess(0);
-			docAuth.setEditEn(0);
-			docAuth.setAddEn(0);
-			docAuth.setDeleteEn(0);
-			docAuth.setHeritable(0);			
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
+			docAuth.setUserName(UserName);
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
+
 			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
 			{
 				System.out.println("getUserRealDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
-				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
-				docAuth.setUserId(UserID);
-				docAuth.setUserName(UserName);			
+				docAuth.setId(null);	//clear docAuthID, so that we know this setting was not on user directly
 			}
 		}
 		return docAuth;
 	}
 	
+	private String getGroupName(Integer groupId) {
+		UserGroup group = reposService.getGroupInfo(groupId);
+		if(group == null)
+		{
+			System.out.println("getGroupName() Group:" +groupId+ "not exists");
+			return null;
+		}
+		return group.getName();
+	}
+	
+	private String getUserName(Integer userId) {
+		if(userId == 0)
+		{
+			return "任意用户";
+		}
+		else
+		{
+			//GetUserInfo
+			User user = reposService.getUserInfo(userId);
+			if(user == null)
+			{
+				System.out.println("getUserName() user:" +userId+ "not exists");
+				return null;
+			}
+			return user.getName();
+		}
+	}
+
 	protected DocAuth getGroupDocAuth(Integer groupId,Integer docId, Integer reposId)
 	{
 		return getRealDocAuth(null, groupId, docId, reposId);
