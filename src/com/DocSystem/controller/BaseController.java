@@ -328,21 +328,33 @@ public class BaseController{
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
+			docAuth.setGroupId(groupId);
 			docAuth.setGroupName(groupName);
-			docAuth.setDocName(doc.getName());
-			docAuth.setDocPath(doc.getPath());
+			docAuth.setDocId(docId);
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(reposId);
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
-			docAuth.setUserName(groupName);			
-			docAuth.setDocName(doc.getName());
-			docAuth.setDocPath(doc.getPath());
-
 			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(docId))
 			{
 				System.out.println("getGroupDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置groupId、groupName");
 				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
 			}
+			//修改信息
+			docAuth.setGroupId(groupId);
+			docAuth.setGroupName(groupName);
+			docAuth.setDocId(docId);
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(reposId);
 		}
 		return docAuth;
 	}
@@ -369,26 +381,33 @@ public class BaseController{
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
+			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
 			if(doc != null)
 			{
+				docAuth.setDocId(DocID);
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
+			docAuth.setReposId(ReposID);
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
-			docAuth.setUserName(UserName);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}	
 			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
 			{
 				System.out.println("getUserRealDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
 				docAuth.setId(null);	//clear docAuthID, so that we know this setting was not on user directly
 			}
+			
+			docAuth.setUserId(UserID);
+			docAuth.setUserName(UserName);
+			if(doc != null)
+			{
+				docAuth.setDocId(DocID);
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(ReposID);
 		}
 		return docAuth;
 	}
