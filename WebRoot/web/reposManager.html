@@ -116,8 +116,9 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell select w10"> 选择</i>
-							<i class="cell username w15">用户名</i>
+							<i class="cell select w5"> 选择</i>
+							<i class="cell username w10">用户名</i>
+							<i class="cell groupname w10">组</i>
 							<i class="cell docpath w15">路径</i>
 							<i class="cell access w8">管理员权限</i>
 							<i class="cell read w8">读权限</i>
@@ -913,12 +914,17 @@ function showDocAuthList(){
 				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+d.id+");' class='mybtn-primary'>删除</a>";
 			}
 			var se = "<li value="+ i +">"
-				+"	<i class='cell select w10'>"
+				+"	<i class='cell select w5'>"
 				+"		<input class='UserEnable' id='User"+i+"' value="+d.userId+" type='checkbox' onclick='editAuth()'/>"
 				+"	</i> "
-				+"	<i class='cell username w15'>"
+				+"	<i class='cell username w10'>"
 				+"		<span class='name'>"
 				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
+				+"		</span>"
+				+"	</i>"
+				+"	<i class='cell groupname w10'>"
+				+"		<span class='name'>"
+				+"			<a id='GroupName"+i+"' href='javascript:void(0)'>"+d.groupName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell docpath w15'>"
@@ -1229,8 +1235,9 @@ function showReposSettingPanel(){
 			//set user
     		var user = userList[index];
     		//get filePath
-    		var userId = user.id;
-    		var userName =  user.name;
+    		var userId = user.userId;
+    		var userName =  user.userName;
+    		var groupId = user.groupId;
     		console.log(user);
     		
     		$.ajax({
@@ -1239,6 +1246,7 @@ function showReposSettingPanel(){
 				    dataType : "json",
 				    data : {
 				         userId : userId,
+				         groupId : groupId,
 				         docId : docId,
 				         reposId : vid,
 				         isAdmin: user.isAdmin, 
