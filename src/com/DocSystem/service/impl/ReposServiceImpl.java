@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.DocSystem.service.ReposService;
 
 import com.DocSystem.entity.Repos;
-import com.DocSystem.entity.UserGroup;
 import com.DocSystem.dao.ReposMapper;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.dao.ReposAuthMapper;
@@ -19,7 +18,8 @@ import com.DocSystem.entity.DocAuth;
 import com.DocSystem.dao.DocAuthMapper;
 import com.DocSystem.entity.User;
 import com.DocSystem.dao.UserMapper;
-
+import com.DocSystem.entity.UserGroup;
+import com.DocSystem.dao.UserGroupMapper;
 
 //ReposService is for all operations of Repository
 @Service  
@@ -34,6 +34,8 @@ public class ReposServiceImpl implements ReposService {
     private ReposAuthMapper reposAuthDao;  
     @Autowired
     private UserMapper userDao;  
+    @Autowired
+    private UserGroupMapper userGroupDao;  
     
     //add a Repos
     public int addRepos(Repos repos) {  
@@ -194,5 +196,13 @@ public class ReposServiceImpl implements ReposService {
 	public List<ReposAuth> getReposAuthListForUser(ReposAuth reposAuth) {
 		//To get the reposAuth with userId=userId and groupId in (groups) and userId=0
 		return reposAuthDao.getReposAuthForUser(reposAuth);
+	}
+
+	public User getUserInfo(Integer userId) {
+		return userDao.selectByPrimaryKey(userId);	
+	}
+
+	public UserGroup getGroupInfo(Integer groupId) {
+		return userGroupDao.selectByPrimaryKey(groupId);
 	}
 }  
