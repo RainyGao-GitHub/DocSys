@@ -226,6 +226,39 @@ public class BaseController{
 		}	
 	}
 	
+	
+	protected boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			return true;
+		}
+		
+		DocAuth userDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
+		if(userDocAuth != null && userDocAuth.getIsAdmin() != null && userDocAuth.getIsAdmin() == 1)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	protected boolean isAdminOfRepos(User login_user,Integer reposId) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			return true;
+		}
+		
+		ReposAuth reposAuth = getUserReposAuth(login_user.getId(),reposId);
+		if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
+		{
+			return true;
+		}			
+		return false;
+	}
+	
+	
+	
 	//获取用户真正的仓库权限(已考虑了所在组以及任意用户权限)
 	public ReposAuth getUserDispReposAuth(Integer UserID,Integer ReposID)
 	{

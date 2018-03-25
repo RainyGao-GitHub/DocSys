@@ -1428,36 +1428,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			return true;
-		}
-		
-		DocAuth docAuth = getUserDocAuth(login_user.getId(), docId, reposId);
-		if(docAuth != null && docAuth.getIsAdmin() == 1)
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean isAdminOfRepos(User login_user,Integer reposId) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			return true;
-		}
-		
-		ReposAuth reposAuth = getUserReposAuth(login_user.getId(),reposId);
-		if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
-		{
-			return true;
-		}			
-		return false;
-	}
-
 	private List<ReposAuth> getReposAuthList(Integer reposId) {
 		System.out.println("getReposAuthList() reposId:" + reposId);
 		List <ReposAuth> ReposAuthList = reposService.getReposAuthList(reposId);	//注意已经包括了任意用户
@@ -1558,8 +1528,7 @@ public class ReposController extends BaseController{
 		}
 
 		//检查当前用户的权限
-		DocAuth userDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
-		if(userDocAuth == null ||userDocAuth.getIsAdmin()==null || userDocAuth.getIsAdmin() == 0)
+		if(isAdminOfDoc(login_user, docId, reposId) == false)
 		{
 			System.out.println("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
@@ -1568,7 +1537,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//login_user不得设置超过自己的权限：超过了则无效
-		if(isUserAuthExpanded(isAdmin,access,editEn,addEn,deleteEn,heritable,userDocAuth,rt) == true)
+		if(isUserAuthExpanded((login_user,isAdmin,access,editEn,addEn,deleteEn,heritable,rt) == true)
 		{
 			System.out.println("超过设置者的权限 ！");
 			writeJson(rt, response);			
@@ -1710,35 +1679,49 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 	}
 
-	private boolean isUserAuthExpanded(Integer isAdmin, Integer access,
-			Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,
-			DocAuth adminDocAuth, ReturnAjax rt) {
-		if(isAdmin > adminDocAuth.getIsAdmin())
+	private boolean isUserAuthExpanded(User login_user,Integer docId,Integer reposId, Integer isAdmin, Integer access,
+			Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,ReturnAjax rt) {
+		
+		if(login_user.getType() == 2)
+		{
+			System.out.println("超级管理员");
+			return false;
+		}
+		
+		
+		DocAuth docAuth = getUserDocAuth(login_user.getId(),docId,reposId); 
+		if(docAuth == null)
+		{
+			rt.setError("您没有该目录/文件的权限");
+			return true;
+		}
+		
+		if(docAuth.getIsAdmin()==null || isAdmin > docAuth.getIsAdmin())
 		{
 			rt.setError("您无权设置管理员权限");
 			return true;
 		}
-		if(access > adminDocAuth.getAccess())
+		if(docAuth.getAccess()==null || access > docAuth.getAccess())
 		{
 			rt.setError("您无权设置读权限");
 			return true;
 		}
-		if(editEn > adminDocAuth.getEditEn())
+		if(docAuth.getEditEn()==null || editEn > docAuth.getEditEn())
 		{
 			rt.setError("您无权设置写权限");
 			return true;
 		}
-		if(addEn > adminDocAuth.getAddEn())
+		if(docAuth.getAddEn()==null || addEn > docAuth.getAddEn())
 		{
 			rt.setError("您无权设置新增权限");
 			return true;
 		}
-		if(deleteEn > adminDocAuth.getDeleteEn())
+		if(docAuth.getDeleteEn()==null || deleteEn > docAuth.getDeleteEn())
 		{
 			rt.setError("您无权设置删除权限");
 			return true;
 		}
-		if(heritable > adminDocAuth.getHeritable())
+		if(docAuth.getHeritable()==null || heritable > docAuth.getHeritable())
 		{
 			rt.setError("您无权设置权限继承");
 			return true;
