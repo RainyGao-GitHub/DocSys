@@ -478,7 +478,8 @@ public class BaseController{
 		//go throug the docIdList to get the UserDocAuthFromHashMap
 		DocAuth parentDocAuth = null;
 		DocAuth docAuth = null;
-		for(int i=docIdList.size();i>0;i--)
+		int docPathDeepth = docIdList.size();
+		for(int i=(docPathDeepth-1);i>0;i--)
 		{
 			Integer curDocId = docIdList.get(i);
 			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
