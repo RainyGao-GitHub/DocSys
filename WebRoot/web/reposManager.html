@@ -562,17 +562,18 @@
           	{
           		var docAuth = [];
 				docAuth.id = $("#DocAuth"+index).val();
-				docAuth.userId = $("#User"+index).val();
+				docAuth.userId = $("#User"+index).attr("value"); //a标签没有value,所以需要使用attr来获取值
 				docAuth.userName =  $("#User"+index).text();
-				docAuth.groupId = $("#Group"+index).val();
+				docAuth.groupId = $("#Group"+index).attr("value");
 				docAuth.groupName =  $("#Group"+index).text();
-				docAuth.docId = $("#Doc"+index).val();
+				docAuth.docId = $("#Doc"+index).attr("value");
 				docAuth.isAdmin = $(".IsAdmin"+index).prop("checked")?1:0;
 				docAuth.access = $("#Access"+index).prop("checked")?1:0;
 				docAuth.editEn = $("#EditEn"+index).prop("checked")?1:0;
 				docAuth.addEn = $("#AddEn"+index).prop("checked")?1:0;
 				docAuth.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
 				docAuth.heritable = $("#Heritable"+index).prop("checked")?1:0;
+				console.log(docAuth);
 				docAuths.push(docAuth);	//将用户加入到列表中
 		    }
 		});
@@ -923,12 +924,12 @@ function showDocAuthList(){
 				+"	</i> "
 				+"	<i class='cell username w10'>"
 				+"		<span class='name'>"
-				+"			<a id='User"+i+"' value="+d.userId+" href='javascript:void(0)'>"+d.userName+"</a>"
+				+"			<a id='User"+i+"' value='"+d.userId+"' href='javascript:void(0)'>"+d.userName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell groupname w10'>"
 				+"		<span class='name'>"
-				+"			<a id='Group"+i+"' value="+d.groupId+" href='javascript:void(0)'>"+d.groupName+"</a>"
+				+"			<a id='Group"+i+"' value='"+d.groupId+"' href='javascript:void(0)'>"+d.groupName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell docpath w15'>"
