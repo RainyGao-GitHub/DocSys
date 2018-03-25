@@ -315,6 +315,10 @@ public class BaseController{
 	}
 
 	private Doc getDocInfo(Integer docId) {
+		if(docId == 0)
+		{
+			return null;
+		}
 		return reposService.getDocInfo(docId);
 	}
 
@@ -333,15 +337,20 @@ public class BaseController{
 		{
 			docAuth = new DocAuth();
 			docAuth.setUserName(UserName);
-			docAuth.setDocName(doc.getName());
-			docAuth.setDocPath(doc.getPath());
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
 			docAuth.setUserName(UserName);
-			docAuth.setDocName(doc.getName());
-			docAuth.setDocPath(doc.getPath());
-
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}	
 			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
 			{
 				System.out.println("getUserRealDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
