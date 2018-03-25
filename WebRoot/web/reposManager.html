@@ -561,8 +561,9 @@
           	if($("#User"+index).prop("checked") == true)
           	{
           		var user = [];
-				user.id = $("#User"+index).val();
-				user.name =  $("#UserName"+index).text();
+				user.userId = $("#User"+index).val();
+				user.userName =  $("#UserName"+index).text();
+				user.groupName =  $("#GroupName"+index).text();
 				user.isAdmin = $(".IsAdmin"+index).prop("checked")?1:0;
 				user.access = $("#Access"+index).prop("checked")?1:0;
 				user.editEn = $("#EditEn"+index).prop("checked")?1:0;
