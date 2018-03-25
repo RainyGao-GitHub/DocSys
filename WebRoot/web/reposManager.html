@@ -554,7 +554,7 @@
         $(".UserEnable").attr("disabled",true);
 		
 		//遍历所有勾选的用户权限
-		var users = [];
+		var docAuths = [];
 		$("#reposAuthArea >li").each(function(){
           	var index =$(this).val();  //获取li的索引
           	//alert(index);
@@ -563,10 +563,10 @@
           		var docAuth = [];
 				docAuth.id = $("#DocAuth"+index).val();
 				docAuth.userId = $("#User"+index).val();
-				docAuth.userName =  $("#UserName"+index).text();
+				docAuth.userName =  $("#User"+index).text();
 				docAuth.groupId = $("#Group"+index).val();
-				docAuth.groupName =  $("#GroupName"+index).text();
-				docAuth.docId = $("#DocId"+index).val();
+				docAuth.groupName =  $("#Group"+index).text();
+				docAuth.docId = $("#Doc"+index).val();
 				docAuth.isAdmin = $(".IsAdmin"+index).prop("checked")?1:0;
 				docAuth.access = $("#Access"+index).prop("checked")?1:0;
 				docAuth.editEn = $("#EditEn"+index).prop("checked")?1:0;
@@ -921,19 +921,19 @@ function showDocAuthList(){
 				+"	<i class='cell select w5'>"
 				+"		<input class='DocAuthEnable' id='DocAuth"+i+"' value="+d.id+" type='checkbox' onclick='editAuth()'/>"
 				+"	</i> "
-				+"	<i class='cell user w10'>"
+				+"	<i class='cell username w10'>"
 				+"		<span class='name'>"
 				+"			<a id='User"+i+"' value="+d.userId+" href='javascript:void(0)'>"+d.userName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell group w10'>"
+				+"	<i class='cell groupname w10'>"
 				+"		<span class='name'>"
 				+"			<a id='Group"+i+"' value="+d.groupId+" href='javascript:void(0)'>"+d.groupName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell docpath w15'>"
 				+"		<span class='name'>"
-				+"			<a id='DocPath"+i+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
+				+"			<a id='Doc"+i+"' value="+d.docId+" href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell access w8'>"
@@ -968,9 +968,9 @@ function EnableUserConfig(index){
 	//alert(index);
 	//alert($("#User"+index).prop("checked"));
 	editAuth();
-	if($("#User"+index).prop("checked") == false)
+	if($("#DocAuth"+index).prop("checked") == false)
 	{
-		$("#User"+index).prop("checked",true);
+		$("#DocAuth"+index).prop("checked",true);
 	}
 }
 
@@ -1111,18 +1111,16 @@ function showReposSettingPanel(){
     var ConfigUserAuth = (function () {
         //当前操作的索引
         var index = 0;
-        var userList = null; //userId, isAdmin, access, editEn, addEn, deleteEn
+        var docAuthList = null; //id(docAuthId),userId,groupId,docId,isAdmin, access, editEn, addEn, deleteEn
         var totalNum = 0;
         var failNum =0;
         var successNum = 0;
-        var docId = 0;
         var vid = 0;
         var configErrorConfirmSet = 0;
         //Context Cache
         var indexCache = [];
-        var userListCache =[];
+        var docAuthListCache =[];
         var totalNumCache = [];
-        var docIdCache = [];
         var vidCache = [];
         
         //标准Java成员操作接口
@@ -1136,14 +1134,14 @@ function showReposSettingPanel(){
 			index = i;
 		}
 		
-		function getUserList()
+		function getDocAutList()
 		{
-            return userList;
+            return docAuthList;
 		}
 		
-		function setUserList(users)
+		function setDocAuthList(docAuths)
 		{
-			userList = users;
+			docAuthList = docAuths;
 		}
 		
 		function getTotalNum()
@@ -1154,16 +1152,6 @@ function showReposSettingPanel(){
 		function setTotalNum(num)
 		{
 			totalNum = num;
-		}
-				
-		function getDocId()
-		{
-            return docId;
-		}
-		
-		function setDocId(id)
-		{
-			docId = id;
 		}
 		
 		function getVid()
@@ -1180,26 +1168,23 @@ function showReposSettingPanel(){
 		function pushContext()
 		{
 			indexCache.push(index);
-			userListCache.push(userList);
+			docAuthListCache.push(docAuthList);
 			totalNumCache.push(totalNum);
-			docIdCache.push(docId);
 			vidCache.push(vid);	
 		}
 		function popContext()
 		{
 			index = indexCache.pop();
-			userList = userListCache.pop();
+			docAuthList = docAuthListCache.pop();
 			totalNum = totalNumCache.pop();
-			docId = docIdCache.pop();
 			vid = vidCache.pop();
 		}
 		
 		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
 		{
 			indexCache = [];
-	        userListCache =[];
+	        docAuthListCache =[];
 	        totalNumCache = [];
-	        docIdCache = [];
 	        vidCache = [];
 		}
 		
@@ -1209,18 +1194,18 @@ function showReposSettingPanel(){
 		}
       	
       	//初始化ConfigUserAuth设置
-      	function ConfigUserAuthSet(users,vid)	//多用户设置函数
+      	function ConfigUserAuthSet(docAuths,vid)	//多用户设置函数
 		{
 			console.log("ConfigUserAuthSet");
 
 			setIndex(0);
 
-			setUserList(users);
+			setDocAuthList(docAuths);
 			
 			var totalNum = 0;
-			if(userList && userList.length)
+			if(docAuthList && docAuthList.length)
 			{
-				totalNum = userList.length;
+				totalNum = docAuthList.length;
 			}
 			setTotalNum(totalNum);
 			failNum = 0;
@@ -1233,31 +1218,27 @@ function showReposSettingPanel(){
 		//ConfigUserAuth接口，该接口是个递归调用
     	function configUserAuth()
     	{
-    		console.log("configUserAuth index:" + index + " totalNum:" + totalNum + " docId:" + docId + " vid:" + vid);
+    		console.log("configUserAuth index:" + index + " totalNum:" + totalNum);
 
-			//set user
-    		var user = userList[index];
-    		//get filePath
-    		var userId = user.userId;
-    		var userName =  user.userName;
-    		var groupId = user.groupId;
-    		console.log(user);
-    		
+			//set docAuth
+    		var docAuth = docAuthList[index];
+    		console.log(docAuth);
+    		   		
     		$.ajax({
 				  url : "/DocSystem/Repos/configDocAuth.do",
 				  	type : "post",
 				    dataType : "json",
 				    data : {
-				         userId : userId,
-				         groupId : groupId,
-				         docId : docId,
+				         userId : docAuth.userId,
+				         groupId : docAuth.groupId,
+				         docId : docAuth.docId,
 				         reposId : vid,
-				         isAdmin: user.isAdmin, 
-				         access: user.access,
-				         editEn: user.editEn, 
-				         addEn: user.addEn, 
-				         deleteEn: user.deleteEn, 
-				         heritable: user.heritable,
+				         isAdmin: docAuth.isAdmin, 
+				         access: docAuth.access,
+				         editEn: docAuth.editEn, 
+				         addEn: docAuth.addEn, 
+				         deleteEn: docAuth.deleteEn, 
+				         heritable: docAuth.heritable,
 				     },
 				     success : function (ret) {
 				         if( "ok" == ret.status){
@@ -1276,13 +1257,13 @@ function showReposSettingPanel(){
 				                }
  				          }else{
 								//设置失败
-								configErrorConfirmHandler(userName, ret.msgInfo);
+								configErrorConfirmHandler(docAuth.userName, ret.msgInfo);
 								return;
 				            }
 				      },
 				      error : function () {
 						  		//设置失败
-						  		configErrorConfirmHandler(userName, "设置异常");
+						  		configErrorConfirmHandler(docAuth.userName, "设置异常");
 								return;
 					 }	
 				});				
@@ -1423,13 +1404,13 @@ function showReposSettingPanel(){
 		}
 
 		//多文件move接口
-		function configUserAuths(users,vid)	//多用户设置函数
+		function configUserAuths(docAuths,vid)	//多用户设置函数
 		{
 			console.log("configUserAuths");
 
 			clearContext();	//清空Context缓存
 			
-			ConfigUserAuthSet(users,vid);	//设置configUserAuth Parameters
+			ConfigUserAuthSet(docAuths,vid);	//设置configUserAuth Parameters
 
 			//启动复制操作      		
 			configUserAuth();	//start set
@@ -1437,8 +1418,8 @@ function showReposSettingPanel(){
 		
 		//开放给外部的调用接口
         return {
-            configUserAuths: function(users,vid){
-            	configUserAuths(users,vid);
+            configUserAuths: function(docAuths,vid){
+            	configUserAuths(docAuths,vid);
             },
             configUserAuth: function(){
             	configUserAuth();
