@@ -1217,12 +1217,12 @@ public class ReposController extends BaseController{
 	//这是个递归调用函数
 	private List <Doc> recurGetAuthedDocList(Integer pid,Integer vid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, List<Doc> resultList)
 	{
-		System.out.println("recurGetAuthedDocList()" + " pid:" + pid + " vid:" + vid);
+		//System.out.println("recurGetAuthedDocList()" + " pid:" + pid + " vid:" + vid);
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			return resultList;
 		}
-		printObject("recurGetAuthedDocList() parentDocAuth:",pDocAuth);
+		//printObject("recurGetAuthedDocList() parentDocAuth:",pDocAuth);
 		
 		//获取子目录所有文件
 		List <Doc> docList = getSubDocList(pid,vid);
@@ -1237,8 +1237,8 @@ public class ReposController extends BaseController{
 			Doc doc = docList.get(i);
 			Integer docId = doc.getId();
 			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
-			System.out.println("recurGetAuthedDocList() docId:"+docId + " docName:" + doc.getName());
-			printObject("recurGetAuthedDocList() docAuth:",docAuth);
+			//System.out.println("recurGetAuthedDocList() docId:"+docId + " docName:" + doc.getName());
+			//printObject("recurGetAuthedDocList() docAuth:",docAuth);
 			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 			{
 				resultList.add(doc);
