@@ -1222,6 +1222,7 @@ public class ReposController extends BaseController{
 		{
 			return resultList;
 		}
+		printObject("recurGetAuthedDocList() parentDocAuth:",pDocAuth);
 		
 		//获取子目录所有文件
 		List <Doc> docList = getSubDocList(pid,vid);
@@ -1234,11 +1235,11 @@ public class ReposController extends BaseController{
 		for(int i=0;i<docList.size();i++)
 		{
 			Doc doc = docList.get(i);
-			printObject("recurGetAuthedDocList() doc:",doc);
 			Integer docId = doc.getId();
-			DocAuth docAuth = docAuthHashMap.get(docId);
-			if((docAuth == null && pDocAuth.getHeritable() == 1) || 
-				(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1))
+			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
+			System.out.println("recurGetAuthedDocList() docId:"+docId + " docName:" + doc.getName());
+			printObject("recurGetAuthedDocList() docAuth:",docAuth);
+			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 			{
 				resultList.add(doc);
 				if(doc.getType() == 2)
