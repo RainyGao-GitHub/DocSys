@@ -912,11 +912,13 @@ function showDocAuthList(){
 			var addChecked = d.addEn == 1? "checked":"";
 			var deleteChecked = d.deleteEn == 1? "checked":"";
 			var heritableChecked = d.heritable == 1? "checked":"";
-			//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+d.docAuthId+");' class='mybtn'>设置</a>";
 			var opBtn = "";
+			var docAuthId = "";
 			if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
 			{
-				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+d.id+");' class='mybtn-primary'>删除</a>";
+				docAuthId = d.id;
+				opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+docAuthId+");' class='mybtn-primary'>删除</a>";
+				//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+docAuthId+");' class='mybtn'>设置</a>";
 			}
 			var userId = "";
 			if(d.userId >= 0)
@@ -930,7 +932,7 @@ function showDocAuthList(){
 			}
 			var se = "<li value="+ i +">"
 				+"	<i class='cell select w5'>"
-				+"		<input class='DocAuthEnable' id='DocAuth"+i+"' value="+d.id+" type='checkbox' onclick='editAuth()'/>"
+				+"		<input class='DocAuthEnable' id='DocAuth"+i+"' value="+docAuthId+" type='checkbox' onclick='editAuth()'/>"
 				+"	</i> "
 				+"	<i class='cell username w10'>"
 				+"		<span class='name'>"
@@ -954,7 +956,7 @@ function showDocAuthList(){
 				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
 				+"	</i>"
 				+"	<i class='cell edit w8'>"
-				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + "onchange='EnableUserConfig("+i+");'>写</input>"
+				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
 				+"	</i>"
 				+"	<i class='cell add w8'>"
 				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>增加</input>"
