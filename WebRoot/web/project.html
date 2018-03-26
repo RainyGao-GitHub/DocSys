@@ -478,7 +478,7 @@
     	   		}
     	   	}
     	}
-    	console.log(fileList);
+    	//console.log(fileList);
    	}
 	
 	//drag upload file confirm dialog（拖拽上传的确认对话框）
@@ -487,7 +487,7 @@
 		//build upload confirm text
 	    if(fileList.length > 0)
 	   	{
-	    	console.log("fileList.length" + fileList.length);
+	    	console.log("fileList.length:" + fileList.length);
 	    	for( var i = 0 ; i < fileList.length ; i++ )
 	    	{  
 	    		firstFile = fileList[i];
@@ -750,7 +750,9 @@
 				$(".el-upload-list").show();
 				str +='<div class="uploadedFileList">';
 				for( var i = 0 ; i < fileList.length ; i++ )
-		    	{		    		
+		    	{	
+		    		console.log("index:" + i);
+		    			    		
 		    		var SubContext ={};
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始上传
