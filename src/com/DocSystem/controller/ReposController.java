@@ -1217,7 +1217,7 @@ public class ReposController extends BaseController{
 	//这是个递归调用函数
 	private List <Doc> recurGetAuthedDocList(Integer pid,Integer vid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, List<Doc> resultList)
 	{
-		System.out.println("getAuthedDocList()" + " pid:" + pid + " vid:" + vid);
+		System.out.println("recurGetAuthedDocList()" + " pid:" + pid + " vid:" + vid);
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			return resultList;
@@ -1234,6 +1234,7 @@ public class ReposController extends BaseController{
 		for(int i=0;i<docList.size();i++)
 		{
 			Doc doc = docList.get(i);
+			printObject("recurGetAuthedDocList() doc:",doc);
 			Integer docId = doc.getId();
 			DocAuth docAuth = docAuthHashMap.get(docId);
 			if((docAuth == null && pDocAuth.getHeritable() == 1) || 
