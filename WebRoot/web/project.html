@@ -266,6 +266,7 @@
 <div style="display:none">
 	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(this)" style="margin-top: 90px;" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(this)" webkitdirectory>
+	<textarea cols="20" rows="10" id="copiedURL">复制的链接</textarea>
 </div>
 
 <!-- single file upload form -->
@@ -278,8 +279,6 @@
 		<input type="text" value="1" id="uploadType" name="uploadType" title="上传类型：1文件 2文件夹"/>
 	</form>
 </div>
-
-<textarea cols="20" rows="10" id="copiedURL">复制的链接</textarea>
            
 <!-- Include all compiled plugins (below), or include individual file	s as needed -->
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
@@ -454,7 +453,7 @@
 		console.log("buildFileList()");
 		if(entrys.length > 0)
    		{
-    		console.log("entrys.length" + entrys.length);
+    		console.log("entrys.length:" + entrys.length);
     		for( var i = 0 ; i < entrys.length ; i++ )
     		{
     			var entry = entrys[i];
@@ -744,9 +743,13 @@
 			uploadedSize = 0;
 			preUploadSize = 0;
 			uploadedFileSize = 0;
-		    if(fileList.length > 0)
+			if(fileList.length > 0)
 		   	{
-		    	for( var i = 0 ; i < fileList.length ; i++ )
+		   		//初始化上传进度显示
+				var str='<div><span class="upload-list-title">上传进度</span><i class="el-icon-close closeBtn"></i></div>';
+				$(".el-upload-list").show();
+				str +='<div class="uploadedFileList">';
+				for( var i = 0 ; i < fileList.length ; i++ )
 		    	{		    		
 		    		var SubContext ={};
 		    		SubContext.index = i;
@@ -764,14 +767,19 @@
 		    	   		SubContext.type = 0;	
 		    	   		SubContext.size = 0;
 		    	   	}
-			    	console.log("SubContext.size" + SubContext.size);
+			    	//console.log("SubContext.size" + SubContext.size);
 		    		SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 		    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 		    		SubContext.stopUploadFlag = false; //停止上传标记未false
 		    		totalSize += SubContext.size;
-		    		console.log("totalSize" + totalSize);
+		    		//console.log("totalSize" + totalSize);
 		    		SubContextList.push(SubContext);
+		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+files[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
 				}
+				str+='</div>';
+				$('.el-upload-list').html(str);
+				//Set stopUpload 处理函数
+				//itemStopUploadDelegate();
 		    }
 			console.log("文件总的大小为："+totalSize);
       	}
@@ -786,8 +794,7 @@
       			for(var i=0;i<len;i++)
     			{
       				//设置每个上传文件的stopUpload处理函数
-    	    		$('.file'+i).delegate('.stopUpload','click',stopU
-    	    		function(){
+    	    		$('.file'+i).delegate('.stopUpload','click',function(){
     					//isUploading=false
     					//console.log($(this).attr('value'));
     					var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
@@ -802,7 +809,7 @@
 		function uploadDocs(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("uploadDocs");
-			console.log(files);
+			//console.log(files);
 			if(files.length <= 0)
 			{
 				//alert("没有需要上传的文件!");
@@ -832,30 +839,6 @@
 						
 			//初始化文件上传参数
 			DocUploadSet(files,parentNode,parentId,vid);
-			
-			//初始化上传进度显示
-			var str='<div><span class="upload-list-title">上传进度</span><i class="el-icon-close closeBtn"></i></div>';
-			$(".el-upload-list").show();
-			str +='<div class="uploadedFileList">';
-			for(var i=0;i<files.length;i++){
-				str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'>'
-					+	'<a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+files[i].name+'</a>'
-					+	'<label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label>'
-					+	'<i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpoad()"></i>'
-					+	'<div class="el-progress el-progress--line">'
-					+		'<div class="el-progress-bar">'
-					+			'<div class="el-progress-bar__outer" >'
-					+				'<div class="el-progress-bar__inner"></div>'
-					+			'</div>'
-					+		'</div>'
-					+		'<div class="el-progress__text" style="font-size: 12.8px;"></div>'
-					+	'</div>'
-					+'</li>';
-			}
-			str+='</div>';
-			$('.el-upload-list').html(str);
-			//Set stopUpload 处理函数
-			//itemStopUploadDelegate();
 			
 			uploadTime = new Date().getTime();	//初始化上传时间
 			uploadStartTime = uploadTime;
