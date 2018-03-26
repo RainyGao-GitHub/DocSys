@@ -513,7 +513,7 @@ public class BaseController{
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
 	protected DocAuth getDocAuthFromHashMap(int docId, DocAuth parentDocAuth,HashMap<Integer,DocAuth> docAuthHashMap)
 	{
-		System.out.println("getDocAuthFromHashMap() docId:" + docId);
+		//System.out.println("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
 		{
 			return null;
