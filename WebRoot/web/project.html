@@ -1774,9 +1774,9 @@
 	    };	
 	}
 
-	//从后台获取zTree数据: callback是成功后的回调函数，需要后续处理的话加在这里处理
-	function getMenu(callback) {
-		console.log("getMenu");
+	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
+	function getMenu(callback1,callback2) {
+		console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);
 		$.ajax({
 		    url : "/DocSystem/Repos/getReposMenu.do",
 		    type : "post",
@@ -1787,7 +1787,8 @@
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
 		        		//console.log(ret);
-		                callback && callback(ret.data);
+		                callback1 && callback1(ret.data);
+		                callback2 && callback2();
 		            }
 		            else
 		           	{
@@ -3611,6 +3612,9 @@ function CompareObj(objA, objB, flag) {
                 	$('#userImgDiv').show();
                 	$('#userInfoDiv > a >span:first-child').text(user.name);
                 	$('#userInfoDiv').show();
+                	
+                	//Show ReposMenu
+                	syncUpMenu(showDoc);
                 }
                 else 
                 {
@@ -3620,47 +3624,26 @@ function CompareObj(objA, objB, flag) {
             error : function () {
                 alert("服务器异常:获取用户信息失败");
             }
-        });
-		
-		
-		
-		syncUpMenu();
-		var doc = getQueryString("doc");
-		console.log("doc:"+doc);
-	    if(doc)
-	    {
-	    	getDoc(doc);
-	    	var edit = getQueryString("edit");
-	    	console.log("edit:"+edit);
-	    	if(edit)
-	    	{
-	    		//启动自动保存定时器
-        		startAutoTmpSaveTimer();
-        		$("#btnExitEdit").show();
-        		$("#btnSaveWiki").show();  
-        	}
-        	else
-        	{
-        		$("#btnEditWiki").show();
-        	}
-	    }
+        });		
 	}
 	
 	//将后台Menu,同步回前台
-	function syncUpMenu()
+	function syncUpMenu(callback)
 	{
 		console.log("syncUpMenu");
-	    getMenu(function (data) {
-	        if( window.menu != data ){
-	        	console.log("同步菜单");
-	        	drawMenu(data);
-	        }else{
-	            console.log("重新绘制菜单，因为当前菜单数据与zTree不一致");
-	            drawMenu(data);
-	        }
-	    });
+	    getMenu(reDrawMenu,callback);
 	}
-
+	
+	function reDrawMenu(data)
+	{
+		if( window.menu != data ){
+	        console.log("同步菜单");
+	        drawMenu(data);
+	    }else{
+	        console.log("重新绘制菜单，因为当前菜单数据与zTree不一致");
+	        drawMenu(data);
+	    }
+	}
 	
 	//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
 	function drawMenu(data) {
@@ -3680,6 +3663,29 @@ function CompareObj(objA, objB, flag) {
 	   zTreeInit(menu);
 	}
 	
+	function showDoc()
+	{
+		console.log("showDoc");
+		var doc = getQueryString("doc");
+		console.log("doc:"+doc);
+		if(doc)
+		{
+	   		getDoc(doc);
+	   		var edit = getQueryString("edit");
+	   		console.log("edit:"+edit);
+	   		if(edit)
+	   		{
+	   			//启动自动保存定时器
+	      		startAutoTmpSaveTimer();
+	      		$("#btnExitEdit").show();
+	      		$("#btnSaveWiki").show();  
+	      	}
+	      	else
+	      	{
+	      		$("#btnEditWiki").show();
+	      	}
+	   }             
+	}
 	/************************** contextMenu 接口***************************/	
 	//add a new Doc: type 1: 文件  2:目录
     function newDoc(type) {         
