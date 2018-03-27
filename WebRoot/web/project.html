@@ -792,13 +792,7 @@
 				totNum = files.length;
 			}
 			setTotalNum(totNum);
-			console.log("文件总的个数为："+totalNum + "文件总的大小为："+totalSize);
-			
-
-			setParentNode(parentNode);
-			setParentId(parentId);
-			
-			setVid(vid);
+			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			
 			//Draw UploadItems by Go through the SubContextList
 			preUploadSize = 0;
@@ -837,7 +831,7 @@
 			//setParentId(parentId);
 			//setVid(vid);
 			
-			console.log("文件总的个数为："+totalNum + "文件总的大小为："+totalSize);
+			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
       	}
       	
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
@@ -894,7 +888,7 @@
 	    	   		}
 	    	   	}
 	    	}
-	    	console.log(SubContextList);
+	    	//console.log(SubContextList);
 	    	console.log("buildSubContextList() totSize:" + totSize);
 	    	return totSize;
 	   	}
@@ -1213,8 +1207,11 @@
 		//uploadDoc接口，该接口是个递归调用
     	function uploadDoc()
     	{
-    		console.log("uploadDoc index:" + index + " totalNum:" + totalNum + " parentId:" + parentId + " vid:" + vid);
-			
+    		console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
+			var SubContext = SubContextList[index];
+			var parentId = SubContext.parentId;
+			var vid = SubContext.vid
+    		
     		//判断是否取消上传
     		if(stopUploadFlag == true)
     		{
@@ -1246,14 +1243,14 @@
 			}
 			
     		//get file name from file
-			var name  = file.name;
+			var name  = SubContext.name;
     		console.log(name);
     		//get filePath form file
-    		var filePath = file.webkitRelativePath;
+    		var filePath = SubContext.webkitRelativePath;
     		console.log(filePath);
 
     		//parentNode maybe is not the real parent for the doc
-    		var tempParentNode = parentNode;
+    		var tempParentNode = SubContext.parentNode;
 			//文件父目录检查部分
     		if(filePath != "")
 			{
