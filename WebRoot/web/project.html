@@ -804,7 +804,7 @@
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
-				checkAnddrawUploadItems(SubContextList);
+				checkAndDrawUploadItems(SubContextList);
 		    }
       	}
       	
@@ -893,7 +893,7 @@
 	   	}
       	
       	//初始化上传文件的SubContext,并绘制对应的进度条
-      	function checkAnddrawUploadItems(SubContextList)
+      	function checkAndDrawUploadItems(SubContextList)
       	{
       			//Check if all items drawed
       			if(drawedNum >= totalNum)
@@ -916,17 +916,17 @@
       			{
       				endIndex = drawedNum + 200;
       			}
-      			var str = '';
+      			var str = "";
       			for( var i = startIndex ; i < endIndex ; i++ )
 		    	{	
 		    		console.log("index:" + i);
 		    		var SubContext = SubContextList[i];
 		    		console.log(SubContext);
-		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+SubContext.name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
+		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+"><a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a><label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label><i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload()'></i><div class='el-progress el-progress--line'><div class='el-progress-bar'><div class='el-progress-bar__outer' ><div class='el-progress-bar__inner'></div></div></div><div class='el-progress__text' style='font-size: 12.8px;'></div></div></li>";
 		    		//已绘制个数增1
 		    		drawedNum++;	    		
 				}
-				$('#uploadedSubContextList').append(str);		
+				$('#uploadedFileList').append(str);		
       	}
 		//文件覆盖确认不能像文件错误确认一样封装成函数的原因在于，文件复制会存在两种种情况：继续、异步等待用户确认，文件错误确认只有一种情况：异步等待用户确认
       	//获取当上传的文件覆盖设置
@@ -1221,7 +1221,7 @@
     		}
     		
     		//每次上传前检查是否需要绘制并绘制
-    		checkAnddrawUploadItems(SubContextList);
+    		checkAndDrawUploadItems(SubContextList);
     		
     		//取消当前文件上传
 			if(SubContext.stopUploadFlag == true)
