@@ -583,9 +583,11 @@
         //当前操作的索引
         var index = 0;
         var fileList = null;
-        var totalNum = 0;
-        var successNum = 0;
-		var failNum = 0;
+        var totalNum = 0; 
+        var drawedNum = 0; //已绘制的进度条个数
+        var uploadedNum = 0; //一上传个数
+        var successNum = 0;	//成功上传个数
+		var failNum = 0; //上传失败个数
 		var totalSize = 0;	//总大小
         var uploadedFileSize = 0; //已完成上传的文件大小
         var uploadedSize = 0; //已上传大小：uploadedFileSize + 上传中文件的loadedSize
@@ -717,75 +719,6 @@
 			return indexCache.length;
 		}
       	
-      	//初始化DocMove设置
-      	function DocUploadSet(files,parentNode,parentId,vid)	//多文件移动函数
-		{
-			console.log("DocUploadSet");
-			
-			setIndex(0);
-
-			setFileList(files);
-			
-			var totalNum = 0;
-			if(fileList && fileList.length)
-			{
-				totalNum = fileList.length;
-			}
-			setTotalNum(totalNum);
-
-			setParentNode(parentNode);
-			setParentId(parentId);
-			
-			setVid(vid);
-			
-			//Init the SubContextList by Go through the fileList
-			totalSize = 0;
-			uploadedSize = 0;
-			preUploadSize = 0;
-			uploadedFileSize = 0;
-			if(fileList.length > 0)
-		   	{
-		   		//初始化上传进度显示
-				var str='<div><span class="upload-list-title">上传进度</span><i class="el-icon-close closeBtn"></i></div>';
-				$(".el-upload-list").show();
-				str +='<div class="uploadedFileList">';
-				for( var i = 0 ; i < fileList.length ; i++ )
-		    	{	
-		    		console.log("index:" + i);
-		    			    		
-		    		var SubContext ={};
-		    		SubContext.index = i;
-		    	   	SubContext.state = 0;	//未开始上传
-		    	   	SubContext.status = "待上传";	//未开始上传
-		    	   	SubContext.name = fileList[i].name;
-			    	SubContext.relativePath = fileList[i].webkitRelativePath;
-			    	if(typeof fileList[i] == 'object')
-		    	   	{
-		    	   		SubContext.type = 1;	
-		    	   		SubContext.size = fileList[i].size;
-		    	   	}
-		    	   	else
-		    	   	{
-		    	   		SubContext.type = 0;	
-		    	   		SubContext.size = 0;
-		    	   	}
-			    	//console.log("SubContext.size" + SubContext.size);
-		    		SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
-		    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
-		    		SubContext.stopUploadFlag = false; //停止上传标记未false
-		    		totalSize += SubContext.size;
-		    		//console.log("totalSize" + totalSize);
-		    		SubContextList.push(SubContext);
-		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+files[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
-				}
-				str+='</div>';
-				$('.el-upload-list').html(str);
-				//Set stopUpload 处理函数
-				//itemStopUploadDelegate();
-		    }
-			console.log("文件总的大小为："+totalSize);
-      	}
-      	
       	//设置进度跳的上传取消按键的接口,this function has performance issue, so it will be be used
     	function itemStopUploadDelegate()
     	{
@@ -833,8 +766,10 @@
 			stopUploadFlag = false;
 			fileCoverConfirmSet = 0;
 			uploadErrorConfirmSet = 0;
+			uploadedNum = 0;
 			successNum = 0;
 			failNum = 0;
+			drawedNum =0;
 			clearContext();	//清空Context缓存
 			//清空上下文列表
 			SubContextList = [];
@@ -849,7 +784,104 @@
 			//启动复制操作      		
 			uploadDoc();	//start upload
 		}
+		
+		//初始化DocMove设置
+      	function DocUploadSet(files,parentNode,parentId,vid)	//多文件移动函数
+		{
+			console.log("DocUploadSet");
+			
+			setIndex(0);
+
+			setFileList(files);
+			
+			var totalNum = 0;
+			if(fileList && fileList.length)
+			{
+				totalNum = fileList.length;
+			}
+			setTotalNum(totalNum);
+
+			setParentNode(parentNode);
+			setParentId(parentId);
+			
+			setVid(vid);
+			
+			//Init the SubContextList by Go through the fileList
+			totalSize = 0;
+			uploadedSize = 0;
+			preUploadSize = 0;
+			uploadedFileSize = 0;
+			if(fileList.length > 0)
+		   	{
+		   		//初始化上传进度显示
+				var str='<div><span class="upload-list-title">上传进度</span><i class="el-icon-close closeBtn"></i></div>';
+				$(".el-upload-list").show();
+				str +='<div id="uploadedFileList" class="uploadedFileList">';
+				str+='</div>';
+				$('.el-upload-list').html(str);
+				checkAnddrawUploadItems(fileList);
+		    }
+			console.log("文件总的大小为："+totalSize);
+      	}
       	
+      	//初始化上传文件的SubContext,并绘制对应的进度条
+      	function checkAnddrawUploadItems(fileList)
+      	{
+      			//Check if all items drawed
+      			if(drawedNum >= totalNum)
+      			{
+      				console.log("druawUploadItems() all items drawed");
+      				return;
+      			}
+      			
+      			//Check if need to draw
+      			if((drawedNum - uploadedNum) > 200)
+      			{
+      			    console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
+      				return;
+      			}
+      			
+      			//Prepare to drawed
+      			var startIndex = drawedNum;
+      			var endIndex = totalNum;
+      			if((totalNum -drawedNum) > 500)	//每次最多绘制500个
+      			{
+      				endIndex = drawedNum + 500;
+      			}
+      			var str = '';
+      			for( var i = startIndex ; i < endIndex ; i++ )
+		    	{	
+		    		console.log("index:" + i);
+		    			    		
+		    		var SubContext ={};
+		    		SubContext.index = i;
+		    	   	SubContext.state = 0;	//未开始上传
+		    	   	SubContext.status = "待上传";	//未开始上传
+		    	   	SubContext.name = fileList[i].name;
+			    	SubContext.relativePath = fileList[i].webkitRelativePath;
+			    	if(typeof fileList[i] == 'object')
+		    	   	{
+		    	   		SubContext.type = 1;	
+		    	   		SubContext.size = fileList[i].size;
+		    	   	}
+		    	   	else
+		    	   	{
+		    	   		SubContext.type = 0;	
+		    	   		SubContext.size = 0;
+		    	   	}
+			    	//console.log("SubContext.size" + SubContext.size);
+		    		SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
+		    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
+		    		SubContext.stopUploadFlag = false; //停止上传标记未false
+		    		totalSize += SubContext.size;
+		    		//console.log("totalSize" + totalSize);
+		    		SubContextList.push(SubContext);
+		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+fileList[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
+		    		//已绘制个数增1
+		    		drawedNum++;	    		
+				}
+				$('#uploadedFileList').append(str);		
+      	}
 		//文件覆盖确认不能像文件错误确认一样封装成函数的原因在于，文件复制会存在两种种情况：继续、异步等待用户确认，文件错误确认只有一种情况：异步等待用户确认
       	//获取当上传的文件覆盖设置
       	function getFileCoverConfirmSetting()
@@ -1062,6 +1094,7 @@
       	function uploadErrorHandler(FileName,errMsg)
       	{
       		failNum++;
+      		uploadNum++;
     		//设置上传状态
 			SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "fail";
@@ -1073,6 +1106,7 @@
       	function uploadErrorAbortHandler(FileName,errMsg)
       	{
       		failNum++;
+      		uploadNum++;
     		//设置上传状态
 			SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "fail";
@@ -1084,6 +1118,7 @@
       	function uploadSuccessHandler(name,msgInfo)
       	{
       		successNum++;
+      		uploadedNum++;
 			SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "success";
       		SubContextList[index].msgInfo = msgInfo;
@@ -1135,6 +1170,10 @@
     			uploadEndHandler();
     			return;
     		}
+    		
+    		//每次上传前检查是否需要绘制并绘制
+    		checkAnddrawUploadItems(fileList);
+    		
     		//取消当前文件上传
 			if(SubContextList[index].stopUploadFlag == true)
 			{
