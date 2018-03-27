@@ -783,9 +783,7 @@
 			SubContextList = [];
 			
 			setIndex(0);
-			
-			SubContextList = [];
-			var totSize = buildSubContextList(files,SubContextList);
+			var totSize = buildSubContextList(files,parentNode,parentId,vid,SubContextList);
 			totalSize = totSize;
 			
 			var totNum = 0;
@@ -824,7 +822,7 @@
 			
 			
 			//Go through files, and add files to SubContextList
-			var totSize = buildFileList(files,SubContextList);
+			var totSize = buildSubContextList(files,parentNode,parentId,vid,SubContextList);
 			totalSize += totSize;			
 			
 			var totNum = 0;
@@ -843,56 +841,62 @@
       	}
       	
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
-		function buildSubContextList(files,SubContextList)
+		function buildSubContextList(files,parentNode,parentId,vid,SubContextList)
 		{
-			var totalSize = 0;
+			var totSize = 0;
 			console.log("buildSubContextList()");
 			if(files.length > 0)
 	   		{
 	    		console.log("files.length:" + files.length);
-	    		for( var i = 0 ; i < entrys.length ; i++ )
+	    		for( var i = 0 ; i < files.length ; i++ )
 	    		{
 	    			var file = files[i];
 	    	   		if(typeof file == 'object')
 	    	   		{
 	    	   		   	var SubContext ={};
+	    	   		   	//Basic Info
 	    	   		   	SubContext.file = file;
+	    	   		   	SubContext.parentNode = parentNode;
+	    	   		   	SubContext.parentId = parentId;
+	    	   		   	SubContext.vid = vid;
+	    	   		   	//advanced Info
+	    	   		   	SubContext.type = 1;	
+			    	   	SubContext.size = file.size;
+	    	   		   	SubContext.name = file.name;
+				    	SubContext.relativePath = file.webkitRelativePath;
+				    	//Status Info
 			    		SubContext.index = i;
 			    	   	SubContext.state = 0;	//未开始上传
 			    	   	SubContext.status = "待上传";	//未开始上传
-			    	   	SubContext.name = file.name;
-				    	SubContext.relativePath = file.webkitRelativePath;
-				    	
-			    		SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
+			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 			    		SubContext.stopUploadFlag = false; //停止上传标记未false
 			    	   	
-	    	   			if(file.isFile)	//文件
-	    	   			{
-	    	   				SubContextList.push(SubContext);
-			    			SubContext.type = 1;	
-			    	   		SubContext.size = file.size;
-			    	   		totalSize += file.size;
-			    	   	}
-	    	   			else
-	    	   			{
+			    	   	//Push the SubContext
+			    	   	SubContextList.push(SubContext);
+			    	   	totSize += file.size;
+	    	   		   	
+	    	   		   	//未来支持 文件夹拖拽上传的代码
+			    	   	//if(file.isFile)	//文件
+	    	   			//{
+	    	   				//SubContext.type = 1;	
+			    	   	//}
+	    	   			//else
+	    	   			//{
 	    	   				//SubContext.type = 0;	
-			    			//SubContext.size = 0;
-	    	   				//var dirReader = entry.createReader();
+			    			//var dirReader = entry.createReader();
 	    	   				//var sbuEntrys = dirReader.readEntries();
 	    	   				//if(sbuEntrys.length > 0)
 	    	   				//{
-	    	   				//	totalSize += totalSizebuildSubContextList(sbuEntrys,SubContextList);
+	    	   				//	totSize += totalSizebuildSubContextList(sbuEntrys,SubContextList);
 	    	   				//}
-	    	   			}
+	    	   			//}
 	    	   		}
 	    	   	}
-	    	   	
-	 
 	    	}
-	    	//console.log(SubContextList);
-	    	console.log("buildSubContextList() totalSize:" + totalSize);
-	    	return totalSize;
+	    	console.log(SubContextList);
+	    	console.log("buildSubContextList() totSize:" + totSize);
+	    	return totSize;
 	   	}
       	
       	//初始化上传文件的SubContext,并绘制对应的进度条
@@ -923,6 +927,7 @@
       			for( var i = startIndex ; i < endIndex ; i++ )
 		    	{	
 		    		console.log("index:" + i);
+		    		console.log(SubContextList[i]);
 		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+SubContextList[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
 		    		//已绘制个数增1
 		    		drawedNum++;	    		
@@ -1867,7 +1872,7 @@
 
 	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
 	function getMenu(callback1,callback2) {
-		console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);
+		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);
 		$.ajax({
 		    url : "/DocSystem/Repos/getReposMenu.do",
 		    type : "post",
@@ -3642,7 +3647,7 @@ function CompareObj(objA, objB, flag) {
 	//zTree初始化接口:根据data和setting生成zTree
 	function zTreeInit(data) {
 	    console.log("zTreeInit");
-	    console.log(setting);
+	    //console.log(setting);
 	
 	    var doctree = zTree.init($("#doctree"), setting, data);
 	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
@@ -3750,7 +3755,7 @@ function CompareObj(objA, objB, flag) {
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
        }
-	   console.log(menu);
+	   //console.log(menu);
 	   zTreeInit(menu);
 	}
 	
