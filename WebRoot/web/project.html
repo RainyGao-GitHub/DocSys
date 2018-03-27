@@ -409,9 +409,10 @@
 	{
 	    var entrys = obj.files;
 	    var fileList = [];
+	    var totalSize = 0;
 	    
 	    //避免事件退出时，文件objects丢失
-	    buildFileList(entrys,fileList);
+	    buildFileList(entrys,fileList,totalSize);
 	    
 	  	//if curentRightClickedTreeNode is not parent node, set the newNode's parent to curentRightClickedTreeNode's parent node
 		var parentNode = curRightClickedTreeNode;
@@ -421,7 +422,7 @@
 		}
 		
 		//用户确认上传
-		uploadConfirm(fileList,parentNode);
+		uploadConfirm(fileList,totalSize,parentNode);
 	    return true;
 	}
 	
@@ -430,9 +431,10 @@
 		console.log(e);
         var entrys = e.dataTransfer.files;
         var fileList = [];
+	    var totalSize = 0;
 	    
 	    //构建纯文件列表
-	    buildFileList(entrys,fileList);	    
+	    buildFileList(entrys,fileList,totalSize);	    
 	     	
 	  	//get the parentNode
 	  	if(e.target.tagName=="SPAN"){
@@ -443,12 +445,12 @@
 		var parentNode = treeObj.getSelectedNodes()[0];
 		
 		//用户确认上传
-		uploadConfirm(fileList,parentNode);
+		uploadConfirm(fileList,totalSize,parentNode);
 	    return true;
 	}
 	
 	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到filelist中
-	function buildFileList(entrys,fileList)
+	function buildFileList(entrys,fileList,totalSize)
 	{
 		console.log("buildFileList()");
 		if(entrys.length > 0)
@@ -460,6 +462,7 @@
     	   		if(typeof entry == 'object')
     	   		{
     	   			fileList.push(entry);
+    	   			totalSize = entry.size;
     	   			/*
     	   			if(entry.isFile)	//文件
     	   			{
@@ -482,8 +485,9 @@
    	}
 	
 	//drag upload file confirm dialog（拖拽上传的确认对话框）
-	function uploadConfirm(fileList,parentNode)
+	function uploadConfirm(fileList,totalSize,parentNode)
 	{	
+		console.log("uploadConfirm() totalSize:"+totalSize);
 		//build upload confirm text
 	    if(fileList.length > 0)
 	   	{
@@ -563,7 +567,7 @@
 	    },function () {
 	    	//alert("点击了确定");
 			//开始上传
-			DocUpload.uploadDocs(fileList,parentNode,parentId,vid);
+			DocUpload.uploadDocs(fileList,totalSize,parentNode,parentId,vid);
 	    	return true;   
 	    });
 		
@@ -741,9 +745,9 @@
     	}
     	
 		//多文件move接口
-		function uploadDocs(files,parentNode,parentId,vid)	//多文件移动函数
+		function uploadDocs(files,totSize,parentNode,parentId,vid)	//多文件移动函数
 		{
-			console.log("uploadDocs");
+			console.log("uploadDocs() totSize:"+totSize);
 			//console.log(files);
 			if(files.length <= 0)
 			{
@@ -754,18 +758,37 @@
 				
 			if(isUploading == true)
 			{
+				DocUploadAppend(files,totSize,parentNode,parentId,vid);
 				//alert("文件上传中，请稍后重试！");
-				showErrorMessage("文件上传中，请稍后重试！");
-				return;
+				//showErrorMessage("文件上传中，请稍后重试！");
+				//return;
 			}
-
-			//设置为正在上传，避免被其他上传中断
+			else
+			{
+				//初始化文件上传参数
+				DocUploadInit(files,totSize,parentNode,parentId,vid);
+				
+				uploadTime = new Date().getTime();	//初始化上传时间
+				uploadStartTime = uploadTime;
+				preUploadTime = uploadTime;
+			
+				//启动复制操作      		
+				uploadDoc();	//start upload
+			}
+		}
+		
+		//初始化DocUpload设置
+      	function DocUploadInit(files,totSize,parentNode,parentId,vid)	//多文件移动函数
+		{
+			console.log("DocUploadInit");
+							//设置为正在上传，避免被其他上传中断
 			isUploading = true;
 			
 			//清空所有全局变量
 			stopUploadFlag = false;
 			fileCoverConfirmSet = 0;
 			uploadErrorConfirmSet = 0;
+			totalSize = totSize;	
 			uploadedNum = 0;
 			successNum = 0;
 			failNum = 0;
@@ -773,33 +796,17 @@
 			clearContext();	//清空Context缓存
 			//清空上下文列表
 			SubContextList = [];
-						
-			//初始化文件上传参数
-			DocUploadSet(files,parentNode,parentId,vid);
-			
-			uploadTime = new Date().getTime();	//初始化上传时间
-			uploadStartTime = uploadTime;
-			preUploadTime = uploadTime;
-
-			//启动复制操作      		
-			uploadDoc();	//start upload
-		}
-		
-		//初始化DocMove设置
-      	function DocUploadSet(files,parentNode,parentId,vid)	//多文件移动函数
-		{
-			console.log("DocUploadSet");
 			
 			setIndex(0);
 
 			setFileList(files);
 			
-			var totalNum = 0;
+			var totNum = 0;
 			if(fileList && fileList.length)
 			{
-				totalNum = fileList.length;
+				totNum = fileList.length;
 			}
-			setTotalNum(totalNum);
+			setTotalNum(totNum);
 
 			setParentNode(parentNode);
 			setParentId(parentId);
@@ -807,8 +814,6 @@
 			setVid(vid);
 			
 			//Init the SubContextList by Go through the fileList
-			totalSize = 0;
-			uploadedSize = 0;
 			preUploadSize = 0;
 			uploadedFileSize = 0;
 			if(fileList.length > 0)
@@ -824,6 +829,31 @@
 			console.log("文件总的大小为："+totalSize);
       	}
       	
+      	//增加上传文件
+      	function DocUploadAppend(files,totSize,parentNode,parentId,vid)	//多文件移动函数
+		{
+			console.log("DocUploadAppend");
+			
+			//清空所有全局变量
+			totalSize += totSize;			
+
+			setFileList(files);
+			
+			var totNum = 0;
+			if(fileList && fileList.length)
+			{
+				totNum = fileList.length;
+			}
+			totalNum += totNum;
+
+			//如果需要更换上传路径，需要将其保存到context中去
+			//setParentNode(parentNode);
+			//setParentId(parentId);
+			//setVid(vid);
+			
+			console.log("文件总的大小为："+totalSize);
+      	}
+      	
       	//初始化上传文件的SubContext,并绘制对应的进度条
       	function checkAnddrawUploadItems(fileList)
       	{
@@ -835,7 +865,7 @@
       			}
       			
       			//Check if need to draw
-      			if((drawedNum - uploadedNum) > 200)
+      			if((drawedNum - uploadedNum) > 100)
       			{
       			    console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
       				return;
@@ -844,9 +874,9 @@
       			//Prepare to drawed
       			var startIndex = drawedNum;
       			var endIndex = totalNum;
-      			if((totalNum -drawedNum) > 500)	//每次最多绘制500个
+      			if((totalNum -drawedNum) > 200)	//每次最多绘制200个
       			{
-      				endIndex = drawedNum + 500;
+      				endIndex = drawedNum + 200;
       			}
       			var str = '';
       			for( var i = startIndex ; i < endIndex ; i++ )
@@ -873,7 +903,6 @@
 		    		SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 		    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 		    		SubContext.stopUploadFlag = false; //停止上传标记未false
-		    		totalSize += SubContext.size;
 		    		//console.log("totalSize" + totalSize);
 		    		SubContextList.push(SubContext);
 		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+fileList[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
