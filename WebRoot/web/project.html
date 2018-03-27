@@ -800,10 +800,9 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str='<div><span class="upload-list-title">上传进度</span><i class="el-icon-close closeBtn"></i></div>';
+				var str="<div><span class='upload-list-title'>上传进度</span><i class='el-icon-close closeBtn'></i></div>";
+				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
-				str +='<div id="uploadedFileList" class="uploadedFileList">';
-				str+='</div>';
 				$('.el-upload-list').html(str);
 				checkAnddrawUploadItems(SubContextList);
 		    }
@@ -921,8 +920,9 @@
       			for( var i = startIndex ; i < endIndex ; i++ )
 		    	{	
 		    		console.log("index:" + i);
-		    		console.log(SubContextList[i]);
-		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+SubContextList[i].name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
+		    		var SubContext = SubContextList[i];
+		    		console.log(SubContext);
+		    		str+='<li class="el-upload-list__item file'+i+' is-uploading" value='+i+'><a class="el-upload-list__item-name"><i class="el-icon-document"></i>'+SubContext.name+'</a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close stopUpload"  value='+i+' onclick="stopUpload()"></i><div class="el-progress el-progress--line"><div class="el-progress-bar"><div class="el-progress-bar__outer" ><div class="el-progress-bar__inner"></div></div></div><div class="el-progress__text" style="font-size: 12.8px;"></div></div></li>';
 		    		//已绘制个数增1
 		    		drawedNum++;	    		
 				}
@@ -1224,7 +1224,7 @@
     		checkAnddrawUploadItems(SubContextList);
     		
     		//取消当前文件上传
-			if(SubContextList[index].stopUploadFlag == true)
+			if(SubContext.stopUploadFlag == true)
 			{
 				console.log("用户取消了上传 "+ name);
     			uploadErrorHandler(name,"用户取消了上传！");
@@ -1235,7 +1235,7 @@
 			SubContextList[index].state = 1;	//上传中
 				
 			//get the file from the SubContextList
-    		var file = SubContextList[index].file;
+    		var file = SubContext.file;
 			if(!file) 
 			{
 				uploadErrorHandler("未知","不是文件");
@@ -1244,10 +1244,10 @@
 			
     		//get file name from file
 			var name  = SubContext.name;
-    		console.log(name);
+    		console.log("fileName:" + name);
     		//get filePath form file
-    		var filePath = SubContext.webkitRelativePath;
-    		console.log(filePath);
+    		var filePath = SubContext.relativePath;
+    		console.log("relativePath:" + filePath);
 
     		//parentNode maybe is not the real parent for the doc
     		var tempParentNode = SubContext.parentNode;
