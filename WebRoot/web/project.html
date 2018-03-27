@@ -744,7 +744,7 @@
 		//多文件move接口
 		function uploadDocs(files,parentNode,parentId,vid)	//多文件移动函数
 		{
-			console.log("uploadDocs() totSize:"+totSize);
+			console.log("uploadDocs()");
 			//console.log(files);
 			if(files.length <= 0)
 			{
@@ -794,8 +794,9 @@
 			SubContextList = [];
 			
 			setIndex(0);
-
-			var totSize = BuildFileList(files,fileList);
+			
+			fileList = [];
+			var totSize = buildFileList(files,fileList);
 			totalSize = totSize;
 			
 			var totNum = 0;
@@ -834,7 +835,7 @@
 			
 			
 			//Go through files, and add files to fileList
-			var totSize = BuildFileList(files,fileList);
+			var totSize = buildFileList(files,fileList);
 			totalSize += totSize;			
 			
 			var totNum = 0;
