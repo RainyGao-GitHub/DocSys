@@ -408,11 +408,11 @@
 	function selectUploadConfirm(obj)
 	{
 	    var entrys = obj.files;
-	    var fileList = [];
-	    var totalSize = 0;
 	    
-	    //避免事件退出时，文件objects丢失
-	    buildFileList(entrys,fileList,totalSize);
+	    //避免事件退出时，文件objects丢失,好像不会的
+	    //var fileList = [];
+	    //var totalSize = 0;
+	    //totalSize = buildFileList(entrys,fileList);
 	    
 	  	//if curentRightClickedTreeNode is not parent node, set the newNode's parent to curentRightClickedTreeNode's parent node
 		var parentNode = curRightClickedTreeNode;
@@ -422,7 +422,7 @@
 		}
 		
 		//用户确认上传
-		uploadConfirm(fileList,totalSize,parentNode);
+		uploadConfirm(entrys,parentNode);
 	    return true;
 	}
 	
@@ -430,11 +430,11 @@
 	{
 		console.log(e);
         var entrys = e.dataTransfer.files;
-        var fileList = [];
-	    var totalSize = 0;
-	    
-	    //构建纯文件列表
-	    buildFileList(entrys,fileList,totalSize);	    
+        
+       	//避免事件退出时，文件objects丢失,好像不会的
+	    //var fileList = [];
+	    //var totalSize = 0;
+	    //totalSize = buildFileList(entrys,fileList);	    
 	     	
 	  	//get the parentNode
 	  	if(e.target.tagName=="SPAN"){
@@ -445,13 +445,14 @@
 		var parentNode = treeObj.getSelectedNodes()[0];
 		
 		//用户确认上传
-		uploadConfirm(fileList,totalSize,parentNode);
+		uploadConfirm(entrys,parentNode);
 	    return true;
 	}
 	
 	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到filelist中
-	function buildFileList(entrys,fileList,totalSize)
+	function buildFileList(entrys,fileList)
 	{
+		var totalSize = 0;
 		console.log("buildFileList()");
 		if(entrys.length > 0)
    		{
@@ -462,7 +463,7 @@
     	   		if(typeof entry == 'object')
     	   		{
     	   			fileList.push(entry);
-    	   			totalSize = entry.size;
+    	   			totalSize += entry.size;
     	   			/*
     	   			if(entry.isFile)	//文件
     	   			{
@@ -482,12 +483,14 @@
     	   	}
     	}
     	//console.log(fileList);
+    	console.log("buildFileList() totalSize:" + totalSize);
+    	return totalSize;
    	}
 	
 	//drag upload file confirm dialog（拖拽上传的确认对话框）
-	function uploadConfirm(fileList,totalSize,parentNode)
+	function uploadConfirm(fileList,parentNode)
 	{	
-		console.log("uploadConfirm() totalSize:"+totalSize);
+		console.log("uploadConfirm()");
 		//build upload confirm text
 	    if(fileList.length > 0)
 	   	{
@@ -567,15 +570,9 @@
 	    },function () {
 	    	//alert("点击了确定");
 			//开始上传
-			DocUpload.uploadDocs(fileList,totalSize,parentNode,parentId,vid);
+			DocUpload.uploadDocs(fileList,parentNode,parentId,vid);
 	    	return true;   
 	    });
-		
-		//if(confirm("上传" + uploadContent + "到" + remoteDir) == true)
-		//{
-		//	//开始上传
-		//	DocUpload.uploadDocs(fileList,parentNode,parentId,vid);
-		//}
 		return true;
 	}
 
@@ -745,7 +742,7 @@
     	}
     	
 		//多文件move接口
-		function uploadDocs(files,totSize,parentNode,parentId,vid)	//多文件移动函数
+		function uploadDocs(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("uploadDocs() totSize:"+totSize);
 			//console.log(files);
@@ -758,7 +755,7 @@
 				
 			if(isUploading == true)
 			{
-				DocUploadAppend(files,totSize,parentNode,parentId,vid);
+				DocUploadAppend(files,parentNode,parentId,vid);
 				//alert("文件上传中，请稍后重试！");
 				//showErrorMessage("文件上传中，请稍后重试！");
 				//return;
@@ -766,7 +763,7 @@
 			else
 			{
 				//初始化文件上传参数
-				DocUploadInit(files,totSize,parentNode,parentId,vid);
+				DocUploadInit(files,parentNode,parentId,vid);
 				
 				uploadTime = new Date().getTime();	//初始化上传时间
 				uploadStartTime = uploadTime;
@@ -778,7 +775,7 @@
 		}
 		
 		//初始化DocUpload设置
-      	function DocUploadInit(files,totSize,parentNode,parentId,vid)	//多文件移动函数
+      	function DocUploadInit(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("DocUploadInit");
 							//设置为正在上传，避免被其他上传中断
@@ -788,7 +785,6 @@
 			stopUploadFlag = false;
 			fileCoverConfirmSet = 0;
 			uploadErrorConfirmSet = 0;
-			totalSize = totSize;	
 			uploadedNum = 0;
 			successNum = 0;
 			failNum = 0;
@@ -799,7 +795,8 @@
 			
 			setIndex(0);
 
-			setFileList(files);
+			var totSize = BuildFileList(files,fileList);
+			totalSize = totSize;
 			
 			var totNum = 0;
 			if(fileList && fileList.length)
@@ -807,6 +804,8 @@
 				totNum = fileList.length;
 			}
 			setTotalNum(totNum);
+			console.log("文件总的个数为："+totalNum + "文件总的大小为："+totalSize);
+			
 
 			setParentNode(parentNode);
 			setParentId(parentId);
@@ -826,32 +825,31 @@
 				$('.el-upload-list').html(str);
 				checkAnddrawUploadItems(fileList);
 		    }
-			console.log("文件总的大小为："+totalSize);
       	}
       	
       	//增加上传文件
-      	function DocUploadAppend(files,totSize,parentNode,parentId,vid)	//多文件移动函数
+      	function DocUploadAppend(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("DocUploadAppend");
 			
-			//清空所有全局变量
+			
+			//Go through files, and add files to fileList
+			var totSize = BuildFileList(files,fileList);
 			totalSize += totSize;			
-
-			setFileList(files);
 			
 			var totNum = 0;
-			if(fileList && fileList.length)
+			if(files && files.length)
 			{
-				totNum = fileList.length;
+				totNum = files.length;
 			}
 			totalNum += totNum;
-
+			
 			//如果需要更换上传路径，需要将其保存到context中去
-			//setParentNode(parentNode);
+			//setParentNode(parentNode); 
 			//setParentId(parentId);
 			//setVid(vid);
 			
-			console.log("文件总的大小为："+totalSize);
+			console.log("文件总的个数为："+totalNum + "文件总的大小为："+totalSize);
       	}
       	
       	//初始化上传文件的SubContext,并绘制对应的进度条
