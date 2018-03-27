@@ -501,7 +501,7 @@
 	    	   	if(typeof firstFile == 'object')
 	    	   	{
 	    	   		relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
-	    	   		console.log(firstFile.webkitRelativePath);
+	    	   		console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
 	    	   		break;
 	    	   	}
 	    	   	else
@@ -519,7 +519,7 @@
 	   	}  
 		
 		var fileName = firstFile.name;
-	    console.log(fileName);
+	    console.log("firstFile:"+fileName);
 	  	
 	  	var uploadContent = fileName;
 	  	if(relativePath)
@@ -1238,7 +1238,7 @@
 			SubContextList[index].state = 1;	//上传中
 				
 			//get the file from the SubContextList
-    		var file = subContextList[index].file;
+    		var file = SubContextList[index].file;
 			if(!file) 
 			{
 				uploadErrorHandler("未知","不是文件");
@@ -1432,9 +1432,9 @@
 			//设置异步上传进度回调处理函数
 			xhr.upload.onprogress = function(evt) {
 				//由于xhr.abort不能立即结束上传，因此会导致uploadErrorHandler多次被调用而导致状态机混乱，因此目前处理方式只对未开始上传的文件有效
-				//if(stopUploadFlag == true || subContextList[index].stopUploadFlag == true)
+				//if(stopUploadFlag == true || SubContextList[index].stopUploadFlag == true)
 				//{
-				//	console.log("stopUploadFlag: " + stopUploadFlag + " subContextList[index].stopUploadFlag:" + subContextList[index].stopUploadFlag);	
+				//	console.log("stopUploadFlag: " + stopUploadFlag + " SubContextList[index].stopUploadFlag:" + SubContextList[index].stopUploadFlag);	
 				//		xhr.abort(); //结束上传	
 				//		uploadErrorHandler(name, name + " 取消上传！");
 				//	return;
