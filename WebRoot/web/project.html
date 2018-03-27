@@ -1123,7 +1123,7 @@
       	function uploadErrorHandler(FileName,errMsg)
       	{
       		failNum++;
-      		uploadNum++;
+      		uploadedNum++;
     		//设置上传状态
 			SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "fail";
@@ -1135,7 +1135,7 @@
       	function uploadErrorAbortHandler(FileName,errMsg)
       	{
       		failNum++;
-      		uploadNum++;
+      		uploadedNum++;
     		//设置上传状态
 			SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "fail";
