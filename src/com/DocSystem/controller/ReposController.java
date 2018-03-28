@@ -1749,5 +1749,32 @@ public class ReposController extends BaseController{
 		
 		return false;
 	}
+	
+	/********************* get UserDocAuth ******************************/
+	@RequestMapping("/getUserDocAuth.do")
+	public void getUserDocAuth(Integer docId, Integer reposId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查该用户是否设置了目录权限
+		DocAuth docAuth = getUserDispDocAuth(login_user.getId(),docId,reposId); 
+		if(docAuth == null)
+		{
+			rt.setError("您没有该目录/文件的权限");
+			return;
+		}
+		
+		rt.setData(docAuth);
+		writeJson(rt, response);			
+	}
 
 }
