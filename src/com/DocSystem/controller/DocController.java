@@ -714,7 +714,8 @@ public class DocController extends BaseController{
 			doc.setCreateTime(createTime);
 			doc.setState(2);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-			doc.setLockTime(new Date().getTime());	//Set lockTime
+			long lockTime = new Date().getTime() + 24*60*60*1000;
+			doc.setLockTime(lockTime);	//Set lockTime
 			if(reposService.addDoc(doc) == 0)
 			{
 				
@@ -1272,7 +1273,8 @@ public class DocController extends BaseController{
 			doc.setCreateTime(createTime);
 			doc.setState(1);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//set LockBy
-			doc.setLockTime(new Date().getTime());	//Set lockTime
+			long lockTime = new Date().getTime() + 24*60*60*1000;
+			doc.setLockTime(lockTime);	//Set lockTime
 			if(reposService.addDoc(doc) == 0)
 			{
 				unlock(); //线程锁
@@ -1468,7 +1470,7 @@ public class DocController extends BaseController{
 			//check if the lock was out of date
 			long curTime = new Date().getTime();
 			long lockTime = doc.getLockTime();
-			if((curTime - lockTime) < 24*60*60*1000)
+			if(curTime > lockTime)	//lockTime out of date
 			{
 				rt.setError("Doc " + docId + " " + doc.getName() +" was locked:" + doc.getState());
 				System.out.println("Doc: " + docId +" was locked！");
@@ -1494,7 +1496,8 @@ public class DocController extends BaseController{
 		lockDoc.setId(docId);
 		lockDoc.setState(lockType);	//doc的状态为不可用
 		lockDoc.setLockBy(login_user.getId());
-		doc.setLockTime(new Date().getTime());	//Set lockTime
+		long lockTime = new Date().getTime() + 24*60*60*1000;
+		doc.setLockTime(lockTime);	//Set lockTime
 		if(reposService.updateDoc(lockDoc) == 0)
 		{
 			return null;
@@ -1512,7 +1515,9 @@ public class DocController extends BaseController{
 		
 		Doc doc = reposService.getDoc(parentDocId);
 		Integer lockState = doc.getState();
-		if(lockState != 0)
+		long curTime = new Date().getTime();
+		long lockTime = doc.getLockTime();
+		if(lockState != 0 && curTime < lockTime)
 		{
 			rt.setError(parentDocId + " " + doc.getName() + " was locked:" + lockState);
 			System.out.println("getParentLockState() " + parentDocId + " is locked!");
