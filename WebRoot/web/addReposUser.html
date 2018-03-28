@@ -116,6 +116,7 @@ function addReposUser(userId)
             data : {
             	userId: userId,
                 reposId : vid,
+                access: 1,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
