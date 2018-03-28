@@ -2199,7 +2199,7 @@ public class DocController extends BaseController{
 				{
 					String oldFilePath = getReposRefRealPath(repos) + docRPath;
 					String newFilePath = docFullRPath;
-					if(svnUtil.svnModifyFile(parentPath,docRPath,oldFilePath, newFilePath, commitMsg) == false)
+					if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
 					{
 						System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
 						return false;

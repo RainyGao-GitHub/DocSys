@@ -724,6 +724,7 @@ public class SVNUtil {
 	//修改文件
 	public boolean svnModifyFile(String parentPath,String entryName,String oldFilePath,String newFilePath,String commitMsg)
 	{
+		System.out.println("svnModifyFile() parentPath:"+parentPath + " entryName:" + entryName);
         ISVNEditor editor = getCommitEditor(commitMsg);
 		if(editor == null)
 		{
