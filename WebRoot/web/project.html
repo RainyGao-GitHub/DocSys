@@ -461,7 +461,7 @@
 		var remoteDir = getNodePath(parentNode);	//only for display
 		
 		$.ajax({
-			url : "/DocSystem/Doc/getUserDocAuth.do",
+			url : "/DocSystem/Repos/getUserDocAuth.do",
 			type : "post",
 			dataType : "json",
 			data : {
@@ -478,18 +478,18 @@
 					}
 					else
 					{
-						showErrorMsg("您没有目"+remoteDir+"录的新增权限");
+						showErrorMessage("您没有目录 "+remoteDir+" 的新增或修改权限");
 					}
 					return;
  				}
 				else
 				{
-					showErrorMsg("获取用户权限失败:",ret.msgInfo);
+					showErrorMessage("Error:",ret.msgInfo);
 					return;
 				}
 			},
 			error : function () {
-				showErrorMsg("获取用户权限异常");
+				showErrorMessage("获取用户权限异常");
 				return;
 			}
 		});
