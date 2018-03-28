@@ -5,6 +5,8 @@
     <id column="ID" jdbcType="INTEGER" property="id" />
     <result column="USER_ID" jdbcType="INTEGER" property="userId" />
     <result column="GROUP_ID" jdbcType="INTEGER" property="groupId" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="PRIORITY" jdbcType="INTEGER" property="priority" />
     <result column="DOC_ID" jdbcType="INTEGER" property="docId" />
     <result column="REPOS_ID" jdbcType="INTEGER" property="reposId" />
     <result column="IS_ADMIN" jdbcType="INTEGER" property="isAdmin" />
@@ -15,8 +17,8 @@
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, 
-    HERITABLE
+    ID, USER_ID, GROUP_ID, TYPE, PRIORITY, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, 
+    ADD_EN, DELETE_EN, HERITABLE
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -30,13 +32,15 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.DocAuth">
     insert into doc_auth (ID, USER_ID, GROUP_ID, 
-      DOC_ID, REPOS_ID, IS_ADMIN, 
-      ACCESS, EDIT_EN, ADD_EN, 
-      DELETE_EN, HERITABLE)
+      TYPE, PRIORITY, DOC_ID, 
+      REPOS_ID, IS_ADMIN, ACCESS, 
+      EDIT_EN, ADD_EN, DELETE_EN, 
+      HERITABLE)
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
-      #{docId,jdbcType=INTEGER}, #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, 
-      #{access,jdbcType=INTEGER}, #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, 
-      #{deleteEn,jdbcType=INTEGER}, #{heritable,jdbcType=INTEGER})
+      #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{docId,jdbcType=INTEGER}, 
+      #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
+      #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, 
+      #{heritable,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.DocAuth">
     insert into doc_auth
@@ -49,6 +53,12 @@
       </if>
       <if test="groupId != null">
         GROUP_ID,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="priority != null">
+        PRIORITY,
       </if>
       <if test="docId != null">
         DOC_ID,
@@ -85,6 +95,12 @@
       <if test="groupId != null">
         #{groupId,jdbcType=INTEGER},
       </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="priority != null">
+        #{priority,jdbcType=INTEGER},
+      </if>
       <if test="docId != null">
         #{docId,jdbcType=INTEGER},
       </if>
@@ -120,6 +136,12 @@
       <if test="groupId != null">
         GROUP_ID = #{groupId,jdbcType=INTEGER},
       </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="priority != null">
+        PRIORITY = #{priority,jdbcType=INTEGER},
+      </if>
       <if test="docId != null">
         DOC_ID = #{docId,jdbcType=INTEGER},
       </if>
@@ -151,6 +173,8 @@
     update doc_auth
     set USER_ID = #{userId,jdbcType=INTEGER},
       GROUP_ID = #{groupId,jdbcType=INTEGER},
+      TYPE = #{type,jdbcType=INTEGER},
+      PRIORITY = #{priority,jdbcType=INTEGER},
       DOC_ID = #{docId,jdbcType=INTEGER},
       REPOS_ID = #{reposId,jdbcType=INTEGER},
       IS_ADMIN = #{isAdmin,jdbcType=INTEGER},
@@ -161,7 +185,7 @@
       HERITABLE = #{heritable,jdbcType=INTEGER}
     where ID = #{id,jdbcType=INTEGER}
   </update>
-    <select id="selectSelective" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
+  <select id="selectSelective" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from doc_auth
@@ -260,21 +284,31 @@
         and REPOS_ID = #{reposId,jdbcType=INTEGER}
       </if>
   </delete>
-    
-  <select id="getUserDocAuthList" parameterType="java.util.Map" resultMap="BaseResultMap">
+  <select id="getAllDocAuthList" parameterType="java.util.Map" resultMap="BaseResultMap">
     select 
-    	doc_auth.ID, USER_ID,GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+    <include refid="Base_Column_List" />
     from doc_auth 
-    LEFT JOIN doc on doc.ID = doc_auth.DOC_ID
-    where doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
-    <if test="docId != null">
-        and doc.ID = #{docId,jdbcType=INTEGER}
-    </if>
-    <if test="pDocId != null">
-        and doc.PID = #{pDocId,jdbcType=INTEGER}
-    </if>
-    <if test="reposId != null">
-        and doc.VID = #{reposId,jdbcType=INTEGER}
-    </if>
+ 	where REPOS_ID = #{reposId,jdbcType=INTEGER}
+  </select>    
+  <select id="getDocAuthForUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth
+    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+		and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0 or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
+  </select>
+  <select id="getDocAuthForGroup" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth
+    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+		and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
+  </select>
+  <select id="getDocAuthForAnyUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_auth
+    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+		and USER_ID = 0
   </select>
 </mapper>

@@ -349,20 +349,20 @@
     from user
   </select>
    
-  <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+  <select id="getReposAuthForAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
-		user.ID as userId,user.NAME as userName,
-		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+		repos_auth.ID as id,
+    	REPOS_ID as reposId, IS_ADMIN as isAmdin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE,
+     	USER_ID as userId, user.NAME as userName
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
   
-  <select id="getReposAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
+  <select id="getReposAuthForAllGroups" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
-		user_group.ID as groupId,user_group.NAME as groupName,
-		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+    	repos_auth.ID as id,
+    	REPOS_ID as reposId, IS_ADMIN as isAmdin, ACCESS, EDIT_EN as editEn, ADD_EN as addEn, DELETE_EN as deleteEn, HERITABLE,
+     	GROUP_ID as groupId, user_group.NAME as groupName
       from user_group
     LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
