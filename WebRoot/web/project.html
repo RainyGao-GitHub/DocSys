@@ -384,20 +384,21 @@
             }
         });*/
 	}
-        
-	/*文件上传实现*/
+    
+    /*文件上传实现*/
 	//文件上传入口
 	function uploadFiles(){
-	     $("#uploadType").val(1); //文件	
-	     return $("#uploadFiles").click();
+	
+	    $("#uploadType").val(1); //文件	
+	    return $("#uploadFiles").click();
 	}
+	
 	//文件夹上传入口
 	function uploadDir(){
 		$("#uploadType").val(2);
 	    return $("#uploadDir").click();
 	}
-
-
+	
 	//get the filename 
 	function getFileName(o){
 	    var pos=o.lastIndexOf("\\");
@@ -408,7 +409,6 @@
 	function selectUploadConfirm(obj)
 	{
 	    var entrys = obj.files;
-	    
 	    //避免事件退出时，文件objects丢失,好像不会的
 	    //var fileList = [];
 	    //var totalSize = 0;
@@ -421,8 +421,7 @@
 			parentNode = curRightClickedTreeNode.getParentNode();
 		}
 		
-		//用户确认上传
-		uploadConfirm(entrys,parentNode);
+		checkUserUploadRight(entrys,parentNode,uploadConfirm);		
 	    return true;
 	}
 	
@@ -445,8 +444,55 @@
 		var parentNode = treeObj.getSelectedNodes()[0];
 		
 		//用户确认上传
-		uploadConfirm(entrys,parentNode);
+		checkUserUploadRight(entrys,parentNode,uploadConfirm);
 	    return true;
+	}
+	
+	//获取用户的权限
+	function checkUserUploadRight(files,parentNode,callback)
+	{
+		//get Pid
+		var pid = 0;
+		if(parentNode)
+		{
+			pid = parentNode.id;
+		}
+		var vid = getQueryString("vid");
+		var remoteDir = getNodePath(parentNode);	//only for display
+		
+		$.ajax({
+			url : "/DocSystem/Doc/getUserDocAuth.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				docId : pid,
+				reposId : vid
+			},
+			success : function (ret){
+				if( "ok" == ret.status){
+					var docAuth = ret.data;
+					console.log(docAuth);
+					if(docAuth.addEn == 1 || docAuth.editEn == 1)
+					{
+						callback && callback(files,parentNode);
+					}
+					else
+					{
+						showErrorMsg("您没有目"+remoteDir+"录的新增权限");
+					}
+					return;
+ 				}
+				else
+				{
+					showErrorMsg("获取用户权限失败:",ret.msgInfo);
+					return;
+				}
+			},
+			error : function () {
+				showErrorMsg("获取用户权限异常");
+				return;
+			}
+		});
 	}
 	
 	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到filelist中
