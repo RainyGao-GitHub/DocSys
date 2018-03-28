@@ -55,6 +55,27 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		Integer UserId = login_user.getId();
+		System.out.println("UserId:" + UserId);
+		List <Repos> accessableReposList = getAccessableReposList(UserId);
+		printObject("getReposList() accessableReposList",accessableReposList);
+		rt.setData(accessableReposList);
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/getManagerReposList.do")
+	public void getManagerReposList(HttpSession session,HttpServletResponse response){
+		System.out.println("getManagerReposList");
+		ReturnAjax rt = new ReturnAjax();
+		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		if(login_user.getType() == 2)	//超级管理员
 		{
 			List<Repos> reposList = reposService.getAllReposList();
@@ -88,9 +109,10 @@ public class ReposController extends BaseController{
 		for(int i=0;i<reposList.size();i++)
 		{
 			Repos repos = reposList.get(i);
-			//printObject("repos",repos);
+			printObject("repos",repos);
 			ReposAuth reposAuth = reposAuthHashMap.get(repos.getId());
-			if(reposAuth != null && reposAuth.getAccess().equals(1))
+			printObject("reposAuth",reposAuth);
+			if(reposAuth != null && reposAuth.getAccess()!=null && reposAuth.getAccess().equals(1))
 			{
 				resultList.add(repos);
 			}
