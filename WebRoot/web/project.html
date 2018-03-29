@@ -2848,20 +2848,57 @@
   	 	    	    saveWikiAndExit();
   	  	 			return true;
   	 			},function(){
-  	 				exitEditWikit();
+  	 				unlockDocAndExitEditWiki();
   	 				return true;
   	 		});
   	 	}
   	 	else
   	 	{
-    		exitEditWiki();
+    		unlockDocAndExitEditWiki();
     	}
 	}
 	
-    function exitEditWiki() {
+	function unlockDocAndExitEditWiki()
+	{
+		console.log("lockDocAndEditWiki()");
+	    var vid = getQueryString("vid");
+		var docId = curDoc;
+		var lockType = 0;
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				locType : lockType, //
+				reposId : vid, 
+				docId : docId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status){
+					console.log(ret.data);
+				    exitEditWiki(docId,vid);
+				    return;
+ 				}
+				else
+				{
+					showErrorMessage("unlockDoc Error:" + ret.msgInfo);
+					exitEditWiki(docId,vid);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("unlockDoc 异常");
+				exitEditWiki(docId,vid);
+				return;
+			}
+		});
+	}
+	
+    function exitEditWiki(docId,vid) {    
         var params = {
-            vid : getQueryString("vid"),
-            doc : curDoc,
+            vid : vid,
+            doc : docId,
             edit : false
         }
         window.location.href = makeUrl(params)
@@ -2930,7 +2967,7 @@
     	if(debounce.getStatus() == 1)
     	{
     		debounce.clearStatus();
-    		saveDoc(curDoc, debounce.get(),exitEditWiki);
+    		saveDoc(curDoc, debounce.get(),unlockDocAndExitEditWiki);
     	}
     }
 	
