@@ -1818,6 +1818,8 @@
 	var gReposInfo = [];
 	var gReposType = 1; //默认是普通文件系统
 	var gReposName = "";
+	var gReposCreateTime = "";
+	
     function getReposInfo(callback){
 		console.log("getReposInfo");
         $.ajax({
@@ -1832,10 +1834,9 @@
                 	gReposInfo = ret.data;
                     gReposType = ret.data.type;
                     gReposName = ret.data.name;
-                    $("#projectName").text(ret.data.name);
-                    var time=getDate(ret.data.createTime);
-                    //var time = ret.data.createTime;
-                    $("#editTime").text(time);
+                    gReposCreateTime = ret.data.createTime;
+                    $("#projectName").text(gReposName);
+                    $("#editTime").text(gReposCreateTime);
                     if(gReposType == 0)
                     {
                     	//alert("虚拟文件系统");
@@ -1845,8 +1846,7 @@
 					//回调函数	
                     callback && callback();
                 }else {
-                    $("#projectName").text("项目名");
-                    $("#editTime").text((new Date()).toLocaleTimeString());
+                    $("#projectName").text("仓库名");
                     alert(ret.msgInfo);
                     window.location.href = "index.html";
                 }
@@ -3159,9 +3159,6 @@
     var firstcall = false;
     var loadmd;
     var content;
-    var projectname;
-    var projectVersion;
-    var editTime;
     
 	//显示Markdown内容
     var loadFirstContent = function () {
