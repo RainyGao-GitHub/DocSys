@@ -306,6 +306,8 @@
 	var firstcall = true;	//用来标示doc是否是首次加载进meditor
 	var gEditState = false;
 	var gPreEditState = false;
+	var gAutoTmpSaver = null;
+	
 	//Doc Info
 	var gDocContent;
 	//Repos Info
@@ -2033,6 +2035,23 @@
                     {
                     	firstcall = false;
                     }
+                    
+                    //Clear debounce
+                   	debounce.clear();
+                   	debounce.clearStatus1();
+                   	debounce.clearStatus();
+                   	if(gEditState == true)
+                   	{
+                   		//start the autoTmpSaver
+	      				gAutoTmpSaver = startAutoTmpSaveTimer();
+                   	}
+                   	else
+                   	{
+                   		stopAutoTmpSaverTimer(gAutoTmpSaver);
+                   	}
+                   	docEditBtnControl();
+                   	
+                   	//load new doContent 
                     loadDocContent();
                 }
                 else
@@ -2910,6 +2929,8 @@
 	
     function exitEditWiki(docId,vid) {    
         gEditState = false;
+        docEditBtnControl()
+	    
         var params = {
             vid : vid,
             doc : docId,
@@ -2962,6 +2983,9 @@
     function editWiki(docId,vid) {
         gEditState = true;
         gPreEditState = false;
+        
+        docEditBtnControl()
+	    
         var params = {
             vid : vid,
             doc : docId,
@@ -2970,6 +2994,14 @@
         var url = makeUrl(params);
         //window.location.href = url;	//reload the page
         window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
+        
+        //start the autoTmpSaver
+        debounce.clear();
+        debounce.clearStatus();
+        debounce.clearStatus1();
+	    gAutoTmpSaver = startAutoTmpSaveTimer();
+		
+		//load Doc Content
         loadDocContent();
     }
     
@@ -3005,7 +3037,13 @@
 	    		tmpSaveDoc(gDocId, debounce.get());
 	    	}
 	    },10000);
+	    return timer;
 	}     
+	
+	function stopAutoTmpSaverTimer(timer){
+		console.log("stopAutoTmpSaverTimer");
+		clearInterval(timer);
+	}
 	
 	//debounce文件编辑缓存类
     var debounce = (function () {
@@ -3262,9 +3300,13 @@
                 },
                 onpreviewing : function () {
                     console.log("onpreviewing");
+                    gEditState = false;
+                    gPreEditState = false;
                 },
                 onpreviewed :function () {
                     console.log("onpreviewed");
+                    gEditState = true;
+                    gPreEditState = true;                    
                 },
                 onload : function () {
                     console.log("onload editState:" + gEditState);                 
@@ -3911,18 +3953,23 @@ function CompareObj(objA, objB, flag) {
 		if(docId)
 		{
 	   		getDoc(docId);
-	   		if(gEditState)
-	   		{
-	   			//启动自动保存定时器
-	      		startAutoTmpSaveTimer();
+	   }             
+	}
+	
+	function docEditBtnControl()
+	{
+		 if(gEditState)
+	   	 {
 	      		$("#btnExitEdit").show();
 	      		$("#btnSaveWiki").show();  
-	      	}
-	      	else
-	      	{
+	      		$("#btnEditWiki").hide();
+	     }
+	     else
+	     {
+	     	    $("#btnExitEdit").hide();
+	      		$("#btnSaveWiki").hide(); 
 	      		$("#btnEditWiki").show();
-	      	}
-	   }             
+	     }
 	}
 	/************************** contextMenu 接口***************************/	
 	//add a new Doc: type 1: 文件  2:目录
