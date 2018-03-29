@@ -655,6 +655,49 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/****************   lock a Doc ******************/
+	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
+	public void lockDoc(Integer docId,Integer reposId, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查用户是否有权限新增文件
+		if(checkUserEditRight(rt,login_user.getId(),docId,reposId) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		Doc doc = null;
+		synchronized(syncLock)
+		{
+			//Try to lock the Doc
+			doc = lockDoc(docId,lockType,login_user,rt);
+			if(doc == null)
+			{
+				unlock(); //线程锁
+			
+				rt.setError("Failed to lock Doc: " + docId);
+				System.out.println("Failed to lock Doc: " + docId);
+				writeJson(rt, response);
+				return;			
+			}
+			unlock(); //线程锁
+		}
+		
+		System.out.println("lockDoc docId: " + docId + " success");
+		rt.setData(doc);
+		writeJson(rt, response);	
+	}
+	
 	/********************************** Functions For Application Layer****************************************/
 	//底层addDoc接口
 	private void addDoc(String name, Integer type, MultipartFile uploadFile,Integer reposId,Integer parentId, 
@@ -672,7 +715,7 @@ public class DocController extends BaseController{
 			if(type == 1)
 			{
 				rt.setError("虚拟文件系统不能创建实体文件");
-				System.out.println("虚拟文件系统不能创建实体文件");
+				System.out.println("addDoc() 虚拟文件系统不能创建实体文件");
 				return;
 			}
 		}
@@ -681,7 +724,7 @@ public class DocController extends BaseController{
 		if(isNodeExist(name,parentId,reposId) == true)
 		{
 			rt.setError("Node: " + name +" 已存在！");
-			//writeJson(rt, response);
+			System.out.println("addDoc() " + name + " 已存在");
 			return;
 		}
 		
@@ -690,13 +733,11 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//Check if parentDoc was absolutely locked (LockState == 2)
-			Integer parentLockState = getParentLockState(parentId,rt);
-			if(parentLockState == 2)
-			{
+			if(isParentDocLocked(parentId,rt))
+			{	
 				unlock(); //线程锁
 	
 				System.out.println("ParentNode: " + parentId +" is locked！");
-				//writeJson(rt, response);
 				return;			
 			}
 				
@@ -717,11 +758,10 @@ public class DocController extends BaseController{
 			long lockTime = new Date().getTime() + 24*60*60*1000;
 			doc.setLockTime(lockTime);	//Set lockTime
 			if(reposService.addDoc(doc) == 0)
-			{
-				
+			{			
 				unlock();
 				rt.setError("Add Node: " + name +" Failed！");
-				//writeJson(rt, response);
+				System.out.println("addDoc() addDoc to db failed");
 				return;
 			}
 			unlock();
@@ -1271,7 +1311,7 @@ public class DocController extends BaseController{
 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
 			String createTime = df.format(new Date());// new Date()为获取当前系统时间
 			doc.setCreateTime(createTime);
-			doc.setState(1);	//doc的状态为不可用
+			doc.setState(2);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//set LockBy
 			long lockTime = new Date().getTime() + 24*60*60*1000;
 			doc.setLockTime(lockTime);	//Set lockTime
@@ -1465,33 +1505,20 @@ public class DocController extends BaseController{
 		}
 		
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
-		if(doc.getState() != 0)
+		if(isDocLocked(doc,login_user,rt))
 		{
-			//check if the lock was out of date
-			long curTime = new Date().getTime();
-			long lockTime = doc.getLockTime();
-			if(curTime > lockTime)	//lockTime out of date
-			{
-				rt.setError("Doc " + docId + " " + doc.getName() +" was locked:" + doc.getState());
-				System.out.println("Doc: " + docId +" was locked！");
-				return null;
-			}
-			else
-			{
-				//Lock 自动失效设计
-				System.out.println("Doc: " + docId +" lock is out of date！");
-			}
+			System.out.println("Doc " + docId +" was locked");
+			return null;
 		}
 		
 		//检查其父节点是否进行了递归锁定
-		Integer lockState = getParentLockState(doc.getPid(),rt);
-		if(lockState == 2)	//2: 全目录锁定
+		if(isParentDocLocked(doc.getPid(),rt))	//2: 全目录锁定
 		{
 			System.out.println("Parent Doc of " + docId +" was locked！");				
 			return null;
 		}
 		
-		//get the current time as the lockTime
+		//lockTime is the time to release lock 
 		Doc lockDoc= new Doc();
 		lockDoc.setId(docId);
 		lockDoc.setState(lockType);	//doc的状态为不可用
@@ -1506,26 +1533,77 @@ public class DocController extends BaseController{
 		return doc;
 	}
 	
-	//获取当前节点父节点的lockState
-	private Integer getParentLockState(Integer parentDocId, ReturnAjax rt) {
+	//确定当前doc是否被锁定
+	private boolean isDocLocked(Doc doc,User login_user,ReturnAjax rt) {
+		int lockState = doc.getState();	//0: not locked 1: lock doc only 2: lock doc and subDocs 3: lock doc for online edit
+		if(lockState != 0)
+		{
+			if(lockState == 3)	//someone is online edit the doc
+			{
+				if(doc.getLockBy() == login_user.getId())	//locked by login_user
+				{
+					System.out.println("Doc: " + doc.getId() +" is online editing by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
+					return false;
+				}
+			}
+				
+			if(isLockOutOfDate(doc) == false)
+			{			
+				rt.setError("Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());
+				System.out.println("Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());;
+				return true;						
+			}
+			else 
+			{
+				System.out.println("doc " + doc.getId()+ " " + doc.getName()  +" lock was out of date！");
+				return false;
+			}
+		}
+		return false;
+	}
+
+	private boolean isLockOutOfDate(Doc doc) {
+		//check if the lock was out of date
+		long curTime = new Date().getTime();
+		long lockTime = doc.getLockTime();
+		System.out.println("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
+		if(curTime < lockTime)	//
+		{
+			System.out.println("isLockOutOfDate() Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());
+			return false;
+		}
+
+		//Lock 自动失效设计
+		System.out.println("Doc: " +  doc.getId() +" lock is out of date！");
+		return true;
+	}
+
+	//确定parentDoc是否被全部锁定
+	private boolean isParentDocLocked(Integer parentDocId, ReturnAjax rt) {
 		if(parentDocId == 0)
 		{
-			return 0;	//已经到了最上层
+			return false;	//已经到了最上层
 		}
 		
 		Doc doc = reposService.getDoc(parentDocId);
 		Integer lockState = doc.getState();
-		long curTime = new Date().getTime();
-		long lockTime = doc.getLockTime();
-		if(lockState != 0 && curTime < lockTime)
+		
+		if(lockState == 2)	//1:lock doc only 2: lock doc and subDocs
 		{
-			rt.setError(parentDocId + " " + doc.getName() + " was locked:" + lockState);
-			System.out.println("getParentLockState() " + parentDocId + " is locked!");
-			return lockState;
+			long curTime = new Date().getTime();
+			long lockTime = doc.getLockTime();	//time for lock release
+			System.out.println("isParentDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
+			if(curTime < lockTime)
+			{
+				rt.setError(parentDocId + " " + doc.getName() + " was locked:" + lockState);
+				System.out.println("getParentLockState() " + parentDocId + " is locked!");
+				return true;
+			}
 		}
-		return getParentLockState(doc.getPid(),rt);
+		return isParentDocLocked(doc.getPid(),rt);
 	}
 	
+	//docId目录下是否有锁定的doc(包括所有锁定状态)
 	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy the Directory
 	private boolean isSubDocLocked(Integer docId, ReturnAjax rt)
 	{
