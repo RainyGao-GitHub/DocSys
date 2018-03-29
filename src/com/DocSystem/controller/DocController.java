@@ -684,8 +684,6 @@ public class DocController extends BaseController{
 			if(doc == null)
 			{
 				unlock(); //线程锁
-			
-				rt.setError("Failed to lock Doc: " + docId);
 				System.out.println("Failed to lock Doc: " + docId);
 				writeJson(rt, response);
 				return;			
@@ -1550,7 +1548,7 @@ public class DocController extends BaseController{
 				
 			if(isLockOutOfDate(doc) == false)
 			{			
-				rt.setError("Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());
+				rt.setError("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked:" + doc.getState());
 				System.out.println("Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());;
 				return true;						
 			}
@@ -1596,7 +1594,7 @@ public class DocController extends BaseController{
 			System.out.println("isParentDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
 			if(curTime < lockTime)
 			{
-				rt.setError(parentDocId + " " + doc.getName() + " was locked:" + lockState);
+				rt.setError("parentDoc " + parentDocId + "[" + doc.getName() + "] was locked:" + lockState);
 				System.out.println("getParentLockState() " + parentDocId + " is locked!");
 				return true;
 			}
@@ -1619,7 +1617,7 @@ public class DocController extends BaseController{
 			Doc subDoc =SubDocList.get(i);
 			if(subDoc.getState() != 0)
 			{
-				rt.setError( subDoc.getId() + " " +  subDoc.getName() + " is locked:" + subDoc.getState());
+				rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
 				System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
 				return true;
 			}
