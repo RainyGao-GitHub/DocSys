@@ -4011,39 +4011,6 @@ function CompareObj(objA, objB, flag) {
         uuz.ondrop = function(e){  
             e.preventDefault();
             dragUploadConfirm(e);
-            //var obj = e.dataTransfer;
-            //uploadConfirm(obj);
-            
-            /*
-            var upfile = e.dataTransfer.files;
-			if(!e.dataTransfer.files.length) return 
-            if(e.target.tagName=="SPAN"){
-            	e.target.parentNode.click();
-            	
-            }
-			var parentId = 0;
-		
-			var vid = getQueryString("vid");
-			var treeObj = $.fn.zTree.getZTreeObj("doctree");
-			
-			var parentNode = treeObj.getSelectedNodes()[0];
-			
-			if(parentNode&&parentNode.type=="2"){
-				var parentId=parentNode.id;	
-			}else{
-				
-				if(parentNode&&parentNode.getParentNode()){
-					parentNode=parentNode.getParentNode();
-					parentId=parentNode.id;
-					console.log(parentId)
-				}else{
-					parentNode=null;
-				}
-			}
-			
-			//开始上传
-			DocUpload.uploadDocs(upfile,parentNode,parentId,vid);
-			*/
         };
         
 		//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
