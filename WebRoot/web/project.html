@@ -99,7 +99,7 @@
 					<li>
 						<button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
 	                   	</button>
-	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="editWiki()" style="display:none">编辑
+	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockDocAndEditWiki()" style="display:none">编辑
 	                    </button>
 	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="saveWiki()" style="display:none">保存
 	                    </button>
@@ -2867,11 +2867,48 @@
         window.location.href = makeUrl(params)
     }
 	
+	
+	function lockDocAndEditWiki()
+	{
+		console.log("lockDocAndEditWiki()");
+	
+		var vid = getQueryString("vid");
+		var docId = curDoc;
+		var lockType = 3;
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				locType : lockType, //
+				reposId : vid, 
+				docId : docId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status){
+					console.log(ret.data);
+				    editWiki(docId,vid);
+				    return;
+ 				}
+				else
+				{
+					showErrorMessage("lockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("lockDoc 异常");
+				return;
+			}
+		});
+	}
+	
 	//进入文件编辑状态
-    function editWiki() {
+    function editWiki(docId,vid) {
         var params = {
-            vid : getQueryString("vid"),
-            doc : curDoc,
+            vid : vid,
+            doc : docId,
             edit : true
         }
         window.location.href = makeUrl(params)
