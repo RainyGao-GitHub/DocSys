@@ -301,9 +301,9 @@
 
 <script type="text/javascript">
 	//初始化全局变量
-	var gReposId = getQueryString("vid");
-	var gDocId = getQueryString("doc");
-	var gEditState = getQueryString("edit");
+	var gReposId;
+	var gDocId;
+	var gEditState = false;
 	//Doc Info
 	var gDocContent;
 	//Repos Info
@@ -1833,9 +1833,9 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
-                    gReposType = ret.data.type;
-                    gReposName = ret.data.name;
-                    gReposCreateTime = ret.data.createTime;
+                    gReposType = gReposInfo.type;
+                    gReposName = gReposInfo.name;
+                    gReposCreateTime = gReposInfo.createTime;
                     $("#projectName").text(gReposName);
                     $("#editTime").text(gReposCreateTime);
                     if(gReposType == 0)
@@ -2599,7 +2599,7 @@
     })();
 
 
-	//DocMove类
+	//DocMove类	
     var DocMove = (function () {
         //当前操作的索引
         var index = 0;
@@ -2900,12 +2900,16 @@
 	}
 	
     function exitEditWiki(docId,vid) {    
+        gEditState = false;
         var params = {
             vid : vid,
             doc : docId,
-            edit : false
+            edit : gEditState
         }
-        window.location.href = makeUrl(params)
+        var url = makeUrl(params);
+        //window.location.href = url;	//reload the page
+        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
+        loadFirstContent();
     }
 	
 	
@@ -2947,12 +2951,16 @@
 	
 	//进入文件编辑状态
     function editWiki(docId,vid) {
+        gEditState = false;
         var params = {
             vid : vid,
             doc : docId,
-            edit : true
+            edit : gEditState
         }
-        window.location.href = makeUrl(params)
+        var url = makeUrl(params);
+        //window.location.href = url;	//reload the page
+        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
+        loadFirstContent();
     }
     
     //将编辑中的文件保存到后台
@@ -3159,10 +3167,11 @@
     var firstcall = false;
     var loadmd;
     
-	//显示Markdown内容
+	//loadFirstContent should be called only when the new doc content was load
     var loadFirstContent = function () {
+    	console.log("loadFirstContent()");
         if( seajsLoaded && firstcall){
-            loadmd(gDocContent);
+            loadmd(gDocContent,gEditState);
         }
     }
 
@@ -3198,11 +3207,12 @@
     
     seajs.use(deps, function($, editormd) {
         var mdEditor;
-
-        loadmd = function (md){
+		
+		//content: content editState: 
+        loadmd = function (content,editState){
 
             if (mdEditor){
-                mdEditor.setMarkdown(md);
+                mdEditor.setMarkdown(content);
                 return;
             }
 
@@ -3210,7 +3220,7 @@
                 width: "100%",
                 height: $(document).height() - 70,
                 path : 'static/markdown/lib/',
-                markdown : md,
+                markdown : content,
                 //toolbar  : false,             // 关闭工具栏
                 codeFold : true,
                 searchReplace : true,
@@ -3242,9 +3252,10 @@
                     console.log("onpreviewed");
                 },
                 onload : function () {
-                    console.log("onload");
-                    if( ! gEditState){
-                        this.previewing();
+                    console.log("onload editState:" + editState);                 
+                    if(editState == false)
+                    {
+                    	this.previewing();
                     }
                 }
             };
@@ -3612,9 +3623,10 @@ function CompareObj(objA, objB, flag) {
               };
               var url = makeUrl(param);
 
-              if( gEditState ){
+              if(gEditState){
                   // 重新载入 并退出编辑模式
-                  window.location.href = url;
+                  //window.location.href = url;
+                  window.history.pushState({}, "wiki", url);
               }else{
                   // 快速载入
                   window.history.pushState({}, "wiki", url);
@@ -3878,7 +3890,7 @@ function CompareObj(objA, objB, flag) {
 	
 	function showDoc()
 	{
-		var docId = doc;
+		var docId = gDocId;
 		console.log("showDoc docId:" + docId);
 		if(docId)
 		{
@@ -3996,6 +4008,16 @@ function CompareObj(objA, objB, flag) {
     
     //页面加载完成处理函数    
     $(document).ready(function(){
+    	//初始化全局变量
+    	gReposId = getQueryString("vid");
+		gDocId = getQueryString("doc");
+		gEditState = getQueryString("edit");
+		if(gEditState == null)
+		{
+			gEditState = false;
+		}
+		
+    	
     	//拖拽上传
     	var uuz = document.getElementById('uuz');  
     	uuz.ondragenter = function(e){  
