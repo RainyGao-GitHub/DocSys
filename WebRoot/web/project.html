@@ -304,7 +304,14 @@
 	var gReposId = getQueryString("vid");
 	var gDocId = getQueryString("doc");
 	var gEditState = getQueryString("edit");
-
+	//Doc Info
+	var gDocContent;
+	//Repos Info
+	var gReposInfo = [];
+	var gReposType = 1; //默认是普通文件系统
+	var gReposName = "";
+	var gReposCreateTime = "";
+	
 	//通用函数接口
 	function showErrorMessage($msg) {
     	qiao.bs.alert($msg);
@@ -1814,12 +1821,6 @@
 
 <script type="text/javascript">
 	/******************************** Repos Interfaces***************************************/
-	//获取仓库信息
-	var gReposInfo = [];
-	var gReposType = 1; //默认是普通文件系统
-	var gReposName = "";
-	var gReposCreateTime = "";
-	
     function getReposInfo(callback){
 		console.log("getReposInfo");
         $.ajax({
@@ -2021,9 +2022,8 @@
                 if( "ok" == ret.status ){
                     firstcall = true; 
                     
-                    //content is for meditor
-                    content = JSON.parse(ret.data.content);
                     gDocId = ret.data.id;
+                    gDocContent = JSON.parse(ret.data.content);
                     loadFirstContent();
                 }
                 else
@@ -3158,12 +3158,11 @@
     var seajsLoaded = false;
     var firstcall = false;
     var loadmd;
-    var content;
     
 	//显示Markdown内容
     var loadFirstContent = function () {
         if( seajsLoaded && firstcall){
-            loadmd(content);
+            loadmd(gDocContent);
         }
     }
 
