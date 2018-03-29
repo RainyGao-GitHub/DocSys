@@ -1426,7 +1426,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			doc = lockDoc(id,1,login_user,rt);
+			doc = lockDoc(id,3,login_user,rt);
 			if(doc== null)
 			{
 				unlock(); //线程锁
@@ -1450,8 +1450,7 @@ public class DocController extends BaseController{
 			if(unlockDoc(id,login_user) == false)
 			{
 				rt.setError("更新文件失败 and unlockDoc failed");	
-			}
-			//writeJson(rt, response);			
+			}	
 			return;			
 		}	
 		
@@ -1485,10 +1484,11 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		if(unlockDoc(id,login_user) == false)
-		{
-			rt.setError("unlockDoc failed");	
-		}		
+		//do not release the doc lock
+		//if(unlockDoc(id,login_user) == false)
+		//{
+		//	rt.setError("unlockDoc failed");	
+		//}		
 	}
 	
 	/*********************Functions For DocLock *******************************/
@@ -1500,21 +1500,21 @@ public class DocController extends BaseController{
 		if(doc == null)
 		{
 			rt.setError("Doc " + docId +" 不存在！");
-			System.out.println("Doc: " + docId +" 不存在！");
+			System.out.println("lockDoc() Doc: " + docId +" 不存在！");
 			return null;
 		}
 		
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		if(isDocLocked(doc,login_user,rt))
 		{
-			System.out.println("Doc " + docId +" was locked");
+			System.out.println("lockDoc() Doc " + docId +" was locked");
 			return null;
 		}
 		
 		//检查其父节点是否进行了递归锁定
 		if(isParentDocLocked(doc.getPid(),rt))	//2: 全目录锁定
 		{
-			System.out.println("Parent Doc of " + docId +" was locked！");				
+			System.out.println("lockDoc() Parent Doc of " + docId +" was locked！");				
 			return null;
 		}
 		
@@ -1527,6 +1527,7 @@ public class DocController extends BaseController{
 		doc.setLockTime(lockTime);	//Set lockTime
 		if(reposService.updateDoc(lockDoc) == 0)
 		{
+			rt.setError("lock Doc:" + docId +"[" + doc.getName() +"]  failed");
 			return null;
 		}
 		System.out.println("lockDoc() success docId:" + docId + " lockType:" + lockType + " by " + login_user.getName());
