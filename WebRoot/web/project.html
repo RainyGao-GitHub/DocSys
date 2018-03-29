@@ -99,7 +99,7 @@
 					<li>
 						<button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
 	                   	</button>
-	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockDocAndEditWiki()" style="display:none">编辑
+	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockAndEditWiki()" style="display:none">编辑
 	                    </button>
 	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="saveWiki()" style="display:none">保存
 	                    </button>
@@ -302,8 +302,10 @@
 <script type="text/javascript">
 	//初始化全局变量
 	var gReposId;
-	var gDocId;
+	var gDocId; 
+	var firstcall = true;	//用来标示doc是否是首次加载进meditor
 	var gEditState = false;
+	var gPreEditState = false;
 	//Doc Info
 	var gDocContent;
 	//Repos Info
@@ -2020,11 +2022,18 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    firstcall = true; 
-                    
                     gDocId = ret.data.id;
                     gDocContent = JSON.parse(ret.data.content);
-                    loadFirstContent();
+                    if(firstcall == false)	//第一次getDoc时编辑状态在url中获取
+                    {
+                    	gEditState = false;
+                    	gPreEditState = false;
+                    }
+                    else
+                    {
+                    	firstcall = false;
+                    }
+                    loadDocContent();
                 }
                 else
                 {
@@ -2852,19 +2861,19 @@
   	 	    	    saveWikiAndExit();
   	  	 			return true;
   	 			},function(){
-  	 				unlockDocAndExitEditWiki();
+  	 				unlockAndExitEditWiki();
   	 				return true;
   	 		});
   	 	}
   	 	else
   	 	{
-    		unlockDocAndExitEditWiki();
+    		unlockAndExitEditWiki();
     	}
 	}
 	
-	function unlockDocAndExitEditWiki()
+	function unlockAndExitEditWiki()
 	{
-		console.log("lockDocAndEditWiki()");
+		console.log("lockAndEditWiki()");
 	    var vid = gReposId;
 		var docId = gDocId;
 		var lockType = 0;
@@ -2909,13 +2918,13 @@
         var url = makeUrl(params);
         //window.location.href = url;	//reload the page
         window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
-        loadFirstContent();
+        loadDocContent();
     }
 	
 	
-	function lockDocAndEditWiki()
+	function lockAndEditWiki()
 	{
-		console.log("lockDocAndEditWiki()");
+		console.log("lockAndEditWiki()");
 	
 		var vid = gReposId;
 		var docId = gDocId;
@@ -2951,7 +2960,8 @@
 	
 	//进入文件编辑状态
     function editWiki(docId,vid) {
-        gEditState = false;
+        gEditState = true;
+        gPreEditState = false;
         var params = {
             vid : vid,
             doc : docId,
@@ -2960,7 +2970,7 @@
         var url = makeUrl(params);
         //window.location.href = url;	//reload the page
         window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
-        loadFirstContent();
+        loadDocContent();
     }
     
     //将编辑中的文件保存到后台
@@ -2979,7 +2989,7 @@
     	if(debounce.getStatus() == 1)
     	{
     		debounce.clearStatus();
-    		saveDoc(gDocId, debounce.get(),unlockDocAndExitEditWiki);
+    		saveDoc(gDocId, debounce.get(),unlockAndExitEditWiki);
     	}
     }
 	
@@ -3164,13 +3174,12 @@
 	
 	//Markdown Edit Implementaion: Start
     var seajsLoaded = false;
-    var firstcall = false;
     var loadmd;
     
-	//loadFirstContent should be called only when the new doc content was load
-    var loadFirstContent = function () {
-    	console.log("loadFirstContent()");
-        if( seajsLoaded && firstcall){
+	//loadDocContent should be called only when the content was load
+    var loadDocContent = function () {
+    	console.log("loadDocContent()");
+        if( seajsLoaded){
             loadmd(gDocContent,gEditState);
         }
     }
@@ -3201,16 +3210,16 @@
     ];
 
 
-    if ( !gEditState ){
-        seajs.request("static/markdown/css/add.css",function(){});
-    }
+    
+    seajs.request("static/markdown/css/add.css",function(){});
     
     seajs.use(deps, function($, editormd) {
         var mdEditor;
-		
-		//content: content editState: 
-        loadmd = function (content,editState){
 
+		//content: content editState: 
+        loadmd = function (content){
+			console.log("loadmd() gPreEditState:" + gPreEditState + " gEditState:" + gEditState);
+			
             if (mdEditor){
                 mdEditor.setMarkdown(content);
                 return;
@@ -3242,8 +3251,14 @@
                 imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
                 imageUploadURL : "",
                 onchange : function () {
+                    console.log("onchange");
                     var newContent = this.getMarkdown();
                     debounce.call(newContent);
+                    if(gPreEditState != gEditState)
+                    {
+                    	gPreEditState = gEditState;
+                    	this.previewing();
+                    }
                 },
                 onpreviewing : function () {
                     console.log("onpreviewing");
@@ -3252,9 +3267,10 @@
                     console.log("onpreviewed");
                 },
                 onload : function () {
-                    console.log("onload editState:" + editState);                 
-                    if(editState == false)
+                    console.log("onload editState:" + gEditState);                 
+                    if(gEditState == false)
                     {
+                    	gPreEditState = gEditState;
                     	this.previewing();
                     }
                 }
@@ -3264,7 +3280,7 @@
         };
 
         seajsLoaded = true;
-        loadFirstContent();
+        loadDocContent();
     });
     //Markdown Edit Implementaion: End
 </script>
@@ -4016,7 +4032,7 @@ function CompareObj(objA, objB, flag) {
 		{
 			gEditState = false;
 		}
-		
+		gPreEditState = gEditState;
     	
     	//拖拽上传
     	var uuz = document.getElementById('uuz');  
