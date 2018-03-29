@@ -1445,10 +1445,6 @@ public class DocController extends BaseController{
 		if(reposService.updateDoc(newDoc) == 0)
 		{
 			rt.setError("更新文件失败");
-			if(unlockDoc(id,login_user) == false)
-			{
-				rt.setError("更新文件失败 and unlockDoc failed");	
-			}	
 			return;			
 		}	
 		
