@@ -300,12 +300,17 @@
  -->
 
 <script type="text/javascript">
+	//初始化变量
+	var gReposId = getQueryString("vid");
+	var gDocId = getQueryString("doc");
+	var gEditState = getQueryString("edit");
+
 	//通用函数接口
 	function showErrorMessage($msg) {
     	qiao.bs.alert($msg);
 	}
 	
-	function closeBootstrapDialog(id){
+	function closeBootstrapDialog(id){ 
 		$("#"+id + "div").remove();	//删除全屏遮罩
 		$("#"+id).remove();	//删除对话框
 	}
@@ -319,7 +324,7 @@
 			return false;
 		}
 		id = curRightClickedTreeNode.id;
-		var vid = getQueryString("vid");
+		var vid = gReposId;
 		var href = "/DocSystem/web/project.html?vid="+vid+"&doc="+id;
 		//console.log(href);
 		var host = window.location.host;	//域名带端口
@@ -457,7 +462,7 @@
 		{
 			pid = parentNode.id;
 		}
-		var vid = getQueryString("vid");
+		var vid = gReposId;
 		var remoteDir = getNodePath(parentNode);	//only for display
 		
 		$.ajax({
@@ -593,7 +598,7 @@
 		{
 			parentId = parentNode.id;
 		}
-		var vid = getQueryString("vid");
+		var vid = gReposId;
 		
 		var remoteDir = getNodePath(parentNode);	//only for display
 		
@@ -1811,8 +1816,8 @@
 	/******************************** Repos Interfaces***************************************/
 	//获取仓库信息
 	var gReposInfo = [];
-	var reposType = 1; //默认是普通文件系统
-	var reposName = "";
+	var gReposType = 1; //默认是普通文件系统
+	var gReposName = "";
     function getReposInfo(callback){
 		console.log("getReposInfo");
         $.ajax({
@@ -1820,18 +1825,18 @@
             type : "post",
             dataType : "json",
             data : {
-                vid:getQueryString("vid")
+                vid:gReposId
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
-                    reposType = ret.data.type;
-                    reposName = ret.data.name;
+                    gReposType = ret.data.type;
+                    gReposName = ret.data.name;
                     $("#projectName").text(ret.data.name);
                     var time=getDate(ret.data.createTime);
                     //var time = ret.data.createTime;
                     $("#editTime").text(time);
-                    if(reposType == 0)
+                    if(gReposType == 0)
                     {
                     	//alert("虚拟文件系统");
                         var keep = {};	//将虚拟文件系统的isParent锁定属性去掉
@@ -1875,7 +1880,7 @@
              type : "post",
              dataType : "json",
              data : {
-                 vid : getQueryString("vid"),
+                 vid : gReposId,
                  menu : newMenu
              },
              success : function (ret) {
@@ -1922,7 +1927,7 @@
 		    type : "post",
 		    dataType : "json",
 		    data : {
-		        vid : getQueryString("vid")
+		        vid : gReposId
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
@@ -2016,10 +2021,9 @@
                 if( "ok" == ret.status ){
                     firstcall = true; 
                     
+                    //content is for meditor
                     content = JSON.parse(ret.data.content);
-                    curDoc = ret.data.id;
-
-					
+                    gDocId = ret.data.id;
                     loadFirstContent();
                 }
                 else
@@ -2861,8 +2865,8 @@
 	function unlockDocAndExitEditWiki()
 	{
 		console.log("lockDocAndEditWiki()");
-	    var vid = getQueryString("vid");
-		var docId = curDoc;
+	    var vid = gReposId;
+		var docId = gDocId;
 		var lockType = 0;
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
@@ -2909,8 +2913,8 @@
 	{
 		console.log("lockDocAndEditWiki()");
 	
-		var vid = getQueryString("vid");
-		var docId = curDoc;
+		var vid = gReposId;
+		var docId = gDocId;
 		var lockType = 3;
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
@@ -2957,7 +2961,7 @@
     	if(debounce.getStatus() == 1)
     	{
     		debounce.clearStatus();
-    		saveDoc(curDoc, debounce.get());
+    		saveDoc(gDocId, debounce.get());
     	}
     }
     
@@ -2967,7 +2971,7 @@
     	if(debounce.getStatus() == 1)
     	{
     		debounce.clearStatus();
-    		saveDoc(curDoc, debounce.get(),unlockDocAndExitEditWiki);
+    		saveDoc(gDocId, debounce.get(),unlockDocAndExitEditWiki);
     	}
     }
 	
@@ -2980,7 +2984,7 @@
 	    	{
 	    		console.log("autoTmpSaveWiki");
 	    	    debounce.clearStatus1();
-	    		tmpSaveDoc(curDoc, debounce.get());
+	    		tmpSaveDoc(gDocId, debounce.get());
 	    	}
 	    },10000);
 	}     
@@ -3155,11 +3159,10 @@
     var firstcall = false;
     var loadmd;
     var content;
-    var curDoc;	
     var projectname;
     var projectVersion;
     var editTime;
-
+    
 	//显示Markdown内容
     var loadFirstContent = function () {
         if( seajsLoaded && firstcall){
@@ -3193,7 +3196,7 @@
     ];
 
 
-    if ( ! getQueryString("edit") ){
+    if ( !gEditState ){
         seajs.request("static/markdown/css/add.css",function(){});
     }
     
@@ -3244,7 +3247,7 @@
                 },
                 onload : function () {
                     console.log("onload");
-                    if( ! getQueryString("edit") ){
+                    if( ! gEditState){
                         this.previewing();
                     }
                 }
@@ -3579,7 +3582,7 @@ function CompareObj(objA, objB, flag) {
       			return;
       		}
 			
-			var vid = getQueryString("vid");
+			var vid = gReposId;
  	 		
  	 		//确定是copy还是move,如果是move调用后台move操作，否则调用后台copy操作
 	      	if(isCopy == true) //copy: 复制文件，并新建doc记录
@@ -3603,17 +3606,17 @@ function CompareObj(objA, objB, flag) {
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) {
     	  
-          if ( curDoc != treeNode.id ){
+          if ( gDocId != treeNode.id ){
               debounce.clear();
               getDoc(treeNode.id);
               $("#btnEditWiki").show();
               var param = {
-                  vid : getQueryString("vid"),
+                  vid : gReposId,
                   doc : treeNode.id,
               };
               var url = makeUrl(param);
 
-              if( getQueryString("edit") ){
+              if( gEditState ){
                   // 重新载入 并退出编辑模式
                   window.location.href = url;
               }else{
@@ -3673,7 +3676,7 @@ function CompareObj(objA, objB, flag) {
 	//获取Node的路径
 	function getNodePath(treeNode)
 	{
-		var remoteDir = reposName+"::/";
+		var remoteDir = gReposName+"::/";
 		if(treeNode)
 		{
 			var nodes = treeNode.getPath();	//获取当前节点的所有父节点
@@ -3879,15 +3882,12 @@ function CompareObj(objA, objB, flag) {
 	
 	function showDoc()
 	{
-		console.log("showDoc");
-		var doc = getQueryString("doc");
-		console.log("doc:"+doc);
-		if(doc)
+		var docId = doc;
+		console.log("showDoc docId:" + docId);
+		if(docId)
 		{
-	   		getDoc(doc);
-	   		var edit = getQueryString("edit");
-	   		console.log("edit:"+edit);
-	   		if(edit)
+	   		getDoc(docId);
+	   		if(gEditState)
 	   		{
 	   			//启动自动保存定时器
 	      		startAutoTmpSaveTimer();
@@ -3944,7 +3944,7 @@ function CompareObj(objA, objB, flag) {
 			  	alert(name + " 已存在");
 			  	return false;
 			  }
-			  var vid = getQueryString("vid");
+			  var vid = gReposId;
 			  
 			  //发送新建文件请求到后台
               if( name ){
@@ -4014,13 +4014,13 @@ function CompareObj(objA, objB, flag) {
         };
         
 		//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if( getQueryString("edit") ){
+        if( gEditState ){
             var edit = {};
             setting.edit = edit;
         }
 
 		//set the vid in upload form
-		$("#reposId").val(getQueryString("vid"));
+		$("#reposId").val(gReposId);
         
 		//获取仓库信息
 		getReposInfo(SysInit);
