@@ -3173,8 +3173,8 @@
         {
 	        //更新URL(保证页面刷新后能够)
 		    var params = {
-	            vid : vid,
-	            doc : docId,
+	            vid : gReposId,
+	            doc : curDocId,
 	        }
 	        var url = makeUrl(params);
 	        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page	
