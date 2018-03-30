@@ -1953,8 +1953,8 @@
 
 	/******************************** Doc Interfaces***************************************/
 	//文件保存操作: callback是指成功后的回调函数
-    function saveDoc(id, content,callback){
-		console.log("saveDoc: " + content);
+    function saveDoc(curDocId, content,newDocId){
+		console.log("saveDoc curDocId:" + curDocId + " newDocId" + newDocId);
         $.ajax({
             url : "/DocSystem/Doc/updateDocContent.do",
             type : "post",
@@ -1971,8 +1971,12 @@
 								type : 'success',
 								time : 1000,
 					});
-					callback && callback();
-                }else {
+					
+					if(newDocId)
+					{
+						unlockAndExitEditWiki(curDocId,newDocId);
+					}
+				}else {
                     bootstrapQ.alert("保存失败:"+ret.msgInfo);
                 }
             },
@@ -2012,35 +2016,38 @@
         });
 
     }
-
+    
+    function updateUrl(reposId,docId,edit)
+    {
+        //Update URL 保证页面刷新后还是处于正确的状态
+        var param = {
+        	vid : reposId,
+            doc : docId,
+            edit: edit,
+        };
+        var url = makeUrl(param);
+		window.history.pushState({}, "wiki", url);
+	}
+	
 	//读取文件信息
-    function getDoc(id) {
+    function getDoc(docId,edit) {
+      
+      	//To get the Doc  
         $.ajax({
             url : "/DocSystem/Doc/getDoc.do",
             type : "post",
             dataType : "json",
             data : {
-                id : id
+                id : docId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
                     gDocId = ret.data.id;
                     gDocContent = JSON.parse(ret.data.content);
-                    if(firstcall == false)	//第一次getDoc时编辑状态在url中获取
-                    {
-                    	gEditState = false;
-                    	gPreEditState = false;
-                    }
-                    else
-                    {
-                    	firstcall = false;
-                    }
                     
                     //Clear debounce
                    	debounce.clear();
-                   	debounce.clearStatus1();
-                   	debounce.clearStatus();
-                   	if(gEditState == true)
+                   	if(edit == true)
                    	{
                    		//start the autoTmpSaver
 	      				gAutoTmpSaver = startAutoTmpSaveTimer();
@@ -2049,10 +2056,18 @@
                    	{
                    		stopAutoTmpSaverTimer(gAutoTmpSaver);
                    	}
-                   	docEditBtnControl();
                    	
-                   	//load new doContent 
-                    loadDocContent();
+                   	WikiEditBtnControl(edit);
+                   	
+                   	//load new doContent
+                   	if(firstcall == true)
+                   	{ 
+                    	DocEdit.editorInit(gDocContent,edit);	
+                    }
+                    else
+                    {
+                    	DocEdit.editorLoadmd(gDocContent,edit);	                    
+                    }
                 }
                 else
                 {
@@ -2865,9 +2880,160 @@
 
 <script type="text/javascript">
 	/********************* 文件编辑接口 *********************************************/
+		//如果需要看懂下面的代码，请先看懂seajs，还不懂可以联系我：QQ：652055239
+	//load editormd by using seajs
+	seajs.config({
+        base  : "./static",
+        alias : {
+            jquery: "scripts/jquery.min.js",
+            editormd : "markdown/editormd.js"
+        }
+    });
+
+    //seajs.use("./js/seajs-main"); //使用main.js时 editormd 路径要改为 "../../editormd"
+
+    var deps = [
+        "jquery",
+        "editormd",
+        "markdown/plugins/link-dialog/link-dialog",
+        "markdown/plugins/reference-link-dialog/reference-link-dialog",
+        "markdown/plugins/image-dialog/image-dialog",
+        "markdown/plugins/code-block-dialog/code-block-dialog",
+        "markdown/plugins/table-dialog/table-dialog",
+        "markdown/plugins/emoji-dialog/emoji-dialog",
+        "markdown/plugins/goto-line-dialog/goto-line-dialog",
+        "markdown/plugins/help-dialog/help-dialog",
+        "markdown/plugins/html-entities-dialog/html-entities-dialog",
+        "markdown/plugins/preformatted-text-dialog/preformatted-text-dialog"
+    ];
+
+    seajs.request("static/markdown/css/add.css",function(){});
+    
+    seajs.use(deps, function($, editormd) {
+       	DocEdit.init(editormd);
+    });
+    
+	//DocEdit类	
+    var DocEdit = (function () {
+    	var mdEditor;
+    	var editState = false;	//默认是预览状态
+    	
+    	function init(editor)
+      	{
+      		console.log("DocEdit init");
+      		mdEditor = editor;
+      	} 
+
+      	function editorInit(content,edit)
+      	{
+      		console.log("DocEdit editorInit");
+      		var params = {
+               width: "100%",
+               height: $(document).height() - 70,
+               path : 'static/markdown/lib/',
+               markdown : content,
+               //toolbar  : false,             // 关闭工具栏
+               codeFold : true,
+               searchReplace : true,
+               saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
+               htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+               emoji : true,
+               taskList : true,
+               tocm: true,          			// Using [TOCM]
+               tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
+               //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
+               flowChart : true,                // 疑似 Sea.js与 Raphael.js 有冲突，必须先加载 Raphael.js ，Editor.md 才能在 Sea.js 下正常进行；
+               sequenceDiagram : true,          // 同上
+               //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
+               //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
+               //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
+               //dialogMaskOpacity : 0.4,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
+               //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
+               imageUpload : true,
+               imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+               imageUploadURL : "",
+               onchange : function () {
+                   console.log("onchange");
+                   var newContent = this.getMarkdown();
+                   if(editState == true)
+                   {
+            	       debounce.call(newContent);
+    		       }
+    		       else
+    		       {
+    		           debounce.clear();
+    		       }       
+               },
+               onpreviewing : function () {
+                   console.log("onpreviewing");
+                   editState = true;
+               },
+               onpreviewed :function () {
+                   console.log("onpreviewed");
+                   editState = false;                   
+               },
+               onload : function () {
+                   console.log("onload edit:" + edit);
+                   if(edit == true)
+                   {
+                   		editState = true;
+                   		this.previewing();               
+                   }  
+               }
+       		};
+       		
+       		if(!mdEditor)
+       		{
+       			console.log("please load the editormd firstly by seajs");
+       			return;
+       		}
+       		else
+       		{
+       			mdEditor("doc",params);
+       		}    
+      	}
+        
+    	function editorLoadmd(content,edit) 
+    	{
+    		console.log("DocEdit editorLoadmd()");
+    		mdEditor.setMarkdown(content);
+    		if(edit != editState)
+    		{
+    			editState = edit;
+    			mdEditor.previewing();
+    		}
+        }
+		      		
+		function editorSwitch(edit)
+    	{
+    		console.log("DocEdit editorSwitch");
+    		if(edit != editState)
+    		{
+    		    editState = edit;
+    			mdEditor.previewing();
+    		}
+    	}
+
+		//开放给外部的调用接口
+        return {
+            init: function(editor){
+            	init(editor);
+            },
+            editorInit: function(content,edit){
+            	editorInit(content,edit);
+            },
+            editorLoadmd: function(content,edit){
+            	editorLoadmd(content,edit);
+            },
+            editorSwitch: function(edit){
+            	editorSwitch(edit);
+            },
+        };
+    })();
+	
 	//退出文件编辑状态
-    function exitEdit() {
-    	console.log("exitEdit");
+    function exitEdit(curDocId,newDocId) {
+    	console.log("exitEdit curDocId:" + curDocId + " newDocId:" + newDocId);
     	if(debounce.getStatus() == 1)
     	{
     		qiao.bs.confirm({
@@ -2877,92 +3043,111 @@
   	 	    		okbtn: "保存",
   	 	    		qubtn: "直接退出",
   	 	    	},function () {
-  	 	    	    saveWikiAndExit();
+  	 	    	    saveWikiAndExit(curDocId,newDocId);
   	  	 			return true;
   	 			},function(){
-  	 				unlockAndExitEditWiki();
+  	 				unlockAndExitEditWiki(curDocId,newDocId);
   	 				return true;
   	 		});
   	 	}
   	 	else
   	 	{
-    		unlockAndExitEditWiki();
+    		unlockAndExitEditWiki(curDocId,newDocId);
     	}
 	}
 	
-	function unlockAndExitEditWiki()
+	    //将编辑中的文件保存到后台
+    function saveWikiAndExit(curDocId,newDocId) {
+    	console.log("saveWikiAndExit  curDocId:" + curDocId + " newDocId:" + newDocId);
+    	if(debounce.getStatus() == 1)
+    	{
+    		debounce.clearStatus();
+    		saveDoc(gDocId, debounce.get(),newDocId);
+    	}
+    }
+	
+	function unlockAndExitEditWiki(curDocId,newDocId)
 	{
-		console.log("lockAndEditWiki()");
-	    var vid = gReposId;
-		var docId = gDocId;
-		var lockType = 0;
+		console.log("unlockAndExitEditWiki()  curDocId:" + curDocId + " newDocId:" + newDocId);
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
 			dataType : "json",
 			data : {
-				lockType : lockType, //
-				reposId : vid, 
-				docId : docId,
+				lockType : 0, //unlock the doc
+				reposId : gReposId, 
+				docId : curDocId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
-				    exitEditWiki(docId,vid);
+				    exitEditWiki(curDocId,newDocId);
 				    return;
  				}
 				else
 				{
 					showErrorMessage("unlockDoc Error:" + ret.msgInfo);
-					exitEditWiki(docId,vid);
+					exitEditWiki(curDocId,newDocId);
 					return;
 				}
 			},
 			error : function () 
 			{
 				showErrorMessage("unlockDoc 异常");
-				exitEditWiki(docId,vid);
+				exitEditWiki(curDocId,newDocId);
 				return;
 			}
 		});
 	}
 	
-    function exitEditWiki(docId,vid) {    
-        gEditState = false;
-        docEditBtnControl()
+    function exitEditWiki(curDocId,newDocId) {  
+      	console.log("exitEditWiki()  curDocId:" + curDocId + " newDocId:" + newDocId);
+		//swith to preview state
+        DocEdit.mdSwitch(false);
+        //编辑等按键显示控制
+        WikiEditBtnControl(false);
 	    
-        var params = {
-            vid : vid,
-            doc : docId,
-            edit : gEditState
+	    //Stop autoSaver
+	    debounce.clear();
+	    stoptAutoTmpSaveTimer(gAutoTmpSaver);
+	            
+        if(newDocId)
+        {
+        	var edit = false;
+        	getDoc(newDocId,edit);	//
         }
-        var url = makeUrl(params);
-        //window.location.href = url;	//reload the page
-        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
-        loadDocContent();
+        else
+        {
+	        //更新URL(保证页面刷新后能够)
+		    var params = {
+	            vid : vid,
+	            doc : docId,
+	        }
+	        var url = makeUrl(params);
+	        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page	
+        }
     }
 	
-	
+	//进入编辑状态
 	function lockAndEditWiki()
 	{
 		console.log("lockAndEditWiki()");
-	
 		var vid = gReposId;
 		var docId = gDocId;
-		var lockType = 3;
+
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
 			dataType : "json",
 			data : {
-				lockType : lockType, //
+				lockType : 3, //
 				reposId : vid, 
 				docId : docId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
-				    editWiki(docId,vid);
+				    editWiki(docId);
 				    return;
  				}
 				else
@@ -2980,16 +3165,16 @@
 	}
 	
 	//进入文件编辑状态
-    function editWiki(docId,vid) {
-        gEditState = true;
-        gPreEditState = false;
+    function editWiki(docId){
         
-        docEditBtnControl()
+        DocEdit.mdswitch(true);
+        
+        WikiEditBtnControl(true);
 	    
         var params = {
             vid : vid,
             doc : docId,
-            edit : gEditState
+            edit : true,
         }
         var url = makeUrl(params);
         //window.location.href = url;	//reload the page
@@ -2997,12 +3182,7 @@
         
         //start the autoTmpSaver
         debounce.clear();
-        debounce.clearStatus();
-        debounce.clearStatus1();
 	    gAutoTmpSaver = startAutoTmpSaveTimer();
-		
-		//load Doc Content
-        loadDocContent();
     }
     
     //将编辑中的文件保存到后台
@@ -3014,17 +3194,7 @@
     		saveDoc(gDocId, debounce.get());
     	}
     }
-    
-    //将编辑中的文件保存到后台
-    function saveWikiAndExit() {
-    	console.log("saveWikiAndExit");
-    	if(debounce.getStatus() == 1)
-    	{
-    		debounce.clearStatus();
-    		saveDoc(gDocId, debounce.get(),unlockAndExitEditWiki);
-    	}
-    }
-	
+    	
 	//定时自动保存接口
 	function startAutoTmpSaveTimer()
 	{ 
@@ -3041,8 +3211,11 @@
 	}     
 	
 	function stopAutoTmpSaverTimer(timer){
-		console.log("stopAutoTmpSaverTimer");
-		clearInterval(timer);
+		if(timer)
+		{
+			console.log("stopAutoTmpSaverTimer");
+			clearInterval(timer);
+		}
 	}
 	
 	//debounce文件编辑缓存类
@@ -3208,123 +3381,6 @@
         var tt = new Date(tm).toLocaleString();
         return tt;
     }
-	
-	
-	//Markdown Edit Implementaion: Start
-    var seajsLoaded = false;
-    var loadmd;
-    
-	//loadDocContent should be called only when the content was load
-    var loadDocContent = function () {
-    	console.log("loadDocContent()");
-        if( seajsLoaded){
-            loadmd(gDocContent,gEditState);
-        }
-    }
-
-    seajs.config({
-        base  : "./static",
-        alias : {
-            jquery: "scripts/jquery.min.js",
-            editormd : "markdown/editormd.js"
-        }
-    });
-
-    //seajs.use("./js/seajs-main"); //使用main.js时 editormd 路径要改为 "../../editormd"
-
-    var deps = [
-        "jquery",
-        "editormd",
-        "markdown/plugins/link-dialog/link-dialog",
-        "markdown/plugins/reference-link-dialog/reference-link-dialog",
-        "markdown/plugins/image-dialog/image-dialog",
-        "markdown/plugins/code-block-dialog/code-block-dialog",
-        "markdown/plugins/table-dialog/table-dialog",
-        "markdown/plugins/emoji-dialog/emoji-dialog",
-        "markdown/plugins/goto-line-dialog/goto-line-dialog",
-        "markdown/plugins/help-dialog/help-dialog",
-        "markdown/plugins/html-entities-dialog/html-entities-dialog",
-        "markdown/plugins/preformatted-text-dialog/preformatted-text-dialog"
-    ];
-
-
-    
-    seajs.request("static/markdown/css/add.css",function(){});
-    
-    seajs.use(deps, function($, editormd) {
-        var mdEditor;
-
-		//content: content editState: 
-        loadmd = function (content){
-			console.log("loadmd() gPreEditState:" + gPreEditState + " gEditState:" + gEditState);
-			
-            if (mdEditor){
-                mdEditor.setMarkdown(content);
-                return;
-            }
-
-            var params = {
-                width: "100%",
-                height: $(document).height() - 70,
-                path : 'static/markdown/lib/',
-                markdown : content,
-                //toolbar  : false,             // 关闭工具栏
-                codeFold : true,
-                searchReplace : true,
-                saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
-                htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
-                emoji : true,
-                taskList : true,
-                tocm            : true,          // Using [TOCM]
-                tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
-                //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
-                flowChart : true,                // 疑似 Sea.js与 Raphael.js 有冲突，必须先加载 Raphael.js ，Editor.md 才能在 Sea.js 下正常进行；
-                sequenceDiagram : true,          // 同上
-                //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
-                //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
-                //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
-                //dialogMaskOpacity : 0.4,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
-                //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
-                imageUpload : true,
-                imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
-                imageUploadURL : "",
-                onchange : function () {
-                    console.log("onchange");
-                    var newContent = this.getMarkdown();
-                    debounce.call(newContent);
-                    if(gPreEditState != gEditState)
-                    {
-                    	gPreEditState = gEditState;
-                    	this.previewing();
-                    }
-                },
-                onpreviewing : function () {
-                    console.log("onpreviewing");
-                    gEditState = false;
-                    gPreEditState = false;
-                },
-                onpreviewed :function () {
-                    console.log("onpreviewed");
-                    gEditState = true;
-                    gPreEditState = true;                    
-                },
-                onload : function () {
-                    console.log("onload editState:" + gEditState);                 
-                    if(gEditState == false)
-                    {
-                    	gPreEditState = gEditState;
-                    	this.previewing();
-                    }
-                }
-            };
-
-            mdEditor = editormd("doc", params);
-        };
-
-        seajsLoaded = true;
-        loadDocContent();
-    });
-    //Markdown Edit Implementaion: End
 </script>
 
 <script type="text/javascript" >
@@ -3669,28 +3725,20 @@ function CompareObj(objA, objB, flag) {
       }
         
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
-      function zTreeOnClick(event, treeId, treeNode) {
+      function zTreeOnClick(event, treeId, treeNode) 
+      {
     	  
-          if ( gDocId != treeNode.id ){
-              debounce.clear();
-              getDoc(treeNode.id);
-              $("#btnEditWiki").show();
-              var param = {
-                  vid : gReposId,
-                  doc : treeNode.id,
-              };
-              var url = makeUrl(param);
-
-              if(gEditState){
-                  // 重新载入 并退出编辑模式
-                  //window.location.href = url;
-                  window.history.pushState({}, "wiki", url);
-              }else{
-                  // 快速载入
-                  window.history.pushState({}, "wiki", url);
-              }
-
-
+          if (gDocId != treeNode.id)
+          {
+             if(gEditState)
+             {
+              	//exitEdit then getDoc
+              	exitEditAndGetDoc(treeNode.id);
+             }
+             else
+             {              
+              	getDoc(treeNode.id);
+             }             
           }
       };
       
@@ -3956,19 +4004,19 @@ function CompareObj(objA, objB, flag) {
 	   }             
 	}
 	
-	function docEditBtnControl()
+	function WikiEditBtnControl(editState)
 	{
-		 if(gEditState)
+		 if(editState == true)
 	   	 {
-	      		$("#btnExitEdit").show();
-	      		$("#btnSaveWiki").show();  
-	      		$("#btnEditWiki").hide();
+	      	$("#btnExitEdit").show();
+	      	$("#btnSaveWiki").show();  
+	      	$("#btnEditWiki").hide();
 	     }
 	     else
 	     {
-	     	    $("#btnExitEdit").hide();
-	      		$("#btnSaveWiki").hide(); 
-	      		$("#btnEditWiki").show();
+		    $("#btnExitEdit").hide();
+	      	$("#btnSaveWiki").hide(); 
+	      	$("#btnEditWiki").show();
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
@@ -4075,12 +4123,7 @@ function CompareObj(objA, objB, flag) {
     	gReposId = getQueryString("vid");
 		gDocId = getQueryString("doc");
 		gEditState = getQueryString("edit");
-		if(gEditState == null)
-		{
-			gEditState = false;
-		}
-		gPreEditState = gEditState;
-    	
+    	console.log("ready() gDocId:"+gDocId +  " gReposId:" + gReposId + " gEditState:" + gEditState);
     	//拖拽上传
     	var uuz = document.getElementById('uuz');  
     	uuz.ondragenter = function(e){  
