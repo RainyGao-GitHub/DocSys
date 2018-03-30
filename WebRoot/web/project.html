@@ -300,20 +300,17 @@
  -->
 
 <script type="text/javascript">
-	//初始化全局变量
+	//初始化全局变量 //Repos Info
 	var gReposId;
-	var gDocId;
-	var gEditState; 
-	var firstcall = true;	//用来标示doc是否是首次加载进meditor
-	var gAutoTmpSaver = null;
-	
-	//Doc Info
-	var gDocContent;
-	//Repos Info
 	var gReposInfo = [];
 	var gReposType = 1; //默认是普通文件系统
 	var gReposName = "";
 	var gReposCreateTime = "";
+	//Doc Info
+	var gDocId;
+	var gDocContent;
+	var gEdit; 
+	var firstcall = true;	//用来标示doc是否是首次加载进meditor	
 	
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -2027,7 +2024,7 @@
         var url = makeUrl(param);
 		window.history.pushState({}, "wiki", url);
 	}
-	
+
 	//读取文件信息
     function getDoc(docId,edit) {
       	console.log("getDoc() docId:"+docId + " edit:" + edit);
@@ -2044,23 +2041,9 @@
                 if( "ok" == ret.status ){
                     gDocId = ret.data.id;
                     gDocContent = JSON.parse(ret.data.content);
-                    
-                    //Clear debounce
-                   	debounce.clear();
-                   	if(edit)
-                   	{
-                   		//start the autoTmpSaver
-	      				gAutoTmpSaver = startAutoTmpSaver();
-                   	}
-                   	else
-                   	{
-                   		stopAutoTmpSaver(gAutoTmpSaver);
-                   	}
-                   	
-                   	WikiEditBtnCtrl(edit);
-                   	
-                   	//Update URL 保证页面刷新后还是处于正确的状态
-			        updateUrl(gReposId,gDocId,edit);
+		
+					//Update URL 保证页面刷新后还是处于正确的状态
+					updateUrl(gReposId,gDocId,edit);
 					
                    	//load new doContent
                    	if(firstcall == true)
@@ -2070,8 +2053,22 @@
                     }
                     else
                     {
-                    	DocEdit.editorLoadmd(gDocContent,edit);	                    
+                    	DocEdit.editorLoadmd(gtDocContent,edit);	                    
                     }
+                    
+                    WikiEditBtnCtrl(edit);		
+					
+                    //we need to clear debounce when a new doc was loaded
+					debounce.clear();
+					if(edit)
+					{
+						//start the autoTmpSaver
+						DocEdit.startAutoTmpSaver();
+					}
+					else
+					{
+						DocEdit.stopAutoTmpSaver();
+					}
                 }
                 else
                 {
@@ -2919,8 +2916,12 @@
     
 	//DocEdit类	
     var DocEdit = (function () {
-    	var mdEditor;
-    	var md;
+    	//markdow Editor
+    	var mdEditor;	//editormd函数指针 
+    	var md;	//mdeditor对象
+      	//自动保存定时器
+      	var autoSaveTimer;
+      	var timerState = 0;
     
     	function init(editor)
       	{
@@ -2931,8 +2932,8 @@
       	function editorInit(content,edit)
       	{
       		console.log("DocEdit editorInit");
-      		gEditState = edit;
-      		
+      		gEdit = edit;
+
       		var params = {
                width: "100%",
                height: $(document).height() - 70,
@@ -2961,7 +2962,7 @@
                onchange : function () {
                    console.log("onchange");
                    var newContent = this.getMarkdown();
-                   if(gEditState == true)
+                   if(gEdit == true)
                    {
             	       debounce.call(newContent);
     		       }
@@ -2972,8 +2973,8 @@
                },
                onpreviewing : function () {
                    console.log("onpreviewing");
-                   gEditState = false;
-                   WikiEditBtnCtrl(gEditState);
+                   gEdit = false;
+                   WikiEditBtnCtrl(gEdit);
                },
                onpreviewed :function () {
                    console.log("onpreviewed");
@@ -2984,8 +2985,8 @@
                    {
                    		this.previewing();               
                    }
-                   gEditState = edit;
-                   WikiEditBtnCtrl(gEditState);
+                   gEdit = edit;
+                   WikiEditBtnCtrl(gEdit);
                }
        		};
        		
@@ -3010,9 +3011,9 @@
        		}
        		
     		md.setMarkdown(content);
-    		if(edit != gEditState)
+    		if(edit != gEdit)
     		{
-    			gEditState = edit;
+    			gEdit = edit;
     			md.previewing();
     		}
         }
@@ -3026,12 +3027,38 @@
        			return;
        		}
        		
-    		if(edit != gEditState)
+    		if(edit != gEdit)
     		{
-    		    gEditState = edit;
+    		    gEdit = edit;
     			md.previewing();
     		}
     	}
+    	
+    	function startAutoTmpSaver()
+		{ 
+			console.log("DocEdit.startAutoTmpSaver timerState:" + timerState);
+			if(timerState == 0)
+			{
+				timerState = 1;
+				autoSaveTimer = setInterval(function () {
+		        	if(debounce.getStatus1() == 1)
+		    		{
+		    			console.log("autoTmpSaveWiki");
+		    	    	debounce.clearStatus1();
+		    			tmpSaveDoc(gDocId, debounce.get());
+		    		}
+		    	},10000);
+		    }
+		}     
+	
+		function stopAutoTmpSaver(){
+			console.log("DocEdit.stopAutoTmpSaver timerState:" + timerState);
+			if(timerState == 1)
+			{
+				timerState = 0;
+				clearInterval(gAutoSaveTimer);
+			}
+		}
 
 		//开放给外部的调用接口
         return {
@@ -3047,6 +3074,13 @@
             editorSwitch: function(edit){
             	editorSwitch(edit);
             },
+            startAutoTmpSaver: function(){
+            	startAutoTmpSaver();
+            },
+            stopAutoTmpSaver: function(){
+            	stopAutoTmpSaver();
+            },
+            
         };
     })();
 	
@@ -3128,7 +3162,7 @@
 	    
 	    //Stop autoSaver
 	    debounce.clear();
-	    stopAutoTmpSaver(gAutoTmpSaver);
+	    DocEdit.stopAutoTmpSaver();
 	            
         if(newDocId)
         {
@@ -3201,7 +3235,7 @@
         
         //start the autoTmpSaver
         debounce.clear();
-	    gAutoTmpSaver = startAutoTmpSaver();
+	    DocEdit.startAutoTmpSaver();
     }
     
     //将编辑中的文件保存到后台
@@ -3213,29 +3247,6 @@
     		saveDoc(gDocId, debounce.get());
     	}
     }
-    	
-	//定时自动保存接口
-	function startAutoTmpSaver()
-	{ 
-		console.log("startAutoTmpSaver");
-		var timer = setInterval(function () {
-	        if(debounce.getStatus1() == 1)
-	    	{
-	    		console.log("autoTmpSaveWiki");
-	    	    debounce.clearStatus1();
-	    		tmpSaveDoc(gDocId, debounce.get());
-	    	}
-	    },10000);
-	    return timer;
-	}     
-	
-	function stopAutoTmpSaver(timer){
-		if(timer)
-		{
-			console.log("stopAutoTmpSaver");
-			clearInterval(timer);
-		}
-	}
 	
 	//debounce文件编辑缓存类
     var debounce = (function () {
@@ -3752,7 +3763,7 @@ function CompareObj(objA, objB, flag) {
       {
           if (gDocId != treeNode.id)
           {
-             if(gEditState)
+             if(gEdit)
              {
               	//exitEdit then getDoc
               	exitEdit(gDocId,treeNode.id);
@@ -4027,7 +4038,7 @@ function CompareObj(objA, objB, flag) {
 			 zTree.selectNode(node);
 			
 			//获取DocContent
-	   		getDoc(gDocId,gEditState);
+	   		getDoc(gDocId,gEdit);
 	   	}             
 	}
 	
@@ -4149,8 +4160,12 @@ function CompareObj(objA, objB, flag) {
     	//初始化全局变量
     	gReposId = getQueryString("vid");
 		gDocId = getQueryString("doc");
-		gEditState = getQueryString("edit");
-    	console.log("ready() gDocId:"+gDocId +  " gReposId:" + gReposId + " gEditState:" + gEditState);
+		gEdit = getQueryString("edit");
+		if(!gEdit)
+		{
+			gEdit = false;
+		}
+    	console.log("ready() gDocId:"+gDocId +  " gReposId:" + gReposId + " gEdit:" + gEdit);
     	//拖拽上传
     	var uuz = document.getElementById('uuz');  
     	uuz.ondragenter = function(e){  
@@ -4165,7 +4180,7 @@ function CompareObj(objA, objB, flag) {
         };
         
 		//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if( gEditState ){
+        if( gEdit ){
             var edit = {};
             setting.edit = edit;
         }
