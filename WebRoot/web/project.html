@@ -310,7 +310,6 @@
 	var gDocId;
 	var gDocContent;
 	var gEdit; 
-	var firstcall = true;	//用来标示doc是否是首次加载进meditor	
 	
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -2045,16 +2044,7 @@
 					//Update URL 保证页面刷新后还是处于正确的状态
 					updateUrl(gReposId,gDocId,edit);
 					
-                   	//load new doContent
-                   	if(firstcall == true)
-                   	{ 
-                   		firstcall = false;
-                    	DocEdit.editorInit(gDocContent,edit);	
-                    }
-                    else
-                    {
-                    	DocEdit.editorLoadmd(gDocContent,edit);	                    
-                    }
+					DocEdit.loadmd(gDocContent,edit);
                     
                     WikiEditBtnCtrl(edit);		
 					
@@ -2917,8 +2907,9 @@
 	//DocEdit类	
     var DocEdit = (function () {
     	//markdow Editor
-    	var mdEditor;	//editormd函数指针 
+    	var mdEditor;	//editormd构建函数 
     	var md;	//mdeditor对象
+    	var firstcall = true;
       	//自动保存定时器
       	var autoSaveTimer;
       	var timerState = 0;
@@ -3017,6 +3008,19 @@
     			md.previewing();
     		}
         }
+        
+        function loadmd(content,edit)
+        {
+			if(firstcall == true)
+   			{ 
+    			firstcall = false;
+         		editorInit(content,edit);	
+    		}
+    		else
+      		{
+      			editorLoadmd(content,edit);	                    
+			}
+        }
 		      		
 		function editorSwitch(edit)
     	{
@@ -3065,11 +3069,8 @@
             init: function(editor){
             	init(editor);
             },
-            editorInit: function(content,edit){
-            	editorInit(content,edit);
-            },
-            editorLoadmd: function(content,edit){
-            	editorLoadmd(content,edit);
+            loadmd: function(content,edit){
+               loadmd(content,edit);
             },
             editorSwitch: function(edit){
             	editorSwitch(edit);
@@ -3087,7 +3088,7 @@
 	//退出文件编辑状态
     function exitEdit(curDocId,newDocId) {
     	console.log("exitEdit curDocId:" + curDocId + " newDocId:" + newDocId);
-    	if(curDocId)
+    	if(!curDocId)
     	{
     		curDocId = gDocId;
     	}
