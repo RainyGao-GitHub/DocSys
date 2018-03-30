@@ -3750,7 +3750,6 @@ function CompareObj(objA, objB, flag) {
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
-    	  
           if (gDocId != treeNode.id)
           {
              if(gEditState)
@@ -4022,6 +4021,12 @@ function CompareObj(objA, objB, flag) {
 		console.log("showDoc gDocId:" + gDocId);
 		if(gDocId)
 		{
+			//select the zTreeNode with gDocId
+			 var zTree = $.fn.zTree.getZTreeObj("doctree");
+			 var node = zTree.getNodeByParam("id",gDocId);
+			 zTree.selectNode(node);
+			
+			//获取DocContent
 	   		getDoc(gDocId,gEditState);
 	   	}             
 	}
