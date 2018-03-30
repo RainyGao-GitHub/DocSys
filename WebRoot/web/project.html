@@ -1956,7 +1956,7 @@
             type : "post",
             dataType : "json",
             data : {
-                id : id,
+                id : curDocId,
                 content : content
             },
             success : function (ret) {
@@ -3087,6 +3087,11 @@
 	//退出文件编辑状态
     function exitEdit(curDocId,newDocId) {
     	console.log("exitEdit curDocId:" + curDocId + " newDocId:" + newDocId);
+    	if(curDocId)
+    	{
+    		curDocId = gDocId;
+    	}
+    	
     	if(debounce.getStatus() == 1)
     	{
     		qiao.bs.confirm({
