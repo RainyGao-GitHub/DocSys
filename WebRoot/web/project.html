@@ -302,10 +302,9 @@
 <script type="text/javascript">
 	//初始化全局变量
 	var gReposId;
-	var gDocId; 
+	var gDocId;
+	var gEditState; 
 	var firstcall = true;	//用来标示doc是否是首次加载进meditor
-	var gEditState = false;
-	var gPreEditState = false;
 	var gAutoTmpSaver = null;
 	
 	//Doc Info
@@ -2031,7 +2030,8 @@
 	
 	//读取文件信息
     function getDoc(docId,edit) {
-      
+      	console.log("getDoc() docId:"+docId + " edit:" + edit);
+      	
       	//To get the Doc  
         $.ajax({
             url : "/DocSystem/Doc/getDoc.do",
@@ -2047,21 +2047,25 @@
                     
                     //Clear debounce
                    	debounce.clear();
-                   	if(edit == true)
+                   	if(edit)
                    	{
                    		//start the autoTmpSaver
-	      				gAutoTmpSaver = startAutoTmpSaveTimer();
+	      				gAutoTmpSaver = startAutoTmpSaver();
                    	}
                    	else
                    	{
-                   		stopAutoTmpSaverTimer(gAutoTmpSaver);
+                   		stopAutoTmpSaver(gAutoTmpSaver);
                    	}
                    	
-                   	WikiEditBtnControl(edit);
+                   	WikiEditBtnCtrl(edit);
                    	
+                   	//Update URL 保证页面刷新后还是处于正确的状态
+			        updateUrl(gReposId,gDocId,edit);
+					
                    	//load new doContent
                    	if(firstcall == true)
                    	{ 
+                   		firstcall = false;
                     	DocEdit.editorInit(gDocContent,edit);	
                     }
                     else
@@ -2916,8 +2920,8 @@
 	//DocEdit类	
     var DocEdit = (function () {
     	var mdEditor;
-    	var editState = false;	//默认是预览状态
-    	
+    	var md;
+    
     	function init(editor)
       	{
       		console.log("DocEdit init");
@@ -2927,6 +2931,8 @@
       	function editorInit(content,edit)
       	{
       		console.log("DocEdit editorInit");
+      		gEditState = edit;
+      		
       		var params = {
                width: "100%",
                height: $(document).height() - 70,
@@ -2955,7 +2961,7 @@
                onchange : function () {
                    console.log("onchange");
                    var newContent = this.getMarkdown();
-                   if(editState == true)
+                   if(gEditState == true)
                    {
             	       debounce.call(newContent);
     		       }
@@ -2966,51 +2972,64 @@
                },
                onpreviewing : function () {
                    console.log("onpreviewing");
-                   editState = true;
+                   gEditState = false;
+                   WikiEditBtnCtrl(gEditState);
                },
                onpreviewed :function () {
                    console.log("onpreviewed");
-                   editState = false;                   
                },
                onload : function () {
                    console.log("onload edit:" + edit);
-                   if(edit == true)
+                   if(edit == false)
                    {
-                   		editState = true;
                    		this.previewing();               
-                   }  
+                   }
+                   gEditState = edit;
+                   WikiEditBtnCtrl(gEditState);
                }
        		};
        		
        		if(!mdEditor)
        		{
-       			console.log("please load the editormd firstly by seajs");
+       			alert("please load the editormd firstly by seajs");
        			return;
        		}
        		else
        		{
-       			mdEditor("doc",params);
+       			md = mdEditor("doc",params);
        		}    
       	}
         
     	function editorLoadmd(content,edit) 
     	{
-    		console.log("DocEdit editorLoadmd()");
-    		mdEditor.setMarkdown(content);
-    		if(edit != editState)
+    		console.log("DocEdit editorLoadmd() edit:" + edit);
+    		if(!md)
+       		{
+       			alert("please call editorInit firstly");
+       			return;
+       		}
+       		
+    		md.setMarkdown(content);
+    		if(edit != gEditState)
     		{
-    			editState = edit;
-    			mdEditor.previewing();
+    			gEditState = edit;
+    			md.previewing();
     		}
         }
 		      		
 		function editorSwitch(edit)
     	{
-    		console.log("DocEdit editorSwitch");
-    		if(edit != editState)
+    		console.log("DocEdit editorSwitch() edit:"+edit);
+    		if(!md)
+       		{
+       			alert("please call editorInit firstly");
+       			return;
+       		}
+       		
+    		if(edit != gEditState)
     		{
-    		    editState = edit;
-    			mdEditor.previewing();
+    		    gEditState = edit;
+    			md.previewing();
     		}
     	}
 
@@ -3103,13 +3122,13 @@
     function exitEditWiki(curDocId,newDocId) {  
       	console.log("exitEditWiki()  curDocId:" + curDocId + " newDocId:" + newDocId);
 		//swith to preview state
-        DocEdit.mdSwitch(false);
+        DocEdit.editorSwitch(false);
         //编辑等按键显示控制
-        WikiEditBtnControl(false);
+        WikiEditBtnCtrl(false);
 	    
 	    //Stop autoSaver
 	    debounce.clear();
-	    stoptAutoTmpSaveTimer(gAutoTmpSaver);
+	    stopAutoTmpSaver(gAutoTmpSaver);
 	            
         if(newDocId)
         {
@@ -3167,12 +3186,12 @@
 	//进入文件编辑状态
     function editWiki(docId){
         
-        DocEdit.mdswitch(true);
+        DocEdit.editorSwitch(true);
         
-        WikiEditBtnControl(true);
+        WikiEditBtnCtrl(true);
 	    
         var params = {
-            vid : vid,
+            vid : gReposId,
             doc : docId,
             edit : true,
         }
@@ -3182,7 +3201,7 @@
         
         //start the autoTmpSaver
         debounce.clear();
-	    gAutoTmpSaver = startAutoTmpSaveTimer();
+	    gAutoTmpSaver = startAutoTmpSaver();
     }
     
     //将编辑中的文件保存到后台
@@ -3196,9 +3215,9 @@
     }
     	
 	//定时自动保存接口
-	function startAutoTmpSaveTimer()
+	function startAutoTmpSaver()
 	{ 
-		console.log("startAutoTmpSaveTimer");
+		console.log("startAutoTmpSaver");
 		var timer = setInterval(function () {
 	        if(debounce.getStatus1() == 1)
 	    	{
@@ -3210,10 +3229,10 @@
 	    return timer;
 	}     
 	
-	function stopAutoTmpSaverTimer(timer){
+	function stopAutoTmpSaver(timer){
 		if(timer)
 		{
-			console.log("stopAutoTmpSaverTimer");
+			console.log("stopAutoTmpSaver");
 			clearInterval(timer);
 		}
 	}
@@ -3267,17 +3286,21 @@
             	return getStatus1();
             },
             clearStatus: function(){
+            	console.log("debounce clearStatus");
             	return clearStatus();
             },
             clearStatus1: function(){
+	            console.log("debounce clearStatus1");
             	return clearStatus1();
             },
             call : function (c) {
+            	console.log("debounce call");
                 latestcopy = c;
                 status = 1;
                 status1 = 1;
             },
             clear : function () {
+                console.log("debounce clear");
                 status = 0;
                 status1 = 0;
                 latestcopy = "";
@@ -3733,11 +3756,11 @@ function CompareObj(objA, objB, flag) {
              if(gEditState)
              {
               	//exitEdit then getDoc
-              	exitEditAndGetDoc(treeNode.id);
+              	exitEdit(gDocId,treeNode.id);
              }
              else
              {              
-              	getDoc(treeNode.id);
+              	getDoc(treeNode.id,false);
              }             
           }
       };
@@ -3996,17 +4019,16 @@ function CompareObj(objA, objB, flag) {
 	
 	function showDoc()
 	{
-		var docId = gDocId;
-		console.log("showDoc docId:" + docId);
-		if(docId)
+		console.log("showDoc gDocId:" + gDocId);
+		if(gDocId)
 		{
-	   		getDoc(docId);
-	   }             
+	   		getDoc(gDocId,gEditState);
+	   	}             
 	}
 	
-	function WikiEditBtnControl(editState)
+	function WikiEditBtnCtrl(edit)
 	{
-		 if(editState == true)
+		 if(edit)
 	   	 {
 	      	$("#btnExitEdit").show();
 	      	$("#btnSaveWiki").show();  
