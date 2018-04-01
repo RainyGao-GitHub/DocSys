@@ -1966,6 +1966,8 @@
 								type : 'success',
 								time : 1000,
 					});
+					//清除debounce
+					debounce.clear();
 					
 					if(newDocId)
 					{
@@ -3120,7 +3122,6 @@
     	console.log("saveWikiAndExit  curDocId:" + curDocId + " newDocId:" + newDocId);
     	if(debounce.getStatus() == 1)
     	{
-    		debounce.clearStatus();
     		saveDoc(gDocId, debounce.get(),newDocId);
     	}
     }
@@ -3249,7 +3250,6 @@
     	console.log("saveWiki");
     	if(debounce.getStatus() == 1)
     	{
-    		debounce.clearStatus();
     		saveDoc(gDocId, debounce.get());
     	}
     }
