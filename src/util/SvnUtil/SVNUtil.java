@@ -442,7 +442,7 @@ public class SVNUtil {
 	           	    else	//If it is dir, go through the subNodes for delete
 	           	    {
 	        			Collection entries;
-	        			entries = repository.getDir(parentPath, -1, null,(Collection) null);
+	        			entries = repository.getDir(entryPath, -1, null,(Collection) null);
 	        	        Iterator iterator = entries.iterator();
 	        	        while (iterator.hasNext()) 
 	        	        {
