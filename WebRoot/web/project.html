@@ -1866,7 +1866,7 @@
 		    type : "post",
 		    dataType : "json",
 		    data : {
-		    	pid: 0,	//parentId =0 means get the root docs
+		    	id: 0,	//parentId =0 means get the root docs
 		        vid : gReposId,      
 		    },
 		    success : function (ret) {
@@ -3432,11 +3432,14 @@ function CompareObj(objA, objB, flag) {
 	/********************** zTree设置与接口**********************************/
     //zTree's setting
 	var setting = {
-		//异步加载
+		//异步加载的工作原理
 		async : {  
     		enable : true,//设置 zTree 是否开启异步加载模式  
-    		url : "/test/servlet",//Ajax 获取数据的 URL 地址  
-    		autoParam : [ "id" ],//异步加载时需要自动提交父节点属性的参数  
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+    		autoParam : ["id"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
+    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
+    		dataFilter: asyncDataFilter, 
 		},
 	   	//可编辑功能设置
 		edit: {
@@ -3484,6 +3487,12 @@ function CompareObj(objA, objB, flag) {
 	};
 
 
+	function asyncDataFilter(treeId, parentNode, responseData) {
+		console.log("asyncDataFilter");
+		console.log(responseData);
+	    return responseData.data;
+	}
+	
     function zTreeBeforeAsync() {  
     	console.log("zTreeBeforeAsync");
     }  
@@ -4129,6 +4138,23 @@ function CompareObj(objA, objB, flag) {
 			gEdit = false;
 		}
     	console.log("ready() gDocId:"+gDocId +  " gReposId:" + gReposId + " gEdit:" + gEdit);
+    	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
+        if( gEdit ){
+            var edit = {};
+            setting.edit = edit;
+        }
+        //设置异步加载的参数
+        var async =  {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+    		autoParam : ["id"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{"vid":gReposId},
+    		dataFilter: asyncDataFilter, 
+		};
+		setting.async = async;
+        
+    	
     	//拖拽上传:目录树区域
     	var uuz = document.getElementById("uuz");  
     	uuz.ondragenter = function(e){  
@@ -4153,12 +4179,6 @@ function CompareObj(objA, objB, flag) {
             e.preventDefault();
             dragUploadConfirm(e);
         };
-        
-		//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if( gEdit ){
-            var edit = {};
-            setting.edit = edit;
-        }
 
 		//set the vid in upload form
 		$("#reposId").val(gReposId);
