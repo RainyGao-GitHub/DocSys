@@ -1857,67 +1857,6 @@
         });
 
     }
-    
-	//更新后台的zTree数据: callback是成功后的回调函数
-	function updateMenu(callback) {
-		console.log("updateMenu");
-		//get Menu from current zTree (this menu maybe not equals to window.menu)
-		var treeObj = zTree.getZTreeObj("doctree");
-	    if ( !treeObj ){
-	        alert("系统错误：can not find the doctree");
-	        // 初始化过程中似乎获取不到 tree 对象
-	        return;
-	    }
-	    var nodes = treeObj.getNodes();
-	    //console.log(nodes);
-	    var curMenu = [];
-	    getinfo(nodes);	 
-	    
-		//更新后台的Menu 
-        var newMenu = jsonEscape(curMenu); //Convert the array to jason Format
-        $.ajax({
-             url : "/DocSystem/Repos/updateReposMenu.do",
-             type : "post",
-             dataType : "json",
-             data : {
-                 vid : gReposId,
-                 menu : newMenu
-             },
-             success : function (ret) {
-                 if( "ok" == ret.status ){
-                     window.menu = newMenu;	//更新本地menu，但不需要再syncUp了，因为本来就是一样的
-                     console.log("更新目录成功");
-                     callback && callback();
-                 }
-                 else
-                 {	
-                 	showErrorMessage("更新目录失败:" + ret.msgInfo); 
-                 }
-             },
-             error : function () {
-                 syncUpMenu();
-                 showErrorMessage("服务器异常：" + ret.msgInfo);
-             }
-         });
-         
-        //递归获取zTree信息，并放到ret数组中
-		function getinfo(nodes){
-	        if( nodes && nodes.length )
-	        {
-	            for(i in nodes)
-	            {
-	                var node = nodes[i];
-	                curMenu.push({
-	                    "id" : node.id,
-	                    "name" : node.name,
-	                    "pId" : node.pId ? node.pId : "root",
-	                    "isParent": node.isParent,
-	                });
-	                getinfo(node.children);
-	            };
-	        };
-	    };	
-	}
 
 	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
 	function getMenu(callback1,callback2) {
