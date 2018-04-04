@@ -1282,6 +1282,79 @@ public class ReposController extends BaseController{
 		return reposService.getDocList(doc);
 	}
 	
+	/****************   get subDocList under pid ******************/
+	@RequestMapping("/getSubDocList.do")
+	public void getSubDocList(Integer pid,Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getSubDocList pid: " + pid + " vid: " + vid);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(),pid,vid);
+		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
+		{
+			rt.setData("");
+			writeJson(rt, response);			
+			return;
+		}		
+		
+		//获取用户可访问文件列表
+		List <Doc> docList = getAccessableSubDocList(login_user.getId(),pid,vid);
+		if(docList == null)
+		{
+			rt.setData("");
+		}
+		else
+		{
+			rt.setData(docList);	
+		}
+		writeJson(rt, response);
+	}
+	
+	//getAccessableSubDocList
+	private List<Doc> getAccessableSubDocList(Integer userID, Integer pid,Integer vid) {		
+		System.out.println("getAccessableSubDocList() userId:" + userID + " pid:" + pid + " vid:" + vid);
+		
+		//Get the userDocAuthHashMap
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(userID,vid);
+		
+		//get the rootDocAuth
+		DocAuth pDocAuth = getUserDispDocAuth(userID,pid,vid);
+		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
+		{
+			System.out.println("getAccessableSubDocList() 用户没有该目录的权限");
+			return null;
+		}
+		
+		//获取子目录所有文件oc
+		List <Doc> resultList = new ArrayList<Doc>();
+		List <Doc> docList = getSubDocList(pid,vid);
+		if(docList == null || docList.size() == 0)
+		{
+			return resultList;
+		}
+		
+		//Go through the docList if the doc can be access, add it to resultList
+		for(int i=0;i<docList.size();i++)
+		{
+			Doc doc = docList.get(i);
+			Integer docId = doc.getId();
+			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
+			//printObject("getAccessableSubDocList() docAuth:",docAuth);
+			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+			{
+				resultList.add(doc);
+			}
+		}
+		return resultList;
+	}
+	
+	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
 	public void getReposManagerMenu(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
