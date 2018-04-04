@@ -1923,11 +1923,12 @@
 	function getMenu(callback1,callback2) {
 		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);
 		$.ajax({
-		    url : "/DocSystem/Repos/getReposMenu.do",
+		    url : "/DocSystem/Repos/getSubDocList.do",
 		    type : "post",
 		    dataType : "json",
 		    data : {
-		        vid : gReposId
+		    	pid: 0,	//parentId =0 means get the root docs
+		        vid : gReposId,      
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
@@ -3492,6 +3493,12 @@ function CompareObj(objA, objB, flag) {
 	/********************** zTree设置与接口**********************************/
     //zTree's setting
 	var setting = {
+		//异步加载
+		async : {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+    		url : "/test/servlet",//Ajax 获取数据的 URL 地址  
+    		autoParam : [ "id" ],//异步加载时需要自动提交父节点属性的参数  
+		},
 	   	//可编辑功能设置
 		edit: {
                enable: true,
@@ -3520,6 +3527,8 @@ function CompareObj(objA, objB, flag) {
 	    },
 	    //zTree各种操作的回调函数定义
 	    callback: {
+	            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
+                onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
 	            beforeDrag: zTreeBeforeDrag,
 	            beforeDrop: zTreeBeforeDrop,
 	            onDrag : zTreeOnDrag,
@@ -3535,6 +3544,15 @@ function CompareObj(objA, objB, flag) {
 	    },
 	};
 
+
+    function zTreeBeforeAsync() {  
+    	console.log("zTreeBeforeAsync");
+    }  
+      
+    function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
+    	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
+    }
+    
 	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
 	var curRightClickedTreeNode = null;
 
