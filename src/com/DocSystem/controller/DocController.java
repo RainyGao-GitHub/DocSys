@@ -493,16 +493,22 @@ public class DocController extends BaseController{
 		
 		//得到要下载的文件名
 		String fileName = doc.getName();
-		//fileName = new String(fileName.getBytes("iso8859-1"),"UTF-8");	//格式转换??
-		//String realname = fileName.substring(fileName.indexOf("_")+1);
-		String realname = fileName;
+		String file_name = fileName;
 		
 		//虚拟文件下载
 		Repos repos = reposService.getRepos(doc.getVid());
 		//虚拟文件系统下载，直接将数据库的文件内容传回去，未来需要优化
 		if(isRealFS(repos.getType()) == false)
 		{
-			response.setHeader("content-disposition", "attachment;filename=" + realname);
+			//解决中文编码问题
+			if(request.getHeader("User-Agent").toUpperCase().indexOf("MSIE")>0){  
+				file_name = URLEncoder.encode(file_name, "UTF-8");  
+			}else{  
+				file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+			}  
+			System.out.println("doGet file_name:" + file_name);
+			//解决空格问题
+			response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 			
 			//创建输出流
 			OutputStream out = response.getOutputStream();
@@ -516,9 +522,10 @@ public class DocController extends BaseController{
 		}
 		
 		//实文件文件下载（是文件夹需要先压缩再下载）
+
 		if(doc.getType() == 2)
 		{
-			realname = realname +".zip";
+			file_name = file_name +".zip";
 		}
 		
 		//get reposRPath
@@ -580,8 +587,16 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//设置响应头，控制浏览器下载该文件
-		response.setHeader("content-disposition", "attachment;filename=" + URLEncoder.encode(realname, "UTF-8"));
+		//解决中文编码问题
+		if(request.getHeader("User-Agent").toUpperCase().indexOf("MSIE")>0){  
+			file_name = URLEncoder.encode(file_name, "UTF-8");  
+		}else{  
+			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+		}  
+		System.out.println("doGet file_name:" + file_name);
+		//解决空格问题
+		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+		
 		//读取要下载的文件，保存到文件输入流
 		FileInputStream in = new FileInputStream(dstPath);
 		//创建输出流
