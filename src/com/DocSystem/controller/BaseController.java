@@ -491,7 +491,7 @@ public class BaseController{
 		return docAuth;
 	}
 
-	private List<Integer> getDocIdList(Integer docId,List<Integer> docIdList) {
+	protected List<Integer> getDocIdList(Integer docId,List<Integer> docIdList) {
 		if(docId == 0)
 		{
 			docIdList.add(0);

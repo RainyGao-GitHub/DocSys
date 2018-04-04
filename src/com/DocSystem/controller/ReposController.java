@@ -1180,32 +1180,53 @@ public class ReposController extends BaseController{
         return true;
 	}
 	
-	/****************   get Repository Menu Info (Directory structure) ******************/
+	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposMenu.do")
-	public void getReposMenu(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getReposMenu vid: " + vid);
+	public void getReposMenu(Integer vid,Integer docId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getReposMenu vid: " + vid + " docId: " + docId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户登录，请先登录！");
 			writeJson(rt, response);			
 			return;
 		}
 		
-		//获取用户可访问文件列表
-		List <Doc> docList = getReposMenu(vid,login_user);
-		if(docList == null)
+		if(docId == null || docId == 0)
 		{
-			rt.setData("");
+			//we will only get the root level of repository
+			//获取用户可访问文件列表
+			List <Doc> docList = getAccessableSubDocList(login_user.getId(),0,vid);
+			if(docList == null)
+			{
+				rt.setData("");
+			}
+			else
+			{
+				rt.setData(docList);	
+			}
+			writeJson(rt, response);
+			return;
 		}
-		else
-		{
-			rt.setData(docList);	
-		}
-		writeJson(rt, response);
+		
 	}
 	
+	private List<Doc> getReposMenuEx(Integer vid, Integer docId, Integer UserId) {
+		
+		Doc doc = getDocInfo(docId);
+		Integer pid = doc.getPid();
+		List<Integer> idList = getDocIdList(docId);
+		
+		resultList;
+		for(int i= idList.size(); i>=0;i--)
+		{
+			getAuthedSubDocList(0,dddd,resultList);
+		}
+		return null;
+	}
+		
+
 	private List<Doc> getReposMenu(Integer vid, User login_user) {
 		Integer userID = login_user.getId();
 		List <Doc> docList = getAccessableDocList(userID,vid);
@@ -1292,14 +1313,6 @@ public class ReposController extends BaseController{
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(),pid,vid);
-		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
-		{
-			rt.setData("");
 			writeJson(rt, response);			
 			return;
 		}		
