@@ -1284,8 +1284,9 @@ public class ReposController extends BaseController{
 	
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer pid,Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getSubDocList pid: " + pid + " vid: " + vid);
+	public void getSubDocList(Integer id,Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getSubDocList pid: " + id + " vid: " + vid);
+		Integer pid = id;
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
