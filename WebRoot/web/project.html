@@ -4172,15 +4172,27 @@ function CompareObj(objA, objB, flag) {
 			gEdit = false;
 		}
     	console.log("ready() gDocId:"+gDocId +  " gReposId:" + gReposId + " gEdit:" + gEdit);
-    	//拖拽上传
-    	var uuz = document.getElementById('uuz');  
+    	//拖拽上传:目录树区域
+    	var uuz = document.getElementById("uuz");  
     	uuz.ondragenter = function(e){  
             e.preventDefault();  
         };  
         uuz.ondragover = function(e){  
             e.preventDefault();  
         };  
-        uuz.ondrop = function(e){  
+        uuz.ondrop = function(e){   
+            e.preventDefault();
+            dragUploadConfirm(e);
+        };
+        //文件预览区的拖拽上传
+        var doc =  document.getElementById("doc");  
+        doc.ondragenter = function(e){  
+            e.preventDefault();  
+        };  
+        doc.ondragover = function(e){  
+            e.preventDefault();  
+        };  
+        doc.ondrop = function(e){   
             e.preventDefault();
             dragUploadConfirm(e);
         };
