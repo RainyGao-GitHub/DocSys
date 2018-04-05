@@ -1181,9 +1181,9 @@ public class ReposController extends BaseController{
 	}
 	
 	/****************   get Repository Menu so that we can touch the docId******************/
-	@RequestMapping("/getReposMenu.do")
+	@RequestMapping("/getReposInitMenu.do")
 	public void getReposMenu(Integer vid,Integer docId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getReposMenu vid: " + vid + " docId: " + docId);
+		System.out.println("getReposInitMenu vid: " + vid + " docId: " + docId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1193,39 +1193,113 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//获取用户可访问文件列表(From Root to docId)
+		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
-			//we will only get the root level of repository
-			//获取用户可访问文件列表
-			List <Doc> docList = getAccessableSubDocList(login_user.getId(),0,vid);
-			if(docList == null)
-			{
-				rt.setData("");
-			}
-			else
-			{
-				rt.setData(docList);	
-			}
-			writeJson(rt, response);
-			return;
+			docList = getAccessableSubDocList(login_user.getId(),0,vid);
+		}
+		else
+		{
+			docList = getDocListFromRootToDoc(vid,docId,login_user.getId());
 		}
 		
+		if(docList == null)
+		{
+			rt.setData("");
+		}
+		else
+		{
+			rt.setData(docList);	
+		}
+		writeJson(rt, response);
+		return;		
 	}
 	
-	private List<Doc> getReposMenuEx(Integer vid, Integer docId, Integer UserId) {
+	private List<Doc> getDocListFromRootToDoc(Integer vid, Integer docId, Integer UserId) {
 		
-		Doc doc = getDocInfo(docId);
-		Integer pid = doc.getPid();
-		List<Integer> idList = getDocIdList(docId);
+		System.out.println("getDocListFromRootToDoc() userId:" + UserId + " vid:" + vid  + " docId:" + docId);
 		
-		resultList;
-		for(int i= idList.size(); i>=0;i--)
+		//Get the userDocAuthHashMap
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(UserId,vid);
+
+		//获取从docId到rootDoc的全路径，put it to docPathList
+		List<Integer> docIdList = new ArrayList<Integer>();
+		docIdList = getDocIdList(docId,docIdList);
+		if(docIdList == null || docIdList.size() == 0)
 		{
-			getAuthedSubDocList(0,dddd,resultList);
+			return null;
 		}
-		return null;
-	}
 		
+		//size <=2，表明docId位于rootDoc下或不存在，都只取出根目录下的subDocs
+		if(docIdList.size() <= 2)
+		{
+			DocAuth docAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
+			List<Doc> docList = getAuthedSubDocList(0,vid,docAuth,docAuthHashMap);
+			return docList;
+		}
+		
+		//go throug the docIdList to get the UserDocAuthFromHashMap
+		List<Doc> resultList = new ArrayList<Doc>();
+		DocAuth parentDocAuth = null;
+		int docPathDeepth = docIdList.size();
+		for(int i=(docPathDeepth-1);i>0;i--)	//We should not to get subDocList with index 0 (which is the docId) 
+		{
+			Integer curDocId = docIdList.get(i);
+			System.out.println("getDocListFromRootToDoc() curDocId[" + i+ "]:" + curDocId); 
+			DocAuth docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
+			List<Doc> subDocList = getAuthedSubDocList(curDocId,vid,docAuth,docAuthHashMap);
+			if(subDocList != null && subDocList.size() > 0)
+			{
+				resultList.addAll(subDocList);
+			}
+			parentDocAuth = docAuth;
+		}		
+		return resultList;
+	}
+	
+	//获取pid下的SubDocList
+	private List <Doc> getAuthedSubDocList(Integer pid,Integer vid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap)
+	{
+		System.out.println("getAuthedDocList()" + " pid:" + pid + " vid:" + vid);
+		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
+		{
+			return null;
+		}
+		//printObject("getAuthedDocList() parentDocAuth:",pDocAuth);
+		
+		//获取子目录所有文件
+		List <Doc> docList = getSubDocList(pid,vid);
+		if(docList == null || docList.size() == 0)
+		{
+			return null;
+		}
+		
+		//get the rootDocAuth
+		DocAuth rootDocAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
+		if(rootDocAuth == null)
+		{
+			System.out.println("getAuthedSubDocList() 用户根目录权限未设置");
+			return null;
+		}
+		
+		//Go through the docList if the doc can be access, add it to resultList
+		List <Doc> resultList = new ArrayList<Doc>();
+		for(int i=0;i<docList.size();i++)
+		{
+			Doc doc = docList.get(i);
+			Integer docId = doc.getId();
+			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
+			//System.out.println("getAuthedSubDocList() docId:"+docId + " docName:" + doc.getName());
+			//printObject("getAuthedSubDocList() docAuth:",docAuth);
+			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+			{
+				resultList.add(doc);
+			}
+		}
+		return resultList;
+	}
+	
 
 	private List<Doc> getReposMenu(Integer vid, User login_user) {
 		Integer userID = login_user.getId();
@@ -1254,11 +1328,11 @@ public class ReposController extends BaseController{
 				
 		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
 		List <Doc> docList = new ArrayList<Doc>();
-		return recurGetAuthedDocList(0,vid,rootDocAuth,docAuthHashMap,docList);
+		return recurGetAuthedSubDocList(0,vid,rootDocAuth,docAuthHashMap,docList);
 	}
-	
+
 	//这是个递归调用函数
-	private List <Doc> recurGetAuthedDocList(Integer pid,Integer vid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, List<Doc> resultList)
+	private List <Doc> recurGetAuthedSubDocList(Integer pid,Integer vid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, List<Doc> resultList)
 	{
 		//System.out.println("recurGetAuthedDocList()" + " pid:" + pid + " vid:" + vid);
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
@@ -1287,7 +1361,7 @@ public class ReposController extends BaseController{
 				resultList.add(doc);
 				if(doc.getType() == 2)
 				{
-					recurGetAuthedDocList(docId,vid,docAuth,docAuthHashMap,resultList);
+					recurGetAuthedSubDocList(docId,vid,docAuth,docAuthHashMap,resultList);
 				}
 			}
 		}
@@ -1345,26 +1419,8 @@ public class ReposController extends BaseController{
 			return null;
 		}
 		
-		//获取子目录所有文件oc
-		List <Doc> resultList = new ArrayList<Doc>();
-		List <Doc> docList = getSubDocList(pid,vid);
-		if(docList == null || docList.size() == 0)
-		{
-			return resultList;
-		}
-		
-		//Go through the docList if the doc can be access, add it to resultList
-		for(int i=0;i<docList.size();i++)
-		{
-			Doc doc = docList.get(i);
-			Integer docId = doc.getId();
-			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
-			//printObject("getAccessableSubDocList() docAuth:",docAuth);
-			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-			{
-				resultList.add(doc);
-			}
-		}
+		//获取子目录所有authed subDocs
+		List <Doc> resultList = getAuthedSubDocList(pid, vid, pDocAuth, docAuthHashMap);
 		return resultList;
 	}
 	
