@@ -1862,11 +1862,11 @@
 	function getMenu(callback1,callback2) {
 		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);
 		$.ajax({
-		    url : "/DocSystem/Repos/getSubDocList.do",
+		    url : "/DocSystem/Repos/getReposInitMenu.do",
 		    type : "post",
 		    dataType : "json",
 		    data : {
-		    	id: 0,	//parentId =0 means get the root docs
+		    	docId: gDocId,
 		        vid : gReposId,      
 		    },
 		    success : function (ret) {
