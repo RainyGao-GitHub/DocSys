@@ -3489,7 +3489,6 @@ function CompareObj(objA, objB, flag) {
 
 	function asyncDataFilter(treeId, parentNode, responseData) {
 		console.log("asyncDataFilter");
-		console.log(responseData);
 		var docList = responseData.data;
 		//遍历jason_arry, convert the node type to isParent flag
       	for(var i=0; i<docList.length; i++)
@@ -3498,6 +3497,7 @@ function CompareObj(objA, objB, flag) {
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
        }
+       console.log(docList);
 	   return docList;
 	}
 	
