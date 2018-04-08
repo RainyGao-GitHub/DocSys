@@ -266,7 +266,9 @@
 <div style="display:none">
 	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(this)" style="margin-top: 90px;" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(this)" webkitdirectory>
-	<textarea cols="20" rows="10" id="copiedURL">复制的链接</textarea>
+	<textarea cols="20" rows="10" id="copiedURL">copiedURL</textarea>
+	<textarea cols="20" rows="10" id="copiedDocName">copiedDocName</textarea>
+	<textarea cols="20" rows="10" id="copiedDocPath">copiedDocPath</textarea>
 </div>
 
 <!-- single file upload form -->
@@ -321,6 +323,68 @@
 		$("#"+id).remove();	//删除对话框
 	}
 
+
+	function copyDocName(){
+		var id = 0;
+		if(curRightClickedTreeNode == null)
+		{
+			bootstrapQ.alert("请选择文件或目录");
+			return false;
+		}
+		id = curRightClickedTreeNode.id;
+		var docName = curRightClickedTreeNode.name;
+		console.log("copiedDocName:" + docName);
+		
+		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
+		var obj=document.getElementById("copiedDocName");
+		obj.value=docName;	//修改其中的值
+		obj.select(); // 选择对象
+		document.execCommand("Copy"); // 执行浏览器复制命令
+        // 普通消息提示条
+		bootstrapQ.msg({
+					msg : '复制成功！',
+					type : 'success',
+					time : 1000,
+		});
+	}
+	
+	function copyDocPath(){
+		var id = 0;
+		if(curRightClickedTreeNode == null)
+		{
+			bootstrapQ.alert("请选择文件或目录");
+			return false;
+		}
+		id = curRightClickedTreeNode.id;
+		var docPath = getDocPath(curRightClickedTreeNode);
+		console.log("docPath:" + docPath);
+		
+		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
+		var obj=document.getElementById("copiedDocPath");
+		obj.value=docPath;	//修改其中的值
+		obj.select(); // 选择对象
+		document.execCommand("Copy"); // 执行浏览器复制命令
+        // 普通消息提示条
+		bootstrapQ.msg({
+					msg : '复制成功！',
+					type : 'success',
+					time : 1000,
+		});
+	}
+	
+	//getDocPath
+	function getDocPath(treeNode)
+	{
+		console.log(treeNode);
+		var remoteDir = gReposName+"::/";
+		if(treeNode)
+		{
+			var parentPath = treeNode.path;	//获取当前节点的所有父节点
+			var	name = treeNode.name;
+			remoteDir += parentPath + name;
+		}
+		return remoteDir;
+	}
 	
 	function copyUrl(){
 		var id = 0;
@@ -332,15 +396,15 @@
 		id = curRightClickedTreeNode.id;
 		var vid = gReposId;
 		var href = "/DocSystem/web/project.html?vid="+vid+"&doc="+id;
-		//console.log(href);
+		console.log(href);
 		var host = window.location.host;	//域名带端口
 		//var host2=document.domain; 			//域名不带端口
 		//var url = window.location.href;		//全路径
-		//console.log(host);
+		console.log(host);
 		//console.log(host2);
 		//console.log(url);
 		var url = host+href;
-		//console.log(url);
+		console.log(url);
 		
 		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
 		var obj=document.getElementById("copiedURL");
@@ -354,6 +418,7 @@
 					time : 1000,
 		});
 	}
+	
 	
 	/*文件上传实现*/
 	function download(){
@@ -4284,12 +4349,22 @@ function CompareObj(objA, objB, flag) {
 	        			download();
 					}
 			},
+			{divider: true},
+			{text: '复制名字', action: function(e){
+						e.preventDefault();
+	        			copyDocName();
+					}
+			},
 			{text: '复制路径', action: function(e){
+						e.preventDefault();
+	        			copyDocPath();
+					}
+			},
+			{text: '复制链接', action: function(e){
 						e.preventDefault();
 	        			copyUrl();
 					}
-			},
-			
+			},	
 		]);
 		
 		context.settings({compress: true});
