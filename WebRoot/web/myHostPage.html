@@ -97,22 +97,19 @@
         <div class="row">
             <div class="page-left">
                 <ul class="menu">
-                    <li class="active"><a href="/DocSystem/web/myHostPage.html" class="item"><i class="fa fa-sitemap" aria-hidden="true"></i> 基本信息</a> </li>
+                    <li id="myInfoTag" class="active"><a href="/DocSystem/web/myHostPage.html" class="item"><i class="fa fa-sitemap" aria-hidden="true"></i> 基本信息</a> </li>
                     
-                    <li><a href="/DocSystem/web/myHostPage.html?toHref=password" class="item"><i class="fa fa-user" aria-hidden="true"></i> 修改密码</a> </li>
+                    <li id="passwordTag"><a href="/DocSystem/web/myHostPage.html?toHref=password" class="item"><i class="fa fa-user" aria-hidden="true"></i> 修改密码</a> </li>
                     
                 </ul>
             </div>
-            <div class="page-right">
+            <div id="myInfo" class="page-right">
                 <div class="m-box">
-                    <div id="myInfoTag" class="box-head">
+                    <div class="box-head">
                         <strong class="box-title">基本信息</strong>
                     </div>
-                    <div id="passwordTag" class="box-head"  style="display:none">
-                        <strong class="box-title">修改密码</strong>
-                    </div>
                 </div>
-                <div id="myInfo" class="box-body" style="padding-right: 200px;">
+                <div class="box-body" style="padding-right: 200px;">
                     <div class="form-left">
                         <form role="form" method="post" id="memberInfoForm">
                             <div class="form-group">
@@ -150,7 +147,14 @@
                         </label>
                     </div>
                 </div>
-                <div  id="password" class="box-body" style="width: 300px; display:none;">
+            </div>
+            <div id="password" class="page-right"   style="display:none">
+                <div class="m-box">
+                    <div class="box-head">
+                        <strong class="box-title">修改密码</strong>
+                    </div>
+                </div>
+                <div class="box-body" style="width: 300px;">
                     <form role="form" method="post" id="securityForm">
                         <div class="form-group">
                             <label for="password1">原始密码</label>
@@ -371,7 +375,8 @@
                 	{
                 		gToHref = "myInfo";
                 	}           
-                	console.log("gToHref:" + gToHref);  	
+                	console.log("gToHref:" + gToHref); 
+                	PageSwitch(gToHref); 	
                 }
                 else 
                 {
@@ -393,6 +398,26 @@
         }
         return null;
     }
+    
+    function PageSwitch(page)
+	{
+		console.log("PageSwitch:" + page);
+		switch(page)
+		{
+	   	case "password":
+		    $("#myInfoTag").removeClass("active");
+		    $("#passwordTag").addClass("active");
+		    $("#myInfo").hide();
+		    $("#password").show();
+	      	break;
+	    default:	//myInfo
+	    	$("#myInfoTag").addClass("active");
+		    $("#passwordTag").removeClass("active");
+		    $("#myInfo").show();
+	      	$("#password").hide();
+	     	break;
+	     }
+	}
     
     
 </script>
