@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0028)http://doc.iminho.me/setting -->
 <html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>用户中心 - Powered by MinDoc</title>
+    <title>用户中心 - DocSys</title>
 
     
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -70,25 +69,22 @@
                     <div class="img user-info" data-toggle="dropdown">
                         <img src="images/default/defaultHeadPic.png" onerror="this.src=&#39;http:\/\/static.iminho.me\/static\/images\/headimgurl.jpg&#39;;" class="img-circle userbar-avatar" alt="admin">
                         <div class="userbar-content">
-                            <span>admin</span>
+                            <span>Rainy</span>
                             <div></div>
                         </div>
                         <i class="fa fa-chevron-down" aria-hidden="true"></i>
                     </div>
                     <ul class="dropdown-menu user-info-dropdown" role="menu">
                         <li>
-                            <a href="http://doc.iminho.me/setting" title="个人中心"><i class="fa fa-user" aria-hidden="true"></i> 个人中心</a>
-                        </li>
-                        <li>
-                            <a href="http://doc.iminho.me/book" title="我的项目"><i class="fa fa-book" aria-hidden="true"></i> 我的项目</a>
+                            <a href="/DocSystem/web/myHostPage.html" title="个人中心"><i class="fa fa-user" aria-hidden="true"></i> 个人中心</a>
                         </li>
                         
                         <li>
-                            <a href="http://doc.iminho.me/manager" title="管理后台"><i class="fa fa-university" aria-hidden="true"></i> 管理后台</a>
+                            <a href="/DocSystem/web/reposManager.html" title="管理后台"><i class="fa fa-university" aria-hidden="true"></i> 管理后台</a>
                         </li>
                         
                         <li>
-                            <a href="http://doc.iminho.me/logout" title="退出登录"><i class="fa fa-sign-out"></i> 退出登录</a>
+                            <a onclick="logout()" title="退出登录"><i class="fa fa-sign-out"></i> 退出登录</a>
                         </li>
                     </ul>
                 </li>
@@ -101,19 +97,22 @@
         <div class="row">
             <div class="page-left">
                 <ul class="menu">
-                    <li class="active"><a href="http://doc.iminho.me/setting" class="item"><i class="fa fa-sitemap" aria-hidden="true"></i> 基本信息</a> </li>
+                    <li class="active"><a href="/DocSystem/web/myHostPage.html" class="item"><i class="fa fa-sitemap" aria-hidden="true"></i> 基本信息</a> </li>
                     
-                    <li><a href="http://doc.iminho.me/setting/password" class="item"><i class="fa fa-user" aria-hidden="true"></i> 修改密码</a> </li>
+                    <li><a href="/DocSystem/web/myHostPage.html&toHref=password" class="item"><i class="fa fa-user" aria-hidden="true"></i> 修改密码</a> </li>
                     
                 </ul>
             </div>
             <div class="page-right">
                 <div class="m-box">
-                    <div class="box-head">
+                    <div id="myInfoTag" class="box-head">
                         <strong class="box-title">基本信息</strong>
                     </div>
+                    <div id="passwordTag" class="box-head"  style="display:none">
+                        <strong class="box-title">修改密码</strong>
+                    </div>
                 </div>
-                <div class="box-body" style="padding-right: 200px;">
+                <div id="myInfo" class="box-body" style="padding-right: 200px;">
                     <div class="form-left">
                         <form role="form" method="post" id="memberInfoForm">
                             <div class="form-group">
@@ -150,6 +149,26 @@
                             </a>
                         </label>
                     </div>
+                </div>
+                <div  id="password" class="box-body" style="width: 300px; display:none;">
+                    <form role="form" method="post" id="securityForm">
+                        <div class="form-group">
+                            <label for="password1">原始密码</label>
+                            <input type="password" name="password1" id="password1" class="form-control disabled" placeholder="原始密码">
+                        </div>
+                        <div class="form-group">
+                            <label for="password2">新密码</label>
+                            <input type="password" class="form-control" name="password2" id="password2" max="50" placeholder="新密码">
+                        </div>
+                        <div class="form-group">
+                            <label for="password3">确认密码</label>
+                            <input type="password" class="form-control" id="password3" name="password3" placeholder="确认密码">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
+                            <span id="form-error-message" class="error-message"></span>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
