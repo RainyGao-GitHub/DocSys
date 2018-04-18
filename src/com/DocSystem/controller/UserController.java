@@ -88,32 +88,15 @@ public class UserController extends BaseController {
 		{
 			return null;
 		}
-		else if(RegularUtil.isEmail(userName))	//邮箱注册
-		{
-			tmp_user.setEmail(userName);
-			tmp_user.setPwd(pwd);
-			List<User> uList = userService.getUserListByUserInfo(tmp_user);
-			if(uList == null || uList.size() == 0)
-			{
-				return null;
-			}
-			return uList;
-		}
-		else if(RegularUtil.IsMobliePhone(userName))
-		{
-			tmp_user.setTel(userName);
-			tmp_user.setPwd(pwd);
-			List<User> uList = userService.getUserListByUserInfo(tmp_user);
-			if(uList == null || uList.size() == 0)
-			{
-				return null;
-			}
-			return uList;
-		}
-		else
+		
+		tmp_user.setName(userName);
+		tmp_user.setPwd(pwd);
+		List<User> uList = userService.getUserListByUserInfo(tmp_user);
+		if(uList == null || uList.size() == 0)
 		{
 			return null;
 		}
+		return uList;
 	}
 
 	/**
@@ -189,14 +172,7 @@ public class UserController extends BaseController {
 				String pwd = c2.getValue();
 				//tmp_user is used for store the query condition
 				User tmp_user = new User();
-				if(RegularUtil.isEmail(userName))
-				{
-					tmp_user.setEmail(userName);
-				}
-				else
-				{
-					tmp_user.setTel(userName);			
-				}
+				tmp_user.setName(userName);			
 				tmp_user.setPwd(pwd);
 				List<User> uLists = getUserSelective(userName,pwd);
 				boolean f =loginCheck(rt, tmp_user, uLists, session,response);
@@ -550,7 +526,6 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User user = new User();
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
@@ -586,6 +561,7 @@ public class UserController extends BaseController {
 		return;
 	}	
 	
+	//This function is for forget password
 	@RequestMapping(value="changePwd")
 	public void changePwd(HttpSession session,String userName,String pwd,String pwd2,String verifyCode,HttpServletResponse response,ModelMap model)
 	{
@@ -627,6 +603,66 @@ public class UserController extends BaseController {
 		if(checkVerifyCode(session,"docsys_vcode1", userName, verifyCode,1) == false)
 		{
 			rt.setError("danger#验证码错误！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//检查密码是否为空
+		if(pwd==null||"".equals(pwd))
+		{
+			rt.setError("danger#密码不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
+		{
+			System.out.println("密码："+pwd);
+			System.out.println("确认密码："+pwd2);
+			rt.setError("danger#两次密码不一致，请重试！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//更新密码
+		User user = new User();
+		user.setId(uList.get(0).getId());	//设置UserId
+		user.setPwd(pwd);
+		if(userService.updateUserInfo(user) == 0)
+		{
+			System.out.println("设置密码失败!");
+			rt.setError("设置密码失败！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+		return;
+	}
+	
+	@RequestMapping(value="modifyPwd")
+	public void modifyPwd(HttpSession session,String userName,String pwd,String pwd2,String oldPwd,HttpServletResponse response,ModelMap model)
+	{
+		System.out.println("changePwd userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2 + " oldPwd:"+oldPwd);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//Check the user oldPwd
+		User qUser = new User();
+		qUser.setName(userName);
+		qUser.setPwd(oldPwd);
+		List<User> uList = userService.getUserListByUserInfo(qUser);
+		if(uList == null || uList.size() == 0)
+		{
+			rt.setError("用户名或密码错误！");
 			writeJson(rt, response);
 			return;
 		}
