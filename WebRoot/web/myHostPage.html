@@ -113,34 +113,34 @@
                 </div>
                 <div class="box-body" style="padding-right: 200px;">
                     <div class="form-left">
-                        <form role="form" method="post" id="memberInfoForm" action="/DocSystem/updateUserInfo.do">
+                        <div id="memberInfoForm">
                             <div class="form-group">
                                 <label>用户名</label>
-                                <input type="text" class="form-control" value="" id="userName" name="userName" disabled="" placeholder="用户名">
+                                <input type="text" class="form-control disabled" value="" id="name" name="name" disabled="" placeholder="用户名">
                             </div>
                             <div class="form-group">
-                                <label for="user-nickName">昵称<strong class="text-danger">*</strong></label>
+                                <label>昵称<strong class="text-danger">*</strong></label>
                                 <input type="text" class="form-control" value="" id="nickName" name="nickName" max="100" placeholder="昵称">
                             </div>
                             <div class="form-group">
                                 <label>真实姓名</label>
-                                <input type="text" name="realName" class="form-control" value="" placeholder="真实姓名">
+                                <input type="text" id="realName" name="realName" class="form-control" value="" placeholder="真实姓名">
                             </div>
                             <div class="form-group">
                                 <label class="description">描述</label>
-                                <textarea class="form-control" rows="3" title="描述" name="intro" id="userIntro" maxlength="500"></textarea>
+                                <textarea class="form-control" rows="3" title="描述" name="userIntro" id="userIntro" maxlength="500"></textarea>
                                 <p style="color: #999;font-size: 12px;">描述不能超过500字</p>
                             </div>
                             <div class="form-group">
-                                <button type="submit" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
+                                <button onclick="UpdateUserInfo();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
                                 <span id="form-error-message" class="error-message"></span>
                             </div>
-                        </form>
+                        </div>
                     </div>
                     <div class="form-right">
                         <label>
                             <a href="javascript:;" data-toggle="modal" data-target="#upload-logo-panel">
-                                <img src="images/default/defaultHeadPic1.png" onerror="this.src=&#39;images/default/defaultHeadPic.png&#39;" class="img-circle" alt="头像" style="max-width: 120px;max-height: 120px;" id="headimgurl">
+                                <img src="images/default/defaultHeadPic.png" onerror="this.src=&#39;images/default/defaultHeadPic.png&#39;" class="img-circle" alt="头像" style="max-width: 120px;max-height: 120px;" id="headimgurl">
                             </a>
                         </label>
                     </div>
@@ -153,7 +153,7 @@
                     </div>
                 </div>
                 <div class="box-body" style="width: 300px;">
-                    <form role="form" method="post" id="securityForm">
+                    <div id="securityForm">
                         <div class="form-group">
                             <label for="password1">原始密码</label>
                             <input type="password" name="password1" id="password1" class="form-control disabled" placeholder="原始密码">
@@ -167,10 +167,10 @@
                             <input type="password" class="form-control" id="password3" name="password3" placeholder="确认密码">
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
+                            <button onclick="ModifyPassword();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
                             <span id="form-error-message" class="error-message"></span>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -228,6 +228,7 @@
 <script src="js/main.js" type="text/javascript"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script src="js/logon.js" type="text/javascript"></script>
+<script src="js/md5.js"></script>
 <script type="text/javascript">
     $(function () {
     	pageInit();
@@ -237,27 +238,6 @@
             $("#upload-logo-panel").find(".modal-body").html(window.modalHtml);
         }).on("show.bs.modal",function () {
             window.modalHtml = $("#upload-logo-panel").find(".modal-body").html();
-        });
-
-
-        $("#memberInfoForm").ajaxForm({
-            beforeSubmit : function () {
-
-                var nickName = $.trim($("#nickName").val());
-                if(!nickName){
-                    return showError('昵称不能为空');
-                }
-                $("button[type='submit']").button('loading');
-            },
-            success : function (ret) {
-                console.log(ret);
-            	$("button[type='submit']").button('reset');
-                if("ok" == ret.status){
-                    showSuccess("保存成功");
-                }else{
-                    showError(ret.msg);
-                }
-            }
         });
 
         try {
@@ -333,8 +313,72 @@
         }
     });
     
-    	//页面初始化
-	var login_user = "";
+    //Update UserInfo
+	function UpdateUserInfo(){
+		console.log("UpdateUserInfo");
+        $.ajax({
+            url : "/DocSystem/updateUserInfo.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $("#name").val(),
+                 nickName : $("#nickName").val(),
+                 realName : $("#realName").val(),
+                 intro: $("#userIntro").val(),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("UpdateUserInfo 成功");
+        			bootstrapQ.msg({
+    					msg : '保存成功！', 
+    					type : 'success',
+    					time : 2000,
+    				    });
+                }else {
+                	showErrorMessage("错误："+ret.msgInfo);
+                	//showError(ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("服务器异常:保存失败");
+            }
+        });
+    }
+    
+    
+	//ModifyPassword
+	function ModifyPassword(){
+		console.log("ModifyPassword");
+        $.ajax({
+            url : "/DocSystem/modifyPwd.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $("#name").val(),
+                 oldPwd : MD5($("#password1").val()),
+                 pwd : MD5($("#password2").val()),
+                 pwd2 : MD5($("#password3").val()),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("ModifyPassword 成功");
+        			bootstrapQ.msg({
+    					msg : '修改成功！', 
+    					type : 'success',
+    					time : 2000,
+    				    });
+                }else {
+                	showErrorMessage("错误："+ret.msgInfo);
+                	//showError(ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("服务器异常:修改失败");
+            }
+        });
+    }
+   	//页面初始化
+	var loginUser = "";
 	var gToHref;
     function pageInit()
     {
@@ -349,8 +393,14 @@
                 if( "ok" == ret.status )
                 {
                 	var user = ret.data;
-                	login_user = user;
-                	console.log(login_user);
+                	loginUser = user;
+                	console.log(loginUser);
+                	//Set UserName NickName RealName Intro
+                	$("#name").val(loginUser.name);
+                   	$("#nickName").val(loginUser.nickName);
+                   	$("#realName").val(loginUser.realName);
+                   	$("#userIntro").val(loginUser.intro);
+                   	
                 	//显示用户信息
                 	ShowUserInfo(user);
                 	
@@ -365,11 +415,7 @@
                 	console.log("gToHref:" + gToHref); 
                 	PageSwitch(gToHref);
                 	
-                	//Set UserName NickName RealName Intro
-                	$("#userName").val(login_user.name);
-                   	$("#nickName").val(login_user.nickName);
-                   	$("#realName").val(login_user.realName);
-                   	$("#userIntro").val(login_user.intro);
+
                 }
                 else 
                 {
@@ -382,6 +428,10 @@
         });
     }
     
+	//通用函数接口
+	function showErrorMessage($msg) {
+    	qiao.bs.alert($msg);
+	}
     // 从 url 中获取参数
     function getQueryString(name) {
         var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
