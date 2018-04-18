@@ -99,7 +99,7 @@
 </header>
     <div class="container manual-body">
         <div class="row">
-            <div class="page-left">
+            <div id="menu" class="page-left"  style="display:none">
                 <ul class="menu">
                     <li id="myInfoTag" class="active"><a href="/DocSystem/web/myHostPage.html" class="item"> 基本信息</a> </li>
                     <li id="passwordTag"><a href="/DocSystem/web/myHostPage.html?toHref=password" class="item"> 修改密码</a> </li>  
@@ -364,11 +364,10 @@
                 	$('#userImgDiv').show();
                 	$('#userInfoDiv > a >span:first-child').text(user.name);
                 	$('#userInfoDiv').show();
-                	
-                	$('#newReposBtn').show();
-
                 	$('#loginBtn').hide();
                 	
+                	//显示左侧菜单栏
+                	$('#menu').show();
                 	//根据url中的toHref信息确定需要显示的内容
                 	gToHref = getQueryString("toHref");
                 	if(!gToHref)
