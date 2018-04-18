@@ -421,6 +421,19 @@ public class UserController extends BaseController {
 		return true;
 	}
 	
+	public User getUserByName(String name)
+	{
+		User user = new User();
+		user.setName(name);
+		List<User> uList = userService.getUserListByUserInfo(user);
+		if(uList == null || uList.size() == 0)
+		{
+			return null;
+		}
+		
+		return uList.get(0);
+	}
+	
 	/**
 	 * 发送邮箱验证信息
 	 * @param response
@@ -655,7 +668,7 @@ public class UserController extends BaseController {
 	@RequestMapping(value="addUser")
 	public void addUser(HttpSession session,String userName,String pwd,String pwd2,HttpServletResponse response,ModelMap model)
 	{
-		System.out.println("register userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2);
+		System.out.println("addUser userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -722,6 +735,63 @@ public class UserController extends BaseController {
 		
 		user.setPwd("");	//密码不要返回回去
 		rt.setData(user);
+		writeJson(rt, response);
+		return;
+	}
+	
+	//This interface should be used by admin
+	@RequestMapping(value="updateUserInfo")
+	public void updateUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
+	{
+		System.out.println("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//Try to find the User
+		User user = getUserByName(userName);
+		if(user == null)
+		{
+			rt.setError("danger#用户不存在！");
+			writeJson(rt, response);
+			return;			
+		}
+		
+		//检查用户名是否为空
+		if(realName!=null&&"".equals(realName))
+		{
+			rt.setError("danger#真实姓名不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+
+		if(nickName!=null&&"".equals(nickName))
+		{
+			rt.setError("danger#昵称不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		User newUserInfo = new User();
+		newUserInfo.setId(user.getId());
+		newUserInfo.setNickName(nickName);
+		newUserInfo.setRealName(realName);	
+		newUserInfo.setIntro(intro);	
+		if(userService.updateUserInfo(newUserInfo) == 0)
+		{
+			rt.setError("danger#用户信息更新失败！");
+			writeJson(rt, response);
+			return;			
+		}
+		
 		writeJson(rt, response);
 		return;
 	}
