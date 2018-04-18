@@ -112,7 +112,8 @@
                 if( "ok" == ret.status ){
                 	console.log("登录成功");
                 	loginUser = $('input[name="userName"]').val();
-                	window.location.href = "projects.html";
+                	document.location.reload();
+                	//window.location.href = "projects.html";
                 }else {
                     alert("错误："+ret.msgInfo);
                 }
