@@ -66,7 +66,7 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li>
-                	<li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" class="img-circle m5"/></li>
+                	<li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" onerror="UserImgErrHandler();" class="img-circle m5"/></li>
 					<li id="userInfoDiv" style="display:none">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
@@ -140,7 +140,7 @@
                     <div class="form-right">
                         <label>
                             <a href="javascript:;" data-toggle="modal" data-target="#upload-logo-panel">
-                                <img src="images/default/defaultHeadPic.png" onerror="this.src=&#39;/static/images/middle.gif&#39;" class="img-circle" alt="头像" style="max-width: 120px;max-height: 120px;" id="headimgurl">
+                                <img src="images/default/defaultHeadPic1.png" onerror="this.src=&#39;images/default/defaultHeadPic.png&#39;" class="img-circle" alt="头像" style="max-width: 120px;max-height: 120px;" id="headimgurl">
                             </a>
                         </label>
                     </div>
