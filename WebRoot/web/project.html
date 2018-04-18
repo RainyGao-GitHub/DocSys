@@ -94,6 +94,9 @@
 								<li><a onclick="logout()">退出登录</a></li>
 							</ul>
 					</li>
+					<li id="loginBtn">
+                        <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                    </li>
 					<li>
 						<button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
 	                   	</button>
@@ -3490,6 +3493,7 @@ function CompareObj(objA, objB, flag) {
 }
 </script>
 
+<script type="text/javascript" src="js/logon.js"></script>
 <SCRIPT type="text/javascript" >
 	/********************** zTree设置与接口**********************************/
     //zTree's setting
@@ -3963,30 +3967,6 @@ function CompareObj(objA, objB, flag) {
 	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
 	}
 	
-	
-		//退出登录
-	function logout()
-	{
-		console.log("logout");
-        $.ajax({
-            url : "/DocSystem/logout.do",
-            type : "post",
-            dataType : "json",
-            data : {},
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	console.log("已退出登录");
-                	window.location.reload();	//刷新页面
-                }else {
-                    showErrorMsg("logout Error:"+ret.msgInfo);
-                }
-            },
-            error : function () {
-                alert("服务器异常:退出登录失败");
-            }
-        });
-    }
-    
 	//PageInit
 	function SysInit()
 	{
@@ -4004,20 +3984,7 @@ function CompareObj(objA, objB, flag) {
                 	var user = ret.data;
                 	login_user = user;
                 	//显示用户信息
-                	console.log("id:" + user.id + " name:" + user.name + " img:" + user.img);
-                	if((typeof(user.img)=="undefined") || (user.img == ""))
-                	{
-                		//使用默认图片
-                		console.log("use default img");
-                		//$("#userImg").attr('src',"images/default/defaultHeadPic1.png"); 
-                	}
-                	else	//使用用户自定义头像
-                	{
-                		$("#userImg").attr('src',user.img); 
-                	}
-                	$('#userImgDiv').show();
-                	$('#userInfoDiv > a >span:first-child').text(user.name);
-                	$('#userInfoDiv').show();
+                	ShowUserInfo(user);
                 	
                 	//Show ReposMenu
                 	syncUpMenu(showDoc);
