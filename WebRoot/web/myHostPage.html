@@ -113,22 +113,22 @@
                 </div>
                 <div class="box-body" style="padding-right: 200px;">
                     <div class="form-left">
-                        <form role="form" method="post" id="memberInfoForm">
+                        <form role="form" method="post" id="memberInfoForm" action="/DocSystem/updateUserInfo.do">
                             <div class="form-group">
                                 <label>用户名</label>
-                                <input type="text" class="form-control disabled" value="Rainy" disabled="" placeholder="用户名">
+                                <input type="text" class="form-control" value="" id="userName" name="userName" disabled="" placeholder="用户名">
                             </div>
                             <div class="form-group">
-                                <label for="user-email">昵称<strong class="text-danger">*</strong></label>
-                                <input type="email" class="form-control" value="Rainy" id="nick_name" name="nick_name" max="100" placeholder="邮箱">
+                                <label for="user-nickName">昵称<strong class="text-danger">*</strong></label>
+                                <input type="text" class="form-control" value="" id="nickName" name="nickName" max="100" placeholder="昵称">
                             </div>
                             <div class="form-group">
                                 <label>真实姓名</label>
-                                <input type="text" name="real_name" class="form-control" value="高雨" placeholder="真实姓名">
+                                <input type="text" name="realName" class="form-control" value="" placeholder="真实姓名">
                             </div>
                             <div class="form-group">
                                 <label class="description">描述</label>
-                                <textarea class="form-control" rows="3" title="描述" name="description" id="description" maxlength="500">I am Rainy</textarea>
+                                <textarea class="form-control" rows="3" title="描述" name="intro" id="userIntro" maxlength="500"></textarea>
                                 <p style="color: #999;font-size: 12px;">描述不能超过500字</p>
                             </div>
                             <div class="form-group">
@@ -243,18 +243,19 @@
         $("#memberInfoForm").ajaxForm({
             beforeSubmit : function () {
 
-                var email = $.trim($("#userEmail").val());
-                if(!email){
-                    return showError('邮箱不能为空');
+                var nickName = $.trim($("#nickName").val());
+                if(!nickName){
+                    return showError('昵称不能为空');
                 }
                 $("button[type='submit']").button('loading');
             },
-            success : function (res) {
-                $("button[type='submit']").button('reset');
-                if(res.errcode === 0){
+            success : function (ret) {
+                console.log(ret);
+            	$("button[type='submit']").button('reset');
+                if("ok" == ret.status){
                     showSuccess("保存成功");
                 }else{
-                    showError(res.message);
+                    showError(ret.msg);
                 }
             }
         });
@@ -349,7 +350,7 @@
                 {
                 	var user = ret.data;
                 	login_user = user;
-                	
+                	console.log(login_user);
                 	//显示用户信息
                 	ShowUserInfo(user);
                 	
@@ -362,7 +363,13 @@
                 		gToHref = "myInfo";
                 	}           
                 	console.log("gToHref:" + gToHref); 
-                	PageSwitch(gToHref); 	
+                	PageSwitch(gToHref);
+                	
+                	//Set UserName NickName RealName Intro
+                	$("#userName").val(login_user.name);
+                   	$("#nickName").val(login_user.nickName);
+                   	$("#realName").val(login_user.realName);
+                   	$("#userIntro").val(login_user.intro);
                 }
                 else 
                 {
