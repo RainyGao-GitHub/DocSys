@@ -43,10 +43,9 @@
         });
     }
 	
-	//This function
+	//This  function
 	function ShowUserInfo(user)
 	{
-		user.img = "images/default/defaultHeadPic22.png";
 		console.log("id:" + user.id + " name:" + user.name + " img:" + user.img);
 		if((typeof(user.img)=="undefined") || (user.img == ""))
 		{
