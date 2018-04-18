@@ -42,3 +42,23 @@
             }
         });
     }
+	
+	//This function
+	function ShowUserInfo(user)
+	{
+		console.log("id:" + user.id + " name:" + user.name + " img:" + user.img);
+		if((typeof(user.img)=="undefined") || (user.img == ""))
+		{
+			//使用默认图片
+			console.log("use default img");
+			//$("#userImg").attr('src',"images/default/defaultHeadPic.png"); 
+		}
+		else	//使用用户自定义头像
+		{
+			$("#userImg").attr('src',user.img); 
+		}
+		$('#userImgDiv').show();
+		$('#userInfoDiv > a >span:first-child').text(user.name);
+		$('#userInfoDiv').show();
+		$('#loginBtn').hide();
+	}
