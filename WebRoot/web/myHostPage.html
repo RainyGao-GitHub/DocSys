@@ -24,11 +24,11 @@
         <div class="navbar-header col-sm-12 col-md-9 col-lg-8">
             <a href="/DocSystem" class="navbar-brand" title="DocSys"><i class="fa fa-paper-plane"></i> DocSys</a>
             <nav class="collapse navbar-collapse col-sm-10">
-                <ul class="nav navbar-nav">
+                <!-- <ul class="nav navbar-nav">
                     <li>
                         <a href="/DocSystem" title="首页">首页</a>
                     </li>
-                    <!-- <li>
+                    <li>
                         <a href="http://doc.iminho.me/tags" title="标签">标签</a>
                     </li> -->
                 </ul>
@@ -67,21 +67,24 @@
                 
                 <li>
                 	<li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" class="img-circle m5"/></li>
-					<div class="img user-info" data-toggle="dropdown">
-                        <img src="images/default/defaultHeadPic.png" onerror="this.src=&#39;http:\/\/static.iminho.me\/static\/images\/headimgurl.jpg&#39;;" class="img-circle userbar-avatar" alt="Rainy">
-                        <div class="userbar-content">
-                            <span>Rainy</span>
-                            <div></div>
-                        </div>
-                        <i class="fa fa-chevron-down" aria-hidden="true"></i>
-                    </div>
+					<li id="userInfoDiv" style="display:none">
+							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
+								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
+								<li><a onclick="logout()">退出登录</a></li>
+							</ul>
+					</li>
+					<li id="loginBtn">
+                        <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                    </li>
                     <ul class="dropdown-menu user-info-dropdown" role="menu">
                         <li>
                             <a href="/DocSystem/web/myHostPage.html" title="个人中心"> 个人中心</a>
                         </li>
                         
                         <li>
-                            <a href="/DocSystem/web/reposManager.html" title="管理后台"> 管理后台</a>
+                            <a href="/DocSystem/web/reposManager.html" title="仓库管理"> 仓库管理</a>
                         </li>
                         
                         <li>
@@ -99,8 +102,7 @@
             <div class="page-left">
                 <ul class="menu">
                     <li id="myInfoTag" class="active"><a href="/DocSystem/web/myHostPage.html" class="item"> 基本信息</a> </li>
-                    <li id="passwordTag"><a href="/DocSystem/web/myHostPage.html?toHref=password" class="item"> 修改密码</a> </li>
-                    
+                    <li id="passwordTag"><a href="/DocSystem/web/myHostPage.html?toHref=password" class="item"> 修改密码</a> </li>  
                 </ul>
             </div>
             <div id="myInfo" class="page-right" style="display:none">
@@ -224,6 +226,8 @@
 <script src="static/cropper/cropper.min.js" type="text/javascript"></script>
 <script src="static/scripts/jquery.form.js" type="text/javascript"></script>
 <script src="js/main.js" type="text/javascript"></script>
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<script src="js/logon.js" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
     	pageInit();
@@ -351,7 +355,7 @@
                 	{
                 		//使用默认图片
                 		console.log("use default img");
-                		//$("#userImg").attr('src',"images/default/defaultHeadPic1.png"); 
+                		$("#userImg").attr('src',"images/default/defaultHeadPic.png"); 
                 	}
                 	else	//使用用户自定义头像
                 	{
