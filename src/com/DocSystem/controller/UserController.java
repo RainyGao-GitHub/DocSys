@@ -193,7 +193,9 @@ public class UserController extends BaseController {
 			}
 		}
 		else
-		{
+		{	
+			//always get the userInfo from db
+			user = userService.getUser(user.getId());
 			rt.setData(user);	//返回用户信息
 		}
 		
