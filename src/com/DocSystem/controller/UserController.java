@@ -792,11 +792,28 @@ public class UserController extends BaseController {
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		
-		//检查用户名是否为空
+		//Check if user is login
+		User loginUser = (User) session.getAttribute("login_user");
+		if(loginUser == null)
+		{
+			System.out.println("updateUserInfo() 用户未登陆！");
+			rt.setError("用户未登陆！");
+			writeJson(rt, response);
+			return;
+		}
+				
+		//检查用户名是否为空 
 		if(userName==null||"".equals(userName))
 		{
 			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(userName.equals(loginUser.getName()))
+		{
+			System.out.println("updateUserInfo() 不能修改其他用户的信息！");
+			rt.setError("修改用户信息失败！");
 			writeJson(rt, response);
 			return;
 		}
@@ -836,9 +853,27 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;			
 		}
+		syncUpLoginUserInfo(newUserInfo,loginUser);
 		
 		writeJson(rt, response);
 		return;
+	}
+	
+	private void syncUpLoginUserInfo(User user,User loginUser)
+	{
+		if(user.getNickName() != null)
+		{
+			loginUser.setNickName(user.getNickName());
+		}
+		if(user.getRealName() != null)
+		{
+			loginUser.setRealName(user.getRealName());
+		}
+		if(user.getIntro() != null)
+		{
+			loginUser.setNickName(user.getIntro());
+		}
+		
 	}
 	
 	@RequestMapping(value="uploadUserImg")
