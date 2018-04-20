@@ -441,7 +441,7 @@
                 if(res.status === "ok"){
                     $("#upload-logo-panel").modal('hide');
                     //Set the headimg url
-                    var headImgUrl = "uploads/" + res.data.img; 
+                    var headImgUrl = res.data.img; 
                     $("#headimgurl").attr('src',headImgUrl);
                 }else{
                     $("#error-message").text(res.message);
