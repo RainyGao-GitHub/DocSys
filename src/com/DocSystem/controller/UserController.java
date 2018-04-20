@@ -25,6 +25,7 @@ import util.RegularUtil;
 import util.ReturnAjax;
 import util.WebUploader.MultipartFileParam;
 
+import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
@@ -837,12 +838,76 @@ public class UserController extends BaseController {
 	}
 	
 	@RequestMapping(value="uploadUserImg")
-    public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request) throws Exception 
+    public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception 
     {	
 		System.out.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
-		MultipartFile uploadFile = param.getFile();
+		ReturnAjax rt = new ReturnAjax();
 		
-
+		//Check if user is login
+		User loginUser = (User) session.getAttribute("login_user");
+		if(loginUser == null)
+		{
+			rt.setError("用户未登陆！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//Save the file
+		MultipartFile uploadFile = param.getFile();
+		if (uploadFile != null) 
+		{
+			String fileName = uploadFile.getOriginalFilename();
+			System.out.println("uploadFile size is :" + uploadFile.getSize());
+			/*保存文件*/
+			String userImgDir = "images";
+			System.out.println(userImgDir);
+			if(saveUserImg(userImgDir,fileName,uploadFile) == null)
+			{
+				System.out.println("uploadUserImg() saveFile " + fileName +" Failed！");
+				rt.setMsgDetail("uploadUserImg() saveFile " + fileName +" Failed！");
+				rt.setError("文件上传失败！");
+				writeJson(rt, response);
+				return;
+			}
+			
+			//Set the user img info
+			User user = new User();
+			user.setId(loginUser.getId());
+			user.setImg(fileName);
+			if(userService.updateUserInfo(user) == 0)
+			{
+				System.out.println("uploadUserImg() updateUserInfo Failed！");
+				rt.setMsgDetail("uploadUserImg() updateUserInfo Failed！");
+				rt.setError("用户头像更新失败！");
+				writeJson(rt, response);
+				return;				
+			}
+		}
+		else
+		{
+			rt.setError("文件上传失败！");
+		}
+		writeJson(rt, response);
     }
+	
+	private String saveUserImg(String userImgDir,String name, MultipartFile uploadFile) {
+
+		String retName = null;
+		try {
+			retName = saveFile(uploadFile, userImgDir,name);
+		} catch (Exception e) {
+			System.out.println("saveUserImg() saveFile " + name +" 异常！");
+			e.printStackTrace();
+			return null;
+		}
+		
+		System.out.println("saveUserImg() saveFile return: " + retName);
+		if(retName == null  || !retName.equals(name))
+		{
+			System.out.println("updateRealDoc() saveFile " + name +" Failed！");
+			return null;
+		}
+		return retName;
+	}
 	
 }
