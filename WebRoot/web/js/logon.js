@@ -55,7 +55,8 @@
 		}
 		else	//使用用户自定义头像
 		{
-			$("#userImg").attr('src',user.img); 
+			var userImgUrl = "uploads/"+user.img; 
+			$("#userImg").attr('src',userImgUrl); 
 		}
 		$('#userImgDiv').show();
 		$('#userInfoDiv > a >span:first-child').text(user.name);
