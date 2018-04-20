@@ -389,6 +389,10 @@
     function MyInfoPageInit()
     {
     	console.log("MyInfoPageInit");
+    	
+    	//Set userImg
+    	$("#headimgurl").attr('src',loginUser.img); 
+    	
     	//Set the evnent handler for hidden.bs.modal(This handler will show the immg upload dialog)
         $("#upload-logo-panel").on("hidden.bs.modal",function () {
             $("#upload-logo-panel").find(".modal-body").html(window.modalHtml);
@@ -443,6 +447,7 @@
                     //Set the headimg url
                     var headImgUrl = res.data.img; 
                     $("#headimgurl").attr('src',headImgUrl);
+                    $("#userImg").attr('src',headImgUrl);
                 }else{
                     $("#error-message").text(res.message);
                 }
