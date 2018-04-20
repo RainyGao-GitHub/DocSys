@@ -16,12 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import util.EmailUtil;
 import util.EncryptUtil;
 import util.HexString;
 import util.RegularUtil;
 import util.ReturnAjax;
+import util.WebUploader.MultipartFileParam;
 
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.UserServiceImpl;
@@ -833,4 +835,14 @@ public class UserController extends BaseController {
 		writeJson(rt, response);
 		return;
 	}
+	
+	@RequestMapping(value="uploadUserImg")
+    public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request) throws Exception 
+    {	
+		System.out.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
+		MultipartFile uploadFile = param.getFile();
+		
+
+    }
+	
 }
