@@ -857,14 +857,15 @@ public class UserController extends BaseController {
 		MultipartFile uploadFile = param.getFile();
 		if (uploadFile == null) 
 		{
+			System.out.println("uploadUserImg() uploadFile is null！");
 			rt.setError("文件上传失败！");
 			writeJson(rt, response);
 			return;
 		}
 		
 		/*保存文件*/
-		String fileName = uploadFile.getOriginalFilename();
 		System.out.println("uploadFile size is :" + uploadFile.getSize());
+		String fileName = uploadFile.getOriginalFilename();
 		String userImgDir = "images";
 		System.out.println(userImgDir);
 		if(saveUserImg(userImgDir,fileName,uploadFile) == null)
