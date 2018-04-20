@@ -232,85 +232,7 @@
 <script type="text/javascript">
     $(function () {
     	pageInit();
-    
-    
-        $("#upload-logo-panel").on("hidden.bs.modal",function () {
-            $("#upload-logo-panel").find(".modal-body").html(window.modalHtml);
-        }).on("show.bs.modal",function () {
-            window.modalHtml = $("#upload-logo-panel").find(".modal-body").html();
-        });
 
-        try {
-            var uploader = WebUploader.create({
-                auto: false,
-                swf: '/static/webuploader/Uploader.swf',
-                server: 'http:\/\/doc.iminho.me\/setting\/upload',
-                pick: "#filePicker",
-                fileVal : "image-file",
-                fileNumLimit : 1,
-                compress : false,
-                accept: {
-                    title: 'Images',
-                    extensions: 'jpg,jpeg,png',
-                    mimeTypes: 'image/jpg,image/jpeg,image/png'
-                }
-            }).on("beforeFileQueued",function (file) {
-                uploader.reset();
-            }).on( 'fileQueued', function( file ) {
-                uploader.makeThumb( file, function( error, src ) {
-                    $img = '<img src="' + src +'" style="max-width: 360px;max-height: 360px;">';
-                    if ( error ) {
-                        $img.replaceWith('<span>不能预览</span>');
-                        return;
-                    }
-
-                    $("#image-wraper").html($img);
-                    window.ImageCropper = $('#image-wraper>img').cropper({
-                        aspectRatio: 1 / 1,
-                        dragMode : 'move',
-                        viewMode : 1,
-                        preview : ".img-preview"
-                    });
-                }, 1, 1 );
-            }).on("uploadError",function (file,reason) {
-                console.log(reason);
-                $("#error-message").text("上传失败:" + reason);
-
-            }).on("uploadSuccess",function (file, res) {
-
-                if(res.errcode === 0){
-                    console.log(res);
-                    $("#upload-logo-panel").modal('hide');
-                    $("#headimgurl").attr('src',res.data);
-                }else{
-                    $("#error-message").text(res.message);
-                }
-            }).on("beforeFileQueued",function (file) {
-                if(file.size > 1024*1024*2){
-                    uploader.removeFile(file);
-                    uploader.reset();
-                    alert("文件必须小于2MB");
-                    return false;
-                }
-            }).on("uploadComplete",function () {
-                $("#saveImage").button('reset');
-            });
-            $("#saveImage").on("click",function () {
-                var files = uploader.getFiles();
-                if(files.length > 0) {
-                    $("#saveImage").button('loading');
-                    var cropper = window.ImageCropper.cropper("getData");
-
-                    uploader.option("formData", cropper);
-
-                    uploader.upload();
-                }else{
-                    alert("请选择头像");
-                }
-            });
-        }catch(e){
-            console.log(e);
-        }
     });
     
     //Update UserInfo
@@ -442,6 +364,7 @@
         return null;
     }
     
+    //Siwtch the display of page
     function PageSwitch(page)
 	{
 		console.log("PageSwitch:" + page);
@@ -458,10 +381,98 @@
 		    $("#passwordTag").removeClass("active");
 		    $("#myInfo").show();
 	      	$("#password").hide();
+		    MyInfoPageInit();
 	     	break;
 	     }
 	}
     
+    function MyInfoPageInit()
+    {
+    	console.log("MyInfoPageInit");
+    	//Set the evnent handler for hidden.bs.modal(This handler will show the immg upload dialog)
+        $("#upload-logo-panel").on("hidden.bs.modal",function () {
+            $("#upload-logo-panel").find(".modal-body").html(window.modalHtml);
+        }).on("show.bs.modal",function () {
+            window.modalHtml = $("#upload-logo-panel").find(".modal-body").html();
+        });
+		
+    	//Setup the WebUploader for img upload
+        var host = window.location.host;	//域名带端口
+		console.log(host);
+    	var serverUrl = host + "/DocSystem/uploadUserImg.do";		
+    	try {
+            var uploader = WebUploader.create({
+                auto: false,
+                swf: 'static/webuploader/Uploader.swf',
+                server: serverUrl,
+                pick: "#filePicker",
+                fileVal : "image-file",
+                fileNumLimit : 1,
+                compress : false,
+                accept: {
+                    title: 'Images',
+                    extensions: 'jpg,jpeg,png',
+                    mimeTypes: 'image/jpg,image/jpeg,image/png'
+                }
+            }).on("beforeFileQueued",function (file) {
+                uploader.reset();
+            }).on( 'fileQueued', function( file ) {
+                uploader.makeThumb( file, function( error, src ) {
+                    $img = '<img src="' + src +'" style="max-width: 360px;max-height: 360px;">';
+                    if ( error ) {
+                        $img.replaceWith('<span>不能预览</span>');
+                        return;
+                    }
+
+                    $("#image-wraper").html($img);
+                    window.ImageCropper = $('#image-wraper>img').cropper({
+                        aspectRatio: 1 / 1,
+                        dragMode : 'move',
+                        viewMode : 1,
+                        preview : ".img-preview"
+                    });
+                }, 1, 1 );
+            }).on("uploadError",function (file,reason) {
+                console.log(reason);
+                $("#error-message").text("上传失败:" + reason);
+
+            }).on("uploadSuccess",function (file, res) {
+
+                if(res.errcode === 0){
+                    console.log(res);
+                    $("#upload-logo-panel").modal('hide');
+                    $("#headimgurl").attr('src',res.data);
+                }else{
+                    $("#error-message").text(res.message);
+                }
+            }).on("beforeFileQueued",function (file) {
+                if(file.size > 1024*1024*2){
+                    uploader.removeFile(file);
+                    uploader.reset();
+                    alert("文件必须小于2MB");
+                    return false;
+                }
+            }).on("uploadComplete",function () {
+                $("#saveImage").button('reset');
+            });
+            
+            $("#saveImage").on("click",function () {
+                var files = uploader.getFiles();
+                if(files.length > 0) {
+                    $("#saveImage").button('loading');
+                    var cropper = window.ImageCropper.cropper("getData");
+
+                    uploader.option("formData", cropper);
+
+                    uploader.upload();
+                }else{
+                    alert("请选择头像");
+                }
+            });
+        }catch(e){
+            console.log(e);
+        }
+    }
     
 </script>
 
