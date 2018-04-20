@@ -904,8 +904,8 @@ public class UserController extends BaseController {
         
 		//判断uploads目录是否存在，如果不存在则新建一个目录link
 		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        String imgDirPath = wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) + "uploads" +  File.separator;
-        
+        String imgDirPath = wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) + "web/uploads" +  File.separator;
+        System.out.println("imgDirPath:" + imgDirPath);
         File dir = new File(imgDirPath);
         if (!dir.exists()) {
         	if(dir.mkdir() == false)
@@ -914,7 +914,8 @@ public class UserController extends BaseController {
         	}
         }
         
-        String usrImgName =  user.getId()+"_"+ MD5.md5(fileName); 
+        String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+        String usrImgName =  user.getId()+"_"+ MD5.md5(fileName) + "."  + suffix; 
         String retName = null;
 		try {
 			retName = saveFile(uploadFile, imgDirPath,usrImgName);
