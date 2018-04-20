@@ -399,7 +399,7 @@
     	//Setup the WebUploader for img upload
         var host = window.location.host;	//域名带端口
 		console.log(host);
-    	var serverUrl = host + "/DocSystem/uploadUserImg.do";		
+    	var serverUrl = "http://" + host + "/DocSystem/uploadUserImg.do";		
     	try {
             var uploader = WebUploader.create({
                 auto: false,
@@ -437,7 +437,7 @@
                 $("#error-message").text("上传失败:" + reason);
 
             }).on("uploadSuccess",function (file, res) {
-
+            	console.log(res);
                 if(res.errcode === 0){
                     console.log(res);
                     $("#upload-logo-panel").modal('hide');
