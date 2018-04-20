@@ -12,7 +12,8 @@ public class ReturnAjax {
 	//以下是默认成功信息
 	private String status =	"ok";
 	private String msgInfo = "获取数据成功";
-	private Object data;	
+	private String msgDetail;	//用于向前台传递更详细的信息,方便调试
+	private Object data;
 
 	/**
 	 * 设置默认错误信息
@@ -28,7 +29,6 @@ public class ReturnAjax {
 			this.msgInfo = "获取数据失败";			
 		}
 	}
-	
 	//================================ getters and setters ===================================
 	public String getMsgInfo() {
 		return msgInfo;
@@ -52,6 +52,14 @@ public class ReturnAjax {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public String getMsgDetail() {
+		return msgDetail;
+	}
+	
+	public void setMsgDetail(String msgDetail) {
+		this.msgDetail = msgDetail;
 	}
 	
 }
