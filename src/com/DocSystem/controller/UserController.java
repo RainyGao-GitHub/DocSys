@@ -1,5 +1,6 @@
 package com.DocSystem.controller;
 
+import java.io.File;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.text.SimpleDateFormat;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 
 import util.EmailUtil;
@@ -23,6 +26,7 @@ import util.EncryptUtil;
 import util.HexString;
 import util.RegularUtil;
 import util.ReturnAjax;
+import util.Encrypt.MD5;
 import util.WebUploader.MultipartFileParam;
 
 import com.DocSystem.entity.ReposAuth;
@@ -866,22 +870,21 @@ public class UserController extends BaseController {
 		
 		/*保存文件*/
 		System.out.println("uploadFile size is :" + uploadFile.getSize());
-		String fileName = uploadFile.getOriginalFilename();
-		String userImgDir = "images";
-		System.out.println(userImgDir);
-		if(saveUserImg(userImgDir,fileName,uploadFile) == null)
+		String userImgName = saveUserImg(uploadFile,loginUser);
+		if(userImgName == null)
 		{
-			System.out.println("uploadUserImg() saveFile " + fileName +" Failed！");
-			rt.setMsgDetail("uploadUserImg() saveFile " + fileName +" Failed！");
+			System.out.println("uploadUserImg() saveFile Failed！");
+			rt.setMsgDetail("uploadUserImg() saveFile Failed！");
 			rt.setError("文件上传失败！");
 			writeJson(rt, response);
 			return;
 		}
 			
 		//Set the user img info
+		String userImgUrl = "uploads/"+userImgName;
 		User user = new User();
 		user.setId(loginUser.getId());
-		user.setImg(fileName);
+		user.setImg(userImgUrl);
 		if(userService.updateUserInfo(user) == 0)
 		{
 			System.out.println("uploadUserImg() updateUserInfo Failed！");
@@ -890,28 +893,44 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;				
 		}
-		loginUser.setImg(fileName);
-
+		loginUser.setImg(userImgUrl);
+		rt.setData(loginUser);
 		writeJson(rt, response);
     }
 	
-	private String saveUserImg(String userImgDir,String name, MultipartFile uploadFile) {
-
-		String retName = null;
+	private String saveUserImg(MultipartFile uploadFile,User user) 
+	{
+		String fileName = uploadFile.getOriginalFilename();
+        
+		//判断uploads目录是否存在，如果不存在则新建一个目录link
+		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        String imgDirPath = wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) + "uploads" +  File.separator;
+        
+        File dir = new File(imgDirPath);
+        if (!dir.exists()) {
+        	if(dir.mkdir() == false)
+        	{
+        		return null;
+        	}
+        }
+        
+        String usrImgName =  user.getId()+"_"+ MD5.md5(fileName); 
+        String retName = null;
 		try {
-			retName = saveFile(uploadFile, userImgDir,name);
+			retName = saveFile(uploadFile, imgDirPath,usrImgName);
 		} catch (Exception e) {
-			System.out.println("saveUserImg() saveFile " + name +" 异常！");
+			System.out.println("saveUserImg() saveFile " + usrImgName +" 异常！");
 			e.printStackTrace();
 			return null;
 		}
 		
 		System.out.println("saveUserImg() saveFile return: " + retName);
-		if(retName == null  || !retName.equals(name))
+		if(retName == null  || !retName.equals(usrImgName))
 		{
-			System.out.println("updateRealDoc() saveFile " + name +" Failed！");
+			System.out.println("updateRealDoc() saveFile " + usrImgName +" Failed！");
 			return null;
 		}
+		
 		return retName;
 	}
 	
