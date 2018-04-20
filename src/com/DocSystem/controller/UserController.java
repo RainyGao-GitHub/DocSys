@@ -785,7 +785,7 @@ public class UserController extends BaseController {
 	public void updateUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
 	{
 		System.out.println("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
-		
+
 		ReturnAjax rt = new ReturnAjax();
 		
 		
@@ -838,9 +838,10 @@ public class UserController extends BaseController {
 	}
 	
 	@RequestMapping(value="uploadUserImg")
-    public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception 
+    public  void uploadUserImg(MultipartFile uploadFile, MultipartFileParam param, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
 		System.out.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
+		
 		ReturnAjax rt = new ReturnAjax();
 		
 		//Check if user is login
@@ -854,7 +855,7 @@ public class UserController extends BaseController {
 		}
 		
 		//Save the file
-		MultipartFile uploadFile = param.getFile();
+		//MultipartFile uploadFile = param.getFile();
 		if (uploadFile == null) 
 		{
 			System.out.println("uploadUserImg() uploadFile is null！");
