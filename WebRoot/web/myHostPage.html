@@ -438,10 +438,11 @@
 
             }).on("uploadSuccess",function (file, res) {
             	console.log(res);
-                if(res.errcode === 0){
-                    console.log(res);
+                if(res.status === "ok"){
                     $("#upload-logo-panel").modal('hide');
-                    $("#headimgurl").attr('src',res.data);
+                    //Set the headimg url
+                    var headImgUrl = "uploads/" + res.data.img; 
+                    $("#headimgurl").attr('src',headImgUrl);
                 }else{
                     $("#error-message").text(res.message);
                 }
