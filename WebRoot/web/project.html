@@ -517,7 +517,14 @@
         	
         }
 		var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		var parentNode = treeObj.getSelectedNodes()[0];
+		var selectedNode = treeObj.getSelectedNodes()[0];
+		console.log(selectedNode);
+		var parentNode = selectedNode;
+		if(selectedNode && selectedNode.isParent === false)
+		{	
+			console.log("selectedNode:" + selectedNode.name);
+			parentNode = selectedNode.getParentNode();
+		}
 		
 		//用户确认上传
 		checkUserUploadRight(entrys,parentNode,uploadConfirm);
