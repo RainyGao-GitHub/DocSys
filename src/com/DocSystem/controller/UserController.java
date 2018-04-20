@@ -838,7 +838,7 @@ public class UserController extends BaseController {
 	}
 	
 	@RequestMapping(value="uploadUserImg")
-    public  void uploadUserImg(MultipartFile uploadFile, MultipartFileParam param, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
+    public  void uploadUserImg(MultipartFileParam param, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
     {	
 		System.out.println("uploadUserImg() filename:"+param.getName() + " size:" + param.getSize() + " Uid:" +param.getUid());
 		
@@ -855,7 +855,7 @@ public class UserController extends BaseController {
 		}
 		
 		//Save the file
-		//MultipartFile uploadFile = param.getFile();
+		MultipartFile uploadFile = param.getFile();
 		if (uploadFile == null) 
 		{
 			System.out.println("uploadUserImg() uploadFile is null！");
