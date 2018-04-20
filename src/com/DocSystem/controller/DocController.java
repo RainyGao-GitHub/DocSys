@@ -6,9 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,11 +19,16 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
+
+import util.FileUtils;
 import util.ReturnAjax;
 import util.SvnUtil.SVNUtil;
+import util.WebUploader.MultipartFileParam;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -259,6 +266,82 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
+	
+	//This Interface will use webuploder to upload doc
+	@RequestMapping(value="uploadDoc2")
+    public  void uploadDoc2(MultipartFileParam param, HttpServletRequest request) throws Exception {
+		/*
+		System.out.println("uploadDoc2()");
+		System.out.println(param.getUid());
+        String prefix = "req_count:" + counter.incrementAndGet() + ":";
+        System.out.println(prefix + "start !!!");
+        //使用 工具类解析相关参数，工具类代码见下面
+        System.out.println(prefix + "chunks= " + param.getChunks());
+        System.out.println(prefix + "chunk= " + param.getChunk());
+        System.out.println(prefix + "chunkSize= " + param.getFile().getSize());
+        //这个必须与前端设定的值一致
+        long chunkSize = 5 * 1024 * 1024;
+
+
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        String finalDirPath = wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) + "jar" +  File.separator;
+
+
+//      String finalDirPath = "/uploads/";
+        String tempDirPath = finalDirPath;
+        String tempFileName = param.getName() + "_tmp";
+        File tmpDir = new File(tempDirPath);
+        if (!tmpDir.exists()) {
+            tmpDir.mkdirs();
+        }
+
+        File confFile = new File(tempDirPath, param.getName() + ".conf");
+        File tmpFile = new File(tempDirPath, tempFileName);
+
+        RandomAccessFile accessTmpFile = new RandomAccessFile(tmpFile, "rw");
+        RandomAccessFile accessConfFile = new RandomAccessFile(confFile, "rw");
+
+        long offset = chunkSize * param.getChunk();
+        //定位到该分片的偏移量
+        accessTmpFile.seek(offset);
+        //写入该分片数据
+        accessTmpFile.write(param.getFile().getBytes());
+
+        //把该分段标记为 true 表示完成
+        System.out.println(prefix + "set part " + param.getChunk() + " complete");
+        accessConfFile.setLength(param.getChunks());
+        accessConfFile.seek(param.getChunk());
+        accessConfFile.write(Byte.MAX_VALUE);
+
+        //completeList 检查是否全部完成,如果数组里是否全部都是(全部分片都成功上传)
+        byte[] completeList = FileUtils.readFileToByteArray(confFile);
+        byte isComplete = Byte.MAX_VALUE;
+        for (int i = 0; i < completeList.length && isComplete==Byte.MAX_VALUE; i++) {
+            //与运算, 如果有部分没有完成则 isComplete 不是 Byte.MAX_VALUE
+            isComplete = (byte)(isComplete & completeList[i]);
+            System.out.println(prefix + "check part " + i + " complete?:" + completeList[i]);
+        }
+
+        accessTmpFile.close();
+        accessConfFile.close();
+        if (isComplete == Byte.MAX_VALUE) {
+            System.out.println(prefix + "upload complete !!");
+            confFile.delete();
+            // 覆盖，若改名后的文件已存在，则先删掉再改名
+            File renameFile = new File(finalDirPath, param.getName());
+            if(renameFile.exists())
+                renameFile.delete();
+            tmpFile.renameTo(renameFile);
+        }
+        System.out.println(prefix + "end !!!");
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("status", "ok");
+//        map.put("msg", jarService.uploadJar(file));
+        map.put("msg", "ok");
+        return map;
+        */
+    }
 	
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
