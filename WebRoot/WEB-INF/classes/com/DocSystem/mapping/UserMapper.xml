@@ -275,6 +275,8 @@
   <select id="selectSelective" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
     from user
     where 1 = 1
     <if test="name != null">
