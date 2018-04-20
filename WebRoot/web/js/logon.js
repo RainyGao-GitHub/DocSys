@@ -32,7 +32,9 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("已退出登录");
-                	window.location.reload();	//刷新页面
+                	//document.location.reload();
+                	var url = window.location.href;
+                	window.location.href = url;	//刷新页面
                 }else {
                     alert("错误："+ret.msgInfo);
                 }
