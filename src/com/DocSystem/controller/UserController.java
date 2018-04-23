@@ -1,6 +1,9 @@
 package com.DocSystem.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.text.SimpleDateFormat;
@@ -905,6 +908,7 @@ public class UserController extends BaseController {
 		
 		/*保存文件*/
 		System.out.println("uploadFile size is :" + uploadFile.getSize());
+		
 		String userImgName = saveUserImg(uploadFile,loginUser);
 		if(userImgName == null)
 		{
@@ -916,7 +920,7 @@ public class UserController extends BaseController {
 		}
 			
 		//Set the user img info
-		String userImgUrl = "uploads/"+userImgName;
+		String userImgUrl = userImgName;
 		User user = new User();
 		user.setId(loginUser.getId());
 		user.setImg(userImgUrl);
@@ -937,13 +941,11 @@ public class UserController extends BaseController {
 	{
 		String fileName = uploadFile.getOriginalFilename();
         
-		//判断uploads目录是否存在，如果不存在则新建一个目录link
-		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        String imgDirPath = wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) + "web/uploads" +  File.separator;
+        String imgDirPath = getUserImgPath(); 
         System.out.println("imgDirPath:" + imgDirPath);
         File dir = new File(imgDirPath);
         if (!dir.exists()) {
-        	if(dir.mkdir() == false)
+        	if(dir.mkdirs() == false)
         	{
         		return null;
         	}
@@ -970,4 +972,70 @@ public class UserController extends BaseController {
 		return retName;
 	}
 	
+	private String getUserImgPath()
+	{
+		//String rootPath = getCurrentAppPath();
+		String rootPath = getDocSysDataPath();
+	    String imgDirPath = rootPath + "uploads/userImg/";
+        return imgDirPath;
+	}
+	
+	private String getCurrentAppPath() {
+		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        String currentAppPath = wac.getServletContext().getRealPath("/");
+        return currentAppPath;
+	}
+	
+	private String getDocSysDataPath() {
+		String docSysDataPath = "";
+		String os = System.getProperty("os.name");  
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){  
+			docSysDataPath = "D:/DocSysData/";
+		}
+		else
+		{
+			docSysDataPath = "/data/DocSysData/";	//Linux系统放在  /data	
+		}
+		return docSysDataPath;
+	}
+	
+	//This interface is for getUserImg if useImgs not under tomcat
+	@RequestMapping(value="getUserImg")
+    public  void getUserImg(String fileName, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
+    {	
+		System.out.println("getUserImg() fileName:" + fileName);
+		
+		//解决中文编码问题
+		if(request.getHeader("User-Agent").toUpperCase().indexOf("MSIE")>0){  
+			fileName = URLEncoder.encode(fileName, "UTF-8");  
+		}else{  
+			fileName = new String(fileName.getBytes("UTF-8"),"ISO8859-1");  
+		}  
+		System.out.println("getUserImg fileName:" + fileName);
+		
+		//String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+		 
+		//解决空格问题
+		response.setHeader("content-disposition", "attachment;filename=\"" + fileName +"\"");
+		response.setHeader("Content-Type","image/jped");
+		
+		//读取要下载的文件，保存到文件输入流
+		String dstPath = getUserImgPath() + fileName;
+		FileInputStream in = new FileInputStream(dstPath);
+		//创建输出流
+		OutputStream out = response.getOutputStream();
+		//创建缓冲区
+		byte buffer[] = new byte[1024];
+		int len = 0;
+		//循环将输入流中的内容读取到缓冲区当中
+		while((len=in.read(buffer))>0){
+			//输出缓冲区的内容到浏览器，实现文件下载
+			out.write(buffer, 0, len);
+		}
+		//关闭文件输入流
+		in.close();
+		//关闭输出流
+		out.close();
+    }
 }
