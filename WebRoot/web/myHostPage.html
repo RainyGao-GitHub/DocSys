@@ -419,9 +419,15 @@
                     extensions: 'jpg,jpeg,png',
                     mimeTypes: 'image/jpg,image/jpeg,image/png'
                 }
-            }).on("beforeFileQueued",function (file) {
+            });
+            
+            uploader.on("beforeFileQueued",function (file) {
+            	console.log("beforeFileQueued1");
                 uploader.reset();
-            }).on( 'fileQueued', function( file ) {
+            });
+            
+            uploader.on( "fileQueued", function( file ) {
+            	console.log("fileQueued");
                 uploader.makeThumb( file, function( error, src ) {
                     $img = '<img src="' + src +'" style="max-width: 360px;max-height: 360px;">';
                     if ( error ) {
@@ -437,11 +443,17 @@
                         preview : ".img-preview"
                     });
                 }, 1, 1 );
-            }).on("uploadError",function (file,reason) {
-                console.log(reason);
+            });
+            
+            uploader.on("uploadError",function (file,reason) {
+            	console.log("uploadError");
+            	console.log(reason);
                 $("#error-message").text("上传失败:" + reason);
 
-            }).on("uploadSuccess",function (file, res) {
+            });
+            
+            uploader.on("uploadSuccess",function (file, res) {
+            	console.log("uploadSuccess");
             	console.log(res);
                 if(res.status === "ok"){
                     $("#upload-logo-panel").modal('hide');
@@ -452,14 +464,20 @@
                 }else{
                     $("#error-message").text(res.message);
                 }
-            }).on("beforeFileQueued",function (file) {
+            });
+            
+            uploader.on("beforeFileQueued",function (file) {
+            	console.log("beforeFileQueued2");
                 if(file.size > 1024*1024*2){
                     uploader.removeFile(file);
                     uploader.reset();
                     alert("文件必须小于2MB");
                     return false;
                 }
-            }).on("uploadComplete",function () {
+            })
+            
+            uploader.on("uploadComplete",function () {
+            	console.log("uploadComplete");
                 $("#saveImage").button('reset');
             });
             
@@ -480,7 +498,10 @@
             console.log(e);
         }
     }
-    
+	function getUserImgUrl(imgName)
+	{
+		return "/DocSystem/getUserImg.do?fileName=" + imgName;
+	}
 </script>
 
 </body></html>
