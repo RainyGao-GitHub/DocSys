@@ -23,7 +23,7 @@ public interface UserMapper {
 
     List<User> selectSelective(User user);
 
-	List<User> queryUserByTelOrEmail(User user);
+	List<User> queryUserExt(User user);	//根据用户名和密码查询用户列表
 
 	List<User> selectAll();
 }

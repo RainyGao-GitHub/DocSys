@@ -26,9 +26,9 @@ public class UserServiceImpl implements UserService {
     	return userDao.selectSelective(user);
     } 
     
-    public List<User> queryUserByTelOrEmail(User user)
+    public List<User> queryUserExt(User user)
     {
-    	return userDao.queryUserByTelOrEmail(user);
+    	return userDao.queryUserExt(user);
     }
 
 	public List<User> geAllUsers() {
@@ -40,5 +40,4 @@ public class UserServiceImpl implements UserService {
 		// TODO Auto-generated method stub
 		return userDao.selectByPrimaryKey(userID);
 	}
-
 }  
