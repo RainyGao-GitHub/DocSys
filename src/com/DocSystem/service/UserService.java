@@ -7,5 +7,5 @@ import com.DocSystem.entity.User;
 public interface UserService {  
     public List<User> getUserListByUserInfo(User user);  
     
-    public List<User> queryUserByTelOrEmail(User user);
+    public List<User> queryUserExt(User user);
 }  

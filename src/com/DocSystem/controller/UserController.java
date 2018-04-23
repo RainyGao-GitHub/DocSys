@@ -61,18 +61,11 @@ public class UserController extends BaseController {
 		
 		//tmp_user is used for store the query condition
 		User tmp_user = new User();
-		if(RegularUtil.isEmail(userName))
-		{
-			tmp_user.setEmail(userName);
-		}
-		else
-		{
-			tmp_user.setTel(userName);			
-		}
+		tmp_user.setName(userName);
 		tmp_user.setPwd(pwd);
-		List<User> uLists = getUserSelective(userName,pwd);
-		boolean f =loginCheck(rt, tmp_user, uLists, session,response);
-		if(f){
+		List<User> uLists = getUserList(userName,pwd);
+		boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
+		if(ret){
 			System.out.println("登录成功");
 			session.setAttribute("login_user", uLists.get(0));
 			rt.setMsgInfo("success#登录成功！");
@@ -90,7 +83,7 @@ public class UserController extends BaseController {
 		return;
 	}
 		
-	private List<User> getUserSelective(String userName,String pwd) {
+	private List<User> getUserList(String userName,String pwd) {
 		// TODO Auto-generated method stub
 		User tmp_user = new User();
 		//检查用户名是否为空
@@ -101,7 +94,7 @@ public class UserController extends BaseController {
 		
 		tmp_user.setName(userName);
 		tmp_user.setPwd(pwd);
-		List<User> uList = userService.getUserListByUserInfo(tmp_user);
+		List<User> uList = userService.queryUserExt(tmp_user);
 		if(uList == null || uList.size() == 0)
 		{
 			return null;
@@ -184,7 +177,7 @@ public class UserController extends BaseController {
 				User tmp_user = new User();
 				tmp_user.setName(userName);			
 				tmp_user.setPwd(pwd);
-				List<User> uLists = getUserSelective(userName,pwd);
+				List<User> uLists = getUserList(userName,pwd);
 				boolean f =loginCheck(rt, tmp_user, uLists, session,response);
 				if(f){
 					System.out.println("登录成功");
@@ -244,9 +237,10 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-		else if(RegularUtil.isEmail(userName))	//邮箱注册
+		
+		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
-			if(isEmailRegistered(userName) == true)
+			if(isUserRegistered(userName) == true)
 			{
 				rt.setError("error#该邮箱已注册！");
 			}
@@ -256,7 +250,7 @@ public class UserController extends BaseController {
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			if(isTelRegistered(userName) == true)
+			if(isUserRegistered(userName) == true)
 			{
 				rt.setError("error#该手机已注册！");
 			}
@@ -287,9 +281,10 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-		else if(RegularUtil.isEmail(userName))	//邮箱注册
+		
+		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
-			if(isNameRegistered(userName) == true)
+			if(isUserRegistered(userName) == true)
 			{
 				rt.setError("error#该邮箱已注册！");
 				writeJson(rt, response);
@@ -300,7 +295,7 @@ public class UserController extends BaseController {
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			if(isNameRegistered(userName) == true)
+			if(isUserRegistered(userName) == true)
 			{
 				rt.setError("error#该手机已注册！");
 				writeJson(rt, response);
@@ -370,37 +365,9 @@ public class UserController extends BaseController {
 		return false;
 	}
 
-	public boolean isNameRegistered(String name)
+	public boolean isUserRegistered(String name)
 	{
-		User user = new User();
-		user.setName(name);
-		List<User> uList = userService.getUserListByUserInfo(user);
-		if(uList == null || uList.size() == 0)
-		{
-			return false;
-		}
-		
-		return true;
-	}
-	
-	public boolean isTelRegistered(String Tel)
-	{
-		User user = new User();
-		user.setTel(Tel);
-		List<User> uList = userService.getUserListByUserInfo(user);
-		if(uList == null || uList.size() == 0)
-		{
-			return false;
-		}
-		
-		return true;
-	}
-	
-	public boolean isEmailRegistered(String Email)
-	{
-		User user = new User();
-		user.setEmail(Email);
-		List<User> uList = userService.getUserListByUserInfo(user);
+		List <User> uList = getUserList(name,null);
 		if(uList == null || uList.size() == 0)
 		{
 			return false;
@@ -603,7 +570,7 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-		List<User> uList = userService.getUserListByUserInfo(qUser);
+		List<User> uList = getUserList(userName,null);
 		if(uList == null || uList.size() == 0)
 		{
 			rt.setError("用户不存在！");
@@ -728,17 +695,10 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-		
-		if(isNameRegistered(userName) == true)
-		{
-			rt.setError("error#该用户名已注册！");
-			writeJson(rt, response);
-			return;
-		}
-		
+
 		if(RegularUtil.isEmail(userName))	//邮箱注册
 		{
-			if(isEmailRegistered(userName) == true)
+			if(isUserRegistered(userName) == true)
 			{
 				rt.setError("error#该邮箱已注册！");
 				writeJson(rt, response);
@@ -747,9 +707,18 @@ public class UserController extends BaseController {
 		}
 		else if(RegularUtil.IsMobliePhone(userName))
 		{
-			if(isTelRegistered(userName) == true)
+			if(isUserRegistered(userName) == true)
 			{
 				rt.setError("error#该手机已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该用户名已注册！");
 				writeJson(rt, response);
 				return;
 			}
