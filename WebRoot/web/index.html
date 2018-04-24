@@ -197,6 +197,8 @@
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript">
+	pageInit();   
+
 	//页面初始化
     var loginUser = "";	//用来保存刚注册的用户、或刚才登录的用户
 	function pageInit()
@@ -230,12 +232,15 @@
                 }
             },
             error : function () {
-                alert("服务器异常:获取用户信息失败");
+            	showErrorMessage("服务器异常:获取用户信息失败");
             }
         });
     }
     
-    pageInit();   
+	//通用函数接口
+	function showErrorMessage($msg) {
+    	qiao.bs.alert($msg);
+	}
 </script>	
 </body>
 </html>

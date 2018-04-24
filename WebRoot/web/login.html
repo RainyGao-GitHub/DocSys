@@ -98,7 +98,6 @@
 	
 	//登录按键处理函数
 	function login(){
-		//alert("11");
         $.ajax({
             url : "/DocSystem/login.do",
             type : "post",
@@ -116,11 +115,11 @@
                 	var url = window.location.href;
                 	window.location.href = url;	//刷新页面
                 }else {
-                    alert("错误："+ret.msgInfo);
+                	alert("错误："+ret.msgInfo);
                 }
             },
             error : function () {
-                showErrorMessage("服务器异常:登录失败");
+            	alert("服务器异常:登录失败");
             }
         });
     }
@@ -133,7 +132,7 @@
 	});
 </script>
 
-     <form id="ordLogin" class="form-horizontal">
+     <div id="ordLogin" class="form-horizontal">
          <div class="form-group">
              <label class="col-sm-2 control-label">邮箱/手机</label>
              <div class="col-sm-9">
@@ -161,7 +160,7 @@
                  <button onclick="login()" class="btn btnPrimary" style="width: 258px;height: 42px;">登录</button>
              </div>
          </div>
-     </form>    
+     </div>    
       
  <div id="smsLogin" class="row" style="display: none;">
      <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').show();$('#smsLogin').hide();"><em class="important">普通方式登录</em></a>用户登录</h4> -->

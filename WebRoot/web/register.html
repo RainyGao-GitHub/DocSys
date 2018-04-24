@@ -55,11 +55,11 @@
                 	showLoginPanel();
                 	loginUser =  $('input[name="userName"]').val();
                 }else {
-                    alert("错误：" + ret.msgInfo);
+                	alert("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-                alert("服务器异常:注册失败");
+            	alert("服务器异常:注册失败");
             }
         });
     }
@@ -80,11 +80,11 @@
                 	//alert("用户不存在，可以注册");
                 	sendVerifyCode();
                 }else {
-                    alert("错误：" + ret.msgInfo);
+                	alert("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-                alert("服务器异常:发送验证码失败");
+            	alert("服务器异常:发送验证码失败");
             }
         });
         
@@ -110,11 +110,11 @@
                 if( "ok" == ret.status ){
                 	alert("验证码已发送，请注意查收！");
                 }else {
-                    alert("错误：" + ret.msgInfo);
+                	alert("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-                alert("服务器异常:发送验证码失败");
+            	alert("服务器异常:发送验证码失败");
             }
         });
 	}
@@ -141,7 +141,7 @@
 	});
 </script>
 
-                    <form class="form-horizontal">
+                    <div class="form-horizontal">
                         <div class="form-group" id="userIdDiv">
                             <label class="col-sm-2 control-label">邮箱/手机</label>
                             <div class="col-sm-10">
@@ -184,4 +184,4 @@
                                 <button  id="submit" type="button" class="btn btnPrimary" onclick="register();" style="width: 288px;height: 42px;" disabled>立即注册</button>
                             </div>
                         </div>
-                    </form>
+                    </div>
