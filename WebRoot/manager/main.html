@@ -306,19 +306,21 @@
     });
     */
 
+    //绑定click 事件，取出参数
     $(document).on("click","[data-eb-event]", function () {
-        var bus = eb4js();
-        var event = $(this).attr("data-eb-event");
+        var bus = eb4js();	//全局事件总线
+        var event = $(this).attr("data-eb-event");	//配置在页面的参数
         var params = $(this).attr("data-eb-params");
         if( ! params ){
             bus.trigger(event);
         }else{
-            params = params.split("|");
-            params.splice(0,0,event);
-            bus.trigger.apply(bus,params);
+            params = params.split("|");	//解析参数
+            params.splice(0,0,event);	//把event第一个参数插入第一个参数中，让apply函数可以获取到event
+            bus.trigger.apply(bus,params); //apply是用来调整参数的方法
         }
     })
 
+    //展开子目录
     $(document).on("click","li.has_sublist",function(){
         var $this = $(this);
         if( ! $this.children("a").hasClass("open") ){
@@ -333,6 +335,7 @@
 <script type="application/javascript">
 //var $Current = ${session.curUser};
 var $Current = {"editUrl":"http://www.gofreeteam.com:8080/SSM/toRecommend.do?userId=","payUrl":"http://www.gofreeteam.com:8080/SSM/alipay/payToUsers.do?token=$&orders=","user":{"id":36,"name":"huangqian","role":"普通管理员","auth":["pay","project","service","user","claim"]}};
+//ajax 接口定义
 $Current.ajax = function () {
     var args = Array.prototype.slice.call(arguments, 0);
     var api = args[0].toLowerCase();
@@ -345,7 +348,7 @@ $Current.ajax = function () {
     $.post.apply(null,args);
 };
 var args;
-var bus = eb4js();
+var bus = eb4js();	//This interface was defined in eb4js, it very important
 
 function getConfig(cb) {
     $Current.ajax("/statistics/config",function(ret){
@@ -361,7 +364,7 @@ function getConfig(cb) {
 bus.after("eventbus.init",function(){
 
     setTimeout(function () {
-        $Func.render($("#sidebar"),"sidebar",$Current);
+        $Func.render($("#sidebar"),"sidebar",$Current);	//用户crrent参数来渲染sidebar.html文件
         $Func.render($("#headbar"),"headbar",$Current);
         bus.trigger("content.refresh","index");
         bus.trigger("head.refresh");
@@ -391,7 +394,7 @@ bus.before("content.refresh", function (event) {
             title = "首页";
             getConfig(function (ret) {
                 $Func.render($("#container"),"index",ret.data, function () {
-                    $Func.render($("#banner_content"),"banner_content",ret.data);
+                    $Func.render($("#banner_content"),"banner_content",ret.data);	//模板渲染函数
                     $Func.render($("#menu_content"),"menu_content",ret.data);
                     $Func.render($("#hot_project_content"),"hot_project_content",ret.data);
                     $Func.render($("#hot_service_content"),"hot_service_content",ret.data);
@@ -574,7 +577,7 @@ bus.on("Role.refresh",function(){
 
 
 bus.on("Role.show",function(){
-    $Func.render($("#container"),"role",arguments[1],function(){
+    $Func.render($("#container"),"role",arguments[1],function(){	//显示出来
         bus.trigger("content.refresh.over");
     });
 });
