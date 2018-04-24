@@ -2997,7 +2997,7 @@
        		
        		if(!mdEditor)
        		{
-       			alert("please load the editormd firstly by seajs");
+       			showErrorMessage("please load the editormd firstly by seajs");
        			return;
        		}
        		else
@@ -3011,7 +3011,7 @@
     		console.log("DocEdit editorLoadmd() edit:" + edit);
     		if(!md)
        		{
-       			alert("please call editorInit firstly");
+    			showErrorMessage("please call editorInit firstly");
        			return;
        		}
        		
@@ -3041,7 +3041,7 @@
     		console.log("DocEdit editorSwitch() edit:"+edit);
     		if(!md)
        		{
-       			alert("please call editorInit firstly");
+    			showErrorMessage("please call editorInit firstly");
        			return;
        		}
        		
@@ -3712,7 +3712,7 @@ function CompareObj(objA, objB, flag) {
       		}
       		else
       		{
-      			alert("targetNode is null,理论上不该出现");
+      			showErrorMessage("targetNode is null,理论上不该出现");
       			return;
       		}
  	 	   	
@@ -3721,7 +3721,7 @@ function CompareObj(objA, objB, flag) {
       		{
       			if(treeNodes[0].getParentNode() == parentNode)
       			{
-      				alert("同目录禁止复制");
+      				showErrorMessage("同目录禁止复制");
       				return false;
       			}
 			}
@@ -3786,7 +3786,7 @@ function CompareObj(objA, objB, flag) {
       		}
       		else
       		{
-      			alert("targetNode is null,理论上不该出现");
+      			showErrorMessage("targetNode is null,理论上不该出现");
       			return;
       		}
 			
@@ -4002,7 +4002,7 @@ function CompareObj(objA, objB, flag) {
                 }
             },
             error : function () {
-                alert("服务器异常:获取用户信息失败");
+            	showErrorMessage("服务器异常:获取用户信息失败");
             }
         });		
 	}
@@ -4114,7 +4114,7 @@ function CompareObj(objA, objB, flag) {
 			  //检查当前目录下是否有同名文件
 			  if(isNodeExist(name,parentNode) == true)
 			  {	
-			  	alert(name + " 已存在");
+				showErrorMessage(name + " 已存在");
 			  	return false;
 			  }
 			  var vid = gReposId;
