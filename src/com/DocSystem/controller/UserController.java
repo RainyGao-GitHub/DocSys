@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -15,7 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -24,15 +21,11 @@ import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 
-import util.EmailUtil;
-import util.EncryptUtil;
-import util.HexString;
 import util.RegularUtil;
 import util.ReturnAjax;
 import util.Encrypt.MD5;
 import util.WebUploader.MultipartFileParam;
 
-import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
@@ -92,7 +85,6 @@ public class UserController extends BaseController {
 	}
 		
 	private List<User> getUserList(String userName,String pwd) {
-		// TODO Auto-generated method stub
 		User tmp_user = new User();
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
@@ -441,7 +433,6 @@ public class UserController extends BaseController {
 	}
 	
 	private void sendVerifyCodeSMS(ReturnAjax rt, String userName, Integer type, String code) {
-		// TODO Auto-generated method stub
 		switch(type.intValue())
 		{
 		case 0:
