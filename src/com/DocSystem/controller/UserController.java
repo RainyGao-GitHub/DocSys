@@ -756,13 +756,21 @@ public class UserController extends BaseController {
 		return;
 	}
 	
-	//This interface should be used by admin
-	@RequestMapping(value="updateUserInfo")
-	public void updateUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
+	@RequestMapping(value="updateLoginUserInfo")
+	public void updateLoginUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
 	{
 		System.out.println("updateUserInfo userName:"+userName + " nickName:"+nickName + " realName:"+realName + " intro:"+intro);
 
 		ReturnAjax rt = new ReturnAjax();
+		
+		//检查用户名是否为空，注意用户名真的是用户名，不是指绑定的手机和邮箱
+		if(userName==null||"".equals(userName))
+		{
+			System.out.println("updateUserInfo() userName is empty！");
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
 		
 		//Check if user is login
 		User loginUser = (User) session.getAttribute("login_user");
@@ -773,16 +781,8 @@ public class UserController extends BaseController {
 			writeJson(rt, response);
 			return;
 		}
-				
-		//检查用户名是否为空 
-		if(userName==null||"".equals(userName))
-		{
-			rt.setError("danger#账号不能为空！");
-			writeJson(rt, response);
-			return;
-		}
 		
-		if(userName.equals(loginUser.getName()))
+		if(!userName.equals(loginUser.getName()))
 		{
 			System.out.println("updateUserInfo() 不能修改其他用户的信息！");
 			rt.setError("修改用户信息失败！");
