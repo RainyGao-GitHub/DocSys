@@ -65,20 +65,28 @@ public class UserController extends BaseController {
 		tmp_user.setPwd(pwd);
 		List<User> uLists = getUserList(userName,pwd);
 		boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
-		if(ret){
-			System.out.println("登录成功");
-			session.setAttribute("login_user", uLists.get(0));
-			rt.setMsgInfo("success#登录成功！");
-			rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
-			//如果用户点击了保存密码则保存cookies
-			if(rememberMe!=null&&rememberMe.equals("1")){
-				addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
-				addCookie(response, "dstoken", pwd, 7*24*60*60);
-				System.out.println("用户cookie保存成功");
-			}
+		if(ret == false)
+		{
+			System.out.println("登录失败");
+			writeJson(rt, response);	
+			return;
 		}
+		
+		//Set session
+		System.out.println("登录成功");
+		session.setAttribute("login_user", uLists.get(0));
 		System.out.println("SESSION ID:" + session.getId());
 		
+		//如果用户点击了保存密码则保存cookies
+		if(rememberMe!=null&&rememberMe.equals("1")){
+			addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
+			addCookie(response, "dstoken", pwd, 7*24*60*60);
+			System.out.println("用户cookie保存成功");
+		}
+		
+		//Feeback to page
+		rt.setMsgInfo("success#登录成功！");
+		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
 		writeJson(rt, response);	
 		return;
 	}
@@ -111,47 +119,22 @@ public class UserController extends BaseController {
 	 * @return
 	 */
 	private boolean loginCheck(ReturnAjax rt,User localUser, List<User> uLists,HttpSession session,HttpServletResponse response)
-	{
-		User dbUser = new User();
-		
+	{	
 		if(uLists == null)
 		{
+			System.out.println("loginCheck() uLists is null");
 			rt.setError("fail#用户名或密码错误！");
 			return false;	
 		}
 		else if(uLists.size()<1){
+			System.out.println("loginCheck() uLists size < 1");
 			rt.setError("danger#对不起，您的账号或者密码错误！");
 			return false;
 		}else if(uLists.size()>1){
 			//TODO系统异常需要处理
+			System.out.println("loginCheck() uLists size > 1");
 			rt.setError("danger#登录失败！");
 			return false;
-		}
-		else
-		{
-			//检查邮箱或手机是否已通过验证
-			dbUser = uLists.get(0);
-			if(StringUtils.isNotBlank(localUser.getEmail()))//邮箱登录
-			{
-				if(dbUser.getEmailValid() == 0)
-				{
-					rt.setError("warning#您尚未验证邮箱，请验证后再登陆");
-					return false;
-				}
-			}
-			else if(StringUtils.isNotBlank(localUser.getTel()))	//手机登录
-			{
-				if(dbUser.getTelValid() == 0)
-				{
-					rt.setError("warning#您尚未验证手机，请验证后再登陆");
-					return false;
-				}
-			}
-			else
-			{
-				rt.setError("error#系统错误,登录用户信息错误");
-				return false;
-			}
 		}
 		
 		return true;
@@ -178,30 +161,39 @@ public class UserController extends BaseController {
 				tmp_user.setName(userName);			
 				tmp_user.setPwd(pwd);
 				List<User> uLists = getUserList(userName,pwd);
-				boolean f =loginCheck(rt, tmp_user, uLists, session,response);
-				if(f){
-					System.out.println("登录成功");
-					session.setAttribute("login_user", uLists.get(0));
-					rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
-					//延长cookie的有效期
-					addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
-					addCookie(response, "dstoken", pwd, 7*24*60*60);
-					System.out.println("用户cookie保存成功");
+				boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
+				if(ret == false)
+				{
+					System.out.println("自动登录失败");
+					rt.setMsgDetail("自动登陆失败");
+					writeJson(rt, response);
+					return;
 				}
+				
+				System.out.println("自动登录成功");
+				//Set session
+				session.setAttribute("login_user", uLists.get(0));
+				//延长cookie的有效期
+				addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
+				addCookie(response, "dstoken", pwd, 7*24*60*60);
+				System.out.println("用户cookie保存成功");
 				System.out.println("SESSION ID:" + session.getId());
+
+				rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
+				writeJson(rt, response);
+				return;
 			}
 			else
 			{
-					rt.setError("用户未登录");
+				rt.setError("用户未登录");
+				writeJson(rt, response);
+				return;
 			}
 		}
-		else
-		{	
-			//always get the userInfo from db
-			user = userService.getUser(user.getId());
-			rt.setData(user);	//返回用户信息
-		}
 		
+		//I not sure if the info in loginUser is lastest, so I need to get the usrInfo from database 
+		user = userService.getUser(user.getId());
+		rt.setData(user);	//返回用户信息
 		writeJson(rt, response);	
 	}
 	
