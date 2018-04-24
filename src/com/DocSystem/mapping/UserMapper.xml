@@ -338,7 +338,7 @@
   		,
     	<include refid="Blob_Column_List" />
   	from user
-		(NAME = #{name} or TEL = #{name} or EMAIL = #{name})
+	WHERE	(NAME = #{name} or TEL = #{name} or EMAIL = #{name})
 		<if test="pwd != null">
          and PWD = #{pwd} 
         </if>
