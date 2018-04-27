@@ -50,7 +50,7 @@ public class DES {
      * @return
      * @throws Exception
      */
-    private static byte[] encrypt(byte[] data, byte[] key) throws Exception {
+    public static byte[] encrypt(byte[] data, byte[] key) throws Exception {
         // 生成一个可信任的随机数源
         SecureRandom sr = new SecureRandom();
  

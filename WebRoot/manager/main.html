@@ -107,7 +107,8 @@
 
 
 <div class="content">
-<div class="sidebar" id="sidebar" data-tmpl="sidebar"></div>
+<div class="sidebar" id="sidebar" data-tmpl="sidebar">
+</div>
 
 <!-- Main bar -->
 <div class="mainbar" >
@@ -240,6 +241,7 @@
 <script src="./static/js/layouts/top.js"></script> <!-- jQuery Notify -->
 <!-- jQuery Notification ends -->
 
+
 <script src="./static/js/sparklines.js"></script> <!-- Sparklines -->
 <script src="./static/js/jquery.cleditor.min.js"></script> <!-- CLEditor -->
 <script src="./static/js/bootstrap-datetimepicker.min.js"></script> <!-- Date picker -->
@@ -250,7 +252,6 @@
 <script src="./static/js/filter.js"></script> <!-- Filter for support page -->
 <script src="./static/js/custom.js"></script> <!-- Custom codes -->
 <script src="./static/js/md5.js"></script>
-<script src="./static/js/eb4js.js"></script>
 <script src="./static/js/config.js"></script>
 <script src="./static/js/tmpl.js"></script>
 
@@ -292,8 +293,52 @@
 
 
 <script type="application/javascript">
+	pageInit();
+	
+	//页面初始化
+	var loginUser = "";	//用来保存刚注册的用户、或刚才登录的用户
+	function pageInit()
+	{
+		console.log("pageInit");
+		//确定当前登录用户是否已登录
+		$.ajax({
+	        url : "/DocSystem/getLoginUser.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	//Get用户信息
+					var user = ret.data;
+					loginUser = user;
+						
+	            	//显示用户信息
+	            	$Func.render($("#headbar"),"headbar",user);
+	            	
+	            	$('#registerBtn').hide();
+	            	//显示进入系统按键
+	            	$('#enterSystemBtn').show();
+	            	$('#loginBannerBtn').hide();
+	            	
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取用户信息失败");
+	        }
+	    });
+	}
+	
+	//通用函数接口
+	function showErrorMessage($msg) {
+    	qiao.bs.alert($msg);
+	}
 
-    /*
+	//展开子项目
     $(document).on("click",".has_sub",function(){
         var title = $(this).children("a");
         if( title.hasClass("subdrop") ){
@@ -304,21 +349,6 @@
             $(this).children("ul").show();
         }
     });
-    */
-
-    //绑定click 事件，取出参数
-    $(document).on("click","[data-eb-event]", function () {
-        var bus = eb4js();	//全局事件总线
-        var event = $(this).attr("data-eb-event");	//配置在页面的参数
-        var params = $(this).attr("data-eb-params");
-        if( ! params ){
-            bus.trigger(event);
-        }else{
-            params = params.split("|");	//解析参数
-            params.splice(0,0,event);	//把event第一个参数插入第一个参数中，让apply函数可以获取到event
-            bus.trigger.apply(bus,params); //apply是用来调整参数的方法
-        }
-    })
 
     //展开子目录
     $(document).on("click","li.has_sublist",function(){
@@ -331,24 +361,9 @@
 
 </script>
 
-
 <script type="application/javascript">
-//var $Current = ${session.curUser};
-var $Current = {"editUrl":"http://www.gofreeteam.com:8080/SSM/toRecommend.do?userId=","payUrl":"http://www.gofreeteam.com:8080/SSM/alipay/payToUsers.do?token=$&orders=","user":{"id":36,"name":"huangqian","role":"普通管理员","auth":["pay","project","service","user","claim"]}};
-//ajax 接口定义
-$Current.ajax = function () {
-    var args = Array.prototype.slice.call(arguments, 0);
-    var api = args[0].toLowerCase();
-    api = api.replace(".","/");
-    if( '/' !== api[0] ){
-        api = "/" + api;
-    }
-    api = "." + api;
-    args[0] = api;
-    $.post.apply(null,args);
-};
-var args;
-var bus = eb4js();	//This interface was defined in eb4js, it very important
+
+
 
 function getConfig(cb) {
     $Current.ajax("/statistics/config",function(ret){
