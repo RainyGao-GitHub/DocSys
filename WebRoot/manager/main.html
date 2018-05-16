@@ -107,7 +107,8 @@
 
 
 <div class="content">
-<div class="sidebar" id="sidebar" data-tmpl="sidebar"></div>
+<div class="sidebar" id="sidebar" data-tmpl="sidebar">
+</div>
 
 <!-- Main bar -->
 <div class="mainbar" >
@@ -240,6 +241,7 @@
 <script src="./static/js/layouts/top.js"></script> <!-- jQuery Notify -->
 <!-- jQuery Notification ends -->
 
+
 <script src="./static/js/sparklines.js"></script> <!-- Sparklines -->
 <script src="./static/js/jquery.cleditor.min.js"></script> <!-- CLEditor -->
 <script src="./static/js/bootstrap-datetimepicker.min.js"></script> <!-- Date picker -->
@@ -250,14 +252,11 @@
 <script src="./static/js/filter.js"></script> <!-- Filter for support page -->
 <script src="./static/js/custom.js"></script> <!-- Custom codes -->
 <script src="./static/js/md5.js"></script>
-<script src="./static/js/eb4js.js"></script>
 <script src="./static/js/config.js"></script>
 <script src="./static/js/tmpl.js"></script>
 
 <script type="application/javascript">
-	
-  //This function was used to add param to URL
-  //So that reload page will not cause the page switch to unexpected status
+
   function addToUrlParam(key,value,url){
     var ref = "";
     if( url ){
@@ -294,8 +293,52 @@
 
 
 <script type="application/javascript">
+	pageInit();
+	
+	//页面初始化
+	var loginUser = "";	//用来保存刚注册的用户、或刚才登录的用户
+	function pageInit()
+	{
+		console.log("pageInit");
+		//确定当前登录用户是否已登录
+		$.ajax({
+	        url : "/DocSystem/getLoginUser.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	//Get用户信息
+					var user = ret.data;
+					loginUser = user;
+						
+	            	//显示用户信息
+	            	$Func.render($("#headbar"),"headbar",user);
+	            	
+	            	$('#registerBtn').hide();
+	            	//显示进入系统按键
+	            	$('#enterSystemBtn').show();
+	            	$('#loginBannerBtn').hide();
+	            	
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取用户信息失败");
+	        }
+	    });
+	}
+	
+	//通用函数接口
+	function showErrorMessage($msg) {
+    	qiao.bs.alert($msg);
+	}
 
-    /*
+	//展开子项目
     $(document).on("click",".has_sub",function(){
         var title = $(this).children("a");
         if( title.hasClass("subdrop") ){
@@ -306,21 +349,8 @@
             $(this).children("ul").show();
         }
     });
-    */
 
-    $(document).on("click","[data-eb-event]", function () {
-        var bus = eb4js();
-        var event = $(this).attr("data-eb-event");
-        var params = $(this).attr("data-eb-params");
-        if( ! params ){
-            bus.trigger(event);
-        }else{
-            params = params.split("|");
-            params.splice(0,0,event);
-            bus.trigger.apply(bus,params);
-        }
-    })
-
+    //展开子目录
     $(document).on("click","li.has_sublist",function(){
         var $this = $(this);
         if( ! $this.children("a").hasClass("open") ){
@@ -331,32 +361,9 @@
 
 </script>
 
-
 <script type="application/javascript">
-//Something I need to declare here
-//when you get this code, you will find that it is very difficult to understand
-//Yes! you are right it is really complicated
-//Because every interface is diffrent
 
-//var $Current = ${session.curUser};
-var $Current = {"editUrl":"http://www.gofreeteam.com:8080/SSM/toRecommend.do?userId=","payUrl":"http://www.gofreeteam.com:8080/SSM/alipay/payToUsers.do?token=$&orders=","user":{"id":36,"name":"huangqian","role":"普通管理员","auth":["pay","project","service","user","claim"]}};
 
-//ajax接口定义，maybe I need to change it to unacceptale format
-$Current.ajax = function () {
-    var args = Array.prototype.slice.call(arguments, 0);
-    var api = args[0].toLowerCase();
-    api = api.replace(".","/");
-    if( '/' !== api[0] ){
-        api = "/" + api;
-    }
-    api = "." + api;
-    args[0] = api;
-    $.post.apply(null,args);
-};
-
-//eb4js Init
-var args;
-var bus = eb4js();
 
 function getConfig(cb) {
     $Current.ajax("/statistics/config",function(ret){
@@ -369,19 +376,13 @@ function getConfig(cb) {
     });
 }
 
-//Event Bus mode is really complicated
-//I always forget what I have learn
-//Maybe It is a good mode
-//But it is really diffcult to remind
-//I am not sure when i will touch this code again
-//I wish What I see i what I do
 bus.after("eventbus.init",function(){
 
     setTimeout(function () {
-        $Func.render($("#sidebar"),"sidebar",$Current);	//Menu display
-        $Func.render($("#headbar"),"headbar",$Current); //userInfo display
-        bus.trigger("content.refresh","index"); //show index content on content area
-        bus.trigger("head.refresh"); //Show head aread
+        $Func.render($("#sidebar"),"sidebar",$Current);	//用户crrent参数来渲染sidebar.html文件
+        $Func.render($("#headbar"),"headbar",$Current);
+        bus.trigger("content.refresh","index");
+        bus.trigger("head.refresh");
     },100);
 
 })
@@ -408,7 +409,7 @@ bus.before("content.refresh", function (event) {
             title = "首页";
             getConfig(function (ret) {
                 $Func.render($("#container"),"index",ret.data, function () {
-                    $Func.render($("#banner_content"),"banner_content",ret.data);
+                    $Func.render($("#banner_content"),"banner_content",ret.data);	//模板渲染函数
                     $Func.render($("#menu_content"),"menu_content",ret.data);
                     $Func.render($("#hot_project_content"),"hot_project_content",ret.data);
                     $Func.render($("#hot_service_content"),"hot_service_content",ret.data);
@@ -591,7 +592,7 @@ bus.on("Role.refresh",function(){
 
 
 bus.on("Role.show",function(){
-    $Func.render($("#container"),"role",arguments[1],function(){
+    $Func.render($("#container"),"role",arguments[1],function(){	//显示出来
         bus.trigger("content.refresh.over");
     });
 });
