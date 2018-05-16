@@ -255,7 +255,9 @@
 <script src="./static/js/tmpl.js"></script>
 
 <script type="application/javascript">
-
+	
+  //This function was used to add param to URL
+  //So that reload page will not cause the page switch to unexpected status
   function addToUrlParam(key,value,url){
     var ref = "";
     if( url ){
@@ -331,8 +333,15 @@
 
 
 <script type="application/javascript">
+//Something I need to declare here
+//when you get this code, you will find that it is very difficult to understand
+//Yes! you are right it is really complicated
+//Because every interface is diffrent
+
 //var $Current = ${session.curUser};
 var $Current = {"editUrl":"http://www.gofreeteam.com:8080/SSM/toRecommend.do?userId=","payUrl":"http://www.gofreeteam.com:8080/SSM/alipay/payToUsers.do?token=$&orders=","user":{"id":36,"name":"huangqian","role":"普通管理员","auth":["pay","project","service","user","claim"]}};
+
+//ajax接口定义，maybe I need to change it to unacceptale format
 $Current.ajax = function () {
     var args = Array.prototype.slice.call(arguments, 0);
     var api = args[0].toLowerCase();
@@ -344,6 +353,8 @@ $Current.ajax = function () {
     args[0] = api;
     $.post.apply(null,args);
 };
+
+//eb4js Init
 var args;
 var bus = eb4js();
 
@@ -358,13 +369,19 @@ function getConfig(cb) {
     });
 }
 
+//Event Bus mode is really complicated
+//I always forget what I have learn
+//Maybe It is a good mode
+//But it is really diffcult to remind
+//I am not sure when i will touch this code again
+//I wish What I see i what I do
 bus.after("eventbus.init",function(){
 
     setTimeout(function () {
-        $Func.render($("#sidebar"),"sidebar",$Current);
-        $Func.render($("#headbar"),"headbar",$Current);
-        bus.trigger("content.refresh","index");
-        bus.trigger("head.refresh");
+        $Func.render($("#sidebar"),"sidebar",$Current);	//Menu display
+        $Func.render($("#headbar"),"headbar",$Current); //userInfo display
+        bus.trigger("content.refresh","index"); //show index content on content area
+        bus.trigger("head.refresh"); //Show head aread
     },100);
 
 })
