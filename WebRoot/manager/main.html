@@ -345,10 +345,7 @@
 					//显示菜单
 	            	$Func.render($("#sidebar"),"sidebar");	//用户crrent参数来渲染sidebar.html文件
 					//显示内容部分
-	            	//showContentPage("index");
-	                //刷新头部
-	            	//us.trigger("head.refresh");
-	            	
+	            	showContentPage("index");	            	
 	            }
 	            else 
 	            {
@@ -373,13 +370,13 @@
 	    $("ul.sublist").hide();
 	
 	    switch ( curPath ){
-	        case "role":
+	        case "group":
 	            title = "角色管理";
 	            bus.trigger("Role.refresh");
 	            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
 	            $("ul.sublist").show();
 	            break;
-	        case "admin":
+	        case "user":
 	            title = "成员管理";
 	            bus.trigger("Admin.refresh");
 	            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
