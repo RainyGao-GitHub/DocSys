@@ -290,7 +290,8 @@
     location.href = addToUrlParam("page",msg.page);
   });
   
-	//展开子项目
+  
+  //展开子项目
   $(document).on("click",".has_sub",function(){
       var title = $(this).children("a");
       if( title.hasClass("subdrop") ){
@@ -314,7 +315,7 @@
 
 <script type="application/javascript">
   var curPage = 1;
-
+  
 </script>
 
 
@@ -360,14 +361,6 @@
 	    });
 	}
 
-	function showMetaInfo() 
-	{
-	    $Current.ajax("/statistics/info",{},function(msg){
-	        $Func.render($("#metainfo"),"metainfo",msg.data);
-	    });
-
-	}
-
 	// 刷新 pagehead
 	function showContentPage(curPath) {
 	    var title = "载入中...";
@@ -379,23 +372,6 @@
 	    $("ul.sublist").hide();
 	
 	    switch ( curPath ){
-	        case "index":
-	            title = "首页";
-	            getConfig(function (ret) {
-	                $Func.render($("#container"),"index",ret.data, function () {
-	                    $Func.render($("#banner_content"),"banner_content",ret.data);	//模板渲染函数
-	                    $Func.render($("#menu_content"),"menu_content",ret.data);
-	                    $Func.render($("#hot_project_content"),"hot_project_content",ret.data);
-	                    $Func.render($("#hot_service_content"),"hot_service_content",ret.data);
-	                    $Func.render($("#hot_resource_content"),"hot_resource_content",ret.data);
-	                    // service/list
-	                });
-	            })
-	
-	            $("#nav li:first>a").addClass("open");
-	
-	
-	            break;
 	        case "role":
 	            title = "角色管理";
 	            bus.trigger("Role.refresh");
@@ -425,42 +401,61 @@
 
 	//成员管理
 	function showUserList(){
-    	$Current.ajax("Admin.list",{},function(ret){
-            $Func.render($("#container"),"admin",{
-    	        list:arguments[1],
-    	        rolelist:arguments[2]
-    	    },function(){
-    	        bus.trigger("content.refresh.over");
-    	    });
-   	 	}
+		
+		$.ajax({
+	        url : "/DocSystem/getUserList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	UserListDisplay(ret.data);
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取用户列表失败");
+	        }
+	    });
 	}
+	
+	function UserListDisplay(list)
+    {
+		$Func.render($("#container"),"admin",list);
+    }
 
 	//角色管理
-	function showRoleList(){
-	    $Current.ajax("Role.list",{},function(ret){
-	        console.log(ret);
-	    	$Func.render($("#container"),"role",arguments[1],function(){	//显示出来
+	function showGroupList(){
+		$.ajax({
+	        url : "/DocSystem/getGroupList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	GroupListDisplay(ret.data);
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取用户列表失败");
+	        }
 	    });
-	});
-	
-	//意见与反馈管理
-	function showSuggestList(){
-	
-	    var curPage = arguments[2];
-	    $Current.ajax("Suggest.list",{
-	        curPage:curPage ? curPage + "" : "1"
-	    },function(ret){
-	        curPage = ret.data.pageNumber;
-	        console.log(ret);
-	        ret.data.page.curExamine = examine;
-	        var suggest = arguments[1];
-		    $Func.render($("#container"),"suggest",suggest,function(){
-		        bus.trigger("content.refresh.over");
-		    });
-		});
-	
-	});
-	
+	}
+
+	function GroupListDisplay(list)
+	{
+		$Func.render($("#container"),"role",list);
+	}
+		
 	// 快速查找指定的项
 	function fastSearch(_this){
 	    var $this = $(_this);
@@ -474,8 +469,6 @@
 	        ret.data.page.curExamine = "0";
 	        bus.trigger(event2,ret.data.page);
 	    });
-	
-	
 	}
 
 
@@ -638,18 +631,6 @@
 	    });
 	}
 
-
-	
-	function updateConfig(params , cb){
-	    $Current.ajax("/statistics/update",params,function(ret){
-	        cb && cb();
-	        if ( "ok" == ret.status ){
-	            $().toastmessage('showSuccessToast', "修改已保存");
-	        }else{
-	            $().toastmessage('showErrorToast', "通信出现错误");
-	        }
-	    });
-	}
 </script>
 </body>
 </html>
