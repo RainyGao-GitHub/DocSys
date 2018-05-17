@@ -419,50 +419,32 @@
 	        title : title,
 	        subtitle : title
 	    });
-	});
+	}
 
 
 
 	//成员管理
-	bus.on("Admin.refresh",function(){
+	function showUserList(){
     	$Current.ajax("Admin.list",{},function(ret){
-        	$Current.ajax("Role.list",{},function(ret2){
-            	bus.trigger("Admin.show",ret.data.list,ret2.data.list);
-        	});
-   	 	});
-	});
-
-
-	bus.on("Admin.show",function(){
-	    $Func.render($("#container"),"admin",{
-	        list:arguments[1],
-	        rolelist:arguments[2]
-	    },function(){
-	        bus.trigger("content.refresh.over");
-	    });
-	});
+            $Func.render($("#container"),"admin",{
+    	        list:arguments[1],
+    	        rolelist:arguments[2]
+    	    },function(){
+    	        bus.trigger("content.refresh.over");
+    	    });
+   	 	}
+	}
 
 	//角色管理
-	bus.on("Role.refresh",function(){
-	
-	
+	function showRoleList(){
 	    $Current.ajax("Role.list",{},function(ret){
 	        console.log(ret);
-	        bus.trigger("Role.show",ret.data);
-	    });
-	
-	
-	});
-	
-	
-	bus.on("Role.show",function(){
-	    $Func.render($("#container"),"role",arguments[1],function(){	//显示出来
-	        bus.trigger("content.refresh.over");
+	    	$Func.render($("#container"),"role",arguments[1],function(){	//显示出来
 	    });
 	});
 	
 	//意见与反馈管理
-	bus.on("Suggest.refresh",function(){
+	function showSuggestList(){
 	
 	    var curPage = arguments[2];
 	    $Current.ajax("Suggest.list",{
@@ -471,19 +453,14 @@
 	        curPage = ret.data.pageNumber;
 	        console.log(ret);
 	        ret.data.page.curExamine = examine;
-	        bus.trigger("Suggest.show",ret.data.page);
-	    });
+	        var suggest = arguments[1];
+		    $Func.render($("#container"),"suggest",suggest,function(){
+		        bus.trigger("content.refresh.over");
+		    });
+		});
 	
 	});
 	
-	
-	bus.on("Suggest.show",function(){
-	    var suggest = arguments[1];
-	    $Func.render($("#container"),"suggest",suggest,function(){
-	        bus.trigger("content.refresh.over");
-	    });
-	})
-
 	// 快速查找指定的项
 	function fastSearch(_this){
 	    var $this = $(_this);
