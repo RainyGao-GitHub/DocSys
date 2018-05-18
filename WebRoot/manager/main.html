@@ -33,8 +33,49 @@
   <link href="./static/style/style.css" rel="stylesheet">
   <!-- Widgets stylesheet -->
   <link href="./static/style/widgets.css" rel="stylesheet">
+  
+  <!-- jQuery -->
+  <script src="./static/js/jquery.js"></script>
+  <script src="./static/js/bootstrap.js"></script> <!-- Bootstrap -->
+  <script src="./static/js/jquery-ui-1.9.2.custom.min.js"></script> <!-- jQuery UI -->
+  <script src="./static/js/fullcalendar.min.js"></script> <!-- Full Google Calendar - Calendar -->
+  <script src="./static/js/jquery.rateit.min.js"></script> <!-- RateIt - Star rating -->
+  <script src="./static/js/jquery.prettyPhoto.js"></script> <!-- prettyPhoto -->
+  <script src="./static/js/ajaxfileupload.js"></script>
 
-  <script src="./static/js/jquery.js"></script> <!-- jQuery -->
+  <!-- jQuery Flot -->
+  <script src="./static/js/excanvas.min.js"></script>
+  <script src="./static/js/jquery.flot.js"></script>
+  <script src="./static/js/jquery.flot.resize.js"></script>
+  <script src="./static/js/jquery.flot.pie.js"></script>
+  <script src="./static/js/jquery.flot.stack.js"></script>
+
+  <!-- jQuery Notification - Noty -->
+  <script src="./static/js/jquery.noty.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/themes/default.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/layouts/bottom.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/layouts/topRight.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/layouts/top.js"></script> <!-- jQuery Notify -->
+  <!-- jQuery Notification ends -->
+
+
+  <script src="./static/js/sparklines.js"></script> <!-- Sparklines -->
+  <script src="./static/js/jquery.cleditor.min.js"></script> <!-- CLEditor -->
+  <script src="./static/js/bootstrap-datetimepicker.min.js"></script> <!-- Date picker -->
+  <script src="./static/js/bootstrap-switch.min.js"></script> <!-- Bootstrap Toggle -->
+
+  <script src="./static/js/jquery.raty.js"></script>
+  <script src="./static/js/jquery.toastmessage-min.js"></script>
+  <script src="./static/js/filter.js"></script> <!-- Filter for support page -->
+  <script src="./static/js/custom.js"></script> <!-- Custom codes -->
+  <script src="./static/js/md5.js"></script>
+  <script src="./static/js/config.js"></script>
+  <script src="./static/js/tmpl.js"></script>
+  
+  <!-- bootstrapQ based on jquery and bootstrap-->
+  <link href="./static/bootstrapQ/qiao.css" rel="stylesheet">
+  <script type="text/javascript" src="./static/bootstrapQ/qiao.js"></script>  
+  
 
   <!-- HTML5 Support for IE -->
   <!--[if lt IE 9]>
@@ -218,42 +259,6 @@
 
 <!-- Scroll to top -->
 <span class="totop"><a href="#"><i class="icon-chevron-up"></i></a></span>
-<!-- JS -->
-<script src="./static/js/bootstrap.js"></script> <!-- Bootstrap -->
-<script src="./static/js/jquery-ui-1.9.2.custom.min.js"></script> <!-- jQuery UI -->
-<script src="./static/js/fullcalendar.min.js"></script> <!-- Full Google Calendar - Calendar -->
-<script src="./static/js/jquery.rateit.min.js"></script> <!-- RateIt - Star rating -->
-<script src="./static/js/jquery.prettyPhoto.js"></script> <!-- prettyPhoto -->
-<script src="./static/js/ajaxfileupload.js"></script>
-
-<!-- jQuery Flot -->
-<script src="./static/js/excanvas.min.js"></script>
-<script src="./static/js/jquery.flot.js"></script>
-<script src="./static/js/jquery.flot.resize.js"></script>
-<script src="./static/js/jquery.flot.pie.js"></script>
-<script src="./static/js/jquery.flot.stack.js"></script>
-
-<!-- jQuery Notification - Noty -->
-<script src="./static/js/jquery.noty.js"></script> <!-- jQuery Notify -->
-<script src="./static/js/themes/default.js"></script> <!-- jQuery Notify -->
-<script src="./static/js/layouts/bottom.js"></script> <!-- jQuery Notify -->
-<script src="./static/js/layouts/topRight.js"></script> <!-- jQuery Notify -->
-<script src="./static/js/layouts/top.js"></script> <!-- jQuery Notify -->
-<!-- jQuery Notification ends -->
-
-
-<script src="./static/js/sparklines.js"></script> <!-- Sparklines -->
-<script src="./static/js/jquery.cleditor.min.js"></script> <!-- CLEditor -->
-<script src="./static/js/bootstrap-datetimepicker.min.js"></script> <!-- Date picker -->
-<script src="./static/js/bootstrap-switch.min.js"></script> <!-- Bootstrap Toggle -->
-
-<script src="./static/js/jquery.raty.js"></script>
-<script src="./static/js/jquery.toastmessage-min.js"></script>
-<script src="./static/js/filter.js"></script> <!-- Filter for support page -->
-<script src="./static/js/custom.js"></script> <!-- Custom codes -->
-<script src="./static/js/md5.js"></script>
-<script src="./static/js/config.js"></script>
-<script src="./static/js/tmpl.js"></script>
 
 <script type="application/javascript">
 	//通用函数接口
@@ -382,7 +387,7 @@
 	
 	//显示对应菜单
 	function showContentPage(curPath) {
-	    
+	    console.log("showContentPage() " + curPath);
 		var title = "载入中...";
 	    var subtitle = "载入中...";
 		
