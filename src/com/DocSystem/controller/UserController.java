@@ -662,83 +662,6 @@ public class UserController extends BaseController {
 		return;
 	}
 	
-	//This interface should be used by admin
-	@RequestMapping(value="addUser")
-	public void addUser(HttpSession session,String userName,String pwd,String pwd2,HttpServletResponse response,ModelMap model)
-	{
-		System.out.println("addUser userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2);
-		
-		ReturnAjax rt = new ReturnAjax();
-		
-		User user = new User();
-		//检查用户名是否为空
-		if(userName==null||"".equals(userName))
-		{
-			rt.setError("danger#账号不能为空！");
-			writeJson(rt, response);
-			return;
-		}
-
-		if(RegularUtil.isEmail(userName))	//邮箱注册
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("error#该邮箱已注册！");
-				writeJson(rt, response);
-				return;
-			}
-		}
-		else if(RegularUtil.IsMobliePhone(userName))
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("error#该手机已注册！");
-				writeJson(rt, response);
-				return;
-			}
-		}
-		else
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("error#该用户名已注册！");
-				writeJson(rt, response);
-				return;
-			}
-		}
-		
-		//检查密码是否为空
-		if(pwd==null||"".equals(pwd))
-		{
-			rt.setError("danger#密码不能为空！");
-			writeJson(rt, response);
-			return;
-		}
-		
-		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
-		{
-			System.out.println("注册密码："+pwd);
-			System.out.println("确认注册密码："+pwd2);
-			rt.setError("danger#两次密码不一致，请重试！");
-			writeJson(rt, response);
-			return;
-		}
-		user.setPwd(pwd);
-		user.setName(userName);	//默认用户名就用注册的名字
-		user.setCreateType(2);	//用户为管理员添加
-		//set createTime
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-		String createTime = df.format(new Date());// new Date()为获取当前系统时间
-		user.setCreateTime(createTime);	//设置川剧时间
-		user.setType(0);
-		userService.addUser(user);
-		
-		user.setPwd("");	//密码不要返回回去
-		rt.setData(user);
-		writeJson(rt, response);
-		return;
-	}
-	
 	@RequestMapping(value="updateLoginUserInfo")
 	public void updateLoginUserInfo(HttpSession session,String userName,String nickName,String realName,String intro,HttpServletResponse response,ModelMap model)
 	{
@@ -990,4 +913,82 @@ public class UserController extends BaseController {
 		//关闭输出流
 		out.close();
     }
+	
+	/****  以下接口是供管理后台使用的 ******************/
+	@RequestMapping(value="addUser")
+	public void addUser(HttpSession session,String userName,String pwd,String pwd2,HttpServletResponse response,ModelMap model)
+	{
+		System.out.println("addUser userName:"+userName + " pwd:"+pwd + " pwd2:"+pwd2);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		User user = new User();
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+
+		if(RegularUtil.isEmail(userName))	//邮箱注册
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该邮箱已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该手机已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该用户名已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		//检查密码是否为空
+		if(pwd==null||"".equals(pwd))
+		{
+			rt.setError("danger#密码不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(!pwd.equals(pwd2))	//要不要在后台检查两次密码不一致问题呢
+		{
+			System.out.println("注册密码："+pwd);
+			System.out.println("确认注册密码："+pwd2);
+			rt.setError("danger#两次密码不一致，请重试！");
+			writeJson(rt, response);
+			return;
+		}
+		user.setPwd(pwd);
+		user.setName(userName);	//默认用户名就用注册的名字
+		user.setCreateType(2);	//用户为管理员添加
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置川剧时间
+		user.setType(0);
+		userService.addUser(user);
+		
+		user.setPwd("");	//密码不要返回回去
+		rt.setData(user);
+		writeJson(rt, response);
+		return;
+	}
+	
 }
