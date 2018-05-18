@@ -435,6 +435,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
+	            	console.log(ret.data);
 	            	UserListDisplay(ret.data);
 	            }
 	            else 
