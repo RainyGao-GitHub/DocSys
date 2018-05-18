@@ -16,10 +16,13 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>名字</th>
+                  <th>用户名</th>
                   <th>角色</th>
-                  <th>权限</th>
-                  <th>删除</th>
+                  <th>昵称</th>
+                  <th>名字</th>
+                  <th>手机</th>
+                  <th>邮箱</th>
+                  <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -29,9 +32,9 @@
                     <td>{{value.id}}</td>
                     <td>{{value.name}}</td>
                     <td>{{value.role}}</td>
-                    <td style="min-width: 10em">
-                      {{# authshow(value.auth)}}
-                    </td>
+                    <td>{{value.realName}}</td>
+                    <td>{{value.tel}}</td>
+                    <td>{{value.emaail}}</td>
                     <td class="edit">
                       <button onclick="delAdmin({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
                     </td>
