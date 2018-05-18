@@ -372,7 +372,7 @@
 	    switch ( curPath ){
 	        case "user":
 	            title = "成员管理";
-	            bus.trigger("Admin.refresh");
+	            showUserList();
 	            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
 	            $("ul.sublist").show();
 	            break;
@@ -423,7 +423,7 @@
 	
 	function UserListDisplay(list)
     {
-		$Func.render($("#container"),"admin",list);
+		$Func.render($("#container"),"user",list);
     }
 
 	//角色管理
