@@ -451,7 +451,7 @@
 	
 	function UserListDisplay(list)
     {
-		$Func.render($("#container"),"user",list);
+		$Func.render($("#container"),"user",{"list":list});
     }
 
 	//角色管理
@@ -479,7 +479,7 @@
 
 	function GroupListDisplay(list)
 	{
-		$Func.render($("#container"),"role",list);
+		$Func.render($("#container"),"role",{"list":list});
 	}
 		
 	// 快速查找指定的项
