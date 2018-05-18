@@ -359,9 +359,31 @@
 	    });
 	}
 
-	// 刷新 pagehead
+	//click event handler  for data-eb-event="content.refresh"
+	$(document).on("click","[data-eb-event]", function () {
+		console.log("data-eb-event click handler");
+		
+        var event = $(this).attr("data-eb-event");
+        var params = $(this).attr("data-eb-params");
+      	
+        console.log("data-eb-event:"+ event + " " + params);
+        
+        //非回调方式更加容易被理解，so I give up the event bus 
+        switch(event)
+        {
+        //菜单点击
+        case "content.refresh":
+        	showContentPage(params);
+        	break;
+        }
+        
+        
+    });
+	
+	//显示对应菜单
 	function showContentPage(curPath) {
-	    var title = "载入中...";
+	    
+		var title = "载入中...";
 	    var subtitle = "载入中...";
 		
 	    $("#container").html("载入中...");
@@ -377,8 +399,8 @@
 	            $("ul.sublist").show();
 	            break;
 	        case "group":
-	            title = "角色管理";
-	            bus.trigger("Role.refresh");
+	            title = "用户组管理";
+	            showGroupList();
 	            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
 	            $("ul.sublist").show();
 	            break;
