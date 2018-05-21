@@ -294,28 +294,7 @@
   $(document).on("changePage",function(e,msg){
     location.href = addToUrlParam("page",msg.page);
   });
-  
-  
-  //展开子项目
-  $(document).on("click",".has_sub",function(){
-      var title = $(this).children("a");
-      if( title.hasClass("subdrop") ){
-          title.removeClass("subdrop");
-          $(this).children("ul").hide();
-      }else{
-          title.addClass("subdrop");
-          $(this).children("ul").show();
-      }
-  });
-
-  //展开子目录
-  $(document).on("click","li.has_sublist",function(){
-      var $this = $(this);
-      if( ! $this.children("a").hasClass("open") ){
-          $this.children("ul.sublist").toggle();
-      }
-
-  });  
+    
 </script>
 
 <script type="application/javascript">
@@ -381,9 +360,28 @@
         	showContentPage(params);
         	break;
         }
-        
-        
     });
+	
+	  //展开子项目
+	  $(document).on("click",".has_sub",function(){
+	      var title = $(this).children("a");
+	      if( title.hasClass("subdrop") ){
+	          title.removeClass("subdrop");
+	          $(this).children("ul").hide();
+	      }else{
+	          title.addClass("subdrop");
+	          $(this).children("ul").show();
+	      }
+	  });
+
+	  //展开子目录
+	  $(document).on("click","li.has_sublist",function(){
+	      var $this = $(this);
+	      if( ! $this.children("a").hasClass("open") ){
+	          $this.children("ul.sublist").toggle();
+	      }
+
+	  });
 	
 	//显示对应菜单
 	function showContentPage(curPath) {
