@@ -1,5 +1,8 @@
 package com.DocSystem.dao;
 
+import java.util.List;
+
+import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 
 public interface UserGroupMapper {
@@ -14,4 +17,6 @@ public interface UserGroupMapper {
     int updateByPrimaryKeySelective(UserGroup record);
 
     int updateByPrimaryKey(UserGroup record);
+    
+	List<UserGroup> selectAll();
 }
