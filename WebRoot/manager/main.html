@@ -601,28 +601,10 @@
 	    });
 	}
 
-	
-	function addRole(){
-	    var name = $("#role_name").val();
-	    $Current.ajax("Role.add",{
-	        name:name
-	    },function(ret){
-	        bus.trigger("Role.refresh");
-	    });
-	}
-
-	function delRole(id){
-	    $Current.ajax("Role.delete",{
-	        id:id
-	    },function(ret){
-	        bus.trigger("Role.refresh");
-	    });
-	}
-
-	function addAdmin(){
+	function addUser(){
 	    var name = $("#name").val();
 	    var pwd = $("#password").val();
-	    var role = $("#role").val();
+	    var role = $("#type").val();
 	    $Current.ajax("Admin.add",{
 	        name :name,
 	        role : role,
@@ -633,7 +615,7 @@
 	}
 	
 	
-	function delAdmin(id){
+	function delUser(id){
 	    $Current.ajax("Admin.delete",{
 	        id :id
 	    },function(ret){
