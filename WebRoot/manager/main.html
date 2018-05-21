@@ -457,7 +457,7 @@
 	//角色管理
 	function showGroupList(){
 		$.ajax({
-	        url : "/DocSystem/getGroupList.do",
+	        url : "/DocSystem/Manage/getGroupList.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {},
@@ -479,7 +479,7 @@
 
 	function GroupListDisplay(list)
 	{
-		$Func.render($("#container"),"role",{"list":list});
+		$Func.render($("#container"),"group",{"list":list});
 	}
 		
 	// 快速查找指定的项
