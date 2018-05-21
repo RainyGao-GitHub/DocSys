@@ -2,7 +2,7 @@
         <div class="col-md-12">
           <div class="widget">
             <div class="widget-head">
-              <div class="pull-left">成员表</div>
+              <div class="pull-left">用户组列表</div>
               <div class="widget-icons pull-right">
                 <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
                 <a href="#" class="wclose"><i class="icon-remove"></i></a>
@@ -16,12 +16,10 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>用户名</th>
-                  <th>角色</th>
-                  <th>昵称</th>
-                  <th>名字</th>
-                  <th>手机</th>
-                  <th>邮箱</th>
+                  <th>组名称</th>
+                  <th>类型</th>
+                  <th>优先级</th>
+                  <th>描述</th>
                   <th>操作</th>
                 </tr>
                 </thead>
@@ -32,10 +30,8 @@
                     <td>{{value.id}}</td>
                     <td>{{value.name}}</td>
                     <td>{{value.type}}</td>
-                    <td>{{value.nickName}}</td>
-                    <td>{{value.realName}}</td>
-                    <td>{{value.tel}}</td>
-                    <td>{{value.email}}</td>
+                    <td>{{value.priority}}</td>
+                    <td>{{value.info}}</td>
                     <td class="edit">
                       <button onclick="delAdmin({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
                     </td>
@@ -60,7 +56,7 @@
 
           <div class="widget">
             <div class="widget-head">
-              <div class="pull-left">添加用户</div>
+              <div class="pull-left">添加组</div>
               <div class="widget-icons pull-right">
                 <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
                 <a href="#" class="wclose"><i class="icon-remove"></i></a>
@@ -75,33 +71,38 @@
                   <form class="form-horizontal">
                     <!-- userName -->
                     <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">用户名</label>
+                      <label class="control-label col-lg-3" for="name">组名称</label>
                       <div class="col-lg-9">
                         <input type="text" class="form-control" id="name">
                       </div>
                     </div>
-                    <!-- realName -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="realName">名字</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="realName">
-                      </div>
-                    </div>
                     <!-- Cateogry -->
                     <div class="form-group">
-                      <label class="control-label col-lg-3">角色</label>
+                      <label class="control-label col-lg-3">类型</label>
                       <div class="col-lg-9">
-                        <select class="form-control" id="role">
-                          <option value="0">普通用户</option>
-                          <option value="1">管理员</option>
-                          <option value="2">超级管理员</option>
+                        <select class="form-control" id="type">
+                          <option value="0">0</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
                         </select>
                       </div>
                     </div>
                     <div class="form-group">
-                      <label class="control-label col-lg-3" for="password">密码</label>
+                      <label class="control-label col-lg-3">优先级</label>
                       <div class="col-lg-9">
-                        <input type="password" class="form-control" id="password">
+                        <select class="form-control" id="priority">
+                          <option value="0">0</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <!-- info -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="info">描述</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="info">
                       </div>
                     </div>
 
