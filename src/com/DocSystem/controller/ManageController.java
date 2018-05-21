@@ -64,4 +64,30 @@ public class ManageController extends BaseController{
 		return UserList;
 	}
 
+	/********** 获取用户组列表 ***************/
+	@RequestMapping("/getGroupList.do")
+	public void getGroupList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getGroupList()");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//获取All UserList
+		List <UserGroup> GroupList = getAllGroups();
+		
+		rt.setData(GroupList);
+		writeJson(rt, response);
+	}
+
+	private List<UserGroup> getAllGroups() {
+		List <UserGroup> GroupList = userService.geAllGroups();
+		return GroupList;
+	}
+
 }
