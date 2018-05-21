@@ -60,7 +60,7 @@
 
           <div class="widget">
             <div class="widget-head">
-              <div class="pull-left">添加成员</div>
+              <div class="pull-left">添加用户</div>
               <div class="widget-icons pull-right">
                 <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
                 <a href="#" class="wclose"><i class="icon-remove"></i></a>
@@ -73,11 +73,18 @@
                 <div class="form quick-post">
                   <!-- Edit profile form (not working)-->
                   <form class="form-horizontal">
-                    <!-- Title -->
+                    <!-- userName -->
                     <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">名字</label>
+                      <label class="control-label col-lg-3" for="name">用户名</label>
                       <div class="col-lg-9">
                         <input type="text" class="form-control" id="name">
+                      </div>
+                    </div>
+                    <!-- realName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="realName">名字</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="realName">
                       </div>
                     </div>
                     <!-- Cateogry -->
@@ -85,9 +92,9 @@
                       <label class="control-label col-lg-3">角色</label>
                       <div class="col-lg-9">
                         <select class="form-control" id="role">
-                          {{each rolelist as role i}}
-                            <option value="{{role.id}}">{{role.name}}</option>
-                          {{/each}}
+                          <option value="0">普通用户</option>
+                          <option value="1">管理员</option>
+                          <option value="2">超级管理员</option>
                         </select>
                       </div>
                     </div>
