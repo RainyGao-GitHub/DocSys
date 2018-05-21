@@ -1,0 +1,127 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">成员表</div>
+              <div class="widget-icons pull-right">
+                <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                <a href="#" class="wclose"><i class="icon-remove"></i></a>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+
+              <table class="table table-striped table-bordered table-hover" id="admin_list">
+                <thead>
+                <tr>
+                  <th>#</th>
+                  <th>用户名</th>
+                  <th>角色</th>
+                  <th>昵称</th>
+                  <th>名字</th>
+                  <th>手机</th>
+                  <th>邮箱</th>
+                  <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {{each list as value i}}
+                  <tr>
+                    <td>{{value.id}}</td>
+                    <td>{{value.name}}</td>
+                    <td>{{value.type}}</td>
+                    <td>{{value.nickName}}</td>
+                    <td>{{value.realName}}</td>
+                    <td>{{value.tel}}</td>
+                    <td>{{value.email}}</td>
+                    <td class="edit">
+                      <button onclick="delAdmin({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+                    </td>
+                  </tr>
+                {{/each}}
+
+                </tbody>
+              </table>
+
+              <div class="widget-foot">
+
+                <div class="clearfix"></div>
+
+              </div>
+
+            </div>
+            <!-- Matter ends -->
+          </div>
+
+
+          <!-- Matter -->
+
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">添加用户</div>
+              <div class="widget-icons pull-right">
+                <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                <a href="#" class="wclose"><i class="icon-remove"></i></a>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            <div class="widget-content">
+              <div class="padd">
+
+                <div class="form quick-post">
+                  <!-- Edit profile form (not working)-->
+                  <form class="form-horizontal">
+                    <!-- userName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">用户名</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="name">
+                      </div>
+                    </div>
+                    <!-- realName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="realName">名字</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="realName">
+                      </div>
+                    </div>
+                    <!-- Cateogry -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3">角色</label>
+                      <div class="col-lg-9">
+                        <select class="form-control" id="role">
+                          <option value="0">普通用户</option>
+                          <option value="1">管理员</option>
+                          <option value="2">超级管理员</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="password">密码</label>
+                      <div class="col-lg-9">
+                        <input type="password" class="form-control" id="password">
+                      </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="form-group">
+                      <!-- Buttons -->
+                      <div class="col-lg-offset-9 col-lg-2">
+                        <button type="submit" class="btn btn-success" id="btn_addAdmin" onclick="addAdmin()">添加</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+
+
+              </div>
+              <div class="widget-foot">
+                <!-- Footer goes here -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
