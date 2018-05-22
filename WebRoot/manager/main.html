@@ -451,6 +451,28 @@
     {
 		$Func.render($("#container"),"user",{"list":list});
     }
+	
+	function delUser(id){
+        $.ajax({
+            url : "/DocSystem/Manage/delUser.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userId : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showUserList();	//刷新UserList
+                    alert("删除成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:删除失败");
+            }
+        });
+	}
 
 	//角色管理
 	function showGroupList(){
