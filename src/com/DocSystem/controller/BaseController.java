@@ -693,6 +693,35 @@ public class BaseController{
 		
 	}
 	
+	public List<User> getUserList(String userName,String pwd) {
+		User tmp_user = new User();
+		//检查用户名是否为空
+		if(userName==null||"".equals(userName))
+		{
+			return null;
+		}
+		
+		tmp_user.setName(userName);
+		tmp_user.setPwd(pwd);
+		List<User> uList = userService.queryUserExt(tmp_user);
+		if(uList == null || uList.size() == 0)
+		{
+			return null;
+		}
+		return uList;
+	}
+	
+	public boolean isUserRegistered(String name)
+	{
+		List <User> uList = getUserList(name,null);
+		if(uList == null || uList.size() == 0)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
 	/**
 	 * 向页面返回json信息
 	 * @param obj
