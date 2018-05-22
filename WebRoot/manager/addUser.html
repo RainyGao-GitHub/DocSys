@@ -1,166 +1,112 @@
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-	function RegisterPageInit()
+	function AddUserPageInit()
 	{
-		//console.log($.cookie("dsuser"));
-		//回车键监听函数
-		EnterKeyListenerForRegister();
+		console.log("addUserPageInit()");
+		EnterKeyListenerForAddUser();
 	}
 	
-	function showRegister(text){
-		$(".registerModal").fadeIn("slow");
-		$("#realName").focus();
+	function showAddUserPanel(text){
+		$(".addUserModal").fadeIn("slow");
+		$("#name").focus();
 	}
 	
-	function closeRegister(){
-		$(".registerModal").fadeOut("slow");
+	function closeAddUserPanel(){
+		$(".addUserModal").fadeOut("slow");
 	}
 	
 	//回车键监听函数
-	function EnterKeyListenerForRegister(){
+	function EnterKeyListenerForAddUser(){
+		console.log("start enter key listener");
 		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
 	 	if (event.keyCode == 13){  
-	 		register();
+	 		addUser();
 	 	}  
 	}
 	
-	//使能submit按键
-	function canSubmit(dom){
-		if(dom.checked) {
-			$("#submit").attr('disabled',false);
-		}
-		else {
-			$("#submit").attr('disabled',true);
-		}
-	}
-	
-	//登录按键处理函数
-	function register(){
-		console.log("register");
-		
+	function addUser(){
+		console.log("addUser()");
+
+		var name = $(#name).val();
+	    var realName = $('input[name="realName"]').val();
+	    var pwd =  $('input[name="pwd"]').val();
+	    var type =  $('input[name="type"]').val();
+	    
+	    console.log(name,realName,pwd,type);
+	    
         $.ajax({
-            url : "/DocSystem/register.do",
+            url : "/DocSystem/Manage/addUser.do",
             type : "post",
             dataType : "json",
             data : {
-                 userName : $('input[name="userName"]').val(),
-                 pwd : MD5($('input[name="pwd"]').val()),
-                 pwd2: MD5($('input[name="pwd2"]').val()),
-                 verifyCode : $('input[name="verifyCode"]').val(),
+                 userName : name,
+                 realName : realName,
+                 type : type,
+                 pwd : MD5(pwd),
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	//window.location.href = "index.html";	//跳转到主页
-                	//弹出登录对话框
-                	showLoginPanel();
-                	loginUser =  $('input[name="userName"]').val();
+                	alert("新增成功");
                 }else {
                 	alert("错误：" + ret.msgInfo);
                 }
             },
             error : function () {
-            	alert("服务器异常:注册失败");
-            }
-        });
-    }
-	
-	//检查用户是否注册并发送验证码
-	function checkUserAndSendVerifyCode(){
-		console.log("checkUserAndSendVerifyCode");
-		
-		$.ajax({
-            url : "/DocSystem/checkUserRegistered.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $('input[name="userName"]').val(),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	//alert("用户不存在，可以注册");
-                	sendVerifyCode();
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:发送验证码失败");
-            }
-        });
-        
-	}
-	
-	//发送验证码
-	function sendVerifyCode()
-	{
-		var dom = $("#svc");
-		
-		$(dom).attr("disabled","disabled");
-		$(dom).attr("second","60");
-		remainTime(dom);
-			
-		$.ajax({
-            url : "/DocSystem/sendVerifyCode.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $('input[name="userName"]').val(),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	alert("验证码已发送，请注意查收！");
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:发送验证码失败");
+            	alert("服务器异常:新增失败");
             }
         });
 	}
 	
-	//验证码倒计时
-	function remainTime(){
-		var dom = $("#svc");
-		var i = $(dom).attr("second");
-		$(dom).val(--i + "s"); 
-		$(dom).attr("second",i);
-	    var t = setTimeout(remainTime,1000);
-	    if(i==0){
-	    	clearTimeout(t);
-	    	$(dom).removeAttr("disabled");
-	    	$(dom).val("获取验证码");
-	    }
-	} 
+	
+	function delUser(id){
+        $.ajax({
+            url : "/DocSystem/Manage/delUser.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 id : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	alert("删除成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:删除失败");
+            }
+        });
+	}
 	
 	//页面初始化代码    
     $(function(){
-    	console.log("register Page init");
-		RegisterPageInit();
-		$("#userName").click().focus();
+    	console.log("addUser Page init");
+    	AddUserPageInit();
+		$("#name").click().focus();
 	});
 </script>
                     
-                  <form class="form-horizontal">
+                  <div class="form-horizontal">
                     <!-- userName -->
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="name">用户名</label>
                       <div class="col-lg-9">
-                        <input type="text" class="form-control" id="name">
+                        <input type="text" class="form-control" id="name" name="name">
                       </div>
                     </div>
                     <!-- realName -->
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="realName">名字</label>
                       <div class="col-lg-9">
-                        <input type="text" class="form-control" id="realName">
+                        <input type="text" class="form-control" id="realName" name="realName">
                       </div>
                     </div>
                     <!-- Cateogry -->
                     <div class="form-group">
                       <label class="control-label col-lg-3">角色</label>
                       <div class="col-lg-9">
-                        <select class="form-control" id="type">
+                        <select class="form-control" id="type" name="type">
                           <option value="0">普通用户</option>
                           <option value="1">管理员</option>
                           <option value="2">超级管理员</option>
@@ -170,7 +116,7 @@
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="password">密码</label>
                       <div class="col-lg-9">
-                        <input type="password" class="form-control" id="password">
+                        <input type="password" class="form-control" id="pwd" name="pwd">
                       </div>
                     </div>
 
@@ -181,4 +127,4 @@
                         <button type="submit" class="btn btn-success" id="btn_addAdmin" onclick="addUser()">添加</button>
                       </div>
                     </div>
-                  </form>
+                  </div>
