@@ -2,7 +2,9 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -12,9 +14,11 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.tmatesoft.svn.core.SVNException;
 
+import util.RegularUtil;
 import util.ReturnAjax;
 import util.SvnUtil.SVNUtil;
 
@@ -62,6 +66,80 @@ public class ManageController extends BaseController{
 	private List<User> getAllUsers() {
 		List <User> UserList = userService.geAllUsers();
 		return UserList;
+	}
+	
+	/****  以下接口是供管理后台使用的 ******************/
+	@RequestMapping(value="addUser")
+	public void addUser(User user, HttpSession session,HttpServletResponse response,ModelMap model)
+	{
+		System.out.println("addUser");
+
+		String userName = user.getName();
+		String pwd = user.getPwd();
+		Integer type = user.getType();
+
+		System.out.println("userName:"+userName + " pwd:"+pwd + "type:" + type);
+	
+		ReturnAjax rt = new ReturnAjax();
+		
+		//检查用户名是否为空
+		if(userName ==null||"".equals(userName))
+		{
+			rt.setError("danger#账号不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		
+		if(RegularUtil.isEmail(userName))	//邮箱注册
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该邮箱已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else if(RegularUtil.IsMobliePhone(userName))
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该手机已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else
+		{
+			if(isUserRegistered(userName) == true)
+			{
+				rt.setError("error#该用户名已注册！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		//检查密码是否为空
+		if(pwd==null||"".equals(pwd))
+		{
+			rt.setError("danger#密码不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		user.setCreateType(2);	//用户为管理员添加
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置川剧时间
+
+		if(userService.addUser(user) == 0)
+		{
+			rt.setError("Failed to add new User in DB");
+		}
+		
+		writeJson(rt, response);
+		return;
 	}
 
 	/********** 获取用户组列表 ***************/
