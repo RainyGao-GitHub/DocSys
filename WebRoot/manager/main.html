@@ -488,6 +488,30 @@
         });
 	}
 	
+	//showAddUserPanel
+	function showAddUserPanel(){
+		console.log("showAddUserPanel");
+		bootstrapQ.dialog({
+			url: 'addUser.html',
+			title: '新增用户',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+
+	function showEditUserPanel(e, id)
+	{
+		console.log("showEditUserPanel");
+		bootstrapQ.dialog({
+			url: 'editUser.html',
+			title: '编辑用户',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);	
+	}
+	
 	function editUser(e, id)
 	{
 		console.log("editUser() " + id);
@@ -654,18 +678,6 @@
 	    });
 	}
     
-	//showAddUserPanel
-	function showAddUserPanel(){
-		console.log("showAddUserPanel");
-		bootstrapQ.dialog({
-			url: 'addUser.html',
-			title: '新增用户',
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-			big: false
-		}, null);
-	}
-
 	function exit(){
 	    $.post("./admin/logout", function () {
 	        localStorage.session = '';
