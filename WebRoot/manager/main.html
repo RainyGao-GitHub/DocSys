@@ -613,15 +613,11 @@
 	
 	function addUser(){
 	    var name = $("#name").val();
+	    var realName = $("#realName").val();
 	    var pwd = $("#password").val();
 	    var role = $("#type").val();
-	    $Current.ajax("Admin.add",{
-	        name :name,
-	        role : role,
-	        pwd : MD5(pwd)
-	    },function(ret){
-	        bus.trigger("Admin.refresh");
-	    });
+	    
+	    console.log("addUser()", name, realName, role, pwd);
 	}
 	
 	
