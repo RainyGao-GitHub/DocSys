@@ -598,7 +598,19 @@
 	        }
 	    });
 	}
-
+    
+	//showAddUserPanel
+	function showAddUserPanel(){
+		console.log("showAddUserPanel");
+		bootstrapQ.dialog({
+			url: 'addUser.html',
+			title: '新增用户',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
 	function addUser(){
 	    var name = $("#name").val();
 	    var pwd = $("#password").val();
