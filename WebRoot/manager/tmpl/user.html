@@ -39,7 +39,7 @@
                     <td>{{value.email}}</td>
                     <td class="edit">
                       <button onclick="delUserConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
-                      <button onclick="editUser(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑 </button>
+                      <button onclick="showEditUserPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑 </button>
                     </td>
                   </tr>
                 {{/each}}
