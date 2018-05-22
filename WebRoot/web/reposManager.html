@@ -486,6 +486,20 @@
 		        }
 		    });
 	}
+	
+	function deleteReposConfirm(vid)
+	{	
+		console.log("deleteReposConfirm");
+		bootstrapQ.confirm({
+	        title: "删除仓库",
+	        msg: "是否删除仓库？",
+	        okbtn: "删除",
+	        qubtn: "取消",
+	    },function () {
+	    	deleteRepos(vid);
+	    	return true;   
+	    });
+	}
     
     function deleteRepos(vid)
 	{
@@ -816,7 +830,7 @@
 						}
 						var vid = getQueryString("vid");
 						console.log("删除仓库：" + vid);	
-						deleteRepos(vid);
+						deleteReposConfirm(vid);
 					}
 			},
 		]);
