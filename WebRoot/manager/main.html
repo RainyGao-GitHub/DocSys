@@ -610,24 +610,6 @@
 			big: false
 		}, null);
 	}
-	
-	function addUser(){
-	    var name = $("#name").val();
-	    var realName = $("#realName").val();
-	    var pwd = $("#password").val();
-	    var role = $("#type").val();
-	    
-	    console.log("addUser()", name, realName, role, pwd);
-	}
-	
-	
-	function delUser(id){
-	    $Current.ajax("Admin.delete",{
-	        id :id
-	    },function(ret){
-	        bus.trigger("Admin.refresh");
-	    });
-	}
 
 	function exit(){
 	    $.post("./admin/logout", function () {
