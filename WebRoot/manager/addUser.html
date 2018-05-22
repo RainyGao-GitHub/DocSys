@@ -27,10 +27,10 @@
 	function addUser(){
 		console.log("addUser()");
 
-		var name = $(#name).val();
-	    var realName = $('input[name="realName"]').val();
-	    var pwd =  $('input[name="pwd"]').val();
-	    var type =  $('input[name="type"]').val();
+		var name = $("#name").val();
+	    var realName = $("#realName").val();
+	    var pwd =  $("#pwd").val();
+	    var type =  $("#type").val();
 	    
 	    console.log(name,realName,pwd,type);
 	    
@@ -39,7 +39,7 @@
             type : "post",
             dataType : "json",
             data : {
-                 userName : name,
+                 name : name,
                  realName : realName,
                  type : type,
                  pwd : MD5(pwd),
@@ -68,7 +68,8 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	alert("删除成功");
+                   	showUserList();	//刷新UserList
+                    alert("删除成功");
                 }else {
                 	alert("错误：" + ret.msgInfo);
                 }
