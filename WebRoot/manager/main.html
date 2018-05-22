@@ -487,7 +487,16 @@
             }
         });
 	}
-
+	
+	function editUser(id)
+	{
+		console.log("editUser() " + id);
+		
+		var name = $(this).parent().parent('td :eq(0)').val();	//Tr
+		console.log("name:" + name);
+		
+		
+	}
 	//角色管理
 	function showGroupList(){
 		$.ajax({
