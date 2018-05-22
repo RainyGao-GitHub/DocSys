@@ -67,10 +67,10 @@ public class ManageController extends BaseController{
 		List <User> UserList = userService.geAllUsers();
 		return UserList;
 	}
+
 	
-	/****  以下接口是供管理后台使用的 ******************/
 	@RequestMapping(value="addUser")
-	public void addUser(User user, HttpSession session,HttpServletResponse response,ModelMap model)
+	public void addUser(User user, HttpSession session,HttpServletResponse response)
 	{
 		System.out.println("addUser");
 
@@ -142,6 +142,22 @@ public class ManageController extends BaseController{
 		return;
 	}
 
+	
+	@RequestMapping(value="delUser")
+	public void delUser(Integer userId, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("delUser " + userId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(userService.delUser(userId) == 0)
+		{
+			rt.setError("Failed to delete User in DB");
+		}
+		
+		writeJson(rt, response);
+		return;		
+	}
 	/********** 获取用户组列表 ***************/
 	@RequestMapping("/getGroupList.do")
 	public void getGroupList(HttpSession session,HttpServletRequest request,HttpServletResponse response)

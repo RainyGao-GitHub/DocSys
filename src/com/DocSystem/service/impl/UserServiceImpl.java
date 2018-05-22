@@ -43,6 +43,10 @@ public class UserServiceImpl implements UserService {
 	public User getUser(Integer userID) {
 		return userDao.selectByPrimaryKey(userID);
 	}
+	
+	public int delUser(Integer userId) {
+		return userDao.deleteByPrimaryKey(userId);
+	}
 
 	/*The following interface is for group*/
 	public List<UserGroup> geAllGroups() {
