@@ -46,6 +46,7 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
+                	showUserList();	//刷新UserList
                 	alert("新增成功");
                 }else {
                 	alert("错误：" + ret.msgInfo);
@@ -53,29 +54,6 @@
             },
             error : function () {
             	alert("服务器异常:新增失败");
-            }
-        });
-	}
-	
-	
-	function delUser(id){
-        $.ajax({
-            url : "/DocSystem/Manage/delUser.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 id : id,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                   	showUserList();	//刷新UserList
-                    alert("删除成功");
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:删除失败");
             }
         });
 	}
