@@ -140,48 +140,45 @@
 		$("#userName").click().focus();
 	});
 </script>
-
-                    <div class="form-horizontal">
-                        <div class="form-group" id="userIdDiv">
-                            <label class="col-sm-2 control-label">邮箱/手机</label>
-                            <div class="col-sm-10">
-                                <input type="text" id="userName" name="userName" class="form-control"  maxlength="40" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="请填写您的有效邮箱/手机，以便找回密码以及验证" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                        	<label class="col-sm-2 control-label">验证码</label>
-                        	<div class="col-sm-7">
-                        		<input type="text" id="verifyCode" name="verifyCode" class="form-control" maxlength="6" needvalicate=true valicate="_required _num"  placeholder="请输入验证码"/>
-                        	</div>
-                        	<div class="col-sm-3">
-                        		<input type="button" id="svc" class="mybtn-primary m3" second="60" onclick="checkUserAndSendVerifyCode();" value="获取验证码"/>
-                        	</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">密 码</label>
-                            <div class="col-sm-10">
-                                <input type="password" id="pwd" name="pwd" needvalicate="true" valicate="_required _minlen=6" class="form-control" placeholder="6-18位，可由数字字母特殊字符组成"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">重复密码</label>
-                            <div class="col-sm-10">
-                                <input type="password" id="pwd2" name="pwd2" needvalicate="true" valicate="_required _minlen=6 _equals=pwdForReg" class="form-control" placeholder="请填写重复密码"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-12 text-center">
-                                <input onclick="canSubmit(this);" type="checkbox">
-									<!-- <span class="p5">我已阅读并同意<a target="_blank" href="/DocSystem/pageTo.do?p=contactUs#useAgreement">《DocSys注册条款》</a></span> -->
-									<span class="p5">我已阅读并同意<a>《DocSys注册条款》</a></span>
-								</input>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-sm-12 text-center">
-                            	<input id="submitBtn" type="submit" class="hidden"/>
-                                <button  id="submit" type="button" class="btn btnPrimary" onclick="register();" style="width: 288px;height: 42px;" disabled>立即注册</button>
-                            </div>
-                        </div>
+                    
+                  <form class="form-horizontal">
+                    <!-- userName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">用户名</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="name">
+                      </div>
                     </div>
+                    <!-- realName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="realName">名字</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="realName">
+                      </div>
+                    </div>
+                    <!-- Cateogry -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3">角色</label>
+                      <div class="col-lg-9">
+                        <select class="form-control" id="type">
+                          <option value="0">普通用户</option>
+                          <option value="1">管理员</option>
+                          <option value="2">超级管理员</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="password">密码</label>
+                      <div class="col-lg-9">
+                        <input type="password" class="form-control" id="password">
+                      </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="form-group">
+                      <!-- Buttons -->
+                      <div class="col-lg-offset-9 col-lg-2">
+                        <button type="submit" class="btn btn-success" id="btn_addAdmin" onclick="addUser()">添加</button>
+                      </div>
+                    </div>
+                  </form>
