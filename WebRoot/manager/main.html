@@ -124,7 +124,7 @@
       <div class="col-md-4">
         <!-- Logo. -->
         <div class="logo">
-          <h1><a href="#">DocSys<span class="bold"></span></a></h1>
+          <h1><a href="/DocSystem">DocSys<span class="bold"></span></a></h1>
           <p class="meta">后台管理系统</p>
         </div>
         <!-- Logo ends -->
@@ -451,6 +451,20 @@
     {
 		$Func.render($("#container"),"user",{"list":list});
     }
+	
+	function delUserConfirm(id)
+	{	
+		console.log("delUserConfirm");
+		bootstrapQ.confirm({
+	        title: "删除用户",
+	        msg: "是否删除用户？",
+	        okbtn: "删除",
+	        qubtn: "取消",
+	    },function () {
+	    	delUser(id);
+	    	return true;   
+	    });
+	}
 	
 	function delUser(id){
         $.ajax({
