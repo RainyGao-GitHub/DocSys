@@ -488,15 +488,16 @@
         });
 	}
 	
-	function editUser(id)
+	function editUser(e, id)
 	{
 		console.log("editUser() " + id);
-		
-		var name = $(this).parent().parent('td :eq(0)').val();	//Tr
-		console.log("name:" + name);
-		
-		
+		//console.log("this", this); //this is not correct, so i get the current item from event
+		//alert($(this).attr("data-id"));
+		//console.log("event", e);
+		var  value = $(e.target).parent().parent().attr("index");
+		console.log(value);
 	}
+	
 	//角色管理
 	function showGroupList(){
 		$.ajax({
