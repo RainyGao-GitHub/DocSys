@@ -494,8 +494,17 @@
 		//console.log("this", this); //this is not correct, so i get the current item from event
 		//alert($(this).attr("data-id"));
 		//console.log("event", e);
-		var  value = $(e.target).parent().parent().attr("index");
-		console.log(value);
+		var Obj = e.target;
+		var trObj =  $(e.target).parent().parent();
+		var userId = trObj.children("td:eq(0)").text();
+		var name = trObj.children("td:eq(1)").text();
+		var type = trObj.children("td:eq(2)").text();
+		var nickName = trObj.children("td:eq(3)").text();
+		var realName = trObj.children("td:eq(4)").text();
+		var tel = trObj.children("td:eq(5)").text();
+		var email = trObj.children("td:eq(6)").text();
+		
+		console.log(userId);
 	}
 	
 	//角色管理
