@@ -1,0 +1,87 @@
+<script type="text/javascript">
+	function AddGroupPageInit()
+	{
+		console.log("addGroupPageInit()");
+		EnterKeyListenerForAddGroup();
+	}
+	
+	function showAddGroupPanel(text){
+		$(".addGroupModal").fadeIn("slow");
+		$("#name").focus();
+	}
+	
+	function closeAddGroupPanel(){
+		$(".addGroupModal").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForAddGroup(){
+		console.log("start enter key listener");
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		addGroup();
+	 	}  
+	}
+	
+	function addGroup(){
+		console.log("addGroup()");
+
+		var name = $("#name").val();
+	    var info = $("#info").val();
+	    
+	    console.log(name,info);
+	    
+        $.ajax({
+            url : "/DocSystem/Manage/addGroup.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 name : name,
+                 info : info,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	showGroupList();	//刷新GroupList
+                	alert("新增成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:新增失败");
+            }
+        });
+	}
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("addGroup Page init");
+    	AddGroupPageInit();
+		$("#name").click().focus();
+	});
+</script>
+                    
+                  <div class="form-horizontal">
+                    <!-- GroupName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">组名称</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="name" name="name">
+                      </div>
+                    </div>
+                    <!-- info -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="info">描述</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="info" name="info">
+                      </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="form-group">
+                      <!-- Buttons -->
+                      <div class="col-lg-offset-9 col-lg-2">
+                        <button type="submit" class="btn btn-success" id="btn_addGroup" onclick="addGroup()">添加</button>
+                      </div>
+                    </div>
+                  </div>
