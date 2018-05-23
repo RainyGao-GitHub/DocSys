@@ -1,0 +1,166 @@
+<div>
+        <div class="manual-right width:80%" >
+            <div class="manual-article">
+               <div class="article-body editor-content"  id="doc" style="min-height: 650px">
+               		<div class="panel-body eventset-list" >	
+	               		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell username w15">用户名</i>
+							<i class="cell operation w10">操作</i>						
+						</li>
+					</div>
+               		<div class="panel-body eventset-list" id="groupMembers">
+			 			<!-- 成员列表区域-->
+					</div>
+			 </div>
+			</div>
+		</div>
+</div>
+
+<script type="text/javascript">
+	function manageGroupMemberPageInit()
+	{
+		console.log("manageGroupMemberPageInit");
+		showGroupAllUserList();		
+	}
+
+        
+    //页面初始化代码    
+    $(function(){
+		manageGroupMemberPageInit();
+	});
+
+
+function showGroupAllUserList(){
+   	console.log("showGroupAllUserList()");
+   	
+   	$.ajax({
+            url : "/DocSystem/Manage/getGroupAllUsers.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	groupId:groupId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showUserList(ret.data);
+                }
+                else
+                {
+                	alert("Error:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               alert('服务器异常：获取用户列表失败！');
+            }
+    });
+
+
+	//根据获取到的目录权限用户列表数据，绘制列表
+	function showUserList(data){
+		console.log(data);
+		var c = $("#groupMembers").children();
+		$(c).remove();
+		if(data.length==0){
+			$("#groupMembers").append("<p>暂无数据</p>");
+		}
+		
+		for(var i=0;i<data.length;i++){
+			var d = data[i];
+			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
+			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
+			{
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
+			}
+												
+			var se = "<li value="+ i +">"
+				+"	<i class='cell username w15'>"
+				+"		<span class='name'>"
+				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
+				+"		</span>"
+				+"	</i>"
+				+"	<i class='cell operation w10'>"
+				+		opBtn
+				+"	</i>"
+				+"</li>";
+			
+			$("#systemAllUsers").append(se);
+		}
+	}
+}
+
+function addGroupMember(userId,groupId)
+{
+   	console.log("addUserToGroup " + userId+ " " + groupId);
+   
+    $.ajax({
+            url : "/DocSystem/Repos/addGroupMember.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	userId: userId,
+                groupId : groupId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showGroupMemberList();		//这个 接口是更新组成员列表
+                    showAllUserList();		//更新显示
+                }
+                else
+                {
+                	showErrorMessage("Error:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               showErrorMessage('服务器异常：获取用户列表失败！');
+            }
+    });
+}
+
+
+function deleteGroupMemeberConfirm(groupId,userId)
+{
+		qiao.bs.confirm({
+ 	    	id: 'deleteGroupMemeberConfirm',
+ 	        msg: "是否删除该成员?",
+ 	        close: false,		
+ 	        okbtn: "删除",
+ 	        qubtn: "取消",
+ 	    },function () {
+ 	    	
+ 	    	//alert("点击了确定");
+ 	    	deleteGroupMemeber(groupId,userId);
+ 	    	return true;   
+ 	    },function(){
+ 	    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteGroupMember(groupId,userId)
+{	
+   	console.log("deleteGroupMember()");
+   	
+    $.ajax({
+            url : "/DocSystem/Repos/deleteGroupMember.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                groupId: groupId,
+                userId: userId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showGroupMemberList();
+                    showAllUserList();		//更新显示
+                }
+                else
+                {
+                	showErrorMessage("Error:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+               showErrorMessage('服务器异常：删除成员失败！');
+            }
+    });
+}
+</script>

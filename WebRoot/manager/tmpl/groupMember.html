@@ -2,11 +2,10 @@
         <div class="col-md-12">
           <div class="widget">
             <div class="widget-head">
-              <div class="pull-left">用户组列表</div>
+              <div class="pull-left">成员列表</div>
               <div class="widget-icons pull-right">
                 <!-- <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
                 <a href="#" class="wclose"><i class="icon-remove"></i></a>  -->
-                <button onclick="showAddGroupPanel()" class="btn btn-lg btn-success examine_ban">新增用户组</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -17,9 +16,8 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>组名称</th>
-                  <th>描述</th>
-                  <th>成员列表</th>
+                  <th>用户名</th>
+                  <th>姓名</th>
                   <th>操作</th>
                 </tr>
                 </thead>
@@ -29,12 +27,15 @@
                   <tr>
                     <td>{{value.id}}</td>
                     <td>{{value.name}}</td>
-                    <td>{{value.info}}</td>
-                    <td>{{value.memberList}}</td>
+                    <td>{{value.realName}}</td>
                     <td class="edit">
-                      <button onclick="delGroupConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
-                      <button onclick="showEditGroupPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑 </button>
-                      <button onclick="showManageGroupMemberPanel({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">成员管理</button>
+                      {{if "0" != value.id}} 
+                      <button onclick="delGroupMemberConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+                      {{/if}}
+                    
+                      {{if "0" == value.id}} 
+                      <button onclick="addGroupMember({{value.name}})" data-id="{{value.name}}" class="btn btn-lg btn-danger examine_ban">添加 </button>
+                      {{/if}}
                     </td>
                   </tr>
                 {{/each}}
