@@ -578,6 +578,42 @@
 		}, null);
 	}
 	
+	function delGroupConfirm(id)
+	{	
+		console.log("delGroupConfirm");
+		bootstrapQ.confirm({
+	        title: "删除用户组",
+	        msg: "是否删除用户组？",
+	        okbtn: "删除",
+	        qubtn: "取消",
+	    },function () {
+	    	delGroup(id);
+	    	return true;   
+	    });
+	}
+	
+	function delGroup(id){
+        $.ajax({
+            url : "/DocSystem/Manage/delGroup.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 id : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showGroupList();	//刷新GroupList
+                    alert("删除成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:删除失败");
+            }
+        });
+	}
+	
 	// 快速查找指定的项
 	function fastSearch(_this){
 	    var $this = $(_this);
