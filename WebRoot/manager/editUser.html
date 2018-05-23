@@ -27,6 +27,7 @@
 	function editUser(){
 		console.log("editUser()");
 
+		var id =  $("#userId").val();
 		var name = $("#name").val();
 	    var realName = $("#realName").val();
 	    var pwd =  $("#pwd").val();
@@ -35,10 +36,11 @@
 	    console.log(name,realName,pwd,type);
 	    
         $.ajax({
-            url : "/DocSystem/Manage/updateUser.do",
+            url : "/DocSystem/Manage/editUser.do",
             type : "post",
             dataType : "json",
             data : {
+            	 id : id,
                  name : name,
                  realName : realName,
                  type : type,
@@ -67,6 +69,12 @@
 </script>
                     
                   <div class="form-horizontal">
+                    <div class="form-group" hidden>
+                      <label class="control-label col-lg-3" for="userId">用户ID</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="userId" name="userId">
+                      </div>
+                    </div>
                     <!-- userName -->
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="name">用户名</label>
