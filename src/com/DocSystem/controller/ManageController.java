@@ -217,7 +217,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="addGroup")
-	public void addUser(UserGroup group, HttpSession session,HttpServletResponse response)
+	public void addGroup(UserGroup group, HttpSession session,HttpServletResponse response)
 	{
 		System.out.println("addGroup");
 
@@ -287,6 +287,37 @@ public class ManageController extends BaseController{
 		
 		writeJson(rt, response);
 		return;		
+	}
+	
+	@RequestMapping(value="editGroup")
+	public void editGroup(UserGroup group, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("editGroup");
+
+		Integer groupId = group.getId();
+		String name = group.getName();
+		String info = group.getInfo();
+
+		System.out.println("name:"+name + " info:"+info);
+	
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(groupId == null || "".equals(groupId))
+		{
+			rt.setError("用户组ID不能为空");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(userService.editGroup(group) == 0)
+		{
+			rt.setError("更新数据库失败");
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+		return;
 	}
 
 }

@@ -70,4 +70,8 @@ public class UserServiceImpl implements UserService {
 		return groupDao.deleteByPrimaryKey(id);
 	}
 
+	public int editGroup(UserGroup group) {
+		return groupDao.updateByPrimaryKeySelective(group);
+	}
+
 }  
