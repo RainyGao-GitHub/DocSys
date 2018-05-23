@@ -18,9 +18,8 @@
                 <tr>
                   <th>#</th>
                   <th>组名称</th>
-                  <th>类型</th>
-                  <th>优先级</th>
                   <th>描述</th>
+                  <th>成员列表</th>
                   <th>操作</th>
                 </tr>
                 </thead>
@@ -30,11 +29,12 @@
                   <tr>
                     <td>{{value.id}}</td>
                     <td>{{value.name}}</td>
-                    <td>{{value.type}}</td>
-                    <td>{{value.priority}}</td>
                     <td>{{value.info}}</td>
+                    <td>{{value.memberList}}</td>
                     <td class="edit">
-                      <button onclick="delAdmin({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+                      <button onclick="delGroupConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+                      <button onclick="showEditGroupPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑 </button>
+                      <button onclick="showGroupMemberPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">成员管理</button>
                     </td>
                   </tr>
                 {{/each}}
