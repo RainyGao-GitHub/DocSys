@@ -58,4 +58,12 @@ public class UserServiceImpl implements UserService {
 		return groupDao.selectAll();
 	}
 
+	public List<UserGroup> getGroupListByGroupInfo(UserGroup qGroup) {
+		return groupDao.selectSelective(qGroup);
+	}
+	
+	public int addGroup(UserGroup group) {
+		return groupDao.insertSelective(group);
+	}
+
 }  

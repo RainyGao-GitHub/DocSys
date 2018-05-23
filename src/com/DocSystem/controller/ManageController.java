@@ -215,5 +215,62 @@ public class ManageController extends BaseController{
 		List <UserGroup> GroupList = userService.geAllGroups();
 		return GroupList;
 	}
+	
+	@RequestMapping(value="addGroup")
+	public void addUser(UserGroup group, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("addGroup");
+
+		String name = group.getName();
+		String info = group.getInfo();
+		
+		System.out.println("name:"+name + " info:"+info);
+		ReturnAjax rt = new ReturnAjax();
+		
+		//检查用户名是否为空
+		if(name ==null||"".equals(name))
+		{
+			rt.setError("组名不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(isGroupExist(name) == true)
+		{
+			rt.setError("用户组 " + name + " 已存在！");
+			writeJson(rt, response);
+			return;
+		}
+	
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		group.setCreateTime(createTime);	//设置川剧时间
+
+		if(userService.addGroup(group) == 0)
+		{
+			rt.setError("Failed to add new Group in DB");
+		}
+		
+		writeJson(rt, response);
+		return;
+	}
+
+	private boolean isGroupExist(String name) {
+		UserGroup qGroup = new UserGroup();
+		//检查用户名是否为空
+		if(name==null||"".equals(name))
+		{
+			return true;
+		}
+			
+		qGroup.setName(name);
+		List<UserGroup> list = userService.getGroupListByGroupInfo(qGroup);
+		if(list == null || list.size() == 0)
+		{
+			return false;
+		}
+		return true;
+	}
 
 }
