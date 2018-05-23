@@ -191,20 +191,6 @@ public class ManageController extends BaseController{
 				return;
 			}
 		}
-		
-		//检查密码是否为空
-		if(pwd==null||"".equals(pwd))
-		{
-			rt.setError("danger#密码不能为空！");
-			writeJson(rt, response);
-			return;
-		}
-		
-		user.setCreateType(2);	//用户为管理员添加
-		//set createTime
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-		String createTime = df.format(new Date());// new Date()为获取当前系统时间
-		user.setCreateTime(createTime);	//设置川剧时间
 
 		if(userService.editUser(user) == 0)
 		{
