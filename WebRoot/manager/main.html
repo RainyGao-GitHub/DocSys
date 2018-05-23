@@ -614,6 +614,31 @@
         });
 	}
 	
+	function showEditGroupPanel(e, id)
+	{
+		console.log("showEditGroupPanel() " + id);
+		var Obj = e.target;
+		var trObj =  $(e.target).parent().parent();
+		var groupId = trObj.children("td:eq(0)").text();
+		var name = trObj.children("td:eq(1)").text();
+		var info = trObj.children("td:eq(2)").text();		
+		
+		bootstrapQ.dialog({
+			url: 'editGroup.html',
+			title: '编辑用户组',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+			    console.log("page loaded callback");
+			    //Page Value Init
+			    $("#groupId").val(groupId);
+				$("#name").val(name);
+			    $("#info").val(info);
+			}
+		}, null);	
+	}
+	
 	// 快速查找指定的项
 	function fastSearch(_this){
 	    var $this = $(_this);

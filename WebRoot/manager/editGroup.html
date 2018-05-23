@@ -1,0 +1,95 @@
+<script type="text/javascript">
+	function EditGroupPageInit()
+	{
+		console.log("EditGroupPageInit()");
+		EnterKeyListenerForEditGroup();
+	}
+	
+	function showEditGroupPanel(text){
+		$(".editGroupModal").fadeIn("slow");
+		$("#name").focus();
+	}
+	
+	function closeEditGroupPanel(){
+		$(".editGroupModal").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForEditGroup(){
+		console.log("start enter key listener");
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		editGroup();
+	 	}  
+	}
+	
+	function editGroup(){
+		console.log("editGroup()");
+
+		var id =  $("#groupId").val();
+		var name = $("#name").val();
+	    var info = $("#info").val();
+	    
+	    console.log(name,info);
+	    
+        $.ajax({
+            url : "/DocSystem/Manage/editGroup.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	 id : id,
+                 name : name,
+                 info : info,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	showGroupList();	//刷新GroupList
+                	alert("更新成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:更新失败");
+            }
+        });
+	}
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("editGroup Page init");
+    	EditGroupPageInit();
+		$("#name").click().focus();
+	});
+</script>
+                    
+                  <div class="form-horizontal">
+                    <div class="form-group" hidden>
+                      <label class="control-label col-lg-3" for="GroupId">组ID</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="groupId" name="groupId">
+                      </div>
+                    </div>
+                    <!-- GroupName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">组名称</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="name" name="name">
+                      </div>
+                    </div>
+                    <!-- info -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="info">描述</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="info" name="info">
+                      </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="form-group">
+                      <!-- Buttons -->
+                      <div class="col-lg-offset-9 col-lg-2">
+                        <button type="submit" class="btn btn-success" id="btn_editGroup" onclick="editGroup()">保存</button>
+                      </div>
+                    </div>
+                  </div>
