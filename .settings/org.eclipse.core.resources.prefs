@@ -1,7 +1,12 @@
 eclipse.preferences.version=1
+encoding//WebRoot/manager/tmpl/group.html=UTF-8
 encoding//WebRoot/manager/tmpl/headbar.html=UTF-8
-encoding//WebRoot/manager/tmpl/role.html=UTF-8
+encoding//WebRoot/manager/tmpl/index.html=UTF-8
+encoding//WebRoot/manager/tmpl/metainfo.html=UTF-8
+encoding//WebRoot/manager/tmpl/pagehead.html=UTF-8
 encoding//WebRoot/manager/tmpl/sidebar.html=UTF-8
+encoding//WebRoot/manager/tmpl/team.html=UTF-8
+encoding//WebRoot/manager/tmpl/user.html=UTF-8
 encoding//WebRoot/web/addReposUser.html=UTF-8
 encoding//WebRoot/web/getPassword.html=UTF-8
 encoding//WebRoot/web/login.html=UTF-8
