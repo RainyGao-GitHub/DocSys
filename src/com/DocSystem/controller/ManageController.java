@@ -147,6 +147,7 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("editUser");
 
+		Integer userId = user.getId();
 		String userName = user.getName();
 		String pwd = user.getPwd();
 		Integer type = user.getType();
@@ -155,46 +156,18 @@ public class ManageController extends BaseController{
 	
 		ReturnAjax rt = new ReturnAjax();
 		
-		//检查用户名是否为空
-		if(userName ==null||"".equals(userName))
+		if(userId == null || "".equals(userId))
 		{
-			rt.setError("danger#账号不能为空！");
+			rt.setError("用户ID不能为空");
 			writeJson(rt, response);
 			return;
 		}
 		
-		
-		if(RegularUtil.isEmail(userName))	//邮箱注册
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("error#该邮箱已注册！");
-				writeJson(rt, response);
-				return;
-			}
-		}
-		else if(RegularUtil.IsMobliePhone(userName))
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("error#该手机已注册！");
-				writeJson(rt, response);
-				return;
-			}
-		}
-		else
-		{
-			if(isUserRegistered(userName) == true)
-			{
-				rt.setError("error#该用户名已注册！");
-				writeJson(rt, response);
-				return;
-			}
-		}
-
 		if(userService.editUser(user) == 0)
 		{
-			rt.setError("Failed to add new User in DB");
+			rt.setError("更新数据库失败");
+			writeJson(rt, response);
+			return;
 		}
 		
 		writeJson(rt, response);
