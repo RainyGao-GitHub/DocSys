@@ -19,4 +19,6 @@ public interface UserGroupMapper {
     int updateByPrimaryKey(UserGroup record);
     
 	List<UserGroup> selectAll();
+
+	List<UserGroup> selectSelective(UserGroup qGroup);
 }
