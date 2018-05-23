@@ -47,9 +47,15 @@ public class UserServiceImpl implements UserService {
 	public int delUser(Integer userId) {
 		return userDao.deleteByPrimaryKey(userId);
 	}
+	
+	public int editUser(User user) {
+		return userDao.updateByPrimaryKeySelective(user);
+
+	}
 
 	/*The following interface is for group*/
 	public List<UserGroup> geAllGroups() {
 		return groupDao.selectAll();
 	}
+
 }  
