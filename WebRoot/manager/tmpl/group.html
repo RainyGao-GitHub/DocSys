@@ -4,8 +4,9 @@
             <div class="widget-head">
               <div class="pull-left">用户组列表</div>
               <div class="widget-icons pull-right">
-                <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
-                <a href="#" class="wclose"><i class="icon-remove"></i></a>
+                <!-- <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                <a href="#" class="wclose"><i class="icon-remove"></i></a>  -->
+                <button onclick="showAddGroupPanel()" class="btn btn-lg btn-success examine_ban">新增用户组</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -49,80 +50,6 @@
 
             </div>
             <!-- Matter ends -->
-          </div>
-
-
-          <!-- Matter -->
-
-          <div class="widget">
-            <div class="widget-head">
-              <div class="pull-left">添加组</div>
-              <div class="widget-icons pull-right">
-                <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
-                <a href="#" class="wclose"><i class="icon-remove"></i></a>
-              </div>
-              <div class="clearfix"></div>
-            </div>
-            <div class="widget-content">
-              <div class="padd">
-
-                <div class="form quick-post">
-                  <!-- Edit profile form (not working)-->
-                  <form class="form-horizontal">
-                    <!-- userName -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">组名称</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="name">
-                      </div>
-                    </div>
-                    <!-- Cateogry -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3">类型</label>
-                      <div class="col-lg-9">
-                        <select class="form-control" id="type">
-                          <option value="0">0</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3">优先级</label>
-                      <div class="col-lg-9">
-                        <select class="form-control" id="priority">
-                          <option value="0">0</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <!-- info -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="info">描述</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="info">
-                      </div>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="form-group">
-                      <!-- Buttons -->
-                      <div class="col-lg-offset-9 col-lg-2">
-                        <button type="submit" class="btn btn-success" id="btn_addAdmin" onclick="addAdmin()">添加</button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-
-
-              </div>
-              <div class="widget-foot">
-                <!-- Footer goes here -->
-              </div>
-            </div>
-
           </div>
         </div>
       </div>

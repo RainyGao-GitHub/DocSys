@@ -565,6 +565,19 @@
 		$Func.render($("#container"),"group",{"list":list});
 	}
 		
+	
+	//showAddGroupPanel
+	function showAddGroupPanel(){
+		console.log("showAddGroupPanel");
+		bootstrapQ.dialog({
+			url: 'addGroup.html',
+			title: '新增用户组',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
 	// 快速查找指定的项
 	function fastSearch(_this){
 	    var $this = $(_this);
