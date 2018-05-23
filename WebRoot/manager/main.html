@@ -503,18 +503,8 @@
 	function showEditUserPanel(e, id)
 	{
 		console.log("showEditUserPanel");
-		bootstrapQ.dialog({
-			url: 'editUser.html',
-			title: '编辑用户',
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-			big: false
-		}, null);	
-	}
-	
-	function editUser(e, id)
-	{
-		console.log("editUser() " + id);
+		
+		console.log("showEditUserPanel() " + id);
 		//console.log("this", this); //this is not correct, so i get the current item from event
 		//alert($(this).attr("data-id"));
 		//console.log("event", e);
@@ -528,7 +518,23 @@
 		var tel = trObj.children("td:eq(5)").text();
 		var email = trObj.children("td:eq(6)").text();
 		
-		console.log(userId);
+		
+		bootstrapQ.dialog({
+			url: 'editUser.html',
+			title: '编辑用户',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+			    console.log("page loaded callback");
+			    //Page Value Init
+			    $("#userId").val(userId);
+				$("#name").val(name);
+			    $("#realName").val(realName);
+			    $("#pwd").val(pwd);
+			    $("#type").val(type);
+			}
+		}, null);	
 	}
 	
 	//角色管理
