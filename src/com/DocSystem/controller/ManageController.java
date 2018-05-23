@@ -272,5 +272,21 @@ public class ManageController extends BaseController{
 		}
 		return true;
 	}
+	
+	@RequestMapping(value="delGroup")
+	public void delGroup(Integer id, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("delGroup " + id);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(userService.delGroup(id) == 0)
+		{
+			rt.setError("Failed to delete Group from DB");
+		}
+		
+		writeJson(rt, response);
+		return;		
+	}
 
 }

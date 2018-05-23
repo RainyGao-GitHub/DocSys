@@ -66,4 +66,8 @@ public class UserServiceImpl implements UserService {
 		return groupDao.insertSelective(group);
 	}
 
+	public int delGroup(Integer id) {
+		return groupDao.deleteByPrimaryKey(id);
+	}
+
 }  
