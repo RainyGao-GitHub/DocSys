@@ -1,5 +1,7 @@
 package com.DocSystem.dao;
 
+import java.util.List;
+
 import com.DocSystem.entity.GroupMember;
 
 public interface GroupMemberMapper {
@@ -14,4 +16,7 @@ public interface GroupMemberMapper {
     int updateByPrimaryKeySelective(GroupMember record);
 
     int updateByPrimaryKey(GroupMember record);
+
+    //获取所有用户列表（包含组信息，但这个函数名定义确实有点奇怪）
+	List<GroupMember> getGroupAllUsers(Integer groupId);
 }
