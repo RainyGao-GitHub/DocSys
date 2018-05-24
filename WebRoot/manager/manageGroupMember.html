@@ -26,6 +26,7 @@ function showGroupAllUserList(groupId){
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
+                	console.log("groupAllUsers:",ret.data);
                 	GroupMemberListDisplay(ret.data);
                 }
                 else
