@@ -1,20 +1,4 @@
-<div>
-        <div class="manual-right width:80%" >
-            <div class="manual-article">
-               <div class="article-body editor-content"  id="doc" style="min-height: 650px">
-               		<div class="panel-body eventset-list" >	
-	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell username w15">用户名</i>
-							<i class="cell operation w10">操作</i>						
-						</li>
-					</div>
-               		<div class="panel-body eventset-list" id="groupMembers">
-			 			<!-- 成员列表区域-->
-					</div>
-			 </div>
-			</div>
-		</div>
-</div>
+<div id="groupMemberContainer"></div>
 
 <script type="text/javascript">
 	function manageGroupMemberPageInit()
@@ -54,6 +38,10 @@ function showGroupAllUserList(){
             }
     });
 
+	function GroupMemberListDisplay(list)
+	{
+		$Func.render($("#groupMemberContainer"),"groupMember",{"list":list});
+	}
 
 	//根据获取到的目录权限用户列表数据，绘制列表
 	function showUserList(data){
