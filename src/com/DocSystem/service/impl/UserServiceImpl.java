@@ -5,8 +5,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;  
 import org.springframework.stereotype.Service;  
   
+import com.DocSystem.dao.GroupMemberMapper;
 import com.DocSystem.dao.UserGroupMapper;
 import com.DocSystem.dao.UserMapper;
+import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.UserService;
@@ -17,7 +19,8 @@ public class UserServiceImpl implements UserService {
     private UserMapper userDao;  
     @Autowired
     private UserGroupMapper groupDao;  
-
+    @Autowired
+    private GroupMemberMapper groupMemberDao;  
     
     public  int addUser(User user) {
     	return userDao.insertSelective(user);
@@ -72,6 +75,10 @@ public class UserServiceImpl implements UserService {
 
 	public int editGroup(UserGroup group) {
 		return groupDao.updateByPrimaryKeySelective(group);
+	}
+	
+	public List<GroupMember> getGroupAllUsers(Integer groupId) {
+		return groupMemberDao.getGroupAllUsers(groupId);
 	}
 
 }  
