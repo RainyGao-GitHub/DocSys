@@ -70,13 +70,12 @@
   </update>
     <select id="getGroupAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.GroupMember">
 	select 
-		user.ID as userId,user.NAME as userName,
+		USER_ID,user.NAME as userName,
 		group_member.ID as id, 
-		group.id as groupId, group.NAME as groupName
+		GROUP_ID, user_group.NAME as groupName
       from user
-    LEFT JOIN group_member ON user.ID = group_member.USER_ID
-	LEFT JOIN group ON group.ID =  #{groupId,jdbcType=INTEGER}
-    where GROUP_ID = #{groupId,jdbcType=INTEGER}
+    LEFT JOIN group_member ON user.ID = group_member.USER_ID and group_member.ID =  #{groupId,jdbcType=INTEGER}
+	LEFT JOIN user_group ON user_group.ID =  #{groupId,jdbcType=INTEGER}
   </select>
   
 </mapper>
