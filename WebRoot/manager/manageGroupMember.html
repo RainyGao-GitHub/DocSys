@@ -4,7 +4,7 @@
 	function manageGroupMemberPageInit()
 	{
 		console.log("manageGroupMemberPageInit");
-		showGroupAllUserList();		
+		showGroupAllUserList(0);		
 	}
 
         
@@ -14,7 +14,7 @@
 	});
 
 
-function showGroupAllUserList(){
+function showGroupAllUserList(groupId){
    	console.log("showGroupAllUserList()");
    	
    	$.ajax({
@@ -26,7 +26,7 @@ function showGroupAllUserList(){
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    showUserList(ret.data);
+                	GroupMemberListDisplay(ret.data);
                 }
                 else
                 {
@@ -37,43 +37,11 @@ function showGroupAllUserList(){
                alert('服务器异常：获取用户列表失败！');
             }
     });
+}
 
-	function GroupMemberListDisplay(list)
-	{
-		$Func.render($("#groupMemberContainer"),"groupMember",{"list":list});
-	}
-
-	//根据获取到的目录权限用户列表数据，绘制列表
-	function showUserList(data){
-		console.log(data);
-		var c = $("#groupMembers").children();
-		$(c).remove();
-		if(data.length==0){
-			$("#groupMembers").append("<p>暂无数据</p>");
-		}
-		
-		for(var i=0;i<data.length;i++){
-			var d = data[i];
-			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
-			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
-			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
-			}
-												
-			var se = "<li value="+ i +">"
-				+"	<i class='cell username w15'>"
-				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell operation w10'>"
-				+		opBtn
-				+"	</i>"
-				+"</li>";
-			
-			$("#systemAllUsers").append(se);
-		}
-	}
+function GroupMemberListDisplay(list)
+{
+	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list});
 }
 
 function addGroupMember(userId,groupId)
@@ -90,8 +58,7 @@ function addGroupMember(userId,groupId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    showGroupMemberList();		//这个 接口是更新组成员列表
-                    showAllUserList();		//更新显示
+                    GroupMemberListDisplay();		//更新显示
                 }
                 else
                 {
