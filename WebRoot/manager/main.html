@@ -455,7 +455,7 @@
 	function delUserConfirm(id)
 	{	
 		console.log("delUserConfirm");
-		bootstrapQ.confirm({
+		qiao.bs.confirm({
 	        title: "删除用户",
 	        msg: "是否删除用户？",
 	        okbtn: "删除",
@@ -519,7 +519,7 @@
 		var email = trObj.children("td:eq(6)").text();
 		
 		
-		bootstrapQ.dialog({
+		qiao.bs.dialog({
 			url: 'editUser.html',
 			title: '编辑用户',
 			msg: '页面正在加载，请稍等...',
@@ -569,7 +569,7 @@
 	//showAddGroupPanel
 	function showAddGroupPanel(){
 		console.log("showAddGroupPanel");
-		bootstrapQ.dialog({
+		qiao.bs.dialog({
 			url: 'addGroup.html',
 			title: '新增用户组',
 			msg: '页面正在加载，请稍等...',
@@ -581,7 +581,7 @@
 	function delGroupConfirm(id)
 	{	
 		console.log("delGroupConfirm");
-		bootstrapQ.confirm({
+		qiao.bs.confirm({
 	        title: "删除用户组",
 	        msg: "是否删除用户组？",
 	        okbtn: "删除",
@@ -623,7 +623,7 @@
 		var name = trObj.children("td:eq(1)").text();
 		var info = trObj.children("td:eq(2)").text();		
 		
-		bootstrapQ.dialog({
+		qiao.bs.dialog({
 			url: 'editGroup.html',
 			title: '编辑用户组',
 			msg: '页面正在加载，请稍等...',
@@ -642,7 +642,7 @@
 	//显示组成员管理页面
 	function showManageGroupMemberPanel(groupId){
 		console.log("showManageGroupMemberPanel");
-		bootstrapQ.dialog({
+		qiao.bs.dialog({
 			title: '成员管理',
 			url: 'manageGroupMember.html',
 			msg: '页面正在加载，请稍等...',
