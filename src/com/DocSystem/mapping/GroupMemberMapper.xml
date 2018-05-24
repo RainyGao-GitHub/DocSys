@@ -70,9 +70,9 @@
   </update>
     <select id="getGroupAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.GroupMember">
 	select 
-		USER_ID,user.NAME as userName,
+		user.ID as userId, user.NAME as userName,
 		group_member.ID as id, 
-		GROUP_ID, user_group.NAME as groupName
+		user_group.ID as groupId, user_group.NAME as groupName
       from user
     LEFT JOIN group_member ON user.ID = group_member.USER_ID and group_member.ID =  #{groupId,jdbcType=INTEGER}
 	LEFT JOIN user_group ON user_group.ID =  #{groupId,jdbcType=INTEGER}
