@@ -23,6 +23,7 @@ import util.ReturnAjax;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
@@ -318,6 +319,27 @@ public class ManageController extends BaseController{
 		
 		writeJson(rt, response);
 		return;
+	}
+	
+	/********** 获取系统所有用户 ：前台用于给group添加访问用户，返回的结果实际上是groupMember列表***************/
+	@RequestMapping("/getGroupAllUsers.do")
+	public void getGroupAllUsers(Integer groupId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getGroupAllUsers groupId: " + groupId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		List <GroupMember> UserList = userService.getGroupAllUsers(groupId);	
+		printObject("UserList:",UserList);
+		
+		rt.setData(UserList);
+		writeJson(rt, response);
 	}
 
 }
