@@ -14,9 +14,10 @@
 	});
 
 
-function showGroupAllUserList(groupId){
+function showGroupAllUserList(){
    	console.log("showGroupAllUserList()");
-   	
+   	var groupId = gGroupId;
+
    	$.ajax({
             url : "/DocSystem/Manage/getGroupAllUsers.do",
             type : "post",
@@ -41,14 +42,16 @@ function showGroupAllUserList(groupId){
     });
 }
 
-function GroupMemberListDisplay(list,groupId)
+function GroupMemberListDisplay(list)
 {
-	console.log("GroupMemberListDisplay", groupId);
+	var groupId = gGroupId;
+	console.log("GroupMemberListDisplay", groupId);	
 	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list,"groupId":groupId});
 }
 
-function addGroupMember(userId,groupId)
+function addGroupMember(userId)
 {
+	var groupId = gGroupId;
    	console.log("addUserToGroup userId:" + userId+ " groupId" + groupId);
    
     $.ajax({
@@ -75,9 +78,10 @@ function addGroupMember(userId,groupId)
 }
 
 
-function deleteGroupMemeberConfirm(id,groupId,userId)
+function deleteGroupMemeberConfirm(id,userId)
 {
-		qiao.bs.confirm({
+	var groupId = gGroupId;
+	qiao.bs.confirm({
  	    	id: 'deleteGroupMemeberConfirm',
  	        msg: "是否删除该成员?",
  	        close: false,		
