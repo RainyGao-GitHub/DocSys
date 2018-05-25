@@ -392,5 +392,22 @@ public class ManageController extends BaseController{
 		}
 		return true;
 	}
+	
+	@RequestMapping(value="delGroupMember")
+	public void delGroupMember(Integer id, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("delGroupMember " + id);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(userService.delGroupMember(id) == 0)
+		{
+			rt.setError("Failed to delete GroupMember from DB");
+		}
+		
+		writeJson(rt, response);
+		return;		
+	}
+	
 
 }
