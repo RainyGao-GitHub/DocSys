@@ -1668,7 +1668,7 @@ public class ReposController extends BaseController{
 		ReposAuth qReposAuth = new ReposAuth();
 		if(type == 2)
 		{
-			qReposAuth.setUserId(groupId);		
+			qReposAuth.setGroupId(groupId);		
 		}
 		else
 		{
@@ -1688,7 +1688,14 @@ public class ReposController extends BaseController{
 			qReposAuth.setHeritable(heritable);
 			if(reposService.addReposAuth(qReposAuth) == 0)
 			{
-				rt.setError("用户仓库权限新增失败！");
+				if(type == 2)
+				{
+					rt.setError("用户组仓库权限新增失败");
+				}
+				else
+				{
+					rt.setError("用户仓库权限新增失败");
+				}
 				writeJson(rt, response);			
 				return;
 			}	
@@ -1704,7 +1711,14 @@ public class ReposController extends BaseController{
 			reposAuth.setHeritable(heritable);
 			if(reposService.updateReposAuth(reposAuth) == 0)
 			{
-				rt.setError("用户仓库权限更新失败");
+				if(type == 2)
+				{
+					rt.setError("用户组仓库权限更新失败");
+				}
+				else
+				{
+					rt.setError("用户仓库权限更新失败");
+				}
 				writeJson(rt, response);			
 				return;
 			}
@@ -1718,7 +1732,7 @@ public class ReposController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("configUserAuth userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		System.out.println("configDocAuth userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1781,7 +1795,14 @@ public class ReposController extends BaseController{
 			qDocAuth.setHeritable(heritable);
 			if(reposService.addDocAuth(qDocAuth) == 0)
 			{
-				rt.setError("用户文件权限增加失败");
+				if(type == 2)
+				{
+					rt.setError("用户组文件权限增加失败");					
+				}
+				else
+				{
+					rt.setError("用户文件权限增加失败");					
+				}
 				writeJson(rt, response);			
 				return;
 			}
@@ -1796,7 +1817,14 @@ public class ReposController extends BaseController{
 			docAuth.setHeritable(heritable);
 			if(reposService.updateDocAuth(docAuth) == 0)
 			{
-				rt.setError("用户文件权限更新失败");
+				if(type == 2)
+				{
+					rt.setError("用户组文件权限更新失败");					
+				}
+				else
+				{
+					rt.setError("用户文件权限更新失败");
+				}
 				writeJson(rt, response);			
 				return;
 			}
