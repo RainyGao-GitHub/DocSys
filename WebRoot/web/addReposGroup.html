@@ -4,13 +4,12 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell username w15">用户名</i>
-							<i class="cell username w15">名字</i>
+							<i class="cell Groupname w15">组名称</i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
-               		<div class="panel-body eventset-list" id="reposAllUsers">
-			 			<!-- 用户列表区域-->
+               		<div class="panel-body eventset-list" id="reposAllGroups">
+			 			<!-- 列表区域-->
 					</div>
 			 </div>
 			</div>
@@ -18,25 +17,25 @@
 </div>
 
 <script type="text/javascript">
-	function addReposUserPageInit()
+	function addReposGroupPageInit()
 	{
-		console.log("addReposUserPageInit");
-		showReposAllUserList();		
+		console.log("addReposGroupPageInit");
+		showReposAllGroupList();		
 	}
 
         
     //页面初始化代码    
     $(function(){
-		addReposUserPageInit();
+		addReposGroupPageInit();
 	});
 
 
-function showReposAllUserList(){
-   	console.log("showReposAllUserList()");
+function showReposAllGroupList(){
+   	console.log("showReposAllGroupList()");
    	var vid = getQueryString("vid");
 
     $.ajax({
-            url : "/DocSystem/Repos/getReposAllUsers.do",
+            url : "/DocSystem/Repos/getReposAllGroups.do",
             type : "post",
             dataType : "json",
             data : {
@@ -44,7 +43,7 @@ function showReposAllUserList(){
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    showUserList(ret.data);
+                    showGroupList(ret.data);
                 }
                 else
                 {
@@ -58,31 +57,26 @@ function showReposAllUserList(){
 
 
 	//根据获取到的目录权限用户列表数据，绘制列表
-	function showUserList(data){
+	function showGroupList(data){
 		console.log(data);
-		var c = $("#reposAllUsers").children();
+		var c = $("#reposAllGroups").children();
 		$(c).remove();
 		if(data.length==0){
-			$("#reposAllUsers").append("<p>暂无数据</p>");
+			$("#reposAllGroups").append("<p>暂无数据</p>");
 		}
 		
 		for(var i=0;i<data.length;i++){
 			var d = data[i];
-			var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
+			var opBtn = "		<a href='javascript:void(0)' onclick='addReposGroup("+d.groupId+");' class='mybtn-primary'>添加</a>";
 			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.groupId+");' disabled='disabled'>删除</a>";
 			}
 												
 			var se = "<li value="+ i +">"
-				+"	<i class='cell username w15'>"
+				+"	<i class='cell Groupname w15'>"
 				+"		<span class='name'>"
-				+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
-				+"		</span>"
-				+"	</i>"
-				+"	<i class='cell realname w15'>"
-				+"		<span class='name'>"
-				+"			<a id='RealName"+i+"' href='javascript:void(0)'>"+d.realName+"</a>"
+				+"			<a id='GroupName"+i+"' href='javascript:void(0)'>"+d.groupName+"</a>"
 				+"		</span>"
 				+"	</i>"
 				+"	<i class='cell operation w10'>"
@@ -90,14 +84,14 @@ function showReposAllUserList(){
 				+"	</i>"
 				+"</li>";
 			
-			$("#reposAllUsers").append(se);
+			$("#reposAllGroups").append(se);
 		}
 	}
 }
 
-function addReposUser(userId)
+function addReposGroup(groupId)
 {
-   	console.log("addReposUser(" + userId+")");
+   	console.log("addReposGroup(" + groupId+")");
    	var vid = getQueryString("vid");
 
     $.ajax({
@@ -105,14 +99,14 @@ function addReposUser(userId)
             type : "post",
             dataType : "json",
             data : {
-            	userId: userId,
+            	groupId: groupId,
                 reposId : vid,
                 access: 1,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
                     showAuthList();		//这个 接口是更新reposManager页面的权限列表用户的
-                    showReposAllUserList();		//更新显示
+                    showReposAllGroupList();		//更新显示
                 }
                 else
                 {
@@ -126,7 +120,7 @@ function addReposUser(userId)
 }
 
 
-function deleteReposAuthConfirm(reposAuthId,userId)
+function deleteReposAuthConfirm(reposAuthId,groupId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteReposAuthConfirm',
@@ -137,7 +131,7 @@ function deleteReposAuthConfirm(reposAuthId,userId)
  	    },function () {
  	    	
  	    	//alert("点击了确定");
- 	    	deleteReposAuth(reposAuthId,userId);
+ 	    	deleteReposAuth(reposAuthId,groupId);
  	    	return true;   
  	    },function(){
  	    	//alert("点击了取消");
@@ -145,7 +139,7 @@ function deleteReposAuthConfirm(reposAuthId,userId)
  	    }); 
 }
 
-function deleteReposAuth(reposAuthId,userId)
+function deleteReposAuth(reposAuthId,groupId)
 {	
    	console.log("deleteReposAuth()");
    	
@@ -156,13 +150,13 @@ function deleteReposAuth(reposAuthId,userId)
             dataType : "json",
             data : {
                 reposAuthId: reposAuthId,
-                userId: userId,
+                groupId: groupId,
                 reposId: vid,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
                     showAuthList();
-                    showReposAllUserList();		//更新显示
+                    showReposAllGroupList();		//更新显示
                 }
                 else
                 {

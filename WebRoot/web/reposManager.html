@@ -1109,6 +1109,17 @@ function showAddReposUserPanel(){
 	}, null);
 }
 
+function showAddReposGroupPanel(){
+	console.log("showAddReposGroupPanel");
+	bootstrapQ.dialog({
+		title: '添加访问组',
+		url: 'addReposGroup.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+	}, null);
+}
+
 function showReposBasicSettingPanel(){
 	console.log("showReposBasicSettingPanel");
 	bootstrapQ.dialog({
