@@ -27,7 +27,9 @@ function showGroupAllUserList(groupId){
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("groupAllUsers:",ret.data);
-                	GroupMemberListDisplay(ret.data);
+                	var memberList = ret.data;
+                	var groupId = groupId;
+                	GroupMemberListDisplay(memberList,groupId);
                 }
                 else
                 {
@@ -40,9 +42,9 @@ function showGroupAllUserList(groupId){
     });
 }
 
-function GroupMemberListDisplay(list)
+function GroupMemberListDisplay(list,groupId)
 {
-	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list});
+	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list},{"groupId":groupId});
 }
 
 function addGroupMember(userId,groupId)
@@ -59,7 +61,7 @@ function addGroupMember(userId,groupId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    GroupMemberListDisplay();		//更新显示
+                	showGroupAllUserList(groupId);		//更新显示
                 }
                 else
                 {
@@ -73,7 +75,7 @@ function addGroupMember(userId,groupId)
 }
 
 
-function deleteGroupMemeberConfirm(groupId,userId)
+function deleteGroupMemeberConfirm(id,groupId,userId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteGroupMemeberConfirm',
@@ -84,7 +86,7 @@ function deleteGroupMemeberConfirm(groupId,userId)
  	    },function () {
  	    	
  	    	//alert("点击了确定");
- 	    	deleteGroupMemeber(groupId,userId);
+ 	    	deleteGroupMemeber(id,groupId,userId);
  	    	return true;   
  	    },function(){
  	    	//alert("点击了取消");
@@ -92,22 +94,22 @@ function deleteGroupMemeberConfirm(groupId,userId)
  	    }); 
 }
 
-function deleteGroupMember(groupId,userId)
+function deleteGroupMember(id,groupId,userId)
 {	
-   	console.log("deleteGroupMember()");
+   	console.log("deleteGroupMember() id:" + id + " groupId:" + groupId + " userId:" + userId);
    	
     $.ajax({
             url : "/DocSystem/Repos/deleteGroupMember.do",
             type : "post",
             dataType : "json",
             data : {
+            	id: id,
                 groupId: groupId,
                 userId: userId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    showGroupMemberList();
-                    showAllUserList();		//更新显示
+                	showGroupAllUserList(groupId);
                 }
                 else
                 {
