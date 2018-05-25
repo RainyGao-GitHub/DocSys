@@ -83,3 +83,7 @@
 17、docsystem20180322.sql
 	1.04版本使用
 	reposAuth/DocAuth add  type and priority
+	
+18、docsystem20180525.sql
+	1.05版本使用
+	DocAuth USER_ID can be null
