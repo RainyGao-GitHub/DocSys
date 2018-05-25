@@ -24,6 +24,8 @@ public interface ReposAuthMapper {
 	//获取所有用户列表（包含授权信息，但这个函数名定义确实有点奇怪）
 	List<ReposAuth> getReposAllUsers(Integer reposId);
 	
+	List<ReposAuth> getReposAllGroups(Integer reposId);
+	
 	//获取仓库的所有授权信息
 	List<ReposAuth> getReposAuthList(Integer reposId);
 	

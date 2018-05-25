@@ -160,6 +160,11 @@ public class ReposServiceImpl implements ReposService {
 	public List<ReposAuth> getReposAllUsers(Integer reposId) {
 		return reposAuthDao.getReposAllUsers(reposId);		
 	}
+	
+	//仓库的所有用户组（包括有授权和没授权的）
+	public List<ReposAuth> getReposAllGroups(Integer reposId) {
+		return reposAuthDao.getReposAllGroups(reposId);	
+	}
 
 	public int deleteReposAuth(Integer id) {
 		return reposAuthDao.deleteByPrimaryKey(id);

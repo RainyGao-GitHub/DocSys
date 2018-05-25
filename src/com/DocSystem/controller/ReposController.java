@@ -1518,6 +1518,29 @@ public class ReposController extends BaseController{
 		UserList.add(anyUserReposAuth);	//将任意用户插入到ReposUserList			
 		return UserList;
 	}	
+	
+	/********** 获取系统所有用户组 ：前台用于给仓库添加访问用户组，返回的结果实际上是reposAuth列表***************/
+	@RequestMapping("/getReposAllGroups.do")
+	public void getReposAllGroups(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getReposAllGroups reposId: " + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//获取All GroupList
+		List <ReposAuth> List = reposService.getReposAllGroups(reposId);	
+		
+		rt.setData(List);
+		writeJson(rt, response);
+		
+	}
+	
 	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
 	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
