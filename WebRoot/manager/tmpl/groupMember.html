@@ -34,7 +34,7 @@
                       {{/if}}
                     
                       {{if undefined == value.id}} 
-                      <button onclick="addGroupMember({{value.name}})" data-id="{{value.name}}" class="btn btn-lg btn-success examine_ban">添加 </button>
+                      <button onclick="addGroupMember({{groupId}},{{value.userId}})" data-id="{{value.userId}}" class="btn btn-lg btn-success examine_ban">添加 </button>
                       {{/if}}
                     </td>
                   </tr>
