@@ -133,7 +133,7 @@
         and TYPE = #{type,jdbcType=INTEGER}
       </if>
       <if test="priority != null" >
-        and PRIORITY = #{priority,jdbcType=INTEGER},
+        and PRIORITY = #{priority,jdbcType=INTEGER}
       </if>
       <if test="info != null">
         and INFO = #{info,jdbcType=VARCHAR}
