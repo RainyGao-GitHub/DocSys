@@ -55,7 +55,7 @@ function addGroupMember(userId)
    	console.log("addUserToGroup userId:" + userId+ " groupId" + groupId);
    
     $.ajax({
-            url : "/DocSystem/Repos/addGroupMember.do",
+            url : "/DocSystem/Manage/addGroupMember.do",
             type : "post",
             dataType : "json",
             data : {
@@ -103,7 +103,7 @@ function deleteGroupMember(id,groupId,userId)
    	console.log("deleteGroupMember() id:" + id + " groupId:" + groupId + " userId:" + userId);
    	
     $.ajax({
-            url : "/DocSystem/Repos/deleteGroupMember.do",
+            url : "/DocSystem/Manage/delGroupMember.do",
             type : "post",
             dataType : "json",
             data : {
