@@ -370,6 +370,7 @@ public class ManageController extends BaseController{
 		
 		if(isGroupMemberExist(groupMember) == true)
 		{
+			System.out.println("addGroupMember() 用户 " + userId + " 已是该组成员！");
 			rt.setError("用户 " + userId + " 已是该组成员！");
 			writeJson(rt, response);
 			return;
@@ -377,7 +378,10 @@ public class ManageController extends BaseController{
 	
 		if(userService.addGroupMember(groupMember) == 0)
 		{
+			System.out.println("addGroupMember() Failed to add groupMember");
 			rt.setError("Failed to add new GroupMember in DB");
+			writeJson(rt, response);
+			return;
 		}
 		
 		writeJson(rt, response);
