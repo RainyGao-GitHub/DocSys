@@ -28,7 +28,6 @@ function showGroupAllUserList(groupId){
                 if( "ok" == ret.status ){
                 	console.log("groupAllUsers:",ret.data);
                 	var memberList = ret.data;
-                	var groupId = groupId;
                 	GroupMemberListDisplay(memberList,groupId);
                 }
                 else
@@ -44,12 +43,13 @@ function showGroupAllUserList(groupId){
 
 function GroupMemberListDisplay(list,groupId)
 {
-	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list},{"groupId":groupId});
+	console.log("GroupMemberListDisplay", groupId);
+	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list,"groupId":groupId});
 }
 
 function addGroupMember(userId,groupId)
 {
-   	console.log("addUserToGroup " + userId+ " " + groupId);
+   	console.log("addUserToGroup userId:" + userId+ " groupId" + groupId);
    
     $.ajax({
             url : "/DocSystem/Repos/addGroupMember.do",

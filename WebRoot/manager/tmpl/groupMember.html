@@ -16,7 +16,7 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>用户名</th>
+                  <th>组ID</th>
                   <th>姓名</th>
                   <th>操作</th>
                 </tr>
@@ -26,7 +26,7 @@
                 {{each list as value i}}
                   <tr>
                     <td>{{value.id}}</td>
-                    <td>{{value.groupName}}</td>
+                    <td>{{groupId}}</td>
                     <td>{{value.userName}}</td>
                     <td class="edit">
                       {{if undefined != value.id}} 
@@ -34,7 +34,7 @@
                       {{/if}}
                     
                       {{if undefined == value.id}} 
-                      <button onclick="addGroupMember({{groupId}},{{value.userId}})" data-id="{{value.userId}}" class="btn btn-lg btn-success examine_ban">添加 </button>
+                      <button onclick="addGroupMember({{value.userId}},{{groupId}})" class="btn btn-lg btn-success examine_ban">添加 </button>
                       {{/if}}
                     </td>
                   </tr>
