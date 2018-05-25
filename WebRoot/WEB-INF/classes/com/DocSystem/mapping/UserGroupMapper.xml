@@ -120,4 +120,26 @@
     <include refid="Base_Column_List" />
     from user_group
   </select>
+  
+    <select id="selectSelective" parameterType="com.DocSystem.entity.UserGroup" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user_group
+    where 1 = 1
+    <if test="name != null">
+        and NAME = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="type != null">
+        and TYPE = #{type,jdbcType=INTEGER}
+      </if>
+      <if test="priority != null" >
+        and PRIORITY = #{priority,jdbcType=INTEGER},
+      </if>
+      <if test="info != null">
+        and INFO = #{info,jdbcType=VARCHAR}
+      </if>
+      <if test="createTime != null">
+        and CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+      </if>
+  </select>
 </mapper>
