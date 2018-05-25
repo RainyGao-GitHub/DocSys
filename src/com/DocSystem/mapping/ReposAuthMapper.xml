@@ -248,7 +248,7 @@
   </select>
   <select id="getReposAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
 	select 
-		user.ID as userId,user.NAME as userName,
+		user.ID as userId,user.NAME as userName,user.REAL_NAME as realName,
 		repos_auth.ID as id, 
 		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
       from user
