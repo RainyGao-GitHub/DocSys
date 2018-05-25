@@ -78,19 +78,17 @@ function addGroupMember(userId)
 }
 
 
-function deleteGroupMemeberConfirm(id,userId)
+function delGroupMemberConfirm(id,userId,groupId)
 {
-	var groupId = gGroupId;
 	qiao.bs.confirm({
- 	    	id: 'deleteGroupMemeberConfirm',
+ 	    	id: 'delGroupMemeberConfirm',
  	        msg: "是否删除该成员?",
  	        close: false,		
  	        okbtn: "删除",
  	        qubtn: "取消",
  	    },function () {
- 	    	
  	    	//alert("点击了确定");
- 	    	deleteGroupMemeber(id,groupId,userId);
+ 	    	delGroupMemeber(id,groupId,userId);
  	    	return true;   
  	    },function(){
  	    	//alert("点击了取消");
@@ -98,7 +96,7 @@ function deleteGroupMemeberConfirm(id,userId)
  	    }); 
 }
 
-function deleteGroupMember(id,groupId,userId)
+function delGroupMemeber(id,groupId,userId)
 {	
    	console.log("deleteGroupMember() id:" + id + " groupId:" + groupId + " userId:" + userId);
    	
@@ -113,7 +111,7 @@ function deleteGroupMember(id,groupId,userId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	showGroupAllUserList(groupId);
+                	showGroupAllUserList();
                 }
                 else
                 {

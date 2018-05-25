@@ -30,7 +30,7 @@
                     <td>{{value.userName}}</td>
                     <td class="edit">
                       {{if undefined != value.id}} 
-                      <button onclick="delGroupMemberConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+                      <button onclick="delGroupMemberConfirm({{value.id}},{{value.userId}},{{value.groupId}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
                       {{/if}}
                     
                       {{if undefined == value.id}} 
