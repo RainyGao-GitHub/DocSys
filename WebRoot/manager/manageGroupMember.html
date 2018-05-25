@@ -4,7 +4,7 @@
 	function manageGroupMemberPageInit()
 	{
 		console.log("manageGroupMemberPageInit");
-		showGroupAllUserList(0);		
+		showGroupAllUserList();		
 	}
 
         
@@ -29,7 +29,7 @@ function showGroupAllUserList(){
                 if( "ok" == ret.status ){
                 	console.log("groupAllUsers:",ret.data);
                 	var memberList = ret.data;
-                	GroupMemberListDisplay(memberList,groupId);
+                	GroupMemberListDisplay(memberList);
                 }
                 else
                 {
@@ -52,7 +52,7 @@ function GroupMemberListDisplay(list)
 function addGroupMember(userId)
 {
 	var groupId = gGroupId;
-   	console.log("addUserToGroup userId:" + userId+ " groupId" + groupId);
+   	console.log("addGroupMember userId:" + userId+ " groupId:" + groupId);
    
     $.ajax({
             url : "/DocSystem/Manage/addGroupMember.do",
@@ -64,7 +64,7 @@ function addGroupMember(userId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	showGroupAllUserList(groupId);		//更新显示
+                	showGroupAllUserList();		//更新显示
                 }
                 else
                 {
