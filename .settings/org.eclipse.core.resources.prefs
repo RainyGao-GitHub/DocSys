@@ -13,6 +13,7 @@ encoding//WebRoot/manager/tmpl/pagehead.html=UTF-8
 encoding//WebRoot/manager/tmpl/sidebar.html=UTF-8
 encoding//WebRoot/manager/tmpl/team.html=UTF-8
 encoding//WebRoot/manager/tmpl/user.html=UTF-8
+encoding//WebRoot/web/addReposGroup.html=UTF-8
 encoding//WebRoot/web/addReposUser.html=UTF-8
 encoding//WebRoot/web/getPassword.html=UTF-8
 encoding//WebRoot/web/login.html=UTF-8
