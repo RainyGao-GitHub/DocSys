@@ -341,5 +341,56 @@ public class ManageController extends BaseController{
 		rt.setData(UserList);
 		writeJson(rt, response);
 	}
+	
+	@RequestMapping(value="addGroupMember")
+	public void addGroupMember(Integer groupId,Integer userId, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("addGroupMember groupId:" + groupId + " userId:" + userId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		//检查GroupId是否为空
+		if(groupId ==null||"".equals(groupId))
+		{
+			rt.setError("组ID不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//检查用户ID是否为空
+		if(userId ==null||"".equals(userId))
+		{
+			rt.setError("用户ID不能为空！");
+			writeJson(rt, response);
+			return;
+		}
+		GroupMember groupMember = new GroupMember();
+		groupMember.setGroupId(groupId);
+		groupMember.setUserId(userId);
+		
+		if(isGroupMemberExist(groupMember) == true)
+		{
+			rt.setError("用户 " + userId + " 已是该组成员！");
+			writeJson(rt, response);
+			return;
+		}
+	
+		if(userService.addGroupMember(groupMember) == 0)
+		{
+			rt.setError("Failed to add new GroupMember in DB");
+		}
+		
+		writeJson(rt, response);
+		return;
+	}
+
+	private boolean isGroupMemberExist(GroupMember groupMember) {
+		List<UserGroup> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
+		if(list == null || list.size() == 0)
+		{
+			return false;
+		}
+		return true;
+	}
 
 }

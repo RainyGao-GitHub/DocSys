@@ -78,4 +78,20 @@
 	LEFT JOIN user_group ON user_group.ID =  #{groupId,jdbcType=INTEGER}
   </select>
   
+  <select id="selectSelective" parameterType="com.DocSystem.entity.GroupMember" resultMap="BaseResultMap">
+    select 
+   	<include refid="Base_Column_List" />
+    from group_member
+    where 1 = 1
+       <if test="id != null">
+        and ID = #{id,jdbcType=INTEGER},
+      </if>
+      <if test="groupId != null">
+        and GROUP_ID = #{groupId,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        and USER_ID = #{userId,jdbcType=INTEGER}
+      </if>
+      
+  </select>
 </mapper>
