@@ -123,6 +123,7 @@ public class ReposAuth {
     
     //ReposAuth 附加信息: 需要通过joint doc and user or group Table to get these info
     private String  userName="";	//from user Table
+    private String  realName="";	//from user Table
     private String  groupName="";	//from group Table
     
     private String docName="";		//from doc Table
@@ -134,6 +135,14 @@ public class ReposAuth {
 
     public void setUserName(String userName) {
         this.userName = userName == null ? null : userName.trim();
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName == null ? null : realName.trim();
     }
     
     public String getGroupName() {
