@@ -2,7 +2,7 @@ Docs: 各种文档和资料以及外部工具（maven和mybatis_generator）
 src: DocSys的后台Java代码（包括业务和管理后台）
 WebRoot: DocSys的前端代码
 WebRoot/web: DocSys前端业务界面代码 
-WebRoot/web/static: 外部引用的js/css/资源文件（图标、背景图）等静态文件
+WebRoot/web/static: 外部引用的js/css/资源文件（图标、背景图）等静态文件,注意请按照引入的包作为目录名字存放
 WebRoot/web/images: 该目录用于存放用户头像信息，如果是静态的文件请放入static/images目录 
 WebRoot/web/js:	DocSys自定义的js文件 
 WebRoot/web/css: DocSys自定义的css文件 
