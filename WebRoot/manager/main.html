@@ -677,124 +677,25 @@
 	    });
 	}
 
-
-	function toPage(num){
-	    var $this = $("#examine");
-	    var event = $this.attr("data-eb-xevent");
-	    var value = $this.val();
-	    bus.trigger(event,value,num);
-	
-	}
-
-	function examineChange(_this){
-	    var $this = $(_this);
-	    var event = $this.attr("data-eb-xevent");
-	    var value = $this.val();
-	    bus.trigger(event,value);
-	}
-
-	var msgServer = "//www.gofreeteam.com";
-	var okTmpl = "1498000";
-	var errTmpl = "1498002";
-	function sendEmail(email,content){
-	    try{
-	        if(email){
-	            $.get( msgServer +  "/email/sendEmail.do?token=$&toEmail=" + email + "&content=" + encodeURI(encodeURI(content)) + "&r=" + Math.random())
-	        }
-	    }catch (e){
-	        console.log(e);
-	    }
-	
-	}
-
-
-	function sendSMS(tel,tmpl,type,content){
-	    try{
-	        if(tel){
-	            var url = msgServer +  "/SMS/sendSms.do?token=$&code=&phone=" + tel
-	                    +  "&tplId=" + tmpl + "&type=" + encodeURI(encodeURI(type)) + "&r=" + Math.random();
-	            if( content ){
-	                url += "&content=" + encodeURI(encodeURI(content));
-	            }
-	            $.get( url );
-	        }
-	    }
-	    catch (e){
-	        console.log(e);
-	    }
-	}
-
-	function conExamine(){
-	    $('#myModal').modal('hide')
-	    var msg = ' ';
-	    if ( $('#btn1').is(':checked') ){
-	        msg += $('#btn1').val();
-	    }
-	    if ( $('#btn2').is(':checked') ){
-	        msg += $('#btn2').val();
-	    }
-	    if ( $('#btn3').is(':checked') ){
-	        msg += $('#btn3').val();
-	    }
-	    args[7] = msg;
-	    //alert(msg);
-	    $('#btn1').attr("checked",false);
-	    $('#btn2').attr("checked",false);
-	    $('#btn3').attr("checked",false);
-	    examine.apply(this,args);
-	}
-
-	function examine(event,id,flag,nextEvent,tel,email,type,content){
-	
-	    if( flag != 2){
-	        sendEmail(email,"您的" + type + "已通过审核");
-	        sendSMS(tel,okTmpl,type,content);
-	    }else {
-	        if( ! content ){
-	            // 保存参数
-	            args = Array.prototype.slice.call(arguments);
-	            return;
-	        }else{
-	            sendEmail(email,"您的" + type + "未通过审核,原因:" + content);
-	            sendSMS(tel,errTmpl,type,content);
-	        }
-	    }
-	
-	    var dotIndex = event.indexOf(".");
-	    var eventName = event;
-	    if( dotIndex > 0 ){
-	        eventName = event.substring(dotIndex+1);
-	    }
-	    $Current.ajax(event,{
-	        id:id,
-	        flag:flag,
-	        event: eventName
-	    },function(ret){
-	        if( event.startsWith("Service") ){
-	            bus.trigger("Service.refresh",$("#examine").val(),curPage);
-	        }else if( event.startsWith("Project") ){
-	            bus.trigger("Project.refresh",$("#examine").val(),curPage);
-	        }else{
-	            bus.trigger(nextEvent,$("#examine").val(),curPage);
-	
-	        }
-	    });
-	}
-    
 	function exit(){
-	    $.post("./admin/logout", function () {
-	        localStorage.session = '';
-	        localStorage.curUser = '';
-	        location.href = "./?r=" + Math.random();
-	    });
-	}
-
-
-	function toedit(id) {
-	    $Current.ajax("/admin/getToken",{},function(ret){
-	        console.log(ret);
-	        window.open($Current.editUrl + id + "&token="+ ret.data.token);
-	    });
+		console.log("logout");
+        $.ajax({
+            url : "/DocSystem/logout.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("已退出登录");
+                	window.location.href = "login.html";
+                }else {
+                    alert("错误："+ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert("服务器异常:退出登录失败");
+            }
+        });
 	}
 
 </script>
