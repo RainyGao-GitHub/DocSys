@@ -68,7 +68,6 @@
   <script src="./static/js/jquery.toastmessage-min.js"></script>
   <script src="./static/js/filter.js"></script> <!-- Filter for support page -->
   <script src="./static/js/custom.js"></script> <!-- Custom codes -->
-  <script src="./static/js/md5.js"></script>
   <script src="./static/js/config.js"></script>
   <script src="./static/js/tmpl.js"></script>
   
@@ -171,71 +170,6 @@
   <!-- Matter ends -->
 
 </div>
-
-
-
-<!-- 模态框（Modal） -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
-     aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" style="zoom: 1.5;">
-            <div class="modal-header">
-                <button type="button" class="close"
-                        data-dismiss="modal" aria-hidden="true">
-                    &times;
-                </button>
-                <h4 class="modal-title" id="myModalLabel">
-                    拒绝原因
-                </h4>
-            </div>
-            <div class="modal-body">
-                <p><input name="reason" type="checkbox"  value="您提交的内容不完整，请补全。"  id="btn1"/> 您提交的内容不完整，请补全。</p>
-                <p><input name="reason" type="checkbox"  value="您提交的内容与实际不符，请修改。" id="btn2"/> 您提交的内容与实际不符，请修改。</p>
-                <p><input name="reason" type="checkbox" value="您提交的内容非法，请修改。" id="btn3"/> 您提交的内容非法，请修改。</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default"
-                        data-dismiss="modal">关闭
-                </button>
-                <button type="button" class="btn btn-primary" onclick="conExamine()">
-                    提交
-                </button>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal -->
-</div>
-
-
-<!-- 模态框（Modal） -->
-<div class="modal fade" id="addUser" tabindex="-1" role="dialog"
-     aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" style="zoom: 1.5;">
-            <div class="modal-header">
-                <button type="button" class="close"
-                        data-dismiss="modal" aria-hidden="true">
-                    &times;
-                </button>
-                <h4 class="modal-title">
-                    手动添加用户
-                </h4>
-            </div>
-            <div class="modal-body">
-                <p>昵称 ： <input style="width: 80%" id="nickname"/></p>
-                <p>全称 ： <input style="width: 80%" id="realname"/></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default"
-                        data-dismiss="modal">关闭
-                </button>
-                <button type="button" class="btn btn-primary" onclick="addUser()">
-                    提交
-                </button>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal -->
-</div>
-
 
 <!-- Mainbar ends -->
 <div class="clearfix"></div>
