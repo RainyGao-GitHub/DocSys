@@ -562,6 +562,7 @@
 
 	function GroupListDisplay(list)
 	{
+		console.log("GroupListDisplay", list);
 		$Func.render($("#container"),"group",{"list":list});
 	}
 		
@@ -640,14 +641,29 @@
 	}
 	
 	//显示组成员管理页面
-	function showManageGroupMemberPanel(groupId){
-		console.log("showManageGroupMemberPanel");
+	function showManageGroupMemberPanel(e,groupId){
+		console.log("showManageGroupMemberPanel" + groupId);
+		
+		//get current click the Group Info
+		var Obj = e.target;
+		console.log(Obj);
+		var trObj =  $(e.target).parent().parent();
+		var groupId = trObj.children("td:eq(0)").text();
+		var groupName = trObj.children("td:eq(1)").text();
+		console.log(groupId,groupName);
+		
 		qiao.bs.dialog({
-			title: '成员管理',
+			title: '成员管理 -'+ groupName,
 			url: 'manageGroupMember.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
+			callback: function(){
+			    console.log("page loaded callback");
+			    //Page Value Init
+			    $("#groupId").val(groupId);
+				$("#groupName").val(groupName);
+			}
 		}, null);
 	}
 	
