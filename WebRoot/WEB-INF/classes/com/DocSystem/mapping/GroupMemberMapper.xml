@@ -74,7 +74,7 @@
 		group_member.ID as id, 
 		user_group.ID as groupId, user_group.NAME as groupName
       from user
-    LEFT JOIN group_member ON user.ID = group_member.USER_ID and group_member.ID =  #{groupId,jdbcType=INTEGER}
+    LEFT JOIN group_member ON user.ID = group_member.USER_ID and group_member.GROUP_ID =  #{groupId,jdbcType=INTEGER}
 	LEFT JOIN user_group ON user_group.ID =  #{groupId,jdbcType=INTEGER}
   </select>
   
