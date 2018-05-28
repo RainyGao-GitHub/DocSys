@@ -425,7 +425,11 @@ public class BaseController{
 	}
 	
 	protected String getUserName(Integer userId) {
-		if(userId == 0)
+		if(userId == null)
+		{
+			return "";
+		}	
+		else if(userId == 0)
 		{
 			return "任意用户";
 		}
