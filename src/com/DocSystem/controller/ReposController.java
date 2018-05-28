@@ -1625,6 +1625,7 @@ public class ReposController extends BaseController{
 					Integer tmpDocId = tmpDocAuth.getDocId();
 					if(!tmpDocId.equals(0))
 					{
+						/* userName groupName and docName docPath should be query directly in get allDocAuth sql 
 						String userName = getUserName(tmpDocAuth.getUserId());
 						Doc doc = getDocInfo(tmpDocId);
 						tmpDocAuth.setUserName(userName);
@@ -1633,6 +1634,7 @@ public class ReposController extends BaseController{
 							tmpDocAuth.setDocName(doc.getName());
 							tmpDocAuth.setDocPath(doc.getPath());
 						}
+						*/
 						docAuthList.add(tmpDocAuth);						
 					}
 				}
