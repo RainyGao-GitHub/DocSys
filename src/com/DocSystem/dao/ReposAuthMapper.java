@@ -30,4 +30,6 @@ public interface ReposAuthMapper {
 	List<ReposAuth> getReposAuthList(Integer reposId);
 	
 	List<ReposAuth> getReposAuthForUser(ReposAuth reposAuth);
+
+	int deleteSelective(ReposAuth reposAuth);
 }

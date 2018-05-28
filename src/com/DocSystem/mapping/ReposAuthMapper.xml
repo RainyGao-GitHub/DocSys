@@ -210,7 +210,43 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
   </select>
-    <select id="getReposAuth" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
+   
+  <delete id="deleteSelective" parameterType="com.DocSystem.entity.ReposAuth">
+    delete from repos_auth
+      where 1 = 1
+    <if test="id != null">
+      and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="userId != null">
+      and USER_ID = #{userId,jdbcType=INTEGER}
+    </if>
+    <if test="groupId != null">
+      and GROUP_ID = #{groupId,jdbcType=INTEGER}
+    </if>
+    <if test="reposId != null">
+      and REPOS_ID = #{reposId,jdbcType=INTEGER}
+    </if>
+	<if test="isAdmin != null">
+      IS_ADMIN = #{isAdmin,jdbcType=INTEGER}
+    </if>
+    <if test="access != null">
+      ACCESS = #{access,jdbcType=INTEGER}
+    </if>
+    <if test="editEn != null">
+      and EDIT_EN = #{editEn,jdbcType=INTEGER}
+    </if>
+    <if test="addEn != null">
+      and ADD_EN = #{addEn,jdbcType=INTEGER}
+    </if>
+    <if test="deleteEn != null">
+      and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    </if>
+    <if test="heritable != null">
+      and HERITABLE = #{heritable,jdbcType=INTEGER}
+    </if>
+  </delete>
+  
+  <select id="getReposAuth" parameterType="com.DocSystem.entity.ReposAuth" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from repos_auth
