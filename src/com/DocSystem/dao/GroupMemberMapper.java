@@ -22,4 +22,6 @@ public interface GroupMemberMapper {
 	List<GroupMember> getGroupAllUsers(Integer groupId);
 
 	List<UserGroup> selectSelective(GroupMember groupMember);
+
+	int deleteSelective(GroupMember groupMember);
 }

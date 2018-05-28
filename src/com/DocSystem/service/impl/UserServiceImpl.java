@@ -93,4 +93,8 @@ public class UserServiceImpl implements UserService {
 		return groupMemberDao.deleteByPrimaryKey(id);
 	}
 
+	public int deleteGroupMemberSelective(GroupMember groupMember) {
+		return groupMemberDao.deleteSelective(groupMember);	
+	}
+
 }  

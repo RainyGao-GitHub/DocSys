@@ -182,6 +182,11 @@ public class ReposServiceImpl implements ReposService {
 		return docDao.getDocInfo(docId);	//只获取文件的信息但不包括内容
 	}
 
+
+	public void deleteReposAuthSelective(ReposAuth reposAuth) {
+		reposAuthDao.deleteSelective(reposAuth);
+	}
+	
 	public void deleteDocAuthSelective(DocAuth docAuth) {
 		docAuthDao.deleteSelective(docAuth);
 	}
@@ -210,4 +215,5 @@ public class ReposServiceImpl implements ReposService {
 	public UserGroup getGroupInfo(Integer groupId) {
 		return userGroupDao.selectByPrimaryKey(groupId);
 	}
+
 }  
