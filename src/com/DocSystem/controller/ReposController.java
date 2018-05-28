@@ -570,7 +570,22 @@ public class ReposController extends BaseController{
 		if(reposService.deleteRepos(vid) == 0)
 		{
 			rt.setError("仓库删除失败！");
+			writeJson(rt, response);	
+			return;
 		}
+		else
+		{
+			//Delete related doc auth Setting
+			DocAuth docAuth = new DocAuth();
+			docAuth.setReposId(vid);			
+			reposService.deleteDocAuthSelective(docAuth);
+
+			//Delete related repos auth Setting
+			ReposAuth reposAuth = new ReposAuth();
+			reposAuth.setReposId(vid);			
+			reposService.deleteReposAuthSelective(reposAuth);
+		}
+		
 		
 		writeJson(rt, response);	
 	}
