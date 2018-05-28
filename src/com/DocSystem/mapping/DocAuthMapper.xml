@@ -291,7 +291,7 @@
     	user_group.NAME as groupName
     from doc_auth 
     LEFT JOIN user on doc_auth.USER_ID = user.ID
-    LEFT JOIN user_group on doc_auth.ID = user_group.ID
+    LEFT JOIN user_group on doc_auth.GROUP_ID = user_group.ID
  	where REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>    
   <select id="getDocAuthForUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
