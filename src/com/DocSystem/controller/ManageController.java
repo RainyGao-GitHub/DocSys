@@ -42,6 +42,9 @@ import com.alibaba.fastjson.JSON;
 public class ManageController extends BaseController{
 	@Autowired
 	private UserServiceImpl userService;
+
+	@Autowired
+	private ReposServiceImpl reposService;
 	
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
@@ -186,6 +189,23 @@ public class ManageController extends BaseController{
 		if(userService.delUser(userId) == 0)
 		{
 			rt.setError("Failed to delete User in DB");
+			writeJson(rt, response);
+			return;		
+		}
+		else
+		{
+			//Delete all related ReposAuth \ DocAuth \GroupMember Infos
+			DocAuth docAuth = new DocAuth();
+			docAuth.setUserId(userId);
+			reposService.deleteDocAuthSelective(docAuth);
+
+			ReposAuth reposAuth = new ReposAuth();
+			reposAuth.setUserId(userId);
+			reposService.deleteReposAuthSelective(reposAuth);
+			
+			GroupMember groupMember = new GroupMember();
+			groupMember.setUserId(userId);
+			userService.deleteGroupMemberSelective(groupMember);
 		}
 		
 		writeJson(rt, response);
@@ -284,6 +304,23 @@ public class ManageController extends BaseController{
 		if(userService.delGroup(id) == 0)
 		{
 			rt.setError("Failed to delete Group from DB");
+			writeJson(rt, response);
+			return;		
+		}
+		else
+		{
+			//Delete all related ReposAuth \ DocAuth \GroupMember Infos
+			DocAuth docAuth = new DocAuth();
+			docAuth.setGroupId(id);
+			reposService.deleteDocAuthSelective(docAuth);
+	
+			ReposAuth reposAuth = new ReposAuth();
+			reposAuth.setGroupId(id);
+			reposService.deleteReposAuthSelective(reposAuth);
+			
+			GroupMember groupMember = new GroupMember();
+			groupMember.setGroupId(id);
+			userService.deleteGroupMemberSelective(groupMember);
 		}
 		
 		writeJson(rt, response);
