@@ -297,7 +297,7 @@
   <select id="getDocAuthForUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
         doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
-	    user.NAME as userName,user.REAL_NAME as realName,
+	    user.NAME as userName,user.REAL_NAME as realName
 	from doc_auth
     LEFT JOIN user on doc_auth.USER_ID = user.ID
     where REPOS_ID = #{reposId,jdbcType=INTEGER}
