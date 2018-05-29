@@ -286,22 +286,30 @@
   </delete>
   <select id="getAllDocAuthList" parameterType="java.util.Map" resultMap="BaseResultMap">
     select 
-    <include refid="Base_Column_List" />
+        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
+    	user.NAME as userName,user.REAL_NAME as realName,
+    	user_group.NAME as groupName
     from doc_auth 
+    LEFT JOIN user on doc_auth.USER_ID = user.ID
+    LEFT JOIN user_group on doc_auth.GROUP_ID = user_group.ID
  	where REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>    
   <select id="getDocAuthForUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
-    <include refid="Base_Column_List" />
-    from doc_auth
+        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
+	    user.NAME as userName,user.REAL_NAME as realName
+	from doc_auth
+    LEFT JOIN user on doc_auth.USER_ID = user.ID
     where REPOS_ID = #{reposId,jdbcType=INTEGER}
 		and (USER_ID = #{userId,jdbcType=INTEGER} or USER_ID = 0 or GROUP_ID IN (select GROUP_ID from group_member where USER_ID = #{userId,jdbcType=INTEGER}))
   </select>
   <select id="getDocAuthForGroup" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
-    <include refid="Base_Column_List" />
-    from doc_auth
-    where REPOS_ID = #{reposId,jdbcType=INTEGER}
+        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE,
+	    user_group.NAME as groupName
+	from doc_auth
+    LEFT JOIN user_group on doc_auth.GROUP_ID = user_group.ID
+ 	where REPOS_ID = #{reposId,jdbcType=INTEGER}
 		and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
   </select>
   <select id="getDocAuthForAnyUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">

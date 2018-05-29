@@ -92,6 +92,19 @@
       <if test="userId != null">
         and USER_ID = #{userId,jdbcType=INTEGER}
       </if>
-      
   </select>
+  
+  <delete id="deleteSelective" parameterType="com.DocSystem.entity.GroupMember">
+    delete from doc_auth
+      where 1 = 1
+      <if test="id != null">
+      	  and ID = #{id,jdbcType=INTEGER}
+      </if>
+      <if test="groupId != null">
+      	  and GROUP_ID = #{groupId,jdbcType=INTEGER}
+      </if>
+      <if test="userId != null">
+        	and USER_ID = #{userId,jdbcType=INTEGER}
+      </if>
+  </delete>
 </mapper>
