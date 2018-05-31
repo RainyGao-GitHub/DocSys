@@ -3648,12 +3648,12 @@ function CompareObj(objA, objB, flag) {
 	            onDrop : zTreeOnDrop,
 	            onChange: zTreeOnChange,
 	            onClick: zTreeOnClick,
-	            beforeRemove: zTreeBeforeRemove,
-	            onRemove: zTreeOnRemove,
+	            //beforeRemove: zTreeBeforeRemove,	//remove操作将改为主动触发
+	            //onRemove: zTreeOnRemove,
 	            beforeRename: zTreeBeforeRename,
 	            onRename: zTreeOnRename,
 	            beforeRightClick: zTreeBeforeRightClick
-	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统邮件事件
+	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
 	};
 
@@ -4446,12 +4446,24 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '删除', action: function(e){
 						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						if(curRightClickedTreeNode !== null)
+						var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						var selectedNodes = treeObj.getSelectedNodes();
+						if(selectedNodes == null)
 						{
-							treeObj.removeNode(curRightClickedTreeNode,true);
-							curRightClickedTreeNode = null;
-	        			}
+							bootStrapQ.alert("清选择需要删除的文件或目录");
+							return;
+						}
+						else
+						{
+							DocDelete.deleteDocs(selectedNodes);
+						}
+						//以下是用于删除右键选中的文件节点
+						//var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						//if(curRightClickedTreeNode !== null)
+						//{
+						//	treeObj.removeNode(curRightClickedTreeNode,true);
+						//	curRightClickedTreeNode = null;
+	        			//}
 					}
 			},
 
