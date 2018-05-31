@@ -973,7 +973,7 @@ public class DocController extends BaseController{
 
 		//删除实体文件
 		String name = doc.getName();
-		if(deleteRealDoc(reposRPath, parentPath, name,doc.getType()) == false)
+		if(deleteRealDoc(reposRPath, parentPath, name,doc.getType(),rt) == false)
 		{
 			String MsgInfo = "deleteRealDoc Failed";
 			rt.setError(parentPath + name + "删除失败！");
@@ -986,12 +986,12 @@ public class DocController extends BaseController{
 		}
 			
 		//需要将文件Commit到SVN上去
-		if(svnRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser) == false)
+		if(svnRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
 		{
 			System.out.println("svnRealDocDelete Failed");
 			String MsgInfo = "svnRealDocDelete Failed";
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(svnRevertRealDoc(repos,parentPath,name,doc.getType()) == false)
+			if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
 			{						
 				MsgInfo += " and revertFile Failed";
 			}
@@ -1007,14 +1007,14 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getDocVPath(parentPath,doc.getName());
 		String localDocVPath = reposVPath + docVName;
-		if(deleteVirtualDoc(reposVPath,docVName) == false)
+		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
 		{
 			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
 			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
 		}
 		else
 		{
-			if(svnVirtualDocDelete(repos,docVName,commitMsg,commitUser) == false)
+			if(svnVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
 			{
 				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
 				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
@@ -1063,7 +1063,7 @@ public class DocController extends BaseController{
 		if(isRealFS(repos.getType())) //0：虚拟文件系统   1： 普通文件系统	
 		{
 			//保存文件信息
-			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile) == false)
+			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile,rt) == false)
 			{
 				if(unlockDoc(docId,login_user) == false)
 				{
@@ -1079,12 +1079,12 @@ public class DocController extends BaseController{
 			}
 			
 			//需要将文件Commit到SVN上去
-			if(svnRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser) == false)
+			if(svnRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
 			{
 				System.out.println("updateDoc() svnRealDocCommit Failed:" + parentPath + name);
 				String MsgInfo = "svnRealDocCommit Failed";
 				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-				if(svnRevertRealDoc(repos,parentPath,name,doc.getType()) == false)
+				if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
 				{						
 					MsgInfo += " and revertFile Failed";
 				}
@@ -1141,7 +1141,7 @@ public class DocController extends BaseController{
 		String oldname = doc.getName();
 		
 		//修改实文件名字	
-		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname,doc.getType()) == false)
+		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname,doc.getType(),rt) == false)
 		{
 			if(unlockDoc(docId,login_user) == false)
 			{
@@ -1157,13 +1157,13 @@ public class DocController extends BaseController{
 		else
 		{
 			//commit to history db
-			if(svnRealDocMove(repos,parentPath,oldname,parentPath,newname,doc.getType(),commitMsg,commitUser) == false)
+			if(svnRealDocMove(repos,parentPath,oldname,parentPath,newname,doc.getType(),commitMsg,commitUser,rt) == false)
 			{
 				//我们假定版本提交总是会成功，因此报错不处理
 				System.out.println("renameDoc() svnRealDocMove Failed");
 				String MsgInfo = "svnRealDocMove Failed";
 				
-				if(moveRealDoc(reposRPath,parentPath,newname,parentPath,oldname,doc.getType()) == false)
+				if(moveRealDoc(reposRPath,parentPath,newname,parentPath,oldname,doc.getType(),rt) == false)
 				{
 					MsgInfo += " and moveRealDoc Back Failed";
 				}
@@ -1180,9 +1180,9 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVName = getDocVPath(parentPath,oldname);
 		String dstDocVName = getDocVPath(parentPath,newname);
-		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
+		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 		{
-			if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+			if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
 			{
 				System.out.println("renameDoc() svnVirtualDocMove Failed");
 			}
@@ -1203,7 +1203,7 @@ public class DocController extends BaseController{
 		}
 		
 		//更新所有子目录的Path信息,path好像有人在用
-		docPathRecurUpdate(repos,docId,doc.getPid(),oldname,reposVPath,parentPath,parentPath,commitMsg,commitUser);	
+		docPathRecurUpdate(repos,docId,doc.getPid(),oldname,reposVPath,parentPath,parentPath,commitMsg,commitUser,rt);	
 	
 		//unlock doc
 		if(unlockDoc(docId,login_user) == false)
@@ -1269,7 +1269,7 @@ public class DocController extends BaseController{
 		if(!orgPid.equals(dstPid))
 		{
 			System.out.println("moveDoc() docId:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
-			if(moveRealDoc(reposRPath,srcParentPath,filename,dstParentPath,filename,doc.getType()) == false)
+			if(moveRealDoc(reposRPath,srcParentPath,filename,dstParentPath,filename,doc.getType(),rt) == false)
 			{
 				String MsgInfo = "文件移动失败！";
 				System.out.println("moveDoc() 文件: " + filename + " 移动失败");
@@ -1286,11 +1286,11 @@ public class DocController extends BaseController{
 			}
 			
 			//需要将文件Commit到SVN上去：先执行svn的移动
-			if(svnRealDocMove(repos, srcParentPath,filename, dstParentPath, filename,doc.getType(),commitMsg, commitUser) == false)
+			if(svnRealDocMove(repos, srcParentPath,filename, dstParentPath, filename,doc.getType(),commitMsg, commitUser,rt) == false)
 			{
 				System.out.println("moveDoc() svnRealDocMove Failed");
 				String MsgInfo = "svnRealDocMove Failed";
-				if(moveRealDoc(reposRPath,dstParentPath,filename,srcParentPath,filename,doc.getType()) == false)
+				if(moveRealDoc(reposRPath,dstParentPath,filename,srcParentPath,filename,doc.getType(),rt) == false)
 				{
 					MsgInfo += "and changeDirectory Failed";
 				}
@@ -1312,10 +1312,10 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVName = getDocVPath(srcParentPath,doc.getName());
 		String dstDocVName = getDocVPath(dstParentPath,doc.getName());
-		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
+		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 		{
 			//提交修改到版本仓库
-			if(svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+			if(svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
 			{
 				System.out.println("moveDoc() svnVirtualDocMove " + srcDocVName + " to " + dstDocVName + " Failed");							
 			}
@@ -1337,7 +1337,7 @@ public class DocController extends BaseController{
 		}
 		
 		//更新所有子目录的Path信息,path好像有人在用
-		docPathRecurUpdate(repos,docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath,commitMsg,commitUser);
+		docPathRecurUpdate(repos,docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath,commitMsg,commitUser,rt);
 
 		//Unlock Docs
 		String MsgInfo = null; 
@@ -1425,7 +1425,7 @@ public class DocController extends BaseController{
 		System.out.println("id: " + doc.getId());
 		
 		//复制文件或目录，注意这个接口只会复制单个文件
-		if(copyRealDoc(reposRPath,parentPath,name,dstParentPath,name,doc.getType()) == false)
+		if(copyRealDoc(reposRPath,parentPath,name,dstParentPath,name,doc.getType(),rt) == false)
 		{
 			System.out.println("文件: " + name + " 复制失败");
 			String MsgInfo = "copyRealDoc " + name +" Failed";
@@ -1448,7 +1448,7 @@ public class DocController extends BaseController{
 		String MsgInfo = "";
 		if(type == 1) 
 		{
-			ret = svnRealDocCopy(repos,parentPath,name,dstParentPath,name,type,commitMsg, commitUser);
+			ret = svnRealDocCopy(repos,parentPath,name,dstParentPath,name,type,commitMsg, commitUser,rt);
 			MsgInfo = "svnRealDocCopy Failed";
 		}
 		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
@@ -1462,7 +1462,7 @@ public class DocController extends BaseController{
 		{
 			System.out.println("copyDoc() " + MsgInfo);
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(deleteRealDoc(reposRPath,parentPath,name,type) == false)
+			if(deleteRealDoc(reposRPath,parentPath,name,type,rt) == false)
 			{						
 				MsgInfo += " and deleteFile Failed";
 			}
@@ -1482,9 +1482,9 @@ public class DocController extends BaseController{
 		String reposVPath = getReposVirtualPath(repos);
 		String srcDocVName = getDocVPath(parentPath,name);
 		String dstDocVName = getDocVPath(dstParentPath,name);
-		if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
+		if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 		{
-			if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+			if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
 			{
 				System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
 			}
@@ -1819,7 +1819,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				if(updateRealDoc(reposRPath,parentPath,name,type,uploadFile) == false)
+				if(updateRealDoc(reposRPath,parentPath,name,type,uploadFile,rt) == false)
 				{
 					System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
 					rt.setMsgData("createRealDoc() updateRealDoc 文件 " + localDocPath + "创建失败！");
@@ -1830,17 +1830,18 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean deleteRealDoc(String reposRPath, String parentPath, String name, Integer type) {
+	private boolean deleteRealDoc(String reposRPath, String parentPath, String name, Integer type, ReturnAjax rt) {
 		String localDocPath = reposRPath + parentPath + name;
 		if(deleteFile(localDocPath) == false)
 		{
 			System.out.println("deleteRealDoc() " + localDocPath + "删除失败！");
+			rt.setMsgData("deleteRealDoc() " + localDocPath + "删除失败！");
 			return false;
 		}
 		return true;
 	}
 	
-	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, MultipartFile uploadFile) {
+	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, MultipartFile uploadFile, ReturnAjax rt) {
 
 		String localDocParentPath = reposRPath + parentPath;
 		String retName = null;
@@ -1849,6 +1850,7 @@ public class DocController extends BaseController{
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() saveFile " + name +" 异常！");
 			e.printStackTrace();
+			rt.setMsgData(e);
 			return false;
 		}
 		
@@ -1861,7 +1863,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName,Integer type) 
+	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName,Integer type, ReturnAjax rt) 
 	{
 		System.out.println("moveRealDoc() " + " reposRPath:"+reposRPath + " srcParentPath:"+srcParentPath + " srcName:"+srcName + " dstParentPath:"+dstParentPath + " dstName:"+dstName);
 		String localOldParentPath = reposRPath + srcParentPath;
@@ -1872,6 +1874,7 @@ public class DocController extends BaseController{
 		if(isFileExist(oldFilePath) == false)
 		{
 			System.out.println("moveRealDoc() " + oldFilePath + " not exists");
+			rt.setMsgData("moveRealDoc() " + oldFilePath + " not exists");
 			return false;
 		}
 		
@@ -1879,6 +1882,7 @@ public class DocController extends BaseController{
 		if(isFileExist(newFilePath) == true)
 		{
 			System.out.println("moveRealDoc() " + newFilePath + " already exists");
+			rt.setMsgData("moveRealDoc() " + newFilePath + " already exists");
 			return false;
 		}
 	
@@ -1886,24 +1890,27 @@ public class DocController extends BaseController{
 		if(moveFile(localOldParentPath,srcName,localNewParentPath,dstName,false) == false)	//强制覆盖
 		{
 			System.out.println("moveRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
+			rt.setMsgData("moveRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
 			return false;
 		}
 		return true;
 	}
 	
-	private boolean copyRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type) {
+	private boolean copyRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt) {
 		String srcDocPath = reposRPath + srcParentPath + srcName;
 		String dstDocPath = reposRPath + dstParentPath + dstName;
 
 		if(isFileExist(srcDocPath) == false)
 		{
 			System.out.println("文件: " + srcDocPath + " 不存在");
+			rt.setMsgData("文件: " + srcDocPath + " 不存在");
 			return false;
 		}
 		
 		if(isFileExist(dstDocPath) == true)
 		{
 			System.out.println("文件: " + dstDocPath + " 已存在");
+			rt.setMsgData("文件: " + dstDocPath + " 已存在");
 			return false;
 		}
 		
@@ -1914,6 +1921,7 @@ public class DocController extends BaseController{
 				if(false == createDir(dstDocPath))
 				{
 					System.out.println("目录: " + dstDocPath + " 创建");
+					rt.setMsgData("目录: " + dstDocPath + " 创建");
 					return false;
 				}
 			}
@@ -1922,12 +1930,14 @@ public class DocController extends BaseController{
 				if(copyFile(srcDocPath,dstDocPath,false) == false)	//强制覆盖
 				{
 					System.out.println("文件: " + srcDocPath + " 复制失败");
+					rt.setMsgData("文件: " + srcDocPath + " 复制失败");
 					return false;
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
 			System.out.println("系统异常：文件复制失败！");
+			e.printStackTrace();
+			rt.setMsgData(e);
 			return false;
 		}
 		return true;
@@ -1970,19 +1980,34 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean deleteVirtualDoc(String reposVPath, String docVName) {
+	private boolean deleteVirtualDoc(String reposVPath, String docVName, ReturnAjax rt) {
 		String localDocVPath = reposVPath + docVName;
-		return delDir(localDocVPath);
+		if(delDir(localDocVPath) == false)
+		{
+			rt.setMsgData("deleteVirtualDoc() delDir失败 " + localDocVPath);
+			return false;
+		}
+		return true;
 	}
 	
-	private boolean moveVirtualDoc(String reposRefVPath, String srcDocVName,String dstDocVName) {
-		return moveFile(reposRefVPath, srcDocVName, reposRefVPath, dstDocVName, false);		
+	private boolean moveVirtualDoc(String reposRefVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
+		if(moveFile(reposRefVPath, srcDocVName, reposRefVPath, dstDocVName, false) == false)
+		{
+			rt.setMsgData("moveVirtualDoc() moveFile " + " reposRefVPath:" + reposRefVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
+			return false;
+		}
+		return true;
 	}
 	
-	private boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName) {
+	private boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName, ReturnAjax rt) {
 		String srcDocFullVPath = reposVPath + srcDocVName;
 		String dstDocFullVPath = reposVPath + dstDocVName;
-		return copyFolder(srcDocFullVPath,dstDocFullVPath);
+		if(copyFolder(srcDocFullVPath,dstDocFullVPath) == false)
+		{
+			rt.setMsgData("copyVirtualDoc() copyFolder " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
+			return false;
+		}
+		return true;
 	}
 
 	private boolean saveVirtualDocContent(String reposVPath, String docVName, String content, ReturnAjax rt) {
@@ -2069,7 +2094,7 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean updateRefRealDoc(String reposRPath, String reposRefRPath,
-			String parentPath, String name, Integer type) {
+			String parentPath, String name, Integer type, ReturnAjax rt) {
 		return createRefRealDoc(reposRPath, reposRefRPath, parentPath, name, type,rt);
 	}
 	
@@ -2090,7 +2115,7 @@ public class DocController extends BaseController{
 	}
 	
 	//更新doc和其所有子节点的Path:该函数只更新Path信息，不会改变节点间的逻辑关系
-	void docPathRecurUpdate(Repos repos,Integer id,Integer dstPid,String oldname,String reposVPath,String srcParentPath,String dstParentPath,String commitMsg,String commitUser)
+	void docPathRecurUpdate(Repos repos,Integer id,Integer dstPid,String oldname,String reposVPath,String srcParentPath,String dstParentPath,String commitMsg,String commitUser, ReturnAjax rt)
 	{
 		//移动当前节点
 		Doc doc = reposService.getDocInfo(id);
@@ -2105,9 +2130,9 @@ public class DocController extends BaseController{
 			//修改虚拟文件的目录名称
 			String srcDocVName = getDocVPath(srcParentPath,oldname);
 			String dstDocVName = getDocVPath(dstParentPath,doc.getName());
-			if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName) == true)
+			if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 			{
-				if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser) == false)
+				if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
 				{
 					System.out.println("docPathRecurUpdate() svnVirtualDocMove Failed");
 				}
@@ -2136,7 +2161,7 @@ public class DocController extends BaseController{
 				Doc subDoc = list.get(i);
 				Integer subDocId = subDoc.getId();
 				Integer suDocDstPid = id;
-				docPathRecurUpdate(repos,subDocId,suDocDstPid,subDoc.getName(),reposVPath,srcDocRPath+"/",dstDocRPath+"/",commitMsg,commitUser);
+				docPathRecurUpdate(repos,subDocId,suDocDstPid,subDoc.getName(),reposVPath,srcDocRPath+"/",dstDocRPath+"/",commitMsg,commitUser,rt);
 			};
 		}
 	}
@@ -2329,7 +2354,7 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
-			String commitMsg, String commitUser) {
+			String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
 		if(repos.getVerCtrl() == 1)
 		{
@@ -2350,18 +2375,20 @@ public class DocController extends BaseController{
 					if(svnUtil.svnDelete(parentPath,name,commitMsg) == false)
 					{
 						System.out.println(docRPath + " remoteDeleteEntry失败！");
+						rt.setMsgData("svnRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
 						return false;
 					}
 				}
 			} catch (SVNException e) {
-				e.printStackTrace();
 				System.out.println("系统异常：" + docRPath + " remoteDeleteEntry异常！");
+				e.printStackTrace();
+				rt.setMsgData(e);
 				return false;
 			}
 			
 			//delete the ref real doc
 			String reposRefRPath = getReposRefRealPath(repos);
-			deleteRealDoc(reposRefRPath,parentPath,name,type);
+			deleteRealDoc(reposRefRPath,parentPath,name,type,rt);
 			return true;
 		}
 		else
@@ -2371,7 +2398,7 @@ public class DocController extends BaseController{
 	}
 
 	private boolean svnRealDocCommit(Repos repos, String parentPath,
-			String name,Integer type, String commitMsg, String commitUser) {
+			String name,Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnRealDocCommit() parentPath:" + parentPath + " name:" + name);
 		if(repos.getVerCtrl() == 1)
@@ -2394,6 +2421,7 @@ public class DocController extends BaseController{
 				if(svnUtil.doCheckPath(docRPath, -1) == false)	//检查文件是否已经存在于仓库中
 				{
 					System.out.println("svnRealDocCommit() " + docRPath + " 在仓库中不存在！");
+					rt.setMsgData("svnRealDocCommit() " + docRPath + " 在仓库中不存在！");
 					return false;
 				}
 				else	//如果已经存在，则只是将修改的内容commit到服务器上
@@ -2403,12 +2431,14 @@ public class DocController extends BaseController{
 					if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
 					{
 						System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
+						System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + name  + " oldFilePath:" + oldFilePath + " newFilePath:" + newFilePath);
 						return false;
 					}
 				}
 			} catch (SVNException e) {
-				e.printStackTrace();
 				System.out.println("svnRealDocCommit() 系统异常：" + name + " svnRealDocCommit异常！");
+				e.printStackTrace();
+				rt.setMsgData(e);
 				return false;
 			}
 			
@@ -2425,7 +2455,7 @@ public class DocController extends BaseController{
 	}
 
 	private boolean svnRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
-			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser) {
+			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		String reposRefRPath = getReposRefRealPath(repos);
@@ -2441,11 +2471,12 @@ public class DocController extends BaseController{
 			if(svnMove(reposURL,svnUser,svnPwd,srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg) == false)
 			{
 				System.out.println("svnMove Failed！");
+				rt.setMsgData("svnMove Failed！");
 				return false;
 			}
 			
 			//rename the ref real doc
-			moveRealDoc(reposRefRPath,srcParentPath,srcEntryName,dstParentPath,dstEntryName,type);
+			moveRealDoc(reposRefRPath,srcParentPath,srcEntryName,dstParentPath,dstEntryName,type,rt);
 			return true;
 		}
 		else
@@ -2456,7 +2487,7 @@ public class DocController extends BaseController{
 	}
 
 	private boolean svnRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
-			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser) {
+			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(repos.getVerCtrl() == 1)
@@ -2469,7 +2500,7 @@ public class DocController extends BaseController{
 				svnUser = commitUser;
 			}
 			String svnPwd = repos.getSvnPwd();
-			if(svnCopy(reposURL,svnUser,svnPwd,srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg) == false)
+			if(svnCopy(reposURL,svnUser,svnPwd,srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,rt) == false)
 			{
 				System.out.println("文件: " + srcEntryName + " svnCopy失败");
 				return false;
@@ -2525,7 +2556,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private boolean svnVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser) {
+	private boolean svnVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocDelete() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
 		{
@@ -2546,18 +2577,20 @@ public class DocController extends BaseController{
 					if(svnUtil.svnDelete("",docVName,commitMsg) == false)
 					{
 						System.out.println(docVName + " remoteDeleteEntry失败！");
+						rt.setMsgData("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ");
 						return false;
 					}
 				}
 			} catch (SVNException e) {
 				e.printStackTrace();
 				System.out.println("系统异常：" + docVName + " remoteDeleteEntry异常！");
+				rt.setMsgData(e);
 				return false;
 			}
 			
 			//delete Ref Virtual Doc
 			String reposRefVPath = getReposRefVirtualPath(repos);
-			deleteVirtualDoc(reposRefVPath,docVName);
+			deleteVirtualDoc(reposRefVPath,docVName,rt);
 			return true;
 		}
 		else
@@ -2601,7 +2634,7 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean svnVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser) {
+	private boolean svnVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocMove() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
 		if(repos.getVerCtrl1() == 1)
 		{	
@@ -2615,12 +2648,13 @@ public class DocController extends BaseController{
 			if(svnMove(reposURL,svnUser,svnPwd,"",srcDocVName,"",dstDocVName,commitMsg) == false)
 			{
 				System.out.println("svnMove Failed！");
+				rt.setMsgData("svnVirtualDocMove() svnMove Failed！");
 				return false;
 			}
 			
 			//move the ref virtual doc
 			String reposRefVPath = getReposRefVirtualPath(repos);
-			moveVirtualDoc(reposRefVPath, srcDocVName, dstDocVName);
+			moveVirtualDoc(reposRefVPath, srcDocVName, dstDocVName,rt);
 			return true;
 		}
 		else
@@ -2630,7 +2664,7 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean svnVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser) {
+	private boolean svnVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) {
 
 		System.out.println("svnVirtualDocCopy() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
 		if(repos.getVerCtrl1() == 1)
@@ -2642,7 +2676,7 @@ public class DocController extends BaseController{
 				svnUser = commitUser;
 			}
 			String svnPwd = repos.getSvnPwd1();
-			if(svnCopy(reposURL,svnUser,svnPwd,"",srcDocVName,"",dstDocVName,commitMsg) == false)
+			if(svnCopy(reposURL,svnUser,svnPwd,"",srcDocVName,"",dstDocVName,commitMsg,rt) == false)
 			{
 				System.out.println("文件: " + srcDocVName + " svnCopy失败");
 				return false;
@@ -2660,7 +2694,7 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type) 
+	private boolean svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
 	{
 		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
@@ -2681,6 +2715,8 @@ public class DocController extends BaseController{
 		} catch (IOException e) {
 			System.out.println("svnRevertRealDoc() copyFile Exception!");
 			e.printStackTrace();
+			rt.setMsgData(e);
+			
 			String reposURL = repos.getSvnPath();
 			String svnUser = repos.getSvnUser();
 			String svnPwd = repos.getSvnPwd();
@@ -2805,14 +2841,14 @@ public class DocController extends BaseController{
 	
 	private boolean svnCopy(String reposURL, String svnUser, String svnPwd,
 			String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName,
-			String commitMsg) 
+			String commitMsg, ReturnAjax rt) 
 	{
 		SVNUtil svnUtil = new SVNUtil();
 		svnUtil.Init(reposURL, svnUser, svnPwd);
 		
-		
 		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, false) == false)
 		{
+			rt.setMsgData("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
 			return false;
 		}
 		return true;
