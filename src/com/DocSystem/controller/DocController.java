@@ -464,15 +464,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(dstDocName == null)
+		String srcDocName = doc.getName();
+		if(dstDocName == null || "".equals(dstDocName))
 		{
-			dstDocName = doc.getName();
+			dstDocName = srcDocName;
 		}
+		
 		if(commitMsg == null)
 		{
 			commitMsg = "copyDoc " + doc.getName() + " to " + dstDocName;
 		}
-		copyDoc(id,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
+		copyDoc(id,srcDocName,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);	
 	}
 
@@ -1361,7 +1363,7 @@ public class DocController extends BaseController{
 	}
 	
 	//底层copyDoc接口
-	private void copyDoc(Integer docId,String name,Integer type, Integer reposId,Integer parentId, Integer dstPid,
+	private void copyDoc(Integer docId,String srcName,String dstName, Integer type, Integer reposId,Integer parentId, Integer dstPid,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -1379,9 +1381,9 @@ public class DocController extends BaseController{
 		//String dstDocFullRPath = reposRPath + dstParentPath + name;
 		
 		//判断节点是否已存在
-		if(isNodeExist(name,dstPid,reposId) == true)
+		if(isNodeExist(dstName,dstPid,reposId) == true)
 		{
-			rt.setError("Node: " + name +" 已存在！");
+			rt.setError("Node: " + dstName +" 已存在！");
 			return;
 		}
 
@@ -1400,7 +1402,7 @@ public class DocController extends BaseController{
 			
 			//新建doc记录
 			doc.setId(null);	//置空id,以便新建一个doc
-			//doc.setName(name);
+			doc.setName(dstName);
 			//doc.setType(type);
 			//doc.setContent("#" + name);
 			doc.setPath(dstParentPath);
@@ -1419,7 +1421,7 @@ public class DocController extends BaseController{
 			{
 				unlock(); //线程锁
 	
-				rt.setError("Add Node: " + name +" Failed！");
+				rt.setError("Add Node: " + dstName +" Failed！");
 				unlockDoc(docId,login_user);
 				return;
 			}
@@ -1429,10 +1431,10 @@ public class DocController extends BaseController{
 		System.out.println("id: " + doc.getId());
 		
 		//复制文件或目录，注意这个接口只会复制单个文件
-		if(copyRealDoc(reposRPath,parentPath,name,dstParentPath,name,doc.getType(),rt) == false)
+		if(copyRealDoc(reposRPath,parentPath,srcName,dstParentPath,dstName,doc.getType(),rt) == false)
 		{
-			System.out.println("文件: " + name + " 复制失败");
-			String MsgInfo = "copyRealDoc " + name +" Failed";
+			System.out.println("copy " + srcName + " to " + dstName + " 失败");
+			String MsgInfo = "copyRealDoc from " + srcName + " to " + dstName + "Failed";
 			//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
 			if(reposService.deleteDoc(doc.getId()) == 0)	
 			{
@@ -1452,12 +1454,12 @@ public class DocController extends BaseController{
 		String MsgInfo = "";
 		if(type == 1) 
 		{
-			ret = svnRealDocCopy(repos,parentPath,name,dstParentPath,name,type,commitMsg, commitUser,rt);
+			ret = svnRealDocCopy(repos,parentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt);
 			MsgInfo = "svnRealDocCopy Failed";
 		}
 		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
 		{
-			ret = svnRealDocAdd(repos,dstParentPath,name,type,commitMsg,commitUser,rt);
+			ret = svnRealDocAdd(repos,dstParentPath,dstName,type,commitMsg,commitUser,rt);
 			MsgInfo = "svnRealDocAdd Failed";
 		}
 			
@@ -1466,7 +1468,7 @@ public class DocController extends BaseController{
 		{
 			System.out.println("copyDoc() " + MsgInfo);
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(deleteRealDoc(reposRPath,parentPath,name,type,rt) == false)
+			if(deleteRealDoc(reposRPath,parentPath,dstName,type,rt) == false)
 			{						
 				MsgInfo += " and deleteFile Failed";
 			}
@@ -1484,8 +1486,8 @@ public class DocController extends BaseController{
 		
 		//创建虚拟文件目录
 		String reposVPath = getReposVirtualPath(repos);
-		String srcDocVName = getDocVPath(parentPath,name);
-		String dstDocVName = getDocVPath(dstParentPath,name);
+		String srcDocVName = getDocVPath(parentPath,srcName);
+		String dstDocVName = getDocVPath(dstParentPath,dstName);
 		if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 		{
 			if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
