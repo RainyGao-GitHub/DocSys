@@ -65,7 +65,7 @@ public class ReturnAjax {
 		return msgData;
 	}
 	
-	public void setMsgDetail(Object msgData) {
+	public void setMsgData(Object msgData) {
 		this.msgData = msgData;
 	}
 	public Object getData() {
