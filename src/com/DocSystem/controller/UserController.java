@@ -139,7 +139,7 @@ public class UserController extends BaseController {
 				if(ret == false)
 				{
 					System.out.println("自动登录失败");
-					rt.setMsgDetail("自动登陆失败");
+					rt.setMsgData("自动登陆失败");
 					writeJson(rt, response);
 					return;
 				}
@@ -759,7 +759,7 @@ public class UserController extends BaseController {
 		if(userImgName == null)
 		{
 			System.out.println("uploadUserImg() saveFile Failed！");
-			rt.setMsgDetail("uploadUserImg() saveFile Failed！");
+			rt.setMsgData("uploadUserImg() saveFile Failed！");
 			rt.setError("文件上传失败！");
 			writeJson(rt, response);
 			return;
@@ -773,7 +773,7 @@ public class UserController extends BaseController {
 		if(userService.updateUserInfo(user) == 0)
 		{
 			System.out.println("uploadUserImg() updateUserInfo Failed！");
-			rt.setMsgDetail("uploadUserImg() updateUserInfo Failed！");
+			rt.setMsgData("uploadUserImg() updateUserInfo Failed！");
 			rt.setError("用户头像更新失败！");
 			writeJson(rt, response);
 			return;				
