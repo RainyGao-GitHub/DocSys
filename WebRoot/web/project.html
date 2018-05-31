@@ -325,17 +325,32 @@
 
 	function DoPaste(copiedNode,dstParentNode)
 	{
+		console.log("DoPaste()",copiedNode,dstParentNode);
 		if(copiedNode == null)
 		{
 			console.log("DoPaste nothing was copied");
 			return;	
 		}
 		
+		if(dstParentNode != null)
+		{
+			if(copiedNode.id == dstParentNode.id)
+			{
+				console.log("copiedNode and dstParentNode is same");
+				dstParentNode = dstParentNode.getParentNode();
+			}
+		}
+		
+		
 		if(isNodeExist(copiedNode.name,dstParentNode) == true)
 	  	{
+	  		//Node Name conflict confirm
 			bootstrapQ.alert(copiedNode.name + "已存在！");
-	  		return false;
+	  		return;
 	  	}
+		
+		console.log("StartCopy");
+		DocCopy.DocCopy(copiedNode,dstParentNode,vid,copiedNode.name);
 	}
 
 	function copyDocName(){
