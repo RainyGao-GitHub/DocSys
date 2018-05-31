@@ -3507,7 +3507,12 @@ function CompareObj(objA, objB, flag) {
 <script type="text/javascript" src="js/logon.js"></script>
 <SCRIPT type="text/javascript" >
 	/********************** zTree设置与接口**********************************/
-    //zTree's setting
+	
+	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
+	var curRightClickedTreeNode = null;
+	var gCopiedNode = null;	//右键复制操作选中的节点
+	
+	//zTree's setting
 	var setting = {
 		//异步加载的工作原理
 		async : {  
@@ -3585,9 +3590,6 @@ function CompareObj(objA, objB, flag) {
     function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
     	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
     }
-    
-	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
-	var curRightClickedTreeNode = null;
 
 	//This function was used to get the rightClick treeNode,it will be used for contextjs
 	function zTreeBeforeRightClick(treeId, treeNode) {
