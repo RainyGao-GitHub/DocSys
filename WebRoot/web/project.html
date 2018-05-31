@@ -4297,25 +4297,9 @@ function CompareObj(objA, objB, flag) {
 				},	
 				]
 			},
-			{divider: true},
-			{text: '重命名', action: function(e){
+			{text: '下载', action: function(e){
 						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						if(curRightClickedTreeNode !== null)
-						{
-							treeObj.editName(curRightClickedTreeNode);
-							curRightClickedTreeNode = null;
-	        			}
-					}
-			},
-			{text: '删除', action: function(e){
-						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						if(curRightClickedTreeNode !== null)
-						{
-							treeObj.removeNode(curRightClickedTreeNode,true);
-							curRightClickedTreeNode = null;
-	        			}
+	        			download();
 					}
 			},
 			{divider: true},
@@ -4344,11 +4328,27 @@ function CompareObj(objA, objB, flag) {
 					}
 			},
 			{divider: true},
-			{text: '下载', action: function(e){
+			{text: '重命名', action: function(e){
 						e.preventDefault();
-	        			download();
+						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						if(curRightClickedTreeNode !== null)
+						{
+							treeObj.editName(curRightClickedTreeNode);
+							curRightClickedTreeNode = null;
+	        			}
 					}
 			},
+			{text: '删除', action: function(e){
+						e.preventDefault();
+						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						if(curRightClickedTreeNode !== null)
+						{
+							treeObj.removeNode(curRightClickedTreeNode,true);
+							curRightClickedTreeNode = null;
+	        			}
+					}
+			},
+
 			{divider: true},
 			{text: '其它', subMenu: [
 			           	{text: '复制名字', action: function(e){
