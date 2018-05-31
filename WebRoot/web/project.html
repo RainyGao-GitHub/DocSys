@@ -221,11 +221,11 @@
     </form>
 </div>
 
-<div id="new-version" style="display:none">
+<div id="copyConflictConfirmDialog" style="display:none">
     <form class="form" onkeydown="if(event.keyCode==13)return false;">
         <div class="form-group">
-            <label>版本号</label>
-            <input class="form-control" type="text" name="version" style="width: 100%"/>
+            <label>请输入新的文件名/目录名</label>
+            <input class="form-control" type="text" name="newDocName" style="width: 100%"/>
         </div>
     </form>
 </div>
@@ -342,15 +342,15 @@
 		}
 		
 		
-		if(isNodeExist(copiedNode.name,dstParentNode) == true)
-	  	{
-	  		//Node Name conflict confirm
-			bootstrapQ.alert(copiedNode.name + "已存在！");
-	  		return;
-	  	}
+		//if(isNodeExist(copiedNode.name,dstParentNode) == true)
+	  	//{
+	  	//	//Node Name conflict confirm
+		//	bootstrapQ.alert(copiedNode.name + "已存在！");
+	  	//	return;
+	  	//}
 		
 		console.log("StartCopy");
-		DocCopy.DocCopy(copiedNode,dstParentNode,vid,copiedNode.name);
+		DocCopy.DocCopy(copiedNode,dstParentNode,gReposId);
 	}
 
 	function copyDocName(){
@@ -2545,17 +2545,35 @@
       	}
       		
 		//copyDoc接口，该接口是个递归调用
-		function copyDoc()
+		function copyDoc(dstName)
 		{
 			var treeNode = treeNodes[index];
-			console.log("copyDoc index:" + index + " name:" + treeNode.name + " parentId:" + parentId + " parentNode:" + parentNode.name + " vid:" + vid + " totalNum:" + totalNum);
-	  		$.ajax({
+			console.log("copyDoc index:" + index + " name:" + treeNode.name + " parentId:" + parentId + " vid:" + vid + " totalNum:" + totalNum);
+	  		
+			var dstDocName = treeNode.name;
+			//如果copyDoc未指定dstName,需要检查parentNode下是否存在同名Node
+			if(dstName != undefined)
+			{
+				dstDocName = dstName;	
+			}
+			else
+			{
+				if(isNodeExist(treeNode.name,parentNode) == true)
+			  	{
+			  		//Node Name conflict confirm
+					CopyConflictConfirm(treeNode.name);
+			  		return;
+			  	}
+			}
+			
+			$.ajax({
 	            url : "/DocSystem/Doc/copyDoc.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
 	                id : treeNode.id,	//待复制的docid
 	                dstPid: parentId,	//目标doc parentId
+	                dstDocName: dstDocName, //目标docName
 	                vid: vid,			//仓库id
 	            },
 	            success : function (ret) {
@@ -2650,12 +2668,36 @@
 	            }
 	    	});
 		}
+		
+		function CopyConflictConfirm(copiedNodeName)
+		{
+		    qiao.bs.dialog({
+		        id: "dialog-copyConflictDialog",
+		        url: '#copyConflictConfirmDialog',
+		        title: copiedNodeName + '已存在',
+		        okbtn: "确定",
+		        callback: function () {
+		            setTimeout(function () {
+		                $("#dialog-copyConflictDialog input[name='newDocName']").val("Copy of " + copiedNodeName);
+		            },100);
+		        }
+		    },function () {
+		    	var dstName =  $("#dialog-copyConflictDialog input[name='newDocName']").val();
+		    	console.log("copyConflictConfirm newName:",dstName);
+				copyDoc(dstName);
+		    	return true;   
+		    });
+		}
 
 		//多文件copy接口
 		function DocsCopy(treeNodes,parentNode,vid)	//多文件移动函数
 		{
 			console.log("DocsCopy");
-
+			if(ContextSize() > 0)
+			{
+				bootstrapQ.alert("系统正忙，请稍候重试！");
+				return;
+			}
 			clearContext();	//清空Context缓存
 			
 			DocCopySet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
@@ -2664,16 +2706,34 @@
 			copyDoc();	//start copy
 		}
 		
+		//单文件copy接口
+		function DocCopy(treeNode,parentNode,vid)	//多文件移动函数
+		{
+			console.log("DocCopy");
+			if(ContextSize() > 0)
+			{
+				bootstrapQ.alert("系统正忙，请稍候重试！");
+				return;
+			}
+			clearContext();	//清空Context缓存
+			
+			var treeNodes = [];
+			treeNodes.push(treeNode);
+			DocCopySet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
+				
+			//启动复制操作      		
+			copyDoc();	//start copy
+		}
 		//开放给外部的调用接口
         return {
 			DocsCopy: function(treeNodes,parentNode,vid){
             	DocsCopy(treeNodes,parentNode,vid);
             },
-            DocCopy: function(treeNode,parentNode,dstName,vid){
-            	DocCopy(treeNode,parentNode,dstName,vid);
+            DocCopy: function(treeNode,parentNode,vid){
+            	DocCopy(treeNode,parentNode,vid);
             },
-            copyDoc: function(){
-            	copyDoc();
+            copyDoc: function(dstName){
+            	copyDoc(dstName);
             },
 
         };
