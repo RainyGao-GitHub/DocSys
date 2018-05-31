@@ -323,6 +323,20 @@
 		$("#"+id).remove();	//删除对话框
 	}
 
+	function DoPaste(copiedNode,dstParentNode)
+	{
+		if(copiedNode == null)
+		{
+			console.log("DoPaste nothing was copied");
+			return;	
+		}
+		
+		if(isNodeExist(copiedNode.name,dstParentNode) == true)
+	  	{
+			bootstrapQ.alert(copiedNode.name + "已存在！");
+	  		return false;
+	  	}
+	}
 
 	function copyDocName(){
 		var id = 0;
@@ -4269,6 +4283,19 @@ function CompareObj(objA, objB, flag) {
 				},	
 				]
 			},
+			{divider: true},
+			{text: '粘贴', action: function(e){
+						e.preventDefault();
+						if(gCopiedNode == null)
+						{
+							//nothing was copied
+						}
+						else
+						{
+							DoPaste(gCopiedNode,null);
+	        			}
+					}
+			},
 			]
 		);
 		//zTree上的右键菜单
@@ -4316,16 +4343,18 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						if(curRightClickedTreeNode !== null)
+						if(gCopiedNode == null)
+						{
+							//nothing was copied
+						}
+						else
 						{
 							var parentNode = curRightClickedTreeNode;
 							if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
 							{
 								parentNode = curRightClickedTreeNode.getParentNode();
 							}
-							DocCopy.DocCopy(gCopiedNode,parentNode,vid);
-							gCopiedNode = null;
+							DoPaste(gCopiedNode,parentNode);
 	        			}
 					}
 			},
