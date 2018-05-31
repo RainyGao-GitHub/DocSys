@@ -545,7 +545,7 @@ public class DocController extends BaseController{
 		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String reposUserTmpPath = getReposUserTmpPath(repos,login_user);
-		if(saveVirtualDocContent(reposUserTmpPath,docVName,content) == false)
+		if(saveVirtualDocContent(reposUserTmpPath,docVName,content,rt) == false)
 		{
 			rt.setError("saveVirtualDocContent Error!");
 		}
@@ -1556,22 +1556,22 @@ public class DocController extends BaseController{
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
 		if(isFileExist(localVDocPath) == true)
 		{
-			if(saveVirtualDocContent(reposVPath,docVName, content) == true)
+			if(saveVirtualDocContent(reposVPath,docVName, content,rt) == true)
 			{
 				if(repos.getVerCtrl() == 1)
 				{
-					svnVirtualDocCommit(repos, docVName, commitMsg, commitUser);
+					svnVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 				}
 			}
 		}
 		else
 		{	
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
-			if(createVirtualDoc(reposVPath,docVName,content) == true)
+			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				if(repos.getVerCtrl() == 1)
 				{
-					svnVirtualDocCommit(repos, docVName, commitMsg, commitUser);
+					svnVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 				}
 			}
 		}
@@ -2073,7 +2073,7 @@ public class DocController extends BaseController{
 		return createRefRealDoc(reposRPath, reposRefRPath, parentPath, name, type,rt);
 	}
 	
-	private boolean createRefVirtualDoc(String reposVPath,String reposRefVPath,String vDocName) {
+	private boolean createRefVirtualDoc(String reposVPath,String reposRefVPath,String vDocName, ReturnAjax rt) {
 		System.out.println("createRefVirtualDoc() reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath + " vDocName:" + vDocName);
 		
 		String localPath = reposVPath + vDocName;
@@ -2082,6 +2082,7 @@ public class DocController extends BaseController{
 		if(isFileExist(localRefPath) == true)
 		{
 			System.out.println("createRefVirtualDoc() " +localRefPath + " 已存在！");
+			rt.setMsgData("createRefVirtualDoc() " +localRefPath + " 已存在！");
 			return false;
 		}
 		
@@ -2477,7 +2478,7 @@ public class DocController extends BaseController{
 			//create Ref RealDoc
 			String reposRPath = getReposRealPath(repos);
 			String reposRefRPath = getReposRefRealPath(repos);
-			createRefRealDoc(reposRPath, reposRefRPath, dstParentPath, dstEntryName, type);
+			createRefRealDoc(reposRPath, reposRefRPath, dstParentPath, dstEntryName, type,rt);
 			return true;
 		}
 		else
@@ -2486,7 +2487,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private boolean svnVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser) {
+	private boolean svnVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnVirtualDocAdd() docVName:" + docVName);
 		
@@ -2499,6 +2500,7 @@ public class DocController extends BaseController{
 			if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
 			{
 				System.out.println("svnVirtualDocAdd() svnUtil Init Failed!");
+				rt.setMsgData("svnVirtualDocAdd() svnUtil Init Failed!");
 				return false;
 			}
 			
@@ -2509,11 +2511,12 @@ public class DocController extends BaseController{
 			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,false,reposRefVPath) == false)
 			{
 				System.out.println(docVName + " doAutoCommit失败！");
+				rt.setMsgData("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath );
 				return false;
 			}
 			
 			//同步两个目录,modifyEnable set to false
-			createRefVirtualDoc(reposVPath,reposRefVPath,docVName);
+			createRefVirtualDoc(reposVPath,reposRefVPath,docVName,rt);
 			return true;
 		}
 		else
@@ -2563,7 +2566,7 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean svnVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser) {
+	private boolean svnVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocCommit() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
 		{
@@ -2584,6 +2587,7 @@ public class DocController extends BaseController{
 			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,true,reposRefVPath) == false)
 			{
 				System.out.println(docVName + " doCommit失败！");
+				rt.setMsgData(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath);
 				return false;
 			}
 			
@@ -2647,7 +2651,7 @@ public class DocController extends BaseController{
 			//create Ref Virtual Doc
 			String reposVPath = getReposVirtualPath(repos);
 			String reposRefVPath = getReposRefVirtualPath(repos);
-			createRefVirtualDoc(reposVPath,reposRefVPath,dstDocVName);
+			createRefVirtualDoc(reposVPath,reposRefVPath,dstDocVName,rt);
 			return true;
 		}
 		else
