@@ -436,8 +436,8 @@ public class DocController extends BaseController{
 	
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer id,Integer dstPid,Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("copyDoc id: " + id + " dstPid: " + dstPid + " vid: " + vid);
+	public void copyDoc(Integer id,Integer dstPid, String dstDocName, Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("copyDoc id: " + id  + " dstPid: " + dstPid + " dstDocName: " + dstDocName + " vid: " + vid);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -460,15 +460,19 @@ public class DocController extends BaseController{
 		//检查用户是否有目标目录权限新增文件
 		if(checkUserAddRight(rt,login_user.getId(),dstPid,vid) == false)
 		{
-			writeJson(rt, response);	
+			writeJson(rt, response);
 			return;
 		}
 		
+		if(dstDocName == null)
+		{
+			dstDocName = doc.getName();
+		}
 		if(commitMsg == null)
 		{
-			commitMsg = "copyDoc " + doc.getName();
+			commitMsg = "copyDoc " + doc.getName() + " to " + dstDocName;
 		}
-		copyDoc(id,doc.getName(),doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
+		copyDoc(id,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);	
 	}
 
