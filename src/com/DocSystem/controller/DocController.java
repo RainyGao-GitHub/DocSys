@@ -832,7 +832,7 @@ public class DocController extends BaseController{
 			if(isParentDocLocked(parentId,rt))
 			{	
 				unlock(); //线程锁
-	
+				rt.setError("ParentNode: " + parentId +" is locked！");	
 				System.out.println("ParentNode: " + parentId +" is locked！");
 				return;			
 			}
@@ -866,7 +866,7 @@ public class DocController extends BaseController{
 		System.out.println("id: " + doc.getId());
 		
 		/*创建实文件Entry：新建文件或目录*/
-		if(createRealDoc(reposRPath,parentPath,name,type,uploadFile) == false)
+		if(createRealDoc(reposRPath,parentPath,name,type,uploadFile,rt) == false)
 		{		
 			String MsgInfo = "createRealDoc " + name +" Failed";
 			rt.setError(MsgInfo);
@@ -882,7 +882,7 @@ public class DocController extends BaseController{
 		}
 		
 		//commit to history db
-		if(svnRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser) == false)
+		if(svnRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser,rt) == false)
 		{
 			System.out.println("svnRealDocAdd Failed");
 			String MsgInfo = "svnRealDocAdd Failed";
@@ -903,9 +903,9 @@ public class DocController extends BaseController{
 		//创建虚拟文件目录：用户编辑保存时再考虑创建
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getDocVPath(parentPath, doc.getName());
-		if(createVirtualDoc(reposVPath,docVName,"#"+name) == true)
+		if(createVirtualDoc(reposVPath,docVName,"#"+name,rt) == true)
 		{
-			if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser) ==false)
+			if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
 			{
 				System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
 				rt.setMsgInfo("svnVirtualDocAdd Failed");			
@@ -1453,7 +1453,7 @@ public class DocController extends BaseController{
 		}
 		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
 		{
-			ret = svnRealDocAdd(repos,dstParentPath,name,type,commitMsg,commitUser);
+			ret = svnRealDocAdd(repos,dstParentPath,name,type,commitMsg,commitUser,rt);
 			MsgInfo = "svnRealDocAdd Failed";
 		}
 			
@@ -1774,9 +1774,10 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	/*************************** Functions For Real and Virtual Doc Operaion***********************************/
+	/*************************** Functions For Real and Virtual Doc Operaion
+	 * @param rt ***********************************/
 	//create Real Doc
-	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, MultipartFile uploadFile) {
+	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, MultipartFile uploadFile, ReturnAjax rt) {
 		//获取 doc parentPath
 		String localParentPath =  reposRPath + parentPath;
 		String localDocPath = localParentPath + name;
@@ -1787,12 +1788,14 @@ public class DocController extends BaseController{
 			if(isFileExist(localDocPath) == true)
 			{
 				System.out.println("createRealDoc() 目录 " +localDocPath + "　已存在！");
+				rt.setMsgData("createRealDoc() 目录 " +localDocPath + "　已存在！");
 				return false;
 			}
 			
 			if(false == createDir(localDocPath))
 			{
 				System.out.println("createRealDoc() 目录 " +localDocPath + " 创建失败！");
+				rt.setMsgData("createRealDoc() 目录 " +localDocPath + " 创建失败！");
 				return false;
 			}				
 		}
@@ -1801,6 +1804,7 @@ public class DocController extends BaseController{
 			if(isFileExist(localDocPath) == true)
 			{
 				System.out.println("createRealDoc() 文件 " +localDocPath + " 已存在！");
+				rt.setMsgData("createRealDoc() 文件 " +localDocPath + " 已存在！");
 				return false;
 			}
 			
@@ -1809,6 +1813,7 @@ public class DocController extends BaseController{
 				if(false == createFile(localParentPath,name))
 				{
 					System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
+					rt.setMsgData("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
 					return false;					
 				}
 			}
@@ -1817,6 +1822,7 @@ public class DocController extends BaseController{
 				if(updateRealDoc(reposRPath,parentPath,name,type,uploadFile) == false)
 				{
 					System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
+					rt.setMsgData("createRealDoc() updateRealDoc 文件 " + localDocPath + "创建失败！");
 					return false;
 				}
 			}
@@ -1928,33 +1934,37 @@ public class DocController extends BaseController{
 	}
 
 	//create Virtual Doc
-	private boolean createVirtualDoc(String reposVPath, String docVName,String content) {
+	private boolean createVirtualDoc(String reposVPath, String docVName,String content, ReturnAjax rt) {
 		String vDocPath = reposVPath + docVName;
 		System.out.println("vDocPath: " + vDocPath);
 		if(isFileExist(vDocPath) == true)
 		{
 			System.out.println("目录 " +vDocPath + "　已存在！");
+			rt.setMsgData("目录 " +vDocPath + "　已存在！");
 			return false;
 		}
 			
 		if(false == createDir(vDocPath))
 		{
 			System.out.println("目录 " + vDocPath + " 创建失败！");
+			rt.setMsgData("目录 " + vDocPath + " 创建失败！");
 			return false;
 		}
 		if(createDir(vDocPath + "/res") == false)
 		{
 			System.out.println("目录 " + vDocPath + "/res" + " 创建失败！");
+			rt.setMsgData("目录 " + vDocPath + "/res" + " 创建失败！");
 			return false;
 		}
 		if(createFile(vDocPath,"content.md") == false)
 		{
 			System.out.println("目录 " + vDocPath + "/content.md" + " 创建失败！");
+			rt.setMsgData("目录 " + vDocPath + "/content.md" + " 创建失败！");
 			return false;			
 		}
 		if(content !=null && !"".equals(content))
 		{
-			saveVirtualDocContent(reposVPath,docVName, content);
+			saveVirtualDocContent(reposVPath,docVName, content,rt);
 		}
 		
 		return true;
@@ -1975,7 +1985,7 @@ public class DocController extends BaseController{
 		return copyFolder(srcDocFullVPath,dstDocFullVPath);
 	}
 
-	private boolean saveVirtualDocContent(String reposVPath, String docVName, String content) {
+	private boolean saveVirtualDocContent(String reposVPath, String docVName, String content, ReturnAjax rt) {
 		String vDocPath = reposVPath + docVName + "/";
 		File folder = new File(vDocPath);
 		if(!folder.exists())
@@ -1983,7 +1993,8 @@ public class DocController extends BaseController{
 			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
 			if(folder.mkdir() == false)
 			{
-				System.out.println("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");				
+				System.out.println("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
+				rt.setMsgData("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
 				return false;
 			}
 		}
@@ -1995,7 +2006,9 @@ public class DocController extends BaseController{
 		try {
 			out = new FileOutputStream(mdFilePath);
 		} catch (FileNotFoundException e) {
+			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
 			e.printStackTrace();
+			rt.setMsgData(e);
 			return false;
 		}
 		try {
@@ -2003,14 +2016,16 @@ public class DocController extends BaseController{
 			//关闭输出流
 			out.close();
 		} catch (IOException e) {
+			System.out.println("saveVirtualDocContent() out.write exception");
 			e.printStackTrace();
+			rt.setMsgData(e);
 			return false;
 		}
 		return true;
 	}
 	
 	//Create Ref Data (File or Dir), both support Real Doc and Virtual Doc
-	private boolean createRefRealDoc(String reposRPath,String reposRefRPath,String parentPath, String name, Integer type)
+	private boolean createRefRealDoc(String reposRPath,String reposRefRPath,String parentPath, String name, Integer type, ReturnAjax rt)
 	{
 		String localParentPath =  reposRPath + parentPath;
 		String localRefParentPath =  reposRefRPath + parentPath;
@@ -2022,12 +2037,14 @@ public class DocController extends BaseController{
 			if(isFileExist(localRefDocPath) == true)
 			{
 				System.out.println("createRefDoc() 目录 " + localRefDocPath + "　已存在！");
+				rt.setMsgData("createRefDoc() 目录 " + localRefDocPath + "　已存在！");
 				return false;
 			}
 			
 			if(false == createDir(localRefDocPath))
 			{
 				System.out.println("createRefDoc() 目录 " +localRefDocPath + " 创建失败！");
+				rt.setMsgData("createRefDoc() 目录 " +localRefDocPath + " 创建失败！");
 				return false;
 			}				
 		}
@@ -2036,6 +2053,7 @@ public class DocController extends BaseController{
 			if(isFileExist(localRefDocPath) == true)
 			{
 				System.out.println("createRefDoc() 文件 " +localRefDocPath + " 已存在！");
+				rt.setMsgData("createRefDoc() 文件 " +localRefDocPath + " 已存在！");
 				return false;
 			}
 			try {
@@ -2043,6 +2061,7 @@ public class DocController extends BaseController{
 			} catch (IOException e) {
 				System.out.println("createRefDoc() copy " + localDocPath + " to " + localRefDocPath + "Failed!");
 				e.printStackTrace();
+				rt.setMsgData(e);
 				return false;
 			}
 		}
@@ -2051,7 +2070,7 @@ public class DocController extends BaseController{
 	
 	private boolean updateRefRealDoc(String reposRPath, String reposRefRPath,
 			String parentPath, String name, Integer type) {
-		return createRefRealDoc(reposRPath, reposRefRPath, parentPath, name, type);
+		return createRefRealDoc(reposRPath, reposRefRPath, parentPath, name, type,rt);
 	}
 	
 	private boolean createRefVirtualDoc(String reposVPath,String reposRefVPath,String vDocName) {
@@ -2242,8 +2261,9 @@ public class DocController extends BaseController{
 		}
 		return true;
 	}
-	/*************** Functions For SVN *********************/
-	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser) 
+	/*************** Functions For SVN 
+	 * @param rt *********************/
+	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		String remotePath = parentPath + entryName;
 		String reposRPath = getReposRealPath(repos);
@@ -2269,7 +2289,8 @@ public class DocController extends BaseController{
 						String localFilePath = reposRPath + remotePath;
 						if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg) == false)
 						{
-							System.out.println(remotePath + " remoteAddFile失败！");	
+							System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
+							rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
 							return false;
 						}
 					}
@@ -2277,24 +2298,27 @@ public class DocController extends BaseController{
 					{
 						if(svnUtil.svnAddDir(parentPath,entryName,commitMsg) == false)
 						{
-							System.out.println(remotePath + " remoteAddDir失败！");	
+							System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");	
+							rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");
 							return false;
 						}
 					}
 				}
 				else	//如果已经存在，则只是将修改的内容commit到服务器上
 				{
-					System.out.println(remotePath + "在仓库中已存在！");	
+					System.out.println(remotePath + "在仓库中已存在！");
+					rt.setMsgData("svnRealDocAdd() " + remotePath + "在仓库中已存在！");
 					return false;
 				}
 			} catch (SVNException e) {
 				e.printStackTrace();
 				System.out.println("系统异常：" + remotePath + " svnRealDocAdd异常！");
+				rt.setMsgData(e);
 				return false;
 			}
 			
 			//Create the ref real doc, so that we can commit the diff later
-			createRefRealDoc(reposRPath,reposRefRPath,parentPath,entryName,type);
+			createRefRealDoc(reposRPath,reposRefRPath,parentPath,entryName,type,rt);
 			return true;
 		}
 		else
@@ -2389,7 +2413,7 @@ public class DocController extends BaseController{
 			
 			//Update the RefRealDoc with the RealDoc
 			String reposRefRPath = getReposRefRealPath(repos);
-			updateRefRealDoc(reposRPath,reposRefRPath,parentPath,name,type);
+			updateRefRealDoc(reposRPath,reposRefRPath,parentPath,name,type,rt);
 			return true;
 		}
 		else
