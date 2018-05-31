@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="renderer" content="webkit" />
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="shortcut icon"  href="static/SmartWiki/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Cheney" />
     <title>仓库详情-DocSys</title>
@@ -2526,7 +2526,7 @@
 	            dataType : "json",
 	            data : {
 	                id : treeNode.id,	//待复制的docid
-	                dstPid: parentId,	//目标docid
+	                dstPid: parentId,	//目标doc parentId
 	                vid: vid,			//仓库id
 	            },
 	            success : function (ret) {
@@ -2623,9 +2623,9 @@
 		}
 
 		//多文件copy接口
-		function copyDocs(treeNodes,parentNode,vid)	//多文件移动函数
+		function DocsCopy(treeNodes,parentNode,vid)	//多文件移动函数
 		{
-			console.log("copyDocs");
+			console.log("DocsCopy");
 
 			clearContext();	//清空Context缓存
 			
@@ -2637,12 +2637,16 @@
 		
 		//开放给外部的调用接口
         return {
-            copyDocs: function(treeNodes,parentNode,vid){
-            	copyDocs(treeNodes,parentNode,vid);
+			DocsCopy: function(treeNodes,parentNode,vid){
+            	DocsCopy(treeNodes,parentNode,vid);
+            },
+            DocCopy: function(treeNode,parentNode,dstName,vid){
+            	DocCopy(treeNode,parentNode,dstName,vid);
             },
             copyDoc: function(){
             	copyDoc();
             },
+
         };
     })();
 
@@ -3795,7 +3799,7 @@ function CompareObj(objA, objB, flag) {
  	 		//确定是copy还是move,如果是move调用后台move操作，否则调用后台copy操作
 	      	if(isCopy == true) //copy: 复制文件，并新建doc记录
 	      	{
-				DocCopy.copyDocs(treeNodes,parentNode,vid);
+				DocCopy.DocsCopy(treeNodes,parentNode,vid);
 	      	}
 	      	else	//move: 移动文件，并修改doc的parenID和path
 	      	{
@@ -4315,27 +4319,55 @@ function CompareObj(objA, objB, flag) {
 					}
 			},
 			{divider: true},
+			{text: '复制', action: function(e){
+						e.preventDefault();
+						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						if(curRightClickedTreeNode !== null)
+						{
+							gCopiedNode = curRightClickedTreeNode;
+	        			}
+					}
+			},
+			{text: '粘贴', action: function(e){
+						e.preventDefault();
+						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						if(curRightClickedTreeNode !== null)
+						{
+							var parentNode = curRightClickedTreeNode;
+							if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
+							{
+								parentNode = curRightClickedTreeNode.getParentNode();
+							}
+							DocCopy.DocCopy(gCopiedNode,parentNode,vid);
+							gCopiedNode = null;
+	        			}
+					}
+			},
+			{divider: true},
 			{text: '下载', action: function(e){
 						e.preventDefault();
 	        			download();
 					}
 			},
 			{divider: true},
-			{text: '复制名字', action: function(e){
-						e.preventDefault();
-	        			copyDocName();
-					}
-			},
-			{text: '复制路径', action: function(e){
-						e.preventDefault();
-	        			copyDocPath();
-					}
-			},
-			{text: '复制链接', action: function(e){
-						e.preventDefault();
-	        			copyUrl();
-					}
-			},	
+			{text: '其它', subMenu: [
+			           	{text: '复制名字', action: function(e){
+									e.preventDefault();
+				        			copyDocName();
+								}
+						},
+						{text: '复制路径', action: function(e){
+									e.preventDefault();
+				        			copyDocPath();
+								}
+						},
+						{text: '复制链接', action: function(e){
+									e.preventDefault();
+				        			copyUrl();
+								}
+						},	
+   				]
+   			},
 		]);
 		
 		context.settings({compress: true});
