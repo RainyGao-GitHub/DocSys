@@ -323,6 +323,39 @@
 		$("#"+id).remove();	//删除对话框
 	}
 
+	function DoDelete(treeNodes)
+	{
+		if(treeNodes == null)
+		{
+			bootStrapQ.alert("清选择需要删除的文件或目录");
+		}
+		else
+		{
+			var treeNode = treeNodes[0];
+			var msg =  "是否删除文件 " + treeNode.name;
+			if(treeNodes.length > 1)
+		  	{
+				msg =  "是否删除 " + treeNode.name + "等" + treeNodes.length  +"文件";	
+		  	}
+			else
+			{
+				if(treeNode.type == 2)
+				{
+					msg =  "是否删除整个目录 " + treeNode.name;	
+				}
+			}
+			
+			bootstrapQ.confirm({
+				title: "删除确认",
+				msg : msg,
+				},function () {
+			    	//alert("点击了确定");
+					DocDelete.deleteDocs(treeNodes);
+			    	return true;   
+			 	});
+		}
+	}
+	
 	function DoPaste(copiedNode,dstParentNode)
 	{
 		console.log("DoPaste()",copiedNode,dstParentNode);
@@ -4455,7 +4488,7 @@ function CompareObj(objA, objB, flag) {
 						}
 						else
 						{
-							DocDelete.deleteDocs(selectedNodes);
+							DoDelete(selectedNodes);
 						}
 						//以下是用于删除右键选中的文件节点
 						//var treeObj = $.fn.zTree.getZTreeObj("doctree");
