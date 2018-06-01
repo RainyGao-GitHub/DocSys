@@ -1536,6 +1536,22 @@ public class DocController extends BaseController{
 		{
 			rt.setData(doc);
 		}
+		
+		//copySubDocs
+		copySubDocs(docId, reposId, doc.getId(),commitMsg,commitUser,login_user,rt); 
+	}
+
+	private void copySubDocs(Integer docId, Integer reposId, Integer dstParentId,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		Doc doc = new Doc();
+		doc.setPid(docId);
+		List<Doc> subDocList = reposService.getDocList(doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			String subDocName = subDoc.getName();
+			copyDoc(subDoc.getId(),subDocName,subDocName, subDoc.getType(), reposId, docId, dstParentId,commitMsg,commitUser,login_user,rt);
+		}
 	}
 
 	private void updateDocContent(Integer id,String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {

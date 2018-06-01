@@ -2318,6 +2318,7 @@
 			var treeNode = treeNodes[index];
 			console.log("deleteDoc index:" + index + " name:" + treeNode.name + " totalNum:" + totalNum);
 			
+			/* 后台会自动删除子目录，因此前台不需要遍历删除其子目录
 			if(status == 0)
 			{
 				if(treeNode.isParent)	//如果是parentNode,则获取其子目录先删除掉
@@ -2348,6 +2349,7 @@
 			{
 				status = 0;
 			}
+			*/
 			
 			$.ajax({
                 url : "/DocSystem/Doc/deleteDoc.do",
@@ -2419,7 +2421,12 @@
 		function deleteDocs(treeNodes,parentNode,vid)	//多文件移动函数
 		{
 			console.log("deleteDocs");
-
+			if(ContextSize() > 0)
+			{
+				bootStrapQ.alert("系统正忙，请稍候重试！");
+				return;
+			}
+			
 			clearContext();	//清空Context缓存
 			
 			DocDeleteSet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
@@ -2626,7 +2633,9 @@
 	          			treeObj.addNodes(parentNode,NodeIndex,newNode);
 	          			var newTreeNode = treeObj.getNodeByParam("id", ret.data.id,parentNode);
 	          			console.log(newTreeNode.name);          			
-	                    if(treeNode.isParent)	//如果是parentNode,则获取其子目录
+	                    
+	          			/* 后台将自动复制其子目录，因此前台不需要遍历复制其子目录
+	          			if(treeNode.isParent)	//如果是parentNode,则获取其子目录
 	                    {
 	                    	console.log("treeNodes[" + index + "] isParent");
 	                    	var subTreeNodes = treeObj.getNodesByParam("pId", treeNode.id, treeNode);
@@ -2648,6 +2657,7 @@
 				      			console.log("subTreeNodes is null");
 				      		}
 	                    }
+	                    */
 	                    
 	                   	//确定是否还有需要复制的文件
 	                   	index++;
