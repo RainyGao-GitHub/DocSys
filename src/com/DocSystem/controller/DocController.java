@@ -967,7 +967,9 @@ public class DocController extends BaseController{
 				return;			
 			}
 			unlock(); //线程锁
-		}	
+		}
+		
+		deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt);
 		
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
@@ -1035,6 +1037,19 @@ public class DocController extends BaseController{
 			return;
 		}
 		rt.setData(doc);
+	}
+
+	private void deleteSubDocs(Integer docId, Integer reposId,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		
+		Doc doc = new Doc();
+		doc.setPid(docId);
+		List<Doc> subDocList = reposService.getDocList(doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			deleteDoc(subDoc.getId(),reposId,docId,commitMsg,commitUser,login_user,rt);
+		}
 	}
 
 	//底层updateDoc接口
