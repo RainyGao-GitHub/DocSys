@@ -2616,16 +2616,15 @@
 		{
 			var treeNode = treeNodes[index];
 			console.log("copyDoc index:" + index + " name:" + treeNode.name + " parentId:" + parentId + " vid:" + vid + " totalNum:" + totalNum);
-	  		
+			
 			//如果目标目录和自己一样禁止复制
 			if(parentNode != null)
 			{
 				if(treeNode.id == parentNode.id)
 				{
 					console.log("copiedNode and dstParentNode is same");
-					//Do copy NextDoc
-					index++;
-					copyDoc();
+					copyErrorConfirm(treeNode.name);
+					return;
 				}
 			}
 			
@@ -2759,6 +2758,7 @@
 		        id: "dialog-copyConflictDialog",
 		        url: '#copyConflictConfirmDialog',
 		        title: copiedNodeName + '已存在',
+    	        close: false,		
 		        okbtn: "确定",
 		        callback: function () {
 		            setTimeout(function () {
@@ -2778,6 +2778,26 @@
 		    	return true;   
 		    });
 		}
+		
+      	function copyErrorConfirm(FileName)
+      	{
+      		//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: "copyErrorConfirm",
+    	        msg: FileName + "复制失败,是否继续复制其他文件？",
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "结束复制",
+    	    },function () {
+    	    	//alert("点击了确定");
+    	    	index++;
+    	    	copyDoc();
+    	    	return true;
+			},function(){
+    	    	//alert("点击了取消");
+    	    	return true;
+      		});
+      	}
 
 		//多文件copy接口
 		function DocsCopy(treeNodes,parentNode,vid)	//多文件移动函数
@@ -4474,6 +4494,7 @@ function CompareObj(objA, objB, flag) {
 			{text: '复制', action: function(e){
 						e.preventDefault();
 						gCopiedNodes = getCopiedNodes();
+						console.log("gCopiedNodes",gCopiedNodes);
 					}
 			},
 			{text: '粘贴', action: function(e){
