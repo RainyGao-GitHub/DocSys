@@ -2404,9 +2404,9 @@
 	                }
 	                else
 	                {
+	                	showErrorMessage("Error:" + ret.msgInfo);
 	                	clearContext(); //清空上下文
 	                	syncUpMenu();	//同步菜单
-	                	showErrorMessage("Error:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
