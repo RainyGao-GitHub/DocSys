@@ -1869,11 +1869,23 @@ public class DocController extends BaseController{
 	
 	private boolean deleteRealDoc(String reposRPath, String parentPath, String name, Integer type, ReturnAjax rt) {
 		String localDocPath = reposRPath + parentPath + name;
-		if(deleteFile(localDocPath) == false)
+		if(type == 2)
 		{
-			System.out.println("deleteRealDoc() " + localDocPath + "删除失败！");
-			rt.setMsgData("deleteRealDoc() " + localDocPath + "删除失败！");
-			return false;
+			if(delDir(localDocPath) == false)
+			{
+				System.out.println("deleteRealDoc() delDir " + localDocPath + "删除失败！");
+				rt.setMsgData("deleteRealDoc() delDir " + localDocPath + "删除失败！");
+				return false;
+			}
+		}	
+		else 
+		{
+			if(deleteFile(localDocPath) == false)
+			{
+				System.out.println("deleteRealDoc() deleteFile " + localDocPath + "删除失败！");
+				rt.setMsgData("deleteRealDoc() deleteFile " + localDocPath + "删除失败！");
+				return false;
+			}
 		}
 		return true;
 	}
