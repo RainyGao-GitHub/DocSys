@@ -2776,8 +2776,9 @@
 		        id: "dialog-copyConflictDialog",
 		        url: '#copyConflictConfirmDialog',
 		        title: copiedNodeName + '已存在',
-    	        close: false,		
+    	        //close: false,		
 		        okbtn: "确定",
+    	        qubtn: "取消",
 		        callback: function () {
 		            setTimeout(function () {
 		                $("#dialog-copyConflictDialog input[name='newDocName']").val("Copy of " + copiedNodeName);
