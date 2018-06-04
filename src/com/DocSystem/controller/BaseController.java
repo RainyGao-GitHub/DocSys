@@ -1362,8 +1362,11 @@ public class BaseController{
         if(file.exists()){
         	return file.delete();	
         }
-        System.out.println(path + " 不存在！");
-        return false;
+        else
+        {
+            System.out.println(path + " 不存在！");
+        	return true;
+        }
     }
     
     //Delete Directory, path must be dir path
