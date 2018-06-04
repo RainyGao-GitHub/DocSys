@@ -511,7 +511,7 @@ public class BaseController{
 		}
 		
 		System.out.println("getDocIdList() docId:" + docId + " is null");
-		return null;
+		return docIdList;
 	}
 
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
