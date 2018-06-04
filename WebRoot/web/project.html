@@ -4079,6 +4079,7 @@ function CompareObj(objA, objB, flag) {
         renameDoc(treeNode.id,treeNode.name);
     }
     
+	/* I will call doDelete to delete treeNodes
 	function zTreeBeforeRemove(treeId, treeNode) {	
 		if(treeNode)
 		{
@@ -4100,6 +4101,7 @@ function CompareObj(objA, objB, flag) {
     	treeNodes.push(treeNode);
 		DocDelete.deleteDocs(treeNodes);
     }
+	*/
 	
     //Rename and Delete Implemenation End	
 
@@ -4491,22 +4493,23 @@ function CompareObj(objA, objB, flag) {
 						e.preventDefault();
 						var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						var selectedNodes = treeObj.getSelectedNodes();
-						if(selectedNodes == null)
+						var deleteNodes = selectedNodes;
+						if(selectedNodes == null || selectedNodes.length < 2)
+						{
+							if(curRightClickedTreeNode == null)
+							{
+								deleteNodes = null;
+							}
+							deleteNodes.push(curRightClickedTreeNode);
+						}
+						
+						if(deleteNodes == null)
 						{
 							bootStrapQ.alert("清选择需要删除的文件或目录");
 							return;
 						}
-						else
-						{
-							DoDelete(selectedNodes);
-						}
-						//以下是用于删除右键选中的文件节点
-						//var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						//if(curRightClickedTreeNode !== null)
-						//{
-						//	treeObj.removeNode(curRightClickedTreeNode,true);
-						//	curRightClickedTreeNode = null;
-	        			//}
+						
+						DoDelete(deleteNodes);
 					}
 			},
 
