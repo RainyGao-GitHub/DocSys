@@ -2658,84 +2658,16 @@
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
 	                	console.log(ret.data);
-	                 	//后台复制成功，根据后台返回的docid,新建一个treeNode,zTree自动产生的需要删除
-	                    var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	                 	//后台复制成功，根据后台返回的docid,新建一个treeNode
 						var newNode = {name: ret.data.name,id : ret.data.id, pId: ret.data.pid, isParent: ret.data.type==2?true:false};
+	                 	var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						var NodeIndex =  -1;
-						//我现在不是使用zTree自带的copy操作，因此不会自动产生node，因此不需要再删除
-						//var Node = treeObj.getNodeByParam("id", treeNode.id, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
-						//if(Node!=null)
-						//{
-						//	treeObj.removeNode(Node);
-	          			//	NodeIndex = treeObj.getNodeIndex(Node);
-	          			//}
-	          			//console.log(NodeIndex);
 	          			treeObj.addNodes(parentNode,NodeIndex,newNode);
 	          			var newTreeNode = treeObj.getNodeByParam("id", ret.data.id,parentNode);
 	          			console.log(newTreeNode.name);          			
-	                    
-	          			/* 后台将自动复制其子目录，因此前台不需要遍历复制其子目录
-	          			if(treeNode.isParent)	//如果是parentNode,则获取其子目录
-	                    {
-	                    	console.log("treeNodes[" + index + "] isParent");
-	                    	var subTreeNodes = treeObj.getNodesByParam("pId", treeNode.id, treeNode);
-	                    	if(subTreeNodes && subTreeNodes.length)
-				      		{
-				      			console.log("subTreeNodes num:" + subTreeNodes.length + " newTreeNode:" + newTreeNode.name);
-				      			//保存上下文
-				      			index++;
-				      			pushContext();
-				      			//设置新的copyDoc条件
-				      			DocCopySet(subTreeNodes,newTreeNode,vid);
-				      			//等更新完成TreeData后再开始copyDoc
-				      			//updateMenu(copyDoc);
-				      			copyDoc();	//do copy Next Doc
-				      			return;
-				      		}
-				      		else
-				      		{
-				      			console.log("subTreeNodes is null");
-				      		}
-	                    }
-	                    */
-	                    
-	                   	//确定是否还有需要复制的文件
-	                   	index++;
-	                   	if(index < totalNum)	//callback没传入，表示单个上传
-	                   	{
-							//updateMenu(copyDoc);
-				      		copyDoc();	//do copy Next Doc	                   	
-				      	}
-	                   	else	//更新显示数据
-	                   	{	
-	                   		if(ContextSize() > 0)	//上下文非空
-	                  		{
-	                  			popContext();	//pop out the Context
-	                   			if(index < totalNum)
-	                   			{
-	                   				//updateMenu(copyDoc);
-	                   				copyDoc();
-								}
-								else
-								{
-									//updateMenu();
-									bootstrapQ.msg({
-										msg : '复制完成！',
-										type : 'success',
-										time : 2000,
-									});
-								}
-	                  		}
-	                  		else
-	                  		{
-	                    		//updateMenu();	//全部结束
-	        					bootstrapQ.msg({
-									msg : '复制完成！',
-									type : 'success',
-									time : 2000,
-								});
-	                    	}
-	                    }
+
+	          			//复制下一个Doc
+	                    copyNextDoc();
 	                }
 	                else
 	                {
@@ -2759,6 +2691,85 @@
 	    	});
 		}
 		
+		function deleteTreeNode(treeNode,parentNode)
+	    {
+			var NodeIndex = -1;
+			//我现在不是使用zTree自带的copy操作，因此不会自动产生node，因此不需要再删除
+			var Node = treeObj.getNodeByParam("id", treeNode.id, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
+			if(Node!=null)
+			{
+				treeObj.removeNode(Node);
+				NodeIndex = treeObj.getNodeIndex(Node);
+			}
+			console.log(NodeIndex);
+			return NodeIndex;
+	    }
+		
+		function doCopySubDocs(treeNode)
+		{
+  			if(treeNode.isParent)	//如果是parentNode,则获取其子目录
+            {
+            	console.log("treeNodes[" + index + "] isParent");
+            	var subTreeNodes = treeObj.getNodesByParam("pId", treeNode.id, treeNode);
+            	if(subTreeNodes && subTreeNodes.length)
+	      		{
+	      			console.log("subTreeNodes num:" + subTreeNodes.length + " newTreeNode:" + newTreeNode.name);
+	      			//保存上下文
+	      			index++;
+	      			pushContext();
+	      			//设置新的copyDoc条件
+	      			DocCopySet(subTreeNodes,newTreeNode,vid);
+	      			return;
+	      		}
+	      		else
+	      		{
+	      			console.log("subTreeNodes is null");
+	      		}
+            }
+		}
+		
+		//启动复制下一个Doc,如果没有了的话则结束复制
+		function copyNextDoc()
+		{
+           	//确定是否还有需要复制的文件
+           	index++;
+           	if(index < totalNum)	//callback没传入，表示单个上传
+           	{
+				//updateMenu(copyDoc);
+	      		copyDoc();	//do copy Next Doc	                   	
+	      	}
+           	else	//更新显示数据
+           	{	
+           		if(ContextSize() > 0)	//上下文非空
+          		{
+          			popContext();	//pop out the Context
+           			if(index < totalNum)
+           			{
+           				//updateMenu(copyDoc);
+           				copyDoc();
+					}
+					else
+					{
+						//updateMenu();
+						bootstrapQ.msg({
+							msg : '复制完成！',
+							type : 'success',
+							time : 2000,
+						});
+					}
+          		}
+          		else
+          		{
+            		//updateMenu();	//全部结束
+					bootstrapQ.msg({
+						msg : '复制完成！',
+						type : 'success',
+						time : 2000,
+					});
+            	}
+            }
+		}
+		
 		function CopyConflictConfirm(copiedNodeName)
 		{
 		    qiao.bs.dialog({
@@ -2780,8 +2791,7 @@
 		    	return true;   
 		    },function () {
 		    	//取消按键
-		    	index++;
-		    	copyDoc();
+		    	copyNextDoc();
 		    	return true;   
 		    });
 		}
@@ -2802,8 +2812,7 @@
     	        qubtn: "结束复制",
     	    },function () {
     	    	//alert("点击了确定");
-    	    	index++;
-    	    	copyDoc();
+    	    	copyNextDoc();
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
