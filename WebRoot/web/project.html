@@ -2739,15 +2739,22 @@
 	                }
 	                else
 	                {
-	                	showErrorMessage("Error:" + ret.msgInfo);
-	                	clearContext(); //清空上下文
-	                	syncUpMenu();	//将新增的失败的节点刷掉
+	                	console.log("Error:" + ret.msgInfo);
+	                	copyErrorConfirm(treeNode.name,ret.msgInfo);
+	                	return;
+	                	
+	                	//showErrorMessage("Error:" + ret.msgInfo);
+	                	//clearContext(); //清空上下文
+	                	//syncUpMenu();	//将新增的失败的节点刷掉
 	                }
 	            },
 	            error : function () {
-	             	showErrorMessage("服务器异常：copy failed");
-	            	clearContext(); //清空上下文
-	            	syncUpMenu();	//将新增的失败的节点刷掉
+	            	console.log("服务器异常：copy failed");
+                	copyErrorConfirm(treeNode.name,"服务器异常");
+                	return;
+	             	//showErrorMessage("服务器异常：copy failed");
+	            	//clearContext(); //清空上下文
+	            	//syncUpMenu();	//将新增的失败的节点刷掉
 	            }
 	    	});
 		}
@@ -2779,12 +2786,17 @@
 		    });
 		}
 		
-      	function copyErrorConfirm(FileName)
+      	function copyErrorConfirm(FileName,errMsg)
       	{
+      		var msg = FileName + "复制失败,是否继续复制其他文件？";
+      		if(errMsg != undefined)
+      		{
+      			msg = FileName + "复制失败(" + errMsg + "),是否继续复制其他文件？";
+      		}
       		//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: "copyErrorConfirm",
-    	        msg: FileName + "复制失败,是否继续复制其他文件？",
+    	        msg: msg,
     	        close: false,		
     	        okbtn: "继续",
     	        qubtn: "结束复制",
