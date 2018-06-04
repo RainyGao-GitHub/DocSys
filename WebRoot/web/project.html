@@ -409,16 +409,6 @@
 			return;	
 		}
 		
-		//如果目标目录和自己一样禁止复制
-		//if(dstParentNode != null)
-		//{
-		//	if(copiedNode.id == dstParentNode.id)
-		//	{
-		//		console.log("copiedNode and dstParentNode is same");
-		//		dstParentNode = dstParentNode.getParentNode();
-		//	}
-		//}
-		
 		console.log("StartCopy");
 		DocCopy.DocsCopy(treeNodes,dstParentNode,gReposId);
 	}
