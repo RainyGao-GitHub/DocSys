@@ -325,7 +325,7 @@
 
 	function DoDelete(treeNodes)
 	{
-		if(treeNodes == null)
+		if(treeNodes == null || treeNodes.length < 1)
 		{
 			bootStrapQ.alert("清选择需要删除的文件或目录");
 		}
@@ -4493,22 +4493,19 @@ function CompareObj(objA, objB, flag) {
 						e.preventDefault();
 						var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						var selectedNodes = treeObj.getSelectedNodes();
-						var deleteNodes = selectedNodes;
+						var deleteNodes = [];
 						if(selectedNodes == null || selectedNodes.length < 2)
 						{
-							if(curRightClickedTreeNode == null)
+							console.log("selectedNodes",selectedNodes);
+							if(curRightClickedTreeNode != null)
 							{
-								deleteNodes = null;
+								deleteNodes.push(curRightClickedTreeNode);
 							}
-							deleteNodes.push(curRightClickedTreeNode);
 						}
-						
-						if(deleteNodes == null)
+						else
 						{
-							bootStrapQ.alert("清选择需要删除的文件或目录");
-							return;
+							deleteNodes = selectedNodes;
 						}
-						
 						DoDelete(deleteNodes);
 					}
 			},
