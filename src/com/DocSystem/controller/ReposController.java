@@ -1241,10 +1241,6 @@ public class ReposController extends BaseController{
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Integer> docIdList = new ArrayList<Integer>();
 		docIdList = getDocIdList(docId,docIdList);
-		if(docIdList == null || docIdList.size() == 0)
-		{
-			return null;
-		}
 		
 		//size <=2，表明docId位于rootDoc下或不存在，都只取出根目录下的subDocs
 		if(docIdList.size() <= 2)
