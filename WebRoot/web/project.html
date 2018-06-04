@@ -323,6 +323,28 @@
 		$("#"+id).remove();	//删除对话框
 	}
 
+	function getDeleteNodes()
+	{
+		var deleteNodes = [];
+		
+		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		var selectedNodes = treeObj.getSelectedNodes();
+		if(selectedNodes == null || selectedNodes.length < 2)
+		{
+			console.log("selectedNodes",selectedNodes);
+			if(curRightClickedTreeNode != null)
+			{
+				deleteNodes.push(curRightClickedTreeNode);
+			}
+		}
+		else
+		{
+			deleteNodes = selectedNodes;
+		}
+		
+		return deleteNodes;
+	}
+	
 	function DoDelete(treeNodes)
 	{
 		if(treeNodes == null || treeNodes.length < 1)
@@ -355,35 +377,50 @@
 			 	});
 		}
 	}
-	
-	function DoPaste(copiedNode,dstParentNode)
+
+	function getCopiedNodes()
 	{
-		console.log("DoPaste()",copiedNode,dstParentNode);
-		if(copiedNode == null)
+		var treeNodes = [];
+		
+		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		var selectedNodes = treeObj.getSelectedNodes();
+		if(selectedNodes == null || selectedNodes.length < 2)
+		{
+			console.log("selectedNodes",selectedNodes);
+			if(curRightClickedTreeNode != null)
+			{
+				treeNodes.push(curRightClickedTreeNode);
+			}
+		}
+		else
+		{
+			treeNodes = selectedNodes;
+		}
+		
+		return treeNodes;
+	}
+
+	function DoPaste(treeNodes,dstParentNode)
+	{
+		console.log("DoPaste()",treeNodes,dstParentNode);
+		if(treeNodes == null || treeNodes.length < 1)
 		{
 			console.log("DoPaste nothing was copied");
 			return;	
 		}
 		
-		if(dstParentNode != null)
-		{
-			if(copiedNode.id == dstParentNode.id)
-			{
-				console.log("copiedNode and dstParentNode is same");
-				dstParentNode = dstParentNode.getParentNode();
-			}
-		}
-		
-		
-		//if(isNodeExist(copiedNode.name,dstParentNode) == true)
-	  	//{
-	  	//	//Node Name conflict confirm
-		//	bootstrapQ.alert(copiedNode.name + "已存在！");
-	  	//	return;
-	  	//}
+		//如果目标目录和自己一样禁止复制
+		//if(dstParentNode != null)
+		//{
+		//	if(copiedNode.id == dstParentNode.id)
+		//	{
+		//		console.log("copiedNode and dstParentNode is same");
+		//		dstParentNode = dstParentNode.getParentNode();
+		//	}
+		//}
 		
 		console.log("StartCopy");
-		DocCopy.DocCopy(copiedNode,dstParentNode,gReposId);
+		DocCopy.DocsCopy(treeNodes,dstParentNode,gReposId);
 	}
 
 	function copyDocName(){
@@ -2590,6 +2627,19 @@
 			var treeNode = treeNodes[index];
 			console.log("copyDoc index:" + index + " name:" + treeNode.name + " parentId:" + parentId + " vid:" + vid + " totalNum:" + totalNum);
 	  		
+			//如果目标目录和自己一样禁止复制
+			if(parentNode != null)
+			{
+				if(treeNode.id == parentNode.id)
+				{
+					console.log("copiedNode and dstParentNode is same");
+					//Do copy NextDoc
+					index++;
+					copyDoc();
+				}
+			}
+			
+			
 			var dstDocName = treeNode.name;
 			//如果copyDoc未指定dstName,需要检查parentNode下是否存在同名Node
 			if(dstName != undefined)
@@ -2700,15 +2750,15 @@
 	                }
 	                else
 	                {
+	                	showErrorMessage("Error:" + ret.msgInfo);
 	                	clearContext(); //清空上下文
 	                	syncUpMenu();	//将新增的失败的节点刷掉
-	                	showErrorMessage("Error:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
+	             	showErrorMessage("服务器异常：copy failed");
 	            	clearContext(); //清空上下文
 	            	syncUpMenu();	//将新增的失败的节点刷掉
-	             	showErrorMessage("服务器异常：copy failed");
 	            }
 	    	});
 		}
@@ -2726,9 +2776,15 @@
 		            },100);
 		        }
 		    },function () {
+		    	//确定按键
 		    	var dstName =  $("#dialog-copyConflictDialog input[name='newDocName']").val();
 		    	console.log("copyConflictConfirm newName:",dstName);
 				copyDoc(dstName);
+		    	return true;   
+		    },function () {
+		    	//取消按键
+		    	index++;
+		    	copyDoc();
 		    	return true;   
 		    });
 		}
@@ -2750,31 +2806,10 @@
 			copyDoc();	//start copy
 		}
 		
-		//单文件copy接口
-		function DocCopy(treeNode,parentNode,vid)	//多文件移动函数
-		{
-			console.log("DocCopy");
-			if(ContextSize() > 0)
-			{
-				bootstrapQ.alert("系统正忙，请稍候重试！");
-				return;
-			}
-			clearContext();	//清空Context缓存
-			
-			var treeNodes = [];
-			treeNodes.push(treeNode);
-			DocCopySet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
-				
-			//启动复制操作      		
-			copyDoc();	//start copy
-		}
 		//开放给外部的调用接口
         return {
 			DocsCopy: function(treeNodes,parentNode,vid){
             	DocsCopy(treeNodes,parentNode,vid);
-            },
-            DocCopy: function(treeNode,parentNode,vid){
-            	DocCopy(treeNode,parentNode,vid);
             },
             copyDoc: function(dstName){
             	copyDoc(dstName);
@@ -3643,7 +3678,7 @@ function CompareObj(objA, objB, flag) {
 	
 	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
 	var curRightClickedTreeNode = null;
-	var gCopiedNode = null;	//右键复制操作选中的节点
+	var gCopiedNodes = null;	//右键复制操作选中的节点
 	
 	//zTree's setting
 	var setting = {
@@ -4407,14 +4442,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						if(gCopiedNode == null)
-						{
-							//nothing was copied
-						}
-						else
-						{
-							DoPaste(gCopiedNode,null);
-	        			}
+						DoPaste(gCopiedNodes,null);
 					}
 			},
 			]
@@ -4455,28 +4483,17 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						if(curRightClickedTreeNode !== null)
-						{
-							gCopiedNode = curRightClickedTreeNode;
-	        			}
+						gCopiedNodes = getCopiedNodes();
 					}
 			},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						if(gCopiedNode == null)
+						var parentNode = curRightClickedTreeNode;
+						if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
 						{
-							//nothing was copied
+							parentNode = curRightClickedTreeNode.getParentNode();
 						}
-						else
-						{
-							var parentNode = curRightClickedTreeNode;
-							if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
-							{
-								parentNode = curRightClickedTreeNode.getParentNode();
-							}
-							DoPaste(gCopiedNode,parentNode);
-	        			}
+						DoPaste(gCopiedNodes,parentNode);
 					}
 			},
 			{divider: true},
@@ -4493,20 +4510,7 @@ function CompareObj(objA, objB, flag) {
 			{text: '删除', action: function(e){
 						e.preventDefault();
 						var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						var selectedNodes = treeObj.getSelectedNodes();
-						var deleteNodes = [];
-						if(selectedNodes == null || selectedNodes.length < 2)
-						{
-							console.log("selectedNodes",selectedNodes);
-							if(curRightClickedTreeNode != null)
-							{
-								deleteNodes.push(curRightClickedTreeNode);
-							}
-						}
-						else
-						{
-							deleteNodes = selectedNodes;
-						}
+						var deleteNodes = getDeleteNodes();
 						DoDelete(deleteNodes);
 					}
 			},
