@@ -1393,6 +1393,11 @@ public class ReposController extends BaseController{
 	public void getSubDocList(Integer id,Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getSubDocList pid: " + id + " vid: " + vid);
 		Integer pid = id;
+		if(pid == null)
+		{
+			pid = 0;
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
