@@ -2410,9 +2410,9 @@
 	                }
 	            },
 	            error : function () {
+	             	showErrorMessage("服务器异常：delete failed");
 	            	clearContext(); //清空上下文
 	            	syncUpMenu();	//将新增的失败的节点刷掉
-	             	showErrorMessage("服务器异常：delete failed");
 	            }
 	    	});
 		}
