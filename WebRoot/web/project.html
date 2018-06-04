@@ -2621,15 +2621,16 @@
 	                	console.log(ret.data);
 	                 	//后台复制成功，根据后台返回的docid,新建一个treeNode,zTree自动产生的需要删除
 	                    var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						var Node = treeObj.getNodeByParam("id", treeNode.id, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
 						var newNode = {name: ret.data.name,id : ret.data.id, pId: ret.data.pid, isParent: ret.data.type==2?true:false};
 						var NodeIndex =  -1;
-						if(Node!=null)
-						{
-							treeObj.removeNode(Node);
-	          				NodeIndex = treeObj.getNodeIndex(Node);
-	          			}
-	          			console.log(NodeIndex);
+						//我现在不是使用zTree自带的copy操作，因此不会自动产生node，因此不需要再删除
+						//var Node = treeObj.getNodeByParam("id", treeNode.id, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
+						//if(Node!=null)
+						//{
+						//	treeObj.removeNode(Node);
+	          			//	NodeIndex = treeObj.getNodeIndex(Node);
+	          			//}
+	          			//console.log(NodeIndex);
 	          			treeObj.addNodes(parentNode,NodeIndex,newNode);
 	          			var newTreeNode = treeObj.getNodeByParam("id", ret.data.id,parentNode);
 	          			console.log(newTreeNode.name);          			
