@@ -2365,7 +2365,7 @@
 			console.log("deleteDoc index:" + index + " name:" + treeNode.name + " totalNum:" + totalNum);
 			
 			//后台会自动删除子目录，因此前台不需要遍历删除其子目录
-			//if(deleteSubDocs() == true)
+			//if(doDeleteSubDocs() == true)
 			//{
 			//	return;
 			//}
@@ -2428,7 +2428,7 @@
       	}
 		
       	//删除子目录
-      	function deleteSubDocs()
+      	function doDeleteSubDocs(treeNode)
       	{
 			if(status == 0)
 			{
@@ -2512,13 +2512,15 @@
 	
 	//DocCopy类
     var DocCopy = (function () {
-        //当前操作的索引
-        var index = 0;
+    	
+    	//copyDoc conditions
+        var index = 0;        //当前操作的索引
         var treeNodes = null;
         var totalNum = 0;
         var parentNode = null;
         var parentId = 0;
         var vid = 0; 
+
         //Context Cache
         var indexCache = [];
         var treeNodesCache =[];
@@ -2622,6 +2624,23 @@
 			return indexCache.length;
 		}
       	
+		//提供给外部的多文件copy接口
+		function DocsCopy(treeNodes,parentNode,vid)	//多文件移动函数
+		{
+			console.log("DocsCopy");
+			if(ContextSize() > 0)
+			{
+				bootstrapQ.alert("系统正忙，请稍候重试！");
+				return;
+			}
+			clearContext();	//清空Context缓存
+			
+			DocCopySet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
+				
+			//启动复制操作      		
+			copyDoc();	//start copy
+		}
+		
       	//初始化DocCopy设置
       	function DocCopySet(treeNodes,parentNode,vid)	//多文件移动函数
 		{
@@ -2711,19 +2730,12 @@
 	                	console.log("Error:" + ret.msgInfo);
 	                	copyErrorConfirm(treeNode.name,ret.msgInfo);
 	                	return;
-	                	
-	                	//showErrorMessage("Error:" + ret.msgInfo);
-	                	//clearContext(); //清空上下文
-	                	//syncUpMenu();	//将新增的失败的节点刷掉
 	                }
 	            },
 	            error : function () {
 	            	console.log("服务器异常：copy failed");
                 	copyErrorConfirm(treeNode.name,"服务器异常");
                 	return;
-	             	//showErrorMessage("服务器异常：copy failed");
-	            	//clearContext(); //清空上下文
-	            	//syncUpMenu();	//将新增的失败的节点刷掉
 	            }
 	    	});
 		}
@@ -2756,13 +2768,14 @@
 	      			pushContext();
 	      			//设置新的copyDoc条件
 	      			DocCopySet(subTreeNodes,newTreeNode,vid);
-	      			return;
+	      			return true;
 	      		}
 	      		else
 	      		{
 	      			console.log("subTreeNodes is null");
 	      		}
             }
+  			return false;
 		}
 		
 		//启动复制下一个Doc,如果没有了的话则结束复制
@@ -2857,23 +2870,6 @@
     	    	return true;
       		});
       	}
-
-		//多文件copy接口
-		function DocsCopy(treeNodes,parentNode,vid)	//多文件移动函数
-		{
-			console.log("DocsCopy");
-			if(ContextSize() > 0)
-			{
-				bootstrapQ.alert("系统正忙，请稍候重试！");
-				return;
-			}
-			clearContext();	//清空Context缓存
-			
-			DocCopySet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
-				
-			//启动复制操作      		
-			copyDoc();	//start copy
-		}
 		
 		//开放给外部的调用接口
         return {
