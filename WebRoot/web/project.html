@@ -3998,19 +3998,6 @@ function CompareObj(objA, objB, flag) {
       			showErrorMessage("targetNode is null,理论上不该出现");
       			return;
       		}
- 	 	  
- 	 	  	//检查目标目录是否有同名文件存在，
-      		if(treeNodes[0].getParentNode() != parentNode || isCopy == true) 
- 	 	  	{
-	 	 		 for(var i=0;i<treeNodes.length;i++)
-	 	 	  	 {
-	 	 	  		if(isNodeExist(treeNodes[i].name,parentNode) == true)
-	 	 	  		{
-						bootstrapQ.alert(treeNodes[i].name + "已存在！");
-	 	 	  			return false;
-	 	 	  		}
-	          	}
-		  	}
            
           	className = (className === "dark" ? "":"dark");
           	return true;
