@@ -3070,10 +3070,11 @@
     		console.log("moveDoc index:" + index + " totalNum:" + totalNum + " parentId:" + parentId + " vid:" + vid);
     		var treeNode = treeNodes[index];
     		
-  	    	if(treeNode.getParentNode() == parentNode)
+  	    	if(treeNode.pid == parentNode.id)
   			{
+  	    		console.log("treeNode.parentNode same to parentNode","treeNode",treeNode.pid,"parentNode",parentNode.id);
   	    		moveErrorConfirm(treeNode.name);
-  	    		return;
+  	    		return; 
   			}
   	    	
 			//执行后台moveDoc操作
@@ -3120,7 +3121,7 @@
 	        {
     	    	busy = 0;
 	            clearContext(); //清空上下文
-	            syncUpMenu();	//刷新菜单
+	            //syncUpMenu();	//刷新菜单
 	            
 	         	console.log("moveDoc End");
 				bootstrapQ.msg({
