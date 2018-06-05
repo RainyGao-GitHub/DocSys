@@ -411,7 +411,7 @@
 		}
 		
 		console.log("StartCopy");
-		DocCopy.DocsCopy(treeNodes,dstParentNode,gReposId);
+		DocCopy.copyDocs(treeNodes,dstParentNode,gReposId);
 	}
 
 	function copyDocName(){
@@ -2638,9 +2638,9 @@
 		}
       	
 		//提供给外部的多文件copy接口
-		function DocsCopy(treeNodes,parentNode,vid)	//多文件移动函数
+		function copyDocs(treeNodes,parentNode,vid)	//多文件移动函数
 		{
-			console.log("DocsCopy");
+			console.log("copyDocs");
 			if(ContextSize() > 0)
 			{
 				bootstrapQ.alert("系统正忙，请稍候重试！");
@@ -2686,17 +2686,13 @@
 			var treeNode = treeNodes[index];
 			console.log("copyDoc index:" + index + " name:" + treeNode.name + " parentId:" + parentId + " vid:" + vid + " totalNum:" + totalNum);
 			
-			//如果目标目录和自己一样禁止复制
-			if(parentNode != null)
+			//
+			if(treeNode.id == parentId)
 			{
-				if(treeNode.id == parentNode.id)
-				{
-					console.log("copiedNode and dstParentNode is same");
-					copyErrorConfirm(treeNode.name);
-					return;
-				}
-			}
-			
+				console.log("treeNode is same to parentNode","treeNode",treeNode.id,"parentId",parentId);
+				copyErrorConfirm(treeNode.name);
+				return;
+			}			
 			
 			var dstDocName = treeNode.name;
 			//如果copyDoc未指定dstName,需要检查parentNode下是否存在同名Node
@@ -2897,8 +2893,8 @@
 		
 		//开放给外部的调用接口
         return {
-			DocsCopy: function(treeNodes,parentNode,vid){
-            	DocsCopy(treeNodes,parentNode,vid);
+			copyDocs: function(treeNodes,parentNode,vid){
+            	copyDocs(treeNodes,parentNode,vid);
             },
         };
     })();
@@ -3969,7 +3965,6 @@ function CompareObj(objA, objB, flag) {
       }
 		
 	  //drop前检查函数
-      var moveUnderSameDir = 0; //同目录下移动标记
       function zTreeBeforeDrop(treeId, treeNodes, targetNode, moveType, isCopy) {
           console.log("zTreeBeforeDrop");
           
@@ -4003,25 +3998,6 @@ function CompareObj(objA, objB, flag) {
       			showErrorMessage("targetNode is null,理论上不该出现");
       			return;
       		}
- 	 	   	
-	 	   	//确定是copy还是move
-      		if(isCopy == true)
-      		{
-      			if(treeNodes[0].getParentNode() == parentNode)
-      			{
-      				showErrorMessage("同目录禁止复制");
-      				return false;
-      			}
-			}
-      		else	//move: 移动文件，并修改doc的parenID和path
-      		{
-      	    	if(treeNodes[0].getParentNode() == parentNode)
-      			{
-      				//alert("同目录移动");
-      				moveUnderSameDir = 1;
-      			}
-      		}
- 	 	  
  	 	  
  	 	  	//检查目标目录是否有同名文件存在，
       		if(treeNodes[0].getParentNode() != parentNode || isCopy == true) 
@@ -4083,7 +4059,7 @@ function CompareObj(objA, objB, flag) {
  	 		//确定是copy还是move,如果是move调用后台move操作，否则调用后台copy操作
 	      	if(isCopy == true) //copy: 复制文件，并新建doc记录
 	      	{
-				DocCopy.DocsCopy(treeNodes,parentNode,vid);
+				DocCopy.copyDocs(treeNodes,parentNode,vid);
 	      	}
 	      	else	//move: 移动文件，并修改doc的parenID和path
 	      	{
