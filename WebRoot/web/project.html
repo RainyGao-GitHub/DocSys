@@ -594,7 +594,8 @@
 	function dragUploadConfirm(e)
 	{
 		console.log("dragUploadConfirm",e);
-        var entrys = e.dataTransfer.files;   
+        var entrys = e.dataTransfer.files;
+        console.log("entrys",entrys);
         
 	  	//get the parentNode
 	  	console.log(e.target);
@@ -1512,10 +1513,13 @@
 				             },
 				             success : function (ret) {
 				             	if( "ok" == ret.status && ret.data.id){
-				                	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+				            	    //add the treeNode
+				             		var treeObj = $.fn.zTree.getZTreeObj("doctree");
 				                    var newNode = {name: nodeName, id : ret.data.id, isParent: true};
 				                    newNode = treeObj.addNodes(tempParentNode, newNode);
-				        		  	console.log("try to uploadDoc again");
+				                    
+				                    //to upload next Doc
+				        		  	console.log("start to uploadNextDoc");
 				        		  	uploadDoc();
 				        		  	return;
  				                }
@@ -1604,10 +1608,13 @@
 					//上传成功！
 					if("ok" == ret.status){
 	                	if(docId == -1) //文件新建成功
-		                {
+		                {	
+	                		//add treeNode
 		                   	var treeObj = $.fn.zTree.getZTreeObj("doctree");
 		                    var newNode = {name: name, id : ret.data.id,};
 							newNode = treeObj.addNodes(tempParentNode, newNode);
+		                  	
+							//update the uploadStatus
 							$('.file'+index).removeClass('is-uploading');
 							$('.file'+index).addClass('is-success');
 							uploadSuccessHandler(name,ret.msgInfo);
@@ -1740,9 +1747,6 @@
             uploadDocs: function(files,parentNode,parentId,vid){
             	uploadDocs(files,parentNode,parentId,vid);
             },
-            uploadDoc: function(){
-            	uploadDoc();
-            },
             stopAllUpload: function(){
             	stopAllUpload();
             },
@@ -1761,6 +1765,42 @@
     	var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
     	console.log("stopUpload " + index);
     	DocUpload.stopUpload(index);
+    }
+	
+	//删除多余的treeNode
+	function deleteDuplicatedTreeNode(name,parentNode)
+    {
+		console.log("deleteDuplicatedTreeNode",name,parentNode);
+		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		var nodes = treeObj.getNodesByParam("name", name, parentNode);
+		console.log(nodes);
+		if(nodes!=null && nodes.length > 1)
+		{
+			var size = nodes.length;
+			var i = 1;
+			//删除多余的treeNode
+			for(i=1;i<size;i++)
+			{
+				Node = nodes[i];
+				treeObj.removeNode(Node);
+			}
+		}
+		return;
+    }
+	
+	function deleteTreeNode(name,parentNode)
+    {
+		console.log("deleteTreeNode",name,parentNode);
+		var NodeIndex = -1;
+		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		var Node = treeObj.getNodeByParam("name", name, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
+		if(Node!=null)
+		{
+			NodeIndex = treeObj.getNodeIndex(Node);
+			treeObj.removeNode(Node);
+		}
+		console.log(NodeIndex);
+		return NodeIndex;
     }
 </script>
 
@@ -2750,20 +2790,6 @@
 	            }
 	    	});
 		}
-		
-		function deleteTreeNode(treeNode,parentNode)
-	    {
-			var NodeIndex = -1;
-			//我现在不是使用zTree自带的copy操作，因此不会自动产生node，因此不需要再删除
-			var Node = treeObj.getNodeByParam("id", treeNode.id, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
-			if(Node!=null)
-			{
-				treeObj.removeNode(Node);
-				NodeIndex = treeObj.getNodeIndex(Node);
-			}
-			console.log(NodeIndex);
-			return NodeIndex;
-	    }
 		
 		function doCopySubDocs(treeNode)
 		{
