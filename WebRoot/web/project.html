@@ -593,19 +593,15 @@
 	
 	function dragUploadConfirm(e)
 	{
-		console.log(e);
-        var entrys = e.dataTransfer.files;
+		console.log("dragUploadConfirm",e);
+        var entrys = e.dataTransfer.files;   
         
-       	//避免事件退出时，文件objects丢失,好像不会的
-	    //var fileList = [];
-	    //var totalSize = 0;
-	    //totalSize = buildFileList(entrys,fileList);	    
-	     	
 	  	//get the parentNode
-	  	if(e.target.tagName=="SPAN"){
+	  	console.log(e.target);
+        if(e.target.tagName=="SPAN"){
         	e.target.parentNode.click();
-        	
         }
+	  	
 		var treeObj = $.fn.zTree.getZTreeObj("doctree");
 		var selectedNode = treeObj.getSelectedNodes()[0];
 		console.log(selectedNode);
@@ -4458,7 +4454,11 @@ function CompareObj(objA, objB, flag) {
             e.preventDefault();  
         };  
         uuz.ondragover = function(e){  
-            e.preventDefault();  
+            e.preventDefault();
+            //判断现在所在的zTree Node并选中它
+            if(e.target.tagName=="SPAN"){
+            	e.target.parentNode.click();
+            }
         };  
         uuz.ondrop = function(e){   
             e.preventDefault();
