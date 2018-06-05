@@ -2254,6 +2254,8 @@
     
 	//DocDelete类
     var DocDelete = (function () {
+    	var busy = 0;
+    	
         //deleteDoc current conditions
         var treeNodes = null; //doc nodes which need to be delete
         var index = 0;  //current delete node index in treeNodes
@@ -2328,12 +2330,13 @@
 		function deleteDocs(treeNodes,parentNode,vid)	//多文件移动函数
 		{
 			console.log("deleteDocs");
-			if(ContextSize() > 0)
+			if(busy ==  1)
 			{
 				bootStrapQ.alert("系统正忙，请稍候重试！");
 				return;
 			}
 			
+			busy = 1;
 			clearContext();	//清空Context缓存
 			
 			DocDeleteSet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
@@ -2386,19 +2389,19 @@
 				     	
 				     	//start to delete nextDoc
 				     	deleteNextDoc();
+				     	return;
 	                }
 	                else
 	                {
-	                	deleteErrorConfirm();
-	                	showErrorMessage("Error:" + ret.msgInfo);
-	                	clearContext(); //清空上下文
-	                	syncUpMenu();	//同步菜单
+	                	console.log("Error:" + ret.msgInfo);
+	                	deleteErrorConfirm(treeNode.name,ret.msgInfo);
+	            		return;
 	                }
 	            },
 	            error : function () {
-	             	showErrorMessage("服务器异常：delete failed");
-	            	clearContext(); //清空上下文
-	            	syncUpMenu();	//将新增的失败的节点刷掉
+	             	console.log("服务器异常：delete failed");
+	             	deleteErrorConfirm(treeNode.name,"服务器异常");
+	            	return;
 	            }
 	    	});
 		}
@@ -2423,6 +2426,9 @@
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
+    	    	busy = 0;
+	            clearContext(); //清空上下文
+	            syncUpMenu();	//将新增的失败的节点刷掉
     	    	return true;
       		});
       	}
@@ -2481,7 +2487,10 @@
 					}
 					else
 					{
-						//updateMenu();
+		    	    	busy = 0;
+			            clearContext(); //清空上下文
+			            syncUpMenu();
+			            
 						bootstrapQ.msg({
 							msg : '删除完成！',
 							type : 'success',
@@ -2491,8 +2500,11 @@
           		}
           		else
           		{
-            		//updateMenu();	//全部结束
-					bootstrapQ.msg({
+        	    	busy = 0;
+    	            clearContext(); //清空上下文
+    	            syncUpMenu();
+    	            
+            		bootstrapQ.msg({
 						msg : '删除完成！',
 						type : 'success',
 						time : 2000,
@@ -2791,7 +2803,7 @@
            	index++;
            	if(index < totalNum)	//callback没传入，表示单个上传
            	{
-				//updateMenu(copyDoc);
+   				//Start to copy next Doc
 	      		copyDoc();	//do copy Next Doc	                   	
 	      	}
            	else	//更新显示数据
@@ -2801,12 +2813,15 @@
           			popContext();	//pop out the Context
            			if(index < totalNum)
            			{
-           				//updateMenu(copyDoc);
+           				//Start to copy next Doc
            				copyDoc();
 					}
 					else
 					{
-						//updateMenu();
+	        	    	busy = 0;
+	    	            clearContext(); //清空上下文
+	    	            syncUpMenu();	//刷新菜单
+			            
 						bootstrapQ.msg({
 							msg : '复制完成！',
 							type : 'success',
@@ -2816,8 +2831,11 @@
           		}
           		else
           		{
-            		//updateMenu();	//全部结束
-					bootstrapQ.msg({
+        	    	busy = 0;
+    	            clearContext(); //清空上下文
+    	            syncUpMenu();	//刷新菜单
+    	            
+    	            bootstrapQ.msg({
 						msg : '复制完成！',
 						type : 'success',
 						time : 2000,
@@ -2846,10 +2864,6 @@
 		    	console.log("copyConflictConfirm newName:",dstName);
 				copyDoc(dstName);
 		    	return true;   
-		    },function () {
-		    	//取消按键
-		    	copyNextDoc();
-		    	return true;   
 		    });
 		}
 		
@@ -2866,13 +2880,16 @@
     	        msg: msg,
     	        close: false,		
     	        okbtn: "继续",
-    	        qubtn: "结束复制",
+    	        qubtn: "结束",
     	    },function () {
     	    	//alert("点击了确定");
     	    	copyNextDoc();
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
+    	    	busy = 0;
+    	        clearContext(); //清空上下文
+    	        syncUpMenu();	//刷新菜单
     	    	return true;
       		});
       	}
@@ -2888,6 +2905,8 @@
 
 	//DocMove类	
     var DocMove = (function () {
+    	var busy = 0;
+    	
         //moveDoc conditions
     	var index = 0; //当前操作的索引
         var treeNodes = null;
@@ -3004,6 +3023,12 @@
 		{
 			console.log("moveDocs");
 
+			if(busy == 1)
+			{
+				bootStrapQ("系统正忙，请稍候重试!");
+				return;
+			}
+			busy = 1;
 			clearContext();	//清空Context缓存
 			
 			DocMoveSet(treeNodes,parentNode,vid);	//设置DocMove Parameters
@@ -3092,7 +3117,10 @@
 	        }
 	        else	//上传结束，保存目录结构到后台
 	        {
-	         	//updateMenu();
+    	    	busy = 0;
+	            clearContext(); //清空上下文
+	            syncUpMenu();	//刷新菜单
+	            
 	         	console.log("moveDoc End");
 				bootstrapQ.msg({
 					msg : '移动完成！',
@@ -3122,6 +3150,9 @@
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
+        	    busy = 0;
+    	        clearContext(); //清空上下文
+    	        syncUpMenu();	//刷新菜单
     	    	return true;
       		});
       	}
