@@ -797,37 +797,28 @@
         /*全局变量*/
         var isUploading = false;	//文件上传中标记
         var stopUploadFlag = false;	//结束上传
-        //当前操作的索引
-        var index = 0;
-        var totalNum = 0; 
         var drawedNum = 0; //已绘制的进度条个数
-        var uploadedNum = 0; //一上传个数
+        var uploadedNum = 0; //已上传个数
         var successNum = 0;	//成功上传个数
 		var failNum = 0; //上传失败个数
 		var totalSize = 0;	//总大小
-        var uploadedFileSize = 0; //已完成上传的文件大小
         var uploadedSize = 0; //已上传大小：uploadedFileSize + 上传中文件的loadedSize
- 		var preUploadSize = 0; //上次的已上传大小
-        var uploadTime = 0; //当前上传时间
+		var uploadedFileSize = 0; //已完成上传的文件大小
+		var preUploadSize = 0; //上次的已上传大小
+		var uploadTime = 0; //当前上传时间
         var preUploadTime = 0; //上次的上传时间
         var uploadStartTime = 0;//上传开始时间，用于计算已用时间
         var uploadSpeed = 1000;	//1k/s
-        var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
-        var uploadErrorConfirmSet = 0; //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传		
-        //文件上传上下文List，用于记录单个文件的上传情况，在开始上传的时候初始化
-        var SubContextList = [];
-        //上传的目标目录信息
-        var parentNode = null;
-        var parentId = 0;
+        
+        /*uploadDoc conditions 用于指示当前的上传文件及上传状态*/
+        var index = 0; //当前操作的索引
+        var totalNum = 0; 
+ 		var SubContextList = []; //文件上传上下文List，用于记录单个文件的上传情况，在开始上传的时候初始化
         var vid = 0;
         
-        //Context Cache:适用于多层递归调用
-        var indexCache = [];
-        var SubContextListCache =[];
-        var totalNumCache = [];
-        var parentNodeCache = [];
-        var parentIdCache = [];
-        var vidCache = [];
+        //状态机变量，用于实现异步对话框的实现
+        var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
+        var uploadErrorConfirmSet = 0; //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传		
         
         //标准Java成员操作接口
         function getUploadStatus()
@@ -861,26 +852,6 @@
 			totalNum = num;
 		}
 		
-		function getParentNode()
-		{
-            return parentNode;
-		}
-		
-		function setParentNode(node)
-		{
-			parentNode = node;
-		}
-		
-		function getParentId()
-		{
-            return parentId;
-		}
-		
-		function setParentId(id)
-		{
-			parentId = id;
-		}
-		
 		function getVid()
 		{
             return vid;
@@ -889,40 +860,6 @@
 		function setVid(id)
 		{
 			vid = id;
-		}
-		
-				
-		//上下文操作接口
-		function pushContext()
-		{
-			indexCache.push(index);
-			SubContextListCache.push(SubContextList);
-			totalNumCache.push(totalNum);
-			parentNodeCache.push(parentNode);
-			parentIdCache.push(parentId);
-			vidCache.push(vid);	
-		}
-		function popContext()
-		{
-			index = indexCache.pop();
-			SubContextList = SubContextListCache.pop();
-			totalNum = totalNumCache.pop();
-			parentNode = parentNodeCache.pop();
-			parentId = parentIdCache.pop();
-			vid = vidCache.pop();
-		}
-		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
-		{
-			indexCache = [];
-	        SubContextListCache =[];
-	        totalNumCache = [];
-	        parentNodeCache = [];
-	        parentIdCache = [];
-	        vidCache = [];
-		}
-		function ContextSize()
-		{
-			return indexCache.length;
 		}
       	
       	//设置进度跳的上传取消按键的接口,this function has performance issue, so it will be be used
@@ -983,7 +920,7 @@
       	function DocUploadInit(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("DocUploadInit");
-							//设置为正在上传，避免被其他上传中断
+			//设置为正在上传，避免被其他上传中断
 			isUploading = true;
 			
 			//清空所有全局变量
@@ -994,7 +931,6 @@
 			successNum = 0;
 			failNum = 0;
 			drawedNum =0;
-			clearContext();	//清空Context缓存
 			//清空上下文列表
 			SubContextList = [];
 			
@@ -1040,11 +976,6 @@
 				totNum = files.length;
 			}
 			totalNum += totNum;
-			
-			//如果需要更换上传路径，需要将其保存到context中去
-			//setParentNode(parentNode); 
-			//setParentId(parentId);
-			//setVid(vid);
 			
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			checkAndDrawUploadItems(SubContextList);
@@ -1437,7 +1368,7 @@
     			return;
     		}
     		
-    		//每次上传前检查是否需要绘制并绘制
+    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
     		checkAndDrawUploadItems(SubContextList);
     		
     		//取消当前文件上传
@@ -1573,10 +1504,6 @@
 		  	 		}
 		  	 	}
 			}
-			
-			//通过每一个文件新建一个进度状态来指示上传状态
-			//var fileDom = '<p>'+name+'<span class="status">上传中</span></p>';
-			//$("body").append(fileDom);
 			
 			//新建文件上传表单
 			var form = new FormData();
