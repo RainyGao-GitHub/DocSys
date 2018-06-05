@@ -2888,13 +2888,14 @@
 
 	//DocMove类	
     var DocMove = (function () {
-        //当前操作的索引
-        var index = 0;
+        //moveDoc conditions
+    	var index = 0; //当前操作的索引
         var treeNodes = null;
         var totalNum = 0;
         var parentNode = null;
         var parentId = 0;
         var vid = 0; 
+
         //Context Cache
         var indexCache = [];
         var treeNodesCache =[];
@@ -2998,6 +2999,19 @@
 			return indexCache.length;
 		}
       	
+		//多文件move接口
+		function moveDocs(treeNodes,parentNode,vid)	//多文件移动函数
+		{
+			console.log("moveDocs");
+
+			clearContext();	//清空Context缓存
+			
+			DocMoveSet(treeNodes,parentNode,vid);	//设置DocMove Parameters
+				
+			//启动复制操作      		
+			moveDoc();	//start move
+		}
+		
       	//初始化DocMove设置
       	function DocMoveSet(treeNodes,parentNode,vid)	//多文件移动函数
 		{
@@ -3029,95 +3043,94 @@
     	{
     		console.log("moveDoc index:" + index + " totalNum:" + totalNum + " parentId:" + parentId + " vid:" + vid);
     		var treeNode = treeNodes[index];
-    		if(moveUnderSameDir)	
-    		{
-    			index++;	//move成功，则调用回调函
-            	if(index < totalNum) //上传没结束，且回调函数存在则回调，否则表示结束
-            	{
-                	console.log("moveDoc Next");
-                   	//updateMenu(DocMove.moveDoc);
-                   	DocMove.moveDoc();
+    		
+  	    	if(treeNode.getParentNode() == parentNode)
+  			{
+  	    		moveErrorConfirm(treeNode.name);
+  	    		return;
+  			}
+  	    	
+			//执行后台moveDoc操作
+    		$.ajax({
+                url : "/DocSystem/Doc/moveDoc.do",
+                type : "post",
+                dataType : "json",
+                data : {
+                    id : treeNode.id,
+                    dstPid: parentId,
+                    vid: vid,
+                },
+                success : function (ret) {
+                   if( "ok" == ret.status )
+                   {
+                	   //moveNextDoc
+                	   moveNextDoc();
+                	   return;
+                   }
+                   else	//后台报错，结束移动
+                   {
+                	   console.log("moveDoc Error:" + ret.msgInfo);
+                       moveErrorConfirm(treeNode.name,ret.msgInfo);
+                       return;
+                   }
+                },
+                error : function () {	//后台异常
+ 	               console.log("服务器异常：文件[" + index + "]移动异常！");
+            	   moveErrorConfirm(treeNode.name,"服务器异常");
+            	   return;
                 }
-                else	//上传结束，保存目录结构到后台
-                {
-                	//updateMenu();
-                    console.log("moveDoc End");
-					bootstrapQ.msg({
-						msg : '移动完成！',
-						type : 'success',
-						time : 2000,
-					});
-                }
-    		}
-    		else
-    		{
-    			//执行后台moveDoc操作
-	    		$.ajax({
-	                url : "/DocSystem/Doc/moveDoc.do",
-	                type : "post",
-	                dataType : "json",
-	                data : {
-	                    id : treeNode.id,
-	                    dstPid: parentId,
-	                    vid: vid,
-	                },
-	                success : function (ret) {
-	                   if( "ok" == ret.status )
-	                   {
-	                        index++;	//move成功，则调用回调函
-	                        if(index < totalNum) //上传没结束，且回调函数存在则回调，否则表示结束
-	                        {
-	                        	console.log("moveDoc Next");
-	                        	//updateMenu(DocMove.moveDoc);
-	                        	DocMove.moveDoc();
-	                        }
-	                        else	//上传结束，保存目录结构到后台
-	                        {
-	                         	//updateMenu();
-	                         	console.log("moveDoc End");
-	        					bootstrapQ.msg({
-	        						msg : '移动完成！',
-	        						type : 'success',
-	        						time : 2000,
-	        					});
-	                        }
-	                   }
-	                   else	//后台报错，结束移动
-	                   {
-	                    	syncUpMenu();
-	                    	showErrorMessage("moveDoc Error:" + ret.msgInfo);
-	                   }
-	                },
-	                error : function () {	//后台异常
-		               syncUpMenu();
-	 	               showErrorMessage("服务器异常：文件[" + index + "]移动异常！");
-	                }
-	        	});
-        	}
+        	});
     	}
 
-		//多文件move接口
-		function moveDocs(treeNodes,parentNode,vid)	//多文件移动函数
+		function moveNextDoc()
 		{
-			console.log("moveDocs");
-
-			clearContext();	//清空Context缓存
-			
-			DocMoveSet(treeNodes,parentNode,vid);	//设置DocMove Parameters
-				
-			//启动复制操作      		
-			moveDoc();	//start move
+	        index++;	//move成功，则调用回调函
+	        if(index < totalNum) //上传没结束，且回调函数存在则回调，否则表示结束
+	        {
+	        	console.log("moveDoc Next");
+	        	moveDoc();
+	        }
+	        else	//上传结束，保存目录结构到后台
+	        {
+	         	//updateMenu();
+	         	console.log("moveDoc End");
+				bootstrapQ.msg({
+					msg : '移动完成！',
+					type : 'success',
+					time : 2000,
+				});
+	        }
 		}
+		
+      	function moveErrorConfirm(FileName,errMsg)
+      	{
+      		var msg = FileName + "移动失败,是否继续移动其他文件？";
+      		if(errMsg != undefined)
+      		{
+      			msg = FileName + "移动失败(" + errMsg + "),是否继续移动其他文件？";
+      		}
+      		//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: "moveErrorConfirm",
+    	        msg: msg,
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "结束",
+    	    },function () {
+    	    	//alert("点击了确定");
+    	    	moveNextDoc();
+    	    	return true;
+			},function(){
+    	    	//alert("点击了取消");
+    	    	return true;
+      		});
+      	}
 		
 		//开放给外部的调用接口
         return {
             moveDocs: function(treeNodes,parentNode,vid){
             	moveDocs(treeNodes,parentNode,vid);
             },
-            moveDoc: function(){
-            	moveDoc();
-            },
-            
         };
     })();
 </script>
