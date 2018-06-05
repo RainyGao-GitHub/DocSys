@@ -3072,8 +3072,9 @@
     		
   	    	if(treeNode.pid == parentId)
   			{
-  	    		console.log("treeNode.parentNode same to parentNode","treeNode",treeNode.pid,"parentNode",parentNode.id);
-  	    		moveErrorConfirm(treeNode.name);
+  	    		console.log("treeNode is already under parentNode","treeNode",treeNode.pid,"parentNode",parentNode.id);
+  	    		//moveErrorConfirm(treeNode.name);
+  	    		moveNextDoc();
   	    		return; 
   			}
   	    	
