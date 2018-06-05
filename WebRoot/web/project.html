@@ -2722,6 +2722,12 @@
 	          			var newTreeNode = treeObj.getNodeByParam("id", ret.data.id,parentNode);
 	          			console.log(newTreeNode.name);          			
 
+	          			//后台将自动复制其子目录，因此前台不需要遍历复制其子目录
+	          			//if(doCopySubDocs(treeNode) == true)	//如果是parentNode,则获取其子目录
+	                    //{
+	          			//	return;
+	                    //}
+	          			
 	          			//复制下一个Doc
 	                    copyNextDoc();
 	                }
@@ -2876,10 +2882,6 @@
 			DocsCopy: function(treeNodes,parentNode,vid){
             	DocsCopy(treeNodes,parentNode,vid);
             },
-            copyDoc: function(dstName){
-            	copyDoc(dstName);
-            },
-
         };
     })();
 
