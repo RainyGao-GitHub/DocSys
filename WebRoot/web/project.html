@@ -736,10 +736,10 @@
 	    console.log("firstFile:"+fileName);
 	  	
 	  	var uploadContent = fileName;
-	  	if(relativePath)
-	  	{
-	  		uploadContent = relativePath;
-	  	}
+	  	//if(relativePath)
+	  	//{
+	  	//	uploadContent = relativePath;
+	  	//}
 	  	if(files.length > 1)
 	  	{
 	  		uploadContent = uploadContent + " 等" + files.length + "个文件";
@@ -2030,7 +2030,7 @@
                 }
             },
             error : function () {
-                bootstrapQ.alert("保存异常");
+                bootstrapQ.alert("保存失败:服务器异常");
             }
         });
 
@@ -2056,11 +2056,21 @@
 								time : 1000,
 					});
                 }else {
-                    bootstrapQ.alert("临时保存失败:"+ret.msgInfo);
+                    //bootstrapQ.alert("临时保存失败:"+ret.msgInfo);
+                    bootstrapQ.msg({
+						msg : "临时保存失败 :" + +ret.msgInfo,
+						type : 'danger',
+						time : 1000,
+					});
                 }
             },
             error : function () {
-                bootstrapQ.alert("临时保存异常");
+                //bootstrapQ.alert("临时保存异常");
+                bootstrapQ.msg({
+					msg : "临时保存失败 :服务器异常",
+					type : 'danger',
+					time : 1000,
+				});
             }
         });
 
@@ -3283,7 +3293,7 @@
 		    	    	debounce.clearStatus1();
 		    			tmpSaveDoc(gDocId, debounce.get());
 		    		}
-		    	},10000);
+		    	},20000);
 		    }
 		}     
 	
