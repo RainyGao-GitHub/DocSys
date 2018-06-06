@@ -13,10 +13,13 @@
 
       if (files.length) {
         items = e.dataTransfer.items;
+    	console.log("items",items);
+
         if (items && items.length && (items[0].webkitGetAsEntry != null)) {
-          return _addFilesFromItems(items);
+        	console.log("_addFilesFromItems");
+        	return _addFilesFromItems(items);
         } else {
-          return files;
+        	return files;
         }
       }
     }

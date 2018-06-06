@@ -265,8 +265,8 @@
 
 <!-- multiple file and dir upload triger div -->
 <div style="display:none">
-	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(this)" style="margin-top: 90px;" multiple="multiple"/>
-	<input id="uploadDir" type="file" onchange="selectUploadConfirm(this)" webkitdirectory>
+	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(event)" style="margin-top: 90px;" multiple="multiple"/>
+	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 
 </div>
 <textarea cols="20" rows="10" id="copiedText"></textarea>
@@ -572,13 +572,10 @@
 	}
 
 	//upload file confirm dialog
-	function selectUploadConfirm(obj)
+	function selectUploadConfirm(e)
 	{
-	    var entrys = obj.files;
-	    //避免事件退出时，文件objects丢失,好像不会的
-	    //var fileList = [];
-	    //var totalSize = 0;
-	    //totalSize = buildFileList(entrys,fileList);
+		console.log("selectUploadConfirm",e);
+	    var entrys = e.target.files;
 	    
 	  	//if curentRightClickedTreeNode is not parent node, set the newNode's parent to curentRightClickedTreeNode's parent node
 		var parentNode = curRightClickedTreeNode;
@@ -596,7 +593,6 @@
 		console.log("dragUploadConfirm",e);
         
 		//getFileList
-		//var entrys = e.dataTransfer.files;
         var entrys = getFileList(e);
         console.log("entrys",entrys);
         
@@ -1007,6 +1003,11 @@
 			    	   	SubContext.size = file.size;
 	    	   		   	SubContext.name = file.name;
 				    	SubContext.relativePath = file.webkitRelativePath;
+				    	if(file.fullPath)
+				    	{
+				    		SubContext.relativePath = file.fullPath;
+				    	}
+				    	
 				    	//Status Info
 			    		SubContext.index = i;
 			    	   	SubContext.state = 0;	//未开始上传
@@ -1018,22 +1019,6 @@
 			    	   	//Push the SubContext
 			    	   	SubContextList.push(SubContext);
 			    	   	totSize += file.size;
-	    	   		   	
-	    	   		   	//未来支持 文件夹拖拽上传的代码
-			    	   	//if(file.isFile)	//文件
-	    	   			//{
-	    	   				//SubContext.type = 1;	
-			    	   	//}
-	    	   			//else
-	    	   			//{
-	    	   				//SubContext.type = 0;	
-			    			//var dirReader = entry.createReader();
-	    	   				//var sbuEntrys = dirReader.readEntries();
-	    	   				//if(sbuEntrys.length > 0)
-	    	   				//{
-	    	   				//	totSize += totalSizebuildSubContextList(sbuEntrys,SubContextList);
-	    	   				//}
-	    	   			//}
 	    	   		}
 	    	   	}
 	    	}
