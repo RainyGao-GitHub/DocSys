@@ -300,7 +300,7 @@
 <script type="text/javascript" src="static/ContextJS/js/context.js"></script>
 <!-- <script  type="text/javascript" src="static/ContextJS/js/jquery.min.js"></script>
  -->
-
+<script type="text/javascript" src="js/fileReader.js"></script>
 <script type="text/javascript">
 	//初始化全局变量 //Repos Info
 	var gReposId;
@@ -594,7 +594,10 @@
 	function dragUploadConfirm(e)
 	{
 		console.log("dragUploadConfirm",e);
-        var entrys = e.dataTransfer.files;
+        
+		//getFileList
+		//var entrys = e.dataTransfer.files;
+        var entrys = getFileList(e);
         console.log("entrys",entrys);
         
 	  	//get the parentNode
@@ -602,8 +605,7 @@
         if(e.target.tagName=="SPAN"){
         	e.target.parentNode.click();
         }
-	  	
-		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
 		var selectedNode = treeObj.getSelectedNodes()[0];
 		console.log(selectedNode);
 		var parentNode = selectedNode;
