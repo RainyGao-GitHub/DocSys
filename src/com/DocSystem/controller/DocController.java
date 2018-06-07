@@ -24,6 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNLogEntry;
 
 import util.FileUtils;
 import util.ReturnAjax;
@@ -800,6 +801,33 @@ public class DocController extends BaseController{
 		writeJson(rt, response);	
 	}
 	
+	/****************   get Document History (logList) ******************/
+	@RequestMapping("/getDocHistory.do")
+	public void getDocHistory(Integer reposId,String docPath,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getDocHistory docPath: " + docPath);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(reposId == null)
+		{
+			rt.setError("reposId is null");
+			writeJson(rt, response);
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		List<SVNLogEntry> logList = svnGetHistory(repos,docPath);
+		rt.setData(logList);
+		writeJson(rt, response);
+	}
+
 	/********************************** Functions For Application Layer****************************************/
 	//底层addDoc接口
 	private void addDoc(String name, Integer type, MultipartFile uploadFile,Integer reposId,Integer parentId, 
@@ -2336,8 +2364,14 @@ public class DocController extends BaseController{
 		}
 		return true;
 	}
-	/*************** Functions For SVN 
-	 * @param rt *********************/
+	/*************** Functions For SVN *********************/
+	private List<SVNLogEntry> svnGetHistory(Repos repos,String docPath) {
+
+		SVNUtil svnUtil = new SVNUtil();
+		svnUtil.Init(repos.getSvnPath(), repos.getSvnUser(), repos.getSvnPwd());
+		return svnUtil.getHistory(docPath, -1, -1);
+	}
+	
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		String remotePath = parentPath + entryName;
