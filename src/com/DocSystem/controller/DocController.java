@@ -33,6 +33,7 @@ import util.WebUploader.MultipartFileParam;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
@@ -804,7 +805,7 @@ public class DocController extends BaseController{
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
 	public void getDocHistory(Integer reposId,String docPath,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getDocHistory docPath: " + docPath);
+		System.out.println("getDocHistory docPath: " + docPath + " reposId:" + reposId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -823,7 +824,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		List<SVNLogEntry> logList = svnGetHistory(repos,docPath);
+		List<LogEntry> logList = svnGetHistory(repos,docPath);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}
@@ -2365,11 +2366,11 @@ public class DocController extends BaseController{
 		return true;
 	}
 	/*************** Functions For SVN *********************/
-	private List<SVNLogEntry> svnGetHistory(Repos repos,String docPath) {
+	private List<LogEntry> svnGetHistory(Repos repos,String docPath) {
 
 		SVNUtil svnUtil = new SVNUtil();
 		svnUtil.Init(repos.getSvnPath(), repos.getSvnUser(), repos.getSvnPwd());
-		return svnUtil.getHistory(docPath, -1, -1);
+		return svnUtil.getHistory(docPath, 0, -1);
 	}
 	
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
