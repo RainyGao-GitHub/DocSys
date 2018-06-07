@@ -102,7 +102,7 @@ public class SVNUtil {
     //getHistory filePath: remote File Path under repositoryURL
     public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision) 
     {
-    	
+    	System.out.println("getHistoryLogs filePath:" + filePath);	
     	List<LogEntry> logList = new ArrayList<LogEntry>();
         /*
          * Gets the latest revision number of the repository
@@ -131,21 +131,21 @@ public class SVNUtil {
             SVNLogEntry logEntry = (SVNLogEntry) entries.next();
             
             LogEntry log = new LogEntry();
-            System.out.println("---------------------------------------------");
+            //System.out.println("---------------------------------------------");
             //gets the revision number
-            System.out.println("revision: " + logEntry.getRevision());
+            //System.out.println("revision: " + logEntry.getRevision());
             log.setRevision(logEntry.getRevision());
 
             //gets the author of the changes made in that revision
-            System.out.println("author: " + logEntry.getAuthor());
+            //System.out.println("author: " + logEntry.getAuthor());
             log.setCommitUser(logEntry.getAuthor());
 
             //gets the time moment when the changes were committed
-            System.out.println("date: " + logEntry.getDate());
+            //System.out.println("date: " + logEntry.getDate());
             log.setCommitTime(logEntry.getDate().toGMTString());
             
             //gets the commit log message
-            System.out.println("log message: " + logEntry.getMessage());
+            //System.out.println("log message: " + logEntry.getMessage());
             log.setCommitMsg(logEntry.getMessage());
             
             //displaying all paths that were changed in that revision; changed path information is represented by SVNLogEntryPath.
@@ -153,8 +153,8 @@ public class SVNUtil {
             {
             	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
                 
-            	System.out.println();
-                System.out.println("changed Entries:");
+            	//System.out.println();
+                //System.out.println("changed Entries:");
                 //keys are changed paths
                 Set changedPathsSet = logEntry.getChangedPaths().keySet();
                 for (Iterator changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
@@ -168,7 +168,7 @@ public class SVNUtil {
                     String copyPath = entryPath.getCopyPath();
                     long copyRevision = entryPath.getCopyRevision();
                     
-                    System.out.println(" " + changeType + "	" + nodePath + ((copyPath != null) ? " (from " + copyPath + " revision " + copyRevision + ")" : ""));                 
+                    //System.out.println(" " + changeType + "	" + nodePath + ((copyPath != null) ? " (from " + copyPath + " revision " + copyRevision + ")" : ""));                 
 
                     //Add to changedItemList
                     ChangedItem changedItem = new ChangedItem();
