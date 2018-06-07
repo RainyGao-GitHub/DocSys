@@ -2138,6 +2138,8 @@
 	
 	function showDocHistory()
 	{
+		console.log("showDocHistory()");
+
 		var docPath = "";
 		var treeNode = curRightClickedTreeNode;
 		if(treeNode != null)
@@ -2145,7 +2147,18 @@
 			docPath = getTreeNodeFullPath(treeNode);
 		}
 		console.log("docPath",docPath);
-		getDocHistory(docPath,gReposId)
+		
+		//show HistoryLogs page
+		bootstrapQ.dialog({
+			title: "文件历史",
+			url: 'historyLogs.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			callback: function(){
+				historyLogsPageInit(gReposId,docPath);
+			},
+		});
 	}
 	
 	function getTreeNodeFullPath(treeNode)
