@@ -33,6 +33,7 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
+import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.LogEntry;
 
 public class SVNUtil {
@@ -150,21 +151,35 @@ public class SVNUtil {
             //displaying all paths that were changed in that revision; changed path information is represented by SVNLogEntryPath.
             if(logEntry.getChangedPaths().size() > 0) 
             {
-            	List<String> changedPathList = new ArrayList<String>();
+            	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
                 
             	System.out.println();
-                System.out.println("changed paths:");
+                System.out.println("changed Entries:");
                 //keys are changed paths
                 Set changedPathsSet = logEntry.getChangedPaths().keySet();
                 for (Iterator changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
                 {
+                    
                 	//obtains a next SVNLogEntryPath
                     SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
-                    System.out.println(" " + entryPath.getType() + "	" + entryPath.getPath()
-                            + ((entryPath.getCopyPath() != null) ? " (from " + entryPath.getCopyPath() + " revision " + entryPath.getCopyRevision() + ")" : ""));
-                    changedPathList.add(entryPath.getPath());
+                    String nodePath = entryPath.getPath();
+                    String nodeKind = entryPath.getKind().toString();
+                    String changeType = "" + entryPath.getType();
+                    String copyPath = entryPath.getCopyPath();
+                    long copyRevision = entryPath.getCopyRevision();
+                    
+                    System.out.println(" " + changeType + "	" + nodePath + ((copyPath != null) ? " (from " + copyPath + " revision " + copyRevision + ")" : ""));                 
+
+                    //Add to changedItemList
+                    ChangedItem changedItem = new ChangedItem();
+                    changedItem.setChangeType(changeType);	
+                    changedItem.setPath(nodePath);
+                    changedItem.setKind(nodeKind);
+                    changedItem.setCopyPath(copyPath);
+                    changedItem.setCopyRevision(copyRevision);
+                    changedItemList.add(changedItem);
                 }
-                log.setChangedPaths(changedPathList);
+                log.setChangedItems(changedItemList);
             }
             logList.add(log);
         }
