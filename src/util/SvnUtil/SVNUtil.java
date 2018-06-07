@@ -96,6 +96,89 @@ public class SVNUtil {
     }
     
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
+    //getHistory filePath: remote File Path under repositoryURL
+    public List<SVNLogEntry> getHistory(String fielPath,long startRevision, long endRevision) 
+    {
+    	
+    	List<SVNLogEntry> logList = new ArrayList();
+        /*
+         * Gets the latest revision number of the repository
+         */
+        try {
+            endRevision = repository.getLatestRevision();
+        } catch (SVNException svne) {
+            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+            return null;
+        }
+
+        Collection logEntries = null;
+        try {
+            logEntries = repository.log(new String[] {""}, null,
+                    startRevision, endRevision, true, true);
+
+        } catch (SVNException svne) {
+            System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
+            return null;
+        }
+        
+        for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
+            /*
+             * gets a next SVNLogEntry
+             */
+            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+            logList.add(logEntry);
+            
+            System.out.println("---------------------------------------------");
+            /*
+             * gets the revision number
+             */
+            System.out.println("revision: " + logEntry.getRevision());
+            /*
+             * gets the author of the changes made in that revision
+             */
+            System.out.println("author: " + logEntry.getAuthor());
+            /*
+             * gets the time moment when the changes were committed
+             */
+            System.out.println("date: " + logEntry.getDate());
+            /*
+             * gets the commit log message
+             */
+            System.out.println("log message: " + logEntry.getMessage());
+            /*
+             * displaying all paths that were changed in that revision; changed
+             * path information is represented by SVNLogEntryPath.
+             */
+            
+            
+            if (logEntry.getChangedPaths().size() > 0) {
+                System.out.println();
+                System.out.println("changed paths:");
+                /*
+                 * keys are changed paths
+                 */
+                Set changedPathsSet = logEntry.getChangedPaths().keySet();
+
+                for (Iterator changedPaths = changedPathsSet.iterator(); changedPaths
+                        .hasNext();) {
+                    /*
+                     * obtains a next SVNLogEntryPath
+                     */
+                    SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry
+                            .getChangedPaths().get(changedPaths.next());
+                    System.out.println(" "
+                            + entryPath.getType()
+                            + "	"
+                            + entryPath.getPath()
+                            + ((entryPath.getCopyPath() != null) ? " (from "
+                                    + entryPath.getCopyPath() + " revision "
+                                    + entryPath.getCopyRevision() + ")" : ""));
+                }
+            }
+        }
+        return logList;
+    }
+    
     //FSFS格式SVN仓库创建接口
 	public static String CreateRepos(String name,String path){
 		System.out.println("CreateRepos reposName:" + name + "under Path:" + path);
