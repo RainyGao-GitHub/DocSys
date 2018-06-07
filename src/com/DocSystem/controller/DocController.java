@@ -2370,7 +2370,7 @@ public class DocController extends BaseController{
 
 		SVNUtil svnUtil = new SVNUtil();
 		svnUtil.Init(repos.getSvnPath(), repos.getSvnUser(), repos.getSvnPwd());
-		return svnUtil.getHistory(docPath, 0, -1);
+		return svnUtil.getHistoryLogs(docPath, 0, -1);
 	}
 	
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 

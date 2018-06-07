@@ -99,7 +99,7 @@ public class SVNUtil {
     
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
     //getHistory filePath: remote File Path under repositoryURL
-    public List<LogEntry> getHistory(String filePath,long startRevision, long endRevision) 
+    public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision) 
     {
     	
     	List<LogEntry> logList = new ArrayList<LogEntry>();
