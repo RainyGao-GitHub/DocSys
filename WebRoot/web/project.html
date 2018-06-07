@@ -2126,16 +2126,48 @@
                 }
                 else
                 {
-                	showErrorMessage("getDoc Error:"+ret.msgInfo);              	
+                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
                 }
             },
             error : function () {
-                showErrorMessage('服务器异常：获取文件信息失败');
+                showErrorMessage("获取文件信息失败：服务器异常");
                 $btn.button('reset');
             }
         });
     }
-    
+	
+	//getHistory接口
+	function getDocHistory(docPath,reposId)
+	{
+   		console.log("getHistory docPath:" + nadocPathme + " reposId:" +  reposId);
+    	$.ajax({
+             url : "/DocSystem/Doc/getDocHistory.do",
+             type : "post",
+             dataType : "json",
+             data : {
+             	docPath : docPath,
+                reposId : reposId, 
+             },
+             success : function (ret) {
+             	if( "ok" == ret.status){
+        		  	console.log(ret.data);
+					bootstrapQ.msg({
+								msg : "获取历史信息成功！",
+								type : 'success',
+								time : 2000,
+					});
+                }
+                else
+                {
+                	showErrorMessage("获取历史信息失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("获取历史信息失败:服务器异常");
+            }
+        });
+	}
+	
    	//addDoc接口	
    	function addDoc(name,type,parentNode,parentId,vid)
    	{
@@ -2163,18 +2195,18 @@
                     //updateMenu();	//用当前的zTree来更新后台Menu
                     // 普通消息提示条
 					bootstrapQ.msg({
-								msg : '新建完成！',
+								msg : "新建完成！",
 								type : 'success',
 								time : 2000,
 					});
                 }
                 else
                 {
-                	showErrorMessage("Error:" + ret.msgInfo);
+                	showErrorMessage("新建失败:" + ret.msgInfo);
                 }
             },
             error : function () {
-                showErrorMessage("服务器异常：新建失败！");
+                showErrorMessage("新建失败:服务器异常！");
             }
         });
     }
@@ -2195,7 +2227,7 @@
                     if( "ok" == ret.status ){
                         //updateMenu();
                         bootstrapQ.msg({
-								msg : '重命名完成！',
+								msg : "重命名完成！",
 								type : 'success',
 								time : 2000,
 						});
@@ -2203,12 +2235,12 @@
                     else
                     {
                     	syncUpMenu();
-                    	showErrorMessage("Error:" + ret.msgInfo);
+                    	showErrorMessage("重命名失败:" + ret.msgInfo);
                     }
                 },
                 error : function () {
 	               syncUpMenu();
- 	               showErrorMessage('服务器异常：rename failed');
+ 	               showErrorMessage("重命名失败:服务器异常！");
                 }
         });
     }
@@ -4560,6 +4592,12 @@ function CompareObj(objA, objB, flag) {
 				        			copyUrl();
 								}
 						},	
+						{divider: true},
+						{text: '查看历史', action: function(e){
+									e.preventDefault();
+				        			viewHistory();
+								}
+						},
    				]
    			},
 		]);
