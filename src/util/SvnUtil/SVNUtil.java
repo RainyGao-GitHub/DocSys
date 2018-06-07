@@ -100,7 +100,7 @@ public class SVNUtil {
     public List<SVNLogEntry> getHistory(String fielPath,long startRevision, long endRevision) 
     {
     	
-    	List<SVNLogEntry> logList = new ArrayList();
+    	List<SVNLogEntry> logList = new ArrayList<SVNLogEntry>();
         /*
          * Gets the latest revision number of the repository
          */
