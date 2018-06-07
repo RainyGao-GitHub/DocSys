@@ -9,7 +9,7 @@ public class LogEntry {
 	private String commitTime;
 	private List<ChangedItem> changedItems;	//有变化的文件列表
 	
-    public long getRevison() {
+    public long getRevision() {
         return revision;
     }
 
