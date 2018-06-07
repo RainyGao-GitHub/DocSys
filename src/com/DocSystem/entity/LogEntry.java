@@ -1,16 +1,13 @@
 package com.DocSystem.entity;
 
 import java.util.List;
-import java.util.Map;
-
-import org.tmatesoft.svn.core.SVNProperties;
 
 public class LogEntry {
 	private long revision;
 	private String commitUser;
 	private String commitMsg;
 	private String commitTime;
-	private List<String> changedPaths;	//有变化的文件列表
+	private List<ChangedItem> changedItems;	//有变化的文件列表
 	
     public long getRevison() {
         return revision;
@@ -44,11 +41,11 @@ public class LogEntry {
         this.commitTime = commitTime == null ? null : commitTime.trim();
     }
     
-    public List<String> getChangedPaths() {
-        return changedPaths;
+    public List<ChangedItem> getChangedItems() {
+        return changedItems;
     }
 
-    public void setChangedPaths(List<String> changedPaths) {
-        this.changedPaths = changedPaths;
+    public void setChangedItems(List<ChangedItem> changedItems) {
+        this.changedItems = changedItems;
     }
 }
