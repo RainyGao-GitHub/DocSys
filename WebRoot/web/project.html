@@ -2136,10 +2136,37 @@
         });
     }
 	
-	//getHistory接口
+	function showDocHistory()
+	{
+		var docPath = "";
+		var treeNode = curRightClickedTreeNode;
+		if(treeNode != null)
+		{
+			docPath = getTreeNodeFullPath(treeNode);
+		}
+		console.log("docPath",docPath);
+		getDocHistory(docPath,gReposId)
+	}
+	
+	function getTreeNodeFullPath(treeNode)
+	{
+		console.log("getTreeNodeFullPath treeNode",treeNode);
+		
+		var parentPath = "";
+		
+		var nodes = treeNode.getPath();
+		console.log("getTreeNodeFullPath nodes",nodes);
+		for(var i=0;i<nodes.length-1;i++)
+		{
+			parentPath = parentPath + nodes[i].name + "/";
+		}
+		return parentPath + treeNode.name;
+	}
+	
+	//getDocHistory接口
 	function getDocHistory(docPath,reposId)
 	{
-   		console.log("getHistory docPath:" + nadocPathme + " reposId:" +  reposId);
+   		console.log("getHistory docPath:" + docPath + " reposId:" +  reposId);
     	$.ajax({
              url : "/DocSystem/Doc/getDocHistory.do",
              type : "post",
@@ -4595,7 +4622,7 @@ function CompareObj(objA, objB, flag) {
 						{divider: true},
 						{text: '查看历史', action: function(e){
 									e.preventDefault();
-				        			viewHistory();
+				        			showDocHistory();
 								}
 						},
    				]
