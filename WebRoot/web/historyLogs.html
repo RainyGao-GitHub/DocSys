@@ -4,11 +4,11 @@
                <div class="article-body editor-content"  id="history" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell revision w10">版本号</i>
+							<i class="cell revision w8">版本号</i>
 							<i class="cell commitMsg w30">提交信息</i>
 							<i class="cell commitUser w10">提交人</i>
 							<i class="cell commitTime w15">提交时间</i>
-							<i class="cell operation w20">操作</i>						
+							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
                		<div class="panel-body eventset-list" id="historyLogs">
@@ -71,7 +71,7 @@
 				var d = data[i];
 				var opBtn = "		<a href='javascript:void(0)' onclick='download("+d.revision+"," + d.docPath+");' class='mybtn-primary'>下载</a>";							
 				var se = "<li value="+ i +">"
-					+"	<i class='cell revision w10'>"
+					+"	<i class='cell revision w8'>"
 					+"		<span class='name'>"
 					+"			<a id='revision"+i+"' href='javascript:void(0)'>"+d.revision+"</a>"
 					+"		</span>"
@@ -91,7 +91,7 @@
 					+"			<a id='commitTime"+i+"' href='javascript:void(0)'>"+d.commitTime+"</a>"
 					+"		</span>"
 					+"	</i>"
-					+"	<i class='cell operation w20'>"
+					+"	<i class='cell operation w10'>"
 					+		opBtn
 					+"	</i>"
 					+"</li>";
