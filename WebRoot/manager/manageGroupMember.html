@@ -1,23 +1,19 @@
 <div id="groupMemberContainer"></div>
 
 <script type="text/javascript">
-	function manageGroupMemberPageInit()
-	{
-		console.log("manageGroupMemberPageInit");
-		showGroupAllUserList();		
-	}
+var groupId;
+	
+function manageGroupMemberPageInit(groupId)
+{
+	console.log("manageGroupMemberPageInit groupId:" + groupId);
+	groupId = groupId;
+		
+	showGroupAllUserList(groupId);		
+}
 
-        
-    //页面初始化代码    
-    $(function(){
-		manageGroupMemberPageInit();
-	});
-
-
-function showGroupAllUserList(){
-   	console.log("showGroupAllUserList()");
-   	var groupId = gGroupId;
-
+function showGroupAllUserList(groupId){
+   	console.log("showGroupAllUserList() groupId",groupId);
+ 
    	$.ajax({
             url : "/DocSystem/Manage/getGroupAllUsers.do",
             type : "post",
@@ -29,7 +25,7 @@ function showGroupAllUserList(){
                 if( "ok" == ret.status ){
                 	console.log("groupAllUsers:",ret.data);
                 	var memberList = ret.data;
-                	GroupMemberListDisplay(memberList);
+                	GroupMemberListDisplay(groupId,memberList);
                 }
                 else
                 {
@@ -42,16 +38,14 @@ function showGroupAllUserList(){
     });
 }
 
-function GroupMemberListDisplay(list)
+function GroupMemberListDisplay(groupId,list)
 {
-	var groupId = gGroupId;
 	console.log("GroupMemberListDisplay", groupId);	
 	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list,"groupId":groupId});
 }
 
-function addGroupMember(userId)
+function addGroupMember(userId,groupId)
 {
-	var groupId = gGroupId;
    	console.log("addGroupMember userId:" + userId+ " groupId:" + groupId);
    
     $.ajax({
