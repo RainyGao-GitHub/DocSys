@@ -575,10 +575,8 @@
 	}
 	
 	//显示组成员管理页面
-	var gGroupId = 0;	//This var is for groupMemberManage
 	function showManageGroupMemberPanel(e,groupId){
 		console.log("showManageGroupMemberPanel groupId:" + groupId);
-		gGroupId = groupId;
 		
 		//get current click the Group Info
 		var Obj = e.target;
@@ -593,7 +591,10 @@
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
-		}, null);
+			callback: function(){
+				manageGroupMemberPageInit(groupId);
+			},
+		});
 	}
 	
 	// 快速查找指定的项
