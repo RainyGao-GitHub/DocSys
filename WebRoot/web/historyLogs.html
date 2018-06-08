@@ -70,7 +70,7 @@
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
 				var opBtn = "		<a href='javascript:void(0)' onclick='download("+d.revision+"," + d.docPath+");' class='mybtn-primary'>下载</a>";							
-				var se = "<li value="+ i +">"
+				var se = "<li id='popover" +i+"' + + value="+ i +">"
 					+"	<i class='cell revision w8'>"
 					+"		<span class='name'>"
 					+"			<a id='revision"+i+"' href='javascript:void(0)'>"+d.revision+"</a>"
@@ -98,6 +98,33 @@
 				
 				$("#historyLogs").append(se);
 			}
+			
+			//Set popover details
+			/*for(var i=0;i<data.length;i++){
+				var d = data[i];
+				
+				var changedItems = d.changedItems;
+				var changedPaths = "";
+				for(var j=0;j<changedItems.length;j++){
+					changedItem = changedItems[i];
+					changedPaths = changedPaths + changedItem.changeType + "  "+ changedItem.path + "<br>";	
+				}
+				console.log(changedPaths);
+				
+				var detail = "<p>revision:" + d.revision + "<br>" 
+				+"Message:" + d.commitMsg + "<br>"
+				+"Author:" + d.commitUser + "<br>"
+				+"Date:" + d.commitTime + "<br>"
+				+"changePaths:<br>" 
+				+ changedPaths
+				+"</p>"
+				console.log(detail);
+				
+				$("#popover" + i).bspop({
+				    title   : "详情",
+				    content : detail,
+				});	
+			}*/
 		}
 	}
 </script>
