@@ -12,7 +12,7 @@ function manageGroupMemberPageInit(groupId)
 }
 
 function showGroupAllUserList(groupId){
-   	console.log("showGroupAllUserList() groupId",groupId);
+   	console.log("showGroupAllUserList() groupId:"+groupId);
  
    	$.ajax({
             url : "/DocSystem/Manage/getGroupAllUsers.do",
@@ -58,7 +58,7 @@ function addGroupMember(userId,groupId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	showGroupAllUserList();		//更新显示
+                	showGroupAllUserList(groupId);		//更新显示
                 }
                 else
                 {
@@ -82,7 +82,7 @@ function delGroupMemberConfirm(id,userId,groupId)
  	        qubtn: "取消",
  	    },function () {
  	    	//alert("点击了确定");
- 	    	delGroupMemeber(id,groupId,userId);
+ 	    	delGroupMemeber(id,userId,groupId);
  	    	return true;   
  	    },function(){
  	    	//alert("点击了取消");
@@ -90,7 +90,7 @@ function delGroupMemberConfirm(id,userId,groupId)
  	    }); 
 }
 
-function delGroupMemeber(id,groupId,userId)
+function delGroupMemeber(id,userId,groupId)
 {	
    	console.log("deleteGroupMember() id:" + id + " groupId:" + groupId + " userId:" + userId);
    	
@@ -105,7 +105,7 @@ function delGroupMemeber(id,groupId,userId)
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	showGroupAllUserList();
+                	showGroupAllUserList(groupId);
                 }
                 else
                 {
