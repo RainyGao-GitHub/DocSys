@@ -91,7 +91,7 @@
                 <ul>
                     <li><a href="#">DocSys</a></li>
                     <li>&nbsp;·&nbsp;</li>
-                    <li><a href="#" target="_blank">意见反馈</a> </li>
+                    <li><a onclick="showFeebackPanel()">意见反馈</a> </li>
                 </ul>
 
             </div>
@@ -447,6 +447,21 @@
         });
 
     }
+    
+	function showFeebackPanel()
+	{
+		console.log("showFeebackPanel");
+		bootstrapQ.dialog({
+			url: 'feeback.html',
+			title: '意见与反馈',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				FeebackPageInit();
+			},
+		});
+	}
 
 </script>
 </body>
