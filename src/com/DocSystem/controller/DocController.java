@@ -78,7 +78,7 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(String name,Integer type,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void addDoc(String name,String content,Integer type,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addDoc name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId);
 		//System.out.println(Charset.defaultCharset());
 		//System.out.println("黄谦");
@@ -104,7 +104,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "addDoc " + name;
 		}
-		addDoc(name,type,null,reposId,parentId,commitMsg,commitUser,login_user,rt);
+		addDoc(name,content,type,null,reposId,parentId,commitMsg,commitUser,login_user,rt);
 		
 		writeJson(rt, response);	
 	}
@@ -249,7 +249,7 @@ public class DocController extends BaseController{
 			}
 			if(uploadType == 1)	//新建文件则新建记录，否则
 			{
-				addDoc(fileName, 1, uploadFile, reposId, parentId, commitMsg, commitUser, login_user, rt);
+				addDoc(fileName,null, 1, uploadFile, reposId, parentId, commitMsg, commitUser, login_user, rt);
 			}
 			else
 			{
@@ -823,9 +823,10 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	/********************************** Functions For Application Layer****************************************/
+	/********************************** Functions For Application Layer
+	 * @param content ****************************************/
 	//底层addDoc接口
-	private void addDoc(String name, Integer type, MultipartFile uploadFile,Integer reposId,Integer parentId, 
+	private void addDoc(String name, String content, Integer type, MultipartFile uploadFile,Integer reposId,Integer parentId, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
@@ -869,7 +870,7 @@ public class DocController extends BaseController{
 			//新建doc记录,并锁定
 			doc.setName(name);
 			doc.setType(type);
-			doc.setContent("#" + name);
+			doc.setContent(content);
 			doc.setPath(parentPath);
 			doc.setVid(reposId);
 			doc.setPid(parentId);
@@ -932,7 +933,7 @@ public class DocController extends BaseController{
 		//创建虚拟文件目录：用户编辑保存时再考虑创建
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getDocVPath(parentPath, doc.getName());
-		if(createVirtualDoc(reposVPath,docVName,"#"+name,rt) == true)
+		if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 		{
 			if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
 			{
