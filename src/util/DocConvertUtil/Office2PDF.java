@@ -47,7 +47,7 @@ public class Office2PDF {
         if (Pattern.matches("Linux.*", osName)) {
             return "/opt/openoffice.org3";
         } else if (Pattern.matches("Windows.*", osName)) {
-            return "C:/Program Files/OpenOffice 4";
+            return "C:/Program Files (x86)/OpenOffice 4";
         } else if (Pattern.matches("Mac.*", osName)) {
             return "/Applications/OpenOffice.org.app/Contents/";
         }
