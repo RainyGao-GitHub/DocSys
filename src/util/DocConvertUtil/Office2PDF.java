@@ -10,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import org.artofsolving.jodconverter.OfficeDocumentConverter;
 import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
-import org.springframework.util.StringUtils;
 
 /**
  * 这是一个工具类，主要是为了使Office2003-2007全部格式的文档(.doc|.docx|.xls|.xlsx|.ppt|.pptx)
@@ -103,7 +102,7 @@ public class Office2PDF {
     public static File office2pdf(String inputFilePath) {
         OfficeManager officeManager = null;
         try {
-            if (StringUtils.isEmpty(inputFilePath)) {
+            if (inputFilePath == null || "".equals(inputFilePath)) {
                 LOG.info("输入文件地址为空，转换终止!");
                 return null;
             }
@@ -153,10 +152,6 @@ public class Office2PDF {
      */
     public static String getPostfix(String inputFilePath) {
         return inputFilePath.substring(inputFilePath.lastIndexOf(".") + 1);
-    }
-
-    public static void main(String[] args) {
-        Office2PDF.openOfficeToPDF("/Users/JJC/Downloads/20170302汽修服务测试反馈.docx");
     }
 
 }
