@@ -110,7 +110,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("登录成功");
-                	loginUser = $('input[name="userName"]').val();
+                	login_user = $('input[name="userName"]').val();
                 	//document.location.reload();
                 	var url = window.location.href;
                 	window.location.href = url;	//刷新页面
@@ -127,7 +127,7 @@
     //页面初始化代码    
     $(function(){
 		LoginPageInit();
-		$("#userName").val(loginUser);
+		$("#userName").val(login_user);
 		//$("#userName").click().focus();
 	});
 </script>
