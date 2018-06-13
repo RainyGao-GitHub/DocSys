@@ -200,7 +200,7 @@
 	pageInit();   
 
 	//页面初始化
-    var loginUser = "";	//用来保存刚注册的用户、或刚才登录的用户
+    var login_userUser = "";	//用来保存刚注册的用户、或刚才登录的用户
 	function pageInit()
     {
     	console.log("pageInit");
@@ -215,7 +215,7 @@
                 {
                 	//Get用户信息
    					var user = ret.data;
-   					loginUser = user;
+   					login_user = user;
    					
                 	//显示用户信息
                 	ShowUserInfo(user);
