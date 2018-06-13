@@ -1391,7 +1391,7 @@
     		//parentNode maybe is not the real parent for the doc
     		var tempParentNode = SubContext.parentNode;
 			//文件父目录检查部分
-    		if(filePath != "")
+    		if(filePath && filePath != "")
 			{
 				var pathArray = new Array(); //定义一数组 
     			pathArray = filePath.split("/"); //字符分割 
