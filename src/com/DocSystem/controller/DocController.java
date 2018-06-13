@@ -1138,8 +1138,7 @@ public class DocController extends BaseController{
 				{
 					MsgInfo += " and unlockDoc Failed";						
 				}
-				rt.setError(MsgInfo);
-				//writeJson(rt, response);	
+				rt.setError(MsgInfo);	
 				return;
 			}
 		}
