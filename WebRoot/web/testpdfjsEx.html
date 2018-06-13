@@ -12,7 +12,12 @@
 <body>
   
 	<h1>PDF.js Previous/Next example</h1>  
-	  
+
+	<div>  
+	  <button id="View">预览</button>  
+	  <button id="Close">Close</button>  
+	</div>
+		  
 	<div>  
 	  <button id="prev">Previous</button>  
 	  <button id="next">Next</button>  
@@ -32,7 +37,7 @@
         var pageNum = 1;  
         var pageRendering = false;
         var pageNumPending = null;
-        var scale = 0.8;
+        var scale = 2;
         var canvas = document.getElementById("the-canvas");  
         var ctx = canvas.getContext("2d");
         
@@ -97,15 +102,30 @@
           	queueRenderPage(pageNum);  
         }  
         document.getElementById('next').addEventListener('click', onNextPage);  
-          
-        PDFJS.getDocument(url).then(function(pdfDoc_) 
-       	{
-        	console.log("getDocumentCallBack:",pdfDoc);
-			pdfDoc = pdfDoc_;  
-			document.getElementById('page_count').textContent = pdfDoc.numPages;  
-			
-			renderPage(pageNum);  
-        });  
+        
+        function onClosePage()
+        {
+        	var canvas = document.getElementById("the-canvas");
+        	canvas.style.display = "none";
+        }
+        
+        document.getElementById('Close').addEventListener('click', onClosePage); 
+        
+        function onViewPage()
+        {
+            PDFJS.getDocument(url).then(function(pdfDoc_) 
+           	{
+            	console.log("getDocumentCallBack:",pdfDoc);
+    			pdfDoc = pdfDoc_;  
+    			document.getElementById('page_count').textContent = pdfDoc.numPages;  
+    			
+    			renderPage(pageNum);  
+            });
+        	var canvas = document.getElementById("the-canvas");
+        	canvas.style.display = "block";
+        }
+        document.getElementById('View').addEventListener('click', onViewPage); 
+         
     </script>	
 	
 </body>
