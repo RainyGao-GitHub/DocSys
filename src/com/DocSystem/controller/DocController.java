@@ -22,6 +22,8 @@ import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 
 import util.ReturnAjax;
+import util.DocConvertUtil.Office2PDF;
+import util.Encrypt.MD5;
 import util.SvnUtil.SVNUtil;
 import util.WebUploader.MultipartFileParam;
 
@@ -700,6 +702,76 @@ public class DocController extends BaseController{
 		out.close();
 	}
 	
+	/**************** convert Doc To PDF ******************/
+	@RequestMapping("/DocToPDF.do")
+	public void DocToPDF(Integer docId,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("DocToPDF docId: " + docId);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Doc doc = reposService.getDoc(docId);
+		if(doc == null)
+		{
+			rt.setError("文件不存在");
+			writeJson(rt, response);	
+			return;			
+		}
+		
+		//检查用户是否有文件读取权限
+		if(checkUseAccessRight(rt,login_user.getId(),docId,doc.getVid()) == false)
+		{
+			System.out.println("DocToPDF() you have no access right on doc:" + docId);
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(doc.getType() == 2)
+		{
+			rt.setError("目录无法预览");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//虚拟文件下载
+		Repos repos = reposService.getRepos(doc.getVid());
+				
+		//get reposRPath
+		String reposRPath = getReposRealPath(repos);
+				
+		//get srcParentPath
+		String srcParentPath = getParentPath(docId);	//文件或目录的相对路径
+		//文件的真实全路径
+		String srcPath = reposRPath + srcParentPath;
+		srcPath = srcPath + doc.getName();			
+		System.out.println("DocToPDF() srcPath:" + srcPath);
+	
+		String reposUserTmpPath = getWebUserTmpPath(login_user);
+		String dstName = MD5.md5(srcPath) + ".pdf";
+		String dstPath = reposUserTmpPath + "preview/" + dstName;
+		System.out.println("DocToPDF() dstPath:" + dstPath);
+		
+		File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
+		if(pdf == null)
+		{
+			rt.setError("Failed to convert office to pdf");
+			rt.setMsgData("srcPath:"+srcPath);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//Save the pdf to web
+		String fileLink = "/DocSystem/tmp/" + login_user.getId() + "/preview/" + dstName;
+		rt.setData(fileLink);
+		writeJson(rt, response);
+	}
+	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(Integer id,HttpServletRequest request,HttpServletResponse response){
@@ -754,7 +826,7 @@ public class DocController extends BaseController{
 		rt.setData(doc);
 		writeJson(rt, response);
 	}
-	
+
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer docId,Integer reposId, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){

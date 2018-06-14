@@ -23,6 +23,8 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNNodeKind;
 
@@ -131,6 +133,13 @@ public class BaseController{
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
 		String reposTmpVirtualPath = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
 		return reposTmpVirtualPath;
+	}
+		
+	protected String getWebUserTmpPath(User login_user) {
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        
+        String webUserTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/" + login_user.getId() + "/";
+		return webUserTmpPath;
 	}
 	
 	protected Integer getAuthType(Integer userId, Integer groupId) {

@@ -4,6 +4,6 @@ class OpenOfficeTest
 {  
 
     public static void main(String[] args) {
-        Office2PDF.openOfficeToPDF("D:/Office2PDF/友宾体检套餐.docx");
+        Office2PDF.openOfficeToPDF("D:/Office2PDF/友宾体检套餐.docx","D:/Office2PDF/友宾体检套餐.pdf");
     }
 }
