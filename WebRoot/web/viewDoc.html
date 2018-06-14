@@ -8,6 +8,10 @@
     <script src="static/scripts/jquery.min.js"></script>
     <script src="static/pdfjs/build/pdf.js"></script>
     <script src="static/pdfjs/build/pdf.worker.js"></script>
+    <!-- bootstrapQ -->
+    <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+    <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+    
     <script type="text/javascript">
         var var_win_height = $(window).height();
 
@@ -34,32 +38,9 @@
 	    
     	function viewDoc()
 	   	{
-	    	var docId = getQueryString("doc");
-		    console.log("viewDoc() docId:"+docId);
-		  	
-		  	//Convert doc to PDF and return the link, then show the pdf 
-		    $.ajax({
-		        url : "/DocSystem/Doc/Doc2PDF.do",
-		        type : "post",
-		        dataType : "json",
-		        data : {
-		            id : docId,
-		        },
-		        success : function (ret) {
-		            if( "ok" == ret.status ){
-		                var fileLink = ret.data.url;
-		                console.log("fileLink" + fileLink);
-		                showPDF(fileLink);	//show Doc at another page
-		            }
-		            else
-		            {
-		            	showErrorMessage("文件预览失败：" + ret.msgInfo);              	
-		            }
-		        },
-		        error : function () {
-		            showErrorMessage("文件预览失败：服务器异常");
-		        }
-		    });
+	    	var fileLink = getQueryString("fileLink");
+		    console.log("viewDoc() fileLink:"+fileLink);
+			showPDF(fileLink);
 	   	}   
 	    
 	    function showPDF(url)
@@ -67,7 +48,7 @@
 	        $('.tmPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
 	            '" style="width:100%; height:100%;"></iframe>');
 	   	}
-	    
+		
 	    // 从 url 中获取参数
 	    function getQueryString(name) {
 	        var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
@@ -77,6 +58,10 @@
 	        }
 	        return null;
 	    }
+		//通用函数接口
+		function showErrorMessage($msg) {
+	    	qiao.bs.alert($msg);
+		}
     </script>
 </body>
 </html>
