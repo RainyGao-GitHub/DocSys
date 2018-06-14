@@ -4342,8 +4342,31 @@ function CompareObj(objA, objB, flag) {
 		console.log("previewDoc gDocId:" + gDocId);
 		if(gDocId)
 		{
-			//在新的页面打开
-			window.open("/DocSystem/web/viewDoc.html?doc=" + gDocId); 
+		    var docId = gDocId;
+			//Convert doc to PDF and return the link, then show the pdf 
+		    $.ajax({
+		        url : "/DocSystem/Doc/DocToPDF.do",
+		        type : "post",
+		        dataType : "json",
+		        data : {
+		            docId : docId,
+		        },
+		        success : function (ret) {
+		            if( "ok" == ret.status ){
+		                var fileLink = ret.data;
+		                console.log("fileLink" + fileLink);
+		    			//在新的页面打开
+		    			window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink); 
+		            }
+		            else
+		            {
+		            	showErrorMessage("文件预览失败：" + ret.msgInfo);              	
+		            }
+		        },
+		        error : function () {
+		            showErrorMessage("文件预览失败：服务器异常");
+		        }
+		    });
 	   	}
 		else
 		{
