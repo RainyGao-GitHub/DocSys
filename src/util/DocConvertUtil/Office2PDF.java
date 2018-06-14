@@ -5,8 +5,6 @@ package util.DocConvertUtil;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.artofsolving.jodconverter.OfficeDocumentConverter;
 import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
@@ -21,9 +19,6 @@ import org.artofsolving.jodconverter.office.OfficeManager;
  * 
  */
 public class Office2PDF {
-
-    private static final Log LOG = LogFactory.getLog(Office2PDF.class);
-
     /**
      * 使Office2003-2007全部格式的文档(.doc|.docx|.xls|.xlsx|.ppt|.pptx) 转化为pdf文件<br>
      * 
@@ -31,8 +26,8 @@ public class Office2PDF {
      *            源文件路径，如："e:/test.docx"
      * @return
      */
-    public static File openOfficeToPDF(String inputFilePath) {
-        return office2pdf(inputFilePath);
+    public static File openOfficeToPDF(String inputFilePath,String outputFilePath) {
+        return office2pdf(inputFilePath,outputFilePath);
     }
 
     /**
@@ -95,24 +90,23 @@ public class Office2PDF {
      * 
      * @param inputFilePath
      *            源文件路径，如："e:/test.docx"
+     * @param outputFilePath 
      * @param outputFilePath
      *            目标文件路径，如："e:/test_docx.pdf"
      * @return
      */
-    public static File office2pdf(String inputFilePath) {
+    public static File office2pdf(String inputFilePath, String outputFilePath) {
         OfficeManager officeManager = null;
         try {
             if (inputFilePath == null || "".equals(inputFilePath)) {
-                LOG.info("输入文件地址为空，转换终止!");
+                System.out.println("office2pdf() 输入文件地址为空，转换终止!");
                 return null;
             }
 
             File inputFile = new File(inputFilePath);
-            // 转换后的文件路径
-            String outputFilePath_end = getOutputFilePath(inputFilePath);
 
             if (!inputFile.exists()) {
-                LOG.info("输入文件不存在，转换终止!");
+                System.out.println("office2pdf() 输入文件不存在，转换终止!");
                 return null;
             }
 
@@ -121,9 +115,10 @@ public class Office2PDF {
             // 连接OpenOffice
             OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);
 
-            return converterFile(inputFile, outputFilePath_end, inputFilePath, converter);
+            return converterFile(inputFile, outputFilePath, inputFilePath, converter);
         } catch (Exception e) {
-            LOG.error("转化出错!", e);
+            System.out.println("office2pdf() 转换终止异常!");
+            e.printStackTrace();
         } finally {
             // 停止openOffice
             if (officeManager != null) {
@@ -131,17 +126,6 @@ public class Office2PDF {
             }
         }
         return null;
-    }
-
-    /**
-     * 获取输出文件
-     * 
-     * @param inputFilePath
-     * @return
-     */
-    public static String getOutputFilePath(String inputFilePath) {
-        String outputFilePath = inputFilePath.replaceAll("." + getPostfix(inputFilePath), ".pdf");
-        return outputFilePath;
     }
 
     /**
