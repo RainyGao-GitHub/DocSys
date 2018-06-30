@@ -349,6 +349,17 @@ public class ReposController extends BaseController{
 		}
 		
 		//新建目录
+		File reposRootDir = new File(path);
+		if(reposRootDir.exists() == false)
+		{
+			System.out.println("addRepos() path:" + path + " not exists, do create it!");
+			if(reposRootDir.mkdirs() == false)
+			{
+				rt.setError("Failed to create dir:" + path);
+				writeJson(rt, response);	
+				return;	
+			}
+		}
 		String reposDir = path + repos.getId();
 		if(createDir(reposDir) == true)
 		{
