@@ -72,6 +72,48 @@ public class BaseController{
 		System.out.println(Head + json);		
 	}
 	
+	//获取默认的仓库根路径
+	protected String getDefaultReposRootPath() {
+		String path = null;
+		String os = System.getProperty("os.name");  
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){  
+			path = "D:/DocSysReposes/";
+		}
+		else
+		{
+			path = "/data/DocSysReposes/";	//Linux系统放在  /data	
+		}
+		return path;
+	}
+	
+	//正确格式化仓库根路径
+	protected String reposRootPathFormat(String path) {
+		//如果传入的Path没有带/,给他加一个
+		String endChar = path.substring(path.length()-1, path.length());
+		if(!endChar.equals("/"))	
+		{
+			path = path + "/";
+		}
+		return path;
+	}
+
+	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
+	protected String getDefaultSvnLocalReposPath() {
+		String localReposPath = "";
+		String os = System.getProperty("os.name");  
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){  
+			localReposPath = "D:/DocSysSvnReposes/";
+		}
+		else
+		{
+			localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+		}
+		return localReposPath;
+	}
+
+	
 	//获取仓库的实文件的本地存储根路径
 	protected String getReposRealPath(Repos repos)
 	{
