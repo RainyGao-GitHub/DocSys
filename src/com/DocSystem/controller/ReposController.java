@@ -736,16 +736,7 @@ public class ReposController extends BaseController{
 		if((svnPath1 == null) || svnPath1.equals(""))
 		{
 			//Create a local SVN Repos
-			String localReposPath = "";
-			String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
-				localReposPath = "D:/DocSysSvnReposes/";
-			}
-			else
-			{
-				localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
-			}
+			String localReposPath = getDefaultSvnLocalReposPath();
 			
 			//get old ReposInfo
 			Repos oldReposInfo = reposService.getRepos(reposId);
@@ -823,16 +814,7 @@ public class ReposController extends BaseController{
 		if((svnPath == null) || svnPath.equals(""))
 		{
 			//Create a local SVN Repos
-			String localReposPath = "";
-			String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
-				localReposPath = "D:/DocSysSvnReposes/";
-			}
-			else
-			{
-				localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
-			}
+			String localReposPath = getDefaultSvnLocalReposPath();
 			
 			//get old ReposInfo
 			Repos oldReposInfo = reposService.getRepos(reposId);
