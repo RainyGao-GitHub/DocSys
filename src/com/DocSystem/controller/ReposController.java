@@ -488,6 +488,7 @@ public class ReposController extends BaseController{
 			docAuth.setEditEn(1);		//修改权限：可以修改仓库中的文件和目录
 			docAuth.setAddEn(1);		//增加权限：可以往仓库中增加文件或目录
 			docAuth.setDeleteEn(1);		//删除权限：可以删除仓库中的文件或目录
+			docAuth.setHeritable(1);;	//权限继承：0：不可继承  1：可继承
 			ret = reposService.addDocAuth(docAuth);
 			System.out.println("addRepos() addDocAuth return:" + ret);
 			if(ret == 0)
