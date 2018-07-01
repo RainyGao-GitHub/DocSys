@@ -469,10 +469,31 @@ public class ReposController extends BaseController{
 			reposAuth.setAddEn(1);		//可以往仓库中增加文件或目录
 			reposAuth.setDeleteEn(1);	//可以删除仓库中的文件或目录
 			int ret = reposService.addReposAuth(reposAuth);
-			System.out.println("addReposAuth return:" + ret);
+			System.out.println("addRepos() addReposAuth return:" + ret);
 			if(ret == 0)
 			{
-				System.out.println("设置用户仓库权限失败");
+				rt.setMsgData("addRepos() addReposAuth return:" + ret);
+				System.out.println("新增用户仓库权限失败");
+			}
+			
+			//设置当前用户仓库根目录的访问权限
+			DocAuth docAuth = new DocAuth();
+			docAuth.setReposId(repos.getId());		//仓库：新增仓库id
+			docAuth.setUserId(login_user.getId());	//访问用户：当前登录用户	
+			docAuth.setDocId(0); 		//目录：根目录
+			docAuth.setType(1); 		//权限类型：用户权限
+			docAuth.setPriority(10); 	//权限优先级：user是10, group是1-9,anyUser是0
+			docAuth.setIsAdmin(1); 		//管理员：可以管理仓库，修改描述、设置密码、设置用户访问权限
+			docAuth.setAccess(1);		//访问权限：0：不可访问  1：可访问
+			docAuth.setEditEn(1);		//修改权限：可以修改仓库中的文件和目录
+			docAuth.setAddEn(1);		//增加权限：可以往仓库中增加文件或目录
+			docAuth.setDeleteEn(1);		//删除权限：可以删除仓库中的文件或目录
+			ret = reposService.addDocAuth(docAuth);
+			System.out.println("addRepos() addDocAuth return:" + ret);
+			if(ret == 0)
+			{
+				rt.setMsgData("addRepos() addReposAuth return:" + ret);
+				System.out.println("新增用户仓库根目录权限失败");
 			}
 		}
 		else
