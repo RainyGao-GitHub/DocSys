@@ -38,9 +38,9 @@ import util.ReturnAjax;
 @RequestMapping("email")
 public class EmailService {
 
-	public static String fromUser = ReadProperties.read("emailConfig.properties", "fromuser");
-	private static String fromPwd = ReadProperties.read("emailConfig.properties", "frompwd");
-	private static String messagetype = ReadProperties.read("emailConfig.properties", "messagetype");
+	public static String fromUser = ReadProperties.read("docSysConfig.properties", "fromuser");
+	private static String fromPwd = ReadProperties.read("docSysConfig.properties", "frompwd");
+	private static String messagetype = ReadProperties.read("docSysConfig.properties", "messagetype");
 	
 	
 	/**
@@ -57,7 +57,7 @@ public class EmailService {
 		try {
 			Properties props = new Properties();
 			String basePath = new EmailService().getClass().getClassLoader().getResource("/").getPath();
-			File config = new File(basePath+"emailConfig.properties");
+			File config = new File(basePath+"docSysConfig.properties");
 			InputStream in = new FileInputStream(config);
 			props.load(in);
 			
