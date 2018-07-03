@@ -9,6 +9,8 @@ import org.artofsolving.jodconverter.OfficeDocumentConverter;
 import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
 
+import util.ReadProperties;
+
 /**
  * 这是一个工具类，主要是为了使Office2003-2007全部格式的文档(.doc|.docx|.xls|.xlsx|.ppt|.pptx)
  * 转化为pdf文件<br>
@@ -37,10 +39,21 @@ public class Office2PDF {
      * @return OpenOffice.org 3的安装目录
      */
     public static String getOfficeHome() {
+    	//get OpenOffice Home From Config File
+    	String officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePath");
+    	System.out.println("officeHome:" + officeHome);
+    	if(officeHome == null || "".equals(officeHome))
+    	{
+    		return getDefaultOfficeHome();
+    	}
+    	return officeHome;
+    }
+
+    private static String getDefaultOfficeHome() {
         String osName = System.getProperty("os.name");
         System.out.println("操作系统名称:" + osName);
         if (Pattern.matches("Linux.*", osName)) {
-            return "/opt/openoffice.org3";
+            return "/opt/openoffice.org4";
         } else if (Pattern.matches("Windows.*", osName)) {
             return "C:/Program Files (x86)/OpenOffice 4";
         } else if (Pattern.matches("Mac.*", osName)) {
