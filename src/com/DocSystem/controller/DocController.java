@@ -2905,11 +2905,14 @@ public class DocController extends BaseController{
 		String reposURL = repos.getSvnPath1();
 		String svnUser = repos.getSvnUser1();
 		String svnPwd = repos.getSvnPwd1();
-		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName);
+		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName,-1);
 	}
 	
+	//getFile or dir from VersionDB
+	//If the entry is file, then the file will put to localParentPath+localEntryName
+	//If the entry is dir, then the dir will be put under localParentPath+localEntryName (The logic seem is incorrect)
 	private boolean svnGetEntry(String reposURL, String svnUser, String svnPwd,
-			String parentPath, String entryName, String localParentPath,String localEntryName) {
+			String parentPath, String entryName, String localParentPath,String localEntryName,long revision) {
 	
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
@@ -2921,10 +2924,10 @@ public class DocController extends BaseController{
 		String remoteEntryPath = parentPath + entryName;
 		String localEntryPath = localParentPath + localEntryName;
 		
-		int entryType = svnUtil.getEntryType(remoteEntryPath, -1);
+		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
 		if(entryType == 1)	//File
 		{
-			svnUtil.getFile(localEntryPath,parentPath,entryName,-1);				
+			svnUtil.getFile(localEntryPath,parentPath,entryName,revision);				
 		}
 		else if(entryType == 2)
 		{
@@ -2936,7 +2939,7 @@ public class DocController extends BaseController{
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
-				if(svnGetEntry(reposURL,svnUser,svnPwd,remoteEntryPath,subEntryName,localEntryPath,subEntryName) == false)
+				if(svnGetEntry(reposURL,svnUser,svnPwd,remoteEntryPath,subEntryName,localEntryPath,subEntryName,revision) == false)
 				{
 					System.out.println("svnGetEntry() svnGetEntry Failed: " + subEntryName);
 					return false;
