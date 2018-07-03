@@ -1160,7 +1160,7 @@ public class SVNUtil {
     //Get the File from Version DataBase
 	public boolean getFile(String localFilePath, String parentPath, String entryName, long revision) {
 
-		System.out.println("revertFile() ");
+		System.out.println("getFile() ");
 		String remoteFilePath = parentPath + entryName;
         /*
          * This Map will be used to get the file properties. Each Map key is a
