@@ -40,8 +40,24 @@ public class Office2PDF {
      */
     public static String getOfficeHome() {
     	//get OpenOffice Home From Config File
-    	String officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePath");
-    	System.out.println("officeHome:" + officeHome);
+    	String officeHome = null;
+        String osName = System.getProperty("os.name");
+        System.out.println("操作系统名称:" + osName);
+        
+        if (Pattern.matches("Linux.*", osName)) 
+        {
+        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForLinux");
+        } 
+        else if (Pattern.matches("Windows.*", osName)) 
+        {
+        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForWindows");
+        } 
+        else if (Pattern.matches("Mac.*", osName)) 
+        {
+        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForMac");
+        }
+
+        System.out.println("officeHome:" + officeHome);
     	if(officeHome == null || "".equals(officeHome))
     	{
     		return getDefaultOfficeHome();
@@ -49,14 +65,20 @@ public class Office2PDF {
     	return officeHome;
     }
 
-    private static String getDefaultOfficeHome() {
+    private static String getDefaultOfficeHome() 
+    {
         String osName = System.getProperty("os.name");
         System.out.println("操作系统名称:" + osName);
-        if (Pattern.matches("Linux.*", osName)) {
+        if (Pattern.matches("Linux.*", osName)) 
+        {
             return "/opt/openoffice.org4";
-        } else if (Pattern.matches("Windows.*", osName)) {
+        } 
+        else if (Pattern.matches("Windows.*", osName)) 
+        {
             return "C:/Program Files (x86)/OpenOffice 4";
-        } else if (Pattern.matches("Mac.*", osName)) {
+        } 
+        else if (Pattern.matches("Mac.*", osName)) 
+        {
             return "/Applications/OpenOffice.org.app/Contents/";
         }
         return null;
