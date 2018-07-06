@@ -1062,7 +1062,13 @@ public class SVNUtil {
 	        }
 	        else
 	        {
-	       		checksum = deltaGenerator.sendDelta(entryPath, oldFileData, 0, newFileData, editor, true);       	
+	            try {
+	            	checksum = deltaGenerator.sendDelta(entryPath, oldFileData, 0, newFileData, editor, true);       	
+	    		}catch (SVNException e) {
+	    			System.out.println("modifyFile(): sendDelta failed try to sendDelta with oleFileData is null!");
+	    			e.printStackTrace();
+	    			checksum = deltaGenerator.sendDelta(entryPath, newFileData, editor, true); 	
+	    		}
 	        }
 	 
 	        /*
