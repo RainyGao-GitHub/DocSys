@@ -181,6 +181,7 @@ public class BaseController{
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         
         String webUserTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/" + login_user.getId() + "/";
+        System.out.println("getWebUserTmpPath() webUserTmpPath" + webUserTmpPath);
 		return webUserTmpPath;
 	}
 	
