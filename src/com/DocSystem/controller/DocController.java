@@ -677,7 +677,9 @@ public class DocController extends BaseController{
 		}
 		
 		//解决中文编码问题
-		if(request.getHeader("User-Agent").toUpperCase().indexOf("MSIE")>0){  
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
+		{  
 			file_name = URLEncoder.encode(file_name, "UTF-8");  
 		}else{  
 			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
