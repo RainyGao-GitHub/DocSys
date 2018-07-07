@@ -1166,7 +1166,7 @@ public class SVNUtil {
     //Get the File from Version DataBase
 	public boolean getFile(String localFilePath, String parentPath, String entryName, long revision) {
 
-		System.out.println("getFile() ");
+		System.out.println("getFile() parentPath:" + parentPath + " entryName:" + entryName + " revision:" + revision );
 		String remoteFilePath = parentPath + entryName;
         /*
          * This Map will be used to get the file properties. Each Map key is a
@@ -1183,7 +1183,7 @@ public class SVNUtil {
             SVNNodeKind nodeKind = repository.checkPath(remoteFilePath,revision);
             
             if (nodeKind == SVNNodeKind.NONE) {
-                System.err.println("revertFile() There is no entry at '" + repositoryURL + "'.");
+                System.err.println("getFile() There is no entry at '" + repositoryURL + "'.");
                 return false;
             } else if (nodeKind == SVNNodeKind.DIR) {
                 System.err.println("The entry at '" + repositoryURL + "' is a directory while a file was expected.");
