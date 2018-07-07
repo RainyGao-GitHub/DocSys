@@ -2965,7 +2965,7 @@ public class DocController extends BaseController{
 		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
 		if(entryType == 1)	//File
 		{
-			svnUtil.getFile(localParentPath,parentPath,entryName,revision);				
+			svnUtil.getFile(localParentPath+entryName,parentPath,entryName,revision);				
 		}
 		else if(entryType == 2)
 		{
@@ -3021,7 +3021,7 @@ public class DocController extends BaseController{
 			}
 			else //getFile From the Version DataBase
 			{
-				svnUtil.getFile(localEntryPath,parentPath,entryName,-1);
+				svnUtil.getFile(localEntryPath+entryName,parentPath,entryName,-1);
 			}
 		} catch (SVNException e) {
 			System.out.println("svnRevert() revertFile " + localEntryPath + " Failed!");
