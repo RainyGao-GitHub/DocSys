@@ -414,13 +414,7 @@ public class ReposController extends BaseController{
 				rt.setError("创建tmp目录失败");
 				writeJson(rt, response);	
 				return;
-			}
-			if(createDir(reposDir+"/backup") == false)
-			{
-				rt.setError("创建backup目录失败");
-				writeJson(rt, response);	
-				return;
-			}			
+			}		
 			//Real Doc 带版本控制，则需要同步本地和版本仓库
 			if(verCtrl == 1)
 			{					
