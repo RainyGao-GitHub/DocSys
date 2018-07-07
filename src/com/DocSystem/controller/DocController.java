@@ -2940,7 +2940,7 @@ public class DocController extends BaseController{
 	
 	private boolean svnCheckOut(Repos repos, String parentPath,String entryName, String localParentPath,long revision, ReturnAjax rt) 
 	{
-		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
+		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName);
 		String reposURL = repos.getSvnPath();
 		String svnUser = repos.getSvnUser();
 		String svnPwd = repos.getSvnPwd();
