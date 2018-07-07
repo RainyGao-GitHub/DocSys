@@ -579,104 +579,55 @@ public class DocController extends BaseController{
 		}
 		
 		//得到要下载的文件名
-		String fileName = doc.getName();
-		String file_name = fileName;
+		String file_name = doc.getName();
 		
 		//虚拟文件下载
 		Repos repos = reposService.getRepos(doc.getVid());
 		//虚拟文件系统下载，直接将数据库的文件内容传回去，未来需要优化
 		if(isRealFS(repos.getType()) == false)
 		{
-			//解决中文编码问题: https://blog.csdn.net/u012117531/article/details/54808960
-			String userAgent = request.getHeader("User-Agent").toUpperCase();
-			if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
-			{  
-				file_name = URLEncoder.encode(file_name, "UTF-8");  
-			}else{  
-				file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
-			}  
-			System.out.println("doGet file_name:" + file_name);
-			//解决空格问题
-			response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
-			
-			//创建输出流
-			OutputStream out = response.getOutputStream();
-			//创建缓冲区
-			//输出缓冲区的内容到浏览器，实现文件下载
 			String content = doc.getContent();
-			out.write(content.getBytes(), 0, content.length());		
-			//关闭输出流
-			out.close();	
+			byte [] data = content.getBytes();
+			sendDataToWebPage(file_name,data, response, request); 
 			return;
-		}
-		
-		//实文件文件下载（是文件夹需要先压缩再下载）
-
-		if(doc.getType() == 2)
-		{
-			file_name = file_name +".zip";
 		}
 		
 		//get reposRPath
 		String reposRPath = getReposRealPath(repos);
 				
 		//get srcParentPath
-		String srcParentPath = getParentPath(id);	//文件或目录的相对路径
-		//文件的真实全路径
-		String srcPath = reposRPath + srcParentPath;
-		if(doc.getType() == 1)
-		{
-			srcPath = srcPath + doc.getName();			
-		}
-		System.out.println("doGet() srcPath:" + srcPath);
+		String srcParentPath = getParentPath(doc.getPid());	//doc的ParentPath
+
+		//文件的localParentPath
+		String localParentPath = reposRPath + srcParentPath;
+		System.out.println("doGet() localParentPath:" + localParentPath);
 		
-		String dstPath = srcPath;
+		//For dir 
 		if(doc.getType() == 2) //目录
 		{
 			//判断用户临时空间是否存在，不存在则创建，存在则将压缩文件保存在临时空间里
 			String userTmpDir = getReposUserTmpPath(repos,login_user);
-			File userDir = new File(userTmpDir);
-			if(!userDir.exists())
-			{
-				if(createDir(userTmpDir) == false)
-				{
-					System.out.println("doGet() 创建用户空间失败:" + userTmpDir);	
-					rt.setError("创建用户空间 " + userTmpDir + " 失败");
-					writeJson(rt, response);
-					return;
-				}
-			}
-			dstPath = userTmpDir + "/" + doc.getName() + ".zip";
 			
-			System.out.println("doGet() dstPath" + dstPath);
-			//开始压缩
-			if(compressExe(srcPath,dstPath) == true)
+			String zipFileName = file_name + ".zip";
+			
+			if(doCompressDir(localParentPath, file_name, userTmpDir, zipFileName, rt) == false)
 			{
-				System.out.println("压缩完成！");	
-			}
-			else
-			{
-				System.out.println("doGet() 压缩失败！");
-				rt.setError("压缩  " + dstPath + " 失败");
+				rt.setError("压缩目录失败！");
 				writeJson(rt, response);
 				return;
 			}
+			
+			sendFileToWebPage(userTmpDir,zipFileName, response, request); 
 		}
-		
-		//开始下载 
-		File file = new File(dstPath);
-		
-		//如果文件不存在
-		if(!file.exists()){
-			System.out.println("doGet() " + dstPath + " 不存在！");	
-			//request.setAttribute("message", "您要下载的资源已被删除！！");
-			//request.getRequestDispatcher("/message.jsp").forward(request, response);
-			rt.setError(dstPath + " 不存在！");
-			writeJson(rt, response);
-			return;
+		else	//for File
+		{
+			//Send the file to webPage
+			sendFileToWebPage(localParentPath,file_name, response, request); 			
 		}
-		
-		//解决中文编码问题
+	}
+	
+	private void sendDataToWebPage(String file_name, byte[] data, HttpServletResponse response, HttpServletRequest request)  throws Exception{ 
+		//解决中文编码问题: https://blog.csdn.net/u012117531/article/details/54808960
 		String userAgent = request.getHeader("User-Agent").toUpperCase();
 		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
 		{  
@@ -688,8 +639,29 @@ public class DocController extends BaseController{
 		//解决空格问题
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 		
+		//创建输出流
+		OutputStream out = response.getOutputStream();
+		out.write(data, 0, data.length);		
+		//关闭输出流
+		out.close();	
+		
+	}
+	
+	private void sendFileToWebPage(String localParentPath, String file_name,HttpServletResponse response,HttpServletRequest request) throws Exception{ 
+		//解决中文编码问题
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
+		{  
+			file_name = URLEncoder.encode(file_name, "UTF-8");  
+		}else{  
+			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+		}  
+		
+		//解决空格问题
+		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+		
 		//读取要下载的文件，保存到文件输入流
-		FileInputStream in = new FileInputStream(dstPath);
+		FileInputStream in = new FileInputStream(localParentPath + file_name);
 		//创建输出流
 		OutputStream out = response.getOutputStream();
 		//创建缓冲区
@@ -705,7 +677,61 @@ public class DocController extends BaseController{
 		//关闭输出流
 		out.close();
 	}
-	
+
+	private boolean doCompressDir(String srcParentPath, String dirName, String dstParentPath, String zipFileName,ReturnAjax rt) {
+		
+		//if dstDir not exists create it
+		File dstDir = new File(dstParentPath);
+		if(!dstDir.exists())
+		{
+			if(createDir(dstParentPath) == false)
+			{
+				System.out.println("doCompressDir() Failed to create:" + dstParentPath);	
+				rt.setMsgData("创建目录 " + dstParentPath + " 失败");
+				return false;
+			}
+		}
+		//开始压缩
+		if(compressExe(srcParentPath + dirName,dstParentPath + zipFileName) == true)
+		{
+			System.out.println("压缩完成！");	
+		}
+		else
+		{
+			System.out.println("doCompressDir()  压缩失败！");
+			rt.setMsgData("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败");
+			return false;
+		}
+		
+		return true;
+	}
+
+	/**************** download History Doc  ******************/
+	@RequestMapping("/getHistoryDoc.do")
+	public void getHistoryDoc(long revision,Integer reposId, String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("getHistoryDoc revision: " + revision + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//get reposInfo to 
+		Repos repos = reposService.getRepos(reposId);
+		
+		//userTmpDir will be used to tmp store the history doc 
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		
+		//checkout the entry to local
+		svnCheckOut(repos, parentPath, docName, userTmpDir, revision, rt);
+		 
+		//send the file to web page
+		sendFileToWebPage(userTmpDir,docName, response, request); 
+	}
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer docId,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
@@ -2909,14 +2935,23 @@ public class DocController extends BaseController{
 		String reposURL = repos.getSvnPath1();
 		String svnUser = repos.getSvnUser1();
 		String svnPwd = repos.getSvnPwd1();
-		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName,-1);
+		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath,-1);
+	}
+	
+	private boolean svnCheckOut(Repos repos, String parentPath,String entryName, String localParentPath,long revision, ReturnAjax rt) 
+	{
+		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
+		String reposURL = repos.getSvnPath();
+		String svnUser = repos.getSvnUser();
+		String svnPwd = repos.getSvnPwd();
+		return svnGetEntry(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, revision);
 	}
 	
 	//getFile or dir from VersionDB
 	//If the entry is file, then the file will put to localParentPath+localEntryName
 	//If the entry is dir, then the dir will be put under localParentPath+localEntryName (The logic seem is incorrect)
 	private boolean svnGetEntry(String reposURL, String svnUser, String svnPwd,
-			String parentPath, String entryName, String localParentPath,String localEntryName,long revision) {
+			String parentPath, String entryName, String localParentPath,long revision) {
 	
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
@@ -2926,24 +2961,25 @@ public class DocController extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
-		String localEntryPath = localParentPath + localEntryName;
 		
 		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
 		if(entryType == 1)	//File
 		{
-			svnUtil.getFile(localEntryPath,parentPath,entryName,revision);				
+			svnUtil.getFile(localParentPath,parentPath,entryName,revision);				
 		}
 		else if(entryType == 2)
 		{
-			File file = new File(localEntryPath);
+			File file = new File(localParentPath,entryName);
 			file.mkdir();
+			String localEntryPath = localParentPath + entryName + "/";
+			
 			//Get the subEntries and call svnGetEntry
 			List <SVNDirEntry> subEntries = svnUtil.getSubEntries(remoteEntryPath);
 			for(int i=0;i<subEntries.size();i++)
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
-				if(svnGetEntry(reposURL,svnUser,svnPwd,remoteEntryPath,subEntryName,localEntryPath,subEntryName,revision) == false)
+				if(svnGetEntry(reposURL,svnUser,svnPwd,remoteEntryPath,subEntryName,localEntryPath,revision) == false)
 				{
 					System.out.println("svnGetEntry() svnGetEntry Failed: " + subEntryName);
 					return false;
