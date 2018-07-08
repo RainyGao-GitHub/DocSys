@@ -602,30 +602,36 @@ public class DocController extends BaseController{
 		String localParentPath = reposRPath + srcParentPath;
 		System.out.println("doGet() localParentPath:" + localParentPath);
 		
+		//get userTmpDir
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		sendTargetToWebPage(localParentPath,file_name, userTmpDir, rt, response, request);
+	}
+	
+	private void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request) throws Exception {
+		
+		int entryType = getLocalEntryType(localParentPath,targetName);
+
 		//For dir 
-		if(doc.getType() == 2) //目录
+		if(entryType == 2) //目录
 		{
 			//doCompressDir and save the zip File under userTmpDir
-			String userTmpDir = getReposUserTmpPath(repos,login_user);
-			
-			String zipFileName = file_name + ".zip";
-			
-			if(doCompressDir(localParentPath, file_name, userTmpDir, zipFileName, rt) == false)
+			String zipFileName = targetName + ".zip";
+			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
 			{
 				rt.setError("压缩目录失败！");
 				writeJson(rt, response);
 				return;
 			}
 			
-			sendFileToWebPage(userTmpDir,zipFileName, response, request); 
+			sendFileToWebPage(tmpDir,zipFileName, response, request); 
 		}
 		else	//for File
 		{
 			//Send the file to webPage
-			sendFileToWebPage(localParentPath,file_name, response, request); 			
+			sendFileToWebPage(localParentPath,targetName, response, request); 			
 		}
 	}
-	
+
 	private void sendDataToWebPage(String file_name, byte[] data, HttpServletResponse response, HttpServletRequest request)  throws Exception{ 
 		//解决中文编码问题: https://blog.csdn.net/u012117531/article/details/54808960
 		String userAgent = request.getHeader("User-Agent").toUpperCase();
@@ -725,40 +731,21 @@ public class DocController extends BaseController{
 		
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String targetName = docName + "_" + revision;
 		
 		//checkout the entry to local
 		String reposURL = repos.getSvnPath();
 		String svnUser = repos.getSvnUser();
 		String svnPwd = repos.getSvnPwd();
-		if(svnCheckOut(reposURL, svnUser, svnPwd, parentPath, docName, userTmpDir, revision) == false)
+		if(svnCheckOut(reposURL, svnUser, svnPwd, parentPath, docName, userTmpDir, targetName, revision) == false)
 		{
 			System.out.println("getHistoryDoc() svnCheckOut Failed!");
-			rt.setError("svnCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir);
+			rt.setError("svnCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
 			writeJson(rt, response);	
 			return;
 		}
 		
-		
-		int entryType = getLocalEntryType(userTmpDir,docName);
-		//For dir 
-		if(entryType == 2) //目录
-		{
-			//doCompressDir and save the zip File under userTmpDir
-			String zipFileName = docName + ".zip";
-			if(doCompressDir(userTmpDir, docName, userTmpDir, zipFileName, rt) == false)
-			{
-				rt.setError("压缩目录失败！");
-				writeJson(rt, response);
-				return;
-			}
-			
-			sendFileToWebPage(userTmpDir,zipFileName, response, request); 
-		}
-		else	//for File
-		{
-			//Send the file to webPage
-			sendFileToWebPage(userTmpDir,docName, response, request); 			
-		}
+		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request);
 	}
 	
 	private int getLocalEntryType(String localParentPath, String entryName) {
