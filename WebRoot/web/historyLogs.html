@@ -21,16 +21,26 @@
 
 <script type="text/javascript">
 	//This two value need to be set
-	var docPath;
+	var parentPath = "";
+	var docName = "";
+	var docPath = "";
 	var reposId;
-	function historyLogsPageInit(reposId,docPath)
+	function historyLogsPageInit(vid,pPath,name)
 	{
-		console.log("historyLogsPageInit docPath" + docPath);
-		docPath = docPath;
-		reposId = reposId;
+		console.log("historyLogsPageInit parentPath:" + parentPath + " docName:" + docName);
+		parentPath = pPath;
+		docName = name;
+		docPath = pPath + name;
+		reposId = vid;
 		showHistoryLogList(reposId,docPath);		
 	}
 
+	function downloadHistory(revision)
+	{
+	   	console.log("download() revision:" +revision  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
+
+	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?revision=" + revision + "&reposId=" + reposId + "&parentPath=" + parentPath + "&docName="+docName;
+	}
 
 	function showHistoryLogList(reposId,docPath)
 	{
@@ -69,7 +79,7 @@
 			
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
-				var opBtn = "		<a href='javascript:void(0)' onclick='download("+d.revision+"," + d.docPath+");' class='mybtn-primary'>下载</a>";							
+				var opBtn = "		<a href='javascript:void(0)' onclick='downloadHistory("+d.revision+ ");' class='mybtn-primary'>下载</a>";							
 				var se = "<li id='popover" +i+"' + + value="+ i +">"
 					+"	<i class='cell revision w8'>"
 					+"		<span class='name'>"
@@ -127,4 +137,5 @@
 			}*/
 		}
 	}
+
 </script>
