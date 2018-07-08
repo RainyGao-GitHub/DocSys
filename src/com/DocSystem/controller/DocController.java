@@ -727,8 +727,17 @@ public class DocController extends BaseController{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
 		//checkout the entry to local
-		svnCheckOut(repos, parentPath, docName, userTmpDir, revision, rt);
-		 
+		String reposURL = repos.getSvnPath();
+		String svnUser = repos.getSvnUser();
+		String svnPwd = repos.getSvnPwd();
+		if(svnCheckOut(reposURL, svnUser, svnPwd, parentPath, docName, userTmpDir, revision) == false)
+		{
+			System.out.println("getHistoryDoc() svnCheckOut Failed!");
+			rt.setError("svnCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir);
+			writeJson(rt, response);	
+			return;
+		}
+		
 		//send the file to web page
 		sendFileToWebPage(userTmpDir,docName, response, request); 
 	}
@@ -2935,31 +2944,27 @@ public class DocController extends BaseController{
 		String reposURL = repos.getSvnPath1();
 		String svnUser = repos.getSvnUser1();
 		String svnPwd = repos.getSvnPwd1();
-		return svnGetEntry(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath,-1);
+		return svnCheckOut(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath,-1);
 	}
 	
-	private boolean svnCheckOut(Repos repos, String parentPath,String entryName, String localParentPath,long revision, ReturnAjax rt) 
+	private boolean svnCheckOut(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, String localParentPath,long revision) 
 	{
-		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName);
-		String reposURL = repos.getSvnPath();
-		String svnUser = repos.getSvnUser();
-		String svnPwd = repos.getSvnPwd();
-		return svnGetEntry(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, revision);
-	}
-	
-	//getFile or dir from VersionDB
-	//If the entry is file, then the file will put to localParentPath+localEntryName
-	//If the entry is dir, then the dir will be put under localParentPath+localEntryName (The logic seem is incorrect)
-	private boolean svnGetEntry(String reposURL, String svnUser, String svnPwd,
-			String parentPath, String entryName, String localParentPath,long revision) {
-	
+		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath);
+		
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
 		{
-			System.out.println("svnGetEntry() svnUtil Init Failed: " + reposURL);
+			System.out.println("svnCheckOut() svnUtil Init Failed: " + reposURL);
 			return false;
 		}
 		
+		return svnGetEntry(svnUtil, parentPath, entryName, localParentPath, revision);
+	}
+	
+	//getFile or directory from VersionDB
+	private boolean svnGetEntry(SVNUtil svnUtil, String parentPath, String entryName, String localParentPath,long revision) 
+	{
+		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath);
 		String remoteEntryPath = parentPath + entryName;
 		
 		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
@@ -2979,7 +2984,7 @@ public class DocController extends BaseController{
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
-				if(svnGetEntry(reposURL,svnUser,svnPwd,remoteEntryPath,subEntryName,localEntryPath,revision) == false)
+				if(svnGetEntry(svnUtil,remoteEntryPath+"/",subEntryName,localEntryPath,revision) == false)
 				{
 					System.out.println("svnGetEntry() svnGetEntry Failed: " + subEntryName);
 					return false;
