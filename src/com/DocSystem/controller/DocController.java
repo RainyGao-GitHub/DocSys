@@ -3045,8 +3045,7 @@ public class DocController extends BaseController{
 		}
 		else if(entryType == 0)
 		{
-			System.out.println("svnGetEntry() " + remoteEntryPath + " 在仓库中不存在！");
-			return false;
+			//System.out.println("svnGetEntry() " + remoteEntryPath + " 在仓库中不存在！");
 		}
 		else	//如果已经存在，则只是将修改的内容commit到服务器上
 		{
