@@ -732,6 +732,11 @@ public class DocController extends BaseController{
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		String targetName = docName + "_" + revision;
+		//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
+		if("".equals(docName))
+		{
+			targetName = repos.getName() + "_" + revision;
+		}
 		
 		//checkout the entry to local
 		String reposURL = repos.getSvnPath();
