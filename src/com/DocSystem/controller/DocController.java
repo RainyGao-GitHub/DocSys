@@ -605,7 +605,7 @@ public class DocController extends BaseController{
 		//For dir 
 		if(doc.getType() == 2) //目录
 		{
-			//判断用户临时空间是否存在，不存在则创建，存在则将压缩文件保存在临时空间里
+			//doCompressDir and save the zip File under userTmpDir
 			String userTmpDir = getReposUserTmpPath(repos,login_user);
 			
 			String zipFileName = file_name + ".zip";
@@ -738,9 +738,51 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//send the file to web page
-		sendFileToWebPage(userTmpDir,docName, response, request); 
+		
+		int entryType = getLocalEntryType(userTmpDir,docName);
+		//For dir 
+		if(entryType == 2) //目录
+		{
+			//doCompressDir and save the zip File under userTmpDir
+			String zipFileName = docName + ".zip";
+			if(doCompressDir(userTmpDir, docName, userTmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩目录失败！");
+				writeJson(rt, response);
+				return;
+			}
+			
+			sendFileToWebPage(userTmpDir,zipFileName, response, request); 
+		}
+		else	//for File
+		{
+			//Send the file to webPage
+			sendFileToWebPage(userTmpDir,docName, response, request); 			
+		}
 	}
+	
+	private int getLocalEntryType(String localParentPath, String entryName) {
+		
+		File entry = new File(localParentPath,entryName);
+		if(!entry.exists())
+		{
+			System.out.println("getLocalEntryType() Failed: " + localParentPath + entryName + " 不存在 ！");
+			return -1;
+		}	
+		
+		if(entry.isFile())
+		{
+			return 1;
+		}
+		else if(entry.isDirectory())
+		{
+			return 2;
+		}
+
+		System.out.println("getLocalEntryType() Failed: 未知文件类型！");
+		return -1;
+	}
+
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer docId,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
@@ -2945,6 +2987,23 @@ public class DocController extends BaseController{
 		String svnUser = repos.getSvnUser1();
 		String svnPwd = repos.getSvnPwd1();
 		return svnCheckOut(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath,-1);
+	}
+	
+	private int svnGetEntryType(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, long revision) 
+	{
+		System.out.println("svnGetEntryType() parentPath:" + parentPath + " entryName:" + entryName);
+		
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
+		{
+			System.out.println("svnGetEntryType() svnUtil Init Failed: " + reposURL);
+			return -1;
+		}
+		
+		String remoteEntryPath = parentPath + entryName;
+		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
+		
+		return entryType;
 	}
 	
 	private boolean svnCheckOut(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, String localParentPath,long revision) 
