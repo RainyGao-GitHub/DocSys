@@ -2986,7 +2986,7 @@ public class DocController extends BaseController{
 		String reposURL = repos.getSvnPath1();
 		String svnUser = repos.getSvnUser1();
 		String svnPwd = repos.getSvnPwd1();
-		return svnCheckOut(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath,-1);
+		return svnCheckOut(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName,-1);
 	}
 	
 	private int svnGetEntryType(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, long revision) 
@@ -3006,7 +3006,7 @@ public class DocController extends BaseController{
 		return entryType;
 	}
 	
-	private boolean svnCheckOut(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, String localParentPath,long revision) 
+	private boolean svnCheckOut(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
 	{
 		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath);
 		
@@ -3017,33 +3017,39 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		return svnGetEntry(svnUtil, parentPath, entryName, localParentPath, revision);
+		return svnGetEntry(svnUtil, parentPath, entryName, localParentPath, targetName, revision);
 	}
 	
 	//getFile or directory from VersionDB
-	private boolean svnGetEntry(SVNUtil svnUtil, String parentPath, String entryName, String localParentPath,long revision) 
+	private boolean svnGetEntry(SVNUtil svnUtil, String parentPath, String entryName, String localParentPath,String targetName,long revision) 
 	{
-		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath);
-		String remoteEntryPath = parentPath + entryName;
+		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
+		//check targetName and set
+		if(targetName == null)
+		{
+			targetName = entryName;
+		}
+		
+		String remoteEntryPath = parentPath + entryName;
 		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
 		if(entryType == 1)	//File
 		{
-			svnUtil.getFile(localParentPath+entryName,parentPath,entryName,revision);				
+			svnUtil.getFile(localParentPath + targetName,parentPath,entryName,revision);				
 		}
 		else if(entryType == 2)
 		{
-			File file = new File(localParentPath,entryName);
-			file.mkdir();
-			String localEntryPath = localParentPath + entryName + "/";
+			File dir = new File(localParentPath,targetName);
+			dir.mkdir();
 			
 			//Get the subEntries and call svnGetEntry
+			String localEntryPath = localParentPath + targetName + "/";
 			List <SVNDirEntry> subEntries = svnUtil.getSubEntries(remoteEntryPath);
 			for(int i=0;i<subEntries.size();i++)
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
-				if(svnGetEntry(svnUtil,remoteEntryPath+"/",subEntryName,localEntryPath,revision) == false)
+				if(svnGetEntry(svnUtil,remoteEntryPath+"/",subEntryName,localEntryPath,null,revision) == false)
 				{
 					System.out.println("svnGetEntry() svnGetEntry Failed: " + subEntryName);
 					return false;
