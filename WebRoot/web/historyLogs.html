@@ -39,7 +39,9 @@
 	{
 	   	console.log("download() revision:" +revision  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
 
-	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?revision=" + revision + "&reposId=" + reposId + "&parentPath=" + parentPath + "&docName="+docName;
+	   	var encParentPath = encodeURI(parentPath);
+	   	var encDocName = encodeURI(docName);
+	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?revision=" + revision + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName;
 	}
 
 	function showHistoryLogList(reposId,docPath)

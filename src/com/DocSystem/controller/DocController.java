@@ -732,19 +732,9 @@ public class DocController extends BaseController{
 		//get reposInfo to 
 		Repos repos = reposService.getRepos(reposId);
 		
-		//convert parentPath and docName according to the web browzer
-		String userAgent = request.getHeader("User-Agent").toUpperCase();
-		System.out.println("getHistoryDoc() userAgent:" + userAgent);
-		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//For IE
-		{  
-			System.out.println("getHistoryDoc() URLDecoder");
-			docName = URLDecoder.decode(docName, "UTF-8"); 
-			parentPath = URLDecoder.decode(parentPath, "UTF-8");
-			
-		}else{  
-			docName = new String(docName.getBytes("ISO8859-1"),"UTF-8");  
-			parentPath = new String(parentPath.getBytes("ISO8859-1"),"UTF-8");  
-		}  
+		//URL was encode by EncodeURI, so just decode it here
+		docName = new String(docName.getBytes("ISO8859-1"),"UTF-8");  
+		parentPath = new String(parentPath.getBytes("ISO8859-1"),"UTF-8");  
 		System.out.println("getHistoryDoc() docName:" + docName + " parentPath:" + parentPath);
 		
 		//userTmpDir will be used to tmp store the history doc 
