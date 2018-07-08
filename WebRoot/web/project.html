@@ -2147,13 +2147,16 @@
 	{
 		console.log("showDocHistory()");
 
-		var docPath = "";
+		var parentPath ="";
+		var docName = "";
+
 		var treeNode = curRightClickedTreeNode;
 		if(treeNode != null)
 		{
-			docPath = getTreeNodeFullPath(treeNode);
+			parentPath = getTreeNodeParentPath(treeNode);
+			docName = treeNode.name;
 		}
-		console.log("docPath",docPath);
+		console.log("parentPath:" + parentPath + " docName:"+docName);
 		
 		//show HistoryLogs page
 		bootstrapQ.dialog({
@@ -2163,7 +2166,7 @@
 			foot: false,
 			big: true,
 			callback: function(){
-				historyLogsPageInit(gReposId,docPath);
+				historyLogsPageInit(gReposId,parentPath,docName);
 			},
 		});
 	}
@@ -2181,6 +2184,22 @@
 			parentPath = parentPath + nodes[i].name + "/";
 		}
 		return parentPath + treeNode.name;
+	}
+	
+	
+	function getTreeNodeParentPath(treeNode)
+	{
+		console.log("getTreeNodeParentPath treeNode",treeNode);
+		
+		var parentPath = "";
+		
+		var nodes = treeNode.getPath();
+		console.log("getTreeNodeParentPath nodes",nodes);
+		for(var i=0;i<nodes.length-1;i++)
+		{
+			parentPath = parentPath + nodes[i].name + "/";
+		}
+		return parentPath;
 	}
 	
 	//getDocHistory接口
@@ -4575,11 +4594,13 @@ function CompareObj(objA, objB, flag) {
 			{text: '上传', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
+						curRightClickedTreeNode = null; 
 	        			uploadFiles();
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
+						curRightClickedTreeNode = null; 
 						uploadDir();
 					}
 				},	
@@ -4588,9 +4609,20 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
+						curRightClickedTreeNode = null; 
 						DoPaste(gCopiedNodes,null);
 					}
 			},
+			{divider: true},
+			{text: '其它', subMenu: [
+						{text: '查看仓库历史', action: function(e){
+									e.preventDefault();
+									curRightClickedTreeNode = null; 
+				        			showDocHistory();
+								}
+						},
+   				]
+   			},
 			]
 		);
 		//zTree上的右键菜单
