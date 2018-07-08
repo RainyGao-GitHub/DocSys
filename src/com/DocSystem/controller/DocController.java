@@ -653,7 +653,11 @@ public class DocController extends BaseController{
 		
 	}
 	
-	private void sendFileToWebPage(String localParentPath, String file_name,HttpServletResponse response,HttpServletRequest request) throws Exception{ 
+	private void sendFileToWebPage(String localParentPath, String file_name,HttpServletResponse response,HttpServletRequest request) throws Exception{
+		
+		//读取要下载的文件，保存到文件输入流
+		FileInputStream in = new FileInputStream(localParentPath + file_name);
+		
 		//解决中文编码问题
 		String userAgent = request.getHeader("User-Agent").toUpperCase();
 		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
@@ -661,13 +665,11 @@ public class DocController extends BaseController{
 			file_name = URLEncoder.encode(file_name, "UTF-8");  
 		}else{  
 			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
-		}  
+		}
 		
 		//解决空格问题
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 		
-		//读取要下载的文件，保存到文件输入流
-		FileInputStream in = new FileInputStream(localParentPath + file_name);
 		//创建输出流
 		OutputStream out = response.getOutputStream();
 		//创建缓冲区
