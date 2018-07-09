@@ -605,32 +605,9 @@ public class DocController extends BaseController{
 		
 		//get userTmpDir
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		sendTargetToWebPage(localParentPath,file_name, userTmpDir, rt, response, request);
-	}
-	
-	private void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request) throws Exception {
+		createDir(userTmpDir);
 		
-		int entryType = getLocalEntryType(localParentPath,targetName);
-
-		//For dir 
-		if(entryType == 2) //目录
-		{
-			//doCompressDir and save the zip File under userTmpDir
-			String zipFileName = targetName + ".zip";
-			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
-			{
-				rt.setError("压缩目录失败！");
-				writeJson(rt, response);
-				return;
-			}
-			
-			sendFileToWebPage(tmpDir,zipFileName, response, request); 
-		}
-		else	//for File
-		{
-			//Send the file to webPage
-			sendFileToWebPage(localParentPath,targetName, response, request); 			
-		}
+		sendTargetToWebPage(localParentPath,file_name, userTmpDir, rt, response, request);
 	}
 
 	private void sendDataToWebPage(String file_name, byte[] data, HttpServletResponse response, HttpServletRequest request)  throws Exception{ 
@@ -654,10 +631,45 @@ public class DocController extends BaseController{
 		
 	}
 	
-	private void sendFileToWebPage(String localParentPath, String file_name,HttpServletResponse response,HttpServletRequest request) throws Exception{
+	private void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request) throws Exception {
 		
-		//读取要下载的文件，保存到文件输入流
-		FileInputStream in = new FileInputStream(localParentPath + file_name);
+		int entryType = getLocalEntryType(localParentPath,targetName);
+
+		//For dir 
+		if(entryType == 2) //目录
+		{
+			//doCompressDir and save the zip File under userTmpDir
+			String zipFileName = targetName + ".zip";
+			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩目录失败！");
+				writeJson(rt, response);
+				return;
+			}
+			
+			sendFileToWebPage(tmpDir,zipFileName,rt,response, request); 
+		}
+		else	//for File
+		{
+			//Send the file to webPage
+			sendFileToWebPage(localParentPath,targetName,rt, response, request); 			
+		}
+	}
+	
+	private void sendFileToWebPage(String localParentPath, String file_name,  ReturnAjax rt,HttpServletResponse response,HttpServletRequest request) throws Exception{
+		
+		String dstPath = localParentPath + file_name;
+
+		//检查文件是否存在
+		File file = new File(dstPath);
+		if(!file.exists()){
+			System.out.println("doGet() " + dstPath + " 不存在！");	
+			//request.setAttribute("message", "您要下载的资源已被删除！！");
+			//request.getRequestDispatcher("/message.jsp").forward(request, response);
+			rt.setError(dstPath + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
 		
 		//解决中文编码问题
 		String userAgent = request.getHeader("User-Agent").toUpperCase();
@@ -667,10 +679,11 @@ public class DocController extends BaseController{
 		}else{  
 			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
 		}
-		
 		//解决空格问题
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
-		
+
+		//读取要下载的文件，保存到文件输入流
+		FileInputStream in = new FileInputStream(dstPath);
 		//创建输出流
 		OutputStream out = response.getOutputStream();
 		//创建缓冲区
@@ -739,6 +752,8 @@ public class DocController extends BaseController{
 		
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		createDir(userTmpDir);
+		
 		String targetName = docName + "_" + revision;
 		//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
 		if("".equals(docName))
