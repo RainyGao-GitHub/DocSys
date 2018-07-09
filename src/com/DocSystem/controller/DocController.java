@@ -681,7 +681,8 @@ public class DocController extends BaseController{
 		}else{  
 			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
 		}
-		//解决空格问题
+		//解决空格问题（空格变加号和兼容性问题）
+		file_name=file_name.replaceAll("\\+","%20"); 
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 
 		//读取要下载的文件，保存到文件输入流
