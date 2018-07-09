@@ -549,8 +549,10 @@ public class DocController extends BaseController{
 		//String docRPath = parentPath + doc.getName();	
 		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
-		String reposUserTmpPath = getReposUserTmpPath(repos,login_user);
-		if(saveVirtualDocContent(reposUserTmpPath,docVName,content,rt) == false)
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		createDir(userTmpDir);
+		
+		if(saveVirtualDocContent(userTmpDir,docVName,content,rt) == false)
 		{
 			rt.setError("saveVirtualDocContent Error!");
 		}
@@ -2250,8 +2252,8 @@ public class DocController extends BaseController{
 		return true;
 	}
 
-	private boolean saveVirtualDocContent(String reposVPath, String docVName, String content, ReturnAjax rt) {
-		String vDocPath = reposVPath + docVName + "/";
+	private boolean saveVirtualDocContent(String localParentPath, String docVName, String content, ReturnAjax rt) {
+		String vDocPath = localParentPath + docVName + "/";
 		File folder = new File(vDocPath);
 		if(!folder.exists())
 		{
