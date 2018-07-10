@@ -91,6 +91,17 @@ public class BaseController{
 				path = "/data/DocSysReposes/";	//Linux系统放在  /data	
 			}
 	    }
+	    
+		File dir = new File(path);
+		if(dir.exists() == false)
+		{
+			System.out.println("getDefaultReposRootPath() defaultReposRootPath:" + path + " not exists, do create it!");
+			if(dir.mkdirs() == false)
+			{
+				System.out.println("getDefaultReposRootPath() Failed to create dir:" + path);
+			}
+		}	 
+	    
 		return path;
 	}
 	
@@ -106,23 +117,33 @@ public class BaseController{
 	}
 
 	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
-	protected String getDefaultSvnLocalReposPath() {
-		String localReposPath = "";
+	protected String getSvnLocalReposStorePath() {
+		String path = "";
 		
-		localReposPath = ReadProperties.read("docSysConfig.properties", "defaultSvnLocalReposPath");
-	    if(localReposPath == null || "".equals(localReposPath))
+		path = ReadProperties.read("docSysConfig.properties", "svnLocalReposStorePath");
+	    if(path == null || "".equals(path))
 	    {
 			String os = System.getProperty("os.name");  
 			System.out.println("OS:"+ os);  
 			if(os.toLowerCase().startsWith("win")){  
-				localReposPath = "C:/DocSysSvnReposes/";
+				path = "C:/DocSysSvnReposes/";
 			}
 			else
 			{
-				localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+				path = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
 			}
-	    }	
-		return localReposPath;
+	    }
+	    
+		File dir = new File(path);
+		if(dir.exists() == false)
+		{
+			System.out.println("getSvnLocalReposStorePath() svnLocalReposStorePath:" + path + " not exists, do create it!");
+			if(dir.mkdirs() == false)
+			{
+				System.out.println("getSvnLocalReposStorePath() Failed to create dir:" + path);
+			}
+		}	    
+		return path;
 	}
 
 	
