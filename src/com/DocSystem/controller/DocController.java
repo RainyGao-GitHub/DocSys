@@ -546,7 +546,6 @@ public class DocController extends BaseController{
 		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		createDir(userTmpDir);
 		
 		if(saveVirtualDocContent(userTmpDir,docVName,content,rt) == false)
 		{
@@ -603,7 +602,6 @@ public class DocController extends BaseController{
 		
 		//get userTmpDir
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		createDir(userTmpDir);
 		
 		sendTargetToWebPage(localParentPath,file_name, userTmpDir, rt, response, request);
 	}
@@ -751,7 +749,6 @@ public class DocController extends BaseController{
 		
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		createDir(userTmpDir);
 		
 		String targetName = docName + "_" + revision;
 		//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
