@@ -491,8 +491,9 @@ public class ReposController extends BaseController{
 		File dir = new File(svnLocalReposStorePath,reposName);
 		if(dir.exists())
 		{
-			rt.setMsgData("SVN仓库:"+svnLocalReposStorePath+reposName + "已存在，请直接设置！");	
-			return svnLocalReposStorePath + reposName;
+			System.out.println("SVN仓库:"+svnLocalReposStorePath+reposName + "已存在，请直接设置！");	
+			rt.setMsgData("SVN仓库:"+svnLocalReposStorePath+reposName + "已存在，已直接设置！");
+			return "file:///" + svnLocalReposStorePath + reposName;
 		}
 		
 		String svnPath = SVNUtil.CreateRepos(reposName,svnLocalReposStorePath);
