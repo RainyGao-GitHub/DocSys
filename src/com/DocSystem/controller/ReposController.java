@@ -234,17 +234,8 @@ public class ReposController extends BaseController{
 			if((svnPath == null) || svnPath.equals(""))
 			{
 				//Create a local SVN Repos
-				String localReposPath = getDefaultSvnLocalReposPath();
 				String reposName = repos.getId() + "";
-				File dir = new File(localReposPath,reposName);
-				if(dir.exists())
-				{
-					rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
-					writeJson(rt, response);	
-					return;
-				}
-				
-				svnPath = SVNUtil.CreateRepos(reposName,localReposPath);
+				svnPath = createSvnLocalRepos(reposName,rt);
 				if(svnPath == null)
 				{
 					rt.setError("SVN仓库的创建失败");
@@ -294,23 +285,15 @@ public class ReposController extends BaseController{
 			if((svnPath1 == null) || svnPath1.equals(""))
 			{
 				//Create a local SVN Repos
-				String localReposPath = getDefaultSvnLocalReposPath();
 				String reposName = repos.getId() + "_VRepos";
-				File dir = new File(localReposPath,reposName);
-				if(dir.exists())
-				{
-					rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
-					writeJson(rt, response);	
-					return;
-				}
-				
-				svnPath1 = SVNUtil.CreateRepos(reposName,localReposPath);
+				svnPath1 = createSvnLocalRepos(reposName,rt);
 				if(svnPath1 == null)
 				{
 					rt.setError("SVN仓库的创建失败");
 					writeJson(rt, response);	
 					return;
 				}
+
 				repos.setSvnPath1(svnPath1);
 				svnUser1 = "";
 				svnPwd1 = "";
@@ -501,8 +484,20 @@ public class ReposController extends BaseController{
 		
 		writeJson(rt, response);	
 	}
-	
 
+	private String createSvnLocalRepos(String reposName, ReturnAjax rt) {
+		//获取svn本地仓库的存放路径：后续考虑在系统中配置	
+		String svnLocalReposStorePath = getSvnLocalReposStorePath();
+		File dir = new File(svnLocalReposStorePath,reposName);
+		if(dir.exists())
+		{
+			rt.setMsgData("SVN仓库:"+svnLocalReposStorePath+reposName + "已存在，请直接设置！");	
+			return svnLocalReposStorePath + reposName;
+		}
+		
+		String svnPath = SVNUtil.CreateRepos(reposName,svnLocalReposStorePath);
+		return svnPath;
+	}
 
 	//Commit the localPath to svnPath
 	boolean svnAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
@@ -748,49 +743,29 @@ public class ReposController extends BaseController{
 
 	private boolean UpdateReposVerCtrl1(Integer reposId, Integer verCtrl1,
 			String svnPath1, User login_user, ReturnAjax rt) {
-		//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
-		if((svnPath1 == null) || svnPath1.equals(""))
+		
+		//get current ReposInfo
+		Repos reposInfo = reposService.getRepos(reposId);
+		if(reposInfo == null)
 		{
-			//Create a local SVN Repos
-			String localReposPath = getDefaultSvnLocalReposPath();
-			
-			//get old ReposInfo
-			Repos oldReposInfo = reposService.getRepos(reposId);
-			if(oldReposInfo == null)
-			{
-				rt.setError("仓库 " +reposId +" 不存在!");				
-				//writeJson(rt, response);
-				return false;
-			}
-			String reposName = oldReposInfo.getId() + "_VRepos";
-			File dir = new File(localReposPath,reposName);
-			if(dir.exists())
-			{
-				rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
-				//writeJson(rt, response);	
-				return false;
-			}
-			
-			svnPath1 = SVNUtil.CreateRepos(reposName,localReposPath);
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			return false;
+		}
+		
+		//变更版本管理时,如果新的svnPath为空，表示需要新建一个仓库
+		if((svnPath1 == null) || svnPath1.equals(""))
+		{	
+			String reposName = reposInfo.getId() + "_VRepos";
+			svnPath1 = createSvnLocalRepos(reposName,rt);
 			if(svnPath1 == null)
 			{
 				rt.setError("SVN仓库的创建失败");
-				//writeJson(rt, response);	
 				return false;
 			}
 		}			
 		
-		//get old ReposInfo
-		Repos oldReposInfo = reposService.getRepos(reposId);
-		if(oldReposInfo == null)
-		{
-			rt.setError("仓库 " +reposId +" 不存在!");				
-			//writeJson(rt, response);
-			return false;
-		}
-		
 		//如果VirtualDoc版本控制设置切换、svnPath1都需要重新同步本地目录和仓库(SVNUser、svnPwd修改不用管，直接改即可)
-		if(oldReposInfo.getVerCtrl1() != verCtrl1 || !svnPath1.equals(oldReposInfo.getSvnPath1()))
+		if(reposInfo.getVerCtrl1() != verCtrl1 || !svnPath1.equals(reposInfo.getSvnPath1()))
 		{
 			//new ReposInfo
 			Repos newReposInfo = new Repos();
@@ -798,14 +773,12 @@ public class ReposController extends BaseController{
 			newReposInfo.setVerCtrl1(verCtrl1);
 			newReposInfo.setSvnPath1(svnPath1);
 			
-			//Get the repos virtual data Path
-			String reposVPath = getReposVirtualPath(oldReposInfo);
+			//Get the repos virtual data Path, and do auto commit
+			String reposVPath = getReposVirtualPath(reposInfo);
 			String commitUser = login_user.getName();
 			String commitMsg = "Virtual Doc SvnRepository Init svnPath:" + svnPath1 + " reposRPath:" + reposVPath;
-			String svnUser1 = oldReposInfo.getSvnUser1();
-			String svnPwd1 = oldReposInfo.getSvnPwd1();
-			
-			
+			String svnUser1 = reposInfo.getSvnUser1();
+			String svnPwd1 = reposInfo.getSvnPwd1();
 			if(svnAutoCommit(svnPath1, svnUser1, svnPwd1, reposVPath, commitMsg, commitUser, false, null) == false)
 			{
 				System.out.println("仓库的SVN初始化失败");
@@ -826,50 +799,30 @@ public class ReposController extends BaseController{
 	}
 
 	private boolean UpdateReposVerCtrl(Integer reposId, Integer verCtrl,String svnPath,User login_user, ReturnAjax rt) {
+		
+		//get old ReposInfo
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " +reposId +" 不存在!");				
+			return false;
+		}
+		
 		//变更版本管理时,如果svnPath为空，表示需要新建一个仓库
 		if((svnPath == null) || svnPath.equals(""))
 		{
 			//Create a local SVN Repos
-			String localReposPath = getDefaultSvnLocalReposPath();
-			
-			//get old ReposInfo
-			Repos oldReposInfo = reposService.getRepos(reposId);
-			if(oldReposInfo == null)
-			{
-				rt.setError("仓库 " +reposId +" 不存在!");				
-				//writeJson(rt, response);
-				return false;
-			}
-			
-			String reposName = oldReposInfo.getId()+"";
-			File dir = new File(localReposPath,reposName);
-			if(dir.exists())
-			{
-				rt.setError("SVN仓库:"+localReposPath+reposName + "已存在，请直接设置！");
-				//writeJson(rt, response);	
-				return false;
-			}
-			
-			svnPath = SVNUtil.CreateRepos(reposName,localReposPath);
+			String reposName = repos.getId()+"";
+			svnPath = createSvnLocalRepos(reposName,rt);
 			if(svnPath == null)
 			{
 				rt.setError("SVN仓库的创建失败");
-				//writeJson(rt, response);	
 				return false;
 			}
-		}			
-		
-		//get old ReposInfo
-		Repos oldReposInfo = reposService.getRepos(reposId);
-		if(oldReposInfo == null)
-		{
-			rt.setError("仓库 " +reposId +" 不存在!");				
-			//writeJson(rt, response);
-			return false;
 		}
 		
 		//如果版本控制设置切换、svnPath、SVNUser、svnPwd修改都需要重新同步本地目录和仓库
-		if(oldReposInfo.getVerCtrl() != verCtrl || !svnPath.equals(oldReposInfo.getSvnPath()))
+		if(repos.getVerCtrl() != verCtrl || !svnPath.equals(repos.getSvnPath()))
 		{
 			//new ReposInfo
 			Repos newReposInfo = new Repos();
@@ -878,16 +831,15 @@ public class ReposController extends BaseController{
 			newReposInfo.setSvnPath(svnPath);
 			
 			//Init the svn Repository
-			String reposRPath = getReposRealPath(oldReposInfo);			
+			String reposRPath = getReposRealPath(repos);			
 			String commitUser = login_user.getName();
 			String commitMsg = "Real Doc SvnRepository Init svnPath:" + svnPath + " reposRPath:" + reposRPath;
-			String svnUser = oldReposInfo.getSvnUser();
-			String svnPwd = oldReposInfo.getSvnPwd();					
+			String svnUser = repos.getSvnUser();
+			String svnPwd = repos.getSvnPwd();					
 			if(svnAutoCommit(svnPath,svnUser,svnPwd,reposRPath,commitMsg,commitUser,false,null) == false)
 			{
 				System.out.println("仓库的SVN初始化失败");
 				rt.setError("仓库的SVN初始化失败，请检查svnPath、svnUser、svnPwd"+ svnPath + " " + svnUser + " " + svnPwd);
-				//writeJson(rt, response);	
 				return false;
 			}
 			
@@ -895,7 +847,6 @@ public class ReposController extends BaseController{
 			{
 				System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
 				rt.setError("仓库信息更新失败！");
-				//writeJson(rt, response);
 				return false;
 			}
 		}
@@ -1123,45 +1074,6 @@ public class ReposController extends BaseController{
 			}
 		}
 		return true;
-	}
-
-
-	private boolean CopyReposDir(String oldReposDir, String newReposDir) {
-		System.out.println("CopyReposDir oldReposDir " + oldReposDir +" newReposDir " + newReposDir);
-        if(!oldReposDir.equals(newReposDir))
-        {
-            //File oldfile=new File(oldReposDir);
-            File newfile=new File(newReposDir);
-            if(newfile.exists()) //若在待转移目录下，已经存在待转移文件
-            {
-            	System.out.println(newReposDir + " 仓库已存在");
-            	return false;
-            }
-            else
-            {
-            	System.out.println("迁移仓库");
-            	return copyFolder(oldReposDir, newReposDir);
-            }
-        }
-        else
-        {
-        	System.out.println("仓库根目录未变化");
-        	return false;	//同一个目录下不需要
-        }
-	}
-	
-	private boolean DeleteReposDir(String reposDir) {
-		System.out.println("DeleteReposDir reposDir " + reposDir);
-        File file = new File(reposDir);
-        if(file.exists()) 
-        {
-        	return delDir(reposDir);
-        }
-        else
-        {
-        	System.out.println(reposDir + "目录不存在!");
-        }
-        return true;
 	}
 	
 	/****************   get Repository Menu so that we can touch the docId******************/
