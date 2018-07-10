@@ -84,7 +84,7 @@ public class BaseController{
 		    String os = System.getProperty("os.name");  
 			System.out.println("OS:"+ os);  
 			if(os.toLowerCase().startsWith("win")){  
-				path = "C:/DocSysReposes/";
+				path = "D:/DocSysReposes/";
 			}
 			else
 			{
@@ -120,13 +120,13 @@ public class BaseController{
 	protected String getSvnLocalReposStorePath() {
 		String path = "";
 		
-		path = ReadProperties.read("docSysConfig.properties", "svnLocalReposStorePath");
+		path = ReadProperties.read("docSysConfig.properties", "defaultSvnLocalReposStorePath");
 	    if(path == null || "".equals(path))
 	    {
 			String os = System.getProperty("os.name");  
 			System.out.println("OS:"+ os);  
 			if(os.toLowerCase().startsWith("win")){  
-				path = "C:/DocSysSvnReposes/";
+				path = "D:/DocSysSvnReposes/";
 			}
 			else
 			{
