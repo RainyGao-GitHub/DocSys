@@ -205,11 +205,20 @@ public class BaseController{
 		return HashValue;
 	}
 	
+	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
-		String reposTmpVirtualPath = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
-		return reposTmpVirtualPath;
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
+		createDir(userTmpDir);
+		return userTmpDir;
 	}
-		
+	
+	protected String getTmpPathForO(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
+		createDir(userTmpDir);
+		return userTmpDir;
+	}
+	
+	//WebTmpPath was accessable for web
 	protected String getWebUserTmpPath(User login_user) {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         
