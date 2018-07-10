@@ -56,6 +56,10 @@ public class Office2PDF {
         {
         	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForMac");
         }
+        else
+        {
+        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePath");        	
+        }
 
         System.out.println("officeHome:" + officeHome);
     	if(officeHome == null || "".equals(officeHome))

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +31,7 @@ import org.tmatesoft.svn.core.SVNNodeKind;
 
 import util.CompressPic;
 import util.DateFormat;
+import util.ReadProperties;
 import util.ReturnAjax;
 import util.UUid;
 
@@ -75,15 +77,20 @@ public class BaseController{
 	//获取默认的仓库根路径
 	protected String getDefaultReposRootPath() {
 		String path = null;
-		String os = System.getProperty("os.name");  
-		System.out.println("OS:"+ os);  
-		if(os.toLowerCase().startsWith("win")){  
-			path = "D:/DocSysReposes/";
-		}
-		else
-		{
-			path = "/data/DocSysReposes/";	//Linux系统放在  /data	
-		}
+		
+		path = ReadProperties.read("docSysConfig.properties", "defaultReposRootPath");
+	    if(path == null || "".equals(path))
+	    {
+		    String os = System.getProperty("os.name");  
+			System.out.println("OS:"+ os);  
+			if(os.toLowerCase().startsWith("win")){  
+				path = "C:/DocSysReposes/";
+			}
+			else
+			{
+				path = "/data/DocSysReposes/";	//Linux系统放在  /data	
+			}
+	    }
 		return path;
 	}
 	
@@ -101,15 +108,20 @@ public class BaseController{
 	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
 	protected String getDefaultSvnLocalReposPath() {
 		String localReposPath = "";
-		String os = System.getProperty("os.name");  
-		System.out.println("OS:"+ os);  
-		if(os.toLowerCase().startsWith("win")){  
-			localReposPath = "D:/DocSysSvnReposes/";
-		}
-		else
-		{
-			localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
-		}
+		
+		localReposPath = ReadProperties.read("docSysConfig.properties", "defaultSvnLocalReposPath");
+	    if(localReposPath == null || "".equals(localReposPath))
+	    {
+			String os = System.getProperty("os.name");  
+			System.out.println("OS:"+ os);  
+			if(os.toLowerCase().startsWith("win")){  
+				localReposPath = "C:/DocSysSvnReposes/";
+			}
+			else
+			{
+				localReposPath = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
+			}
+	    }	
 		return localReposPath;
 	}
 
