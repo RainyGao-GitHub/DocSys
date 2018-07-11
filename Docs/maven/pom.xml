@@ -7,99 +7,79 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>maven Maven Webapp</name>
   <url>http://maven.apache.org</url>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
+  
+  <properties>  
+	<!-- spring版本号 -->  
+	<spring.version>4.0.2.RELEASE</spring.version>  
+	<!-- mybatis版本号 -->  
+	<mybatis.version>3.2.6</mybatis.version>
+  </properties> 
+	
+  <dependencies>	
 	<!-- spring核心包 -->  
-	<dependency>
-		<groupId>org.springframework</groupId>
-		<artifactId>spring-test</artifactId>
-		<version>3.2.0.RELEASE</version>
-	</dependency>
-	<dependency>
-		<groupId>org.springframework</groupId>
-		<artifactId>spring-webmvc</artifactId>
-		<version>3.2.0.RELEASE</version>
-	</dependency>
-	<dependency>
-		<groupId>org.springframework</groupId>
-		<artifactId>spring-core</artifactId>
-		<version>3.2.0.RELEASE</version>
-	</dependency>
-	<dependency>
-    	<groupId>org.springframework</groupId>
-    	<artifactId>spring-aop</artifactId>
-   		<version>3.2.0.RELEASE</version>
-	</dependency>
-	<dependency>
-		<groupId>aspectj</groupId>
-		<artifactId>aspectjweaver</artifactId>
-		<version>1.5.4</version>
-	</dependency>
-	<dependency>
-		<groupId>aspectj</groupId>
-		<artifactId>aspectjrt</artifactId>
-		<version>1.5.4</version>
-	</dependency>
-	<dependency>
-		<groupId>org.codehaus.jackson</groupId>
-		<artifactId>jackson-mapper-asl</artifactId>
-		<version>1.9.11</version>
-	</dependency>
-	<!--mybatis核心包-->
-	<dependency>
-		<groupId>org.mybatis</groupId>
-		<artifactId>mybatis</artifactId>
-		<version>3.1.1</version>
-	</dependency>
-	<dependency>
-		<groupId>org.mybatis</groupId>
-		<artifactId>mybatis-spring</artifactId>
-		<version>1.1.1</version>
-	</dependency>
-	<dependency>
-		<groupId>mysql</groupId>
-		<artifactId>mysql-connector-java</artifactId>
-		<version>5.1.21</version>
-	</dependency>
-	<dependency>
-		<groupId>c3p0</groupId>
-		<artifactId>c3p0</artifactId>
-		<version>0.9.1.2</version>
-		<type>jar</type>
-	</dependency>
-	<!--打印日志-->
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-api</artifactId>
-		<version>1.7.5</version>
-	</dependency>
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-log4j12</artifactId>
-		<version>1.7.5</version>
-	</dependency>
-	<dependency>
-		<groupId>log4j</groupId>
-		<artifactId>log4j</artifactId>
-		<version>1.2.17</version>
-	</dependency>
-	<dependency>
-		<groupId>jstl</groupId>
-		<artifactId>jstl</artifactId>
-		<version>1.2</version>
-	</dependency>
-	<dependency>
-       	<groupId>org.springframework</groupId>
-       	<artifactId>spring-context-support</artifactId>
-       	<version>3.1.2.RELEASE</version>
-       	<type>jar</type>
-       	<scope>compile</scope>
-	</dependency>
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-core</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-web</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-oxm</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-tx</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-jdbc</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-webmvc</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-aop</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-context-support</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+
+	<dependency>  
+		<groupId>org.springframework</groupId>  
+		<artifactId>spring-test</artifactId>  
+		<version>${spring.version}</version>  
+	</dependency>  
+	
+	<!-- mybatis核心包 -->  
+	<dependency>  
+		<groupId>org.mybatis</groupId>  
+		<artifactId>mybatis</artifactId>  
+		<version>${mybatis.version}</version>  
+	</dependency>  
+	 <!-- mybatis/spring包 -->  
+	<dependency>  
+		<groupId>org.mybatis</groupId>  
+		<artifactId>mybatis-spring</artifactId>  
+		<version>1.2.2</version>  
+	</dependency> 
+	
 	<!--org.apache.tools.ant包-->
 	<dependency>
 	    <groupId>ant</groupId>
