@@ -21,7 +21,7 @@
             <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter" />  
             <bean class="org.springframework.http.converter.FormHttpMessageConverter" />  
             <bean class="org.springframework.http.converter.xml.SourceHttpMessageConverter" />  
-            <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter" />  
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter" />  
         </mvc:message-converters>  
     </mvc:annotation-driven>  
     
@@ -42,12 +42,12 @@
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">  
         <property name="messageConverters">  
             <list>  
-                <ref bean="mappingJacksonHttpMessageConverter" />  
+                <ref bean="mappingJackson2HttpMessageConverter" />  
             </list>  
         </property>  
     </bean>  
-    <bean id="mappingJacksonHttpMessageConverter"  
-        class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">  
+    <bean id="mappingJackson2HttpMessageConverter"  
+        class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">  
     </bean>  
     
     <!-- 文件上传表单的视图解析器 -->  
