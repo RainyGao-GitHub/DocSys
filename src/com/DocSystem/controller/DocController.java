@@ -667,16 +667,24 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		System.out.println("sendFileToWebPage() file_name befor convert:" + file_name);
+		
 		//解决中文编码问题
 		String userAgent = request.getHeader("User-Agent").toUpperCase();
 		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
 		{  
 			file_name = URLEncoder.encode(file_name, "UTF-8");  
+			System.out.println("sendFileToWebPage() file_name after URL Encode:" + file_name);
 		}else{  
 			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+			
+			
+			System.out.println("sendFileToWebPage() file_name after convert to ISO8859-1:" + file_name);
 		}
 		//解决空格问题（空格变加号和兼容性问题）
-		file_name=file_name.replaceAll("\\+","%20"); 
+		file_name = file_name.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
+		System.out.println("sendFileToWebPage() file_name:" + file_name);
+		
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 
 		//读取要下载的文件，保存到文件输入流
