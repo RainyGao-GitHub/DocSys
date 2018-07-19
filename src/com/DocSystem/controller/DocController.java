@@ -168,8 +168,9 @@ public class DocController extends BaseController{
 		Doc doc = getDocByName(name,parentId,reposId);
 		if(doc != null)
 		{
+			rt.setData(doc.getId());
 			rt.setMsgInfo("Node: " + name +" 已存在！");
-			rt.setData("0");
+			rt.setMsgData("0");
 			System.out.println("checkDocInfo() " + name + " 已存在");
 	
 			//检查checkSum是否相同
@@ -178,7 +179,7 @@ public class DocController extends BaseController{
 				if(isDocCheckSumMatched(doc,size,checkSum) == true)
 				{
 					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
-					rt.setData("1");
+					rt.setMsgData("1");
 					System.out.println("checkDocInfo() " + name + " 已存在，且checkSum相同！");
 				}
 			}

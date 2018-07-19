@@ -1526,15 +1526,15 @@
 		             	if( "ok" == ret.status)
 		             	{		
 		             		console.log("ret",ret);
-		             		if(ret.data == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
+		             		if(ret.msgInfo == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 		             		{
-		             			SubContextList[index].subState = 1;
-		             			
+		             			docId = ret.data;
 		             			fileCoverConfirm(name,"文件" + name + " 已存在");
 		             			return;
 		             		}
-		             		else if(ret.data == "1")	//文件存在且checkSum相同，直接标记成功
+		             		else if(ret.msgInfo == "1")	//文件存在且checkSum相同，直接标记成功
 		             		{
+		             			docId = ret.data;
 			                	$('.file'+index).removeClass('is-uploading');
 			    				$('.file'+index).addClass('is-success');
 			                    uploadSuccessHandler(name,ret.msgInfo);
