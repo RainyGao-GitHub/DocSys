@@ -1498,10 +1498,14 @@
 	  	 	}
     		
 	  	 	//It is the first call for file, so we need to check the docInfo
+	  	 	console.log("subState:" + SubContextList[index].subState);
    			if(0 == SubContextList[index].subState)
 			{
+   				
    				SubContextList[index].subState = 1;
-    			//检查服务器端是否存在同名文件，并确认文件内容是否相同
+   				console.log("subState:" + SubContextList[index].subState);
+   	   			
+   				//检查服务器端是否存在同名文件，并确认文件内容是否相同
     			var checkSum = getFileCheckSum(SubContextList[index].file);
     			$.ajax({
 		             url : "/DocSystem/Doc/checkDocInfo.do",
@@ -1517,7 +1521,8 @@
 		             },
 		             success : function (ret) {
 		             	if( "ok" == ret.status)
-		             	{		             		
+		             	{		
+		             		console.log("ret",ret);
 		             		if(ret.data == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 		             		{
 		             			SubContextList[index].subState = 1;
