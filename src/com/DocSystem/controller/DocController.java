@@ -150,6 +150,49 @@ public class DocController extends BaseController{
 		writeJson(rt, response);	
 	}
 	
+	/****************   Check a Document ******************/
+	@RequestMapping("/checkDocInfo.do")
+	public void checkDocInfo(String name,Integer type,String checkSum,Integer reposId,Integer parentId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("addDoc name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId);
+		ReturnAjax rt = new ReturnAjax();
+
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//判断目录下是否有同名节点 
+		Doc doc = getDocByName(name,parentId,reposId);
+		if(doc != null)
+		{
+			rt.setMsgInfo("Node: " + name +" 已存在！");
+			rt.setData("0");
+			System.out.println("addDoc() " + name + " 已存在");
+	
+			//检查checkSum是否相同
+			if(type == 1)
+			{
+				if(isDocCheckSumMatched(doc,checkSum) == true)
+				{
+					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
+					rt.setData("1");
+				}
+			}
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
+	
+	private boolean isDocCheckSumMatched(Doc doc, String checkSum) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(MultipartFile uploadFile, Integer uploadType,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
@@ -2426,6 +2469,20 @@ public class DocController extends BaseController{
 			return true;
 		}
 		return false;
+	}
+	
+	Doc getDocByName(String name, Integer parentId, Integer reposId)
+	{
+		Doc qdoc = new Doc();
+		qdoc.setName(name);
+		qdoc.setPid(parentId);
+		qdoc.setVid(reposId);
+		List <Doc> docList = reposService.getDocList(qdoc);
+		if(docList != null && docList.size() > 0)
+		{
+			return null;
+		}
+		return docList.get(0);
 	}
 
 	//0：虚拟文件系统  1：实文件系统 
