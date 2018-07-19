@@ -1498,16 +1498,18 @@
 	  	 	}
     		
 	  	 	//It is the first call for file, so we need to check the docInfo
-   			if(0 == SubContextList[index].substate)
+   			if(0 == SubContextList[index].subState)
 			{
-   				SubContextList[index].substate = 1;
+   				SubContextList[index].subState = 1;
     			//检查服务器端是否存在同名文件，并确认文件内容是否相同
+    			var checkSum = getFileCheckSum(SubContextList[index].file);
     			$.ajax({
-		             url : "/DocSystem/Doc/docInfoCheck.do",
+		             url : "/DocSystem/Doc/checkDocInfo.do",
 		             type : "post",
 		             dataType : "json",
 		             data : {
 		             	name : nodeName,
+						type: 1,
 		             	checkSum: checkSum,
 		             	reposId : vid, 
 		                parentId : tempParentId,
@@ -1515,18 +1517,18 @@
 		             success : function (ret) {
 		             	if( "ok" == ret.status)
 		             	{		             		
-		             		if(ret.msgInfo == "0")	//文件存在且checkSum相同，直接标记成功
+		             		else if(ret.data == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
+		             		{
+		             			SubContextList[index].subState = 1;
+		             			fileCoverConfirm(name,"文件" + name + " 已存在");
+		             			return;
+		             		}
+		             		else if(ret.data == "1")	//文件存在且checkSum相同，直接标记成功
 		             		{
 			                	$('.file'+index).removeClass('is-uploading');
 			    				$('.file'+index).addClass('is-success');
 			                    uploadSuccessHandler(name,ret.msgInfo);
 								return;
-		             		}
-		             		else if(ret.msgInfo == "1")	//文件存在且checkSume相同，等待用户确认是否覆盖
-		             		{
-		             			SubContextList[index].subState = 1;
-		             			fileCoverConfirm(name,"文件" + name + " 已存在");
-		             			return;
 		             		}
 		             		else
 		             		{
@@ -1715,6 +1717,11 @@
 		function stopAllUpload()
 		{
 			stopUploadFlag = true;
+		}
+		
+		function getFileCheckSum(file)
+		{
+			return 0;
 		}
 		
 		//开放给外部的调用接口
