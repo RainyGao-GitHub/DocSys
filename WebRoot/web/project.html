@@ -1017,6 +1017,7 @@
 			    		SubContext.index = i;
 			    	   	SubContext.state = 0;	//未开始上传
 			    	   	SubContext.status = "待上传";	//未开始上传
+			    	   	SubContext.subState = 0;	//upload的subState 0: 需要检查后台的文件信息 1: 不需要检查后台的文件信息
 			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 			    		SubContext.stopUploadFlag = false; //停止上传标记未false
@@ -1373,7 +1374,7 @@
     		
     		//设置上传状态
 			SubContextList[index].state = 1;	//上传中
-				
+			
 			//get the file from the SubContextList
     		var file = SubContext.file;
 			if(!file) 
@@ -1463,41 +1464,95 @@
 				}
 				
     		}
-    		
+			
     		//文件上传部分
 			//检查当前目录下是否有同名文件或目录
-			var docId = -1;
-			var uploadType = 1;	//新建文件
-			var treeNode = getNodeByName(name,tempParentNode);	//获取parentNode下名为name的子节点
-			if(treeNode)
+  	 		var confirm = getFileCoverConfirmSetting();
+	  	 	if(confirm == 0)
+	  	 	{
+	   			var treeNode = getNodeByName(name,tempParentNode);	//获取parentNode下名为name的子节点
+	   			if(treeNode)
+	   			{
+	   		  		if(treeNode.isParent == true)
+	   		  		{
+	   		  			uploadErrorConfirmHandler(name,"文件夹 " + name + " 已存在");
+	   		  			return;
+	   		  	 	}
+	   		  	 	else
+	   		  	 	{
+	   		  	 		docId = treeNode.id;
+	   		  	 		uploadType = 2;	//覆盖文件
+	   		  	 		fileCoverConfirm(name,"文件" + name + " 已存在");
+	   		  	 		return;
+	   		  	 	}
+	   			}
+	  	 	}
+	  	 	else if(confirm == 1)
+	  	 	{
+	  	 		//用户已确认直接覆盖
+	  	 	}
+	  	 	else if(confirm == 2)
+	  	 	{
+	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
+	  	 		return;
+	  	 	}
+    		
+	  	 	//It is the first call for file, so we need to check the docInfo
+   			if(0 == SubContextList[index].substate)
 			{
-		  		if(treeNode.isParent == true)
-		  		{
-		  			uploadErrorConfirmHandler(name,"文件夹 " + name + " 已存在");
-		  			return;
-		  	 	}
-		  	 	else
-		  	 	{
-		  	 		docId = treeNode.id;
-		  	 		uploadType = 2;	//覆盖文件
-		  	 		var confirm = getFileCoverConfirmSetting();
-		  	 		if(confirm == 1)
-		  	 		{
-		  	 			//覆盖
-		  	 		}
-		  	 		else if(confirm == 2)
-		  	 		{
-		  	 			uploadErrorHandler(name,"文件" + name + " 已存在");
-		  	 			return;
-		  	 		}
-		  	 		else
-		  	 		{
-		  	 			fileCoverConfirm(name,"文件" + name + " 已存在");
-		  	 			return;	
-		  	 		}
-		  	 	}
+   				SubContextList[index].substate = 1;
+    			//检查服务器端是否存在同名文件，并确认文件内容是否相同
+    			$.ajax({
+		             url : "/DocSystem/Doc/docInfoCheck.do",
+		             type : "post",
+		             dataType : "json",
+		             data : {
+		             	name : nodeName,
+		             	checkSum: checkSum,
+		             	reposId : vid, 
+		                parentId : tempParentId,
+		             },
+		             success : function (ret) {
+		             	if( "ok" == ret.status)
+		             	{		             		
+		             		if(ret.msgInfo == "0")	//文件存在且checkSum相同，直接标记成功
+		             		{
+			                	$('.file'+index).removeClass('is-uploading');
+			    				$('.file'+index).addClass('is-success');
+			                    uploadSuccessHandler(name,ret.msgInfo);
+								return;
+		             		}
+		             		else if(ret.msgInfo == "1")	//文件存在且checkSume相同，等待用户确认是否覆盖
+		             		{
+		             			SubContextList[index].subState = 1;
+		             			fileCoverConfirm(name,"文件" + name + " 已存在");
+		             			return;
+		             		}
+		             		else
+		             		{
+		             			//next time uploadDoc should skip to upload file
+		             			SubContextList[index].subState = 1;
+		             			uploadDoc();
+		             			return;
+		             		}
+		                }
+		                else
+		                {
+						 	uploadErrorConfirmHandler(name,ret.msgInfo);
+				            return;
+		                }
+		            },
+		            error : function () {
+					 	uploadErrorConfirmHandler(name,"doCheck "+nodeName+ " 异常");
+			            return;
+		            }
+		        });
+    			return;
 			}
 			
+			//ready to do upload file
+			var docId = -1;
+   			var uploadType = 1;	//新建文件
 			//新建文件上传表单
 			var form = new FormData();
 			form.append("uploadFile", file);
