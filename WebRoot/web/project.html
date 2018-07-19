@@ -1510,6 +1510,7 @@
 		             data : {
 		             	name : nodeName,
 						type: 1,
+						size: SubContextList[index].filesize,
 		             	checkSum: checkSum,
 		             	reposId : vid, 
 		                parentId : tempParentId,
@@ -1517,7 +1518,7 @@
 		             success : function (ret) {
 		             	if( "ok" == ret.status)
 		             	{		             		
-		             		else if(ret.data == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
+		             		if(ret.data == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 		             		{
 		             			SubContextList[index].subState = 1;
 		             			fileCoverConfirm(name,"文件" + name + " 已存在");

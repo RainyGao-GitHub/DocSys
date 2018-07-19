@@ -152,8 +152,8 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(String name,Integer type,String checkSum,Integer reposId,Integer parentId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addDoc name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId);
+	public void checkDocInfo(String name,Integer type,String size,String checkSum,Integer reposId,Integer parentId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("addDoc name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -175,7 +175,7 @@ public class DocController extends BaseController{
 			//检查checkSum是否相同
 			if(type == 1)
 			{
-				if(isDocCheckSumMatched(doc,checkSum) == true)
+				if(isDocCheckSumMatched(doc,size,checkSum) == true)
 				{
 					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
 					rt.setData("1");
@@ -188,7 +188,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private boolean isDocCheckSumMatched(Doc doc, String checkSum) {
+	private boolean isDocCheckSumMatched(Doc doc,String size, String checkSum) {
 		// TODO Auto-generated method stub
 		return false;
 	}
