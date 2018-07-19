@@ -1003,6 +1003,9 @@
 	    	   		   	SubContext.parentNode = parentNode;
 	    	   		   	SubContext.parentId = parentId;
 	    	   		   	SubContext.vid = vid;
+	    	   		   	
+			    		SubContext.docId = -1; //-1: 新增  
+
 	    	   		   	//advanced Info
 	    	   		   	SubContext.type = 1;	
 			    	   	SubContext.size = file.size;
@@ -1021,7 +1024,7 @@
 			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 			    		SubContext.stopUploadFlag = false; //停止上传标记未false
-			    	   	
+			      								    	   	
 			    	   	//Push the SubContext
 			    	   	SubContextList.push(SubContext);
 			    	   	totSize += file.size;
@@ -1466,7 +1469,6 @@
     		}
 			
     		//文件上传部分
-			var docId = -1;
    			var uploadType = 1;	//新建文件
 
    			//检查当前目录下是否有同名文件或目录
@@ -1483,7 +1485,7 @@
 	   		  	 	}
 	   		  	 	else
 	   		  	 	{
-	   		  	 		docId = treeNode.id;
+		   		  	 	SubContextList[index].docId = treeNode.id;
 	   		  	 		fileCoverConfirm(name,"文件" + name + " 已存在");
 	   		  	 		return;
 	   		  	 	}
@@ -1526,15 +1528,15 @@
 		             	if( "ok" == ret.status)
 		             	{		
 		             		console.log("ret",ret);
-		             		if(ret.msgInfo == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
+		             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 		             		{
-		             			docId = ret.data;
+		             			SubContextList[index].docId = ret.data;
 		             			fileCoverConfirm(name,"文件" + name + " 已存在");
 		             			return;
 		             		}
-		             		else if(ret.msgInfo == "1")	//文件存在且checkSum相同，直接标记成功
+		             		else if(ret.msgData == "1")	//文件存在且checkSum相同，直接标记成功
 		             		{
-		             			docId = ret.data;
+		             			SubContextList[index].docId = ret.data;
 			                	$('.file'+index).removeClass('is-uploading');
 			    				$('.file'+index).addClass('is-success');
 			                    uploadSuccessHandler(name,ret.msgInfo);
@@ -1568,10 +1570,10 @@
 			form.append("filePath", filePath);
 			form.append("name", name);
 			form.append("uploadType", uploadType);
-			form.append("docId", docId);
+			form.append("docId", SubContextList[index].docId);
 			form.append("parentId", tempParentNode?tempParentNode.id:0);
 			form.append("reposId", vid);
-			
+			console.log("docId:" + docId);
 			//新建http异步请求
 			var xhr = new XMLHttpRequest();
 			//设置异步上传状态变化回调处理函数
@@ -1591,7 +1593,7 @@
 					//console.log(ret.msgInfo);
 					//上传成功！
 					if("ok" == ret.status){
-	                	if(docId == -1) //文件新建成功
+	                	if(SubContextList[index].docId == -1) //文件新建成功
 		                {	
 	                		//add treeNode
 		                   	var treeObj = $.fn.zTree.getZTreeObj("doctree");
@@ -1599,6 +1601,7 @@
 							newNode = treeObj.addNodes(tempParentNode, newNode);
 		                  	
 							//update the uploadStatus
+							SubContextList[index].docId = ret.data.id;
 							$('.file'+index).removeClass('is-uploading');
 							$('.file'+index).addClass('is-success');
 							uploadSuccessHandler(name,ret.msgInfo);
