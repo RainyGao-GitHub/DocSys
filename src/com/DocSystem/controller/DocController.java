@@ -170,7 +170,7 @@ public class DocController extends BaseController{
 		{
 			rt.setMsgInfo("Node: " + name +" 已存在！");
 			rt.setData("0");
-			System.out.println("addDoc() " + name + " 已存在");
+			System.out.println("checkDocInfo() " + name + " 已存在");
 	
 			//检查checkSum是否相同
 			if(type == 1)
@@ -179,6 +179,7 @@ public class DocController extends BaseController{
 				{
 					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
 					rt.setData("1");
+					System.out.println("checkDocInfo() " + name + " 已存在，且checkSum相同！");
 				}
 			}
 			writeJson(rt, response);
@@ -2480,9 +2481,9 @@ public class DocController extends BaseController{
 		List <Doc> docList = reposService.getDocList(qdoc);
 		if(docList != null && docList.size() > 0)
 		{
-			return null;
+			return docList.get(0);
 		}
-		return docList.get(0);
+		return null;
 	}
 
 	//0：虚拟文件系统  1：实文件系统 
