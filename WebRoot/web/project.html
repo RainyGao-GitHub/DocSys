@@ -1466,7 +1466,10 @@
     		}
 			
     		//文件上传部分
-			//检查当前目录下是否有同名文件或目录
+			var docId = -1;
+   			var uploadType = 1;	//新建文件
+
+   			//检查当前目录下是否有同名文件或目录
   	 		var confirm = getFileCoverConfirmSetting();
 	  	 	if(confirm == 0)
 	  	 	{
@@ -1481,7 +1484,6 @@
 	   		  	 	else
 	   		  	 	{
 	   		  	 		docId = treeNode.id;
-	   		  	 		uploadType = 2;	//覆盖文件
 	   		  	 		fileCoverConfirm(name,"文件" + name + " 已存在");
 	   		  	 		return;
 	   		  	 	}
@@ -1490,6 +1492,7 @@
 	  	 	else if(confirm == 1)
 	  	 	{
 	  	 		//用户已确认直接覆盖
+	  	 		uploadType = 2;	//覆盖文件
 	  	 	}
 	  	 	else if(confirm == 2)
 	  	 	{
@@ -1512,12 +1515,12 @@
 		             type : "post",
 		             dataType : "json",
 		             data : {
-		             	name : nodeName,
+		             	name : name,
 						type: 1,
-						size: SubContextList[index].filesize,
+						size: SubContextList[index].size,
 		             	checkSum: checkSum,
 		             	reposId : vid, 
-		                parentId : tempParentId,
+		                parentId : tempParentNode?tempParentNode.id:0,
 		             },
 		             success : function (ret) {
 		             	if( "ok" == ret.status)
@@ -1526,6 +1529,7 @@
 		             		if(ret.data == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 		             		{
 		             			SubContextList[index].subState = 1;
+		             			
 		             			fileCoverConfirm(name,"文件" + name + " 已存在");
 		             			return;
 		             		}
@@ -1558,9 +1562,6 @@
     			return;
 			}
 			
-			//ready to do upload file
-			var docId = -1;
-   			var uploadType = 1;	//新建文件
 			//新建文件上传表单
 			var form = new FormData();
 			form.append("uploadFile", file);
