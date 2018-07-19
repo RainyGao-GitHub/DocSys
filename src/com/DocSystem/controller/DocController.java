@@ -1064,10 +1064,19 @@ public class DocController extends BaseController{
 		}
 		
 		//判断目录下是否有同名节点 
-		if(isNodeExist(name,parentId,reposId) == true)
+		Doc tempDoc = getDocByName(name,parentId,reposId);
+		if(tempDoc != null)
 		{
-			rt.setError("Node: " + name +" 已存在！");
-			System.out.println("addDoc() " + name + " 已存在");
+			if(type == 2)	//如果是则目录直接成功
+			{
+				rt.setMsg("Node: " + name +" 已存在！", "");
+				rt.setData(tempDoc);
+			}
+			else
+			{
+				rt.setError("Node: " + name +" 已存在！");
+				System.out.println("addDoc() " + name + " 已存在");
+			}
 			return;
 		}
 		
