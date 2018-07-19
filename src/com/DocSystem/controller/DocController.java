@@ -1069,7 +1069,7 @@ public class DocController extends BaseController{
 		{
 			if(type == 2)	//如果是则目录直接成功
 			{
-				rt.setMsg("Node: " + name +" 已存在！", "");
+				rt.setMsg("Node: " + name +" 已存在！", "dirExists");
 				rt.setData(tempDoc);
 			}
 			else
@@ -1181,6 +1181,7 @@ public class DocController extends BaseController{
 			//writeJson(rt, response);	
 			return;
 		}
+		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
 	}
 	
