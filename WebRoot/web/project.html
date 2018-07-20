@@ -1477,7 +1477,7 @@
 	  	 	console.log("checkDocInfo() name:" + name);
 
 	  	 	//It is the first call for file, so we need to check the docInfo
-	  	 	console.log("SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
+	  	 	console.log("checkDocInfo() SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
    			if("checkDocInfo" == SubContext.SMState && 1 == SubContext.SMSubState)
    			{
    				return true;
@@ -1486,23 +1486,6 @@
    			//Modify the SM
       		SubContext.SMState = "checkDocInfo";
       		SubContext.SMSubState = 1;
-
-   			
-      		//检查当前目录下是否有同名文件或目录
-  	 		var confirm = getFileCoverConfirmSetting();
-	  	 	if(confirm == 1)
-	  	 	{
-	  	 		SubContext.isAdd = 0;	//覆盖文件
-	  	 		return true;
-	  	 	}
-	  	 	else if(confirm == 2)
-	  	 	{
-	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
-	  	 		return;
-	  	 	}
-   			
-   			//Set the SM SubState, If uploadDoc was reenter means we need not do checkDocInfo
-   			SubContext.SMSubState = 1;	//checkDocInfo 已开始执行
    	   		
    			//检查服务器端是否存在同名文件，并确认文件内容是否相同
     		SubContext.checkSum = getFileCheckSum(SubContext.file);
