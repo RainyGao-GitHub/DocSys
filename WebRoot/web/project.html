@@ -926,7 +926,7 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>上传进度</span><i class='el-icon-close closeBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><i class='el-icon-close closeBtn'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
@@ -950,6 +950,8 @@
 				totNum = files.length;
 			}
 			totalNum += totNum;
+			
+			updateUploadListTitle();
 			
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			checkAndDrawUploadItems(SubContextList);
@@ -1310,6 +1312,15 @@
       	{
       		console.log(uploadEndHandler);
       		console.log("上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			
+      		//显示上传完成 
+      		var uploadEndInfo = "上传完成";
+      		if(successNum != totalNum)
+      		{
+      			uploadEndInfo = "上传完成 ,成功 " + successNum + "个";
+      		}
+      		$(".upload-list-title").text("上传完成  " + totalNum + "");
+      		
       		//清除文件控件
 			$("#uploadFiles").val("");
   			$("#uploadDir").val("");
@@ -1340,6 +1351,8 @@
       	//该接口是为了避免新增Node时触发的异步加载导致出现多个Node
  		function addTreeNode(nodeName,isParent,nodeId,parentNode)
  		{
+ 			console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + nodeId);
+ 			
  			//parentNode处于展开状态时，需要手动addTreeNode以保证与后台同步，否则只要触发异步加载即可
  			if(parentNode == null || parentNode.open == true)
  			{
@@ -1548,6 +1561,12 @@
    			return false;
       	}
       	
+      	function updateUploadListTitle()
+      	{
+      		var uploadingIndex = index + 1;
+	      	$(".upload-list-title").text("正在上传   " + uploadingIndex + " / " + totalNum);
+      	}
+      	
 		//uploadDoc接口，该接口是个递归调用
     	function uploadDoc()
     	{
@@ -1577,9 +1596,11 @@
     		
     		//设置上传状态
     		if(0 == SubContext.state)
-    		{
+    		{    			
 				SubContext.state = 1;	//上传中
-			
+				
+				updateUploadListTitle();
+				
 				//get the file from the SubContextList
     			var file = SubContext.file;
 				if(!file) 
