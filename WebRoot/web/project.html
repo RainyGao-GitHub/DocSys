@@ -1497,6 +1497,11 @@
    				return true;
    			}
    			
+   			//Modify the SM
+      		SubContext.SMState = "checkDocInfo";
+      		SubContext.SMSubState = 1;
+
+   			
       		//检查当前目录下是否有同名文件或目录
   	 		var confirm = getFileCoverConfirmSetting();
 	  	 	if(confirm == 1)
@@ -1667,7 +1672,7 @@
 					if("ok" == ret.status){
 	                	if(SubContext.docId == -1) //文件新建成功
 		                {	
-		             		addTreeNode(name,false,ret.data.id,tempParentNode);
+		             		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
 		             		//set the docId so that We can open it 
 		             		SubContext.docId = ret.data.id;
 							
