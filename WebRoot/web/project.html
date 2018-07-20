@@ -857,8 +857,8 @@
       		}
     	}
     	
-		//多文件move接口
-		function uploadDocs(files,parentNode,parentId,vid)	//多文件移动函数
+		//多文件Upload接口
+		function uploadDocs(files,parentNode,parentId,vid)	//多文件上传函数
 		{
 			console.log("uploadDocs()");
 			//console.log(files);
@@ -872,9 +872,6 @@
 			if(isUploading == true)
 			{
 				DocUploadAppend(files,parentNode,parentId,vid);
-				//alert("文件上传中，请稍后重试！");
-				//showErrorMessage("文件上传中，请稍后重试！");
-				//return;
 			}
 			else
 			{
@@ -885,7 +882,7 @@
 				uploadStartTime = uploadTime;
 				preUploadTime = uploadTime;
 			
-				//启动复制操作      		
+				//启动第一个Doc的Upload操作      		
 				uploadDoc();	//start upload
 			}
 		}
@@ -907,17 +904,20 @@
 			drawedNum =0;
 			//清空上下文列表
 			SubContextList = [];
+			FailList = [];
 			
-			setIndex(0);
-			var totSize = buildSubContextList(files,parentNode,parentId,vid,SubContextList);
-			totalSize = totSize;
+			//Set the Index
+			index = 0;
 			
-			var totNum = 0;
+			//Build SubContextList and get total Size
+			totalSize = buildSubContextList(files,parentNode,parentId,vid,SubContextList);
+			
+			//Set upload total file Num
+			totalNum = 0;
 			if(files && files.length)
 			{
-				totNum = files.length;
+				totalNum = files.length;
 			}
-			setTotalNum(totNum);
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			
 			//Draw UploadItems by Go through the SubContextList
