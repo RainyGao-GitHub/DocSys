@@ -1717,20 +1717,15 @@
 				//侦查附件上传情况  
 				//通过事件对象侦查  
 				//该匿名函数表达式大概0.05-0.1秒执行一次  
-				evt.total; //附件总大小  
+				//evt.total; //附件总大小  
 				var loaded = evt.loaded;	//已上传大小
 				var tot = evt.total;
-				console.log("tot: " + tot);
+				console.log("fileSize:" +   SubContext.size  + "evt.tot: " + tot + " evt.loaded: " + loaded);
+				
 				//计算当前文件上传百分比
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
 				$('.file'+index+' .el-progress__text').text(per+"%");
-				$('.file'+index+' .el-progress-bar__inner')[0].style.width=per+'%';
-				//if(per=="100"){ //后台处理完才表示上传成功
-				//per = "99";
-				//$('.file'+index).removeClass('is-uploading');
-				//$('.file'+index).addClass('is-success');
-				//}
-				console.log("上传中："+per+"%！"); 
+				//console.log("上传中："+per+"%！"); 
 	
 				//统计已上传大小、百分比、上传速度、剩余上传时间
 				uploadTime = new Date().getTime();
