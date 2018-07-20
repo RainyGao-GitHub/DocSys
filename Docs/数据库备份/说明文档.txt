@@ -87,3 +87,7 @@
 18、docsystem20180525.sql
 	1.05版本使用
 	DocAuth USER_ID can be null
+
+19、docsystem20180720.sql
+	1.09版本使用
+	Doc Add SIZE and CHECK_SUM
