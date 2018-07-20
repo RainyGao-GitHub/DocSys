@@ -1040,9 +1040,9 @@
       			var str = "";
       			for( var i = startIndex ; i < endIndex ; i++ )
 		    	{	
-		    		console.log("index:" + i);
+		    		//console.log("index:" + i);
 		    		var SubContext = SubContextList[i];
-		    		console.log(SubContext);
+		    		//console.log(SubContext);
 		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+"><a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a><label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label><i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload()'></i><div class='el-progress el-progress--line'><div class='el-progress-bar'><div class='el-progress-bar__outer' ><div class='el-progress-bar__inner'></div></div></div><div class='el-progress__text' style='font-size: 12.8px;'></div></div></li>";
 		    		//已绘制个数增1
 		    		drawedNum++;	    		
@@ -1310,8 +1310,7 @@
       	//uploadEndHandler
       	function uploadEndHandler()
       	{
-      		console.log(uploadEndHandler);
-      		console.log("上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
       		//显示上传完成 
       		var uploadEndInfo = "上传完成";
@@ -1650,9 +1649,9 @@
 			//设置异步上传状态变化回调处理函数
 			xhr.onreadystatechange = function() {				
 				//文件上传状态
+				console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
 				if(xhr.status == 200) 
 				{
-					console.log("xhr onreadystatechange() readyState:" + xhr.readyState);
 					if(xhr.readyState != 4)
 					{
 						//文件上传未结束
@@ -1687,7 +1686,6 @@
 						return;
 		             };
 				}else{
-					console.log(xhr.status);
 					if(xhr.status < 300) 
 					{
 						//不是真正的异常
@@ -1720,7 +1718,7 @@
 				//evt.total; //附件总大小  
 				var loaded = evt.loaded;	//已上传大小
 				var tot = evt.total;
-				console.log("fileSize:" +   SubContext.size  + "evt.tot: " + tot + " evt.loaded: " + loaded);
+				//console.log("fileSize:" +   SubContext.size  + "evt.tot: " + tot + " evt.loaded: " + loaded);
 				
 				//计算当前文件上传百分比
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
@@ -1741,14 +1739,14 @@
 				}
 				var remainSize = totalSize - uploadedSize;
 				var usedTime = (uploadTime - uploadStartTime)/1000; //转换成秒
-	    		console.log("totalSize:" + totalSize + " remainSize:" + remainSize + " preUploadSize:" + preUploadSize + " uploadedSize:"+ uploadedSize);
+	    		//console.log("totalSize:" + totalSize + " remainSize:" + remainSize + " preUploadSize:" + preUploadSize + " uploadedSize:"+ uploadedSize);
 	    		if(remainSize < 0)
 	    		{
 	    			remainSize = 0;
 	    		}
 				
 				var perTime = (uploadTime - preUploadTime)/1000;
-	    		console.log("preUploadTime:" + preUploadTime + " uploadTime:" + uploadTime + " perTime:" + perTime);
+	    		//console.log("preUploadTime:" + preUploadTime + " uploadTime:" + uploadTime + " perTime:" + perTime);
 				if(perTime > 1)	//每10秒更新一次下载速度
 	    		{
 	    			var bspeed = (uploadedSize - preUploadSize)/perTime; //上传速度(b/s)
@@ -1771,8 +1769,8 @@
 						units = "M/s";
 					}
 				}
-	       		console.log("上传速度："+ speed + units);
-				console.log("总进度：" + totPer + " 已用时间：" + usedTime + " 剩余时间：" + remainTime);
+	       		//console.log("上传速度："+ speed + units);
+				//console.log("总进度：" + totPer + " 已用时间：" + usedTime + " 剩余时间：" + remainTime);
 			};
 			
 			//上传表单			
