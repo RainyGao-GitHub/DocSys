@@ -1020,7 +1020,11 @@
 			    		SubContext.index = i;
 			    	   	SubContext.state = 0;	//未开始上传
 			    	   	SubContext.status = "待上传";	//未开始上传
-			    	   	SubContext.subState = 0;	//upload的subState 0: 需要检查后台的文件信息 1: 不需要检查后台的文件信息
+			    	   	
+			    	   	//StateMachine SMMain\SMSub
+			    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
+			    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
+			    	   	
 			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 			    		SubContext.stopUploadFlag = false; //停止上传标记未false
@@ -1092,94 +1096,109 @@
       	//文件覆盖处理接口
       	function fileCoverConfirm(FileName,msgInfo)
       	{
-	        var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-	            	console.log("用户确认覆盖超时");
-	            	SubContextList[index].fileCoverConfirmSet = 1; //覆盖
-	            	fileCoverConfirmSet = 1;
-	            	closeBootstrapDialog("fileCoverConfirm");
-	            	uploadDoc(); //reEnter uploadDoc
-	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
-	        
-    	    qiao.bs.confirm({
-    	    	id: 'fileCoverConfirm',
-    	        msg: FileName + "已存在,是否覆盖?",
-    	        close: false,		
-    	        okbtn: "替换",
-    	        qubtn: "跳过",
-    	    },function () {
-    	    	//alert("点击了确定");
-    	    	clearTimeout(fileCoverTimer);
- 	 			SubContextList[index].fileCoverConfirmSet = 1; //覆盖
-  	 			if(index < (totalNum-1)) //后续还有才提示
-  	 			{
-	  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-	 	            	console.log("用户确认超时,后续全部覆盖");
-	 	            	fileCoverConfirmSet = 1;
-	 	            	closeBootstrapDialog("takeSameActionConfirm1");
-	 	            	uploadDoc(); //reEnter uploadDoc
-	 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
-	 	            
-  	 	    	    qiao.bs.confirm({
-  	 	    	    	id: 'takeSameActionConfirm1',
-  	 	    	        msg: "后续错误是否执行此操作？",
-  	 	    	        close: false,		
-  	 	    	        okbtn: "是",
-  	 	    	        qubtn: "否",
-  	 	    	    },function () {
-  	  	 				clearTimeout(fileCoverTimer1);
-  	 	    	    	fileCoverConfirmSet = 1;	//全局覆盖
-  	  	 				uploadDoc(); //reEnter uploadDoc
-  	  	 				return true;
-  	 				},function(){
-  	 					clearTimeout(fileCoverTimer1);
-  	 					uploadDoc(); //reEnter uploadDoc
-  	  	 				return true;
-  	 				});
-  	 			}
-  	 			else
-  	 			{
-  	 				uploadDoc(); //reEnter uploadDoc
-  	 			}
-    	    	return true;   
-    	    },function(){
-    	    	//alert("点击了取消");
-    	    	clearTimeout(fileCoverTimer);
-
-  	 			SubContextList[index].fileCoverConfirmSet = 2; //不覆盖
-  	 			if(index < (totalNum-1)) //后续还有才提示 
-  	 			{
-	  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-	 	            	console.log("用户确认超时,后续全部跳过");
-	 	            	fileCoverConfirmSet = 2;
-	 	            	closeBootstrapDialog("takeSameActionConfirm2");
-	 	            	uploadDoc(); //reEnter uploadDoc
-	 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
-  	 				
-  	 	    	    qiao.bs.confirm({
-  	 	    	    	id: 'takeSameActionConfirm2',
-  	 	    	        msg: "后续错误是否执行此操作？",
-  	 	    	        close: false,		
-  	 	    	        okbtn: "是",
-  	 	    	        qubtn: "否",
-  	 	    	    },function () {
-  	 	    	    	clearTimeout(fileCoverTimer2);
-  	 					fileCoverConfirmSet = 2;	//全局覆盖
-  	  	 				uploadDoc(); //reEnter uploadDoc
-  	  	 				return true;
-  	 				},function(){
-  	 	    	    	clearTimeout(fileCoverTimer2);
-  	 					uploadDoc(); //reEnter uploadDoc
-  	  	 				return true;
-  	 				});			
-  	 			}
-  	 			else
-  	 			{
-  	 				uploadDoc(); //reEnter uploadDoc
-  	 			}
-    	    	return true;
-    	    });      		
+      		//检查当前目录下是否有同名文件或目录
+  	 		var confirm = getFileCoverConfirmSetting();
+	  	 	if(confirm == 1)
+	  	 	{
+	  	 		//用户已确认直接覆盖
+	  	 		uploadDoc();
+	  	 		return;
+	  	 	}
+	  	 	else if(confirm == 2)
+	  	 	{
+	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
+	  	 		return;
+	  	 	}
+	  	 	else
+	  	 	{
+		        var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+		            	console.log("用户确认覆盖超时");
+		            	SubContextList[index].fileCoverConfirmSet = 1; //覆盖
+		            	fileCoverConfirmSet = 1;
+		            	closeBootstrapDialog("fileCoverConfirm");
+		            	uploadDoc(); //reEnter uploadDoc
+		            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+		        
+	    	    qiao.bs.confirm({
+	    	    	id: 'fileCoverConfirm',
+	    	        msg: FileName + "已存在,是否覆盖?",
+	    	        close: false,		
+	    	        okbtn: "替换",
+	    	        qubtn: "跳过",
+	    	    },function () {
+	    	    	//alert("点击了确定");
+	    	    	clearTimeout(fileCoverTimer);
+	 	 			SubContextList[index].fileCoverConfirmSet = 1; //覆盖
+	  	 			if(index < (totalNum-1)) //后续还有才提示
+	  	 			{
+		  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+		 	            	console.log("用户确认超时,后续全部覆盖");
+		 	            	fileCoverConfirmSet = 1;
+		 	            	closeBootstrapDialog("takeSameActionConfirm1");
+		 	            	uploadDoc(); //reEnter uploadDoc
+		 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+		 	            
+	  	 	    	    qiao.bs.confirm({
+	  	 	    	    	id: 'takeSameActionConfirm1',
+	  	 	    	        msg: "后续错误是否执行此操作？",
+	  	 	    	        close: false,		
+	  	 	    	        okbtn: "是",
+	  	 	    	        qubtn: "否",
+	  	 	    	    },function () {
+	  	  	 				clearTimeout(fileCoverTimer1);
+	  	 	    	    	fileCoverConfirmSet = 1;	//全局覆盖
+	  	  	 				uploadDoc(); //reEnter uploadDoc
+	  	  	 				return true;
+	  	 				},function(){
+	  	 					clearTimeout(fileCoverTimer1);
+	  	 					uploadDoc(); //reEnter uploadDoc
+	  	  	 				return true;
+	  	 				});
+	  	 			}
+	  	 			else
+	  	 			{
+	  	 				uploadDoc(); //reEnter uploadDoc
+	  	 			}
+	    	    	return true;   
+	    	    },function(){
+	    	    	//alert("点击了取消");
+	    	    	clearTimeout(fileCoverTimer);
+	
+	  	 			SubContextList[index].fileCoverConfirmSet = 2; //不覆盖
+	  	 			if(index < (totalNum-1)) //后续还有才提示 
+	  	 			{
+		  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
+		 	            	console.log("用户确认超时,后续全部跳过");
+		 	            	fileCoverConfirmSet = 2;
+		 	            	closeBootstrapDialog("takeSameActionConfirm2");
+		 	            	uploadDoc(); //reEnter uploadDoc
+		 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+	  	 				
+	  	 	    	    qiao.bs.confirm({
+	  	 	    	    	id: 'takeSameActionConfirm2',
+	  	 	    	        msg: "后续错误是否执行此操作？",
+	  	 	    	        close: false,		
+	  	 	    	        okbtn: "是",
+	  	 	    	        qubtn: "否",
+	  	 	    	    },function () {
+	  	 	    	    	clearTimeout(fileCoverTimer2);
+	  	 					fileCoverConfirmSet = 2;	//全局覆盖
+	  	  	 				uploadDoc(); //reEnter uploadDoc
+	  	  	 				return true;
+	  	 				},function(){
+	  	 	    	    	clearTimeout(fileCoverTimer2);
+	  	 					uploadDoc(); //reEnter uploadDoc
+	  	  	 				return true;
+	  	 				});			
+	  	 			}
+	  	 			else
+	  	 			{
+	  	 				uploadDoc(); //reEnter uploadDoc
+	  	 			}
+	    	    	return true;
+	    	    });      		
+      	 	}
       	}
-      	
       	
       	//获取当上传的文件覆盖设置
       	function getUploadErrorConfirmSetting()
@@ -1369,140 +1388,108 @@
  			}
  		}
       	
-      	
-		//uploadDoc接口，该接口是个递归调用
-    	function uploadDoc()
-    	{
-    		console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
-			var SubContext = SubContextList[index];
-			var parentId = SubContext.parentId;
-			var vid = SubContext.vid
-    		
-    		//判断是否取消上传
-    		if(stopUploadFlag == true)
-    		{
-    			console.log("uploadDoc(): 结束上传");
-    			uploadEndHandler();
-    			return;
-    		}
-    		
-    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
-    		checkAndDrawUploadItems(SubContextList);
-    		
-    		//取消当前文件上传
-			if(SubContext.stopUploadFlag == true)
-			{
-				console.log("用户取消了上传 "+ name);
-    			uploadErrorHandler(name,"用户取消了上传！");
-				return;
-			}
-    		
-    		//设置上传状态
-			SubContextList[index].state = 1;	//上传中
-			
-			//get the file from the SubContextList
-    		var file = SubContext.file;
-			if(!file) 
-			{
-				uploadErrorHandler("未知","不是文件");
-				return; 
-			}
-			
-    		//get file name from file
-			var name  = SubContext.name;
-    		console.log("fileName:" + name);
+      	//检查当前上传文件的父节点是否存在，不存在则通知后台新建，直到全部新建完成
+ 		function checkAddParentNode(SubContext)
+ 		{
+			//parentNode maybe is not the real parent for the doc
+			var tempParentNode = SubContext.parentNode;
     		//get filePath form file
     		var filePath = SubContext.relativePath;
     		console.log("relativePath:" + filePath);
 
-    		//parentNode maybe is not the real parent for the doc
-    		var tempParentNode = SubContext.parentNode;
-			//文件父目录检查部分
-    		if(filePath && filePath != "")
-			{
-				var pathArray = new Array(); //定义一数组 
-    			pathArray = filePath.split("/"); //字符分割 
-				//alert(pathArray[0]);
-				//alert(pathArray.length);
-				//检查其其父节点是否存在，如果不存在则需要先新建父节点目录
-				for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
-				{
-					var nodeName = pathArray[i];
-					var treeNode = getNodeByName(nodeName,tempParentNode);	//获取parentNode下名为name的子节点
-					if(treeNode)	//同名节点已存在
-					{
-						if(treeNode.isParent == true)	//同名节点是目录
-						{
-							tempParentNode = treeNode;
-						}
-						else	//同名节点不是目录，此文件则上传失败
-						{
-							uploadErrorConfirmHandler(name,nodeName + " 不是目录");
-				            return;
-						}
-					}
-					else	//同名节点不存在，则新建该节点
-					{
-						//add This Node，成功则回调uploadDoc尝试 继续上传文件，或创建下一个节点
-				    	var tempParentId = 0;
-				    	if(tempParentNode)
-				    	{
-				    		tempParentId = tempParentNode.id;
-				    	}
-				   		console.log("addDoc name:" + nodeName + " type:" +  2 + " tempParentId:" +  tempParentId + " vid:" +  vid);
-				    	$.ajax({
-				             url : "/DocSystem/Doc/addDoc.do",
-				             type : "post",
-				             dataType : "json",
-				             data : {
-				             	name : nodeName,
-				             	content: "#" + nodeName,
-				                type : 2, //文件类型
-				                reposId : vid, 
-				                parentId : tempParentId,
-				             },
-				             success : function (ret) {
-				             	if( "ok" == ret.status && ret.data.id){
-				             		if(ret.msgData == "isNewNode")
-				             		{
-				             			addTreeNode(nodeName,true,ret.data.id,tempParentNode);
-				             		}
-				             		else
-				             		{
-				             			//Dir Node exists, we just open the parentNode is ok
-				         				var treeObj = $.fn.zTree.getZTreeObj("doctree");
-				         				treeObj.expandNode(tempParentNode, true, false, true);
-				             		}
-				                    //to upload next Doc
-				        		  	console.log("start to uploadNextDoc");
-				        		  	uploadDoc();
-				        		  	return;
- 				                }
-				                else
-				                {
-								 	uploadErrorConfirmHandler(name,ret.msgInfo);
-						            return;
-				                }
-				            },
-				            error : function () {
-							 	uploadErrorConfirmHandler(name,"新增目录 "+nodeName+ " 异常");
-					            return;
-				            }
-				        });
-						return;
-					}
-				}
-				
+    		if(filePath || filePath == "")
+    		{
+    			//文件没有相对路径，realParentNod = parentNode
+ 				SubContext.realParentNode = tempParentNode;
+ 				SubContext.realParentId = tempParentNode?tempParentNode.id:0;
+    			return true;
     		}
 			
-    		//文件上传部分
-   			var uploadType = 1;	//新建文件
+    		//文件父目录检查部分
+			var pathArray = new Array(); //定义一数组 
+			pathArray = filePath.split("/"); //字符分割 
 
-   			//检查当前目录下是否有同名文件或目录
+			//检查其其父节点是否存在，如果不存在则需要先新建父节点目录
+			for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
+			{
+				var nodeName = pathArray[i];
+				var treeNode = getNodeByName(nodeName,tempParentNode);	//获取parentNode下名为name的子节点
+				if(treeNode)	//节点已存在
+				{
+					if(treeNode.isParent == true)
+					{
+						//节点存在且是目录，检查下一级parentNode
+						tempParentNode = treeNode;
+					}
+					else	//同名节点不是目录，此文件则上传失败
+					{
+						uploadErrorConfirmHandler(name,nodeName + " 不是目录");
+			            return false;
+					}
+				}
+				else	//节点不存在，则新建该节点
+				{
+					//由于后台新增节点是异步调用，所以成功后回调uploadDoc来触发下一级目录的检查
+			    	var tempParentId = 0;
+			    	if(tempParentNode)
+			    	{
+			    		tempParentId = tempParentNode.id;
+			    	}
+			   		console.log("addDoc name:" + nodeName + " type:" +  2 + " tempParentId:" +  tempParentId + " vid:" +  vid);
+			    	$.ajax({
+			             url : "/DocSystem/Doc/addDoc.do",
+			             type : "post",
+			             dataType : "json",
+			             data : {
+			             	name : nodeName,
+			             	content: "#" + nodeName,
+			                type : 2, //文件类型
+			                reposId : vid, 
+			                parentId : tempParentId,
+			             },
+			             success : function (ret) {
+			             	if( "ok" == ret.status && ret.data.id){
+			             		if(ret.msgData == "isNewNode")
+			             		{
+			             			addTreeNode(nodeName,true,ret.data.id,tempParentNode);
+			             		}
+			             		else
+			             		{
+			             			//Dir Node exists, we just open the parentNode is ok
+			         				var treeObj = $.fn.zTree.getZTreeObj("doctree");
+			         				treeObj.expandNode(tempParentNode, true, false, true);
+			             		}
+
+			             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
+			        		  	uploadDoc();
+			        		  	return;
+				            }
+			                else
+			                {
+							 	uploadErrorConfirmHandler(name,ret.msgInfo);
+					            return;
+			                }
+			            },
+			            error : function () {
+						 	uploadErrorConfirmHandler(name,"新增目录 "+nodeName+ " 异常");
+				            return;
+			            }
+			        });
+					return false;
+				}
+			}
+			SubContext.realParentNode = tempParentNode;
+			SubContext.realParentId = tempParentNode?tempParentNode.id:0;
+			return true;
+ 		}
+      	
+      	function localCheckDocInfo(SubContext)
+      	{
+      		//检查当前目录下是否有同名文件或目录
   	 		var confirm = getFileCoverConfirmSetting();
 	  	 	if(confirm == 0)
 	  	 	{
-	   			var treeNode = getNodeByName(name,tempParentNode);	//获取parentNode下名为name的子节点
+	   			var treeNode = getNodeByName(name,SubContext.realParentNode);	//获取parentNode下名为name的子节点
 	   			if(treeNode)
 	   			{
 	   		  		if(treeNode.isParent == true)
@@ -1512,7 +1499,7 @@
 	   		  	 	}
 	   		  	 	else
 	   		  	 	{
-		   		  	 	SubContextList[index].docId = treeNode.id;
+		   		  	 	SubContext.docId = treeNode.id;
 	   		  	 		fileCoverConfirm(name,"文件" + name + " 已存在");
 	   		  	 		return;
 	   		  	 	}
@@ -1528,80 +1515,158 @@
 	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
 	  	 		return;
 	  	 	}
-    		
+      	}
+      	
+      	//返回false表示该接口触发异步调用，当前uploadDoc线程需要先退出，异步回调会根据check结果决定后续是否reenter uploadDoc
+      	function checkDocInfo(SubContext)
+      	{
 	  	 	//It is the first call for file, so we need to check the docInfo
-	  	 	console.log("subState:" + SubContextList[index].subState);
-   			if(0 == SubContextList[index].subState)
-			{
-   				
-   				SubContextList[index].subState = 1;
-   				console.log("subState:" + SubContextList[index].subState);
-   	   			
-   				//检查服务器端是否存在同名文件，并确认文件内容是否相同
-    			var checkSum = getFileCheckSum(SubContextList[index].file);
-    			$.ajax({
-		             url : "/DocSystem/Doc/checkDocInfo.do",
-		             type : "post",
-		             dataType : "json",
-		             data : {
-		             	name : name,
-						type: 1,
-						size: SubContextList[index].size,
-		             	checkSum: checkSum,
-		             	reposId : vid, 
-		                parentId : tempParentNode?tempParentNode.id:0,
-		             },
-		             success : function (ret) {
-		             	if( "ok" == ret.status)
-		             	{		
-		             		console.log("ret",ret);
-		             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
-		             		{
-		             			SubContextList[index].docId = ret.data;
-		             			fileCoverConfirm(name,"文件" + name + " 已存在");
-		             			return;
-		             		}
-		             		else if(ret.msgData == "1")	//文件存在且checkSum相同，直接标记成功
-		             		{
-		             			SubContextList[index].docId = ret.data;
-			                	
-		             			$('.file'+index).removeClass('is-uploading');
-			    				$('.file'+index).addClass('is-success');
-			                    uploadSuccessHandler(name,ret.msgInfo);
-								return;
-		             		}
-		             		else
-		             		{
-		             			//next time uploadDoc should skip to upload file
-		             			SubContextList[index].subState = 1;
-		             			uploadDoc();
-		             			return;
-		             		}
-		                }
-		                else
-		                {
-						 	uploadErrorConfirmHandler(name,ret.msgInfo);
-				            return;
-		                }
-		            },
-		            error : function () {
-					 	uploadErrorConfirmHandler(name,"doCheck "+nodeName+ " 异常");
+	  	 	console.log("SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
+   			if("checkDocInfo" == SubContext.SMState && 1 == SubContext.SMSubState)
+   			{
+   				return true;
+   			}
+   			
+      		//检查当前目录下是否有同名文件或目录
+  	 		var confirm = getFileCoverConfirmSetting();
+	  	 	if(confirm == 1)
+	  	 	{
+	  	 		SubContext.isAdd = 0;	//覆盖文件
+	  	 		return true;
+	  	 	}
+	  	 	else if(confirm == 2)
+	  	 	{
+	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
+	  	 		return;
+	  	 	}
+   			
+   			//Set the SM SubState, If uploadDoc was reenter means we need not do checkDocInfo
+   			SubContext.SMSubState = 1;	//checkDocInfo 已开始执行
+   	   		
+   			//检查服务器端是否存在同名文件，并确认文件内容是否相同
+    		var checkSum = getFileCheckSum(SubContext.file);
+
+   			//调用后台接口检查DocInfo，回调函数需要根据情况决定具体的操作
+  			$.ajax({
+	             url : "/DocSystem/Doc/checkDocInfo.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	             	name : name,
+					type: 1,
+					size: SubContextList[index].size,
+	             	checkSum: checkSum,
+	             	reposId : vid, 
+	                parentId : tempParentNode?tempParentNode.id:0,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status)
+	             	{		
+	             		console.log("ret",ret);
+	             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
+	             		{
+	             			SubContext.docId = ret.data;
+	             			SubContext.isAdd = 0;
+	             			fileCoverConfirm(name,"文件" + name + " 已存在");
+	             			return;
+	             		}
+	             		else if(ret.msgData == "1")	//文件存在且checkSum相同，直接标记成功
+	             		{
+	             			SubContext.docId = ret.data;	                
+	             			SubContext.isAdd = 0;
+	             			$('.file'+index).removeClass('is-uploading');
+		    				$('.file'+index).addClass('is-success');
+		                    uploadSuccessHandler(name,ret.msgInfo);
+							return;
+	             		}
+	             		else
+	             		{
+	             			//doc not exists, let's resume the uploadDoc
+	             			SubContext.isAdd = 1;
+	             			uploadDoc();
+	             			return;
+	             		}
+	                }
+	                else
+	                {
+					 	uploadErrorConfirmHandler(name,ret.msgInfo);
 			            return;
-		            }
-		        });
+	                }
+	            },
+	            error : function () {
+				 	uploadErrorConfirmHandler(name,"doCheck "+nodeName+ " 异常");
+		            return;
+	            }
+	        });
+    		
+   			return false;
+      	}
+      	
+		//uploadDoc接口，该接口是个递归调用
+    	function uploadDoc()
+    	{
+    		console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
+			var SubContext = SubContextList[index];
+    		
+    		//判断是否取消上传
+    		if(stopUploadFlag == true)
+    		{
+    			console.log("uploadDoc(): 结束上传");
+    			uploadEndHandler();
     			return;
+    		}
+    		
+    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
+    		checkAndDrawUploadItems(SubContextList);
+    		
+    		//取消当前文件上传
+			if(SubContext.stopUploadFlag == true)
+			{
+				console.log("uploadDoc() 用户取消了上传 "+ name);
+    			uploadErrorHandler(name,"用户取消了上传！");
+				return;
 			}
+    		
+    		//设置上传状态
+			SubContext.state = 1;	//上传中
+			
+			//get the file from the SubContextList
+    		var file = SubContext.file;
+			if(!file) 
+			{
+				uploadErrorHandler("未知","不是文件");
+				return; 
+			}
+			
+    		//get file name from file
+			var name  = SubContext.name;
+    		console.log("uploadDoc() fileName:" + name);
+
+    		//文件父目录检查部分
+    		if(false == checkAddParentNode())
+    		{
+    			console.log("uploadDoc() checkAddParentNode return false");
+    			return;
+    		}
+   			console.log("uploadDoc() checkAddParentNode ok");
+   		 	
+   			//检查文件是否存在且是否相同
+   			if(false == checkDocInfo())
+   			{
+   				return;
+   			}
 			
 			//新建文件上传表单
 			var form = new FormData();
-			form.append("uploadFile", file);
-			form.append("filePath", filePath);
-			form.append("name", name);
-			form.append("uploadType", uploadType);
-			form.append("docId", SubContextList[index].docId);
-			form.append("parentId", tempParentNode?tempParentNode.id:0);
-			form.append("reposId", vid);
-			console.log("docId:" + docId);
+			form.append("uploadFile", SubContext.file);
+			form.append("filePath", SubContext.filePath);
+			form.append("name", SubContext.name);
+			form.append("isAdd", SubContext.isAdd);
+			form.append("docId", SubContext.docId);
+			form.append("parentId", SubContext.realParentId);
+			form.append("reposId", SubContext.vid);
+			console.log("docId:" + SubContext.docId);
+			
 			//新建http异步请求
 			var xhr = new XMLHttpRequest();
 			//设置异步上传状态变化回调处理函数
