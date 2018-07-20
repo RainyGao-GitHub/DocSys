@@ -818,6 +818,7 @@
         var totalNum = 0; 
  		var SubContextList = []; //文件上传上下文List，用于记录单个文件的上传情况，在开始上传的时候初始化
         var vid = 0;
+ 		var FailList = [];
         
         //状态机变量，用于实现异步对话框的实现
         var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
@@ -834,38 +835,8 @@
         	console.log("uploadStatus: " + uploadStatus);
         	return uploadStatus;
         }
-        
-		function getIndex()
-		{
-            return index;
-		}
-		
-		function setIndex(i)
-		{
-			index = i;
-		}
-		
-		function getTotalNum()
-		{
-            return totalNum;
-		}
-		
-		function setTotalNum(num)
-		{
-			totalNum = num;
-		}
-		
-		function getVid()
-		{
-            return vid;
-		}
-		
-		function setVid(id)
-		{
-			vid = id;
-		}
       	
-      	//设置进度跳的上传取消按键的接口,this function has performance issue, so it will be be used
+      	//设置进度条的上传取消按键的接口,this function has performance issue, so it will not be used
     	function itemStopUploadDelegate()
     	{
     		console.log("itemStopUploadDelegate");
