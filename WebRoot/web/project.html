@@ -1486,6 +1486,9 @@
       	//返回false表示该接口触发异步调用，当前uploadDoc线程需要先退出，异步回调会根据check结果决定后续是否reenter uploadDoc
       	function checkDocInfo(SubContext)
       	{
+      		var name = SubContext.name;
+	  	 	console.log("checkDocInfo() name:" + name);
+
 	  	 	//It is the first call for file, so we need to check the docInfo
 	  	 	console.log("SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
    			if("checkDocInfo" == SubContext.SMState && 1 == SubContext.SMSubState)
@@ -1510,7 +1513,7 @@
    			SubContext.SMSubState = 1;	//checkDocInfo 已开始执行
    	   		
    			//检查服务器端是否存在同名文件，并确认文件内容是否相同
-    		var checkSum = getFileCheckSum(SubContext.file);
+    		SubContext.checkSum = getFileCheckSum(SubContext.file);
 
    			//调用后台接口检查DocInfo，回调函数需要根据情况决定具体的操作
   			$.ajax({
@@ -1520,10 +1523,10 @@
 	             data : {
 	             	name : name,
 					type: 1,
-					size: SubContextList[index].size,
-	             	checkSum: checkSum,
-	             	reposId : vid, 
-	                parentId : tempParentNode?tempParentNode.id:0,
+					size: SubContext.size,
+	             	checkSum: SubContext.checkSum,
+	             	reposId : SubContext.vid, 
+	                parentId : SubContext.realParentId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -1610,7 +1613,7 @@
     		}
 			
     		//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
-    		if(false == checkAddParentNode())
+    		if(false == checkAddParentNode(SubContext))
     		{
     			console.log("uploadDoc() checkAddParentNode return false");
     			return;
@@ -1618,14 +1621,14 @@
    			console.log("uploadDoc() checkAddParentNode return true");
    		 	
    			//检查文件是否存在且是否相同，return false 表示内部有异步调用
-   			if(false == checkDocInfo())
+   			if(false == checkDocInfo(SubContext))
    			{
     			console.log("uploadDoc() checkDocInfo return false");   				
    				return;
    			}
    			console.log("uploadDoc() checkDocInfo return true");  
 			
-   			doUploadDoc(SubContext);
+   			startUplod(SubContext);
     	}
 		
     	function startUpload(SubContext)
