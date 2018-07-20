@@ -1391,13 +1391,14 @@
       	//检查当前上传文件的父节点是否存在，不存在则通知后台新建，直到全部新建完成
  		function checkAddParentNode(SubContext)
  		{
+      		var vid = SubContext.vid;
 			//parentNode maybe is not the real parent for the doc
 			var tempParentNode = SubContext.parentNode;
     		//get filePath form file
     		var filePath = SubContext.relativePath;
     		console.log("relativePath:" + filePath);
 
-    		if(filePath || filePath == "")
+    		if(!filePath || filePath == "")
     		{
     			//文件没有相对路径，realParentNod = parentNode
  				SubContext.realParentNode = tempParentNode;
