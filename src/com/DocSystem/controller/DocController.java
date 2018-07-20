@@ -197,8 +197,8 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile, Integer uploadType,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc reposId:" + reposId + " parentId:" + parentId  + " uploadType:" + uploadType  + " docId:" + docId + " filePath:" + filePath);
+	public void uploadDoc(MultipartFile uploadFile, Integer isAdd,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("uploadDoc reposId:" + reposId + " parentId:" + parentId  + " isAdd:" + isAdd  + " docId:" + docId + " filePath:" + filePath);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -211,7 +211,7 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		
 		//检查用户是否有权限新增文件
-		if(uploadType == 1)
+		if(isAdd == 1)
 		{
 			if(checkUserAddRight(rt,login_user.getId(),parentId,reposId) == false)
 			{
@@ -235,12 +235,6 @@ public class DocController extends BaseController{
 			rt.setError("虚拟文件系统不支持实体文件上传!");
 			writeJson(rt, response);
 			return;
-		}		
-		
-		//带有相对路径的标明是文件夹上传，需要先判断其相对路径是否存在，如果不存在则，需要递归创建，而且parentId，需要修改
-		if(filePath != null && !filePath.equals(""))
-		{
-			System.out.println("文件夹上传");
 		}
 		
 		//获取文件并保存文件
@@ -291,7 +285,7 @@ public class DocController extends BaseController{
 			{
 				commitMsg = "uploadDoc " + fileName;
 			}
-			if(uploadType == 1)	//新建文件则新建记录，否则
+			if(isAdd == 1)	//新建文件则新建记录，否则
 			{
 				addDoc(fileName,null, 1, uploadFile, reposId, parentId, commitMsg, commitUser, login_user, rt);
 			}
