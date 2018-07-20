@@ -1275,6 +1275,7 @@
       	//uploadErrorHandler
       	function uploadErrorHandler(FileName,errMsg)
       	{
+      		console.log("uploadErrorHandler() "+ FileName + " " + errMsg);
       		failNum++;
       		uploadedNum++;
     		//设置上传状态
@@ -1287,6 +1288,7 @@
       	//uploadErrorAbortHandler
       	function uploadErrorAbortHandler(FileName,errMsg)
       	{
+      		console.log("uploadErrorAbortHandler() "+ FileName + " " + errMsg);
       		failNum++;
       		uploadedNum++;
     		//设置上传状态
@@ -1299,6 +1301,7 @@
       	//uploadSuccessHandler
       	function uploadSuccessHandler(name,msgInfo)
       	{
+      		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
       		successNum++;
       		uploadedNum++;
 			SubContextList[index].state = 2;	//上传结束
