@@ -1483,40 +1483,6 @@
 			return true;
  		}
       	
-      	function localCheckDocInfo(SubContext)
-      	{
-      		//检查当前目录下是否有同名文件或目录
-  	 		var confirm = getFileCoverConfirmSetting();
-	  	 	if(confirm == 0)
-	  	 	{
-	   			var treeNode = getNodeByName(name,SubContext.realParentNode);	//获取parentNode下名为name的子节点
-	   			if(treeNode)
-	   			{
-	   		  		if(treeNode.isParent == true)
-	   		  		{
-	   		  			uploadErrorConfirmHandler(name,"文件夹 " + name + " 已存在");
-	   		  			return;
-	   		  	 	}
-	   		  	 	else
-	   		  	 	{
-		   		  	 	SubContext.docId = treeNode.id;
-	   		  	 		fileCoverConfirm(name,"文件" + name + " 已存在");
-	   		  	 		return;
-	   		  	 	}
-	   			}
-	  	 	}
-	  	 	else if(confirm == 1)
-	  	 	{
-	  	 		//用户已确认直接覆盖
-	  	 		uploadType = 2;	//覆盖文件
-	  	 	}
-	  	 	else if(confirm == 2)
-	  	 	{
-	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
-	  	 		return;
-	  	 	}
-      	}
-      	
       	//返回false表示该接口触发异步调用，当前uploadDoc线程需要先退出，异步回调会根据check结果决定后续是否reenter uploadDoc
       	function checkDocInfo(SubContext)
       	{
@@ -1606,7 +1572,9 @@
     	function uploadDoc()
     	{
     		console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
-			var SubContext = SubContextList[index];
+
+    		var SubContext = SubContextList[index];
+			console.log("uploadDoc() fileName:" + SubContext.name);
     		
     		//判断是否取消上传
     		if(stopUploadFlag == true)
@@ -1628,34 +1596,43 @@
 			}
     		
     		//设置上传状态
-			SubContext.state = 1;	//上传中
+    		if(0 == SubContext.state)
+    		{
+				SubContext.state = 1;	//上传中
 			
-			//get the file from the SubContextList
-    		var file = SubContext.file;
-			if(!file) 
-			{
-				uploadErrorHandler("未知","不是文件");
-				return; 
-			}
+				//get the file from the SubContextList
+    			var file = SubContext.file;
+				if(!file) 
+				{
+					uploadErrorHandler("未知","不是文件");
+					return; 
+				}
+    		}
 			
-    		//get file name from file
-			var name  = SubContext.name;
-    		console.log("uploadDoc() fileName:" + name);
-
-    		//文件父目录检查部分
+    		//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
     		if(false == checkAddParentNode())
     		{
     			console.log("uploadDoc() checkAddParentNode return false");
     			return;
     		}
-   			console.log("uploadDoc() checkAddParentNode ok");
+   			console.log("uploadDoc() checkAddParentNode return true");
    		 	
-   			//检查文件是否存在且是否相同
+   			//检查文件是否存在且是否相同，return false 表示内部有异步调用
    			if(false == checkDocInfo())
    			{
+    			console.log("uploadDoc() checkDocInfo return false");   				
    				return;
    			}
+   			console.log("uploadDoc() checkDocInfo return true");  
 			
+   			doUploadDoc(SubContext);
+    	}
+		
+    	function startUpload(SubContext)
+    	{
+
+			console.log("startUpload() docId:" + SubContext.docId);
+
 			//新建文件上传表单
 			var form = new FormData();
 			form.append("uploadFile", SubContext.file);
@@ -1665,52 +1642,46 @@
 			form.append("docId", SubContext.docId);
 			form.append("parentId", SubContext.realParentId);
 			form.append("reposId", SubContext.vid);
-			console.log("docId:" + SubContext.docId);
 			
 			//新建http异步请求
 			var xhr = new XMLHttpRequest();
+			
 			//设置异步上传状态变化回调处理函数
 			xhr.onreadystatechange = function() {				
 				//文件上传状态
 				if(xhr.status == 200) 
 				{
-					console.log(xhr.readyState);
+					console.log("xhr onreadystatechange()" + xhr.readyState);
 					if(xhr.readyState != 4)
 					{
 						//文件上传未结束
 						return;
 					}
 					
-		            var ret = JSON.parse(xhr.responseText);
-					//console.log(ret);
-					//console.log(ret.msgInfo);
 					//上传成功！
+					var ret = JSON.parse(xhr.responseText);
 					if("ok" == ret.status){
-	                	if(SubContextList[index].docId == -1) //文件新建成功
+	                	if(SubContext.docId == -1) //文件新建成功
 		                {	
 		             		addTreeNode(name,false,ret.data.id,tempParentNode);
-		             		
 		             		//set the docId so that We can open it 
-		             		SubContextList[index].docId = ret.data.id;
+		             		SubContext.docId = ret.data.id;
 							
-							//update the uploadStatus
-							$('.file'+index).removeClass('is-uploading');
-							$('.file'+index).addClass('is-success');
-							uploadSuccessHandler(name,ret.msgInfo);
 		                }
-		                else //文件更新成功
-		                {
-		                	$('.file'+index).removeClass('is-uploading');
-		    				$('.file'+index).addClass('is-success');
-		                    uploadSuccessHandler(name,ret.msgInfo);
-		                }
+	                	
+						//update the uploadStatus
+						$('.file'+index).removeClass('is-uploading');
+						$('.file'+index).addClass('is-success');
+						uploadSuccessHandler(name,ret.msgInfo);
 					 }
 					 else	//上传失败
 					 {
+						//上传失败
+						console.log("上传失败：" + ret.msgInfo);
+	
+						//update the uploadStatus
 						$('.file'+index).removeClass('is-uploading');
 						$('.file'+index).addClass('is-fail');
-					 	//上传失败
-						console.log("上传失败：" + ret.msgInfo);
 						uploadErrorConfirmHandler(name, ret.msgInfo);
 						return;
 		             };
@@ -1723,6 +1694,8 @@
 					}
 					//上传失败
 					console.log("系统异常: " + name + " 上传异常！");
+					$('.file'+index).removeClass('is-uploading');
+					$('.file'+index).addClass('is-fail');
 					uploadErrorConfirmHandler(name, name + " 上传异常！");
 					return;
 				}
@@ -1757,7 +1730,7 @@
 				//$('.file'+index).addClass('is-success');
 				//}
 				console.log("上传中："+per+"%！"); 
-
+	
 				//统计已上传大小、百分比、上传速度、剩余上传时间
 				uploadTime = new Date().getTime();
 				if(per=="100")
@@ -1771,25 +1744,25 @@
 				}
 				var remainSize = totalSize - uploadedSize;
 				var usedTime = (uploadTime - uploadStartTime)/1000; //转换成秒
-        		console.log("totalSize:" + totalSize + " remainSize:" + remainSize + " preUploadSize:" + preUploadSize + " uploadedSize:"+ uploadedSize);
-        		if(remainSize < 0)
-        		{
-        			remainSize = 0;
-        		}
+	    		console.log("totalSize:" + totalSize + " remainSize:" + remainSize + " preUploadSize:" + preUploadSize + " uploadedSize:"+ uploadedSize);
+	    		if(remainSize < 0)
+	    		{
+	    			remainSize = 0;
+	    		}
 				
 				var perTime = (uploadTime - preUploadTime)/1000;
-        		console.log("preUploadTime:" + preUploadTime + " uploadTime:" + uploadTime + " perTime:" + perTime);
+	    		console.log("preUploadTime:" + preUploadTime + " uploadTime:" + uploadTime + " perTime:" + perTime);
 				if(perTime > 1)	//每10秒更新一次下载速度
-        		{
-        			var bspeed = (uploadedSize - preUploadSize)/perTime; //上传速度(b/s)
-            		uploadSpeed = bspeed;
-            		preUploadSize = uploadedSize;
+	    		{
+	    			var bspeed = (uploadedSize - preUploadSize)/perTime; //上传速度(b/s)
+	        		uploadSpeed = bspeed;
+	        		preUploadSize = uploadedSize;
 					preUploadTime = uploadTime;
-        		}				
-        		var remainTime = remainSize/uploadSpeed;
-        		var totPer = Math.floor(100 * uploadedSize / totalSize);
+	    		}				
+	    		var remainTime = remainSize/uploadSpeed;
+	    		var totPer = Math.floor(100 * uploadedSize / totalSize);
 				//计算显示用speed和时间
-        		var speed = uploadSpeed;
+	    		var speed = uploadSpeed;
 				var units = "b/s";	//速度单位
 				if((speed/1024)>1)
 				{
@@ -1803,14 +1776,14 @@
 				}
 	       		console.log("上传速度："+ speed + units);
 				console.log("总进度：" + totPer + " 已用时间：" + usedTime + " 剩余时间：" + remainTime);
- 			};
+			};
 			
 			//上传表单			
 			xhr.open("post", "/DocSystem/Doc/uploadDoc.do");
 			xhr.send(form);
 			uploadTime = new Date().getTime();	//上传时间初始化
     	}
-		
+    	
 		function stopUpload(index)
 		{
 			SubContextList[index].stopUploadFlag = true;
