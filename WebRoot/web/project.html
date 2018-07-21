@@ -866,10 +866,40 @@
 				uploadTime = new Date().getTime();	//初始化上传时间
 				uploadStartTime = uploadTime;
 				preUploadTime = uploadTime;
-			
 				//启动第一个Doc的Upload操作      		
 				uploadDoc();	//start upload
 			}
+		}
+		
+		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
+		function reuploadAllFailedDocs()
+		{
+			var firstFailedIndex = -1;
+			//设置uploadEnd和一些影响uploadDoc的参数
+			for(i=0;i<totalNum;i++)
+			{
+				if(SubContextList[i].state != 2)
+				{
+					if(firstFailedIndex = -1)
+					{
+						firstFailedIndex = i;
+					}
+					SubContextList[i].uploadEn = true;
+					SubContextList[i].stopUploadFlag = false;
+					SubContextList[i].fileCoverConfirmSet = 0;
+					SubContextList[i].uploadErrorConfirmSet = 0;		
+				}
+			}
+			
+			//reset some important settings
+			isUploading = true;
+			stopUploadFlag = false;
+			fileCoverConfirmSet = 0;
+			uploadErrorConfirmSet = 0;
+			index = 0;
+			
+			//trigger uploadDoc
+			uploadDoc();
 		}
 		
 		//初始化DocUpload设置
@@ -978,6 +1008,8 @@
 			    		SubContext.index = i;
 			    	   	SubContext.state = 0;	//未开始上传
 			    	   	SubContext.status = "待上传";	//未开始上传
+			    	   	
+			    	   	SubContext.uploadEn = true; //默认打开uploadEn
 			    	   	
 			    	   	//StateMachine SMMain\SMSub
 			    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
@@ -1280,10 +1312,11 @@
       		failNum++;
       		uploadedNum++;
     		//设置上传状态
-			SubContextList[index].state = 2;	//上传结束
+			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
-      		SubContextList[index].msgInfo = errMsg;
-    		uploadNextDoc();		 	
+			SubContextList[index].msgInfo = errMsg;
+			SubContextList[index].uploadEn = false;
+			uploadNextDoc();		 	
       	}
       	
       	//uploadErrorAbortHandler
@@ -1293,10 +1326,11 @@
       		failNum++;
       		uploadedNum++;
     		//设置上传状态
-			SubContextList[index].state = 2;	//上传结束
+			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
       		SubContextList[index].msgInfo = errMsg;
-    		uploadEndHandler();
+			SubContextList[index].uploadEn = false;
+      		uploadEndHandler();
       	}
       	
       	//uploadSuccessHandler
@@ -1308,6 +1342,7 @@
 			SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "success";
       		SubContextList[index].msgInfo = msgInfo;
+			SubContextList[index].uploadEn = false;
 			uploadNextDoc();
       	}
       	
@@ -1560,7 +1595,13 @@
 
     		var SubContext = SubContextList[index];
 			console.log("uploadDoc() fileName:" + SubContext.name);
-    		
+			
+			//uploadEn was used to control reupload
+			if(SubContext.uploadEn == false)
+			{
+				return;
+			}
+			
     		//判断是否取消上传
     		if(stopUploadFlag == true)
     		{
