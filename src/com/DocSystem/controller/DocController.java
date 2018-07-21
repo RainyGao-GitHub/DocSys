@@ -1096,12 +1096,11 @@ public class DocController extends BaseController{
 			doc.setPid(parentId);
 			doc.setCreator(login_user.getId());
 			//set createTime
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-			String createTime = df.format(new Date());// new Date()为获取当前系统时间
-			doc.setCreateTime(createTime);
+			long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+			doc.setCreateTime(nowTimeStamp);
 			doc.setState(2);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-			long lockTime = new Date().getTime() + 24*60*60*1000;
+			long lockTime = nowTimeStamp + 24*60*60*1000;
 			doc.setLockTime(lockTime);	//Set lockTime
 			if(reposService.addDoc(doc) == 0)
 			{			
@@ -1669,12 +1668,11 @@ public class DocController extends BaseController{
 			doc.setPid(dstPid);
 			doc.setCreator(login_user.getId());
 			//set createTime
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-			String createTime = df.format(new Date());// new Date()为获取当前系统时间
-			doc.setCreateTime(createTime);
+			long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
+			doc.setCreateTime(nowTimeStamp);
 			doc.setState(2);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//set LockBy
-			long lockTime = new Date().getTime() + 24*60*60*1000;
+			long lockTime = nowTimeStamp + 24*60*60*1000;
 			doc.setLockTime(lockTime);	//Set lockTime
 			if(reposService.addDoc(doc) == 0)
 			{
