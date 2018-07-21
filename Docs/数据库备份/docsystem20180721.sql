@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 2018-07-21 12:04:26
+-- Generation Time: 2018-07-21 12:21:38
 -- 服务器版本： 10.1.33-MariaDB
 -- PHP Version: 7.2.6
 
@@ -105,7 +105,7 @@ CREATE TABLE `repos` (
   `MENU` varchar(5000) DEFAULT NULL,
   `PWD` varchar(20) DEFAULT NULL,
   `OWNER` int(11) DEFAULT NULL,
-  `CREATE_TIME` varchar(100) DEFAULT NULL
+  `CREATE_TIME` bigint(20) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
