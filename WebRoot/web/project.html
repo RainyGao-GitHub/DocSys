@@ -872,7 +872,7 @@
 		}
 		
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
-		function reuploadAllFailedDocs()
+		function reuploadFailDocs()
 		{
 			var firstFailedIndex = -1;
 			//设置uploadEnd和一些影响uploadDoc的参数
@@ -941,12 +941,12 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><i class='el-icon-close closeBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reupload-fail-docs' onclick='reuploadFailDocs()'>重传</span><i class='el-icon-close closeBtn'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
 				checkAndDrawUploadItems(SubContextList);
-		    }
+		   	}
       	}
       	
       	//增加上传文件
@@ -1600,6 +1600,8 @@
 			if(SubContext.uploadEn == false)
 			{
 				console.log("uploadDoc() uploadEn: false");
+				index++;
+				uploadNextDoc();
 				return;
 			}
 			
@@ -1836,10 +1838,20 @@
             },
             getUploadStatus: function(){
             	return getUploadStatus();
-            }           
+            },
+            reuploadFailDocs: function(){
+            	return reuploadFailDocs();
+            },
         };
     })();
 
+	//Re Upload Fail Docs
+    function reuploadFailDocs()
+    {
+    	console.log("reuploadFailDocs() ");
+    	DocUpload.reuploadFailDocs();    	
+    }
+    
 	//Stop Upload
 	function stopUpload()
 	{
