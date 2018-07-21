@@ -33,7 +33,7 @@ public class Repos {
 
     private Integer owner;
 
-    private String createTime;
+    private Long createTime;
 
     public Integer getId() {
         return id;
@@ -163,11 +163,11 @@ public class Repos {
         this.owner = owner;
     }
 
-    public String getCreateTime() {
+    public Long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime == null ? null : createTime.trim();
+    public void setCreateTime(Long createTime) {
+        this.createTime = createTime;
     }
 }
