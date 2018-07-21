@@ -1028,7 +1028,19 @@
 		    		//console.log("index:" + i);
 		    		var SubContext = SubContextList[i];
 		    		//console.log(SubContext);
-		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+"><a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a><label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label><i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload()'></i><div class='el-progress el-progress--line'><div class='el-progress-bar'><div class='el-progress-bar__outer' ><div class='el-progress-bar__inner'></div></div></div><div class='el-progress__text' style='font-size: 12.8px;'></div></div></li>";
+		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
+		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
+		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
+		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload()'></i>"+
+		    				"<div class='el-progress el-progress--line'>"+
+		    					"<div class='el-progress-bar'>"+
+		    						"<div class='el-progress-bar__outer' >"+
+		    							"<div class='el-progress-bar__inner'></div>"+
+		    						"</div>"+
+		    					"</div>"+
+		    					"<div class='el-progress__text' style='font-size: 12.8px;'></div>"+
+		    				"</div>"+
+		    			  "</li>";
 		    		//已绘制个数增1
 		    		drawedNum++;	    		
 				}
