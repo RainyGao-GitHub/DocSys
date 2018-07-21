@@ -7,6 +7,10 @@ public class Doc {
 
     private Integer type;
 
+    private Integer size;
+
+    private String checkSum;
+
     private String path;
 
     private Integer pid;
@@ -17,7 +21,11 @@ public class Doc {
 
     private Integer creator;
 
-    private String createTime;
+    private Long createTime;
+
+    private Integer latestEditor;
+
+    private Long latestEditTime;
 
     private Integer state;
 
@@ -49,6 +57,22 @@ public class Doc {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getCheckSum() {
+        return checkSum;
+    }
+
+    public void setCheckSum(String checkSum) {
+        this.checkSum = checkSum == null ? null : checkSum.trim();
     }
 
     public String getPath() {
@@ -91,12 +115,28 @@ public class Doc {
         this.creator = creator;
     }
 
-    public String getCreateTime() {
+    public Long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime == null ? null : createTime.trim();
+    public void setCreateTime(Long createTime) {
+        this.createTime = createTime;
+    }
+
+    public Integer getLatestEditor() {
+        return latestEditor;
+    }
+
+    public void setLatestEditor(Integer latestEditor) {
+        this.latestEditor = latestEditor;
+    }
+
+    public Long getLatestEditTime() {
+        return latestEditTime;
+    }
+
+    public void setLatestEditTime(Long latestEditTime) {
+        this.latestEditTime = latestEditTime;
     }
 
     public Integer getState() {
