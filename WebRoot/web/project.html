@@ -803,11 +803,18 @@
         var totalNum = 0; 
  		var SubContextList = []; //文件上传上下文List，用于记录单个文件的上传情况，在开始上传的时候初始化
         var vid = 0;
- 		var FailList = [];
-        
+ 		
         //状态机变量，用于实现异步对话框的实现
         var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
         var uploadErrorConfirmSet = 0; //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传		
+        
+        //vars for reupload
+        var reuploadFlag = false;
+        var reuploadCount = 0; 
+        var reuploadTotalNum = 0;
+        var reuploadFailNum = 0;
+        var reuploadSuccessNum = 0;
+        var reuploadedNum = 0;
         
         //标准Java成员操作接口
         function getUploadStatus()
@@ -1032,7 +1039,7 @@
 		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
 		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
-		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload()'></i>"+
+		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
 		    					"<div class='el-progress-bar'>"+
 		    						"<div class='el-progress-bar__outer' >"+
@@ -1278,8 +1285,16 @@
       	function uploadErrorHandler(FileName,errMsg)
       	{
       		console.log("uploadErrorHandler() "+ FileName + " " + errMsg);
-      		failNum++;
-      		uploadedNum++;
+      		if(reuploadFlag == false)
+      		{
+      			failNum++;
+      			uploadedNum++;
+      		}
+      		else
+      		{
+      			reuploadFailNum++;
+      			reuploadedNum++;
+      		}
     		//设置上传状态
 			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
@@ -1292,8 +1307,16 @@
       	function uploadErrorAbortHandler(FileName,errMsg)
       	{
       		console.log("uploadErrorAbortHandler() "+ FileName + " " + errMsg);
-      		failNum++;
-      		uploadedNum++;
+      		if(reuploadFlag == false)
+      		{
+      			failNum++;
+      			uploadedNum++;
+      		}
+      		else
+      		{
+      			reuploadFailNum++;
+      			reuploadedNum++;
+      		}
     		//设置上传状态
 			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
@@ -1307,8 +1330,16 @@
       	{
       		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
       		successNum++;
-      		uploadedNum++;
-			SubContextList[index].state = 2;	//上传结束
+	      	if(reuploadFlag == false)
+      		{	
+	      		uploadedNum++;
+      		}
+	      	else
+	      	{
+	      		reuploadSuccessNum++;
+	      		reuploadedNum++;
+	      	}
+	      	SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "success";
       		SubContextList[index].msgInfo = msgInfo;
 			SubContextList[index].uploadEn = false;
@@ -1553,20 +1584,37 @@
       	
       	function updateUploadListTitle()
       	{
-      		var uploadingIndex = index + 1;
-	      	$(".upload-list-title").text("正在上传   " + uploadingIndex + " / " + totalNum);
+      		if(reuploadFlag == false)
+      		{
+      			var uploadingIndex = index + 1;
+	      		$(".upload-list-title").text("正在上传   " + uploadingIndex + " / " + totalNum);
+      		}
+      		else
+      		{
+      			var reuploadingIndex = reuploadCount;
+      			$(".upload-list-title").text("正在上传   " + reuploadingIndex + " / " + reuploadTotalNum);
+      		}
       	}
       	
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
 		function reuploadFailDocs()
 		{
+			reuploadFlag = true;
+			reuploadCount = 0; 
+			reuploadTotalNum = 0;
+	        reuploadFailNum = 0;
+	        reuploadSuccessNum = 0;
+	        reuploadedNum = 0;
+			
 			var firstFailedIndex = -1;
+	        
 			//设置uploadEnd和一些影响uploadDoc的参数
 			for(i=0;i<totalNum;i++)
 			{
 				SubContext = SubContextList[i];
 				if(SubContext.state != 2)
 				{
+					reuploadTotalNum ++;
 					if(-1 == firstFailedIndex)
 					{
 						firstFailedIndex = i;
@@ -1586,6 +1634,8 @@
 				}
 			}
 			
+			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
+
 			//reset some important settings
 			isUploading = true;
 			stopUploadFlag = false;
@@ -1635,8 +1685,12 @@
     		
     		//设置上传状态
     		if(0 == SubContext.state)
-    		{    			
+    		{   
 				SubContext.state = 1;	//上传中
+    			if(true == reuploadFlag)
+    			{
+    				reuploadCount++;
+    			}
 				
 				updateUploadListTitle();
 				
@@ -1821,6 +1875,7 @@
     	
 		function stopUpload(index)
 		{
+			console.log("stopUpload() index:" + index ,SubContextList[index]);
 			SubContextList[index].stopUploadFlag = true;
 		}
 		
@@ -1862,9 +1917,9 @@
     }
     
 	//Stop Upload
-	function stopUpload()
+	function stopUpload(index)
 	{
-    	var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
+    	//var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
     	console.log("stopUpload " + index);
     	DocUpload.stopUpload(index);
     }
