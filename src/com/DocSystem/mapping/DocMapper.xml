@@ -5,12 +5,16 @@
     <id column="ID" jdbcType="INTEGER" property="id" />
     <result column="NAME" jdbcType="VARCHAR" property="name" />
     <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="SIZE" jdbcType="INTEGER" property="size" />
+    <result column="CHECK_SUM" jdbcType="VARCHAR" property="checkSum" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
     <result column="PID" jdbcType="INTEGER" property="pid" />
     <result column="VID" jdbcType="INTEGER" property="vid" />
     <result column="PWD" jdbcType="VARCHAR" property="pwd" />
     <result column="CREATOR" jdbcType="INTEGER" property="creator" />
-    <result column="CREATE_TIME" jdbcType="VARCHAR" property="createTime" />
+    <result column="CREATE_TIME" jdbcType="BIGINT" property="createTime" />
+    <result column="LATEST_EDITOR" jdbcType="INTEGER" property="latestEditor" />
+    <result column="LATEST_EDIT_TIME" jdbcType="BIGINT" property="latestEditTime" />
     <result column="STATE" jdbcType="INTEGER" property="state" />
     <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
     <result column="LOCK_TIME" jdbcType="BIGINT" property="lockTime" />
@@ -19,7 +23,8 @@
     <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE, LOCK_BY, LOCK_TIME
+    ID, NAME, TYPE, SIZE, CHECK_SUM, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, LATEST_EDITOR, 
+    LATEST_EDIT_TIME, STATE, LOCK_BY, LOCK_TIME
   </sql>
   <sql id="Blob_Column_List">
     CONTENT
@@ -38,15 +43,17 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.Doc">
     insert into doc (ID, NAME, TYPE, 
-      PATH, PID, VID, PWD, 
-      CREATOR, CREATE_TIME, STATE, 
-      LOCK_BY, LOCK_TIME, CONTENT
-      )
+      SIZE, CHECK_SUM, PATH, 
+      PID, VID, PWD, CREATOR, 
+      CREATE_TIME, LATEST_EDITOR, LATEST_EDIT_TIME, 
+      STATE, LOCK_BY, LOCK_TIME, 
+      CONTENT)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{path,jdbcType=VARCHAR}, #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, 
-      #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=VARCHAR}, #{state,jdbcType=INTEGER}, 
-      #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT}, #{content,jdbcType=LONGVARCHAR}
-      )
+      #{size,jdbcType=INTEGER}, #{checkSum,jdbcType=VARCHAR}, #{path,jdbcType=VARCHAR}, 
+      #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, #{creator,jdbcType=INTEGER}, 
+      #{createTime,jdbcType=BIGINT}, #{latestEditor,jdbcType=INTEGER}, #{latestEditTime,jdbcType=BIGINT}, 
+      #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT}, 
+      #{content,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
     insert into doc
@@ -59,6 +66,12 @@
       </if>
       <if test="type != null">
         TYPE,
+      </if>
+      <if test="size != null">
+        SIZE,
+      </if>
+      <if test="checkSum != null">
+        CHECK_SUM,
       </if>
       <if test="path != null">
         PATH,
@@ -77,6 +90,12 @@
       </if>
       <if test="createTime != null">
         CREATE_TIME,
+      </if>
+      <if test="latestEditor != null">
+        LATEST_EDITOR,
+      </if>
+      <if test="latestEditTime != null">
+        LATEST_EDIT_TIME,
       </if>
       <if test="state != null">
         STATE,
@@ -101,6 +120,12 @@
       <if test="type != null">
         #{type,jdbcType=INTEGER},
       </if>
+      <if test="size != null">
+        #{size,jdbcType=INTEGER},
+      </if>
+      <if test="checkSum != null">
+        #{checkSum,jdbcType=VARCHAR},
+      </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
@@ -117,7 +142,13 @@
         #{creator,jdbcType=INTEGER},
       </if>
       <if test="createTime != null">
-        #{createTime,jdbcType=VARCHAR},
+        #{createTime,jdbcType=BIGINT},
+      </if>
+      <if test="latestEditor != null">
+        #{latestEditor,jdbcType=INTEGER},
+      </if>
+      <if test="latestEditTime != null">
+        #{latestEditTime,jdbcType=BIGINT},
       </if>
       <if test="state != null">
         #{state,jdbcType=INTEGER},
@@ -142,6 +173,12 @@
       <if test="type != null">
         TYPE = #{type,jdbcType=INTEGER},
       </if>
+      <if test="size != null">
+        SIZE = #{size,jdbcType=INTEGER},
+      </if>
+      <if test="checkSum != null">
+        CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
+      </if>
       <if test="path != null">
         PATH = #{path,jdbcType=VARCHAR},
       </if>
@@ -158,7 +195,13 @@
         CREATOR = #{creator,jdbcType=INTEGER},
       </if>
       <if test="createTime != null">
-        CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+        CREATE_TIME = #{createTime,jdbcType=BIGINT},
+      </if>
+      <if test="latestEditor != null">
+        LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
+      </if>
+      <if test="latestEditTime != null">
+        LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
       </if>
       <if test="state != null">
         STATE = #{state,jdbcType=INTEGER},
@@ -179,12 +222,16 @@
     update doc
     set NAME = #{name,jdbcType=VARCHAR},
       TYPE = #{type,jdbcType=INTEGER},
+      SIZE = #{size,jdbcType=INTEGER},
+      CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
       PID = #{pid,jdbcType=INTEGER},
       VID = #{vid,jdbcType=INTEGER},
       PWD = #{pwd,jdbcType=VARCHAR},
       CREATOR = #{creator,jdbcType=INTEGER},
-      CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      CREATE_TIME = #{createTime,jdbcType=BIGINT},
+      LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
+      LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
       STATE = #{state,jdbcType=INTEGER},
       LOCK_BY = #{lockBy,jdbcType=INTEGER},
       LOCK_TIME = #{lockTime,jdbcType=BIGINT},
@@ -195,12 +242,16 @@
     update doc
     set NAME = #{name,jdbcType=VARCHAR},
       TYPE = #{type,jdbcType=INTEGER},
+      SIZE = #{size,jdbcType=INTEGER},
+      CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
       PID = #{pid,jdbcType=INTEGER},
       VID = #{vid,jdbcType=INTEGER},
       PWD = #{pwd,jdbcType=VARCHAR},
       CREATOR = #{creator,jdbcType=INTEGER},
-      CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+      CREATE_TIME = #{createTime,jdbcType=BIGINT},
+      LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
+      LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
       STATE = #{state,jdbcType=INTEGER},
       LOCK_BY = #{lockBy,jdbcType=INTEGER},
       LOCK_TIME = #{lockTime,jdbcType=BIGINT}
@@ -218,6 +269,12 @@
       <if test="type != null">
         TYPE,
       </if>
+      <if test="size != null">
+        SIZE,
+      </if>
+      <if test="checkSum != null">
+        CHECK_SUM,
+      </if>
       <if test="path != null">
         PATH,
       </if>
@@ -227,6 +284,18 @@
       <if test="vid != null">
         VID,
       </if>
+      <if test="creator != null">
+		CREATOR,
+	  </if>
+	  <if test="createTime != null">
+		CREATE_TIME,
+	  </if>
+	  <if test="latestEditor != null">
+		LATEST_EDITOR,
+	  </if>
+	  <if test="latestEditTime != null">
+		LATEST_EDIT_TIME,
+	  </if>
       <if test="state != null">
         STATE,
       </if>
@@ -250,6 +319,12 @@
       <if test="type != null">
         #{type,jdbcType=INTEGER},
       </if>
+      <if test="size != null">
+        #{size,jdbcType=INTEGER},
+      </if>
+      <if test="checkSum != null">
+        #{checkSum,jdbcType=VARCHAR},
+      </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
@@ -259,6 +334,18 @@
       <if test="vid != null">
         #{vid,jdbcType=INTEGER},
       </if>
+	  <if test="creator != null">
+	  	#{creator,jdbcType=INTEGER},
+	  </if>
+	  <if test="createTime != null">
+		#{createTime,jdbcType=BIGINT},
+	  </if>
+	  <if test="latestEditor != null">
+		#{latestEditor,jdbcType=INTEGER},
+	  </if>
+	  <if test="latestEditTime != null">
+	  	#{latestEditTime,jdbcType=BIGINT},
+	  </if>
       <if test="state != null">
         #{state,jdbcType=INTEGER},
       </if>
@@ -288,6 +375,12 @@
     <if test="type != null">
     	and TYPE = #{type,jdbcType=INTEGER}
     </if>
+    <if test="size != null">
+        SIZE = #{size,jdbcType=INTEGER},
+    </if>
+    <if test="checkSum != null">
+        CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
+    </if>
     <if test="path != null">
         and PATH = #{path,jdbcType=VARCHAR}
     </if>
@@ -297,6 +390,18 @@
     <if test="vid != null">
         and VID = #{vid,jdbcType=INTEGER}
     </if>
+	<if test="creator != null">
+		CREATOR = #{creator,jdbcType=INTEGER},
+	</if>
+	<if test="createTime != null">
+		CREATE_TIME = #{createTime,jdbcType=BIGINT},
+	</if>
+	<if test="latestEditor != null">
+		LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
+	</if>
+	<if test="latestEditTime != null">
+		LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
+	</if>
     <if test="state != null">
         and STATE = #{state,jdbcType=INTEGER},
     </if>
