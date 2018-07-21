@@ -131,30 +131,15 @@
                 </div>
                 <div  class="uploadBox ">
 		            <ul style="display:none" class="el-upload-list el-upload-list--text">
-		            	<!--
-						<li class="el-upload-list__item is-success">
-							<a class="el-upload-list__item-name"><i class="el-icon-document"></i></a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close"></i>
-						</li> 
-						 <li class="el-upload-list__item is-uploading">
-							<a class="el-upload-list__item-name"></i><i class="el-icon-document"></i></a><label class="el-upload-list__item-status-label"><i class="el-icon-upload-success el-icon-circle-check"></i></label><i class="el-icon-close"></i>
-							<div class="el-progress el-progress--line">
-								<div class="el-progress-bar">
-									<div class="el-progress-bar__outer" >
-										<div class="el-progress-bar__inner">
-										</div>
-									</div>
-								</div>
-								<div class="el-progress__text" style="font-size: 12.8px;"></div>
-							</div>
-						</li>--> 
 					</ul>
 				</div>
             </div>
 
+			<!-- 
             <div id="container" class="m-copyright">
                 <p id="editTime">2017.7.7</p>   
             </div>
-            
+             -->
         </div>
         <div id="line" class="manual-line" ></div>
         <div class="manual-middle" style="display:none">
@@ -2072,7 +2057,7 @@
                     gReposName = gReposInfo.name;
                     gReposCreateTime = gReposInfo.createTime;
                     $("#projectName").text(gReposName);
-                    $("#editTime").text(gReposCreateTime);
+                    //$("#editTime").text(gReposCreateTime);
                     if(gReposType == 0)
                     {
                     	//alert("虚拟文件系统");
