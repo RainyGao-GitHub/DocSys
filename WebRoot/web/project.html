@@ -871,37 +871,6 @@
 			}
 		}
 		
-		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
-		function reuploadFailDocs()
-		{
-			var firstFailedIndex = -1;
-			//设置uploadEnd和一些影响uploadDoc的参数
-			for(i=0;i<totalNum;i++)
-			{
-				if(SubContextList[i].state != 2)
-				{
-					if(firstFailedIndex = -1)
-					{
-						firstFailedIndex = i;
-					}
-					SubContextList[i].uploadEn = true;
-					SubContextList[i].stopUploadFlag = false;
-					SubContextList[i].fileCoverConfirmSet = 0;
-					SubContextList[i].uploadErrorConfirmSet = 0;		
-				}
-			}
-			
-			//reset some important settings
-			isUploading = true;
-			stopUploadFlag = false;
-			fileCoverConfirmSet = 0;
-			uploadErrorConfirmSet = 0;
-			index = 0;
-			
-			//trigger uploadDoc
-			uploadDoc();
-		}
-		
 		//初始化DocUpload设置
       	function DocUploadInit(files,parentNode,parentId,vid)	//多文件移动函数
 		{
@@ -1588,6 +1557,46 @@
 	      	$(".upload-list-title").text("正在上传   " + uploadingIndex + " / " + totalNum);
       	}
       	
+		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
+		function reuploadFailDocs()
+		{
+			var firstFailedIndex = -1;
+			//设置uploadEnd和一些影响uploadDoc的参数
+			for(i=0;i<totalNum;i++)
+			{
+				SubContext = SubContextList[i];
+				if(SubContext.state != 2)
+				{
+					if(-1 == firstFailedIndex)
+					{
+						firstFailedIndex = i;
+					}
+					
+					SubContext.state = 0;
+
+					//StateMachine SMMain\SMSub
+		    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
+		    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
+					
+					SubContext.stopUploadFlag = false;
+					SubContext.fileCoverConfirmSet = 0;
+					SubContext.uploadErrorConfirmSet = 0;
+					
+					SubContext.uploadEn = true;
+				}
+			}
+			
+			//reset some important settings
+			isUploading = true;
+			stopUploadFlag = false;
+			fileCoverConfirmSet = 0;
+			uploadErrorConfirmSet = 0;
+
+			//trigger uploadDoc
+			index = firstFailedIndex;
+			uploadDoc();
+		}
+		
 		//uploadDoc接口，该接口是个递归调用
     	function uploadDoc()
     	{
