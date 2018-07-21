@@ -158,7 +158,7 @@ public class ReposController extends BaseController{
 	/****************   add a Repository ******************/
 	@RequestMapping("/addRepos.do")
 	public void addRepos(String name,String info, Integer type, String path, Integer verCtrl, String svnPath,String svnUser,String svnPwd, 
-			Integer verCtrl1, String svnPath1,String svnUser1,String svnPwd1, String createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+			Integer verCtrl1, String svnPath1,String svnUser1,String svnPwd1, Long createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path + " verCtrl: " + verCtrl  + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
