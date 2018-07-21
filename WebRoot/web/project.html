@@ -1064,7 +1064,7 @@
       	}
       	
       	//文件覆盖处理接口
-      	function fileCoverConfirm(FileName,msgInfo)
+      	function fileCoverConfirm(docName,msgInfo)
       	{
       		//检查当前目录下是否有同名文件或目录
   	 		var confirm = getFileCoverConfirmSetting();
@@ -1076,13 +1076,13 @@
 	  	 	}
 	  	 	else if(confirm == 2)
 	  	 	{
-	  	 		uploadErrorHandler(name,"文件" + name + " 已存在");
+	  	 		uploadErrorHandler(docName,"文件" + docName + " 已存在，自动跳过");
 	  	 		return;
 	  	 	}
 	  	 	else
 	  	 	{
 		        var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-		            	console.log("用户确认覆盖超时");
+		            	console.log("fileCoverConfirm() 是否覆盖 " + docName + ",用户确认超时,采用覆盖且后续自动覆盖");
 		            	SubContextList[index].fileCoverConfirmSet = 1; //覆盖
 		            	fileCoverConfirmSet = 1;
 		            	closeBootstrapDialog("fileCoverConfirm");
@@ -1091,18 +1091,18 @@
 		        
 	    	    qiao.bs.confirm({
 	    	    	id: 'fileCoverConfirm',
-	    	        msg: FileName + "已存在,是否覆盖?",
+	    	        msg: docName + "已存在,是否覆盖?",
 	    	        close: false,		
 	    	        okbtn: "替换",
 	    	        qubtn: "跳过",
 	    	    },function () {
-	    	    	//alert("点击了确定");
-	    	    	clearTimeout(fileCoverTimer);
+	               	console.log("fileCoverConfirm() 用户选择覆盖 " + docName);
+	       		 	clearTimeout(fileCoverTimer);
 	 	 			SubContextList[index].fileCoverConfirmSet = 1; //覆盖
 	  	 			if(index < (totalNum-1)) //后续还有才提示
 	  	 			{
 		  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-		 	            	console.log("用户确认超时,后续全部覆盖");
+		 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动覆盖，用户确认超时,后续自动覆盖");
 		 	            	fileCoverConfirmSet = 1;
 		 	            	closeBootstrapDialog("takeSameActionConfirm1");
 		 	            	uploadDoc(); //reEnter uploadDoc
@@ -1110,16 +1110,18 @@
 		 	            
 	  	 	    	    qiao.bs.confirm({
 	  	 	    	    	id: 'takeSameActionConfirm1',
-	  	 	    	        msg: "后续错误是否执行此操作？",
+	  	 	    	        msg: "后续已存在文件是否自动覆盖？",
 	  	 	    	        close: false,		
 	  	 	    	        okbtn: "是",
 	  	 	    	        qubtn: "否",
 	  	 	    	    },function () {
-	  	  	 				clearTimeout(fileCoverTimer1);
+	  	 	           		console.log("fileCoverConfirm() 后续已存在文件将自动覆盖");
+	  			 	    	clearTimeout(fileCoverTimer1);
 	  	 	    	    	fileCoverConfirmSet = 1;	//全局覆盖
 	  	  	 				uploadDoc(); //reEnter uploadDoc
 	  	  	 				return true;
 	  	 				},function(){
+	  	 		       		console.log("fileCoverConfirm() 后续已存在文件不自动覆盖");
 	  	 					clearTimeout(fileCoverTimer1);
 	  	 					uploadDoc(); //reEnter uploadDoc
 	  	  	 				return true;
@@ -1131,39 +1133,41 @@
 	  	 			}
 	    	    	return true;   
 	    	    },function(){
-	    	    	//alert("点击了取消");
+	    	    	console.log("fileCoverConfirm() 用户选择跳过上传 " + docName);
 	    	    	clearTimeout(fileCoverTimer);
 	
 	  	 			SubContextList[index].fileCoverConfirmSet = 2; //不覆盖
 	  	 			if(index < (totalNum-1)) //后续还有才提示 
 	  	 			{
 		  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
-		 	            	console.log("用户确认超时,后续全部跳过");
+		 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动跳过，用户确认超时，后续自动跳过！");
 		 	            	fileCoverConfirmSet = 2;
-		 	            	closeBootstrapDialog("takeSameActionConfirm2");
-		 	            	uploadDoc(); //reEnter uploadDoc
+		 	            	closeBootstrapDialog("takeSameActionConfirm2");	 	            	
+		 	            	uploadErrorHandler(docName,"后续已存在文件是否自动跳过，用户确认超时，跳过且后续自动跳过！");
 		 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
 	  	 				
 	  	 	    	    qiao.bs.confirm({
 	  	 	    	    	id: 'takeSameActionConfirm2',
-	  	 	    	        msg: "后续错误是否执行此操作？",
+	  	 	    	        msg: "？",
 	  	 	    	        close: false,		
 	  	 	    	        okbtn: "是",
 	  	 	    	        qubtn: "否",
 	  	 	    	    },function () {
+	  	 	    	    	console.log("fileCoverConfirm() 后续已存在文件自动跳过！");
 	  	 	    	    	clearTimeout(fileCoverTimer2);
 	  	 					fileCoverConfirmSet = 2;	//全局覆盖
-	  	  	 				uploadDoc(); //reEnter uploadDoc
+	  	 					uploadErrorHandler(docName,"文件已存在，跳过且后续自动跳过");
 	  	  	 				return true;
 	  	 				},function(){
+	  	 					console.log("fileCoverConfirm() 后续已存在文件不自动跳过！");
 	  	 	    	    	clearTimeout(fileCoverTimer2);
-	  	 					uploadDoc(); //reEnter uploadDoc
+	  						uploadErrorHandler(docName,"文件已存在，跳过但后续不自动跳过");
 	  	  	 				return true;
 	  	 				});			
 	  	 			}
 	  	 			else
 	  	 			{
-	  	 				uploadDoc(); //reEnter uploadDoc
+	  	 				uploadErrorHandler(docName,"文件已存在，跳过");
 	  	 			}
 	    	    	return true;
 	    	    });      		
