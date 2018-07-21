@@ -1599,33 +1599,82 @@
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
 		function reuploadFailDocs()
 		{
-			reuploadFlag = true;
-			reuploadCount = 0; 
-			reuploadTotalNum = 0;
-	        reuploadFailNum = 0;
-	        reuploadSuccessNum = 0;
-	        reuploadedNum = 0;
-			
-			var firstFailedIndex = -1;
+			if(false == reuploadFlag)
+			{
+				reuploadFlag = true;
+				reuploadCount = 0; 
+				reuploadTotalNum = 0;
+		        reuploadFailNum = 0;
+		        reuploadSuccessNum = 0;
+		        reuploadedNum = 0;
+
+		        //reset some important settings
+				isUploading = true;
+				stopUploadFlag = false;
+				fileCoverConfirmSet = 0;
+				uploadErrorConfirmSet = 0;
+			}
 	        
 			//设置uploadEnd和一些影响uploadDoc的参数
 			for(i=0;i<totalNum;i++)
 			{
-				SubContext = SubContextList[i];
+				setReuploadContext(i);
+			}
+			
+			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
+			
+			if(false == reuploadFlag)
+			{
+				//trigger uploadDoc
+				index = 0;
+				uploadDoc();
+			}
+		}
+		
+		function reuploadFailDoc(reuploadIndex)
+		{
+			if(false == reuploadFlag)
+			{
+				reuploadFlag = true;
+				reuploadCount = 0; 
+				reuploadTotalNum = 0;
+		        reuploadFailNum = 0;
+		        reuploadSuccessNum = 0;
+		        reuploadedNum = 0;
+		        
+		        //reset some important settings
+				isUploading = true;
+				stopUploadFlag = false;
+				fileCoverConfirmSet = 0;
+				uploadErrorConfirmSet = 0;
+			}
+			
+			setReuploadContext(reuploadIndex);
+			
+			if(false == reuploadFlag)
+			{
+				//trigger uploadDoc
+				index = reuploadIndex;
+				uploadDoc();
+			}
+		}
+		
+		function setReuploadContext(reuploadIndex)
+		{
+			SubContext = SubContextList[reuploadIndex];
+			
+			if(false == SubContext.uploadEn)
+			{
 				if(SubContext.state != 2)
 				{
 					reuploadTotalNum ++;
-					if(-1 == firstFailedIndex)
-					{
-						firstFailedIndex = i;
-					}
-					
+						
 					SubContext.state = 0;
-
+	
 					//StateMachine SMMain\SMSub
-		    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
-		    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
-					
+			    	SubContext.SMState = "init";	//uploadDoc状态机的主状态
+			    	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
+						
 					SubContext.stopUploadFlag = false;
 					SubContext.fileCoverConfirmSet = 0;
 					SubContext.uploadErrorConfirmSet = 0;
@@ -1633,18 +1682,6 @@
 					SubContext.uploadEn = true;
 				}
 			}
-			
-			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
-
-			//reset some important settings
-			isUploading = true;
-			stopUploadFlag = false;
-			fileCoverConfirmSet = 0;
-			uploadErrorConfirmSet = 0;
-
-			//trigger uploadDoc
-			index = firstFailedIndex;
-			uploadDoc();
 		}
 		
 		//uploadDoc接口，该接口是个递归调用
@@ -1916,6 +1953,13 @@
     	DocUpload.reuploadFailDocs();    	
     }
     
+	//Re Upload Fail Doc
+    function reuploadFailDoc(index)
+    {
+    	console.log("reuploadFailDoc() index:" + index);
+    	DocUpload.reuploadFailDoc();    	
+    }
+	
 	//Stop Upload
 	function stopUpload(index)
 	{
