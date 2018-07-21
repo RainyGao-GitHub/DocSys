@@ -1321,10 +1321,10 @@
       		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
       		//显示上传完成 
-      		var uploadEndInfo = "上传完成";
+      		var uploadEndInfo = "上传完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
-      			uploadEndInfo = "上传完成 ,成功 " + successNum + "个";
+      			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
       		}
       		$(".upload-list-title").text(uploadEndInfo);
       		
