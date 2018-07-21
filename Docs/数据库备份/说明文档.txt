@@ -91,3 +91,9 @@
 19、docsystem20180720.sql
 	1.09版本使用
 	Doc Add SIZE and CHECK_SUM
+
+20、docsystem20180721.sql
+	1.09版本使用
+	Doc Change createTime to long type
+	    Add LatestEditor and LatestEditTime
+	Repos Change createTime to long type 
