@@ -917,7 +917,7 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reupload-fail-docs' onclick='reuploadFailDocs()'>重传</span><i class='el-icon-close closeBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reupload-fail-docs' onclick='reuploadFailDocs()'>重传失败文件 </span><i class='el-icon-close closeBtn'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
@@ -1332,8 +1332,10 @@
       	function uploadSuccessHandler(name,msgInfo)
       	{
       		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
+      		
       		successNum++;
-	      	if(false == reuploadFlag)
+	      	
+      		if(false == reuploadFlag)
       		{	
 	      		uploadedNum++;
       		}
@@ -1374,6 +1376,10 @@
 					type : 'success',
 					time : 2000,
 				    });
+      		
+            //Reset some Flag
+			reuploadFlag = false;
+      	
       	}
       	
       	//uploadNextDoc，如果后续有未上传文件则上传下一个文件 
@@ -1659,6 +1665,7 @@
 			}
 			
 			setReuploadContext(reuploadIndex);
+			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
 			
 			if(false == reuploadFlag)
 			{
@@ -1678,6 +1685,7 @@
 		{
 			SubContext = SubContextList[reuploadIndex];
 			
+			console.log("setReuploadContext()",SubContext);
 			if(false == SubContext.uploadEn)
 			{
 				if(SubContext.state != 2)
@@ -1697,6 +1705,7 @@
 					SubContext.uploadEn = true;
 				}
 			}
+			console.log("setReuploadContext() 重传个数："+reuploadTotalNum);
 		}
 		
 		//uploadDoc接口，该接口是个递归调用
