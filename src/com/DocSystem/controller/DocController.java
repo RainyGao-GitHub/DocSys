@@ -1319,6 +1319,16 @@ public class DocController extends BaseController{
 				return;
 			}
 			unlock(); //线程锁
+			
+		}
+		
+		//为了避免执行到SVNcommit成功但数据库操作失败，所以先将checkSum更新掉
+		doc.setCheckSum(checkSum);
+		if(reposService.updateDoc(doc) == 0)
+		{
+			rt.setError("系统异常：操作数据库失败");
+			rt.setMsgData("updateDoc() update Doc CheckSum Failed");
+			return;
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -1371,10 +1381,10 @@ public class DocController extends BaseController{
 		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
-		doc.setCheckSum(checkSum);
 		doc.setState(0);	//
 		doc.setLockBy(0);	//
 		doc.setLockTime((long) 0);	//Set lockTime
+		doc.setCheckSum(checkSum);
 		if(reposService.updateDoc(doc) == 0)
 		{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
