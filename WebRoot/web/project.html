@@ -1038,6 +1038,7 @@
 		    		//console.log(SubContext);
 		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
 		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
+		    				"<a class='el-upload-list__item-reupload' onclick='reuploadFailDoc("+i+")'>重传 </a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -1601,7 +1602,6 @@
 		{
 			if(false == reuploadFlag)
 			{
-				reuploadFlag = true;
 				reuploadCount = 0; 
 				reuploadTotalNum = 0;
 		        reuploadFailNum = 0;
@@ -1629,13 +1629,19 @@
 				index = 0;
 				uploadDoc();
 			}
+			else
+			{
+				reuploadFlag = true;
+				
+				//显示上传中的Index
+				updateUploadListTitle();
+			}
 		}
 		
 		function reuploadFailDoc(reuploadIndex)
 		{
 			if(false == reuploadFlag)
 			{
-				reuploadFlag = true;
 				reuploadCount = 0; 
 				reuploadTotalNum = 0;
 		        reuploadFailNum = 0;
@@ -1653,9 +1659,15 @@
 			
 			if(false == reuploadFlag)
 			{
+				reuploadFlag = true;
 				//trigger uploadDoc
 				index = reuploadIndex;
 				uploadDoc();
+			}
+			else
+			{
+				//显示上传中的Index
+				updateUploadListTitle();
 			}
 		}
 		
@@ -1729,6 +1741,7 @@
     				reuploadCount++;
     			}
 				
+				//显示上传中的Index
 				updateUploadListTitle();
 				
 				//get the file from the SubContextList
@@ -1942,6 +1955,9 @@
             },
             reuploadFailDocs: function(){
             	return reuploadFailDocs();
+            },
+            reuploadFailDoc: function(id){
+            	return reuploadFailDocs(id);
             },
         };
     })();
