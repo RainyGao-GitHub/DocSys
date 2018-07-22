@@ -2364,6 +2364,11 @@ public class DocController extends BaseController{
 	//Create Ref Data (File or Dir), both support Real Doc and Virtual Doc
 	private boolean createRefRealDoc(String reposRPath,String reposRefRPath,String parentPath, String name, Integer type, ReturnAjax rt)
 	{
+		//RefDoc本意是希望提升后续文件修改后，diff部分的commit速度，但事实上是人们通常只会去修改文本文件（通常较小），所以就显得没有那么必要
+		//另外，即使真的需要也将考虑只放在新增文件只会，因为新增文件可能是大批量的文件上传，速度是需要优先考虑的
+		System.out.println("createRefDoc() OK");
+		return false;
+		/*
 		String localParentPath =  reposRPath + parentPath;
 		String localRefParentPath =  reposRefRPath + parentPath;
 		String localDocPath = localParentPath + name;
@@ -2398,6 +2403,7 @@ public class DocController extends BaseController{
 		}
 		System.out.println("createRefDoc() OK");
 		return true;
+		*/
 	}
 	
 	private boolean updateRefRealDoc(String reposRPath, String reposRefRPath,
