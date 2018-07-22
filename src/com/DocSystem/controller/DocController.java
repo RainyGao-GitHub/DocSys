@@ -2388,7 +2388,7 @@ public class DocController extends BaseController{
 		else
 		{
 			try {
-				copyFile(localDocPath, localRefDocPath, false);
+				copyFile(localDocPath, localRefDocPath, true);
 			} catch (IOException e) {
 				System.out.println("createRefDoc() copy " + localDocPath + " to " + localRefDocPath + "Failed!");
 				e.printStackTrace();
