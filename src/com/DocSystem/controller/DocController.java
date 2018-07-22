@@ -2387,12 +2387,6 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(isFileExist(localRefDocPath) == true)
-			{
-				System.out.println("createRefDoc() 文件 " +localRefDocPath + " 已存在！");
-				rt.setMsgData("createRefDoc() 文件 " +localRefDocPath + " 已存在！");
-				return false;
-			}
 			try {
 				copyFile(localDocPath, localRefDocPath, false);
 			} catch (IOException e) {
@@ -2402,6 +2396,7 @@ public class DocController extends BaseController{
 				return false;
 			}
 		}
+		System.out.println("createRefDoc() OK");
 		return true;
 	}
 	
@@ -2760,11 +2755,25 @@ public class DocController extends BaseController{
 				{
 					String oldFilePath = getReposRefRealPath(repos) + docRPath;
 					String newFilePath = docFullRPath;
-					if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
+					
+					File oldFile = new File(oldFilePath);
+					if(false == oldFile.exists())
 					{
-						System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
-						System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + name  + " oldFilePath:" + oldFilePath + " newFilePath:" + newFilePath);
-						return false;
+						if(false == svnUtil.svnAddFile(parentPath,name,newFilePath,commitMsg))
+						{
+							System.out.println("svnRealDocCommit() " + name + " svnAddFile失败！");
+							System.out.println("svnRealDocCommit() svnUtil.svnAddFile " + " parentPath:" + parentPath  + " name:" + name  + " newFilePath:" + newFilePath);
+							return false;
+						}	
+					}
+					else 
+					{
+						if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
+						{
+							System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
+							System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + name  + " oldFilePath:" + oldFilePath + " newFilePath:" + newFilePath);
+							return false;
+						}
 					}
 				}
 			} catch (SVNException e) {
