@@ -1612,7 +1612,16 @@
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
 		function reuploadFailDocs()
 		{
-			if(false == reuploadFlag)
+			//首次上传未结束
+			if(false == reuploadFlag && true == isUploading)
+			{
+				console.log("reuploadFailDocs() 首次上传未结束,不能重传失败文件");
+				return;
+			}
+			
+			reuploadFlag = true;
+			
+			if(false == isUploading)
 			{
 				reuploadCount = 0; 
 				reuploadTotalNum = 0;
@@ -1621,7 +1630,6 @@
 		        reuploadedNum = 0;
 
 		        //reset some important settings
-				isUploading = true;
 				stopUploadFlag = false;
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
@@ -1637,7 +1645,7 @@
 			
 			if(false == reuploadFlag)
 			{
-				reuploadFlag = true;
+				isUploading = true;
 				//trigger uploadDoc
 				index = 0;
 				uploadDoc();
@@ -1651,7 +1659,16 @@
 		
 		function reuploadFailDoc(reuploadIndex)
 		{
-			if(false == reuploadFlag)
+			//首次上传未结束
+			if(false == reuploadFlag && true == isUploading)
+			{
+				console.log("reuploadFailDoc() 首次上传未结束,不能重传失败文件");
+				return;
+			}
+			
+			reuploadFlag = true;
+			
+			if(false == isUploading)
 			{
 				reuploadCount = 0; 
 				reuploadTotalNum = 0;
@@ -1660,7 +1677,6 @@
 		        reuploadedNum = 0;
 		        
 		        //reset some important settings
-				isUploading = true;
 				stopUploadFlag = false;
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
@@ -1669,9 +1685,9 @@
 			setReuploadContext(reuploadIndex);
 			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
 			
-			if(false == reuploadFlag)
+			if(false == isUploading)
 			{
-				reuploadFlag = true;
+				isUploading = true;
 				//trigger uploadDoc
 				index = reuploadIndex;
 				uploadDoc();
