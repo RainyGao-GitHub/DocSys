@@ -1286,13 +1286,14 @@
       	function uploadErrorHandler(FileName,errMsg)
       	{
       		console.log("uploadErrorHandler() "+ FileName + " " + errMsg);
-      		if(reuploadFlag == false)
+      		if(false == reuploadFlag)
       		{
       			failNum++;
       			uploadedNum++;
       		}
       		else
       		{
+          		console.log("uploadErrorHandler() 重传出错");
       			reuploadFailNum++;
       			reuploadedNum++;
       		}
@@ -1308,13 +1309,14 @@
       	function uploadErrorAbortHandler(FileName,errMsg)
       	{
       		console.log("uploadErrorAbortHandler() "+ FileName + " " + errMsg);
-      		if(reuploadFlag == false)
+      		if(false == reuploadFlag)
       		{
       			failNum++;
       			uploadedNum++;
       		}
       		else
       		{
+          		console.log("uploadErrorAbortHandler() 重传出错");
       			reuploadFailNum++;
       			reuploadedNum++;
       		}
@@ -1331,12 +1333,13 @@
       	{
       		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
       		successNum++;
-	      	if(reuploadFlag == false)
+	      	if(false == reuploadFlag)
       		{	
 	      		uploadedNum++;
       		}
 	      	else
 	      	{
+	      		console.log("uploadErrorAbortHandler() 重传出错");
 	      		reuploadSuccessNum++;
 	      		reuploadedNum++;
 	      	}
@@ -1938,7 +1941,7 @@
 		function stopAllUpload()
 		{
 			//将未上传的全部设置
-			for(i=inedx;i<totalNum;i++)
+			for(i=index;i<totalNum;i++)
 			{
 				SubContextList[i].stopUploadFlag = true;
 			}
