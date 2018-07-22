@@ -834,6 +834,7 @@ public class SVNUtil {
 		SVNCommitInfo commitInfo = commit(editor);
 		if(commitInfo == null)
 		{
+			System.out.println("svnModifyFile() commit failed ");
 			return false;
 		}
 
