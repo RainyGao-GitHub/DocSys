@@ -1296,7 +1296,7 @@
       			reuploadFailNum++;
       			reuploadedNum++;
       		}
-    		//设置上传状态
+      		//设置上传状态
 			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
 			SubContextList[index].msgInfo = errMsg;
@@ -1787,6 +1787,8 @@
 			form.append("parentId", SubContext.realParentId);
 			form.append("reposId", SubContext.vid);
 			
+			var name = SubContext.name;
+			
 			//新建http异步请求
 			var xhr = new XMLHttpRequest();
 			
@@ -1847,13 +1849,17 @@
 			//设置异步上传进度回调处理函数
 			xhr.upload.onprogress = function(evt) {
 				//由于xhr.abort不能立即结束上传，因此会导致uploadErrorHandler多次被调用而导致状态机混乱，因此目前处理方式只对未开始上传的文件有效
-				//if(stopUploadFlag == true || SubContextList[index].stopUploadFlag == true)
-				//{
-				//	console.log("stopUploadFlag: " + stopUploadFlag + " SubContextList[index].stopUploadFlag:" + SubContextList[index].stopUploadFlag);	
-				//		xhr.abort(); //结束上传	
-				//		uploadErrorHandler(name, name + " 取消上传！");
-				//	return;
-				//}
+				if(stopUploadFlag == true || SubContextList[index].stopUploadFlag == true)
+				{
+					console.log("stopUploadFlag: " + stopUploadFlag + " SubContextList[index].stopUploadFlag:" + SubContextList[index].stopUploadFlag);	
+					if(true == SubContextList[index].stopUploadFlag)	//we need to promise there is only one abort for one doc upload
+					{
+						SubContextList[index].stopUploadFlag = false;
+						xhr.abort(); //结束当前上传	 
+						uploadErrorHandler(name, name + " 取消上传！");
+					}
+					return;
+				}
 				
 				//文件上传进度
 				//侦查附件上传情况  
@@ -1931,6 +1937,11 @@
 		
 		function stopAllUpload()
 		{
+			//将未上传的全部设置
+			for(i=inedx;i<totalNum;i++)
+			{
+				SubContextList[i].stopUploadFlag = true;
+			}
 			stopUploadFlag = true;
 		}
 		
