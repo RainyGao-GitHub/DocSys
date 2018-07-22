@@ -103,7 +103,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "addDoc " + name;
 		}
-		addDoc(name,content,type,null,reposId,parentId,commitMsg,commitUser,login_user,rt);
+		addDoc(name,content,type,null,0,"",reposId,parentId,commitMsg,commitUser,login_user,rt);
 		
 		writeJson(rt, response);	
 	}
@@ -152,7 +152,7 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(String name,Integer type,String size,String checkSum,Integer reposId,Integer parentId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(String name,Integer type,Integer size,String checkSum,Integer reposId,Integer parentId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addDoc name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -176,7 +176,7 @@ public class DocController extends BaseController{
 			//检查checkSum是否相同
 			if(type == 1)
 			{
-				if(isDocCheckSumMatched(doc,size,checkSum) == true)
+				if(true == isDocCheckSumMatched(doc,size,checkSum))
 				{
 					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
 					rt.setMsgData("1");
@@ -190,15 +190,19 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private boolean isDocCheckSumMatched(Doc doc,String size, String checkSum) {
-		// TODO Auto-generated method stub
+	private boolean isDocCheckSumMatched(Doc doc,Integer size, String checkSum) {
+		System.out.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
+		if(size.equals(doc.getSize()) && checkSum.equals(doc.getCheckSum()))
+		{
+			return true;
+		}
 		return false;
 	}
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile, Integer isAdd,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc reposId:" + reposId + " parentId:" + parentId  + " isAdd:" + isAdd  + " docId:" + docId + " filePath:" + filePath);
+	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer isAdd,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("uploadDoc size:" +size+ "checkSum" + checkSum + "reposId:" + reposId + " parentId:" + parentId  + " isAdd:" + isAdd  + " docId:" + docId + " filePath:" + filePath);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -287,11 +291,11 @@ public class DocController extends BaseController{
 			}
 			if(isAdd == 1)	//新建文件则新建记录，否则
 			{
-				addDoc(fileName,null, 1, uploadFile, reposId, parentId, commitMsg, commitUser, login_user, rt);
+				addDoc(fileName,null, 1, uploadFile,size, checkSum,reposId, parentId, commitMsg, commitUser, login_user, rt);
 			}
 			else
 			{
-				updateDoc(docId, uploadFile, reposId, parentId, commitMsg, commitUser, login_user, rt);
+				updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, commitMsg, commitUser, login_user, rt);
 			}	
 		}
 		else
@@ -1037,7 +1041,7 @@ public class DocController extends BaseController{
 	/********************************** Functions For Application Layer
 	 * @param content ****************************************/
 	//底层addDoc接口
-	private void addDoc(String name, String content, Integer type, MultipartFile uploadFile,Integer reposId,Integer parentId, 
+	private void addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
@@ -1090,6 +1094,8 @@ public class DocController extends BaseController{
 			//新建doc记录,并锁定
 			doc.setName(name);
 			doc.setType(type);
+			doc.setSize(fileSize);
+			doc.setCheckSum(checkSum);
 			doc.setContent(content);
 			doc.setPath(parentPath);
 			doc.setVid(reposId);
@@ -1297,7 +1303,7 @@ public class DocController extends BaseController{
 	}
 
 	//底层updateDoc接口
-	private void updateDoc(Integer docId, MultipartFile uploadFile,Integer reposId,Integer parentId, 
+	private void updateDoc(Integer docId, MultipartFile uploadFile,Integer fileSize,String checkSum,Integer reposId,Integer parentId, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
@@ -1362,11 +1368,16 @@ public class DocController extends BaseController{
 				return;
 			}
 		}
-				
-		//unlockDoc
-		if(unlockDoc(docId,login_user) == false)
+		
+		//updateDoc Info and unlock
+		doc.setSize(fileSize);
+		doc.setCheckSum(checkSum);
+		doc.setState(0);	//
+		doc.setLockBy(0);	//
+		doc.setLockTime((long) 0);	//Set lockTime
+		if(reposService.updateDoc(doc) == 0)
 		{
-			rt.setError("不可恢复系统错误：unlockDoc Failed");
+			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
 			return;
 		}
 	}
