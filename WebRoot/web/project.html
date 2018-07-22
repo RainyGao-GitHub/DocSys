@@ -809,7 +809,7 @@
         var uploadErrorConfirmSet = 0; //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传		
         
         //vars for reupload
-        var reuploadFlag = false;
+        var reuploadFlag = false; //false: 正常上传  true: 重传
         var reuploadCount = 0; 
         var reuploadTotalNum = 0;
         var reuploadFailNum = 0;
@@ -942,7 +942,7 @@
 			}
 			totalNum += totNum;
 			
-			updateUploadListTitle();
+			showUploadingInfo();
 			
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			checkAndDrawUploadItems(SubContextList);
@@ -1351,35 +1351,38 @@
 			SubContextList[index].uploadEn = false;
 			uploadNextDoc();
       	}
-      	
-      	//uploadEndHandler
-      	function uploadEndHandler()
-      	{
-      		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
-			
-      		//显示上传完成 
-      		var uploadEndInfo = "上传完成(共" + totalNum +"个)";
+
+  		function showUploadEndInfo()
+  		{
+  			var uploadEndInfo = "上传完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
       			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
       		}
       		$(".upload-list-title").text(uploadEndInfo);
       		
-      		//清除文件控件
-			$("#uploadFiles").val("");
-  			$("#uploadDir").val("");
-            //清除上传中标志
-            isUploading = false;
             // 普通消息提示条
 			bootstrapQ.msg({
 					msg : '上传结束！',
 					type : 'success',
 					time : 2000,
-				    });
+				    });      	
+  		}
+
+      	//uploadEndHandler
+      	function uploadEndHandler()
+      	{
+      		console.log("uploadEndHandler() 上传结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			
+      		//显示上传完成 
+      		showUploadEndInfo();      		
       		
-            //Reset some Flag
-			reuploadFlag = false;
-      	
+      		//清除文件控件
+			$("#uploadFiles").val("");
+  			$("#uploadDir").val("");
+            
+  			//清除上传中标志
+            isUploading = false;
       	}
       	
       	//uploadNextDoc，如果后续有未上传文件则上传下一个文件 
@@ -1592,7 +1595,7 @@
    			return false;
       	}
       	
-      	function updateUploadListTitle()
+      	function showUploadingInfo()
       	{
       		if(reuploadFlag == false)
       		{
@@ -1634,6 +1637,7 @@
 			
 			if(false == reuploadFlag)
 			{
+				reuploadFlag = true;
 				//trigger uploadDoc
 				index = 0;
 				uploadDoc();
@@ -1641,9 +1645,7 @@
 			else
 			{
 				reuploadFlag = true;
-				
-				//显示上传中的Index
-				updateUploadListTitle();
+				showUploadingInfo();
 			}
 		}
 		
@@ -1676,8 +1678,7 @@
 			}
 			else
 			{
-				//显示上传中的Index
-				updateUploadListTitle();
+				showUploadingInfo();
 			}
 		}
 		
@@ -1753,8 +1754,7 @@
     				reuploadCount++;
     			}
 				
-				//显示上传中的Index
-				updateUploadListTitle();
+				showUploadingInfo();
 				
 				//get the file from the SubContextList
     			var file = SubContext.file;
