@@ -1520,6 +1520,7 @@
  		}
       	
       	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
+      	checkSumCaculateCounter = 0;
       	function caculateFileCheckSum(SubContext)
       	{
       		if(1 == SubContext.checkSumState)
@@ -1540,6 +1541,8 @@
       		}
       		
       		//start to caculate the checkSum
+      		checkSumCaculateCounter = 0;
+
       		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
             	file = input.files[0],
             	chunkSize = 2097152,                           // read in chunks of 2MB
@@ -1594,19 +1597,27 @@
       	}
       	
 		function getFileCheckSum(SubContext)
-		{
+		{            
+			checkSumCaculateCounter ++;
+			console.log("getFileCheckSum() checkSumCaculateCounter",checkSumCaculateCounter);
 			switch(SubContext.checkSumState)
 			{
 			case 0:
 				//Start Check Caculate Thread
+				caculateFileCheckSum();
 			case 1:
 				//Start timer to wait for result
+		        console.log("getFileCheckSum() checkSum not ready, wait for result 5 seconds later");
+				setTimeout(function () {
+		            uploadDoc(); //reEnter uploadDoc
+		        },5*1000);	//check it one minute later
 				return false;
 			case 2:
 				//CheckSum ok
 				return true;
 			default:
 				//CheckSum Error
+				SubContext.checkSum = "";
 				return true;
 			}
 		}
@@ -1877,24 +1888,24 @@
     		//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
     		if(false == checkAddParentNode(SubContext))
     		{
-    			console.log("uploadDoc() checkAddParentNode return false");
+    			console.log("uploadDoc() checkAddParentNode return false, addDoc have been called, callback will re-enter uploadDoc");
     			return;
     		}
-   			console.log("uploadDoc() checkAddParentNode return true");
+   			console.log("uploadDoc() checkAddParentNode completed");
    		 	
    			if(getFileCheckSum(SubContext) == false)
    			{
-   				//Keep wait for result
+   				//checkSum is not ready, timer be called, callback will re-enter uploadDoc 5 secnods later
    				return;
    			}
    			
    			//检查文件是否存在且是否相同，return false 表示内部有异步调用
    			if(false == checkDocInfo(SubContext))
    			{
-    			console.log("uploadDoc() checkDocInfo return false");   				
+    			console.log("uploadDoc() checkDocInfo be called, callback will re-enter uploadDoc");   				
    				return;
    			}
-   			console.log("uploadDoc() checkDocInfo return true");  
+   			console.log("uploadDoc() checkDocInfo completed");  
 			
    			startUpload(SubContext);
     	}
