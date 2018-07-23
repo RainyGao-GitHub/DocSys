@@ -202,7 +202,7 @@ public class DocController extends BaseController{
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer isAdd,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc size:" +size+ "checkSum" + checkSum + "reposId:" + reposId + " parentId:" + parentId  + " isAdd:" + isAdd  + " docId:" + docId + " filePath:" + filePath);
+		System.out.println("uploadDoc size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " isAdd:" + isAdd  + " docId:" + docId + " filePath:" + filePath);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -2746,40 +2746,30 @@ public class DocController extends BaseController{
 			String reposRPath =  getReposRealPath(repos);
 			String docRPath = parentPath + name;
 			String docFullRPath = reposRPath + parentPath + name;
+			String newFilePath = docFullRPath;
 			
 			try {
 				SVNUtil svnUtil = new SVNUtil();
 				svnUtil.Init(reposURL, svnUser, svnPwd);
 				
 				if(svnUtil.doCheckPath(docRPath, -1) == false)	//检查文件是否已经存在于仓库中
-				{
+				{					
 					System.out.println("svnRealDocCommit() " + docRPath + " 在仓库中不存在！");
-					rt.setMsgData("svnRealDocCommit() " + docRPath + " 在仓库中不存在！");
-					return false;
+					if(false == svnUtil.svnAddFile(parentPath,name,newFilePath,commitMsg))
+					{
+						System.out.println("svnRealDocCommit() " + name + " svnAddFile失败！");
+						System.out.println("svnRealDocCommit() svnUtil.svnAddFile " + " parentPath:" + parentPath  + " name:" + name  + " newFilePath:" + newFilePath);
+						return false;
+					}
 				}
 				else	//如果已经存在，则只是将修改的内容commit到服务器上
 				{
 					String oldFilePath = getReposRefRealPath(repos) + docRPath;
-					String newFilePath = docFullRPath;
-					
-					File oldFile = new File(oldFilePath);
-					if(false == oldFile.exists())
+					if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
 					{
-						if(false == svnUtil.svnAddFile(parentPath,name,newFilePath,commitMsg))
-						{
-							System.out.println("svnRealDocCommit() " + name + " svnAddFile失败！");
-							System.out.println("svnRealDocCommit() svnUtil.svnAddFile " + " parentPath:" + parentPath  + " name:" + name  + " newFilePath:" + newFilePath);
-							return false;
-						}	
-					}
-					else 
-					{
-						if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
-						{
-							System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
-							System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + name  + " oldFilePath:" + oldFilePath + " newFilePath:" + newFilePath);
-							return false;
-						}
+						System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
+						System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + name  + " oldFilePath:" + oldFilePath + " newFilePath:" + newFilePath);
+						return false;
 					}
 				}
 			} catch (SVNException e) {
