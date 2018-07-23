@@ -1519,54 +1519,96 @@
 			return true;
  		}
       	
-      	//该接口是异步调用，计算结果会保存在SubContext.checkSum
-      	function getFileCheckSum(SubContext)
+      	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
+      	function caculateFileCheckSum(SubContext)
       	{
-          	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
-                  file = SubContext.file,
-                  chunkSize = 2097152,                           // read in chunks of 2MB
-                  chunks = Math.ceil(file.size / chunkSize),
-                  currentChunk = 0,
-                  spark = new SparkMD5.ArrayBuffer(),
-                  time,
-                  uniqueId = 'chunk_' + (new Date().getTime()),
-                  chunkId = null,
-                  fileReader = new FileReader();
+      		if(1 == SubContext.checkSumState)
+          	{
+      			console.log("caculateFileCheckSum() checkSum is caculating for:",SubContext);
+      			return;
+          	}
+      		else if(2 == SubContext.checkSumState)
+      		{
+      			console.log("caculateFileCheckSum() checkSum is ready for:",SubContext);
+      			return;
+      		}
+      		
+      		if(0 != SubContext.checkSumState)
+      		{
+      			console.log("caculateFileCheckSum() faile to caculate checkSum for:",SubContext);
+      			return;
+      		}
+      		
+      		//start to caculate the checkSum
+      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+            	file = input.files[0],
+            	chunkSize = 2097152,                           // read in chunks of 2MB
+            	chunks = Math.ceil(file.size / chunkSize),
+            	currentChunk = 0,
+            	spark = new SparkMD5(),
+            	time,
+            	uniqueId = 'chunk_' + (new Date().getTime()),
+            	chunkId = null,
+            	fileReader = new FileReader();
 
-          	fileReader.onload = function (e) {
-                  if (currentChunk === 0) {
-                  	console.log("Saa");
-                  } else {
-                      if (chunkId === null) {
-                          chunkId = document.getElementById(uniqueId);
-                      }
-
-                      chunkId.innerHTML = currentChunk + 1;
-                  }
-
-                  spark.append(e.target.result);                 // append array buffer
-                  currentChunk += 1;
-
-                  if (currentChunk < chunks) {
-                      loadNext();
-                  } else {
-                  	SunContext.checkSum =  spark.end();
-                  }
-              };
-
-              fileReader.onerror = function () {
-              	console.log("fileReader Error");
-              };
-
-              function loadNext() {
-                  var start = currentChunk * chunkSize,
-                      end = start + chunkSize >= file.size ? file.size : start + chunkSize;
-
-                  fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
-              }
-
-              loadNext();
+	        fileReader.onload = function (e) {
+	            if (currentChunk === 0) {
+	                console.log("Read chunk number id=" + uniqueId + " + currentChunk="(currentChunk + 1) + " chunks=" + chunks);
+	            } else {
+	                if (chunkId === null) {
+	                    chunkId = document.getElementById(uniqueId);
+	                }
+	
+	                chunkId.innerHTML = currentChunk + 1;
+	            }
+	
+	            spark.appendBinary(e.target.result);                 // append array buffer
+	            currentChunk += 1;
+	
+	            if (currentChunk < chunks) {
+	                loadNext();
+	            } else {
+	            	SubContext.checkSumState = 2;
+	            	SubContext.checkSum = spark.end();	            	
+	                console.log("Computed hash:" + spark.end()); // compute hash
+	            }
+	        };
+	
+	        fileReader.onerror = function () {
+	        	SubContext.checkSumState = 3;
+                console.log("Fail to Computed hash"); //fail to compute hash
+	        };
+	
+	        function loadNext() {
+	            var start = currentChunk * chunkSize,
+	                end = start + chunkSize >= file.size ? file.size : start + chunkSize;
+	
+	            fileReader.readAsBinaryString(blobSlice.call(file, start, end));
+	        }
+	
+      		//set the running state
+      		SubContext.checkSumState = 1;
+	        console.log("Starting caculate checkSum for",SubContext);
+	        loadNext();
       	}
+      	
+		function getFileCheckSum(SubContext);
+		{
+			switch(SubContext.checkSumState)
+			{
+			case 0:
+				//Start Check Caculate Thread
+			case 1:
+				//Start timer to wait for result
+				return false;
+			case 2:
+				//CheckSum ok
+				return true;
+			default:
+				//CheckSum Error
+				return true;
+			}
+		}
       	
       	//返回false表示该接口触发异步调用，当前uploadDoc线程需要先退出，异步回调会根据check结果决定后续是否reenter uploadDoc
       	function checkDocInfo(SubContext)
@@ -1798,7 +1840,7 @@
     		}
     		
     		//启动计算文件的校验码
-    		caculateCheckSum(SubContext);
+    		caculateFileCheckSum(SubContext);
     		
     		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
     		checkAndDrawUploadItems(SubContextList);
@@ -1839,6 +1881,12 @@
     		}
    			console.log("uploadDoc() checkAddParentNode return true");
    		 	
+   			if(getFileCheckSum(SubContext) == false)
+   			{
+   				//Keep wait for result
+   				return;
+   			}
+   			
    			//检查文件是否存在且是否相同，return false 表示内部有异步调用
    			if(false == checkDocInfo(SubContext))
    			{
