@@ -821,11 +821,22 @@ public class SVNUtil {
 			return false;
 		}	
 	    
-		InputStream oldFile = getFileInputStream(oldFilePath);
+		boolean ret = false;
 		InputStream newFile = getFileInputStream(newFilePath);
-		boolean ret = modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true);
-		closeFileInputStream(oldFile);
+		InputStream oldFile = null;
+		File file = new File(oldFilePath);
+		if(true == file.exists())
+		{
+			oldFile = getFileInputStream(oldFilePath);	
+			ret = modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true);
+			closeFileInputStream(oldFile);
+		}
+		else
+		{
+			ret = modifyFile(editor, parentPath,entryName, null, newFile,true,true);
+		}
 		closeFileInputStream(newFile);
+		
 		if(ret == false)
 		{
 			return false;
