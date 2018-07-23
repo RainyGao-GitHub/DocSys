@@ -152,7 +152,7 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(String name,Integer type,Integer size,String checkSum,Integer reposId,Integer parentId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(String name,Integer type,Integer size,String checkSum,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addDoc name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -186,10 +186,45 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		else
+		{
+			//Try to find the same Doc in the repos
+			Doc sameDoc = getSameDoc(size,checkSum,reposId);
+			if(null != sameDoc)
+			{
+				System.out.println("checkDocInfo() " + sameDoc.getName() + " found！");
+				//Do copy the Doc
+				copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt);
+				Doc newDoc = getDocByName(name,parentId,reposId);
+				if(null != newDoc)
+				{
+					System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
+					rt.setData(newDoc.getId());
+					rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
+					rt.setMsgData("1");
+					writeJson(rt, response);
+					return;
+				}
+			}
+		}
 		
 		writeJson(rt, response);
 	}
 	
+	private Doc getSameDoc(Integer size, String checkSum, Integer reposId) {
+
+		Doc qdoc = new Doc();
+		qdoc.setSize(size);
+		qdoc.setCheckSum(checkSum);
+		qdoc.setVid(reposId);
+		List <Doc> docList = reposService.getDocList(qdoc);
+		if(docList != null && docList.size() > 0)
+		{
+			return docList.get(0);
+		}
+		return null;
+	}
+
 	private boolean isDocCheckSumMatched(Doc doc,Integer size, String checkSum) {
 		System.out.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
 		if(size.equals(doc.getSize()) && !"".equals(checkSum) && checkSum.equals(doc.getCheckSum()))
