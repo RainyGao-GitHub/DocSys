@@ -192,7 +192,7 @@ public class DocController extends BaseController{
 	
 	private boolean isDocCheckSumMatched(Doc doc,Integer size, String checkSum) {
 		System.out.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
-		if(size.equals(doc.getSize()) && "".equals(checkSum) && checkSum.equals(doc.getCheckSum()))
+		if(size.equals(doc.getSize()) && !"".equals(checkSum) && checkSum.equals(doc.getCheckSum()))
 		{
 			return true;
 		}
