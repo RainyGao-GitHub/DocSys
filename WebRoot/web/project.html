@@ -290,6 +290,7 @@
 <!-- <script  type="text/javascript" src="static/ContextJS/js/jquery.min.js"></script>
  -->
 <script type="text/javascript" src="js/fileReader.js"></script>
+<script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 <script type="text/javascript">
 	//初始化全局变量 //Repos Info
 	var gReposId;
@@ -987,6 +988,10 @@
 			    	   	
 			    	   	SubContext.uploadEn = true; //默认打开uploadEn
 			    	   	
+			    	   	//checkSum Init
+			    	   	SubContext.checkSumState = 0;
+			    	   	SubContext.checkSum = "";
+			    	   	
 			    	   	//StateMachine SMMain\SMSub
 			    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
 			    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
@@ -1544,7 +1549,7 @@
       		checkSumCaculateCounter = 0;
 
       		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
-            	file = input.files[0],
+            	file = SubContext.file,
             	chunkSize = 2097152,                           // read in chunks of 2MB
             	chunks = Math.ceil(file.size / chunkSize),
             	currentChunk = 0,
@@ -1556,7 +1561,7 @@
 
 	        fileReader.onload = function (e) {
 	            if (currentChunk === 0) {
-	                console.log("Read chunk number id=" + uniqueId + " + currentChunk="(currentChunk + 1) + " chunks=" + chunks);
+	                console.log("Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
 	            } else {
 	                if (chunkId === null) {
 	                    chunkId = document.getElementById(uniqueId);
