@@ -164,6 +164,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if("".equals(checkSum))
+		{
+			//CheckSum is empty, mean no need 
+			writeJson(rt, response);
+			return;
+		}
+		
 		//判断目录下是否有同名节点 
 		Doc doc = getDocByName(name,parentId,reposId);
 		if(doc != null)
