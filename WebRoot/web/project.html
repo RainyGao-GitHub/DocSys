@@ -1525,7 +1525,6 @@
  		}
       	
       	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
-      	checkSumCaculateCounter = 0;
       	function caculateFileCheckSum(SubContext)
       	{
       		if(1 == SubContext.checkSumState)
@@ -1546,7 +1545,7 @@
       		}
       		
       		//start to caculate the checkSum
-      		checkSumCaculateCounter = 0;
+      		SubContext.checkSumCaculateCounter = 0;
 
       		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
             	file = SubContext.file,
@@ -1603,8 +1602,8 @@
       	
 		function getFileCheckSum(SubContext)
 		{            
-			checkSumCaculateCounter ++;
-			console.log("getFileCheckSum() checkSumCaculateCounter",checkSumCaculateCounter);
+			SubContext.checkSumCaculateCounter++;
+			console.log("getFileCheckSum() checkSumCaculateCounter",SubContext.checkSumCaculateCounter);
 			switch(SubContext.checkSumState)
 			{
 			case 0:
@@ -1612,10 +1611,10 @@
 				caculateFileCheckSum();
 			case 1:
 				//Start timer to wait for result
-		        console.log("getFileCheckSum() checkSum not ready, wait for result 5 seconds later");
+		        console.log("getFileCheckSum() checkSum not ready, wait for result 100 ms later");
 				setTimeout(function () {
 		            uploadDoc(); //reEnter uploadDoc
-		        },5*1000);	//check it one minute later
+		        },100);	//check it one minute later
 				return false;
 			case 2:
 				//CheckSum ok
