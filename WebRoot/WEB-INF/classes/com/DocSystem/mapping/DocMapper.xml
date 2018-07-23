@@ -376,10 +376,10 @@
     	and TYPE = #{type,jdbcType=INTEGER}
     </if>
     <if test="size != null">
-        SIZE = #{size,jdbcType=INTEGER}
+        and SIZE = #{size,jdbcType=INTEGER}
     </if>
     <if test="checkSum != null">
-        CHECK_SUM = #{checkSum,jdbcType=VARCHAR}
+        and CHECK_SUM = #{checkSum,jdbcType=VARCHAR}
     </if>
     <if test="path != null">
         and PATH = #{path,jdbcType=VARCHAR}
@@ -391,16 +391,16 @@
         and VID = #{vid,jdbcType=INTEGER}
     </if>
 	<if test="creator != null">
-		CREATOR = #{creator,jdbcType=INTEGER},
+		and CREATOR = #{creator,jdbcType=INTEGER}
 	</if>
 	<if test="createTime != null">
-		CREATE_TIME = #{createTime,jdbcType=BIGINT},
+		and CREATE_TIME = #{createTime,jdbcType=BIGINT}
 	</if>
 	<if test="latestEditor != null">
-		LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
+		and LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER}
 	</if>
 	<if test="latestEditTime != null">
-		LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
+		and LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT}
 	</if>
     <if test="state != null">
         and STATE = #{state,jdbcType=INTEGER},
