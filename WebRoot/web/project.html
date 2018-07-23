@@ -1555,22 +1555,21 @@
             	spark = new SparkMD5(),
             	time,
             	uniqueId = 'chunk_' + (new Date().getTime()),
-            	chunkId = null,
+            	chunkStep = 1,
             	fileReader = new FileReader();
 
 	        fileReader.onload = function (e) {
 	            if (currentChunk === 0) {
 	                console.log("Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
-	            } else {
-	                if (chunkId === null) {
-	                    chunkId = document.getElementById(uniqueId);
+	                if(chunks > 20)
+	                {
+	                	chunkStep = chunks / 10;
 	                }
-	
-	                chunkId.innerHTML = currentChunk + 1;
+	                console.log("chunkStep=" + chunkStep);
 	            }
 	
 	            spark.appendBinary(e.target.result);                 // append array buffer
-	            currentChunk += 1;
+	            currentChunk += chunkStep;
 	
 	            if (currentChunk < chunks) {
 	                loadNext();
