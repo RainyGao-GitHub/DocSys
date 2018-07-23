@@ -886,6 +886,8 @@
 			//设置为正在上传，避免被其他上传中断
 			isUploading = true;
 			
+			reuploadFlag = false; //false: 正常上传  true: 重传
+	        
 			//清空所有全局变量
 			stopUploadFlag = false;
 			fileCoverConfirmSet = 0;
@@ -1346,7 +1348,7 @@
       		}
 	      	else
 	      	{
-	      		console.log("uploadErrorAbortHandler() 重传出错");
+	      		console.log("uploadSuccessHandler() 重传成功");
 	      		reuploadSuccessNum++;
 	      		reuploadedNum++;
 	      	}
