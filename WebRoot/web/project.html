@@ -1018,7 +1018,7 @@
       			//Check if all items drawed
       			if(drawedNum >= totalNum)
       			{
-      				console.log("druawUploadItems() all items drawed");
+      				//console.log("druawUploadItems() all items drawed");
       				return;
       			}
       			
@@ -1441,7 +1441,7 @@
 			var tempParentNode = SubContext.parentNode;
     		//get filePath form file
     		var filePath = SubContext.relativePath;
-    		console.log("relativePath:" + filePath);
+    		//console.log("checkAddParentNode() relativePath:" + filePath);
 
     		if(!filePath || filePath == "")
     		{
@@ -1481,7 +1481,7 @@
 			    	{
 			    		tempParentId = tempParentNode.id;
 			    	}
-			   		console.log("addDoc name:" + nodeName + " type:" +  2 + " tempParentId:" +  tempParentId + " vid:" +  vid);
+			   		console.log("checkAddParentNode() addDoc name:" + nodeName + " type:" +  2 + " tempParentId:" +  tempParentId + " vid:" +  vid);
 			    	$.ajax({
 			             url : "/DocSystem/Doc/addDoc.do",
 			             type : "post",
@@ -1534,7 +1534,7 @@
       	{
       		if(1 == SubContext.checkSumState)
           	{
-      			console.log("caculateFileCheckSum() checkSum is caculating for:",SubContext);
+      			//console.log("caculateFileCheckSum() checkSum is caculating for:",SubContext);
       			return;
           	}
       		else if(2 == SubContext.checkSumState)
@@ -1562,7 +1562,7 @@
             	chunkStep = 1,
             	fileReader = new FileReader();
 
-      		console.log("caculateFileCheckSum() blobSlice",blobSlice);
+      		//console.log("caculateFileCheckSum() blobSlice",blobSlice);
       		
 	        fileReader.onload = function (e) {
 	            //console.log("currentChunk=" + currentChunk);
@@ -1574,10 +1574,10 @@
 	            
 	            if (currentChunk === 0) {
 	                console.log("Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
-	                //if(chunks > 10)
-	                //{
-	                //	chunkStep = chunks / 10;
-	                //}
+	                if(chunks > 10)
+	                {
+	                	chunkStep = chunks / 10;
+	                }
 	                console.log("chunkStep=" + chunkStep);
 	            }
 	
@@ -1640,20 +1640,21 @@
       	function checkDocInfo(SubContext)
       	{      		
       		var name = SubContext.name;
-	  	 	console.log("checkDocInfo() name:" + name);
+	  	 	//console.log("checkDocInfo() file:" + name);
 
 	  	 	//It is the first call for file, so we need to check the docInfo
-	  	 	console.log("checkDocInfo() SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
+	  	 	//console.log("checkDocInfo() SM [" + SubContext.SMState + "," + SubContext.SMSubState + "]");
    			if("checkDocInfo" == SubContext.SMState && 1 == SubContext.SMSubState)
    			{
    				return true;
    			}
    			
+   			console.log("checkDocInfo() for file:"+ name);
    			//Modify the SM
       		SubContext.SMState = "checkDocInfo";
       		SubContext.SMSubState = 1;
-   	   		
-   			//检查服务器端是否存在同名文件，并确认文件内容是否相同
+      		
+      		//检查服务器端是否存在同名文件，并确认文件内容是否相同
    			//调用后台接口检查DocInfo，回调函数需要根据情况决定具体的操作
   			$.ajax({
 	             url : "/DocSystem/Doc/checkDocInfo.do",
@@ -1670,7 +1671,7 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
 	             	{		
-	             		console.log("ret",ret);
+	             		console.log("checkDocInfo() ret",ret);
 	             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 	             		{
 	             			SubContext.docId = ret.data;
@@ -1866,7 +1867,7 @@
     			console.log("uploadDoc() checkAddParentNode return false, addDoc have been called, callback will re-enter uploadDoc");
     			return;
     		}
-   			console.log("uploadDoc() checkAddParentNode completed");
+   			//console.log("uploadDoc() checkAddParentNode completed");
    		 	
    			if(getFileCheckSum(SubContext) == false)
    			{
@@ -1880,7 +1881,7 @@
     			console.log("uploadDoc() checkDocInfo be called, callback will re-enter uploadDoc");   				
    				return;
    			}
-   			console.log("uploadDoc() checkDocInfo completed");  
+   			//console.log("uploadDoc() checkDocInfo completed");  
 			
    			startUpload(SubContext);
     	}
