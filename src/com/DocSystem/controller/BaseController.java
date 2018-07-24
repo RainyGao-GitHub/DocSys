@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -1128,6 +1129,19 @@ public class BaseController{
         	}
         }
         
+        //Copy by Channel
+        FileInputStream in=new FileInputStream(srcFilePath);
+        FileOutputStream out=new FileOutputStream(dstFilePath);
+        FileChannel inputChannel = in.getChannel();    
+        FileChannel outputChannel = out.getChannel();   
+        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+	   	inputChannel.close();
+	    outputChannel.close();
+	    in.close();
+	    out.close();
+        return true;
+        
+        /* copy by buffer
         FileInputStream in=new FileInputStream(srcFilePath);
         FileOutputStream out=new FileOutputStream(dstFilePath);
         int c;
@@ -1138,7 +1152,7 @@ public class BaseController{
         }
         in.close();
         out.close();
-        return true;
+        return true;  */
     }
     
     /** 
