@@ -1197,23 +1197,25 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//创建虚拟文件目录：用户编辑保存时再考虑创建
-		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(parentPath, doc.getName());
-		if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
+		//只有在content非空的时候才创建VDOC
+		if(null != content && !"".equals(content))
 		{
-			if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
+			String reposVPath = getReposVirtualPath(repos);
+			String docVName = getDocVPath(parentPath, doc.getName());
+			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
-				System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
-				rt.setMsgInfo("svnVirtualDocAdd Failed");			
+				if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
+				{
+					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
+					rt.setMsgInfo("svnVirtualDocAdd Failed");			
+				}
+			}
+			else
+			{
+				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
+				rt.setMsgInfo("createVirtualDoc Failed");
 			}
 		}
-		else
-		{
-			System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
-			rt.setMsgInfo("createVirtualDoc Failed");
-		}
-		
 		
 		//启用doc
 		if(unlockDoc(doc.getId(),login_user) == false)
@@ -1804,20 +1806,23 @@ public class DocController extends BaseController{
 			return;
 		}				
 		
-		//创建虚拟文件目录
-		String reposVPath = getReposVirtualPath(repos);
-		String srcDocVName = getDocVPath(parentPath,srcName);
-		String dstDocVName = getDocVPath(dstParentPath,dstName);
-		if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
+		//content非空时才去创建虚拟文件目录
+		if(null != doc.getContent() && !"".equals(doc.getContent()))
 		{
-			if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
+			String reposVPath = getReposVirtualPath(repos);
+			String srcDocVName = getDocVPath(parentPath,srcName);
+			String dstDocVName = getDocVPath(dstParentPath,dstName);
+			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 			{
-				System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
+				if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
+				{
+					System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
+				}
 			}
-		}
-		else
-		{
-			System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
+			else
+			{
+				System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
+			}
 		}
 		
 		//启用doc
