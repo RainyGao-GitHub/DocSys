@@ -1296,13 +1296,11 @@
       		if(false == reuploadFlag)
       		{
       			failNum++;
-      			uploadedNum++;
       		}
       		else
       		{
           		console.log("uploadErrorHandler() 重传出错");
       			reuploadFailNum++;
-      			reuploadedNum++;
       		}
       		//设置上传状态
 			SubContextList[index].state = 3;	//上传结束
@@ -1319,13 +1317,11 @@
       		if(false == reuploadFlag)
       		{
       			failNum++;
-      			uploadedNum++;
       		}
       		else
       		{
           		console.log("uploadErrorAbortHandler() 重传出错");
       			reuploadFailNum++;
-      			reuploadedNum++;
       		}
     		//设置上传状态
 			SubContextList[index].state = 3;	//上传结束
@@ -1342,15 +1338,10 @@
       		
       		successNum++;
 	      	
-      		if(false == reuploadFlag)
+      		if(true == reuploadFlag)
       		{	
-	      		uploadedNum++;
-      		}
-	      	else
-	      	{
 	      		console.log("uploadSuccessHandler() 重传成功");
 	      		reuploadSuccessNum++;
-	      		reuploadedNum++;
 	      	}
 	      	SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "success";
@@ -1560,13 +1551,16 @@
             	chunkStep = 1,
             	fileReader = new FileReader();
 
+      		console.log("blobSlice",blobSlice);
+      		
 	        fileReader.onload = function (e) {
+	            console.log("currentChunk=" + currentChunk);
 	            if (currentChunk === 0) {
 	                console.log("Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
-	                if(chunks > 20)
-	                {
-	                	chunkStep = chunks / 10;
-	                }
+	                //if(chunks > 10)
+	                //{
+	                //	chunkStep = chunks / 10;
+	                //}
 	                console.log("chunkStep=" + chunkStep);
 	            }
 	
@@ -1705,13 +1699,11 @@
       	{
       		if(reuploadFlag == false)
       		{
-      			var uploadingIndex = index + 1;
-	      		$(".upload-list-title").text("正在上传   " + uploadingIndex + " / " + totalNum);
+	      		$(".upload-list-title").text("正在上传   " + uploadedNum + " / " + totalNum);
       		}
       		else
       		{
-      			var reuploadingIndex = reuploadCount;
-      			$(".upload-list-title").text("正在上传   " + reuploadingIndex + " / " + reuploadTotalNum);
+      			$(".upload-list-title").text("正在重传   " + reuploadedNum + " / " + reuploadTotalNum);
       		}
       	}
       	
@@ -1834,20 +1826,17 @@
 		//uploadDoc接口，该接口是个递归调用
     	function uploadDoc()
     	{
-    		console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
-
+    		//console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
     		var SubContext = SubContextList[index];
-			console.log("uploadDoc() fileName:" + SubContext.name);
 			
-			//uploadEn was used to control reupload
+    		//uploadEn was used to control reupload
 			if(SubContext.uploadEn == false)
 			{
 				console.log("uploadDoc() uploadEn: false");
-				index++;
 				uploadNextDoc();
 				return;
 			}
-			
+    		
     		//判断是否取消上传
     		if(stopUploadFlag == true)
     		{
@@ -1856,12 +1845,6 @@
     			return;
     		}
     		
-    		//启动计算文件的校验码
-    		caculateFileCheckSum(SubContext);
-    		
-    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
-    		checkAndDrawUploadItems(SubContextList);
-    		
     		//取消当前文件上传
 			if(SubContext.stopUploadFlag == true)
 			{
@@ -1869,14 +1852,20 @@
     			uploadErrorHandler(name,"用户取消了上传！");
 				return;
 			}
+			
     		
     		//设置上传状态
     		if(0 == SubContext.state)
     		{   
+    			console.log("uploadDoc() 开始上传 fileName:" + SubContext.name,SubContext);
 				SubContext.state = 1;	//上传中
-    			if(true == reuploadFlag)
+    			if(false == reuploadFlag)
     			{
-    				reuploadCount++;
+    				uploadedNum++;
+    			}
+    			else
+    			{
+    				reuploadedNum++;
     			}
 				
 				showUploadingInfo();
@@ -1889,6 +1878,12 @@
 					return; 
 				}
     		}
+    		
+    		//启动计算文件的校验码
+    		caculateFileCheckSum(SubContext);
+    		
+    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
+    		checkAndDrawUploadItems(SubContextList);
 			
     		//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
     		if(false == checkAddParentNode(SubContext))
