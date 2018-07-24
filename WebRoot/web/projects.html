@@ -402,7 +402,7 @@
             var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
             var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
             var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
-            var createTime = (new Date()).toLocaleDateString();
+            var createTime = new Date().getTime();	//获取时间戳
             //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
             if( name && info){
                 $.ajax({
