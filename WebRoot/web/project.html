@@ -1763,7 +1763,8 @@
 			}
 			else
 			{
-				for(i=0;i<totalNum;i++)
+				//由于push会pop后进的id,会导致先上传还未绘制进度条的文件，因此反过来遍历
+				for(i=totalNum-1; i>=0 ;i--)
 				{
 					setSubContextForReupload(i);
 				}
@@ -1830,18 +1831,6 @@
 			SubContext.uploadErrorConfirmSet = 0;
 			
 			reuploadList.push(id);
-		}
-		
-		function isInReuploadList(id)
-		{
-			for(i=0;i<reuploadList.length;i++)
-			{
-				if(id == reuploadList[i])
-				{
-					return true;
-				}
-			}
-			return false;
 		}
 		
 		//uploadDoc接口，该接口是个递归调用
