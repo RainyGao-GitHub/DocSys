@@ -1025,7 +1025,7 @@
       			//Check if need to draw
       			if((drawedNum - uploadedNum) > 100)
       			{
-      			    //console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
+      			    console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
       				return;
       			}
       			
@@ -1816,9 +1816,16 @@
 
 			//Reset all basick SubContext 
 			SubContext.state = 0;
-			SubContext.SMState = "init";	//uploadDoc状态机的主状态
-			SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
+			if(SubContext.checkSumState != 2) //checkSum is not ready, need to recaculate the checkSum
+			{
+				SubContext.checkSumState = 0; 
+			}
+			//CheckDocInfo should be reCheck
+			SubContext.SMState = "init";
+			SubContext.SMSubState = 0;
+			//stopUploadFlag should be clean
 			SubContext.stopUploadFlag = false;
+			//confirmSet should be clean
 			SubContext.fileCoverConfirmSet = 0;
 			SubContext.uploadErrorConfirmSet = 0;
 			
