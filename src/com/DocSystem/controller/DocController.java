@@ -2413,7 +2413,7 @@ public class DocController extends BaseController{
 	{
 		//RefDoc本意是希望提升后续文件修改后，diff部分的commit速度，但事实上是人们通常只会去修改文本文件（通常较小），所以就显得没有那么必要
 		//另外，即使真的需要也将考虑只放在新增文件只会，因为新增文件可能是大批量的文件上传，速度是需要优先考虑的
-		System.out.println("createRefDoc() OK");
+		System.out.println("createRefRealDoc() now refData not used");
 		return false;
 		/*
 		String localParentPath =  reposRPath + parentPath;
@@ -2459,7 +2459,9 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean createRefVirtualDoc(String reposVPath,String reposRefVPath,String vDocName, ReturnAjax rt) {
-		System.out.println("createRefVirtualDoc() reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath + " vDocName:" + vDocName);
+		System.out.println("createRefVirtualDoc() now refData not used");
+		return false;
+		/*System.out.println("createRefVirtualDoc() reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath + " vDocName:" + vDocName);
 		
 		String localPath = reposVPath + vDocName;
 		String localRefPath = reposRefVPath + vDocName;
@@ -2472,6 +2474,7 @@ public class DocController extends BaseController{
 		}
 		
 		return copyFolder(localPath, localRefPath);
+		*/
 	}
 	
 	//更新doc和其所有子节点的Path:该函数只更新Path信息，不会改变节点间的逻辑关系
@@ -3008,8 +3011,8 @@ public class DocController extends BaseController{
 				return false;
 			}
 			
-			//同步两个目录
-			syncUpFolder(reposVPath,docVName,reposRefVPath,docVName,true);
+			//创建RefVDoc
+			//syncUpFolder(reposVPath,docVName,reposRefVPath,docVName,true);
 			return true;
 		}
 		else
