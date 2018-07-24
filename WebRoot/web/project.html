@@ -989,8 +989,6 @@
 			    	   	SubContext.state = 0;	//未开始上传
 			    	   	SubContext.status = "待上传";	//未开始上传
 			    	   	
-			    	   	SubContext.reuploadEn = false; //默认关闭reuploadEn
-			    	   	
 			    	   	//checkSum Init
 			    	   	SubContext.checkSumState = 0;
 			    	   	SubContext.checkSum = "";
@@ -1794,9 +1792,6 @@
 			
 			//其他所有状态的都可以重传
 			reuploadTotalNum ++;
-			
-			//Set reuploadEn to true
-			SubContext.reuploadEn = true;
 
 			//Reset all basick SubContext 
 			SubContext.state = 0;
@@ -1829,17 +1824,6 @@
 				console.log("uploadDoc() 用户取消了上传 "+ name);
     			uploadErrorHandler(name,"用户取消了上传！");
 				return;
-			}
-			
-    		//重传时根据reuploadEn确定该文件是否被设置为重传了
-			if(true == reuploadFlag)
-			{
-    			if(SubContext.reuploadEn == false)
-				{
-					console.log("uploadDoc() reuploadEn: false");
-					uploadNextDoc();
-					return;
-				}
 			}
     		
     		//设置上传状态
