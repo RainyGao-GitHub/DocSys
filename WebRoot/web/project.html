@@ -1550,8 +1550,7 @@
       		}
       		
       		//start to caculate the checkSum
-      		SubContext.checkSumCaculateCounter = 0;
-
+      		console.log("caculateFileCheckSum() start caculate checkSum for:",SubContext);
       		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
             	file = SubContext.file,
             	chunkSize = 2097152,                           // read in chunks of 2MB
@@ -1563,10 +1562,16 @@
             	chunkStep = 1,
             	fileReader = new FileReader();
 
-      		console.log("blobSlice",blobSlice);
+      		console.log("caculateFileCheckSum() blobSlice",blobSlice);
       		
 	        fileReader.onload = function (e) {
-	            console.log("currentChunk=" + currentChunk);
+	            //console.log("currentChunk=" + currentChunk);
+	            if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
+	            {
+	            	console.log("caculateFileCheckSum() upload was stoped, stop caculate");
+	                return;
+	            }
+	            
 	            if (currentChunk === 0) {
 	                console.log("Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
 	                //if(chunks > 10)
@@ -1603,22 +1608,20 @@
       		//set the running state
       		SubContext.checkSumState = 1;
       		SubContext.checkSum = "";
-      		console.log("Starting caculate checkSum for",SubContext);
 	        loadNext();
       	}
       	
 		function getFileCheckSum(SubContext)
 		{            
-			SubContext.checkSumCaculateCounter++;
-			console.log("getFileCheckSum() checkSumCaculateCounter",SubContext.checkSumCaculateCounter);
 			switch(SubContext.checkSumState)
 			{
 			case 0:
 				//Start Check Caculate Thread
+				 console.log("getFileCheckSum() call caculateFileCheckSum");
 				caculateFileCheckSum();
 			case 1:
 				//Start timer to wait for result
-		        console.log("getFileCheckSum() checkSum not ready, wait for result 100 ms later");
+		        console.log("getFileCheckSum() checkSum not ready, wait for result 100 ms later"); 
 				setTimeout(function () {
 		            uploadDoc(); //reEnter uploadDoc
 		        },100);	//check it one minute later
