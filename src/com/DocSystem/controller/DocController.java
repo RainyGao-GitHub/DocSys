@@ -3085,31 +3085,18 @@ public class DocController extends BaseController{
 	{
 		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
-		String localDocPath = localParentPath + entryName;
 
-		//only revert the file
-		File file = new File(localParentPath,entryName);
 		if(type == 2) //如果是目录则重新新建目录即可
 		{
+			File file = new File(localParentPath,entryName);
 			return file.mkdir();
 		}
 		
-		//If it is file, we will try to revert locally, if failed then revert from the version DataBase
-		String localRefParentPath = getReposRefRealPath(repos) + parentPath;
-		String localRefDocPath =  localRefParentPath + entryName;
-		try {
-			copyFile(localRefDocPath, localDocPath, false);
-		} catch (IOException e) {
-			System.out.println("svnRevertRealDoc() copyFile Exception!");
-			e.printStackTrace();
-			rt.setMsgData(e);
-			
-			String reposURL = repos.getSvnPath();
-			String svnUser = repos.getSvnUser();
-			String svnPwd = repos.getSvnPwd();
-			return svnRevert(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, entryName);
-		}
-		return true;
+		//revert from svn server
+		String reposURL = repos.getSvnPath();
+		String svnUser = repos.getSvnUser();
+		String svnPwd = repos.getSvnPwd();
+		return svnRevert(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, entryName);
 	}
 	
 
@@ -3117,26 +3104,6 @@ public class DocController extends BaseController{
 		System.out.println("svnRevertVirtualDoc() docVName:" + docVName);
 		
 		String localDocVParentPath = getReposVirtualPath(repos);
-		String localDocVPath = localDocVParentPath + docVName;
-		String localDocVRefParentPath = getReposRefVirtualPath(repos);
-		String localRefDocVPath = localDocVRefParentPath + docVName;
-
-		//only revert the file
-		File file = new File(localDocVPath);
-		if(!file.exists())
-		{
-			if(copyFolder(localRefDocVPath,localDocVPath) == true)
-			{
-				return true;
-			}
-		}
-		else
-		{
-			if(syncUpFolder(localDocVRefParentPath,docVName,localDocVParentPath,docVName,true) == true)
-			{
-				return true;
-			}
-		}
 
 		//getFolder From the version DataBase
 		String reposURL = repos.getSvnPath1();
