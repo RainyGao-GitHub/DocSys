@@ -1025,7 +1025,7 @@
       			//Check if need to draw
       			if((drawedNum - uploadedNum) > 100)
       			{
-      			    console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
+      			    //console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
       				return;
       			}
       			
@@ -1044,7 +1044,7 @@
 		    		//console.log(SubContext);
 		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
 		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
-		    				"<a class='el-upload-list__item-reupload' onclick='reuploadFailDoc("+i+")'>重传 </a>"+
+		    				"<a class='el-upload-list__item-reupload' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -1728,31 +1728,21 @@
       	}
       	
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
-		function reuploadFailDocs()
-		{
-			console.log("reuploadFailDocs() 重传所有失败文件");
-			for(i=0;i<totalNum;i++)
-			{
-				reuploadFailDoc(i);
-			}
-		}
-		
-		function reuploadFailDoc(id)
+		function reuploadFailDocs(id)
 		{
 			//首次上传未结束
 			if(false == reuploadFlag && true == isUploading)
 			{
-				console.log("reuploadFailDoc() 首次上传未结束,不能重传失败文件");
+				console.log("reuploadFailDocs() 首次上传未结束,不能重传失败文件");
 				return;
 			}
 			
 			if(false == reuploadFlag && false == isUploading)
 			{	
-				console.log("reuploadFailDoc() 启动重传");
-				//开始重传
-				reuploadFlag = true;
-				reuploadList = [];
+				console.log("reuploadFailDocs() 启动重传");
 
+				//开始重传
+				reuploadList = [];
 				reuploadTotalNum = 0;
 		        reuploadedNum = 0;
 		    	reuploadFailNum = 0;
@@ -1763,28 +1753,39 @@
 			}
 			else
 			{
-				console.log("reuploadFailDoc() 重传进行中,更新重传列表即可");
+				console.log("reuploadFailDocs() 重传进行中,更新重传列表即可");
 			}
 	        
-			//设置uploadEnd和一些影响uploadDoc的参数
-			setSubContextForReupload(id);
+			//Build reupload List
+			if(id)
+			{
+				setSubContextForReupload(id);
+			}
+			else
+			{
+				for(i=0;i<totalNum;i++)
+				{
+					setSubContextForReupload(i);
+				}
+			}
 			
-			console.log("reuploadFailDoc() 重传个数："+reuploadTotalNum);
+			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
 			if(0 == reuploadTotalNum )
 			{
-				console.log("reuploadFailDoc() 没有需要重传的Doc");
+				console.log("reuploadFailDocs() 没有需要重传的Doc");
 				return;	
 			}
 			
 			//更新上传进度
 			showUploadingInfo();
 			
-			if(true == reuploadFlag && false == isUploading)
+			if(false == reuploadFlag && false == isUploading)
 			{
+				reuploadFlag = true;
 				isUploading = true;
 				//trigger uploadDoc
 				index = reuploadList.pop();
-				console.log("reuploadFailDoc() 重传开始" + index);
+				console.log("reuploadFailDocs() 重传开始" + index);
 				uploadDoc();
 			}
 		}
@@ -1793,13 +1794,23 @@
 		{
 			SubContext = SubContextList[id];
 			
-			console.log("setSubContextForReupload()",SubContext);
+			//console.log("setSubContextForReupload()",SubContext);
 			//已成功地不能重传
 			if(2 == SubContext.state)
 			{
 				return;
 			}
 			
+			//避免在上传过程中，被多次重传
+			if(true == reuploadFlag)
+			{
+				if(true == SubContext.reuploadFlag)
+				{
+					return;
+				}
+			}
+			SubContext.reuploadFlag = true;
+				
 			//其他所有状态的都可以重传
 			reuploadTotalNum ++;
 
@@ -1812,6 +1823,18 @@
 			SubContext.uploadErrorConfirmSet = 0;
 			
 			reuploadList.push(id);
+		}
+		
+		function isInReuploadList(id)
+		{
+			for(i=0;i<reuploadList.length;i++)
+			{
+				if(id == reuploadList[i])
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 		
 		//uploadDoc接口，该接口是个递归调用
@@ -2081,29 +2104,19 @@
             getUploadStatus: function(){
             	return getUploadStatus();
             },
-            reuploadFailDocs: function(){
-            	return reuploadFailDocs();
-            },
-            reuploadFailDoc: function(id){
-            	return reuploadFailDoc(id);
+            reuploadFailDocs: function(id){
+            	return reuploadFailDocs(id);
             },
         };
     })();
 
 	//Re Upload Fail Docs
-    function reuploadFailDocs()
+    function reuploadFailDocs(index)
     {
-    	console.log("reuploadFailDocs() ");
-    	DocUpload.reuploadFailDocs();    	
+    	console.log("reuploadFailDocs() index:" + index);
+    	DocUpload.reuploadFailDocs(index);    	
     }
-    
-	//Re Upload Fail Doc
-    function reuploadFailDoc(index)
-    {
-    	console.log("reuploadFailDoc() index:" + index);
-    	DocUpload.reuploadFailDoc(index);    	
-    }
-	
+    	
 	//Stop Upload
 	function stopUpload(index)
 	{
