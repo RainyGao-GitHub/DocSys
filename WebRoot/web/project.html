@@ -988,7 +988,7 @@
 			    	   	SubContext.state = 0;	//未开始上传
 			    	   	SubContext.status = "待上传";	//未开始上传
 			    	   	
-			    	   	SubContext.uploadEn = true; //默认打开uploadEn
+			    	   	SubContext.reuploadEn = false; //默认关闭reuploadEn
 			    	   	
 			    	   	//checkSum Init
 			    	   	SubContext.checkSumState = 0;
@@ -1306,7 +1306,6 @@
 			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
 			SubContextList[index].msgInfo = errMsg;
-			SubContextList[index].uploadEn = false;
 			uploadNextDoc();		 	
       	}
       	
@@ -1327,7 +1326,6 @@
 			SubContextList[index].state = 3;	//上传结束
       		SubContextList[index].status = "fail";
       		SubContextList[index].msgInfo = errMsg;
-			SubContextList[index].uploadEn = false;
       		uploadEndHandler();
       	}
       	
@@ -1346,7 +1344,6 @@
 	      	SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "success";
       		SubContextList[index].msgInfo = msgInfo;
-			SubContextList[index].uploadEn = false;
 			uploadNextDoc();
       	}
 
@@ -1717,28 +1714,32 @@
 				return;
 			}
 			
-			reuploadFlag = true;
-			
-			if(false == isUploading)
-			{
+			if(false == reuploadFlag && false == isUploading)
+			{	
+				console.log("reuploadFailDocs() 启动重传");
+				//开始重传
+				reuploadFlag = true;
+				isUploading = true;
+
 				reuploadCount = 0; 
 				reuploadTotalNum = 0;
 		        reuploadFailNum = 0;
 		        reuploadSuccessNum = 0;
 		        reuploadedNum = 0;
-
-		        //reset some important settings
 				stopUploadFlag = false;
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
+			}
+			else
+			{
+				console.log("reuploadFailDocs() 重传进行中,只要append到重传列表即可");
 			}
 	        
 			//设置uploadEnd和一些影响uploadDoc的参数
 			for(i=0;i<totalNum;i++)
 			{
-				setReuploadContext(i);
+				setSubContextForReupload(i);
 			}
-			
 			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
 			
 			if(false == reuploadFlag)
@@ -1780,7 +1781,7 @@
 				uploadErrorConfirmSet = 0;
 			}
 			
-			setReuploadContext(reuploadIndex);
+			setSubContextForReupload(reuploadIndex);
 			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
 			
 			if(false == isUploading)
@@ -1796,31 +1797,32 @@
 			}
 		}
 		
-		function setReuploadContext(reuploadIndex)
+		function setSubContextForReupload(reuploadIndex)
 		{
 			SubContext = SubContextList[reuploadIndex];
 			
-			console.log("setReuploadContext()",SubContext);
-			if(false == SubContext.uploadEn)
+			console.log("setSubContextForReupload()",SubContext);
+			//已成功地不能重传
+			if(2 == SubContext.state)
 			{
-				if(SubContext.state != 2)
-				{
-					reuploadTotalNum ++;
-						
-					SubContext.state = 0;
-	
-					//StateMachine SMMain\SMSub
-			    	SubContext.SMState = "init";	//uploadDoc状态机的主状态
-			    	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
-						
-					SubContext.stopUploadFlag = false;
-					SubContext.fileCoverConfirmSet = 0;
-					SubContext.uploadErrorConfirmSet = 0;
-					
-					SubContext.uploadEn = true;
-				}
+				return;
 			}
-			console.log("setReuploadContext() 重传个数："+reuploadTotalNum);
+			
+			//其他所有状态的都可以重传
+			reuploadTotalNum ++;
+			
+			//Set reuploadEn to true
+			SubContext.reuploadEn = true;
+
+			//Reset all basick SubContext 
+			SubContext.state = 0;
+			SubContext.SMState = "init";	//uploadDoc状态机的主状态
+			SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
+			SubContext.stopUploadFlag = false;
+			SubContext.fileCoverConfirmSet = 0;
+			SubContext.uploadErrorConfirmSet = 0;
+					
+			console.log("setSubContextForReupload() 重传个数："+reuploadTotalNum);
 		}
 		
 		//uploadDoc接口，该接口是个递归调用
@@ -1829,14 +1831,6 @@
     		//console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
     		var SubContext = SubContextList[index];
 			
-    		//uploadEn was used to control reupload
-			if(SubContext.uploadEn == false)
-			{
-				console.log("uploadDoc() uploadEn: false");
-				uploadNextDoc();
-				return;
-			}
-    		
     		//判断是否取消上传
     		if(stopUploadFlag == true)
     		{
@@ -1853,6 +1847,16 @@
 				return;
 			}
 			
+    		//重传时根据reuploadEn确定该文件是否被设置为重传了
+			if(true == reuploadFlag)
+			{
+    			if(SubContext.reuploadEn == false)
+				{
+					console.log("uploadDoc() reuploadEn: false");
+					uploadNextDoc();
+					return;
+				}
+			}
     		
     		//设置上传状态
     		if(0 == SubContext.state)
@@ -2103,7 +2107,7 @@
             	return reuploadFailDocs();
             },
             reuploadFailDoc: function(id){
-            	return reuploadFailDocs(id);
+            	return reuploadFailDoc(id);
             },
         };
     })();
@@ -2119,7 +2123,7 @@
     function reuploadFailDoc(index)
     {
     	console.log("reuploadFailDoc() index:" + index);
-    	DocUpload.reuploadFailDoc();    	
+    	DocUpload.reuploadFailDoc(index);    	
     }
 	
 	//Stop Upload
