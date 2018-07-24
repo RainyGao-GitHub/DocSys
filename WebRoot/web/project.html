@@ -816,6 +816,7 @@
         var reuploadFailNum = 0;
         var reuploadSuccessNum = 0;
         var reuploadedNum = 0;
+        var reuploadList = []; //重传列表，保存的是SubContext的index
         
         //标准Java成员操作接口
         function getUploadStatus()
@@ -1383,15 +1384,31 @@
       	//uploadNextDoc，如果后续有未上传文件则上传下一个文件 
 		function uploadNextDoc()
 		{
-			index++;
-			if(index < totalNum)
-			{
-				uploadDoc(); 
-			}
-			else
-			{
-				uploadEndHandler();
-			}
+      		if(false == reuploadFlag)
+      		{
+	      		index++;
+				if(index < totalNum)
+				{
+					uploadDoc(); 
+				}
+				else
+				{
+					uploadEndHandler();
+				}
+      		}
+      		else 
+      		{
+      			if(reuploadList.length)
+      			{
+      				index = reuploadList.pop();
+      				uploadDoc();
+      			}
+      			else
+      			{
+      				uploadEndHandler();
+      			}
+      				
+      		}
 		}
 
       	//该接口是为了避免新增Node时触发的异步加载导致出现多个Node
@@ -1707,6 +1724,14 @@
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
 		function reuploadFailDocs()
 		{
+			for(i=0;i<totalNum;i++)
+			{
+				reuploadFailDoc(i);
+			}
+		}
+		
+		function reuploadFailDoc(id)
+		{
 			//首次上传未结束
 			if(false == reuploadFlag && true == isUploading)
 			{
@@ -1720,86 +1745,45 @@
 				//开始重传
 				reuploadFlag = true;
 				isUploading = true;
+				reuploadList = [];
 
-				reuploadCount = 0; 
 				reuploadTotalNum = 0;
-		        reuploadFailNum = 0;
-		        reuploadSuccessNum = 0;
 		        reuploadedNum = 0;
+		    	reuploadFailNum = 0;
+		        reuploadSuccessNum = 0;
 				stopUploadFlag = false;
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
 			}
 			else
 			{
-				console.log("reuploadFailDocs() 重传进行中,只要append到重传列表即可");
+				console.log("reuploadFailDocs() 重传进行中,更新重传列表即可");
 			}
 	        
 			//设置uploadEnd和一些影响uploadDoc的参数
-			for(i=0;i<totalNum;i++)
-			{
-				setSubContextForReupload(i);
-			}
-			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
+			setSubContextForReupload(index);
 			
-			if(false == reuploadFlag)
+			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
+			if(0 == reuploadTotalNum )
 			{
-				isUploading = true;
-				//trigger uploadDoc
-				index = 0;
-				uploadDoc();
+				console.log("reuploadFailDocs() 没有需要重传的Doc");
+				return;	
 			}
-			else
+			
+			//更新上传进度
+			showUploadingInfo();
+			
+			if(true == reuploadFlag && false == isUploading)
 			{
-				reuploadFlag = true;
-				showUploadingInfo();
+				//trigger uploadDoc
+				index = reuploadList.pop();
+				uploadDoc();
 			}
 		}
 		
-		function reuploadFailDoc(reuploadIndex)
+		function setSubContextForReupload(id)
 		{
-			//首次上传未结束
-			if(false == reuploadFlag && true == isUploading)
-			{
-				console.log("reuploadFailDoc() 首次上传未结束,不能重传失败文件");
-				return;
-			}
-			
-			reuploadFlag = true;
-			
-			if(false == isUploading)
-			{
-				reuploadCount = 0; 
-				reuploadTotalNum = 0;
-		        reuploadFailNum = 0;
-		        reuploadSuccessNum = 0;
-		        reuploadedNum = 0;
-		        
-		        //reset some important settings
-				stopUploadFlag = false;
-				fileCoverConfirmSet = 0;
-				uploadErrorConfirmSet = 0;
-			}
-			
-			setSubContextForReupload(reuploadIndex);
-			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
-			
-			if(false == isUploading)
-			{
-				isUploading = true;
-				//trigger uploadDoc
-				index = reuploadIndex;
-				uploadDoc();
-			}
-			else
-			{
-				showUploadingInfo();
-			}
-		}
-		
-		function setSubContextForReupload(reuploadIndex)
-		{
-			SubContext = SubContextList[reuploadIndex];
+			SubContext = SubContextList[id];
 			
 			console.log("setSubContextForReupload()",SubContext);
 			//已成功地不能重传
@@ -1821,8 +1805,8 @@
 			SubContext.stopUploadFlag = false;
 			SubContext.fileCoverConfirmSet = 0;
 			SubContext.uploadErrorConfirmSet = 0;
-					
-			console.log("setSubContextForReupload() 重传个数："+reuploadTotalNum);
+			
+			reuploadList.push(id);
 		}
 		
 		//uploadDoc接口，该接口是个递归调用
