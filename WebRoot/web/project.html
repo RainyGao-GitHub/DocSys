@@ -1360,7 +1360,11 @@
 					msg : '上传结束！',
 					type : 'success',
 					time : 2000,
-				    });      	
+				    }); 
+            
+  			//清除标记
+  			isUploading = false;
+  			reuploadFlag = false;
   		}
 
       	//uploadEndHandler
@@ -1726,6 +1730,7 @@
 		//重新上传所有失败文件（包括用户自己选择取消上传的文件）
 		function reuploadFailDocs()
 		{
+			console.log("reuploadFailDocs() 重传所有失败文件");
 			for(i=0;i<totalNum;i++)
 			{
 				reuploadFailDoc(i);
@@ -1737,16 +1742,15 @@
 			//首次上传未结束
 			if(false == reuploadFlag && true == isUploading)
 			{
-				console.log("reuploadFailDocs() 首次上传未结束,不能重传失败文件");
+				console.log("reuploadFailDoc() 首次上传未结束,不能重传失败文件");
 				return;
 			}
 			
 			if(false == reuploadFlag && false == isUploading)
 			{	
-				console.log("reuploadFailDocs() 启动重传");
+				console.log("reuploadFailDoc() 启动重传");
 				//开始重传
 				reuploadFlag = true;
-				isUploading = true;
 				reuploadList = [];
 
 				reuploadTotalNum = 0;
@@ -1759,16 +1763,16 @@
 			}
 			else
 			{
-				console.log("reuploadFailDocs() 重传进行中,更新重传列表即可");
+				console.log("reuploadFailDoc() 重传进行中,更新重传列表即可");
 			}
 	        
 			//设置uploadEnd和一些影响uploadDoc的参数
-			setSubContextForReupload(index);
+			setSubContextForReupload(id);
 			
-			console.log("reuploadFailDocs() 重传个数："+reuploadTotalNum);
+			console.log("reuploadFailDoc() 重传个数："+reuploadTotalNum);
 			if(0 == reuploadTotalNum )
 			{
-				console.log("reuploadFailDocs() 没有需要重传的Doc");
+				console.log("reuploadFailDoc() 没有需要重传的Doc");
 				return;	
 			}
 			
@@ -1777,8 +1781,10 @@
 			
 			if(true == reuploadFlag && false == isUploading)
 			{
+				isUploading = true;
 				//trigger uploadDoc
 				index = reuploadList.pop();
+				console.log("reuploadFailDoc() 重传开始" + index);
 				uploadDoc();
 			}
 		}
