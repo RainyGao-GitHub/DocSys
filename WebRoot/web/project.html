@@ -660,44 +660,6 @@
 		});
 	}
 	
-	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到filelist中
-	function buildFileList(entrys,fileList)
-	{
-		var totalSize = 0;
-		console.log("buildFileList()");
-		if(entrys.length > 0)
-   		{
-    		console.log("entrys.length:" + entrys.length);
-    		for( var i = 0 ; i < entrys.length ; i++ )
-    		{
-    			var entry = entrys[i];
-    	   		if(typeof entry == 'object')
-    	   		{
-    	   			fileList.push(entry);
-    	   			totalSize += entry.size;
-    	   			/*
-    	   			if(entry.isFile)	//文件
-    	   			{
-    	   				fileList.push(entry);
-    	   			}
-    	   			else
-    	   			{
-    	   				var dirReader = entry.createReader();
-    	   				var sbuEntrys = dirReader.readEntries();
-    	   				if(sbuEntrys.length > 0)
-    	   				{
-    	   					buildFileList(sbuEntrys,fileList);
-    	   				}
-    	   			}
-    	   			*/
-    	   		}
-    	   	}
-    	}
-    	//console.log(fileList);
-    	console.log("buildFileList() totalSize:" + totalSize);
-    	return totalSize;
-   	}
-	
 	//drag upload file confirm dialog（拖拽上传的确认对话框）
 	function uploadConfirm(files,parentNode)
 	{	
