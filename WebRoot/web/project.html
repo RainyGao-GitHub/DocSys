@@ -981,6 +981,30 @@
 	    	return totSize;
 	   	}
       	
+      	function getFileShowSize(fileSize)
+      	{
+			var showSize = fileSize;
+			var units = "B";	//速度单位
+			if((showSize/1024)>1)
+			{
+				showSize = showSize/1024;
+				units = "K";
+				if((showSize/1024)>1)
+				{
+					showSize = showSize/1024;
+					units = "M";
+					if((showSize/1024)>1)
+					{
+						showSize = showSize/1024;
+						units = "G";						
+					}
+				}
+			}
+			result =  "" + showSize + units;
+			console.log("getFileSize() showSize:" + result);
+			return result;
+      	}
+      	
       	//初始化上传文件的SubContext,并绘制对应的进度条
       	function checkAndDrawUploadItems(SubContextList)
       	{
@@ -1010,6 +1034,7 @@
 		    	{	
 		    		//console.log("index:" + i);
 		    		var SubContext = SubContextList[i];
+		    		SubContext.showSize = getFileShowSize(SubContext.size);
 		    		//console.log(SubContext);
 		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
 		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
