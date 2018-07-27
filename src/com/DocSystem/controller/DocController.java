@@ -243,8 +243,8 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer isAdd,Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " isAdd:" + isAdd  + " docId:" + docId + " filePath:" + filePath);
+	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("uploadDoc size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -257,7 +257,7 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		
 		//检查用户是否有权限新增文件
-		if(isAdd == 1)
+		if(-1 == docId)
 		{
 			if(checkUserAddRight(rt,login_user.getId(),parentId,reposId) == false)
 			{
@@ -331,7 +331,7 @@ public class DocController extends BaseController{
 			{
 				commitMsg = "uploadDoc " + fileName;
 			}
-			if(isAdd == 1)	//新建文件则新建记录，否则
+			if(-1 == docId)	//新建文件则新建记录，否则
 			{
 				addDoc(fileName,null, 1, uploadFile,size, checkSum,reposId, parentId, commitMsg, commitUser, login_user, rt);
 			}
