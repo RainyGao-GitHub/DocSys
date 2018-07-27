@@ -60,6 +60,9 @@
         	cursor: pointer;
         }
         
+        .uploadFileName{
+        	cursor: text;
+        }
         .reuploadAllBtn{
         	position:absolute;
         	top:15px;
@@ -1053,9 +1056,9 @@
 		    		var SubContext = SubContextList[i];
 		    		SubContext.showSize = getFileShowSize(SubContext.size);
 		    		//console.log(SubContext);
-		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
-		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
-		    				"<a class='reuploadBtn' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
+		    		str+="<li class='el-upload-list__item file"+i+" is-uploading' value="+i+">"+
+		    				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+SubContext.name+"</span></a>"+
+		    				"<a class='reuploadBtn reupload"+i+"' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -1354,6 +1357,8 @@
 	      	SubContextList[index].state = 2;	//上传结束
       		SubContextList[index].status = "success";
       		SubContextList[index].msgInfo = msgInfo;
+			//hide the reupload btn
+			$(".reupload"+index).hide();
 			uploadNextDoc();
       	}
 
@@ -1363,6 +1368,10 @@
       		if(successNum != totalNum)
       		{
       			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      		}
+      		else
+      		{
+      			$(".reuploadAllBtn").hide();
       		}
       		$(".upload-list-title").text(uploadEndInfo);
       		
