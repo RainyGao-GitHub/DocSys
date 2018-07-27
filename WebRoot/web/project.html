@@ -942,7 +942,7 @@
 	    	   		   	SubContext.vid = vid;
 	    	   		   	
 			    		SubContext.docId = -1; //-1: 新增  
-
+			    		
 	    	   		   	//advanced Info
 	    	   		   	SubContext.type = 1;	
 			    	   	SubContext.size = file.size;
@@ -1672,14 +1672,12 @@
 	             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 	             		{
 	             			SubContext.docId = ret.data;
-	             			SubContext.isAdd = 0;
 	             			fileCoverConfirm(name,"文件" + name + " 已存在");
 	             			return;
 	             		}
 	             		else if(ret.msgData == "1")	//文件存在且checkSum相同，直接标记成功
 	             		{
 	             			SubContext.docId = ret.data;	                
-	             			SubContext.isAdd = 0;
 	             			$('.file'+index).removeClass('is-uploading');
 		    				$('.file'+index).addClass('is-success');
 		                    uploadSuccessHandler(name,ret.msgInfo);
@@ -1688,7 +1686,6 @@
 	             		else
 	             		{
 	             			//doc not exists, let's resume the uploadDoc
-	             			SubContext.isAdd = 1;
 	             			uploadDoc();
 	             			return;
 	             		}
@@ -1916,7 +1913,6 @@
 			form.append("name", SubContext.name);
 			form.append("size", SubContext.size);
 			form.append("checkSum", SubContext.checkSum);
-			form.append("isAdd", SubContext.isAdd);
 			form.append("docId", SubContext.docId);
 			form.append("parentId", SubContext.realParentId);
 			form.append("reposId", SubContext.vid);
