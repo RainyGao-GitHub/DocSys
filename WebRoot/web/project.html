@@ -57,6 +57,23 @@
         	top:15px;
         	right:15px;
         	font-size:13px;
+        	cursor: pointer;
+        }
+        
+        .reuploadAllBtn{
+        	position:absolute;
+        	top:15px;
+        	right:50px;
+        	font-size:13px;
+        	cursor: pointer;
+        }
+        
+        .reuploadBtn{
+        	position:absolute;
+        	top:0px;
+        	right:50px;
+        	font-size:13px;
+        	cursor: pointer;
         }
     </style>
 
@@ -890,7 +907,7 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span onclick='reuploadFailDocs()'>全部重传 </span><i class='el-icon-close closeBtn'></i></div>";
+				var str="<div><span class='upload-list-title'>正在上传  " +index +" / " + totalNum +"</span><span class='reuploadAllBtn' onclick='reuploadFailDocs()'>全部重传 </span><i class='el-icon-close closeBtn'></i></div>";
 				str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 				$(".el-upload-list").show();
 				$('.el-upload-list').html(str);
@@ -1038,7 +1055,7 @@
 		    		//console.log(SubContext);
 		    		str+="<li class='el-upload-list__item file"+i+" is-uploading value="+i+">"+
 		    				"<a class='el-upload-list__item-name'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
-		    				"<a onclick='reuploadFailDocs("+i+")'>重传 </a>"+
+		    				"<a class='reuploadBtn' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
