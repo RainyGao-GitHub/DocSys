@@ -1997,14 +1997,14 @@
 
 			//新建文件上传表单
 			var form = new FormData();
-			form.append("uploadFile", SubContext.file);
-			form.append("filePath", SubContext.filePath);
 			form.append("name", SubContext.name);
+			form.append("filePath", SubContext.filePath);
 			form.append("size", SubContext.size);
 			form.append("checkSum", SubContext.checkSum);
 			form.append("docId", SubContext.docId);
 			form.append("parentId", SubContext.realParentId);
 			form.append("reposId", SubContext.vid);
+			form.append("uploadFile", SubContext.file);
 			
 			var name = SubContext.name;
 			
