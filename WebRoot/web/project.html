@@ -1611,9 +1611,10 @@
  		            if (currentChunk < chunks) {
  		                loadNext();
  		            } else {
- 		            	SubContext.checkSumState = 2;
+
  		            	SubContext.checkSum = spark.end();	            	
  		                console.log("caculateFileCheckSum() Computed hash:" + SubContext.checkSum); // computed hash
+ 		            	SubContext.checkSumState = 2; 		                
  		                
  		                //To caculateNext
  		                caculateNext();
@@ -1661,7 +1662,7 @@
  	         		reuploadCaculateIndex ++;
  	         		if(reuploadCaculateIndex < reuploadTotalNum)
  	         		{
- 	         			index = reuploadList[reuploadCaculateIndex];
+ 	         			caculateIndex = reuploadList[reuploadCaculateIndex];
  	         			caculate();
  	         		}
  	         		else
