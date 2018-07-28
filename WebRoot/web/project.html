@@ -1036,10 +1036,10 @@
       				return;
       			}
       			
-      			//Check if need to draw
-      			if((drawedNum - uploadedNum) > 100)
+      			//the drawedNum ahead of index less than 100, do draw the doc progress
+      			if((drawedNum - index) > 100)
       			{
-      			    console.log("druawUploadItems() drawedNum:" + drawedNum + " uploadedNum:" + uploadedNum);
+      			    console.log("druawUploadItems() drawedNum:" + drawedNum + " index:" + index);
       				return;
       			}
       			
