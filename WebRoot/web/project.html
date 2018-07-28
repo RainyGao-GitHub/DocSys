@@ -1780,7 +1780,7 @@
 	             			return;
 	             		}
 	                }
-	                elsee
+	                else
 	                {
 					 	uploadErrorConfirmHandler(name,ret.msgInfo);
 			            return;
@@ -1973,9 +1973,9 @@
     		}
    			//console.log("uploadDoc() checkAddParentNode completed");
    		 	
-   			if(getFileCheckSum(SubContext) == false)
+   			if(false == getFileCheckSum(SubContext))
    			{
-   				//checkSum is not ready, timer be called, callback will re-enter uploadDoc 5 secnods later
+   				//checkSum is not ready, timer be called, callback will re-enter uploadDoc 100ms later
    				return;
    			}
    			
@@ -1993,7 +1993,7 @@
     	function startUpload(SubContext)
     	{
 
-			console.log("startUpload() docId:" + SubContext.docId);
+			console.log("startUpload() docId:" + SubContext.docId,SubContext);
 
 			//新建文件上传表单
 			var form = new FormData();
@@ -2162,6 +2162,10 @@
 				SubContextList[i].stopUploadFlag = true;
 			}
 			stopUploadFlag = true;
+			
+  			//清除标记
+  			isUploading = false;
+  			reuploadFlag = false;
 		}
 				
 		//开放给外部的调用接口
