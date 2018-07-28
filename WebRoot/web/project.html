@@ -1560,21 +1560,22 @@
  	      	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
  	      	function caculate()
  	      	{
+ 	      		console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
  	      		var SubContext = SubContextList[caculateIndex];
  	 			if(1 == SubContext.checkSumState)
  	          	{
- 	      			console.log("caculateFileCheckSum() checkSum is caculating for:" + SubContext.index);
+ 	      			console.log("caculateFileCheckSum() checkSum is caculating for: " + SubContext.name );
  	      			return;
  	          	}
  	      		else if(2 == SubContext.checkSumState)
  	      		{
- 	      			console.log("caculateFileCheckSum() checkSum is ready for:" + SubContext.index);
+ 	      			console.log("caculateFileCheckSum() checkSum is ready for:" + SubContext.name);
  	      			caculateNext();
  	      			return;
  	      		}
  	      		
  	      		//start to caculate the checkSum for SubContext
- 	      		console.log("caculateFileCheckSum() start caculate checkSum for:" + SubContext.index);
+ 	      		console.log("caculateFileCheckSum() start caculate checkSum for:" + SubContext.name);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
  	            	chunkSize = 2097152,                           // read in chunks of 2MB
