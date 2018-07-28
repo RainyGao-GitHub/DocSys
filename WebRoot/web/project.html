@@ -1560,7 +1560,7 @@
  	      	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
  	      	function caculate()
  	      	{
- 	      		console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
+ 	      		//console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
  	      		var SubContext = SubContextList[caculateIndex];
  	 			if(1 == SubContext.checkSumState)
  	          	{
@@ -1569,7 +1569,7 @@
  	          	}
  	      		else if(2 == SubContext.checkSumState)
  	      		{
- 	      			console.log("caculateFileCheckSum() checkSum is ready for:" + SubContext.name);
+ 	      			//console.log("caculateFileCheckSum() checkSum is ready for:" + SubContext.name);
  	      			caculateNext();
  	      			return;
  	      		}
