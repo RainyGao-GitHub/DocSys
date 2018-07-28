@@ -256,6 +256,13 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
+		if(null == docId)
+		{
+			rt.setError("异常请求，docId是空！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//检查用户是否有权限新增文件
 		if(-1 == docId)
 		{
