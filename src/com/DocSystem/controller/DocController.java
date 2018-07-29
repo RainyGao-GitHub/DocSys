@@ -195,22 +195,25 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			//Try to find the same Doc in the repos
-			Doc sameDoc = getSameDoc(size,checkSum,reposId);
-			if(null != sameDoc)
+			if(size > 1024)
 			{
-				System.out.println("checkDocInfo() " + sameDoc.getName() + " found！");
-				//Do copy the Doc
-				copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt);
-				Doc newDoc = getDocByName(name,parentId,reposId);
-				if(null != newDoc)
+				//Try to find the same Doc in the repos
+				Doc sameDoc = getSameDoc(size,checkSum,reposId);
+				if(null != sameDoc)
 				{
-					System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
-					rt.setData(newDoc.getId());
-					rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
-					rt.setMsgData("1");
-					writeJson(rt, response);
-					return;
+					System.out.println("checkDocInfo() " + sameDoc.getName() + " found！");
+					//Do copy the Doc
+					copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt);
+					Doc newDoc = getDocByName(name,parentId,reposId);
+					if(null != newDoc)
+					{
+						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
+						rt.setData(newDoc.getId());
+						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
+						rt.setMsgData("1");
+						writeJson(rt, response);
+						return;
+					}
 				}
 			}
 		}
