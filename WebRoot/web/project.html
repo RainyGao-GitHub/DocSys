@@ -1917,6 +1917,58 @@
 			reuploadList.push(id);
 		}
 		
+      	function checkChunkUploade(SubContext)
+      	{      		
+      		var name = SubContext.name;
+	  	 	
+   			console.log("checkChunkUploade() for file:"+ name);
+      		
+   			var chunk = SubContext.chunkList[chunkIndex];
+      		//检查服务器端是否存在分片文件（checkHash should same）
+   			//调用后台接口检查chunk，并设置chunk.state re-enter upload
+  			$.ajax({
+	             url : "/DocSystem/Doc/checkChunkUploaded.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	             	name : name,
+	             	chunkIndex: SubContext.chunkIndex,
+	             	chunkNum: SubContext.chunkNum,
+	             	chunkHash: chunk.checkSum,
+	             	reposId : SubContext.vid, 
+	                parentId : SubContext.realParentId,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status)
+	             	{		
+	             		console.log("checkChunkUploade() ret",ret);
+	             		if(ret.msgData == "0")	//分片文件不存在 
+	             		{
+	             			chunk.state = 1;
+	             			uploadDoc();
+	             			return;
+	             		}
+	             		else
+	             		{
+	             			SubContext。chunkIndex++;
+	             			chunk.state = 2;
+	             			uploadDoc();
+	             			return;
+	             		}
+	                }
+	                else
+	                {
+					 	uploadErrorConfirmHandler(name,ret.msgInfo);
+			            return;
+	                }
+	            },
+	            error : function () {
+				 	uploadErrorConfirmHandler(name,"checkChunkUploade "+nodeName+ " 异常");
+		            return;
+	            }
+	        });
+      	}
+      	
 		//uploadDoc接口，该接口是个递归调用
     	function uploadDoc()
     	{
@@ -2002,10 +2054,6 @@
    					{
    						checkChunkUploaded(SubContext);	//It will check and set chunk state then re-enter uploadDoc
    						return;   				
-   					}
-   					else if(2 == chunk.state)	//Chunk alreay uploaded
-   					{
-   						chunkIndex++;  					
    					}
    					else
    					{
