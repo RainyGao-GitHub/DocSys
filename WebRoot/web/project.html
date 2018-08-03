@@ -54,7 +54,7 @@
         }
         .closeBtn{
         	position:absolute;
-        	top:15px;
+        	top:20px;
         	right:15px;
         	font-size:13px;
         	cursor: pointer;
@@ -1057,9 +1057,11 @@
 		    		var SubContext = SubContextList[i];
 		    		SubContext.showSize = getFileShowSize(SubContext.size);
 		    		//console.log(SubContext);
-		    		str+="<li class='el-upload-list__item file"+i+" is-uploading' value="+i+">"+
-		    				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+SubContext.name+"</span></a>"+
-		    				"<a class='reuploadBtn reupload"+i+"' onclick='reuploadFailDocs("+i+")'>重传 </a>"+
+		    		str+="<li class='el-upload-list__item file"+i+" is-uploading' value='"+i+"'>"+
+		    				"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i>"+SubContext.name+"</a>"+
+		    				"<label class='label label-danger label-sm mr30'>失败</label>"+
+		    				"<label class='label label-success label-sm mr30'>成功</label>"+
+		    				"<a class='el-upload-list__item-reupload' onclick='reuploadFailDoc("+i+")'>重传 </a>"+
 		    				"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopUpload'  value="+i+" onclick='stopUpload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -1987,7 +1989,42 @@
    			}
    			//console.log("uploadDoc() checkDocInfo completed");  
 			
-   			startUpload(SubContext);
+   			if(false == SubContext.chunked) 
+   			{
+   	   			startUpload(SubContext);   				
+   			}
+   			else
+   			{
+   				while(chunkIndex < chunkSum)
+   				{
+   					var chunk = SubContext.chunkList[chunkIndex];
+   					if(0 == chunk.state)
+   					{
+   						checkChunkUploaded(SubContext);	//It will check and set chunk state then re-enter uploadDoc
+   						return;   				
+   					}
+   					else if(2 == chunk.state)	//Chunk alreay uploaded
+   					{
+   						chunkIndex++;  					
+   					}
+   					else
+   					{
+   						startUpload(SubContext); //Do Upload the chunk
+   					}
+   				}
+   				//File Upload Ok
+            	if(SubContext.docId == -1) //文件新建成功
+                {	
+             		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
+             		//set the docId so that We can open it 
+             		SubContext.docId = ret.data.id;
+					
+                }
+				//update the uploadStatus
+				$('.file'+index).removeClass('is-uploading');
+				$('.file'+index).addClass('is-success');
+				uploadSuccessHandler(name,ret.msgInfo);
+   			}
     	}
 		
     	function startUpload(SubContext)
@@ -1997,22 +2034,45 @@
 
 			//新建文件上传表单
 			var form = new FormData();
-			form.append("name", SubContext.name);
-			form.append("filePath", SubContext.filePath);
-			form.append("size", SubContext.size);
-			form.append("checkSum", SubContext.checkSum);
-			form.append("docId", SubContext.docId);
-			form.append("parentId", SubContext.realParentId);
-			form.append("reposId", SubContext.vid);
-			form.append("uploadFile", SubContext.file);
+			
+			if(false == SubContext.chunked)
+			{
+				form.append("name", SubContext.name);
+				form.append("filePath", SubContext.filePath);
+				form.append("size", SubContext.size);
+				form.append("checkSum", SubContext.checkSum);
+				form.append("docId", SubContext.docId);
+				form.append("parentId", SubContext.realParentId);
+				form.append("reposId", SubContext.vid);
+				form.append("uploadFile", SubContext.file);
+			}
+			else
+			{
+				//根据chunkIndex上传
+				form.append("name", SubContext.name);
+				form.append("filePath", SubContext.filePath);
+				form.append("size", SubContext.size);
+				form.append("checkSum", SubContext.checkSum);
+				form.append("docId", SubContext.docId);
+				form.append("parentId", SubContext.realParentId);
+				form.append("reposId", SubContext.vid);
+				
+				var chunkIndex = SunContext.chunkIndex;
+				var chunkNum = SubContext.chunkNum;
+				var chunk = SubContext.chunkList[ckunkIndex];
+				var chunkData = SubContext.file.slice(chunk.utart,chunk.end);
+				form.append("uploadFile", chunkIndex);
+				form.append("chunkNum", chunkNum);
+				form.append("chunkHash", chunk.checkSum);
+				form.append("uploadFile", chunkData);
+			}
 			
 			var name = SubContext.name;
-			
 			//新建http异步请求
 			var xhr = new XMLHttpRequest();
 			
-			//设置异步上传状态变化回调处理函数
-			xhr.onreadystatechange = function() {				
+			//设置异步上传状态变化回调处a理函数
+			xhr.onreadystatechange = funtction() {				
 				//文件上传状态
 				console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
 				if(xhr.status == 200) 
@@ -2026,6 +2086,13 @@
 					//上传成功！
 					var ret = JSON.parse(xhr.responseText);
 					if("ok" == ret.status){
+						if(true == SubContext.chunked && false == isLastChunk(SubContext))
+						{
+							//分片上传未结束,re-enter uploadDoc to upload next chunk
+							uploadDoc();
+							return;
+						}
+						
 	                	if(SubContext.docId == -1) //文件新建成功
 		                {	
 		             		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
@@ -2081,13 +2148,10 @@
 				}
 				
 				//文件上传进度
-				//侦查附件上传情况  
-				//通过事件对象侦查  
-				//该匿名函数表达式大概0.05-0.1秒执行一次  
-				//evt.total; //附件总大小  
-				var loaded = evt.loaded;	//已上传大小
-				var tot = evt.total;
-				//console.log("fileSize:" +   SubContext.size  + "evt.tot: " + tot + " evt.loaded: " + loaded);
+				var loaded = evt.loaded + SubContext.uploadedSize;	//已上传大小
+				SubContext.uploadedSize = loaded;
+				//var tot = evt.total;
+				var tot = SubContext.size;
 				
 				//计算当前文件上传百分比
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
@@ -2095,7 +2159,7 @@
 				$('.file'+index+' .el-progress-bar__inner')[0].style.width=per+'%';
 				//console.log("上传中："+per+"%！"); 
 	
-				//统计已上传大小、百分比、上传速度、剩余上传时间
+				//统计总的已上传大小、百分比、上传速度、剩余上传时间
 				uploadTime = new Date().getTime();
 				if(per=="100")
 				{
