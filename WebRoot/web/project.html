@@ -2041,6 +2041,13 @@
    			}
    			//console.log("uploadDoc() checkDocInfo completed");  
 			
+   			if(false == CutFile(SubContext))	//文件切片 
+   			{
+   				//文件需要切片，但切片未完成，切片完成后会re-enter uploadDoc
+   				//This function will set chunked\ChunkIndex\ChunkNum\ChunkList(start,end,chunkHash)
+   				return;
+   			}
+   			
    			if(false == SubContext.chunked) 
    			{
    	   			startUpload(SubContext);   				
