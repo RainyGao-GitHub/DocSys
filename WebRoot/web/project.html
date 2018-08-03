@@ -2082,6 +2082,76 @@
    			}
     	}
 		
+		function CutFile(SubContext)
+		{
+			if(SubContext.size < 10M)
+			{
+				return true;
+			}
+ 	      	
+ 	      	if(0 != SubContext.cutFileState)
+ 	      	{
+ 	      		console.log("CutFile() completed for: " + SubContext.name );
+ 	      		return true;
+ 	      	}
+			
+			SubContext.checkSumState = 1;
+			 
+			chunkSize = 2097152;
+			SubContext.chunked = true;
+			SubContext.chunkIndex = 0;
+			SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
+			var chunkList = [];
+			for(i=0; i<SubContext.chunkNum; i++)
+			{
+				var chunk = [];
+				chunk.start=  i * chunkSize,;
+				chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
+				chunk.checkSum = 0;
+				chunkList.push(chunk);
+			}
+			SubContext.chunkList = chunkList;
+ 	      		
+ 	      	//start to caculate the chunk checkSum
+ 	      	console.log("CutFile() start to caculate check Sum for:" + SubContext.name);
+ 	      	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+ 	            	file = SubContext.file,
+ 	            	chunkSize = chunkSize,                           // read in chunks of 2MB
+ 	            	chunks = SubContext.chunkNum,
+ 	            	currentChunk = 0,
+ 	            	spark = new SparkMD5(),
+ 	            	fileReader = new FileReader();
+ 	      		
+ 		        	fileReader.onload = function (e) {
+ 		            	if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
+ 		            	{
+ 		            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
+ 		                	return;
+ 		            	}	
+ 		            	spark.readBinary(e.target.result);   //Read Data
+ 		           		chunkList[currentChunk].checkSum = spark.end();                
+		            	currentChunk ++;
+ 		            	if (currentChunk < chunks) {
+ 		                	loadNext();
+ 		            	}
+ 		            	else
+ 		            	{
+ 		            		//CutFile ok re-enter uploadDoc
+ 		            		SubContext.cutFileState = 2;
+ 		            		uploadDoc();	
+ 		            		return;
+ 		            	}
+ 		            }
+ 		    };
+		        
+		    function loadNext() {
+		            var start = chunkList[currentChunk].start;
+		            var end = chunkList[currentChunk].end;
+		            fileReader.readAsBinaryString(blobSlice.call(file, start, end));
+		    }
+		    return false;
+		}
+		
     	function startUpload(SubContext)
     	{
 
