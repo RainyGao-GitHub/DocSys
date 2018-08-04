@@ -152,7 +152,7 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(String name,Integer docId,  Integer size, Integer checkSum,Integer chunkIndex,Integer chunkNum,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkChunkUploaded(String name,Integer docId,  Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " chunkIndex: " + checkSum + " checkSum: " + chunkIndex + " chunkNum: " + chunkNum + " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
