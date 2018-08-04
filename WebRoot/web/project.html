@@ -2027,11 +2027,15 @@
       	function checkChunkUploade(SubContext)
       	{      		
       		var name = SubContext.name;
+	  	 	console.log("checkChunkUploade() for file:"+ name);
 	  	 	
-   			console.log("checkChunkUploade() for file:"+ name);
-      		
    			var chunk = SubContext.chunkList[chunkIndex];
-      		//检查服务器端是否存在分片文件（checkHash should same）
+	  	 	if(0 != chunk.uploadedState)
+	  	 	{
+	  	 		return true;
+	  	 	}
+   			
+   			//检查服务器端是否存在分片文件（checkHash should same）
    			//调用后台接口检查chunk，并设置chunk.state re-enter upload
   			$.ajax({
 	             url : "/DocSystem/Doc/checkChunkUploaded.do",
@@ -2051,29 +2055,31 @@
 	             		console.log("checkChunkUploade() ret",ret);
 	             		if(ret.msgData == "0")	//分片文件不存在 
 	             		{
-	             			chunk.state = 1;
+	             			chunk.uploadedState = 1;
 	             			uploadDoc();
 	             			return;
 	             		}
 	             		else
 	             		{
-	             			SubContext。chunkIndex++;
-	             			chunk.state = 2;
+	             			chunk.uploadedState = 2;
 	             			uploadDoc();
 	             			return;
 	             		}
 	                }
 	                else
 	                {
-					 	uploadErrorConfirmHandler(name,ret.msgInfo);
-			            return;
+             			chunk.uploadedState = 1;
+             			uploadDoc();
+             			return;
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(name,"checkChunkUploade "+nodeName+ " 异常");
-		            return;
+         			chunk.uploadedState = 1;
+         			uploadDoc();
+         			return;
 	            }
 	        });
+   			return false;
       	}
       	
 		//uploadDoc接口，该接口是个递归调用
@@ -2153,7 +2159,8 @@
    			
    			if(false == SubContext.chunked) 
    			{
-   	   			startUpload(SubContext);   				
+   	   			startUpload(SubContext);
+   	   			return;
    			}
    			else
    			{
@@ -2174,13 +2181,14 @@
    	   			
 	   	   			//根据chunk.state决定是否上传
 	   	   			var chunk = SubContext.chunkList[chunkIndex];
-	   				if(0 == chunk.uploadedState)	//current chunk not uploaded
+	   				if(1 == chunk.uploadedState)	//current chunk not uploaded
 	   				{
 		   				startUpload(SubContext); //Do Upload the chunk
+		   				return;
 	   				}
 	   				else
 	   				{
-	   					chunkIndex++;			
+	   					chunkIndex++;
 	   				}
    				}
 	   			
