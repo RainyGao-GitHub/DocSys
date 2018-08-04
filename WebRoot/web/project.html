@@ -1917,6 +1917,113 @@
 			reuploadList.push(id);
 		}
 		
+		//CutFile will cut file to dedicated size slice
+		function CutFile(SubContext)
+		{
+			chunkSize = 2097152;
+			if(SubContext.size < chunkSize * 10)	//< 20M do not cut
+			{
+				console.log("CutFile() no need to cut file!");
+				return true;
+			}
+ 	      	
+			if(0 == SubContext.cutFileState)
+			{
+				console.log("CutFile() file will be cut with chunkSize:" + chunkSize);
+				SubContext.chunked = true;
+				SubContext.checkSumState = 1;
+				SubContext.chunkIndex = 0;
+				SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
+				console.log("CutFile() chunkNum:" + chunkNum);
+				//Build ChunkList
+				var chunkList = [];
+				for(i=0; i< SubContext.chunkNum; i++)
+				{
+					var chunk = [];
+					chunk.start=  i * chunkSize,;
+					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
+					chunk.checkSum = "";
+					chunk.checkSumState = 0;
+					chunkList.push(chunk);
+				}
+				SubContext.chunkList = chunkList;
+			}
+			if(2 == SubContext.cutFileState)
+ 	      	{
+ 	      		console.log("CutFile() completed for: " + SubContext.name );
+ 	      		return true;
+ 	      	}
+ 	      	else
+ 	      	{
+ 	      		console.log("CutFile() is in processing for: " + SubContext.name );
+	      		return false;
+ 	      	}
+ 	      		
+ 	      	//start to caculate the chunk checkSum
+ 	      	console.log("CutFile() start to caculate check Sum for:" + SubContext.name);
+ 	      	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
+ 	            	file = SubContext.file,
+ 	            	chunkSize = chunkSize,                           // read in chunks of 2MB
+ 	            	chunks = SubContext.chunkNum,
+ 	            	currentChunkIndex = 0,
+ 	            	spark = new SparkMD5(),
+ 	            	fileReader = new FileReader();
+ 	      		
+ 		        	fileReader.onload = function (e) {
+ 		            	if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
+ 		            	{
+ 		            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
+ 		                	return;
+ 		            	}	
+ 		            	spark.readBinary(e.target.result);   //Read Data
+ 		            	SubContext.chunkList[currentChunk].checkSum = spark.end();
+ 		            	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
+		
+ 		            	currentChunk ++;
+ 		            	if (currentChunk < chunks) {
+ 		                	loadNext();
+ 		            	}
+ 		            	else
+ 		            	{
+ 		            		SubContext.cutFileState = 2;
+ 		            		return;
+ 		            	}
+ 		            }
+ 		    };
+		        
+		    function loadNext() {
+         		SubContext.chunkList[currentChunk].checkSumState = 1;
+		        var start = SubContext.chunkList[currentChunk].start;
+		        var end = SubContext.chunkList[currentChunk].end;
+		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
+		    }
+		    return false;
+		}
+		
+		
+		function getChunkCheckSum(SubContext)
+		{            
+			var chunk = SubContext.chunkList[SubContext.chunkIndex];
+			switch(chunk.checkSumState)
+			{
+			case 0:
+			case 1:
+				//Start timer to wait for result
+		        console.log("getChunkCheckSum() chunk checkSum not ready, wait for result 100 ms later"); 
+				setTimeout(function () {
+		            uploadDoc(); //reEnter uploadDoc
+		        },100);	//check it one minute later
+				return false;
+			case 2:
+				//CheckSum ok
+				return true;
+			default:
+				//CheckSum Error
+				SubContext.checkSum = "";
+				return true;
+			}
+		}
+		
       	function checkChunkUploade(SubContext)
       	{      		
       		var name = SubContext.name;
@@ -2092,89 +2199,6 @@
 				return;   	
    			}
     	}
-		
-		//CutFile will cut file to dedicated size slice
-		function CutFile(SubContext)
-		{
-			chunkSize = 2097152;
-			if(SubContext.size < chunkSize * 10)	//< 20M do not cut
-			{
-				console.log("CutFile() no need to cut file!");
-				return true;
-			}
- 	      	
-			if(0 == SubContext.cutFileState)
-			{
-				console.log("CutFile() file will be cut with chunkSize:" + chunkSize);
-				SubContext.chunked = true;
-				SubContext.checkSumState = 1;
-				SubContext.chunkIndex = 0;
-				SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
-				console.log("CutFile() chunkNum:" + chunkNum);
-				//Build ChunkList
-				var chunkList = [];
-				for(i=0; i< SubContext.chunkNum; i++)
-				{
-					var chunk = [];
-					chunk.start=  i * chunkSize,;
-					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
-					chunk.checkSum = "";
-					chunk.checkSumState = 0;
-					chunkList.push(chunk);
-				}
-				SubContext.chunkList = chunkList;
-			}
-			if(2 == SubContext.cutFileState)
- 	      	{
- 	      		console.log("CutFile() completed for: " + SubContext.name );
- 	      		return true;
- 	      	}
- 	      	else
- 	      	{
- 	      		console.log("CutFile() is in processing for: " + SubContext.name );
-	      		return false;
- 	      	}
- 	      		
- 	      	//start to caculate the chunk checkSum
- 	      	console.log("CutFile() start to caculate check Sum for:" + SubContext.name);
- 	      	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
- 	            	file = SubContext.file,
- 	            	chunkSize = chunkSize,                           // read in chunks of 2MB
- 	            	chunks = SubContext.chunkNum,
- 	            	currentChunkIndex = 0,
- 	            	spark = new SparkMD5(),
- 	            	fileReader = new FileReader();
- 	      		
- 		        	fileReader.onload = function (e) {
- 		            	if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
- 		            	{
- 		            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
- 		                	return;
- 		            	}	
- 		            	spark.readBinary(e.target.result);   //Read Data
- 		            	SubContext.chunkList[currentChunk].checkSum = spark.end();
- 		            	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
-		
- 		            	currentChunk ++;
- 		            	if (currentChunk < chunks) {
- 		                	loadNext();
- 		            	}
- 		            	else
- 		            	{
- 		            		SubContext.cutFileState = 2;
- 		            		return;
- 		            	}
- 		            }
- 		    };
-		        
-		    function loadNext() {
-         		SubContext.chunkList[currentChunk].checkSumState = 1;
-		        var start = SubContext.chunkList[currentChunk].start;
-		        var end = SubContext.chunkList[currentChunk].end;
-		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
-		    }
-		    return false;
-		}
 		
     	function startUpload(SubContext)
     	{
