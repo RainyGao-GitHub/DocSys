@@ -356,10 +356,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//获取文件并保存文件
-		//MultipartHttpServletRequest multiRequest;
-		//multiRequest = (MultipartHttpServletRequest) request;
-		//MultipartFile uploadFile = multiRequest.getFile("uploadFile");
+		//如果是分片文件，则保存分片文件
+		//如果是最后一个分片则combineChunks
+		
+		//整个文件已经准备好
 		if (uploadFile != null) 
 		{
 			String fileName = uploadFile.getOriginalFilename();
