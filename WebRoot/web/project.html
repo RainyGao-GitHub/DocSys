@@ -2041,12 +2041,8 @@
    			}
    			//console.log("uploadDoc() checkDocInfo completed");  
 			
-   			if(false == CutFile(SubContext))	//文件切片 
-   			{
-   				//文件需要切片，但切片未完成，切片完成后会re-enter uploadDoc
-   				//This function will set chunked\ChunkIndex\ChunkNum\ChunkList(start,end,chunkHash)
-   				return;
-   			}
+   			//Check and CutFile
+   			CutFile(SubContext); 
    			
    			if(false == SubContext.chunked) 
    			{
@@ -2054,20 +2050,34 @@
    			}
    			else
    			{
-   				while(chunkIndex < chunkSum)
+   				while(chunkIndex <  SubContext.chunkNum)
    				{
-   					var chunk = SubContext.chunkList[chunkIndex];
-   					if(0 == chunk.state)
-   					{
-   						checkChunkUploaded(SubContext);	//It will check and set chunk state then re-enter uploadDoc
-   						return;   				
-   					}
-   					else
-   					{
-   						startUpload(SubContext); //Do Upload the chunk
-   					}
+	   	   			if(false == getChunkCheckSum(SubContext))
+	   	   			{
+	   	   				//checkSum for chunk is not ready, timer be called, callback will re-enter uploadDoc 100ms later
+	   	   				return;
+	   	   			}
+   	   			
+	   	   			//检查Chunk是否存在且是否相同，return false 表示内部有异步调用
+	   	   			if(false == checkChunkUploaded(SubContext))
+	   	   			{
+	   	    			console.log("uploadDoc() checkChunkUploaded be called, callback will re-enter uploadDoc");   				
+	   	   				return;
+	   	   			}
+   	   			
+	   	   			//根据chunk.state决定是否上传
+	   	   			var chunk = SubContext.chunkList[chunkIndex];
+	   				if(0 == chunk.uploadedState)	//current chunk not uploaded
+	   				{
+		   				startUpload(SubContext); //Do Upload the chunk
+	   				}
+	   				else
+	   				{
+	   					chunkIndex++;			
+	   				}
    				}
-   				//File Upload Ok
+	   			
+   				//All Chunk Uploaded, means file upload ok
             	if(SubContext.docId == -1) //文件新建成功
                 {	
              		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
@@ -2079,38 +2089,51 @@
 				$('.file'+index).removeClass('is-uploading');
 				$('.file'+index).addClass('is-success');
 				uploadSuccessHandler(name,ret.msgInfo);
+				return;   	
    			}
     	}
 		
+		//CutFile will cut file to dedicated size slice
 		function CutFile(SubContext)
 		{
-			if(SubContext.size < 10M)
+			chunkSize = 2097152;
+			if(SubContext.size < chunkSize * 10)	//< 20M do not cut
 			{
+				console.log("CutFile() no need to cut file!");
 				return true;
 			}
  	      	
- 	      	if(0 != SubContext.cutFileState)
+			if(0 == SubContext.cutFileState)
+			{
+				console.log("CutFile() file will be cut with chunkSize:" + chunkSize);
+				SubContext.chunked = true;
+				SubContext.checkSumState = 1;
+				SubContext.chunkIndex = 0;
+				SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
+				console.log("CutFile() chunkNum:" + chunkNum);
+				//Build ChunkList
+				var chunkList = [];
+				for(i=0; i< SubContext.chunkNum; i++)
+				{
+					var chunk = [];
+					chunk.start=  i * chunkSize,;
+					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
+					chunk.checkSum = "";
+					chunk.checkSumState = 0;
+					chunkList.push(chunk);
+				}
+				SubContext.chunkList = chunkList;
+			}
+			if(2 == SubContext.cutFileState)
  	      	{
  	      		console.log("CutFile() completed for: " + SubContext.name );
  	      		return true;
  	      	}
-			
-			SubContext.checkSumState = 1;
-			 
-			chunkSize = 2097152;
-			SubContext.chunked = true;
-			SubContext.chunkIndex = 0;
-			SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
-			var chunkList = [];
-			for(i=0; i<SubContext.chunkNum; i++)
-			{
-				var chunk = [];
-				chunk.start=  i * chunkSize,;
-				chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
-				chunk.checkSum = 0;
-				chunkList.push(chunk);
-			}
-			SubContext.chunkList = chunkList;
+ 	      	else
+ 	      	{
+ 	      		console.log("CutFile() is in processing for: " + SubContext.name );
+	      		return false;
+ 	      	}
  	      		
  	      	//start to caculate the chunk checkSum
  	      	console.log("CutFile() start to caculate check Sum for:" + SubContext.name);
@@ -2118,7 +2141,7 @@
  	            	file = SubContext.file,
  	            	chunkSize = chunkSize,                           // read in chunks of 2MB
  	            	chunks = SubContext.chunkNum,
- 	            	currentChunk = 0,
+ 	            	currentChunkIndex = 0,
  	            	spark = new SparkMD5(),
  	            	fileReader = new FileReader();
  	      		
@@ -2129,25 +2152,26 @@
  		                	return;
  		            	}	
  		            	spark.readBinary(e.target.result);   //Read Data
- 		           		chunkList[currentChunk].checkSum = spark.end();                
-		            	currentChunk ++;
+ 		            	SubContext.chunkList[currentChunk].checkSum = spark.end();
+ 		            	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
+		
+ 		            	currentChunk ++;
  		            	if (currentChunk < chunks) {
  		                	loadNext();
  		            	}
  		            	else
  		            	{
- 		            		//CutFile ok re-enter uploadDoc
  		            		SubContext.cutFileState = 2;
- 		            		uploadDoc();	
  		            		return;
  		            	}
  		            }
  		    };
 		        
 		    function loadNext() {
-		            var start = chunkList[currentChunk].start;
-		            var end = chunkList[currentChunk].end;
-		            fileReader.readAsBinaryString(blobSlice.call(file, start, end));
+         		SubContext.chunkList[currentChunk].checkSumState = 1;
+		        var start = SubContext.chunkList[currentChunk].start;
+		        var end = SubContext.chunkList[currentChunk].end;
+		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
 		    }
 		    return false;
 		}
@@ -2186,8 +2210,9 @@
 				var chunkNum = SubContext.chunkNum;
 				var chunk = SubContext.chunkList[ckunkIndex];
 				var chunkData = SubContext.file.slice(chunk.utart,chunk.end);
-				form.append("uploadFile", chunkIndex);
+				form.append("chunkIndex", chunkIndex);
 				form.append("chunkNum", chunkNum);
+				formappend("chunkSize",chunk.chunkSize);
 				form.append("chunkHash", chunk.checkSum);
 				form.append("uploadFile", chunkData);
 			}
