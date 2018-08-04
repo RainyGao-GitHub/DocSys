@@ -2069,15 +2069,13 @@
 	                }
 	                else
 	                {
-             			chunk.uploadedState = 1;
-             			uploadDoc();
-             			return;
+					 	uploadErrorConfirmHandler(name,ret.msgInfo);
+			            return;
 	                }
 	            },
 	            error : function () {
-         			chunk.uploadedState = 1;
-         			uploadDoc();
-         			return;
+				 	uploadErrorConfirmHandler(name,"checkChunkUploade "+nodeName+ " 异常");
+		            return;
 	            }
 	        });
    			return false;
