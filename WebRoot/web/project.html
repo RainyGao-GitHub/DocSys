@@ -2145,6 +2145,7 @@
 			var form = new FormData();
 			if(false == SubContext.chunked)
 			{
+				SubContext.uploadedSize = 0;	//For display
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
@@ -2266,7 +2267,7 @@
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
 				$('.file'+index+' .el-progress__text').text(per+"%");
 				$('.file'+index+' .el-progress-bar__inner')[0].style.width=per+'%';
-				//console.log("上传中："+per+"%！"); 
+				console.log("上传中："+per+"%！"); 
 	
 				//统计总的已上传大小、百分比、上传速度、剩余上传时间
 				uploadTime = new Date().getTime();
