@@ -1943,7 +1943,8 @@
 				for(i=0; i< SubContext.chunkNum; i++)
 				{
 					var chunk = [];
-					chunk.start=  i * chunkSize;
+					var start = i * chunkSize;
+					chunk.start= start;
 					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
 					chunk.chunkSize = chunk.end - chunk.start;
 					chunk.checkSum = "";
@@ -2091,8 +2092,8 @@
       	}
 		
 		function startChunkUpload(SubContext)
-		{
-			while(chunkIndex <  SubContext.chunkNum)
+		{ 
+			while(SubContext.chunkIndex <  SubContext.chunkNum)
 			{
    	   			if(false == getChunkCheckSum(SubContext))
    	   			{
@@ -2108,7 +2109,7 @@
    	   			}
 	   			
    	   			//根据chunk.state决定是否上传
-   	   			var chunk = SubContext.chunkList[chunkIndex];
+   	   			var chunk = SubContext.chunkList[SubContext.chunkIndex];
    				if(1 == chunk.uploadedState)	//current chunk not uploaded
    				{
 	   				startUpload(SubContext); //Do Upload the chunk
@@ -2116,7 +2117,7 @@
    				}
    				else
    				{
-   					chunkIndex++;
+   					SubContext.chunkIndex++;
    				}
 			}
    			
