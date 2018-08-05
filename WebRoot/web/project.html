@@ -1634,8 +1634,8 @@
  		        };
  		
  		        function loadNext() {
- 		            var start = currentChunk * chunkSize,
- 		                end = start + chunkSize >= file.size ? file.size : start + chunkSize;
+ 		            var start = currentChunk * chunkSize;
+ 		            var end = start + chunkSize >= file.size ? file.size : start + chunkSize;
  		
  		            fileReader.readAsBinaryString(blobSlice.call(file, start, end));
  		        }
@@ -1943,7 +1943,7 @@
 					var chunk = [];
 					chunk.start=  i * chunkSize;
 					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
-					chunk.chunkSize = end - start;
+					chunk.chunkSize = chunk.end - chunk.start;
 					chunk.checkSum = "";
 					chunk.checkSumState = 0;
 					chunkList.push(chunk);
@@ -1972,29 +1972,28 @@
  	            	spark = new SparkMD5(),
  	            	fileReader = new FileReader();
  	      		
- 		        	fileReader.onload = function (e) {
- 		            	if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
- 		            	{
- 		            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
- 		                	return;
- 		            	}
- 		    	      	var hash = spark.hashBinary(e.target.result);   //compute Data Hash
- 		    	      	SubContext.chunkList[currentChunk].checkSum = hash;
- 		    	      	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
- 		            	console.log("CutFile() Chunk " + currentChunk + " data read ok, checkSum is " + hash);
- 		            	
- 		            	//Try to start read next chunk data
- 		            	currentChunk ++;
- 		            	if (currentChunk < chunks) {
- 		                	loadNext();
- 		            	}
- 		            	else
- 		            	{
- 		            		SubContext.cutFileState = 2;
- 		            		return;
- 		            	}
- 		            }
- 		    };
+        	fileReader.onload = function (e) {
+            	if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
+            	{
+            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
+                	return;
+            	}
+    	      	var hash = spark.hashBinary(e.target.result);   //compute Data Hash
+    	      	SubContext.chunkList[currentChunk].checkSum = hash;
+    	      	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
+            	console.log("CutFile() Chunk " + currentChunk + " data read ok, checkSum is " + hash);
+            	
+            	//Try to start read next chunk data
+            	currentChunk ++;
+            	if (currentChunk < chunks) {
+                	loadNext();
+            	}
+            	else
+            	{
+            		SubContext.cutFileState = 2;
+            		return;
+            	}
+            };
 		        
 		    function loadNext() {
          		SubContext.chunkList[currentChunk].checkSumState = 1;
@@ -2002,6 +2001,9 @@
 		        var end = SubContext.chunkList[currentChunk].end;
 		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
 		    }
+		    
+	      	//Trigger the fileRead
+		    loadNext();
 		    return false;
 		}
 		
