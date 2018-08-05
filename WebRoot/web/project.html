@@ -987,6 +987,10 @@
 			    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
 			    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
 			    	   	
+			    	   	//分片上传状态 
+			    	   	SubContext.cutFileState = 0;
+			    	   	SubContext.chunked = false;
+			    	   	
 			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
 			    		SubContext.stopUploadFlag = false; //停止上传标记未false
