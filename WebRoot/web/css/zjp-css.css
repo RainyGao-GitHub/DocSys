@@ -3,10 +3,10 @@
     border-radius: 5px;
     position: fixed;
     max-height: 200px;
-    bottom: 30px;
+    bottom: 0;
     top: auto;
     min-width: 320px;
-    width: 30%;
+    width: 25%;
     left: auto;
     right: 0;
     background: white;
@@ -21,8 +21,6 @@
     margin-top: -5px;
     width: 270px;
 }
-.mr15{margin-right: 15px;}
-.mr30{margin-right: 30px;}
 .uploadedFileList{
 	border-top: 1px solid #eee;
 	border-bottom: 1px solid #eee;
@@ -31,15 +29,4 @@
     overflow-y: auto;
     padding-right: 10px;
     margin-right: -5px;
-}
-
-.el-upload-list__item{
-	font-size: 12px;
-}
-
-.el-upload-list__item-name{
-	display: inline-block;
-	vertical-align: middle;
-	width: 200px;
-    overflow: hidden;
 }
