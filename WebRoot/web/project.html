@@ -1942,6 +1942,7 @@
 					var chunk = [];
 					chunk.start=  i * chunkSize,;
 					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
+					chunk.chunkSize = end - start;
 					chunk.checkSum = "";
 					chunk.checkSumState = 0;
 					chunkList.push(chunk);
