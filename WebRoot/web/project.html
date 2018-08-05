@@ -2140,7 +2140,6 @@
 
 			//新建文件上传表单
 			var form = new FormData();
-			
 			if(false == SubContext.chunked)
 			{
 				form.append("name", SubContext.name);
@@ -2166,7 +2165,7 @@
 				var chunkIndex = SunContext.chunkIndex;
 				var chunkNum = SubContext.chunkNum;
 				var chunk = SubContext.chunkList[ckunkIndex];
-				var chunkData = SubContext.file.slice(chunk.utart,chunk.end);
+				var chunkData = SubContext.file.slice(chunk.start,chunk.end);
 				form.append("chunkIndex", chunkIndex);
 				form.append("chunkNum", chunkNum);
 				formappend("chunkSize",chunk.chunkSize);
@@ -2179,7 +2178,7 @@
 			var xhr = new XMLHttpRequest();
 			
 			//设置异步上传状态变化回调处a理函数
-			xhr.onreadystatechange = funtction() {				
+			xhr.onreadystatechange = function() {				
 				//文件上传状态
 				console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
 				if(xhr.status == 200) 
@@ -2223,7 +2222,7 @@
 						$('.file'+index).addClass('is-fail');
 						uploadErrorConfirmHandler(name, ret.msgInfo);
 						return;
-		             };
+		             }
 				}else{
 					if(xhr.status < 300) 
 					{
