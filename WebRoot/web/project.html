@@ -1978,11 +1978,11 @@
  		            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
  		                	return;
  		            	}
- 		    	      	console.log("CutFile() Chunk " + currentChunk + " data read ok, caculate its checkSum");
- 		            	spark.readBinary(e.target.result);   //Read Data
- 		            	SubContext.chunkList[currentChunk].checkSum = spark.end();
- 		            	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
-		
+ 		    	      	var hash = spark.hashBinary(e.target.result);   //compute Data Hash
+ 		    	      	SubContext.chunkList[currentChunk].checkSum = hash;
+ 		    	      	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
+ 		            	console.log("CutFile() Chunk " + currentChunk + " data read ok, checkSum is " + hash);
+ 		            	
  		            	//Try to start read next chunk data
  		            	currentChunk ++;
  		            	if (currentChunk < chunks) {
