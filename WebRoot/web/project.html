@@ -1920,21 +1920,22 @@
 		//CutFile will cut file to dedicated size slice
 		function CutFile(SubContext)
 		{
-			chunkSize = 2097152;
-			if(SubContext.size < chunkSize * 10)	//< 20M do not cut
+			console.log("CutFile() for", SubContext);
+			var chunkSize = 2097152;
+			var minCutSize = chunkSize * 10;
+			if(SubContext.size < minCutSize)	//< 20M do not cut
 			{
-				console.log("CutFile() no need to cut file!");
+				console.log("CutFile() file size less than minCutSize " + minCutSize);
 				return true;
 			}
  	      	
 			if(0 == SubContext.cutFileState)
 			{
-				console.log("CutFile() file will be cut with chunkSize:" + chunkSize);
+				console.log("CutFile() start to cut file");
 				SubContext.chunked = true;
 				SubContext.checkSumState = 1;
 				SubContext.chunkIndex = 0;
 				SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
-				console.log("CutFile() chunkNum:" + chunkNum);
 				//Build ChunkList
 				var chunkList = [];
 				for(i=0; i< SubContext.chunkNum; i++)
@@ -1948,20 +1949,21 @@
 					chunkList.push(chunk);
 				}
 				SubContext.chunkList = chunkList;
+				console.log("CutFile() cut ok",SubContext);
 			}
 			if(2 == SubContext.cutFileState)
  	      	{
- 	      		console.log("CutFile() completed for: " + SubContext.name );
+ 	      		console.log("CutFile() completed for:",SubContext);
  	      		return true;
  	      	}
  	      	else
  	      	{
- 	      		console.log("CutFile() is in processing for: " + SubContext.name );
+ 	      		console.log("CutFile() is in processing for: ",SubContext);
 	      		return false;
  	      	}
  	      		
  	      	//start to caculate the chunk checkSum
- 	      	console.log("CutFile() start to caculate check Sum for:" + SubContext.name);
+ 	      	console.log("CutFile() start to caculate chunk checkSum for:" + SubContext.name);
  	      	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
  	            	chunkSize = chunkSize,                           // read in chunks of 2MB
@@ -1975,11 +1977,13 @@
  		            	{
  		            		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
  		                	return;
- 		            	}	
+ 		            	}
+ 		    	      	console.log("CutFile() Chunk " + currentChunk + " data read ok, caculate its checkSum");
  		            	spark.readBinary(e.target.result);   //Read Data
  		            	SubContext.chunkList[currentChunk].checkSum = spark.end();
  		            	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
 		
+ 		            	//Try to start read next chunk data
  		            	currentChunk ++;
  		            	if (currentChunk < chunks) {
  		                	loadNext();
