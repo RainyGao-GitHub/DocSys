@@ -1921,18 +1921,19 @@
 		
 		//CutFile will cut file to dedicated size slice
 		function CutFile(SubContext)
-		{
-			console.log("CutFile() for", SubContext);
-			var chunkSize = 2097152;
-			var minCutSize = chunkSize * 10;
-			if(SubContext.size < minCutSize)	//< 20M do not cut
-			{
-				console.log("CutFile() file size less than minCutSize " + minCutSize);
-				return true;
-			}
- 	      	
+		{ 	
 			if(0 == SubContext.cutFileState)
 			{
+				console.log("CutFile() for", SubContext);
+				var chunkSize = 2097152;
+				var minCutSize = chunkSize * 10;
+				if(SubContext.size < minCutSize)	//< 20M do not cut
+				{
+					SubContext.cutFileState = 2;
+					console.log("CutFile() file size less than minCutSize " + minCutSize);
+					return true;
+				}
+				
 				console.log("CutFile() start to cut file");
 				SubContext.chunked = true;
 				SubContext.cutFileState = 1;
@@ -1956,7 +1957,7 @@
 			}
 			else if(2 == SubContext.cutFileState)
  	      	{
- 	      		console.log("CutFile() completed for:",SubContext);
+ 	      		//console.log("CutFile() completed for:",SubContext);
  	      		return true;
  	      	}
  	      	else
@@ -1992,17 +1993,18 @@
             	}
             	else
             	{
-            		SubContext.cutFileState = 2;
+            		console.log("CutFile() all chunks checkSum is ready ",SubContext);
+                	SubContext.cutFileState = 2;
             		return;
             	}
             };
 		        
 		    function loadNext() {
-		    	console.log("loadNext()");
+		    	//console.log("loadNext()");
 		    	SubContext.chunkList[currentChunk].checkSumState = 1;
 		        var start = SubContext.chunkList[currentChunk].start;
 		        var end = SubContext.chunkList[currentChunk].end;
-		        console.log("loadNext() ",start,end);
+		        //console.log("loadNext() ",start,end);
 		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
 		    }
 		    
@@ -2035,12 +2037,12 @@
 			}
 		}
 		
-      	function checkChunkUploade(SubContext)
+      	function checkChunkUploaded(SubContext)
       	{      		
       		var name = SubContext.name;
-	  	 	console.log("checkChunkUploade() for file:"+ name);
+	  	 	console.log("checkChunkUploaded() for file:"+ name);
 	  	 	
-   			var chunk = SubContext.chunkList[chunkIndex];
+   			var chunk = SubContext.chunkList[SubContext.chunkIndex];
 	  	 	if(0 != chunk.uploadedState)
 	  	 	{
 	  	 		return true;
@@ -2105,7 +2107,7 @@
    	   			//检查Chunk是否存在且是否相同，return false 表示内部有异步调用
    	   			if(false == checkChunkUploaded(SubContext))
    	   			{
-   	    			console.log("uploadDoc() checkChunkUploaded be called, callback will re-enter uploadDoc");   				
+   	    			console.log("startChunkUpload() checkChunkUploaded be called, callback will re-enter uploadDoc");   				
    	   				return;
    	   			}
 	   			
