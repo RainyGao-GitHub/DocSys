@@ -1564,7 +1564,7 @@
  	      	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
  	      	function caculate()
  	      	{
- 	      		//console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
+ 	      		console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
  	      		var SubContext = SubContextList[caculateIndex];
  	 			if(1 == SubContext.checkSumState)
  	          	{
@@ -1579,18 +1579,18 @@
  	      		}
  	      		
  	      		//start to caculate the checkSum for SubContext
- 	      		console.log("caculateFileCheckSum() start caculate checkSum for:" + SubContext.name);
+ 	      		console.log("caculateFileCheckSum() start caculate checkSum for:",SubContext);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
  	            	chunkSize = 2097152,                           // read in chunks of 2MB
- 	            	chunks = Math.ceil(file.size / chunkSize),
+ 	            	chunks = Math.ceil(SubContext.size / chunkSize),
  	            	currentChunk = 0,
  	            	spark = new SparkMD5(),
  	            	time,
  	            	uniqueId = 'chunk_' + (new Date().getTime()),
  	            	chunkStep = 1,
  	            	fileReader = new FileReader();
-
+ 	      		
  	      		//console.log("caculateFileCheckSum() blobSlice",blobSlice);
  	      		
  		        fileReader.onload = function (e) {
@@ -1935,7 +1935,7 @@
 			{
 				console.log("CutFile() start to cut file");
 				SubContext.chunked = true;
-				SubContext.checkSumState = 1;
+				SubContext.cutFileState = 1;
 				SubContext.chunkIndex = 0;
 				SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
 				//Build ChunkList
@@ -1954,7 +1954,7 @@
 				SubContext.chunkList = chunkList;
 				console.log("CutFile() cut ok",SubContext);
 			}
-			if(2 == SubContext.cutFileState)
+			else if(2 == SubContext.cutFileState)
  	      	{
  	      		console.log("CutFile() completed for:",SubContext);
  	      		return true;
@@ -1971,8 +1971,7 @@
  	            	file = SubContext.file,
  	            	chunkSize = chunkSize,                           // read in chunks of 2MB
  	            	chunks = SubContext.chunkNum,
- 	            	currentChunkIndex = 0,
- 	            	spark = new SparkMD5(),
+ 	            	currentChunk = 0,
  	            	fileReader = new FileReader();
  	      		
         	fileReader.onload = function (e) {
@@ -1981,7 +1980,7 @@
             		console.log("CutFile() upload was stoped, stop caculate chunk checkSum");
                 	return;
             	}
-    	      	var hash = spark.hashBinary(e.target.result);   //compute Data Hash
+    	      	var hash = SparkMD5.hashBinary(e.target.result);   //compute Data Hash
     	      	SubContext.chunkList[currentChunk].checkSum = hash;
     	      	SubContext.chunkList[currentChunk].checkSumState = 2;		            	
             	console.log("CutFile() Chunk " + currentChunk + " data read ok, checkSum is " + hash);
@@ -1999,9 +1998,11 @@
             };
 		        
 		    function loadNext() {
-         		SubContext.chunkList[currentChunk].checkSumState = 1;
+		    	console.log("loadNext()");
+		    	SubContext.chunkList[currentChunk].checkSumState = 1;
 		        var start = SubContext.chunkList[currentChunk].start;
 		        var end = SubContext.chunkList[currentChunk].end;
+		        console.log("loadNext() ",start,end);
 		        fileReader.readAsBinaryString(blobSlice.call(file, start, end));
 		    }
 		    
