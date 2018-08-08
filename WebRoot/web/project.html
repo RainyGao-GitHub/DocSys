@@ -1950,6 +1950,7 @@
 					chunk.chunkSize = chunk.end - chunk.start;
 					chunk.checkSum = "";
 					chunk.checkSumState = 0;
+					chunk.uploadedState = 0;
 					chunkList.push(chunk);
 				}
 				SubContext.chunkList = chunkList;
@@ -2013,9 +2014,18 @@
 		    return false;
 		}
 		
+		function isLastChunk(SubContext)
+		{
+			if(SubContext.chunkIndex == SubContext.chunkNum -1)
+			{
+				return true;
+			}
+			return false;
+		}
 		
 		function getChunkCheckSum(SubContext)
 		{            
+			console.log("getChunkCheckSum() chunkIndex:" + SubContext.chunkIndex)
 			var chunk = SubContext.chunkList[SubContext.chunkIndex];
 			switch(chunk.checkSumState)
 			{
@@ -2169,13 +2179,14 @@
 				form.append("parentId", SubContext.realParentId);
 				form.append("reposId", SubContext.vid);
 				
-				var chunkIndex = SunContext.chunkIndex;
+				var chunkIndex = SubContext.chunkIndex;
 				var chunkNum = SubContext.chunkNum;
-				var chunk = SubContext.chunkList[ckunkIndex];
+				var chunk = SubContext.chunkList[chunkIndex];
+				console.log("startUpload() chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum, chunk);
 				var chunkData = SubContext.file.slice(chunk.start,chunk.end);
 				form.append("chunkIndex", chunkIndex);
 				form.append("chunkNum", chunkNum);
-				formappend("chunkSize",chunk.chunkSize);
+				form.append("chunkSize",chunk.chunkSize);
 				form.append("chunkHash", chunk.checkSum);
 				form.append("uploadFile", chunkData);
 			}
