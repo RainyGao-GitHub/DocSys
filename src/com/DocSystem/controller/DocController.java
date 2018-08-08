@@ -228,16 +228,24 @@ public class DocController extends BaseController{
 		}
 		
 		//检查登录用户的权限
-		ReposAuth tempReposAuth = new ReposAuth();
-		tempReposAuth.setUserId(login_user.getId());
-		tempReposAuth.setReposId(reposId);
-		if(reposService.getReposAuth(tempReposAuth) == null)
+		DocAuth UserDocAuth = getUserDocAuth(login_user.getId(),parentId,reposId);
+		if(UserDocAuth == null)
 		{
-			if(size > 30*1024*1024)
+			rt.setError("您无权在该目录上传文件!");
+			writeJson(rt, response);
+			return;
+		}
+		else 
+		{
+			//既不是授权组用户也不是直接授权用户
+			if((UserDocAuth.getGroupId() == null) && ((UserDocAuth.getUserId() == null) || (UserDocAuth.getUserId() == 0)))
 			{
-				rt.setError("非仓库授权用户最大上传文件不超过30M!");
-				writeJson(rt, response);
-				return;
+				if(size > 30*1024*1024)
+				{
+					rt.setError("非仓库授权用户最大上传文件不超过30M!");
+					writeJson(rt, response);
+					return;
+				}
 			}
 		}
 		
