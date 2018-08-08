@@ -227,6 +227,20 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//检查登录用户的权限
+		ReposAuth tempReposAuth = new ReposAuth();
+		tempReposAuth.setUserId(login_user.getId());
+		tempReposAuth.setReposId(reposId);
+		if(reposService.getReposAuth(tempReposAuth) == null)
+		{
+			if(size > 30*1024*1024)
+			{
+				rt.setError("非仓库授权用户最大上传文件不超过30M!");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		if("".equals(checkSum))
 		{
 			//CheckSum is empty, mean no need 
@@ -376,19 +390,6 @@ public class DocController extends BaseController{
 				}
 			}
 			
-			//检查登录用户的权限
-			ReposAuth tempReposAuth = new ReposAuth();
-			tempReposAuth.setUserId(login_user.getId());
-			tempReposAuth.setReposId(reposId);
-			if(reposService.getReposAuth(tempReposAuth) == null)
-			{
-				if(uploadFile.getSize() > 30*1024*1024)
-				{
-					rt.setError("非仓库授权用户最大上传文件不超过30M!");
-					writeJson(rt, response);
-					return;
-				}
-			}
 			/*保存文件*/
 			//get reposRPath
 			String reposRPath = getReposRealPath(repos);
