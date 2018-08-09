@@ -2214,6 +2214,7 @@
 						if(true == SubContext.chunked && false == isLastChunk(SubContext))
 						{
 							//分片上传未结束,re-enter uploadDoc to upload next chunk
+							SubContext.chunkIndex++;
 							uploadDoc();
 							return;
 						}
