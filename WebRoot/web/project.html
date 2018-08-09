@@ -2215,6 +2215,7 @@
 						{
 							//分片上传未结束,re-enter uploadDoc to upload next chunk
 							SubContext.chunkIndex++;
+							SubContext.uploadedSize += chunk.chunkSize;
 							uploadDoc();
 							return;
 						}
@@ -2275,9 +2276,9 @@
 				
 				//文件上传进度
 				var loaded = evt.loaded + SubContext.uploadedSize;	//已上传大小
-				SubContext.uploadedSize = loaded;
 				//var tot = evt.total;
 				var tot = SubContext.size;
+				console.log("upload.onprogress loaded:" + loaded + " tot:" + tot + " uploadedSize:" + SubContext.uploadedSize);
 				
 				//计算当前文件上传百分比
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
