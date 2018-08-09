@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -157,12 +158,12 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
+		//if(login_user == null)
+		//{
+		//	rt.setError("用户未登录，请先登录！");
+		//	writeJson(rt, response);			
+		//	return;
+		//}
 		
 		if("".equals(checkSum))
 		{
@@ -174,14 +175,19 @@ public class DocController extends BaseController{
 
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		rt.setMsgData("0");
-		if(true == isChunkMatched(name,chunkIndex,chunkSize,chunkHash))
+		String fileChunkName = name + "_" + chunkIndex;
+		Repos repos = reposService.getRepos(reposId);
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String chunkFilePath = userTmpDir + fileChunkName;
+		if(true == isChunkMatched(chunkFilePath,chunkSize,chunkHash))
 		{
-			rt.setMsgInfo("chunk: " + name + chunkIndex +" 已存在，且checkSum相同！");
+			rt.setMsgInfo("chunk: " + fileChunkName +" 已存在，且checkSum相同！");
 			rt.setMsgData("1");
 			
-			System.out.println("checkChunkUploaded() " + name + " 已存在，且checkSum相同！");
+			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
+				System.out.println("checkChunkUploaded() combineChunks");
 				//Do combine the chunkFiles to multipartFile
 				MultipartFile uploadFile = combineChunks();
 				
@@ -208,8 +214,22 @@ public class DocController extends BaseController{
 		return null;
 	}
 
-	private boolean isChunkMatched(String name, Integer chunkIndex, Integer chunkSize, String chunkHash) {
+	private boolean isChunkMatched(String chunkFilePath, Integer chunkSize, String chunkHash) {
 		// TODO Auto-generated method stub
+		FileInputStream file;
+		try {
+			file = new FileInputStream(chunkFilePath);
+			String hash=DigestUtils.md5Hex(file);
+			if(hash.equals(chunkHash))
+			{
+				return true;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+
 		return false;
 	}
 
