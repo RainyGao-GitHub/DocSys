@@ -2184,6 +2184,7 @@
 				var chunk = SubContext.chunkList[chunkIndex];
 				console.log("startUpload() chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum, chunk);
 				var chunkData = SubContext.file.slice(chunk.start,chunk.end);
+				console.log("startUpload() chunkData:",chunkData);
 				form.append("chunkIndex", chunkIndex);
 				form.append("chunkNum", chunkNum);
 				form.append("chunkSize",chunk.chunkSize);
