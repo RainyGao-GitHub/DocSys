@@ -236,8 +236,20 @@ public class DocController extends BaseController{
 			return;
 		}
 		else 
-		{
-			//既不是授权组用户也不是直接授权用户
+		{			
+			//Get File Size 
+			Integer MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
+			if(MaxFileSize != null)
+			{
+				if(size > MaxFileSize.longValue()*1024*1024)
+				{
+					rt.setError("上传文件超过 "+ MaxFileSize + "M");
+					writeJson(rt, response);
+					return;
+				}
+			}
+			
+			//任意用户文件不得30M
 			if((UserDocAuth.getGroupId() == null) && ((UserDocAuth.getUserId() == null) || (UserDocAuth.getUserId() == 0)))
 			{
 				if(size > 30*1024*1024)
@@ -331,8 +343,12 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath, String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath);
+	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
+			Integer chunkIndex, Integer chunkNum, Integer chunkSize, String chunkHash,
+			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("uploadDoc size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath 
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
+
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -377,26 +393,15 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
+
 		//如果是分片文件，则保存分片文件
+		if(null != chunkIndex)
 		//如果是最后一个分片则combineChunks
 		
 		//整个文件已经准备好
 		if (uploadFile != null) 
 		{
 			String fileName = uploadFile.getOriginalFilename();
-			System.out.println("uploadFile size is :" + uploadFile.getSize());
-			//Get File Size Limitation
-			Integer MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
-			if(MaxFileSize != null)
-			{
-				if(uploadFile.getSize() > MaxFileSize.longValue()*1024*1024)
-				{
-					rt.setError("上传文件超过 "+ MaxFileSize + "M");
-					writeJson(rt, response);
-					return;
-				}
-			}
 			
 			/*保存文件*/
 			//get reposRPath
