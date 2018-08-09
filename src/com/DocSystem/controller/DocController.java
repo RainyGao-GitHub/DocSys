@@ -292,7 +292,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(size > 1024)
+			if(size > 1024)	//小于1K的文件没有必要
 			{
 				//Try to find the same Doc in the repos
 				Doc sameDoc = getSameDoc(size,checkSum,reposId);
@@ -396,9 +396,32 @@ public class DocController extends BaseController{
 
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
-		//如果是最后一个分片则combineChunks
+		{
+			//Save File chunk to tmp dir with name_chunkIndex
+			String fileChunkName = uploadFile.getOriginalFilename() + "_" + chunkIndex;
+			String userTmpDir = getReposUserTmpPath(repos,login_user);
+			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
+			{
+				rt.setError("分片文件 " + fileChunkName +  " 暂存失败!");
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(chunkIndex < (chunkNum-1))
+			{
+				rt.setData(chunkIndex);	//Return the sunccess upload chunkIndex
+				writeJson(rt, response);
+				return;
+				
+			}
+			else
+			{	
+				//如果是最后一个分片则combineChunks
+				uploadFile = combineChunks();
+			}
+		}
 		
-		//整个文件已经准备好
+		//非分片上传或者整个文件已经准备好
 		if (uploadFile != null) 
 		{
 			String fileName = uploadFile.getOriginalFilename();
