@@ -343,10 +343,10 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
+	public void uploadDoc(MultipartFile uploadFile,String name,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
 			Integer chunkIndex, Integer chunkNum, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath 
+		System.out.println("uploadDoc name " + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath 
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -398,7 +398,7 @@ public class DocController extends BaseController{
 		if(null != chunkIndex)
 		{
 			//Save File chunk to tmp dir with name_chunkIndex
-			String fileChunkName = uploadFile.getOriginalFilename() + "_" + chunkIndex;
+			String fileChunkName = name + "_" + chunkIndex;
 			String userTmpDir = getReposUserTmpPath(repos,login_user);
 			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
