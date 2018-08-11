@@ -1925,7 +1925,7 @@
 			if(0 == SubContext.cutFileState)
 			{
 				console.log("CutFile() for", SubContext);
-				var chunkSize = 2097152;
+				var cutSize = 2097152;
 				var minCutSize = chunkSize * 10;
 				if(SubContext.size < minCutSize)	//< 20M do not cut
 				{
@@ -1936,9 +1936,10 @@
 				
 				console.log("CutFile() start to cut file");
 				SubContext.chunked = true;
+				SubContext.cutSize = cutSize;
 				SubContext.cutFileState = 1;
 				SubContext.chunkIndex = 0;
-				SubContext.chunkNum = Math.ceil(SubContext.size / chunkSize);
+				SubContext.chunkNum = Math.ceil(SubContext.size / cutSize);
 				//Build ChunkList
 				var chunkList = [];
 				for(i=0; i< SubContext.chunkNum; i++)
@@ -1946,7 +1947,7 @@
 					var chunk = [];
 					var start = i * chunkSize;
 					chunk.start= start;
-					chunk.end =  start + chunkSize >= SubContext.size ? SubContext.size : start + chunkSize;
+					chunk.end =  start + cutSize >= SubContext.size ? SubContext.size : start + cutSize;
 					chunk.chunkSize = chunk.end - chunk.start;
 					chunk.checkSum = "";
 					chunk.checkSumState = 0;
@@ -1971,7 +1972,7 @@
  	      	console.log("CutFile() start to caculate chunk checkSum for:" + SubContext.name);
  	      	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
- 	            	chunkSize = chunkSize,                           // read in chunks of 2MB
+ 	            	cutSize = cutSize,                           // read in chunks of 2MB
  	            	chunks = SubContext.chunkNum,
  	            	currentChunk = 0,
  	            	fileReader = new FileReader();
@@ -2068,7 +2069,7 @@
 	             	name : name,
 	             	chunkIndex: SubContext.chunkIndex,
 	             	chunkNum: SubContext.chunkNum,
-	             	chunkSize: chunk.chunkSize,
+	             	chunkSize: chunk.cutSize,
 	             	chunkHash: chunk.checkSum,
 	             	reposId : SubContext.vid, 
 	                parentId : SubContext.realParentId,
@@ -2086,6 +2087,7 @@
 	             		else
 	             		{
 	             			chunk.uploadedState = 2;
+	             			SubContext.uploadedSize += chunk.chunkSize;
 	             			uploadDoc();
 	             			return;
 	             		}
@@ -2158,7 +2160,6 @@
 			var form = new FormData();
 			if(false == SubContext.chunked)
 			{
-				SubContext.uploadedSize = 0;	//For display
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
@@ -2215,7 +2216,6 @@
 						{
 							//分片上传未结束,re-enter uploadDoc to upload next chunk
 							SubContext.chunkIndex++;
-							SubContext.uploadedSize += chunk.chunkSize;
 							uploadDoc();
 							return;
 						}
@@ -2274,14 +2274,25 @@
 					return;
 				}
 				
-				//文件上传进度
-				var loaded = evt.loaded + SubContext.uploadedSize;	//已上传大小
-				//var tot = evt.total;
-				var tot = SubContext.size;
-				console.log("upload.onprogress loaded:" + loaded + " tot:" + tot + " uploadedSize:" + SubContext.uploadedSize);
+				//文件上传进度(evt获取到的是上传的所有数据的百分比，所有比实际文件要大)
+				var loaded = evt.loaded;	//已上传大小
+				var tot = evt.total;
+				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
+				console.log("upload.onprogress loaded:" + loaded + " tot:" + tot + " per:" + per);
+				
+				//计算实际文件的分片上传进度
+				if(SubContext.chunked)
+				{
+					var uploadedChunkSize = per * SubContext.chunkList[SubContext。chunkIndex].chunkSize;
+					var realUploaedSize = SubContext.uploadedSize +  uploadedChunkSize;
+					if(per == "100")	//单片上传结束
+					{
+						SubContext.uploadedSize = realUploaedSize;
+					}
+					per =  Math.floor(100 * realUploaedSize / SubContext.size);
+				}
 				
 				//计算当前文件上传百分比
-				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
 				$('.file'+index+' .el-progress__text').text(per+"%");
 				$('.file'+index+' .el-progress-bar__inner')[0].style.width=per+'%';
 				console.log("上传中："+per+"%！"); 
@@ -2366,7 +2377,9 @@
     		{   
     			console.log("uploadDoc() 开始上传 fileName:" + SubContext.name,SubContext);
 				SubContext.state = 1;	//上传中
-    			if(false == reuploadFlag)
+				SubContext.uploadedSize = 0; //Clear uploadedSize
+
+				if(false == reuploadFlag)
     			{
     				uploadedNum++;
     			}
