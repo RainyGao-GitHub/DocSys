@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.channels.FileChannel;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -104,7 +105,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "addDoc " + name;
 		}
-		addDoc(name,content,type,null,0,"",reposId,parentId,commitMsg,commitUser,login_user,rt);
+		addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
 		
 		writeJson(rt, response);	
 	}
@@ -178,8 +179,9 @@ public class DocController extends BaseController{
 		String fileChunkName = name + "_" + chunkIndex;
 		Repos repos = reposService.getRepos(reposId);
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String chunkFilePath = userTmpDir + fileChunkName;
-		if(true == isChunkMatched(chunkFilePath,chunkSize,chunkHash))
+		String chunkParentPath = userTmpDir;
+		String chunkFilePath = chunkParentPath + fileChunkName;
+		if(true == isChunkMatched(chunkFilePath,chunkHash))
 		{
 			rt.setMsgInfo("chunk: " + fileChunkName +" 已存在，且checkSum相同！");
 			rt.setMsgData("1");
@@ -187,10 +189,6 @@ public class DocController extends BaseController{
 			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
-				System.out.println("checkChunkUploaded() combineChunks");
-				//Do combine the chunkFiles to multipartFile
-				MultipartFile uploadFile = combineChunks();
-				
 				if(commitMsg == null)
 				{
 					commitMsg = "uploadDoc " + name;
@@ -198,23 +196,47 @@ public class DocController extends BaseController{
 				String commitUser = login_user.getName();
 				if(-1 == docId)	//新建文件则新建记录，否则
 				{
-					addDoc(name,null, 1, uploadFile,size, checkSum,reposId, parentId, commitMsg, commitUser, login_user, rt);
+					addDoc(name,null, 1, null,size, checkSum,reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser,login_user, rt);
 				}
 				else
 				{
-					updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, commitMsg, commitUser, login_user, rt);
+					updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
 				}	
 			}
 		}
 		writeJson(rt, response);
 	}
 	
-	private MultipartFile combineChunks() {
-		// TODO Auto-generated method stub
-		return null;
+	private String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer chunkSize, String chunkParentPath) {
+		try {
+			String targetFilePath = targetParentPath + fileName;
+			FileOutputStream out;
+
+			out = new FileOutputStream(targetFilePath);
+	        FileChannel outputChannel = out.getChannel();   
+			
+	        for(int chunkIndex = 0; chunkIndex < chunkNum; chunkIndex ++)
+	        {
+	        	long offset = chunkSize * chunkIndex;
+	
+	        	String chunkFilePath = chunkParentPath + fileName + "_" + chunkIndex;
+	        	FileInputStream in=new FileInputStream(chunkFilePath);
+	            FileChannel inputChannel = in.getChannel();    
+	            outputChannel.transferFrom(inputChannel, offset, inputChannel.size());
+	    	   	inputChannel.close();
+	    	   	in.close();
+	    	}
+	        outputChannel.close();
+		    out.close();
+		    return fileName;
+		} catch (Exception e) {
+			System.out.println("combineChunks() Failed to combine the chunks");
+			e.printStackTrace();
+			return null;
+		}        
 	}
 
-	private boolean isChunkMatched(String chunkFilePath, Integer chunkSize, String chunkHash) {
+	private boolean isChunkMatched(String chunkFilePath, String chunkHash) {
 		// TODO Auto-generated method stub
 		FileInputStream file;
 		try {
@@ -434,40 +456,25 @@ public class DocController extends BaseController{
 				return;
 				
 			}
-			else
-			{	
-				//如果是最后一个分片则combineChunks
-				uploadFile = combineChunks();
-			}
 		}
 		
-		//非分片上传或者整个文件已经准备好
-		if (uploadFile != null) 
+		//非分片上传或LastChunk Received
+		if(uploadFile != null) 
 		{
-			String fileName = uploadFile.getOriginalFilename();
-			
-			/*保存文件*/
-			//get reposRPath
-			String reposRPath = getReposRealPath(repos);
-			//get doc parentPath
-			String parentPath = getParentPath(parentId); //未指定则放到根目录
-	
-			String localDocParentPath = reposRPath + parentPath;
-			//替换路径分隔符windows下自动替换为"\" linux 下为"/"
-			//savePath = savePath.replace("\\", File.separator).replace("/", File.separator);
-			System.out.println(localDocParentPath);
-			
+			String fileName = name;
+			String chunkParentPath = getReposUserTmpPath(repos,login_user);
+					
 			if(commitMsg == null)
 			{
 				commitMsg = "uploadDoc " + fileName;
 			}
 			if(-1 == docId)	//新建文件则新建记录，否则
 			{
-				addDoc(fileName,null, 1, uploadFile,size, checkSum,reposId, parentId, commitMsg, commitUser, login_user, rt);
+				addDoc(name,null, 1, uploadFile,size, checkSum,reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
 			}
 			else
 			{
-				updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, commitMsg, commitUser, login_user, rt);
+				updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
 			}	
 		}
 		else
@@ -1135,10 +1142,13 @@ public class DocController extends BaseController{
 	}
 
 	/********************************** Functions For Application Layer
-	 * @param content ****************************************/
+	 * @param content 
+	 * @param commitUser2 
+	 * @param chunkSize 
+	 * @param chunkNum ****************************************/
 	//底层addDoc接口
 	private void addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
 		String parentPath = getParentPath(parentId);
@@ -1217,7 +1227,7 @@ public class DocController extends BaseController{
 		System.out.println("id: " + doc.getId());
 		
 		/*创建实文件Entry：新建文件或目录*/
-		if(createRealDoc(reposRPath,parentPath,name,type,uploadFile,rt) == false)
+		if(createRealDoc(reposRPath,parentPath,name,type,uploadFile,chunkNum, chunkSize, chunkParentPath, rt) == false)
 		{		
 			String MsgInfo = "createRealDoc " + name +" Failed";
 			rt.setError(MsgInfo);
@@ -1402,7 +1412,7 @@ public class DocController extends BaseController{
 
 	//底层updateDoc接口
 	private void updateDoc(Integer docId, MultipartFile uploadFile,Integer fileSize,String checkSum,Integer reposId,Integer parentId, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
 		synchronized(syncLock)
@@ -1442,7 +1452,7 @@ public class DocController extends BaseController{
 		if(isRealFS(repos.getType())) //0：虚拟文件系统   1： 普通文件系统	
 		{
 			//保存文件信息
-			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile,rt) == false)
+			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{
 				if(unlockDoc(docId,login_user) == false)
 				{
@@ -2176,9 +2186,13 @@ public class DocController extends BaseController{
 	}
 	
 	/*************************** Functions For Real and Virtual Doc Operaion
+	 * @param chunkParentPath 
+	 * @param chunkSize 
+	 * @param chunkNum 
 	 * @param rt ***********************************/
 	//create Real Doc
-	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, MultipartFile uploadFile, ReturnAjax rt) {
+	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, MultipartFile uploadFile,
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
 		//获取 doc parentPath
 		String localParentPath =  reposRPath + parentPath;
 		String localDocPath = localParentPath + name;
@@ -2220,7 +2234,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				if(updateRealDoc(reposRPath,parentPath,name,type,uploadFile,rt) == false)
+				if(updateRealDoc(reposRPath,parentPath,name,type,uploadFile,chunkNum, chunkSize, chunkParentPath, rt) == false)
 				{
 					System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
 					rt.setMsgData("createRealDoc() updateRealDoc 文件 " + localDocPath + "创建失败！");
@@ -2254,12 +2268,20 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, MultipartFile uploadFile, ReturnAjax rt) {
-
+	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, MultipartFile uploadFile,
+			Integer chunkNum,Integer chunkSize,String chunkParentPath, ReturnAjax rt) {
 		String localDocParentPath = reposRPath + parentPath;
 		String retName = null;
 		try {
-			retName = saveFile(uploadFile, localDocParentPath,name);
+			if(null == chunkNum)	//非分片上传
+			{
+				retName = saveFile(uploadFile, localDocParentPath,name);
+			}
+			else
+			{
+				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
+			}
+			
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() saveFile " + name +" 异常！");
 			e.printStackTrace();
