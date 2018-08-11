@@ -1926,7 +1926,7 @@
 			{
 				console.log("CutFile() for", SubContext);
 				var cutSize = 2097152;
-				var minCutSize = chunkSize * 10;
+				var minCutSize = cutSize * 10;
 				if(SubContext.size < minCutSize)	//< 20M do not cut
 				{
 					SubContext.cutFileState = 2;
@@ -1945,7 +1945,7 @@
 				for(i=0; i< SubContext.chunkNum; i++)
 				{
 					var chunk = [];
-					var start = i * chunkSize;
+					var start = i * cutSize;
 					chunk.start= start;
 					chunk.end =  start + cutSize >= SubContext.size ? SubContext.size : start + cutSize;
 					chunk.chunkSize = chunk.end - chunk.start;
@@ -2099,7 +2099,7 @@
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(name,"checkChunkUploade "+nodeName+ " 异常");
+				 	uploadErrorConfirmHandler(name,"checkChunkUploade "+name+ " 异常");
 		            return;
 	            }
 	        });
@@ -2283,7 +2283,7 @@
 				//计算实际文件的分片上传进度
 				if(SubContext.chunked)
 				{
-					var uploadedChunkSize = per * SubContext.chunkList[SubContext。chunkIndex].chunkSize;
+					var uploadedChunkSize = per * SubContext.chunkList[SubContext.chunkIndex].chunkSize;
 					var realUploaedSize = SubContext.uploadedSize +  uploadedChunkSize;
 					if(per == "100")	//单片上传结束
 					{
