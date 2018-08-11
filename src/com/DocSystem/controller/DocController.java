@@ -1445,7 +1445,7 @@ public class DocController extends BaseController{
 		//get parentPath
 		String parentPath = getParentPath(parentId);		
 		//Get the file name
-		String name = uploadFile.getOriginalFilename();
+		String name = doc.getName();
 		System.out.println("updateDoc() name:" + name);
 
 		//替换文件
