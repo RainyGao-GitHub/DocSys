@@ -247,6 +247,10 @@ public class BaseController{
 		}
 		else
 		{
+			if(groupId != null)
+			{
+				return 2;
+			}
 			return 1; //权限类型：任意用户权限
 		}
 	}
