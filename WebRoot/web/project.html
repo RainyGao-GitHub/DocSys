@@ -2299,7 +2299,7 @@
 				//计算实际文件的分片上传进度
 				if(SubContext.chunked)
 				{
-					var uploadedChunkSize = per * SubContext.chunkList[SubContext.chunkIndex].chunkSize;
+					var uploadedChunkSize = (per * SubContext.chunkList[SubContext.chunkIndex].chunkSize)/100;
 					var realUploaedSize = SubContext.uploadedSize +  uploadedChunkSize;
 					if(per == "100")	//单片上传结束
 					{
