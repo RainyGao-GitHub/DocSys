@@ -2068,6 +2068,7 @@
 	             data : {
 	             	name : name,
 	             	docId: SubContext.docId,
+	             	size: SubContext.size,
 	             	checkSum: SubContext.checkSum,
 	             	chunkIndex: SubContext.chunkIndex,
 	             	chunkNum: SubContext.chunkNum,
@@ -2091,13 +2092,32 @@
 	             			chunk.uploadedState = 2;
 
 	             			//Show current doc upload progress
-	             			SubContext.uploadedSize += chunk.chunkSize;
+	             			SubContext.uploadedSize += chunk.chunkSize
+	             			console.log("checkChunkUploaded() uploadedSize:" + SubContext.uploadedSize + " fileSize:" +   SubContext.size);
 	    					var per =  Math.floor(100 * SubContext.uploadedSize / SubContext.size);
 	    					$('.file'+index+' .el-progress__text').text(per+"%");
 	    					$('.file'+index+' .el-progress-bar__inner')[0].style.width=per+'%';
 							
-	    					//re enter uploadDoc
-	    					uploadDoc();
+	    					if(SubContext.chunkIndex == SubContext.chunkSum -1)
+	    					{
+		    					//All Chunk Uploaded, means file upload ok, 这里的逻辑是有问题的，因为没有ret
+		    		        	if(SubContext.docId == -1) //文件新建成功
+		    		            {	
+		    		         		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
+		    		         		//set the docId so that We can open it 
+		    		         		SubContext.docId = ret.data.id;
+		    						
+		    		            }
+		    					//update the uploadStatus
+		    					$('.file'+index).removeClass('is-uploading');
+		    					$('.file'+index).addClass('is-success');
+		    					uploadSuccessHandler(name,ret.msgInfo);
+	    					}
+	    					else
+	    					{
+	    						//re enter uploadDoc to upload next trunk
+	    						uploadDoc();
+	    					}
 	             			return;
 	             		}
 	                }
@@ -2144,19 +2164,6 @@
    					SubContext.chunkIndex++;
    				}
 			}
-   			
-			//All Chunk Uploaded, means file upload ok, 这里的逻辑是有问题的，因为没有ret
-        	if(SubContext.docId == -1) //文件新建成功
-            {	
-         		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
-         		//set the docId so that We can open it 
-         		SubContext.docId = ret.data.id;
-				
-            }
-			//update the uploadStatus
-			$('.file'+index).removeClass('is-uploading');
-			$('.file'+index).addClass('is-success');
-			uploadSuccessHandler(name,ret.msgInfo);
 			return;   	
 		}
 		
