@@ -201,7 +201,12 @@ public class DocController extends BaseController{
 				else
 				{
 					updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
-				}	
+				}
+				writeJson(rt, response);
+				
+				//Delete All Trunks if trunks have been combined
+				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				return;
 			}
 		}
 		writeJson(rt, response);
@@ -234,6 +239,27 @@ public class DocController extends BaseController{
 			e.printStackTrace();
 			return null;
 		}        
+	}
+	
+	private void deleteChunks(String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath) {
+		System.out.println("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
+		
+		if(null == chunkIndex || chunkIndex < (chunkNum-1))
+		{
+			return;
+		}
+		
+		System.out.println("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
+		try {
+	        for(int i = 0; i < chunkNum; i ++)
+	        {
+	        	String chunkFilePath = chunkParentPath + name + "_" + i;
+	        	deleteFile(chunkFilePath);
+	    	}
+		} catch (Exception e) {
+			System.out.println("deleteChunks() Failed to combine the chunks");
+			e.printStackTrace();
+		}  
 	}
 
 	private boolean isChunkMatched(String chunkFilePath, String chunkHash) {
@@ -463,7 +489,6 @@ public class DocController extends BaseController{
 		{
 			String fileName = name;
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
-					
 			if(commitMsg == null)
 			{
 				commitMsg = "uploadDoc " + fileName;
@@ -475,7 +500,12 @@ public class DocController extends BaseController{
 			else
 			{
 				updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
-			}	
+			}
+			writeJson(rt, response);
+			
+			//Delete All Trunks if trunks have been combined
+			deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
+			return;
 		}
 		else
 		{
@@ -483,7 +513,7 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
+
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
 	public void renameDoc(Integer id,String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -790,6 +820,9 @@ public class DocController extends BaseController{
 			}
 			
 			sendFileToWebPage(tmpDir,zipFileName,rt,response, request); 
+			
+			//Delete zip file
+			deleteFile(tmpDir+zipFileName);
 		}
 		else	//for File
 		{
