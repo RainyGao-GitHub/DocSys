@@ -957,6 +957,9 @@ public class DocController extends BaseController{
 		}
 		
 		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request);
+		
+		//delete the history file or dir
+		deleteFile(userTmpDir+targetName);
 	}
 	
 	private int getLocalEntryType(String localParentPath, String entryName) {
