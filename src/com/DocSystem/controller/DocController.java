@@ -959,6 +959,7 @@ public class DocController extends BaseController{
 		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request);
 		
 		//delete the history file or dir
+		System.out.println("getHistoryDoc() deleteFile " + userTmpDir+targetName);
 		deleteFile(userTmpDir+targetName);
 	}
 	
@@ -2023,7 +2024,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//do not release the doc lock
+		//do not release the doc lock, doc lock should be released when user exit edit
 		//if(unlockDoc(id,login_user) == false)
 		//{
 		//	rt.setError("unlockDoc failed");	
