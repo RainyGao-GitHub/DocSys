@@ -1516,6 +1516,33 @@ public class BaseController{
         return true;
     }
 	
+    //Delete Directory or File
+    public boolean delFileOrDir(String path){
+        File file=new File(path);
+        if(file.exists())
+        {
+            if(file.isDirectory())
+            {
+	            File[] tmp=file.listFiles();            
+	            for(int i=0;i<tmp.length;i++)
+	            {
+	            	String subDirPath = path+"/"+tmp[i].getName();
+	                if(delFileOrDir(subDirPath) == false)
+	                {
+	                	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
+	                    return false;
+	                }
+	            }
+            }
+            
+            if(file.delete() == false)
+            {
+            	System.out.println("delFileOrDir() delete Dir Failed:" + path);
+                return false;
+            }
+        }
+        return true;
+    }
     //检查文件是否存在
     public boolean isFileExist(String path){
     	File file=new File(path);
