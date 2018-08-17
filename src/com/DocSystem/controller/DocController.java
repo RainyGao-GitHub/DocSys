@@ -911,6 +911,35 @@ public class DocController extends BaseController{
 		
 		return true;
 	}
+	
+	/**************** get Tmp File ******************/
+	@RequestMapping("/doGetTmpFile.do")
+	public void doGetTmp(Integer reposId,String parentPath, String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("doGetTmpFile reposId: " + reposId);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//虚拟文件下载
+		Repos repos = reposService.getRepos(reposId);
+		
+		//get userTmpDir
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		
+		String localParentPath = userTmpDir;
+		if(parentPath != null)
+		{
+			localParentPath = userTmpDir + parentPath;
+		}
+		
+		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
+	}
 
 	/**************** download History Doc  ******************/
 	@RequestMapping("/getHistoryDoc.do")
