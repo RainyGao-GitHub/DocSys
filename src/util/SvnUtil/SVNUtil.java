@@ -1220,8 +1220,9 @@ public class SVNUtil {
 				return false;
 			}
             repository.getFile(remoteFilePath, revision, fileProperties, out);
-        } catch (SVNException svne) {
-            System.err.println("error while fetching the file contents and properties: " + svne.getMessage());
+            out.close();
+        } catch (Exception e) {
+            System.err.println("error while fetching the file contents and properties: " + e.getMessage());
             return false;
         }
         return true;

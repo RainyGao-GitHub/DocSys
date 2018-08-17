@@ -959,10 +959,9 @@ public class DocController extends BaseController{
 		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request);
 		
 		//delete the history file or dir
-		System.out.println("getHistoryDoc() deleteFile " + userTmpDir+targetName);
-		deleteFile(userTmpDir+targetName);
+		delFileOrDir(userTmpDir+targetName);
 	}
-	
+
 	private int getLocalEntryType(String localParentPath, String entryName) {
 		
 		File entry = new File(localParentPath,entryName);
