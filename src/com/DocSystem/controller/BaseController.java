@@ -1472,7 +1472,12 @@ public class BaseController{
     public boolean deleteFile(String path){
         File file=new File(path);
         if(file.exists()){
-        	return file.delete();	
+        	if(file.delete() == false)
+        	{
+        		System.out.println("deleteFile() delete File Failed:" + path);
+        		return false;
+        	}
+        	return true;
         }
         else
         {
