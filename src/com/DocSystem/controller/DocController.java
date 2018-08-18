@@ -1064,17 +1064,21 @@ public class DocController extends BaseController{
 		System.out.println("DocToPDF() srcPath:" + srcPath);
 	
 		String reposUserTmpPath = getWebUserTmpPath(login_user);
-		String dstName = MD5.md5(srcPath) + ".pdf";
+		//String dstName = MD5.md5(srcPath) + ".pdf";
+		String dstName = doc.getCheckSum() + ".pdf";
 		String dstPath = reposUserTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
-		
-		File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
-		if(pdf == null)
+		File file = new File(dstPath);
+		if(!file.exists())
 		{
-			rt.setError("Failed to convert office to pdf");
-			rt.setMsgData("srcPath:"+srcPath);
-			writeJson(rt, response);
-			return;
+			File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
+			if(pdf == null)
+			{
+				rt.setError("Failed to convert office to pdf");
+				rt.setMsgData("srcPath:"+srcPath);
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		//Save the pdf to web
