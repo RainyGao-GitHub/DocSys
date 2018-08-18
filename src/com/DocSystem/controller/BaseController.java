@@ -213,12 +213,6 @@ public class BaseController{
 		return userTmpDir;
 	}
 	
-	protected String getTmpPathForO(Repos repos, User login_user) {
-		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
-		createDir(userTmpDir);
-		return userTmpDir;
-	}
-	
 	//WebTmpPath was accessable for web
 	protected String getWebUserTmpPath(User login_user) {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
@@ -226,6 +220,15 @@ public class BaseController{
         String webUserTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/" + login_user.getId() + "/";
         System.out.println("getWebUserTmpPath() webUserTmpPath" + webUserTmpPath);
 		return webUserTmpPath;
+	}
+	
+	//WebTmpPath was 
+	protected String getWebTmpPath() {
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        
+        String webTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/";
+        System.out.println("getWebTmpPath() webTmpPath" + webTmpPath);
+		return webTmpPath;
 	}
 	
 	protected Integer getAuthType(Integer userId, Integer groupId) {
