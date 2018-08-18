@@ -5294,8 +5294,11 @@ function CompareObj(objA, objB, flag) {
 			  
 			  //发送新建文件请求到后台
               if( name ){
-                  //新建Doc之前需要确认前后台的zTree是相同的，现在不再需要，直接由后台进行控制
-                  addDoc(name,type,"#"+content,parentNode,parentId,vid);
+            	  if(content && content != "")
+            	  {
+            		  content = "#" + content; 
+            	  }
+                  addDoc(name,type,content,parentNode,parentId,vid);
                   return true;
               }else{
               	  alert("文件名不能为空");
