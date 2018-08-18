@@ -1301,7 +1301,7 @@ public class DocController extends BaseController{
 		System.out.println("id: " + doc.getId());
 		
 		/*创建实文件Entry：新建文件或目录*/
-		if(createRealDoc(reposRPath,parentPath,name,type,uploadFile,chunkNum, chunkSize, chunkParentPath, rt) == false)
+		if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
 		{		
 			String MsgInfo = "createRealDoc " + name +" Failed";
 			rt.setError(MsgInfo);
@@ -2286,8 +2286,7 @@ public class DocController extends BaseController{
 	 * @param chunkNum 
 	 * @param rt ***********************************/
 	//create Real Doc
-	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, MultipartFile uploadFile,
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
+	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, ReturnAjax rt) {
 		//获取 doc parentPath
 		String localParentPath =  reposRPath + parentPath;
 		String localDocPath = localParentPath + name;
@@ -2318,23 +2317,11 @@ public class DocController extends BaseController{
 				return false;
 			}
 			
-			if(uploadFile != null && uploadFile.getSize() == 0)
+			if(false == createFile(localParentPath,name))
 			{
-				if(false == createFile(localParentPath,name))
-				{
-					System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
-					rt.setMsgData("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
-					return false;					
-				}
-			}
-			else
-			{
-				if(updateRealDoc(reposRPath,parentPath,name,type,uploadFile,chunkNum, chunkSize, chunkParentPath, rt) == false)
-				{
-					System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
-					rt.setMsgData("createRealDoc() updateRealDoc 文件 " + localDocPath + "创建失败！");
-					return false;
-				}
+				System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
+				rt.setMsgData("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
+				return false;					
 			}
 		}
 		return true;
