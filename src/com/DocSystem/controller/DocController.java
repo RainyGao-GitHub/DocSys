@@ -2280,11 +2280,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	/*************************** Functions For Real and Virtual Doc Operaion
-	 * @param chunkParentPath 
-	 * @param chunkSize 
-	 * @param chunkNum 
-	 * @param rt ***********************************/
+	/*************************** Functions For Real and Virtual Doc Operation ***********************************/
 	//create Real Doc
 	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, ReturnAjax rt) {
 		//获取 doc parentPath
