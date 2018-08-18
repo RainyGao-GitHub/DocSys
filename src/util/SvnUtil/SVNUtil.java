@@ -381,7 +381,10 @@ public class SVNUtil {
 		{
    			ret = modifyFile(editor,parentPath, entryName, oldData, newData,false,true);       			
 		}
-		closeFileInputStream(oldData);
+		if(oldData != null)
+		{
+			closeFileInputStream(oldData);
+		}
 		closeFileInputStream(newData);
 		return ret;
 	}
@@ -712,7 +715,7 @@ public class SVNUtil {
 	private boolean closeFileInputStream(InputStream fileData) {
 		try {
 			fileData.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			System.out.println("closeFileInputStream() close failed");
 			e.printStackTrace();
 			return false;
