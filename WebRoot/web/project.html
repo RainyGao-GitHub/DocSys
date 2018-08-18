@@ -2936,9 +2936,17 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
+                	console.log("getDoc ret",ret);
                     gDocId = ret.data.id;
-                    gDocContent = JSON.parse(ret.data.content);
-		
+                    if(ret.data.content == "null")
+                    {
+                    	gDocContent = "";	//Convert it to empty String
+                    }
+                    else
+                    {	
+                    	gDocContent = JSON.parse(ret.data.content);
+                    }
+                    
 					//Update URL 保证页面刷新后还是处于正确的状态
 					updateUrl(gReposId,gDocId,edit);
 					
