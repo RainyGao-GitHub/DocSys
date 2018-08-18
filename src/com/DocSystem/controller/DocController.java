@@ -685,6 +685,13 @@ public class DocController extends BaseController{
 		}
 		updateDocContent(id, content, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);
+		
+		//Delete tmp saved doc content
+		Repos repos = reposService.getRepos(doc.getVid());
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath,doc.getName());
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		delFileOrDir(userTmpDir+docVName);
 	}
 
 	//this interface is for auto save of the virtual doc edit
@@ -718,7 +725,6 @@ public class DocController extends BaseController{
 		
 		Repos repos = reposService.getRepos(doc.getVid());
 		String parentPath = getParentPath(doc.getPid());
-		//String docRPath = parentPath + doc.getName();	
 		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
@@ -2076,7 +2082,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//do not release the doc lock, doc lock should be released when user exit edit
+		//do not release the doc lock, doc lock will be released when user exit Edit on web page
 		//if(unlockDoc(id,login_user) == false)
 		//{
 		//	rt.setError("unlockDoc failed");	
