@@ -1063,10 +1063,9 @@ public class DocController extends BaseController{
 		srcPath = srcPath + doc.getName();			
 		System.out.println("DocToPDF() srcPath:" + srcPath);
 	
-		String reposUserTmpPath = getWebUserTmpPath(login_user);
-		//String dstName = MD5.md5(srcPath) + ".pdf";
+		String webTmpPath = getWebTmpPath();
 		String dstName = doc.getCheckSum() + ".pdf";
-		String dstPath = reposUserTmpPath + "preview/" + dstName;
+		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 		File file = new File(dstPath);
 		if(!file.exists())
@@ -1082,7 +1081,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Save the pdf to web
-		String fileLink = "/DocSystem/tmp/" + login_user.getId() + "/preview/" + dstName;
+		String fileLink = "/DocSystem/tmp/preview/" + dstName;
 		rt.setData(fileLink);
 		writeJson(rt, response);
 	}
@@ -1457,6 +1456,9 @@ public class DocController extends BaseController{
 			}
 		}
 		
+		//保存删除前的CheckSum，用于预览文件的删除
+		String CheckSum = doc.getCheckSum();
+				
 		//删除Node
 		if(reposService.deleteDoc(docId) == 0)
 		{	
@@ -1464,6 +1466,16 @@ public class DocController extends BaseController{
 			return;
 		}
 		rt.setData(doc);
+		
+		//Delete tmp files for this doc (preview)
+		deletePreviewFile(CheckSum);
+	}
+
+	//删除预览文件
+	private void deletePreviewFile(String checkSum) {
+		String dstName = checkSum + ".pdf";
+		String dstPath = getWebTmpPath() + "preview/" + dstName;
+		delFileOrDir(dstPath);
 	}
 
 	private void deleteSubDocs(Integer docId, Integer reposId,
@@ -1498,6 +1510,9 @@ public class DocController extends BaseController{
 			unlock(); //线程锁
 			
 		}
+		
+		//Save oldCheckSum
+		String oldCheckSum = doc.getCheckSum();
 		
 		//为了避免执行到SVNcommit成功但数据库操作失败，所以先将checkSum更新掉
 		doc.setCheckSum(checkSum);
@@ -1556,6 +1571,8 @@ public class DocController extends BaseController{
 			}
 		}
 		
+		
+		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
 		doc.setState(0);	//
@@ -1567,6 +1584,9 @@ public class DocController extends BaseController{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
 			return;
 		}
+		
+		//Delete PreviewFile
+		deletePreviewFile(oldCheckSum);
 	}
 
 	//底层renameDoc接口
