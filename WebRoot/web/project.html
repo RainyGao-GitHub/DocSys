@@ -463,7 +463,7 @@
 			return false;
 		}
 		id = curRightClickedTreeNode.id;
-		var docPath = getDocPath(curRightClickedTreeNode);
+		var docPath = getNodePath(curRightClickedTreeNode);
 		console.log("docPath:" + docPath);
 		
 		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
@@ -477,20 +477,6 @@
 					type : 'success',
 					time : 1000,
 		});
-	}
-	
-	//getDocPath
-	function getDocPath(treeNode)
-	{
-		console.log(treeNode);
-		var remoteDir = gReposName+"::/";
-		if(treeNode)
-		{
-			var parentPath = treeNode.path;	//获取当前节点的所有父节点
-			var	name = treeNode.name;
-			remoteDir += parentPath + name;
-		}
-		return remoteDir;
 	}
 	
 	function copyUrl(){
@@ -4986,10 +4972,20 @@ function CompareObj(objA, objB, flag) {
 		var remoteDir = gReposName+"::/";
 		if(treeNode)
 		{
-			var nodes = treeNode.getPath();	//获取当前节点的所有父节点
-			for( var i = 0 ; i < nodes.length ; i++ )
+			var nodes = treeNode.getPath();	//获取当前节点的所有父节
+			console.log("getNodePath() nodes ",nodes);	
+			for( var i = 0 ; i < nodes.length-1; i++ )
 			{
 				remoteDir += nodes[i].name + "/"; 
+			}
+			
+			if(true == treeNode.isParent)
+			{
+				remoteDir += treeNode.name + "/";
+			}
+			else
+			{
+				remoteDir += treeNode.name;				
 			}
 		}
 		return remoteDir;
@@ -5077,7 +5073,7 @@ function CompareObj(objA, objB, flag) {
     //该接口是为了避免新增Node时触发的异步加载导致出现多个Node
 	function addTreeNode(nodeName,isParent,nodeId,parentNode)
 	{
-		console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + nodeId);
+		console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + nodeId + " parentNode",parentNode);
 		
 		//parentNode处于展开状态时，需要手动addTreeNode以保证与后台同步，否则只要触发异步加载即可
 		if(parentNode == null || parentNode.open == true)
@@ -5089,16 +5085,18 @@ function CompareObj(objA, objB, flag) {
 			}
 			else
 			{
-				pId =parentNode.id;
+				pId = parentNode.id;
 			}
+			
 			if(pId == 0)
 			{
 				pId = "root"; //zTree root id is root -__-!
 			}
+			console.log("addTreeNode() pId = " + pId);
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
       		var newNode = {name: nodeName, id : nodeId, isParent: isParent, pId: pId};
-      		newNode = treeObj.addNodes(parentNode, newNode);
+      		newNodes = treeObj.addNodes(parentNode, newNode);
 		}
 		else
 		{
