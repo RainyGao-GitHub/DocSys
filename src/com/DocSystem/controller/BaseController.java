@@ -199,11 +199,10 @@ public class BaseController{
 		return parentPath;
 	}	
 	
-	protected String getDocVPath(String parentPath,String docName) 
+	protected String getDocVPath(Doc doc) 
 	{
-		String HashValue = MD5.md5(parentPath) + "_" + docName;
-		System.out.println("getDocVPath() " + HashValue + " for " + parentPath + docName);
-		return HashValue;
+		String VPath =  doc.getVid() + "_" + doc.getId();
+		return VPath;
 	}
 	
 	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
