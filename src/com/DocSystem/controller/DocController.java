@@ -688,8 +688,7 @@ public class DocController extends BaseController{
 		
 		//Delete tmp saved doc content
 		Repos repos = reposService.getRepos(doc.getVid());
-		String parentPath = getParentPath(doc.getPid());
-		String docVName = getDocVPath(parentPath,doc.getName());
+		String docVName = getDocVPath(doc);
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		delFileOrDir(userTmpDir+docVName);
 	}
@@ -724,8 +723,7 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(doc.getVid());
-		String parentPath = getParentPath(doc.getPid());
-		String docVName = getDocVPath(parentPath,doc.getName());
+		String docVName = getDocVPath(doc);
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
@@ -1339,7 +1337,7 @@ public class DocController extends BaseController{
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getDocVPath(parentPath, doc.getName());
+			String docVName = getDocVPath(doc);
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
@@ -1445,7 +1443,7 @@ public class DocController extends BaseController{
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(parentPath,doc.getName());
+		String docVName = getDocVPath(doc);
 		String localDocVPath = reposVPath + docVName;
 		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
 		{
@@ -1664,22 +1662,6 @@ public class DocController extends BaseController{
 			}	
 		}
 		
-		//修改虚拟文件的目录名称
-		String reposVPath = getReposVirtualPath(repos);
-		String srcDocVName = getDocVPath(parentPath,oldname);
-		String dstDocVName = getDocVPath(parentPath,newname);
-		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
-		{
-			if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
-			{
-				System.out.println("renameDoc() svnVirtualDocMove Failed");
-			}
-		}
-		else
-		{
-			System.out.println("renameDoc() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");
-		}
-		
 		//更新doc name
 		Doc tempDoc = new Doc();
 		tempDoc.setId(docId);
@@ -1690,9 +1672,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//更新所有子目录的Path信息,path好像有人在用
-		docPathRecurUpdate(repos,docId,doc.getPid(),oldname,reposVPath,parentPath,parentPath,commitMsg,commitUser,rt);	
-	
 		//unlock doc
 		if(unlockDoc(docId,login_user) == false)
 		{
@@ -1796,23 +1775,6 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//修改虚拟文件的目录名称
-		String reposVPath = getReposVirtualPath(repos);
-		String srcDocVName = getDocVPath(srcParentPath,doc.getName());
-		String dstDocVName = getDocVPath(dstParentPath,doc.getName());
-		if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
-		{
-			//提交修改到版本仓库
-			if(svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
-			{
-				System.out.println("moveDoc() svnVirtualDocMove " + srcDocVName + " to " + dstDocVName + " Failed");							
-			}
-		}
-		else
-		{
-			System.out.println("moveDoc() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");			
-		}
-		
 		//更新doc pid and path
 		Doc tempDoc = new Doc();
 		tempDoc.setId(docId);
@@ -1824,9 +1786,6 @@ public class DocController extends BaseController{
 			return;				
 		}
 		
-		//更新所有子目录的Path信息,path好像有人在用
-		docPathRecurUpdate(repos,docId,doc.getPid(),doc.getName(),reposVPath,srcParentPath,dstParentPath,commitMsg,commitUser,rt);
-
 		//Unlock Docs
 		String MsgInfo = null; 
 		if(unlockDoc(docId,login_user) == false)
@@ -1969,8 +1928,9 @@ public class DocController extends BaseController{
 		if(null != doc.getContent() && !"".equals(doc.getContent()))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String srcDocVName = getDocVPath(parentPath,srcName);
-			String dstDocVName = getDocVPath(dstParentPath,dstName);
+			Doc srcDoc = reposService.getDoc(docId);
+			String srcDocVName = getDocVPath(srcDoc);
+			String dstDocVName = getDocVPath(doc);
 			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 			{
 				if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
@@ -2053,10 +2013,8 @@ public class DocController extends BaseController{
 		}	
 		
 		//Save the content to virtual file
-		String parentPath = getParentPath(doc.getPid());
-		//String docRPath = parentPath + doc.getName();
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(parentPath,doc.getName());
+		String docVName = getDocVPath(doc);
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
@@ -2629,58 +2587,6 @@ public class DocController extends BaseController{
 		
 		return copyFolder(localPath, localRefPath);
 		*/
-	}
-	
-	//更新doc和其所有子节点的Path:该函数只更新Path信息，不会改变节点间的逻辑关系
-	void docPathRecurUpdate(Repos repos,Integer id,Integer dstPid,String oldname,String reposVPath,String srcParentPath,String dstParentPath,String commitMsg,String commitUser, ReturnAjax rt)
-	{
-		//移动当前节点
-		Doc doc = reposService.getDocInfo(id);
-		Integer orgPid = doc.getPid();
-		System.out.println("docPathRecurUpdate id:" + id + " orgPid: " + orgPid + " oldname: " + oldname + " dstPid: " + dstPid +" srcParentPath: " + srcParentPath + " dstParentPath: " + dstParentPath );
-		
-		//更新虚拟文件名字: srcParentPath 和 dstParentPath相同表示是rename,否则表示move
-		String srcDocRPath = srcParentPath + oldname;
-		String dstDocRPath = dstParentPath + doc.getName();
-		if(!dstDocRPath.equals(srcDocRPath))
-		{
-			//修改虚拟文件的目录名称
-			String srcDocVName = getDocVPath(srcParentPath,oldname);
-			String dstDocVName = getDocVPath(dstParentPath,doc.getName());
-			if(moveVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
-			{
-				if(svnVirtualDocMove(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
-				{
-					System.out.println("docPathRecurUpdate() svnVirtualDocMove Failed");
-				}
-			}
-			else
-			{
-				System.out.println("docPathRecurUpdate() moveVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");
-			}
-		}
-		
-		//该函数只更新路径信息，而不更改实际映射关系，因此当dstPid != orgPid时，不做处理，并且要报错
-		if(orgPid.equals(dstPid))
-		{
-			/*更新doc记录*/
-			doc.setPath(dstParentPath);
-			reposService.updateDoc(doc);
-		}
-		
-		//set query condition: 取出所有pid==id的doc记录,更新其ParentPath
-		Doc queryConditon = new Doc();
-		queryConditon.setPid(id);
-		List <Doc> list = reposService.getDocList(queryConditon);
-		if(list != null)
-		{
-			for(int i = 0 ; i < list.size() ; i++) {
-				Doc subDoc = list.get(i);
-				Integer subDocId = subDoc.getId();
-				Integer suDocDstPid = id;
-				docPathRecurUpdate(repos,subDocId,suDocDstPid,subDoc.getName(),reposVPath,srcDocRPath+"/",dstDocRPath+"/",commitMsg,commitUser,rt);
-			};
-		}
 	}
 	
 	private Integer getMaxFileSize() {
