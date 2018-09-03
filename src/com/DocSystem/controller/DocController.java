@@ -219,15 +219,15 @@ public class DocController extends BaseController{
 
 			out = new FileOutputStream(targetFilePath);
 	        FileChannel outputChannel = out.getChannel();   
-			
+
+        	long offset = 0;
 	        for(int chunkIndex = 0; chunkIndex < chunkNum; chunkIndex ++)
 	        {
-	        	long offset = chunkSize * chunkIndex;
-	
 	        	String chunkFilePath = chunkParentPath + fileName + "_" + chunkIndex;
 	        	FileInputStream in=new FileInputStream(chunkFilePath);
 	            FileChannel inputChannel = in.getChannel();    
 	            outputChannel.transferFrom(inputChannel, offset, inputChannel.size());
+	        	offset += inputChannel.size();	        			
 	    	   	inputChannel.close();
 	    	   	in.close();
 	    	}
