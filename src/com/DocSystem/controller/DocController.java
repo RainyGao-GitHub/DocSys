@@ -154,8 +154,8 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(String name,Integer docId,  Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId);
+	public void checkChunkUploaded(String name,Integer docId,  Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -196,11 +196,11 @@ public class DocController extends BaseController{
 				String commitUser = login_user.getName();
 				if(-1 == docId)	//新建文件则新建记录，否则
 				{
-					addDoc(name,null, 1, null,size, checkSum,reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser,login_user, rt);
+					addDoc(name,null, 1, null,size, checkSum,reposId, parentId, chunkNum, cutSize, chunkParentPath,commitMsg, commitUser,login_user, rt);
 				}
 				else
 				{
-					updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
+					updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, cutSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
 				}
 				writeJson(rt, response);
 				
@@ -212,7 +212,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer chunkSize, String chunkParentPath) {
+	private String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer cutSize, String chunkParentPath) {
 		try {
 			String targetFilePath = targetParentPath + fileName;
 			FileOutputStream out;
@@ -418,10 +418,10 @@ public class DocController extends BaseController{
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(MultipartFile uploadFile,String name,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
-			Integer chunkIndex, Integer chunkNum, Integer chunkSize, String chunkHash,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("uploadDoc name " + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath 
-							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
 		ReturnAjax rt = new ReturnAjax();
 

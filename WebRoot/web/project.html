@@ -2040,7 +2040,8 @@
 	             	checkSum: SubContext.checkSum,
 	             	chunkIndex: SubContext.chunkIndex,
 	             	chunkNum: SubContext.chunkNum,
-	             	chunkSize: SubContext.cutSize,
+	             	cutSize: SubContext.cutSize,
+	             	chunkSize: chunk.chunkSize,
 	             	chunkHash: chunk.checkSum,
 	             	reposId : SubContext.vid, 
 	                parentId : SubContext.realParentId,
@@ -2172,6 +2173,7 @@
 				console.log("startUpload() chunkData:",chunkData);
 				form.append("chunkIndex", chunkIndex);
 				form.append("chunkNum", chunkNum);
+				form.append("cutSize",SubContext.cutSize);
 				form.append("chunkSize",chunk.chunkSize);
 				form.append("chunkHash", chunk.checkSum);
 				form.append("uploadFile", chunkData);
