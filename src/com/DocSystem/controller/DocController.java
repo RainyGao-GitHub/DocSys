@@ -263,7 +263,13 @@ public class DocController extends BaseController{
 	}
 
 	private boolean isChunkMatched(String chunkFilePath, String chunkHash) {
-		// TODO Auto-generated method stub
+		//检查文件是否存在
+		File f = new File(chunkFilePath);
+		if(!f.exists()){
+			return false;
+		}
+
+		//Check if chunkHash is same
 		FileInputStream file;
 		try {
 			file = new FileInputStream(chunkFilePath);
