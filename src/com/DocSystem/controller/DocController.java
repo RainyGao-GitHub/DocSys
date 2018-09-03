@@ -1298,22 +1298,40 @@ public class DocController extends BaseController{
 		
 		System.out.println("id: " + doc.getId());
 		
-		/*创建实文件Entry：新建文件或目录*/
-		if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
-		{		
-			String MsgInfo = "createRealDoc " + name +" Failed";
-			rt.setError(MsgInfo);
-			System.out.println("createRealDoc Failed");
-			//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
-			if(reposService.deleteDoc(doc.getId()) == 0)	
-			{
-				MsgInfo += " and delete Node Failed";
-				System.out.println("Delete Node: " + doc.getId() +" failed!");
+		if(uploadFile == null)
+		{
+			if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
+			{		
+				String MsgInfo = "createRealDoc " + name +" Failed";
 				rt.setError(MsgInfo);
+				System.out.println("createRealDoc Failed");
+				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
+				if(reposService.deleteDoc(doc.getId()) == 0)	
+				{
+					MsgInfo += " and delete Node Failed";
+					System.out.println("Delete Node: " + doc.getId() +" failed!");
+					rt.setError(MsgInfo);
+				}
+				return;
 			}
-			return;
 		}
-		
+		else
+		{
+			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			{		
+				String MsgInfo = "updateRealDoc " + name +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("updateRealDoc Failed");
+				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
+				if(reposService.deleteDoc(doc.getId()) == 0)	
+				{
+					MsgInfo += " and delete Node Failed";
+					System.out.println("Delete Node: " + doc.getId() +" failed!");
+					rt.setError(MsgInfo);
+				}
+				return;
+			}
+		}
 		//commit to history db
 		if(svnRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser,rt) == false)
 		{
