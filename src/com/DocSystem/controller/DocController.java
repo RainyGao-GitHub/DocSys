@@ -1323,7 +1323,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{		
 				String MsgInfo = "updateRealDoc " + name +" Failed";
 				rt.setError(MsgInfo);
@@ -1564,7 +1564,7 @@ public class DocController extends BaseController{
 		if(isRealFS(repos.getType())) //0：虚拟文件系统   1： 普通文件系统	
 		{
 			//保存文件信息
-			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{
 				if(unlockDoc(docId,login_user) == false)
 				{
@@ -2328,8 +2328,8 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, MultipartFile uploadFile,
-			Integer chunkNum,Integer chunkSize,String chunkParentPath, ReturnAjax rt) {
+	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Integer fileSize, String fileCheckSum,
+			MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
 		String localDocParentPath = reposRPath + parentPath;
 		String retName = null;
 		try {
@@ -2340,6 +2340,12 @@ public class DocController extends BaseController{
 			else
 			{
 				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
+			}
+			//Verify the size and FileCheckSum
+			if(false == checkFileSizeAndCheckSum(localDocParentPath,name,fileSize,fileCheckSum))
+			{
+				System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error");
+				return false;
 			}
 			
 		} catch (Exception e) {
@@ -2358,6 +2364,18 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
+	private boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Integer fileSize,
+			String fileCheckSum) {
+		// TODO Auto-generated method stub
+		File file = new File(localDocParentPath,name);
+		if(fileSize != file.length())
+		{
+			System.out.println("checkFileSizeAndCheckSum() fileSize " + file.length() + "not match with ExpectedSize" + fileSize);
+			return false;
+		}
+		return true;
+	}
+
 	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName,Integer type, ReturnAjax rt) 
 	{
 		System.out.println("moveRealDoc() " + " reposRPath:"+reposRPath + " srcParentPath:"+srcParentPath + " srcName:"+srcName + " dstParentPath:"+dstParentPath + " dstName:"+dstName);
