@@ -417,6 +417,7 @@
     <if test="content != null">
         and CONTENT = #{content,jdbcType=LONGVARCHAR}
     </if>
+    order by type desc,name asc
   </select>
   <select id="getDocInfo" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
