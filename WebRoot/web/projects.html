@@ -107,19 +107,18 @@
             <input class="form-control" type="text" name="name" style="width: 100%"/>
             <label>介绍<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="info" style="width: 100%"/>
-            <label>仓库类型</label>
-            <!-- <input class="form-control" type="text" name="type"  value="1" style="width: 100%"/> -->
+            <!-- <label>仓库类型</label>
             <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
             	<option value="0">虚拟文件系统</option>   
             	<option value="1" selected="selected">实文件系统</option>   
-            </select>
+            </select> -->
             <label>仓库位置<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
             <label>版本管理</label>
             <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
-            	<option value="2">GIT</option>   
+            	<!-- <option value="2">GIT</option> -->   
             </select>
             <label>svn路径<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="svnPath"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
@@ -131,7 +130,7 @@
             <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
-            	<option value="2">GIT</option>   
+            	<!-- <option value="2">GIT</option> -->   
             </select>
             <label>svn路径1<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="svnPath1"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
@@ -391,7 +390,8 @@
         },function () {
             var name = $("#dialog-new-repos input[name='name']").val();
             var info = $("#dialog-new-repos input[name='info']").val();
-            var type = $("#dialog-new-repos select[name='type']").val();
+            //var type = $("#dialog-new-repos select[name='type']").val();
+            var type = 1;	//Real Doc System
             var path = $("#dialog-new-repos input[name='path']").val();
             var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
