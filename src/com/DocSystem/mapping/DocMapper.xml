@@ -456,5 +456,26 @@
     <if test="reposId != null">
 		and doc.VID = #{reposId,jdbcType=INTEGER}
     </if>
-  </select>  
+  </select>
+ 
+  <select id="queryDocList" resultType="BaseResultMap" parameterType="HashMap">
+	select 
+    <include refid="Base_Column_List" />
+    from doc
+	where 1 = 1 
+	<if test='name!=null and name!=""'>
+		and (
+			NAME like '%${name}%'
+			<if test='ids!=null and ids!=""'>
+				or ID in (${ids})
+			 </if>
+			)
+	</if>
+	<if test='reposId!=null and reposId!=""'>
+		and VID = #{reposId}
+	</if>
+	<if test='pDocId!=null and pDocId!=""'>
+		and PID = #{pDocId}
+	</if>
+  </select>
 </mapper>

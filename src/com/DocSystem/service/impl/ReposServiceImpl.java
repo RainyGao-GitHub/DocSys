@@ -215,5 +215,10 @@ public class ReposServiceImpl implements ReposService {
 	public UserGroup getGroupInfo(Integer groupId) {
 		return userGroupDao.selectByPrimaryKey(groupId);
 	}
-
+	
+	//Doc List 查询
+	public List<Doc> queryDocList(HashMap<String, Object> params)
+	{
+		return docDao.queryDocList(params);
+	}
 }  
