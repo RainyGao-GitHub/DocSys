@@ -29,7 +29,6 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
-import com.freeTeam.controller.UserController;
 
 /** 
  * @ClassName: LuceneUtil 
@@ -177,9 +176,9 @@ public class LuceneUtil extends Thread{
 	}
 	
 	//统一设定WEB运行时的文件索引存储路径(必须在web环境下才能获取到路径)
-	public String basePath = UserController.getEmailProps(this, "lucenePath");
+	public String basePath = ReadProperties.read("docSysConfig.properties", "lucenePath");
 	
-	public String tmpBasePath = UserController.getEmailProps(this, "tmpLucenePath");
+	public String tmpBasePath = ReadProperties.read("docSysConfig.properties", "tmpLucenePath");
 	
 	//统一设定Lucene版本号
 	private Version currentVersion = Version.LUCENE_46;
