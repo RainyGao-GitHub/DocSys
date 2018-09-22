@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
-import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -24,17 +26,16 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 
+import util.GsonUtils;
+import util.LuceneUtil2;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
-import util.Encrypt.MD5;
 import util.SvnUtil.SVNUtil;
-import util.WebUploader.MultipartFileParam;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
-import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.controller.BaseController;
@@ -1216,6 +1217,57 @@ public class DocController extends BaseController{
 		
 		List<LogEntry> logList = svnGetHistory(repos,docPath);
 		rt.setData(logList);
+		writeJson(rt, response);
+	}
+	
+	/* 文件搜索与排序  */
+	@RequestMapping(value="searchDoc.do")
+	public void searchDoc(HttpServletResponse response,HttpSession session,String searchWord,String sort,Integer reposId,Integer pDocId){
+		System.out.println("searchDoc searchWord: " + searchWord + " sort:" + sort);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+			
+		}else{
+			HashMap<String, Object> params = new HashMap<String, Object>();
+			params.put("reposId", reposId);	//reposId为空则search所有仓库下的文件
+			params.put("parentDocId", pDocId);	//pDocId为空则search仓库下所有文件
+					
+			if(sort!=null&&sort.length()>0)
+			{
+				List<Map<String, Object>> sortList = GsonUtils.getMapList(sort);
+				params.put("sortList", sortList);
+			}
+			
+			//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
+			if(searchWord!=null&&!"".equals(searchWord)){
+				try {
+					params.put("name", searchWord);
+					List<String> idList = LuceneUtil2.search(searchWord, "project");
+					List<String> ids = new ArrayList<String>();
+					for(String s:idList){
+						String[] tmp = s.split(":");
+						ids.add(tmp[0]);
+					}
+					params.put("ids", ids.toString().replace("[", "").replace("]", ""));
+					System.out.println(idList.toString());
+				} catch (Exception e) {
+					System.out.println("LuceneUtil2.search 异常");
+					e.printStackTrace();
+				}
+			}else{
+				params.put("name", "");
+			}
+			
+			//根据params参数查询docList
+			List<Doc> list = reposService.queryDocList(params);
+			rt.setData(list);
+		}
 		writeJson(rt, response);
 	}
 
