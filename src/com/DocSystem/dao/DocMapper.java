@@ -32,4 +32,7 @@ public interface DocMapper {
 	
 	//获取给用户直接授权和继承的文件列表
 	List<Doc> getAuthedDocListHeritable(HashMap<String, Object> params);
+	
+	//For Doc Search
+	List<Doc> queryDocList(HashMap<String, Object> params);
 }
