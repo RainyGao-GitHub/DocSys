@@ -24,8 +24,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
-import com.freeTeam.controller.UserController;
-
 /**  
  * 类描述：   lucene索引增删改查的公共类
  * 创建人：zhanjp
@@ -36,7 +34,7 @@ import com.freeTeam.controller.UserController;
 public class LuceneUtil2 {
 
 	// 保存路径
-    private static String INDEX_DIR = UserController.getEmailProps(new LuceneUtil2(), "lucenePath");
+    private static String INDEX_DIR = ReadProperties.read("docSysConfig.properties", "lucenePath");
     private static Analyzer analyzer = null;
     private static Directory directory = null;
     private static IndexWriter indexWriter = null;
