@@ -32,12 +32,12 @@
             <div class="navbar-header">
                 <a class="navbar-brand" href="/DocSystem"><i class="fa fa-paper-plane"></i> DocSys</a>
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
-                    <form class="form-inline" action="/search" method="get">
+                    <div class="form-inline">
                         <input class="form-control" name="keyword" type="search" placeholder="请输入关键词...">
-                        <button class="search-btn">
+                        <button class="search-btn" onclick="searchDoc();">
                             <i class="fa fa-search"></i>
                         </button>
-                    </form>
+                    </div>
                 </div>
                 <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
@@ -461,6 +461,36 @@
 				FeebackPageInit();
 			},
 		});
+	}
+	
+	function searchDoc()
+	{
+		var searchWord = "abc efg";
+        //var sort = $("#dialog-new-repos input[name='info']").val();
+        var sort = "";
+        
+       	$.ajax({
+               url : "/DocSystem/Doc/searchDoc.do",
+               type : "post",
+               dataType : "json",
+               data : {
+                   searchWord:searchWord,
+                   sort:sort,
+               },
+               success : function (ret) {
+               	if(ret.status == "ok")
+               	{
+               		console.log("文件搜索成功");
+                   }
+                   else
+                   {
+                   	alert(ret.msgInfo);
+                   }
+               },
+               error : function () {
+                   alert('服务器异常: 搜索文件异常');
+               }
+           });
 	}
 
 </script>
