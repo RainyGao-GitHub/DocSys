@@ -16,7 +16,7 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.freeTeam.model.MyEmail;
+import com.DocSystem.entity.MyEmail;
 
 /** 
  * @ClassName: EmailUtil 
