@@ -458,7 +458,7 @@
     </if>
   </select>
  
-  <select id="queryDocList" resultType="BaseResultMap" parameterType="HashMap">
+  <select id="queryDocList" resultMap="BaseResultMap" parameterType="HashMap">
 	select 
     <include refid="Base_Column_List" />
     from doc
