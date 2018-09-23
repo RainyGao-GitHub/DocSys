@@ -1221,7 +1221,7 @@ public class DocController extends BaseController{
 	}
 	
 	/* 文件搜索与排序  */
-	@RequestMapping(value="searchDoc.do")
+	@RequestMapping("/searchDoc.do")
 	public void searchDoc(HttpServletResponse response,HttpSession session,String searchWord,String sort,Integer reposId,Integer pDocId){
 		System.out.println("searchDoc searchWord: " + searchWord + " sort:" + sort);
 		
