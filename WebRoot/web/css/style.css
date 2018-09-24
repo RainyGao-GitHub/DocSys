@@ -1,0 +1,148 @@
+.second-table{
+    position: absolute;
+    left: 282px;
+    top: 55px;
+    bottom: 0;
+    width: 379px;
+}
+.second-line{
+    position: absolute;
+    cursor: col-resize;
+    left: 658px;
+    top: 55px;
+    bottom: 0;
+    width: 3px;
+    background: #ddd;
+    z-index: 301;
+}
+.searchBox{
+    padding:10px 0;
+    border-bottom:1px solid #e0e1e5;
+}
+.backicon{
+	position: absolute;
+    left: 15px;
+    top: 22px;
+    color:gray;
+    cursor:pointer;
+}
+.selecticon{
+	position:absolute;
+	color:gray;
+	cursor:pointer;
+	top:-25px;
+	right:15px;
+}
+
+.content{
+	position:relative;
+	margin: 0 40px 0 40px;
+    border: 1px solid rgba(148, 157, 166, 0.36);
+    border-radius: 40px;
+    line-height: 33px;
+    padding:0 30px;
+    height: 38px;
+}
+.content input{
+	color: #595959;
+    padding: 0;
+    line-height: 20px;
+    width: 100%;
+    background-color: transparent;
+    font-size: 12px;
+    font-family: '\5FAE\8F6F\96C5\9ED1', 'Microsoft Yahei', Helvetica Neue, Hiragino Sans GB;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    outline:none;
+}
+.icon{
+    top: 11px;
+    left: 11px;
+    color:rgba(148, 157, 166, 0.36);
+	position:absolute;
+}
+.second-table{
+	overflow:auto;
+	background:#fafafa
+}
+
+.second-list ul li {
+	position: relative;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e0e1e5;
+    overflow: hidden;
+    cursor:pointer;
+}
+.second-listBox:hover{
+	background:#eaf0fb;
+	
+}
+.second-listBox:hover .handle{
+	display:block;
+}
+.second-listBox:hover .filedate{
+	display:none;
+}
+.handle .glyphicon{
+	margin-left: 10px;
+    display: inline-block;
+    color: #b2b2b2;
+}
+.handle .glyphicon:hover{
+	color: blue;
+}
+.second-listBox .handle{
+	display:none;
+}
+.second-list .fileTitle{
+	height: 22px;
+}
+.icons{
+	width: 16px;
+    height: 16px;
+    font-size:15px;
+    margin-right:5px;
+    color:#ffcc00;
+    display:inline-block;
+    text-align:center;
+}
+.icons.type1{
+	background-image:url("../static/zTree/css/metroStyle/img/metro.png");
+	background-position:-147px 0;
+}
+.icons.type2{
+	background-position:-147px -42px;
+	background-image:url("../static/zTree/css/metroStyle/img/metro.png");
+}
+.filedate{
+    margin-left: 10px;
+    display: inline-block;
+    color: #c2c2c2;
+    white-space: nowrap;
+    font:12px '\5FAE\8F6F\96C5\9ED1', 'Microsoft Yahei', Helvetica Neue, Hiragino Sans GB, '\5B8B\4F53', 'simsun', '\9ED1\4F53', Arial, sans-serif;
+}
+.filename{
+	margin-left: 10px;
+	font:12px '\5FAE\8F6F\96C5\9ED1', 'Microsoft Yahei', Helvetica Neue, Hiragino Sans GB, '\5B8B\4F53', 'simsun', '\9ED1\4F53', Arial, sans-serif;
+    color: #393939;
+    line-height: 16px;
+}
+.filename .name{
+	white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow:hidden;
+}
+.filetitle{
+	padding:0 20px;
+	height:60px;
+	line-height:60px;
+	border-bottom:1px solid #ddd;
+    position: fixed;
+    top: 55px;
+    z-index: 999;
+    width: 100%;
+}
+.editormd{
+	border:none;
+}
