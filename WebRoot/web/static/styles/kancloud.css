@@ -274,10 +274,10 @@ h6 {
 
 .m-manual .manual-right {
     position: absolute;
-    left: 282px;
+    left: 661px;
     top: 55px;
     z-index: 300;
-    overflow-y: auto;
+    overflow:hidden;
     bottom: 0;
     right: 0;
     transition-property: top;
