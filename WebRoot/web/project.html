@@ -27,7 +27,9 @@
 		<!-- FreeTeam CSS-->
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
-	
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+ 	
+ 	<link rel="stylesheet" type="text/css" href="//at.alicdn.com/t/font_768133_1t0u55lw1ri.css">
     <style type="text/css">
         .editormd-preview{
             left: 0 !important;
@@ -162,12 +164,42 @@
              -->
         </div>
         <div id="line" class="manual-line" ></div>
-        <div class="manual-middle" style="display:none">
-        	<span>搜索框</span>
-        </div>
-        <div id="line2" class="manual-line" style="display:none"></div>
+        <div class="second-table">
+         	<div class="searchBox">
+         		<div class="back">
+         			<i class="backicon glyphicon glyphicon-arrow-left"></i>
+         		</div>
+         		<div class="content">
+         			<i class="glyphicon glyphicon-search icon"></i>
+         			<input placeholder="搜索..." type="text" />
+         		</div>
+         		<div class="dropdown">
+         			<a class="selecticon glyphicon glyphicon-align-justify dropdown-toggle" data-toggle="dropdown" aria-expanded="false"></a>
+         			<ul class="dropdown-menu" style="left:210px">
+ 		                    <li><a href="#">摘要</a>
+ 		                    </li>
+ 		                    <li><a  href="#">列表</a>
+ 		                    </li>
+ 		                    <li><a  href="#">创建时间</a>
+ 		                    </li>
+ 		                    <li><a  href="#">修改时间</a>
+ 		                    </li>
+ 		                    <li><a  href="#">文件名称</a>
+ 		                    </li>
+ 		                    <li><a  href="#">文件大小</a>
+ 		                    </li>
+ 		                </ul>
+         		</div>
+         	</div>
+         	<div class="second-list">
+         		<ul id="secondList">
+         		</ul>
+         	</div>
+         </div>
+        <div id="second-line" class="second-line" ></div>
         
         <div class="manual-right">
+        <div class="filetitle"></div>
             <div class="manual-article">
                 <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                 </div>
@@ -2901,6 +2933,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("getDoc ret",ret);
+                	$('.filetitle').html(ret.data.name);
                     gDocId = ret.data.id;
                     if(ret.data.content == "null")
                     {
@@ -5186,8 +5219,49 @@ function CompareObj(objA, objB, flag) {
        }
 	   //console.log(menu);
 	   zTreeInit(menu);
+	   drawSecondMenu(menu);
 	}
-	
+	function drawSecondMenu(data){
+ 	 	var str="";
+       	for(var i=0; i<data.length; i++)
+ 	      	{
+ 	           var iconType =menu[i].type===2?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+ 	           str+='<li onclick="secondGetDoc(this)" dataId='+data[i].id+' datatype='+data[i].type+' class="second-listBox"><div class="filename pull-left">'+iconType+menu[i].name+'</div><div class="filedate pull-right">'+formatDate(menu[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	       }
+       	$("#secondList").html(str);
+ 	}
+ 	function secondGetDoc(obj){
+ 		var id = $(obj).attr('dataId');
+ 		var type = $(obj).attr('dataType')
+ 		console.log(type);
+ 		if(type==1)getDoc(id,false);
+ 		else{
+ 			alert("获取文件夹内容")
+ 		}
+ 	}
+ 	function fx(obj,event){
+ 		var id = $(obj).parents('li').attr('dataId');
+ 		alert('分享'+id);
+ 		event.stopPropagation();
+ 	}
+ 	function xz(obj,event){
+ 		var id = $(obj).parents('li').attr('dataId');
+ 		
+ 		alert('下载'+id);
+ 		event.stopPropagation();
+ 	}
+ 	function sc(obj,event){
+ 		var id = $(obj).parents('li').attr('dataId');
+ 		alert('删除'+id);
+ 		event.stopPropagation();
+ 	}
+ 	function formatDate(date) {
+ 		var now = new Date(date);
+ 		var year=now.getFullYear(); 
+ 		var month=now.getMonth()+1; 
+ 		var date=now.getDate(); 
+ 		return year+"-"+month+"-"+date; 
+ 	} 
 	function showDoc()
 	{
 		console.log("showDoc gDocId:" + gDocId);
@@ -5329,7 +5403,9 @@ function CompareObj(objA, objB, flag) {
           var l=ev.clientX-disX;	//计算Line的位置
           oDiv.style.left=l+'px';	//设置Line的位置
      	  $(".manual-left")[0].style.width=ev.clientX+'px';
-       	  $(".manual-right")[0].style.left=ev.clientX+'px';
+       	 $(".manual-right")[0].style.left=$(".second-table").width()+3+ev.clientX+'px';
+       	 $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
+       	 $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
    	  };
       
       document.onmouseup=function(ev){
@@ -5340,25 +5416,23 @@ function CompareObj(objA, objB, flag) {
       };
     };
     
-    /*var oDiv2=document.getElementById('line2')
+    var oDiv2=document.getElementById('second-line');
     oDiv2.onmousedown=function(ev){
-      var disX=ev.clientX-oDiv2.offsetLeft;
-      var disY=ev.clientY-oDiv2.offsetTop;
-
-      document.onmousemove=function(ev){
-        var l=ev.clientX-disX;
-
-        oDiv2.style.left=l+'px'
-      };
-      document.onmouseup=function(ev){
-    	var lw = $(".manual-left").width();
-   	  	$(".manual-middle")[0].style.width=(ev.clientX - lw )+'px';
-   	 	$(".manual-right")[0].style.left=ev.clientX+'px';
-        document.onmousemove=null;
-        document.onmouseup=null;
-      };
-    };*/
-    
+        var disX=ev.clientX-oDiv2.offsetLeft;
+        var disY=ev.clientY-oDiv2.offsetTop;
+   
+       document.onmousemove=function(ev){
+       		var l=ev.clientX-disX;	//计算Line的位置
+           oDiv2.style.left=l+'px';	//设置Line的位置
+           $('.second-table').width($(".second-line").position().left-$('.manual-left').width());
+           $(".manual-right").css("left",$(".second-table").width()+$('.manual-left').width()+3);
+           return false;
+   	  };
+    	  document.onmouseup=function(ev){
+    	 	document.onmousemove=null;
+    	  	document.onmouseup=null;
+        };
+    };
     //页面加载完成处理函数    
     $(document).ready(function(){
     	//初始化全局变量
