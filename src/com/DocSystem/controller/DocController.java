@@ -106,9 +106,18 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "addDoc " + name;
 		}
-		addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
+		Integer docId = addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
 		
-		writeJson(rt, response);	
+		writeJson(rt, response);
+		
+		//Add the doc to lucene Index
+		String strDocId = "" + docId;
+		try {
+			LuceneUtil2.update(strDocId, content, "doc");
+		} catch (Exception e) {
+			System.out.println("AddDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
 	}
 	
 	/****************   delete a Document ******************/
@@ -1248,7 +1257,7 @@ public class DocController extends BaseController{
 			if(searchWord!=null&&!"".equals(searchWord)){
 				try {
 					params.put("name", searchWord);
-					List<String> idList = LuceneUtil2.search(searchWord, "project");
+					List<String> idList = LuceneUtil2.search(searchWord, "doc");
 					List<String> ids = new ArrayList<String>();
 					for(String s:idList){
 						String[] tmp = s.split(":");
@@ -1277,7 +1286,7 @@ public class DocController extends BaseController{
 	 * @param chunkSize 
 	 * @param chunkNum ****************************************/
 	//底层addDoc接口
-	private void addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
+	private Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
@@ -1293,7 +1302,7 @@ public class DocController extends BaseController{
 			{
 				rt.setError("虚拟文件系统不能创建实体文件");
 				System.out.println("addDoc() 虚拟文件系统不能创建实体文件");
-				return;
+				return null;
 			}
 		}
 		
@@ -1311,7 +1320,7 @@ public class DocController extends BaseController{
 				rt.setError("Node: " + name +" 已存在！");
 				System.out.println("addDoc() " + name + " 已存在");
 			}
-			return;
+			return null;		
 		}
 		
 		//以下代码不可重入，使用syncLock进行同步
@@ -1324,7 +1333,7 @@ public class DocController extends BaseController{
 				unlock(); //线程锁
 				rt.setError("ParentNode: " + parentId +" is locked！");	
 				System.out.println("ParentNode: " + parentId +" is locked！");
-				return;			
+				return null;			
 			}
 				
 			//新建doc记录,并锁定
@@ -1349,7 +1358,7 @@ public class DocController extends BaseController{
 				unlock();
 				rt.setError("Add Node: " + name +" Failed！");
 				System.out.println("addDoc() addDoc to db failed");
-				return;
+				return null;
 			}
 			unlock();
 		}
@@ -1370,7 +1379,7 @@ public class DocController extends BaseController{
 					System.out.println("Delete Node: " + doc.getId() +" failed!");
 					rt.setError(MsgInfo);
 				}
-				return;
+				return null;
 			}
 		}
 		else
@@ -1387,7 +1396,7 @@ public class DocController extends BaseController{
 					System.out.println("Delete Node: " + doc.getId() +" failed!");
 					rt.setError(MsgInfo);
 				}
-				return;
+				return null;
 			}
 		}
 		//commit to history db
@@ -1406,7 +1415,7 @@ public class DocController extends BaseController{
 			}
 			rt.setError(MsgInfo);
 			//writeJson(rt, response);	
-			return;
+			return null;
 		}
 		
 		//只有在content非空的时候才创建VDOC
@@ -1434,10 +1443,11 @@ public class DocController extends BaseController{
 		{
 			rt.setError("unlockDoc Failed");
 			//writeJson(rt, response);	
-			return;
+			return null;
 		}
 		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
+		return doc.getId();
 	}
 	
 	//释放线程锁
