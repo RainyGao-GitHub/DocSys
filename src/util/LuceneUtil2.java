@@ -34,7 +34,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 public class LuceneUtil2 {
 
 	// 保存路径
-    private static String INDEX_DIR = ReadProperties.read("docSysConfig.properties", "lucenePath");
+    private static String INDEX_DIR = getLucenePath();
     private static Analyzer analyzer = null;
     private static Directory directory = null;
     private static IndexWriter indexWriter = null;
@@ -51,7 +51,34 @@ public class LuceneUtil2 {
         }
     }
     
-    /**
+    private static String getLucenePath() {
+		String path = ReadProperties.read("docSysConfig.properties", "lucenePath");
+	    if(path == null || "".equals(path))
+	    {
+			String os = System.getProperty("os.name");  
+			System.out.println("OS:"+ os);  
+			if(os.toLowerCase().startsWith("win")){  
+				path = "D:/DocSys/Lucene/";
+			}
+			else
+			{
+				path = "/data/DocSys/Lucene/";	//Linux系统放在  /data	
+			}
+	    }
+	    
+		File dir = new File(path);
+		if(dir.exists() == false)
+		{
+			System.out.println("getLucenePath() path:" + path + " not exists, do create it!");
+			if(dir.mkdirs() == false)
+			{
+				System.out.println("getLucenePath() Failed to create dir:" + path);
+			}
+		}	 
+		return path;
+	}
+
+	/**
      * 更新索引
      * @param id
      * @param content
