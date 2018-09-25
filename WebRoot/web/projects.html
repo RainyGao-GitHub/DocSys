@@ -33,7 +33,7 @@
                 <a class="navbar-brand" href="/DocSystem"><i class="fa fa-paper-plane"></i> DocSys</a>
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
                     <div class="form-inline">
-                        <input class="form-control" name="keyword" type="search" placeholder="请输入关键词...">
+                        <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="请输入关键词...">
                         <button class="search-btn" onclick="searchDoc();">
                             <i class="fa fa-search"></i>
                         </button>
@@ -465,10 +465,9 @@
 	
 	function searchDoc()
 	{
-		var searchWord = "abc efg";
-        //var sort = $("#dialog-new-repos input[name='info']").val();
-        var sort = "";
-        
+		var searchWord = $("#searchWord").val();
+		var sort = "";
+		
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
                type : "post",
