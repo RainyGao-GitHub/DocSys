@@ -111,9 +111,9 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 		
 		//Add the doc to lucene Index
-		String strDocId = "" + docId;
 		try {
-			LuceneUtil2.update(strDocId, content, "doc");
+			System.out.println("AddDoc() add index in lucne: docId " + docId + " content:" + content);
+			LuceneUtil2.index(""+docId, content, "doc");
 		} catch (Exception e) {
 			System.out.println("AddDoc() Failed to update lucene Index");
 			e.printStackTrace();
@@ -160,6 +160,15 @@ public class DocController extends BaseController{
 		}
 		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);	
+		
+		//Delete the index
+		try {
+			System.out.println("DeleteDoc() delete index in lucne: docId " + id);
+			LuceneUtil2.delete(""+id,"doc");
+		} catch (Exception e) {
+			System.out.println("DeleteDoc() Failed to delete lucene Index");
+			e.printStackTrace();
+		}
 	}
 	
 	/****************   Check a Document ******************/
@@ -511,7 +520,7 @@ public class DocController extends BaseController{
 			}
 			if(-1 == docId)	//新建文件则新建记录，否则
 			{
-				addDoc(name,null, 1, uploadFile,size, checkSum,reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+				docId = addDoc(name,null, 1, uploadFile,size, checkSum,reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
 			}
 			else
 			{
@@ -707,6 +716,14 @@ public class DocController extends BaseController{
 		String docVName = getDocVPath(doc);
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		delFileOrDir(userTmpDir+docVName);
+		
+		try {
+			System.out.println("UpdateDocContent() delete index in lucne: docId " + id);
+			LuceneUtil2.update(""+id,content,"doc");
+		} catch (Exception e) {
+			System.out.println("UpdateDocContent() Failed to update lucene Index");
+			e.printStackTrace();
+		}
 	}
 
 	//this interface is for auto save of the virtual doc edit
@@ -1258,6 +1275,11 @@ public class DocController extends BaseController{
 				try {
 					params.put("name", searchWord);
 					List<String> idList = LuceneUtil2.search(searchWord, "doc");
+		        	for(int i=0; i < idList.size(); i++)
+		        	{
+		        		System.out.println(idList.get(i));
+		        	}
+		        	
 					List<String> ids = new ArrayList<String>();
 					for(String s:idList){
 						String[] tmp = s.split(":");
