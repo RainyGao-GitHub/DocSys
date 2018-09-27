@@ -1262,7 +1262,7 @@ public class DocController extends BaseController{
 		}else{
 			HashMap<String, Object> params = new HashMap<String, Object>();
 			params.put("reposId", reposId);	//reposId为空则search所有仓库下的文件
-			params.put("parentDocId", pDocId);	//pDocId为空则search仓库下所有文件
+			params.put("pDocId", pDocId);	//pDocId为空则search仓库下所有文件
 					
 			if(sort!=null&&sort.length()>0)
 			{
