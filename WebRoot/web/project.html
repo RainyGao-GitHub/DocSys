@@ -29,8 +29,6 @@
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
 	<link rel="stylesheet" type="text/css" href="css/style.css">
  	
- 	<!-- <link rel="stylesheet" type="text/css" href="//at.alicdn.com/t/font_768133_1t0u55lw1ri.css">
-     -->
      <style type="text/css">
         .editormd-preview{
             left: 0 !important;
@@ -141,7 +139,6 @@
             <div class="manual-tab">
                 <div class="tab-navg">
                     <span data-mode="view" class="navg-item main active"><i class="fa fa-align-justify"></i><b class="text">目录</b></span>
-                    <!-- <span data-mode="view" class="navg-item lookPro"><i class="el-icon-search"></i><b class="text">进度查看</b></span> -->
                 </div>
                 <div id="treeBody" class="tab-wrap">
                     <div class="tab-item manual-catalog" id="uuz">
@@ -171,8 +168,8 @@
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
          		</div>
          		<div class="content">
-         			<i class="glyphicon glyphicon-search icon"></i>
-         			<input placeholder="搜索..." type="text" />
+         			<i class="glyphicon glyphicon-search icon" onclick="searchDoc();"></i>
+         			<input placeholder="搜索..." type="text" id="searchWord"/>
          		</div>
          		<div class="dropdown">
          			<a class="selecticon glyphicon glyphicon-align-justify dropdown-toggle" data-toggle="dropdown" aria-expanded="false"></a>
@@ -5226,7 +5223,7 @@ function CompareObj(objA, objB, flag) {
  	 	var str="";
        	for(var i=0; i<data.length; i++)
  	      	{
- 	           var iconType =menu[i].type===2?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+ 	           var iconType =menu[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
  	           str+='<li onclick="secondGetDoc(this)" dataId='+data[i].id+' datatype='+data[i].type+' class="second-listBox"><div class="filename pull-left">'+iconType+menu[i].name+'</div><div class="filedate pull-right">'+formatDate(menu[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
  	       }
        	$("#secondList").html(str);
@@ -5276,6 +5273,39 @@ function CompareObj(objA, objB, flag) {
 			//获取DocContent
 	   		getDoc(gDocId,gEdit);
 	   	}             
+	}
+	
+	function searchDoc()
+	{
+		var searchWord = $("#searchWord").val();
+		var sort = "";
+		
+       	$.ajax({
+               url : "/DocSystem/Doc/searchDoc.do",
+               type : "post",
+               dataType : "json",
+               data : {
+                   searchWord:searchWord,
+                   sort:sort,
+                   reposId: gReposId,
+                   pDocId: gDocId,
+               },
+               success : function (ret) {
+            		console.log("searchDoc ret:", ret)
+            		if(ret.status == "ok")
+               		{
+            			drawSecondMenu(ret.data);
+               			console.log("文件搜索成功");
+                   	}
+                   	else
+                   	{
+                   		alert(ret.msgInfo);
+                   	}
+               },
+               error : function () {
+                   alert('服务器异常: 搜索文件异常');
+               }
+           });
 	}
 	
 	function previewDoc()
