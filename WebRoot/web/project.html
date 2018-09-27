@@ -5223,8 +5223,8 @@ function CompareObj(objA, objB, flag) {
  	 	var str="";
        	for(var i=0; i<data.length; i++)
  	      	{
- 	           var iconType =menu[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
- 	           str+='<li onclick="secondGetDoc(this)" dataId='+data[i].id+' datatype='+data[i].type+' class="second-listBox"><div class="filename pull-left">'+iconType+menu[i].name+'</div><div class="filedate pull-right">'+formatDate(menu[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+ 	           str+='<li onclick="secondGetDoc(this)" dataId='+data[i].id+' datatype='+data[i].type+' class="second-listBox"><div class="filename pull-left">'+iconType + data[i].name+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
  	       }
        	$("#secondList").html(str);
  	}
@@ -5299,7 +5299,7 @@ function CompareObj(objA, objB, flag) {
                    	}
                    	else
                    	{
-                   		alert(ret.msgInfo);
+                   		showErrorMessage("文件搜索出错:" + ret.msgInfo);
                    	}
                },
                error : function () {

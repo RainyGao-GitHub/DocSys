@@ -477,14 +477,15 @@
                    sort:sort,
                },
                success : function (ret) {
-               	if(ret.status == "ok")
-               	{
-               		console.log("文件搜索成功");
-                   }
-                   else
-                   {
-                   	alert(ret.msgInfo);
-                   }
+	           		console.log("searchDoc ret:", ret)
+	        		if(ret.status == "ok")
+	           		{
+	           			console.log("文件搜索成功");
+	               	}
+	               	else
+	               	{
+	               		showErrorMessage("文件搜索出错:" + ret.msgInfo);
+	               	}
                },
                error : function () {
                    alert('服务器异常: 搜索文件异常');
