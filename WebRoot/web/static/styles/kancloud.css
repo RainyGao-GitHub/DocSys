@@ -178,7 +178,7 @@ h6 {
     padding: 0 9px;
     cursor: pointer;
     float: left;
-    height: 30px;
+    height: 59px;
     line-height: 30px;
     color: #999
 }
@@ -213,7 +213,7 @@ h6 {
 .m-manual .manual-tab .tab-item {
     display: none;
     position: absolute;
-    top: 31px;
+    top: 60px;
     bottom: 0;
     left: 0;
     right: 0;
