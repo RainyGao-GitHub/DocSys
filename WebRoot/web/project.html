@@ -4950,6 +4950,7 @@ function CompareObj(objA, objB, flag) {
              else
              {              
               	getDoc(treeNode.id,false);
+              	showSubDocList(treeNode.id);
              }             
           }
       };
@@ -5273,6 +5274,34 @@ function CompareObj(objA, objB, flag) {
 			//获取DocContent
 	   		getDoc(gDocId,gEdit);
 	   	}             
+	}
+	
+	function showSubDocList(parentDocId)
+	{
+		$.ajax({
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                id:parentDocId,
+                vid: gReposId,
+            },
+            success : function (ret) {
+         		console.log("showSubDocList ret:", ret)
+         		if(ret.status == "ok")
+            	{
+         			drawSecondMenu(ret.data);
+            		console.log("showSubDocList");
+                }
+                else
+                {
+                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+                alert('服务器异常: 获取子目录异常');
+            }
+        });
 	}
 	
 	function searchDoc()
