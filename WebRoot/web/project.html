@@ -4950,7 +4950,10 @@ function CompareObj(objA, objB, flag) {
              else
              {              
               	getDoc(treeNode.id,false);
-              	showSubDocList(treeNode.id);
+              	if(true == treeNode.isParent)
+              	{
+              		showSubDocList(treeNode.id);
+              	}
              }             
           }
       };
