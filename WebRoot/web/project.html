@@ -164,7 +164,7 @@
         <div id="line" class="manual-line" ></div>
         <div class="second-table">
          	<div class="searchBox">
-         		<div class="back">
+         		<div class="back" onclick="backToParentDoc();"> 
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
          		</div>
          		<div class="content">
@@ -5306,6 +5306,26 @@ function CompareObj(objA, objB, flag) {
             }
         });
 	}
+	
+	function backToParentDoc()
+	{
+		console.log("gDocId:" + gDocId);
+		if(gDocId)
+		{
+			var zTree = $.fn.zTree.getZTreeObj("doctree");
+			var node = zTree.getNodeByParam("id",gDocId);
+			var parentNode = node.getParentNode();
+			if(parentNode && parentNode.id)
+			{
+				zTree.selectNode(parentNode);
+				showSubDocList(parentNode.id)			
+			}
+			else
+			{
+				
+			}			
+		}
+   	}         
 	
 	function searchDoc()
 	{
