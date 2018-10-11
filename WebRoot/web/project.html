@@ -352,7 +352,6 @@
 	//初始化全局变量 //Repos Info
 	var gReposId;
 	var gReposInfo = [];
-	var gReposType = 1; //默认是普通文件系统
 	var gReposName = "";
 	var gReposCreateTime = "";
 	//Doc Info
@@ -2772,17 +2771,9 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
-                    gReposType = gReposInfo.type;
                     gReposName = gReposInfo.name;
                     gReposCreateTime = gReposInfo.createTime;
                     $("#projectName").text(gReposName);
-                    //$("#editTime").text(gReposCreateTime);
-                    if(gReposType == 0)
-                    {
-                    	//alert("虚拟文件系统");
-                        var keep = {};	//将虚拟文件系统的isParent锁定属性去掉
-            			setting.data.keep = keep;
-					}
 					//回调函数	
                     callback && callback();
                 }else {
@@ -4347,13 +4338,7 @@
         }
         else
         {
-	        //更新URL(保证页面刷新后能够)
-		    var params = {
-	            vid : gReposId,
-	            doc : curDocId,
-	        }
-	        var url = makeUrl(params);
-	        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page	
+        	updateUrl(gReposId,curDocId,false);
         }
     }
 	
@@ -4400,14 +4385,7 @@
         
         WikiEditBtnCtrl(true);
 	    
-        var params = {
-            vid : gReposId,
-            doc : docId,
-            edit : true,
-        }
-        var url = makeUrl(params);
-        //window.location.href = url;	//reload the page
-        window.history.pushState({}, "wiki", url);	//just update the url,do not reload the page
+        updateUrl(gReposId,docId,true);
         
         //start the autoTmpSaver
         debounce.clear();
@@ -4506,11 +4484,9 @@
 
         var str = ""
         for( k in params ){
-            if ( params[k] ){ //params[k]
+            if ( params[k]){ //params[k]
               str += "&" + k + "=" + params[k];
-
             }
-
         }
 
 
@@ -5318,11 +5294,15 @@ function CompareObj(objA, objB, flag) {
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
+				getDoc(parentNode.id);
 				showSubDocList(parentNode.id)			
 			}
 			else
 			{
-				
+				zTree.cancelSelectedNode(node);
+				gDocId = undefined;
+				updateUrl(gReposId,gDocId);
+				showSubDocList(gDocId);
 			}			
 		}
    	}         
