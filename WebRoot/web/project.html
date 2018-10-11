@@ -356,6 +356,7 @@
 	var gReposCreateTime = "";
 	//Doc Info
 	var gDocId;
+	var gParentDocId;
 	var gDocContent;
 	var gEdit; 
 	
@@ -4928,7 +4929,8 @@ function CompareObj(objA, objB, flag) {
               	getDoc(treeNode.id,false);
               	if(true == treeNode.isParent)
               	{
-              		showSubDocList(treeNode.id);
+              		gParentDocId = treeNode.id;
+              		showSubDocList(gParentDocId);
               	}
              }             
           }
@@ -5220,7 +5222,8 @@ function CompareObj(objA, objB, flag) {
  		getDoc(docId,false);
  		if(2 == type)
  		{
- 			showSubDocList(docId);
+      		gParentDocId = docId;
+      		showSubDocList(gParentDocId);
  		}
  	}
  	function fx(obj,event){
@@ -5296,19 +5299,30 @@ function CompareObj(objA, objB, flag) {
 		{
 			var zTree = $.fn.zTree.getZTreeObj("doctree");
 			var node = zTree.getNodeByParam("id",gDocId);
-			var parentNode = node.getParentNode();
+			var parentNode;
+			if(node == null)
+			{
+				parentNode = zTree.getNodeByParam("id",gParentDocId);
+			}
+			else
+			{
+				parentNode = node.getParentNode();
+			}
+			
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
-				getDoc(parentNode.id);
-				showSubDocList(parentNode.id)			
+				getDoc(parentNode.id,false);
+          		gParentDocId = parentNode.id;
+          		showSubDocList(gParentDocId);
 			}
 			else
 			{
 				zTree.cancelSelectedNode(node);
 				gDocId = undefined;
+				gParentDocId = undefined;
 				updateUrl(gReposId,gDocId);
-				showSubDocList(gDocId);
+				showSubDocList(gParentDocId);
 			}			
 		}
    	}         
