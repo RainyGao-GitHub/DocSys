@@ -5209,12 +5209,18 @@ function CompareObj(objA, objB, flag) {
        	$("#secondList").html(str);
  	}
  	function secondGetDoc(obj){
- 		var id = $(obj).attr('dataId');
+ 		var docId = $(obj).attr('dataId');
  		var type = $(obj).attr('dataType')
- 		console.log(type);
- 		if(type==1)getDoc(id,false);
- 		else{
- 			showSubDocList(id);
+ 		console.log("type:" + type);
+ 		
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",docId);
+		zTree.selectNode(node);
+ 		
+ 		getDoc(docId,false);
+ 		if(2 == type)
+ 		{
+ 			showSubDocList(docId);
  		}
  	}
  	function fx(obj,event){
