@@ -5217,6 +5217,10 @@ function CompareObj(objA, objB, flag) {
  		
 		var zTree = $.fn.zTree.getZTreeObj("doctree");
 		var node = zTree.getNodeByParam("id",docId);
+		if(node == null)
+		{
+			alert("Error");
+		}
 		zTree.selectNode(node);
  		
  		getDoc(docId,false);
@@ -5224,8 +5228,11 @@ function CompareObj(objA, objB, flag) {
  		{
       		gParentDocId = docId;
       		showSubDocList(gParentDocId);
+			//展开该节点，否则会导致通过secondGetDoc进去无法返回 	      		
+    		zTree.expandNode(node, true, false, true);
  		}
  	}
+ 	
  	function fx(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
  		alert('分享'+id);
