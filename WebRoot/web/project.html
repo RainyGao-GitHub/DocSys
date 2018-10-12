@@ -4930,8 +4930,20 @@ function CompareObj(objA, objB, flag) {
               	if(true == treeNode.isParent)
               	{
               		gParentDocId = treeNode.id;
-              		showSubDocList(gParentDocId);
               	}
+              	else
+              	{
+              		var parentNode = treeNode.getParentNode();
+              		if(parentNode == null)
+              		{
+              			gParentDocId = undefined;
+              		}
+              		else
+              		{
+              			gParentDocId = parentNode.id;
+              		}
+              	}
+          		showSubDocList(gParentDocId);
              }             
           }
       };
@@ -5348,7 +5360,7 @@ function CompareObj(objA, objB, flag) {
                    searchWord:searchWord,
                    sort:sort,
                    reposId: gReposId,
-                   pDocId: gDocId,
+                   //pDocId: gDocId,
                },
                success : function (ret) {
             		console.log("searchDoc ret:", ret)
