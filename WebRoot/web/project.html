@@ -5227,23 +5227,34 @@ function CompareObj(objA, objB, flag) {
  		var type = $(obj).attr('dataType')
  		console.log("type:" + type);
  		
+ 		//Change curent gDocId to docId
+	 	gDocId = docId;
+		
+ 		//Try to select the node in zTree
 		var zTree = $.fn.zTree.getZTreeObj("doctree");
 		var node = zTree.getNodeByParam("id",docId);
 		if(node == null)
 		{
-			alert("Error");
+			console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
+			syncUpMenu(showDoc);
 		}
-		zTree.selectNode(node);
- 		
- 		getDoc(docId,false);
- 		if(2 == type)
- 		{
-      		gParentDocId = docId;
- 			showSubDocList(gParentDocId);
-			//展开该节点，否则会导致通过secondGetDoc进去无法返回
-			zTree.reAsyncChildNodes(node, "refresh",true);
-    		//zTree.expandNode(node, true, false, true);
- 		}
+		else
+		{
+	 		//Show Doc in review Area and set gDocId by getDoc
+	 		getDoc(docId,false);
+			
+			zTree.selectNode(node);
+	 		if(2 == type)
+	 		{
+	 			//Show SubDocs
+	 			gParentDocId = docId;
+	 			showSubDocList(gParentDocId);
+	 			
+	      		//展开该节点，否则会导致通过secondGetDoc进去无法返回
+				zTree.reAsyncChildNodes(node, "refresh",true);
+	    		//zTree.expandNode(node, true, false, true);
+	 		}
+		}
  	}
  	
  	function fx(obj,event){
@@ -5351,7 +5362,7 @@ function CompareObj(objA, objB, flag) {
 	{
 		var searchWord = $("#searchWord").val();
 		var sort = "";
-		
+	
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
                type : "post",
