@@ -392,7 +392,8 @@
 		return deleteNodes;
 	}
 	
-	function DoDelete(treeNodes)
+	//callback is for success delete
+	function DoDelete(treeNodes,callback)
 	{
 		if(treeNodes == null || treeNodes.length < 1)
 		{
@@ -420,7 +421,7 @@
 				msg : msg,
 				},function () {
 			    	//alert("点击了确定");
-					DocDelete.deleteDocs(treeNodes);
+					DocDelete.deleteDocs(treeNodes,callback);
 			    	return true;   
 			 	});
 		}
@@ -3132,6 +3133,7 @@
         var treeNodesCache =[];
         var totalNumCache = [];
         var statusCache =[];
+        var successCallBack;
         
         //标准Java成员操作接口
 		function getIndex()
@@ -3367,9 +3369,11 @@
           		{
         	    	busy = 0;
     	            clearContext(); //清空上下文
-    	            //syncUpMenu();
     	            
-            		bootstrapQ.msg({
+    	            //调用回调函数
+    	            successCallBack && successCallBack();
+    	            
+    	            bootstrapQ.msg({
 						msg : '删除完成！',
 						type : 'success',
 						time : 2000,
@@ -3381,7 +3385,11 @@
 		
 		//开放给外部的调用接口
         return {
-        	deleteDocs: function(treeNodes,parentNode,vid){
+        	deleteDocs: function(treeNodes,parentNode,vid,callback){
+        		if(callback)
+        		{
+        			successCallBack = callback;
+        		}
         		deleteDocs(treeNodes,parentNode,vid);
             },
         };
@@ -5259,8 +5267,21 @@ function CompareObj(objA, objB, flag) {
  	
  	function sc(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
- 		alert('删除'+id);
- 		event.stopPropagation();
+ 		//alert('删除'+id);
+ 		
+ 		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",id);
+		if(node == null)
+		{
+			alert("ERROR");
+		}
+		else
+		{
+			var deleteNodes = [];
+			deleteNodes.push(node);
+			DoDelete(deleteNodes,showSubDocList);
+		}
+		event.stopPropagation();
  	}
  	function formatDate(date) {
  		var now = new Date(date);
@@ -5286,12 +5307,18 @@ function CompareObj(objA, objB, flag) {
 	
 	function showSubDocList(parentDocId)
 	{
+		var pDocId = gParentDocId;
+		if(parentDocId)
+		{
+			pDocId = parentDocId;
+		}
+
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
             dataType : "json",
             data : {
-                id:parentDocId,
+                id: pDocId,
                 vid: gReposId,
             },
             success : function (ret) {
