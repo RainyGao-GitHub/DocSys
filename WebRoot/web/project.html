@@ -543,8 +543,8 @@
 	}
 	
 	
-	/*文件上传实现*/
-	function download(){
+	/*文件右键实现*/
+ 	function download(){
 		
 		var id = 0;
 		if(curRightClickedTreeNode == null)
@@ -554,36 +554,19 @@
 		}
 		id = curRightClickedTreeNode.id;
 		var name = curRightClickedTreeNode.name;
-		if(confirm("是否下载文件：" + name) == false)
+		downloadDoc(id,name);
+	}
+	
+	//指定文件下载
+ 	function downloadDoc(docId,docName){		
+		if(confirm("是否下载文件：" + docName) == false)
 		{
 			return;
 		}
 
-		window.location.href = "/DocSystem/Doc/doGet.do?id="+id;
-
-   		//download Doc
-        /*$.ajax({
-            url : "/DocSystem/Doc/downloadDoc.do",	//文件或目录下载，ret.data中包含了下载路径等信息
-            type : "post",
-            dataType : "json",
-            data : {
-                id : id,
-            },
-            success : function (ret) {
-                console.log(ret);
-                if( "ok" == ret.status ){
-                  	downloadUrl = ret.data.path;
-                  	alert(downloadUrl);
-    				window.location.href = "/DocSystem" + downloadUrl;
-                }
-            },
-            error : function () {
-                showErrorMessage('服务器异常');
-                $btn.button('reset');
-            }
-        });*/
+		window.location.href = "/DocSystem/Doc/doGet.do?id="+docId;
 	}
-    
+	
     /*文件上传实现*/
 	//文件上传入口
 	function uploadFiles(){
@@ -5216,15 +5199,18 @@ function CompareObj(objA, objB, flag) {
 	function drawSecondMenu(data){
  	 	var str="";
        	for(var i=0; i<data.length; i++)
- 	      	{
+ 	    {
  	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
- 	           str+='<li onclick="secondGetDoc(this)" dataId='+data[i].id+' datatype='+data[i].type+' class="second-listBox"><div class="filename pull-left">'+iconType + data[i].name+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
- 	       }
+ 	           var docId = data[i].id;
+ 	           var docType = data[i].type;
+ 	           var docName = data[i].name;
+ 	           str+='<li onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName='+docName+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	    }
        	$("#secondList").html(str);
  	}
  	function secondGetDoc(obj){
  		var docId = $(obj).attr('dataId');
- 		var type = $(obj).attr('dataType')
+ 		var type = $(obj).attr('dataType');
  		console.log("type:" + type);
  		
  		//Change curent gDocId to docId
@@ -5262,12 +5248,15 @@ function CompareObj(objA, objB, flag) {
  		alert('分享'+id);
  		event.stopPropagation();
  	}
+ 	
  	function xz(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
- 		
- 		alert('下载'+id);
+ 		var name = $(obj).parents('li').attr('dataName');
+
+ 		downloadDoc(id,name);
  		event.stopPropagation();
  	}
+ 	
  	function sc(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
  		alert('删除'+id);
