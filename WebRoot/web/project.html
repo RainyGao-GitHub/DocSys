@@ -5212,7 +5212,7 @@ function CompareObj(objA, objB, flag) {
  	           var docId = data[i].id;
  	           var docType = data[i].type;
  	           var docName = data[i].name;
- 	           str+='<li onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName='+docName+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	           str+='<li onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
  	    }
        	$("#secondList").html(str);
  	}
@@ -5253,7 +5253,25 @@ function CompareObj(objA, objB, flag) {
  	
  	function fx(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
- 		alert('分享'+id);
+ 		//alert('分享'+id);
+ 		
+ 		var vid = gReposId;
+ 		var href = "/DocSystem/web/project.html?vid="+vid+"&doc="+id;
+ 		console.log(href);
+ 		var host = window.location.host;	//域名带端口
+ 		var url = host+href;
+ 		console.log(url);
+ 		var obj=document.getElementById("copiedText");
+ 		obj.value=url;	//修改其中的值
+ 		obj.select(); // 选择对象
+ 		document.execCommand("Copy"); // 执行浏览器复制命令
+ 	    // 普通消息提示条
+ 		bootstrapQ.msg({
+ 			msg : '链接已复制！',
+ 			type : 'success',
+ 			time : 1000,
+ 		});
+ 		
  		event.stopPropagation();
  	}
  	
