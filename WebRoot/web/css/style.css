@@ -138,9 +138,7 @@
 	height:60px;
 	line-height:60px;
 	border-bottom:1px solid #ddd;
-    position: fixed;
     top: 55px;
-    z-index: 999;
     width: 100%;
 }
 .editormd{

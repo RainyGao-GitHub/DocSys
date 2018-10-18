@@ -197,7 +197,7 @@
         <div id="second-line" class="second-line" ></div>
         
         <div class="manual-right">
-        <div class="filetitle"></div>
+        	<div class="filetitle"></div>
             <div class="manual-article">
                 <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                 </div>
@@ -4081,7 +4081,8 @@
 
       		var params = {
                width: "100%",
-               height: $(document).height() - 70,
+               //height: $(document).height()-70,
+               autoHeight: true,
                path : 'static/markdown/lib/',
                markdown : content,
                //toolbar  : false,             // 关闭工具栏
