@@ -277,7 +277,7 @@ h6 {
     left: 661px;
     top: 55px;
     z-index: 300;
-    overflow:hidden;
+    overflow-y: auto;
     bottom: 0;
     right: 0;
     transition-property: top;
