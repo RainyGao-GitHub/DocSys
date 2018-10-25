@@ -77,14 +77,28 @@ public class ManageController extends BaseController{
 	public void addUser(User user, HttpSession session,HttpServletResponse response)
 	{
 		System.out.println("addUser");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
 
 		String userName = user.getName();
 		String pwd = user.getPwd();
 		Integer type = user.getType();
 
 		System.out.println("userName:"+userName + " pwd:"+pwd + "type:" + type);
-	
-		ReturnAjax rt = new ReturnAjax();
+		
+		//检查是否越权设置
+		if(type > login_user.getType())
+		{
+			rt.setError("danger#！越权操作！");
+			writeJson(rt, response);
+			return;
+		}
 		
 		//检查用户名是否为空
 		if(userName ==null||"".equals(userName))
@@ -150,17 +164,74 @@ public class ManageController extends BaseController{
 	public void editUser(User user, HttpSession session,HttpServletResponse response)
 	{
 		System.out.println("editUser");
-
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		Integer userId = user.getId();
 		String userName = user.getName();
 		String pwd = user.getPwd();
 		Integer type = user.getType();
 
-		System.out.println("userName:"+userName + " pwd:"+pwd + "type:" + type);
+		System.out.println("userName:"+userName + "type:" + type  + " pwd:" + pwd);
 	
-		ReturnAjax rt = new ReturnAjax();
+		//检查是否越权设置
+		if(type > login_user.getType())
+		{
+			rt.setError("danger#！越权操作！");
+			writeJson(rt, response);
+			return;
+		}
 		
-		if(userId == null || "".equals(userId))
+		if(userId == null)
+		{
+			rt.setError("用户ID不能为空");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(userService.editUser(user) == 0)
+		{
+			rt.setError("更新数据库失败");
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+		return;
+	}
+	
+	@RequestMapping(value="resetPwd")
+	public void resetPwd(User user, HttpSession session,HttpServletResponse response)
+	{
+		System.out.println("resetPwd");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		if(login_user.getType() < 2)
+		{
+			rt.setError("您无权进行此操作！");
+			writeJson(rt, response);
+			return;			
+		}
+		
+		Integer userId = user.getId();
+		String userName = user.getName();
+		String pwd = user.getPwd();
+
+		System.out.println("userName:" +userName + " pwd:" + pwd);
+	
+		if(userId == null)
 		{
 			rt.setError("用户ID不能为空");
 			writeJson(rt, response);
@@ -185,6 +256,19 @@ public class ManageController extends BaseController{
 		System.out.println("delUser " + userId);
 		
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		if(login_user.getType() < 2)
+		{
+			rt.setError("您无权进行此操作！");
+			writeJson(rt, response);
+			return;			
+		}
 		
 		if(userService.delUser(userId) == 0)
 		{
