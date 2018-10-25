@@ -40,6 +40,7 @@
                     <td class="edit">
                       <button onclick="delUserConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
                       <button onclick="showEditUserPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑 </button>
+                      <button onclick="showResetPwdPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">重置密码 </button>
                     </td>
                   </tr>
                 {{/each}}
