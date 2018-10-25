@@ -30,10 +30,10 @@
 		var id =  $("#userId").val();
 		var name = $("#name").val();
 	    var realName = $("#realName").val();
-	    var pwd =  $("#pwd").val();
+	    //var pwd =  $("#pwd").val();
 	    var type =  $("#type").val();
 	    
-	    console.log(name,realName,pwd,type);
+	    console.log(name,realName,type);
 	    
         $.ajax({
             url : "/DocSystem/Manage/editUser.do",
@@ -44,7 +44,7 @@
                  name : name,
                  realName : realName,
                  type : type,
-                 pwd : MD5(pwd),
+                 //pwd : MD5(pwd),
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -100,12 +100,14 @@
                         </select>
                       </div>
                     </div>
+                    <!-- 
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="password">密码</label>
                       <div class="col-lg-9">
                         <input type="password" class="form-control" id="pwd" name="pwd">
                       </div>
-                    </div>
+                    </div> 
+                    -->
 
                     <!-- Buttons -->
                     <div class="form-group">
