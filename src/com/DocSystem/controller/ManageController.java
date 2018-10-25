@@ -95,7 +95,7 @@ public class ManageController extends BaseController{
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			rt.setError("danger#！越权操作！");
+			rt.setError("danger#越权操作！");
 			writeJson(rt, response);
 			return;
 		}
@@ -175,17 +175,26 @@ public class ManageController extends BaseController{
 		
 		Integer userId = user.getId();
 		String userName = user.getName();
-		String pwd = user.getPwd();
 		Integer type = user.getType();
-
+		String pwd = user.getPwd();
+		
 		System.out.println("userName:"+userName + "type:" + type  + " pwd:" + pwd);
-	
+		
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			rt.setError("danger#！越权操作！");
+			rt.setError("danger#越权操作！");
 			writeJson(rt, response);
 			return;
+		}
+		
+		//不得修改同级别或高级别用户的信息
+		User tempUser  = userService.getUser(userId);
+		if(tempUser.getType() >= login_user.getType())
+		{
+			rt.setError("danger#越权操作！");
+			writeJson(rt, response);
+			return;			
 		}
 		
 		if(userId == null)
@@ -226,11 +235,19 @@ public class ManageController extends BaseController{
 		}
 		
 		Integer userId = user.getId();
-		String userName = user.getName();
 		String pwd = user.getPwd();
-
-		System.out.println("userName:" +userName + " pwd:" + pwd);
+		
+		System.out.println("userId:" +userId + " pwd:" + pwd);
 	
+		//不得修改同级别或高级别用户的信息
+		User tempUser  = userService.getUser(userId);
+		if(tempUser.getType() >= login_user.getType())
+		{
+			rt.setError("danger#越权操作！");
+			writeJson(rt, response);
+			return;			
+		}
+		
 		if(userId == null)
 		{
 			rt.setError("用户ID不能为空");

@@ -4,6 +4,7 @@ encoding//WebRoot/manager/addUser.html=UTF-8
 encoding//WebRoot/manager/editGroup.html=UTF-8
 encoding//WebRoot/manager/editUser.html=UTF-8
 encoding//WebRoot/manager/manageGroupMember.html=UTF-8
+encoding//WebRoot/manager/resetPwd.html=UTF-8
 encoding//WebRoot/manager/tmpl/group.html=UTF-8
 encoding//WebRoot/manager/tmpl/groupMember.html=UTF-8
 encoding//WebRoot/manager/tmpl/headbar.html=UTF-8
