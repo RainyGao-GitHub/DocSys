@@ -1,0 +1,94 @@
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function ResetPwdPageInit()
+	{
+		console.log("ResetPwdPageInit()");
+		EnterKeyListenerForResetPwd();
+	}
+	
+	function showResetPwdPanel(text){
+		$(".resetPwdModal").fadeIn("slow");
+		$("#name").focus();
+	}
+	
+	function closeResetPwdPanel(){
+		$(".resetPwdModal").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForResetPwd(){
+		console.log("start enter key listener");
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		resetPwd();
+	 	}  
+	}
+	
+	function resetPwd(){
+		console.log("resetPwd()");
+
+		var id =  $("#userId").val();
+		var name = $("#name").val();
+	    var pwd =  $("#pwd").val();
+	    
+	    console.log(name,pwd);
+	    
+        $.ajax({
+            url : "/DocSystem/Manage/resetPwd.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	 id : id,
+                 pwd : MD5(pwd),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	showUserList();	//刷新UserList
+                	alert("更新成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:更新失败");
+            }
+        });
+	}
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("resetPwd Page init");
+    	ResetPwdPageInit();
+		$("#name").click().focus();
+	});
+</script>
+                    
+                  <div class="form-horizontal">
+                    <div class="form-group" hidden>
+                      <label class="control-label col-lg-3" for="userId">用户ID</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="userId" name="userId">
+                      </div>
+                    </div>
+                    <!-- userName -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">用户名</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="name" name="name" disabled="disabled">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="password">密码</label>
+                      <div class="col-lg-9">
+                        <input type="password" class="form-control" id="pwd" name="pwd">
+                      </div>
+                    </div> 
+                    
+                    <!-- Buttons -->
+                    <div class="form-group">
+                      <!-- Buttons -->
+                      <div class="col-lg-offset-9 col-lg-2">
+                        <button type="submit" class="btn btn-success" id="btn_resetPwd" onclick="resetPwd()">保存</button>
+                      </div>
+                    </div>
+                  </div>
