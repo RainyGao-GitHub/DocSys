@@ -239,21 +239,25 @@ public class ManageController extends BaseController{
 		
 		System.out.println("userId:" +userId + " pwd:" + pwd);
 	
-		//不得修改同级别或高级别用户的信息
-		User tempUser  = userService.getUser(userId);
-		if(tempUser.getType() >= login_user.getType())
-		{
-			rt.setError("danger#越权操作！");
-			writeJson(rt, response);
-			return;			
-		}
-		
 		if(userId == null)
 		{
 			rt.setError("用户ID不能为空");
 			writeJson(rt, response);
 			return;
 		}
+		
+		//不得修改同级别或高级别用户的信息
+		if(userId != login_user.getId())
+		{
+			User tempUser  = userService.getUser(userId);
+			if(tempUser.getType() >= login_user.getType())
+			{
+				rt.setError("danger#越权操作！");
+				writeJson(rt, response);
+				return;			
+			}
+		}	
+				
 		
 		if(userService.editUser(user) == 0)
 		{
