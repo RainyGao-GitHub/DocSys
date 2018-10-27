@@ -127,7 +127,7 @@
                         <h2><span>DocSys DocSys</span></h2>
                     </div>
                     <p>自己的系统自己做主，把握主动性还是有必要的 ^__^。</p>
-                    <p><a class="banner_btn" href="#">Read More</a>
+                    <p><a class="banner_btn" onclick="showFeebackPanel()">意见与反馈</a>
                     </p>
                 </div>
 
@@ -241,6 +241,23 @@
 	function showErrorMessage($msg) {
     	qiao.bs.alert($msg);
 	}
+	
+	
+	function showFeebackPanel()
+	{
+		console.log("showFeebackPanel");
+		bootstrapQ.dialog({
+			url: 'feeback.html',
+			title: '意见与反馈',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				FeebackPageInit();
+			},
+		});
+	}
+	
 </script>	
 </body>
 </html>
