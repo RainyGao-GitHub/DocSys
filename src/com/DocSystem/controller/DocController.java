@@ -28,6 +28,7 @@ import org.tmatesoft.svn.core.SVNException;
 
 import util.GsonUtils;
 import util.LuceneUtil2;
+import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
 import util.SvnUtil.SVNUtil;
@@ -120,6 +121,68 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	/****************   Feeback  ******************/
+	@RequestMapping("/feeback.do")
+	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("feeback name: " + name + " content: " + content);
+
+		ReturnAjax rt = new ReturnAjax();
+		String commitUser = "游客";
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user != null)
+		{
+			commitUser = login_user.getName();
+		}
+		else
+		{
+			login_user = new User();
+			login_user.setId(0);
+		}
+		Integer reposId = getReposIdForFeeback();		
+		Integer parentId = getParentIdForFeeback();
+		
+		String commitMsg = "User Feeback by " + name;
+		Integer docId = addDoc(name,content,1,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
+		
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
+		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
+		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");		
+		
+		writeJson(rt, response);
+		
+		//Add the doc to lucene Index
+		try {
+			System.out.println("AddDoc() add index in lucne: docId " + docId + " content:" + content);
+			LuceneUtil2.index(""+docId, content, "doc");
+		} catch (Exception e) {
+			System.out.println("AddDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
+	private Integer getReposIdForFeeback() {
+		String tempStr = null;
+		tempStr = ReadProperties.read("docSysConfig.properties", "feebackReposId");
+	    if(tempStr == null || "".equals(tempStr))
+	    {
+	    	return 5;
+	    }
+	    
+	    return(Integer.parseInt(tempStr));
+	}
+
+	private Integer getParentIdForFeeback() {
+		String tempStr = null;
+		tempStr = ReadProperties.read("docSysConfig.properties", "feebackParentId");
+	    if(tempStr == null || "".equals(tempStr))
+	    {
+	    	return 0;
+	    }
+
+	    return(Integer.parseInt(tempStr));
+ 	}
+
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer id,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -1315,18 +1378,6 @@ public class DocController extends BaseController{
 		String parentPath = getParentPath(parentId);
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + name;
-		
-		//虚拟文静系统不支持新建实体文件
-		if(isRealFS(repos.getType()) == false) //0：虚拟文件系统   1： 普通文件系统	
-		{
-			//虚拟文件系统只能创建目录
-			if(type == 1)
-			{
-				rt.setError("虚拟文件系统不能创建实体文件");
-				System.out.println("addDoc() 虚拟文件系统不能创建实体文件");
-				return null;
-			}
-		}
 		
 		//判断目录下是否有同名节点 
 		Doc tempDoc = getDocByName(name,parentId,reposId);
