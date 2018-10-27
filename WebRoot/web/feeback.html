@@ -28,15 +28,12 @@
 		var content = $("#detail").val();
 		console.log("feeback title:" + title + " content:" +  content);
     	$.ajax({
-             url : "/DocSystem/Doc/addDoc.do",
+             url : "http://dw.gofreeteam.com/DocSystem/Doc/feeback.do",
              type : "post",
              dataType : "json",
              data : {
              	name : title,
-                type : 1, //文件类型
                 content: content,
-                reposId : 2, 
-                parentId : 0,
              },
              success : function (ret) {
              	if( "ok" == ret.status){
