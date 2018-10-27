@@ -5140,6 +5140,9 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("SysInit");
     	
+		//Enable the EnterKey Monitor for SearchDoc
+		EnterKeyListenerForSearchDoc();
+		
     	//确定当前登录用户是否已登录
     	$.ajax({
             url : "/DocSystem/getLoginUser.do",
@@ -5391,6 +5394,15 @@ function CompareObj(objA, objB, flag) {
 			}			
 		}
    	}         
+	
+	//回车键监听函数
+	function EnterKeyListenerForSearchDoc(){
+		console.log("start enter key listener for SearchDoc");
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		searchDoc();
+	 	}  
+	}
 	
 	function searchDoc()
 	{
