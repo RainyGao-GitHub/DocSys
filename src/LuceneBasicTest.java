@@ -4,6 +4,7 @@ import java.io.IOException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
@@ -24,12 +25,20 @@ class LuceneBasicTest
 
      
     public static void main(String[] args){
-    	addIndex();
-        //updateIndex();
-        search("第五");
+    	System.out.println("addIndex");
+    	//addIndex(5,"1","55");
+    	//addIndex(5,"1","66");
+    	//addIndex(5,"1","77");
+    	//addIndex(5,"1","88");
+     	//updateIndex();
+    	System.out.println("search");
+        search("55"); 
+        search("66"); 
+        search("77"); 
+        search("88"); 
     }
      
-    public static void addIndex(){
+    public static void addIndex(Integer id,String docId,String content){
         try {
         	Analyzer analyzer = new IKAnalyzer();
         	Directory directory = FSDirectory.open(new File(path));
@@ -39,14 +48,11 @@ class LuceneBasicTest
             IndexWriter write =  new IndexWriter(directory, config);
             
             Document doc = new Document();
-            doc.add(new TextField("id", "123456", Store.YES));
-            doc.add(new TextField("content", "第一", Store.YES));
-            doc.add(new TextField("content", "第二", Store.YES));
-            doc.add(new TextField("content", "第三", Store.YES));
-            doc.add(new TextField("content", "第四", Store.YES));
-            doc.add(new TextField("content", "第五", Store.YES));
+            doc.add(new IntField("id", id, Store.YES));
+            doc.add(new TextField("docId", docId, Store.YES));
+            doc.add(new TextField("content", content, Store.YES));
             write.addDocument(doc);
-             
+            
             write.close(); 
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,7 +94,7 @@ class LuceneBasicTest
             IndexSearcher isearcher = new IndexSearcher(ireader);
             
             Analyzer analyzer = new IKAnalyzer();
-            QueryParser parser = new QueryParser(Version.LUCENE_CURRENT, "userName",analyzer);
+            QueryParser parser = new QueryParser(Version.LUCENE_CURRENT, "content",analyzer);
             Query query =  parser.parse(str);
             
             ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
@@ -96,7 +102,8 @@ class LuceneBasicTest
             for (int i = 0; i < hits.length; i++) {
 	            	Document hitDoc = isearcher.doc(hits[i].doc);
 	                System.out.println("own id = " + hitDoc.get("id"));
-	                System.out.println("content = "+hitDoc.get("content"));
+	                System.out.println("docId = "+ hitDoc.get("docId"));
+	                System.out.println("content = "+ hitDoc.get("content"));
 	                System.out.println("");
             	}
                  
