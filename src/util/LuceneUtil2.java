@@ -3,14 +3,12 @@
  */
 package util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,20 +20,18 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
-import com.sun.star.io.IOException;
 
 /**  
  * 类描述：   lucene索引增删改查的公共类
@@ -103,7 +99,7 @@ public class LuceneUtil2 {
         Document doc = new Document();
         doc.add(new TextField("id", id, Store.YES));
         doc.add(new IntField("docId", docId, Store.YES));
-        doc.add(new TextField("content", content, Store.YES));
+        doc.add(new TextField("content", content, Store.NO));
         indexWriter.addDocument(doc);
         
         indexWriter.commit();
@@ -136,7 +132,7 @@ public class LuceneUtil2 {
         Document doc1 = new Document();
         doc1.add(new TextField("id", id, Store.YES));
         doc1.add(new IntField("docId", docId, Store.YES));
-        doc1.add(new TextField("content", content, Store.YES));
+        doc1.add(new TextField("content", content, Store.NO));
         
         indexWriter.updateDocument(new Term("id",id), doc1);
         indexWriter.close();
@@ -197,6 +193,33 @@ public class LuceneUtil2 {
         directory.close();
         return res;
     }
+
+    /**
+     * 关键字模糊查询
+     * 返回docId List
+     * 
+     * @param str: keyWord
+     * @param type: 索引库名字
+     */
+	public static List<String> fuzzySearch(String str,String type) throws Exception {
+        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +type));
+        analyzer = new IKAnalyzer();
+        DirectoryReader ireader = DirectoryReader.open(directory);
+        IndexSearcher isearcher = new IndexSearcher(ireader);
+
+        FuzzyQuery query = new FuzzyQuery(new Term("content",str));
+
+        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+        List<String> res = new ArrayList<String>();
+        for (int i = 0; i < hits.length; i++) {
+            Document hitDoc = isearcher.doc(hits[i].doc);
+            res.add(hitDoc.get("docId"));
+            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId") + " content:" + hitDoc.get("content"));
+        }
+        ireader.close();
+        directory.close();
+        return res;
+    }
     
     /**
 	     * 根据docId查询idList
@@ -241,9 +264,10 @@ public class LuceneUtil2 {
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
 	{
+		String code = getFileEncode(filePath);
 		InputStream is = new FileInputStream(filePath);
 		String line; // 用来保存每行读取的内容
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
 		line = reader.readLine(); // 读取第一行
 		while (line != null) { // 如果 line 为空说明读完了
 			buffer.append(line); // 将读到的内容添加到 buffer 中
@@ -252,6 +276,41 @@ public class LuceneUtil2 {
 	    }
 	    reader.close();
 	    is.close();
+	}
+	
+	/**
+	 * 获取文件编码格式
+	 * @param filePath
+	 * @return UTF-8/Unicode/UTF-16BE/GBK
+	 * @throws Exception
+	 */
+	public static String getFileEncode(String filePath) throws Exception {
+		BufferedInputStream bin = null;
+		String code = null;
+ 
+		try {
+			bin = new BufferedInputStream(new FileInputStream(filePath));
+			int p = (bin.read() << 8) + bin.read();
+			switch (p) {
+			case 0xefbb:
+				code = "UTF-8";
+				break;
+			case 0xfffe:
+				code = "Unicode";
+				break;
+			case 0xfeff:
+				code = "UTF-16BE";
+				break;
+			default:
+				code = "GBK";
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			bin.close();
+		}
+ 
+		return code;
 	}
 	
 	public static String readFile(String filePath) throws Exception {
