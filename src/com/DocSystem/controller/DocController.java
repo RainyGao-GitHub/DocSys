@@ -1344,7 +1344,7 @@ public class DocController extends BaseController{
 			if(searchWord!=null&&!"".equals(searchWord)){
 				try {
 					params.put("name", searchWord);
-					List<String> idList = LuceneUtil2.search(searchWord, "doc");
+					List<String> idList = LuceneUtil2.fuzzySearch(searchWord, "doc");
 		        	for(int i=0; i < idList.size(); i++)
 		        	{
 		        		System.out.println(idList.get(i));
