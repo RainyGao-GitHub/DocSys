@@ -19,7 +19,7 @@ class LuceneTest
         	//LuceneUtil2.addIndex("3-1",3,file1Content2,"doc");
         	
         	LuceneUtil2.addIndexForDoc(1,"C:/Users/Administrator/Desktop/77777ddd.txt","doc");
-        	List<String> list = LuceneUtil2.search("INNNNNNNNN","doc");
+        	List<String> list = LuceneUtil2.search("INNNNN","doc");
         	System.out.println("Search Result count " + list.size());
         	for(int i=0; i < list.size(); i++)
         	{
