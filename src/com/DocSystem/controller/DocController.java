@@ -114,7 +114,8 @@ public class DocController extends BaseController{
 		//Add the doc to lucene Index
 		try {
 			System.out.println("AddDoc() add index in lucne: docId " + docId + " content:" + content);
-			LuceneUtil2.index(""+docId, content, "doc");
+			//Add Index For Content
+			LuceneUtil2.addIndex(docId + "-0", docId,content, "doc");
 		} catch (Exception e) {
 			System.out.println("AddDoc() Failed to update lucene Index");
 			e.printStackTrace();
@@ -154,7 +155,7 @@ public class DocController extends BaseController{
 		//Add the doc to lucene Index
 		try {
 			System.out.println("AddDoc() add index in lucne: docId " + docId + " content:" + content);
-			LuceneUtil2.index(""+docId, content, "doc");
+			LuceneUtil2.addIndex(docId+"-0",docId,content,"doc");
 		} catch (Exception e) {
 			System.out.println("AddDoc() Failed to update lucene Index");
 			e.printStackTrace();
@@ -227,7 +228,7 @@ public class DocController extends BaseController{
 		//Delete the index
 		try {
 			System.out.println("DeleteDoc() delete index in lucne: docId " + id);
-			LuceneUtil2.delete(""+id,"doc");
+			LuceneUtil2.deleteDoc(id,"doc");
 		} catch (Exception e) {
 			System.out.println("DeleteDoc() Failed to delete lucene Index");
 			e.printStackTrace();
@@ -541,14 +542,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//虚拟文件系统不支持实文件上传
 		Repos repos = reposService.getRepos(reposId);
-		if(isRealFS(repos.getType()) == false)
-		{
-			rt.setError("虚拟文件系统不支持实体文件上传!");
-			writeJson(rt, response);
-			return;
-		}
 
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
@@ -593,6 +587,19 @@ public class DocController extends BaseController{
 			
 			//Delete All Trunks if trunks have been combined
 			deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
+			
+			//Add the doc to lucene Index
+			try {
+				System.out.println("AddDoc() add index in lucne: docId " + docId);
+				//Add Index For File
+				String parentPath = getParentPath(parentId);
+				String reposRPath = getReposRealPath(repos);
+				String localDocRPath = reposRPath + parentPath + name;
+				LuceneUtil2.addIndexForDoc(docId,localDocRPath, "doc");
+			} catch (Exception e) {
+				System.out.println("AddDoc() Failed to update lucene Index");
+				e.printStackTrace();
+			}
 			return;
 		}
 		else
@@ -782,7 +789,7 @@ public class DocController extends BaseController{
 		
 		try {
 			System.out.println("UpdateDocContent() delete index in lucne: docId " + id);
-			LuceneUtil2.update(""+id,content,"doc");
+			LuceneUtil2.updateIndex(id+"-0",id,content,"doc");
 		} catch (Exception e) {
 			System.out.println("UpdateDocContent() Failed to update lucene Index");
 			e.printStackTrace();
