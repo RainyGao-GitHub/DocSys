@@ -111,7 +111,17 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		//Add the doc to lucene Index
+		//Add Lucene Index For Vdoc
+		addIndexForVDoc(docId,content);
+	}
+	
+	//Add Search Index For VDoc
+	private void addIndexForVDoc(Integer docId, String content) {
+		if(content == null || "".equals(content))
+		{
+			return;
+		}
+		
 		try {
 			System.out.println("AddDoc() add index in lucne: docId " + docId + " content:" + content);
 			//Add Index For Content
@@ -121,7 +131,6 @@ public class DocController extends BaseController{
 			e.printStackTrace();
 		}
 	}
-	
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
 	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -152,14 +161,8 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		//Add the doc to lucene Index
-		try {
-			System.out.println("AddDoc() add index in lucne: docId " + docId + " content:" + content);
-			LuceneUtil2.addIndex(docId+"-0",docId,content,"doc");
-		} catch (Exception e) {
-			System.out.println("AddDoc() Failed to update lucene Index");
-			e.printStackTrace();
-		}
+		//Add Lucene Index For Vdoc
+		addIndexForVDoc(docId,content);
 	}
 	
 	private Integer getReposIdForFeeback() {
@@ -225,16 +228,19 @@ public class DocController extends BaseController{
 		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);	
 		
-		//Delete the index
+		//Delete Lucene index For Doc
+		deleteAllIndexForDoc(id);
+	}
+	
+	private void deleteAllIndexForDoc(Integer id) {
 		try {
-			System.out.println("DeleteDoc() delete index in lucne: docId " + id);
+			System.out.println("DleteDoc() delete index in lucne: docId " + id);
 			LuceneUtil2.deleteDoc(id,"doc");
 		} catch (Exception e) {
 			System.out.println("DeleteDoc() Failed to delete lucene Index");
 			e.printStackTrace();
 		}
 	}
-	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
 	public void checkChunkUploaded(String name,Integer docId,  Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -293,8 +299,16 @@ public class DocController extends BaseController{
 			}
 		}
 		writeJson(rt, response);
+		
+		//UpdateIndexForRDoc: delete all exist RDoc Indexs then Rebuild it
+		UpdateIndexForRDoc();
 	}
 	
+	private void UpdateIndexForRDoc() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer cutSize, String chunkParentPath) {
 		try {
 			String targetFilePath = targetParentPath + fileName;
@@ -588,18 +602,11 @@ public class DocController extends BaseController{
 			//Delete All Trunks if trunks have been combined
 			deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
 			
-			//Add the doc to lucene Index
-			try {
-				System.out.println("AddDoc() add index in lucne: docId " + docId);
-				//Add Index For File
-				String parentPath = getParentPath(parentId);
-				String reposRPath = getReposRealPath(repos);
-				String localDocRPath = reposRPath + parentPath + name;
-				LuceneUtil2.addIndexForDoc(docId,localDocRPath, "doc");
-			} catch (Exception e) {
-				System.out.println("AddDoc() Failed to update lucene Index");
-				e.printStackTrace();
-			}
+			//UpdatIndexForRDoc
+			String parentPath = getParentPath(parentId);
+			String reposRPath = getReposRealPath(repos);
+			String localDocRPath = reposRPath + parentPath + name;
+			updatIndexForRDoc(docId,localDocRPath);
 			return;
 		}
 		else
@@ -607,6 +614,18 @@ public class DocController extends BaseController{
 			rt.setError("文件上传失败！");
 		}
 		writeJson(rt, response);
+	}
+
+	private void updatIndexForRDoc(Integer docId, String localDocRPath) {
+		//Add the doc to lucene Index
+		try {
+			System.out.println("addIndexForRDoc() add index in lucne: docId " + docId);
+			//Add Index For File
+			LuceneUtil2.updateIndexForDoc(docId,localDocRPath, "doc");
+		} catch (Exception e) {
+			System.out.println("addIndexForRDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
 	}
 
 	/****************   rename a Document ******************/
@@ -741,7 +760,7 @@ public class DocController extends BaseController{
 			commitMsg = "copyDoc " + doc.getName() + " to " + dstDocName;
 		}
 		copyDoc(id,srcDocName,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
-		writeJson(rt, response);	
+		writeJson(rt, response);
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
@@ -787,6 +806,11 @@ public class DocController extends BaseController{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		delFileOrDir(userTmpDir+docVName);
 		
+		//Update Index For VDoc
+		updateIndexForVDoc(id,content);
+	}
+
+	private void updateIndexForVDoc(Integer id, String content) {
 		try {
 			System.out.println("UpdateDocContent() delete index in lucne: docId " + id);
 			LuceneUtil2.updateIndex(id+"-0",id,content,"doc");

@@ -259,8 +259,15 @@ public class LuceneUtil2 {
 	}
 
 	public static void addIndexForDoc(Integer docId, String filePath, String type) throws Exception {
+
 		addIndex(docId + "-1",docId,readFile(filePath),type);
 	}
+	
+	public static void updateIndexForDoc(Integer docId, String filePath, String type) throws Exception {
+		deleteIndex(docId + "-1",type);
+		addIndex(docId + "-1",docId,readFile(filePath),type);
+	}
+
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
 	{
@@ -271,7 +278,7 @@ public class LuceneUtil2 {
 		line = reader.readLine(); // 读取第一行
 		while (line != null) { // 如果 line 为空说明读完了
 			buffer.append(line); // 将读到的内容添加到 buffer 中
-			//buffer.append("\n"); // 添加换行符
+			buffer.append("\n"); // 添加换行符
 			line = reader.readLine(); // 读取下一行
 	    }
 	    reader.close();
