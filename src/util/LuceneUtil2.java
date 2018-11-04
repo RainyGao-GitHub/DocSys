@@ -77,7 +77,7 @@ public class LuceneUtil2 {
 	}
     
 	/**
-     * 增加索引
+	 *     	增加索引
      * @param id: lucence document id
      * @param docId:  docId of DocSys 
      * @param content: 文件内容或markdown文件内容 
@@ -110,7 +110,7 @@ public class LuceneUtil2 {
     }
 
 	/**
-     * 更新索引
+     * 	 更新索引
      * @param id: lucence document id
      * @param docId:  docId of DocSys 
      * @param content: 文件内容或markdown文件内容 
@@ -142,9 +142,9 @@ public class LuceneUtil2 {
     }
     
     /**
-     * 删除索引
+     * 	删除索引
      * 
-     * @param str 删除的关键字
+     * @param id: lucene document id
      * @throws Exception
      */
     @SuppressWarnings("deprecation")
@@ -166,10 +166,8 @@ public class LuceneUtil2 {
     }    
 
     /**
-     * 关键字查询
-     * 返回docId List
-     * 
-     * @param str: keyWord
+     * 	关键字精确查询,返回docId List
+     * @param str: 关键字
      * @param type: 索引库名字
      */
     @SuppressWarnings("deprecation")
@@ -186,8 +184,12 @@ public class LuceneUtil2 {
         List<String> res = new ArrayList<String>();
         for (int i = 0; i < hits.length; i++) {
             Document hitDoc = isearcher.doc(hits[i].doc);
-            res.add(hitDoc.get("docId"));
-            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId") + " content:" + hitDoc.get("content"));
+            String docId = hitDoc.get("docId");
+            if(docId != null && !"".equals(docId))
+            {
+            	res.add(docId);
+                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId + " content:" + hitDoc.get("content"));
+            }
         }
         ireader.close();
         directory.close();
@@ -195,10 +197,8 @@ public class LuceneUtil2 {
     }
 
     /**
-     * 关键字模糊查询
-     * 返回docId List
-     * 
-     * @param str: keyWord
+     * 	关键字模糊查询， 返回docId List
+     * @param str: 关键字
      * @param type: 索引库名字
      */
 	public static List<String> fuzzySearch(String str,String type) throws Exception {
@@ -213,8 +213,12 @@ public class LuceneUtil2 {
         List<String> res = new ArrayList<String>();
         for (int i = 0; i < hits.length; i++) {
             Document hitDoc = isearcher.doc(hits[i].doc);
-            res.add(hitDoc.get("docId"));
-            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId") + " content:" + hitDoc.get("content"));
+            String docId = hitDoc.get("docId");
+            if(docId != null && !"".equals(docId))
+            {
+            	res.add(docId);
+                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId + " content:" + hitDoc.get("content"));
+            }
         }
         ireader.close();
         directory.close();
@@ -222,10 +226,9 @@ public class LuceneUtil2 {
     }
     
     /**
-	     * 根据docId查询idList
-	     *  返回idList
+	 * 	根据docId查询idList，返回idList
      * 
-     * @param docId: 
+     * @param docId: DocSys doc id
      * @param type: 索引库名字
      */
     public static List<String> getIdListForDoc(Integer docId,String type) throws Exception {
@@ -249,7 +252,8 @@ public class LuceneUtil2 {
         return res;
     }
 
-	public static void deleteDoc(Integer docId, String type) throws Exception {
+    //Delete All Index For Doc
+	public static void deleteIndexForDoc(Integer docId, String type) throws Exception {
 		
 		List<String> res = getIdListForDoc(docId, type);
 		for(int i=0;i < res.size(); i++)
@@ -257,17 +261,79 @@ public class LuceneUtil2 {
 			deleteIndex(res.get(i),type);
 		}
 	}
-
-	public static void addIndexForDoc(Integer docId, String filePath, String type) throws Exception {
-
-		addIndex(docId + "-1",docId,readFile(filePath),type);
+	
+	//Delete Indexs For Real Doc
+	public static void deleteIndexForRDoc(Integer docId, String type) throws Exception {
+		
+		List<String> res = getIdListForDoc(docId, type);
+		for(int i=0;i < res.size(); i++)
+		{
+			deleteIndex(docId + "_RDoc_" + i, type);
+		}
 	}
 	
-	public static void updateIndexForDoc(Integer docId, String filePath, String type) throws Exception {
-		deleteIndex(docId + "-1",type);
-		addIndex(docId + "-1",docId,readFile(filePath),type);
+	
+	//Add Index For RDoc
+	public static void addIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
+		int lineCount = 0;
+		int totalLine = 0;
+		
+		int bufSize = 0;
+		int totalSize = 0;
+		
+		int chunkIndex = 0;
+		
+		StringBuffer buffer = new StringBuffer();
+		String code = getFileEncode(filePath);
+		InputStream is = new FileInputStream(filePath);
+		String line; // 用来保存每行读取的内容
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
+		line = reader.readLine(); // 读取第一行
+		while (line != null) { // 如果 line 为空说明读完了
+			buffer.append(line); // 将读到的内容添加到 buffer 中
+			buffer.append("\n"); // 添加换行符
+			line = reader.readLine(); // 读取下一行
+			
+			totalLine ++;
+			lineCount ++;
+			
+			bufSize = buffer.length();
+			totalSize += bufSize;
+			if(bufSize > 10485760)	//10MByte
+			{
+				addIndex(docId + "_RDoc_" + chunkIndex,docId,buffer.toString(),type);
+				chunkIndex ++;
+				System.out.println("addIndexForRDoc() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
+				//Clear StringBuffer
+				lineCount  = 0;
+				buffer = new StringBuffer();
+			}
+	    }
+	    reader.close();
+	    is.close();
+		System.out.println("addIndexForRDoc() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
+	}
+	
+	//Update Index For RDoc
+	public static void updateIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
+		deleteIndexForRDoc(docId,type);
+		addIndexForRDoc(docId,filePath,type);
+	}
+	
+	//Delete Indexs For Virtual Doc
+	public static void deleteIndexForVDoc(Integer docId, String type) throws Exception {		
+		deleteIndex(docId + "_VDoc_0", type);
 	}
 
+	//Add Index For VDoc
+	public static void addIndexForVDoc(Integer docId, String content, String type) throws Exception {
+		addIndex(docId + "_VDoc_0",docId,content,type);
+	}
+		
+	//Update Index For RDoc
+	public static void updateIndexForVDoc(Integer docId, String content, String type) throws Exception {
+		updateIndex(docId + "_VDoc_0",docId,content,type);
+	}
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
 	{
