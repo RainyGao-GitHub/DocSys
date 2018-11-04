@@ -269,7 +269,7 @@ public class LuceneUtil2 {
 		List<String> res = getIdListForDoc(docId, type);
 		for(int i=0;i < res.size(); i++)
 		{
-			deleteIndex(docId + "_RDoc_" + i, type);
+			deleteIndex(generateRDocId(docId,i), type);
 		}
 	}
 	
@@ -304,7 +304,7 @@ public class LuceneUtil2 {
 			totalSize += bufSize;
 			if(bufSize >= 10485760)	//10MByte
 			{
-				addIndex(docId + "_RDoc_" + chunkIndex,docId,buffer.toString(),type);
+				addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),type);
 				chunkIndex ++;
 				System.out.println("addIndexForRDoc() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 				//Clear StringBuffer
@@ -315,7 +315,7 @@ public class LuceneUtil2 {
 	    }
 		if(bufSize > 0)
 		{
-			addIndex(docId + "_RDoc_" + chunkIndex,docId,buffer.toString(),type);
+			addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),type);
 			chunkIndex ++;
 			System.out.println("addIndexForRDoc() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 		}
@@ -332,22 +332,33 @@ public class LuceneUtil2 {
 		addIndexForRDoc(docId,filePath,type);
 	}
 	
+	
 	//Delete Indexs For Virtual Doc
 	public static void deleteIndexForVDoc(Integer docId, String type) throws Exception {
 		System.out.println("deleteIndexForVDoc() docId:" + docId + " type:" + type);
-		deleteIndex(docId + "_VDoc_0", type);
+		deleteIndex(generateVDocId(docId,0), type);
 	}
 
 	//Add Index For VDoc
 	public static void addIndexForVDoc(Integer docId, String content, String type) throws Exception {
 		System.out.println("addIndexForVDoc() docId:" + docId + " type:" + type);
-		addIndex(docId + "_VDoc_0",docId,content,type);
+		addIndex(generateVDocId(docId,0),docId,content,type);
 	}
 		
 	//Update Index For RDoc
 	public static void updateIndexForVDoc(Integer docId, String content, String type) throws Exception {
 		System.out.println("updateIndexForVDoc() docId:" + docId + " type:" + type);
-		updateIndex(docId + "_VDoc_0",docId,content,type);
+		updateIndex(generateVDocId(docId,0),docId,content,type);
+	}
+	
+	private static String generateVDocId(Integer docId, int index) {
+		//return "VDoc-" + docId + "-" + index;
+		return docId+"-0";
+	}
+
+	private static String generateRDocId(Integer docId, int index) {
+		//return "RDoc-" + docId + "-" + index;
+		return docId+"-"+ (index+1);
 	}
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
