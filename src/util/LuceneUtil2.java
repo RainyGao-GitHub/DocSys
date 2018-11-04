@@ -86,7 +86,7 @@ public class LuceneUtil2 {
     @SuppressWarnings("deprecation")
 	public static void addIndex(String id,Integer docId, String content,String type) throws Exception {
     	
-    	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+type + " content:" + content);
+    	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
@@ -99,7 +99,7 @@ public class LuceneUtil2 {
         Document doc = new Document();
         doc.add(new TextField("id", id, Store.YES));
         doc.add(new IntField("docId", docId, Store.YES));
-        doc.add(new TextField("content", content, Store.NO));
+        doc.add(new TextField("content", content, Store.YES));
         indexWriter.addDocument(doc);
         
         indexWriter.commit();
@@ -119,7 +119,7 @@ public class LuceneUtil2 {
     @SuppressWarnings("deprecation")
 	public static void updateIndex(String id,Integer docId,String content,String type) throws Exception {
 
-    	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+type + " content:" + content);
+    	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
@@ -132,7 +132,7 @@ public class LuceneUtil2 {
         Document doc1 = new Document();
         doc1.add(new TextField("id", id, Store.YES));
         doc1.add(new IntField("docId", docId, Store.YES));
-        doc1.add(new TextField("content", content, Store.NO));
+        doc1.add(new TextField("content", content, Store.YES));
         
         indexWriter.updateDocument(new Term("id",id), doc1);
         indexWriter.close();
@@ -149,6 +149,7 @@ public class LuceneUtil2 {
      */
     @SuppressWarnings("deprecation")
 	public static void deleteIndex(String id,String type) throws Exception {
+    	System.out.println("deleteIndex() id:" + id + " indexLib:"+type);
         Date date1 = new Date();
         analyzer = new IKAnalyzer();
         directory = FSDirectory.open(new File(INDEX_DIR + File.separator + type));
@@ -158,7 +159,7 @@ public class LuceneUtil2 {
         indexWriter = new IndexWriter(directory, config);
         
         indexWriter.deleteDocuments(new Term("id",id));  
-        
+        indexWriter.commit();
         indexWriter.close();
         
         Date date2 = new Date();
@@ -188,7 +189,7 @@ public class LuceneUtil2 {
             if(docId != null && !"".equals(docId))
             {
             	res.add(docId);
-                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId + " content:" + hitDoc.get("content"));
+                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId);
             }
         }
         ireader.close();
@@ -217,7 +218,7 @@ public class LuceneUtil2 {
             if(docId != null && !"".equals(docId))
             {
             	res.add(docId);
-                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId + " content:" + hitDoc.get("content"));
+                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId);
             }
         }
         ireader.close();
@@ -232,7 +233,7 @@ public class LuceneUtil2 {
      * @param type: 索引库名字
      */
     public static List<String> getIdListForDoc(Integer docId,String type) throws Exception {
-        
+    	System.out.println("getIdListForDoc() docId:" + docId + " type:" + type);
     	directory = FSDirectory.open(new File(INDEX_DIR + File.separator +type));
         analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
@@ -245,7 +246,7 @@ public class LuceneUtil2 {
         for (int i = 0; i < hits.length; i++) {
             Document hitDoc = isearcher.doc(hits[i].doc);
             res.add(hitDoc.get("id"));
-            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId") + " content:" + hitDoc.get("content"));
+            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId"));
         }
         ireader.close();
         directory.close();
@@ -254,7 +255,7 @@ public class LuceneUtil2 {
 
     //Delete All Index For Doc
 	public static void deleteIndexForDoc(Integer docId, String type) throws Exception {
-		
+		System.out.println("deleteIndexForDoc() docId:" + docId + " type:" + type);
 		List<String> res = getIdListForDoc(docId, type);
 		for(int i=0;i < res.size(); i++)
 		{
@@ -264,7 +265,7 @@ public class LuceneUtil2 {
 	
 	//Delete Indexs For Real Doc
 	public static void deleteIndexForRDoc(Integer docId, String type) throws Exception {
-		
+		System.out.println("deleteIndexForRDoc() docId:" + docId + " type:" + type);
 		List<String> res = getIdListForDoc(docId, type);
 		for(int i=0;i < res.size(); i++)
 		{
@@ -275,6 +276,8 @@ public class LuceneUtil2 {
 	
 	//Add Index For RDoc
 	public static void addIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
+		System.out.println("addIndexForRDoc() docId:" + docId + " type:" + type + " filePath:" + filePath);
+
 		int lineCount = 0;
 		int totalLine = 0;
 		
@@ -299,16 +302,24 @@ public class LuceneUtil2 {
 			
 			bufSize = buffer.length();
 			totalSize += bufSize;
-			if(bufSize > 10485760)	//10MByte
+			if(bufSize >= 10485760)	//10MByte
 			{
 				addIndex(docId + "_RDoc_" + chunkIndex,docId,buffer.toString(),type);
 				chunkIndex ++;
 				System.out.println("addIndexForRDoc() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 				//Clear StringBuffer
 				lineCount  = 0;
+				bufSize = 0;
 				buffer = new StringBuffer();
 			}
 	    }
+		if(bufSize > 0)
+		{
+			addIndex(docId + "_RDoc_" + chunkIndex,docId,buffer.toString(),type);
+			chunkIndex ++;
+			System.out.println("addIndexForRDoc() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
+		}
+		
 	    reader.close();
 	    is.close();
 		System.out.println("addIndexForRDoc() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
@@ -316,22 +327,26 @@ public class LuceneUtil2 {
 	
 	//Update Index For RDoc
 	public static void updateIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
+		System.out.println("updateIndexForRDoc() docId:" + docId + " type:" + type + " filePath:" + filePath);
 		deleteIndexForRDoc(docId,type);
 		addIndexForRDoc(docId,filePath,type);
 	}
 	
 	//Delete Indexs For Virtual Doc
-	public static void deleteIndexForVDoc(Integer docId, String type) throws Exception {		
+	public static void deleteIndexForVDoc(Integer docId, String type) throws Exception {
+		System.out.println("deleteIndexForVDoc() docId:" + docId + " type:" + type);
 		deleteIndex(docId + "_VDoc_0", type);
 	}
 
 	//Add Index For VDoc
 	public static void addIndexForVDoc(Integer docId, String content, String type) throws Exception {
+		System.out.println("addIndexForVDoc() docId:" + docId + " type:" + type);
 		addIndex(docId + "_VDoc_0",docId,content,type);
 	}
 		
 	//Update Index For RDoc
 	public static void updateIndexForVDoc(Integer docId, String content, String type) throws Exception {
+		System.out.println("updateIndexForVDoc() docId:" + docId + " type:" + type);
 		updateIndex(docId + "_VDoc_0",docId,content,type);
 	}
 	
