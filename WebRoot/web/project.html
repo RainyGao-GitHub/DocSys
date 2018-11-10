@@ -2345,7 +2345,7 @@
 			};
 			
 			//上传表单			
-			xhr.open("post", "/DocSystem/Doc/uploadDoc.do");
+			xhr.open("post", c);
 			xhr.send(form);
 			uploadTime = new Date().getTime();	//上传时间初始化
     	}
@@ -4102,8 +4102,8 @@
                //dialogMaskOpacity : 0.4,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
                //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
                imageUpload : true,
-               imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
-               imageUploadURL : "",
+               //imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+               imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
                    console.log("onchange");
                    var newContent = this.getMarkdown();
