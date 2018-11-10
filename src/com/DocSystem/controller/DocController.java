@@ -22,6 +22,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
@@ -620,6 +621,46 @@ public class DocController extends BaseController{
 			System.out.println("updatIndexForRDoc() Failed to update lucene Index");
 			e.printStackTrace();
 		}
+	}
+
+	/****************   Upload a Picture for Markdown ******************/
+	@RequestMapping("/uploadMarkdownPic.do")
+	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response) throws Exception{
+		System.out.println("uploadMarkdownPic ");
+
+		JSONObject res = new JSONObject();
+		
+		//MayBe We need to save current Edit docId in session, So that I can put the pic to dedicated VDoc Directory
+		if(file == null) 
+		{
+			res.put("success", 0);
+			res.put("message", "upload failed: file is null!");
+			writeJson(res,response);
+			return;
+		}
+		
+		//Save the file
+		String fileName =  file.getOriginalFilename();
+		String localParentPath = getWebTmpPath() + "markdownImg/";
+		File dir = new File(localParentPath);
+		if(!dir.exists())
+		{
+			dir.mkdirs();
+		}
+		
+		String retName = saveFile(file, localParentPath,fileName);
+		if(retName == null)
+		{
+			res.put("success", 0);
+			res.put("message", "upload failed: saveFile error!");
+			writeJson(res,response);
+			return;
+		}
+		
+		res.put("url", "/DocSystem/tmp/markdownImg/"+fileName);
+		res.put("success", 1);
+		res.put("message", "upload success!");
+		writeJson(res,response);
 	}
 
 	/****************   rename a Document ******************/
