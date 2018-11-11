@@ -14,7 +14,10 @@ import java.util.Date;
 import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
@@ -97,7 +100,7 @@ public class LuceneUtil2 {
         indexWriter = new IndexWriter(directory, config);
 
         Document doc = new Document();
-        doc.add(new TextField("id", id, Store.YES));
+        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
         doc.add(new IntField("docId", docId, Store.YES));
         doc.add(new TextField("content", content, Store.YES));
         indexWriter.addDocument(doc);
@@ -130,7 +133,7 @@ public class LuceneUtil2 {
         indexWriter = new IndexWriter(directory, config);
          
         Document doc1 = new Document();
-        doc1.add(new TextField("id", id, Store.YES));
+        doc1.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
         doc1.add(new IntField("docId", docId, Store.YES));
         doc1.add(new TextField("content", content, Store.YES));
         
@@ -151,11 +154,10 @@ public class LuceneUtil2 {
 	public static void deleteIndex(String id,String type) throws Exception {
     	System.out.println("deleteIndex() id:" + id + " indexLib:"+type);
         Date date1 = new Date();
-        analyzer = new IKAnalyzer();
         directory = FSDirectory.open(new File(INDEX_DIR + File.separator + type));
 
         IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_CURRENT, analyzer);
+                Version.LUCENE_CURRENT, null);
         indexWriter = new IndexWriter(directory, config);
         
         indexWriter.deleteDocuments(new Term("id",id));  
@@ -352,13 +354,13 @@ public class LuceneUtil2 {
 	}
 	
 	private static String generateVDocId(Integer docId, int index) {
-		//return "VDoc-" + docId + "-" + index;
-		return docId+"-0";
+		return "VDoc-" + docId + "-" + index;
+		//return docId+"-0";
 	}
 
 	private static String generateRDocId(Integer docId, int index) {
-		//return "RDoc-" + docId + "-" + index;
-		return docId+"-"+ (index+1);
+		return "RDoc-" + docId + "-" + index;
+		//return docId+"-"+ (index+1);
 	}
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
