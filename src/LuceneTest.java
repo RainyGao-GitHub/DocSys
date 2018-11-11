@@ -12,8 +12,10 @@ class LuceneTest
         try {
         	System.out.println("************* Add Index Test ****************");
         	LuceneUtil2.addIndexForVDoc(1,content,"doc");        	
-        	LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/77777ddd.txt","doc");
-        	
+        	//LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/77777ddd.txt","doc");
+        	//LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/CommitFailTest.xlsx","doc");
+        	LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/getHistoryDoc.js","doc");
+
         	System.out.println("************* Search Test ****************");
         	LuceneUtil2.fuzzySearch("7788","doc");
         	
