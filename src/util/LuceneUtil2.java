@@ -90,6 +90,7 @@ public class LuceneUtil2 {
 	public static void addIndex(String id,Integer docId, String content,String type) throws Exception {
     	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
+    	System.out.println("addIndex() content:" + content);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
@@ -123,6 +124,7 @@ public class LuceneUtil2 {
 	public static void updateIndex(String id,Integer docId,String content,String type) throws Exception {
 
     	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
+    	System.out.println("updateIndex() content:" + content);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
@@ -191,7 +193,8 @@ public class LuceneUtil2 {
             if(docId != null && !"".equals(docId))
             {
             	res.add(docId);
-                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId);
+                System.out.println("search()  id:" + hitDoc.get("id") + " docId:"+ docId);
+                System.out.println("search()  content:" + hitDoc.get("content"));	
             }
         }
         ireader.close();
@@ -220,7 +223,8 @@ public class LuceneUtil2 {
             if(docId != null && !"".equals(docId))
             {
             	res.add(docId);
-                System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ docId);
+                System.out.println("fuzzySearch()  id:" + hitDoc.get("id") + " docId:"+ docId);
+                System.out.println("fuzzySearch()  content:" + hitDoc.get("content"));	
             }
         }
         ireader.close();
@@ -410,7 +414,8 @@ public class LuceneUtil2 {
 		} finally {
 			bin.close();
 		}
- 
+		
+		System.out.println("code:" + code);
 		return code;
 	}
 	
