@@ -671,11 +671,11 @@ public class DocController extends BaseController{
 		String localParentPath = localVDocPath + "/res/";
 		
 		//Check and create localParentPath
-		//File dir = new File(localParentPath);
-		//if(!dir.exists())	
-		//{
-		//	dir.mkdirs();
-		//}
+		File dir = new File(localParentPath);
+		if(!dir.exists())	
+		{
+			dir.mkdirs();
+		}
 		
 		String retName = saveFile(file, localParentPath,fileName);
 		if(retName == null)
