@@ -625,11 +625,30 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
-	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response) throws Exception{
+	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{
 		System.out.println("uploadMarkdownPic ");
-
-		JSONObject res = new JSONObject();
 		
+		JSONObject res = new JSONObject();
+
+		//Get the currentDocId from Session which was set in getDocContent
+		Integer docId = (Integer) session.getAttribute("currentDocId");
+		if(docId == null || docId == 0)
+		{
+			res.put("success", 0);
+			res.put("message", "upload failed: currentDocId was not set!");
+			writeJson(res,response);
+			return;
+		}
+		
+		Doc doc = reposService.getDoc(docId);
+		if(doc == null)
+		{
+			res.put("success", 0);
+			res.put("message", "upload failed: getDoc failed for docId:" + docId );
+			writeJson(res,response);
+			return;			
+		}
+				
 		//MayBe We need to save current Edit docId in session, So that I can put the pic to dedicated VDoc Directory
 		if(file == null) 
 		{
@@ -641,12 +660,22 @@ public class DocController extends BaseController{
 		
 		//Save the file
 		String fileName =  file.getOriginalFilename();
-		String localParentPath = getWebTmpPath() + "markdownImg/";
-		File dir = new File(localParentPath);
-		if(!dir.exists())
-		{
-			dir.mkdirs();
-		}
+
+		
+		//get localParentPath for Markdown Img
+		//String localParentPath = getWebTmpPath() + "markdownImg/";
+		Repos repos = reposService.getRepos(doc.getVid());
+		String reposVPath = getReposVirtualPath(repos);
+		String docVName = getDocVPath(doc);
+		String localVDocPath = reposVPath + docVName;
+		String localParentPath = localVDocPath + "/res/";
+		
+		//Check and create localParentPath
+		//File dir = new File(localParentPath);
+		//if(!dir.exists())	
+		//{
+		//	dir.mkdirs();
+		//}
 		
 		String retName = saveFile(file, localParentPath,fileName);
 		if(retName == null)
@@ -657,7 +686,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		res.put("url", "/DocSystem/tmp/markdownImg/"+fileName);
+		//res.put("url", "/DocSystem/tmp/markdownImg/"+fileName);
+		res.put("url", "/DocSystem/Doc/getVDocRes.do?docId="+docId+"&fileName="+fileName);
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
@@ -1074,6 +1104,38 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
+	@RequestMapping("/getVDocRes.do")
+	public void getVDocRes(Integer docId,String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("getVDocRes docId:" + docId + " fileName: " + fileName);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Doc doc = reposService.getDoc(docId);
+		if(doc==null){
+			System.out.println("doGet() Doc " + docId + " 不存在");
+			rt.setError("doc " + docId + "不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		//Get the file
+		Repos repos = reposService.getRepos(doc.getVid());
+		String reposVPath = getReposVirtualPath(repos);
+		String docVName = getDocVPath(doc);
+		String localVDocPath = reposVPath + docVName;
+		String localParentPath = localVDocPath + "/res/";		
+		System.out.println("getVDocRes() localParentPath:" + localParentPath);
+		
+		sendFileToWebPage(localParentPath,fileName, rt, response, request);
+	}
+	
 	/**************** get Tmp File ******************/
 	@RequestMapping("/doGetTmpFile.do")
 	public void doGetTmp(Integer reposId,String parentPath, String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
@@ -1250,7 +1312,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
-	public void getDocContent(Integer id,HttpServletRequest request,HttpServletResponse response){
+	public void getDocContent(Integer id,HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		System.out.println("getDocContent id: " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1283,6 +1345,10 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;			
 		}
+		
+		//Set currentDocId to session which will be used MarkDown ImgUpload
+		session.setAttribute("currentDocId", id);
+		System.out.println("getDoc currentDocId:" + id);
 	
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(rt,login_user.getId(),id,doc.getVid()) == false)
