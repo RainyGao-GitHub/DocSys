@@ -194,7 +194,7 @@ public class LuceneUtil2 {
             {
             	res.add(docId);
                 System.out.println("search()  id:" + hitDoc.get("id") + " docId:"+ docId);
-                System.out.println("search()  content:" + hitDoc.get("content"));	
+                //System.out.println("search()  content:" + hitDoc.get("content"));	
             }
         }
         ireader.close();
@@ -224,7 +224,7 @@ public class LuceneUtil2 {
             {
             	res.add(docId);
                 System.out.println("fuzzySearch()  id:" + hitDoc.get("id") + " docId:"+ docId);
-                System.out.println("fuzzySearch()  content:" + hitDoc.get("content"));	
+                //System.out.println("fuzzySearch()  content:" + hitDoc.get("content"));	
             }
         }
         ireader.close();
