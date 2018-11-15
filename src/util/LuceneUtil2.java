@@ -35,6 +35,12 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import info.monitorenter.cpdetector.io.ASCIIDetector;
+import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
+import info.monitorenter.cpdetector.io.JChardetFacade;
+import info.monitorenter.cpdetector.io.ParsingDetector;
+import info.monitorenter.cpdetector.io.UnicodeDetector;
+
 
 /**  
  * 类描述：   lucene索引增删改查的公共类
@@ -59,7 +65,7 @@ public class LuceneUtil2 {
 			String os = System.getProperty("os.name");  
 			System.out.println("OS:"+ os);  
 			if(os.toLowerCase().startsWith("win")){  
-				path = "D:/DocSys/Lucene/";
+				path = "C:/DocSys/Lucene/";
 			}
 			else
 			{
@@ -294,6 +300,12 @@ public class LuceneUtil2 {
 		
 		StringBuffer buffer = new StringBuffer();
 		String code = getFileEncode(filePath);
+		if(isBinaryFile(code) == true)
+		{
+			System.out.println("addIndexForRDoc() BinaryFile will not add Index");
+			return;
+		}
+		
 		InputStream is = new FileInputStream(filePath);
 		String line; // 用来保存每行读取的内容
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
@@ -331,6 +343,24 @@ public class LuceneUtil2 {
 		System.out.println("addIndexForRDoc() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
 	}
 	
+	private static boolean isBinaryFile(String code) {
+		System.out.println("isBinaryFile:" + code);
+		if(code == null)
+		{
+			return true;
+		}
+		
+		switch(code)
+		{
+		case "GBK":
+		case "UTF-8":
+		case "UTF-16":
+		case "Unicode":
+			return false;
+		}
+		return true;
+	}
+
 	//Update Index For RDoc
 	public static void updateIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
 		System.out.println("updateIndexForRDoc() docId:" + docId + " type:" + type + " filePath:" + filePath);
@@ -390,33 +420,24 @@ public class LuceneUtil2 {
 	 * @throws Exception
 	 */
 	public static String getFileEncode(String filePath) throws Exception {
-		BufferedInputStream bin = null;
-		String code = null;
- 
-		try {
-			bin = new BufferedInputStream(new FileInputStream(filePath));
-			int p = (bin.read() << 8) + bin.read();
-			switch (p) {
-			case 0xefbb:
-				code = "UTF-8";
-				break;
-			case 0xfffe:
-				code = "Unicode";
-				break;
-			case 0xfeff:
-				code = "UTF-16BE";
-				break;
-			default:
-				code = "GBK";
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			bin.close();
-		}
-		
-		System.out.println("code:" + code);
-		return code;
+        String charsetName = null;
+        try {
+            File file = new File(filePath);
+            CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
+            detector.add(new ParsingDetector(false));
+            detector.add(JChardetFacade.getInstance());
+            detector.add(ASCIIDetector.getInstance());
+            detector.add(UnicodeDetector.getInstance());
+            java.nio.charset.Charset charset = null;
+            charset = detector.detectCodepage(file.toURI().toURL());
+            if (charset != null) {
+                charsetName = charset.name();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return charsetName;
 	}
 	
 	public static String readFile(String filePath) throws Exception {
