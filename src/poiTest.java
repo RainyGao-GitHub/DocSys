@@ -22,12 +22,33 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+@SuppressWarnings("deprecation")
 class poiTest  
 {  
     public static void main(String[] args)    
     {  
-        String content = readWordDocx("C:/Users/Administrator/Desktop/HashMap/ddddddddddd.docx");
+        String content = readWord("C:\\Users\\Administrator\\Downloads\\高級日本語中間テスト2016年11月送印.doc");
         System.out.println(content);
+        
+        //content = readWordDocx("C:/Users/Administrator/Desktop/HashMap/ddddddddddd.docx");
+        //System.out.println(content);
+        
+        
+        //content = getTextFromExcel("C:\\Users\\Administrator\\Downloads\\CommitFailTest.xls");
+        //System.out.println(content); 
+        
+        //content = getTextFromExcel2007("C:\\Users\\Administrator\\Downloads\\圆图网络公司账目 (1).xlsx");
+        //System.out.println(content);
+        
+        //content = readPdf("C:/Users/Administrator/Downloads/111111111111111111.pdf");
+        //System.out.println(content);
+        
+        content = getTextFromPPT2007("C:/Users/Administrator/Downloads/Debate (1).pptx");
+        System.out.println(content);
+     
+        //content = readFile("C:\\Users\\Administrator\\Downloads\\ecs_migration_list_cn-hangzhou-dg-a01_2018-10-16.csv");
+        //System.out.println(content);
+        
     }
     
     public static String readWord(String path) {
@@ -108,7 +129,7 @@ class poiTest
     }  
           
          
-    public static String readPdf(String path) throws Exception {
+    public static String readPdf(String path) {
              File pdfFile=new File(path);
              PDDocument document = null;
              String content = "";
