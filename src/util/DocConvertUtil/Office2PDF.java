@@ -85,7 +85,13 @@ public class Office2PDF {
 
 	public static boolean copyFile(String srcFilePath,String dstFilePath){
         try {
-			//Copy by Channel
+            File dstFile=new File(dstFilePath);
+            if(!dstFile.exists())
+            {
+            	dstFile.createNewFile();
+            }
+        	
+        	//Copy by Channel
 	        FileInputStream in=new FileInputStream(srcFilePath);
 	        FileOutputStream out=new FileOutputStream(dstFilePath);
 	        FileChannel inputChannel = in.getChannel();    
