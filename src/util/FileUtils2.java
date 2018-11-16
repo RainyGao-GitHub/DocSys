@@ -1,5 +1,6 @@
 package util;
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -141,7 +142,6 @@ public class FileUtils2 {
         }
         return res;
     }
-
     
     public static String getFileEncode(String filePath) {
         String charsetName = null;
@@ -164,6 +164,62 @@ public class FileUtils2 {
         return charsetName;
     }
     
+	public static boolean isBinaryFile(String code) {
+		System.out.println("isBinaryFile:" + code);
+		if(code == null)
+		{
+			return true;
+		}
+		
+		switch(code)
+		{
+		case "GBK":
+		case "UTF-8":
+		case "UTF-16":
+		case "Unicode":
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean isPdf(String code) {
+		switch(code)
+		{
+		case "Shift_JIS":
+		case "GB18030":
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean copyFile(String srcFilePath,String dstFilePath){
+        try {
+            File dstFile=new File(dstFilePath);
+            if(!dstFile.exists())
+            {
+            	dstFile.createNewFile();
+            }
+        	
+        	//Copy by Channel
+	        FileInputStream in=new FileInputStream(srcFilePath);
+	        FileOutputStream out=new FileOutputStream(dstFilePath);
+	        FileChannel inputChannel = in.getChannel();    
+	        FileChannel outputChannel = out.getChannel();   
+
+	        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+		   	inputChannel.close();
+		    outputChannel.close();
+		    in.close();	
+			out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+        return true;
+	}
+	
+    
     public static void main(String[] args) throws Exception {
         
         String type = getFileType("C:\\Users\\ragao\\Desktop\\LinFeng\\timg (2).jpg");
@@ -174,5 +230,5 @@ public class FileUtils2 {
         System.out.println("code: "+code);
         System.out.println();             
     }
-	
+
 }

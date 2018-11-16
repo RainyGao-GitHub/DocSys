@@ -3,7 +3,6 @@
  */
 package util;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +18,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
-import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
@@ -306,13 +304,14 @@ public class LuceneUtil2 {
 	//Add Index For RDoc
 	public static void addIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
 		System.out.println("addIndexForRDoc() docId:" + docId + " type:" + type + " filePath:" + filePath);
-		String fileType = getFileType(filePath);
+		String fileType = FileUtils2.getFileType(filePath);
 		if(fileType == null)
 		{
 			System.out.println("addIndexForRDoc failed to get FileType");
 			return;
 		}
 		
+		System.out.println("addIndexForRDoc() fileType:" + fileType);
 		switch(fileType)
 		{
 		case "doc":
@@ -340,11 +339,6 @@ public class LuceneUtil2 {
 			addIndexForFile(docId,filePath,type);
 			break;
 		}
-	}
-	
-	private static String getFileType(String filePath) {
-		
-		return null;
 	}
 
 	private static void addIndexForWord(Integer docId, String filePath, String type) throws Exception {
@@ -500,8 +494,8 @@ public class LuceneUtil2 {
 		int chunkIndex = 0;
 		
 		StringBuffer buffer = new StringBuffer();
-		String code = getFileEncode(filePath);
-		if(isBinaryFile(code) == true)
+		String code = FileUtils2.getFileEncode(filePath);
+		if(FileUtils2.isBinaryFile(code) == true)
 		{
 			System.out.println("addIndexForFile() BinaryFile will not add Index");
 			return;
@@ -543,24 +537,6 @@ public class LuceneUtil2 {
 	    is.close();
 		System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
 		
-	}
-
-	private static boolean isBinaryFile(String code) {
-		System.out.println("isBinaryFile:" + code);
-		if(code == null)
-		{
-			return true;
-		}
-		
-		switch(code)
-		{
-		case "GBK":
-		case "UTF-8":
-		case "UTF-16":
-		case "Unicode":
-			return false;
-		}
-		return true;
 	}
 
 	//Update Index For RDoc

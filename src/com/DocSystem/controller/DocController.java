@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 
+import util.FileUtils2;
 import util.GsonUtils;
 import util.LuceneUtil2;
 import util.ReadProperties;
@@ -1294,13 +1295,32 @@ public class DocController extends BaseController{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{
-			File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
-			if(pdf == null)
+			String fileType = FileUtils2.getFileType(srcPath);
+			if(fileType == "pdf")
 			{
-				rt.setError("Failed to convert office to pdf");
-				rt.setMsgData("srcPath:"+srcPath);
-				writeJson(rt, response);
-				return;
+				FileUtils2.copyFile(srcPath, dstPath);
+			}
+			else
+			{
+				String code = FileUtils2.getFileEncode(srcPath);
+				if(isPdfConvertable(code))
+				{			
+					File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
+					if(pdf == null)
+					{
+						rt.setError("Failed to convert office to pdf");
+						rt.setMsgData("srcPath:"+srcPath);
+						writeJson(rt, response);
+						return;
+					}
+				}
+				else
+				{
+					rt.setError("Unable to convert this file to pdf");
+					rt.setMsgData("srcPath:"+srcPath);
+					writeJson(rt, response);
+					return;
+				}
 			}
 		}
 		
@@ -1310,6 +1330,24 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	private boolean isPdfConvertable(String code) {
+		System.out.println("isPdfConvertable:" + code);
+		if(code == null)
+		{
+			return false;
+		}
+		
+		switch(code)
+		{
+		case "GBK":
+		case "UTF-8":
+		case "UTF-16":
+		case "Unicode":
+			return true;
+		}
+		return false;
+	}
+
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(Integer id,HttpServletRequest request,HttpServletResponse response,HttpSession session){
