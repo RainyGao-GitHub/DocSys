@@ -13,11 +13,7 @@ import org.artofsolving.jodconverter.OfficeDocumentConverter;
 import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
 
-import info.monitorenter.cpdetector.io.ASCIIDetector;
-import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
-import info.monitorenter.cpdetector.io.JChardetFacade;
-import info.monitorenter.cpdetector.io.ParsingDetector;
-import info.monitorenter.cpdetector.io.UnicodeDetector;
+import util.FileUtils2;
 import util.ReadProperties;
 
 /**
@@ -37,107 +33,9 @@ public class Office2PDF {
      *            源文件路径，如："e:/test.docx"
      * @return
      */
-    public static File openOfficeToPDF(String inputFilePath,String outputFilePath) {
-    	 String code = getFileEncode(inputFilePath);
-    	 System.out.println("openOfficeToPDF:" + code);
-    	 if(isPdf(code) == true)
-    	 { 
-    		 copyFile(inputFilePath, outputFilePath);   
-    		 File dstFile=new File(outputFilePath);
-    		 return dstFile;
-    	 }
-    	 
-    	 if(isBinaryFile(code) == true)
-    	 {
-    		 return null;
-    	 }
-    	 
+    public static File openOfficeToPDF(String inputFilePath,String outputFilePath) {    	 
     	 return office2pdf(inputFilePath,outputFilePath);
     }
-    
-	private static boolean isBinaryFile(String code) {
-		System.out.println("isBinaryFile:" + code);
-		if(code == null)
-		{
-			return true;
-		}
-		
-		switch(code)
-		{
-		case "GBK":
-		case "UTF-8":
-		case "UTF-16":
-		case "Unicode":
-			return false;
-		}
-		return true;
-	}
-
-	private static boolean isPdf(String code) {
-		switch(code)
-		{
-		case "Shift_JIS":
-		case "GB18030":
-			return true;
-		}
-		return false;
-	}
-
-	public static boolean copyFile(String srcFilePath,String dstFilePath){
-        try {
-            File dstFile=new File(dstFilePath);
-            if(!dstFile.exists())
-            {
-            	dstFile.createNewFile();
-            }
-        	
-        	//Copy by Channel
-	        FileInputStream in=new FileInputStream(srcFilePath);
-	        FileOutputStream out=new FileOutputStream(dstFilePath);
-	        FileChannel inputChannel = in.getChannel();    
-	        FileChannel outputChannel = out.getChannel();   
-
-	        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
-		   	inputChannel.close();
-		    outputChannel.close();
-		    in.close();	
-			out.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-        return true;
-    }
-    
-	/**
-	 * 获取文件编码格式
-	 * @param filePath
-	 * @return UTF-8/Unicode/UTF-16BE/GBK
-	 * @throws Exception
-	 */
-	public static String getFileEncode(String filePath){
-        String charsetName = null;
-        try {
-            File file = new File(filePath);
-            CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
-            detector.add(new ParsingDetector(false));
-            detector.add(JChardetFacade.getInstance());
-            detector.add(ASCIIDetector.getInstance());
-            detector.add(UnicodeDetector.getInstance());
-            java.nio.charset.Charset charset = null;
-            charset = detector.detectCodepage(file.toURI().toURL());
-            if (charset != null) {
-                charsetName = charset.name();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
-        return charsetName;
-	}
-	
-	
 
     /**
      * 根据操作系统的名称，获取OpenOffice.org 3的安装目录<br>
