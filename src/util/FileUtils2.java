@@ -47,11 +47,13 @@ public class FileUtils2 {
         FILE_TYPE_MAP.put("7b5c727466315c616e73", "rtf"); //Rich Text Format (rtf)     
         FILE_TYPE_MAP.put("38425053000100000000", "psd"); //Photoshop (psd)     
         FILE_TYPE_MAP.put("46726f6d3a203d3f6762", "eml"); //Email [Outlook Express 6] (eml)       
-        FILE_TYPE_MAP.put("d0cf11e0a1b11ae10000", "doc"); //MS Excel 注意：word、msi 和 excel的文件头一样     
+        FILE_TYPE_MAP.put("d0cf11e0a1b11ae10000", "doc"); //MS Excel 注意：word、msi 和 excel的文件头一样    
+        FILE_TYPE_MAP.put("504b0304140006000800", "doc"); //MS Excel 注意：word、msi 和 excel的文件头一样    
         FILE_TYPE_MAP.put("d0cf11e0a1b11ae10000", "vsd"); //Visio 绘图     
         FILE_TYPE_MAP.put("5374616E64617264204A", "mdb"); //MS Access (mdb)      
         FILE_TYPE_MAP.put("252150532D41646F6265", "ps");     
-        FILE_TYPE_MAP.put("255044462d312e350d0a", "pdf"); //Adobe Acrobat (pdf)   
+        FILE_TYPE_MAP.put("255044462d312e350d0a", "pdf"); //Adobe Acrobat (pdf)
+        FILE_TYPE_MAP.put("255044462d312e340a25", "pdf"); 
         FILE_TYPE_MAP.put("2e524d46000000120001", "rmvb"); //rmvb/rm相同  
         FILE_TYPE_MAP.put("464c5601050000000900", "flv"); //flv与f4v相同  
         FILE_TYPE_MAP.put("00000020667479706d70", "mp4"); 
