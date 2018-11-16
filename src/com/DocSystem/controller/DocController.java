@@ -1342,6 +1342,7 @@ public class DocController extends BaseController{
 		case "GBK":
 		case "UTF-8":
 		case "UTF-16":
+		case "UTF-16LE":
 		case "Unicode":
 			return true;
 		}
