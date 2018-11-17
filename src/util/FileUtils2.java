@@ -228,7 +228,34 @@ public class FileUtils2 {
         System.out.println("type: "+type);
         System.out.println();         
         
-        String code = getFileEncode("C:\\Users\\ragao\\Desktop\\LinFeng\\timg (2).jpg");
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\ddddddddddd.docx");
+        System.out.println("type: "+type);
+      
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\基本数据结构：链表（list） - CSDN博客.html");
+        System.out.println("type: "+type);
+      
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\新建文本文档.txt");
+        System.out.println("type: "+type);
+        
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\unordered_map.jpg");
+        System.out.println("type: "+type);
+        
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\timg.jpg");
+        System.out.println("type: "+type);
+      
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\Debate.pptx");
+        System.out.println("type: "+type);
+        
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\poi-bin-4.0.0-20180907.zip");
+        System.out.println("type: "+type);
+        
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\TTI_trace_Analyzer.xlsb");
+        System.out.println("type: "+type);
+        
+        type = getFileType("C:\\Users\\Administrator\\Desktop\\HashMap\\TtiTraceFilter.exe");
+        System.out.println("type: "+type);
+        
+        String code = getFileEncode("C:\\Users\\ragao\\Desktop\\LinFeng\\新建 OpenDocument 文本.odt");
         System.out.println("code: "+code);
         System.out.println();             
     }

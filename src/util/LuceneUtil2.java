@@ -315,25 +315,38 @@ public class LuceneUtil2 {
 		switch(fileType)
 		{
 		case "doc":
-			addIndexForWord(docId,filePath,type);
+			if(true == addIndexForWord(docId,filePath,type))
+			{
+				break;
+			}
+			
+			if(true == addIndexForExcel(docId,filePath,type))
+			{
+				break;
+			}
+			
+			if(true == addIndexForPPT(docId,filePath,type))
+			{
+				break;
+			}
 			break;
 		case "docx":
-			addIndexForWord2007(docId,filePath,type);
-			break;
-		case "xsl":
-			addIndexForExcel(docId,filePath,type);
-			break;
-		case "xslx":
-			addIndexForExcel2007(docId,filePath,type);
-			break;
+			if(true == addIndexForWord2007(docId,filePath,type))
+			{
+				break;
+			}
+	
+			if(true == addIndexForExcel2007(docId,filePath,type))
+			{
+				break;
+			}
+			
+			if(true == addIndexForPPT2007(docId,filePath,type))
+			{
+				break;
+			}			
 		case "pdf":
 			addIndexForPdf(docId,filePath,type);
-			break;
-		case "ppt":
-			addIndexForPPT(docId,filePath,type);
-			break;
-		case "pptx":
-			addIndexForPPT2007(docId,filePath,type);
 			break;
 		default:
 			addIndexForFile(docId,filePath,type);
@@ -341,7 +354,7 @@ public class LuceneUtil2 {
 		}
 	}
 
-	private static void addIndexForWord(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForWord(Integer docId, String filePath, String type) throws Exception {
     	StringBuffer content = new StringBuffer("");// 文档内容
     	try {
 			HWPFDocument doc = new HWPFDocument(new FileInputStream(filePath));
@@ -353,12 +366,13 @@ public class LuceneUtil2 {
 	    	}
     	} catch (Exception e) {
     		e.printStackTrace();
+    		return false;
     	}
     	addIndex(generateRDocId(docId,0),docId,content.toString().trim(),type);
-		
+    	return true;		
 	}
 
-	private static void addIndexForWord2007(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForWord2007(Integer docId, String filePath, String type) throws Exception {
     	File file = new File(filePath);
     	String str = "";
     	try {
@@ -369,11 +383,13 @@ public class LuceneUtil2 {
     		fis.close();
     	} catch (Exception e) {
     		 e.printStackTrace();
+    		 return false;
     	}
     	addIndex(generateRDocId(docId,0),docId,str,type);
+    	return true;
 	}
 
-	private static void addIndexForExcel(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForExcel(Integer docId, String filePath, String type) throws Exception {
         InputStream is = null;  
         HSSFWorkbook wb = null;  
         String text="";  
@@ -387,15 +403,18 @@ public class LuceneUtil2 {
             extractor.close();  
         } catch (FileNotFoundException e) {  
             System.out.println("没有找到指定路径"+filePath);  
-            e.printStackTrace();  
+            e.printStackTrace();
+            return false;
         } catch (IOException e) {  
             System.out.println("getTextFromExcel IO错误");  
-            e.printStackTrace();  
+            e.printStackTrace();
+            return false;
         }  
         addIndex(generateRDocId(docId,0),docId,text,type);
+        return true;
 	}
 
-	private static void addIndexForExcel2007(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForExcel2007(Integer docId, String filePath, String type) throws Exception {
         InputStream is = null;  
         XSSFWorkbook workBook = null;  
         String text="";  
@@ -408,14 +427,64 @@ public class LuceneUtil2 {
         } catch (FileNotFoundException e) {  
             System.out.println("没有找到指定路径"+filePath);  
             e.printStackTrace();  
+            return false;
         } catch (IOException e) {  
             System.out.println("getTextFromExcel2007 IO错误");  
-            e.printStackTrace();  
+            e.printStackTrace(); 
+            return false;
         }  
-        addIndex(generateRDocId(docId,0),docId,text,type); 
+        addIndex(generateRDocId(docId,0),docId,text,type);
+        return true;
 	}
 
-	private static void addIndexForPdf(Integer docId, String filePath, String type) throws Exception {
+
+
+	private static boolean addIndexForPPT(Integer docId, String filePath, String type) throws Exception {
+        InputStream is = null;  
+        PowerPointExtractor extractor = null;  
+        String text="";  
+        try {  
+            is = new FileInputStream(filePath);  
+            extractor = new PowerPointExtractor(is);  
+            text=extractor.getText();  
+            extractor.close();  
+        } catch (FileNotFoundException e) {  
+            System.out.println("没有找到指定路径"+filePath);  
+            e.printStackTrace();  
+            return false;
+        } catch (IOException e) {  
+            System.out.println("getTextFromPPT IO错误");  
+            e.printStackTrace(); 
+            return false;
+        }  
+        addIndex(generateRDocId(docId,0),docId,text,type);
+		return true;
+	}
+
+	private static boolean addIndexForPPT2007(Integer docId, String filePath, String type) throws Exception {
+        InputStream is = null;  
+        XMLSlideShow slide = null;  
+        String text="";  
+        try {  
+            is = new FileInputStream(filePath);  
+            slide = new XMLSlideShow(is);  
+            XSLFPowerPointExtractor extractor=new XSLFPowerPointExtractor(slide);  
+            text=extractor.getText();  
+            extractor.close();  
+        } catch (FileNotFoundException e) {  
+            System.out.println("没有找到指定路径"+filePath);  
+            e.printStackTrace();  
+            return false;
+        } catch (IOException e) {  
+            System.out.println("getTextFromPPT2007 IO错误");  
+            e.printStackTrace(); 
+            return false;
+        }  
+        addIndex(generateRDocId(docId,0),docId,text,type);
+        return true;
+	}
+	
+	private static boolean addIndexForPdf(Integer docId, String filePath, String type) throws Exception {
 		File pdfFile=new File(filePath);
 		PDDocument document = null;
 		String content = "";
@@ -435,53 +504,10 @@ public class LuceneUtil2 {
 	   catch(Exception e)
 	   {
 	       e.printStackTrace();
-	       return;
+	       return false;
 	   }
 	   addIndex(generateRDocId(docId,0),docId,content,type);
-	}
-
-	private static void addIndexForPPT(Integer docId, String filePath, String type) throws Exception {
-        InputStream is = null;  
-        PowerPointExtractor extractor = null;  
-        String text="";  
-        try {  
-            is = new FileInputStream(filePath);  
-            extractor = new PowerPointExtractor(is);  
-            text=extractor.getText();  
-            extractor.close();  
-        } catch (FileNotFoundException e) {  
-            System.out.println("没有找到指定路径"+filePath);  
-            e.printStackTrace();  
-            return;
-        } catch (IOException e) {  
-            System.out.println("getTextFromPPT IO错误");  
-            e.printStackTrace(); 
-            return;
-        }  
-        addIndex(generateRDocId(docId,0),docId,text,type);
-		
-	}
-
-	private static void addIndexForPPT2007(Integer docId, String filePath, String type) throws Exception {
-        InputStream is = null;  
-        XMLSlideShow slide = null;  
-        String text="";  
-        try {  
-            is = new FileInputStream(filePath);  
-            slide = new XMLSlideShow(is);  
-            XSLFPowerPointExtractor extractor=new XSLFPowerPointExtractor(slide);  
-            text=extractor.getText();  
-            extractor.close();  
-        } catch (FileNotFoundException e) {  
-            System.out.println("没有找到指定路径"+filePath);  
-            e.printStackTrace();  
-            return;
-        } catch (IOException e) {  
-            System.out.println("getTextFromPPT2007 IO错误");  
-            e.printStackTrace(); 
-            return;
-        }  
-        addIndex(generateRDocId(docId,0),docId,text,type);	
+	   return true;
 	}
 
 	private static void addIndexForFile(Integer docId, String filePath, String type) throws Exception {
