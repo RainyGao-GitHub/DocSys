@@ -555,5 +555,20 @@ public class ManageController extends BaseController{
 		return;		
 	}
 	
+	@RequestMapping(value="getSystemLog")
+	public void getSystemLog(String fileName,HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
+		System.out.println("getSystemLog: " + fileName);
+		ReturnAjax rt = new ReturnAjax();
+		
+		String localParentPath = getSystemLogParentPath();
+		if(fileName == null || "".equals(fileName))
+		{
+			fileName = getSystemLogFileName();
+		}
+		
+		sendTargetToWebPage(localParentPath,fileName, localParentPath, rt, response, request);
+		return;		
+	}
+	
 
 }
