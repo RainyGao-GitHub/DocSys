@@ -112,7 +112,7 @@ public class LuceneUtil2 {
 	public static void addIndex(String id,Integer docId, String content,String type) throws Exception {
     	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
-    	System.out.println("addIndex() content:" + content);
+    	//System.out.println("addIndex() content:" + content);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
