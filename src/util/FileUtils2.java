@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.poi.poifs.filesystem.FileMagic;
+
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
 import info.monitorenter.cpdetector.io.JChardetFacade;
@@ -142,6 +144,7 @@ public class FileUtils2 {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("getFileType() " + res);
         return res;
     }
     
@@ -163,7 +166,23 @@ public class FileUtils2 {
             ex.printStackTrace();
             return null;
         }
+        System.out.println("getFileEncode() " + charsetName);
         return charsetName;
+    }
+    
+    public static String getFileSuffix(String filePath)
+    {
+    	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
+    	System.out.println("getFileSuffix() " + suffix);
+    	return suffix;
+    }
+    
+    public static FileMagic getFileMagic(String filePath) throws Exception {
+    	InputStream istream = new FileInputStream(filePath);
+    	InputStream is = FileMagic.prepareToCheckMagic(istream);
+    	FileMagic fm = FileMagic.valueOf(is);
+    	System.out.println("getFileEncode() " + fm.toString());
+    	return fm;
     }
     
 	public static boolean isBinaryFile(String code) {
@@ -176,6 +195,7 @@ public class FileUtils2 {
 		switch(code)
 		{
 		case "GBK":
+		case "GB2312":
 		case "UTF-8":
 		case "UTF-16":
 		case "Unicode":
