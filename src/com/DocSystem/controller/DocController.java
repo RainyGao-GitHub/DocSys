@@ -1138,21 +1138,28 @@ public class DocController extends BaseController{
 	
 		String webTmpPath = getWebTmpPath();
 		String dstName = doc.getCheckSum() + ".pdf";
+		if(doc.getCheckSum() == null)
+		{
+			dstName = doc.getName();
+		}
 		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 		File file = new File(dstPath);
 		if(!file.exists())
 		{
-			String fileType = FileUtils2.getFileType(srcPath);
-			if(fileType == "pdf")
+			if(srcPath.endsWith(".pdf"))
 			{
 				FileUtils2.copyFile(srcPath, dstPath);
 			}
 			else
 			{
-				String code = FileUtils2.getFileEncode(srcPath);
-				if(isPdfConvertable(code))
-				{			
+				String fileType = FileUtils2.getFileType(srcPath);
+				if(fileType != null && fileType == "pdf")
+				{
+					FileUtils2.copyFile(srcPath, dstPath);
+				}
+				else
+				{
 					File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
 					if(pdf == null)
 					{
@@ -1162,39 +1169,12 @@ public class DocController extends BaseController{
 						return;
 					}
 				}
-				else
-				{
-					rt.setError("Unable to convert this file to pdf");
-					rt.setMsgData("srcPath:"+srcPath);
-					writeJson(rt, response);
-					return;
-				}
 			}
 		}
-		
 		//Save the pdf to web
 		String fileLink = "/DocSystem/tmp/preview/" + dstName;
 		rt.setData(fileLink);
 		writeJson(rt, response);
-	}
-	
-	private boolean isPdfConvertable(String code) {
-		System.out.println("isPdfConvertable:" + code);
-		if(code == null)
-		{
-			return false;
-		}
-		
-		switch(code)
-		{
-		case "GBK":
-		case "UTF-8":
-		case "UTF-16":
-		case "UTF-16LE":
-		case "Unicode":
-			return true;
-		}
-		return false;
 	}
 
 	/****************   get Document Content ******************/
