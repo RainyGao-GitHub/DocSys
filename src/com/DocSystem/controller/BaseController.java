@@ -5,7 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
@@ -117,6 +119,37 @@ public class BaseController{
 		return path;
 	}
 
+	//系统日志所在的目录
+	protected String getSystemLogParentPath() {
+		String path = "";		
+		path = ReadProperties.read("docSysConfig.properties", "SystemLogParentPath");
+	    if(path == null || "".equals(path))
+	    {
+			String os = System.getProperty("os.name");  
+			System.out.println("OS:"+ os);  
+			if(os.toLowerCase().startsWith("win")){  
+				path = "C:/xampp/tomcat/logs/";
+			}
+			else
+			{
+				path = "/var/lib/tomcat7/logs/";	//Linux系统放在  /data	
+			}
+	    }    
+		return path;
+	}
+	
+	//系统日志的名字，可以是目录或文件
+	protected String getSystemLogFileName() {
+		String name = "";
+		
+		name = ReadProperties.read("docSysConfig.properties", "SystemLogFileName");
+	    if(name == null || "".equals(name))
+	    {
+			name = "catalina.log";
+	    }	    
+		return name;
+	}
+	
 	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
 	protected String getSvnLocalReposStorePath() {
 		String path = "";
@@ -1588,5 +1621,156 @@ public class BaseController{
 		return fileName;
 	}
 
+	protected void sendDataToWebPage(String file_name, byte[] data, HttpServletResponse response, HttpServletRequest request)  throws Exception{ 
+		//解决中文编码问题: https://blog.csdn.net/u012117531/article/details/54808960
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
+		{  
+			file_name = URLEncoder.encode(file_name, "UTF-8");  
+		}else{  
+			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+		}  
+		System.out.println("doGet file_name:" + file_name);
+		//解决空格问题
+		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+		
+		//创建输出流
+		OutputStream out = response.getOutputStream();
+		out.write(data, 0, data.length);		
+		//关闭输出流
+		out.close();	
+		
+	}
+	
+	private int getLocalEntryType(String localParentPath, String entryName) {
+		
+		File entry = new File(localParentPath,entryName);
+		if(!entry.exists())
+		{
+			System.out.println("getLocalEntryType() Failed: " + localParentPath + entryName + " 不存在 ！");
+			return -1;
+		}	
+		
+		if(entry.isFile())
+		{
+			return 1;
+		}
+		else if(entry.isDirectory())
+		{
+			return 2;
+		}
+
+		System.out.println("getLocalEntryType() Failed: 未知文件类型！");
+		return -1;
+	}
+	
+	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request) throws Exception {
+		
+		int entryType = getLocalEntryType(localParentPath,targetName);
+
+		//For dir 
+		if(entryType == 2) //目录
+		{
+			//doCompressDir and save the zip File under userTmpDir
+			String zipFileName = targetName + ".zip";
+			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩目录失败！");
+				writeJson(rt, response);
+				return;
+			}
+			
+			sendFileToWebPage(tmpDir,zipFileName,rt,response, request); 
+			
+			//Delete zip file
+			deleteFile(tmpDir+zipFileName);
+		}
+		else	//for File
+		{
+			//Send the file to webPage
+			sendFileToWebPage(localParentPath,targetName,rt, response, request); 			
+		}
+	}
+	
+	protected void sendFileToWebPage(String localParentPath, String file_name,  ReturnAjax rt,HttpServletResponse response,HttpServletRequest request) throws Exception{
+		
+		String dstPath = localParentPath + file_name;
+
+		//检查文件是否存在
+		File file = new File(dstPath);
+		if(!file.exists()){
+			System.out.println("doGet() " + dstPath + " 不存在！");	
+			//request.setAttribute("message", "您要下载的资源已被删除！！");
+			//request.getRequestDispatcher("/message.jsp").forward(request, response);
+			rt.setError(dstPath + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		System.out.println("sendFileToWebPage() file_name befor convert:" + file_name);
+		
+		//解决中文编码问题
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
+		{  
+			file_name = URLEncoder.encode(file_name, "UTF-8");  
+			System.out.println("sendFileToWebPage() file_name after URL Encode:" + file_name);
+		}else{  
+			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+			
+			
+			System.out.println("sendFileToWebPage() file_name after convert to ISO8859-1:" + file_name);
+		}
+		//解决空格问题（空格变加号和兼容性问题）
+		file_name = file_name.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
+		System.out.println("sendFileToWebPage() file_name:" + file_name);
+		
+		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+
+		//读取要下载的文件，保存到文件输入流
+		FileInputStream in = new FileInputStream(dstPath);
+		//创建输出流
+		OutputStream out = response.getOutputStream();
+		//创建缓冲区
+		byte buffer[] = new byte[1024];
+		int len = 0;
+		//循环将输入流中的内容读取到缓冲区当中
+		while((len=in.read(buffer))>0){
+			//输出缓冲区的内容到浏览器，实现文件下载
+			out.write(buffer, 0, len);
+		}
+		//关闭文件输入流
+		in.close();
+		//关闭输出流
+		out.close();
+	}
+
+	private boolean doCompressDir(String srcParentPath, String dirName, String dstParentPath, String zipFileName,ReturnAjax rt) {
+		
+		//if dstDir not exists create it
+		File dstDir = new File(dstParentPath);
+		if(!dstDir.exists())
+		{
+			if(createDir(dstParentPath) == false)
+			{
+				System.out.println("doCompressDir() Failed to create:" + dstParentPath);	
+				rt.setMsgData("创建目录 " + dstParentPath + " 失败");
+				return false;
+			}
+		}
+		//开始压缩
+		if(compressExe(srcParentPath + dirName,dstParentPath + zipFileName) == true)
+		{
+			System.out.println("压缩完成！");	
+		}
+		else
+		{
+			System.out.println("doCompressDir()  压缩失败！");
+			rt.setMsgData("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败");
+			return false;
+		}
+		
+		return true;
+	}
 
 }

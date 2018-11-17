@@ -22,7 +22,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 	//被允许的url
 	private String[] allowedUrl = 
 	{
-		"login","logout","register","sendVerifyCode","feeback",
+		"login","logout","register","sendVerifyCode","feeback","Manage/getSystemLog"
 	};
 	
 	
