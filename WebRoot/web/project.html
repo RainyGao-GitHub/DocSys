@@ -90,7 +90,6 @@
     <![endif]-->
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="static/scripts/jquery.min.js" type="text/javascript"></script>
-
 </head>
 <body>
 <div class="m-manual manual-reader">
@@ -5553,6 +5552,49 @@ function CompareObj(objA, objB, flag) {
           });
    	}
 	
+	function isPC() {
+	    var userAgentInfo = navigator.userAgent;
+	    var Agents = ["Android", "iPhone",
+	                "SymbianOS", "Windows Phone",
+	                "iPad", "iPod"];
+	    var flag = true;
+	    for (var v = 0; v < Agents.length; v++) {
+	        if (userAgentInfo.indexOf(Agents[v]) > 0) {
+	            flag = false;
+	            break;
+	        }
+	    }
+	    return flag;
+	}
+    
+    function isWeiXin(){ 
+        var ua = navigator.userAgent.toLowerCase(); 
+        if(ua.indexOf('micromessenger') != -1) { 
+            return true; 
+        } else { 
+            return false; 
+        } 
+    }
+    
+    function hideManualLeft(){
+        var oDiv=document.getElementById('line');
+        var disX=0;
+        var disY=0;
+
+        var l=0;	//计算Line的位置
+        oDiv.style.left=l+'px';	//设置Line的位置
+        $(".manual-left")[0].style.width=0+'px';
+        $(".manual-right")[0].style.left=$(".second-table").width()+3+'px';
+        $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
+        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
+    }
+    
+    if(false == isPC())
+    {
+	    console.log("It is mobile phone, hide manual-left");
+    	hideManualLeft();
+    }
+    
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
     var oDiv=document.getElementById('line');
     oDiv.onmousedown=function(ev){
