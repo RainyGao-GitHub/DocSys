@@ -5552,6 +5552,8 @@ function CompareObj(objA, objB, flag) {
           });
    	}
 	
+	//Confirm if it is PC
+	var gIsPC = true;
 	function isPC() {
 	    var userAgentInfo = navigator.userAgent;
 	    var Agents = ["Android", "iPhone",
@@ -5576,23 +5578,43 @@ function CompareObj(objA, objB, flag) {
         } 
     }
     
-    function hideManualLeft(){
+    //ShowCenter: hide left and right
+    function showCenterDiv(){
+        var oDiv=document.getElementById('line');
+        oDiv.style.left=0;	//设置Line的位置
+        $(".manual-left")[0].style.width=0;
+        $(".manual-right")[0].style.left=$(".second-table").width()+3+'px';
+        $(".manual-right")[0].style.width = 0;
+        $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
+        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());        
+    }
+    
+    //ShowRight
+	function showRightDiv(){
         var oDiv=document.getElementById('line');
         var disX=0;
         var disY=0;
-
-        var l=0;	//计算Line的位置
-        oDiv.style.left=l+'px';	//设置Line的位置
-        $(".manual-left")[0].style.width=0+'px';
-        $(".manual-right")[0].style.left=$(".second-table").width()+3+'px';
-        $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
-        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
+        var l=0;	//计算Line1的位置
+        oDiv.style.left=0;	//设置Line1的位置
+        
+        var oDiv2=document.getElementById('second-line');
+        oDiv2.style.left=0;	//设置Line2的位置
+        $(".manual-left")[0].style.width=0;
+        $(".second-table").css("left",0);
+        $(".second-table")[0].style.width=0;
+        $(".manual-right")[0].style.left=0;
     }
     
-    if(false == isPC())
-    {
+    if(true == isPC())
+    {	
+    	gIsPC = true;
 	    console.log("It is mobile phone, hide manual-left");
-    	hideManualLeft();
+	    showCenterDiv();
+	    //showRightDiv();
+    }
+    else
+    {
+    	gIsPc = false;
     }
     
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
@@ -5605,9 +5627,9 @@ function CompareObj(objA, objB, flag) {
           var l=ev.clientX-disX;	//计算Line的位置
           oDiv.style.left=l+'px';	//设置Line的位置
      	  $(".manual-left")[0].style.width=ev.clientX+'px';
-       	 $(".manual-right")[0].style.left=$(".second-table").width()+3+ev.clientX+'px';
-       	 $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
-       	 $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
+       	  $(".manual-right")[0].style.left=$(".second-table").width()+3+ev.clientX+'px';
+       	  $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
+       	  $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
    	  };
       
       document.onmouseup=function(ev){
