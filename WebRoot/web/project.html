@@ -5214,7 +5214,7 @@ function CompareObj(objA, objB, flag) {
  	           var docId = data[i].id;
  	           var docType = data[i].type;
  	           var docName = data[i].name;
- 	           str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div  onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	           str+='<li   onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
  	    }
        	$("#secondList").html(str);
  	}
@@ -5285,7 +5285,7 @@ function CompareObj(objA, objB, flag) {
  		event.stopPropagation();
  	}
  	
- 	/*function sc(obj,event){
+ 	function sc(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
  		//alert('删除'+id);
  		
@@ -5302,9 +5302,9 @@ function CompareObj(objA, objB, flag) {
 			DoDelete(deleteNodes,showSubDocList);
 		}
 		event.stopPropagation();
- 	}*/
+ 	}
  	
- 	function sc(obj,event){
+ 	function showContextMenu(obj,event){
  		event.stopPropagation();
   		context.show('#secondList',event);
  	}
