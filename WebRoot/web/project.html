@@ -5870,6 +5870,102 @@ function CompareObj(objA, objB, flag) {
    			},
 		]);
 		
+		//secondList上的右键菜单
+		context.attach('#secondList', [
+			{text: '新建', subMenu: [
+				{text: '文件',  action: function(e){
+						e.preventDefault();
+	        			newDoc(1);
+					}
+				},
+				{text: '文件夹',  action: function(e){
+						e.preventDefault();
+	        			newDoc(2);
+					}
+				},
+				]
+			},
+			{text: '上传', subMenu: [
+				{text: '文件',  action: function(e){
+						e.preventDefault();
+	        			uploadFiles();
+					}
+				},
+				{text: '文件夹',  action: function(e){
+						e.preventDefault();
+	        			uploadDir();
+					}
+				},	
+				]
+			},
+			{divider: true},
+			{text: '复制', action: function(e){
+						e.preventDefault();
+						gCopiedNodes = getCopiedNodes();
+						console.log("gCopiedNodes",gCopiedNodes);
+					}
+			},
+			{text: '粘贴', action: function(e){
+						e.preventDefault();
+						var parentNode = curRightClickedTreeNode;
+						if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
+						{
+							parentNode = curRightClickedTreeNode.getParentNode();
+						}
+						DoPaste(gCopiedNodes,parentNode);
+					}
+			},
+			{divider: true},
+			{text: '重命名', action: function(e){
+						e.preventDefault();
+						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						if(curRightClickedTreeNode !== null)
+						{
+							treeObj.editName(curRightClickedTreeNode);
+							curRightClickedTreeNode = null;
+	        			}
+					}
+			},
+			{text: '删除', action: function(e){
+						e.preventDefault();
+						var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						var deleteNodes = getDeleteNodes();
+						DoDelete(deleteNodes);
+					}
+			},
+			{divider: true},
+			{text: '下载', action: function(e){
+						e.preventDefault();
+	        			download();
+					}
+			},
+			{divider: true},
+			{text: '其它', subMenu: [
+			           	{text: '复制名字', action: function(e){
+									e.preventDefault();
+				        			copyDocName();
+								}
+						},
+						{text: '复制路径', action: function(e){
+									e.preventDefault();
+				        			copyDocPath();
+								}
+						},
+						{text: '复制链接', action: function(e){
+									e.preventDefault();
+				        			copyUrl();
+								}
+						},	
+						{divider: true},
+						{text: '查看历史', action: function(e){
+									e.preventDefault();
+				        			showDocHistory();
+								}
+						},
+   				]
+   			},
+		]);
+		
 		context.settings({compress: true});
 		
 		$(document).on('mouseover', '.me-codesta', function(){
