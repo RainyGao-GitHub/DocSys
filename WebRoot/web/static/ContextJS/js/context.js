@@ -97,34 +97,14 @@ var context = context || (function () {
 			
 		$('body').append($menu);
 		
-		
+		//Rainy added: so that user can call the show interface
+		$(selector).val(id);
+		 
 		$(document).on('contextmenu', selector, function (e) {
 			e.preventDefault();
 			e.stopPropagation();
 			
-			$('.dropdown-context:not(.dropdown-context-sub)').hide();
-			
-			$dd = $('#dropdown-' + id);
-			if (typeof options.above == 'boolean' && options.above) {
-				$dd.addClass('dropdown-context-up').css({
-					top: e.pageY - 20 - $('#dropdown-' + id).height(),
-					left: e.pageX - 13
-				}).fadeIn(options.fadeSpeed);
-			} else if (typeof options.above == 'string' && options.above == 'auto') {
-				$dd.removeClass('dropdown-context-up');
-				var autoH = $dd.height() + 12;
-				if ((e.pageY + autoH) > $('html').height()) {
-					$dd.addClass('dropdown-context-up').css({
-						top: e.pageY - 20 - autoH,
-						left: e.pageX - 13
-					}).fadeIn(options.fadeSpeed);
-				} else {
-					$dd.css({
-						top: e.pageY + 10,
-						left: e.pageX - 13
-					}).fadeIn(options.fadeSpeed);
-				}
-			}
+			showMenu(id,e);
 		});
 	}
 	
@@ -132,10 +112,45 @@ var context = context || (function () {
 		$(document).off('contextmenu', selector).off('click', '.context-event');
 	}
 	
+	function showMenu(id,e)
+	{
+		$('.dropdown-context:not(.dropdown-context-sub)').hide();
+		
+		$dd = $('#dropdown-' + id);
+		
+		if (typeof options.above == 'boolean' && options.above) {
+			$dd.addClass('dropdown-context-up').css({
+				top: e.pageY - 20 - $('#dropdown-' + id).height(),
+				left: e.pageX - 13
+			}).fadeIn(options.fadeSpeed);
+		} else if (typeof options.above == 'string' && options.above == 'auto') {
+			$dd.removeClass('dropdown-context-up');
+			var autoH = $dd.height() + 12;
+			
+			if ((e.pageY + autoH) > $('html').height()) {
+				$dd.addClass('dropdown-context-up').css({
+					top: e.pageY - 20 - autoH,
+					left: e.pageX - 13
+				}).fadeIn(options.fadeSpeed);
+			} else {
+				$dd.css({
+					top: e.pageY + 10,
+					left: e.pageX - 13
+				}).fadeIn(options.fadeSpeed);
+			}
+		}
+	}
+	
+	function show(selector,e) {
+		var id = $(selector).val();
+		showMenu(id,e);
+	}
+	
 	return {
 		init: initialize,
 		settings: updateOptions,
 		attach: addContext,
+		show: show,	//Rainy added
 		destroy: destroyContext
 	};
 })();
