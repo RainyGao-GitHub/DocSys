@@ -312,10 +312,10 @@
 <div style="display:none">
 	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(event)" style="margin-top: 90px;" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
-
 </div>
-<textarea cols="20" rows="10" id="copiedText"></textarea>
-	
+<div style="display:none">
+	<textarea cols="20" rows="10" id="copiedText"></textarea>
+</div>	
 <!-- single file upload form -->
 <div style="display:none">
 	<form id="FileUploadForm" action="/DocSystem/Doc/uploadDoc.do" method="post" enctype="multipart/form-data">  
@@ -5214,7 +5214,7 @@ function CompareObj(objA, objB, flag) {
  	           var docId = data[i].id;
  	           var docType = data[i].type;
  	           var docName = data[i].name;
- 	           str+='<li onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	           str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div  onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
  	    }
        	$("#secondList").html(str);
  	}
@@ -5285,7 +5285,7 @@ function CompareObj(objA, objB, flag) {
  		event.stopPropagation();
  	}
  	
- 	function sc(obj,event){
+ 	/*function sc(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
  		//alert('删除'+id);
  		
@@ -5302,14 +5302,21 @@ function CompareObj(objA, objB, flag) {
 			DoDelete(deleteNodes,showSubDocList);
 		}
 		event.stopPropagation();
+ 	}*/
+ 	
+ 	function sc(obj,event){
+ 		event.stopPropagation();
+  		context.show('#secondList',event);
  	}
+ 	
  	function formatDate(date) {
  		var now = new Date(date);
  		var year=now.getFullYear(); 
- 		var month=now.getMonth()+1; 
+ 		var month=now.getMonth()+1;
  		var date=now.getDate(); 
  		return year+"-"+month+"-"+date; 
- 	} 
+ 	}
+ 	
 	function showDoc()
 	{
 		console.log("showDoc gDocId:" + gDocId);
