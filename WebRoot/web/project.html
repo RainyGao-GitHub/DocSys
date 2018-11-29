@@ -5214,7 +5214,7 @@ function CompareObj(objA, objB, flag) {
  	           var docId = data[i].id;
  	           var docType = data[i].type;
  	           var docName = data[i].name;
- 	           str+='<li   onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
+ 	           str+='<li onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-trash"></i></div></li>';
  	    }
        	$("#secondList").html(str);
  	}
@@ -5616,12 +5616,11 @@ function CompareObj(objA, objB, flag) {
     {	
     	gIsPC = true;
 	    console.log("It is mobile phone, hide manual-left");
-	    showCenterDiv();
-	    //showRightDiv();
     }
     else
     {
     	gIsPc = false;
+	    showCenterDiv();
     }
     
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
