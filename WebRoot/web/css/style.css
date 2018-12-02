@@ -13,12 +13,12 @@
     bottom: 0;
     width: 3px;
     background: #ddd;
-    z-index: 301;
 }
 .searchBox{
     padding:10px 0;
     border-bottom:1px solid #e0e1e5;
 }
+
 .backicon{
 	position: absolute;
     left: 15px;
@@ -134,12 +134,10 @@
     overflow:hidden;
 }
 .filetitle{
-	padding:0 20px;
-	height:60px;
-	line-height:60px;
-	border-bottom:1px solid #ddd;
-    top: 55px;
-    width: 100%;
+	margin:0 20px;
+	padding:1px 20px;
+	height:38px;
+	line-height:33px;
 }
 .editormd{
 	border:none;

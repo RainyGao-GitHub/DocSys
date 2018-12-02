@@ -136,9 +136,12 @@
     <article class="container-fluid manual-body">
         <div class="manual-left">
             <div class="manual-tab">
-                <div class="tab-navg">
-                    <span data-mode="view" class="navg-item main active"><i class="fa fa-align-justify"></i><b class="text">目录</b></span>
-                </div>
+	            <div class="searchBox">
+	         		<div class="back"> 
+	         			<i class="backicon glyphicon glyphicon-th-list"></i>
+	         		</div>
+	        		<div class="filetitle">目录</div>
+	         	</div>
                 <div id="treeBody" class="tab-wrap">
                     <div class="tab-item manual-catalog" id="uuz">
 
@@ -196,7 +199,12 @@
         <div id="second-line" class="second-line" ></div>
         
         <div class="manual-right">
-        	<div class="filetitle"></div>
+            <div class="searchBox">
+         		<div class="back" onclick="showCenterDiv();"> 
+         			<i class="backicon glyphicon glyphicon-arrow-left"></i>
+         		</div>
+        		<div class="filetitle" id="filetitle"></div>
+         	</div>
             <div class="manual-article">
                 <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                 </div>
@@ -2894,7 +2902,8 @@
 	//读取文件信息
     function getDoc(docId,edit) {
       	console.log("getDoc() docId:"+docId + " edit:" + edit);
-      	
+		showRightDiv();
+		
       	//To get the Doc  
         $.ajax({
             url : "/DocSystem/Doc/getDoc.do",
@@ -2906,7 +2915,7 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("getDoc ret",ret);
-                	$('.filetitle').html(ret.data.name);
+                	$('#filetitle').html(ret.data.name);
                     gDocId = ret.data.id;
                     if(ret.data.content == "null")
                     {
@@ -5558,7 +5567,37 @@ function CompareObj(objA, objB, flag) {
               }
           });
    	}
-	
+    
+    //ShowCenter: hide left and right
+    function showCenterDiv(){
+    	if(gIsPC)
+    	{
+    		return;
+    	}
+    	
+        var oDiv=document.getElementById('line');
+        oDiv.style.left=0;	//设置Line的位置
+        $(".manual-left")[0].style.width=0;
+        $(".manual-left")[0].style.display="none";
+        $(".second-table").css("left",$("#line").width());
+        $(".second-table")[0].style.width=372+'px';
+        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
+        $(".manual-right")[0].style.left=$(".manual-left").width()+$(".second-table").width()+3+'px';
+    }
+    
+    //ShowRight
+	function showRightDiv(){
+    	if(gIsPC)
+    	{
+    		return;
+    	}
+    	
+    	$(".second-table")[0].style.width=0;
+        //$(".second-table")[0].style.display="none";
+        $(".second-line").css("left",0);
+        $(".manual-right")[0].style.left=2+'px';
+    }
+    
 	//Confirm if it is PC
 	var gIsPC = true;
 	function isPC() {
@@ -5566,14 +5605,13 @@ function CompareObj(objA, objB, flag) {
 	    var Agents = ["Android", "iPhone",
 	                "SymbianOS", "Windows Phone",
 	                "iPad", "iPod"];
-	    var flag = true;
+
 	    for (var v = 0; v < Agents.length; v++) {
 	        if (userAgentInfo.indexOf(Agents[v]) > 0) {
-	            flag = false;
-	            break;
+	            return false;
 	        }
 	    }
-	    return flag;
+	   	return true;
 	}
     
     function isWeiXin(){ 
@@ -5585,44 +5623,6 @@ function CompareObj(objA, objB, flag) {
         } 
     }
     
-    //ShowCenter: hide left and right
-    function showCenterDiv(){
-        var oDiv=document.getElementById('line');
-        oDiv.style.left=0;	//设置Line的位置
-        $(".manual-left")[0].style.width=0;
-        $(".manual-right")[0].style.left=$(".second-table").width()+3+'px';
-        $(".manual-right")[0].style.width = 0;
-        $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
-        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());        
-    }
-    
-    //ShowRight
-	function showRightDiv(){
-        var oDiv=document.getElementById('line');
-        var disX=0;
-        var disY=0;
-        var l=0;	//计算Line1的位置
-        oDiv.style.left=0;	//设置Line1的位置
-        
-        var oDiv2=document.getElementById('second-line');
-        oDiv2.style.left=0;	//设置Line2的位置
-        $(".manual-left")[0].style.width=0;
-        $(".second-table").css("left",0);
-        $(".second-table")[0].style.width=0;
-        $(".manual-right")[0].style.left=0;
-    }
-    
-    if(true == isPC())
-    {	
-    	gIsPC = true;
-	    console.log("It is mobile phone, hide manual-left");
-    }
-    else
-    {
-    	gIsPc = false;
-	    showCenterDiv();
-    }
-    
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
     var oDiv=document.getElementById('line');
     oDiv.onmousedown=function(ev){
@@ -5632,10 +5632,11 @@ function CompareObj(objA, objB, flag) {
       document.onmousemove=function(ev){
           var l=ev.clientX-disX;	//计算Line的位置
           oDiv.style.left=l+'px';	//设置Line的位置
+          
      	  $(".manual-left")[0].style.width=ev.clientX+'px';
-       	  $(".manual-right")[0].style.left=$(".second-table").width()+3+ev.clientX+'px';
+       	  $(".manual-right")[0].style.left=ev.clientX+$(".second-table").width()+3+'px';
        	  $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
-       	  $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
+       	  $(".second-line").css("left",ev.clientX+$(".second-table").width()+$("#line").width());
    	  };
       
       document.onmouseup=function(ev){
@@ -5665,6 +5666,19 @@ function CompareObj(objA, objB, flag) {
     };
     //页面加载完成处理函数    
     $(document).ready(function(){
+        //Confirm if it is PC
+    	if(true == isPC())
+        {	
+        	gIsPC = true;
+    	    console.log("It is PC");
+        }
+        else
+        {
+        	gIsPC = false;
+    	    console.log("It is MP");
+    	    showCenterDiv();
+        }
+    	
     	//初始化全局变量
     	gReposId = getQueryString("vid");
 		gDocId = getQueryString("doc");
@@ -5905,71 +5919,22 @@ function CompareObj(objA, objB, flag) {
 				]
 			},
 			{divider: true},
-			{text: '复制', action: function(e){
-						e.preventDefault();
-						gCopiedNodes = getCopiedNodes();
-						console.log("gCopiedNodes",gCopiedNodes);
-					}
-			},
-			{text: '粘贴', action: function(e){
-						e.preventDefault();
-						var parentNode = curRightClickedTreeNode;
-						if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
-						{
-							parentNode = curRightClickedTreeNode.getParentNode();
-						}
-						DoPaste(gCopiedNodes,parentNode);
-					}
-			},
-			{divider: true},
-			{text: '重命名', action: function(e){
-						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						if(curRightClickedTreeNode !== null)
-						{
-							treeObj.editName(curRightClickedTreeNode);
-							curRightClickedTreeNode = null;
-	        			}
-					}
-			},
-			{text: '删除', action: function(e){
-						e.preventDefault();
-						var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						var deleteNodes = getDeleteNodes();
-						DoDelete(deleteNodes);
-					}
-			},
-			{divider: true},
-			{text: '下载', action: function(e){
+			{text: '预览', action: function(e){
 						e.preventDefault();
 	        			download();
 					}
 			},
+			{text: '删除', action: function(e){
+						e.preventDefault();
+						sc(this,e);
+					}
+			},
 			{divider: true},
-			{text: '其它', subMenu: [
-			           	{text: '复制名字', action: function(e){
-									e.preventDefault();
-				        			copyDocName();
-								}
-						},
-						{text: '复制路径', action: function(e){
-									e.preventDefault();
-				        			copyDocPath();
-								}
-						},
-						{text: '复制链接', action: function(e){
-									e.preventDefault();
-				        			copyUrl();
-								}
-						},	
-						{divider: true},
-						{text: '查看历史', action: function(e){
-									e.preventDefault();
-				        			showDocHistory();
-								}
-						},
-   				]
-   			},
+			{text: '查看历史', action: function(e){
+					e.preventDefault();
+				    showDocHistory();
+				}
+			},
 		]);
 		
 		context.settings({compress: true});
