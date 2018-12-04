@@ -13,6 +13,7 @@
     bottom: 0;
     width: 3px;
     background: #ddd;
+    z-index: 301;
 }
 .searchBox{
     padding:10px 0;

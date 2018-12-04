@@ -79,6 +79,13 @@
         	font-size:13px;
         	cursor: pointer;
         }
+        
+        .icon_add{
+            background: url(images/sprite-4ce3c9eaa2.svg) no-repeat;
+    		background-position: 74.78510028653295% 0;
+    		width: 28px;
+    		height: 28px;
+    	}
     </style>
 
 
@@ -136,11 +143,21 @@
     <article class="container-fluid manual-body">
         <div class="manual-left">
             <div class="manual-tab">
-	            <div class="searchBox">
-	         		<div class="back"> 
-	         			<i class="backicon glyphicon glyphicon-th-list"></i>
+	            <div class="tab-navg" style="height:59px">
+	         		<div style="padding:20px 0;position: relative; cursor: pointer; margin: 0 auto; width: 100px; display: block;">
+	         			<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+	         				<i class="glyphicon glyphicon-plus" style="zoom:1.2"></i>
+	         				<span>新文档</span>
+	         				<span class="caret"></span>
+	         			</a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a onclick="newDoc(1)">新建文件</a></li>
+							<li><a onclick="newDoc(2)">新建文件夹</a></li>
+							
+							<li><a onclick="uploadFiles();">上传文件</a></li>
+							<li><a onclick="uploadDir()">上传文件夹</a></li>
+						</ul>
 	         		</div>
-	        		<div class="filetitle">目录</div>
 	         	</div>
                 <div id="treeBody" class="tab-wrap">
                     <div class="tab-item manual-catalog" id="uuz">
@@ -5921,7 +5938,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 						e.preventDefault();
-	        			download();
+						previewDoc();
 					}
 			},
 			{text: '删除', action: function(e){
