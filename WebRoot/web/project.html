@@ -126,16 +126,6 @@
 					<li id="loginBtn">
                         <a onclick="showLoginPanel()"  title="用户登录">登录</a>
                     </li>
-					<li>
-						<button id="btnViewDoc" class="btn btn-default" type="button" onclick="previewDoc()" style="display:none">预览
-	                    </button>
-	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
-	                   	</button>
-	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockAndEditWiki()" style="display:none">编辑
-	                    </button>
-	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="saveWiki()" style="display:none">保存
-	                    </button>
-					</li>
                 </ul>
             </nav>
         </div>      
@@ -216,11 +206,21 @@
         <div id="second-line" class="second-line" ></div>
         
         <div class="manual-right">
-            <div class="searchBox">
+            <div class="searchBox" style="white-space:nowrap">
          		<div class="back" onclick="showCenterDiv();"> 
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
          		</div>
         		<div class="filetitle" id="filetitle"></div>
+        		<div style="position:absolute; right:5px; top:10px">
+        				<button id="btnViewDoc" class="btn btn-default" type="button" onclick="previewDoc()" style="display:none">预览
+	                    </button>
+	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
+	                   	</button>
+	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockAndEditWiki()" style="display:none">编辑
+	                    </button>
+	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="saveWiki()" style="display:none">保存
+	                    </button>
+        		</div>
          	</div>
             <div class="manual-article">
                 <div class="article-body editor-content"  id="doc" style="min-height: 650px">
