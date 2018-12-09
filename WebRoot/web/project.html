@@ -171,7 +171,7 @@
              -->
         </div>
         <div id="line" class="manual-line" ></div>
-        <div class="second-table">
+        <div class="second-table"  id="secondDropZone">
          	<div class="searchBox">
          		<div class="back" onclick="backToParentDoc();"> 
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
@@ -629,29 +629,14 @@
 	    return true;
 	}
 	
-	function dragUploadConfirm(e)
+	function dragUploadConfirm(e,parentNode)
 	{
 		console.log("dragUploadConfirm",e);
         
 		//getFileList
         var entrys = getFileList(e);
         console.log("entrys",entrys);
-        
-	  	//get the parentNode
-	  	console.log(e.target);
-        if(e.target.tagName=="SPAN"){
-        	e.target.parentNode.click();
-        }
-	  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		var selectedNode = treeObj.getSelectedNodes()[0];
-		console.log(selectedNode);
-		var parentNode = selectedNode;
-		if(selectedNode && selectedNode.isParent === false)
-		{	
-			console.log("selectedNode:" + selectedNode.name);
-			parentNode = selectedNode.getParentNode();
-		}
-		
+        		
 		//用户确认上传
 		checkUserUploadRight(entrys,parentNode,uploadConfirm);
 	    return true;
@@ -5729,8 +5714,7 @@ function CompareObj(objA, objB, flag) {
 		};
 		setting.async = async;
         
-    	
-    	//拖拽上传:目录树区域
+      	//拖拽上传:目录树区域
     	var uuz = document.getElementById("uuz");  
     	uuz.ondragenter = function(e){  
             e.preventDefault();  
@@ -5744,19 +5728,68 @@ function CompareObj(objA, objB, flag) {
         };  
         uuz.ondrop = function(e){   
             e.preventDefault();
-            dragUploadConfirm(e);
+    	  	//get the parentNode
+    	  	console.log(e.target);
+            if(e.target.tagName=="SPAN"){
+            	e.target.parentNode.click();
+            }
+    	  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+    		var selectedNode = treeObj.getSelectedNodes()[0];
+    		console.log(selectedNode);
+    		var parentNode = selectedNode;
+    		if(selectedNode && selectedNode.isParent === false)
+    		{	
+    			console.log("selectedNode:" + selectedNode.name);
+    			parentNode = selectedNode.getParentNode();
+    		}
+            dragUploadConfirm(e,parentNode);
         };
-        //文件预览区的拖拽上传
-        var doc =  document.getElementById("doc");  
-        doc.ondragenter = function(e){  
+        
+    	//拖拽上传:子目录区域
+    	//目标目录是当前选中的Doc
+    	var docListZone = document.getElementById("secondDropZone");  
+    	docListZone.ondragenter = function(e){  
             e.preventDefault();  
         };  
-        doc.ondragover = function(e){  
-            e.preventDefault();  
-        };  
-        doc.ondrop = function(e){   
+        docListZone.ondragover = function(e){  
             e.preventDefault();
-            dragUploadConfirm(e);
+        };  
+        docListZone.ondrop = function(e){   
+            e.preventDefault();
+    	  	//get the parentNode
+    	  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+    		var selectedNode = treeObj.getSelectedNodes()[0];
+    		console.log(selectedNode);
+    		var parentNode = selectedNode;
+    		if(selectedNode && selectedNode.isParent === false)
+    		{	
+    			console.log("selectedNode:" + selectedNode.name);
+    			parentNode = selectedNode.getParentNode();
+    		}
+            dragUploadConfirm(e,parentNode);
+        };
+        
+        //文件预览区的拖拽上传
+        var docZone =  document.getElementById("doc");  
+        docZone.ondragenter = function(e){  
+            e.preventDefault();  
+        };  
+        docZone.ondragover = function(e){  
+            e.preventDefault();  
+        };  
+        docZone.ondrop = function(e){   
+            e.preventDefault();
+    	  	//get the parentNode
+    	  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+    		var selectedNode = treeObj.getSelectedNodes()[0];
+    		console.log(selectedNode);
+    		var parentNode = selectedNode;
+    		if(selectedNode && selectedNode.isParent === false)
+    		{	
+    			console.log("selectedNode:" + selectedNode.name);
+    			parentNode = selectedNode.getParentNode();
+    		}
+            dragUploadConfirm(e,parentNode);
         };
 
 		//set the vid in upload form
