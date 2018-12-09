@@ -615,17 +615,10 @@
 	//upload file confirm dialog
 	function selectUploadConfirm(e)
 	{
-		console.log("selectUploadConfirm",e);
+		console.log("selectUploadConfirm",e,gParentNodeForUpload);
 	    var entrys = e.target.files;
 	    
-	  	//if curentRightClickedTreeNode is not parent node, set the newNode's parent to curentRightClickedTreeNode's parent node
-		var parentNode = curRightClickedTreeNode;
-		if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
-		{
-			parentNode = curRightClickedTreeNode.getParentNode();
-		}
-		
-		checkUserUploadRight(entrys,parentNode,uploadConfirm);		
+		checkUserUploadRight(entrys,gParentNodeForUpload,uploadConfirm);		
 	    return true;
 	}
 	
@@ -2959,14 +2952,14 @@
         });
     }
 	
-	function showDocHistory()
+	function showDocHistory(node)
 	{
 		console.log("showDocHistory()");
 
 		var parentPath ="";
 		var docName = "";
 
-		var treeNode = curRightClickedTreeNode;
+		var treeNode = node;
 		if(treeNode != null)
 		{
 			parentPath = getTreeNodeParentPath(treeNode);
@@ -4642,6 +4635,7 @@ function CompareObj(objA, objB, flag) {
 	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
 	var curRightClickedTreeNode = null;
 	var gCopiedNodes = null;	//右键复制操作选中的节点
+	var gParentNodeForUpload = null; //用于保存右键选择上传的父节点
 	
 	//zTree's setting
 	var setting = {
@@ -5309,7 +5303,7 @@ function CompareObj(objA, objB, flag) {
 		var node = zTree.getNodeByParam("id",id);
 		if(node == null)
 		{
-			alert("ERROR");
+			alert("请选择需要删除的文件或文件夹！");
 		}
 		else
 		{
@@ -5517,16 +5511,37 @@ function CompareObj(objA, objB, flag) {
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
-	//add a new Doc: type 1: 文件  2:目录
-    function newDoc(type) {         
-		//计算 ParentNode parentId remoteDir
-  		//if curentRightClickedTreeNode is not parent node, set the newNode's parent to curentRightClickedTreeNode's parent node
-		var parentNode = curRightClickedTreeNode;
-		var parentId = 0;
-		if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
+	//Get ParentNode of Node(zTree)
+	function getParentNodeByNode(node)
+	{
+		console.log("getParentNodeByNode",node);
+     	//Get ParentNode
+		var parentNode = node;
+		if(node && node.isParent === false)
 		{
-			parentNode = curRightClickedTreeNode.getParentNode();
+			parentNode = node.getParentNode();
 		}
+		return parentNode;
+	}
+	//Get Node by NodeId
+	function getNodeByNodeId(nodeId)
+	{
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",nodeId);
+		return node;
+	}
+	//Get ParentNode of NodeId(zTree)
+	function getParentNodeByNodeId(nodeId)
+	{
+		console.log("getParentNodeByNodeId" + nodeId);
+		var node = getNodeByNodeId(nodeId);
+     	return getParentNodeByNode(node);
+	}
+	
+	//add a new Doc: type 1: 文件  2:目录
+    function newDoc(type,parentNode) {         
+		//计算 parentId remoteDir
+		var parentId = 0;
 		if(parentNode && parentNode.id)
 		{
 			parentId = parentNode.id;
@@ -5807,13 +5822,15 @@ function CompareObj(objA, objB, flag) {
 				{text: '文件',  action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null; 
-	        			newDoc(1);
+						var parentNode = getParentNodeByNode(null);
+	        			newDoc(1,parentNode);
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
 	        			curRightClickedTreeNode = null;
-	        			newDoc(2);
+	        			var parentNode = getParentNodeByNode(null);
+	        			newDoc(2,parentNode);
 					}
 				},
 				]
@@ -5821,13 +5838,15 @@ function CompareObj(objA, objB, flag) {
 			{text: '上传', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
-						curRightClickedTreeNode = null; 
-	        			uploadFiles();
+						curRightClickedTreeNode = null;
+					    gParentNodeForUpload = getParentNodeByNode(null);	//uploadFiles is the trigger, so need to save the destination dir to gVar
+					  	uploadFiles();
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null; 
+					    gParentNodeForUpload = getParentNodeByNode(null);	//uploadFiles is the trigger, so need to save the destination dir to gVar
 						uploadDir();
 					}
 				},	
@@ -5845,7 +5864,7 @@ function CompareObj(objA, objB, flag) {
 						{text: '查看仓库历史', action: function(e){
 									e.preventDefault();
 									curRightClickedTreeNode = null; 
-				        			showDocHistory();
+				        			showDocHistory(null);
 								}
 						},
    				]
@@ -5857,12 +5876,14 @@ function CompareObj(objA, objB, flag) {
 			{text: '新建', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
-	        			newDoc(1);
+						var parentNode = getParentNodeByNode(curRightClickedTreeNode);
+						newDoc(1,parentNode);
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
-	        			newDoc(2);
+						var parentNode = getParentNodeByNode(curRightClickedTreeNode);
+						newDoc(2,parentNode);
 					}
 				},
 				]
@@ -5870,12 +5891,14 @@ function CompareObj(objA, objB, flag) {
 			{text: '上传', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
-	        			uploadFiles();
+						gParentNodeForUpload = getParentNodeByNode(curRightClickedTreeNode);	//uploadFiles is the trigger, so need to save the destination dir to gVar
+						uploadFiles();
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
-	        			uploadDir();
+						gParentNodeForUpload = getParentNodeByNode(curRightClickedTreeNode);	//uploadFiles is the trigger, so need to save the destination dir to gVar
+						uploadDir();
 					}
 				},	
 				]
@@ -5889,11 +5912,7 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						var parentNode = curRightClickedTreeNode;
-						if(curRightClickedTreeNode && curRightClickedTreeNode.isParent === false)
-						{
-							parentNode = curRightClickedTreeNode.getParentNode();
-						}
+						var parentNode = getParentNodeByNode(curRightClickedTreeNode);
 						DoPaste(gCopiedNodes,parentNode);
 					}
 			},
@@ -5941,7 +5960,7 @@ function CompareObj(objA, objB, flag) {
 						{divider: true},
 						{text: '查看历史', action: function(e){
 									e.preventDefault();
-				        			showDocHistory();
+				        			showDocHistory(curRightClickedTreeNode);
 								}
 						},
    				]
@@ -5953,12 +5972,14 @@ function CompareObj(objA, objB, flag) {
 			{text: '新建', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
-	        			newDoc(1);
+						var parentNode = getParentNodeByNodeId(gDocId);
+	        			newDoc(1,parentNode);
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
-	        			newDoc(2);
+						var parentNode = getParentNodeByNodeId(gDocId);
+	        			newDoc(2,parentNode);
 					}
 				},
 				]
@@ -5966,11 +5987,15 @@ function CompareObj(objA, objB, flag) {
 			{text: '上传', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
+						var node = getNodeByNodeId(gDocId);
+						gParentNodeForUpload = getParentNodeByNode(node);
 	        			uploadFiles();
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
+						var node = getNodeByNodeId(gDocId);
+						gParentNodeForUpload = getParentNodeByNode(node);
 	        			uploadDir();
 					}
 				},	
@@ -5984,13 +6009,16 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '删除', action: function(e){
 						e.preventDefault();
-						sc(this,e);
+						console.log(e);
+						sc(e.target,e);
 					}
 			},
 			{divider: true},
 			{text: '查看历史', action: function(e){
 					e.preventDefault();
-				    showDocHistory();
+					console.log(e);
+					var node = getNodeByNodeId(gDocId);
+				    showDocHistory(node);
 				}
 			},
 		]);
