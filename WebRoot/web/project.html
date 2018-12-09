@@ -5165,10 +5165,15 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("SysInit");
     	
-		//Enable the EnterKey Monitor for SearchDoc
-		EnterKeyListenerForSearchDoc();
+		//Set the event handler for keydown
+		document.onkeydown=function(event)
+		{
+			//浏览器兼容性处理
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			EnterKeyListenerForSearchDoc(e);	
+		}
 		
-    	//确定当前登录用户是否已登录
+    	//确定当前登录用户是否已登录e
     	$.ajax({
             url : "/DocSystem/getLoginUser.do",
             type : "post",
@@ -5427,12 +5432,15 @@ function CompareObj(objA, objB, flag) {
 		}
    	}         
 	
-	//回车键监听函数
-	function EnterKeyListenerForSearchDoc(){
-		console.log("start enter key listener for SearchDoc");
-		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
-	 	if (event.keyCode == 13){  
-	 		searchDoc();
+	//回车键监听函数，该event已经过兼容性处理 
+	function EnterKeyListenerForSearchDoc(event){
+		console.log("enter key listener for SearchDoc");
+		if (event.keyCode == 13){  
+			var isFocus=$("#searchWord").is(":focus");  
+			if(isFocus)
+			{
+				searchDoc();
+			}
 	 	}  
 	}
 	
