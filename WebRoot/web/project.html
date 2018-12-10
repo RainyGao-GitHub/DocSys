@@ -338,8 +338,8 @@
 	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(event)" style="margin-top: 90px;" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 </div>
-<div style="display:none">
-	<textarea cols="20" rows="10" id="copiedText"></textarea>
+<div style="width:0;height:0;">
+	<textarea id="copiedText"></textarea>
 </div>	
 <!-- single file upload form -->
 <div style="display:none">
@@ -567,22 +567,7 @@
 		});
 	}
 	
-	
-	/*文件右键实现*/
- 	function download(){
-		
-		var id = 0;
-		if(curRightClickedTreeNode == null)
-		{
-			bootstrapQ.alert("请选择需要下载的文件或目录");
-			return false;
-		}
-		id = curRightClickedTreeNode.id;
-		var name = curRightClickedTreeNode.name;
-		downloadDoc(id,name);
-	}
-	
-	//指定文件下载
+	//文件下载接口
  	function downloadDoc(docId,docName){		
 		if(confirm("是否下载文件：" + docName) == false)
 		{
@@ -5224,7 +5209,7 @@ function CompareObj(objA, objB, flag) {
  	           var docId = data[i].id;
  	           var docType = data[i].type;
  	           var docName = data[i].name;
- 	           str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+ 	           str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
  	    }
        	$("#secondList").html(str);
  	}
@@ -5459,9 +5444,14 @@ function CompareObj(objA, objB, flag) {
 	function previewDoc()
 	{
 		console.log("previewDoc gDocId:" + gDocId);
-		if(gDocId)
+		doPreviewDoc(gDocId);
+	}
+	
+	function doPreviewDoc(docId)
+	{
+		console.log("doPreviewDoc docId:" + docId);
+		if(docId)
 		{
-		    var docId = gDocId;
 			//Convert doc to PDF and return the link, then show the pdf 
 		    $.ajax({
 		        url : "/DocSystem/Doc/DocToPDF.do",
@@ -5935,9 +5925,25 @@ function CompareObj(objA, objB, flag) {
 					}
 			},
 			{divider: true},
+			{text: '预览', action: function(e){
+					e.preventDefault();
+					if(curRightClickedTreeNode !== null)
+					{
+						var docId = curRightClickedTreeNode.id;
+						doPreviewDoc(docId);
+					}
+				}
+			},
 			{text: '下载', action: function(e){
 						e.preventDefault();
-	        			download();
+						if(curRightClickedTreeNode == null)
+						{
+							bootstrapQ.alert("请选择需要下载的文件或目录");
+							return false;
+						}
+						var id = curRightClickedTreeNode.id;
+						var name = curRightClickedTreeNode.name;
+						downloadDoc(id,name);
 					}
 			},
 			{divider: true},
@@ -6004,9 +6010,15 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 						e.preventDefault();
-						previewDoc();
+						doPreviewDoc(docId);
 					}
 			},
+			{text: '下载', action: function(e){
+					e.preventDefault();
+					downloadDoc(docId,name);
+				}
+			},
+			{divider: true},
 			{text: '删除', action: function(e){
 						e.preventDefault();
 						console.log(e);
@@ -6037,6 +6049,5 @@ function CompareObj(objA, objB, flag) {
 		//右键菜单实现：contextMenu End
     });
 </SCRIPT>
-
 </body>
 </html>
