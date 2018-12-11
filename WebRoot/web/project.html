@@ -5209,10 +5209,23 @@ function CompareObj(objA, objB, flag) {
  	           var docId = data[i].id;
  	           var docType = data[i].type;
  	           var docName = data[i].name;
- 	           str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+ 	           str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
  	    }
        	$("#secondList").html(str);
  	}
+	
+	var curRightClickedDocListNode = [];
+    function docListOnMouseDown(obj,ev)
+    {
+   	 	var docId = $(obj).attr('dataId');
+   	 	var docType = $(obj).attr('dataType');
+   	 	var docName = $(obj).attr('dataName');
+   	 	curRightClickedDocListNode.docId = docId;
+   	 	curRightClickedDocListNode.type = docType;
+   	 	curRightClickedDocListNode.docName = docName;
+   	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
+    }
+	
  	function secondGetDoc(obj){
  		var docId = $(obj).attr('dataId');
  		var type = $(obj).attr('dataType');
@@ -6010,11 +6023,14 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 						e.preventDefault();
+						var docId = curRightClickedDocListNode.docId;
 						doPreviewDoc(docId);
 					}
 			},
 			{text: '下载', action: function(e){
 					e.preventDefault();
+					var docId = curRightClickedDocListNode.docId;
+					var name = curRightClickedDocListNode.docName;
 					downloadDoc(docId,name);
 				}
 			},
@@ -6022,14 +6038,25 @@ function CompareObj(objA, objB, flag) {
 			{text: '删除', action: function(e){
 						e.preventDefault();
 						console.log(e);
-						sc(e.target,e);
+						var docId = curRightClickedDocListNode.docId;
+						var node = getNodeByNodeId(docId);
+						if(node == null)
+						{
+							alert("请选择需要删除的文件或文件夹！");
+						}
+						else
+						{
+							var deleteNodes = [];
+							deleteNodes.push(node);
+							DoDelete(deleteNodes,showSubDocList);
+						}
 					}
 			},
 			{divider: true},
 			{text: '查看历史', action: function(e){
 					e.preventDefault();
-					console.log(e);
-					var node = getNodeByNodeId(gDocId);
+					var docId = curRightClickedDocListNode.docId;
+					var node = getNodeByNodeId(docId);
 				    showDocHistory(node);
 				}
 			},
