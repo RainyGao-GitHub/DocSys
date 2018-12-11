@@ -2882,8 +2882,7 @@
 	//读取文件信息
     function getDoc(docId,edit) {
       	console.log("getDoc() docId:"+docId + " edit:" + edit);
-		showRightDiv();
-		
+      	
       	//To get the Doc  
         $.ajax({
             url : "/DocSystem/Doc/getDoc.do",
@@ -5244,9 +5243,12 @@ function CompareObj(objA, objB, flag) {
 		}
 		else
 		{
-	 		//Show Doc in review Area and set gDocId by getDoc
-	 		getDoc(docId,false);
-			
+ 			getDoc(docId,false);
+	 		if(type == 1)	//For File, show RightDiv
+	 		{
+	 			showRightDiv();
+	 		}
+	 		
 			zTree.selectNode(node);
 	 		if(2 == type)
 	 		{
@@ -6033,6 +6035,14 @@ function CompareObj(objA, objB, flag) {
 					var name = curRightClickedDocListNode.docName;
 					downloadDoc(docId,name);
 				}
+			},
+			{divider: true},
+			{text: 'Markdown', action: function(e){
+						e.preventDefault();
+						var docId = curRightClickedDocListNode.docId;
+			 			getDoc(docId,false);
+			 			showRightDiv();
+					}
 			},
 			{divider: true},
 			{text: '删除', action: function(e){
