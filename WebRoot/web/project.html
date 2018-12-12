@@ -568,15 +568,17 @@
 	}
 	
 	//文件下载接口
- 	function downloadDoc(docId,docName){		
-		if(confirm("是否下载文件：" + docName) == false)
+ 	function downloadDoc(docId,docName,needConfirm){		
+		if(needConfirm)
 		{
-			return;
+			if(confirm("是否下载文件：" + docName) == false)
+			{
+				return;
+			}
 		}
-
 		window.location.href = "/DocSystem/Doc/doGet.do?id="+docId;
 	}
-	
+		
     /*文件上传实现*/
 	//文件上传入口
 	function uploadFiles(){
@@ -5291,7 +5293,7 @@ function CompareObj(objA, objB, flag) {
  		var id = $(obj).parents('li').attr('dataId');
  		var name = $(obj).parents('li').attr('dataName');
 
- 		downloadDoc(id,name);
+ 		downloadDoc(id,name,true);
  		event.stopPropagation();
  	}
  	
@@ -5653,6 +5655,50 @@ function CompareObj(objA, objB, flag) {
         } 
     }
     
+	//LockDoc and Download it
+	function checkOut(docId,docName)
+	{
+		console.log("checkOut()" + docId);
+		var vid = gReposId;
+		
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 2, //
+				reposId : vid, 
+				docId : docId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status){
+					console.log(ret.data);
+				    downloadDoc(docId,docName,false);
+				    return;
+ 				}
+				else
+				{
+					showErrorMessage("checkOut Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("checkOut 异常");
+				return;
+			}
+		});
+	}
+	
+	//UnlockDoc and Upload doc
+	function checkIn(docId,docName)
+	{
+		console.log("checkIn()" + docId);
+		var node = getNodeByNodeId(docId);
+		gParentNodeForUpload = getParentNodeByNode(node);
+		uploadFiles();
+	}
+    
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
     var oDiv=document.getElementById('line');
     oDiv.onmousedown=function(ev){
@@ -5958,7 +6004,7 @@ function CompareObj(objA, objB, flag) {
 						}
 						var id = curRightClickedTreeNode.id;
 						var name = curRightClickedTreeNode.name;
-						downloadDoc(id,name);
+						downloadDoc(id,name,true);
 					}
 			},
 			{divider: true},
@@ -6033,7 +6079,26 @@ function CompareObj(objA, objB, flag) {
 					e.preventDefault();
 					var docId = curRightClickedDocListNode.docId;
 					var name = curRightClickedDocListNode.docName;
-					downloadDoc(docId,name);
+					downloadDoc(docId,name,true);
+				}
+			},
+			{divider: true},
+			{text: 'CheckOut', action: function(e){
+						e.preventDefault();
+						var docType = curRightClickedDocListNode.type;
+						if(docType == 1)
+						{							
+							var docId = curRightClickedDocListNode.docId;
+							var docName = curRightClickedDocListNode.docName;
+							checkOut(docId,docName);
+						}
+					}
+			},
+			{text: 'CheckIn', action: function(e){
+					e.preventDefault();
+					var docId = curRightClickedDocListNode.docId;
+					var docName = curRightClickedDocListNode.docName;
+		 			checkIn(docId,docName);
 				}
 			},
 			{divider: true},
