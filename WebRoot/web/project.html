@@ -5701,9 +5701,37 @@ function CompareObj(objA, objB, flag) {
 	function checkIn(docId,docName)
 	{
 		console.log("checkIn()" + docId);
-		var node = getNodeByNodeId(docId);
-		gParentNodeForUpload = getParentNodeByNode(node);
-		uploadFiles();
+		var vid = gReposId;
+		
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 0, //UnLock the Doc
+				reposId : vid, 
+				docId : docId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status){
+					console.log(ret.data);
+					var node = getNodeByNodeId(docId);
+					gParentNodeForUpload = getParentNodeByNode(node);
+					uploadFiles();
+				    return;
+ 				}
+				else
+				{
+					showErrorMessage("checkIn Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("checkIn 异常");
+				return;
+			}
+		});
 	}
     
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
