@@ -1654,6 +1654,7 @@ public class DocController extends BaseController{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
+		Integer preLockState = 0;
 		synchronized(syncLock)
 		{
 			//Try to lock the doc
@@ -1665,6 +1666,8 @@ public class DocController extends BaseController{
 				System.out.println("updateDoc() lockDoc " + docId +" Failed！");
 				return;
 			}
+			//doc retured by lockDoc is the docInfo before Lock
+			preLockState = doc.getState();
 			unlock(); //线程锁
 			
 		}
@@ -1733,7 +1736,7 @@ public class DocController extends BaseController{
 		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
-		doc.setState(0);	//
+		doc.setState(preLockState);	//Recover the lockState of Doc
 		doc.setLockBy(0);	//
 		doc.setLockTime((long) 0);	//Set lockTime
 		doc.setCheckSum(checkSum);
