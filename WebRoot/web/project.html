@@ -335,6 +335,7 @@
 
 <!-- multiple file and dir upload triger div -->
 <div style="display:none">
+	<input id="checkInFile" name="checkInFile" type="file" class="fLeft" onchange="checkInFileConfirm(event)" style="margin-top: 90px;"/>
 	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(event)" style="margin-top: 90px;" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 </div>
@@ -593,12 +594,17 @@
 	    return $("#uploadDir").click();
 	}
 	
+	//文件chekcIn入口
+	function checkInFile(){
+	    return $("#checkInFile").click();
+	}
+	
 	//get the filename 
 	function getFileName(o){
 	    var pos=o.lastIndexOf("\\");
 	    return o.substring(pos+1);  
 	}
-
+	
 	//upload file confirm dialog
 	function selectUploadConfirm(e)
 	{
@@ -619,6 +625,22 @@
         		
 		//用户确认上传
 		checkUserUploadRight(entrys,parentNode,uploadConfirm);
+	    return true;
+	}
+	
+	//CheckInUpload Confirm
+	function checkInUploadConfirm(e)
+	{
+		console.log("checkInUploadConfirm",e,gParentNodeForUpload);
+	    var entrys = e.target.entrys;
+	    var fileName = entrys[0].name;
+	    if(fileName != curCheckInDoc.name)
+	    {
+	    	bootstrapQ.alert("请选择文件：" + curCheckInDoc.name);
+		    return false;	
+	    }
+	    
+	    checkUserUploadRight(entrys,gParentNodeForUpload,uploadWithoutConfirm);		
 	    return true;
 	}
 	
@@ -692,7 +714,6 @@
 	    	   		//console.log("it is not a file");
 	    	   	}
 	    	}
-	    	
 	    }
 	    else
 	   	{
@@ -757,6 +778,34 @@
 	    	return true;   
 	    });
 		return true;
+	}
+	
+	function uploadWithoutConfirm(files,parentNode)
+	{	
+		console.log("uploadWithoutConfirm()");		
+		
+	  	//get the parentNode
+	  	var parentId = 0;
+		if(parentNode&&parentNode.type=="2"){
+			parentId=parentNode.id;	
+		}else{
+			if(parentNode&&parentNode.getParentNode()){
+				parentNode=parentNode.getParentNode();
+				parentId=parentNode.id;
+				console.log(parentId);
+			}else{
+				parentNode=null;
+			}
+		}
+		if(parentNode && parentNode.id)
+		{
+			parentId = parentNode.id;
+		}
+		var vid = gReposId;
+		
+		//开始上传
+		DocUpload.uploadDocs(files,parentNode,parentId,vid);
+	    return true;   
 	}
 
 	//DocUpload类
@@ -1300,6 +1349,14 @@
       	function uploadErrorHandler(FileName,errMsg)
       	{
       		console.log("uploadErrorHandler() "+ FileName + " " + errMsg);
+      		
+      		//CheckIn Failed
+      		if(curChekcInDoc.id && curChekcInDoc.id > -1)
+      		{	
+          		console.log("uploadErrorAbortHandler() checkIn failed for "+ FileName + " " + errMsg);      			
+      			curChekcInDoc.id = -1;
+      		}
+      		
       		if(false == reuploadFlag)
       		{
       			failNum++;
@@ -1320,6 +1377,13 @@
       	function uploadErrorAbortHandler(FileName,errMsg)
       	{
       		console.log("uploadErrorAbortHandler() "+ FileName + " " + errMsg);
+      		//CheckIn Failed
+      		if(curChekcInDoc.id && curChekcInDoc.id > -1)
+      		{	
+          		console.log("uploadErrorAbortHandler() checkIn failed for "+ FileName + " " + errMsg);      			
+      			curChekcInDoc.id = -1;
+      		}
+      	
       		if(false == reuploadFlag)
       		{
       			failNum++;
@@ -1338,8 +1402,15 @@
       	
       	//uploadSuccessHandler
       	function uploadSuccessHandler(name,msgInfo)
-      	{
+      	{	
       		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
+      		//If curCheckInDoc was set, means the upload is for CheckIn
+      		if(curChekcInDoc.id && curChekcInDoc.id > -1)
+      		{
+      			//CheckIn ok, do unlock the doc
+      			unlockDoc(curChekcInDoc.id);
+      			curChekcInDoc.id = -1;
+      		}
       		
       		successNum++;
 	      	
@@ -4359,6 +4430,37 @@
 		});
 	}
 	
+	function unlockDoc(docId)
+	{
+		console.log("unlockDoc()  docId:" + docId);
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 0, //unlock the doc
+				reposId : gReposId, 
+				docId : docId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status){
+					console.log(ret.data);
+				    return;
+ 				}
+				else
+				{
+					showErrorMessage("unlockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("unlockDoc 异常");
+				return;
+			}
+		});
+	}
+	
 	//进入文件编辑状态
     function editWiki(docId){
         
@@ -5698,41 +5800,18 @@ function CompareObj(objA, objB, flag) {
 	}
 	
 	//UnlockDoc and Upload doc
+	var curCheckInDoc = [];
 	function checkIn(docId,docName)
 	{
 		console.log("checkIn()" + docId);
-		var vid = gReposId;
+		curCheckInDoc.id = docId;
+		curCheckInDoc.name = docName;
 		
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 0, //UnLock the Doc
-				reposId : vid, 
-				docId : docId,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status){
-					console.log(ret.data);
-					var node = getNodeByNodeId(docId);
-					gParentNodeForUpload = getParentNodeByNode(node);
-					uploadFiles();
-				    return;
- 				}
-				else
-				{
-					showErrorMessage("checkIn Error:" + ret.msgInfo);
-					return;
-				}
-			},
-			error : function () 
-			{
-				showErrorMessage("checkIn 异常");
-				return;
-			}
-		});
-	}
+		var node = getNodeByNodeId(docId);
+		gParentNodeForUpload = getParentNodeByNode(node);
+		checkInFile();
+		return;
+ 	}
     
 	//目录列表区域拖放功能：预览区和子目录区域需要一起变化
     var oDiv=document.getElementById('line');
