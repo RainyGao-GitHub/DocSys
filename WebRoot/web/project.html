@@ -335,7 +335,7 @@
 
 <!-- multiple file and dir upload triger div -->
 <div style="display:none">
-	<input id="checkInFile" name="checkInFile" type="file" class="fLeft" onchange="checkInFileConfirm(event)" style="margin-top: 90px;"/>
+	<input id="checkInFile" name="checkInFile" type="file" class="fLeft" onchange="checkInUploadConfirm(event)" style="margin-top: 90px;"/>
 	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(event)" style="margin-top: 90px;" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 </div>
@@ -632,7 +632,7 @@
 	function checkInUploadConfirm(e)
 	{
 		console.log("checkInUploadConfirm",e,gParentNodeForUpload);
-	    var entrys = e.target.entrys;
+	    var entrys = e.target.files;
 	    var fileName = entrys[0].name;
 	    if(fileName != curCheckInDoc.name)
 	    {
@@ -1138,6 +1138,13 @@
       	//文件覆盖处理接口
       	function fileCoverConfirm(docName,msgInfo)
       	{
+      		console.log("fileCoverConfirm");
+      		//It is checkIn behavior do cover
+     		if(curCheckInDoc.id && curCheckInDoc.id > -1)
+     		{
+     			fileCoverConfirmSet = 1;
+     		}
+      		
       		//检查当前目录下是否有同名文件或目录
   	 		var confirm = getFileCoverConfirmSetting();
 	  	 	if(confirm == 1)
@@ -1351,10 +1358,10 @@
       		console.log("uploadErrorHandler() "+ FileName + " " + errMsg);
       		
       		//CheckIn Failed
-      		if(curChekcInDoc.id && curChekcInDoc.id > -1)
+      		if(curCheckInDoc.id && curCheckInDoc.id > -1)
       		{	
           		console.log("uploadErrorAbortHandler() checkIn failed for "+ FileName + " " + errMsg);      			
-      			curChekcInDoc.id = -1;
+          		curCheckInDoc.id = -1;
       		}
       		
       		if(false == reuploadFlag)
@@ -1378,10 +1385,10 @@
       	{
       		console.log("uploadErrorAbortHandler() "+ FileName + " " + errMsg);
       		//CheckIn Failed
-      		if(curChekcInDoc.id && curChekcInDoc.id > -1)
+      		if(curCheckInDoc.id && curCheckInDoc.id > -1)
       		{	
           		console.log("uploadErrorAbortHandler() checkIn failed for "+ FileName + " " + errMsg);      			
-      			curChekcInDoc.id = -1;
+          		curCheckInDoc.id = -1;
       		}
       	
       		if(false == reuploadFlag)
@@ -1405,11 +1412,11 @@
       	{	
       		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
       		//If curCheckInDoc was set, means the upload is for CheckIn
-      		if(curChekcInDoc.id && curChekcInDoc.id > -1)
+      		if(curCheckInDoc.id && curCheckInDoc.id > -1)
       		{
       			//CheckIn ok, do unlock the doc
-      			unlockDoc(curChekcInDoc.id);
-      			curChekcInDoc.id = -1;
+      			unlockDoc(curCheckInDoc.id);
+      			curCheckInDoc.id = -1;
       		}
       		
       		successNum++;
@@ -1463,6 +1470,7 @@
       		//清除文件控件
 			$("#uploadFiles").val("");
   			$("#uploadDir").val("");
+      		$("#checkInFile").val("");
             
   			//清除上传中标志
             isUploading = false;
