@@ -5231,14 +5231,15 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		//Add DocList Node
-		if(parentDocId == gParentDocOfDocList.docId)
+		console.log("parentDocId:" + parentDocId + " gParentDocOfDocList.docId:" + gParentDocOfDocList.docId );
+		if(parentDocId == gParentDocOfDocList.docId,createTime)
 		{
 			var docType = 1;
 			if(isParent)
 			{
 				docType = 2;
 			}
-			DocList.addNode(nodeId,docType,docName);
+			DocList.addNode(nodeId,docType,nodeName);
 		}
 	}
 	
@@ -5355,9 +5356,10 @@ function CompareObj(objA, objB, flag) {
 	//DocList类
     var DocList = (function () {
     	//Add Node
-		function addNode(docId,docType,docName)
+		function addNode(docId,docType,docName,createTime)
 		{
-         	var nodeStr='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+	        var iconType = docType===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+         	var nodeStr='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
 			$("#secondList").append(nodeStr);
 		}
 
@@ -5369,8 +5371,8 @@ function CompareObj(objA, objB, flag) {
 		
     	//开放给外部的调用接口
         return {
-        	addNode: function(docId,docType,docName){
-        		addNode(docId,docType,docName);
+        	addNode: function(docId,docType,docName,createTime){
+        		addNode(docId,docType,docName,createTime);
             },
             deleteNode: function(docId){
             	deleteNode(docId);
