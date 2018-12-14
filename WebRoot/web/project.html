@@ -3316,11 +3316,14 @@
                     id : treeNode.id,
                 },
 	            success : function (ret) {
-	                if( "ok" == ret.status ){
+	                if( "ok" == ret.status ) //后台删除成功
+	                {
 	                	console.log(ret.data);
-	                 	//后台删除成功
+	                 	//Delete zTree Node
 	                    var treeObj = $.fn.zTree.getZTreeObj("doctree");
 				     	treeObj.removeNode(treeNode);
+				     	//Delete docList Node
+				     	DocList.deleteNode(treeNode.id);
 				     	
 				     	//start to delete nextDoc
 				     	deleteNextDoc();
@@ -5312,6 +5315,8 @@ function CompareObj(objA, objB, flag) {
 	   zTreeInit(menu);
 	   drawSecondMenu(menu);
 	}
+	
+	//Draw DocList
 	function drawSecondMenu(data){
  	 	var str="";
        	for(var i=0; i<data.length; i++)
@@ -5332,6 +5337,32 @@ function CompareObj(objA, objB, flag) {
        	$("#secondList").html(str);
  	}
 	
+	//DocList类
+    var DocList = (function () {
+    	//Add Node
+		function addNode(docId,docType,docName)
+		{
+         	var nodeStr='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+			$("#secondList").append(nodeStr);
+		}
+
+    	//Delete Node
+		function deleteNode(docId)
+		{
+			$("[dataId='"+ docId +"']").remove();
+		}
+		
+    	//开放给外部的调用接口
+        return {
+        	addNode: function(docId,docType,docName){
+        		addNode(docId,docType,docName);
+            },
+            deleteNode: function(docId){
+            	deleteNode(docId);
+            },
+        };
+    })();		
+      		
 	var curRightClickedDocListNode = [];
     function docListOnMouseDown(obj,ev)
     {
