@@ -3133,7 +3133,9 @@
                     {
                     	isParent = false;                    	
                     }
-                    addTreeNode(name,isParent,ret.data.id,parentNode);
+                    //Add zTreeNode
+             		addTreeNode(name,isParent,ret.data.id,parentNode);
+                    
              		// 普通消息提示条
 					bootstrapQ.msg({
 								msg : "新建完成！",
@@ -5037,7 +5039,7 @@ function CompareObj(objA, objB, flag) {
               			gParentDocId = parentNode.id;
               		}
               	}
-          		showSubDocList(gParentDocId);
+          		showDocList(gParentDocId);
              }             
           }
       };
@@ -5196,20 +5198,20 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + nodeId + " parentNode",parentNode);
 		
+		var parentDocId = 0;
+		if(parentNode != null)
+		{
+			parentDocId = parentNode.id;
+		}
+				
+		//Add zTree Node
 		//parentNode处于展开状态时，需要手动addTreeNode以保证与后台同步，否则只要触发异步加载即可
 		if(parentNode == null || parentNode.open == true)
 		{
 			console.log("addTreeNode() parentNode is open");
-			if(parentNode == null)
-			{
-				pId = 0;
-			}
-			else
-			{
-				pId = parentNode.id;
-			}
 			
-			if(pId == 0)
+			var pId = parentDocId;
+			if(parentDocId == 0)
 			{
 				pId = "root"; //zTree root id is root -__-!
 			}
@@ -5226,6 +5228,17 @@ function CompareObj(objA, objB, flag) {
 			//open the parentNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
 			treeObj.expandNode(parentNode, true, false, true);
+		}
+		
+		//Add DocList Node
+		if(parentDocId == gParentDocOfDocList.docId)
+		{
+			var docType = 1;
+			if(isParent)
+			{
+				docType = 2;
+			}
+			DocList.addNode(nodeId,docType,docName);
 		}
 	}
 	
@@ -5313,11 +5326,13 @@ function CompareObj(objA, objB, flag) {
        }
 	   //console.log(menu);
 	   zTreeInit(menu);
-	   drawSecondMenu(menu);
+	   //Init DocList
+	   gParentDocOfDocList.docId = 0;
+	   DocListInit(menu);
 	}
 	
 	//Draw DocList
-	function drawSecondMenu(data){
+	function DocListInit(data){
  	 	var str="";
        	for(var i=0; i<data.length; i++)
  	    {
@@ -5404,7 +5419,7 @@ function CompareObj(objA, objB, flag) {
 	 		{
 	 			//Show SubDocs
 	 			gParentDocId = docId;
-	 			showSubDocList(gParentDocId);
+	 			showDocList(gParentDocId);
 	 			
 	      		//展开该节点，否则会导致通过secondGetDoc进去无法返回
 				zTree.reAsyncChildNodes(node, "refresh",true);
@@ -5459,7 +5474,7 @@ function CompareObj(objA, objB, flag) {
 		{
 			var deleteNodes = [];
 			deleteNodes.push(node);
-			DoDelete(deleteNodes,showSubDocList);
+			DoDelete(deleteNodes);
 		}
 		event.stopPropagation();
  	}
@@ -5492,28 +5507,24 @@ function CompareObj(objA, objB, flag) {
 	   	}             
 	}
 	
-	function showSubDocList(parentDocId)
+	function showDocList(parentDocId)
 	{
-		var pDocId = gParentDocId;
-		if(parentDocId)
-		{
-			pDocId = parentDocId;
-		}
+		gParentDocOfDocList.docId = parentDocId;
 
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
             dataType : "json",
             data : {
-                id: pDocId,
+                id: parentDocId,
                 vid: gReposId,
             },
             success : function (ret) {
-         		console.log("showSubDocList ret:", ret)
+         		console.log("showDocList ret:", ret)
          		if(ret.status == "ok")
             	{
-         			drawSecondMenu(ret.data);
-            		console.log("showSubDocList");
+         			DocListInit(ret.data);
+            		console.log("showDocList");
                 }
                 else
                 {
@@ -5548,7 +5559,7 @@ function CompareObj(objA, objB, flag) {
 				zTree.selectNode(parentNode);
 				getDoc(parentNode.id,false);
           		gParentDocId = parentNode.id;
-          		showSubDocList(gParentDocId);
+          		showDocList(gParentDocId);
 			}
 			else
 			{
@@ -5556,7 +5567,7 @@ function CompareObj(objA, objB, flag) {
 				gDocId = undefined;
 				gParentDocId = undefined;
 				updateUrl(gReposId,gDocId);
-				showSubDocList(gParentDocId);
+				showDocList(gParentDocId);
 			}			
 		}
    	}         
@@ -5573,6 +5584,11 @@ function CompareObj(objA, objB, flag) {
 	 	}  
 	}
 	
+	//Current ParentDoc for DocList
+	//docId=-1 searchlDoc result
+	//docId=0 root doc
+	//docId>0 doc
+	var gParentDocOfDocList = [];
 	function searchDoc()
 	{
 		var searchWord = $("#searchWord").val();
@@ -5592,7 +5608,9 @@ function CompareObj(objA, objB, flag) {
             		console.log("searchDoc ret:", ret)
             		if(ret.status == "ok")
                		{
-            			drawSecondMenu(ret.data);
+            			//Set it as search result
+            			gParentDocOfDocList.docId = -1;
+            			DocListInit(ret.data);
                			console.log("文件搜索成功");
                    	}
                    	else
@@ -6254,14 +6272,14 @@ function CompareObj(objA, objB, flag) {
 		 			checkIn(docId,docName);
 				}
 			},
-			{divider: true},
+			/*{divider: true},
 			{text: 'Markdown', action: function(e){
 						e.preventDefault();
 						var docId = curRightClickedDocListNode.docId;
 			 			getDoc(docId,false);
 			 			showRightDiv();
 					}
-			},
+			},*/
 			{divider: true},
 			{text: '删除', action: function(e){
 						e.preventDefault();
@@ -6276,7 +6294,7 @@ function CompareObj(objA, objB, flag) {
 						{
 							var deleteNodes = [];
 							deleteNodes.push(node);
-							DoDelete(deleteNodes,showSubDocList);
+							DoDelete(deleteNodes);
 						}
 					}
 			},
