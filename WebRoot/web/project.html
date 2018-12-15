@@ -3,13 +3,14 @@
 <html lang="zh-cn">
 <head>
     <meta charset="utf-8">
+    <meta name="author" content="Rainy" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="renderer" content="webkit" />
     <link rel="shortcut icon"  href="static/SmartWiki/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Cheney" />
+
     <title>仓库详情-DocSys</title>
-    <!-- Bootstrap -->
+    <!-- BootStarp CSS -->
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="static/highlight/styles/default.css" rel="stylesheet">
@@ -20,11 +21,11 @@
     <link href="static/styles/kancloud.css" rel="stylesheet">
     <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
     <link href="static/markdown/css/editormd.min.css" rel="stylesheet">
-	<!-- context.js -->
+	<!-- contextMenu -->
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
 	<link rel="stylesheet" type="text/css" href="css/zjp-css.css">
-		<!-- FreeTeam CSS-->
+	<!-- FreeTeam CSS-->
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" /> 
 	<link rel="stylesheet" type="text/css" href="css/style.css">
@@ -353,13 +354,14 @@
 	</form>
 </div>
            
-<!-- Include all compiled plugins (below), or include individual file	s as needed -->
+<!-- Include all compiled plugins (below), or include individual files as needed -->
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="static/layer/layer.js"></script>
 <script type="text/javascript" src="static/nprogress/nprogress.js"></script>
 <script type="text/javascript" src="static/highlight/highlight.js"></script>
 <script type="text/javascript" src="static/highlight/highlightjs-line-numbers.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<script type="text/javascript" src="js/logon.js"></script>
 <script type="application/javascript" src="static/markdown/lib/raphael.min.js"></script>
 <script type="application/javascript" src="static/seajs/sea.js"></script>
 <script type="application/javascript" src="static/scripts/jsonEscape.js"></script>
@@ -369,8 +371,6 @@
 <script  type="text/javascript" src="static/scripts/jquery.form.js"></script>
 <!-- context。js -->
 <script type="text/javascript" src="static/ContextJS/js/context.js"></script>
-<!-- <script  type="text/javascript" src="static/ContextJS/js/jquery.min.js"></script>
- -->
 <script type="text/javascript" src="js/fileReader.js"></script>
 <script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 <script type="text/javascript">
@@ -422,7 +422,7 @@
 	{
 		if(treeNodes == null || treeNodes.length < 1)
 		{
-			bootStrapQ.alert("清选择需要删除的文件或目录");
+			bootstrapQ.alert("清选择需要删除的文件或目录");
 		}
 		else
 		{
@@ -2833,7 +2833,6 @@
                 }else {
                     $("#projectName").text("仓库名");
                     alert(ret.msgInfo);
-                    window.location.href = "index.html";
                 }
             },
             error : function () {
@@ -3968,7 +3967,7 @@
 
 			if(busy == 1)
 			{
-				bootStrapQ("系统正忙，请稍候重试!");
+				bootstrapQ("系统正忙，请稍候重试!");
 				return;
 			}
 			busy = 1;
@@ -4113,7 +4112,7 @@
 
 <script type="text/javascript">
 	/********************* 文件编辑接口 *********************************************/
-		//如果需要看懂下面的代码，请先看懂seajs，还不懂可以联系我：QQ：652055239
+	//如果需要看懂下面的代码，请先看懂seajs，还不懂可以联系我：QQ：652055239
 	//load editormd by using seajs
 	seajs.config({
         base  : "./static",
@@ -4744,7 +4743,6 @@ function CompareObj(objA, objB, flag) {
 }
 </script>
 
-<script type="text/javascript" src="js/logon.js"></script>
 <SCRIPT type="text/javascript" >
 	/********************** zTree设置与接口**********************************/
 	
@@ -5279,6 +5277,7 @@ function CompareObj(objA, objB, flag) {
 	}
 	
 	//PageInit
+	var login_user = "";	//用来保存刚注册的用户、或刚才登录的用户
 	function SysInit()
 	{
 		console.log("SysInit");
@@ -5305,12 +5304,18 @@ function CompareObj(objA, objB, flag) {
                 	//显示用户信息
                 	ShowUserInfo(user);
                 	
-                	//Show ReposMenu
-                	syncUpMenu(showDoc);
+                	//获取仓库信息
+            		getReposInfo(syncUpMenu(showDoc));
                 }
                 else 
                 {
-                    console.log(ret.msgInfo);
+                	console.log(ret.msgInfo);
+                	
+                	//Jump to index.html
+                    //window.location.href = "index.html";
+                    
+                	//Show Login Dialog
+                    showLoginPanel();
                 }
             },
             error : function () {
@@ -6101,8 +6106,8 @@ function CompareObj(objA, objB, flag) {
 		//set the vid in upload form
 		$("#reposId").val(gReposId);
         
-		//获取仓库信息
-		getReposInfo(SysInit);
+		//系统初始化
+		SysInit();
 		
 		//右键菜单实现：contextMenu Start
 		context.init({preventDoubleContext: true});
