@@ -2964,58 +2964,72 @@
 	//读取文件信息
     function getDoc(docId,edit) {
       	console.log("getDoc() docId:"+docId + " edit:" + edit);
-      	
-      	//To get the Doc  
-        $.ajax({
-            url : "/DocSystem/Doc/getDoc.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                id : docId,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	console.log("getDoc ret",ret);
-                	$('#filetitle').html(ret.data.name);
-                    gDocId = ret.data.id;
-                    if(ret.data.content == "null")
-                    {
-                    	gDocContent = "";	//Convert it to empty String
-                    }
-                    else
-                    {	
-                    	gDocContent = JSON.parse(ret.data.content);
-                    }
-                    
-					//Update URL 保证页面刷新后还是处于正确的状态
-					updateUrl(gReposId,gDocId,edit);
-					
-					DocEdit.loadmd(gDocContent,edit);
-                    
-                    WikiEditBtnCtrl(edit);		
-					
-                    //we need to clear debounce when a new doc was loaded
-					debounce.clear();
-					if(edit)
-					{
-						//start the autoTmpSaver
-						DocEdit.startAutoTmpSaver();
-					}
-					else
-					{
-						DocEdit.stopAutoTmpSaver();
-					}
-                }
-                else
-                {
-                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
-                }
-            },
-            error : function () {
-                showErrorMessage("获取文件信息失败：服务器异常");
-                $btn.button('reset');
-            }
-        });
+      	if(docId)	//undefine do clean the info of rightDiv
+        {
+	      	//To get the Doc  
+	        $.ajax({
+	            url : "/DocSystem/Doc/getDoc.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	                id : docId,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                	console.log("getDoc ret",ret);
+	                	$('#filetitle').html(ret.data.name);
+	                    gDocId = ret.data.id;
+	                    if(ret.data.content == "null")
+	                    {
+	                    	gDocContent = "";	//Convert it to empty String
+	                    }
+	                    else
+	                    {	
+	                    	gDocContent = JSON.parse(ret.data.content);
+	                    }
+	                    
+						//Update URL 保证页面刷新后还是处于正确的状态
+						updateUrl(gReposId,gDocId,edit);
+						
+						DocEdit.loadmd(gDocContent,edit);
+	                    
+	                    WikiEditBtnCtrl(edit);		
+						
+	                    //we need to clear debounce when a new doc was loaded
+						debounce.clear();
+						if(edit)
+						{
+							//start the autoTmpSaver
+							DocEdit.startAutoTmpSaver();
+						}
+						else
+						{
+							DocEdit.stopAutoTmpSaver();
+						}
+	                }
+	                else
+	                {
+	                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("获取文件信息失败：服务器异常");
+	                $btn.button('reset');
+	            }
+	        });
+        }
+      	else	//docId undefined
+      	{
+      		//Clean FileName
+      		$('#filetitle').html("");
+      		
+      		//Clean the display content
+      		DocEdit.stopAutoTmpSaver();
+      		debounce.clear();
+      		gDocContent = "";
+      		gEdit = false;
+      		DocEdit.loadmd(gDocContent,gEdit);
+      	}
     }
 	
 	function showDocHistory(node)
@@ -5593,40 +5607,41 @@ function CompareObj(objA, objB, flag) {
 	
 	function backToParentDoc()
 	{
-		console.log("gDocId:" + gDocId);
-		if(gDocId)
-		{
-			var zTree = $.fn.zTree.getZTreeObj("doctree");
-			var node = zTree.getNodeByParam("id",gDocId);
-			var parentNode;
-			if(node == null)
-			{
-				parentNode = zTree.getNodeByParam("id",gParentDocId);
-			}
-			else
-			{
-				parentNode = node.getParentNode();
-			}
+		console.log("backToParentDoc() DocListParentDocId:" + DocListParentDocId);
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",DocListParentDocId);
 			
+		if(node == null)
+		{
+			//node is missing, return to the root dir
+			gDocId = undefined;
+			gParentDocId = 0;
+			updateUrl(gReposId,gDocId);
+		}
+		else
+		{
+			var parentNode = node.getParentNode();
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
-				getDoc(parentNode.id,false);
-          		gParentDocId = parentNode.id;
-          		
-          		//showDocList
-    			showDocList(gParentDocId);
+				gDocId = parentNode.id;
+	          	gParentDocId = parentNode.id;
 			}
 			else
 			{
+				//reach the top of zTree
 				zTree.cancelSelectedNode(node);
 				gDocId = undefined;
-				gParentDocId = undefined;
+				gParentDocId = 0;
 				updateUrl(gReposId,gDocId);
-			}			
-			
-
+			}
 		}
+		
+		//getDoc
+		getDoc(gDocId,false);
+	  	
+		//showDocList
+		showDocList(gParentDocId);
    	}         
 	
 	//回车键监听函数，该event已经过兼容性处理 
