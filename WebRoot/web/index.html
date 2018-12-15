@@ -200,7 +200,7 @@
 	pageInit();   
 
 	//页面初始化
-    var login_userUser = "";	//用来保存刚注册的用户、或刚才登录的用户
+    var login_user = "";	//用来保存刚注册的用户、或刚才登录的用户
 	function pageInit()
     {
     	console.log("pageInit");
@@ -229,6 +229,7 @@
                 else 
                 {
                     console.log(ret.msgInfo);
+                    //showLoginPanel();
                 }
             },
             error : function () {
