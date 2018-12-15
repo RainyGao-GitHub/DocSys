@@ -439,7 +439,7 @@ public class DocController extends BaseController{
 		Doc doc = getDocByName(name,parentId,reposId);
 		if(doc != null)
 		{
-			rt.setData(doc.getId());
+			rt.setData(doc);
 			rt.setMsgInfo("Node: " + name +" 已存在！");
 			rt.setMsgData("0");
 			System.out.println("checkDocInfo() " + name + " 已存在");
@@ -472,7 +472,7 @@ public class DocController extends BaseController{
 					if(null != newDoc)
 					{
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
-						rt.setData(newDoc.getId());
+						rt.setData(newDoc);
 						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
 						rt.setMsgData("1");
 						writeJson(rt, response);
