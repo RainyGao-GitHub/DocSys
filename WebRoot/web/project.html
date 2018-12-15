@@ -5038,8 +5038,11 @@ function CompareObj(objA, objB, flag) {
               		{
               			gParentDocId = parentNode.id;
               		}
+              		
+              		//showDocList
+              		showDocList(gParentDocId);
               	}
-          		showDocList(gParentDocId);
+
              }             
           }
       };
@@ -5231,15 +5234,15 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		//Add DocList Node
-		console.log("parentDocId:" + parentDocId + " gParentDocOfDocList.docId:" + gParentDocOfDocList.docId );
-		if(parentDocId == gParentDocOfDocList.docId,createTime)
+		console.log("parentDocId:" + parentDocId + " DocListParentDocId:" + DocListParentDocId );
+		if(parentDocId == DocListParentDocId)
 		{
 			var docType = 1;
 			if(isParent)
 			{
 				docType = 2;
 			}
-			DocList.addNode(nodeId,docType,nodeName);
+			DocList.addNode(nodeId,docType,nodeName,creattime);
 		}
 	}
 	
@@ -5327,34 +5330,33 @@ function CompareObj(objA, objB, flag) {
        }
 	   //console.log(menu);
 	   zTreeInit(menu);
-	   //Init DocList
-	   gParentDocOfDocList.docId = 0;
-	   DocListInit(menu);
 	}
 	
-	//Draw DocList
-	function DocListInit(data){
- 	 	var str="";
-       	for(var i=0; i<data.length; i++)
- 	    {
- 	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
- 	           var docId = data[i].id;
- 	           var docType = data[i].type;
- 	           var docName = data[i].name;
- 	           if(data[i].state != 0)
- 	           {
- 	        		str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
- 	           }
- 	           else
- 	           {
- 	           	   str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
- 	           }	 
- 	    }
-       	$("#secondList").html(str);
- 	}
-	
 	//DocList类
-    var DocList = (function () {
+	var DocListState = 0;
+	var DocListParentDocId = 0;
+	var DocList = (function () {    	
+    	//Draw DocList
+    	function showList(data){
+     	 	var str="";
+           	for(var i=0; i<data.length; i++)
+     	    {
+     	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+     	           var docId = data[i].id;
+     	           var docType = data[i].type;
+     	           var docName = data[i].name;
+     	           if(data[i].state != 0)
+     	           {
+     	        		str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+     	           }
+     	           else
+     	           {
+     	           	   str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" dataId='+docId+' dataType='+docType +' class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+     	           }	 
+     	    }
+           	$("#secondList").html(str);
+     	}
+    	
     	//Add Node
 		function addNode(docId,docType,docName,createTime)
 		{
@@ -5371,7 +5373,10 @@ function CompareObj(objA, objB, flag) {
 		
     	//开放给外部的调用接口
         return {
-        	addNode: function(docId,docType,docName,createTime){
+        	showList: function(data){
+        		showList(data);
+            },
+    		addNode: function(docId,docType,docName,createTime){
         		addNode(docId,docType,docName,createTime);
             },
             deleteNode: function(docId){
@@ -5502,16 +5507,40 @@ function CompareObj(objA, objB, flag) {
 			//select the zTreeNode with gDocId
 			 var zTree = $.fn.zTree.getZTreeObj("doctree");
 			 var node = zTree.getNodeByParam("id",gDocId);
-			 zTree.selectNode(node);
+			 if(node != null)
+			 {
+				 zTree.selectNode(node);
+			 
+				//获取DocContent
+	   			getDoc(gDocId,gEdit);
 			
-			//获取DocContent
-	   		getDoc(gDocId,gEdit);
-	   	}             
+				//showDocList
+				var parentNode = node.getParentNode();
+				if(parentNode && parentNode.id)
+				{
+          			gParentDocId = parentNode.id;          		
+				}
+				else
+				{
+					gParentDocId = 0;
+				}
+
+			 }
+	   	}
+		else
+		{
+			gParentDocId = 0;
+		}
+		
+		//showDocList
+		showDocList(gParentDocId);	
 	}
 	
 	function showDocList(parentDocId)
 	{
-		gParentDocOfDocList.docId = parentDocId;
+		//Set DocListState and DocListParentDocId
+		DocListState = 0;
+    	DocListParentDocId = parentDocId;
 
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
@@ -5525,8 +5554,7 @@ function CompareObj(objA, objB, flag) {
          		console.log("showDocList ret:", ret)
          		if(ret.status == "ok")
             	{
-         			DocListInit(ret.data);
-            		console.log("showDocList");
+         			DocList.showList(ret.data);
                 }
                 else
                 {
@@ -5534,7 +5562,7 @@ function CompareObj(objA, objB, flag) {
                 }
             },
             error : function () {
-                alert('服务器异常: 获取子目录异常');
+            	showErrorMessage('服务器异常: 获取子目录异常');
             }
         });
 	}
@@ -5561,7 +5589,9 @@ function CompareObj(objA, objB, flag) {
 				zTree.selectNode(parentNode);
 				getDoc(parentNode.id,false);
           		gParentDocId = parentNode.id;
-          		showDocList(gParentDocId);
+          		
+          		//showDocList
+    			showDocList(gParentDocId);
 			}
 			else
 			{
@@ -5569,8 +5599,9 @@ function CompareObj(objA, objB, flag) {
 				gDocId = undefined;
 				gParentDocId = undefined;
 				updateUrl(gReposId,gDocId);
-				showDocList(gParentDocId);
 			}			
+			
+
 		}
    	}         
 	
@@ -5586,11 +5617,6 @@ function CompareObj(objA, objB, flag) {
 	 	}  
 	}
 	
-	//Current ParentDoc for DocList
-	//docId=-1 searchlDoc result
-	//docId=0 root doc
-	//docId>0 doc
-	var gParentDocOfDocList = [];
 	function searchDoc()
 	{
 		var searchWord = $("#searchWord").val();
@@ -5611,8 +5637,9 @@ function CompareObj(objA, objB, flag) {
             		if(ret.status == "ok")
                		{
             			//Set it as search result
-            			gParentDocOfDocList.docId = -1;
-            			DocListInit(ret.data);
+            			DocListState = 1;
+            			DocListParentDocId = -1;
+            			DocList.showList(ret.data);
                			console.log("文件搜索成功");
                    	}
                    	else
