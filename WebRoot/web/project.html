@@ -747,6 +747,7 @@
 				parentNode=null;
 			}
 		}
+		
 		if(parentNode && parentNode.id)
 		{
 			parentId = parentNode.id;
@@ -5026,6 +5027,9 @@ function CompareObj(objA, objB, flag) {
               	if(true == treeNode.isParent)
               	{
               		gParentDocId = treeNode.id;
+
+              		//showDocList
+              		showDocList(gParentDocId);
               	}
               	else
               	{
@@ -5038,11 +5042,15 @@ function CompareObj(objA, objB, flag) {
               		{
               			gParentDocId = parentNode.id;
               		}
-              		
-              		//showDocList
-              		showDocList(gParentDocId);
+              		if(gParentDocId == DocListParentDocId)
+              		{
+              			DocList.focusNode(treeNode.id);
+              		}
+              		else
+              		{
+                  		showDocList(gParentDocId);
+              		}
               	}
-
              }             
           }
       };
@@ -5371,6 +5379,12 @@ function CompareObj(objA, objB, flag) {
 			$("[dataId='"+ docId +"']").remove();
 		}
 		
+		//Delete Node
+		function focusNode(docId)
+		{
+			$("[dataId='"+ docId +"']").focus();
+		}
+		
     	//开放给外部的调用接口
         return {
         	showList: function(data){
@@ -5381,6 +5395,9 @@ function CompareObj(objA, objB, flag) {
             },
             deleteNode: function(docId){
             	deleteNode(docId);
+            },
+            focusNode: function(docId){
+            	focusNode(docId);
             },
         };
     })();		
@@ -5515,16 +5532,22 @@ function CompareObj(objA, objB, flag) {
 	   			getDoc(gDocId,gEdit);
 			
 				//showDocList
-				var parentNode = node.getParentNode();
-				if(parentNode && parentNode.id)
+				if(node.isParent)
 				{
-          			gParentDocId = parentNode.id;          		
+					gParentDocId = gDocId;
 				}
 				else
 				{
-					gParentDocId = 0;
+					var parentNode = node.getParentNode();
+					if(parentNode && parentNode.id)
+					{
+	          			gParentDocId = parentNode.id;          		
+					}
+					else
+					{
+						gParentDocId = 0;
+					}
 				}
-
 			 }
 	   	}
 		else
@@ -5538,6 +5561,7 @@ function CompareObj(objA, objB, flag) {
 	
 	function showDocList(parentDocId)
 	{
+		console.log("showDocList() parentDocId:" + parentDocId);
 		//Set DocListState and DocListParentDocId
 		DocListState = 0;
     	DocListParentDocId = parentDocId;
