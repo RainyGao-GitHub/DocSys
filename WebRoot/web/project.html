@@ -1810,7 +1810,7 @@
 	             		console.log("checkDocInfo() ret",ret);
 	             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 	             		{
-	             			SubContext.docId = ret.data;
+	             			SubContext.docId = ret.data.id;
 	             			fileCoverConfirm(name,"文件" + name + " 已存在");
 	             			return;
 	             		}
@@ -2159,7 +2159,7 @@
 		    					//All Chunk Uploaded, means file upload ok, 这里的逻辑是有问题的，因为没有ret
 		    		        	if(SubContext.docId == -1) //文件新建成功
 		    		            {	
-		    		         		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
+		    		         		addTreeNode(name,false,ret.data,SubContext.realParentNode);
 		    		         		//set the docId so that We can open it 
 		    		         		SubContext.docId = ret.data.id;
 		    						
@@ -2291,7 +2291,7 @@
 						
 	                	if(SubContext.docId == -1) //文件新建成功
 		                {	
-		             		addTreeNode(name,false,ret.data.id,SubContext.realParentNode);
+		             		addTreeNode(name,false,ret.data,SubContext.realParentNode);
 		             		//set the docId so that We can open it 
 		             		SubContext.docId = ret.data.id;
 							
@@ -3149,7 +3149,7 @@
                     	isParent = false;                    	
                     }
                     //Add zTreeNode
-             		addTreeNode(name,isParent,ret.data.id,parentNode);
+             		addTreeNode(name,isParent,ret.data,parentNode);
                     
              		// 普通消息提示条
 					bootstrapQ.msg({
@@ -5219,9 +5219,10 @@ function CompareObj(objA, objB, flag) {
     //Rename and Delete Implemenation End	
 
     //该接口是为了避免新增Node时触发的异步加载导致出现多个Node
-	function addTreeNode(nodeName,isParent,nodeId,parentNode)
+	function addTreeNode(nodeName,isParent,node,parentNode)
 	{
-		console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + nodeId + " parentNode",parentNode);
+		console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + node.id + " parentNode",parentNode);
+		console.log("addTreeNode() node:",node);
 		
 		var parentDocId = 0;
 		if(parentNode != null)
@@ -5243,7 +5244,7 @@ function CompareObj(objA, objB, flag) {
 			console.log("addTreeNode() pId = " + pId);
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
-      		var newNode = {name: nodeName, id : nodeId, isParent: isParent, pId: pId};
+      		var newNode = {name: nodeName, id : node.id, isParent: isParent, pId: pId};
       		newNodes = treeObj.addNodes(parentNode, newNode);
 		}
 		else
@@ -5264,7 +5265,7 @@ function CompareObj(objA, objB, flag) {
 			{
 				docType = 2;
 			}
-			DocList.addNode(nodeId,docType,nodeName,creattime);
+			DocList.addNode(node.id,docType,nodeName,node.createTime);
 		}
 	}
 	
