@@ -4473,6 +4473,8 @@
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
+					
+					$("[dataId='"+ docId +"']").children("div:first-child").css("color","black");
 				    return;
  				}
 				else
@@ -5410,7 +5412,7 @@ function CompareObj(objA, objB, flag) {
 		{
 			$("[dataId='"+ docId +"']").focus();
 		}
-		
+
     	//开放给外部的调用接口
         return {
         	showList: function(data){
@@ -5955,6 +5957,7 @@ function CompareObj(objA, objB, flag) {
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
+					$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
 				    downloadDoc(docId,docName,false);
 				    return;
  				}
