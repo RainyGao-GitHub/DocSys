@@ -336,8 +336,8 @@
 
 <!-- multiple file and dir upload triger div -->
 <div style="display:none">
-	<input id="checkInFile" name="checkInFile" type="file" class="fLeft" onchange="checkInUploadConfirm(event)" style="margin-top: 90px;"/>
-	<input id="uploadFiles" name="uploadFiles" type="file" class="fLeft" onchange="selectUploadConfirm(event)" style="margin-top: 90px;" multiple="multiple"/>
+	<input id="checkInFile" name="checkInFile" type="file" onchange="checkInUploadConfirm(event)"/>
+	<input id="uploadFiles" name="uploadFiles" type="file" onchange="selectUploadConfirm(event)" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 </div>
 <div style="width:0;height:0;">
@@ -582,21 +582,33 @@
     /*文件上传实现*/
 	//文件上传入口
 	function uploadFiles(){
-	
-	    $("#uploadType").val(1); //文件	
+		console.log("uploadFiles() gParentNodeForUpload:",gParentNodeForUpload);
+  		//清除文件控件
+		$("#uploadFiles").val("");
+
+  		$("#uploadType").val(1); //文件	
 	    return $("#uploadFiles").click();
 	}
 	
 	//文件夹上传入口
 	function uploadDir(){
+		console.log("uploadDir() gParentNodeForUpload:",gParentNodeForUpload);
+  		//清除文件控件
+		$("#uploadDir").val("");
+  		
 		$("#uploadType").val(2);
 	    return $("#uploadDir").click();
 	}
 	
 	//文件chekcIn入口
 	function checkInFile(){
-	    return $("#checkInFile").click();
+		console.log("checkInFile() gParentNodeForUpload:",gParentNodeForUpload);
+  		//清除文件控件
+  		$("#checkInFile").val("");
+
+  		return $("#checkInFile").click();
 	}
+	
 	
 	//get the filename 
 	function getFileName(o){
@@ -620,7 +632,7 @@
         
 		//getFileList
         var entrys = getFileList(e);
-        console.log("entrys",entrys);
+        //console.log("entrys",entrys);
         		
 		//用户确认上传
 		checkUserUploadRight(entrys,parentNode,uploadConfirm);
