@@ -5524,42 +5524,39 @@ function CompareObj(objA, objB, flag) {
 		console.log("showDoc gDocId:" + gDocId);
 		if(gDocId)
 		{
-			//select the zTreeNode with gDocId
+			 //select the zTreeNode with gDocId
 			 var zTree = $.fn.zTree.getZTreeObj("doctree");
 			 var node = zTree.getNodeByParam("id",gDocId);
+			 var pId = 0;
 			 if(node != null)
 			 {
 				 zTree.selectNode(node);
-			 
-				//获取DocContent
-	   			getDoc(gDocId,gEdit);
 			
 				//showDocList
 				if(node.isParent)
 				{
-					gParentDocId = gDocId;
+					pId = gDocId;
 				}
 				else
 				{
 					var parentNode = node.getParentNode();
 					if(parentNode && parentNode.id)
 					{
-	          			gParentDocId = parentNode.id;          		
+	          			pId = parentNode.id;          		
 					}
 					else
 					{
-						gParentDocId = 0;
+						pId = 0;
 					}
 				}
 			 }
 	   	}
-		else
-		{
-			gParentDocId = 0;
-		}
 		
 		//showDocList
-		showDocList(gParentDocId);	
+		showDocList(pId);
+		
+		//获取DocContent
+		getDoc(gDocId,gEdit);
 	}
 	
 	function showDocList(parentDocId)
