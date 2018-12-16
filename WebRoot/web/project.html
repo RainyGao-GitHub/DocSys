@@ -381,7 +381,6 @@
 	var gReposCreateTime = "";
 	//Doc Info
 	var gDocId;
-	var gParentDocId;
 	var gDocContent;
 	var gEdit; 
 	
@@ -5421,37 +5420,39 @@ function CompareObj(objA, objB, flag) {
  		var type = $(obj).attr('dataType');
  		console.log("type:" + type);
  		
- 		//Change curent gDocId to docId
-	 	gDocId = docId;
-		
- 		//Try to select the node in zTree
-		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",docId);
-		if(node == null)
-		{
-			console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
-			syncUpMenu(showDoc);
-		}
-		else
-		{
- 			getDoc(docId,false);
-	 		if(type == 1)	//For File, show RightDiv
-	 		{
-	 			showRightDiv();
-	 		}
-	 		
-			zTree.selectNode(node);
-	 		if(2 == type)
-	 		{
-	 			//Show SubDocs
-	 			gParentDocId = docId;
-	 			showDocList(gParentDocId);
-	 			
-	      		//展开该节点，否则会导致通过secondGetDoc进去无法返回
-				zTree.reAsyncChildNodes(node, "refresh",true);
-	    		//zTree.expandNode(node, true, false, true);
-	 		}
-		}
+ 		if(gDocId != docId)
+ 		{
+	 		//Change curent gDocId to docId
+		 	gDocId = docId;
+			var node = getNodeByNodeId(docId);
+			if(node == null)
+			{
+				console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
+				syncUpMenu();
+			}
+			else
+			{
+				var zTree = $.fn.zTree.getZTreeObj("doctree");
+				//select this node in zTree
+		 		zTree.selectNode(node);
+				
+				if(type == 1)	//For File, show RightDiv
+		 		{
+		 			showRightDiv();
+		 		}
+		 		else
+		 		{
+		 			//Open the dir in zTree
+					zTree.reAsyncChildNodes(node, "refresh",true);
+		      		
+		 			//show DocList under this dir
+		 			showDocList(docId);
+		 		}
+			}
+			
+			//ShowDoc
+			getDoc(docId,false);
+ 		}
  	}
  	
  	function fx(obj,event){
