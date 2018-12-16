@@ -3443,7 +3443,6 @@
 					{
 		    	    	busy = 0;
 			            clearContext(); //清空上下文
-			            //syncUpMenu();
 			            
 						bootstrapQ.msg({
 							msg : '删除完成！',
@@ -3762,7 +3761,6 @@
 					{
 	        	    	busy = 0;
 	    	            clearContext(); //清空上下文
-	    	            //syncUpMenu();	//刷新菜单
 			            
 						bootstrapQ.msg({
 							msg : '复制完成！',
@@ -3775,8 +3773,7 @@
           		{
         	    	busy = 0;
     	            clearContext(); //清空上下文
-    	            //syncUpMenu();	//刷新菜单
-    	            
+
     	            bootstrapQ.msg({
 						msg : '复制完成！',
 						type : 'success',
@@ -4063,7 +4060,6 @@
 	        {
     	    	busy = 0;
 	            clearContext(); //清空上下文
-	            //syncUpMenu();	//刷新菜单
 	            
 	         	console.log("moveDoc End");
 				bootstrapQ.msg({
@@ -4117,7 +4113,7 @@
 	seajs.config({
         base  : "./static",
         alias : {
-            //jquery: "scripts/jquery.min.js",
+            jquery: "scripts/jquery.min.js",
             editormd : "markdown/editormd.js"
         }
     });
@@ -4125,7 +4121,7 @@
     //seajs.use("./js/seajs-main"); //使用main.js时 editormd 路径要改为 "../../editormd"
 
     var deps = [
-        //"jquery",
+        "jquery",
         "editormd",
         "markdown/plugins/link-dialog/link-dialog",
         "markdown/plugins/reference-link-dialog/reference-link-dialog",
@@ -5020,52 +5016,31 @@ function CompareObj(objA, objB, flag) {
       function zTreeOnChange()
       {
        	console.log("zTreeOnChange");
-      	//updateMenu();
       }
         
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
-          if (gDocId != treeNode.id)
+          if(gDocId != treeNode.id)
           {
-             if(gEdit)
+        	 if(gEdit)
              {
               	//exitEdit then getDoc
               	exitEdit(gDocId,treeNode.id);
              }
              else
              {              
-              	getDoc(treeNode.id,false);
-              	if(true == treeNode.isParent)
-              	{
-              		gParentDocId = treeNode.id;
+            	 gDocId = treeNode.id;
+              	 var pId = getParentNodeIdByNode(treeNode);
 
-              		//showDocList
-              		showDocList(gParentDocId);
-              	}
-              	else
-              	{
-              		var parentNode = treeNode.getParentNode();
-              		if(parentNode == null)
-              		{
-              			gParentDocId = undefined;
-              		}
-              		else
-              		{
-              			gParentDocId = parentNode.id;
-              		}
-              		if(gParentDocId == DocListParentDocId)
-              		{
-              			DocList.focusNode(treeNode.id);
-              		}
-              		else
-              		{
-                  		showDocList(gParentDocId);
-              		}
-              	}
-             }             
+              	 //showDocList
+           		 showDocList(pId);
+           	     
+             	 //show Doc
+            	 getDoc(gDocId,false);
+             }
           }
-      };
+      }
       
       //Double Click 对于文件应该是编辑，对于目录应该是打开
 
@@ -5305,7 +5280,7 @@ function CompareObj(objA, objB, flag) {
                 	ShowUserInfo(user);
                 	
                 	//获取仓库信息
-            		getReposInfo(syncUpMenu(showDoc));
+            		getReposInfo(InitMenu);
                 }
                 else 
                 {
@@ -5322,6 +5297,13 @@ function CompareObj(objA, objB, flag) {
             	showErrorMessage("服务器异常:获取用户信息失败");
             }
         });		
+	}
+	
+	//将后台Menu,同步回前台
+	function InitMenu()
+	{
+		console.log("InitMenu");
+	    getMenu(reDrawMenu,showDoc);
 	}
 	
 	//将后台Menu,同步回前台
@@ -5613,16 +5595,17 @@ function CompareObj(objA, objB, flag) {
 	
 	function backToParentDoc()
 	{
-		console.log("backToParentDoc() DocListParentDocId:" + DocListParentDocId);
+		console.log("backToParentDoc() gDocId:" + gDocId);
 		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",DocListParentDocId);
-			
+		var node = zTree.getNodeByParam("id",gDocId);
+		var pId = 0;
+		
+		//current Doc not exists, update gDocId and URL and showDocList under root dir
 		if(node == null)
 		{
-			//node is missing, return to the root dir
+			console.log("backToParentDoc node not exist:" + gDocId);
 			gDocId = undefined;
-			gParentDocId = 0;
-			updateUrl(gReposId,gDocId);
+			pId = 0;
 		}
 		else
 		{
@@ -5630,24 +5613,28 @@ function CompareObj(objA, objB, flag) {
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
+				
 				gDocId = parentNode.id;
-	          	gParentDocId = parentNode.id;
+				pId = parentNode.id;
 			}
 			else
 			{
-				//reach the top of zTree
 				zTree.cancelSelectedNode(node);
+
 				gDocId = undefined;
-				gParentDocId = 0;
-				updateUrl(gReposId,gDocId);
+				pId = 0;	
 			}
 		}
 		
-		//getDoc
+		//update URL
+		updateUrl(gReposId,gDocId);
+		
+		//Show DocList
+		showDocList(pId);
+		
+		//Update doc preview zone
 		getDoc(gDocId,false);
-	  	
-		//showDocList
-		showDocList(gParentDocId);
+		return;
    	}         
 	
 	//回车键监听函数，该event已经过兼容性处理 
@@ -5758,6 +5745,24 @@ function CompareObj(objA, objB, flag) {
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
+	//Get Node by NodeId
+	function getNodeByNodeId(nodeId)
+	{
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",nodeId);
+		return node;
+	}
+	
+	//Get NodeId by Node
+	function getNodeIdByNode(node)
+	{
+		if(node && node.id)
+		{
+			return node.id;
+		}
+		return 0;
+	}
+	
 	//Get ParentNode of Node(zTree)
 	function getParentNodeByNode(node)
 	{
@@ -5770,19 +5775,29 @@ function CompareObj(objA, objB, flag) {
 		}
 		return parentNode;
 	}
-	//Get Node by NodeId
-	function getNodeByNodeId(nodeId)
-	{
-		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",nodeId);
-		return node;
-	}
+	
 	//Get ParentNode of NodeId(zTree)
 	function getParentNodeByNodeId(nodeId)
 	{
 		console.log("getParentNodeByNodeId" + nodeId);
 		var node = getNodeByNodeId(nodeId);
      	return getParentNodeByNode(node);
+	}
+	
+	//Get ParentNodeId of Node(zTree)
+	function getParentNodeIdByNode(node)
+	{
+		var parentNode = getParentNodeByNode(node);
+     	return getNodeIdByNode(parentNode);
+	}
+	
+	//Get ParentNodeId of NodeId(zTree)
+	function getParentNodeIdByNodeId(nodeId)
+	{
+		console.log("getParentNodeByNodeId" + nodeId);
+		var node = getNodeByNodeId(nodeId);
+     	var parentNode = getParentNodeByNode(node);
+     	return getNodeIdByNode(parentNode);
 	}
 	
 	//add a new Doc: type 1: 文件  2:目录
@@ -5938,8 +5953,7 @@ function CompareObj(objA, objB, flag) {
 		curCheckInDoc.id = docId;
 		curCheckInDoc.name = docName;
 		
-		var node = getNodeByNodeId(docId);
-		gParentNodeForUpload = getParentNodeByNode(node);
+		gParentNodeForUpload = getParentNodeByNodeId(docId);
 		checkInFile();
 		return;
  	}
@@ -6135,14 +6149,14 @@ function CompareObj(objA, objB, flag) {
 				{text: '文件',  action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null;
-					    gParentNodeForUpload = getParentNodeByNode(null);	//uploadFiles is the trigger, so need to save the destination dir to gVar
+					    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
 					  	uploadFiles();
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null; 
-					    gParentNodeForUpload = getParentNodeByNode(null);	//uploadFiles is the trigger, so need to save the destination dir to gVar
+					    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
 						uploadDir();
 					}
 				},	
