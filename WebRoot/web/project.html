@@ -5228,8 +5228,12 @@ function CompareObj(objA, objB, flag) {
 			console.log("addTreeNode() pId = " + pId);
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
-      		var newNode = {name: nodeName, id : node.id, isParent: isParent, pId: pId};
-      		newNodes = treeObj.addNodes(parentNode, newNode);
+			var treeNode = getNodeByNodeId(node.id);
+			if(treeNode == null)
+			{
+	      		var newNode = {name: nodeName, id : node.id, isParent: isParent, pId: pId};
+	      		newNodes = treeObj.addNodes(parentNode, newNode);
+			}
 		}
 		else
 		{
@@ -5244,12 +5248,10 @@ function CompareObj(objA, objB, flag) {
 		console.log("parentDocId:" + parentDocId + " DocListParentDocId:" + DocListParentDocId );
 		if(parentDocId == DocListParentDocId)
 		{
-			var docType = 1;
-			if(isParent)
+			if(DocList.isNodeExists(node.id) == false)
 			{
-				docType = 2;
+				DocList.addNode(node.id,node.type,nodeName,node.createTime);
 			}
-			DocList.addNode(node.id,docType,nodeName,node.createTime);
 		}
 	}
 	
@@ -5378,6 +5380,16 @@ function CompareObj(objA, objB, flag) {
            	$("#secondList").html(str);
      	}
     	
+    	//Check if node exists
+		function isNodeExists(docId)
+		{
+			if($("[dataId='"+ docId +"']").length > 0)
+			{
+				return true;
+			}
+			return false;
+		}
+    	
     	//Add Node
 		function addNode(docId,docType,docName,createTime)
 		{
@@ -5403,6 +5415,10 @@ function CompareObj(objA, objB, flag) {
         	showList: function(data){
         		showList(data);
             },
+    		isNodeExists: function (docId)
+    		{
+    			return isNodeExists(docId);	
+    		},
     		addNode: function(docId,docType,docName,createTime){
         		addNode(docId,docType,docName,createTime);
             },
