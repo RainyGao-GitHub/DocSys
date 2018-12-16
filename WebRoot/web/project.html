@@ -4002,7 +4002,7 @@
     		
   	    	if(treeNode.pid == parentId)
   			{
-  	    		console.log("treeNode is already under parentNode","treeNode",treeNode.pid,"parentNode",parentNode.id);
+  	    		console.log("treeNode is already under parentNode","treeNode",treeNode,"parentNode",parentNode);
   	    		//moveErrorConfirm(treeNode.name);
   	    		moveNextDoc();
   	    		return; 
@@ -4021,9 +4021,22 @@
                 success : function (ret) {
                    if( "ok" == ret.status )
                    {
-                	   //moveNextDoc
-                	   moveNextDoc();
-                	   return;
+                	   	//Add or Delete from DocList
+               			if(parentId == DocListParentDocId)	//dstParentId
+            			{
+            				if(DocList.isNodeExists(treeNode.id) == false)
+            				{
+            					DocList.addNode(treeNode.id,treeNode.type,treeNode.name,treeNode.createTime);
+            				}
+            			}
+               			else if(treeNode.pid == DocListParentDocId) //srcParentId
+               			{
+               				DocList.deleteNode(treeNode.id);
+               			}
+                   		
+                	   	//moveNextDoc
+                	   	moveNextDoc();
+                	   	return;
                    }
                    else	//后台报错，结束移动
                    {
@@ -5187,7 +5200,7 @@ function CompareObj(objA, objB, flag) {
 	function addTreeNode(node,parentNode)
 	{
 		console.log("addTreeNode() node:",node);
-		console.lg("addTreeNode() parentNode",parentNode);
+		console.log("addTreeNode() parentNode",parentNode);
 		
 		var isParent = false;
 		if(node.type == 2)
@@ -5286,12 +5299,12 @@ function CompareObj(objA, objB, flag) {
                 else 
                 {
                 	console.log(ret.msgInfo);
-                	
+                	alert(ret.msgInfo);
                 	//Jump to index.html
                     //window.location.href = "index.html";
                     
                 	//Show Login Dialog
-                    showLoginPanel();
+                    //showLoginPanel();
                 }
             },
             error : function () {
