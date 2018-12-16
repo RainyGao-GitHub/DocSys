@@ -1579,17 +1579,8 @@
 			             },
 			             success : function (ret) {
 			             	if( "ok" == ret.status && ret.data.id){
-			             		if(ret.msgData == "isNewNode")
-			             		{
-			             			addTreeNode(nodeName,true,ret.data.id,tempParentNode);
-			             		}
-			             		else
-			             		{
-			             			//Dir Node exists, we just open the parentNode is ok
-			         				var treeObj = $.fn.zTree.getZTreeObj("doctree");
-			         				treeObj.expandNode(tempParentNode, true, false, true);
-			             		}
-
+			  					addTreeNode(ret.data,tempParentNode);
+			             		
 			             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
 			        		  	uploadDoc();
 			        		  	return;
@@ -1829,7 +1820,7 @@
 	             		{
 		                	if(SubContext.docId == -1) //文件新建成功
 			                {	
-			             		addTreeNode(name,false,ret.data,SubContext.realParentNode);
+			             		addTreeNode(ret.data,SubContext.realParentNode);
 			             		//set the docId so that We can open it 
 		             			SubContext.docId = ret.data.id;	                
 			                }
@@ -2170,7 +2161,7 @@
 		    					//All Chunk Uploaded, means file upload ok, 这里的逻辑是有问题的，因为没有ret
 		    		        	if(SubContext.docId == -1) //文件新建成功
 		    		            {	
-		    		         		addTreeNode(name,false,ret.data,SubContext.realParentNode);
+		    		         		addTreeNode(ret.data,SubContext.realParentNode);
 		    		         		//set the docId so that We can open it 
 		    		         		SubContext.docId = ret.data.id;
 		    						
@@ -2302,7 +2293,7 @@
 						
 	                	if(SubContext.docId == -1) //文件新建成功
 		                {	
-		             		addTreeNode(name,false,ret.data,SubContext.realParentNode);
+		             		addTreeNode(ret.data,SubContext.realParentNode);
 		             		//set the docId so that We can open it 
 		             		SubContext.docId = ret.data.id;
 							
@@ -3159,7 +3150,7 @@
                     	isParent = false;                    	
                     }
                     //Add zTreeNode
-             		addTreeNode(name,isParent,ret.data,parentNode);
+             		addTreeNode(ret.data,parentNode);
                     
              		// 普通消息提示条
 					bootstrapQ.msg({
@@ -3691,20 +3682,10 @@
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
-	                	console.log(ret.data);
-	                 	//后台复制成功，根据后台返回的docid,新建一个treeNode
-						var newNode = {name: ret.data.name,id : ret.data.id, pId: ret.data.pid, isParent: ret.data.type==2?true:false};
-	                 	var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						var NodeIndex =  -1;
-	          			treeObj.addNodes(parentNode,NodeIndex,newNode);
-	          			var newTreeNode = treeObj.getNodeByParam("id", ret.data.id,parentNode);
-	          			console.log(newTreeNode.name);          			
-
-	          			//后台将自动复制其子目录，因此前台不需要遍历复制其子目录
-	          			//if(doCopySubDocs(treeNode) == true)	//如果是parentNode,则获取其子目录
-	                    //{
-	          			//	return;
-	                    //}
+	                	console.log("copyDoc() ok:",ret.data);
+	                 	
+	                	//后台复制成功，根据后台返回的docid,新建一个treeNode
+	                	addTreeNode(ret.data,parentNode);	          			
 	          			
 	          			//复制下一个Doc
 	                    copyNextDoc();
@@ -5203,10 +5184,17 @@ function CompareObj(objA, objB, flag) {
     //Rename and Delete Implemenation End	
 
     //该接口是为了避免新增Node时触发的异步加载导致出现多个Node
-	function addTreeNode(nodeName,isParent,node,parentNode)
+	function addTreeNode(node,parentNode)
 	{
-		console.log("addTreeNode() nodeName:" + nodeName + " nodeId:" + node.id + " parentNode",parentNode);
 		console.log("addTreeNode() node:",node);
+		console.lg("addTreeNode() parentNode",parentNode);
+		
+		var isParent = false;
+		if(node.type == 2)
+		{
+			isParent = true;
+		}	
+		var nodeName = node.name;
 		
 		var parentDocId = 0;
 		if(parentNode != null)
