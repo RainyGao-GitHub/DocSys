@@ -1417,6 +1417,8 @@ public class DocController extends BaseController{
 			//set createTime
 			long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 			doc.setCreateTime(nowTimeStamp);
+			doc.setLatestEditTime(nowTimeStamp);
+			doc.setLatestEditor(login_user.getId());
 			doc.setState(2);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
 			long lockTime = nowTimeStamp + 24*60*60*1000;
@@ -1740,6 +1742,10 @@ public class DocController extends BaseController{
 		doc.setLockBy(0);	//
 		doc.setLockTime((long) 0);	//Set lockTime
 		doc.setCheckSum(checkSum);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		doc.setLatestEditTime(nowTimeStamp);
+		doc.setLatestEditor(login_user.getId());
 		if(reposService.updateDoc(doc) == 0)
 		{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
@@ -1823,6 +1829,10 @@ public class DocController extends BaseController{
 		Doc tempDoc = new Doc();
 		tempDoc.setId(docId);
 		tempDoc.setName(newname);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		tempDoc.setLatestEditTime(nowTimeStamp);
+		tempDoc.setLatestEditor(login_user.getId());
 		if(reposService.updateDoc(tempDoc) == 0)
 		{
 			rt.setError("不可恢复系统错误：Failed to update doc name");
@@ -1937,6 +1947,10 @@ public class DocController extends BaseController{
 		tempDoc.setId(docId);
 		tempDoc.setPath(dstParentPath);
 		tempDoc.setPid(dstPid);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		tempDoc.setLatestEditTime(nowTimeStamp);
+		tempDoc.setLatestEditor(login_user.getId());
 		if(reposService.updateDoc(tempDoc) == 0)
 		{
 			rt.setError("不可恢复系统错误：Failed to update doc pid and path");
@@ -2010,6 +2024,9 @@ public class DocController extends BaseController{
 			//set createTime
 			long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
 			doc.setCreateTime(nowTimeStamp);
+			//set lastEditTime
+			doc.setLatestEditTime(nowTimeStamp);
+			doc.setLatestEditor(login_user.getId());
 			doc.setState(2);	//doc的状态为不可用
 			doc.setLockBy(login_user.getId());	//set LockBy
 			long lockTime = nowTimeStamp + 24*60*60*1000;
