@@ -5539,7 +5539,12 @@ function CompareObj(objA, objB, flag) {
  	
  	function showContextMenu(obj,event){
  		event.stopPropagation();
-  		context.show('#secondList',event);
+ 		var xOffset = 0;
+ 		if(gIsPC == false)
+ 		{
+ 			xOffset = -120;	
+ 		}
+ 		context.show('#secondList',event,xOffset);
  	}
  	
  	function formatDate(date) {
