@@ -187,10 +187,17 @@
 	border-left: 6px solid transparent;
 	content: '';
 }
+.dropdown-context.offset:before,.dropdown-context.offset:after {
+	left:110px;
+}
+
 .dropdown-context-up:before, .dropdown-context-up:after {
 	top: auto;
 	bottom: -7px;
 	z-index: 9999;
+}
+.dropdown-context-up.offset:after {
+	left:110px;
 }
 .dropdown-context-up:before {
 	border-right: 7px solid transparent;
