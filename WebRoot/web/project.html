@@ -4026,7 +4026,7 @@
             			{
             				if(DocList.isNodeExists(treeNode.id) == false)
             				{
-            					DocList.addNode(treeNode.id,treeNode.type,treeNode.name,treeNode.createTime);
+            					DocList.addNode(treeNode.id,treeNode.type,treeNode.name,treeNode.latestEditTime);
             				}
             			}
                			else if(treeNode.pid == DocListParentDocId) //srcParentId
@@ -5253,7 +5253,7 @@ function CompareObj(objA, objB, flag) {
 		{
 			if(DocList.isNodeExists(node.id) == false)
 			{
-				DocList.addNode(node.id,node.type,nodeName,node.createTime);
+				DocList.addNode(node.id,node.type,nodeName,node.latestEditTime);
 			}
 		}
 	}
@@ -5373,11 +5373,11 @@ function CompareObj(objA, objB, flag) {
      	           var docName = data[i].name;
      	           if(data[i].state != 0)
      	           {
-     	        		str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+     	        		str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
      	           }
      	           else
      	           {
-     	           	   str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+     	           	   str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
      	           }	 
      	    }
            	$("#secondList").html(str);
@@ -5394,10 +5394,10 @@ function CompareObj(objA, objB, flag) {
 		}
     	
     	//Add Node
-		function addNode(docId,docType,docName,createTime)
+		function addNode(docId,docType,docName,latestEditTime)
 		{
 	        var iconType = docType===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-         	var nodeStr='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(createTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+         	var nodeStr='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
 			$("#secondList").append(nodeStr);
 		}
 
@@ -5422,8 +5422,8 @@ function CompareObj(objA, objB, flag) {
     		{
     			return isNodeExists(docId);	
     		},
-    		addNode: function(docId,docType,docName,createTime){
-        		addNode(docId,docType,docName,createTime);
+    		addNode: function(docId,docType,docName,latestEditTime){
+        		addNode(docId,docType,docName,latestEditTime);
             },
             deleteNode: function(docId){
             	deleteNode(docId);
