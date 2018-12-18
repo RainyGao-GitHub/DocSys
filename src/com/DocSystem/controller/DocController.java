@@ -113,8 +113,11 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		//Add Lucene Index For Vdoc
-		addIndexForVDoc(docId,content);
+		if("ok".equals(rt.getStatus()))
+		{
+			//Add Lucene Index For Vdoc
+			addIndexForVDoc(docId,content);
+		}
 	}
 	
 	//Add Index For VDoc
@@ -163,8 +166,11 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		//Add Lucene Index For Vdoc
-		addIndexForVDoc(docId,content);
+		if("ok".equals(rt.getStatus()))
+		{
+			//Add Lucene Index For Vdoc
+			addIndexForVDoc(docId,content);
+		}
 	}
 	
 	private Integer getReposIdForFeeback() {
@@ -230,13 +236,16 @@ public class DocController extends BaseController{
 		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);	
 		
-		//Delete Lucene index For Doc
-		try {
-			System.out.println("DeleteDoc() delete index in lucne: docId " + id);
-			LuceneUtil2.deleteIndexForDoc(id,"doc");
-		} catch (Exception e) {
-			System.out.println("DeleteDoc() Failed to delete lucene Index");
-			e.printStackTrace();
+		if("ok".equals(rt.getStatus()))
+		{
+			//Delete Lucene index For Doc
+			try {
+				System.out.println("DeleteDoc() delete index in lucne: docId " + id);
+				LuceneUtil2.deleteIndexForDoc(id,"doc");
+			} catch (Exception e) {
+				System.out.println("DeleteDoc() Failed to delete lucene Index");
+				e.printStackTrace();
+			}
 		}
 	}
 	/****************   Check a Document ******************/
@@ -246,12 +255,6 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
-		//if(login_user == null)
-		//{
-		//	rt.setError("用户未登录，请先登录！");
-		//	writeJson(rt, response);			
-		//	return;
-		//}
 		
 		if("".equals(checkSum))
 		{
@@ -291,18 +294,21 @@ public class DocController extends BaseController{
 				}
 				writeJson(rt, response);
 				
-				//Delete All Trunks if trunks have been combined
-				deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				if("ok".equals(rt.getStatus()))
+				{
+					//Update Index For RDoc
+					String parentPath = getParentPath(parentId);
+					String reposRPath = getReposRealPath(repos);
+					String localDocRPath = reposRPath + parentPath + name;
+					updatIndexForRDoc(docId, localDocRPath);
+					
+					//Delete All Trunks if trunks have been combined
+					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+				}
 				return;
 			}
 		}
 		writeJson(rt, response);
-		
-		//Update Index For RDoc
-		String parentPath = getParentPath(parentId);
-		String reposRPath = getReposRealPath(repos);
-		String localDocRPath = reposRPath + parentPath + name;
-		updatIndexForRDoc(docId, localDocRPath);
 	}
 	
 	private String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer cutSize, String chunkParentPath) {
@@ -595,14 +601,17 @@ public class DocController extends BaseController{
 			}
 			writeJson(rt, response);
 			
-			//Delete All Trunks if trunks have been combined
-			deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
-			
-			//UpdatIndexForRDoc
-			String parentPath = getParentPath(parentId);
-			String reposRPath = getReposRealPath(repos);
-			String localDocRPath = reposRPath + parentPath + name;
-			updatIndexForRDoc(docId,localDocRPath);
+			if("ok".equals(rt.getStatus()))
+			{
+				//UpdatIndexForRDoc
+				String parentPath = getParentPath(parentId);
+				String reposRPath = getReposRealPath(repos);
+				String localDocRPath = reposRPath + parentPath + name;
+				updatIndexForRDoc(docId,localDocRPath);
+				
+				//Delete All Trunks if trunks have been combined
+				deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
+			}
 			return;
 		}
 		else
@@ -866,19 +875,22 @@ public class DocController extends BaseController{
 		updateDocContent(id, content, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);
 		
-		//Delete tmp saved doc content
-		Repos repos = reposService.getRepos(doc.getVid());
-		String docVName = getDocVPath(doc);
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		delFileOrDir(userTmpDir+docVName);
-		
-		//Update Index For VDoc
-		try {
-			System.out.println("UpdateDocContent() updateIndexForVDoc in lucene: docId " + id);
-			LuceneUtil2.updateIndexForVDoc(id,content,"doc");
-		} catch (Exception e) {
-			System.out.println("UpdateDocContent() Failed to update lucene Index");
-			e.printStackTrace();
+		if("ok".equals(rt.getStatus()))
+		{
+			//Delete tmp saved doc content
+			Repos repos = reposService.getRepos(doc.getVid());
+			String docVName = getDocVPath(doc);
+			String userTmpDir = getReposUserTmpPath(repos,login_user);
+			delFileOrDir(userTmpDir+docVName);
+			
+			//Update Index For VDoc
+			try {
+				System.out.println("UpdateDocContent() updateIndexForVDoc in lucene: docId " + id);
+				LuceneUtil2.updateIndexForVDoc(id,content,"doc");
+			} catch (Exception e) {
+				System.out.println("UpdateDocContent() Failed to update lucene Index");
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -1509,7 +1521,7 @@ public class DocController extends BaseController{
 		}
 		
 		//启用doc
-		if(unlockDoc(doc.getId(),login_user) == false)
+		if(unlockDoc(doc.getId(),login_user,null) == false)
 		{
 			rt.setError("unlockDoc Failed");
 			//writeJson(rt, response);	
@@ -1571,7 +1583,7 @@ public class DocController extends BaseController{
 		{
 			String MsgInfo = "deleteRealDoc Failed";
 			rt.setError(parentPath + name + "删除失败！");
-			if(unlockDoc(docId,login_user) == false)
+			if(unlockDoc(docId,login_user,doc) == false)
 			{
 				MsgInfo += " and unlockDoc Failed";						
 			}
@@ -1589,7 +1601,7 @@ public class DocController extends BaseController{
 			{						
 				MsgInfo += " and revertFile Failed";
 			}
-			if(unlockDoc(docId,login_user) == false)
+			if(unlockDoc(docId,login_user,doc) == false)
 			{
 				MsgInfo += " and unlockDoc Failed";						
 			}
@@ -1656,7 +1668,6 @@ public class DocController extends BaseController{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
-		Integer preLockState = 0;
 		synchronized(syncLock)
 		{
 			//Try to lock the doc
@@ -1668,8 +1679,6 @@ public class DocController extends BaseController{
 				System.out.println("updateDoc() lockDoc " + docId +" Failed！");
 				return;
 			}
-			//doc retured by lockDoc is the docInfo before Lock
-			preLockState = doc.getState();
 			unlock(); //线程锁
 			
 		}
@@ -1701,7 +1710,7 @@ public class DocController extends BaseController{
 			//保存文件信息
 			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{
-				if(unlockDoc(docId,login_user) == false)
+				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					System.out.println("updateDoc() saveFile " + docId +" Failed and unlockDoc Failed");
 					rt.setError("Failed to saveMultipartFile " + name + " to " + reposRPath+parentPath);
@@ -1725,7 +1734,7 @@ public class DocController extends BaseController{
 					MsgInfo += " and revertFile Failed";
 				}
 				//还原doc记录的状态
-				if(unlockDoc(docId,login_user) == false)
+				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc Failed";						
 				}
@@ -1735,12 +1744,11 @@ public class DocController extends BaseController{
 		}
 		
 		
-		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
-		doc.setState(preLockState);	//Recover the lockState of Doc
-		doc.setLockBy(0);	//
-		doc.setLockTime((long) 0);	//Set lockTime
+		//doc.setState(preLockState);	//Recover the lockState of Doc
+		//doc.setLockBy(preLockBy);	//
+		//doc.setLockTime(preLockTime);	//Set lockTime
 		doc.setCheckSum(checkSum);
 		//set lastEditTime
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
@@ -1792,7 +1800,7 @@ public class DocController extends BaseController{
 		//修改实文件名字	
 		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname,doc.getType(),rt) == false)
 		{
-			if(unlockDoc(docId,login_user) == false)
+			if(unlockDoc(docId,login_user,doc) == false)
 			{
 				rt.setError(oldname + " renameRealDoc失败！ and unlockDoc " + docId +" Failed！");
 				return;
@@ -1816,7 +1824,7 @@ public class DocController extends BaseController{
 				{
 					MsgInfo += " and moveRealDoc Back Failed";
 				}
-				if(unlockDoc(docId,login_user) == false)
+				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc Failed";						
 				}
@@ -1840,7 +1848,7 @@ public class DocController extends BaseController{
 		}
 		
 		//unlock doc
-		if(unlockDoc(docId,login_user) == false)
+		if(unlockDoc(docId,login_user,doc) == false)
 		{
 			rt.setError("unlockDoc failed");	
 		}
@@ -1852,6 +1860,7 @@ public class DocController extends BaseController{
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
+		Doc dstPDoc = null;
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
@@ -1873,13 +1882,17 @@ public class DocController extends BaseController{
 			}
 			
 			//Try to lock dstPid
-			if(dstPid !=0 && lockDoc(dstPid,2,login_user,rt) == null)
+			if(dstPid !=0)
 			{
-				unlock(); //线程锁
+				dstPDoc = lockDoc(dstPid,2,login_user,rt);
+				if(dstPDoc== null)
+				{
+					unlock(); //线程锁
 	
-				System.out.println("moveDoc() fail to lock dstPid" + dstPid);
-				unlockDoc(docId,login_user);	//Try to unlock the doc
-				return;			
+					System.out.println("moveDoc() fail to lock dstPid" + dstPid);
+					unlockDoc(docId,login_user,doc);	//Try to unlock the doc
+					return;
+				}
 			}
 			unlock(); //线程锁
 		}
@@ -1907,11 +1920,11 @@ public class DocController extends BaseController{
 			{
 				String MsgInfo = "文件移动失败！";
 				System.out.println("moveDoc() 文件: " + filename + " 移动失败");
-				if(unlockDoc(docId,login_user) == false)
+				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc " + docId+ " failed ";
 				}
-				if(dstPid !=0 && unlockDoc(dstPid,login_user) == false)
+				if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
 				{
 					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 				}
@@ -1929,11 +1942,11 @@ public class DocController extends BaseController{
 					MsgInfo += "and changeDirectory Failed";
 				}
 				
-				if(unlockDoc(docId,login_user) == false)
+				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc " + docId+ " failed ";
 				}
-				if(dstPid !=0 && unlockDoc(dstPid,login_user) == false)
+				if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
 				{
 					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 				}
@@ -1959,11 +1972,11 @@ public class DocController extends BaseController{
 		
 		//Unlock Docs
 		String MsgInfo = null; 
-		if(unlockDoc(docId,login_user) == false)
+		if(unlockDoc(docId,login_user,doc) == false)
 		{
 			MsgInfo = "unlockDoc " + docId+ " failed ";
 		}
-		if(dstPid !=0 && unlockDoc(dstPid,login_user) == false)
+		if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
 		{
 			MsgInfo += " and unlockDoc " + dstPid+ " failed ";
 		}
@@ -2036,7 +2049,7 @@ public class DocController extends BaseController{
 				unlock(); //线程锁
 	
 				rt.setError("Add Node: " + dstName +" Failed！");
-				unlockDoc(docId,login_user);
+				unlockDoc(docId,login_user,null);
 				return;
 			}
 			unlock(); //线程锁
@@ -2055,7 +2068,7 @@ public class DocController extends BaseController{
 				System.out.println("Delete Node: " + doc.getId() +" failed!");
 				MsgInfo += " and delete Node Failed";
 			}
-			if(unlockDoc(docId,login_user) == false)
+			if(unlockDoc(docId,login_user,null) == false)
 			{
 				MsgInfo += " and unlock " + docId +" Failed";	
 			}
@@ -2090,7 +2103,7 @@ public class DocController extends BaseController{
 			{
 				MsgInfo += " and delete Node Failed";						
 			}
-			if(unlockDoc(docId,login_user) == false)
+			if(unlockDoc(docId,login_user,null) == false)
 			{
 				MsgInfo += " and unlock " + docId +" Failed";	
 			}
@@ -2120,12 +2133,12 @@ public class DocController extends BaseController{
 		
 		//启用doc
 		MsgInfo = null;
-		if(unlockDoc(doc.getId(),login_user) == false)
+		if(unlockDoc(doc.getId(),login_user,null) == false)
 		{	
 			MsgInfo ="unlockDoc " +doc.getId() + " Failed";;
 		}
 		//Unlock srcDoc 
-		if(unlockDoc(docId,login_user) == false)
+		if(unlockDoc(docId,login_user,null) == false)
 		{
 			MsgInfo += " and unlock " + docId +" Failed";	
 		}
@@ -2162,7 +2175,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			doc = lockDoc(id,3,login_user,rt);
+			doc = lockDoc(id,1,login_user,rt);
 			if(doc== null)
 			{
 				unlock(); //线程锁
@@ -2214,11 +2227,11 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//do not release the doc lock, doc lock will be released when user exit Edit on web page
-		//if(unlockDoc(id,login_user) == false)
-		//{
-		//	rt.setError("unlockDoc failed");	
-		//}		
+		
+		if(unlockDoc(id,login_user,doc) == false)
+		{
+			rt.setError("unlockDoc failed");	
+		}		
 	}
 	
 	/*********************Functions For DocLock *******************************/
@@ -2254,7 +2267,7 @@ public class DocController extends BaseController{
 		lockDoc.setState(lockType);	//doc的状态为不可用
 		lockDoc.setLockBy(login_user.getId());
 		long lockTime = new Date().getTime() + 24*60*60*1000;
-		doc.setLockTime(lockTime);	//Set lockTime
+		lockDoc.setLockTime(lockTime);	//Set lockTime
 		if(reposService.updateDoc(lockDoc) == 0)
 		{
 			rt.setError("lock Doc:" + docId +"[" + doc.getName() +"]  failed");
@@ -2373,7 +2386,7 @@ public class DocController extends BaseController{
 	
 
 	//Unlock Doc
-	private boolean unlockDoc(Integer docId, User login_user) {
+	private boolean unlockDoc(Integer docId, User login_user, Doc preLockInfo) {
 		Doc curDoc = reposService.getDocInfo(docId);
 		if(curDoc == null)
 		{
@@ -2390,12 +2403,22 @@ public class DocController extends BaseController{
 		Integer lockBy = curDoc.getLockBy();
 		if(lockBy != null && lockBy == login_user.getId())
 		{
-			//Try to unlock
 			Doc revertDoc = new Doc();
 			revertDoc.setId(docId);	
-			revertDoc.setState(0);	//
-			revertDoc.setLockBy(0);	//
-			revertDoc.setLockTime((long) 0);	//Set lockTime
+			
+			if(preLockInfo == null)	//Unlock
+			{
+				revertDoc.setState(0);	//
+				revertDoc.setLockBy(0);	//
+				revertDoc.setLockTime((long)0);	//Set lockTime
+			}
+			else	//Revert to preLockState
+			{
+				revertDoc.setState(preLockInfo.getState());	//
+				revertDoc.setLockBy(preLockInfo.getLockBy());	//
+				revertDoc.setLockTime(preLockInfo.getLockTime());	//Set lockTime
+			}
+			
 			if(reposService.updateDoc(revertDoc) == 0)
 			{
 				System.out.println("unlockDoc() updateDoc Failed!");
