@@ -4381,7 +4381,8 @@
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
-				    exitEditWiki(curDocId,newDocId);
+					$("[dataId='"+ curDocId +"']").children("div:first-child").css("color","black");
+					exitEditWiki(curDocId,newDocId);
 				    return;
  				}
 				else
@@ -4441,6 +4442,7 @@
 			success : function (ret) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
+					$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
 				    editWiki(docId);
 				    return;
  				}
