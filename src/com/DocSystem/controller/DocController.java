@@ -2282,18 +2282,15 @@ public class DocController extends BaseController{
 		int lockState = doc.getState();	//0: not locked 1: lock doc only 2: lock doc and subDocs 3: lock doc for online edit
 		if(lockState != 0)
 		{
-			if(lockState == 3)	//someone is online edit the doc
+			if(doc.getLockBy() == login_user.getId())	//locked by login_user
 			{
-				if(doc.getLockBy() == login_user.getId())	//locked by login_user
-				{
-					System.out.println("Doc: " + doc.getId() +" is online editing by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
-					return false;
-				}
+				System.out.println("Doc: " + doc.getId() +" was locked by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
+				return false;
 			}
 				
 			if(isLockOutOfDate(doc) == false)
 			{			
-				rt.setError("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked:" + doc.getState());
+				rt.setError("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy());
 				System.out.println("Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());;
 				return true;						
 			}
