@@ -1994,7 +1994,6 @@
 				SubContext.chunkIndex = 0;
 				SubContext.chunkNum = Math.ceil(SubContext.size / cutSize);
 				//Build ChunkList
-				SubContext.checkChunkFlag = true;
 				var chunkList = [];
 				for(i=0; i< SubContext.chunkNum; i++)
 				{
@@ -2107,15 +2106,9 @@
       		var name = SubContext.name;
 	  	 	console.log("checkChunkUploaded() for file:"+ name);
 	  	 	
-	  	 	if(SubContext.checkChunkFlag == false)
-	  	 	{
-	  	 		return true;
-	  	 	}
-	  	 	
    			var chunk = SubContext.chunkList[SubContext.chunkIndex];
 	  	 	if(0 != chunk.uploadedState)
 	  	 	{
-	  	 		SubContext.checkChunkFlag = false; //只要有一个 trunk不匹配，其他chunk都放弃
 	  	 		return true;
 	  	 	}
    			
