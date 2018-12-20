@@ -1,0 +1,13 @@
+{
+    "main" : {
+        "jdbc" : {
+            "class" : "com.mysql.jdbc.Driver",
+            "url" : "jdbc:mysql://172.16.18.189:3306/wiki&useUnicode=true&characterEncoding=UTF-8",
+            "user" : "root",
+            "password" : "******"
+        },
+        "aliasRule" : {
+            "tableAliasRule" : "wiki_"
+        }
+    }
+}
