@@ -213,8 +213,8 @@
          		</div>
         		<div class="filetitle" id="filetitle"></div>
         		<div style="position:absolute; right:5px; top:10px">
-        				<button id="btnViewDoc" class="btn btn-default" type="button" onclick="previewDoc()" style="display:none">预览
-	                    </button>
+        				<!-- <button id="btnViewDoc" class="btn btn-default" type="button" onclick="previewDoc()" style="display:none">预览
+	                    </button> -->
 	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
 	                   	</button>
 	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockAndEditWiki()" style="display:none">编辑
@@ -5770,14 +5770,14 @@ function CompareObj(objA, objB, flag) {
 	      	$("#btnExitEdit").show();
 	      	$("#btnSaveWiki").show();  
 	      	$("#btnEditWiki").hide();
-	      	$("#btnViewDoc").hide();
+	      	//$("#btnViewDoc").hide();
 	     }
 	     else
 	     {
 		    $("#btnExitEdit").hide();
 	      	$("#btnSaveWiki").hide(); 
 	      	$("#btnEditWiki").show();
-	      	$("#btnViewDoc").show();
+	      	//$("#btnViewDoc").show();
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
