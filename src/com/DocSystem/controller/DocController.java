@@ -41,6 +41,7 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.ReposServiceImpl;
+import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
@@ -76,7 +77,8 @@ import com.alibaba.fastjson.JSONObject;
 public class DocController extends BaseController{
 	@Autowired
 	private ReposServiceImpl reposService;
-	
+	@Autowired
+	private UserServiceImpl userService;
 	//线程锁
 	private static final Object syncLock = new Object(); 
 	
@@ -2289,9 +2291,10 @@ public class DocController extends BaseController{
 			}
 				
 			if(isLockOutOfDate(doc) == false)
-			{			
-				rt.setError("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy());
-				System.out.println("Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());;
+			{	
+				User lockBy = userService.getUser(doc.getLockBy());
+				rt.setError(doc.getName() +" was locked by " + lockBy.getName());
+				System.out.println("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy() + " lockState:"+ doc.getState());;
 				return true;						
 			}
 			else 
