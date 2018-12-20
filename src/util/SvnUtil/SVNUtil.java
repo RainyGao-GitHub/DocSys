@@ -181,7 +181,7 @@ public class SVNUtil {
                 }
                 log.setChangedItems(changedItemList);
             }
-            logList.add(log);
+            logList.add(0,log);	//add to the top
         }
         return logList;
     }
