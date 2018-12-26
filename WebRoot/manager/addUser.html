@@ -24,9 +24,12 @@
 	 	}  
 	}
 	
-	function addUser(){
+	function addUser(obj,event){
 		console.log("addUser()");
-
+		
+		//Disable the obj
+		$(obj).attr("disabled",true);
+		
 		var name = $("#name").val();
 	    var realName = $("#realName").val();
 	    var pwd =  $("#pwd").val();
@@ -45,6 +48,9 @@
                  pwd : MD5(pwd),
             },
             success : function (ret) {
+        		//Enable the obj
+        		$(obj).attr("disabled",false);
+
                 if( "ok" == ret.status ){
                 	showUserList();	//刷新UserList
                 	alert("新增成功");
@@ -53,6 +59,9 @@
                 }
             },
             error : function () {
+        		//Enable the obj
+        		$(obj).attr("disabled",false);
+
             	alert("服务器异常:新增失败");
             }
         });
@@ -103,7 +112,7 @@
                     <div class="form-group">
                       <!-- Buttons -->
                       <div class="col-lg-offset-9 col-lg-2">
-                        <button type="submit" class="btn btn-success" id="btn_addUser" onclick="addUser()">添加</button>
+                        <button type="submit" class="btn btn-success" id="btn_addUser" onclick="addUser(this,event)">添加</button>
                       </div>
                     </div>
                   </div>
