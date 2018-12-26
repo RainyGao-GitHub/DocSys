@@ -292,6 +292,46 @@
     </form>
 </div>
 
+<div id="doc-detail" style="display:none">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">文件名</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="name" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">大小</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="size" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">位置</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="position" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">创建时间</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="createTime" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">修改时间</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="latestEditTime" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	</div>
+</div>
+
 <div id="copyConflictConfirmDialog" style="display:none">
     <form class="form" onkeydown="if(event.keyCode==13)return false;">
         <div class="form-group">
@@ -578,7 +618,7 @@
 		}
 		window.location.href = "/DocSystem/Doc/doGet.do?id="+docId;
 	}
-		
+	
     /*文件上传实现*/
 	//文件上传入口
 	function uploadFiles(){
@@ -5099,7 +5139,7 @@ function CompareObj(objA, objB, flag) {
 	//获取Node的路径
 	function getNodePath(treeNode)
 	{
-		var remoteDir = gReposName+"::/";
+		var remoteDir = "/";
 		if(treeNode)
 		{
 			var nodes = treeNode.getPath();	//获取当前节点的所有父节
@@ -5557,6 +5597,18 @@ function CompareObj(objA, objB, flag) {
  		return year+"-"+month+"-"+date; 
  	}
  	
+ 	function formatTime(time){
+ 		var now = new Date(time);
+ 		var year=now.getFullYear(); 
+ 		var month=now.getMonth()+1;
+ 		var date=now.getDate(); 
+ 		var hh=now.getHours(); 
+ 		var mm=now.getMinutes(); 
+ 		var ss=now.getSeconds(); 
+ 		
+ 		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
+ 	}
+ 	
 	function showDoc()
 	{
 		console.log("showDoc gDocId:" + gDocId);
@@ -5844,7 +5896,7 @@ function CompareObj(objA, objB, flag) {
 		{
 			parentId = parentNode.id;
 		}
-		var remoteDir = getNodePath(parentNode); //only for display
+		var remoteDir = gReposName+ "::" + getNodePath(parentNode); //only for display
         
         //对话框 title
         var title = "新建文件";
@@ -5890,6 +5942,35 @@ function CompareObj(objA, objB, flag) {
               }
           });
    	}
+	
+	//显示文件详情
+	function showDocDetail(node){         
+        //对话框 title
+        var title = "详细信息";
+        
+        var parentNode = node.getParentNode();
+        var parentPath = getNodePath(parentNode);
+          
+        var createTime = formatTime(node.createTime);  
+        var lastEditTime = formatTime(node.latestEditTime);  
+        
+        //显示新建对话框
+        qiao.bs.dialog({
+              id: "dialog-doc-detail",
+              url: '#doc-detail',
+              title: title,
+              okbtn: "确定",
+              callback: function () {
+                      $("#dialog-doc-detail input[name='name']").val(node.name);
+                      $("#dialog-doc-detail input[name='size']").val(node.size);               
+                      $("#dialog-doc-detail input[name='position']").val(parentPath);                
+                      $("#dialog-doc-detail input[name='createTime']").val(createTime);                
+                      $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);                
+              }
+        },function(){
+        	return true;
+          });		
+	}	
     
     //ShowCenter: hide left and right
     function showCenterDiv(){
@@ -6303,6 +6384,16 @@ function CompareObj(objA, objB, flag) {
 						downloadDoc(id,name,true);
 					}
 			},
+			{text: '详细信息', action: function(e){
+					e.preventDefault();
+					if(curRightClickedTreeNode == null)
+					{
+						bootstrapQ.alert("请选择需要文件或目录");
+						return false;
+					}
+					showDocDetail(curRightClickedTreeNode);
+				}
+			},
 			{divider: true},
 			{text: '更多...', subMenu: [
 			           	{text: '复制名字', action: function(e){
@@ -6451,6 +6542,13 @@ function CompareObj(objA, objB, flag) {
 					var docId = curRightClickedDocListNode.docId;
 					var name = curRightClickedDocListNode.docName;
 					downloadDoc(docId,name,true);
+				}
+			},
+			{text: '详细信息', action: function(e){
+					e.preventDefault();
+					var docId = curRightClickedDocListNode.docId;
+					var node = getNodeByNodeId(docId);
+					showDocDetail(node);
 				}
 			},
 			{divider: true},
