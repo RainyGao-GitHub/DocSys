@@ -1715,12 +1715,12 @@ public class DocController extends BaseController{
 				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					System.out.println("updateDoc() saveFile " + docId +" Failed and unlockDoc Failed");
-					rt.setError("Failed to saveMultipartFile " + name + " to " + reposRPath+parentPath);
+					rt.setError("Failed to updateRealDoc " + name + " and unlock Doc");
 				}
 				else
 				{	
-					System.out.println("updateDoc() unlockDoc " + docId +" Failed");
-					rt.setError("Failed to unlockDoc " + docId + " " + doc.getName());
+					System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
+					rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
 				}
 				return;
 			}
