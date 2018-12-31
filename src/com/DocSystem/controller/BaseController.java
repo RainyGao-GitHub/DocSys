@@ -1084,9 +1084,8 @@ public class BaseController{
 		Properties props = new Properties();
 		String basePath = obj.getClass().getClassLoader().getResource("/").getPath();
 		File config = new File(basePath+"emailConfig.properties");
-		InputStream in;
 		try {
-			in = new FileInputStream(config);
+			InputStream in = new FileInputStream(config);
 			props.load(in);
 			String pValue = (String) props.get(pName);
 			return pValue;
@@ -1168,19 +1167,26 @@ public class BaseController{
         	}
         }
         
-        //Copy by Channel
-        FileInputStream in=new FileInputStream(srcFilePath);
-        FileOutputStream out=new FileOutputStream(dstFilePath);
-        FileChannel inputChannel = in.getChannel();    
-        FileChannel outputChannel = out.getChannel();   
-        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
-	   	inputChannel.close();
-	    outputChannel.close();
-	    in.close();
-	    out.close();
-        return true;
-        
-        /* copy by buffer
+        try {
+	        //Copy by Channel
+	        FileInputStream in=new FileInputStream(srcFilePath);
+	        FileOutputStream out=new FileOutputStream(dstFilePath);
+	        FileChannel inputChannel = in.getChannel();    
+	        FileChannel outputChannel = out.getChannel();   
+	        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+		   	inputChannel.close();
+		    outputChannel.close();
+		    in.close();
+		    out.close();
+	        return true;
+        }
+    	catch (Exception e) { 
+    		System.out.println("复制单个文件操作出错"); 
+    		e.printStackTrace(); 
+    	}
+    	return false;
+    	
+    	/* copy by buffer
         FileInputStream in=new FileInputStream(srcFilePath);
         FileOutputStream out=new FileOutputStream(dstFilePath);
         int c;
@@ -1634,12 +1640,16 @@ public class BaseController{
 		//解决空格问题
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 		
-		//创建输出流
-		OutputStream out = response.getOutputStream();
-		out.write(data, 0, data.length);		
-		//关闭输出流
-		out.close();	
-		
+		try {
+			//创建输出流
+			OutputStream out = response.getOutputStream();
+			out.write(data, 0, data.length);		
+			//关闭输出流
+			out.close();	
+		}catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("sendDataToWebPage() Exception");
+		}
 	}
 	
 	private int getLocalEntryType(String localParentPath, String entryName) {
@@ -1727,22 +1737,27 @@ public class BaseController{
 		
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 
-		//读取要下载的文件，保存到文件输入流
-		FileInputStream in = new FileInputStream(dstPath);
-		//创建输出流
-		OutputStream out = response.getOutputStream();
-		//创建缓冲区
-		byte buffer[] = new byte[1024];
-		int len = 0;
-		//循环将输入流中的内容读取到缓冲区当中
-		while((len=in.read(buffer))>0){
-			//输出缓冲区的内容到浏览器，实现文件下载
-			out.write(buffer, 0, len);
+		try {
+			//读取要下载的文件，保存到文件输入流
+			FileInputStream in = new FileInputStream(dstPath);
+			//创建输出流
+			OutputStream out = response.getOutputStream();
+			//创建缓冲区
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//循环将输入流中的内容读取到缓冲区当中
+			while((len=in.read(buffer))>0){
+				//输出缓冲区的内容到浏览器，实现文件下载
+				out.write(buffer, 0, len);
+			}
+			//关闭文件输入流
+			in.close();
+			//关闭输出流
+			out.close();
+		}catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("sendFileToWebPage() Exception");
 		}
-		//关闭文件输入流
-		in.close();
-		//关闭输出流
-		out.close();
 	}
 
 	private boolean doCompressDir(String srcParentPath, String dirName, String dstParentPath, String zipFileName,ReturnAjax rt) {
