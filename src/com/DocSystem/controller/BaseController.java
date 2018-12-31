@@ -630,7 +630,7 @@ public class BaseController{
 	}
 
 	protected List<Integer> getDocIdList(Integer docId,List<Integer> docIdList) {
-		if(docId == 0)
+		if(docId == null || docId == 0)
 		{
 			docIdList.add(0);
 			return docIdList;
