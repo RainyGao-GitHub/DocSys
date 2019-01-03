@@ -142,11 +142,11 @@
 	         				<span class="caret"></span>
 	         			</a>
 						<ul class="dropdown-menu" role="menu">
-							<li><a onclick="newDoc(1)">新建文件</a></li>
-							<li><a onclick="newDoc(2)">新建文件夹</a></li>
+							<li><a onclick="newDocEx(1)">新建文件</a></li>
+							<li><a onclick="newDocEx(2)">新建文件夹</a></li>
 							
-							<li><a onclick="uploadFiles();">上传文件</a></li>
-							<li><a onclick="uploadDir()">上传文件夹</a></li>
+							<li><a onclick="uploadFilesEx();">上传文件</a></li>
+							<li><a onclick="uploadDirEx()">上传文件夹</a></li>
 						</ul>
 	         		</div>
 	         	</div>
@@ -620,6 +620,20 @@
 	}
 	
     /*文件上传实现*/
+   	function uploadFilesEx()
+    {
+    	var node = getNodeByNodeId(gDocId);
+		gParentNodeForUpload = getParentNodeByNode(node);
+	    uploadFiles();
+    }
+    
+   	function uploadDirEx()
+    {
+    	var node = getNodeByNodeId(gDocId);
+		gParentNodeForUpload = getParentNodeByNode(node);
+	    uploadDir();
+    }
+    
 	//文件上传入口
 	function uploadFiles(){
 		console.log("uploadFiles() gParentNodeForUpload:",gParentNodeForUpload);
@@ -5886,6 +5900,13 @@ function CompareObj(objA, objB, flag) {
 		var node = getNodeByNodeId(nodeId);
      	var parentNode = getParentNodeByNode(node);
      	return getNodeIdByNode(parentNode);
+	}
+	
+	//add a new Doc
+	function newDocEx(type)
+	{
+		var parentNode = getParentNodeByNodeId(gDocId);
+		newDoc(type,parentNode);
 	}
 	
 	//add a new Doc: type 1: 文件  2:目录
