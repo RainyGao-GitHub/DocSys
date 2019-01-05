@@ -306,6 +306,13 @@ public class LuceneUtil2 {
 	public static void addIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
 		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + filePath + " indexLib:" + indexLib);
 		
+		File file =new File(filePath);
+		if(file.length() == 0)
+		{
+			System.out.println("addIndexForRDoc() file  size is 0");
+			return;
+		}
+	
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
 		String fileSuffix = FileUtils2.getFileSuffix(filePath);
 		if(fileSuffix != null)
@@ -397,220 +404,229 @@ public class LuceneUtil2 {
 	}
 
 	private static boolean addIndexForWord(Integer docId, String filePath, String indexLib) throws Exception{
-    	StringBuffer content = new StringBuffer("");// 文档内容
-    	HWPFDocument doc;
-    	FileInputStream fis = new FileInputStream(filePath);
+		try {
+			
+			StringBuffer content = new StringBuffer("");// 文档内容
+	    	HWPFDocument doc;
+	    	FileInputStream fis = new FileInputStream(filePath);
     	
-    	try {
-			doc = new HWPFDocument(fis);
-    	} catch (Exception e) {
+    		doc = new HWPFDocument(fis);
+
+    		Range range = doc.getRange();
+    	    int paragraphCount = range.numParagraphs();// 段落
+    	    for (int i = 0; i < paragraphCount; i++) {// 遍历段落读取数据
+    	    	Paragraph pp = range.getParagraph(i);
+    	    	content.append(pp.text());
+    	    }
+    		doc.close();
+    	    fis.close();
+    		
+    	    addIndex(generateRDocId(docId,0),docId,content.toString().trim(),indexLib);
+		} catch (Exception e) {
     		e.printStackTrace();
     		return false;
     	}
-		
-    	Range range = doc.getRange();
-	    int paragraphCount = range.numParagraphs();// 段落
-	    for (int i = 0; i < paragraphCount; i++) {// 遍历段落读取数据
-	    	Paragraph pp = range.getParagraph(i);
-	    	content.append(pp.text());
-	    }
-		doc.close();
-	    fis.close();
-		
-	    addIndex(generateRDocId(docId,0),docId,content.toString().trim(),indexLib);
-
     	return true;		
 	}
 
 	private static boolean addIndexForWord2007(Integer docId, String filePath, String indexLib) throws Exception {
-    	File file = new File(filePath);
-    	String str = "";
-    	FileInputStream fis = new FileInputStream(file);
-    	XWPFDocument xdoc;
+		try {
+	    	
+			File file = new File(filePath);
+	    	String str = "";
+	    	FileInputStream fis = new FileInputStream(file);
+	    	XWPFDocument xdoc;
     	
-    	try {
     		xdoc = new XWPFDocument(fis);
-    	} catch (Exception e) {
+    		
+        	XWPFWordExtractor extractor = new XWPFWordExtractor(xdoc);
+        	str = extractor.getText();
+
+        	xdoc.close();
+        	fis.close();
+        	
+        	addIndex(generateRDocId(docId,0),docId,str,indexLib);
+		} catch (Exception e) {
 			e.printStackTrace();
 		 return false;
 		}
-    	
-    	XWPFWordExtractor extractor = new XWPFWordExtractor(xdoc);
-    	str = extractor.getText();
-    	xdoc.close();
-    	fis.close();
-    	
-    	addIndex(generateRDocId(docId,0),docId,str,indexLib);
     	return true;
 	}
 
 	private static boolean addIndexForExcel(Integer docId, String filePath, String indexLib) throws Exception {
-        InputStream is = new FileInputStream(filePath);  
-        String text="";  
-        HSSFWorkbook wb = null;  
         try {  
+	
+			InputStream is = new FileInputStream(filePath);  
+	        String text="";  
+	        HSSFWorkbook wb = null;  
             wb = new HSSFWorkbook(new POIFSFileSystem(is));  
+
+            ExcelExtractor extractor=new ExcelExtractor(wb);  
+            extractor.setFormulasNotResults(false);  
+            extractor.setIncludeSheetNames(true);  
+            text=extractor.getText();  
+            
+            extractor.close();
+            wb.close();
+            is.close();
+              
+            addIndex(generateRDocId(docId,0),docId,text,indexLib);
+
         } catch(Exception e)
         {
             e.printStackTrace();
             return false;
         }
         
-        ExcelExtractor extractor=new ExcelExtractor(wb);  
-        extractor.setFormulasNotResults(false);  
-        extractor.setIncludeSheetNames(true);  
-        text=extractor.getText();  
-        extractor.close();
-        wb.close();
-        is.close();
-          
-        addIndex(generateRDocId(docId,0),docId,text,indexLib);
         return true;
 	}
 
 	private static boolean addIndexForExcel2007(Integer docId, String filePath, String indexLib) throws Exception {
-        InputStream is = new FileInputStream(filePath);
-        XSSFWorkbook workBook = null;  
-        String text="";  
-        try {  
+		try {  
+	        InputStream is = new FileInputStream(filePath);
+	        XSSFWorkbook workBook = null;  
+	        String text="";  
         	workBook = new XSSFWorkbook(is);  
-        } catch (Exception e) {  
+            XSSFExcelExtractor extractor=new XSSFExcelExtractor(workBook);  
+            text=extractor.getText();  
+
+            extractor.close();
+            workBook.close();
+            is.close();
+             
+            addIndex(generateRDocId(docId,0),docId,text,indexLib);
+		} catch (Exception e) {  
         	e.printStackTrace();  
         	return false;
-        }
-       
-        XSSFExcelExtractor extractor=new XSSFExcelExtractor(workBook);  
-        text=extractor.getText();  
-        extractor.close();
-        workBook.close();
-        is.close();
-         
-        addIndex(generateRDocId(docId,0),docId,text,indexLib);
+        }       
         return true;
 	}
 
 
 
 	private static boolean addIndexForPPT(Integer docId, String filePath, String indexLib) throws Exception {
-        InputStream is = new FileInputStream(filePath);
-        PowerPointExtractor extractor = null;  
-        String text="";  
-        try {
+		try {
+			InputStream is = new FileInputStream(filePath);
+	        PowerPointExtractor extractor = null;  
+	        String text="";  
             extractor = new PowerPointExtractor(is);  
-        } catch (Exception e) {  
+            text=extractor.getText();  
+            
+            extractor.close();
+            is.close();            
+            
+            addIndex(generateRDocId(docId,0),docId,text,indexLib);
+		} catch (Exception e) {  
             e.printStackTrace(); 
-            is.close();
             return false;
-        }  
-        
-        text=extractor.getText();  
-        extractor.close();
-        is.close();
-        
-        addIndex(generateRDocId(docId,0),docId,text,indexLib);
+        }          
 		return true;
 	}
 
 	private static boolean addIndexForPPT2007(Integer docId, String filePath, String indexLib) throws Exception {
-        InputStream is = new FileInputStream(filePath); 
-        XMLSlideShow slide = null;  
-        String text="";  
         try {  
-            slide = new XMLSlideShow(is);
+			InputStream is = new FileInputStream(filePath); 
+	        String text="";  
+	        XMLSlideShow slide = new XMLSlideShow(is);
+            XSLFPowerPointExtractor extractor=new XSLFPowerPointExtractor(slide);  
+            text=extractor.getText();  
+            
+            extractor.close();  
+            is.close();
+            
+            addIndex(generateRDocId(docId,0),docId,text,indexLib);
         } catch (Exception e) {  
             e.printStackTrace(); 
-            is.close();
             return false;
         }
-        
-        XSLFPowerPointExtractor extractor=new XSLFPowerPointExtractor(slide);  
-        text=extractor.getText();  
-        extractor.close();  
-        is.close();
-        
-        addIndex(generateRDocId(docId,0),docId,text,indexLib);
         return true;
 	}
 	
 	private static boolean addIndexForPdf(Integer docId, String filePath, String indexLib) throws Exception {
 		File pdfFile=new File(filePath);
-		PDDocument document = null;
 		String content = "";
 		try
 		{
-	       document=PDDocument.load(pdfFile);
-	       int pages = document.getNumberOfPages();
-	       // 读文本内容
-	       PDFTextStripper stripper=new PDFTextStripper();
-	       // 设置按顺序输出
-	       stripper.setSortByPosition(true);
-	       stripper.setStartPage(1);
-	       stripper.setEndPage(pages);
-	       content = stripper.getText(document);
-	       System.out.println(content);     
+			PDDocument document=PDDocument.load(pdfFile);
+			int pages = document.getNumberOfPages();
+			// 读文本内容
+			PDFTextStripper stripper=new PDFTextStripper();
+			// 设置按顺序输出
+			stripper.setSortByPosition(true);
+			stripper.setStartPage(1);
+			stripper.setEndPage(pages);
+			content = stripper.getText(document);
+			document.close();
+			System.out.println(content);     
+			
+			addIndex(generateRDocId(docId,0),docId,content,indexLib);
 	   }
 	   catch(Exception e)
 	   {
 	       e.printStackTrace();
 	       return false;
 	   }
-	   addIndex(generateRDocId(docId,0),docId,content,indexLib);
 	   return true;
 	}
 
-	private static void addIndexForFile(Integer docId, String filePath, String indexLib) throws Exception {
-		int lineCount = 0;
-		int totalLine = 0;
-		
-		int bufSize = 0;
-		int totalSize = 0;
-		
-		int chunkIndex = 0;
-		
-		StringBuffer buffer = new StringBuffer();
-		String code = FileUtils2.getFileEncode(filePath);
-		if(FileUtils2.isBinaryFile(code) == true)
-		{
-			System.out.println("addIndexForFile() BinaryFile will not add Index");
-			return;
-		}
-		
-		InputStream is = new FileInputStream(filePath);
-		String line; // 用来保存每行读取的内容
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
-		line = reader.readLine(); // 读取第一行
-		while (line != null) { // 如果 line 为空说明读完了
-			buffer.append(line); // 将读到的内容添加到 buffer 中
-			buffer.append("\n"); // 添加换行符
-			line = reader.readLine(); // 读取下一行
+	private static boolean addIndexForFile(Integer docId, String filePath, String indexLib) throws Exception {
+		try {
+			int lineCount = 0;
+			int totalLine = 0;
 			
-			totalLine ++;
-			lineCount ++;
+			int bufSize = 0;
+			int totalSize = 0;
 			
-			bufSize = buffer.length();
-			totalSize += bufSize;
-			if(bufSize >= 10485760)	//10MByte
+			int chunkIndex = 0;
+			
+			StringBuffer buffer = new StringBuffer();
+			String code = FileUtils2.getFileEncode(filePath);
+			if(FileUtils2.isBinaryFile(code) == true)
+			{
+				System.out.println("addIndexForFile() BinaryFile will not add Index");
+				return true;
+			}
+			
+			InputStream is = new FileInputStream(filePath);
+			String line; // 用来保存每行读取的内容
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
+			line = reader.readLine(); // 读取第一行
+			while (line != null) { // 如果 line 为空说明读完了
+				buffer.append(line); // 将读到的内容添加到 buffer 中
+				buffer.append("\n"); // 添加换行符
+				line = reader.readLine(); // 读取下一行
+				
+				totalLine ++;
+				lineCount ++;
+				
+				bufSize = buffer.length();
+				totalSize += bufSize;
+				if(bufSize >= 10485760)	//10MByte
+				{
+					addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),indexLib);
+					chunkIndex ++;
+					System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
+					//Clear StringBuffer
+					lineCount  = 0;
+					bufSize = 0;
+					buffer = new StringBuffer();
+				}
+		    }
+			if(bufSize > 0)
 			{
 				addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),indexLib);
 				chunkIndex ++;
 				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
-				//Clear StringBuffer
-				lineCount  = 0;
-				bufSize = 0;
-				buffer = new StringBuffer();
 			}
-	    }
-		if(bufSize > 0)
-		{
-			addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),indexLib);
-			chunkIndex ++;
-			System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
+			
+		    reader.close();
+		    is.close();
+			System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
+		} catch(Exception e){
+		       e.printStackTrace();
+		       return false;
 		}
-		
-	    reader.close();
-	    is.close();
-		System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
-		
+		return true;
 	}
 
 	//Update Index For RDoc
@@ -651,18 +667,23 @@ public class LuceneUtil2 {
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
 	{
-		String code = getFileEncode(filePath);
-		InputStream is = new FileInputStream(filePath);
-		String line; // 用来保存每行读取的内容
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
-		line = reader.readLine(); // 读取第一行
-		while (line != null) { // 如果 line 为空说明读完了
-			buffer.append(line); // 将读到的内容添加到 buffer 中
-			buffer.append("\n"); // 添加换行符
-			line = reader.readLine(); // 读取下一行
-	    }
-	    reader.close();
-	    is.close();
+		try {
+			
+			String code = getFileEncode(filePath);
+			InputStream is = new FileInputStream(filePath);
+			String line; // 用来保存每行读取的内容
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
+			line = reader.readLine(); // 读取第一行
+			while (line != null) { // 如果 line 为空说明读完了
+				buffer.append(line); // 将读到的内容添加到 buffer 中
+				buffer.append("\n"); // 添加换行符
+				line = reader.readLine(); // 读取下一行
+		    }
+		    reader.close();
+		    is.close();
+		} catch(Exception e){
+		       e.printStackTrace();
+		}		
 	}
 	
 	/**
