@@ -1141,6 +1141,7 @@ public class BaseController{
     					fs.write(buffer, 0, byteread); 
     				} 
     				inStream.close();
+    				fs.close();
     				return true;
     		} 
     	} 

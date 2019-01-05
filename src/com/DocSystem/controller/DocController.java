@@ -371,10 +371,10 @@ public class DocController extends BaseController{
 		}
 
 		//Check if chunkHash is same
-		FileInputStream file;
 		try {
-			file = new FileInputStream(chunkFilePath);
+			FileInputStream file = new FileInputStream(chunkFilePath);
 			String hash=DigestUtils.md5Hex(file);
+			file.close();
 			if(hash.equals(chunkHash))
 			{
 				return true;
