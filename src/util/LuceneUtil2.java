@@ -106,17 +106,17 @@ public class LuceneUtil2 {
      * @param id: lucence document id
      * @param docId:  docId of DocSys 
      * @param content: 文件内容或markdown文件内容 
-     * @param type: 索引库名字
+     * @param indexLib: 索引库名字
      */
     @SuppressWarnings("deprecation")
-	public static void addIndex(String id,Integer docId, String content,String type) throws Exception {
+	public static void addIndex(String id,Integer docId, String content,String indexLib) throws Exception {
     	
-    	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
+    	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("addIndex() content:" + content);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ type));
+        directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
                 Version.LUCENE_CURRENT, analyzer);
@@ -140,17 +140,17 @@ public class LuceneUtil2 {
      * @param id: lucence document id
      * @param docId:  docId of DocSys 
      * @param content: 文件内容或markdown文件内容 
-     * @param type: 索引库名字
+     * @param indexLib: 索引库名字
      */
     @SuppressWarnings("deprecation")
-	public static void updateIndex(String id,Integer docId,String content,String type) throws Exception {
+	public static void updateIndex(String id,Integer docId,String content,String indexLib) throws Exception {
 
-    	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+type);
+    	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	System.out.println("updateIndex() content:" + content);
     	
     	Date date1 = new Date();
         analyzer = new IKAnalyzer();
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator + type));
+        directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
                 Version.LUCENE_CURRENT, analyzer);
@@ -175,10 +175,10 @@ public class LuceneUtil2 {
      * @throws Exception
      */
     @SuppressWarnings("deprecation")
-	public static void deleteIndex(String id,String type) throws Exception {
-    	System.out.println("deleteIndex() id:" + id + " indexLib:"+type);
+	public static void deleteIndex(String id,String indexLib) throws Exception {
+    	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
         Date date1 = new Date();
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator + type));
+        directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
                 Version.LUCENE_CURRENT, null);
@@ -195,11 +195,11 @@ public class LuceneUtil2 {
     /**
      * 	关键字精确查询,返回docId List
      * @param str: 关键字
-     * @param type: 索引库名字
+     * @param indexLib: 索引库名字
      */
     @SuppressWarnings("deprecation")
-	public static List<String> search(String str,String type) throws Exception {
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +type));
+	public static List<String> search(String str,String indexLib) throws Exception {
+        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
         analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
@@ -227,10 +227,10 @@ public class LuceneUtil2 {
     /**
      * 	关键字模糊查询， 返回docId List
      * @param str: 关键字
-     * @param type: 索引库名字
+     * @param indexLib: 索引库名字
      */
-	public static List<String> fuzzySearch(String str,String type) throws Exception {
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +type));
+	public static List<String> fuzzySearch(String str,String indexLib) throws Exception {
+        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
         analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
@@ -258,11 +258,11 @@ public class LuceneUtil2 {
 	 * 	根据docId查询idList，返回idList
      * 
      * @param docId: DocSys doc id
-     * @param type: 索引库名字
+     * @param indexLib: 索引库名字
      */
-    public static List<String> getIdListForDoc(Integer docId,String type) throws Exception {
-    	System.out.println("getIdListForDoc() docId:" + docId + " type:" + type);
-    	directory = FSDirectory.open(new File(INDEX_DIR + File.separator +type));
+    public static List<String> getIdListForDoc(Integer docId,String indexLib) throws Exception {
+    	System.out.println("getIdListForDoc() docId:" + docId + " indexLib:" + indexLib);
+    	directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
         analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
@@ -282,29 +282,29 @@ public class LuceneUtil2 {
     }
 
     //Delete All Index For Doc
-	public static void deleteIndexForDoc(Integer docId, String type) throws Exception {
-		System.out.println("deleteIndexForDoc() docId:" + docId + " type:" + type);
-		List<String> res = getIdListForDoc(docId, type);
+	public static void deleteIndexForDoc(Integer docId, String indexLib) throws Exception {
+		System.out.println("deleteIndexForDoc() docId:" + docId + " indexLib:" + indexLib);
+		List<String> res = getIdListForDoc(docId, indexLib);
 		for(int i=0;i < res.size(); i++)
 		{
-			deleteIndex(res.get(i),type);
+			deleteIndex(res.get(i),indexLib);
 		}
 	}
 	
 	//Delete Indexs For Real Doc
-	public static void deleteIndexForRDoc(Integer docId, String type) throws Exception {
-		System.out.println("deleteIndexForRDoc() docId:" + docId + " type:" + type);
-		List<String> res = getIdListForDoc(docId, type);
+	public static void deleteIndexForRDoc(Integer docId, String indexLib) throws Exception {
+		System.out.println("deleteIndexForRDoc() docId:" + docId + " indexLib:" + indexLib);
+		List<String> res = getIdListForDoc(docId, indexLib);
 		for(int i=0;i < res.size(); i++)
 		{
-			deleteIndex(generateRDocId(docId,i), type);
+			deleteIndex(generateRDocId(docId,i), indexLib);
 		}
 	}
 	
 	
 	//Add Index For RDoc
-	public static void addIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
-		System.out.println("addIndexForRDoc() docId:" + docId + " type:" + type + " filePath:" + filePath);
+	public static void addIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
+		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + filePath + " indexLib:" + indexLib);
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
 		String fileSuffix = FileUtils2.getFileSuffix(filePath);
@@ -313,43 +313,43 @@ public class LuceneUtil2 {
 			switch(fileSuffix)
 			{
 			case "doc":
-				if(false == addIndexForWord(docId,filePath,type))
+				if(false == addIndexForWord(docId,filePath,indexLib))
 				{
-					addIndexForWord2007(docId,filePath,type);	//避免有人乱改后缀
+					addIndexForWord2007(docId,filePath,indexLib);	//避免有人乱改后缀
 				}
 				return;
 			case "docx":
-				if(false == addIndexForWord2007(docId,filePath,type))
+				if(false == addIndexForWord2007(docId,filePath,indexLib))
 				{
-					addIndexForWord(docId,filePath,type);
+					addIndexForWord(docId,filePath,indexLib);
 				}
 				return;
 			case "xls":
-				if(false == addIndexForExcel(docId,filePath,type))
+				if(false == addIndexForExcel(docId,filePath,indexLib))
 				{
-					addIndexForExcel2007(docId,filePath,type);					
+					addIndexForExcel2007(docId,filePath,indexLib);					
 				}
 				return;
 			case "xlsx":
-				if(false == addIndexForExcel2007(docId,filePath,type))
+				if(false == addIndexForExcel2007(docId,filePath,indexLib))
 				{
-					addIndexForExcel(docId,filePath,type);
+					addIndexForExcel(docId,filePath,indexLib);
 				}
 				return;
 			case "ppt":
-				if(false == addIndexForPPT(docId,filePath,type))
+				if(false == addIndexForPPT(docId,filePath,indexLib))
 				{
-					addIndexForPPT2007(docId,filePath,type);
+					addIndexForPPT2007(docId,filePath,indexLib);
 				}
 				return;
 			case "pptx":
-				if(false == addIndexForPPT2007(docId,filePath,type))
+				if(false == addIndexForPPT2007(docId,filePath,indexLib))
 				{
-					addIndexForPPT(docId,filePath,type);
+					addIndexForPPT(docId,filePath,indexLib);
 				}
 				return;
 			case "pdf":
-				addIndexForPdf(docId,filePath,type);
+				addIndexForPdf(docId,filePath,indexLib);
 				return;
 			}
 		}
@@ -365,38 +365,38 @@ public class LuceneUtil2 {
 			case "doc":
 				if(fm == FileMagic.OLE2)
 				{
-					addIndexForWord(docId,filePath,type);
+					addIndexForWord(docId,filePath,indexLib);
 					return;
 				}
 				else
 				{
-					addIndexForExcel(docId,filePath,type);
+					addIndexForExcel(docId,filePath,indexLib);
 					return;
 				}
 			case "docx":
 				if(fm == FileMagic.WORD2)
 				{
-					addIndexForWord2007(docId,filePath,type);
+					addIndexForWord2007(docId,filePath,indexLib);
 					return;
 				}
 				else
 				{
-					addIndexForExcel2007(docId,filePath,type);
+					addIndexForExcel2007(docId,filePath,indexLib);
 					return;
 				}
 			case "pdf":
-				addIndexForPdf(docId,filePath,type);
+				addIndexForPdf(docId,filePath,indexLib);
 				return;
 			default:
-				addIndexForFile(docId,filePath,type);
+				addIndexForFile(docId,filePath,indexLib);
 				return;
 			}
 		}
 		
-		addIndexForFile(docId,filePath,type);
+		addIndexForFile(docId,filePath,indexLib);
 	}
 
-	private static boolean addIndexForWord(Integer docId, String filePath, String type) throws Exception{
+	private static boolean addIndexForWord(Integer docId, String filePath, String indexLib) throws Exception{
     	StringBuffer content = new StringBuffer("");// 文档内容
     	HWPFDocument doc;
     	FileInputStream fis = new FileInputStream(filePath);
@@ -417,12 +417,12 @@ public class LuceneUtil2 {
 		doc.close();
 	    fis.close();
 		
-	    addIndex(generateRDocId(docId,0),docId,content.toString().trim(),type);
+	    addIndex(generateRDocId(docId,0),docId,content.toString().trim(),indexLib);
 
     	return true;		
 	}
 
-	private static boolean addIndexForWord2007(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForWord2007(Integer docId, String filePath, String indexLib) throws Exception {
     	File file = new File(filePath);
     	String str = "";
     	FileInputStream fis = new FileInputStream(file);
@@ -440,11 +440,11 @@ public class LuceneUtil2 {
     	xdoc.close();
     	fis.close();
     	
-    	addIndex(generateRDocId(docId,0),docId,str,type);
+    	addIndex(generateRDocId(docId,0),docId,str,indexLib);
     	return true;
 	}
 
-	private static boolean addIndexForExcel(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForExcel(Integer docId, String filePath, String indexLib) throws Exception {
         InputStream is = new FileInputStream(filePath);  
         String text="";  
         HSSFWorkbook wb = null;  
@@ -464,11 +464,11 @@ public class LuceneUtil2 {
         wb.close();
         is.close();
           
-        addIndex(generateRDocId(docId,0),docId,text,type);
+        addIndex(generateRDocId(docId,0),docId,text,indexLib);
         return true;
 	}
 
-	private static boolean addIndexForExcel2007(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForExcel2007(Integer docId, String filePath, String indexLib) throws Exception {
         InputStream is = new FileInputStream(filePath);
         XSSFWorkbook workBook = null;  
         String text="";  
@@ -485,13 +485,13 @@ public class LuceneUtil2 {
         workBook.close();
         is.close();
          
-        addIndex(generateRDocId(docId,0),docId,text,type);
+        addIndex(generateRDocId(docId,0),docId,text,indexLib);
         return true;
 	}
 
 
 
-	private static boolean addIndexForPPT(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForPPT(Integer docId, String filePath, String indexLib) throws Exception {
         InputStream is = new FileInputStream(filePath);
         PowerPointExtractor extractor = null;  
         String text="";  
@@ -507,11 +507,11 @@ public class LuceneUtil2 {
         extractor.close();
         is.close();
         
-        addIndex(generateRDocId(docId,0),docId,text,type);
+        addIndex(generateRDocId(docId,0),docId,text,indexLib);
 		return true;
 	}
 
-	private static boolean addIndexForPPT2007(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForPPT2007(Integer docId, String filePath, String indexLib) throws Exception {
         InputStream is = new FileInputStream(filePath); 
         XMLSlideShow slide = null;  
         String text="";  
@@ -528,11 +528,11 @@ public class LuceneUtil2 {
         extractor.close();  
         is.close();
         
-        addIndex(generateRDocId(docId,0),docId,text,type);
+        addIndex(generateRDocId(docId,0),docId,text,indexLib);
         return true;
 	}
 	
-	private static boolean addIndexForPdf(Integer docId, String filePath, String type) throws Exception {
+	private static boolean addIndexForPdf(Integer docId, String filePath, String indexLib) throws Exception {
 		File pdfFile=new File(filePath);
 		PDDocument document = null;
 		String content = "";
@@ -554,11 +554,11 @@ public class LuceneUtil2 {
 	       e.printStackTrace();
 	       return false;
 	   }
-	   addIndex(generateRDocId(docId,0),docId,content,type);
+	   addIndex(generateRDocId(docId,0),docId,content,indexLib);
 	   return true;
 	}
 
-	private static void addIndexForFile(Integer docId, String filePath, String type) throws Exception {
+	private static void addIndexForFile(Integer docId, String filePath, String indexLib) throws Exception {
 		int lineCount = 0;
 		int totalLine = 0;
 		
@@ -591,7 +591,7 @@ public class LuceneUtil2 {
 			totalSize += bufSize;
 			if(bufSize >= 10485760)	//10MByte
 			{
-				addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),type);
+				addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),indexLib);
 				chunkIndex ++;
 				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 				//Clear StringBuffer
@@ -602,7 +602,7 @@ public class LuceneUtil2 {
 	    }
 		if(bufSize > 0)
 		{
-			addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),type);
+			addIndex(generateRDocId(docId,chunkIndex),docId,buffer.toString(),indexLib);
 			chunkIndex ++;
 			System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 		}
@@ -614,29 +614,29 @@ public class LuceneUtil2 {
 	}
 
 	//Update Index For RDoc
-	public static void updateIndexForRDoc(Integer docId, String filePath, String type) throws Exception {
-		System.out.println("updateIndexForRDoc() docId:" + docId + " type:" + type + " filePath:" + filePath);
-		deleteIndexForRDoc(docId,type);
-		addIndexForRDoc(docId,filePath,type);
+	public static void updateIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
+		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
+		deleteIndexForRDoc(docId,indexLib);
+		addIndexForRDoc(docId,filePath,indexLib);
 	}
 	
 	
 	//Delete Indexs For Virtual Doc
-	public static void deleteIndexForVDoc(Integer docId, String type) throws Exception {
-		System.out.println("deleteIndexForVDoc() docId:" + docId + " type:" + type);
-		deleteIndex(generateVDocId(docId,0), type);
+	public static void deleteIndexForVDoc(Integer docId, String indexLib) throws Exception {
+		System.out.println("deleteIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
+		deleteIndex(generateVDocId(docId,0), indexLib);
 	}
 
 	//Add Index For VDoc
-	public static void addIndexForVDoc(Integer docId, String content, String type) throws Exception {
-		System.out.println("addIndexForVDoc() docId:" + docId + " type:" + type);
-		addIndex(generateVDocId(docId,0),docId,content,type);
+	public static void addIndexForVDoc(Integer docId, String content, String indexLib) throws Exception {
+		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
+		addIndex(generateVDocId(docId,0),docId,content,indexLib);
 	}
 		
 	//Update Index For RDoc
-	public static void updateIndexForVDoc(Integer docId, String content, String type) throws Exception {
-		System.out.println("updateIndexForVDoc() docId:" + docId + " type:" + type);
-		updateIndex(generateVDocId(docId,0),docId,content,type);
+	public static void updateIndexForVDoc(Integer docId, String content, String indexLib) throws Exception {
+		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
+		updateIndex(generateVDocId(docId,0),docId,content,indexLib);
 	}
 	
 	private static String generateVDocId(Integer docId, int index) {
