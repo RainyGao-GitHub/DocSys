@@ -1598,10 +1598,6 @@ public class BaseController{
 	public String saveFile(MultipartFile srcFile,String path,String fileName)throws Exception{
 		
 		long fileSize = srcFile.getSize();
-		if(fileSize==0){
-			System.out.println("saveFile() fileSize 0");
-			//return null;
-		}
 		
 		if(fileName==null || "".equals(fileName))
 		{
@@ -1617,7 +1613,7 @@ public class BaseController{
 			//forder1.mkdirs(); //创建目录
 			return null;
 		}
-			
+		
 		File dstFile = new File(path,fileName);
 		try {
 			srcFile.transferTo(dstFile);
