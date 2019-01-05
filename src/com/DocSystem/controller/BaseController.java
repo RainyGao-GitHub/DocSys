@@ -1595,10 +1595,7 @@ public class BaseController{
         return file.exists();
     }
     
-	public String saveFile(MultipartFile srcFile,String path,String fileName)throws Exception{
-		
-		long fileSize = srcFile.getSize();
-		
+	public String saveFile(MultipartFile srcFile,String path,String fileName)throws Exception{		
 		if(fileName==null || "".equals(fileName))
 		{
 			System.out.println("saveFile() fileName is empty!");
