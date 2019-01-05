@@ -125,8 +125,9 @@ public class FileUtils2 {
             FileInputStream is = new FileInputStream(filePaht);
             byte[] b = new byte[10];
             is.read(b, 0, b.length);
-            String fileCode = bytesToHexString(b);    
+            is.close();
             
+            String fileCode = bytesToHexString(b);    
             System.out.println(fileCode);
             
             
@@ -181,7 +182,9 @@ public class FileUtils2 {
     	InputStream istream = new FileInputStream(filePath);
     	InputStream is = FileMagic.prepareToCheckMagic(istream);
     	FileMagic fm = FileMagic.valueOf(is);
-    	System.out.println("getFileEncode() " + fm.toString());
+    	istream.close();
+    	is.close();
+    	System.out.println("getFileMagic() " + fm.toString());
     	return fm;
     }
     
