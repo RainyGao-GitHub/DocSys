@@ -111,33 +111,10 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "addDoc " + name;
 		}
-		Integer docId = addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
-		
-		
-		if("ok".equals(rt.getStatus()))
-		{
-			//Add Lucene Index For Vdoc
-			addIndexForVDoc(docId,content);
-		}
+		addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);
 	}
 	
-	//Add Index For VDoc
-	private void addIndexForVDoc(Integer docId, String content) {
-		if(content == null || "".equals(content))
-		{
-			return;
-		}
-		
-		try {
-			System.out.println("addIndexForVDoc() add index in lucne: docId " + docId + " content:" + content);
-			//Add Index For Content
-			LuceneUtil2.addIndex(docId + "-0", docId,content, "doc");
-		} catch (Exception e) {
-			System.out.println("addIndexForVDoc() Failed to update lucene Index");
-			e.printStackTrace();
-		}
-	}
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
 	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -166,11 +143,6 @@ public class DocController extends BaseController{
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");		
 
-		if("ok".equals(rt.getStatus()))
-		{
-			//Add Lucene Index For Vdoc
-			addIndexForVDoc(docId,content);
-		}
 		writeJson(rt, response);
 	}
 	
@@ -235,17 +207,8 @@ public class DocController extends BaseController{
 			commitMsg = "deleteDoc " + doc.getName();
 		}
 		
-		if(true == deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt))
-		{
-			//Delete Lucene index For Doc
-			try {
-				System.out.println("DeleteDoc() delete index in lucne: docId " + id);
-				LuceneUtil2.deleteIndexForDoc(id,"doc");
-			} catch (Exception e) {
-				System.out.println("DeleteDoc() Failed to delete lucene Index");
-				e.printStackTrace();
-			}
-		}
+		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
+		
 		writeJson(rt, response);
 	}
 	/****************   Check a Document ******************/
@@ -294,13 +257,7 @@ public class DocController extends BaseController{
 				}
 				
 				if("ok".equals(rt.getStatus()))
-				{
-					//Update Index For RDoc
-					String parentPath = getParentPath(parentId);
-					String reposRPath = getReposRealPath(repos);
-					String localDocRPath = reposRPath + parentPath + name;
-					updatIndexForRDoc(docId, localDocRPath);
-					
+				{	
 					//Delete All Trunks if trunks have been combined
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 				}
@@ -610,13 +567,7 @@ public class DocController extends BaseController{
 			}
 			
 			if("ok".equals(rt.getStatus()))
-			{
-				//UpdatIndexForRDoc
-				String parentPath = getParentPath(parentId);
-				String reposRPath = getReposRealPath(repos);
-				String localDocRPath = reposRPath + parentPath + name;
-				updatIndexForRDoc(docId,localDocRPath);
-				
+			{				
 				//Delete All Trunks if trunks have been combined
 				deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
 			}
@@ -630,18 +581,55 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private void updatIndexForRDoc(Integer docId, String localDocRPath) {
-		//Add the doc to lucene Index
+	//Add Index For VDoc
+	private void addIndexForVDoc(Integer docId, String content) {
+		if(content == null || "".equals(content))
+		{
+			return;
+		}
+		
 		try {
-			System.out.println("updatIndexForRDoc() add index in lucne: docId " + docId);
-			//Add Index For File
-			LuceneUtil2.updateIndexForRDoc(docId,localDocRPath, "doc");
+			System.out.println("addIndexForVDoc() add index in lucne: docId " + docId + " content:" + content);
+			//Add Index For Content
+			LuceneUtil2.addIndex(docId + "-0", docId,content, "doc");
 		} catch (Exception e) {
-			System.out.println("updatIndexForRDoc() Failed to update lucene Index");
+			System.out.println("addIndexForVDoc() Failed to update lucene Index");
 			e.printStackTrace();
 		}
 	}
-
+	
+	private void updateIndexForVDoc(Integer id, String content) {
+		// TODO Auto-generated method stub
+		try {
+			System.out.println("updateIndexForVDoc() updateIndexForVDoc in lucene: docId " + id);
+			LuceneUtil2.updateIndexForVDoc(id,content,"doc");
+		} catch (Exception e) {
+			System.out.println("updateIndexForVDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
+	private void updateIndexForRDoc(Integer docId, String localDocRPath) {
+		//Add the doc to lucene Index
+		try {
+			System.out.println("updateIndexForRDoc() add index in lucne: docId " + docId);
+			//Add Index For File
+			LuceneUtil2.updateIndexForRDoc(docId,localDocRPath, "doc");
+		} catch (Exception e) {
+			System.out.println("updateIndexForRDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
+	private void deleteIndexForDoc(Integer docId, String string) {
+		try {
+			System.out.println("DeleteDoc() delete index in lucne: docId " + docId);
+			LuceneUtil2.deleteIndexForDoc(docId,"doc");
+		} catch (Exception e) {
+			System.out.println("DeleteDoc() Failed to delete lucene Index");
+			e.printStackTrace();
+		}
+	}
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{
@@ -884,24 +872,6 @@ public class DocController extends BaseController{
 		}
 		updateDocContent(id, content, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);
-		
-		if("ok".equals(rt.getStatus()))
-		{
-			//Delete tmp saved doc content
-			Repos repos = reposService.getRepos(doc.getVid());
-			String docVName = getDocVPath(doc);
-			String userTmpDir = getReposUserTmpPath(repos,login_user);
-			delFileOrDir(userTmpDir+docVName);
-			
-			//Update Index For VDoc
-			try {
-				System.out.println("UpdateDocContent() updateIndexForVDoc in lucene: docId " + id);
-				LuceneUtil2.updateIndexForVDoc(id,content,"doc");
-			} catch (Exception e) {
-				System.out.println("UpdateDocContent() Failed to update lucene Index");
-				e.printStackTrace();
-			}
-		}
 	}
 
 	//this interface is for auto save of the virtual doc edit
@@ -1510,6 +1480,8 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
+		Integer docId = doc.getId();
+		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
 		{
@@ -1528,18 +1500,20 @@ public class DocController extends BaseController{
 				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
+			//Add Lucene Index For Vdoc
+			addIndexForVDoc(docId,content);
 		}
 		
 		//启用doc
-		if(unlockDoc(doc.getId(),login_user,null) == false)
+		if(unlockDoc(docId,login_user,null) == false)
 		{
 			rt.setError("unlockDoc Failed");
-			//writeJson(rt, response);	
 			return null;
 		}
 		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
-		return doc.getId();
+		
+		return docId;
 	}
 	
 	//释放线程锁
@@ -1627,6 +1601,9 @@ public class DocController extends BaseController{
 			return false;
 		}				
 		
+		//Delete Lucene index For Doc
+		deleteIndexForDoc(docId,"doc");
+
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getDocVPath(doc);
@@ -1728,64 +1705,62 @@ public class DocController extends BaseController{
 		String name = doc.getName();
 		System.out.println("updateDoc() name:" + name);
 
-		//替换文件
-		if(isRealFS(repos.getType())) //0：虚拟文件系统   1： 普通文件系统	
+		//保存文件信息
+		if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			//保存文件信息
-			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(unlockDoc(docId,login_user,doc) == false)
 			{
-				if(unlockDoc(docId,login_user,doc) == false)
-				{
-					System.out.println("updateDoc() saveFile " + docId +" Failed and unlockDoc Failed");
-					rt.setError("Failed to updateRealDoc " + name + " and unlock Doc");
-				}
-				else
-				{	
-					System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
-					rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
-				}
-				return;
+				System.out.println("updateDoc() saveFile " + docId +" Failed and unlockDoc Failed");
+				rt.setError("Failed to updateRealDoc " + name + " and unlock Doc");
 			}
-			
-			//需要将文件Commit到SVN上去
-			if(svnRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
-			{
-				System.out.println("updateDoc() svnRealDocCommit Failed:" + parentPath + name);
-				String MsgInfo = "svnRealDocCommit Failed";
-				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-				if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
-				{						
-					MsgInfo += " and revertFile Failed";
-				}
-				//还原doc记录的状态
-				if(unlockDoc(docId,login_user,doc) == false)
-				{
-					MsgInfo += " and unlockDoc Failed";						
-				}
-				rt.setError(MsgInfo);	
-				return;
+			else
+			{	
+				System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
+				rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
 			}
+			return;
 		}
 		
+		//需要将文件Commit到SVN上去
+		if(svnRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+		{
+			System.out.println("updateDoc() svnRealDocCommit Failed:" + parentPath + name);
+			String MsgInfo = "svnRealDocCommit Failed";
+			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+			if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+			{						
+				MsgInfo += " and revertFile Failed";
+			}
+			//还原doc记录的状态
+			if(unlockDoc(docId,login_user,doc) == false)
+			{
+				MsgInfo += " and unlockDoc Failed";						
+			}
+			rt.setError(MsgInfo);	
+			return;
+		}
+		
+		//Update Lucene Index
+		String localDocRPath = reposRPath + parentPath + name;
+		updateIndexForRDoc(docId, localDocRPath);
+		
+		//Delete PreviewFile
+		deletePreviewFile(oldCheckSum);
 		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
-		//doc.setState(preLockState);	//Recover the lockState of Doc
-		//doc.setLockBy(preLockBy);	//
-		//doc.setLockTime(preLockTime);	//Set lockTime
 		doc.setCheckSum(checkSum);
 		//set lastEditTime
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		doc.setLatestEditTime(nowTimeStamp);
 		doc.setLatestEditor(login_user.getId());
+		
 		if(reposService.updateDoc(doc) == 0)
 		{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
 			return;
 		}
-		
-		//Delete PreviewFile
-		deletePreviewFile(oldCheckSum);
+
 	}
 
 	//底层renameDoc接口
@@ -2021,13 +1996,7 @@ public class DocController extends BaseController{
 		//get parentPath
 		String parentPath = getParentPath(parentId);		
 		//目标路径
-		String dstParentPath = getParentPath(dstPid);		
-		
-		//远程仓库相对路径
-		//String srcDocRPath = parentPath  + name;
-		//String dstDocRPath = dstParentPath + name;
-		//String srcDocFullRPath = reposRPath + parentPath + name;
-		//String dstDocFullRPath = reposRPath + dstParentPath + name;
+		String dstParentPath = getParentPath(dstPid);
 		
 		//判断节点是否已存在
 		if(isNodeExist(dstName,dstPid,reposId) == true)
@@ -2079,6 +2048,7 @@ public class DocController extends BaseController{
 			unlock(); //线程锁
 		}
 		
+		Integer dstDocId =  doc.getId();
 		System.out.println("id: " + doc.getId());
 		
 		//复制文件或目录，注意这个接口只会复制单个文件
@@ -2135,6 +2105,10 @@ public class DocController extends BaseController{
 			return false;
 		}				
 		
+		//Update Lucene Index
+		String localDocRPath = reposRPath + dstParentPath + dstName;
+		updateIndexForRDoc(dstDocId,localDocRPath);
+		
 		//content非空时才去创建虚拟文件目录
 		if(null != doc.getContent() && !"".equals(doc.getContent()))
 		{
@@ -2153,6 +2127,7 @@ public class DocController extends BaseController{
 			{
 				System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
 			}
+			addIndexForVDoc(dstDocId,doc.getContent());
 		}
 		
 		//启用doc
@@ -2257,6 +2232,12 @@ public class DocController extends BaseController{
 			}
 		}
 		
+		//Update Index For VDoc
+		updateIndexForVDoc(id,content);
+		
+		//Delete tmp saved doc content
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		delFileOrDir(userTmpDir+docVName);
 		
 		if(unlockDoc(id,login_user,doc) == false)
 		{
@@ -2581,7 +2562,6 @@ public class DocController extends BaseController{
 	
 	private boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Integer fileSize,
 			String fileCheckSum) {
-		// TODO Auto-generated method stub
 		File file = new File(localDocParentPath,name);
 		if(fileSize != file.length())
 		{
