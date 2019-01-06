@@ -113,13 +113,13 @@ public class DocController extends BaseController{
 		}
 		Integer docId = addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
 		
-		writeJson(rt, response);
 		
 		if("ok".equals(rt.getStatus()))
 		{
 			//Add Lucene Index For Vdoc
 			addIndexForVDoc(docId,content);
 		}
+		writeJson(rt, response);
 	}
 	
 	//Add Index For VDoc
@@ -165,14 +165,13 @@ public class DocController extends BaseController{
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");		
-		
-		writeJson(rt, response);
-		
+
 		if("ok".equals(rt.getStatus()))
 		{
 			//Add Lucene Index For Vdoc
 			addIndexForVDoc(docId,content);
 		}
+		writeJson(rt, response);
 	}
 	
 	private Integer getReposIdForFeeback() {
@@ -235,10 +234,8 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "deleteDoc " + doc.getName();
 		}
-		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
-		writeJson(rt, response);	
 		
-		if("ok".equals(rt.getStatus()))
+		if(true == deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt))
 		{
 			//Delete Lucene index For Doc
 			try {
@@ -249,6 +246,7 @@ public class DocController extends BaseController{
 				e.printStackTrace();
 			}
 		}
+		writeJson(rt, response);
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
@@ -294,7 +292,6 @@ public class DocController extends BaseController{
 				{
 					updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, cutSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
 				}
-				writeJson(rt, response);
 				
 				if("ok".equals(rt.getStatus()))
 				{
@@ -307,6 +304,7 @@ public class DocController extends BaseController{
 					//Delete All Trunks if trunks have been combined
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
 				}
+				writeJson(rt, response);
 				return;
 			}
 		}
@@ -610,7 +608,6 @@ public class DocController extends BaseController{
 			{
 				updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
 			}
-			writeJson(rt, response);
 			
 			if("ok".equals(rt.getStatus()))
 			{
@@ -623,6 +620,7 @@ public class DocController extends BaseController{
 				//Delete All Trunks if trunks have been combined
 				deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
 			}
+			writeJson(rt, response);
 			return;
 		}
 		else
@@ -846,6 +844,7 @@ public class DocController extends BaseController{
 			commitMsg = "copyDoc " + doc.getName() + " to " + dstDocName;
 		}
 		copyDoc(id,srcDocName,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
+		
 		writeJson(rt, response);
 	}
 
