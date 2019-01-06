@@ -560,7 +560,7 @@ public class LuceneUtil2 {
 			stripper.setEndPage(pages);
 			content = stripper.getText(document);
 			document.close();
-			System.out.println(content);     
+			//System.out.println(content);     
 			
 			addIndex(generateRDocId(docId,0),docId,content,indexLib);
 	   }
