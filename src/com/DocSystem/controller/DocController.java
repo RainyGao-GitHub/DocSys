@@ -455,11 +455,14 @@ public class DocController extends BaseController{
 			//检查checkSum是否相同
 			if(type == 1)
 			{
-				if(true == isDocCheckSumMatched(doc,size,checkSum))
+				if(size > 1024*1024)	//Only Large Than 1M will check the CheckSume
 				{
-					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
-					rt.setMsgData("1");
-					System.out.println("checkDocInfo() " + name + " 已存在，且checkSum相同！");
+					if(true == isDocCheckSumMatched(doc,size,checkSum))
+					{
+						rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
+						rt.setMsgData("1");
+						System.out.println("checkDocInfo() " + name + " 已存在，且checkSum相同！");
+					}
 				}
 			}
 			writeJson(rt, response);
@@ -467,7 +470,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(size > 1024)	//小于1K的文件没有必要
+			if(size > 1024*1024)	//Only For 1M File 
 			{
 				//Try to find the same Doc in the repos
 				Doc sameDoc = getSameDoc(size,checkSum,reposId);
