@@ -473,7 +473,7 @@ public class DocController extends BaseController{
 				Doc sameDoc = getSameDoc(size,checkSum,reposId);
 				if(null != sameDoc)
 				{
-					System.out.println("checkDocInfo() " + sameDoc.getName() + " found！");
+					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
 					copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt);
 					Doc newDoc = getDocByName(name,parentId,reposId);
@@ -483,6 +483,15 @@ public class DocController extends BaseController{
 						rt.setData(newDoc);
 						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
 						rt.setMsgData("1");
+						writeJson(rt, response);
+						return;
+					}
+					else
+					{
+						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied failed！");
+						rt.setStatus("ok");
+						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found but do copy Failed！");
+						rt.setMsgData("3");
 						writeJson(rt, response);
 						return;
 					}
@@ -2004,7 +2013,7 @@ public class DocController extends BaseController{
 	}
 	
 	//底层copyDoc接口
-	private void copyDoc(Integer docId,String srcName,String dstName, Integer type, Integer reposId,Integer parentId, Integer dstPid,
+	private boolean copyDoc(Integer docId,String srcName,String dstName, Integer type, Integer reposId,Integer parentId, Integer dstPid,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -2025,7 +2034,7 @@ public class DocController extends BaseController{
 		if(isNodeExist(dstName,dstPid,reposId) == true)
 		{
 			rt.setError("Node: " + dstName +" 已存在！");
-			return;
+			return false;
 		}
 
 		Doc doc = null;
@@ -2038,7 +2047,7 @@ public class DocController extends BaseController{
 				unlock(); //线程锁
 	
 				System.out.println("copyDoc lock " + docId + " Failed");
-				return;
+				return false;
 			}
 			
 			//新建doc记录
@@ -2066,7 +2075,7 @@ public class DocController extends BaseController{
 	
 				rt.setError("Add Node: " + dstName +" Failed！");
 				unlockDoc(docId,login_user,null);
-				return;
+				return false;
 			}
 			unlock(); //线程锁
 		}
@@ -2089,7 +2098,7 @@ public class DocController extends BaseController{
 				MsgInfo += " and unlock " + docId +" Failed";	
 			}
 			rt.setError(MsgInfo);
-			return;
+			return false;
 		}
 			
 		//需要将文件Commit到SVN上去
@@ -2124,7 +2133,7 @@ public class DocController extends BaseController{
 				MsgInfo += " and unlock " + docId +" Failed";	
 			}
 			rt.setError(MsgInfo);
-			return;
+			return false;
 		}				
 		
 		//content非空时才去创建虚拟文件目录
@@ -2171,10 +2180,12 @@ public class DocController extends BaseController{
 		
 		//copySubDocs
 		copySubDocs(docId, reposId, doc.getId(),commitMsg,commitUser,login_user,rt); 
+		return true;
 	}
 
-	private void copySubDocs(Integer docId, Integer reposId, Integer dstParentId,
+	private boolean copySubDocs(Integer docId, Integer reposId, Integer dstParentId,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		boolean ret = true;
 		Doc doc = new Doc();
 		doc.setPid(docId);
 		List<Doc> subDocList = reposService.getDocList(doc);
@@ -2182,8 +2193,12 @@ public class DocController extends BaseController{
 		{
 			Doc subDoc = subDocList.get(i);
 			String subDocName = subDoc.getName();
-			copyDoc(subDoc.getId(),subDocName,subDocName, subDoc.getType(), reposId, docId, dstParentId,commitMsg,commitUser,login_user,rt);
+			if(false == copyDoc(subDoc.getId(),subDocName,subDocName, subDoc.getType(), reposId, docId, dstParentId,commitMsg,commitUser,login_user,rt))
+			{
+				ret = false;
+			}
 		}
+		return ret;
 	}
 
 	private void updateDocContent(Integer id,String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
