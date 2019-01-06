@@ -1580,13 +1580,12 @@ public class DocController extends BaseController{
 		
 		if(false == deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt))
 		{
-			String MsgInfo = "deleteSubDocs Failed";
-			rt.setError(parentPath + name + "删除失败！");
+			String MsgInfo = "deleteSubDocs of doc " + docId +" Failed";
 			if(unlockDoc(docId,login_user,doc) == false)
 			{
 				MsgInfo += " and unlockDoc Failed";						
 			}
-			rt.setError(MsgInfo);
+			rt.setMsgInfo(MsgInfo);
 			return false;		
 		}
 		
