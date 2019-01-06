@@ -635,7 +635,13 @@ public class LuceneUtil2 {
 	//Update Index For RDoc
 	public static void updateIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
 		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
-		deleteIndexForRDoc(docId,indexLib);
+		try {
+			deleteIndexForRDoc(docId,indexLib);
+		} catch(Exception e) {
+			System.out.println("deleteIndexForRDoc Failed!");
+			e.printStackTrace();
+		}
+		
 		addIndexForRDoc(docId,filePath,indexLib);
 	}
 	
