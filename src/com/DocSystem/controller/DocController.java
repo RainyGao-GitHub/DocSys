@@ -2105,9 +2105,12 @@ public class DocController extends BaseController{
 			return false;
 		}				
 		
-		//Update Lucene Index
-		String localDocRPath = reposRPath + dstParentPath + dstName;
-		updateIndexForRDoc(dstDocId,localDocRPath);
+		if(type == 1)
+		{
+			//Update Lucene Index
+			String localDocRPath = reposRPath + dstParentPath + dstName;
+			updateIndexForRDoc(dstDocId,localDocRPath);
+		}
 		
 		//content非空时才去创建虚拟文件目录
 		if(null != doc.getContent() && !"".equals(doc.getContent()))
