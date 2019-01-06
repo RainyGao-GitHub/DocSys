@@ -2330,6 +2330,12 @@ public class DocController extends BaseController{
 		}
 		
 		Doc doc = reposService.getDoc(parentDocId);
+		if(doc == null)
+		{
+			System.out.println("isParentDocLocked() doc is null for parentDocId=" + parentDocId);
+			return false;
+		}
+		
 		Integer lockState = doc.getState();
 		
 		if(lockState == 2)	//1:lock doc only 2: lock doc and subDocs
