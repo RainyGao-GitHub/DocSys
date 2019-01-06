@@ -320,44 +320,47 @@ public class LuceneUtil2 {
 			switch(fileSuffix)
 			{
 			case "doc":
-				if(false == addIndexForWord(docId,filePath,indexLib))
+				if(true == addIndexForWord(docId,filePath,indexLib))
 				{
-					addIndexForWord2007(docId,filePath,indexLib);	//避免有人乱改后缀
+					return;
 				}
-				return;
+				break;
 			case "docx":
-				if(false == addIndexForWord2007(docId,filePath,indexLib))
+				if(true == addIndexForWord2007(docId,filePath,indexLib))
 				{
-					addIndexForWord(docId,filePath,indexLib);
+					return;
 				}
-				return;
+				break;
 			case "xls":
-				if(false == addIndexForExcel(docId,filePath,indexLib))
+				if(true == addIndexForExcel(docId,filePath,indexLib))
 				{
-					addIndexForExcel2007(docId,filePath,indexLib);					
+					return;
 				}
-				return;
+				break;
 			case "xlsx":
-				if(false == addIndexForExcel2007(docId,filePath,indexLib))
+				if(true == addIndexForExcel2007(docId,filePath,indexLib))
 				{
-					addIndexForExcel(docId,filePath,indexLib);
+					return;
 				}
-				return;
+				break;
 			case "ppt":
-				if(false == addIndexForPPT(docId,filePath,indexLib))
+				if(true == addIndexForPPT(docId,filePath,indexLib))
 				{
-					addIndexForPPT2007(docId,filePath,indexLib);
+					return;
 				}
-				return;
+				break;
 			case "pptx":
-				if(false == addIndexForPPT2007(docId,filePath,indexLib))
+				if(true == addIndexForPPT2007(docId,filePath,indexLib))
 				{
-					addIndexForPPT(docId,filePath,indexLib);
+					return;
 				}
-				return;
+				break;
 			case "pdf":
-				addIndexForPdf(docId,filePath,indexLib);
-				return;
+				if(true == addIndexForPdf(docId,filePath,indexLib))
+				{
+					return;
+				}
+				break;
 			}
 		}
 		
