@@ -1549,7 +1549,7 @@ public class DocController extends BaseController{
 	}  
 
 	//底层deleteDoc接口
-	private void deleteDoc(Integer docId, Integer reposId,Integer parentId, 
+	private boolean deleteDoc(Integer docId, Integer reposId,Integer parentId, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
@@ -1564,23 +1564,32 @@ public class DocController extends BaseController{
 			{
 				unlock(); //线程锁
 				System.out.println("Failed to lock Doc: " + docId);
-				return;			
+				return false;			
 			}
 			unlock(); //线程锁
 		}
-		
-		deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt);
 		
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
 		String parentPath = getParentPath(parentId);		
 		//get RealDoc Full ParentPath
 		String reposRPath = getReposRealPath(repos);
-		//get doc RealPath
-		//String docRPath = parentPath + doc.getName();
-
+		
 		//删除实体文件
 		String name = doc.getName();
+		
+		if(false == deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt))
+		{
+			String MsgInfo = "deleteSubDocs Failed";
+			rt.setError(parentPath + name + "删除失败！");
+			if(unlockDoc(docId,login_user,doc) == false)
+			{
+				MsgInfo += " and unlockDoc Failed";						
+			}
+			rt.setError(MsgInfo);
+			return false;		
+		}
+		
 		if(deleteRealDoc(reposRPath, parentPath, name,doc.getType(),rt) == false)
 		{
 			String MsgInfo = "deleteRealDoc Failed";
@@ -1590,7 +1599,7 @@ public class DocController extends BaseController{
 				MsgInfo += " and unlockDoc Failed";						
 			}
 			rt.setError(MsgInfo);
-			return;
+			return false;
 		}
 			
 		//需要将文件Commit到SVN上去
@@ -1608,7 +1617,7 @@ public class DocController extends BaseController{
 				MsgInfo += " and unlockDoc Failed";						
 			}
 			rt.setError(MsgInfo);
-			return;
+			return false;
 		}				
 		
 		//删除虚拟文件
@@ -1637,12 +1646,14 @@ public class DocController extends BaseController{
 		if(reposService.deleteDoc(docId) == 0)
 		{	
 			rt.setError("不可恢复系统错误：deleteDoc Failed");
-			return;
+			return false;
 		}
 		rt.setData(doc);
 		
 		//Delete tmp files for this doc (preview)
 		deletePreviewFile(CheckSum);
+
+		return true;
 	}
 
 	//删除预览文件
@@ -1652,7 +1663,7 @@ public class DocController extends BaseController{
 		delFileOrDir(dstPath);
 	}
 
-	private void deleteSubDocs(Integer docId, Integer reposId,
+	private boolean deleteSubDocs(Integer docId, Integer reposId,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		
 		Doc doc = new Doc();
@@ -1661,8 +1672,12 @@ public class DocController extends BaseController{
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			deleteDoc(subDoc.getId(),reposId,docId,commitMsg,commitUser,login_user,rt);
+			if(false == deleteDoc(subDoc.getId(),reposId,docId,commitMsg,commitUser,login_user,rt))
+			{
+				return false;
+			}
 		}
+		return true;
 	}
 
 	//底层updateDoc接口
