@@ -182,8 +182,8 @@ public class FileUtils2 {
     	InputStream istream = new FileInputStream(filePath);
     	InputStream is = FileMagic.prepareToCheckMagic(istream);
     	FileMagic fm = FileMagic.valueOf(is);
-    	istream.close();
     	is.close();
+    	istream.close();
     	System.out.println("getFileMagic() " + fm.toString());
     	return fm;
     }
