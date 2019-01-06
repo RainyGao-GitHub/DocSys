@@ -1410,7 +1410,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//Check if parentDoc was absolutely locked (LockState == 2)
-			if(isParentDocLocked(parentId,rt))
+			if(isParentDocLocked(parentId,null,rt))
 			{	
 				unlock(); //线程锁
 				rt.setError("ParentNode: " + parentId +" is locked！");	
@@ -2271,7 +2271,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查其父节点是否进行了递归锁定
-		if(isParentDocLocked(doc.getPid(),rt))	//2: 全目录锁定
+		if(isParentDocLocked(doc.getPid(),login_user,rt))	//2: 全目录锁定
 		{
 			System.out.println("lockDoc() Parent Doc of " + docId +" was locked！");				
 			return null;
@@ -2337,7 +2337,7 @@ public class DocController extends BaseController{
 	}
 
 	//确定parentDoc是否被全部锁定
-	private boolean isParentDocLocked(Integer parentDocId, ReturnAjax rt) {
+	private boolean isParentDocLocked(Integer parentDocId, User login_user,ReturnAjax rt) {
 		if(parentDocId == 0)
 		{
 			return false;	//已经到了最上层
@@ -2354,6 +2354,14 @@ public class DocController extends BaseController{
 		
 		if(lockState == 2)	//1:lock doc only 2: lock doc and subDocs
 		{
+			if(login_user != null)
+			{
+				if(login_user.getId() == doc.getLockBy())
+				{
+					return false;
+				}
+			}
+			
 			long curTime = new Date().getTime();
 			long lockTime = doc.getLockTime();	//time for lock release
 			System.out.println("isParentDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
@@ -2364,7 +2372,7 @@ public class DocController extends BaseController{
 				return true;
 			}
 		}
-		return isParentDocLocked(doc.getPid(),rt);
+		return isParentDocLocked(doc.getPid(),login_user,rt);
 	}
 	
 	//docId目录下是否有锁定的doc(包括所有锁定状态)
