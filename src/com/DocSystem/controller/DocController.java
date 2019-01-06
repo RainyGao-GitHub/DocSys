@@ -1476,11 +1476,15 @@ public class DocController extends BaseController{
 				MsgInfo += " and delete Node Failed";						
 			}
 			rt.setError(MsgInfo);
-			//writeJson(rt, response);	
 			return null;
 		}
 		
 		Integer docId = doc.getId();
+		if(type == 1)
+		{
+			//Update Lucene Index
+			updateIndexForRDoc(docId, localDocRPath);
+		}
 		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
