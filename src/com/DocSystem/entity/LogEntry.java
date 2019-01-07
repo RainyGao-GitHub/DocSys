@@ -6,7 +6,7 @@ public class LogEntry {
 	private long revision;
 	private String commitUser;
 	private String commitMsg;
-	private String commitTime;
+	private long commitTime;
 	private List<ChangedItem> changedItems;	//有变化的文件列表
 	
     public long getRevision() {
@@ -33,12 +33,12 @@ public class LogEntry {
         this.commitMsg = commitMsg == null ? null : commitMsg.trim();
     }
 
-    public String getCommitTime() {
+    public long getCommitTime() {
         return commitTime;
     }
 
-    public void setCommitTime(String commitTime) {
-        this.commitTime = commitTime == null ? null : commitTime.trim();
+    public void setCommitTime(long commitTime) {
+        this.commitTime = commitTime;
     }
     
     public List<ChangedItem> getChangedItems() {
