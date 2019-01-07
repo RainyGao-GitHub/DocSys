@@ -81,6 +81,7 @@
 			
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
+				var commitTime = formatTime(d.commitTime);  
 				var opBtn = "		<a href='javascript:void(0)' onclick='downloadHistory("+d.revision+ ");' class='mybtn-primary'>下载</a>";							
 				var se = "<li id='popover" +i+"' + + value="+ i +">"
 					+"	<i class='cell revision w8'>"
@@ -100,7 +101,7 @@
 					+"	</i>"
 					+"	<i class='cell commitTime w15'>"
 					+"		<span class='name'>"
-					+"			<a id='commitTime"+i+"' href='javascript:void(0)'>"+d.commitTime+"</a>"
+					+"			<a id='commitTime"+i+"' href='javascript:void(0)'>"+commitTime+"</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell operation w10'>"
