@@ -141,8 +141,9 @@ public class SVNUtil {
             log.setCommitUser(logEntry.getAuthor());
 
             //gets the time moment when the changes were committed
-            //System.out.println("date: " + logEntry.getDate());
-            log.setCommitTime(logEntry.getDate().toGMTString());
+            long commitTime = logEntry.getDate().getTime();
+            //System.out.println("commitTime: " + commitTime);
+            log.setCommitTime(commitTime);
             
             //gets the commit log message
             //System.out.println("log message: " + logEntry.getMessage());
