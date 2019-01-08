@@ -13,6 +13,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -70,9 +72,6 @@ public class LuceneUtil2 {
 
 	// 保存路径
     private static String INDEX_DIR = getLucenePath();
-    private static Analyzer analyzer = null;
-    private static Directory directory = null;
-    private static IndexWriter indexWriter = null;
     
     private static String getLucenePath() {
 		String path = ReadProperties.read("docSysConfig.properties", "lucenePath");
@@ -115,12 +114,12 @@ public class LuceneUtil2 {
     	//System.out.println("addIndex() content:" + content);
     	
     	Date date1 = new Date();
-        analyzer = new IKAnalyzer();
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
+    	Analyzer analyzer = new IKAnalyzer();
+    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
                 Version.LUCENE_CURRENT, analyzer);
-        indexWriter = new IndexWriter(directory, config);
+        IndexWriter indexWriter = new IndexWriter(directory, config);
 
         Document doc = new Document();
         doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
@@ -149,12 +148,12 @@ public class LuceneUtil2 {
     	System.out.println("updateIndex() content:" + content);
     	
     	Date date1 = new Date();
-        analyzer = new IKAnalyzer();
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
+        Analyzer analyzer = new IKAnalyzer();
+        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
                 Version.LUCENE_CURRENT, analyzer);
-        indexWriter = new IndexWriter(directory, config);
+        IndexWriter indexWriter = new IndexWriter(directory, config);
          
         Document doc1 = new Document();
         doc1.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
@@ -178,11 +177,11 @@ public class LuceneUtil2 {
 	public static void deleteIndex(String id,String indexLib) throws Exception {
     	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
         Date date1 = new Date();
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
+        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
                 Version.LUCENE_CURRENT, null);
-        indexWriter = new IndexWriter(directory, config);
+        IndexWriter indexWriter = new IndexWriter(directory, config);
         
         indexWriter.deleteDocuments(new Term("id",id));  
         indexWriter.commit();
@@ -199,8 +198,8 @@ public class LuceneUtil2 {
      */
     @SuppressWarnings("deprecation")
 	public static List<String> search(String str,String indexLib) throws Exception {
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
-        analyzer = new IKAnalyzer();
+        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+        Analyzer analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
 
@@ -230,8 +229,8 @@ public class LuceneUtil2 {
      * @param indexLib: 索引库名字
      */
 	public static List<String> fuzzySearch(String str,String indexLib) throws Exception {
-        directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
-        analyzer = new IKAnalyzer();
+        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+        Analyzer analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
 
@@ -262,8 +261,8 @@ public class LuceneUtil2 {
      */
     public static List<String> getIdListForDoc(Integer docId,String indexLib) throws Exception {
     	System.out.println("getIdListForDoc() docId:" + docId + " indexLib:" + indexLib);
-    	directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
-        analyzer = new IKAnalyzer();
+    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+        Analyzer analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
         IndexSearcher isearcher = new IndexSearcher(ireader);
 
@@ -320,90 +319,36 @@ public class LuceneUtil2 {
 			switch(fileSuffix)
 			{
 			case "doc":
-				if(true == addIndexForWord(docId,filePath,indexLib))
-				{
-					return;
-				}
+				addIndexForWord(docId,filePath,indexLib);
 				break;
 			case "docx":
-				if(true == addIndexForWord2007(docId,filePath,indexLib))
-				{
-					return;
-				}
+				addIndexForWord2007(docId,filePath,indexLib);
 				break;
 			case "xls":
-				if(true == addIndexForExcel(docId,filePath,indexLib))
-				{
-					return;
-				}
+				addIndexForExcel(docId,filePath,indexLib);
 				break;
 			case "xlsx":
-				if(true == addIndexForExcel2007(docId,filePath,indexLib))
-				{
-					return;
-				}
+				addIndexForExcel2007(docId,filePath,indexLib);
 				break;
 			case "ppt":
-				if(true == addIndexForPPT(docId,filePath,indexLib))
-				{
-					return;
-				}
+				addIndexForPPT(docId,filePath,indexLib);
 				break;
 			case "pptx":
-				if(true == addIndexForPPT2007(docId,filePath,indexLib))
-				{
-					return;
-				}
+				addIndexForPPT2007(docId,filePath,indexLib);
 				break;
-			case "pdf":
-				if(true == addIndexForPdf(docId,filePath,indexLib))
-				{
-					return;
-				}
-				break;
-			}
-		}
-		
-		//Use start bytes to confirm the fileTpye
-		String fileType = FileUtils2.getFileType(filePath);
-		if(fileType != null)
-		{
-			System.out.println("addIndexForRDoc() fileType:" + fileType);
-			FileMagic fm = FileUtils2.getFileMagic(filePath);
-			switch(fileType)
-			{
-			case "doc":
-				if(fm == FileMagic.OLE2)
-				{
-					addIndexForWord(docId,filePath,indexLib);
-					return;
-				}
-				else
-				{
-					addIndexForExcel(docId,filePath,indexLib);
-					return;
-				}
-			case "docx":
-				if(fm == FileMagic.WORD2)
-				{
-					addIndexForWord2007(docId,filePath,indexLib);
-					return;
-				}
-				else
-				{
-					addIndexForExcel2007(docId,filePath,indexLib);
-					return;
-				}
 			case "pdf":
 				addIndexForPdf(docId,filePath,indexLib);
-				return;
-			default:
+				break;
+			case "txt":
+			case "TXT":
+			case "log":
+			case "LOG":
+			case "md":
+			case "MD":
 				addIndexForFile(docId,filePath,indexLib);
-				return;
+				break;
 			}
 		}
-		
-		addIndexForFile(docId,filePath,indexLib);
 	}
 
 	private static boolean addIndexForWord(Integer docId, String filePath, String indexLib) throws Exception{

@@ -1145,12 +1145,12 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				String fileType = FileUtils2.getFileType(srcPath);
+				String fileType = FileUtils2.getFileSuffix(srcPath);
 				if(fileType != null && fileType == "pdf")
 				{
 					FileUtils2.copyFile(srcPath, dstPath);
 				}
-				else
+				else if(FileUtils2.isOfficeFile(fileType))
 				{
 					File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
 					if(pdf == null)
@@ -1160,6 +1160,13 @@ public class DocController extends BaseController{
 						writeJson(rt, response);
 						return;
 					}
+				}
+				else
+				{
+					rt.setError("该文件类型不支持预览");
+					rt.setMsgData("srcPath:"+srcPath);
+					writeJson(rt, response);
+					return;
 				}
 			}
 		}
