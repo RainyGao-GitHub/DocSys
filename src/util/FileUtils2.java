@@ -283,4 +283,19 @@ public class FileUtils2 {
         System.out.println();             
     }
 
+	public static boolean isOfficeFile(String fileType) {
+		// TODO Auto-generated method stub
+		switch(fileType)
+		{
+		case "doc":
+		case "docx":
+		case "xls":
+		case "xlsx":
+		case "ppt":
+		case "pptx":
+			return true;
+		}
+		return false;
+	}
+
 }
