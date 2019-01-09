@@ -430,7 +430,7 @@ public class DocController extends BaseController{
 				{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
-					copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt);
+					copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt,false);
 					Doc newDoc = getDocByName(name,parentId,reposId);
 					if(null != newDoc)
 					{
@@ -831,7 +831,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "copyDoc " + doc.getName() + " to " + dstDocName;
 		}
-		copyDoc(id,srcDocName,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);
+		copyDoc(id,srcDocName,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt,false);
 		
 		writeJson(rt, response);
 	}
