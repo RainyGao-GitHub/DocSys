@@ -1552,6 +1552,7 @@ public class DocController extends BaseController{
 		{
 			doc = reposService.getDoc(docId);
 			repos = reposService.getRepos(reposId);
+			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " isSubDelete");
 		}
 		else
 		{
@@ -1567,6 +1568,8 @@ public class DocController extends BaseController{
 				}
 				unlock(); //线程锁
 			}
+			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " Lock OK");
+			
 			repos = reposService.getRepos(reposId);
 			//get parentPath
 			String parentPath = getParentPath(parentId);		
