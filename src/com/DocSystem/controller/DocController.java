@@ -1551,6 +1551,11 @@ public class DocController extends BaseController{
 		if(isSubDelete)	//Do not lock
 		{
 			doc = reposService.getDoc(docId);
+			if(doc == null)
+			{
+				System.out.println("deleteDoc() " + docId + " not exists");
+				return false;			
+			}
 			repos = reposService.getRepos(reposId);
 			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " isSubDelete");
 		}
