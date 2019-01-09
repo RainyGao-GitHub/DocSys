@@ -1603,9 +1603,10 @@ public class DocController extends BaseController{
 			//删除实体文件
 			String name = doc.getName();
 			
-			if(deleteRealDoc(reposRPath, parentPath, name,doc.getType(),rt) == false)
+			String nameForDelete = "deleteing-"+name; 
+			if(moveRealDoc(reposRPath,parentPath,name,parentPath,nameForDelete,doc.getType(),rt) == false)
 			{
-				String MsgInfo = "deleteRealDoc Failed";
+				String MsgInfo = "moveRealDoc For delete Failed";
 				rt.setError(parentPath + name + "删除失败！");
 				if(unlockDoc(docId,login_user,doc) == false)
 				{
@@ -1621,7 +1622,7 @@ public class DocController extends BaseController{
 				System.out.println("svnRealDocDelete Failed");
 				String MsgInfo = "svnRealDocDelete Failed";
 				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-				if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+				if(moveRealDoc(reposRPath,parentPath,nameForDelete,parentPath,name,doc.getType(),rt) == false)
 				{						
 					MsgInfo += " and revertFile Failed";
 				}
@@ -1631,7 +1632,13 @@ public class DocController extends BaseController{
 				}
 				rt.setError(MsgInfo);
 				return false;
-			}				
+			}
+			
+			//Do delete really
+			if(deleteRealDoc(reposRPath, parentPath, nameForDelete,doc.getType(),rt) == false)
+			{
+				System.out.println("deleteDoc() 删除 " + nameForDelete +" 失败");	
+			}
 		}
 		
 		//Delete Lucene index For RDoc and VDoc
