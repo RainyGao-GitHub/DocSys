@@ -1259,12 +1259,23 @@ public class DocController extends BaseController{
 		Doc doc = null;
 		synchronized(syncLock)
 		{
+			if(lockType == 2)	//If want to force lock, must check all subDocs not locked
+			{
+				if(isSubDocLocked(docId,rt) == true)
+				{
+					unlock(); //线程锁
+		
+					System.out.println("lockDoc() subDoc of " + docId +" was locked！");
+					return;
+				}
+			}
+			
 			//Try to lock the Doc
 			doc = lockDoc(docId,lockType,login_user,rt);
 			if(doc == null)
 			{
 				unlock(); //线程锁
-				System.out.println("Failed to lock Doc: " + docId);
+				System.out.println("lockDoc() Failed to lock Doc: " + docId);
 				writeJson(rt, response);
 				return;			
 			}
@@ -1563,12 +1574,20 @@ public class DocController extends BaseController{
 		{
 			synchronized(syncLock)
 			{			
+				if(isSubDocLocked(docId,rt) == true)
+				{
+					unlock(); //线程锁
+		
+					System.out.println("deleteDoc() subDoc of " + docId +" was locked！");
+					return true;
+				}
+				
 				//Try to lock the Doc
 				doc = lockDoc(docId,2,login_user,rt);
 				if(doc == null)
 				{
 					unlock(); //线程锁
-					System.out.println("Failed to lock Doc: " + docId);
+					System.out.println("deleteDoc() Failed to lock Doc: " + docId);
 					return false;			
 				}
 				unlock(); //线程锁
@@ -2020,6 +2039,14 @@ public class DocController extends BaseController{
 		Doc doc = null;
 		synchronized(syncLock)
 		{
+			if(isSubDocLocked(docId,rt) == true)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("copyDoc() subDoc of " + docId +" was locked！");
+				return true;
+			}
+			
 			//Try to lock the srcDoc
 			doc = lockDoc(docId,1,login_user,rt);
 			if(doc == null)
@@ -2280,8 +2307,8 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
-		//检查其父节点是否进行了递归锁定
-		if(isParentDocLocked(doc.getPid(),login_user,rt))	//2: 全目录锁定
+		//检查其父节点是否强制锁定
+		if(isParentDocLocked(doc.getPid(),login_user,rt))
 		{
 			System.out.println("lockDoc() Parent Doc of " + docId +" was locked！");				
 			return null;
@@ -2305,15 +2332,19 @@ public class DocController extends BaseController{
 	
 	//确定当前doc是否被锁定
 	private boolean isDocLocked(Doc doc,User login_user,ReturnAjax rt) {
-		int lockState = doc.getState();	//0: not locked 1: lock doc only 2: lock doc and subDocs 3: lock doc for online edit
+		int lockState = doc.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
 		if(lockState != 0)
 		{
-			if(doc.getLockBy() == login_user.getId())	//locked by login_user
+			//
+			if(lockState != 2)
 			{
-				System.out.println("Doc: " + doc.getId() +" was locked by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
-				return false;
+				if(doc.getLockBy() == login_user.getId())	//locked by login_user
+				{
+					System.out.println("Doc: " + doc.getId() +" was locked by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
+					return false;
+				}
 			}
-				
+			
 			if(isLockOutOfDate(doc) == false)
 			{	
 				User lockBy = userService.getUser(doc.getLockBy());
@@ -2346,7 +2377,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 
-	//确定parentDoc是否被全部锁定
+	//确定parentDoc is Force Locked
 	private boolean isParentDocLocked(Integer parentDocId, User login_user,ReturnAjax rt) {
 		if(parentDocId == 0)
 		{
@@ -2362,16 +2393,8 @@ public class DocController extends BaseController{
 		
 		Integer lockState = doc.getState();
 		
-		if(lockState == 2)	//1:lock doc only 2: lock doc and subDocs
-		{
-			if(login_user != null)
-			{
-				if(login_user.getId() == doc.getLockBy())
-				{
-					return false;
-				}
-			}
-			
+		if(lockState == 2)	//Force Locked
+		{	
 			long curTime = new Date().getTime();
 			long lockTime = doc.getLockTime();	//time for lock release
 			System.out.println("isParentDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
@@ -2386,7 +2409,7 @@ public class DocController extends BaseController{
 	}
 	
 	//docId目录下是否有锁定的doc(包括所有锁定状态)
-	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy the Directory
+	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
 	private boolean isSubDocLocked(Integer docId, ReturnAjax rt)
 	{
 		//Set the query condition to get the SubDocList of DocId
@@ -2400,9 +2423,16 @@ public class DocController extends BaseController{
 			Doc subDoc =SubDocList.get(i);
 			if(subDoc.getState() != 0)
 			{
-				rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
-				System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
-				return true;
+				long curTime = new Date().getTime();
+				long lockTime = subDoc.getLockTime();	//time for lock release
+				System.out.println("isSubDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
+				if(curTime < lockTime)
+				{
+					rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
+					System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
+					return true;
+				}
+				return false;
 			}
 		}
 		
