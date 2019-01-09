@@ -207,7 +207,7 @@ public class DocController extends BaseController{
 			commitMsg = "deleteDoc " + doc.getName();
 		}
 		
-		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt);
+		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt,false);
 		
 		writeJson(rt, response);
 	}
@@ -1542,79 +1542,76 @@ public class DocController extends BaseController{
 	}  
 
 	//底层deleteDoc接口
+	//isSubDelete: true: 文件已删除，只负责删除VDOC、LuceneIndex、previewFile、DBRecord
 	private boolean deleteDoc(Integer docId, Integer reposId,Integer parentId, 
-				String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
-
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete) 
+	{
 		Doc doc = null;
-		synchronized(syncLock)
+		Repos repos = null;
+		if(isSubDelete)	//Do not lock
 		{
-
-			//是否需要检查subDoc is locked? 不需要！ 因为如果doc有subDoc那么deleteRealDoc会抱错
-		
-			//Try to lock the Doc
-			doc = lockDoc(docId,2,login_user,rt);
-			if(doc == null)
-			{
+			doc = reposService.getDoc(docId);
+			repos = reposService.getRepos(reposId);
+		}
+		else
+		{
+			synchronized(syncLock)
+			{			
+				//Try to lock the Doc
+				doc = lockDoc(docId,2,login_user,rt);
+				if(doc == null)
+				{
+					unlock(); //线程锁
+					System.out.println("Failed to lock Doc: " + docId);
+					return false;			
+				}
 				unlock(); //线程锁
-				System.out.println("Failed to lock Doc: " + docId);
-				return false;			
 			}
-			unlock(); //线程锁
-		}
-		
-		Repos repos = reposService.getRepos(reposId);
-		//get parentPath
-		String parentPath = getParentPath(parentId);		
-		//get RealDoc Full ParentPath
-		String reposRPath = getReposRealPath(repos);
-		
-		//删除实体文件
-		String name = doc.getName();
-		
-		if(false == deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt))
-		{
-			String MsgInfo = "deleteSubDocs of doc " + docId +" Failed";
-			if(unlockDoc(docId,login_user,doc) == false)
-			{
-				MsgInfo += " and unlockDoc Failed";						
-			}
-			rt.setMsgInfo(MsgInfo);
-			return false;		
-		}
-		
-		if(deleteRealDoc(reposRPath, parentPath, name,doc.getType(),rt) == false)
-		{
-			String MsgInfo = "deleteRealDoc Failed";
-			rt.setError(parentPath + name + "删除失败！");
-			if(unlockDoc(docId,login_user,doc) == false)
-			{
-				MsgInfo += " and unlockDoc Failed";						
-			}
-			rt.setError(MsgInfo);
-			return false;
-		}
+			repos = reposService.getRepos(reposId);
+			//get parentPath
+			String parentPath = getParentPath(parentId);		
+			//get RealDoc Full ParentPath
+			String reposRPath = getReposRealPath(repos);
 			
-		//需要将文件Commit到SVN上去
-		if(svnRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
-		{
-			System.out.println("svnRealDocDelete Failed");
-			String MsgInfo = "svnRealDocDelete Failed";
-			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
-			{						
-				MsgInfo += " and revertFile Failed";
-			}
-			if(unlockDoc(docId,login_user,doc) == false)
+			//删除实体文件
+			String name = doc.getName();
+			
+			if(deleteRealDoc(reposRPath, parentPath, name,doc.getType(),rt) == false)
 			{
-				MsgInfo += " and unlockDoc Failed";						
+				String MsgInfo = "deleteRealDoc Failed";
+				rt.setError(parentPath + name + "删除失败！");
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc Failed";						
+				}
+				rt.setError(MsgInfo);
+				return false;
 			}
-			rt.setError(MsgInfo);
-			return false;
-		}				
+				
+			//需要将文件Commit到SVN上去
+			if(svnRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+			{
+				System.out.println("svnRealDocDelete Failed");
+				String MsgInfo = "svnRealDocDelete Failed";
+				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+				if(svnRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+				{						
+					MsgInfo += " and revertFile Failed";
+				}
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc Failed";						
+				}
+				rt.setError(MsgInfo);
+				return false;
+			}				
+		}
 		
-		//Delete Lucene index For Doc
+		//Delete Lucene index For RDoc and VDoc
 		deleteIndexForDoc(docId,"doc");
-
+		//Delete previewFile (previewFile use checksum as name)
+		deletePreviewFile(doc.getCheckSum());
+		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getDocVPath(doc);
@@ -1633,21 +1630,20 @@ public class DocController extends BaseController{
 				svnRevertVirtualDoc(repos,docVName);
 			}
 		}
-		
-		//保存删除前的CheckSum，用于预览文件的删除
-		String CheckSum = doc.getCheckSum();
-				
-		//删除Node
+
+		//Delete SubDocs
+		if(false == deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt))
+		{
+			System.out.println("deleteDoc() deleteSubDocs Failed ");
+		}
+						
+		//Delete DataBase Record
 		if(reposService.deleteDoc(docId) == 0)
 		{	
 			rt.setError("不可恢复系统错误：deleteDoc Failed");
 			return false;
 		}
 		rt.setData(doc);
-		
-		//Delete tmp files for this doc (preview)
-		deletePreviewFile(CheckSum);
-
 		return true;
 	}
 
@@ -1667,10 +1663,7 @@ public class DocController extends BaseController{
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			if(false == deleteDoc(subDoc.getId(),reposId,docId,commitMsg,commitUser,login_user,rt))
-			{
-				return false;
-			}
+			deleteDoc(subDoc.getId(),reposId,docId,commitMsg,commitUser,login_user,rt,true);
 		}
 		return true;
 	}
@@ -3397,17 +3390,11 @@ public class DocController extends BaseController{
 		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
 
-		if(type == 2) //如果是目录则重新新建目录即可
-		{
-			File file = new File(localParentPath,entryName);
-			return file.mkdir();
-		}
-		
 		//revert from svn server
 		String reposURL = repos.getSvnPath();
 		String svnUser = repos.getSvnUser();
 		String svnPwd = repos.getSvnPwd();
-		return svnRevert(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, entryName);
+		return svnCheckOut(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, entryName,-1);
 	}
 	
 
