@@ -47,30 +47,35 @@ import com.alibaba.fastjson.JSONObject;
 
 /*
  Something you need to know
- 1、文件节点增、删、改
-（1）文件节点可以是文件或目录（包括实文件和虚文件）
-（2）实文件节点包括三部分内容：本地文件、版本仓库文件、数据库记录
-（3）虚文件节点包括三部分内容：本地目录、版本仓库目录、数据库记录
-	虚文件的实体跟实文件不同，并不是一个单一的文件，而是以文件节点ID为名称的目录，里面包括content.md文件和res目录，markdown文件记录了虚文件的文字内容，res目录下存放相关的资源文件
-（4）add、delete、edit是文件节点的基本功能， rename、move、copy、upload是基本功能的扩展功能
-（5）文件节点操作总是原子操作
-	这个主要是针对upload和copy接口而言，
-	前台上传多个文件和目录时，实际上也是一个文件一个文件上传的，而不是一起上传到后台后再做处理的，这是为了保证前后台信息一致，这样前台能够知道每一个文件节点的更新情况
-	前台执行目录复制操作的话，也是同样一层层目录复制
-（6）文件节点信息的更新优先次序依次为 本地文件、版本仓库文件、数据库记录
+ 1、文件节点
+（1）文件节点可以是文件或目录，包括本地文件或目录、版本仓库节点、数据库记录、虚拟文件和版本仓库节点
+（2）虚文件：虚文件的实体跟实文件不同，并不是一个单一的文件，而是以文件节点ID为名称的目录，里面包括content.md文件和res目录，markdown文件记录了虚文件的文字内容，res目录下存放相关的资源文件
+2、文件节点底层操作接口
+（1）操作类型：add、delete、update、move、rename
+（2）文件节点操作必须是原子操作，实现上使用了线程锁和数据库的状态来实现，保证对本地文件、版本仓库节点和数据库操作是一个原子操作
+（3）文件节点信息的更新优先次序依次为 本地文件、版本仓库文件、数据库记录
 	版本仓库文件如果更新失败，则本地文件需要回退，以保证本地文件与版本仓库最新版本的文件一致
-	数据库记录更新失败时，本地文件和版本仓库文件不会进行回退操作，这里面有些风险但还可以接受（主要是add和delete操作的一些后遗症）
-2、路径定义规则
-(1) 仓库路径
+	数据库记录更新失败时，本地文件和版本仓库文件不会进行回退操作，这里面有些风险但还可以接受
+3、文件节点的锁定
+（1）文件节点底层操作接口需要调用LockDoc接口来锁定该文件节点，以避免该接口在操作过程中不被影响
+（2）锁定状态：
+	0：未锁定
+	2：绝对锁定，自己无法解锁，锁过期时间2天
+	1：RDoc CheckOut，对自己无效，锁过期时间2天
+	3：VDoc Online Edit，对自己无效，锁过期时间2天
+（3）LockDoc(docId,subDocCheckFlag)的实现
+	subDocCheckFlag是true的时候表示需要坚持，docId节点的子目录下是否有锁定文件，由于delete\move\rename会影响subDocs,copy对subDocs有依赖，这四个接口需要将标志设置为true
+4、路径定义规则
+（1） 仓库路径
  reposPath: 仓库根路径，以"/"结尾
  reposRPath: 仓库实文件存储根路径,reposPath + "data/rdata/"
  reposVPath: 仓库虚文件存储根路径,reposPath + "data/vdata/"
  reposRefRPath: 仓库实文件存储根路径,reposPath + "refData/rdata/"
  reposRefVPath: 仓库虚文件存储根路径,reposPath + "refData/vdata/"
  reposUserTempPath: 仓库虚文件存储根路径,reposPath + "tmp/userId/" 
-(2) parentPath: 该变量通过getParentPath获取，如果是文件则获取的是其父节点的目录路径，如果是目录则获取到的是目录路径，以空格开头，以"/"结尾
-(3) 文件/目录相对路径: docRPath = parentPath + doc.name docVName = HashValue(docRPath)  末尾不带"/"
-(4) 文件/目录本地全路径: localDocRPath = reposRPath + parentPath + doc.name  localVDocPath = repoVPath + HashValue(docRPath) 末尾不带"/"
+（2） parentPath: 该变量通过getParentPath获取，如果是文件则获取的是其父节点的目录路径，如果是目录则获取到的是目录路径，以空格开头，以"/"结尾
+（3） 文件/目录相对路径: docRPath = parentPath + doc.name docVName = HashValue(docRPath)  末尾不带"/"
+（4） 文件/目录本地全路径: localDocRPath = reposRPath + parentPath + doc.name  localVDocPath = repoVPath + HashValue(docRPath) 末尾不带"/"
  */
 @Controller
 @RequestMapping("/Doc")
@@ -1259,19 +1264,14 @@ public class DocController extends BaseController{
 		Doc doc = null;
 		synchronized(syncLock)
 		{
+			boolean subDocCheckFlag = false;
 			if(lockType == 2)	//If want to force lock, must check all subDocs not locked
 			{
-				if(isSubDocLocked(docId,rt) == true)
-				{
-					unlock(); //线程锁
-		
-					System.out.println("lockDoc() subDoc of " + docId +" was locked！");
-					return;
-				}
+				subDocCheckFlag = true;
 			}
 			
 			//Try to lock the Doc
-			doc = lockDoc(docId,lockType,login_user,rt);
+			doc = lockDoc(docId,lockType,login_user,rt,subDocCheckFlag);
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -1573,17 +1573,9 @@ public class DocController extends BaseController{
 		else
 		{
 			synchronized(syncLock)
-			{			
-				if(isSubDocLocked(docId,rt) == true)
-				{
-					unlock(); //线程锁
-		
-					System.out.println("deleteDoc() subDoc of " + docId +" was locked！");
-					return true;
-				}
-				
+			{							
 				//Try to lock the Doc
-				doc = lockDoc(docId,2,login_user,rt);
+				doc = lockDoc(docId,2,login_user,rt,true);
 				if(doc == null)
 				{
 					unlock(); //线程锁
@@ -1710,7 +1702,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lock the doc
-			doc = lockDoc(docId, 1, login_user, rt);
+			doc = lockDoc(docId, 1, login_user, rt,false);
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -1808,17 +1800,8 @@ public class DocController extends BaseController{
 		Doc doc = null;
 		synchronized(syncLock)
 		{
-			//Renmae Dir 需要检查其子目录是否上锁
-			if(isSubDocLocked(docId,rt) == true)
-			{
-				unlock(); //线程锁
-	
-				System.out.println("renameDoc() subDoc of " + docId +" was locked！");
-				return;
-			}
-			
 			//Try to lockDoc
-			doc = lockDoc(docId,2,login_user,rt);
+			doc = lockDoc(docId,2,login_user,rt,true);
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -1900,16 +1883,7 @@ public class DocController extends BaseController{
 		Doc dstPDoc = null;
 		synchronized(syncLock)
 		{
-			//Try to lock Doc
-			if(isSubDocLocked(docId,rt) == true)
-			{
-				unlock(); //线程锁
-	
-				System.out.println("subDoc of " + docId +" Locked！");
-				return;
-			}
-			
-			doc = lockDoc(docId,2,login_user,rt);
+			doc = lockDoc(docId,2,login_user,rt,true);
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -1921,7 +1895,7 @@ public class DocController extends BaseController{
 			//Try to lock dstPid
 			if(dstPid !=0)
 			{
-				dstPDoc = lockDoc(dstPid,2,login_user,rt);
+				dstPDoc = lockDoc(dstPid,2,login_user,rt,false);
 				if(dstPDoc== null)
 				{
 					unlock(); //线程锁
@@ -2063,17 +2037,8 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				//Lock SrcDoc
-				if(isSubDocLocked(docId,rt) == true)
-				{
-					unlock(); //线程锁
-		
-					System.out.println("copyDoc() subDoc of " + docId +" was locked！");
-					return true;
-				}
-			
 				//Try to lock the srcDoc
-				srcDoc = lockDoc(docId,1,login_user,rt);
+				srcDoc = lockDoc(docId,1,login_user,rt,true);
 				if(srcDoc == null)
 				{
 					unlock(); //线程锁
@@ -2260,7 +2225,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			doc = lockDoc(id,1,login_user,rt);
+			doc = lockDoc(id,1,login_user,rt,false);
 			if(doc== null)
 			{
 				unlock(); //线程锁
@@ -2325,10 +2290,21 @@ public class DocController extends BaseController{
 		}		
 	}
 	
-	/*********************Functions For DocLock *******************************/
+	/*********************Functions For DocLock 
+	 * @param subDocCheckFlag *******************************/
 	//Lock Doc
-	private Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt) {
-		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName());
+	private Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
+		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
+		
+		if(subDocCheckFlag)
+		{
+			if(isSubDocLocked(docId,rt) == true)
+			{
+				System.out.println("lockDoc() subDoc of " + docId +" was locked！");
+				return null;
+			}
+		}
+		
 		//确定文件节点是否可用
 		Doc doc = reposService.getDoc(docId);
 		if(doc == null)
