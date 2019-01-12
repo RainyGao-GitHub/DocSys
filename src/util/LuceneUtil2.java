@@ -366,6 +366,7 @@ public class LuceneUtil2 {
     	    	Paragraph pp = range.getParagraph(i);
     	    	content.append(pp.text());
     	    }
+    	    
     		doc.close();
     	    fis.close();
     		
@@ -389,7 +390,8 @@ public class LuceneUtil2 {
     		
         	XWPFWordExtractor extractor = new XWPFWordExtractor(xdoc);
         	str = extractor.getText();
-
+        	
+        	extractor.close();
         	xdoc.close();
         	fis.close();
         	
