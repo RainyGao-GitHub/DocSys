@@ -3238,7 +3238,8 @@
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
-                        //updateMenu();
+                        //Rename NodeName in docList
+				     	DocList.renameNode(id,newName);
                         bootstrapQ.msg({
 								msg : "重命名完成！",
 								type : 'success',
@@ -5462,6 +5463,15 @@ function CompareObj(objA, objB, flag) {
 		{
 			$("[dataId='"+ docId +"']").remove();
 		}
+    	
+    	//Rename Node
+		function renameNode(docId,newName)
+		{
+    		var obj = $("[dataId='"+ docId +"']");
+    		obj.attr("dataName",newName);
+			var div = obj.children("div").get(0);
+			console.log(div);
+		}
 		
 		//Delete Node
 		function focusNode(docId)
@@ -5483,6 +5493,9 @@ function CompareObj(objA, objB, flag) {
             },
             deleteNode: function(docId){
             	deleteNode(docId);
+            },
+            renameNode: function(docId,newName){
+            	renameNode(docId,newName);
             },
             focusNode: function(docId){
             	focusNode(docId);
