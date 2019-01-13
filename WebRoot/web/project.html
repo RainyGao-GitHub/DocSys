@@ -801,24 +801,17 @@
 	  	
 	  	//get the parentNode
 	  	var parentId = 0;
-		if(parentNode&&parentNode.type=="2"){
-			parentId=parentNode.id;	
-		}else{
-			if(parentNode&&parentNode.getParentNode()){
-				parentNode=parentNode.getParentNode();
-				parentId=parentNode.id;
-				console.log(parentId);
-			}else{
-				parentNode=null;
-			}
-		}
-		
-		if(parentNode && parentNode.id)
+		if(parentNode)
 		{
-			parentId = parentNode.id;
+			parentId=parentNode.id;	
 		}
-		var vid = gReposId;
+		else
+		{
+			parentNode=null;
+		}
 		
+		var vid = gReposId;
+
 		var remoteDir = getNodePath(parentNode);	//only for display
 		
 	    qiao.bs.dialog({
@@ -852,21 +845,15 @@
 		
 	  	//get the parentNode
 	  	var parentId = 0;
-		if(parentNode&&parentNode.type=="2"){
-			parentId=parentNode.id;	
-		}else{
-			if(parentNode&&parentNode.getParentNode()){
-				parentNode=parentNode.getParentNode();
-				parentId=parentNode.id;
-				console.log(parentId);
-			}else{
-				parentNode=null;
-			}
-		}
-		if(parentNode && parentNode.id)
+		if(parentNode)
 		{
-			parentId = parentNode.id;
+			parentId=parentNode.id;	
 		}
+		else
+		{
+			parentNode=null;
+		}
+		
 		var vid = gReposId;
 		
 		//开始上传
