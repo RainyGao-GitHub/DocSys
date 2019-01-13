@@ -4079,10 +4079,7 @@
                 	   	//Add or Delete from DocList
                			if(parentId == DocListParentDocId)	//dstParentId
             			{
-            				if(DocList.isNodeExists(treeNode.id) == false)
-            				{
-            					DocList.addNode(treeNode.id,treeNode.type,treeNode.name,treeNode.latestEditTime);
-            				}
+							DocList.addNode(treeNode.id,treeNode.type,treeNode.name,treeNode.latestEditTime);
             			}
                			else if(treeNode.pid == DocListParentDocId) //srcParentId
                			{
@@ -6216,21 +6213,26 @@ function CompareObj(objA, objB, flag) {
             }
         };  
         uuz.ondrop = function(e){   
-            e.preventDefault();
-    	  	//get the parentNode
-    	  	console.log(e.target);
+            console.log("uuz.ondrop() event:",e);
+        	e.preventDefault();
+    	  	
+        	//If File drop on the zTree Item, trigger the click event on it
+    	  	console.log("uuz.ondrop() e.target:",e.target);
             if(e.target.tagName=="SPAN"){
             	e.target.parentNode.click();
             }
+            
+            //Choose the selectNode as the place for upload
     	  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
     		var selectedNode = treeObj.getSelectedNodes()[0];
-    		console.log(selectedNode);
+    		console.log("uuz.ondrop() selectedNode",selectedNode);
     		var parentNode = selectedNode;
     		if(selectedNode && selectedNode.isParent === false)
     		{	
-    			console.log("selectedNode:" + selectedNode.name);
+    			console.log("uuz.ondrop() selectedNode:" + selectedNode.name);
     			parentNode = selectedNode.getParentNode();
     		}
+    		console.log("uuz.ondrop() parentNode:" + parentNode.name);
             dragUploadConfirm(e,parentNode);
         };
         
