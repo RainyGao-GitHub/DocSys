@@ -5461,22 +5461,34 @@ function CompareObj(objA, objB, flag) {
     	//Delete Node
 		function deleteNode(docId)
 		{
-			$("[dataId='"+ docId +"']").remove();
+    		var obj = $("[dataId='"+ docId +"']");
+    		if(obj)
+    		{
+    			obj.remove();
+    		}
 		}
     	
     	//Rename Node
 		function renameNode(docId,newName)
 		{
     		var obj = $("[dataId='"+ docId +"']");
-    		obj.attr("dataName",newName);
-			var div = obj.children("div").get(0);
-			console.log(div);
+    		if(obj)
+    		{
+	    		obj.attr("dataName",newName);
+				var domObj = obj.children("div").get(0);
+				var firstDivObj = $(domObj);
+				firstDivObj.text(newName);
+    		}
 		}
 		
 		//Delete Node
 		function focusNode(docId)
 		{
-			$("[dataId='"+ docId +"']").focus();
+			var obj = $("[dataId='"+ docId +"']");
+			if(obj)
+			{
+				obj.focus();
+			}
 		}
 
     	//开放给外部的调用接口
