@@ -19,8 +19,11 @@
     <link href="static/zTree/css/metroStyle/metroStyle.css" rel="stylesheet">
     <link href="static/nprogress/nprogress.css" rel="stylesheet">
     <link href="static/styles/kancloud.css" rel="stylesheet">
-    <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
-    <link href="static/markdown/css/editormd.min.css" rel="stylesheet">
+    <!-- bootStrapQ -->
+	<link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+    <!-- editormd -->
+	<link href="static/markdown/css/editormd.min.css" rel="stylesheet">
+	<link href="static/markdown/css/add.css" rel="stylesheet">
 	<!-- contextMenu -->
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/demo.css">
 	<link rel="stylesheet" type="text/css" href="static/ContextJS/css/context.standalone.css">
@@ -98,6 +101,17 @@
     <![endif]-->
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="static/scripts/jquery.min.js" type="text/javascript"></script>
+    <script src="static/markdown/editormd.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/link-dialog/link-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/reference-link-dialog/reference-link-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/image-dialog/image-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/code-block-dialog/code-block-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/table-dialog/table-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/emoji-dialog/emoji-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/goto-line-dialog/goto-line-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/help-dialog/help-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/html-entities-dialog/html-entities-dialog.js" type="text/javascript"></script>
+    <script src="static/markdown/plugins/preformatted-text-dialog/preformatted-text-dialog.js" type="text/javascript"></script>
 </head>
 <body>
 <div class="m-manual manual-reader">
@@ -403,7 +417,6 @@
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="application/javascript" src="static/markdown/lib/raphael.min.js"></script>
-<script type="application/javascript" src="static/seajs/sea.js"></script>
 <script type="application/javascript" src="static/scripts/jsonEscape.js"></script>
 <!-- zTree -->
 <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
@@ -4152,55 +4165,14 @@
 
 <script type="text/javascript">
 	/********************* 文件编辑接口 *********************************************/
-	//如果需要看懂下面的代码，请先看懂seajs，还不懂可以联系我：QQ：652055239
-	//load editormd by using seajs
-	seajs.config({
-        base  : "./static",
-        alias : {
-            jquery: "scripts/jquery.min.js",
-            editormd : "markdown/editormd.js"
-        }
-    });
-
-    //seajs.use("./js/seajs-main"); //使用main.js时 editormd 路径要改为 "../../editormd"
-
-    var deps = [
-        "jquery",
-        "editormd",
-        "markdown/plugins/link-dialog/link-dialog",
-        "markdown/plugins/reference-link-dialog/reference-link-dialog",
-        "markdown/plugins/image-dialog/image-dialog",
-        "markdown/plugins/code-block-dialog/code-block-dialog",
-        "markdown/plugins/table-dialog/table-dialog",
-        "markdown/plugins/emoji-dialog/emoji-dialog",
-        "markdown/plugins/goto-line-dialog/goto-line-dialog",
-        "markdown/plugins/help-dialog/help-dialog",
-        "markdown/plugins/html-entities-dialog/html-entities-dialog",
-        "markdown/plugins/preformatted-text-dialog/preformatted-text-dialog"
-    ];
-
-    seajs.request("static/markdown/css/add.css",function(){});
-    
-    seajs.use(deps, function($, editormd) {
-       	DocEdit.init(editormd);
-    });
-    
 	//DocEdit类	
     var DocEdit = (function () {
-    	//markdow Editor
-    	var mdEditor;	//editormd构建函数 
     	var md;	//mdeditor对象
     	var firstcall = true;
       	//自动保存定时器
       	var autoSaveTimer;
       	var timerState = 0;
     
-    	function init(editor)
-      	{
-      		console.log("DocEdit init");
-      		mdEditor = editor;
-      	} 
-
       	function editorInit(content,edit)
       	{
       		console.log("DocEdit editorInit");
@@ -4221,15 +4193,15 @@
                tocm: true,          			// Using [TOCM]
                tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
                //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
-               flowChart : true,                // 疑似 Sea.js与 Raphael.js 有冲突，必须先加载 Raphael.js ，Editor.md 才能在 Sea.js 下正常进行；
-               sequenceDiagram : true,          // 同上
+               flowChart : true,
+               sequenceDiagram : true,
                //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
                //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
                //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
-               //dialogMaskOpacity : 0.4,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
-               //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
+               dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
+               dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
                imageUpload : true,
-               //imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+               imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
                    console.log("onchange");
@@ -4262,15 +4234,8 @@
                }
        		};
        		
-       		if(!mdEditor)
-       		{
-       			showErrorMessage("please load the editormd firstly by seajs");
-       			return;
-       		}
-       		else
-       		{
-       			md = mdEditor("doc",params);
-       		}    
+      		//editormd was defined in editormd.js
+       		md = editormd("doc",params);   
       	}
         
     	function editorLoadmd(content,edit) 
@@ -4347,9 +4312,6 @@
 
 		//开放给外部的调用接口
         return {
-            init: function(editor){
-            	init(editor);
-            },
             loadmd: function(content,edit){
                loadmd(content,edit);
             },
