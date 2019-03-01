@@ -110,37 +110,36 @@
             <input class="form-control" type="text" name="name" style="width: 100%"/>
             <label>介绍<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="info" style="width: 100%"/>
-            <!-- <label>仓库类型</label>
-            <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
-            	<option value="0">虚拟文件系统</option>   
-            	<option value="1" selected="selected">实文件系统</option>   
-            </select> -->
             <label>仓库位置<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
             <label>版本管理</label>
             <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
-            	<!-- <option value="2">GIT</option> -->   
+            	<option value="2">GIT</option>   
             </select>
-            <label>svn路径<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="svnPath"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
-            <label>svn用户名</label>
-            <input class="form-control" type="text" name="svnUser"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
-            <label>svn密码</label>
-            <input class="form-control" type="password" name="svnPwd" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
+            <label>本地版本仓库</label>
+            <input class="form-control" type="text" name="localSvnPath"  placeholder="请填写本地版本仓库所在目录！"  value="" style="width: 100%"/>
+            <label>远程版本仓库</label>
+            <input class="form-control" type="text" name="svnPath"  placeholder="请体填写远程版本仓库地址！" value="" style="width: 100%"/>
+            <label>用户名</label>
+            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
+            <label>密码</label>
+            <input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
             <label>版本管理1</label>
             <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
-            	<!-- <option value="2">GIT</option> -->   
+            	<option value="2">GIT</option>  
             </select>
-            <label>svn路径1<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="svnPath1"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
-            <label>svn用户名1</label>
-            <input class="form-control" type="text" name="svnUser1"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
-            <label>svn密码1</label>
-            <input class="form-control" type="password" name="svnPwd1" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
+            <label>本地版本仓库</label>
+            <input class="form-control" type="text" name="localSvnPath1"  placeholder="请填写本地版本仓库所在目录！" value="" style="width: 100%"/>
+            <label>远程版本仓库</label>
+            <input class="form-control" type="text" name="svnPath1"  placeholder="请体填写远程版本仓库地址！" value="" style="width: 100%"/>
+            <label>用户名</label>
+            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
+            <label>密码</label>
+            <input class="form-control" type="password" name="svnPwd1" value="" style="width: 100%"/>           
         </div>
     </form>
 </div>
@@ -333,12 +332,14 @@
 		//alert(verCtrl);
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
+			$("#dialog-new-repos input[name='localSvnPath']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnPath']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnUser']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",false);
 		}
 		else	//hide svn info
 		{
+			$("#dialog-new-repos input[name='localSvnPath']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnPath']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnUser']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",true);				
@@ -352,12 +353,14 @@
 		//alert(verCtrl);
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
+			$("#dialog-new-repos input[name='localSvnPath1']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",false);
 			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",false);
 		}
 		else	//hide svn info
 		{
+			$("#dialog-new-repos input[name='localSvnPath1']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",true);
 			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",true);				
@@ -378,10 +381,12 @@
                     {
                     	$("#dialog-new-repos input[name='path']").attr("disabled",false);
                     }
+                    $("#dialog-new-repos input[name='localSvnPath']").val("");	//local VersionRepos Path
                     $("#dialog-new-repos input[name='svnPath']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser']").val("");
             		$("#dialog-new-repos input[name='svnPwd']").val("");
                     doSelectVerCtrl(); //根据文件系统版本控制默认类型，控制显示svn信息
+                    $("#dialog-new-repos input[name='localSvnPath1']").val("");	//local VersionRepos Path
                     $("#dialog-new-repos input[name='svnPath1']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser1']").val("");
             		$("#dialog-new-repos input[name='svnPwd1']").val("");
@@ -397,11 +402,13 @@
             var type = 1;	//Real Doc System
             var path = $("#dialog-new-repos input[name='path']").val();
             var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+            var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
             var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
             var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
             //For Virtual Doc Version Control
             var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
+            var localSvnPath1 = $("#dialog-new-repos input[name='localSvnPath1']").val();
             var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
             var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
             var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
@@ -418,10 +425,12 @@
                         type:type,
                         path:path,
                         verCtrl: verCtrl,
+                        localSvnPath: localSvnPath,
                         svnPath: svnPath,
                         svnUser: svnUser,
                         svnPwd: svnPwd,
                         verCtrl1: verCtrl1,
+                        localSvnPath1: localSvnPath1,
                         svnPath1: svnPath1,
                         svnUser1: svnUser1,
                         svnPwd1: svnPwd1,
