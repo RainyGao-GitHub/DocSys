@@ -237,24 +237,21 @@ public class ReposController extends BaseController{
 				{
 					localSvnPath = path + "DocSysSvnReposes/";
 				}
-				//Create a local SVN Repos
-				if(verCtrl == 1)
-				{
-					String reposName = repos.getId() + "_SVN_RRepos";
-					svnPath = createSvnLocalRepos(localSvnPath,reposName,rt);
-				}	
-				else if(verCtrl == 2)
-				{
-					String reposName = repos.getId() + "_GIT_RRepos";
-					svnPath = createGitLocalRepos(localSvnPath,reposName,rt);
-				}
 				
+				//Create a localVersionRepos
+				String reposName = repos.getId() + "_SVN_RRepos";
+				if(verCtrl == 2)
+				{
+					reposName = repos.getId() + "_GIT_RRepos";
+				}
+				svnPath = createLocalVersionRepos(localSvnPath,reposName,verCtrl,rt);
 				if(svnPath == null)
 				{
-					rt.setError("SVN仓库的创建失败");
+					rt.setError("版本仓库的创建失败");
 					writeJson(rt, response);	
 					return;
 				}
+				
 				repos.setSvnPath(svnPath);
 				svnUser = "";
 				svnPwd = "";
@@ -266,7 +263,7 @@ public class ReposController extends BaseController{
 			List<Repos> list1= reposService.getReposList(tmpRepos1);
 			if((list1 != null) && (list1.size() > 0))
 			{
-				rt.setError("仓库的SvnPath已使用:" + svnPath);
+				rt.setError("版本仓库地址已使用:" + svnPath);
 				writeJson(rt, response);	
 				return;
 			}
@@ -290,23 +287,20 @@ public class ReposController extends BaseController{
 					localSvnPath1 = path + "DocSysSvnReposes/";
 				}
 
-				if(verCtrl == 1)
+				//Create a localVersionRepos
+				String reposName = repos.getId() + "_SVN_VRepos";
+				if(verCtrl1 == 2)
 				{
-					String reposName = repos.getId() + "_SVN_VRepos";
-					svnPath = createSvnLocalRepos(localSvnPath,reposName,rt);
-				}	
-				else if(verCtrl == 2)
-				{
-					String reposName = repos.getId() + "_GIT_VRepos";
-					svnPath = createGitLocalRepos(localSvnPath,reposName,rt);
+					reposName = repos.getId() + "_GIT_VRepos";
 				}
-				
+				svnPath = createLocalVersionRepos(localSvnPath1,reposName,verCtrl1,rt);
 				if(svnPath == null)
 				{
 					rt.setError("版本仓库的创建失败");
 					writeJson(rt, response);	
 					return;
 				}
+				
 				repos.setSvnPath1(svnPath1);
 				svnUser1 = "";
 				svnPwd1 = "";
@@ -318,7 +312,7 @@ public class ReposController extends BaseController{
 			List<Repos> list1= reposService.getReposList(tmpRepos1);
 			if((list1 != null) && (list1.size() > 0))
 			{
-				rt.setError("仓库的SvnPath1已使用:" + svnPath1);
+				rt.setError("版本仓库地址已使用:" + svnPath);
 				writeJson(rt, response);	
 				return;
 			}
@@ -485,8 +479,32 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 	}
 
+	private String createLocalVersionRepos(String localPath, String reposName, Integer verCtrl,ReturnAjax rt) {
+		if(verCtrl == 1)
+		{
+			return createSvnLocalRepos(localPath, reposName, rt);
+		}
+		else if(verCtrl == 2)
+		{
+			return createGitLocalRepos(localPath, reposName, rt);
+		}
+		return null;
+	}
+	
+	private String createGitLocalRepos(String localSvnPath, String reposName, ReturnAjax rt) {
+		File dir = new File(localSvnPath,reposName);
+		if(dir.exists())
+		{
+			System.out.println("GIT仓库:"+localSvnPath+reposName + "已存在！");	
+			rt.setMsgData("SVN仓库:"+localSvnPath+reposName + "已存在！");
+			return "file:///" + localSvnPath + reposName;
+		}
+		
+		String gitPath = SVNUtil.CreateRepos(reposName,localSvnPath);
+		return gitPath;
+	}
+	
 	private String createSvnLocalRepos(String localSvnPath, String reposName, ReturnAjax rt) {
-		//获取svn本地仓库的存放路径：后续考虑在系统中配置	
 		File dir = new File(localSvnPath,reposName);
 		if(dir.exists())
 		{
