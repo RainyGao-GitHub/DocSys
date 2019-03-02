@@ -11,6 +11,10 @@ public class Repos {
 
     private Integer verCtrl;
 
+    private Integer isRemote;
+
+    private String localSvnPath;
+
     private String svnPath;
 
     private String svnUser;
@@ -19,6 +23,10 @@ public class Repos {
 
     private Integer verCtrl1;
 
+    private Integer isRemote1;
+
+    private String localSvnPath1;
+
     private String svnPath1;
 
     private String svnUser1;
@@ -26,8 +34,6 @@ public class Repos {
     private String svnPwd1;
 
     private String info;
-
-    private String menu;
 
     private String pwd;
 
@@ -75,6 +81,22 @@ public class Repos {
         this.verCtrl = verCtrl;
     }
 
+    public Integer getIsRemote() {
+        return isRemote;
+    }
+
+    public void setIsRemote(Integer isRemote) {
+        this.isRemote = isRemote;
+    }
+
+    public String getLocalSvnPath() {
+        return localSvnPath;
+    }
+
+    public void setLocalSvnPath(String localSvnPath) {
+        this.localSvnPath = localSvnPath == null ? null : localSvnPath.trim();
+    }
+
     public String getSvnPath() {
         return svnPath;
     }
@@ -107,6 +129,22 @@ public class Repos {
         this.verCtrl1 = verCtrl1;
     }
 
+    public Integer getIsRemote1() {
+        return isRemote1;
+    }
+
+    public void setIsRemote1(Integer isRemote1) {
+        this.isRemote1 = isRemote1;
+    }
+
+    public String getLocalSvnPath1() {
+        return localSvnPath1;
+    }
+
+    public void setLocalSvnPath1(String localSvnPath1) {
+        this.localSvnPath1 = localSvnPath1 == null ? null : localSvnPath1.trim();
+    }
+
     public String getSvnPath1() {
         return svnPath1;
     }
@@ -137,14 +175,6 @@ public class Repos {
 
     public void setInfo(String info) {
         this.info = info == null ? null : info.trim();
-    }
-
-    public String getMenu() {
-        return menu;
-    }
-
-    public void setMenu(String menu) {
-        this.menu = menu == null ? null : menu.trim();
     }
 
     public String getPwd() {

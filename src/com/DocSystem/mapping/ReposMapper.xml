@@ -7,22 +7,26 @@
     <result column="TYPE" jdbcType="INTEGER" property="type" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
     <result column="VER_CTRL" jdbcType="INTEGER" property="verCtrl" />
+    <result column="IS_REMOTE" jdbcType="INTEGER" property="isRemote" />
+    <result column="LOCAL_SVN_PATH" jdbcType="VARCHAR" property="localSvnPath" />
     <result column="SVN_PATH" jdbcType="VARCHAR" property="svnPath" />
     <result column="SVN_USER" jdbcType="VARCHAR" property="svnUser" />
     <result column="SVN_PWD" jdbcType="VARCHAR" property="svnPwd" />
     <result column="VER_CTRL1" jdbcType="INTEGER" property="verCtrl1" />
+    <result column="IS_REMOTE1" jdbcType="INTEGER" property="isRemote1" />
+    <result column="LOCAL_SVN_PATH1" jdbcType="VARCHAR" property="localSvnPath1" />
     <result column="SVN_PATH1" jdbcType="VARCHAR" property="svnPath1" />
     <result column="SVN_USER1" jdbcType="VARCHAR" property="svnUser1" />
     <result column="SVN_PWD1" jdbcType="VARCHAR" property="svnPwd1" />
     <result column="INFO" jdbcType="VARCHAR" property="info" />
-    <result column="MENU" jdbcType="VARCHAR" property="menu" />
     <result column="PWD" jdbcType="VARCHAR" property="pwd" />
     <result column="OWNER" jdbcType="INTEGER" property="owner" />
     <result column="CREATE_TIME" jdbcType="BIGINT" property="createTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, PATH, VER_CTRL, SVN_PATH, SVN_USER, SVN_PWD, VER_CTRL1, SVN_PATH1, 
-    SVN_USER1, SVN_PWD1, INFO, MENU, PWD, OWNER, CREATE_TIME
+    ID, NAME, TYPE, PATH, VER_CTRL, IS_REMOTE, LOCAL_SVN_PATH, SVN_PATH, SVN_USER, SVN_PWD, 
+    VER_CTRL1, IS_REMOTE1, LOCAL_SVN_PATH1, SVN_PATH1, SVN_USER1, SVN_PWD1, INFO, PWD, 
+    OWNER, CREATE_TIME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -36,17 +40,19 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.Repos">
     insert into repos (ID, NAME, TYPE, 
-      PATH, VER_CTRL, SVN_PATH, 
-      SVN_USER, SVN_PWD, VER_CTRL1, 
-      SVN_PATH1, SVN_USER1, SVN_PWD1, 
-      INFO, MENU, PWD, OWNER, 
-      CREATE_TIME)
+      PATH, VER_CTRL, IS_REMOTE, 
+      LOCAL_SVN_PATH, SVN_PATH, SVN_USER, 
+      SVN_PWD, VER_CTRL1, IS_REMOTE1, 
+      LOCAL_SVN_PATH1, SVN_PATH1, SVN_USER1, 
+      SVN_PWD1, INFO, PWD, 
+      OWNER, CREATE_TIME)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{path,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, #{svnPath,jdbcType=VARCHAR}, 
-      #{svnUser,jdbcType=VARCHAR}, #{svnPwd,jdbcType=VARCHAR}, #{verCtrl1,jdbcType=INTEGER}, 
-      #{svnPath1,jdbcType=VARCHAR}, #{svnUser1,jdbcType=VARCHAR}, #{svnPwd1,jdbcType=VARCHAR}, 
-      #{info,jdbcType=VARCHAR}, #{menu,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, #{owner,jdbcType=INTEGER}, 
-      #{createTime,jdbcType=BIGINT})
+      #{path,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, #{isRemote,jdbcType=INTEGER}, 
+      #{localSvnPath,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, #{svnUser,jdbcType=VARCHAR}, 
+      #{svnPwd,jdbcType=VARCHAR}, #{verCtrl1,jdbcType=INTEGER}, #{isRemote1,jdbcType=INTEGER}, 
+      #{localSvnPath1,jdbcType=VARCHAR}, #{svnPath1,jdbcType=VARCHAR}, #{svnUser1,jdbcType=VARCHAR}, 
+      #{svnPwd1,jdbcType=VARCHAR}, #{info,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, 
+      #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Repos">
     insert into repos
@@ -66,6 +72,12 @@
       <if test="verCtrl != null">
         VER_CTRL,
       </if>
+      <if test="isRemote != null">
+        IS_REMOTE,
+      </if>
+      <if test="localSvnPath != null">
+        LOCAL_SVN_PATH,
+      </if>
       <if test="svnPath != null">
         SVN_PATH,
       </if>
@@ -78,6 +90,12 @@
       <if test="verCtrl1 != null">
         VER_CTRL1,
       </if>
+      <if test="isRemote1 != null">
+        IS_REMOTE1,
+      </if>
+      <if test="localSvnPath1 != null">
+        LOCAL_SVN_PATH1,
+      </if>
       <if test="svnPath1 != null">
         SVN_PATH1,
       </if>
@@ -89,9 +107,6 @@
       </if>
       <if test="info != null">
         INFO,
-      </if>
-      <if test="menu != null">
-        MENU,
       </if>
       <if test="pwd != null">
         PWD,
@@ -119,6 +134,12 @@
       <if test="verCtrl != null">
         #{verCtrl,jdbcType=INTEGER},
       </if>
+      <if test="isRemote != null">
+        #{isRemote,jdbcType=INTEGER},
+      </if>
+      <if test="localSvnPath != null">
+        #{localSvnPath,jdbcType=VARCHAR},
+      </if>
       <if test="svnPath != null">
         #{svnPath,jdbcType=VARCHAR},
       </if>
@@ -131,6 +152,12 @@
       <if test="verCtrl1 != null">
         #{verCtrl1,jdbcType=INTEGER},
       </if>
+      <if test="isRemote1 != null">
+        #{isRemote1,jdbcType=INTEGER},
+      </if>
+      <if test="localSvnPath1 != null">
+        #{localSvnPath1,jdbcType=VARCHAR},
+      </if>
       <if test="svnPath1 != null">
         #{svnPath1,jdbcType=VARCHAR},
       </if>
@@ -142,9 +169,6 @@
       </if>
       <if test="info != null">
         #{info,jdbcType=VARCHAR},
-      </if>
-      <if test="menu != null">
-        #{menu,jdbcType=VARCHAR},
       </if>
       <if test="pwd != null">
         #{pwd,jdbcType=VARCHAR},
@@ -172,6 +196,12 @@
       <if test="verCtrl != null">
         VER_CTRL = #{verCtrl,jdbcType=INTEGER},
       </if>
+      <if test="isRemote != null">
+        IS_REMOTE = #{isRemote,jdbcType=INTEGER},
+      </if>
+      <if test="localSvnPath != null">
+        LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR},
+      </if>
       <if test="svnPath != null">
         SVN_PATH = #{svnPath,jdbcType=VARCHAR},
       </if>
@@ -184,6 +214,12 @@
       <if test="verCtrl1 != null">
         VER_CTRL1 = #{verCtrl1,jdbcType=INTEGER},
       </if>
+      <if test="isRemote1 != null">
+        IS_REMOTE1 = #{isRemote1,jdbcType=INTEGER},
+      </if>
+      <if test="localSvnPath1 != null">
+        LOCAL_SVN_PATH1 = #{localSvnPath1,jdbcType=VARCHAR},
+      </if>
       <if test="svnPath1 != null">
         SVN_PATH1 = #{svnPath1,jdbcType=VARCHAR},
       </if>
@@ -195,9 +231,6 @@
       </if>
       <if test="info != null">
         INFO = #{info,jdbcType=VARCHAR},
-      </if>
-      <if test="menu != null">
-        MENU = #{menu,jdbcType=VARCHAR},
       </if>
       <if test="pwd != null">
         PWD = #{pwd,jdbcType=VARCHAR},
@@ -217,15 +250,18 @@
       TYPE = #{type,jdbcType=INTEGER},
       PATH = #{path,jdbcType=VARCHAR},
       VER_CTRL = #{verCtrl,jdbcType=INTEGER},
+      IS_REMOTE = #{isRemote,jdbcType=INTEGER},
+      LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR},
       SVN_PATH = #{svnPath,jdbcType=VARCHAR},
       SVN_USER = #{svnUser,jdbcType=VARCHAR},
       SVN_PWD = #{svnPwd,jdbcType=VARCHAR},
       VER_CTRL1 = #{verCtrl1,jdbcType=INTEGER},
+      IS_REMOTE1 = #{isRemote1,jdbcType=INTEGER},
+      LOCAL_SVN_PATH1 = #{localSvnPath1,jdbcType=VARCHAR},
       SVN_PATH1 = #{svnPath1,jdbcType=VARCHAR},
       SVN_USER1 = #{svnUser1,jdbcType=VARCHAR},
       SVN_PWD1 = #{svnPwd1,jdbcType=VARCHAR},
       INFO = #{info,jdbcType=VARCHAR},
-      MENU = #{menu,jdbcType=VARCHAR},
       PWD = #{pwd,jdbcType=VARCHAR},
       OWNER = #{owner,jdbcType=INTEGER},
       CREATE_TIME = #{createTime,jdbcType=BIGINT}
@@ -249,6 +285,12 @@
       <if test="verCtrl != null">
         VER_CTRL,
       </if>
+      <if test="isRemote != null">
+        IS_REMOTE,
+      </if>
+	  <if test="localSvnPath != null">
+        LOCAL_SVN_PATH,
+      </if>
       <if test="svnPath != null">
         SVN_PATH,
       </if>
@@ -261,6 +303,12 @@
       <if test="verCtrl1 != null">
         VER_CTRL1,
       </if>
+      <if test="isRemote1 != null">
+        IS_REMOTE1,
+      </if>
+	  <if test="localSvnPath1 != null">
+        LOCAL_SVN_PATH1,
+      </if>
       <if test="svnPath1 != null">
         SVN_PATH1,
       </if>
@@ -272,9 +320,6 @@
       </if>
       <if test="info != null">
         INFO,
-      </if>
-      <if test="menu != null">
-        MENU,
       </if>
       <if test="pwd != null">
         PWD,
@@ -299,6 +344,12 @@
       <if test="verCtrl != null">
         #{verCtrl,jdbcType=INTEGER},
       </if>
+      <if test="isRemote != null">
+        #{isRemote,jdbcType=INTEGER},
+      </if>
+      <if test="locaSvnPath != null">
+        #{localSvnPath,jdbcType=VARCHAR},
+      </if>
       <if test="svnPath != null">
         #{svnPath,jdbcType=VARCHAR},
       </if>
@@ -311,6 +362,12 @@
       <if test="verCtrl1 != null">
         #{verCtrl1,jdbcType=INTEGER},
       </if>
+      <if test="isRemote1 != null">
+        #{isRemote1,jdbcType=INTEGER},
+      </if>
+      <if test="locaSvnPath != null">
+        #{localSvnPath1,jdbcType=VARCHAR},
+      </if>
       <if test="svnPath1 != null">
         #{svnPath1,jdbcType=VARCHAR},
       </if>
@@ -322,9 +379,6 @@
       </if>
       <if test="info != null">
         #{info,jdbcType=VARCHAR},
-      </if>
-      <if test="menu != null">
-        #{menu,jdbcType=VARCHAR},
       </if>
       <if test="pwd != null">
         #{pwd,jdbcType=VARCHAR},
@@ -357,6 +411,9 @@
     <if test="path != null">
       and PATH = #{path,jdbcType=VARCHAR}
     </if>
+    <if test="localSvnPath != null">
+      and LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR}
+    </if>
     <if test="svnPath != null">
       and SVN_PATH = #{svnPath,jdbcType=VARCHAR}
     </if>
@@ -365,6 +422,9 @@
     </if>
     <if test="svnPwd != null">
       and SVN_PWD = #{svnPwd,jdbcType=VARCHAR}
+    </if>
+    <if test="localSvnPath1 != null">
+      and LOCAL_SVN_PATH1 = #{localSvnPath1,jdbcType=VARCHAR}
     </if>
     <if test="svnPath1 != null">
       and SVN_PATH1 = #{svnPath1,jdbcType=VARCHAR}
@@ -377,9 +437,6 @@
     </if>    
     <if test="info != null">
       and INFO = #{info,jdbcType=VARCHAR}
-    </if>
-    <if test="menu != null">
-      and MENU = #{menu,jdbcType=VARCHAR}
     </if>
     <if test="pwd != null">
       and PWD = #{pwd,jdbcType=VARCHAR}
