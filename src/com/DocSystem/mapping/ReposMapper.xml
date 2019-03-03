@@ -347,7 +347,7 @@
       <if test="isRemote != null">
         #{isRemote,jdbcType=INTEGER},
       </if>
-      <if test="locaSvnPath != null">
+      <if test="localSvnPath != null">
         #{localSvnPath,jdbcType=VARCHAR},
       </if>
       <if test="svnPath != null">
@@ -365,7 +365,7 @@
       <if test="isRemote1 != null">
         #{isRemote1,jdbcType=INTEGER},
       </if>
-      <if test="locaSvnPath != null">
+      <if test="localSvnPath1 != null">
         #{localSvnPath1,jdbcType=VARCHAR},
       </if>
       <if test="svnPath1 != null">
