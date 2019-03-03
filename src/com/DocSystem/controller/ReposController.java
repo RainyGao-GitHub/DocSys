@@ -1,7 +1,6 @@
 package com.DocSystem.controller;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +12,6 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.tmatesoft.svn.core.SVNException;
-
 import util.ReturnAjax;
 import util.SvnUtil.SVNUtil;
 
@@ -23,22 +20,14 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.entity.UserGroup;
-
-import com.DocSystem.service.UserService;
 import com.DocSystem.service.impl.ReposServiceImpl;
-import com.DocSystem.service.impl.UserServiceImpl;
-
 import com.DocSystem.controller.BaseController;
-import com.alibaba.fastjson.JSON;
 
 @Controller
 @RequestMapping("/Repos")
 public class ReposController extends BaseController{
 	@Autowired
 	private ReposServiceImpl reposService;
-	@Autowired
-	private UserServiceImpl userService;
 	
 	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
 	/****************** get Repository List **************/
@@ -340,8 +329,32 @@ public class ReposController extends BaseController{
 				repos.setSvnPwd1(svnPwd1);
 			}
 		}
+				
+		//更新仓库的信息: svnPath 和 path
+		if(reposService.updateRepos(repos) == 0)
+		{
+			System.out.println("更新数据库失败");
+			deleteRepos(repos);
+			rt.setError("更新数据库失败");
+			writeJson(rt, response);		
+			return;
+		}
 		
+		InitReposAuthInfo(repos,login_user,rt);		
+		
+		syncUpdateVerRepos(repos,login_user,rt);
+
+		writeJson(rt, response);	
+	}
+
+	private void syncUpdateVerRepos(Repos repos, User login_user, ReturnAjax rt) {
 		//Real Doc 带版本控制，则需要同步本地和版本仓库
+		Integer verCtrl = repos.getVerCtrl();
+		Integer isRemote = repos.getIsRemote();
+		String svnPath = repos.getSvnPath();
+		String svnUser = repos.getSvnUser();
+		String svnPwd = repos.getSvnPwd();
+		String localVerReposPath = getLocalVerReposPath(repos,true);
 		if(verCtrl != 0)
 		{					
 			String reposRPath = getReposRealPath(repos);
@@ -353,42 +366,58 @@ public class ReposController extends BaseController{
 			if(versionAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
 			{
 				System.out.println("RealDoc版本仓库初始化失败:" + verReposPath);
-				deleteRepos(repos);
-				rt.setError("RealDoc版本仓库初始化失败");
-				writeJson(rt, response);	
-				return;
+				rt.setMsgData("RealDoc版本仓库初始化失败");
 			}
 		}
 		
 		//Virtual Doc 带版本控制，则需要同步本地和版本仓库
+		Integer verCtrl1 = repos.getVerCtrl1();
+		Integer isRemote1 = repos.getIsRemote1();
+		String svnPath1 = repos.getSvnPath1();
+		String svnUser1 = repos.getSvnUser1();
+		String svnPwd1 = repos.getSvnPwd1();
+		String localVerReposPath1 = getLocalVerReposPath(repos,false);
 		if(verCtrl1 != 0)
 		{					
 			String reposVPath = getReposVirtualPath(repos);
 			String commitUser = login_user.getName();
 			String commitMsg = "VirtualDoc版本仓库初始化";
-			String verReposPath1 = isRemote==1? svnPath1 : localVerReposPath1;
-			String verReposUser1 = isRemote==1? svnUser1 : "";
-			String verReposPwd1 = isRemote==1? svnPwd1 : "";
+			String verReposPath1 = isRemote1==1? svnPath1 : localVerReposPath1;
+			String verReposUser1 = isRemote1==1? svnUser1 : "";
+			String verReposPwd1 = isRemote1==1? svnPwd1 : "";
 			if(versionAutoCommit(verReposPath1,verReposUser1,verReposPwd1,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
 			{
 				System.out.println("VirtualDoc版本仓库初始化失败:" + verReposPath1);
-				deleteRepos(repos);
-				rt.setError("VirtualDoc版本仓库初始化失败");
-				writeJson(rt, response);	
-				return;
+				rt.setMsgData("VirtualDoc版本仓库初始化失败");
 			}
-		}
-		
-		//更新仓库的信息: svnPath 和 path
-		if(reposService.updateRepos(repos) == 0)
+		}	
+	}
+
+	private String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
+		String localVerReposPath = null;
+
+		Integer verCtrl = repos.getVerCtrl();
+		String localSvnPath = repos.getLocalSvnPath();
+		if(isRealDoc == false)
 		{
-			System.out.println("更新数据库失败");
-			deleteRepos(repos);
-			rt.setError("更新数据库失败");
-			writeJson(rt, response);		
-			return;
-		}
+			verCtrl = repos.getVerCtrl1();
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+
+		String reposName = getVerReposName(repos.getId(),verCtrl,isRealDoc);
 		
+		if(verCtrl == 1)
+		{
+			localVerReposPath = "file:///" + localSvnPath + reposName;
+		}
+		else
+		{
+			
+		}
+		return localVerReposPath;
+	}
+
+	private void InitReposAuthInfo(Repos repos, User login_user, ReturnAjax rt) {
 		//将当前用户加入到仓库的访问权限列表中
 		ReposAuth reposAuth = new ReposAuth();
 		reposAuth.setReposId(repos.getId());
@@ -407,7 +436,7 @@ public class ReposController extends BaseController{
 			rt.setMsgData("addRepos() addReposAuth return:" + ret);
 			System.out.println("新增用户仓库权限失败");
 		}
-		
+				
 		//设置当前用户仓库根目录的访问权限
 		DocAuth docAuth = new DocAuth();
 		docAuth.setReposId(repos.getId());		//仓库：新增仓库id
@@ -428,7 +457,6 @@ public class ReposController extends BaseController{
 			rt.setMsgData("addRepos() addReposAuth return:" + ret);
 			System.out.println("新增用户仓库根目录权限失败");
 		}		
-		writeJson(rt, response);	
 	}
 
 	private boolean isVerReposPathBeUsed(String svnPath) {
@@ -1270,13 +1298,6 @@ public class ReposController extends BaseController{
 			}
 		}
 		return resultList;
-	}
-	
-
-	private List<Doc> getReposMenu(Integer vid, User login_user) {
-		Integer userID = login_user.getId();
-		List <Doc> docList = getAccessableDocList(userID,vid);
-		return docList;
 	}
 	
 	//获取仓库下用户可访问的doclist

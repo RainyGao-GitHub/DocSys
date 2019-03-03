@@ -76,11 +76,6 @@ public class ReposServiceImpl implements ReposService {
         return reposDao.updateByPrimaryKeySelective(repos);  
     }
     
-    //get Repos Menu
-    public String getReposMenu(Integer id) {  
-        return reposDao.getReposMenu(id);  
-    }
-    
     //add a Document
     public int addDoc(Doc doc)
     {
