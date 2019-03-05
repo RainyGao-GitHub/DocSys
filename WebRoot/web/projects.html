@@ -108,11 +108,11 @@
         <div class="form-group">
             <label>名字<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="name" style="width: 100%"/>
-            <label>介绍<span style="color:#F00">*</span></label>
+            <label>简介<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="info" style="width: 100%"/>
-            <label>仓库位置<span style="color:#F00">*</span></label>
+            <label>位置<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
-            <label>版本仓库 自动创建</label>
+            <label>版本仓库 <span style="margin-left:20px"><input class="ReposAutoCreate" id="ReposAuthoCreate" value="1" type="checkbox" onclick="verCtrl()">自动创建</span></label>
             <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
@@ -126,7 +126,7 @@
             <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
             <label>密码</label>
             <input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
-            <label>VirutalDoc版本仓库 自动创建</label>
+            <label>VirutalDoc版本仓库<span style="margin-left:20px"><input class="ReposAutoCreate" id="ReposAuthoCreate1" value="1" type="checkbox" onclick="verCtrl1()">自动创建</span></label>
             <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
