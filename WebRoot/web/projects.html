@@ -112,34 +112,46 @@
             <input class="form-control" type="text" name="info" style="width: 100%"/>
             <label>位置<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
-            <label>版本仓库 <span style="margin-left:20px"><input class="ReposAutoCreate" id="ReposAuthoCreate" value="1" type="checkbox" onclick="verCtrl()">自动创建</span></label>
+            <label>版本仓库 <span style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
             <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
             	<option value="2">GIT</option>   
             </select>
-            <label>版本仓库所在目录</label>
-            <input class="form-control" type="text" name="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
-            <label>版本仓库链接</label>
-            <input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
-            <label>用户名</label>
-            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
-            <label>密码</label>
-            <input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
-            <label>VirutalDoc版本仓库<span style="margin-left:20px"><input class="ReposAutoCreate" id="ReposAuthoCreate1" value="1" type="checkbox" onclick="verCtrl1()">自动创建</span></label>
+            <div name="verReposSetting">
+	            <div name="localVerRepos">
+		            <label>版本仓库所在目录</label>
+		            <input class="form-control" type="text" name="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+	            </div>
+	            <div name="remoteVerRepos">
+		            <label>版本仓库链接</label>
+		            <input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+		            <label>用户名</label>
+		            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
+		            <label>密码</label>
+	            	<input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
+	            </div>
+            </div>
+            <label>VirutalDoc版本仓库<span style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
             <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
             	<option value="2">GIT</option>  
             </select>
-            <label>版本仓库所在目录</label>
-            <input class="form-control" type="text" name="localSvnPath1"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 100%"/>
-            <label>版本仓库链接</label>
-            <input class="form-control" type="text" name="svnPath1"  placeholder="请体填写远程版本仓库地址！" value="" style="width: 100%"/>
-            <label>用户名</label>
-            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
-            <label>密码</label>
-            <input class="form-control" type="password" name="svnPwd1" value="" style="width: 100%"/>           
+            <div name="verReposSetting1">
+	            <div name="localVerRepos1">            
+		            <label>版本仓库所在目录</label>
+		            <input class="form-control" type="text" name="localSvnPath1"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 100%"/>
+            	</div>
+            	<div name="remoteVerRepos1">
+		            <label>版本仓库链接</label>
+		            <input class="form-control" type="text" name="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+		            <label>用户名</label>
+		            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
+		            <label>密码</label>
+		            <input class="form-control" type="password" name="svnPwd1" value="" style="width: 100%"/>          
+		        </div>
+		    </div>
         </div>
     </form>
 </div>
@@ -328,43 +340,56 @@
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
+		console.log("doSelectVerCtrl");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
+		
 		//alert(verCtrl);
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
-			$("#dialog-new-repos input[name='localSvnPath']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnPath']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnUser']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",false);
+			if(isRemote == 0)
+			{
+				$("#dialog-new-repos div[name='localVerRepos']").show();
+				$("#dialog-new-repos div[name='remoteVerRepos']").hide();
+			}
+			else
+			{
+				$("#dialog-new-repos div[name='localVerRepos']").hide();
+				$("#dialog-new-repos div[name='remoteVerRepos']").show();				
+			}
+			$("#dialog-new-repos div[name='verReposSetting']").show();				
 		}
 		else	//hide svn info
 		{
-			$("#dialog-new-repos input[name='localSvnPath']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnPath']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnUser']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",true);				
+			$("#dialog-new-repos div[name='verReposSetting']").hide();				
 		}   
 	}
 	
 	//According verCtrl1 value to disale the svnPath1 or not
 	function doSelectVerCtrl1()
 	{
+		console.log("doSelectVerCtrl");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
-		//alert(verCtrl);
+		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
+
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
-			$("#dialog-new-repos input[name='localSvnPath1']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",false);
+			if(isRemote == 0)
+			{
+				$("#dialog-new-repos div[name='localVerRepos1']").show();
+				$("#dialog-new-repos div[name='remoteVerRepos1']").hide();
+			}
+			else
+			{
+				$("#dialog-new-repos div[name='localVerRepos1']").hide();
+				$("#dialog-new-repos div[name='remoteVerRepos1']").show();				
+			}
+			$("#dialog-new-repos div[name='verReposSetting1']").show();				
 		}
 		else	//hide svn info
 		{
-			$("#dialog-new-repos input[name='localSvnPath1']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",true);				
-		}   
+			$("#dialog-new-repos div[name='verReposSetting1']").hide();				
+		}     
 	}
 	
     function newRepos() {
