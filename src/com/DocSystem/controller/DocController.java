@@ -1483,7 +1483,7 @@ public class DocController extends BaseController{
 			}
 		}
 		//commit to history db
-		if(svnRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser,rt) == false)
+		if(verReposRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser,rt) == false)
 		{
 			System.out.println("svnRealDocAdd Failed");
 			String MsgInfo = "svnRealDocAdd Failed";
@@ -1612,7 +1612,7 @@ public class DocController extends BaseController{
 			}
 				
 			//需要将文件Commit到SVN上去
-			if(svnRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+			if(verReposRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
 			{
 				System.out.println("svnRealDocDelete Failed");
 				String MsgInfo = "svnRealDocDelete Failed";
@@ -2127,7 +2127,7 @@ public class DocController extends BaseController{
 		}
 		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
 		{
-			ret = svnRealDocAdd(repos,dstParentPath,dstName,type,commitMsg,commitUser,rt);
+			ret = verReposRealDocAdd(repos,dstParentPath,dstName,type,commitMsg,commitUser,rt);
 			MsgInfo = "svnRealDocAdd Failed";
 		}			
 			
@@ -3031,121 +3031,162 @@ public class DocController extends BaseController{
 		return svnUtil.getHistoryLogs(docPath, 0, -1);
 	}
 	
+	private boolean verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnRealDocAdd(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocAdd(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
+		}
+		return true;
+	}
+	
+	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		String remotePath = parentPath + entryName;
 		String reposRPath = getReposRealPath(repos);
 		String reposRefRPath = getReposRefRealPath(repos);
-		if(repos.getVerCtrl() == 1)
+		
+		String reposURL = null;
+		String svnUser = null;
+		String svnPwd = null;
+		Integer isRemote = repos.getIsRemote();
+		if(isRemote == 1)
 		{
-			String reposURL = null;
-			Integer isRemote = repos.getIsRemote();
-			if(isRemote == 1)
-			{
-				reposURL = repos.getSvnPath();
-			}
-			else
-			{
-				reposURL = getLocalVerReposPath(repos,true);
-			}
-			String svnUser = repos.getSvnUser();
-			if(svnUser==null || "".equals(svnUser))
-			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd();
-	
-			try {
-				SVNUtil svnUtil = new SVNUtil();
-				svnUtil.Init(reposURL, svnUser, svnPwd);
-				
-				if(svnUtil.doCheckPath(remotePath, -1) == false)	//检查文件是否已经存在于仓库中
-				{
-					if(type == 1)
-					{
-						String localFilePath = reposRPath + remotePath;
-						if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg) == false)
-						{
-							System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
-							rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
-							return false;
-						}
-					}
-					else
-					{
-						if(svnUtil.svnAddDir(parentPath,entryName,commitMsg) == false)
-						{
-							System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");	
-							rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");
-							return false;
-						}
-					}
-				}
-				else	//如果已经存在，则只是将修改的内容commit到服务器上
-				{
-					System.out.println(remotePath + "在仓库中已存在！");
-					rt.setMsgData("svnRealDocAdd() " + remotePath + "在仓库中已存在！");
-					return false;
-				}
-			} catch (SVNException e) {
-				e.printStackTrace();
-				System.out.println("系统异常：" + remotePath + " svnRealDocAdd异常！");
-				rt.setMsgData(e);
-				return false;
-			}
-			
-			//Create the ref real doc, so that we can commit the diff later
-			createRefRealDoc(reposRPath,reposRefRPath,parentPath,entryName,type,rt);
-			return true;
+			reposURL = repos.getSvnPath();
+			svnUser = repos.getSvnUser();
+			svnPwd = repos.getSvnPwd();
 		}
 		else
 		{
-			return true;
+			reposURL = getLocalVerReposPath(repos,true);
 		}
-	}
-	
-	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
-			String commitMsg, String commitUser, ReturnAjax rt) {
-		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
-		if(repos.getVerCtrl() == 1)
-		{
 		
-			String reposURL = repos.getSvnPath();
-			String svnUser = repos.getSvnUser();
-			if(svnUser==null || "".equals(svnUser))
+		if(svnUser==null || "".equals(svnUser))
+		{
+			svnUser = commitUser;
+		}
+		
+		try {
+			SVNUtil svnUtil = new SVNUtil();
+			svnUtil.Init(reposURL, svnUser, svnPwd);
+			
+			if(svnUtil.doCheckPath(remotePath, -1) == false)	//检查文件是否已经存在于仓库中
 			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd();
-			String docRPath = parentPath + name;
-			try {
-				SVNUtil svnUtil = new SVNUtil();
-				svnUtil.Init(reposURL, svnUser, svnPwd);
-				if(svnUtil.doCheckPath(docRPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
+				if(type == 1)
 				{
-					if(svnUtil.svnDelete(parentPath,name,commitMsg) == false)
+					String localFilePath = reposRPath + remotePath;
+					if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg) == false)
 					{
-						System.out.println(docRPath + " remoteDeleteEntry失败！");
-						rt.setMsgData("svnRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
+						System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
+						rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
 						return false;
 					}
 				}
-			} catch (SVNException e) {
-				System.out.println("系统异常：" + docRPath + " remoteDeleteEntry异常！");
-				e.printStackTrace();
-				rt.setMsgData(e);
+				else
+				{
+					if(svnUtil.svnAddDir(parentPath,entryName,commitMsg) == false)
+					{
+						System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");	
+						rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");
+						return false;
+					}
+				}
+			}
+			else	//如果已经存在，则只是将修改的内容commit到服务器上
+			{
+				System.out.println(remotePath + "在仓库中已存在！");
+				rt.setMsgData("svnRealDocAdd() " + remotePath + "在仓库中已存在！");
 				return false;
 			}
-			
-			//delete the ref real doc
-			String reposRefRPath = getReposRefRealPath(repos);
-			deleteRealDoc(reposRefRPath,parentPath,name,type,rt);
-			return true;
+		} catch (SVNException e) {
+			e.printStackTrace();
+			System.out.println("系统异常：" + remotePath + " svnRealDocAdd异常！");
+			rt.setMsgData(e);
+			return false;
+		}
+		
+		//Create the ref real doc, so that we can commit the diff later
+		createRefRealDoc(reposRPath,reposRefRPath,parentPath,entryName,type,rt);
+		return true;
+	}
+	
+	private boolean verReposRealDocDelete(Repos repos, String parentPath, String name,Integer type,
+			String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnRealDocDelete(repos, parentPath, name, type, commitMsg, commitUser, rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocDelete(repos, parentPath, name, type, commitMsg, commitUser, rt);
+		}
+		return true;
+	
+	}
+	
+	private boolean gitRealDocDelete(Repos repos, String parentPath, String name, Integer type, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
+			String commitMsg, String commitUser, ReturnAjax rt) {
+		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
+		
+		String reposURL = null;
+		String svnUser = null;
+		String svnPwd = null;
+		Integer isRemote = repos.getIsRemote();
+		if(isRemote == 1)
+		{
+			reposURL = repos.getSvnPath();
+			svnUser = repos.getSvnUser();
+			svnPwd = repos.getSvnPwd();
 		}
 		else
 		{
-			return true;
+			reposURL = getLocalVerReposPath(repos,true);
 		}
+		
+		if(svnUser==null || "".equals(svnUser))
+		{
+			svnUser = commitUser;
+		}
+		String docRPath = parentPath + name;
+		try {
+			SVNUtil svnUtil = new SVNUtil();
+			svnUtil.Init(reposURL, svnUser, svnPwd);
+			if(svnUtil.doCheckPath(docRPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
+			{
+				if(svnUtil.svnDelete(parentPath,name,commitMsg) == false)
+				{
+					System.out.println(docRPath + " remoteDeleteEntry失败！");
+					rt.setMsgData("svnRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
+					return false;
+				}
+			}
+		} catch (SVNException e) {
+			System.out.println("系统异常：" + docRPath + " remoteDeleteEntry异常！");
+			e.printStackTrace();
+			rt.setMsgData(e);
+			return false;
+		}
+		
+		//delete the ref real doc
+		String reposRefRPath = getReposRefRealPath(repos);
+		deleteRealDoc(reposRefRPath,parentPath,name,type,rt);
+		return true;
 	}
 
 	private boolean svnRealDocCommit(Repos repos, String parentPath,
