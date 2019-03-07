@@ -427,12 +427,14 @@
             var type = 1;	//Real Doc System
             var path = $("#dialog-new-repos input[name='path']").val();
             var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+            var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
             var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
             var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
             var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
             //For Virtual Doc Version Control
             var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
+            var isRemote1 = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
             var localSvnPath1 = $("#dialog-new-repos input[name='localSvnPath1']").val();
             var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
             var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
@@ -450,13 +452,13 @@
                         type:type,
                         path:path,
                         verCtrl: verCtrl,
-                        isRemote: 1,
+                        isRemote: isRemote,
                         localSvnPath: localSvnPath,
                         svnPath: svnPath,
                         svnUser: svnUser,
                         svnPwd: svnPwd,
                         verCtrl1: verCtrl1,
-                        isRemote1: 1,
+                        isRemote1: isRemote1,
                         localSvnPath1: localSvnPath1,
                         svnPath1: svnPath1,
                         svnUser1: svnUser1,
