@@ -1754,8 +1754,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//需要将文件Commit到SVN上去
-		if(svnRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+		//需要将文件Commit到版本仓库上去
+		if(verReposRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
 		{
 			System.out.println("updateDoc() svnRealDocCommit Failed:" + parentPath + name);
 			String MsgInfo = "svnRealDocCommit Failed";
@@ -3131,7 +3131,6 @@ public class DocController extends BaseController{
 			return gitRealDocDelete(repos, parentPath, name, type, commitMsg, commitUser, rt);
 		}
 		return true;
-	
 	}
 	
 	private boolean gitRealDocDelete(Repos repos, String parentPath, String name, Integer type, String commitMsg,
@@ -3187,6 +3186,25 @@ public class DocController extends BaseController{
 		String reposRefRPath = getReposRefRealPath(repos);
 		deleteRealDoc(reposRefRPath,parentPath,name,type,rt);
 		return true;
+	}
+
+	private boolean verReposRealDocCommit(Repos repos, String parentPath, String name,Integer type,
+			String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnRealDocCommit(repos, parentPath, name, type, commitMsg, commitUser, rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocCommit(repos, parentPath, name, type, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	private boolean gitRealDocCommit(Repos repos, String parentPath, String name, Integer type, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	private boolean svnRealDocCommit(Repos repos, String parentPath,
