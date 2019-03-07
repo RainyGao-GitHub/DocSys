@@ -150,37 +150,6 @@ public class BaseController{
 		return name;
 	}
 	
-	//本地SVN仓库的默认存放位置：后续考虑通过配置来确定
-	protected String getSvnLocalReposStorePath() {
-		String path = "";
-		
-		path = ReadProperties.read("docSysConfig.properties", "defaultSvnLocalReposStorePath");
-	    if(path == null || "".equals(path))
-	    {
-			String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
-				path = "D:/DocSysSvnReposes/";
-			}
-			else
-			{
-				path = "/data/DocSysSvnReposes/";	//Linux系统放在  /data	
-			}
-	    }
-	    
-		File dir = new File(path);
-		if(dir.exists() == false)
-		{
-			System.out.println("getSvnLocalReposStorePath() svnLocalReposStorePath:" + path + " not exists, do create it!");
-			if(dir.mkdirs() == false)
-			{
-				System.out.println("getSvnLocalReposStorePath() Failed to create dir:" + path);
-			}
-		}	    
-		return path;
-	}
-
-	
 	//获取仓库的实文件的本地存储根路径
 	protected String getReposRealPath(Repos repos)
 	{
@@ -262,6 +231,57 @@ public class BaseController{
         System.out.println("getWebTmpPath() webTmpPath" + webTmpPath);
 		return webTmpPath;
 	}
+	
+	//获取本地仓库默认存储位置（相对于仓库的存储路径）
+	protected String getDefaultLocalVerReposPath(String path) {
+		String localSvnPath = path + "DocSysVerReposes/";
+		return localSvnPath;
+	}
+	
+	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
+		String localVerReposPath = null;
+
+		Integer verCtrl = repos.getVerCtrl();
+		String localSvnPath = repos.getLocalSvnPath();
+		if(isRealDoc == false)
+		{
+			verCtrl = repos.getVerCtrl1();
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+
+		String reposName = getVerReposName(repos.getId(),verCtrl,isRealDoc);
+		
+		if(verCtrl == 1)
+		{
+			localVerReposPath = "file:///" + localSvnPath + reposName;
+		}
+		else
+		{
+			
+		}
+		return localVerReposPath;
+	}
+
+	protected String getVerReposName(Integer id, Integer verCtrl,boolean isRealDoc) {
+		String reposName = null;
+		if(isRealDoc)
+		{
+			reposName = id + "_SVN_RRepos";
+			{ 
+				reposName = id + "_GIT_RRepos";
+			}
+		}
+		else
+		{
+			reposName = id + "_SVN_VRepos";
+			{ 
+				reposName = id + "_GIT_VRepos";
+			}
+		}
+		return reposName;
+	}
+	
+	
 	
 	protected Integer getAuthType(Integer userId, Integer groupId) {
 

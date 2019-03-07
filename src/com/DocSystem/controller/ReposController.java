@@ -235,7 +235,7 @@ public class ReposController extends BaseController{
 				//If use localVerRepos, empty path mean use the the directory: path+/DocSysSvnReposes
 				if((localSvnPath == null) || localSvnPath.equals(""))
 				{
-					localSvnPath = getDefaultLocalSvnPath(path);
+					localSvnPath = getDefaultLocalVerReposPath(path);
 				}
 				
 				String reposName = getVerReposName(repos.getId(),verCtrl,true);
@@ -289,7 +289,7 @@ public class ReposController extends BaseController{
 				//If use localVerRepos, empty path mean use the the directory: path+/DocSysSvnReposes
 				if((localSvnPath1 == null) || localSvnPath1.equals(""))
 				{
-					localSvnPath1 = getDefaultLocalSvnPath(path);
+					localSvnPath1 = getDefaultLocalVerReposPath(path);
 				}
 				String reposName = getVerReposName(repos.getId(),verCtrl1,false);
 
@@ -391,30 +391,6 @@ public class ReposController extends BaseController{
 				rt.setMsgData("VirtualDoc版本仓库初始化失败");
 			}
 		}	
-	}
-
-	private String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
-		String localVerReposPath = null;
-
-		Integer verCtrl = repos.getVerCtrl();
-		String localSvnPath = repos.getLocalSvnPath();
-		if(isRealDoc == false)
-		{
-			verCtrl = repos.getVerCtrl1();
-			localSvnPath = repos.getLocalSvnPath1();
-		}	
-
-		String reposName = getVerReposName(repos.getId(),verCtrl,isRealDoc);
-		
-		if(verCtrl == 1)
-		{
-			localVerReposPath = "file:///" + localSvnPath + reposName;
-		}
-		else
-		{
-			
-		}
-		return localVerReposPath;
 	}
 
 	private void InitReposAuthInfo(Repos repos, User login_user, ReturnAjax rt) {
@@ -596,30 +572,6 @@ public class ReposController extends BaseController{
 			String localVerReposDir1 = repos.getLocalSvnPath1() + getVerReposName(repos.getId(),verCtrl1,false);
 			delDir(localVerReposDir1);
 		}
-	}
-
-	private String getVerReposName(Integer id, Integer verCtrl,boolean isRealDoc) {
-		String reposName = null;
-		if(isRealDoc)
-		{
-			reposName = id + "_SVN_RRepos";
-			{ 
-				reposName = id + "_GIT_RRepos";
-			}
-		}
-		else
-		{
-			reposName = id + "_SVN_VRepos";
-			{ 
-				reposName = id + "_GIT_VRepos";
-			}
-		}
-		return reposName;
-	}
-
-	private String getDefaultLocalSvnPath(String path) {
-		String localSvnPath = path + "DocSysSvnReposes/";
-		return localSvnPath;
 	}
 	
 	private String createLocalVerRepos(String localPath, String reposName, Integer verCtrl,ReturnAjax rt) {
@@ -900,7 +852,7 @@ public class ReposController extends BaseController{
 					String reposName = getVerReposName(reposInfo.getId(),verCtrl,true);
 					if(localSvnPath == null || localSvnPath.isEmpty())
 					{
-						localSvnPath = getDefaultLocalSvnPath(reposInfo.getPath());
+						localSvnPath = getDefaultLocalVerReposPath(reposInfo.getPath());
 					}
 					//Create a localVersionRepos
 					localVerReposPath = createLocalVerRepos(localSvnPath,reposName,verCtrl,rt);
@@ -978,7 +930,7 @@ public class ReposController extends BaseController{
 					String reposName = getVerReposName(reposInfo.getId(),verCtrl1,false);
 					if(localSvnPath1 == null || localSvnPath1.isEmpty())
 					{
-						localSvnPath1 = getDefaultLocalSvnPath(reposInfo.getPath());
+						localSvnPath1 = getDefaultLocalVerReposPath(reposInfo.getPath());
 					}
 					//Create a localVersionRepos
 					localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName,verCtrl,rt);

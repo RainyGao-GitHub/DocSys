@@ -3038,7 +3038,16 @@ public class DocController extends BaseController{
 		String reposRefRPath = getReposRefRealPath(repos);
 		if(repos.getVerCtrl() == 1)
 		{
-			String reposURL = repos.getSvnPath();
+			String reposURL = null;
+			Integer isRemote = repos.getIsRemote();
+			if(isRemote == 1)
+			{
+				reposURL = repos.getSvnPath();
+			}
+			else
+			{
+				reposURL = getLocalVerReposPath(repos,true);
+			}
 			String svnUser = repos.getSvnUser();
 			if(svnUser==null || "".equals(svnUser))
 			{
