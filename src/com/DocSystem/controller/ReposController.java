@@ -363,7 +363,7 @@ public class ReposController extends BaseController{
 			String verReposPath = isRemote==1? svnPath : localVerReposPath;
 			String verReposUser = isRemote==1? svnUser : "";
 			String verReposPwd = isRemote==1? svnPwd : "";
-			if(versionAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
+			if(verReposAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
 			{
 				System.out.println("RealDoc版本仓库初始化失败:" + verReposPath);
 				rt.setMsgData("RealDoc版本仓库初始化失败");
@@ -385,7 +385,7 @@ public class ReposController extends BaseController{
 			String verReposPath1 = isRemote1==1? svnPath1 : localVerReposPath1;
 			String verReposUser1 = isRemote1==1? svnUser1 : "";
 			String verReposPwd1 = isRemote1==1? svnPwd1 : "";
-			if(versionAutoCommit(verReposPath1,verReposUser1,verReposPwd1,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
+			if(verReposAutoCommit(verReposPath1,verReposUser1,verReposPwd1,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
 			{
 				System.out.println("VirtualDoc版本仓库初始化失败:" + verReposPath1);
 				rt.setMsgData("VirtualDoc版本仓库初始化失败");
@@ -586,19 +586,11 @@ public class ReposController extends BaseController{
 		return null;
 	}
 	
-	private String createGitLocalRepos(String localSvnPath, String reposName, ReturnAjax rt) {
-		File dir = new File(localSvnPath,reposName);
-		if(dir.exists())
-		{
-			System.out.println("GIT仓库:"+localSvnPath+reposName + "已存在！");	
-			rt.setMsgData("SVN仓库:"+localSvnPath+reposName + "已存在！");
-			return "file:///" + localSvnPath + reposName;
-		}
-		
-		String gitPath = SVNUtil.CreateRepos(reposName,localSvnPath);
-		return gitPath;
+	private String createGitLocalRepos(String localPath, String reposName, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
 	}
-	
+
 	private String createSvnLocalRepos(String localSvnPath, String reposName, ReturnAjax rt) {
 		File dir = new File(localSvnPath,reposName);
 		if(dir.exists())
@@ -612,7 +604,7 @@ public class ReposController extends BaseController{
 		return svnPath;
 	}
 
-	private boolean versionAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath,Integer verCtrl) {
+	private boolean verReposAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath,Integer verCtrl) {
 		if(verCtrl == 1)
 		{
 			return svnAutoCommit(svnPath,svnUser,svnPwd,localPath,commitMsg,commitUser,modifyEnable,localRefPath);
@@ -624,11 +616,12 @@ public class ReposController extends BaseController{
 		return false;
 	}
 	
-	boolean gitAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
-	{
+	private boolean gitAutoCommit(String svnPath, String svnUser, String svnPwd, String localPath, String commitMsg,
+			String commitUser, boolean modifyEnable, String localRefPath) {
+		// TODO Auto-generated method stub
 		return false;
 	}
-	
+
 	//Commit the localPath to svnPath
 	boolean svnAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
 	{	
@@ -1002,7 +995,7 @@ public class ReposController extends BaseController{
 			String verReposPath = isRemote==1? svnPath : localVerReposPath;
 			String verReposUser = isRemote==1? svnUser : "";
 			String verReposPwd = isRemote==1? svnPwd : "";
-			if(versionAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
+			if(verReposAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
 			{
 				rt.setError("RealDoc版本仓库同步失败");
 				return false;
@@ -1018,7 +1011,7 @@ public class ReposController extends BaseController{
 			String verReposPath = isRemote==1? svnPath1 : localVerReposPath1;
 			String verReposUser = isRemote==1? svnUser1 : "";
 			String verReposPwd = isRemote==1? svnPwd1 : "";
-			if(versionAutoCommit(verReposPath,verReposUser,verReposPwd,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
+			if(verReposAutoCommit(verReposPath,verReposUser,verReposPwd,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
 			{
 				rt.setError("VirtualDoc版本仓库同步失败");
 				return false;
