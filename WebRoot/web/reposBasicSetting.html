@@ -27,7 +27,7 @@
 		            <input class="form-control" type="password" id="RBSsvnPwd" value="" style="width: 100%"></input>
 				</div>
 			</div>
-			<label>VirtaulDoc版本仓库 <span style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl()1">自动创建</span></label>
+			<label>VirtaulDoc版本仓库 <span style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
             <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
@@ -68,25 +68,25 @@
 	{
 		console.log("doSelectVerCtrl");
 		var verCtrl = $("#RBSverCtrl").val();
-		var isRemote = $("#RBSisRemote']").is(':checked')? 0: 1;
+		var isRemote = $("#RBSisRemote").is(':checked')? 0: 1;
 		
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
 			if(isRemote == 0)
 			{
-				$("#RBSlocalVerRepos).show();
+				$("#RBSlocalVerRepos").show();
 				$("#RBSremoteVerRepos").hide();
 			}
 			else
 			{
-				$("#RBSlocalVerRepos']").hide();
-				$("#RBSremoteVerRepos']").show();				
+				$("#RBSlocalVerRepos").hide();
+				$("#RBSremoteVerRepos").show();				
 			}
-			$("#RBSverReposSetting']").show();				
+			$("#RBSverReposSetting").show();				
 		}
 		else	//hide svn info
 		{
-			$("#RBSverReposSetting']").hide();				
+			$("#RBSverReposSetting").hide();				
 		}    
 	}
 	
@@ -94,25 +94,25 @@
 	{
 		console.log("doSelectVerCtrl1");
 		var verCtrl = $("#RBSverCtrl1").val();
-		var isRemote = $("#RBSisRemote1']").is(':checked')? 0: 1;
+		var isRemote = $("#RBSisRemote1").is(':checked')? 0: 1;
 		
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
 			if(isRemote == 0)
 			{
-				$("#RBSlocalVerRepos1).show();
+				$("#RBSlocalVerRepos1").show();
 				$("#RBSremoteVerRepos1").hide();
 			}
 			else
 			{
-				$("#RBSlocalVerRepos1']").hide();
-				$("#RBSremoteVerRepos1']").show();				
+				$("#RBSlocalVerRepos1").hide();
+				$("#RBSremoteVerRepos1").show();				
 			}
-			$("#RBSverReposSetting1']").show();				
+			$("#RBSverReposSetting1").show();				
 		}
 		else	//hide svn info
 		{
-			$("#RBSverReposSetting1']").hide();				
+			$("#RBSverReposSetting1").hide();				
 		}  
 	}
 	
