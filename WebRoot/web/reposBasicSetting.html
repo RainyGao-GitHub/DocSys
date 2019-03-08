@@ -3,39 +3,50 @@
         <div class="form-group">
             <label>名字</label>
             <input class="form-control" type="text" id="RBSname" value="" style="width: 100%"></input>
-            <label>介绍</label>
+            <label>简介</label>
             <input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
-            <!-- <label>仓库类型</label>
-            <select class="form-control" id="RBStype" onchange="doSelectFS();" style="width: 100%" disabled="disabled">   
-            	<option value="0">虚拟文件系统</option>   
-            	<option value="1"">实文件系统</option>   
-            </select>  -->
-            <label>仓库位置</label>
+            <label>位置</label>
             <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
-            <label>版本管理</label>
+            <label>版本仓库 <span style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
             <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
-            	<!-- <option value="2">GIT</option>   --> 
+            	<option value="2">GIT</option> 
             </select>
-            <label>svn路径</label>
-            <input class="form-control" type="text" id="RBSsvnPath"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%" disabled="disabled"></input>
-            <label>svn用户名</label>
-            <input class="form-control" type="text" id="RBSsvnUser"   placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%" disabled="disabled"></input>
-            <label>svn密码</label>
-            <input class="form-control" type="password" id="RBSsvnPwd" placeholder="置空表明版本仓库访问不需要密码！" value="" style="width: 100%" disabled="disabled"></input>
-            <label>版本管理1</label>
+            <div id="RBSverReposSetting">
+	            <div id="RBSlocalVerRepos">
+		            <label>版本仓库所在目录</label>
+		            <input class="form-control" type="text" id="RBSlocalSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+	            </div>
+	            <div id="RBSremoteVerRepos">
+		            <label>版本仓库链接</label>
+		            <input class="form-control" type="text" id="RBSsvnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"></input>
+		            <label>用户名</label>
+		            <input class="form-control" type="text" id="RBSsvnUser" value="" style="width: 100%"></input>
+		            <label>密码</label>
+		            <input class="form-control" type="password" id="RBSsvnPwd" value="" style="width: 100%"></input>
+				</div>
+			</div>
+			<label>VirtaulDoc版本仓库 <span style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
             <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
-            	<!-- <option value="2">GIT</option>   -->  
+            	<option value="2">GIT</option>  
             </select>
-            <label>svn路径1</label>
-            <input class="form-control" type="text" id="RBSsvnPath1"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%" disabled="disabled"></input>
-            <label>svn用户名1</label>
-            <input class="form-control" type="text" id="RBSsvnUser1"   placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%" disabled="disabled"></input>
-            <label>svn密码1</label>
-            <input class="form-control" type="password" id="RBSsvnPwd1" placeholder="置空表明版本仓库访问不需要密码！" value="" style="width: 100%" disabled="disabled"></input>              
+            <div id="RBSverReposSetting1">
+	            <div id="RBSlocalVerRepos1">
+		            <label>版本仓库所在目录</label>
+		            <input class="form-control" type="text" id="RBSlocalSvnPath1"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+	            </div>
+				<div id="RBSremoteVerRepos1">
+		            <label>版本仓库链接</label>
+		            <input class="form-control" type="text" id="RBSsvnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"></input>
+		            <label>用户名1</label>
+		            <input class="form-control" type="text" id="RBSsvnUser1" value="" style="width: 100%"></input>
+		            <label>密码1</label>
+		            <input class="form-control" type="password" id="RBSsvnPwd1" value="" style="width: 100%"></input>              
+				</div>
+			</div>
         </div>
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
 </div>
@@ -55,38 +66,54 @@
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
 	function doSelectVerCtrl()
 	{
+		console.log("doSelectVerCtrl");
 		var verCtrl = $("#RBSverCtrl").val();
-		//alert(verCtrl);
+		var isRemote = $("#RBSisRemote']").is(':checked')? 0: 1;
+		
 		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
-			$("#RBSsvnPath").attr("disabled",false);
-			$("#RBSsvnUser").attr("disabled",false);
-			$("#RBSsvnPwd").attr("disabled",false);
+			if(isRemote == 0)
+			{
+				$("#RBSlocalVerRepos).show();
+				$("#RBSremoteVerRepos").hide();
+			}
+			else
+			{
+				$("#RBSlocalVerRepos']").hide();
+				$("#RBSremoteVerRepos']").show();				
+			}
+			$("#RBSverReposSetting']").show();				
 		}
 		else	//hide svn info
 		{
-			$("#RBSsvnPath").attr("disabled",true);
-			$("#RBSsvnUser").attr("disabled",true);
-			$("#RBSsvnPwd").attr("disabled",true);
-		}   
+			$("#RBSverReposSetting']").hide();				
+		}    
 	}
 	
 	function doSelectVerCtrl1()
 	{
-		var verCtrl1 = $("#RBSverCtrl1").val();
-		//alert(verCtrl);
-		if((verCtrl1 == 1) || (verCtrl1 == 2)) 			//show svn info
+		console.log("doSelectVerCtrl1");
+		var verCtrl = $("#RBSverCtrl1").val();
+		var isRemote = $("#RBSisRemote1']").is(':checked')? 0: 1;
+		
+		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
 		{
-			$("#RBSsvnPath1").attr("disabled",false);
-			$("#RBSsvnUser1").attr("disabled",false);
-			$("#RBSsvnPwd1").attr("disabled",false);
+			if(isRemote == 0)
+			{
+				$("#RBSlocalVerRepos1).show();
+				$("#RBSremoteVerRepos1").hide();
+			}
+			else
+			{
+				$("#RBSlocalVerRepos1']").hide();
+				$("#RBSremoteVerRepos1']").show();				
+			}
+			$("#RBSverReposSetting1']").show();				
 		}
 		else	//hide svn info
 		{
-			$("#RBSsvnPath1").attr("disabled",true);
-			$("#RBSsvnUser1").attr("disabled",true);
-			$("#RBSsvnPwd1").attr("disabled",true);
-		}   
+			$("#RBSverReposSetting1']").hide();				
+		}  
 	}
 	
 //显示仓库公开访问权限设置
@@ -123,13 +150,22 @@ function getReposBasicSetting()
 		console.log(reposInfo);
 	   	$("#RBSname").val(reposInfo.name);
 	   	$("#RBSinfo").val(reposInfo.info);
-	   	//$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#RBSpath").val(reposInfo.path);
 	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote == 0)
+	   	{
+		   	$("#RBSisRemote").attr("checked","checked");
+	   	}
+	   	$("#RBSlocalSvnPath").val(reposInfo.localSvnPath);
 	   	$("#RBSsvnPath").val(reposInfo.svnPath);
 	   	$("#RBSsvnUser").val(reposInfo.svnUser);
 	   	$("#RBSsvnPwd").val(reposInfo.svnPwd);
 	   	$("#RBSverCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
+	   	if(reposInfo.isRemote1 == 0)
+	   	{
+		   	$("#RBSisRemote1").attr("checked","checked");
+	   	}
+	   	$("#RBSlocalSvnPath1").val(reposInfo.localSvnPath1);
 	   	$("#RBSsvnPath1").val(reposInfo.svnPath1);
 	   	$("#RBSsvnUser1").val(reposInfo.svnUser1);
 	   	$("#RBSsvnPwd1").val(reposInfo.svnPwd1);
@@ -143,14 +179,17 @@ function saveReposBasicSetting()
 	newReposSetting.vid = getQueryString("vid");
 	newReposSetting.name = $("#RBSname").val();
 	newReposSetting.info = $("#RBSinfo").val();
-	//newReposSetting.type = $("#RBStype").val();
 	newReposSetting.type = 1;	//Real DocSystem
 	newReposSetting.path = $("#RBSpath").val();
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
+	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 0: 1;
+	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
 	newReposSetting.svnPath = $("#RBSsvnPath").val();
 	newReposSetting.svnUser = $("#RBSsvnUser").val();
 	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
 	newReposSetting.verCtrl1 = $("#RBSverCtrl1").val();
+	newReposSetting.isRemote1 =  $("#RBSisRemote1").is(':checked')? 0: 1;
+	newReposSetting.localSvnPath1 = $("#RBSlocalSvnPath1").val();
 	newReposSetting.svnPath1 = $("#RBSsvnPath1").val();
 	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
 	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
@@ -168,11 +207,15 @@ function saveReposBasicSetting()
                     info : newReposSetting.info,
                     type : newReposSetting.type,
                     path : newReposSetting.path,
-                    verCtrl: newReposSetting.verCtrl,
+                    verCtrl : newReposSetting.verCtrl,
+                    isRemote : newReposSetting.isRemote,
+                    localSvnPath : newReposSetting.localSvnPath,
                     svnPath : newReposSetting.svnPath,
                     svnUser : newReposSetting.svnUser,
                     svnPwd : newReposSetting.svnPwd,
-                    verCtrl1: newReposSetting.verCtrl1,
+                    verCtrl1 : newReposSetting.verCtrl1,
+                    isRemote1 : newReposSetting.isRemote1,
+                    localSvnPath1 : newReposSetting.localSvnPath1,
                     svnPath1 : newReposSetting.svnPath1,
                     svnUser1 : newReposSetting.svnUser1,
                     svnPwd1 : newReposSetting.svnPwd1,
@@ -231,6 +274,14 @@ function saveReposBasicSetting()
        		{
        			return true;
        		}
+       		if(oldSetting.isRemote != newSetting.isRemote)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.localSvnPath != newSetting.localSvnPath)
+       		{
+       			return true;
+       		}
        		if(oldSetting.svnPath != newSetting.svnPath)
        		{
        			return true;
@@ -244,6 +295,14 @@ function saveReposBasicSetting()
        			return true;
        		}
        		if(oldSetting.verCtrl1 != newSetting.verCtrl1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.isRemote1 != newSetting.isRemote1)
+       		{
+       			return true;
+       		}
+       		if(oldSetting.localSvnPath1 != newSetting.localSvnPath1)
        		{
        			return true;
        		}
