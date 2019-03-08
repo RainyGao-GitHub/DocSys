@@ -1514,7 +1514,7 @@ public class DocController extends BaseController{
 			String docVName = getDocVPath(doc);
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
-				if(svnVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
+				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
 				{
 					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
 					rt.setMsgInfo("svnVirtualDocAdd Failed");			
@@ -1652,11 +1652,11 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(svnVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
+			if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
 			{
 				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
 				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-				svnRevertVirtualDoc(repos,docVName);
+				verReposRevertVirtualDoc(repos,docVName);
 			}
 		}
 
@@ -2166,7 +2166,7 @@ public class DocController extends BaseController{
 			String dstDocVName = getDocVPath(dstDoc);
 			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 			{
-				if(svnVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
+				if(verReposVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
 				{
 					System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
 				}
@@ -2264,7 +2264,7 @@ public class DocController extends BaseController{
 			{
 				if(repos.getVerCtrl() == 1)
 				{
-					svnVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+					verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 				}
 			}
 		}
@@ -3406,7 +3406,23 @@ public class DocController extends BaseController{
 		return svnCheckOut(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, entryName,-1);
 	}
 	
+	private boolean verReposVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnVirtualDocAdd(repos, docVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocAdd(repos, docVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
 	
+	private boolean gitVirtualDocAdd(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean svnVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnVirtualDocAdd() docVName:" + docVName);
@@ -3445,6 +3461,24 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private boolean verReposVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnVirtualDocDelete(repos, docVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocDelete(repos, docVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	private boolean gitVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser,
+			ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean svnVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocDelete() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
@@ -3488,6 +3522,24 @@ public class DocController extends BaseController{
 		}
 	}
 
+	private boolean verReposVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	private boolean gitVirtualDocCommit(Repos repos, String docVName, String commitMsg, String commitUser,
+			ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean svnVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocCommit() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
@@ -3523,6 +3575,24 @@ public class DocController extends BaseController{
 		}
 	}
 
+	private boolean verReposVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	private boolean gitVirtualDocMove(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean svnVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocMove() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
 		if(repos.getVerCtrl1() == 1)
@@ -3551,6 +3621,24 @@ public class DocController extends BaseController{
 			System.out.println("svnRealDocMove() verCtrl " + repos.getVerCtrl());
 			return true;
 		}
+	}
+
+	private boolean verReposVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);		
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	private boolean gitVirtualDocCopy(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	private boolean svnVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) {
@@ -3583,6 +3671,23 @@ public class DocController extends BaseController{
 		}
 	}
 
+	private boolean verReposRevertVirtualDoc(Repos repos, String docVName) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnRevertVirtualDoc(repos, docVName);		
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRevertVirtualDoc(repos, docVName);
+		}
+		return true;
+	}
+	
+	private boolean gitRevertVirtualDoc(Repos repos, String docVName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean svnRevertVirtualDoc(Repos repos, String docVName) {
 		System.out.println("svnRevertVirtualDoc() docVName:" + docVName);
 		
@@ -3595,6 +3700,7 @@ public class DocController extends BaseController{
 		return svnCheckOut(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName,-1);
 	}
 	
+	//The following functions is for svn Operations
 	private int svnGetEntryType(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, long revision) 
 	{
 		System.out.println("svnGetEntryType() parentPath:" + parentPath + " entryName:" + entryName);
