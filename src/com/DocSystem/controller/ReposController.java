@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import util.ReturnAjax;
+import util.GitUtil.GITUtil;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;
@@ -587,8 +588,16 @@ public class ReposController extends BaseController{
 	}
 	
 	private String createGitLocalRepos(String localPath, String reposName, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		File dir = new File(localPath,reposName);
+		if(dir.exists())
+		{
+			System.out.println("GIT仓库:"+localPath+reposName + "已存在，请直接设置！");	
+			rt.setMsgData("GIT仓库:"+localPath+reposName + "已存在，已直接设置！");
+			return localPath + reposName;
+		}
+		
+		String gitPath = GITUtil.CreateRepos(reposName,localPath);
+		return gitPath;
 	}
 
 	private String createSvnLocalRepos(String localSvnPath, String reposName, ReturnAjax rt) {

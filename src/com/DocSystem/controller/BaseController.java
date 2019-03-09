@@ -266,14 +266,22 @@ public class BaseController{
 		String reposName = null;
 		if(isRealDoc)
 		{
-			reposName = id + "_SVN_RRepos";
+			if(verCtrl == 1)
+			{
+				reposName = id + "_SVN_RRepos";
+			}
+			else
 			{ 
 				reposName = id + "_GIT_RRepos";
 			}
 		}
 		else
 		{
-			reposName = id + "_SVN_VRepos";
+			if(verCtrl == 1)
+			{
+				reposName = id + "_SVN_VRepos";
+			}
+			else
 			{ 
 				reposName = id + "_GIT_VRepos";
 			}
