@@ -13,7 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-
+import org.eclipse.jgit.api.Git;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
@@ -33,14 +33,16 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
+import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.LogEntry;
+import com.DocSystem.entity.Repos;
 
-public class SVNUtil {
+public class SVNUtil  extends BaseController{
 	
 	//For Low Level APIs
-	private SVNRepository repository;
-	
+	private SVNRepository repository = null;
+	private Git git = null;
 	private SVNURL repositoryURL = null;
 
 	/***
@@ -49,7 +51,47 @@ public class SVNUtil {
      * @param userName
      * @param password
      */
-    public boolean Init(String reposURL, String name, String password) {
+    public boolean Init(Repos repos,boolean isRealDoc,String commitUser)
+    {
+    	String reposURL = null;
+    	String svnUser = null;
+    	String svnPwd = null;
+    
+    	if(isRealDoc)
+    	{
+    		Integer isRemote = repos.getIsRemote();
+    		if(isRemote == 1)
+    		{
+    			reposURL = repos.getSvnPath();
+    			svnUser = repos.getSvnUser();
+    			svnPwd = repos.getSvnPwd();
+    		}
+    		else
+    		{
+    			reposURL = getLocalVerReposPath(repos,isRealDoc);
+    		}
+    	}
+    	else
+    	{
+    		Integer isRemote = repos.getIsRemote1();
+    		if(isRemote == 1)
+    		{
+    			reposURL = repos.getSvnPath1();
+    			svnUser = repos.getSvnUser1();
+    			svnPwd = repos.getSvnPwd1();
+    		}
+    		else
+    		{
+    			reposURL = getLocalVerReposPath(repos,isRealDoc);
+    		}
+    	}
+
+		
+		if(svnUser==null || "".equals(svnUser))
+		{
+			svnUser = commitUser;
+		}
+
     	//根据不同协议，初始化不同的仓库工厂。(工厂实现基于SVNRepositoryFactory抽象类)
         setupLibrary();
            	
@@ -72,7 +114,7 @@ public class SVNUtil {
 			return false;
 		}
         //设置权限验证对象
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(name, password);
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(svnUser, svnPwd);
         repository.setAuthenticationManager(authManager);
         
         return true;
@@ -251,7 +293,7 @@ public class SVNUtil {
 	//localPath是需要自动commit的目录
 	//modifyEnable: 表示是否commit已经存在的文件
 	//refLocalPath是存放参考文件的目录，如果对应文件存在且modifyEnable=true的话，则增量commit
-	public boolean doAutoCommit(String parentPath, String entryName,String localPath,String commitMsg,boolean modifyEnable,String localRefPath){
+	public boolean doAutoCommit(String parentPath, String entryName,String localPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefPath){
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
 	
 		String entryPath = parentPath + entryName;
@@ -764,7 +806,7 @@ public class SVNUtil {
 	}	
 	
     //增加目录
-	public boolean svnAddDir(String parentPath,String entryName,String commitMsg)
+	public boolean svnAddDir(String parentPath,String entryName,String commitMsg, String commitUser)
 	{
         ISVNEditor editor = getCommitEditor(commitMsg);
 		if(editor == null)
@@ -788,7 +830,7 @@ public class SVNUtil {
 	}
 	
 	//增加文件
-	public boolean svnAddFile(String parentPath,String entryName,String localFilePath,String commitMsg)
+	public boolean svnAddFile(String parentPath,String entryName,String localFilePath,String commitMsg, String commitUser)
 	{
         ISVNEditor editor = getCommitEditor(commitMsg);
 		if(editor == null)
@@ -816,7 +858,7 @@ public class SVNUtil {
 	
 	
 	//修改文件
-	public boolean svnModifyFile(String parentPath,String entryName,String oldFilePath,String newFilePath,String commitMsg)
+	public boolean svnModifyFile(String parentPath,String entryName,String oldFilePath,String newFilePath,String commitMsg, String commitUser)
 	{
 		System.out.println("svnModifyFile() parentPath:"+parentPath + " entryName:" + entryName);
         ISVNEditor editor = getCommitEditor(commitMsg);
@@ -858,7 +900,7 @@ public class SVNUtil {
 	}
 	
 	//复制文件
-	public boolean svnCopy(String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,String commitMsg,boolean isMove)
+	public boolean svnCopy(String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,String commitMsg,String commitUser,boolean isMove)
 	{
 		//判断文件类型
 		boolean isDir = false;
@@ -911,7 +953,7 @@ public class SVNUtil {
 	}
 	
     //删除文件或目录
-  	public boolean svnDelete(String parentPath,String entryName,String commitMsg)
+  	public boolean svnDelete(String parentPath,String entryName,String commitMsg, String commitUser)
   	{
         ISVNEditor editor = getCommitEditor(commitMsg);
         if(editor == null)

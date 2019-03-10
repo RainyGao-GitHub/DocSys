@@ -343,55 +343,9 @@ public class ReposController extends BaseController{
 		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
-		syncUpdateVerRepos(repos,login_user,rt);
+		syncupVerRepos(repos,login_user,rt);
 
 		writeJson(rt, response);	
-	}
-
-	private void syncUpdateVerRepos(Repos repos, User login_user, ReturnAjax rt) {
-		//Real Doc 带版本控制，则需要同步本地和版本仓库
-		Integer verCtrl = repos.getVerCtrl();
-		Integer isRemote = repos.getIsRemote();
-		String svnPath = repos.getSvnPath();
-		String svnUser = repos.getSvnUser();
-		String svnPwd = repos.getSvnPwd();
-		String localVerReposPath = getLocalVerReposPath(repos,true);
-		if(verCtrl != 0)
-		{					
-			String reposRPath = getReposRealPath(repos);
-			String commitUser = login_user.getName();
-			String commitMsg = "RealDoc版本仓库初始化";
-			String verReposPath = isRemote==1? svnPath : localVerReposPath;
-			String verReposUser = isRemote==1? svnUser : "";
-			String verReposPwd = isRemote==1? svnPwd : "";
-			if(verReposAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
-			{
-				System.out.println("RealDoc版本仓库初始化失败:" + verReposPath);
-				rt.setMsgData("RealDoc版本仓库初始化失败");
-			}
-		}
-		
-		//Virtual Doc 带版本控制，则需要同步本地和版本仓库
-		Integer verCtrl1 = repos.getVerCtrl1();
-		Integer isRemote1 = repos.getIsRemote1();
-		String svnPath1 = repos.getSvnPath1();
-		String svnUser1 = repos.getSvnUser1();
-		String svnPwd1 = repos.getSvnPwd1();
-		String localVerReposPath1 = getLocalVerReposPath(repos,false);
-		if(verCtrl1 != 0)
-		{					
-			String reposVPath = getReposVirtualPath(repos);
-			String commitUser = login_user.getName();
-			String commitMsg = "VirtualDoc版本仓库初始化";
-			String verReposPath1 = isRemote1==1? svnPath1 : localVerReposPath1;
-			String verReposUser1 = isRemote1==1? svnUser1 : "";
-			String verReposPwd1 = isRemote1==1? svnPwd1 : "";
-			if(verReposAutoCommit(verReposPath1,verReposUser1,verReposPwd1,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
-			{
-				System.out.println("VirtualDoc版本仓库初始化失败:" + verReposPath1);
-				rt.setMsgData("VirtualDoc版本仓库初始化失败");
-			}
-		}	
 	}
 
 	private void InitReposAuthInfo(Repos repos, User login_user, ReturnAjax rt) {
@@ -613,42 +567,82 @@ public class ReposController extends BaseController{
 		return svnPath;
 	}
 
-	private boolean verReposAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath,Integer verCtrl) {
+	private void syncupVerRepos(Repos repos, User login_user, ReturnAjax rt) {
+		//Real Doc 带版本控制，则需要同步本地和版本仓库
+		Integer verCtrl = repos.getVerCtrl();
+		if(verCtrl != 0)
+		{	
+			String reposRPath = getReposRealPath(repos);
+			String commitUser = login_user.getName();
+			String commitMsg = "RealDoc版本仓库初始化";
+			if(verReposAutoCommit(repos,reposRPath,commitMsg,commitUser,false,null,true) == false)
+			{
+				System.out.println("RealDoc版本仓库初始化失败:");
+				rt.setMsgData("RealDoc版本仓库初始化失败");
+			}
+		}
+		
+		//Virtual Doc 带版本控制，则需要同步本地和版本仓库
+		Integer verCtrl1 = repos.getVerCtrl1();
+		if(verCtrl1 != 0)
+		{					
+			String reposVPath = getReposVirtualPath(repos);
+			String commitUser = login_user.getName();
+			String commitMsg = "VirtualDoc版本仓库初始化";
+			if(verReposAutoCommit(repos,reposVPath, commitMsg,commitUser,false,null,false) == false)
+			{
+				System.out.println("VirtualDoc版本仓库初始化失败:");
+				rt.setMsgData("VirtualDoc版本仓库初始化失败");
+			}
+		}	
+	}
+	
+	private boolean verReposAutoCommit(Repos repos, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath,boolean isRealDoc) {
+		Integer verCtrl = null;
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+		}	
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+		}
+			
 		if(verCtrl == 1)
 		{
-			return svnAutoCommit(svnPath,svnUser,svnPwd,localPath,commitMsg,commitUser,modifyEnable,localRefPath);
+			return svnAutoCommit(repos,localPath,commitMsg,commitUser,modifyEnable,localRefPath,isRealDoc);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitAutoCommit(svnPath,svnUser,svnPwd,localPath,commitMsg,commitUser,modifyEnable,localRefPath);			
+			return gitAutoCommit(repos,localPath,commitMsg,commitUser,modifyEnable,localRefPath, isRealDoc);			
 		}
 		return false;
 	}
 	
-	private boolean gitAutoCommit(String svnPath, String svnUser, String svnPwd, String localPath, String commitMsg,
-			String commitUser, boolean modifyEnable, String localRefPath) {
+	private boolean gitAutoCommit(Repos repos, String localPath, String commitMsg, String commitUser, boolean modifyEnable, String localRefPath, boolean isRealDoc) {
 		// TODO Auto-generated method stub
-		return false;
+		GITUtil gitUtil = new GITUtil();
+		//svn初始化
+		if(gitUtil.Init(repos, isRealDoc, commitUser) == false)
+		{
+			System.out.println("do Init Failed");
+			return false;
+		}
+		return gitUtil.doAutoCommit("","",localPath,commitMsg,commitUser,modifyEnable,localRefPath);
 	}
 
 	//Commit the localPath to svnPath
-	boolean svnAutoCommit(String svnPath,String svnUser, String svnPwd, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
-	{	
-		//If the svnUser was not set, use the commitUser
-		if(svnUser == null || "".equals(svnUser))
-		{
-			svnUser = commitUser;
-		}
-		
+	boolean svnAutoCommit(Repos repos, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath,boolean isRealDoc)
+	{			
 		SVNUtil svnUtil = new SVNUtil();
 		//svn初始化
-		if(svnUtil.Init(svnPath, svnUser, svnPwd) == false)
+		if(svnUtil.Init(repos,isRealDoc,commitUser) == false)
 		{
 			System.out.println("do Init Failed");
 			return false;
 		}
 		
-		return svnUtil.doAutoCommit("","",localPath,commitMsg,modifyEnable,localRefPath);		
+		return svnUtil.doAutoCommit("","",localPath,commitMsg,commitUser,modifyEnable,localRefPath);		
 	}
 	
 	/****************   delete a Repository ******************/
@@ -910,9 +904,9 @@ public class ReposController extends BaseController{
 						return false;
 					}
 					//Set the final value for svnPath/svnUser/svnPwd
-					newReposInfo.setSvnPath(svnPath);
-					newReposInfo.setSvnUser(svnUser);
-					newReposInfo.setSvnPwd(svnPwd);
+					reposInfo.setSvnPath(svnPath);
+					reposInfo.setSvnUser(svnUser);
+					reposInfo.setSvnPwd(svnPwd);
 				}
 			}	
 		}
@@ -988,9 +982,9 @@ public class ReposController extends BaseController{
 						return false;
 					}
 					//Set the final value for svnPath/svnUser/svnPwd
-					newReposInfo.setSvnPath(svnPath1);
-					newReposInfo.setSvnUser(svnUser1);
-					newReposInfo.setSvnPwd(svnPwd1);
+					reposInfo.setSvnPath(svnPath1);
+					reposInfo.setSvnUser(svnUser1);
+					reposInfo.setSvnPwd(svnPwd1);
 				}
 			}
 		}
@@ -1001,10 +995,7 @@ public class ReposController extends BaseController{
 			String reposRPath = getReposRealPath(reposInfo);
 			String commitUser = login_user.getName();
 			String commitMsg = "RealDoc版本仓库同步";
-			String verReposPath = isRemote==1? svnPath : localVerReposPath;
-			String verReposUser = isRemote==1? svnUser : "";
-			String verReposPwd = isRemote==1? svnPwd : "";
-			if(verReposAutoCommit(verReposPath,verReposUser,verReposPwd,reposRPath,commitMsg,commitUser,false,null,verCtrl) == false)
+			if(verReposAutoCommit(reposInfo,reposRPath,commitMsg,commitUser,false,null,true) == false)
 			{
 				rt.setError("RealDoc版本仓库同步失败");
 				return false;
@@ -1017,10 +1008,7 @@ public class ReposController extends BaseController{
 			String reposVPath = getReposVirtualPath(reposInfo);
 			String commitUser = login_user.getName();
 			String commitMsg = "VirtualDoc版本仓库同步";
-			String verReposPath = isRemote==1? svnPath1 : localVerReposPath1;
-			String verReposUser = isRemote==1? svnUser1 : "";
-			String verReposPwd = isRemote==1? svnPwd1 : "";
-			if(verReposAutoCommit(verReposPath,verReposUser,verReposPwd,reposVPath,commitMsg,commitUser,false,null,verCtrl1) == false)
+			if(verReposAutoCommit(reposInfo,reposVPath,commitMsg,commitUser,false,null,false) == false)
 			{
 				rt.setError("VirtualDoc版本仓库同步失败");
 				return false;

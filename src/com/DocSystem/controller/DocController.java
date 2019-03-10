@@ -607,7 +607,6 @@ public class DocController extends BaseController{
 	}
 	
 	private void updateIndexForVDoc(Integer id, String content) {
-		// TODO Auto-generated method stub
 		try {
 			System.out.println("updateIndexForVDoc() updateIndexForVDoc in lucene: docId " + id);
 			LuceneUtil2.updateIndexForVDoc(id,content,"doc");
@@ -1038,8 +1037,8 @@ public class DocController extends BaseController{
 
 	/**************** download History Doc  ******************/
 	@RequestMapping("/getHistoryDoc.do")
-	public void getHistoryDoc(long revision,Integer reposId, String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("getHistoryDoc revision: " + revision + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
+	public void getHistoryDoc(long revision,Integer reposId, Integer isRealDoc,String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("getHistoryDoc revision: " + revision + " reposId:" + reposId + " isRealDoc:" + isRealDoc +" parentPath:" + parentPath + " docName:" + docName);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1069,10 +1068,7 @@ public class DocController extends BaseController{
 		}
 		
 		//checkout the entry to local
-		String reposURL = repos.getSvnPath();
-		String svnUser = repos.getSvnUser();
-		String svnPwd = repos.getSvnPwd();
-		if(svnCheckOut(reposURL, svnUser, svnPwd, parentPath, docName, userTmpDir, targetName, revision) == false)
+		if(svnCheckOut(repos, true, parentPath, docName, userTmpDir, targetName, revision) == false)
 		{
 			System.out.println("getHistoryDoc() svnCheckOut Failed!");
 			rt.setError("svnCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
@@ -3027,7 +3023,7 @@ public class DocController extends BaseController{
 	private List<LogEntry> svnGetHistory(Repos repos,String docPath) {
 
 		SVNUtil svnUtil = new SVNUtil();
-		svnUtil.Init(repos.getSvnPath(), repos.getSvnUser(), repos.getSvnPwd());
+		svnUtil.Init(repos, true, null);
 		return svnUtil.getHistoryLogs(docPath, 0, -1);
 	}
 	
@@ -3056,36 +3052,15 @@ public class DocController extends BaseController{
 		String reposRPath = getReposRealPath(repos);
 		String reposRefRPath = getReposRefRealPath(repos);
 		
-		String reposURL = null;
-		String svnUser = null;
-		String svnPwd = null;
-		Integer isRemote = repos.getIsRemote();
-		if(isRemote == 1)
-		{
-			reposURL = repos.getSvnPath();
-			svnUser = repos.getSvnUser();
-			svnPwd = repos.getSvnPwd();
-		}
-		else
-		{
-			reposURL = getLocalVerReposPath(repos,true);
-		}
-		
-		if(svnUser==null || "".equals(svnUser))
-		{
-			svnUser = commitUser;
-		}
-		
 		try {
 			SVNUtil svnUtil = new SVNUtil();
-			svnUtil.Init(reposURL, svnUser, svnPwd);
-			
+			svnUtil.Init(repos, true, commitUser);
 			if(svnUtil.doCheckPath(remotePath, -1) == false)	//检查文件是否已经存在于仓库中
 			{
 				if(type == 1)
 				{
 					String localFilePath = reposRPath + remotePath;
-					if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg) == false)
+					if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg,commitUser) == false)
 					{
 						System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
 						rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddFile失败！");	
@@ -3094,7 +3069,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					if(svnUtil.svnAddDir(parentPath,entryName,commitMsg) == false)
+					if(svnUtil.svnAddDir(parentPath,entryName,commitMsg,commitUser) == false)
 					{
 						System.out.println("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");	
 						rt.setMsgData("svnRealDocAdd() " + remotePath + " svnUtil.svnAddDir失败！");
@@ -3142,33 +3117,14 @@ public class DocController extends BaseController{
 	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
 			String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
-		
-		String reposURL = null;
-		String svnUser = null;
-		String svnPwd = null;
-		Integer isRemote = repos.getIsRemote();
-		if(isRemote == 1)
-		{
-			reposURL = repos.getSvnPath();
-			svnUser = repos.getSvnUser();
-			svnPwd = repos.getSvnPwd();
-		}
-		else
-		{
-			reposURL = getLocalVerReposPath(repos,true);
-		}
-		
-		if(svnUser==null || "".equals(svnUser))
-		{
-			svnUser = commitUser;
-		}
+
 		String docRPath = parentPath + name;
 		try {
 			SVNUtil svnUtil = new SVNUtil();
-			svnUtil.Init(reposURL, svnUser, svnPwd);
+			svnUtil.Init(repos, true, commitUser);
 			if(svnUtil.doCheckPath(docRPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
 			{
-				if(svnUtil.svnDelete(parentPath,name,commitMsg) == false)
+				if(svnUtil.svnDelete(parentPath,name,commitMsg,commitUser) == false)
 				{
 					System.out.println(docRPath + " remoteDeleteEntry失败！");
 					rt.setMsgData("verReposRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
@@ -3211,25 +3167,6 @@ public class DocController extends BaseController{
 			String name,Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnRealDocCommit() parentPath:" + parentPath + " name:" + name);
-		String reposURL = null;
-		String svnUser = null;
-		String svnPwd = null;
-		Integer isRemote = repos.getIsRemote();
-		if(isRemote == 1)
-		{
-			reposURL = repos.getSvnPath();
-			svnUser = repos.getSvnUser();
-			svnPwd = repos.getSvnPwd();
-		}
-		else
-		{
-			reposURL = getLocalVerReposPath(repos,true);
-		}
-		
-		if(svnUser==null || "".equals(svnUser))
-		{
-			svnUser = commitUser;
-		}
 		String reposRPath =  getReposRealPath(repos);
 		String docRPath = parentPath + name;
 		String docFullRPath = reposRPath + parentPath + name;
@@ -3237,12 +3174,12 @@ public class DocController extends BaseController{
 		
 		try {
 			SVNUtil svnUtil = new SVNUtil();
-			svnUtil.Init(reposURL, svnUser, svnPwd);
+			svnUtil.Init(repos, true, commitUser);
 			
 			if(svnUtil.doCheckPath(docRPath, -1) == false)	//检查文件是否已经存在于仓库中
 			{					
 				System.out.println("svnRealDocCommit() " + docRPath + " 在仓库中不存在！");
-				if(false == svnUtil.svnAddFile(parentPath,name,newFilePath,commitMsg))
+				if(false == svnUtil.svnAddFile(parentPath,name,newFilePath,commitMsg,commitUser))
 				{
 					System.out.println("svnRealDocCommit() " + name + " svnAddFile失败！");
 					System.out.println("svnRealDocCommit() svnUtil.svnAddFile " + " parentPath:" + parentPath  + " name:" + name  + " newFilePath:" + newFilePath);
@@ -3252,7 +3189,7 @@ public class DocController extends BaseController{
 			else	//如果已经存在，则只是将修改的内容commit到服务器上
 			{
 				String oldFilePath = getReposRefRealPath(repos) + docRPath;
-				if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg) == false)
+				if(svnUtil.svnModifyFile(parentPath,name,oldFilePath, newFilePath, commitMsg,commitUser) == false)
 				{
 					System.out.println("svnRealDocCommit() " + name + " remoteModifyFile失败！");
 					System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + name  + " oldFilePath:" + oldFilePath + " newFilePath:" + newFilePath);
@@ -3299,14 +3236,7 @@ public class DocController extends BaseController{
 		String reposRefRPath = getReposRefRealPath(repos);
 		if(repos.getVerCtrl() == 1)
 		{	
-			String reposURL = repos.getSvnPath();
-			String svnUser = repos.getSvnUser();
-			if(svnUser==null || "".equals(svnUser))
-			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd();
-			if(svnMove(reposURL,svnUser,svnPwd,srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg) == false)
+			if(svnMove(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg, commitUser, rt) == false)
 			{
 				System.out.println("svnMove Failed！");
 				rt.setMsgData("svnMove Failed！");
@@ -3350,15 +3280,7 @@ public class DocController extends BaseController{
 		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(repos.getVerCtrl() == 1)
 		{				
-		
-			String reposURL = repos.getSvnPath();
-			String svnUser = repos.getSvnUser();
-			if(svnUser==null || "".equals(svnUser))
-			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd();
-			if(svnCopy(reposURL,svnUser,svnPwd,srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,rt) == false)
+			if(svnCopy(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,commitUser,rt) == false)
 			{
 				System.out.println("文件: " + srcEntryName + " svnCopy失败");
 				return false;
@@ -3400,10 +3322,7 @@ public class DocController extends BaseController{
 		String localParentPath = getReposRealPath(repos) + parentPath;
 
 		//revert from svn server
-		String reposURL = repos.getSvnPath();
-		String svnUser = repos.getSvnUser();
-		String svnPwd = repos.getSvnPwd();
-		return svnCheckOut(reposURL, svnUser, svnPwd, parentPath, entryName, localParentPath, entryName,-1);
+		return svnCheckOut(repos, true, parentPath, entryName, localParentPath, entryName,-1);
 	}
 	
 	private boolean verReposVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
@@ -3429,11 +3348,8 @@ public class DocController extends BaseController{
 		
 		if(repos.getVerCtrl1() == 1)
 		{
-			String reposURL = repos.getSvnPath1();
-			String svnUser = repos.getSvnUser1();
-			String svnPwd = repos.getSvnPwd1();
 			SVNUtil svnUtil = new SVNUtil();
-			if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
+			if(svnUtil.Init(repos, false, commitUser) == false)
 			{
 				System.out.println("svnVirtualDocAdd() svnUtil Init Failed!");
 				rt.setMsgData("svnVirtualDocAdd() svnUtil Init Failed!");
@@ -3444,7 +3360,7 @@ public class DocController extends BaseController{
 			String reposRefVPath = getReposRefVirtualPath(repos);
 			
 			//modifyEnable set to false
-			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,false,reposRefVPath) == false)
+			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,reposRefVPath) == false)
 			{
 				System.out.println(docVName + " doAutoCommit失败！");
 				rt.setMsgData("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath );
@@ -3482,22 +3398,13 @@ public class DocController extends BaseController{
 	private boolean svnVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		System.out.println("svnVirtualDocDelete() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
-		{
-		
-			String reposURL = repos.getSvnPath1();
-			String svnUser = repos.getSvnUser1();
-			if(svnUser==null || "".equals(svnUser))
-			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd1();
-			
+		{	
 			try {
 				SVNUtil svnUtil = new SVNUtil();
-				svnUtil.Init(reposURL, svnUser, svnPwd);
+				svnUtil.Init(repos, false, commitUser);
 				if(svnUtil.doCheckPath(docVName,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
 				{
-					if(svnUtil.svnDelete("",docVName,commitMsg) == false)
+					if(svnUtil.svnDelete("",docVName,commitMsg,commitUser) == false)
 					{
 						System.out.println(docVName + " remoteDeleteEntry失败！");
 						rt.setMsgData("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ");
@@ -3518,6 +3425,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
+			//TODO: For Git
 			return true;
 		}
 	}
@@ -3544,13 +3452,10 @@ public class DocController extends BaseController{
 		System.out.println("svnVirtualDocCommit() docVName:" + docVName);
 		if(repos.getVerCtrl1() == 1)
 		{
-			String reposURL = repos.getSvnPath1();
-			String svnUser = repos.getSvnUser1();
-			String svnPwd = repos.getSvnPwd1();
 			String reposVPath =  getReposVirtualPath(repos);
 			
 			SVNUtil svnUtil = new SVNUtil();
-			svnUtil.Init(reposURL, svnUser, svnPwd);
+			svnUtil.Init(repos, false, commitUser);
 				
 			if(commitMsg == null || "".equals(commitMsg))
 			{
@@ -3558,7 +3463,7 @@ public class DocController extends BaseController{
 			}
 			
 			String reposRefVPath = getReposRefVirtualPath(repos);
-			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,true,reposRefVPath) == false)
+			if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,reposRefVPath) == false)
 			{
 				System.out.println(docVName + " doCommit失败！");
 				rt.setMsgData(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath);
@@ -3597,14 +3502,7 @@ public class DocController extends BaseController{
 		System.out.println("svnVirtualDocMove() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
 		if(repos.getVerCtrl1() == 1)
 		{	
-			String reposURL = repos.getSvnPath1();
-			String svnUser = repos.getSvnUser1();
-			if(svnUser==null || "".equals(svnUser))
-			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd1();
-			if(svnMove(reposURL,svnUser,svnPwd,"",srcDocVName,"",dstDocVName,commitMsg) == false)
+			if(svnMove(repos, false,"",srcDocVName,"",dstDocVName,commitMsg,commitUser, rt) == false)
 			{
 				System.out.println("svnMove Failed！");
 				rt.setMsgData("svnVirtualDocMove() svnMove Failed！");
@@ -3643,32 +3541,18 @@ public class DocController extends BaseController{
 
 	private boolean svnVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) {
 
-		System.out.println("svnVirtualDocCopy() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
-		if(repos.getVerCtrl1() == 1)
-		{				
-			String reposURL = repos.getSvnPath1();
-			String svnUser = repos.getSvnUser1();
-			if(svnUser==null || "".equals(svnUser))
-			{
-				svnUser = commitUser;
-			}
-			String svnPwd = repos.getSvnPwd1();
-			if(svnCopy(reposURL,svnUser,svnPwd,"",srcDocVName,"",dstDocVName,commitMsg,rt) == false)
-			{
-				System.out.println("文件: " + srcDocVName + " svnCopy失败");
-				return false;
-			}
-			
-			//create Ref Virtual Doc
-			String reposVPath = getReposVirtualPath(repos);
-			String reposRefVPath = getReposRefVirtualPath(repos);
-			createRefVirtualDoc(reposVPath,reposRefVPath,dstDocVName,rt);
-			return true;
-		}
-		else
+		System.out.println("svnVirtualDocCopy() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);			
+		if(svnCopy(repos, false, "",srcDocVName,"",dstDocVName,commitMsg,commitUser,rt) == false)
 		{
-			return true;
+			System.out.println("文件: " + srcDocVName + " svnCopy失败");
+			return false;
 		}
+		
+		//create Ref Virtual Doc
+		String reposVPath = getReposVirtualPath(repos);
+		String reposRefVPath = getReposRefVirtualPath(repos);
+		createRefVirtualDoc(reposVPath,reposRefVPath,dstDocVName,rt);
+		return true;
 	}
 
 	private boolean verReposRevertVirtualDoc(Repos repos, String docVName) {
@@ -3693,22 +3577,18 @@ public class DocController extends BaseController{
 		
 		String localDocVParentPath = getReposVirtualPath(repos);
 
-		//getFolder From the version DataBase
-		String reposURL = repos.getSvnPath1();
-		String svnUser = repos.getSvnUser1();
-		String svnPwd = repos.getSvnPwd1();
-		return svnCheckOut(reposURL, svnUser, svnPwd, "", docVName, localDocVParentPath, docVName,-1);
+		return svnCheckOut(repos, false, "", docVName, localDocVParentPath, docVName,-1);
 	}
 	
 	//The following functions is for svn Operations
-	private int svnGetEntryType(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, long revision) 
+	private int svnGetEntryType(Repos repos, boolean isRealDoc, String parentPath,String entryName, long revision) 
 	{
 		System.out.println("svnGetEntryType() parentPath:" + parentPath + " entryName:" + entryName);
 		
 		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
+		if(svnUtil.Init(repos, isRealDoc, null) == false)
 		{
-			System.out.println("svnGetEntryType() svnUtil Init Failed: " + reposURL);
+			System.out.println("svnGetEntryType() svnUtil Init Failed");
 			return -1;
 		}
 		
@@ -3718,14 +3598,14 @@ public class DocController extends BaseController{
 		return entryType;
 	}
 	
-	private boolean svnCheckOut(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
+	private boolean svnCheckOut(Repos repos, boolean isRealDoc, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
 	{
 		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath);
 		
 		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
+		if(svnUtil.Init(repos, isRealDoc, null) == false)
 		{
-			System.out.println("svnCheckOut() svnUtil Init Failed: " + reposURL);
+			System.out.println("svnCheckOut() svnUtil Init Failed");
 			return false;
 		}
 		
@@ -3782,13 +3662,13 @@ public class DocController extends BaseController{
 	}
 
 	//svnRevert: only for file
-	private boolean svnRevert(String reposURL, String svnUser, String svnPwd, String parentPath,String entryName,String localParentPath,String localEntryName) 
+	private boolean svnRevert(Repos repos, boolean isRealDoc, String parentPath,String entryName,String localParentPath,String localEntryName) 
 	{
 
 		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(reposURL, svnUser, svnPwd) == false)
+		if(svnUtil.Init(repos, isRealDoc, null) == false)
 		{
-			System.out.println("svnRevert() svnUtil Init Failed: " + reposURL);
+			System.out.println("svnRevert() svnUtil Init Failed");
 			return false;
 		}
 		
@@ -3813,14 +3693,13 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean svnCopy(String reposURL, String svnUser, String svnPwd,
-			String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName,
-			String commitMsg, ReturnAjax rt) 
+	private boolean svnCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		SVNUtil svnUtil = new SVNUtil();
-		svnUtil.Init(reposURL, svnUser, svnPwd);
+		svnUtil.Init(repos, isRealDoc, commitUser);
 		
-		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, false) == false)
+		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, false) == false)
 		{
 			rt.setMsgData("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
 			return false;
@@ -3828,14 +3707,13 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean svnMove(String reposURL, String svnUser, String svnPwd,
-			String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,
-			String commitMsg)  
+	private boolean svnMove(Repos repos, boolean isRealDoc, String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt)  
 	{
 		SVNUtil svnUtil = new SVNUtil();
-		svnUtil.Init(reposURL, svnUser, svnPwd);
+		svnUtil.Init(repos, isRealDoc, commitUser);
 		
-		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg, true) == false)
+		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg,commitUser,true) == false)
 		{
 			return false;
 		}
