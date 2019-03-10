@@ -542,6 +542,8 @@ public class ReposController extends BaseController{
 	}
 	
 	private String createGitLocalRepos(String localPath, String reposName, ReturnAjax rt) {
+		System.out.println("createGitLocalRepos localSvnPath:"+localPath + " reposName:" + reposName);	
+
 		File dir = new File(localPath,reposName);
 		if(dir.exists())
 		{
@@ -554,16 +556,18 @@ public class ReposController extends BaseController{
 		return gitPath;
 	}
 
-	private String createSvnLocalRepos(String localSvnPath, String reposName, ReturnAjax rt) {
-		File dir = new File(localSvnPath,reposName);
+	private String createSvnLocalRepos(String localPath, String reposName, ReturnAjax rt) {
+		System.out.println("createSvnLocalRepos localPath:"+localPath + " reposName:" + reposName);	
+		
+		File dir = new File(localPath,reposName);
 		if(dir.exists())
 		{
-			System.out.println("SVN仓库:"+localSvnPath+reposName + "已存在，请直接设置！");	
-			rt.setMsgData("SVN仓库:"+localSvnPath+reposName + "已存在，已直接设置！");
-			return "file:///" + localSvnPath + reposName;
+			System.out.println("SVN仓库:"+localPath+reposName + "已存在，请直接设置！");	
+			rt.setMsgData("SVN仓库:"+localPath+reposName + "已存在，已直接设置！");
+			return "file:///" + localPath + reposName;
 		}
 		
-		String svnPath = SVNUtil.CreateRepos(reposName,localSvnPath);
+		String svnPath = SVNUtil.CreateRepos(reposName,localPath);
 		return svnPath;
 	}
 
@@ -850,7 +854,6 @@ public class ReposController extends BaseController{
 				//If localSvnPath changed, do update in DB
 				if(newVerCtrlInfo.getLocalSvnPath() != null || reposInfo.getLocalSvnPath() == null || reposInfo.getLocalSvnPath().isEmpty())
 				{
-					
 					String localSvnPath = newVerCtrlInfo.getLocalSvnPath() != null? newVerCtrlInfo.getLocalSvnPath() : reposInfo.getLocalSvnPath();
 					String reposName = getVerReposName(reposInfo.getId(),verCtrl,true);
 					if(localSvnPath == null || localSvnPath.isEmpty())
@@ -861,7 +864,7 @@ public class ReposController extends BaseController{
 					localVerReposPath = createLocalVerRepos(localSvnPath,reposName,verCtrl,rt);
 					if(localVerReposPath == null)
 					{
-						rt.setError("本地版本仓库的创建失败:" + localSvnPath + reposName);
+						rt.setError("RealDoc本地版本仓库创建失败:" + localSvnPath + reposName);
 						return false;
 					}
 				
@@ -939,7 +942,7 @@ public class ReposController extends BaseController{
 					localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName,verCtrl,rt);
 					if(localVerReposPath1 == null)
 					{
-						rt.setError("本地版本仓库的创建失败: " + localSvnPath1 + reposName);
+						rt.setError("VirtualDoc本地版本仓库创建失败: " + localSvnPath1 + reposName);
 						return false;
 					}
 					
