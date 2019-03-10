@@ -71,8 +71,8 @@ public class SVNUtil  extends BaseController{
     	}
     	else
     	{
-    		Integer isRemote = repos.getIsRemote1();
-    		if(isRemote == 1)
+    		Integer isRemote1 = repos.getIsRemote1();
+    		if(isRemote1 == 1)
     		{
     			reposURL = repos.getSvnPath1();
     			svnUser = repos.getSvnUser1();
