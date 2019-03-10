@@ -42,7 +42,6 @@ public class SVNUtil  extends BaseController{
 	
 	//For Low Level APIs
 	private SVNRepository repository = null;
-	private Git git = null;
 	private SVNURL repositoryURL = null;
 
 	/***
