@@ -7,7 +7,7 @@
             <input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
             <label>位置</label>
             <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
-            <label>版本仓库 <span style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
+            <label>版本仓库 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
             <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
@@ -27,7 +27,7 @@
 		            <input class="form-control" type="password" id="RBSsvnPwd" value="" style="width: 100%"></input>
 				</div>
 			</div>
-			<label>VirtaulDoc版本仓库 <span style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
+			<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
             <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
@@ -82,10 +82,12 @@
 				$("#RBSlocalVerRepos").hide();
 				$("#RBSremoteVerRepos").show();				
 			}
+			$("#RBSisRemoteSetting").show();							
 			$("#RBSverReposSetting").show();				
 		}
 		else	//hide svn info
 		{
+			$("#RBSisRemoteSetting").hide();
 			$("#RBSverReposSetting").hide();				
 		}    
 	}
@@ -108,10 +110,12 @@
 				$("#RBSlocalVerRepos1").hide();
 				$("#RBSremoteVerRepos1").show();				
 			}
+			$("#RBSisRemoteSetting1").show();
 			$("#RBSverReposSetting1").show();				
 		}
 		else	//hide svn info
 		{
+			$("#RBSisRemoteSetting1").hide();
 			$("#RBSverReposSetting1").hide();				
 		}  
 	}
