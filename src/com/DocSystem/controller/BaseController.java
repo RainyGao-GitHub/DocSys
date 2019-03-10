@@ -241,9 +241,15 @@ public class BaseController{
 	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
 		String localVerReposPath = null;
 
-		Integer verCtrl = repos.getVerCtrl();
-		String localSvnPath = repos.getLocalSvnPath();
-		if(isRealDoc == false)
+		Integer verCtrl = null;
+		String localSvnPath = null;
+
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+			localSvnPath = repos.getLocalSvnPath();
+		}
+		else
 		{
 			verCtrl = repos.getVerCtrl1();
 			localSvnPath = repos.getLocalSvnPath1();
@@ -257,7 +263,7 @@ public class BaseController{
 		}
 		else
 		{
-			
+			//TODO: for git
 		}
 		return localVerReposPath;
 	}
