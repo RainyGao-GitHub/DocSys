@@ -530,6 +530,7 @@ public class ReposController extends BaseController{
 	}
 	
 	private String createLocalVerRepos(String localPath, String reposName, Integer verCtrl,ReturnAjax rt) {
+		System.out.println("createLocalVerRepos localPath:"+localPath + " reposName:" + reposName + " verCtrl:" + verCtrl);	
 		if(verCtrl == 1)
 		{
 			return createSvnLocalRepos(localPath, reposName, rt);
@@ -542,7 +543,7 @@ public class ReposController extends BaseController{
 	}
 	
 	private String createGitLocalRepos(String localPath, String reposName, ReturnAjax rt) {
-		System.out.println("createGitLocalRepos localSvnPath:"+localPath + " reposName:" + reposName);	
+		System.out.println("createGitLocalRepos localPath:"+localPath + " reposName:" + reposName);	
 
 		File dir = new File(localPath,reposName);
 		if(dir.exists())
@@ -933,16 +934,16 @@ public class ReposController extends BaseController{
 				if(newVerCtrlInfo.getLocalSvnPath1() != null || reposInfo.getLocalSvnPath1() == null || reposInfo.getLocalSvnPath1().isEmpty())
 				{
 					String localSvnPath1 = newVerCtrlInfo.getLocalSvnPath1() != null? newVerCtrlInfo.getLocalSvnPath1() : reposInfo.getLocalSvnPath1();
-					String reposName = getVerReposName(reposInfo.getId(),verCtrl1,false);
+					String reposName1 = getVerReposName(reposInfo.getId(),verCtrl1,false);
 					if(localSvnPath1 == null || localSvnPath1.isEmpty())
 					{
 						localSvnPath1 = getDefaultLocalVerReposPath(reposInfo.getPath());
 					}
 					//Create a localVersionRepos
-					localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName,verCtrl,rt);
+					localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName1,verCtrl1,rt);
 					if(localVerReposPath1 == null)
 					{
-						rt.setError("VirtualDoc本地版本仓库创建失败: " + localSvnPath1 + reposName);
+						rt.setError("VirtualDoc本地版本仓库创建失败: " + localSvnPath1 + reposName1);
 						return false;
 					}
 					
