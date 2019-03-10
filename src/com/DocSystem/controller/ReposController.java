@@ -674,6 +674,8 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		Repos repos = reposService.getRepos(vid);
+		
 		//为了避免直接删除仓库数据，系统删除仓库将只删除仓库记录，仓库数据需要用户手动删除
 		if(reposService.deleteRepos(vid) == 0)
 		{
@@ -692,6 +694,11 @@ public class ReposController extends BaseController{
 			ReposAuth reposAuth = new ReposAuth();
 			reposAuth.setReposId(vid);			
 			reposService.deleteReposAuthSelective(reposAuth);
+
+			//Delete Repos LocalDir
+			deleteReposLocalDir(repos);
+			//Delete Repos LocalVerRepos
+			deleteLocalVerRepos(repos);
 		}
 		
 		
