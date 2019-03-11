@@ -4,8 +4,6 @@
 
 > 全平台支持:Linux，Windows，Mac.
 
-### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
-
 ![输入图片说明](https://images.gitee.com/uploads/images/2018/1117/233316_639ed640_1558129.png "1.png")
 
 开源协议: 采用GPL 2.0协议;
@@ -19,6 +17,8 @@
 
 历史版本
 ![输入图片说明](https://images.gitee.com/uploads/images/2018/1119/095414_fba9ce48_1558129.png "8.png")
+
+### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
 系统安装
 ##一、准备工作
