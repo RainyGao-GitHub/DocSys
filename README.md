@@ -17,7 +17,7 @@ DocSys，是基于Java的Web文件管理系统。旨在为个人和企业用户�
 历史版本
 ![输入图片说明](https://images.gitee.com/uploads/images/2018/1119/095414_fba9ce48_1558129.png "8.png")
 
-#系统安装
+系统安装
 ##一、准备工作
 ###1、DocSystem.war配置文件修改
 DocSystem.war下载地址： dw.gofreeteam.com/DocSystem/web/project.html?vid=4&doc=33
