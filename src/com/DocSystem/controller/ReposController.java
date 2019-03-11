@@ -824,7 +824,7 @@ public class ReposController extends BaseController{
 			newReposInfo.setVerCtrl(verCtrl);
 			newReposInfo.setIsRemote(isRemote);
 			newReposInfo.setVerCtrl1(verCtrl1);
-			newReposInfo.setIsRemote(isRemote1);
+			newReposInfo.setIsRemote1(isRemote1);
 			if(reposService.updateRepos(newReposInfo) == 0)
 			{
 				System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
