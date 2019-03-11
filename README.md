@@ -25,7 +25,7 @@
 ### 1、下载DocSystem.war
 下载地址： dw.gofreeteam.com/DocSystem/web/project.html?vid=4&doc=33
 ### 2、DocSystem.war配置文件修改
-将DocSystem.war重命名为DocSystem.zip文件，进入zip文件的WEB-INF/classes/目录，修改以下两个配置文件，修改完成后改为DocSystem.war：
+将DocSystem.war重命名为DocSystem.zip文件，进入zip文件的WEB-INF/classes/目录，修改以下两个配置文件，修改完成后改为DocSystem.war
 (1) 数据库配置：jdbc.properties
 - 数据库访问地址
 - 数据库访问用户
@@ -72,4 +72,4 @@ http://localhost:8080/DocSystem
 远程访问：
 将localhost改为IP地址即可
 
-## DocSys技术交流群: 953982034
+# DocSys技术交流群: 953982034
