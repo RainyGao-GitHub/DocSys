@@ -53,10 +53,10 @@ C:\Program Files (x86)\OpenOffice 4\
 （2）点击tomcat的config按键，选择“<Browser>”找到webapps目录，将DocSystem.war放到该目录，点击Start启动
 
 ### 4、访问
-本机访问：
-http://localhost:8080/DocSystem
-远程访问：
-将localhost改为IP地址即可
+
+本机访问：http://localhost:8080/DocSystem
+
+远程访问：将localhost改为IP地址即可
 
 ## 三、Linux系统安装步骤
 ### 1、安装JDK
