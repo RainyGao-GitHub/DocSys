@@ -20,8 +20,8 @@
 
 ### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
-系统安装
-##一、准备工作
+# 系统安装
+## 一、准备工作
 ###1、DocSystem.war配置文件修改
 DocSystem.war下载地址： dw.gofreeteam.com/DocSystem/web/project.html?vid=4&doc=33
 将DocSystem.war重命名为DocSystem.zip文件，进入zip文件的WEB-INF/classes/目录，修改以下两个配置文件，修改完成后改为DocSystem.war：
@@ -35,37 +35,37 @@ DocSystem.war下载地址： dw.gofreeteam.com/DocSystem/web/project.html?vid=4&
 - openOffice路径配置
 - lucene全文搜索存储路径配置
 
-##二、Windows系统安装步骤
-###2、安装JDK
+## 二、Windows系统安装步骤
+### 2、安装JDK
 请使用JDK或JRE 1.8版本
 ###3、安装OpenOffice（Office文件预览）
 请将OpenOffice安装在以下目录：
 C:\Program Files (x86)\OpenOffice 4\
-###4、安装XAMPP（tomcat和mysql）
+### 4、安装XAMPP（tomcat和mysql）
 安装完成后启动Apache、mysql和tomcat
 (1) 点击mysql的admin进入mysql的管理页面，新增数据库docsystem，并导入docsystem.sql以初始化数据库的表结构
 (2) 点击tomcat的config按键，选择“<Browser>”找到webapps目录，将DocSystem.war放到该目录，点击Start启动
-###4、访问
+### 5、访问
 本机访问：
 http://localhost:8080/DocSystem
 远程访问：
 将localhost改为IP地址即可
 
-##三、Linux系统安装步骤
-###1、安装JDK
+## 三、Linux系统安装步骤
+### 1、安装JDK
 请使用JDK或JRE 1.8版本
-###2、安装OpenOffice（Office文件预览）
+### 2、安装OpenOffice（Office文件预览）
 请将OpenOffice安装在以下目录：
 "/opt/openoffice.org3"
-###3、安装mysql并初始化数据库
+### 3、安装mysql并初始化数据库
 （1）下载Linux版本的mysql安装包，将其解压到/usr/local/mysql目录即可
 （2）启动mysql服务：service mysql start
 （3）使用命令行新建docsystem数据库并导入docsystem.sql文件
-###4、安装tomcat
+### 4、安装tomcat
 （1）下载Linux版本的tomcat7安装包，将其解压到以下目录/usr/local/tomcat目录即可
 （2）将DocSytem.war复制到tomcat的webapps目录
 （3）启动tomcat: service tomcat7 start
-###5、访问
+### 5、访问
 本机访问：
 http://localhost:8080/DocSystem
 远程访问：
