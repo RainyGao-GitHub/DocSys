@@ -238,8 +238,8 @@ public class BaseController{
 		return localSvnPath;
 	}
 	
-	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
-		String localVerReposPath = null;
+	protected String getLocalVerReposURI(Repos repos, boolean isRealDoc) {
+		String localVerReposURI = null;
 
 		Integer verCtrl = null;
 		String localSvnPath = null;
@@ -255,41 +255,79 @@ public class BaseController{
 			localSvnPath = repos.getLocalSvnPath1();
 		}	
 
-		String reposName = getVerReposName(repos.getId(),verCtrl,isRealDoc);
+		String reposName = getVerReposName(repos,isRealDoc);
 		
 		if(verCtrl == 1)
 		{
-			localVerReposPath = "file:///" + localSvnPath + reposName;
+			localVerReposURI = "file:///" + localSvnPath + reposName;
 		}
 		else
 		{
-			//TODO: for git
+			localVerReposURI = null;
+			
 		}
+		return localVerReposURI;
+	}
+	
+	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
+		String localVerReposPath = null;
+		
+		String localSvnPath = null;
+		if(isRealDoc)
+		{
+			localSvnPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+
+		String reposName = getVerReposName(repos,isRealDoc);
+		
+		localVerReposPath = localSvnPath + reposName;
 		return localVerReposPath;
 	}
 
-	protected String getVerReposName(Integer id, Integer verCtrl,boolean isRealDoc) {
+	protected String getVerReposName(Repos repos,boolean isRealDoc) {
 		String reposName = null;
+		
+		Integer id = repos.getId();
 		if(isRealDoc)
 		{
+			Integer verCtrl = repos.getVerCtrl();
 			if(verCtrl == 1)
 			{
 				reposName = id + "_SVN_RRepos";
 			}
-			else
+			else if(verCtrl == 2)
 			{ 
-				reposName = id + "_GIT_RRepos";
+				if(repos.getIsRemote() == 0)
+				{
+					reposName = id + "_GIT_RRepos";
+				}
+				else
+				{
+					reposName = id + "_GIT_RRepos_Remote";					
+				}
 			}
 		}
 		else
 		{
+			Integer verCtrl = repos.getVerCtrl1();			
 			if(verCtrl == 1)
 			{
 				reposName = id + "_SVN_VRepos";
 			}
-			else
-			{ 
-				reposName = id + "_GIT_VRepos";
+			else if(verCtrl == 2)
+			{
+				if(repos.getIsRemote1() == 0)
+				{
+					reposName = id + "_GIT_VRepos";
+				}
+				else
+				{
+					reposName = id + "_GIT_VRepos_Remote";					
+				}
 			}
 		}
 		return reposName;

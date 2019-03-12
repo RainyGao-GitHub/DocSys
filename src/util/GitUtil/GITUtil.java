@@ -5,53 +5,46 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoFilepatternException;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.Repos;
 
 public class GITUtil  extends BaseController{
     //For Low Level APIs
-	private Repository repository = null;
-	private Git git = null;
 	private String repositoryURL = null;
+	private String user = null;
+	private String pwd = null;
+	private String gitDir = null;
+	private String wcDir = null;
 	
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
-    	String reposURL = null;
-    	String user = null;
-    	String pwd = null;
-    
-    	Integer isRemote = null;
+    	
+		gitDir = getLocalVerReposPath(repos,isRealDoc);
+		wcDir = gitDir;
+		
     	if(isRealDoc)
     	{
-    		isRemote = repos.getIsRemote();
-    		if(isRemote == 1)
+    		if(repos.getIsRemote() == 1)
     		{
-    			reposURL = repos.getSvnPath();
+    			repositoryURL = repos.getSvnPath();
     			user = repos.getSvnUser();
     			pwd = repos.getSvnPwd();
-    		}
-    		else
-    		{
-    			reposURL = getLocalVerReposPath(repos,isRealDoc);
     		}
     	}
     	else
     	{
-    		isRemote = repos.getIsRemote1();
-    		if(isRemote == 1)
+    		if(repos.getIsRemote1() == 1)
     		{
-    			reposURL = repos.getSvnPath1();
+    			repositoryURL = repos.getSvnPath1();
     			user = repos.getSvnUser1();
     			pwd = repos.getSvnPwd1();
-    		}
-    		else
-    		{
-    			reposURL = getLocalVerReposPath(repos,isRealDoc);
     		}
     	}
 
@@ -60,28 +53,45 @@ public class GITUtil  extends BaseController{
 		{
 			user = commitUser;
 		}
-		
-		repositoryURL = reposURL;
-		repository = null;
-		
-		try {
-			git = Git.open(new File(repositoryURL));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		};
-	
 		return true;
 	}
 	
     //新建本地git仓库
-	public static String CreateRepos(String name,String path){
-		System.out.println("CreateRepos reposName:" + name + "under Path:" + path);
+	public static String CreateRepos(String path,String name){
+		System.out.println("CreateRepos reposName:" + name + " under Path:" + path);
 		
 		File dir = new File(path,name);
+		File wcdir = new File("C:/localGitTestWC");
         try {
-			Git.init().setGitDir(dir).setDirectory(dir.getParentFile()).call();
+			Git.init().setGitDir(dir).setDirectory(wcdir).setBare(false).call();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("CreateRepos error");
+			return null;
+		}
+        
+        return path+name;
+	}
+	
+    //Clone仓库: clone到path + name目录下
+	public String CloneRepos(String path,String name){
+		System.out.println("CloneRepos reposName:" + name + " under Path:" + path);
+		
+		CloneCommand cloneCommand = Git.cloneRepository();
+		cloneCommand.setURI(repositoryURL);
+		
+		if(user != null)
+		{
+			cloneCommand.setCredentialsProvider( new UsernamePasswordCredentialsProvider(user, pwd));
+		}
+		
+		File dir = new File(path,name);
+		File wcdir = new File("C:/RemoteGitTestWC");
+        cloneCommand.setGitDir(dir);	//Set the repository dir
+        cloneCommand.setDirectory(wcdir);	//set the working copy dir
+		
+		try {
+			cloneCommand.call();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("CreateRepos error");
@@ -96,7 +106,9 @@ public class GITUtil  extends BaseController{
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
 	
 		String entryPath = parentPath + entryName;
-		try {	
+		try {
+			Git git = Git.open(new File(repositoryURL));
+			
 			if(entryPath == null || entryPath.isEmpty())
 			{
 				git.add().addFilepattern(".").call();

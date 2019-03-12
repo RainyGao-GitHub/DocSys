@@ -239,7 +239,7 @@ public class ReposController extends BaseController{
 					localSvnPath = getDefaultLocalVerReposPath(path);
 				}
 				
-				String reposName = getVerReposName(repos.getId(),verCtrl,true);
+				String reposName = getVerReposName(repos,true);
 				
 				//Create a localVersionRepos
 				localVerReposPath = createLocalVerRepos(localSvnPath,reposName,verCtrl,rt);
@@ -292,7 +292,7 @@ public class ReposController extends BaseController{
 				{
 					localSvnPath1 = getDefaultLocalVerReposPath(path);
 				}
-				String reposName = getVerReposName(repos.getId(),verCtrl1,false);
+				String reposName = getVerReposName(repos,false);
 
 				//Create a localVersionRepos
 				localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName,verCtrl1,rt);
@@ -510,7 +510,7 @@ public class ReposController extends BaseController{
 		}
 		if(verCtrl != 0 && isRemote == 0)
 		{
-			String localVerReposDir = repos.getLocalSvnPath() + getVerReposName(repos.getId(),verCtrl,true);
+			String localVerReposDir = repos.getLocalSvnPath() + getVerReposName(repos,true);
 			delDir(localVerReposDir);
 		}
 		
@@ -524,7 +524,7 @@ public class ReposController extends BaseController{
 		}
 		if(verCtrl1 != 0 && isRemote1 == 0)
 		{
-			String localVerReposDir1 = repos.getLocalSvnPath1() + getVerReposName(repos.getId(),verCtrl1,false);
+			String localVerReposDir1 = repos.getLocalSvnPath1() + getVerReposName(repos,false);
 			delDir(localVerReposDir1);
 		}
 	}
@@ -856,7 +856,7 @@ public class ReposController extends BaseController{
 				if(newVerCtrlInfo.getLocalSvnPath() != null || reposInfo.getLocalSvnPath() == null || reposInfo.getLocalSvnPath().isEmpty())
 				{
 					String localSvnPath = newVerCtrlInfo.getLocalSvnPath() != null? newVerCtrlInfo.getLocalSvnPath() : reposInfo.getLocalSvnPath();
-					String reposName = getVerReposName(reposInfo.getId(),verCtrl,true);
+					String reposName = getVerReposName(reposInfo,true);
 					if(localSvnPath == null || localSvnPath.isEmpty())
 					{
 						localSvnPath = getDefaultLocalVerReposPath(reposInfo.getPath());
@@ -934,7 +934,7 @@ public class ReposController extends BaseController{
 				if(newVerCtrlInfo.getLocalSvnPath1() != null || reposInfo.getLocalSvnPath1() == null || reposInfo.getLocalSvnPath1().isEmpty())
 				{
 					String localSvnPath1 = newVerCtrlInfo.getLocalSvnPath1() != null? newVerCtrlInfo.getLocalSvnPath1() : reposInfo.getLocalSvnPath1();
-					String reposName1 = getVerReposName(reposInfo.getId(),verCtrl1,false);
+					String reposName1 = getVerReposName(reposInfo,false);
 					if(localSvnPath1 == null || localSvnPath1.isEmpty())
 					{
 						localSvnPath1 = getDefaultLocalVerReposPath(reposInfo.getPath());
