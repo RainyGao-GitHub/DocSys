@@ -284,7 +284,7 @@ public class BaseController{
 
 		String reposName = getVerReposName(repos,isRealDoc);
 		
-		localVerReposPath = localSvnPath + reposName;
+		localVerReposPath = localSvnPath + reposName + "/";
 		return localVerReposPath;
 	}
 

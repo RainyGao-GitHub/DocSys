@@ -57,11 +57,11 @@ public class GITUtil  extends BaseController{
 	}
 	
     //新建本地git仓库
-	public static String CreateRepos(String path,String name){
-		System.out.println("CreateRepos reposName:" + name + " under Path:" + path);
+	public String CreateRepos(){
+		System.out.println("CreateRepos");
 		
-		File dir = new File(path,name);
-		File wcdir = new File("C:/localGitTestWC");
+		File dir = new File(gitDir);
+		File wcdir = new File(wcDir);
         try {
 			Git.init().setGitDir(dir).setDirectory(wcdir).setBare(false).call();
 		} catch (Exception e) {
@@ -70,12 +70,12 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
         
-        return path+name;
+        return wcDir;
 	}
 	
     //Clone仓库: clone到path + name目录下
-	public String CloneRepos(String path,String name){
-		System.out.println("CloneRepos reposName:" + name + " under Path:" + path);
+	public String CloneRepos(){
+		System.out.println("CloneRepos");
 		
 		CloneCommand cloneCommand = Git.cloneRepository();
 		cloneCommand.setURI(repositoryURL);
@@ -85,8 +85,8 @@ public class GITUtil  extends BaseController{
 			cloneCommand.setCredentialsProvider( new UsernamePasswordCredentialsProvider(user, pwd));
 		}
 		
-		File dir = new File(path,name);
-		File wcdir = new File("C:/RemoteGitTestWC");
+		File dir = new File(gitDir);
+		File wcdir = new File(wcDir);
         cloneCommand.setGitDir(dir);	//Set the repository dir
         cloneCommand.setDirectory(wcdir);	//set the working copy dir
 		
@@ -98,7 +98,7 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
         
-        return path+name;
+        return wcDir;
 	}
 	
 	//Commit all changes under dedicated directory

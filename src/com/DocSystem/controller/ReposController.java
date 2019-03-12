@@ -166,42 +166,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//检查传入的参数
-		if((name == null) || name.equals(""))
-		{
-			rt.setError("仓库名不能为空！");
-			writeJson(rt, response);			
-			return;
-		}
-		if((info == null) || info.equals(""))
-		{
-			rt.setError("仓库描述不能为空！");
-			writeJson(rt, response);			
-			return;
-		}
-		if((path == null) || path.equals(""))
-		{
-			path = getDefaultReposRootPath();
-		}
-		else
-		{
-			//检查path的格式并修正：必须以/结尾
-			path = reposRootPathFormat(path);
-		}		
-
-		//确定是否存在相同路径的仓库
-		Repos tmpRepos = new Repos();
-		tmpRepos.setName(name);
-		tmpRepos.setPath(path);
-		List<Repos> list = reposService.getReposList(tmpRepos);
-		if((list != null) && (list.size() > 0))
-		{
-			rt.setError("仓库已存在:" + path + name);
-			writeJson(rt, response);	
-			return;
-		}
-		
-		//add a new repos
+		//Set reposInfo
 		Repos repos = new Repos();
 		repos.setName(name);
 		repos.setInfo(info);
@@ -209,6 +174,28 @@ public class ReposController extends BaseController{
 		repos.setPath(path);
 		repos.setOwner(login_user.getId());
 		repos.setCreateTime(createTime);
+		//RealDoc VerCtrlInfo
+		repos.setVerCtrl(verCtrl);
+		repos.setIsRemote(isRemote);
+		repos.setLocalSvnPath(localSvnPath);
+		repos.setSvnPath(svnPath);
+		repos.setSvnUser(svnUser);
+		repos.setSvnPwd(svnPwd);
+		//VirtualDoc VerCtrlInfo		
+		repos.setVerCtrl1(verCtrl1);
+		repos.setIsRemote1(isRemote1);
+		repos.setLocalSvnPath1(localSvnPath1);
+		repos.setSvnPath1(svnPath1);
+		repos.setSvnUser1(svnUser1);
+		repos.setSvnPwd1(svnPwd1);
+		
+		if(checkReposInfoForAdd(repos, rt) == false)
+		{
+			System.out.println("checkReposInfoForAdd() failed");
+			writeJson(rt, response);		
+			return;			
+		}
+		
 		if(reposService.addRepos(repos) == 0)
 		{
 			rt.setError("新增仓库记录失败");
@@ -225,120 +212,20 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//RealDoc need version control
-		String localVerReposPath = null;
-		repos.setVerCtrl(verCtrl);
-		repos.setIsRemote(isRemote);
-		if(verCtrl != 0)
+		//Init verRepos for RealDoc
+		if(initVerRepos(repos,true,rt) == false)
 		{
-			if(isRemote == 0)
-			{
-				//If use localVerRepos, empty path mean use the the directory: path+/DocSysSvnReposes
-				if((localSvnPath == null) || localSvnPath.equals(""))
-				{
-					localSvnPath = getDefaultLocalVerReposPath(path);
-				}
-				
-				String reposName = getVerReposName(repos,true);
-				
-				//Create a localVersionRepos
-				localVerReposPath = createLocalVerRepos(localSvnPath,reposName,verCtrl,rt);
-				if(localVerReposPath == null)
-				{
-					System.out.println("RealDoc版本仓库创建失败：" + localSvnPath + reposName);	//这个其实还不是特别严重，只要重新设置一次即可
-					deleteRepos(repos);
-					rt.setMsgData("RealDoc版本仓库的创建失败");
-					writeJson(rt, response);	
-					return;
-				}
-				repos.setLocalSvnPath(localSvnPath);
-			}
-			else
-			{
-				if(svnPath == null || svnPath.equals(""))
-				{
-					System.out.println("RealDoc版本仓库地址不能为空");	//这个其实还不是特别严重，只要重新设置一次即可
-					deleteRepos(repos);
-					rt.setError("版本仓库地址不能为空！");
-					writeJson(rt, response);
-					return;
-				}
-				
-				//检查SVN路径是否已使用
-				if(isVerReposPathBeUsed(svnPath) == true)
-				{
-					System.out.println("版本仓库地址已使用:" + svnPath);	//这个其实还不是特别严重，只要重新设置一次即可
-					deleteRepos(repos);
-					rt.setError("版本仓库地址已使用:" + svnPath);
-					writeJson(rt, response);	
-					return;	
-				}
-				repos.setSvnPath(svnPath);
-				repos.setSvnUser(svnUser);
-				repos.setSvnPwd(svnPwd);
-			}	
-		}
-		
-		//如果VirtualDoc是带版本控制的话，路径不能为空
-		String localVerReposPath1 = null;		
-		repos.setVerCtrl1(verCtrl1);
-		repos.setIsRemote1(isRemote1);
-		if(verCtrl1 != 0)
-		{
-			if(isRemote1 == 0)
-			{
-				//If use localVerRepos, empty path mean use the the directory: path+/DocSysSvnReposes
-				if((localSvnPath1 == null) || localSvnPath1.equals(""))
-				{
-					localSvnPath1 = getDefaultLocalVerReposPath(path);
-				}
-				String reposName = getVerReposName(repos,false);
-
-				//Create a localVersionRepos
-				localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName,verCtrl1,rt);
-				if(localVerReposPath1 == null)
-				{
-					System.out.println("VirtualDoc版本仓库创建失败：" + localSvnPath1 + reposName);	//这个其实还不是特别严重，只要重新设置一次即可
-					deleteRepos(repos);
-					rt.setError("VirtualDoc版本仓库的创建失败");
-					writeJson(rt, response);	
-					return;
-				}
-				repos.setLocalSvnPath1(localSvnPath1);
-			}
-			else
-			{
-				if(svnPath1 == null || svnPath1.equals(""))
-				{
-					System.out.println("VirtualDoc版本仓库地址不能为空");	//这个其实还不是特别严重，只要重新设置一次即可
-					deleteRepos(repos);
-					rt.setError("VirtualDoc版本仓库地址不能为空！");
-					return;
-				}
-				
-				//检查版本仓库地址是否已使用
-				if(isVerReposPathBeUsed(svnPath1) == true)
-				{
-					System.out.println("VirtualDoc版本仓库地址已使用:" + svnPath1);	//这个其实还不是特别严重，只要重新设置一次即可
-					deleteRepos(repos);
-					rt.setError("VirtualDoc版本仓库地址已使用:" + svnPath1);
-					writeJson(rt, response);	
-					return;	
-				}
-				repos.setSvnPath1(svnPath1);
-				repos.setSvnUser1(svnUser1);
-				repos.setSvnPwd1(svnPwd1);
-			}
-		}
-				
-		//更新仓库的信息: svnPath 和 path
-		if(reposService.updateRepos(repos) == 0)
-		{
-			System.out.println("更新数据库失败");
 			deleteRepos(repos);
-			rt.setError("更新数据库失败");
-			writeJson(rt, response);		
-			return;
+			writeJson(rt, response);	
+			return;			
+		}
+
+		//Init verRepos for VirtualDoc
+		if(initVerRepos(repos, false, rt) == false)
+		{
+			deleteRepos(repos);
+			writeJson(rt, response);	
+			return;			
 		}
 		
 		InitReposAuthInfo(repos,login_user,rt);		
@@ -346,6 +233,288 @@ public class ReposController extends BaseController{
 		syncupVerRepos(repos,login_user,rt);
 
 		writeJson(rt, response);	
+	}
+
+	
+	private boolean checkReposInfoForAdd(Repos repos, ReturnAjax rt) {
+		//检查传入的参数
+		String name = repos.getName();
+		if((name == null) || name.isEmpty())
+		{
+			rt.setError("仓库名不能为空！");			
+			return false;
+		}
+
+		//修正path参数
+		String path = repos.getPath();
+		if((path == null) || path.equals(""))
+		{
+			path = getDefaultReposRootPath();
+		}
+		else
+		{
+			//检查path的格式并修正：必须以/结尾
+			path = reposRootPathFormat(path);
+		}
+		repos.setPath(path);
+
+		//确定是否存在相同路径的仓库
+		Repos tmpRepos = new Repos();
+		tmpRepos.setName(name);
+		tmpRepos.setPath(path);
+		List<Repos> list = reposService.getReposList(tmpRepos);
+		if((list != null) && (list.size() > 0))
+		{
+			rt.setError("仓库已存在:" + path + name);
+			return false;
+		}
+		
+		//RealDoc verRepos Settings check
+		if(checkVerReposInfo(repos, true, rt) == false)
+		{
+			return false;
+		}
+
+		//VirtualDoc verRepos Settings check
+		if(checkVerReposInfo(repos, false, rt) == false)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean checkVerReposInfo(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		//Check RealDoc VerRepos Settings
+		Integer verCtrl = null;
+		Integer isRemote = null;
+		String localSvnPath = null;
+		String svnPath = null;
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+			isRemote = repos.getIsRemote();
+			localSvnPath = repos.getLocalSvnPath();
+			svnPath = repos.getSvnPath();	
+		}
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+			isRemote = repos.getIsRemote1();
+			localSvnPath = repos.getLocalSvnPath1();
+			svnPath = repos.getSvnPath1();	
+		}
+		
+		if(verCtrl != 0 )
+		{
+			if(isRemote == 0)	//本地版本仓库
+			{
+				//修正localVerReposPath
+				if(localSvnPath == null || localSvnPath.isEmpty())
+				{
+					if(isRealDoc)
+					{
+						repos.setLocalSvnPath(getDefaultLocalVerReposPath(repos.getPath()));
+					}
+					else
+					{
+						repos.setLocalSvnPath1(getDefaultLocalVerReposPath(repos.getPath()));						
+					}
+				}			
+			}	
+			else	//远程版本仓库
+			{
+				if(svnPath == null || svnPath.isEmpty())
+				{
+					System.out.println("版本仓库链接不能为空");	//这个其实还不是特别严重，只要重新设置一次即可
+					rt.setError("版本仓库链接不能为空！");
+					return false;
+				}	
+				
+				//检查版本仓库地址是否已使用
+				if(isVerReposPathBeUsed(svnPath) == true)
+				{
+					System.out.println("版本仓库地址已使用:" + svnPath);	//这个其实还不是特别严重，只要重新设置一次即可
+					rt.setError("版本仓库地址已使用:" + svnPath);
+					return false;	
+				}
+				
+				//localVerReposPath setting
+				if(verCtrl == 2)
+				{
+					//修正localVerReposPath
+					if(localSvnPath == null || localSvnPath.isEmpty())
+					{
+						if(isRealDoc)
+						{
+							repos.setLocalSvnPath(getDefaultLocalVerReposPath(repos.getPath()));
+						}
+						else
+						{
+							repos.setLocalSvnPath1(getDefaultLocalVerReposPath(repos.getPath()));							
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	private boolean checkReposInfoForUpdate(Repos newReposInfo, Repos previousReposInfo, ReturnAjax rt) {
+		//update repos
+		if(newReposInfo.getId() == null)
+		{
+			rt.setError("仓库ID不能为空!");							
+			return false;
+		}
+				
+		//rename仓库
+		if(newReposInfo.getName() != null)
+		{
+			if(newReposInfo.getName().isEmpty())
+			{
+				rt.setError("名字不能为空！");
+				return false;
+			}
+		}
+	
+		//Change Path
+		if(newReposInfo.getPath() != null)
+		{
+			if(newReposInfo.getPath().isEmpty())
+			{
+				rt.setError("位置不能为空！");
+				return false;
+			}
+		}
+		
+		if(isVerReposInfoChanged(newReposInfo, previousReposInfo, true))
+		{
+			if(checkVerReposInfo(newReposInfo, true, rt) == false)
+			{
+				return false;
+			}
+		}
+		
+		if(isVerReposInfoChanged(newReposInfo, previousReposInfo, false))
+		{
+			if(checkVerReposInfo(newReposInfo, false, rt) == false)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private boolean isVerReposInfoChanged(Repos newReposInfo, Repos previousReposInfo, boolean isRealDoc) {
+		Integer verCtrl = null;
+		Integer isRemote = null;
+		String localSvnPath = null;
+		String svnPath = null;	
+		
+		Integer preVerCtrl = null;
+		Integer preIsRemote = null;
+		String preLocalSvnPath = null;
+		String preSvnPath = null;	
+		
+		if(isRealDoc)
+		{
+			verCtrl = newReposInfo.getVerCtrl();
+			isRemote = newReposInfo.getIsRemote();
+			localSvnPath = newReposInfo.getLocalSvnPath();
+			svnPath = newReposInfo.getSvnPath();	
+			
+			preVerCtrl = previousReposInfo.getVerCtrl();
+			preIsRemote = previousReposInfo.getIsRemote();
+			preLocalSvnPath = previousReposInfo.getLocalSvnPath();
+			preSvnPath = previousReposInfo.getSvnPath();
+		}
+		else
+		{
+			verCtrl = newReposInfo.getVerCtrl1();
+			isRemote = newReposInfo.getIsRemote1();
+			localSvnPath = newReposInfo.getLocalSvnPath1();
+			svnPath = newReposInfo.getSvnPath1();	
+			
+			preVerCtrl = previousReposInfo.getVerCtrl1();
+			preIsRemote = previousReposInfo.getIsRemote1();
+			preLocalSvnPath = previousReposInfo.getLocalSvnPath1();
+			preSvnPath = previousReposInfo.getSvnPath1();
+		}
+		
+		if(verCtrl != null && verCtrl != preVerCtrl)
+		{
+			return true;
+		}
+		
+		if(isRemote != null && isRemote != preIsRemote)
+		{
+			return true;
+		}
+		
+		if(localSvnPath != null && localSvnPath != preLocalSvnPath)
+		{
+			return true;
+		}
+		
+		if(svnPath != null && svnPath != preSvnPath)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean initVerRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		Integer verCtrl = null;
+		Integer isRemote = null;
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+			isRemote = repos.getIsRemote();
+		}
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+			isRemote = repos.getIsRemote1();
+		}
+		
+		if(verCtrl != 0)
+		{
+			if(isRemote == 0)
+			{	
+				//Create a localVersionRepos
+				if(createLocalVerRepos(repos, isRealDoc, rt) == null)
+				{
+					System.out.println("版本仓库创建失败");	//这个其实还不是特别严重，只要重新设置一次即可
+					rt.setError("版本仓库的创建失败");	
+					return false;
+				}
+			}
+			else
+			{
+				//If VerRepos is Git, We need to do clone the Repository
+				if(verCtrl == 2)
+				{
+					//Clone the Repository
+					if(cloneGitRepos(repos, isRealDoc, rt) == null)
+					{
+						System.out.println("版本仓库Clone失败");	//这个其实还不是特别严重，只要重新设置一次即可
+						rt.setError("版本仓库Clone失败");	
+						return false;
+					}
+				}
+				
+			}	
+		}
+		return true;
+	}
+
+	private String cloneGitRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		GITUtil gitUtil = new GITUtil();
+        
+        gitUtil.Init(repos, isRealDoc, "");
+        return gitUtil.CloneRepos();
 	}
 
 	private void InitReposAuthInfo(Repos repos, User login_user, ReturnAjax rt) {
@@ -529,36 +698,69 @@ public class ReposController extends BaseController{
 		}
 	}
 	
-	private String createLocalVerRepos(String localPath, String reposName, Integer verCtrl,ReturnAjax rt) {
-		System.out.println("createLocalVerRepos localPath:"+localPath + " reposName:" + reposName + " verCtrl:" + verCtrl);	
+	private String createLocalVerRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		System.out.println("createLocalVerRepos isRealDoc:"+isRealDoc);	
+		Integer verCtrl = 0;
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+		}
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+		}
+		
 		if(verCtrl == 1)
 		{
-			return createSvnLocalRepos(localPath, reposName, rt);
+			return createSvnLocalRepos(repos,isRealDoc, rt);
 		}
 		else if(verCtrl == 2)
 		{
-			return createGitLocalRepos(localPath, reposName, rt);
+			return createGitLocalRepos(repos, isRealDoc, rt);
 		}
 		return null;
 	}
 	
-	private String createGitLocalRepos(String localPath, String reposName, ReturnAjax rt) {
-		System.out.println("createGitLocalRepos localPath:"+localPath + " reposName:" + reposName);	
+	private String createGitLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		System.out.println("createGitLocalRepos isRealDoc:"+isRealDoc);	
 
-		File dir = new File(localPath,reposName);
+		String localVerRepos = getLocalVerReposPath(repos, isRealDoc);
+		File dir = new File(localVerRepos);
 		if(dir.exists())
 		{
-			System.out.println("GIT仓库:"+localPath+reposName + "已存在，请直接设置！");	
-			rt.setMsgData("GIT仓库:"+localPath+reposName + "已存在，已直接设置！");
-			return localPath + reposName;
+			System.out.println("GIT仓库:"+localVerRepos + "已存在，请直接设置！");	
+			rt.setMsgData("GIT仓库:"+localVerRepos + "已存在，已直接设置！");
+			return localVerRepos;
 		}
 		
-		String gitPath = GITUtil.CreateRepos(reposName,localPath);
+		GITUtil gitUtil = new GITUtil();
+		gitUtil.Init(repos, isRealDoc, "");
+		String gitPath = gitUtil.CreateRepos();
 		return gitPath;
 	}
 
-	private String createSvnLocalRepos(String localPath, String reposName, ReturnAjax rt) {
-		System.out.println("createSvnLocalRepos localPath:"+localPath + " reposName:" + reposName);	
+	private String createSvnLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		System.out.println("createSvnLocalRepos isRealDoc:"+isRealDoc);	
+		
+		String path = repos.getPath();
+		String localPath = null;
+		if(isRealDoc)
+		{
+			localPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			localPath = repos.getLocalSvnPath1();
+		}
+		
+		
+		//If use localVerRepos, empty path mean use the the directory: path+/DocSysSvnReposes
+		if((localPath == null) || localPath.equals(""))
+		{
+			localPath = getDefaultLocalVerReposPath(path);
+		}
+	
+		String reposName = getVerReposName(repos,isRealDoc);
 		
 		File dir = new File(localPath,reposName);
 		if(dir.exists())
@@ -742,401 +944,105 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//检查传入的参数
-		//update repos
-		if(reposId == null)
+		//Set new ReposInfo
+		Repos newReposInfo = new Repos();
+		newReposInfo.setId(reposId);
+		newReposInfo.setName(name);
+		newReposInfo.setInfo(info);
+		newReposInfo.setPath(path);
+		newReposInfo.setVerCtrl(verCtrl);
+		newReposInfo.setIsRemote(isRemote);
+		newReposInfo.setLocalSvnPath(localSvnPath);
+		newReposInfo.setSvnPath(svnPath);
+		newReposInfo.setSvnUser(svnUser);
+		newReposInfo.setSvnUser(svnPwd);
+		newReposInfo.setVerCtrl(verCtrl1);
+		newReposInfo.setIsRemote(isRemote1);
+		newReposInfo.setLocalSvnPath(localSvnPath1);
+		newReposInfo.setSvnPath(svnPath1);
+		newReposInfo.setSvnUser(svnUser1);
+		newReposInfo.setSvnUser(svnPwd1);	
+		
+		//Get reposInfo (It will be used to revert the reposInfo)
+		Repos reposInfo = reposService.getRepos(reposId);
+		
+		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
 		{
-			rt.setError("仓库ID不能为空!");				
 			writeJson(rt, response);	
 			return;
 		}
 		
-		//Get reposInfo
-		Repos reposInfo = reposService.getRepos(reposId);
-		/*通过判断需要内容进行不同的操作，另外需要分阶段更新，优先更新与存储无关的参数*/
-		//修改仓库描述
-		if(info != null && !info.isEmpty())
+		//Update ReposInfo
+		if(reposService.updateRepos(newReposInfo) == 0)
 		{
-			if(UpdateReposInfo(reposId,info,rt) == false)
-			{
-				writeJson(rt, response);
-				return;
-			}
-			reposInfo.setInfo(info);			
-		}
-		
-		//rename仓库
-		if(name != null && !name.isEmpty())
-		{
-			if(UpdateReposName(reposId,name,rt) == false)
-			{
-				writeJson(rt, response);
-				return;
-			}
-			reposInfo.setInfo(name);
-		}
-		
-		//move仓库
-		if(path != null && !path.isEmpty())
-		{
-			if(UpdateReposPath(reposId,path,login_user,rt) == false)
-			{
-				writeJson(rt, response);
-				return;
-			}
-			reposInfo.setPath(path);
-		}
-		
-		//修改版本仓库信息 ：Set the verCtrl Info to newReposInfo
-		Repos newVerCtrlInfo = new Repos();
-		newVerCtrlInfo.setVerCtrl(verCtrl);
-		newVerCtrlInfo.setIsRemote(isRemote);
-		newVerCtrlInfo.setLocalSvnPath(localSvnPath);
-		newVerCtrlInfo.setSvnPath(svnPath);
-		newVerCtrlInfo.setSvnUser(svnUser);
-		newVerCtrlInfo.setSvnUser(svnPwd);
-		newVerCtrlInfo.setVerCtrl1(verCtrl1);
-		newVerCtrlInfo.setIsRemote1(isRemote1);
-		newVerCtrlInfo.setLocalSvnPath1(localSvnPath1);
-		newVerCtrlInfo.setSvnPath1(svnPath1);
-		newVerCtrlInfo.setSvnUser1(svnUser1);
-		newVerCtrlInfo.setSvnUser1(svnPwd1);
-		if(UpdateReposVerCtrlInfo(reposInfo,newVerCtrlInfo,login_user,rt) == false)
-		{
-			writeJson(rt, response);
+			System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
+			rt.setError("仓库信息更新失败！");
+			writeJson(rt, response);	
 			return;
 		}
+		
+		if(ChangeReposPath(newReposInfo, reposInfo, login_user, rt))
+		{
+			reposService.updateRepos(reposInfo);	//Revert reposInfo
+			System.out.println("仓库目录修改失败");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		//To get updated reposInfo
+		Repos repos = reposService.getRepos(reposId);
+		if(isVerReposInfoChanged(newReposInfo, reposInfo, true))
+		{
+			if(initVerRepos(repos, true, rt) == false)
+			{
+				reposService.updateRepos(reposInfo);	//Revert reposInfo
+				System.out.println("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
+				rt.setError("版本仓库初始化失败！");
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		
+		if(isVerReposInfoChanged(newReposInfo, reposInfo, false))
+		{
+			if(initVerRepos(repos, false, rt) == false)
+			{
+				reposService.updateRepos(reposInfo);	//Revert reposInfo
+				System.out.println("版本仓库初始化失败");	//这个其实还不是特别严重，只要重新设置一次即可
+				rt.setError("版本仓库初始化失败！");
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		
+		syncupVerRepos(repos,login_user,rt);
 		
 		writeJson(rt, response);	
 	}
 
-	
-	private boolean UpdateReposVerCtrlInfo(Repos reposInfo, Repos newVerCtrlInfo, User login_user, ReturnAjax rt) 
-	{
-		Integer verCtrl = newVerCtrlInfo.getVerCtrl();
-		Integer verCtrl1 = newVerCtrlInfo.getVerCtrl1();
-		Integer isRemote = newVerCtrlInfo.getIsRemote();
-		Integer isRemote1 = newVerCtrlInfo.getIsRemote1();
-		if(verCtrl != null || verCtrl1 != null || isRemote != null || isRemote1 != null)
-		{
-			Repos newReposInfo = new Repos();
-			newReposInfo.setId(reposInfo.getId());
-			newReposInfo.setVerCtrl(verCtrl);
-			newReposInfo.setIsRemote(isRemote);
-			newReposInfo.setVerCtrl1(verCtrl1);
-			newReposInfo.setIsRemote1(isRemote1);
-			if(reposService.updateRepos(newReposInfo) == 0)
-			{
-				System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
-				rt.setError("仓库信息更新失败！");
-				return false;
-			}
-		}
-		
-		//Get the final value for verCtrl and isRemote
-		verCtrl = verCtrl != null? verCtrl : reposInfo.getVerCtrl();
-		verCtrl1 = verCtrl1 != null? verCtrl1 : reposInfo.getVerCtrl1();
-		isRemote = isRemote != null? isRemote : reposInfo.getIsRemote();
-		isRemote1 = isRemote1 != null? isRemote1 : reposInfo.getIsRemote1();
-		//Update reposInof
-		reposInfo.setVerCtrl(verCtrl);
-		reposInfo.setIsRemote(isRemote);
-		reposInfo.setVerCtrl1(verCtrl1);
-		reposInfo.setIsRemote(isRemote1);
-		
-		String localVerReposPath = null;
-		String svnPath = newVerCtrlInfo.getSvnPath() != null? newVerCtrlInfo.getSvnPath() : reposInfo.getSvnPath();
-		String svnUser = newVerCtrlInfo.getSvnUser() != null? newVerCtrlInfo.getSvnUser() : reposInfo.getSvnUser();
-		String svnPwd = newVerCtrlInfo.getSvnPwd() != null? newVerCtrlInfo.getSvnPwd() : reposInfo.getSvnPwd();
-		if(verCtrl != 0)
-		{
-			if(isRemote == 0)	//Local VerCtrl
-			{
-				//If localSvnPath changed, do update in DB
-				if(newVerCtrlInfo.getLocalSvnPath() != null || reposInfo.getLocalSvnPath() == null || reposInfo.getLocalSvnPath().isEmpty())
-				{
-					String localSvnPath = newVerCtrlInfo.getLocalSvnPath() != null? newVerCtrlInfo.getLocalSvnPath() : reposInfo.getLocalSvnPath();
-					String reposName = getVerReposName(reposInfo,true);
-					if(localSvnPath == null || localSvnPath.isEmpty())
-					{
-						localSvnPath = getDefaultLocalVerReposPath(reposInfo.getPath());
-					}
-					//Create a localVersionRepos
-					localVerReposPath = createLocalVerRepos(localSvnPath,reposName,verCtrl,rt);
-					if(localVerReposPath == null)
-					{
-						rt.setError("RealDoc本地版本仓库创建失败:" + localSvnPath + reposName);
-						return false;
-					}
-				
-					Repos newReposInfo = new Repos();
-					newReposInfo.setId(reposInfo.getId());
-					newReposInfo.setLocalSvnPath(localSvnPath);
-					if(reposService.updateRepos(newReposInfo) == 0)
-					{
-						System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
-						rt.setError("仓库信息更新失败：localSvnPath=" + localSvnPath);
-						return false;
-					}
-					//Update reposInof
-					reposInfo.setLocalSvnPath(localSvnPath);
-				}
-			}
-			else
-			{
-				if(newVerCtrlInfo.getSvnPath() != null || newVerCtrlInfo.getSvnUser() != null || newVerCtrlInfo.getSvnPwd() != null)
-				{
-					if(svnPath == null || svnPath.isEmpty())
-					{
-						System.out.println("版本仓库地址不能为空");	//这个其实还不是特别严重，只要重新设置一次即可
-						rt.setError("版本仓库地址不能为空！");
-						return false;
-					}
-					
-					//检查SVN路径是否已使用
-					Repos tmpRepos1 = new Repos();
-					tmpRepos1.setSvnPath(svnPath);
-					List<Repos> list1= reposService.getReposList(tmpRepos1);
-					if((list1 != null) && (list1.size() > 0))
-					{
-						rt.setError("版本仓库地址已使用:" + svnPath);
-						return false;
-					}
 
-					Repos newReposInfo = new Repos();
-					newReposInfo.setId(reposInfo.getId());
-					newReposInfo.setSvnPath(newVerCtrlInfo.getSvnPath());
-					newReposInfo.setSvnUser(newVerCtrlInfo.getSvnUser());
-					newReposInfo.setSvnPwd(newVerCtrlInfo.getSvnPwd());
-					if(reposService.updateRepos(newReposInfo) == 0)
-					{
-						System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
-						rt.setError("仓库信息更新失败！");
-						return false;
-					}
-					//Set the final value for svnPath/svnUser/svnPwd
-					reposInfo.setSvnPath(svnPath);
-					reposInfo.setSvnUser(svnUser);
-					reposInfo.setSvnPwd(svnPwd);
-				}
-			}	
-		}
-		
-		String localVerReposPath1 = null;
-		String svnPath1 = newVerCtrlInfo.getSvnPath1() != null? newVerCtrlInfo.getSvnPath1() : reposInfo.getSvnPath1();
-		String svnUser1 = newVerCtrlInfo.getSvnUser1() != null? newVerCtrlInfo.getSvnUser1() : reposInfo.getSvnUser1();
-		String svnPwd1 = newVerCtrlInfo.getSvnPwd1() != null? newVerCtrlInfo.getSvnPwd1() : reposInfo.getSvnPwd1();
-		if(verCtrl1 != 0)
-		{
-			if(isRemote1 == 0)	//Local VerCtrl
-			{
-				//If localSvnPath1 changed, do update in DB
-				if(newVerCtrlInfo.getLocalSvnPath1() != null || reposInfo.getLocalSvnPath1() == null || reposInfo.getLocalSvnPath1().isEmpty())
-				{
-					String localSvnPath1 = newVerCtrlInfo.getLocalSvnPath1() != null? newVerCtrlInfo.getLocalSvnPath1() : reposInfo.getLocalSvnPath1();
-					String reposName1 = getVerReposName(reposInfo,false);
-					if(localSvnPath1 == null || localSvnPath1.isEmpty())
-					{
-						localSvnPath1 = getDefaultLocalVerReposPath(reposInfo.getPath());
-					}
-					//Create a localVersionRepos
-					localVerReposPath1 = createLocalVerRepos(localSvnPath1,reposName1,verCtrl1,rt);
-					if(localVerReposPath1 == null)
-					{
-						rt.setError("VirtualDoc本地版本仓库创建失败: " + localSvnPath1 + reposName1);
-						return false;
-					}
-					
-					Repos newReposInfo = new Repos();
-					newReposInfo.setId(reposInfo.getId());
-					newReposInfo.setLocalSvnPath1(localSvnPath1);
-					if(reposService.updateRepos(newReposInfo) == 0)
-					{
-						System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
-						rt.setError("仓库信息更新失败：localSvnPath1=" + localSvnPath1);
-						return false;
-					}
-					//Update reposInof
-					reposInfo.setLocalSvnPath(localSvnPath1);
-				}
-			}
-			else
-			{
-				if(newVerCtrlInfo.getSvnPath1() != null || newVerCtrlInfo.getSvnUser1() != null || newVerCtrlInfo.getSvnPwd1() != null)
-				{	
-					if(svnPath1 == null || svnPath1.isEmpty())
-					{
-						System.out.println("版本仓库地址不能为空");	//这个其实还不是特别严重，只要重新设置一次即可
-						rt.setError("版本仓库地址不能为空！");
-						return false;
-					}
-					
-					//检查版本仓库地址是否已使用
-					Repos tmpRepos1 = new Repos();
-					tmpRepos1.setSvnPath(svnPath1);
-					List<Repos> list1= reposService.getReposList(tmpRepos1);
-					if((list1 != null) && (list1.size() > 0))
-					{
-						rt.setError("版本仓库地址已使用:" + svnPath1);
-						return false;
-					}
-					
-					Repos newReposInfo = new Repos();
-					newReposInfo.setId(reposInfo.getId());
-					newReposInfo.setSvnPath1(newVerCtrlInfo.getSvnPath1());
-					newReposInfo.setSvnUser1(newVerCtrlInfo.getSvnUser1());
-					newReposInfo.setSvnPwd1(newVerCtrlInfo.getSvnPwd1());
-					if(reposService.updateRepos(newReposInfo) == 0)
-					{
-						System.out.println("仓库信息更新失败");	//这个其实还不是特别严重，只要重新设置一次即可
-						rt.setError("仓库信息更新失败："+newReposInfo.getSvnPath1());
-						return false;
-					}
-					//Set the final value for svnPath/svnUser/svnPwd
-					reposInfo.setSvnPath(svnPath1);
-					reposInfo.setSvnUser(svnUser1);
-					reposInfo.setSvnPwd(svnPwd1);
-				}
-			}
-		}
-		
-		//Real Doc 带版本控制，则需要同步本地和版本仓库
-		if(verCtrl != 0)
-		{					
-			String reposRPath = getReposRealPath(reposInfo);
-			String commitUser = login_user.getName();
-			String commitMsg = "RealDoc版本仓库同步";
-			if(verReposAutoCommit(reposInfo,true,reposRPath,commitMsg,commitUser,false,null) == false)
-			{
-				rt.setError("RealDoc版本仓库同步失败");
-				return false;
-			}
-		}
-		
-		//Virtual Doc 带版本控制，则需要同步本地和版本仓库
-		if(verCtrl1 != 0)
-		{					
-			String reposVPath = getReposVirtualPath(reposInfo);
-			String commitUser = login_user.getName();
-			String commitMsg = "VirtualDoc版本仓库同步";
-			if(verReposAutoCommit(reposInfo,false,reposVPath,commitMsg,commitUser,false,null) == false)
-			{
-				rt.setError("VirtualDoc版本仓库同步失败");
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean UpdateReposPath(Integer reposId, String path,User login_user,ReturnAjax rt) {
-		//如果传入的Path没有带/,给他加一个
-		String endChar = path.substring(path.length()-1, path.length());
-		if(!endChar.equals("/"))	
-		{
-			path = path + "/";
-		}
-		
-		//get old ReposInfo
-		Repos oldReposInfo = reposService.getRepos(reposId);
-		if(oldReposInfo == null)
-		{
-			rt.setError("仓库 " +reposId +" 不存在!");				
-			//writeJson(rt, response);
-			return false;
-		}
-		
-		if(!path.equals(oldReposInfo.getPath()))
+	private boolean ChangeReposPath(Repos newReposInfo, Repos previousReposInfo, User login_user,ReturnAjax rt) {
+		String path = newReposInfo.getPath();
+		String oldPath = previousReposInfo.getPath();
+		if(path != null && !path.equals(oldPath))
 		{
 			if(login_user.getType() != 2)
 			{
 				System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
 				rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
-				//writeJson(rt, response);
 				return false;							
 			}
 			
-			//
-			String oldReposDir = oldReposInfo.getPath();
-			String newReposDir = path;
-			String reposName = oldReposInfo.getId()+"";
-			if(moveFile(oldReposDir, reposName,newReposDir,reposName,false) == false)
+			String reposName = previousReposInfo.getId()+"";
+			if(moveFile(oldPath, reposName,path,reposName,false) == false)
 			{
 				System.out.println("仓库目录迁移失败！");
 				rt.setError("修改仓库位置失败！");					
 				return false;
 			}
-			
-			//new ReposInfo
-			Repos newReposInfo = new Repos();
-			newReposInfo.setId(reposId);
-			newReposInfo.setPath(path);
-			if(reposService.updateRepos(newReposInfo) == 0)
-			{
-				//删除新建的仓库目录
-				System.out.println("updateRepos for path failed");
-				moveFile(newReposDir,reposName, oldReposDir,reposName,false);	//还原回去
-				rt.setError("设置仓库path失败！");
-				//writeJson(rt, response);
-				return false;			
-			}
 		}
 		return true;
-	}
-
-	private boolean UpdateReposName(Integer reposId, String name, ReturnAjax rt) {
-		//get old ReposInfo
-		Repos oldReposInfo = reposService.getRepos(reposId);
-		if(oldReposInfo == null)
-		{
-			rt.setError("仓库 " +reposId +" 不存在!");				
-			//writeJson(rt, response);
-			return false;
-		}
-		
-		if(!name.equals(oldReposInfo.getName()))
-		{								
-			//new ReposInfo
-			Repos newReposInfo = new Repos();
-			newReposInfo.setId(reposId);
-			newReposInfo.setName(name);
-			if(reposService.updateRepos(newReposInfo) == 0)
-			{
-				System.out.println("updateRepos for name failed");
-				rt.setError("设置仓库name失败！");
-				//writeJson(rt, response);
-				return false;			
-			}
-		}
-		return true;
-	}
-
-	private boolean UpdateReposInfo(Integer reposId, String info, ReturnAjax rt) {
-		//get old ReposInfo
-		Repos oldReposInfo = reposService.getRepos(reposId);
-		if(oldReposInfo == null)
-		{
-			rt.setError("仓库 " +reposId +" 不存在!");				
-			//writeJson(rt, response);
-			return false;
-		}
-		
-		if(!info.equals(oldReposInfo.getInfo()))
-		{
-			//new ReposInfo
-			Repos newReposInfo = new Repos();
-			newReposInfo.setId(reposId);
-			newReposInfo.setInfo(info);
-			if(reposService.updateRepos(newReposInfo) == 0)
-			{
-				System.out.println("updateRepos for info failed");
-				rt.setError("设置仓库info失败！");
-				//writeJson(rt, response);
-				return false;			
-			}
-		}
-		return true;
-	}
-	
+	}	
 	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposInitMenu.do")
 	public void getReposMenu(Integer vid,Integer docId,HttpSession session,HttpServletRequest request,HttpServletResponse response){
