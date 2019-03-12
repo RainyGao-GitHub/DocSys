@@ -28,7 +28,7 @@
 				</div>
 			</div>
 			<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
-            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1()" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
             	<option value="2">GIT</option>  
@@ -70,7 +70,7 @@
 		var verCtrl = $("#RBSverCtrl").val();
 		var isRemote = $("#RBSisRemote").is(':checked')? 0: 1;
 		
-		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
@@ -79,13 +79,20 @@
 			}
 			else
 			{
-				$("#RBSlocalVerRepos").hide();
+				if(verCtrl == 1)
+				{
+					$("#RBSlocalVerRepos").hide();
+				}
+				else
+				{
+					$("#RBSlocalVerRepos").show();
+				}
 				$("#RBSremoteVerRepos").show();				
 			}
 			$("#RBSisRemoteSetting").show();							
 			$("#RBSverReposSetting").show();				
 		}
-		else	//hide svn info
+		else	//hide verRepos info
 		{
 			$("#RBSisRemoteSetting").hide();
 			$("#RBSverReposSetting").hide();				
@@ -98,7 +105,7 @@
 		var verCtrl = $("#RBSverCtrl1").val();
 		var isRemote = $("#RBSisRemote1").is(':checked')? 0: 1;
 		
-		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
@@ -107,13 +114,20 @@
 			}
 			else
 			{
-				$("#RBSlocalVerRepos1").hide();
+				if(verCtrl == 1)
+				{
+					$("#RBSlocalVerRepos1").hide();
+				}
+				else
+				{
+					$("#RBSlocalVerRepos1").show();
+				}
 				$("#RBSremoteVerRepos1").show();				
 			}
 			$("#RBSisRemoteSetting1").show();
 			$("#RBSverReposSetting1").show();				
 		}
-		else	//hide svn info
+		else	//hide verRepos info
 		{
 			$("#RBSisRemoteSetting1").hide();
 			$("#RBSverReposSetting1").hide();				

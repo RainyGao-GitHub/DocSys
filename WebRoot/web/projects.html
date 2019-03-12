@@ -112,7 +112,7 @@
             <input class="form-control" type="text" name="info" style="width: 100%"/>
             <label>位置<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
-            <label>版本仓库 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
+            <label>版本管理 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
             <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
@@ -132,7 +132,7 @@
 	            	<input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
 	            </div>
             </div>
-            <label>VirutalDoc版本仓库<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
+            <label>版本管理（VirutalDoc）<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
             <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
             	<option value="0">无</option>   
             	<option value="1">SVN</option>   
@@ -345,22 +345,29 @@
 		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
 		
 		//alert(verCtrl);
-		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
-				$("#dialog-new-repos div[name='localVerRepos']").show();
+				$("#dialog-new-repos div[name='localVerRepos']").show();					
 				$("#dialog-new-repos div[name='remoteVerRepos']").hide();
 			}
 			else
 			{
-				$("#dialog-new-repos div[name='localVerRepos']").hide();
+				if(verCtrl == 1)
+				{
+					$("#dialog-new-repos div[name='localVerRepos']").hide();
+				}
+				else
+				{
+					$("#dialog-new-repos div[name='localVerRepos']").show();					
+				}
 				$("#dialog-new-repos div[name='remoteVerRepos']").show();				
 			}
 			$("#dialog-new-repos span[name='isRemoteSetting']").show();
 			$("#dialog-new-repos div[name='verReposSetting']").show();				
 		}
-		else	//hide svn info
+		else	//hide verRepos info
 		{
 			$("#dialog-new-repos span[name='isRemoteSetting']").hide();
 			$("#dialog-new-repos div[name='verReposSetting']").hide();				
@@ -374,7 +381,7 @@
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
 		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
 
-		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
@@ -383,13 +390,20 @@
 			}
 			else
 			{
-				$("#dialog-new-repos div[name='localVerRepos1']").hide();
+				if(verCtrl == 1)
+				{
+					$("#dialog-new-repos div[name='localVerRepos1']").hide();
+				}
+				else
+				{
+					$("#dialog-new-repos div[name='localVerRepos1']").show();
+				}
 				$("#dialog-new-repos div[name='remoteVerRepos1']").show();				
 			}
 			$("#dialog-new-repos span[name='isRemoteSetting1']").show();
 			$("#dialog-new-repos div[name='verReposSetting1']").show();				
 		}
-		else	//hide svn info
+		else	//hide verRepos info
 		{
 			$("#dialog-new-repos span[name='isRemoteSetting1']").hide();
 			$("#dialog-new-repos div[name='verReposSetting1']").hide();				
