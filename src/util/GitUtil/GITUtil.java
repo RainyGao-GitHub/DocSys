@@ -25,9 +25,11 @@ public class GITUtil  extends BaseController{
 	private String wcDir = null;
 	
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
-    	
-		gitDir = getLocalVerReposPath(repos,isRealDoc);
-		wcDir = gitDir;
+    	String localVerReposPath = getLocalVerReposPath(repos,isRealDoc);
+    	System.out.println("GITUtil Init() localVerReposPath:" + localVerReposPath); 
+		
+		gitDir = localVerReposPath + ".git/";
+		wcDir = localVerReposPath;
 		
     	if(isRealDoc)
     	{
@@ -63,7 +65,7 @@ public class GITUtil  extends BaseController{
 		File dir = new File(gitDir);
 		File wcdir = new File(wcDir);
         try {
-			Git.init().setGitDir(dir).setDirectory(wcdir).setBare(false).call();
+			Git.init().setGitDir(dir).setDirectory(wcdir).call();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("CreateRepos error");
@@ -88,13 +90,13 @@ public class GITUtil  extends BaseController{
 		File dir = new File(gitDir);
 		File wcdir = new File(wcDir);
         cloneCommand.setGitDir(dir);	//Set the repository dir
-        cloneCommand.setDirectory(wcdir);	//set the working copy dir
+        //cloneCommand.setDirectory(wcdir);	//set the working copy dir
 		
 		try {
 			cloneCommand.call();
 		} catch (Exception e) {
+			System.out.println("CloneRepos error");
 			e.printStackTrace();
-			System.out.println("CreateRepos error");
 			return null;
 		}
         

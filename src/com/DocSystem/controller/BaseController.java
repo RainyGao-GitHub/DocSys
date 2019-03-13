@@ -109,7 +109,7 @@ public class BaseController{
 	}
 	
 	//正确格式化仓库根路径
-	protected String reposRootPathFormat(String path) {
+	protected String dirPathFormat(String path) {
 		//如果传入的Path没有带/,给他加一个
 		String endChar = path.substring(path.length()-1, path.length());
 		if(!endChar.equals("/"))	
@@ -281,6 +281,8 @@ public class BaseController{
 		{
 			localSvnPath = repos.getLocalSvnPath1();
 		}	
+		
+		localSvnPath = dirPathFormat(localSvnPath);
 
 		String reposName = getVerReposName(repos,isRealDoc);
 		
