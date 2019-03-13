@@ -8,9 +8,6 @@ import java.util.List;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoFilepatternException;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.DocSystem.controller.BaseController;
@@ -23,6 +20,7 @@ public class GITUtil  extends BaseController{
 	private String pwd = null;
 	private String gitDir = null;
 	private String wcDir = null;
+	private boolean isRemote = false;
 	
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
     	String localVerReposPath = getLocalVerReposPath(repos,isRealDoc);
@@ -35,6 +33,7 @@ public class GITUtil  extends BaseController{
     	{
     		if(repos.getIsRemote() == 1)
     		{
+    			isRemote = true;
     			repositoryURL = repos.getSvnPath();
     			user = repos.getSvnUser();
     			pwd = repos.getSvnPwd();
@@ -44,6 +43,7 @@ public class GITUtil  extends BaseController{
     	{
     		if(repos.getIsRemote1() == 1)
     		{
+    			isRemote = true;
     			repositoryURL = repos.getSvnPath1();
     			user = repos.getSvnUser1();
     			pwd = repos.getSvnPwd1();
@@ -130,5 +130,35 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 		return true;
+	}
+
+	public boolean Commit(String parentPath, String entryName) {
+		// TODO Auto-generated method stub
+		System.out.println("Commit");	
+
+        Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+	        git.add().addFilepattern(parentPath+entryName).call();
+	        git.commit().setMessage("addFile").call();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("Commit Error");	
+			e.printStackTrace();
+			return false;
+		}
+		
+		if(isRemote)
+		{
+			try {
+				git.push().call();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.out.println("Push Error");	
+				e.printStackTrace();
+			}
+		}
+		
+        return true;
 	}
 }
