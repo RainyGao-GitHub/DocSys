@@ -45,10 +45,10 @@ import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
 /*
- Something you need to know
- 1、文件节点
+Something you need to know
+1、文件节点
 （1）文件节点可以是文件或目录，包括本地文件或目录、版本仓库节点、数据库记录、虚拟文件和版本仓库节点
-（2）虚文件：虚文件的实体跟实文件不同，并不是一个单一的文件，而是以文件节点ID为名称的目录，里面包括content.md文件和res目录，markdown文件记录了虚文件的文字内容，res目录下存放相关的资源文件
+（2）虚拟文件：虚拟文件的实体跟实文件不同，并不是一个单一的文件，而是以文件节点ID为名称的目录，里面包括content.md文件和res目录，markdown文件记录了虚文件的文字内容，res目录下存放相关的资源文件
 2、文件节点底层操作接口
 （1）操作类型：add、delete、update、move、rename
 （2）文件节点操作必须是原子操作，实现上使用了线程锁和数据库的状态来实现，保证对本地文件、版本仓库节点和数据库操作是一个原子操作
@@ -78,6 +78,8 @@ import com.alibaba.fastjson.JSONObject;
 （2） parentPath: 该变量通过getParentPath获取，如果是文件则获取的是其父节点的目录路径，如果是目录则获取到的是目录路径，以空格开头，以"/"结尾
 （3） 文件/目录相对路径: docRPath = parentPath + doc.name docVName = HashValue(docRPath)  末尾不带"/"
 （4） 文件/目录本地全路径: localDocRPath = reposRPath + parentPath + doc.name  localVDocPath = repoVPath + HashValue(docRPath) 末尾不带"/"
+（5） 版本仓库路径：
+ verReposPath: 本地版本仓库存储目录，以"/"结尾
  */
 @Controller
 @RequestMapping("/Doc")
