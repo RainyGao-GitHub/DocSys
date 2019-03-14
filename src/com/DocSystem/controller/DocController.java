@@ -33,6 +33,7 @@ import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
+import util.GitUtil.GITUtil;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.Doc;
@@ -1313,7 +1314,7 @@ public class DocController extends BaseController{
 		{
 			num = maxLogNum;
 		}
-		List<LogEntry> logList = svnGetHistory(repos,docPath, num);
+		List<LogEntry> logList = verReposGetHistory(repos,docPath, num);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}
@@ -3025,6 +3026,25 @@ public class DocController extends BaseController{
 		return true;
 	}
 	/*************** Functions For SVN *********************/
+	private List<LogEntry> verReposGetHistory(Repos repos,String docPath, int maxLogNum) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnGetHistory(repos, docPath, maxLogNum);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitGetHistory(repos, docPath, maxLogNum);
+		}
+		return null;
+	}
+	
+	private List<LogEntry> gitGetHistory(Repos repos, String docPath, int maxLogNum) {
+		// TODO Auto-generated method stub
+		GITUtil gitUtil = new GITUtil();
+		gitUtil.Init(repos, true, null);
+		return gitUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
+	}
+
 	private List<LogEntry> svnGetHistory(Repos repos,String docPath, int maxLogNum) {
 
 		SVNUtil svnUtil = new SVNUtil();
