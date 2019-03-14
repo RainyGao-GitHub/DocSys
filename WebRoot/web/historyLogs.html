@@ -4,7 +4,7 @@
                <div class="article-body editor-content"  id="history" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell revision w8">版本号</i>
+							<i class="cell commitId w8">版本号</i>
 							<i class="cell commitMsg w30">提交信息</i>
 							<i class="cell commitUser w10">提交人</i>
 							<i class="cell commitTime w15">提交时间</i>
@@ -35,13 +35,13 @@
 		showHistoryLogList(reposId,docPath);		
 	}
 
-	function downloadHistory(revision)
+	function downloadHistory(commitId)
 	{
-	   	console.log("download() revision:" +revision  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
+	   	console.log("download() commitId:" +commitId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
 
 	   	var encParentPath = encodeURI(parentPath);
 	   	var encDocName = encodeURI(docName);
-	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?revision=" + revision + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName;
+	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName;
 	}
 
 	function showHistoryLogList(reposId,docPath)
@@ -82,16 +82,16 @@
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
 				var commitTime = formatTime(d.commitTime);  
-				var opBtn = "		<a href='javascript:void(0)' onclick='downloadHistory("+d.revision+ ");' class='mybtn-primary'>下载</a>";							
+				var opBtn = "		<a href='javascript:void(0)' onclick='downloadHistory("+d.commitId+ ");' class='mybtn-primary'>下载</a>";							
 				var se = "<li id='popover" +i+"' + + value="+ i +">"
-					+"	<i class='cell revision w8'>"
+					+"	<i class='cell commitId w8'>"
 					+"		<span class='name'>"
-					+"			<a id='revision"+i+"' href='javascript:void(0)'>"+d.revision+"</a>"
+					+"			<a id='commitId"+i+"' href='javascript:void(0)'>"+d.commitId+"</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell commitMsg w30'>"
 					+"		<span class='name'>"
-					+"			<a id='revision"+i+"' href='javascript:void(0)'>"+d.commitMsg+"</a>"
+					+"			<a id='commitMsg"+i+"' href='javascript:void(0)'>"+d.commitMsg+"</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell commitUser w10'>"
@@ -124,7 +124,7 @@
 				}
 				console.log(changedPaths);
 				
-				var detail = "<p>revision:" + d.revision + "<br>" 
+				var detail = "<p>commitId:" + d.commitId + "<br>" 
 				+"Message:" + d.commitMsg + "<br>"
 				+"Author:" + d.commitUser + "<br>"
 				+"Date:" + d.commitTime + "<br>"

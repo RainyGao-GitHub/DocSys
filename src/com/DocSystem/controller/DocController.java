@@ -1037,8 +1037,8 @@ public class DocController extends BaseController{
 
 	/**************** download History Doc  ******************/
 	@RequestMapping("/getHistoryDoc.do")
-	public void getHistoryDoc(long revision,Integer reposId, Integer isRealDoc,String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("getHistoryDoc revision: " + revision + " reposId:" + reposId + " isRealDoc:" + isRealDoc +" parentPath:" + parentPath + " docName:" + docName);
+	public void getHistoryDoc(String commitId,Integer reposId, Integer isRealDoc,String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("getHistoryDoc commitId: " + commitId + " reposId:" + reposId + " isRealDoc:" + isRealDoc +" parentPath:" + parentPath + " docName:" + docName);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1060,18 +1060,18 @@ public class DocController extends BaseController{
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
-		String targetName = docName + "_" + revision;
+		String targetName = docName + "_" + commitId;
 		//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
 		if("".equals(docName))
 		{
-			targetName = repos.getName() + "_" + revision;
+			targetName = repos.getName() + "_" + commitId;
 		}
 		
 		//checkout the entry to local
-		if(svnCheckOut(repos, true, parentPath, docName, userTmpDir, targetName, revision) == false)
+		if(verReposCheckOut(repos, true, parentPath, docName, userTmpDir, targetName, commitId) == false)
 		{
-			System.out.println("getHistoryDoc() svnCheckOut Failed!");
-			rt.setError("svnCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
+			System.out.println("getHistoryDoc() verReposCheckOut Failed!");
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
 			writeJson(rt, response);	
 			return;
 		}
@@ -3603,9 +3603,30 @@ public class DocController extends BaseController{
 		return entryType;
 	}
 	
+
+	private boolean verReposCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId) {
+		if(repos.getVerCtrl() == 1)
+		{
+			long revision = Long.parseLong(commitId);
+			return svnCheckOut(repos, isRealDoc, parentPath, entryName, localParentPath, targetName, revision);		
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitCheckOut(repos, isRealDoc, parentPath, entryName, localParentPath, targetName, commitId);
+		}
+		return true;
+	}
+	
+	private boolean gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId) {
+		// TODO Auto-generated method stub
+		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " commitId:" + commitId);
+		
+		return false;
+	}
+
 	private boolean svnCheckOut(Repos repos, boolean isRealDoc, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
 	{
-		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath);
+		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
 		
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, isRealDoc, null) == false)
@@ -3613,7 +3634,7 @@ public class DocController extends BaseController{
 			System.out.println("svnCheckOut() svnUtil Init Failed");
 			return false;
 		}
-		
+
 		return svnGetEntry(svnUtil, parentPath, entryName, localParentPath, targetName, revision);
 	}
 	
@@ -3669,7 +3690,6 @@ public class DocController extends BaseController{
 	//svnRevert: only for file
 	private boolean svnRevert(Repos repos, boolean isRealDoc, String parentPath,String entryName,String localParentPath,String localEntryName) 
 	{
-
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, isRealDoc, null) == false)
 		{
