@@ -66,7 +66,7 @@ public class SVNUtil  extends BaseController{
     		}
     		else
     		{
-    			reposURL = getLocalVerReposPath(repos,isRealDoc);
+    			reposURL = getLocalVerReposURI(repos,isRealDoc);
     		}
     	}
     	else
@@ -80,7 +80,7 @@ public class SVNUtil  extends BaseController{
     		}
     		else
     		{
-    			reposURL = getLocalVerReposPath(repos,isRealDoc);
+    			reposURL = getLocalVerReposURI(repos,isRealDoc);
     		}
     	}
 
@@ -90,6 +90,9 @@ public class SVNUtil  extends BaseController{
 			svnUser = commitUser;
 		}
 
+		//System.out.println("reposURL:" + reposURL);
+		//System.out.println("svnUser:" + svnUser);
+		
     	//根据不同协议，初始化不同的仓库工厂。(工厂实现基于SVNRepositoryFactory抽象类)
         setupLibrary();
            	
