@@ -3073,7 +3073,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 
-		String docPath = repos.getPath() + parentPath + entryName;
+		String docPath = getReposRealPath(repos) + parentPath + entryName;
 		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
 		try {
 			
