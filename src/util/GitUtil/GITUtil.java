@@ -181,8 +181,17 @@ public class GITUtil  extends BaseController{
 	    	List<LogEntry> logList = new ArrayList<LogEntry>();
 			
 	    	git = Git.open(new File(wcDir));
-		    Iterable<RevCommit> iterable=git.log().addPath(filePath).setMaxCount(maxLogNum).call();
-	        
+	    	
+		    Iterable<RevCommit> iterable = null;
+		    if(filePath == null || filePath.isEmpty())
+		    {
+		    	iterable = git.log().setMaxCount(maxLogNum).call();
+		    }
+		    else
+		    {
+		    	iterable = git.log().addPath(filePath).setMaxCount(maxLogNum).call();
+		    }
+		    
 		    Iterator<RevCommit> iter=iterable.iterator();
 	        while (iter.hasNext()){
 	            RevCommit commit=iter.next();
