@@ -3,14 +3,23 @@ package util.GitUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNLogEntry;
+import org.tmatesoft.svn.core.SVNLogEntryPath;
 
 import com.DocSystem.controller.BaseController;
+import com.DocSystem.entity.ChangedItem;
+import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
 public class GITUtil  extends BaseController{
@@ -161,4 +170,58 @@ public class GITUtil  extends BaseController{
 		
         return true;
 	}
+	
+    //getHistory filePath: remote File Path under repositoryURL
+    public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision,int maxLogNum) 
+    {
+    	System.out.println("getHistoryLogs filePath:" + filePath);	
+
+    	Git git = null;
+		try {
+	    	List<LogEntry> logList = new ArrayList<LogEntry>();
+			
+	    	git = Git.open(new File(wcDir));
+		    Iterable<RevCommit> iterable=git.log().addPath(filePath).setMaxCount(maxLogNum).call();
+	        
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();
+	            String authorEmail=commit.getAuthorIdent().getEmailAddress();
+	            String author=commit.getAuthorIdent().getName();  //作者
+	
+	            String commitUser=commit.getCommitterIdent().getName();
+	            String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+	
+	            long commitTime=commit.getCommitTime();
+	
+	            String fullMessage=commit.getFullMessage();
+	            String shortMessage=commit.getShortMessage();  //返回message的firstLine
+	
+	            String commitId=commit.getName();  //这个应该就是提交的版本号
+	
+	            System.out.println("authorEmail:"+authorEmail);
+	            System.out.println("authorName:"+author);
+	            System.out.println("commitEmail:"+commitUserEmail);
+	            System.out.println("commitName:"+commitUser);
+	            System.out.println("time:"+commitTime);
+	            System.out.println("fullMessage:"+fullMessage);
+	            System.out.println("shortMessage:"+shortMessage);
+	            System.out.println("commitId:"+commitId);
+	            
+	            LogEntry log = new LogEntry();
+	            log.setCommitId(commitId);
+	            log.setCommitUser(commitUser);
+	            log.setCommitMsg(fullMessage);
+	            log.setCommitTime(commitTime);
+	            logList.add(0,log);	//add to the top
+	        }
+	        
+	        return logList;
+	    } catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("getHistoryLogs Error");	
+			e.printStackTrace();
+			return null;
+		}
+    }
 }

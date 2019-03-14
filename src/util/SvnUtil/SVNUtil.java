@@ -140,54 +140,67 @@ public class SVNUtil  extends BaseController{
     
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
     //getHistory filePath: remote File Path under repositoryURL
-    public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision) 
+	public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision, int maxLogNum) 
     {
     	System.out.println("getHistoryLogs filePath:" + filePath);	
     	List<LogEntry> logList = new ArrayList<LogEntry>();
-        /*
+        
+    	/*
          * Gets the latest revision number of the repository
          */
-        try {
-            endRevision = repository.getLatestRevision();
-        } catch (SVNException svne) {
-            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
-            return null;
-        }
+        if(endRevision < 0)
+    	{
+        	try {
+	    	    endRevision = repository.getLatestRevision();
+	        } catch (SVNException svne) {
+	            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
+	            return null;
+	        }
+    	}
 
+        /*
+         * Get History Info
+         */
         String[] targetPaths = new String[]{filePath};
-        Collection logEntries = null;
+        Collection<SVNLogEntry> logEntries = null;
         try {
+        	if(maxLogNum > 0)
+        	{
+        		if((endRevision - startRevision) > maxLogNum)
+        		{
+        			startRevision = endRevision - maxLogNum;
+        		}
+        	}
             logEntries = repository.log(targetPaths, null,startRevision, endRevision, true, true);
-
         } catch (SVNException svne) {
             System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
             return null;
         }
         
-        for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
+        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
             /*
              * gets a next SVNLogEntry
              */
             SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+            long revision = logEntry.getRevision();
+            String commitId = "" + revision;
+            String commitUser = logEntry.getAuthor(); //提交者
+            String commitMessage= logEntry.getMessage();
+            long commitTime = logEntry.getDate().getTime();            
+            
+            //System.out.println("revision:"+revision);
+            //System.out.println("commitId:"+commitId);
+            //System.out.println("commitUser:"+commitUser);
+            //System.out.println("commitMessage:"+commitMessage);
+            //System.out.println("commitName:"+commitUser);
+            //System.out.println("commitTime:"+commitTime);
             
             LogEntry log = new LogEntry();
-            //System.out.println("---------------------------------------------");
-            //gets the revision number
-            //System.out.println("revision: " + logEntry.getRevision());
-            log.setRevision(logEntry.getRevision());
-
-            //gets the author of the changes made in that revision
-            //System.out.println("author: " + logEntry.getAuthor());
-            log.setCommitUser(logEntry.getAuthor());
-
-            //gets the time moment when the changes were committed
-            long commitTime = logEntry.getDate().getTime();
-            //System.out.println("commitTime: " + commitTime);
+            log.setRevision(revision);
+            log.setCommitId(commitId);
+            log.setCommitUser(commitUser);
+            log.setCommitMsg(commitMessage);
             log.setCommitTime(commitTime);
-            
-            //gets the commit log message
-            //System.out.println("log message: " + logEntry.getMessage());
-            log.setCommitMsg(logEntry.getMessage());
             
             //displaying all paths that were changed in that revision; changed path information is represented by SVNLogEntryPath.
             if(logEntry.getChangedPaths().size() > 0) 
@@ -197,10 +210,9 @@ public class SVNUtil  extends BaseController{
             	//System.out.println();
                 //System.out.println("changed Entries:");
                 //keys are changed paths
-                Set changedPathsSet = logEntry.getChangedPaths().keySet();
-                for (Iterator changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
+                Set<String> changedPathsSet = logEntry.getChangedPaths().keySet();
+                for (Iterator<String> changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
                 {
-                    
                 	//obtains a next SVNLogEntryPath
                     SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
                     String nodePath = entryPath.getPath();
@@ -396,7 +408,7 @@ public class SVNUtil  extends BaseController{
 	
 	    	return true;
 		} catch (SVNException e) {
-			// TODO Auto-generated catch block
+			System.out.println("executeCommitActionList() 异常");	
 			e.printStackTrace();
 			return false;
 		}

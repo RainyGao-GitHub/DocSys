@@ -1288,7 +1288,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId,String docPath,HttpServletRequest request,HttpServletResponse response){
+	public void getDocHistory(Integer reposId,String docPath, Integer maxLogNum, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory docPath: " + docPath + " reposId:" + reposId);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1308,7 +1308,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		List<LogEntry> logList = svnGetHistory(repos,docPath);
+		int num = 100;
+		if(maxLogNum != null)
+		{
+			num = maxLogNum;
+		}
+		List<LogEntry> logList = svnGetHistory(repos,docPath, num);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}
@@ -3020,11 +3025,11 @@ public class DocController extends BaseController{
 		return true;
 	}
 	/*************** Functions For SVN *********************/
-	private List<LogEntry> svnGetHistory(Repos repos,String docPath) {
+	private List<LogEntry> svnGetHistory(Repos repos,String docPath, int maxLogNum) {
 
 		SVNUtil svnUtil = new SVNUtil();
 		svnUtil.Init(repos, true, null);
-		return svnUtil.getHistoryLogs(docPath, 0, -1);
+		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
 	}
 	
 	private boolean verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
