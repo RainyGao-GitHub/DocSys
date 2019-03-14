@@ -981,7 +981,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		if(ChangeReposPath(newReposInfo, reposInfo, login_user, rt))
+		if(ChangeReposPath(newReposInfo, reposInfo, login_user, rt) == false)
 		{
 			reposService.updateRepos(reposInfo);	//Revert reposInfo
 			System.out.println("仓库目录修改失败");
@@ -1026,6 +1026,8 @@ public class ReposController extends BaseController{
 		String oldPath = previousReposInfo.getPath();
 		if(path != null && !path.equals(oldPath))
 		{
+			System.out.println("ChangeReposPath oldPath:" + oldPath + " newPath:" + path);
+			
 			if(login_user.getType() != 2)
 			{
 				System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
