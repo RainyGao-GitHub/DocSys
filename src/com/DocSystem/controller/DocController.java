@@ -3065,10 +3065,49 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,
-			String commitUser, ReturnAjax rt) {
+	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocAdd() entryName can not be empty");
+			return false;
+		}
+
+		String docPath = repos.getPath() + parentPath + entryName;
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		try {
+			
+			if(type == 1)
+			{
+				copyFile(docPath, wcDocPath, false);
+			}
+			else
+			{
+				copyDir(docPath, wcDocPath, false);
+			}
+		} catch (IOException e) {
+			System.out.println("gitRealDocAdd() copyFile 异常");
+			e.printStackTrace();
+			return false;
+		}				
+		
+	
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			delFileOrDir(wcDocPath);
+			return false;
+		}
+		
+		if(gitUtil.Commit(parentPath, entryName) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Commit failed");
+			delFileOrDir(wcDocPath);
+			return false;
+		}
+		
+		return true;
 	}
 
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 

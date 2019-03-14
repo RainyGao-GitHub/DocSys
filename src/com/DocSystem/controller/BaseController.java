@@ -1260,20 +1260,70 @@ public class BaseController{
     		e.printStackTrace(); 
     	}
     	return false;
-    	
-    	/* copy by buffer
-        FileInputStream in=new FileInputStream(srcFilePath);
-        FileOutputStream out=new FileOutputStream(dstFilePath);
-        int c;
-        byte buffer[]=new byte[1024];
-        while((c=in.read(buffer))!=-1){
-            for(int i=0;i<c;i++)
-                out.write(buffer[i]);        
-        }
-        in.close();
-        out.close();
-        return true;  */
     }
+    
+    public boolean copyDir(String srcPath, String dstPath, boolean cover) 
+    {
+	    try {
+	    	//Check the newPath
+	    	File dstDir = new File(dstPath);
+	    	if(dstDir.exists())
+	    	{
+	    		if(cover == false)
+	    		{
+	    			System.out.println("copyDir() dstPath:"+dstPath);
+	    			return false;	    			
+	    		}
+	    	}
+	    	else
+	    	{
+	    		//mkdirs will create the no exists parent dir, so I use the mkdir
+	    		if(dstDir.mkdir() == false)
+	    		{
+	    			System.out.println("copyDir() Failed to create dir:"+dstPath);
+	    			return false;
+	    		}
+	    	}
+	    	
+	    	//Check the srcDir
+	    	File srcDir = new File(srcPath); 
+		    String[] file=srcDir.list(); 
+		    File temp=null; 
+		    for (int i = 0; i < file.length; i++) 
+		    { 
+		    	String subSrcFilePath = null;
+		    	String subDstFilePath = null;
+		    	if(srcPath.endsWith(File.separator))
+		    	{ 
+		    		subSrcFilePath = srcPath+file[i];
+		    		subDstFilePath = dstPath + file[i];
+		    	} 
+		    	else
+		    	{ 
+		    		subSrcFilePath = srcPath+File.separator+file[i];
+		    		subDstFilePath = dstPath+File.separator+file[i];
+		    	} 
+
+	    		temp=new File(subSrcFilePath); 
+		    	if(temp.isFile())
+		    	{ 
+		    		copyFile(subSrcFilePath, subDstFilePath, cover);
+		    	}
+		    	else //if(temp.isDirectory()) //如果是子文件夹
+		    	{ 
+		    		copyDir(subSrcFilePath, subDstFilePath, cover); 
+		    	} 
+		    } 
+	    } 
+	    catch (Exception e) 
+	    { 
+	    	System.out.println("copyDir 异常"); 
+	    	e.printStackTrace(); 
+	    	return false;
+	    }
+	    return true;
+    }
+
     
     /** 
     * 复制整个文件夹内容 
