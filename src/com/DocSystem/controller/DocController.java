@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,10 +63,10 @@ import com.alibaba.fastjson.JSONObject;
 （2）锁定状态：
 	0：未锁定
 	2：绝对锁定，自己无法解锁，锁过期时间2天
-	1：RDoc CheckOut，对自己无效，锁过期时间2天
-	3：VDoc Online Edit，对自己无效，锁过期时间2天
+	1：RealDoc CheckOut，对自己无效，锁过期时间2天
+	3：VirtualDoc Online Edit，对自己无效，锁过期时间2天
 （3）LockDoc(docId,subDocCheckFlag)的实现
-	subDocCheckFlag是true的时候表示需要坚持，docId节点的子目录下是否有锁定文件，由于delete\move\rename会影响subDocs,copy对subDocs有依赖，这四个接口需要将标志设置为true
+	subDocCheckFlag是true的时候表示需要检查docId节点的子目录下是否有锁定文件，由于delete\move\rename会影响subDocs,copy对subDocs有依赖，这四个接口需要将标志设置为true
 4、路径定义规则
 （1） 仓库路径
  reposPath: 仓库根路径，以"/"结尾
