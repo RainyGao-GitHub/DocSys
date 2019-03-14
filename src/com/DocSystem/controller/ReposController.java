@@ -775,6 +775,8 @@ public class ReposController extends BaseController{
 	}
 
 	private void syncupVerRepos(Repos repos, User login_user, ReturnAjax rt) {
+		System.out.println("syncupVerRepos()");
+		
 		//Real Doc 带版本控制，则需要同步本地和版本仓库
 		Integer verCtrl = repos.getVerCtrl();
 		if(verCtrl != 0)
