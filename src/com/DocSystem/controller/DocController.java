@@ -3209,7 +3209,7 @@ public class DocController extends BaseController{
 		{
 			System.out.println("gitRealDocDelete() GITUtil Commit failed");
 			//Revert wcDocPath
-			gitUtil.getEntry(parentPath,entryName);
+			gitUtil.getEntry(parentPath,entryName, getLocalVerReposPath(repos, true) + parentPath, entryName, null);
 			return false;
 		}
 		

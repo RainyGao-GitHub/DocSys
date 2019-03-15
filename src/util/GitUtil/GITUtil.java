@@ -15,6 +15,7 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
@@ -258,8 +259,6 @@ public class GITUtil  extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
-		//Get NodeType
-		
 		
 		Repository repository = null;
         try {
@@ -272,26 +271,67 @@ public class GITUtil  extends BaseController{
             ObjectId objId = repository.resolve(revision);
             RevCommit revCommit = walk.parseCommit(objId);
             RevTree revTree = revCommit.getTree();
-
+    		
             //Get Entry Node
             TreeWalk treeWalk = TreeWalk.forPath(repository, remoteEntryPath, revTree);
-            ObjectId blobId = treeWalk.getObjectId(0);
-            ObjectLoader loader = repository.open(blobId);
- 
-            loader.getType();
-            loader.copyTo(out);
+            
+            boolean ret = recurGetEntry(git, repository, treeWalk, parentPath, entryName, localParentPath, targetName);
+            repository.close();
+            return ret;
         } catch (Exception e) {
            System.out.println("getFile() IOException"); 
            e.printStackTrace();
            return false;
-        } finally {
+        }/* finally {
             if (repository != null)
                 repository.close();
-        }
-		
-        return true;
+        }*/
 	}
 
+	private boolean recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, String parentPath, String entryName, String localParentPath, String targetName) {
+		// TODO Auto-generated method stub
+        try {
+			FileMode fileMode = treeWalk.getFileMode();
+	        if(FileMode.TYPE_FILE == fileMode.getObjectType())
+	        {
+	            FileOutputStream out = null;
+	    		try {
+	    			out = new FileOutputStream(localParentPath + targetName);
+	    		} catch (FileNotFoundException e) {
+	    			System.out.println("getFile() new FileOutputStream Failed:" + localParentPath + targetName);
+	    			e.printStackTrace();
+	    			return false;
+	    		}
+	
+	            ObjectId blobId = treeWalk.getObjectId(0);
+	            ObjectLoader loader = repository.open(blobId);
+	            loader.copyTo(out);
+	        }
+	        else if(FileMode.TYPE_TREE == fileMode.getObjectType())
+	        {
+				File dir = new File(localParentPath,targetName);
+				dir.mkdir();
+				
+				while(treeWalk.next())
+				{
+					String subEntryName = treeWalk.getNameString();
+					String subParentPath = parentPath + entryName +"/";
+					String subLocalParentPath = localParentPath + targetName + "/";
+					if(false == recurGetEntry(git, repository, treeWalk, subParentPath, subEntryName, subLocalParentPath, subEntryName))
+					{
+						return false;
+					}
+				}				
+	        }
+        }catch (Exception e) {
+        	//TODO
+            System.out.println("recurGetEntry() Exception"); 
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+	
     //Get the Entry from git Repository
  	public boolean getFile(String localFilePath, String parentPath, String entryName, String commitId) {
 
