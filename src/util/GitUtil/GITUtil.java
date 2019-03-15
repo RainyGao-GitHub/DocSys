@@ -23,6 +23,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -245,8 +246,53 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
     }
+    
+	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
+		// TODO Auto-generated method stub
+		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		//check targetName and set
+		if(targetName == null)
+		{
+			targetName = entryName;
+		}
+		
+		String remoteEntryPath = parentPath + entryName;
+		//Get NodeType
+		
+		
+		Repository repository = null;
+        try {
+            //gitDir表示git库目录
+        	Git git = Git.open(new File(gitDir));
+            repository = git.getRepository();
+            
+            //get tree at dedicated revision
+            RevWalk walk = new RevWalk(repository);
+            ObjectId objId = repository.resolve(revision);
+            RevCommit revCommit = walk.parseCommit(objId);
+            RevTree revTree = revCommit.getTree();
 
-    //Get the File from git Repository
+            //Get Entry Node
+            TreeWalk treeWalk = TreeWalk.forPath(repository, remoteEntryPath, revTree);
+            ObjectId blobId = treeWalk.getObjectId(0);
+            ObjectLoader loader = repository.open(blobId);
+ 
+            loader.getType();
+            loader.copyTo(out);
+        } catch (Exception e) {
+           System.out.println("getFile() IOException"); 
+           e.printStackTrace();
+           return false;
+        } finally {
+            if (repository != null)
+                repository.close();
+        }
+		
+        return true;
+	}
+
+    //Get the Entry from git Repository
  	public boolean getFile(String localFilePath, String parentPath, String entryName, String commitId) {
 
  		System.out.println("getFile() parentPath:" + parentPath + " entryName:" + entryName + " commitId:" + commitId );
