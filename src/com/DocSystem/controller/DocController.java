@@ -3100,7 +3100,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		if(gitUtil.Commit(parentPath, entryName) == false)
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser) == false)
 		{
 			System.out.println("gitRealDocAdd() GITUtil Commit failed");
 			delFileOrDir(wcDocPath);
@@ -3172,10 +3172,48 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean gitRealDocDelete(Repos repos, String parentPath, String name, Integer type, String commitMsg,
-			String commitUser, ReturnAjax rt) {
+	private boolean gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocDelete() entryName can not be empty");
+			return false;
+		}
+
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+
+		File dstFile = new File(wcDocPath);
+		if(dstFile.exists() == false)
+		{
+			System.out.println("gitRealDocDelete() there is no file " + wcDocPath + " in WorkingDir:");
+			return false;
+		}
+		else
+		{
+			if(delFileOrDir(wcDocPath) == false)
+			{
+				System.out.println("gitRealDocDelete() failed to delete " + wcDocPath + " in WorkingDir:");				
+				return false;
+			}
+		}
+	
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocDelete() GITUtil Init failed");
+			delFileOrDir(wcDocPath);
+			return false;
+		}
+		
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser)== false)
+		{
+			System.out.println("gitRealDocDelete() GITUtil Commit failed");
+			//Revert wcDocPath
+			gitUtil.getEntry(parentPath,entryName);
+			return false;
+		}
+		
+		return true;
 	}
 
 	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
@@ -3694,56 +3732,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 
-		return svnGetEntry(svnUtil, parentPath, entryName, localParentPath, targetName, revision);
-	}
-	
-	//getFile or directory from VersionDB
-	private boolean svnGetEntry(SVNUtil svnUtil, String parentPath, String entryName, String localParentPath,String targetName,long revision) 
-	{
-		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
-		
-		//check targetName and set
-		if(targetName == null)
-		{
-			targetName = entryName;
-		}
-		
-		String remoteEntryPath = parentPath + entryName;
-		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
-		if(entryType == 1)	//File
-		{
-			svnUtil.getFile(localParentPath + targetName,parentPath,entryName,revision);				
-		}
-		else if(entryType == 2)
-		{
-			File dir = new File(localParentPath,targetName);
-			dir.mkdir();
-			
-			//Get the subEntries and call svnGetEntry
-			String localEntryPath = localParentPath + targetName + "/";
-			List <SVNDirEntry> subEntries = svnUtil.getSubEntries(remoteEntryPath);
-			for(int i=0;i<subEntries.size();i++)
-			{
-				SVNDirEntry subEntry =subEntries.get(i);
-				String subEntryName = subEntry.getName();
-				if(svnGetEntry(svnUtil,remoteEntryPath+"/",subEntryName,localEntryPath,null,revision) == false)
-				{
-					System.out.println("svnGetEntry() svnGetEntry Failed: " + subEntryName);
-					return false;
-				}
-			}
-		}
-		else if(entryType == 0)
-		{
-			//System.out.println("svnGetEntry() " + remoteEntryPath + " 在仓库中不存在！");
-		}
-		else	//如果已经存在，则只是将修改的内容commit到服务器上
-		{
-			System.out.println("svnGetEntry() " + remoteEntryPath + " 是未知类型！");
-			return false;
-		}
-	
-		return true;
+		return svnUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
 	}
 
 	//svnRevert: only for file
@@ -3756,25 +3745,13 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		String remoteEntryPath = parentPath + entryName;
-		String localEntryPath = localParentPath + localEntryName;
 		try {
-			if(svnUtil.doCheckPath(remoteEntryPath, -1) == false)	//检查文件是否已经存在于仓库中
-			{
-				System.out.println(remoteEntryPath + " 在仓库中不存在！");
-				return false;
-			}
-			else //getFile From the Version DataBase
-			{
-				svnUtil.getFile(localEntryPath+entryName,parentPath,entryName,-1);
-			}
-		} catch (SVNException e) {
-			System.out.println("svnRevert() revertFile " + localEntryPath + " Failed!");
+			return svnUtil.getEntry(parentPath,entryName,localParentPath,entryName,-1);
+		} catch (Exception e) {
+			System.out.println("svnRevert() revertFile " + localParentPath + entryName + " Failed!");
 			e.printStackTrace();
 			return false;
 		}
-	
-		return true;
 	}
 	
 	private boolean svnCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 

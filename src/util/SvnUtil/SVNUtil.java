@@ -1217,72 +1217,91 @@ public class SVNUtil  extends BaseController{
     }
     
 	//get the subEntries under remoteEntryPath,only useful for Directory
-	public List<SVNDirEntry> getSubEntries(String remoteEntryPath) 
+	private List<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
 	{
 		List <SVNDirEntry> subEntryList =  new ArrayList<SVNDirEntry>();
 		
-		Collection entries = null;
+		Collection<SVNDirEntry> entries = null;
 		try {
-			entries = repository.getDir(remoteEntryPath, -1, null,(Collection) null);
+			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
 		} catch (SVNException e) {
 			System.out.println("getSubEntries() getDir Failed:" + remoteEntryPath);
 			e.printStackTrace();
 			return null;
 		}
-	    Iterator iterator = entries.iterator();
+	    Iterator<SVNDirEntry> iterator = entries.iterator();
 	    while (iterator.hasNext()) 
 	    {
-	    	SVNDirEntry entry = (SVNDirEntry) iterator.next();
+	    	SVNDirEntry entry = iterator.next();
 	        subEntryList.add(entry);
 	    }
 	    return subEntryList;
 	}
-
-    //Get the File from Version DataBase
-	public boolean getFile(String localFilePath, String parentPath, String entryName, long revision) {
-
-		System.out.println("getFile() parentPath:" + parentPath + " entryName:" + entryName + " revision:" + revision );
-		String remoteFilePath = parentPath + entryName;
-        /*
-         * This Map will be used to get the file properties. Each Map key is a
-         * property name and the value associated with the key is the property
-         * value.
-         */
-        SVNProperties fileProperties = new SVNProperties();
-        try {
-            /*
-             * Checks up if the specified path really corresponds to a file. If
-             * doesn't the program exits. SVNNodeKind is that one who says what is
-             * located at a path in a revision. -1 means the latest revision.
-             */
-            SVNNodeKind nodeKind = repository.checkPath(remoteFilePath,revision);
-            
-            if (nodeKind == SVNNodeKind.NONE) {
-                System.err.println("getFile() There is no entry at '" + repositoryURL + "'.");
-                return false;
-            } else if (nodeKind == SVNNodeKind.DIR) {
-                System.err.println("The entry at '" + repositoryURL + "' is a directory while a file was expected.");
-                return false;
-            }
-            
-            /*
-             * Gets the contents and properties of the file located at filePath
-             * in the repository at the latest revision (which is meant by a
-             * negative revision number).
-             */
+	
+	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,long revision) {
+		// TODO Auto-generated method stub
+		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		//check targetName and set
+		if(targetName == null)
+		{
+			targetName = entryName;
+		}
+		
+		String remoteEntryPath = parentPath + entryName;
+		SVNNodeKind nodeKind = null;
+		try {
+			nodeKind = repository.checkPath(remoteEntryPath,revision);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("svnGetEntry() checkPath Exception");
+	        e.printStackTrace();
+			return false;
+		}
+		
+		if (nodeKind == SVNNodeKind.NONE) {
+            System.out.println("svnGetEntry() There is no entry at '" + repositoryURL + "'.");
+            return false;
+        } else if (nodeKind == SVNNodeKind.DIR) {
+			File dir = new File(localParentPath,targetName);
+			dir.mkdir();
+        	
+			//Get the subEntries and call svnGetEntry
+			String localEntryPath = localParentPath + targetName + "/";
+			List <SVNDirEntry> subEntries = getSubEntries(remoteEntryPath,revision);
+			for(int i=0;i<subEntries.size();i++)
+			{
+				SVNDirEntry subEntry =subEntries.get(i);
+				String subEntryName = subEntry.getName();
+				if(getEntry(remoteEntryPath+"/",subEntryName,localEntryPath,null,revision) == false)
+				{
+					System.out.println("svnGetEntry() svnGetEntry Failed: " + remoteEntryPath+ "/" + subEntryName);
+					return false;
+				}
+			}
+        	return true;
+        }
+        else if(nodeKind == SVNNodeKind.FILE)
+        {	
             FileOutputStream out = null;
 			try {
-				out = new FileOutputStream(localFilePath);
-			} catch (FileNotFoundException e) {
-				System.out.println("revertFile() new FileOutputStream Failed:" + localFilePath);
+				out = new FileOutputStream(localParentPath + targetName);
+			} catch (Exception e) {
+				System.out.println("svnGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
 				e.printStackTrace();
 				return false;
 			}
-            repository.getFile(remoteFilePath, revision, fileProperties, out);
-            out.close();
-        } catch (Exception e) {
-            System.err.println("error while fetching the file contents and properties: " + e.getMessage());
-            return false;
+			
+	        SVNProperties fileProperties = new SVNProperties();
+            try {
+				repository.getFile(remoteEntryPath, revision, fileProperties, out);
+	            out.close();
+            } catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.out.println("svnGetEntry() getFile Exception");
+				e.printStackTrace();
+				return false;
+			}
         }
         return true;
 	}
@@ -1609,6 +1628,5 @@ public class SVNUtil  extends BaseController{
                 }
             }
         }
-    }    
-	
+    }	
 }

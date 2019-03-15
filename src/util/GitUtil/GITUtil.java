@@ -1,6 +1,8 @@
 package util.GitUtil;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,14 +10,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.treewalk.TreeWalk;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
+import org.tmatesoft.svn.core.SVNNodeKind;
+import org.tmatesoft.svn.core.SVNProperties;
 
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
@@ -141,7 +153,7 @@ public class GITUtil  extends BaseController{
 		return true;
 	}
 
-	public boolean Commit(String parentPath, String entryName) {
+	public boolean Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		System.out.println("Commit");	
 
@@ -149,7 +161,7 @@ public class GITUtil  extends BaseController{
 		try {
 			git = Git.open(new File(wcDir));
 	        git.add().addFilepattern(parentPath+entryName).call();
-	        git.commit().setMessage("addFile").call();
+	        git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			System.out.println("Commit Error");	
@@ -233,4 +245,49 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
     }
+
+    //Get the File from git Repository
+ 	public boolean getFile(String localFilePath, String parentPath, String entryName, String commitId) {
+
+ 		System.out.println("getFile() parentPath:" + parentPath + " entryName:" + entryName + " commitId:" + commitId );
+ 		String remoteFilePath = parentPath + entryName;
+ 		
+
+        FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(localFilePath);
+		} catch (FileNotFoundException e) {
+			System.out.println("getFile() new FileOutputStream Failed:" + localFilePath);
+			e.printStackTrace();
+			return false;
+		}
+		
+		Repository repository = null;
+        try {
+            //gitDir表示git库目录
+        	Git git = Git.open(new File(gitDir));
+            repository = git.getRepository();
+            
+            RevWalk walk = new RevWalk(repository);
+            
+            ObjectId objId = repository.resolve(commitId);
+            RevCommit revCommit = walk.parseCommit(objId);
+            RevTree revTree = revCommit.getTree();
+
+            //child表示相对git库的文件路径
+            TreeWalk treeWalk = TreeWalk.forPath(repository, remoteFilePath, revTree);
+            ObjectId blobId = treeWalk.getObjectId(0);
+            ObjectLoader loader = repository.open(blobId);
+            loader.copyTo(out);
+        } catch (Exception e) {
+           System.out.println("getFile() IOException"); 
+           e.printStackTrace();
+           return false;
+        } finally {
+            if (repository != null)
+                repository.close();
+        }
+        
+        return true;
+ 	}
 }
