@@ -425,8 +425,12 @@ public class SVNUtil  extends BaseController{
 		String localRefPath = action.getLocalRefPath();
 		System.out.println("executeModifyAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		
-		InputStream oldData = getFileInputStream(localRefPath + entryName);
-    	InputStream newData = getFileInputStream(localPath + entryName);
+		InputStream oldData = null;
+		if(localRefPath != null)
+		{
+			oldData = getFileInputStream(localRefPath + entryName);
+		}
+		InputStream newData = getFileInputStream(localPath + entryName);
     	boolean ret = false;
 		if(action.isSubAction)
 		{
@@ -882,17 +886,25 @@ public class SVNUtil  extends BaseController{
 	    
 		boolean ret = false;
 		InputStream newFile = getFileInputStream(newFilePath);
-		InputStream oldFile = null;
-		File file = new File(oldFilePath);
-		if(true == file.exists())
+		
+		if(oldFilePath != null)
 		{
-			oldFile = getFileInputStream(oldFilePath);	
-			ret = modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true);
-			closeFileInputStream(oldFile);
+			InputStream oldFile = null;
+			File file = new File(oldFilePath);
+			if(true == file.exists())
+			{
+				oldFile = getFileInputStream(oldFilePath);	
+				ret = modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true);
+				closeFileInputStream(oldFile);
+			}
+			else
+			{
+				ret = modifyFile(editor, parentPath,entryName, null, newFile,true,true);
+			}
 		}
 		else
 		{
-			ret = modifyFile(editor, parentPath,entryName, null, newFile,true,true);
+			ret = modifyFile(editor, parentPath,entryName, null, newFile,true,true);			
 		}
 		closeFileInputStream(newFile);
 		

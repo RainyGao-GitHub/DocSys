@@ -157,14 +157,6 @@ public class BaseController{
 		System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;
 	}
-
-	//获取仓库的LastVersion实文件的本地存储根路径
-	protected String getReposRefRealPath(Repos repos)
-	{
-		String reposRPath = repos.getPath() + repos.getId() + "/refData/rdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposRealRefPath() " + reposRPath);
-		return reposRPath;
-	}
 	
 	//获取仓库的虚拟文件的本地存储根路径
 	protected String getReposVirtualPath(Repos repos)
@@ -174,13 +166,6 @@ public class BaseController{
 		return reposVPath;
 	}
 
-	//获取仓库的LastVersion虚拟文件的本地存储根路径
-	protected String getReposRefVirtualPath(Repos repos)
-	{
-		String reposVPath = repos.getPath() + repos.getId() + "/refData/vdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposVirtualRefPath() " + reposVPath);
-		return reposVPath;
-	}
 	
 	//获取Parentpath: 如果是File则返回其parentPath，如果是Directory则返回全路径
 	protected String getParentPath(Integer id)
