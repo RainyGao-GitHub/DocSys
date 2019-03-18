@@ -14,7 +14,23 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.RevertCommand;
+import org.eclipse.jgit.api.errors.AbortedByHookException;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.api.errors.NoMessageException;
+import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.api.errors.UnmergedPathsException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -126,66 +142,8 @@ public class GITUtil  extends BaseController{
         return wcDir;
 	}
 	
-	//Commit all changes under dedicated directory
-	public boolean doAutoCommit(String parentPath, String entryName,String localPath,String commitMsg,String commitUser,boolean modifyEnable,String localRefPath){
-		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
-	
-		String entryPath = parentPath + entryName;
-		try {
-			Git git = Git.open(new File(repositoryURL));
-			
-			if(entryPath == null || entryPath.isEmpty())
-			{
-				git.add().addFilepattern(".").call();
-			}
-			else
-			{		
-				//Git did not support emptry dir, so need do preHandle
-				git.add().addFilepattern(entryPath).call(); // 添加目录或者指定文件
-			}
-			
-			//Do commit
-			CommitCommand commitCommand = git.commit().setCommitter(commitUser,null).setMessage(commitMsg).setAllowEmpty(true);
-			commitCommand.call();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
 
-	public boolean Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		System.out.println("Commit");	
-
-        Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-	        git.add().addFilepattern(parentPath+entryName).call();
-	        git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			System.out.println("Commit Error");	
-			e.printStackTrace();
-			return false;
-		}
-		
-		if(isRemote)
-		{
-			try {
-				git.push().call();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				System.out.println("Push Error");	
-				e.printStackTrace();
-			}
-		}
-		
-        return true;
-	}
-	
-    //getHistory filePath: remote File Path under repositoryURL
+	//getHistory filePath: remote File Path under repositoryURL
     public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision,int maxLogNum) 
     {
     	System.out.println("getHistoryLogs filePath:" + filePath);	
@@ -282,10 +240,7 @@ public class GITUtil  extends BaseController{
            System.out.println("getFile() IOException"); 
            e.printStackTrace();
            return false;
-        }/* finally {
-            if (repository != null)
-                repository.close();
-        }*/
+        }
 	}
 
 	private boolean recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, String parentPath, String entryName, String localParentPath, String targetName) {
@@ -376,4 +331,175 @@ public class GITUtil  extends BaseController{
         
         return true;
  	}
+
+ 	
+	//Commit will commit change to Git Repos and Push to remote
+	public boolean Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		System.out.println("Commit");	
+
+        Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("Commit() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return false;
+		}
+		
+		String entryPath = parentPath+entryName;
+		try {	
+			if(entryPath.isEmpty())
+			{
+		        git.add().addFilepattern(".").call();
+			}
+			else
+			{
+				git.add().addFilepattern(parentPath+entryName).call();
+			}
+		} catch (Exception e) {
+			System.out.println("Commit add Index Error");	
+			e.printStackTrace();
+			//TODO: Do roll back WorkingCopy
+			rollBackIndex(git, entryPath, null);	
+			return false;
+		}
+		
+        try {
+			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+		} catch (Exception e) {
+			System.out.println("Commit commit error");
+			e.printStackTrace();
+			//TODO: Do roll back Index
+			rollBackIndex(git, entryPath, null);			
+			return false;
+		}
+		
+		if(isRemote)
+		{
+			try {
+				git.push().call();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.out.println("Push Error");	
+				e.printStackTrace();
+				//TODO: Do roll back commit and Index 
+				if(rollBackCommit(git, entryPath, null) == false)
+				{
+					rollBackIndex(git, entryPath, null);
+				}
+				return false;
+			}
+		}
+		
+        return true;
+	}
+	
+	private boolean rollBackCommit(Git git, String entryPath, String revision) {
+        Repository repository = git.getRepository();  
+  
+        RevWalk walk = new RevWalk(repository);  
+        ObjectId objId;
+		try {
+			if(revision != null)
+			{
+				objId = repository.resolve(revision);
+			}
+			else
+			{
+				objId = repository.resolve("HEAD");
+			}
+			RevCommit revCommit = walk.parseCommit(objId);  
+	        String preVision = revCommit.getParent(0).getName();  
+	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
+	        repository.close(); 
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	//将工作区和暂存区恢复指定版本（revision==null表示恢复到最新版本）
+    private boolean rollBackIndex(Git git, String entryPath, String revision) {
+		// TODO Auto-generated method stub
+		//checkout操作会丢失工作区的数据，暂存区和工作区的数据会恢复到指定（revision）的版本内容
+        CheckoutCommand checkoutCmd = git.checkout();
+        checkoutCmd.addPath(entryPath);
+        //加了“^”表示指定版本的前一个版本，如果没有上一版本，在命令行中会报错，例如：error: pathspec '4.vm' did not match any file(s) known to git.
+        if(revision != null)
+        {
+        	checkoutCmd.setStartPoint(revision);
+        }  
+        
+        try {
+			checkoutCmd.call();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+        return true;
+	}
+
+	public boolean gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		System.out.println("gitAdd()");	
+		if(entryName.isEmpty())
+		{
+			System.out.println("gitAdd() entryName is empty");
+			return false;
+		}
+
+        Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("gitAdd() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return false;
+		}
+
+		String entryPath = parentPath + entryName;
+		try {	
+			git.add().addFilepattern(entryPath).call();
+		} catch (Exception e) {
+			System.out.println("gitAdd() add Index Error");	
+			e.printStackTrace();
+			//TODO: Do roll back WorkingCopy
+			delFileOrDir(entryPath);
+			return false;
+		}
+		
+        try {
+			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+		} catch (Exception e) {
+			System.out.println("gitAdd() commit error");
+			e.printStackTrace();
+			//TODO: Do roll back Index
+			rollBackIndex(git, entryPath, null);			
+			return false;
+		}
+		
+		if(isRemote)
+		{
+			try {
+				git.push().call();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.out.println("gitAdd() Push Error");	
+				e.printStackTrace();
+				//TODO: Do roll back commit and Index 
+				if(rollBackCommit(git, entryPath, null) == false)
+				{
+					rollBackIndex(git, entryPath, null);
+					delFileOrDir(entryPath);
+				}
+				return false;
+			}
+		}
+		
+        return true;
+	}
 }

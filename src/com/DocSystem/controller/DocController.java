@@ -3065,50 +3065,6 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		if(entryName == null || entryName.isEmpty())
-		{
-			System.out.println("gitRealDocAdd() entryName can not be empty");
-			return false;
-		}
-
-		String docPath = getReposRealPath(repos) + parentPath + entryName;
-		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
-		try {
-			
-			if(type == 1)
-			{
-				copyFile(docPath, wcDocPath, false);
-			}
-			else
-			{
-				copyDir(docPath, wcDocPath, false);
-			}
-		} catch (IOException e) {
-			System.out.println("gitRealDocAdd() copyFile 异常");
-			e.printStackTrace();
-			return false;
-		}				
-		
-	
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
-		{
-			System.out.println("gitRealDocAdd() GITUtil Init failed");
-			delFileOrDir(wcDocPath);
-			return false;
-		}
-		
-		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser) == false)
-		{
-			System.out.println("gitRealDocAdd() GITUtil Commit failed");
-			delFileOrDir(wcDocPath);
-			return false;
-		}
-		
-		return true;
-	}
 
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
@@ -3168,50 +3124,6 @@ public class DocController extends BaseController{
 		}
 		return true;
 	}
-	
-	private boolean gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		if(entryName == null || entryName.isEmpty())
-		{
-			System.out.println("gitRealDocDelete() entryName can not be empty");
-			return false;
-		}
-
-		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
-
-		File dstFile = new File(wcDocPath);
-		if(dstFile.exists() == false)
-		{
-			System.out.println("gitRealDocDelete() there is no file " + wcDocPath + " in WorkingDir:");
-			return false;
-		}
-		else
-		{
-			if(delFileOrDir(wcDocPath) == false)
-			{
-				System.out.println("gitRealDocDelete() failed to delete " + wcDocPath + " in WorkingDir:");				
-				return false;
-			}
-		}
-	
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
-		{
-			System.out.println("gitRealDocDelete() GITUtil Init failed");
-			delFileOrDir(wcDocPath);
-			return false;
-		}
-		
-		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser)== false)
-		{
-			System.out.println("gitRealDocDelete() GITUtil Commit failed");
-			//TODO: Revert wcDocPath
-			gitUtil.getEntry(parentPath,entryName, getLocalVerReposPath(repos, true) + parentPath, entryName, null);
-			return false;
-		}
-		
-		return true;
-	}
 
 	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
 			String commitMsg, String commitUser, ReturnAjax rt) {
@@ -3251,11 +3163,6 @@ public class DocController extends BaseController{
 			return gitRealDocCommit(repos, parentPath, name, type, commitMsg, commitUser, rt);
 		}
 		return true;
-	}
-	
-	private boolean gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 	private boolean svnRealDocCommit(Repos repos, String parentPath,
@@ -3298,6 +3205,143 @@ public class DocController extends BaseController{
 		}
 		
 		return true;		
+	}
+	
+	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocAdd() entryName can not be empty");
+			return false;
+		}
+
+		//Add to Doc to WorkingDirectory
+		String docPath = getReposRealPath(repos) + parentPath + entryName;
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		try {		
+			if(type == 1)
+			{
+				if(copyFile(docPath, wcDocPath, false) == false)
+				{
+					System.out.println("gitRealDocAdd() add File to WD error");					
+					return false;
+				}
+			}
+			else
+			{
+				//Add Dir
+				File dir = new File(wcDocPath);
+				if(dir.mkdir() == false)
+				{
+					System.out.println("gitRealDocAdd() add Dir to WD error");										
+					return false;
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("gitRealDocAdd() add Doc to WD 异常");
+			e.printStackTrace();
+			return false;
+		}				
+		
+		
+		//Do Commit
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			//Roll Back WorkingCopy
+			delFileOrDir(wcDocPath);
+			return false;
+		}
+		
+		//Commit will roll back WC if there is error
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+
+	private boolean gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocDelete() entryName can not be empty");
+			return false;
+		}
+
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocDelete() GITUtil Init failed");
+			return false;
+		}
+		
+		//Add to Doc to WorkingDirectory
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		if(delFileOrDir(wcDocPath) == false)
+		{
+			System.out.println("gitRealDocDelete() delete working copy failed");
+		}
+			
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser)== false)
+		{
+			System.out.println("gitRealDocDelete() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocCommit() entryName can not be empty");
+			return false;
+		}
+
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			return false;
+		}
+	
+		//Copy to Doc to WorkingDirectory
+		String docPath = getReposRealPath(repos) + parentPath + entryName;
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		try {		
+			if(type == 1)
+			{
+				if(copyFile(docPath, wcDocPath, false) == false)
+				{
+					System.out.println("gitRealDocCommit() copy File to working directory failed");					
+					return false;
+				}
+			}
+			else
+			{
+				System.out.println("gitRealDocCommit() dir can not modify");
+				return false;
+			}
+		} catch (Exception e) {
+			System.out.println("gitRealDocCommit() copy Doc Exception");
+			e.printStackTrace();
+			return false;
+		}				
+				
+		//Commit will roll back WC if there is error
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser) == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;	
 	}
 
 	private boolean verReposRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
