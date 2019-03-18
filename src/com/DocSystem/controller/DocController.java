@@ -3361,30 +3361,72 @@ public class DocController extends BaseController{
 	private boolean gitRealDocMove(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
 			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		System.out.println("gitRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		if(gitMove(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg, commitUser, rt) == false)
+		{
+			System.out.println("gitMove Failed！");
+			rt.setMsgData("gitMove Failed！");
+			return false;
+		}
+			
+		return true;
+	}
+
+	private boolean gitMove(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		GITUtil gitUtil = new GITUtil();
+		gitUtil.Init(repos, isRealDoc, commitUser);
+		
+		if(gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg,commitUser,true) == false)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private boolean svnRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
 			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
-		if(repos.getVerCtrl() == 1)
-		{	
-			if(svnMove(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg, commitUser, rt) == false)
-			{
-				System.out.println("svnMove Failed！");
-				rt.setMsgData("svnMove Failed！");
-				return false;
-			}
-			
-			return true;
-		}
-		else
+		if(svnMove(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg, commitUser, rt) == false)
 		{
-			System.out.println("svnRealDocMove() verCtrl " + repos.getVerCtrl());
-			return true;
+			System.out.println("svnMove Failed！");
+			rt.setMsgData("svnMove Failed！");
+			return false;
 		}
+			
+		return true;
 	}
+	
+	private boolean svnCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		SVNUtil svnUtil = new SVNUtil();
+		svnUtil.Init(repos, isRealDoc, commitUser);
+		
+		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, false) == false)
+		{
+			rt.setMsgData("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean svnMove(Repos repos, boolean isRealDoc, String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt)  
+	{
+		SVNUtil svnUtil = new SVNUtil();
+		svnUtil.Init(repos, isRealDoc, commitUser);
+		
+		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg,commitUser,true) == false)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+
 	
 	private boolean verReposRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
 			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -3760,33 +3802,5 @@ public class DocController extends BaseController{
 			return false;
 		}
 	}
-	
-	private boolean svnCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
-			String commitMsg, String commitUser, ReturnAjax rt) 
-	{
-		SVNUtil svnUtil = new SVNUtil();
-		svnUtil.Init(repos, isRealDoc, commitUser);
-		
-		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, false) == false)
-		{
-			rt.setMsgData("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
-			return false;
-		}
-		return true;
-	}
-	
-	private boolean svnMove(Repos repos, boolean isRealDoc, String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName, 
-			String commitMsg, String commitUser, ReturnAjax rt)  
-	{
-		SVNUtil svnUtil = new SVNUtil();
-		svnUtil.Init(repos, isRealDoc, commitUser);
-		
-		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg,commitUser,true) == false)
-		{
-			return false;
-		}
-		return true;
-	}
-	
 }
 	

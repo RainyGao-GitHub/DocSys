@@ -446,13 +446,8 @@ public class GITUtil  extends BaseController{
 	public boolean gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		System.out.println("gitAdd()");	
-		if(entryName.isEmpty())
-		{
-			System.out.println("gitAdd() entryName is empty");
-			return false;
-		}
-
-        Git git = null;
+		
+		Git git = null;
 		try {
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
@@ -501,5 +496,21 @@ public class GITUtil  extends BaseController{
 		}
 		
         return true;
+	}
+
+	public boolean gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
+			String commitMsg, String commitUser, boolean isMove) {
+		// TODO Auto-generated method stub
+		System.out.println("gitCopy()");	
+		
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("gitAdd() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return false;
+		}
+        return false;
 	}
 }
