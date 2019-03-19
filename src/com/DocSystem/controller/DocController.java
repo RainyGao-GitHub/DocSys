@@ -3758,19 +3758,13 @@ public class DocController extends BaseController{
 			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
-		if(repos.getVerCtrl() == 1)
-		{				
-			if(svnCopy(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,commitUser,rt) == false)
-			{
-				System.out.println("文件: " + srcEntryName + " svnCopy失败");
-				return false;
-			}
-			return true;
-		}
-		else
+			
+		if(svnCopy(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,commitUser,rt) == false)
 		{
-			return true;
+			System.out.println("文件: " + srcEntryName + " svnCopy失败");
+			return false;
 		}
+		return true;
 	}
 
 	private boolean svnCheckOut(Repos repos, boolean isRealDoc, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
