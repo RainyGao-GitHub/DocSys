@@ -384,7 +384,7 @@ public class GITUtil  extends BaseController{
 				System.out.println("Push Error");	
 				e.printStackTrace();
 				//TODO: Do roll back commit and Index 
-				if(rollBackCommit(git, entryPath, null) == false)
+				if(rollBackCommit(git, null) == false)
 				{
 					rollBackIndex(git, entryPath, null);
 				}
@@ -395,7 +395,7 @@ public class GITUtil  extends BaseController{
         return true;
 	}
 	
-	private boolean rollBackCommit(Git git, String entryPath, String revision) {
+	private boolean rollBackCommit(Git git,String revision) {
         Repository repository = git.getRepository();  
   
         RevWalk walk = new RevWalk(repository);  
@@ -486,7 +486,7 @@ public class GITUtil  extends BaseController{
 				System.out.println("gitAdd() Push Error");	
 				e.printStackTrace();
 				//TODO: Do roll back commit and Index 
-				if(rollBackCommit(git, entryPath, null) == false)
+				if(rollBackCommit(git, null) == false)
 				{
 					rollBackIndex(git, entryPath, null);
 					delFileOrDir(entryPath);
@@ -498,8 +498,86 @@ public class GITUtil  extends BaseController{
         return true;
 	}
 
+	public boolean gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
+			String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		System.out.println("gitMove()");	
+		
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("gitMove() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return false;
+		}
+
+		String srcEntryPath = srcParentPath + srcEntryName;
+		String dstEntryPath = dstParentPath + dstEntryName;
+
+		//Add Index for delete srcEntry
+		try {	
+			git.add().addFilepattern(srcEntryPath).call();
+		} catch (Exception e) {
+			System.out.println("gitMove() add Index for srcEntry delete Failed");	
+			e.printStackTrace();
+			//TODO: Do roll back WorkingCopy for srcEntry
+			rollBackIndex(git, srcEntryPath, null);
+			return false;
+		}
+		
+		//Add Index for add dstEntry
+		try {	
+			git.add().addFilepattern(dstEntryPath).call();
+		} catch (Exception e) {
+			System.out.println("gitMove() add Index for dstEntry add Failed");	
+			e.printStackTrace();
+			//TODO: Do roll back WorkingCopy for srcEntry and dstEntry
+			rollBackIndex(git, srcEntryPath, null);
+			delFileOrDir(dstEntryPath);
+			return false;
+		}
+		
+        try {
+			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+		} catch (Exception e) {
+			System.out.println("gitAdd() commit error");
+			e.printStackTrace();
+			//TODO: Do roll back Index
+			rollBackIndex(git, srcEntryPath, null);
+			if(true == rollBackIndex(git, dstEntryPath, null))
+			{
+				delFileOrDir(dstEntryPath);
+			}	
+			return false;
+		}
+		
+		if(isRemote)
+		{
+			try {
+				git.push().call();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.out.println("gitAdd() Push Error");	
+				e.printStackTrace();
+				//TODO: Do roll back commit and Index 
+				if(rollBackCommit(git, null) == false)
+				{
+					rollBackIndex(git, srcEntryPath, null);
+					if(rollBackIndex(git, dstEntryPath, null))
+					{
+						delFileOrDir(dstEntryPath);
+					}
+				}
+				return false;
+			}
+		}
+		
+		return false;
+	}
+
 	public boolean gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
-			String commitMsg, String commitUser, boolean isMove) {
+			String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		System.out.println("gitCopy()");	
 		
@@ -507,10 +585,58 @@ public class GITUtil  extends BaseController{
 		try {
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
-			System.out.println("gitAdd() Failed to open wcDir:" + wcDir);
+			System.out.println("gitCopy() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
 			return false;
 		}
-        return false;
+
+		String srcEntryPath = srcParentPath + srcEntryName;
+		String dstEntryPath = dstParentPath + dstEntryName;
+		
+		//Add Index for add dstEntry
+		try {	
+			git.add().addFilepattern(dstEntryPath).call();
+		} catch (Exception e) {
+			System.out.println("gitCopy() add Index for dstEntry add Failed");	
+			e.printStackTrace();
+			//TODO: Do roll back WorkingCopy for srcEntry and dstEntry
+			delFileOrDir(dstEntryPath);
+			return false;
+		}
+		
+        try {
+			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+		} catch (Exception e) {
+			System.out.println("gitCopy() commit error");
+			e.printStackTrace();
+			//TODO: Do roll back Index
+			if(true == rollBackIndex(git, dstEntryPath, null))
+			{
+				delFileOrDir(dstEntryPath);
+			}	
+			return false;
+		}
+		
+		if(isRemote)
+		{
+			try {
+				git.push().call();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				System.out.println("gitCopy() Push Error");	
+				e.printStackTrace();
+				//TODO: Do roll back commit and Index 
+				if(rollBackCommit(git, null) == false)
+				{
+					if(rollBackIndex(git, dstEntryPath, null))
+					{
+						delFileOrDir(dstEntryPath);
+					}
+				}
+				return false;
+			}
+		}
+		
+		return false;
 	}
 }

@@ -1182,50 +1182,30 @@ public class BaseController{
         	return true;
         }
         return false;
-    }  
-    
-    public boolean copyFile1(String oldPath, String newPath) { 
-    	try { 
-    		int bytesum = 0; 
-    		int byteread = 0; 
-    		File oldfile = new File(oldPath); 
-    		if (oldfile.exists()) { //文件存在时 
-    				InputStream inStream = new FileInputStream(oldPath); //读入原文件 
-    				FileOutputStream fs = new FileOutputStream(newPath); 
-    				byte[] buffer = new byte[1444]; 
-    				//int length; 
-    				while ( (byteread = inStream.read(buffer)) != -1) { 
-    					bytesum += byteread; //字节数 文件大小 
-    					System.out.println(bytesum); 
-    					fs.write(buffer, 0, byteread); 
-    				} 
-    				inStream.close();
-    				fs.close();
-    				return true;
-    		} 
-    	} 
-    	catch (Exception e) { 
-    		System.out.println("复制单个文件操作出错"); 
-    		e.printStackTrace(); 
-    	}
-    	return false;
     }
     
-    public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover) throws IOException{
+    public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
         File dstFile=new File(dstFilePath);
-        if(!dstFile.exists())
-        {
-        	dstFile.createNewFile();
-        }
-        else
+        if(dstFile.exists())
         {
         	if(cover == false)
         	{
         		//不允许覆盖
-        		System.out.println(dstFilePath + " 已存在!");
+        		System.out.println("copyFile() " + dstFilePath + " exists!");
         		return false;
-        	}
+        	}        	
         }
+//        else
+//        {
+//        	try {
+//				dstFile.createNewFile();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				System.out.println("copyFile() Failed to createNewFile");
+//				e.printStackTrace();
+//				return false;
+//			}
+//        }
         
         try {
 	        //Copy by Channel
@@ -1238,13 +1218,13 @@ public class BaseController{
 		    outputChannel.close();
 		    in.close();
 		    out.close();
-	        return true;
         }
     	catch (Exception e) { 
-    		System.out.println("复制单个文件操作出错"); 
+    		System.out.println("copyFile() copy file Exception"); 
     		e.printStackTrace(); 
+    		return false;
     	}
-    	return false;
+    	return true;
     }
     
     public boolean copyDir(String srcPath, String dstPath, boolean cover) 
@@ -1256,7 +1236,7 @@ public class BaseController{
 	    	{
 	    		if(cover == false)
 	    		{
-	    			System.out.println("copyDir() dstPath:"+dstPath);
+	    			System.out.println("copyDir() dstPath exists:"+dstPath);
 	    			return false;	    			
 	    		}
 	    	}
@@ -1308,69 +1288,39 @@ public class BaseController{
 	    }
 	    return true;
     }
-
     
-    /** 
-    * 复制整个文件夹内容 
-    * @param oldPath String 原文件路径 如：c:/fqf 
-    * @param newPath String 复制后路径 如：f:/fqf/ff 
-    * @return boolean 
-    */ 
-    public boolean copyFolder(String oldPath, String newPath) 
-    {
-	    try {
-	    	//Check the newPath
-	    	File newFile = new File(newPath);
-	    	if(newFile.exists() == false)
+    //Copy FileOrDir
+    public boolean copyFileOrDir(String srcPath, String dstPath,boolean cover){
+	    //Check the newPath
+	    File dstDir = new File(dstPath);
+	    if(dstDir.exists())
+	    {
+	    	if(cover == false)
 	    	{
-	    		//mkdirs will create the no exists parent dir, so I use the mkdir
-	    		if(newFile.mkdir() == false)
-	    		{
-	    			System.out.println("copyFolder() Failed to create dir:"+newPath);
-	    			return false;
-	    		}
+	    		System.out.println("copyFileOrDir() dstPath exists:"+dstPath);
+	    		return false;	    			
 	    	}
-	    	//Check the oldPath
-	    	File a=new File(oldPath); 
-		    String[] file=a.list(); 
-		    File temp=null; 
-		    for (int i = 0; i < file.length; i++) 
-		    { 
-		    	if(oldPath.endsWith(File.separator))
-		    	{ 
-		    		temp=new File(oldPath+file[i]); 
-		    	} 
-		    	else
-		    	{ 
-		    		temp=new File(oldPath+File.separator+file[i]); 
-		    	} 
-		    	
-		    	if(temp.isFile())
-		    	{ 
-		    		FileInputStream input = new FileInputStream(temp); 
-		    		FileOutputStream output = new FileOutputStream(newPath + "/" + (temp.getName()).toString()); 
-		    		byte[] b = new byte[1024 * 5]; 
-		    		int len; 
-		    		while ( (len = input.read(b)) != -1) { 
-		    			output.write(b, 0, len); 
-		    		} 
-		    		output.flush(); 
-		    		output.close(); 
-		    		input.close(); 
-		    	} 
-		    	if(temp.isDirectory()){//如果是子文件夹 
-		    		copyFolder(oldPath+"/"+file[i],newPath+"/"+file[i]); 
-		    	} 
-		    } 
-	    } 
-	    catch (Exception e) 
-	    { 
-	    	System.out.println("复制整个文件夹内容操作出错"); 
-	    	e.printStackTrace(); 
-	    	return false;
+	    }
+	    
+	    File srcDir = new File(srcPath);
+	    if(srcDir.isFile())
+	    {
+	    	if(false == copyFile(srcPath, dstPath, cover))
+	    	{
+	    		System.out.println("copyFileOrDir() copyFile Failed:"+dstPath);
+		    	return false;
+	    	}
+	    }
+	    else
+	    {
+	    	if(false == copyDir(srcPath, dstPath, cover))
+	    	{
+	    		System.out.println("copyFileOrDir() copyDir Failed:"+dstPath);
+		    	return false;
+	    	}
 	    }
 	    return true;
-    }
+	}
     
     //将dstDirPath同步成srcDirPath
 	protected boolean syncUpFolder(String srcParentPath,String srcName, String dstParentPath, String dstName,boolean modifyEnable) 
@@ -1382,7 +1332,7 @@ public class BaseController{
 		File dstFolder = new File(dstPath);
 		if(!dstFolder.exists())
 		{
-			return copyFolder(srcPath,dstPath);
+			return copyDir(srcPath,dstPath,true);
 		}
 	
 		if(dstFolder.isFile())
@@ -1524,8 +1474,8 @@ public class BaseController{
        }
 	}
 	
-    //Move File
-    public boolean moveFile(String oldpath,String oldName,String newpath,String newName,boolean cover){
+    //Move FileOrDir
+    public boolean moveFileOrDir(String oldpath,String oldName,String newpath,String newName,boolean cover){
     	
     	String oldFilePath = oldpath + oldName;
     	String newFilePath = newpath + newName;
@@ -1602,8 +1552,8 @@ public class BaseController{
         }
     }
     //Delete File
-    public boolean delFile(String path,String filename){
-        File file=new File(path+"/"+filename);
+    public boolean delFile(String path){
+        File file=new File(path);
         if(file.exists())
         {
         	if(file.isFile())
@@ -1616,25 +1566,6 @@ public class BaseController{
         	}
         }
         return true;
-    }
-    
-    //Delete File and Directory with path
-    //该接口不会去影响其子节点
-    public boolean deleteFile(String path){
-        File file=new File(path);
-        if(file.exists()){
-        	if(file.delete() == false)
-        	{
-        		System.out.println("deleteFile() delete File Failed:" + path);
-        		return false;
-        	}
-        	return true;
-        }
-        else
-        {
-            System.out.println(path + " 不存在！");
-        	return true;
-        }
     }
     
     //Delete Directory, path must be dir path
@@ -1796,7 +1727,7 @@ public class BaseController{
 			sendFileToWebPage(tmpDir,zipFileName,rt,response, request); 
 			
 			//Delete zip file
-			deleteFile(tmpDir+zipFileName);
+			delFile(tmpDir+zipFileName);
 		}
 		else	//for File
 		{
