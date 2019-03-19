@@ -946,6 +946,20 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		//Path re
+		if(path != null && !path.isEmpty())
+		{
+			path = dirPathFormat(path);
+		}
+		if(localSvnPath != null && !localSvnPath.isEmpty())
+		{
+			localSvnPath = dirPathFormat(localSvnPath);
+		}
+		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
+		{
+			localSvnPath1 = dirPathFormat(localSvnPath1);
+		}
+		
 		//Set new ReposInfo
 		Repos newReposInfo = new Repos();
 		newReposInfo.setId(reposId);
@@ -957,13 +971,13 @@ public class ReposController extends BaseController{
 		newReposInfo.setLocalSvnPath(localSvnPath);
 		newReposInfo.setSvnPath(svnPath);
 		newReposInfo.setSvnUser(svnUser);
-		newReposInfo.setSvnUser(svnPwd);
-		newReposInfo.setVerCtrl(verCtrl1);
-		newReposInfo.setIsRemote(isRemote1);
-		newReposInfo.setLocalSvnPath(localSvnPath1);
-		newReposInfo.setSvnPath(svnPath1);
-		newReposInfo.setSvnUser(svnUser1);
-		newReposInfo.setSvnUser(svnPwd1);	
+		newReposInfo.setSvnPwd(svnPwd);
+		newReposInfo.setVerCtrl1(verCtrl1);
+		newReposInfo.setIsRemote1(isRemote1);
+		newReposInfo.setLocalSvnPath1(localSvnPath1);
+		newReposInfo.setSvnPath1(svnPath1);
+		newReposInfo.setSvnUser1(svnUser1);
+		newReposInfo.setSvnPwd1(svnPwd1);	
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
 		Repos reposInfo = reposService.getRepos(reposId);
@@ -1037,6 +1051,19 @@ public class ReposController extends BaseController{
 				return false;							
 			}
 			
+			//newReposRootDir	
+			File newReposRootDir = new File(path);
+			if(newReposRootDir.exists() == false)
+			{
+				System.out.println("ChangeReposPath() path:" + path + " not exists, do create it!");
+				if(newReposRootDir.mkdirs() == false)
+				{
+					rt.setError("创建reposRootDir目录失败:" + path);
+					return false;	
+				}
+			}
+			
+			//Do move the repos
 			String reposName = previousReposInfo.getId()+"";
 			if(copyFileOrDir(oldPath+reposName, path+reposName,false) == false)
 			{
