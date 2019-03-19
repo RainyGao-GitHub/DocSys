@@ -473,7 +473,10 @@ public class GITUtil  extends BaseController{
 			System.out.println("gitAdd() commit error");
 			e.printStackTrace();
 			//TODO: Do roll back Index
-			rollBackIndex(git, entryPath, null);			
+			if(rollBackIndex(git, entryPath, null))
+			{
+				delFileOrDir(entryPath);
+			}
 			return false;
 		}
 		
@@ -486,10 +489,12 @@ public class GITUtil  extends BaseController{
 				System.out.println("gitAdd() Push Error");	
 				e.printStackTrace();
 				//TODO: Do roll back commit and Index 
-				if(rollBackCommit(git, null) == false)
+				if(rollBackCommit(git, null))
 				{
-					rollBackIndex(git, entryPath, null);
-					delFileOrDir(entryPath);
+					if(rollBackIndex(git, entryPath, null))
+					{
+						delFileOrDir(entryPath);
+					}
 				}
 				return false;
 			}

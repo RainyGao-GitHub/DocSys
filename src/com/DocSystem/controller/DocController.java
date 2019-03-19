@@ -3212,6 +3212,14 @@ public class DocController extends BaseController{
 			System.out.println("gitRealDocAdd() entryName can not be empty");
 			return false;
 		}
+		
+		//Do Commit
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			return false;
+		}
 
 		//Add to Doc to WorkingDirectory
 		String docPath = getReposRealPath(repos) + parentPath + entryName;
@@ -3235,18 +3243,8 @@ public class DocController extends BaseController{
 			}
 		}			
 		
-		//Do Commit
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
-		{
-			System.out.println("gitRealDocAdd() GITUtil Init failed");
-			//Roll Back WorkingCopy
-			delFileOrDir(wcDocPath);
-			return false;
-		}
-		
 		//Commit will roll back WC if there is error
-		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser) == false)
+		if(gitUtil.gitAdd(parentPath, entryName,commitMsg, commitUser) == false)
 		{
 			System.out.println("gitRealDocAdd() GITUtil Commit failed");
 			return false;
@@ -3330,80 +3328,101 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean gitRealDocMove(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {	
+		
+		return gitDocMove(repos, true, srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg, commitUser, rt);
+	}
+	
+	private boolean gitRealDocCopy(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
 			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		return  gitDocCopy(repos, true, srcParentPath, srcEntryName, dstParentPath, dstEntryName,  commitMsg, commitUser, rt);
+	}
+	
+	private boolean gitDocMove(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		System.out.println("gitRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		System.out.println("gitDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(srcEntryName == null || srcEntryName.isEmpty())
 		{
-			System.out.println("gitRealDocMove() entryName can not be empty");
+			System.out.println("gitDocMove() srcEntryName can not be empty");
 			return false;
 		}
-
+		
+		if(dstEntryName == null || dstEntryName.isEmpty())
+		{
+			System.out.println("gitDocMove() dstEntryName can not be empty");
+			return false;
+		}
+		
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, true, commitUser) == false)
 		{
-			System.out.println("gitRealDocMove() GITUtil Init failed");
+			System.out.println("gitDocMove() GITUtil Init failed");
 			return false;
 		}
 	
 		//Do move at Working Directory
-		String wcSrcDocParentPath = getLocalVerReposPath(repos, true) + srcParentPath;
-		String wcDstParentDocPath = getLocalVerReposPath(repos, true) + dstParentPath;	
+		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
+		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
 		if(moveFileOrDir(wcSrcDocParentPath, srcEntryName,wcDstParentDocPath, dstEntryName,false) == false)
 		{
-			System.out.println("gitRealDocMove() moveFileOrDir Failed");					
+			System.out.println("gitDocMove() moveFileOrDir Failed");					
 			return false;
 		}
 				
 		//Commit will roll back WC if there is error
 		if(gitUtil.gitMove(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser) == false)
 		{
-			System.out.println("gitRealDocMove() GITUtil Commit failed");
+			System.out.println("gitDocMove() GITUtil Commit failed");
 			return false;
 		}
 		
 		return true;	
 	}
 	
-	private boolean gitRealDocCopy(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+	private boolean gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		System.out.println("gitRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		System.out.println("gitDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
 		if(srcEntryName == null || srcEntryName.isEmpty())
 		{
-			System.out.println("gitRealDocCopy() entryName can not be empty");
+			System.out.println("gitDocCopy() srcEntryName can not be empty");
 			return false;
 		}
 
+		if(dstEntryName == null || dstEntryName.isEmpty())
+		{
+			System.out.println("gitDocCopy() dstEntryName can not be empty");
+			return false;
+		}
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, true, commitUser) == false)
 		{
-			System.out.println("gitRealDocCopy() GITUtil Init failed");
+			System.out.println("gitDocCopy() GITUtil Init failed");
 			return false;
 		}
 	
 		//Do move at Working Directory
-		String wcSrcDocParentPath = getLocalVerReposPath(repos, true) + srcParentPath;
-		String wcDstParentDocPath = getLocalVerReposPath(repos, true) + dstParentPath;	
+		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
+		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
 		if(copyFileOrDir(wcSrcDocParentPath+srcEntryName,wcDstParentDocPath+dstEntryName,false) == false)
 		{
-			System.out.println("gitRealDocCopy() moveFileOrDir Failed");					
+			System.out.println("gitDocCopy() moveFileOrDir Failed");					
 			return false;
 		}
 				
 		//Commit will roll back WC if there is error
 		if(gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser) == false)
 		{
-			System.out.println("gitRealDocCopy() GITUtil Commit failed");
+			System.out.println("gitDocCopy() GITUtil Commit failed");
 			return false;
 		}
 		
 		return true;	
 	}
-	
-	
+
 	private boolean gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String revision) {
 		// TODO Auto-generated method stub
 		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
@@ -3431,39 +3450,129 @@ public class DocController extends BaseController{
 		
 	private boolean gitVirtualDocAdd(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		if(docVName == null || docVName.isEmpty())
+		{
+			System.out.println("gitVirtualDocAdd() entryName can not be empty");
+			return false;
+		}
+		
+		//Do Commit
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitVirtualDocAdd() GITUtil Init failed");
+			return false;
+		}
+
+		//Add to Doc to WorkingDirectory
+		String docPath = getReposVirtualPath(repos) + docVName;
+		String wcDocPath = getLocalVerReposPath(repos, false) + docVName;
+		
+		if(copyDir(docPath, wcDocPath, false) == false)
+		{
+			System.out.println("gitVirtualDocAdd() copyDir Failed");					
+			return false;
+		}			
+		
+		//Commit will roll back WC if there is error
+		if(gitUtil.gitAdd("", docVName,commitMsg, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean gitVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser,
 			ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		if(docVName == null || docVName.isEmpty())
+		{
+			System.out.println("gitVirtualDocDelete() docVName can not be empty");
+			return false;
+		}
+
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitVirtualDocDelete() GITUtil Init failed");
+			return false;
+		}
+		
+		//Add to Doc to WorkingDirectory
+		String wcDocPath = getLocalVerReposPath(repos, false) + docVName;
+		if(delDir(wcDocPath) == false)
+		{
+			System.out.println("gitVirtualDocDelete() delete working copy failed");
+		}
+			
+		if(gitUtil.Commit("", docVName,commitMsg, commitUser)== false)
+		{
+			System.out.println("gitVirtualDocDelete() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
 	}
 	
-	private boolean gitVirtualDocCommit(Repos repos, String docVName, String commitMsg, String commitUser,
-			ReturnAjax rt) {
+	private boolean gitVirtualDocCommit(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
-	}
+		if(docVName == null || docVName.isEmpty())
+		{
+			System.out.println("gitRealDocCommit() entryName can not be empty");
+			return false;
+		}
+
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			return false;
+		}
 	
+		//Copy to Doc to WorkingDirectory
+		String docPath = getReposRealPath(repos);
+		String wcDocPath = getLocalVerReposPath(repos, true);
+		if(syncUpFolder(docPath,docVName, wcDocPath,docVName,true) == false)
+		{
+			System.out.println("gitRealDocCommit() copy File to working directory failed");					
+			return false;
+		}			
+				
+		//Commit will roll back WC if there is error
+		if(gitUtil.Commit("", docVName,commitMsg, commitUser) == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+
 	private boolean gitVirtualDocMove(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
 			String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		return gitDocMove(repos, false, "", srcDocVName, "", dstDocVName, commitMsg, commitUser, rt);
 	}
 	
 	private boolean gitVirtualDocCopy(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
 			String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		return false;
+		return  gitDocCopy(repos, false, "", srcDocVName, "", dstDocVName,  commitMsg, commitUser, rt);
 	}
 	
 	private boolean gitRevertVirtualDoc(Repos repos, String docVName) {
 		// TODO Auto-generated method stub
-		return false;
+		System.out.println("svnRevertRealDoc() docVName:" + docVName);
+		String localParentPath = getReposVirtualPath(repos);
+
+		//revert from svn server
+		return gitCheckOut(repos, false, "", docVName, localParentPath, docVName,null);
 	}
 	
-	//The following functions is for svn Operations
+	/********************** Functions for SVN ***************************/
 	private int svnGetEntryType(Repos repos, boolean isRealDoc, String parentPath,String entryName, long revision) 
 	{
 		System.out.println("svnGetEntryType() parentPath:" + parentPath + " entryName:" + entryName);
