@@ -644,4 +644,10 @@ public class GITUtil  extends BaseController{
 		
 		return false;
 	}
+
+	public boolean doAutoCommit(String string, String string2, String localPath, String commitMsg, String commitUser,
+			boolean modifyEnable, String localRefPath) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

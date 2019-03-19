@@ -1038,11 +1038,15 @@ public class ReposController extends BaseController{
 			}
 			
 			String reposName = previousReposInfo.getId()+"";
-			if(moveFile(oldPath, reposName,path,reposName,false) == false)
+			if(copyFileOrDir(oldPath+reposName, path+reposName,false) == false)
 			{
 				System.out.println("仓库目录迁移失败！");
 				rt.setError("修改仓库位置失败！");					
 				return false;
+			}
+			else
+			{
+				delFileOrDir(oldPath+reposName);
 			}
 		}
 		return true;
