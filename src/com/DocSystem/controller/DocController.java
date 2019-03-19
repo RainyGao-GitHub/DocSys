@@ -344,7 +344,7 @@ public class DocController extends BaseController{
 				return true;
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("isChunkMatched() Exception"); 
 			e.printStackTrace();
 			return false;
 		}
@@ -2811,75 +2811,6 @@ public class DocController extends BaseController{
 			return false;
 		}
 		return true;
-	}
-	
-	//Create Ref Data (File or Dir), both support Real Doc and Virtual Doc
-	private boolean createRefRealDoc(String reposRPath,String reposRefRPath,String parentPath, String name, Integer type, ReturnAjax rt)
-	{
-		//RefDoc本意是希望提升后续文件修改后，diff部分的commit速度，但事实上是人们通常只会去修改文本文件（通常较小），所以就显得没有那么必要
-		//另外，即使真的需要也将考虑只放在新增文件只会，因为新增文件可能是大批量的文件上传，速度是需要优先考虑的
-		System.out.println("createRefRealDoc() now refData not used");
-		return false;
-		/*
-		String localParentPath =  reposRPath + parentPath;
-		String localRefParentPath =  reposRefRPath + parentPath;
-		String localDocPath = localParentPath + name;
-		String localRefDocPath = localRefParentPath + name;
-		System.out.println("createRefDoc() localDocPath:" + localDocPath + " localRefDocPath:" + localRefDocPath);
-		if(type == 2) //目录
-		{
-			if(isFileExist(localRefDocPath) == true)
-			{
-				System.out.println("createRefDoc() 目录 " + localRefDocPath + "　已存在！");
-				rt.setMsgData("createRefDoc() 目录 " + localRefDocPath + "　已存在！");
-				return false;
-			}
-			
-			if(false == createDir(localRefDocPath))
-			{
-				System.out.println("createRefDoc() 目录 " +localRefDocPath + " 创建失败！");
-				rt.setMsgData("createRefDoc() 目录 " +localRefDocPath + " 创建失败！");
-				return false;
-			}				
-		}
-		else
-		{
-			try {
-				copyFile(localDocPath, localRefDocPath, true);
-			} catch (IOException e) {
-				System.out.println("createRefDoc() copy " + localDocPath + " to " + localRefDocPath + "Failed!");
-				e.printStackTrace();
-				rt.setMsgData(e);
-				return false;
-			}
-		}
-		System.out.println("createRefDoc() OK");
-		return true;
-		*/
-	}
-	
-	private boolean updateRefRealDoc(String reposRPath, String reposRefRPath,
-			String parentPath, String name, Integer type, ReturnAjax rt) {
-		return createRefRealDoc(reposRPath, reposRefRPath, parentPath, name, type,rt);
-	}
-	
-	private boolean createRefVirtualDoc(String reposVPath,String reposRefVPath,String vDocName, ReturnAjax rt) {
-		System.out.println("createRefVirtualDoc() now refData not used");
-		return false;
-		/*System.out.println("createRefVirtualDoc() reposVPath:" + reposVPath + " reposRefVPath:" + reposRefVPath + " vDocName:" + vDocName);
-		
-		String localPath = reposVPath + vDocName;
-		String localRefPath = reposRefVPath + vDocName;
-		
-		if(isFileExist(localRefPath) == true)
-		{
-			System.out.println("createRefVirtualDoc() " +localRefPath + " 已存在！");
-			rt.setMsgData("createRefVirtualDoc() " +localRefPath + " 已存在！");
-			return false;
-		}
-		
-		return copyFolder(localPath, localRefPath);
-		*/
 	}
 	
 	private Integer getMaxFileSize() {
