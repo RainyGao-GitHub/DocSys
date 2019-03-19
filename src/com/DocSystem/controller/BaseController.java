@@ -87,7 +87,7 @@ public class BaseController{
 		    String os = System.getProperty("os.name");  
 			System.out.println("OS:"+ os);  
 			if(os.toLowerCase().startsWith("win")){  
-				path = "D:/DocSysReposes/";
+				path = "C:/DocSysReposes/";
 			}
 			else
 			{

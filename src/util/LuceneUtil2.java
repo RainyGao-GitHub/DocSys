@@ -80,11 +80,11 @@ public class LuceneUtil2 {
 			String os = System.getProperty("os.name");  
 			System.out.println("OS:"+ os);  
 			if(os.toLowerCase().startsWith("win")){  
-				path = "C:/DocSys/Lucene/";
+				path = "C:/DocSysLucene/";
 			}
 			else
 			{
-				path = "/data/DocSys/Lucene/";	//Linux系统放在  /data	
+				path = "/data/DocSysLucene/";	//Linux系统放在  /data	
 			}
 	    }
 	    
