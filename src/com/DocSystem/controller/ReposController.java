@@ -566,15 +566,19 @@ public class ReposController extends BaseController{
 		List<Repos> list= reposService.getReposList(tmpRepos);
 		if((list != null) && (list.size() > 0))
 		{
+			Repos repos = list.get(0);
+			System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
 			return true;
 		}
 		
 		//Check if svnPath used by VirtualDoc
 		Repos tmpRepos1 = new Repos();
-		tmpRepos.setSvnPath1(svnPath);
+		tmpRepos1.setSvnPath1(svnPath);
 		List<Repos> list1 = reposService.getReposList(tmpRepos1);
 		if((list1 != null) && (list1.size() > 0))
 		{
+			Repos repos = list1.get(0);
+			System.out.println("SvnPath1 duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
 			return true;
 		}
 		
