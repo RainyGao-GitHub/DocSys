@@ -270,13 +270,13 @@ public class ReposController extends BaseController{
 		}
 		
 		//RealDoc verRepos Settings check
-		if(checkVerReposInfo(repos, true, rt) == false)
+		if(checkVerReposInfo(repos, null, true, rt) == false)
 		{
 			return false;
 		}
 
 		//VirtualDoc verRepos Settings check
-		if(checkVerReposInfo(repos, false, rt) == false)
+		if(checkVerReposInfo(repos, null, false, rt) == false)
 		{
 			return false;
 		}
@@ -284,18 +284,24 @@ public class ReposController extends BaseController{
 		return true;
 	}
 
-	private boolean checkVerReposInfo(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+	private boolean checkVerReposInfo(Repos repos,  Repos oldRepos, boolean isRealDoc,ReturnAjax rt) {
 		//Check RealDoc VerRepos Settings
 		Integer verCtrl = null;
 		Integer isRemote = null;
 		String localSvnPath = null;
 		String svnPath = null;
+		String oldSvnPath = null;
+		
 		if(isRealDoc)
 		{
 			verCtrl = repos.getVerCtrl();
 			isRemote = repos.getIsRemote();
 			localSvnPath = repos.getLocalSvnPath();
-			svnPath = repos.getSvnPath();	
+			svnPath = repos.getSvnPath();
+			if(oldRepos != null)
+			{
+				oldSvnPath = oldRepos.getSvnPath();
+			}
 		}
 		else
 		{
@@ -303,6 +309,10 @@ public class ReposController extends BaseController{
 			isRemote = repos.getIsRemote1();
 			localSvnPath = repos.getLocalSvnPath1();
 			svnPath = repos.getSvnPath1();	
+			if(oldRepos != null)
+			{
+				oldSvnPath = oldRepos.getSvnPath1();
+			}
 		}
 		
 		if(verCtrl != 0 )
@@ -329,14 +339,17 @@ public class ReposController extends BaseController{
 					System.out.println("版本仓库链接不能为空");	//这个其实还不是特别严重，只要重新设置一次即可
 					rt.setError("版本仓库链接不能为空！");
 					return false;
-				}	
+				}
 				
-				//检查版本仓库地址是否已使用
-				if(isVerReposPathBeUsed(svnPath) == true)
+				if(oldSvnPath == null || !svnPath.equals(oldSvnPath))
 				{
-					System.out.println("版本仓库地址已使用:" + svnPath);	//这个其实还不是特别严重，只要重新设置一次即可
-					rt.setError("版本仓库地址已使用:" + svnPath);
-					return false;	
+					//检查版本仓库地址是否已使用
+					if(isVerReposPathBeUsed(svnPath) == true)
+					{
+						System.out.println("版本仓库地址已使用:" + svnPath);	//这个其实还不是特别严重，只要重新设置一次即可
+						rt.setError("版本仓库地址已使用:" + svnPath);
+						return false;	
+					}
 				}
 				
 				//localVerReposPath setting
@@ -390,7 +403,7 @@ public class ReposController extends BaseController{
 		
 		if(isVerReposInfoChanged(newReposInfo, previousReposInfo, true))
 		{
-			if(checkVerReposInfo(newReposInfo, true, rt) == false)
+			if(checkVerReposInfo(newReposInfo, previousReposInfo, true, rt) == false)
 			{
 				return false;
 			}
@@ -398,7 +411,7 @@ public class ReposController extends BaseController{
 		
 		if(isVerReposInfoChanged(newReposInfo, previousReposInfo, false))
 		{
-			if(checkVerReposInfo(newReposInfo, false, rt) == false)
+			if(checkVerReposInfo(newReposInfo,previousReposInfo, false, rt) == false)
 			{
 				return false;
 			}
