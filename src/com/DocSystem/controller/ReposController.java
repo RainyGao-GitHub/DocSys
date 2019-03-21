@@ -268,12 +268,15 @@ public class ReposController extends BaseController{
 		String verReposURI1 = repos.getSvnPath1();
 		if(verReposURI != null && verReposURI1 != null)
 		{
-			verReposURI = dirPathFormat(verReposURI);
-			verReposURI1 = dirPathFormat(verReposURI1);
-			if(verReposURI.equals(verReposURI1))
+			if(!verReposURI.isEmpty() && !verReposURI1.isEmpty())
 			{
-				rt.setError("不能使用相同的版本仓库链接！");			
-				return false;
+				verReposURI = dirPathFormat(verReposURI);
+				verReposURI1 = dirPathFormat(verReposURI1);
+				if(verReposURI.contains(verReposURI1) || verReposURI1.contains(verReposURI))
+				{
+					rt.setError("不能使用相同的版本仓库链接！");			
+					return false;
+				}
 			}
 		}
 		
@@ -591,9 +594,11 @@ public class ReposController extends BaseController{
 		}		
 	}
 
-	private boolean isVerReposPathBeUsed(String svnPath) {
+	private boolean isVerReposPathBeUsed(String newVerReposPath) {
 		
 		List<Repos> reposList = reposService.getAllReposList();
+		
+		newVerReposPath = dirPathFormat(newVerReposPath);
 		
 		for(int i=0; i< reposList.size(); i++)
 		{
@@ -602,15 +607,10 @@ public class ReposController extends BaseController{
 			if(verReposURI != null)
 			{
 				verReposURI = dirPathFormat(verReposURI);
-				if(verReposURI.contains(svnPath))
+				if(verReposURI.contains(newVerReposPath) || newVerReposPath.contains(verReposURI))
 				{					
 					System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
 					return true;
-				}
-				else if(svnPath.contains(verReposURI))
-				{
-					System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
-					return true;					
 				}
 			}
 			
@@ -618,15 +618,10 @@ public class ReposController extends BaseController{
 			if(verReposURI1 != null)
 			{
 				verReposURI1 = dirPathFormat(verReposURI1);
-				if(verReposURI1.contains(svnPath))
+				if(verReposURI1.contains(newVerReposPath) || newVerReposPath.contains(verReposURI1))
 				{					
 					System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
 					return true;
-				}
-				else if(svnPath.contains(verReposURI1))
-				{
-					System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
-					return true;					
 				}
 			}		
 		}
