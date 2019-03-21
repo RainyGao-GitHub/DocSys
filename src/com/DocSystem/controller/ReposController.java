@@ -227,11 +227,16 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);	
 			return;			
 		}
+
+		if(false == syncupVerRepos(repos,login_user,rt))
+		{
+			deleteRepos(repos);
+			writeJson(rt, response);	
+			return;				
+		}
 		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
-		syncupVerRepos(repos,login_user,rt);
-
 		writeJson(rt, response);	
 	}
 
@@ -794,7 +799,7 @@ public class ReposController extends BaseController{
 		return svnPath;
 	}
 
-	private void syncupVerRepos(Repos repos, User login_user, ReturnAjax rt) {
+	private boolean syncupVerRepos(Repos repos, User login_user, ReturnAjax rt) {
 		System.out.println("syncupVerRepos()");
 		
 		//Real Doc 带版本控制，则需要同步本地和版本仓库
@@ -807,7 +812,8 @@ public class ReposController extends BaseController{
 			if(verReposAutoCommit(repos, true, reposRPath,commitMsg,commitUser,false,null) == false)
 			{
 				System.out.println("RealDoc版本仓库初始化失败:");
-				rt.setMsgData("RealDoc版本仓库初始化失败");
+				rt.setError("版本仓库初始化失败");
+				return false;
 			}
 		}
 		
@@ -821,9 +827,11 @@ public class ReposController extends BaseController{
 			if(verReposAutoCommit(repos, false, reposVPath, commitMsg,commitUser,false,null) == false)
 			{
 				System.out.println("VirtualDoc版本仓库初始化失败:");
-				rt.setMsgData("VirtualDoc版本仓库初始化失败");
+				rt.setError("VirtualDoc版本仓库初始化失败");
+				return false;
 			}
-		}	
+		}
+		return true;
 	}
 	
 	private boolean verReposAutoCommit(Repos repos,boolean isRealDoc, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) {
