@@ -2295,8 +2295,7 @@ public class DocController extends BaseController{
 		}		
 	}
 	
-	/*********************Functions For DocLock 
-	 * @param subDocCheckFlag *******************************/
+	/*********************Functions For DocLock *******************************/
 	//Lock Doc
 	private Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
