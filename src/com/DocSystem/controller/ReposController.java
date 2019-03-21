@@ -188,6 +188,10 @@ public class ReposController extends BaseController{
 		repos.setSvnPath1(svnPath1);
 		repos.setSvnUser1(svnUser1);
 		repos.setSvnPwd1(svnPwd1);
+		//Lock the repos
+		repos.setState(1);
+		repos.setLockBy(login_user.getId());
+		repos.setLockTime(createTime);
 		
 		if(checkReposInfoForAdd(repos, rt) == false)
 		{
@@ -236,6 +240,19 @@ public class ReposController extends BaseController{
 		}
 		
 		InitReposAuthInfo(repos,login_user,rt);		
+		
+		//UnLock Repos
+		Repos tempRepos = new Repos();
+		tempRepos.setId(reposId);
+		tempRepos.setState(0);	//
+		tempRepos.setLockBy(0);	//
+		tempRepos.setLockTime((long)0);	//Set lockTime	
+		if(reposService.updateRepos(tempRepos) == 0)
+		{
+			rt.setError("更新仓库记录失败");
+			writeJson(rt, response);		
+			return;
+		}
 		
 		writeJson(rt, response);	
 	}
@@ -366,7 +383,7 @@ public class ReposController extends BaseController{
 				if(oldSvnPath == null || !svnPath.equals(oldSvnPath))
 				{
 					//检查版本仓库地址是否已使用
-					if(isVerReposPathBeUsed(svnPath) == true)
+					if(isVerReposPathBeUsed(repos.getId(),svnPath) == true)
 					{
 						System.out.println("版本仓库地址已使用:" + svnPath);	//这个其实还不是特别严重，只要重新设置一次即可
 						rt.setError("版本仓库地址已使用:" + svnPath);
@@ -594,7 +611,7 @@ public class ReposController extends BaseController{
 		}		
 	}
 
-	private boolean isVerReposPathBeUsed(String newVerReposPath) {
+	private boolean isVerReposPathBeUsed(Integer reposId, String newVerReposPath) {
 		
 		List<Repos> reposList = reposService.getAllReposList();
 		
@@ -603,8 +620,13 @@ public class ReposController extends BaseController{
 		for(int i=0; i< reposList.size(); i++)
 		{
 			Repos repos = reposList.get(i);
+			if(repos.getId() == reposId)
+			{
+				continue;
+			}
+			
 			String verReposURI = repos.getSvnPath();
-			if(verReposURI != null)
+			if(verReposURI != null && !verReposURI.isEmpty())
 			{
 				verReposURI = dirPathFormat(verReposURI);
 				if(verReposURI.contains(newVerReposPath) || newVerReposPath.contains(verReposURI))
@@ -615,7 +637,7 @@ public class ReposController extends BaseController{
 			}
 			
 			String verReposURI1 = repos.getSvnPath1();
-			if(verReposURI1 != null)
+			if(verReposURI1 != null && !verReposURI1.isEmpty())
 			{
 				verReposURI1 = dirPathFormat(verReposURI1);
 				if(verReposURI1.contains(newVerReposPath) || newVerReposPath.contains(verReposURI1))
