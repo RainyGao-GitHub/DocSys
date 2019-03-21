@@ -90,8 +90,6 @@ public class SVNUtil  extends BaseController{
 			svnUser = commitUser;
 		}
 
-		//System.out.println("reposURL:" + reposURL);
-		//System.out.println("svnUser:" + svnUser);
 		
     	//根据不同协议，初始化不同的仓库工厂。(工厂实现基于SVNRepositoryFactory抽象类)
         setupLibrary();
@@ -99,8 +97,8 @@ public class SVNUtil  extends BaseController{
         //转换 url From String to SVNURL
         try {
         	repositoryURL = SVNURL.parseURIEncoded(reposURL);
-        } catch (SVNException e) {
-			System.out.println("Init() parseURIEncoded " + repositoryURL.toString() + " Failed");
+        } catch (Exception e) {
+			System.out.println("Init() parseURIEncoded " + reposURL + " Failed");
             e.printStackTrace();
             return false;
         }
