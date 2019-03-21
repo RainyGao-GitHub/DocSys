@@ -685,34 +685,36 @@ public class ReposController extends BaseController{
 		delDir(reposDir);
 	}
 
-	private void deleteLocalVerRepos(Repos repos) {
-		//Delete LocalVerRepos for RealDoc
-		Integer verCtrl = repos.getVerCtrl();
-		Integer isRemote = repos.getIsRemote();
-		String localSvnPath = repos.getLocalSvnPath();
-		if(verCtrl == null || isRemote == null || isRemote != 0 || localSvnPath == null || localSvnPath.isEmpty())
+	private void deleteLocalVerRepos(Repos repos, boolean isRealDoc) {
+		//Delete LocalVerRepos
+		Integer verCtrl = null;
+		Integer isRemote = null;
+		String localVerReposPath = null;
+
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+			isRemote = repos.getIsRemote();
+			localVerReposPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+			isRemote = repos.getIsRemote1();
+			localVerReposPath = repos.getLocalSvnPath1();			
+		}
+		
+		if(verCtrl == null || isRemote == null || isRemote != 0 || localVerReposPath == null || localVerReposPath.isEmpty())
 		{
 			return;
 		}
+		
 		if(verCtrl != 0 && isRemote == 0)
 		{
-			String localVerReposDir = repos.getLocalSvnPath() + getVerReposName(repos,true);
+			String localVerReposDir = localVerReposPath + getVerReposName(repos,isRealDoc);
 			delDir(localVerReposDir);
 		}
 		
-		//Delete LocalVerRepos for VirtualDoc
-		Integer verCtrl1 = repos.getVerCtrl1();
-		Integer isRemote1 = repos.getIsRemote1();
-		String localSvnPath1 = repos.getLocalSvnPath1();
-		if(verCtrl1 == null || isRemote1 == null || isRemote1 != 0 || localSvnPath1 == null || localSvnPath1.isEmpty())
-		{
-			return;
-		}
-		if(verCtrl1 != 0 && isRemote1 == 0)
-		{
-			String localVerReposDir1 = repos.getLocalSvnPath1() + getVerReposName(repos,false);
-			delDir(localVerReposDir1);
-		}
 	}
 	
 	private String createLocalVerRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
@@ -923,8 +925,10 @@ public class ReposController extends BaseController{
 
 			//Delete Repos LocalDir
 			deleteReposLocalDir(repos);
+			
 			//Delete Repos LocalVerRepos
-			deleteLocalVerRepos(repos);
+			deleteLocalVerRepos(repos, true);
+			deleteLocalVerRepos(repos, false);
 		}
 		
 		
