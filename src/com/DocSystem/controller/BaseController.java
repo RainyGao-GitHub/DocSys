@@ -111,6 +111,11 @@ public class BaseController{
 	//正确格式化仓库根路径
 	protected String dirPathFormat(String path) {
 		//如果传入的Path没有带/,给他加一个
+		if(path.isEmpty())
+		{
+			return path;
+		}
+		
 		String endChar = path.substring(path.length()-1, path.length());
 		if(!endChar.equals("/"))	
 		{
