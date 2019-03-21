@@ -22,11 +22,14 @@
     <result column="PWD" jdbcType="VARCHAR" property="pwd" />
     <result column="OWNER" jdbcType="INTEGER" property="owner" />
     <result column="CREATE_TIME" jdbcType="BIGINT" property="createTime" />
+    <result column="STATE" jdbcType="INTEGER" property="state" />
+    <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
+    <result column="LOCK_TIME" jdbcType="BIGINT" property="lockTime" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, NAME, TYPE, PATH, VER_CTRL, IS_REMOTE, LOCAL_SVN_PATH, SVN_PATH, SVN_USER, SVN_PWD, 
     VER_CTRL1, IS_REMOTE1, LOCAL_SVN_PATH1, SVN_PATH1, SVN_USER1, SVN_PWD1, INFO, PWD, 
-    OWNER, CREATE_TIME
+    OWNER, CREATE_TIME, STATE, LOCK_BY, LOCK_TIME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -45,14 +48,16 @@
       SVN_PWD, VER_CTRL1, IS_REMOTE1, 
       LOCAL_SVN_PATH1, SVN_PATH1, SVN_USER1, 
       SVN_PWD1, INFO, PWD, 
-      OWNER, CREATE_TIME)
+      OWNER, CREATE_TIME, STATE, 
+      LOCK_BY, LOCK_TIME)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
       #{path,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, #{isRemote,jdbcType=INTEGER}, 
       #{localSvnPath,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, #{svnUser,jdbcType=VARCHAR}, 
       #{svnPwd,jdbcType=VARCHAR}, #{verCtrl1,jdbcType=INTEGER}, #{isRemote1,jdbcType=INTEGER}, 
       #{localSvnPath1,jdbcType=VARCHAR}, #{svnPath1,jdbcType=VARCHAR}, #{svnUser1,jdbcType=VARCHAR}, 
       #{svnPwd1,jdbcType=VARCHAR}, #{info,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, 
-      #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT})
+      #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, #{state,jdbcType=INTEGER}, 
+      #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Repos">
     insert into repos
@@ -117,6 +122,15 @@
       <if test="createTime != null">
         CREATE_TIME,
       </if>
+      <if test="state != null">
+        STATE,
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY,
+      </if>
+      <if test="lockTime != null">
+        LOCK_TIME,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -178,6 +192,15 @@
       </if>
       <if test="createTime != null">
         #{createTime,jdbcType=BIGINT},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        #{lockTime,jdbcType=BIGINT},
       </if>
     </trim>
   </insert>
@@ -241,6 +264,15 @@
       <if test="createTime != null">
         CREATE_TIME = #{createTime,jdbcType=BIGINT},
       </if>
+      <if test="state != null">
+        STATE = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        LOCK_TIME = #{lockTime,jdbcType=BIGINT},
+      </if>
     </set>
     where ID = #{id,jdbcType=INTEGER}
   </update>
@@ -264,7 +296,10 @@
       INFO = #{info,jdbcType=VARCHAR},
       PWD = #{pwd,jdbcType=VARCHAR},
       OWNER = #{owner,jdbcType=INTEGER},
-      CREATE_TIME = #{createTime,jdbcType=BIGINT}
+      CREATE_TIME = #{createTime,jdbcType=BIGINT},
+      STATE = #{state,jdbcType=INTEGER},
+      LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      LOCK_TIME = #{lockTime,jdbcType=BIGINT}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Repos" useGeneratedKeys="true">
@@ -327,6 +362,15 @@
       <if test="createTime != null">
         CREATE_TIME,
       </if>
+      <if test="state != null">
+        STATE,
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY,
+      </if>
+      <if test="lockTime != null">
+        LOCK_TIME,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -385,6 +429,15 @@
       </if>
       <if test="createTime != null">
         #{createTime,jdbcType=BIGINT},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        #{lockTime,jdbcType=BIGINT},
       </if>
     </trim>
   </insert>
@@ -446,6 +499,15 @@
     </if>  
     <if test="createTime != null">
       and CREATE_TIME = #{createTime,jdbcType=BIGINT}
+    </if>
+    <if test="state != null">
+   	  and STATE = #{state,jdbcType=INTEGER}
+    </if>
+    <if test="lockBy != null">
+      and LOCK_BY = #{lockBy,jdbcType=INTEGER}
+    </if>
+    <if test="lockTime != null">
+      and LOCK_TIME = #{lockTime,jdbcType=BIGINT}
     </if>
   </select>
   <select id="selectAll" resultMap="BaseResultMap">  

@@ -41,6 +41,12 @@ public class Repos {
 
     private Long createTime;
 
+    private Integer state;
+
+    private Integer lockBy;
+
+    private Long lockTime;
+
     public Integer getId() {
         return id;
     }
@@ -199,5 +205,29 @@ public class Repos {
 
     public void setCreateTime(Long createTime) {
         this.createTime = createTime;
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
+    }
+
+    public Integer getLockBy() {
+        return lockBy;
+    }
+
+    public void setLockBy(Integer lockBy) {
+        this.lockBy = lockBy;
+    }
+
+    public Long getLockTime() {
+        return lockTime;
+    }
+
+    public void setLockTime(Long lockTime) {
+        this.lockTime = lockTime;
     }
 }
