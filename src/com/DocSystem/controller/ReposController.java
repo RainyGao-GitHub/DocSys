@@ -264,10 +264,12 @@ public class ReposController extends BaseController{
 		repos.setPath(path);
 
 		//svnPath and svnPath1 duplicate check
-		String verReposURI = dirPathFormat(repos.getSvnPath());
-		String verReposURI1 = dirPathFormat(repos.getSvnPath1());
+		String verReposURI = repos.getSvnPath();
+		String verReposURI1 = repos.getSvnPath1();
 		if(verReposURI != null && verReposURI1 != null)
 		{
+			verReposURI = dirPathFormat(verReposURI);
+			verReposURI1 = dirPathFormat(verReposURI1);
 			if(verReposURI.equals(verReposURI1))
 			{
 				rt.setError("不能使用相同的版本仓库链接！");			
