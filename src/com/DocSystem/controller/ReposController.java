@@ -263,6 +263,18 @@ public class ReposController extends BaseController{
 		}
 		repos.setPath(path);
 
+		//svnPath and svnPath1 duplicate check
+		String verReposURI = dirPathFormat(repos.getSvnPath());
+		String verReposURI1 = dirPathFormat(repos.getSvnPath1());
+		if(verReposURI != null && verReposURI1 != null)
+		{
+			if(verReposURI.equals(verReposURI1))
+			{
+				rt.setError("不能使用相同的版本仓库链接！");			
+				return false;
+			}
+		}
+		
 		//确定是否存在相同路径的仓库
 		Repos tmpRepos = new Repos();
 		tmpRepos.setName(name);
