@@ -568,38 +568,38 @@ public class SVNUtil  extends BaseController{
 	        }
 	        else
 	        {
-	            String entryPath = parentPath + entryName;            
+	            String remoteEntryPath = parentPath + entryName;            
 	            String localEntryPath = localPath + entryName;
 	
-	            File localFile = new File(localEntryPath);
+	            File localEntry = new File(localEntryPath);
 	            
-				SVNNodeKind entryKind = repository.checkPath(entryPath, -1);
+				SVNNodeKind entryKind = repository.checkPath(remoteEntryPath, -1);
 	            if(entryKind == SVNNodeKind.FILE)
 	            {
-	            	if(!localFile.exists() || localFile.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
+	            	if(!localEntry.exists() || localEntry.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
 	                {
-	                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
+	                    System.out.println("scheduleForDelete() insert " + remoteEntryPath + " to actionList for Delete");
 	                    //deleteEntry(editor,entryPath);
 	                    insertDeleteAction(actionList,parentPath,entryName);
 	                }
 	            }
 	            else if(entryKind == SVNNodeKind.DIR) 
 	            {
-	            	if(!localFile.exists() || localFile.isFile())	//本地目录不存在或者类型不符，则删除该目录
+	            	if(!localEntry.exists() || localEntry.isFile())	//本地目录不存在或者类型不符，则删除该目录
 	                {
-	                    System.out.println("scheduleForDelete() insert " + entryPath + " to actionList for Delete");
+	                    System.out.println("scheduleForDelete() insert " + remoteEntryPath + " to actionList for Delete");
 	                    insertDeleteAction(actionList,parentPath,entryName);
 	                }
 	           	    else	//If it is dir, go through the subNodes for delete
 	           	    {
 	        			Collection entries;
-	        			entries = repository.getDir(entryPath, -1, null,(Collection) null);
+	        			entries = repository.getDir(remoteEntryPath, -1, null,(Collection) null);
 	        	        Iterator iterator = entries.iterator();
 	        	        while (iterator.hasNext()) 
 	        	        {
 	        	            SVNDirEntry entry = (SVNDirEntry) iterator.next();
 	        	            String subEntryName = entry.getName();
-	           	    	    scheduleForDelete(actionList,localEntryPath+"/", entryPath+"/",subEntryName);
+	           	    	    scheduleForDelete(actionList,localEntryPath+"/", remoteEntryPath+"/",subEntryName);
 	        	        }   
 	           	    }
 	            }
@@ -617,8 +617,8 @@ public class SVNUtil  extends BaseController{
 
     	if(entryName.isEmpty())	//Go through the sub files for add and modify
     	{
-    		File file = new File(localPath);
-    		File[] tmp=file.listFiles();
+    		File localEntry = new File(localPath);
+    		File[] tmp=localEntry.listFiles();
     		for(int i=0;i<tmp.length;i++)
     		{
     			String subEntryName = tmp[i].getName();
@@ -632,12 +632,12 @@ public class SVNUtil  extends BaseController{
 	    	String localEntryPath = localPath + entryName;
 	    	String localRefEntryPath = localRefPath + entryName;
 	    	
-	    	File file = new File(localEntryPath);
-	    	if(file.exists())
+	    	File localEntry = new File(localEntryPath);
+	    	if(localEntry.exists())
 	        {
 	        	SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, -1);
 	        	
-	        	if(file.isDirectory())	//IF the entry is dir and need to add, we need to get the subActionList Firstly
+	        	if(localEntry.isDirectory())	//IF the entry is dir and need to add, we need to get the subActionList Firstly
 	        	{
 	        		
 	        		String subParentPath = remoteEntryPath + "/";
@@ -649,7 +649,7 @@ public class SVNUtil  extends BaseController{
 		            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
 		            	
 		            	//Go through the sub files to Get the subActionList
-			    		File[] tmp=file.listFiles();
+			    		File[] tmp=localEntry.listFiles();
 			    		List<CommitAction> subActionList = new ArrayList<CommitAction>();
 			        	for(int i=0;i<tmp.length;i++)
 			        	{
@@ -664,7 +664,7 @@ public class SVNUtil  extends BaseController{
 	        		else
 	        		{
 	        			//Go through the sub Files For Add and Modify
-	        			File[] tmp=file.listFiles();
+	        			File[] tmp=localEntry.listFiles();
 	        			for(int i=0;i<tmp.length;i++)
 	        			{
 	        				String subEntryName = tmp[i].getName();
@@ -691,55 +691,6 @@ public class SVNUtil  extends BaseController{
             	}
 	       }
     	}
-	}
-	
-    private void insertAddFileAction(List<CommitAction> actionList,
-			String parentPath, String entryName, String localPath, boolean isSubAction) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(1);
-    	action.setEntryType(1);
-    	action.setEntryParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
-    	action.setLocalPath(localPath);
-    	action.isSubAction = isSubAction;
-    	actionList.add(action);
-		
-	}
-
-	private void insertAddDirAction(List<CommitAction> actionList,
-			String parentPath, String entryName, boolean isSubAction, boolean hasSubList, List<CommitAction> subActionList) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(1);
-    	action.setEntryType(2);
-    	action.setEntryParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
-    	action.isSubAction = isSubAction;
-    	action.hasSubList = hasSubList;
-    	action.setSubActionList(subActionList);
-    	actionList.add(action);
-    	
-	}
-	
-    private void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(2);
-    	action.setEntryParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
-    	actionList.add(action);
-	}
-    
-	private void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(3);
-    	action.setEntryParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
-    	action.setLocalPath(localPath);
-    	action.setLocalRefPath(localRefPath);
-    	actionList.add(action);	
 	}
 
 	private InputStream getFileInputStream(String filePath) {

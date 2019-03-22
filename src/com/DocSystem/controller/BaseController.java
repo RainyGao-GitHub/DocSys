@@ -50,6 +50,7 @@ import com.alibaba.fastjson.JSON;
 
 import util.Base64File;
 import util.Encrypt.MD5;
+import util.SvnUtil.CommitAction;
 @SuppressWarnings("rawtypes")
 public class BaseController{
 	@Autowired
@@ -1827,4 +1828,54 @@ public class BaseController{
 		return true;
 	}
 
+	/***************Commont Interfaces for verRepos ***************/
+	protected void insertAddFileAction(List<CommitAction> actionList,
+			String parentPath, String entryName, String localPath, boolean isSubAction) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setEntryType(1);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	action.setLocalPath(localPath);
+    	action.isSubAction = isSubAction;
+    	actionList.add(action);
+		
+	}
+    
+	protected void insertAddDirAction(List<CommitAction> actionList,
+			String parentPath, String entryName, boolean isSubAction, boolean hasSubList, List<CommitAction> subActionList) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setEntryType(2);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	action.isSubAction = isSubAction;
+    	action.hasSubList = hasSubList;
+    	action.setSubActionList(subActionList);
+    	actionList.add(action);
+    	
+	}
+	
+	protected void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(2);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	actionList.add(action);
+	}
+    
+	protected void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(3);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	action.setLocalPath(localPath);
+    	action.setLocalRefPath(localRefPath);
+    	actionList.add(action);	
+	}
+	
 }
