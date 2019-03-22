@@ -21,6 +21,8 @@ public class Repos {
 
     private String svnPwd;
 
+    private String revision;
+
     private Integer verCtrl1;
 
     private Integer isRemote1;
@@ -32,6 +34,8 @@ public class Repos {
     private String svnUser1;
 
     private String svnPwd1;
+
+    private String revision1;
 
     private String info;
 
@@ -127,6 +131,14 @@ public class Repos {
         this.svnPwd = svnPwd == null ? null : svnPwd.trim();
     }
 
+    public String getRevision() {
+        return revision;
+    }
+
+    public void setRevision(String revision) {
+        this.revision = revision == null ? null : revision.trim();
+    }
+
     public Integer getVerCtrl1() {
         return verCtrl1;
     }
@@ -173,6 +185,14 @@ public class Repos {
 
     public void setSvnPwd1(String svnPwd1) {
         this.svnPwd1 = svnPwd1 == null ? null : svnPwd1.trim();
+    }
+
+    public String getRevision1() {
+        return revision1;
+    }
+
+    public void setRevision1(String revision1) {
+        this.revision1 = revision1 == null ? null : revision1.trim();
     }
 
     public String getInfo() {
