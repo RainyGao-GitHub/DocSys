@@ -23,7 +23,7 @@
 # 系统安装
 ## 一、准备工作
 ### 1、下载DocSystem.war和DocSystem.sql
-下载地址： dw.gofreeteam.com/DocSystem/web/project.html?vid=4&doc=33
+下载地址： https://gitee.com/RainyGao/DocSys/releases
 ### 2、DocSystem.war配置文件修改
 将DocSystem.war重命名为DocSystem.zip文件，进入zip文件的WEB-INF/classes/目录，修改以下两个配置文件，修改完成后改为DocSystem.war
 
