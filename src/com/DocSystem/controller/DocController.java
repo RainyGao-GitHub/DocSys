@@ -2299,16 +2299,7 @@ public class DocController extends BaseController{
 	//Lock Doc
 	private Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
-		
-		if(subDocCheckFlag)
-		{
-			if(isSubDocLocked(docId,rt) == true)
-			{
-				System.out.println("lockDoc() subDoc of " + docId +" was locked！");
-				return null;
-			}
-		}
-		
+				
 		//确定文件节点是否可用
 		Doc doc = reposService.getDoc(docId);
 		if(doc == null)
@@ -2325,11 +2316,35 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
+		//Check if repos was locked
+		Repos repos = reposService.getRepos(doc.getVid());
+		if(repos == null)
+		{
+			rt.setError("仓库 " + doc.getVid() +" 不存在！");
+			System.out.println("lockDoc() Repos: " + doc.getVid() +" 不存在！");
+			return null;
+		}
+		if(isReposLocked(repos, login_user,rt))
+		{
+			System.out.println("lockDoc() Repos:" + repos.getId() +" was locked！");				
+			return null;			
+		}
+		
 		//检查其父节点是否强制锁定
 		if(isParentDocLocked(doc.getPid(),login_user,rt))
 		{
 			System.out.println("lockDoc() Parent Doc of " + docId +" was locked！");				
 			return null;
+		}
+		
+		//Check If SubDoc was locked
+		if(subDocCheckFlag)
+		{
+			if(isSubDocLocked(docId,rt) == true)
+			{
+				System.out.println("lockDoc() subDoc of " + docId +" was locked！");
+				return null;
+			}
 		}
 		
 		//lockTime is the time to release lock 
@@ -2348,6 +2363,27 @@ public class DocController extends BaseController{
 		return doc;
 	}
 	
+	//确定仓库是否被锁定
+	private boolean isReposLocked(Repos repos, User login_user, ReturnAjax rt) {
+		int lockState = repos.getState();	//0: not locked  1: locked	
+		if(lockState != 0)
+		{
+			if(isLockOutOfDate(repos.getLockTime()) == false)
+			{	
+				User lockBy = userService.getUser(repos.getLockBy());
+				rt.setError("仓库 " + repos.getName() +" was locked by " + lockBy.getName());
+				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
+				return true;						
+			}
+			else 
+			{
+				System.out.println("Repos " + repos.getId()+ " " + repos.getName()  +" lock was out of date！");
+				return false;
+			}
+		}
+		return false;
+	}
+
 	//确定当前doc是否被锁定
 	private boolean isDocLocked(Doc doc,User login_user,ReturnAjax rt) {
 		int lockState = doc.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
@@ -2363,7 +2399,7 @@ public class DocController extends BaseController{
 				}
 			}
 			
-			if(isLockOutOfDate(doc) == false)
+			if(isLockOutOfDate(doc.getLockTime()) == false)
 			{	
 				User lockBy = userService.getUser(doc.getLockBy());
 				rt.setError(doc.getName() +" was locked by " + lockBy.getName());
@@ -2379,19 +2415,16 @@ public class DocController extends BaseController{
 		return false;
 	}
 
-	private boolean isLockOutOfDate(Doc doc) {
+	private boolean isLockOutOfDate(long lockTime) {
 		//check if the lock was out of date
 		long curTime = new Date().getTime();
-		long lockTime = doc.getLockTime();
-		System.out.println("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
+		//System.out.println("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
 		if(curTime < lockTime)	//
 		{
-			System.out.println("isLockOutOfDate() Doc " + doc.getId()+ " " + doc.getName() +" was locked:" + doc.getState());
 			return false;
 		}
 
-		//Lock 自动失效设计
-		System.out.println("Doc: " +  doc.getId() +" lock is out of date！");
+		//Lock 自动失效
 		return true;
 	}
 

@@ -2,6 +2,7 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -167,13 +168,15 @@ public class ReposController extends BaseController{
 		}
 		
 		//Set reposInfo
+
 		Repos repos = new Repos();
 		repos.setName(name);
 		repos.setInfo(info);
 		repos.setType(type);
 		repos.setPath(path);
 		repos.setOwner(login_user.getId());
-		repos.setCreateTime(createTime);
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		repos.setCreateTime(nowTimeStamp);
 		//RealDoc VerCtrlInfo
 		repos.setVerCtrl(verCtrl);
 		repos.setIsRemote(isRemote);
@@ -191,7 +194,8 @@ public class ReposController extends BaseController{
 		//Lock the repos
 		repos.setState(1);
 		repos.setLockBy(login_user.getId());
-		repos.setLockTime(createTime);
+		long lockTime = nowTimeStamp + 24*60*60*1000;
+		repos.setLockTime(lockTime);
 		
 		if(checkReposInfoForAdd(repos, rt) == false)
 		{
