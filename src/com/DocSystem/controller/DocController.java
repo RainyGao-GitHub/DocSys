@@ -3421,26 +3421,17 @@ public class DocController extends BaseController{
 		
 		//Do Commit
 		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
+		if(gitUtil.Init(repos, false, commitUser) == false)
 		{
 			System.out.println("gitVirtualDocAdd() GITUtil Init failed");
 			return false;
 		}
 
-		//Add to Doc to WorkingDirectory
-		String docPath = getReposVirtualPath(repos) + docVName;
-		String wcDocPath = getLocalVerReposPath(repos, false) + docVName;
-		
-		if(copyDir(docPath, wcDocPath, false) == false)
-		{
-			System.out.println("gitVirtualDocAdd() copyDir Failed");					
-			return false;
-		}			
-		
 		//Commit will roll back WC if there is error
-		if(gitUtil.gitAdd("", docVName,commitMsg, commitUser) == false)
+		String localPath = getReposVirtualPath(repos);		
+		if(gitUtil.doAutoCommit("", docVName, localPath,commitMsg, commitUser, true, null) == false)
 		{
-			System.out.println("gitRealDocAdd() GITUtil Commit failed");
+			System.out.println("gitVirtualDocAdd() GITUtil Commit failed");
 			return false;
 		}
 		
@@ -3457,7 +3448,7 @@ public class DocController extends BaseController{
 		}
 
 		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
+		if(gitUtil.Init(repos, false, commitUser) == false)
 		{
 			System.out.println("gitVirtualDocDelete() GITUtil Init failed");
 			return false;
@@ -3489,23 +3480,16 @@ public class DocController extends BaseController{
 
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
+		if(gitUtil.Init(repos, false, commitUser) == false)
 		{
 			System.out.println("gitRealDocAdd() GITUtil Init failed");
 			return false;
 		}
 	
-		//Copy to Doc to WorkingDirectory
-		String docPath = getReposRealPath(repos);
-		String wcDocPath = getLocalVerReposPath(repos, true);
-		if(syncUpFolder(docPath,docVName, wcDocPath,docVName,true) == false)
-		{
-			System.out.println("gitRealDocCommit() copy File to working directory failed");					
-			return false;
-		}			
 				
 		//Commit will roll back WC if there is error
-		if(gitUtil.Commit("", docVName,commitMsg, commitUser) == false)
+		String localPath = getReposVirtualPath(repos);		
+		if(gitUtil.doAutoCommit("", docVName, localPath,commitMsg, commitUser, true, null) == false)
 		{
 			System.out.println("gitRealDocCommit() GITUtil Commit failed");
 			return false;
