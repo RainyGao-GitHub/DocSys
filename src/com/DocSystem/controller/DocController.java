@@ -3384,7 +3384,7 @@ public class DocController extends BaseController{
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, true, commitUser) == false)
 		{
-			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			System.out.println("gitRealDocCommit() GITUtil Init failed");
 			return false;
 		}
 	
@@ -3393,7 +3393,7 @@ public class DocController extends BaseController{
 		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
 		if(type == 1)
 		{
-			if(copyFile(docPath, wcDocPath, true) == false)
+			if(copyFile(docPath, wcDocPath, false) == false)
 			{
 				System.out.println("gitRealDocCommit() copy File to working directory failed");					
 				return false;
@@ -3529,7 +3529,7 @@ public class DocController extends BaseController{
 	
 	private boolean gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
+		System.out.println("gitRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
 
 		//revert from svn server

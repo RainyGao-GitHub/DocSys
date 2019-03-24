@@ -212,7 +212,7 @@ public class GITUtil  extends BaseController{
     
 	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
 		// TODO Auto-generated method stub
-		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		//check targetName and set
 		if(targetName == null)
@@ -245,7 +245,7 @@ public class GITUtil  extends BaseController{
             repository.close();
             return ret;
         } catch (Exception e) {
-           System.out.println("getFile() IOException"); 
+           System.out.println("getEntry() Exception"); 
            e.printStackTrace();
            return false;
         }
@@ -253,15 +253,19 @@ public class GITUtil  extends BaseController{
 
 	private boolean recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, String parentPath, String entryName, String localParentPath, String targetName) {
 		// TODO Auto-generated method stub
-        try {
+		System.out.println("recurGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		try {
 			FileMode fileMode = treeWalk.getFileMode();
 	        if(FileMode.TYPE_FILE == fileMode.getObjectType())
 	        {
+	        	System.out.println("recurGetEntry() isFile:" + fileMode.getObjectType());
+
 	            FileOutputStream out = null;
 	    		try {
 	    			out = new FileOutputStream(localParentPath + targetName);
 	    		} catch (FileNotFoundException e) {
-	    			System.out.println("getFile() new FileOutputStream Failed:" + localParentPath + targetName);
+	    			System.out.println("recurGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
 	    			e.printStackTrace();
 	    			return false;
 	    		}
@@ -269,10 +273,14 @@ public class GITUtil  extends BaseController{
 	            ObjectId blobId = treeWalk.getObjectId(0);
 	            ObjectLoader loader = repository.open(blobId);
 	            loader.copyTo(out);
+	            out.close();
+	            return true;
 	        }
 	        else if(FileMode.TYPE_TREE == fileMode.getObjectType())
 	        {
-				File dir = new File(localParentPath,targetName);
+	        	System.out.println("recurGetEntry() isDir:" + fileMode.getObjectType());
+
+	        	File dir = new File(localParentPath,targetName);
 				dir.mkdir();
 				
 				while(treeWalk.next())
@@ -285,6 +293,11 @@ public class GITUtil  extends BaseController{
 						return false;
 					}
 				}				
+	        }
+	        else
+	        {
+	        	System.out.println("recurGetEntry() unknown FileMode:" + fileMode.getObjectType());
+	        	return false;
 	        }
         }catch (Exception e) {
         	//TODO
