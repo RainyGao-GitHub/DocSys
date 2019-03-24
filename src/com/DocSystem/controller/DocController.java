@@ -664,7 +664,8 @@ public class DocController extends BaseController{
 		//String localParentPath = getWebTmpPath() + "markdownImg/";
 		Repos repos = reposService.getRepos(doc.getVid());
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(doc);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath, doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
 		
@@ -878,7 +879,8 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(doc.getVid());
-		String docVName = getDocVPath(doc);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath,doc.getName());
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
@@ -965,7 +967,8 @@ public class DocController extends BaseController{
 		//Get the file
 		Repos repos = reposService.getRepos(doc.getVid());
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(doc);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath, doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		String localParentPath = localVDocPath + "/res/";		
 		System.out.println("getVDocRes() localParentPath:" + localParentPath);
@@ -1004,8 +1007,8 @@ public class DocController extends BaseController{
 
 	/**************** download History Doc  ******************/
 	@RequestMapping("/getHistoryDoc.do")
-	public void getHistoryDoc(String commitId,Integer reposId, Integer isRealDoc,String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("getHistoryDoc commitId: " + commitId + " reposId:" + reposId + " isRealDoc:" + isRealDoc +" parentPath:" + parentPath + " docName:" + docName);
+	public void getHistoryDoc(String commitId,Integer reposId, String parentPath, String docName, Integer historyType, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("getHistoryDoc commitId: " + commitId + " reposId:" + reposId + " historyType:" + historyType +" parentPath:" + parentPath + " docName:" + docName);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1024,21 +1027,51 @@ public class DocController extends BaseController{
 		parentPath = new String(parentPath.getBytes("ISO8859-1"),"UTF-8");  
 		System.out.println("getHistoryDoc() docName:" + docName + " parentPath:" + parentPath);
 		
+		boolean isRealDoc = true;
+		if(historyType != null && historyType == 1)
+		{
+			isRealDoc = false;
+		}
+		
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
-		String targetName = docName + "_" + commitId;
-		//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
-		if("".equals(docName))
-		{
-			targetName = repos.getName() + "_" + commitId;
+		//Set targetName
+		String entryName = docName;
+		String targetName = null;
+		if(isRealDoc)
+		{	
+			if(docName.isEmpty())
+			{
+				//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
+				targetName = repos.getName() + "_" + commitId;	
+			}
+			else
+			{
+				targetName = docName + "_" + commitId;
+			}
+		}
+		else
+		{	
+			if(docName.isEmpty())
+			{
+				//If the docName is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
+				targetName = repos.getName() + "_AllNotes_" + commitId;	
+			}
+			else
+			{
+				targetName = docName + "_Node_" + commitId;
+			}
+			
+			entryName = getDocVPath(parentPath, docName);
+			parentPath = "";
 		}
 		
 		//checkout the entry to local
-		if(verReposCheckOut(repos, true, parentPath, docName, userTmpDir, targetName, commitId) == false)
+		if(verReposCheckOut(repos, isRealDoc, parentPath, entryName, userTmpDir, targetName, commitId) == false)
 		{
 			System.out.println("getHistoryDoc() verReposCheckOut Failed!");
-			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " docName:" + docName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + entryName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
 			writeJson(rt, response);	
 			return;
 		}
@@ -1255,8 +1288,8 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId,String docPath, Integer maxLogNum, HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getDocHistory docPath: " + docPath + " reposId:" + reposId);
+	public void getDocHistory(Integer reposId,String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getDocHistory reposId:" + reposId + " docPath:" + parentPath+docName +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1280,7 +1313,27 @@ public class DocController extends BaseController{
 		{
 			num = maxLogNum;
 		}
-		List<LogEntry> logList = verReposGetHistory(repos,docPath, num);
+		
+		boolean isRealDoc = true;
+		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		{
+			isRealDoc = false;
+		}
+		
+		String entryPath = parentPath + docName;
+		if(isRealDoc == false)	//get VirtualDoc Path
+		{
+			if(docName == null || docName.isEmpty())
+			{
+				entryPath = "";	
+			}
+			else
+			{
+				entryPath = getDocVPath(parentPath, docName);
+			}
+		}
+		
+		List<LogEntry> logList = verReposGetHistory(repos, isRealDoc, entryPath, num);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}
@@ -1479,7 +1532,7 @@ public class DocController extends BaseController{
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getDocVPath(doc);
+			String docVName = getDocVPath(parentPath,doc.getName());
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
@@ -1611,7 +1664,8 @@ public class DocController extends BaseController{
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(doc);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath ,doc.getName());
 		String localDocVPath = reposVPath + docVName;
 		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
 		{
@@ -1978,17 +2032,17 @@ public class DocController extends BaseController{
 		String reposRPath =  getReposRealPath(repos);
 
 		//get parentPath
-		String parentPath = getParentPath(parentId);		
+		String srcParentPath = getParentPath(parentId);		
 		//目标路径
 		String dstParentPath = getParentPath(dstPid);
 
 		if(isSubCopy)
 		{
-			System.out.println("copyDoc() copy " +docId+ " " + parentPath+srcName + " to " + dstParentPath+dstName + " isSubCopy");
+			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName + " isSubCopy");
 		}
 		else
 		{
-			System.out.println("copyDoc() copy " +docId+ " " + parentPath+srcName + " to " + dstParentPath+dstName);
+			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);
 			
 			//判断节点是否已存在
 			if(isNodeExist(dstName,dstPid,reposId) == true)
@@ -2066,7 +2120,7 @@ public class DocController extends BaseController{
 		System.out.println("dstDoc id: " + dstDoc.getId());
 		
 		//复制文件或目录，注意这个接口只会复制单个文件
-		if(copyRealDoc(reposRPath,parentPath,srcName,dstParentPath,dstName,type,rt) == false)
+		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
 		{
 			System.out.println("copy " + srcName + " to " + dstName + " 失败");
 			String MsgInfo = "copyRealDoc from " + srcName + " to " + dstName + "Failed";
@@ -2090,7 +2144,7 @@ public class DocController extends BaseController{
 		String MsgInfo = "";
 		if(type == 1) 
 		{
-			ret = verReposRealDocCopy(repos,parentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt);
+			ret = verReposRealDocCopy(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt);
 			MsgInfo = "verReposRealDocCopy Failed";
 		}
 		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
@@ -2103,7 +2157,7 @@ public class DocController extends BaseController{
 		{
 			System.out.println("copyDoc() " + MsgInfo);
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(deleteRealDoc(reposRPath,parentPath,dstName,type,rt) == false)
+			if(deleteRealDoc(reposRPath,srcParentPath,dstName,type,rt) == false)
 			{						
 				MsgInfo += " and deleteFile Failed";
 			}
@@ -2130,8 +2184,8 @@ public class DocController extends BaseController{
 		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String srcDocVName = getDocVPath(srcDoc);
-			String dstDocVName = getDocVPath(dstDoc);
+			String srcDocVName = getDocVPath(srcParentPath, srcDoc.getName());
+			String dstDocVName = getDocVPath(dstParentPath, dstDoc.getName());
 			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 			{
 				if(verReposVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
@@ -2222,7 +2276,8 @@ public class DocController extends BaseController{
 		
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(doc);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath, doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
@@ -2948,15 +3003,16 @@ public class DocController extends BaseController{
 	}
 	
 	
-	/*************** Functions For verRepos *********************/
-	private List<LogEntry> verReposGetHistory(Repos repos,String docPath, int maxLogNum) {
+	/*************** Functions For verRepos 
+	 * @param isRealDoc *********************/
+	private List<LogEntry> verReposGetHistory(Repos repos,boolean isRealDoc, String entryPath, int maxLogNum) {
 		if(repos.getVerCtrl() == 1)
 		{
-			return svnGetHistory(repos, docPath, maxLogNum);
+			return svnGetHistory(repos, isRealDoc, entryPath, maxLogNum);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitGetHistory(repos, docPath, maxLogNum);
+			return gitGetHistory(repos, isRealDoc, entryPath, maxLogNum);
 		}
 		return null;
 	}
@@ -3192,7 +3248,7 @@ public class DocController extends BaseController{
 	}
 	
 	/********************** Functions For git *************************************/
-	private List<LogEntry> gitGetHistory(Repos repos, String docPath, int maxLogNum) {
+	private List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
 		// TODO Auto-generated method stub
 		GITUtil gitUtil = new GITUtil();
 		gitUtil.Init(repos, true, null);
@@ -3568,10 +3624,10 @@ public class DocController extends BaseController{
 		return entryType;
 	}
 
-	private List<LogEntry> svnGetHistory(Repos repos,String docPath, int maxLogNum) {
+	private List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
 
 		SVNUtil svnUtil = new SVNUtil();
-		svnUtil.Init(repos, true, null);
+		svnUtil.Init(repos, isRealDoc, null);
 		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
 	}
 

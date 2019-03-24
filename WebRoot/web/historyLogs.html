@@ -25,14 +25,17 @@
 	var docName = "";
 	var docPath = "";
 	var reposId;
-	function historyLogsPageInit(vid,pPath,name)
+	var historyType = 0;
+	function historyLogsPageInit(vid, pPath, name, type)
 	{
-		console.log("historyLogsPageInit parentPath:" + parentPath + " docName:" + docName);
+		console.log("historyLogsPageInit vid:" + vid + " pPath:" + pPath + " name:" + name + " historyType:" + historyType);
 		parentPath = pPath;
 		docName = name;
 		docPath = pPath + name;
 		reposId = vid;
-		showHistoryLogList(reposId,docPath);		
+		historyType = type;
+		
+		showHistoryLogList(reposId,parentPath,docName,historyType);	
 	}
 
 	function downloadHistory(commitId)
@@ -41,19 +44,21 @@
 
 	   	var encParentPath = encodeURI(parentPath);
 	   	var encDocName = encodeURI(docName);
-	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName;
+	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName +  + "&historyType=" + historyType;
 	}
 
-	function showHistoryLogList(reposId,docPath)
+	function showHistoryLogList(reposId,parentPath,docName,historyType)
 	{
-   		console.log("showHistoryLogList docPath:" + docPath + " reposId:" +  reposId);
+   		console.log("showHistoryLogList  reposId:" +  reposId + " docPath:" + parentPath + docName + " historyType:" + historyType);
     	$.ajax({
              url : "/DocSystem/Doc/getDocHistory.do",
              type : "post",
              dataType : "json",
              data : {
-             	docPath : docPath,
-                reposId : reposId, 
+                 reposId : reposId, 
+            	 parentPath : parentPath,
+             	 docName: docName,
+             	 historyType: historyType,
              },
              success : function (ret) {
              	if( "ok" == ret.status){

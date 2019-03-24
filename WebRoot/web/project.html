@@ -3087,7 +3087,7 @@
       	}
     }
 	
-	function showDocHistory(node)
+	function showDocHistory(node,historyType)
 	{
 		console.log("showDocHistory()");
 
@@ -3110,7 +3110,7 @@
 			foot: false,
 			big: true,
 			callback: function(){
-				historyLogsPageInit(gReposId,parentPath,docName);
+				historyLogsPageInit(gReposId,parentPath,docName,historyType);
 			},
 		});
 	}
@@ -3144,38 +3144,6 @@
 			parentPath = parentPath + nodes[i].name + "/";
 		}
 		return parentPath;
-	}
-	
-	//getDocHistory接口
-	function getDocHistory(docPath,reposId)
-	{
-   		console.log("getHistory docPath:" + docPath + " reposId:" +  reposId);
-    	$.ajax({
-             url : "/DocSystem/Doc/getDocHistory.do",
-             type : "post",
-             dataType : "json",
-             data : {
-             	docPath : docPath,
-                reposId : reposId, 
-             },
-             success : function (ret) {
-             	if( "ok" == ret.status){
-        		  	console.log(ret.data);
-					bootstrapQ.msg({
-								msg : "获取历史信息成功！",
-								type : 'success',
-								time : 2000,
-					});
-                }
-                else
-                {
-                	showErrorMessage("获取历史信息失败:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-                showErrorMessage("获取历史信息失败:服务器异常");
-            }
-        });
 	}
 	
    	//addDoc接口	
@@ -6289,9 +6257,15 @@ function CompareObj(objA, objB, flag) {
 						{text: '查看仓库历史', action: function(e){
 									e.preventDefault();
 									curRightClickedTreeNode = null; 
-				        			showDocHistory(null);
+				        			showDocHistory(null,0);
 								}
 						},
+						{text: '查看备注历史', action: function(e){
+							e.preventDefault();
+							curRightClickedTreeNode = null; 
+		        			showDocHistory(null,1);
+						}
+				},
    				]
    			},
 			]
@@ -6427,20 +6401,26 @@ function CompareObj(objA, objB, flag) {
 					 			checkIn(docId,docName);
 							}
 						},
-						/*{divider: true},
-						{text: 'Markdown', action: function(e){
-									e.preventDefault();
-									var docId = curRightClickedTreeNode.id;
-									var docName = curRightClickedTreeNode.name;
-						 			getDoc(docId,false);
-						 			showRightDiv();
-								}
-						},*/
+						{divider: true},
 						{text: '查看历史', action: function(e){
 									e.preventDefault();
-				        			showDocHistory(curRightClickedTreeNode);
+				        			showDocHistory(curRightClickedTreeNode,0);
 								}
 						},
+						
+						{text: '查看备注', action: function(e){
+								e.preventDefault();
+								var docId = curRightClickedTreeNode.id;
+								var docName = curRightClickedTreeNode.name;
+					 			getDoc(docId,false);
+					 			showRightDiv();
+							}
+						},
+						{text: '查看历史备注', action: function(e){
+							e.preventDefault();
+		        			showDocHistory(curRightClickedTreeNode,1);
+						}
+				},
    				]
    			},
 		]);
@@ -6590,20 +6570,27 @@ function CompareObj(objA, objB, flag) {
 					 			checkIn(docId,docName);
 							}
 						},
-						/*{divider: true},
-						{text: 'Markdown', action: function(e){
-									e.preventDefault();
-									var docId = curRightClickedDocListNode.docId;
-						 			getDoc(docId,false);
-						 			showRightDiv();
-								}
-						},*/
+						{divider: true},
 						{text: '查看历史', action: function(e){
 									e.preventDefault();
 									var docId = curRightClickedDocListNode.docId;
 									var node = getNodeByNodeId(docId);
-								    showDocHistory(node);
+								    showDocHistory(node,0);
 								}
+						},
+						{text: '查看备注', action: function(e){
+								e.preventDefault();
+								var docId = curRightClickedDocListNode.docId;
+					 			getDoc(docId,false);
+					 			showRightDiv();
+							}
+						},
+						{text: '查看历史备注', action: function(e){
+								e.preventDefault();
+								var docId = curRightClickedDocListNode.docId;
+								var node = getNodeByNodeId(docId);
+							    showDocHistory(node,1);
+							}
 						},
    				]
    			},

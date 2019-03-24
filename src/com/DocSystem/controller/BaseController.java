@@ -192,9 +192,9 @@ public class BaseController{
 		return parentPath;
 	}	
 	
-	protected String getDocVPath(Doc doc) 
+	protected String getDocVPath(String parentPath, String docName) 
 	{
-		String VPath =  doc.getVid() + "_" + doc.getId();
+		String VPath =  " " + "_" + docName;
 		return VPath;
 	}
 	
