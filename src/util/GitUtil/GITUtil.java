@@ -230,6 +230,10 @@ public class GITUtil  extends BaseController{
             
             //get tree at dedicated revision
             RevWalk walk = new RevWalk(repository);
+            if(revision == null || revision.isEmpty())
+            {
+            	revision = "HEAD";
+            }
             ObjectId objId = repository.resolve(revision);
             RevCommit revCommit = walk.parseCommit(objId);
             RevTree revTree = revCommit.getTree();
@@ -401,19 +405,15 @@ public class GITUtil  extends BaseController{
 	}
 	
 	private boolean rollBackCommit(Git git,String revision) {
-        Repository repository = git.getRepository();  
-  
-        RevWalk walk = new RevWalk(repository);  
-        ObjectId objId;
+		if(revision == null || revision.isEmpty()) 
+		{
+			revision = "HEAD";
+		}
+
 		try {
-			if(revision != null)
-			{
-				objId = repository.resolve(revision);
-			}
-			else
-			{
-				objId = repository.resolve("HEAD");
-			}
+			Repository repository = git.getRepository();
+	        RevWalk walk = new RevWalk(repository);
+			ObjectId objId = repository.resolve(revision);
 			RevCommit revCommit = walk.parseCommit(objId);  
 	        String preVision = revCommit.getParent(0).getName();  
 	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
@@ -433,10 +433,7 @@ public class GITUtil  extends BaseController{
         CheckoutCommand checkoutCmd = git.checkout();
         checkoutCmd.addPath(entryPath);
         //加了“^”表示指定版本的前一个版本，如果没有上一版本，在命令行中会报错，例如：error: pathspec '4.vm' did not match any file(s) known to git.
-        if(revision != null)
-        {
-        	checkoutCmd.setStartPoint(revision);
-        }  
+        checkoutCmd.setStartPoint(revision);
         
         try {
 			checkoutCmd.call();
