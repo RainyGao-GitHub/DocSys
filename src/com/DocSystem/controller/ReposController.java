@@ -635,7 +635,8 @@ public class ReposController extends BaseController{
 				verReposURI = dirPathFormat(verReposURI);
 				if(verReposURI.contains(newVerReposPath) || newVerReposPath.contains(verReposURI))
 				{					
-					System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
+					System.out.println("该版本仓库连接已被使用"); 
+					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath=" + repos.getSvnPath()); 
 					return true;
 				}
 			}
@@ -646,10 +647,37 @@ public class ReposController extends BaseController{
 				verReposURI1 = dirPathFormat(verReposURI1);
 				if(verReposURI1.contains(newVerReposPath) || newVerReposPath.contains(verReposURI1))
 				{					
-					System.out.println("SvnPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " svnPath=" + repos.getPath() + " svnPath1=" + repos.getSvnPath1()); 
+					System.out.println("该版本仓库连接已被使用"); 
+					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath1=" + repos.getSvnPath1()); 
 					return true;
 				}
-			}		
+			}
+			
+			//检查是否与本地仓库使用了相同的URI
+			String localVerReposURI = getLocalVerReposURI(repos,true);
+			if(localVerReposURI != null && !localVerReposURI.isEmpty())
+			{
+				localVerReposURI = dirPathFormat(localVerReposURI);
+				if(localVerReposURI.contains(newVerReposPath) || newVerReposPath.contains(localVerReposURI))
+				{					
+					System.out.println("该版本仓库连接已被使用"); 
+					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " localVerReposPath=" + repos.getLocalSvnPath()); 
+					return true;
+				}
+			}
+			
+			String localVerReposURI1 = getLocalVerReposURI(repos,false);
+			if(localVerReposURI1 != null && !localVerReposURI1.isEmpty())
+			{
+				localVerReposURI1 = dirPathFormat(localVerReposURI1);
+				if(localVerReposURI1.contains(newVerReposPath) || newVerReposPath.contains(localVerReposURI1))
+				{					
+					System.out.println("该版本仓库连接已被使用"); 
+					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " localVerReposURI1=" + repos.getLocalSvnPath1()); 
+					return true;
+				}
+			}
+			
 		}
 		return false;
 	}
