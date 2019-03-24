@@ -194,7 +194,8 @@ public class BaseController{
 	
 	protected String getDocVPath(String parentPath, String docName) 
 	{
-		String VPath =  " " + "_" + docName;
+		String VPath = MD5.md5(parentPath) + "_" + docName;
+		System.out.println("getDocVPath() " + VPath + " for " + parentPath + docName);
 		return VPath;
 	}
 	

@@ -1892,12 +1892,52 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//更新DocVPath
+		String reposVPath = getReposVirtualPath(repos);
+		updateDocVPath(repos, doc, reposVPath, parentPath, oldname, parentPath, newname, commitMsg, commitUser, rt);
+		
 		//unlock doc
 		if(unlockDoc(docId,login_user,doc) == false)
 		{
 			rt.setError("unlockDoc failed");	
 		}
 		return;
+	}
+	
+	//更新Doc和其SubDoc的VirtualDocPath（Only For rename and move of Dir）
+	void updateDocVPath(Repos repos, Doc doc, String reposVPath, String srcParentPath, String oldName, String dstParentPath, String newName, String commitMsg,String commitUser, ReturnAjax rt)
+	{
+		System.out.println("moveVirtualDoc move " + srcParentPath+oldName + " to " + dstParentPath + newName);
+		
+		String srcDocVPath = getDocVPath(srcParentPath, oldName);
+		String dstDocVPath = getDocVPath(dstParentPath, newName);
+		if(!srcDocVPath.equals(dstDocVPath))
+		{
+			//修改虚拟文件的目录名称 when VDoc exists
+			File srcEntry = new File(reposVPath, srcDocVPath);
+			if(srcEntry.exists())
+			{
+				if(moveVirtualDoc(reposVPath,srcDocVPath, dstDocVPath,rt) == true)
+				{
+					if(verReposVirtualDocMove(repos, srcDocVPath, dstDocVPath, commitMsg, commitUser,rt) == false)
+					{
+						System.out.println("moveVirtualDoc() svnVirtualDocMove Failed");
+					}
+				}
+			}
+		}
+		
+		//Get all subDocs of Doc( and Update Their VDoc Path)
+		Doc queryConditon = new Doc();
+		queryConditon.setPid(doc.getId());
+		List <Doc> list = reposService.getDocList(queryConditon);
+		if(list != null)
+		{
+			for(int i = 0 ; i < list.size() ; i++) {
+				Doc subDoc = list.get(i);
+				updateDocVPath(repos,subDoc,reposVPath, srcParentPath + newName+"/", subDoc.getName() ,dstParentPath + newName+"/", subDoc.getName(), commitMsg,commitUser,rt);
+			}
+		}
 	}
 	
 	//底层moveDoc接口
@@ -2005,6 +2045,10 @@ public class DocController extends BaseController{
 			rt.setError("不可恢复系统错误：Failed to update doc pid and path");
 			return;				
 		}
+		
+		//更新DocVPath
+		String reposVPath = getReposVirtualPath(repos);
+		updateDocVPath(repos, doc, reposVPath, srcParentPath, filename, dstParentPath, filename, commitMsg, commitUser, rt);
 		
 		//Unlock Docs
 		String MsgInfo = null; 
@@ -2807,10 +2851,10 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean moveVirtualDoc(String reposRefVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
-		if(moveFileOrDir(reposRefVPath, srcDocVName, reposRefVPath, dstDocVName, false) == false)
+	private boolean moveVirtualDoc(String reposVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
+		if(moveFileOrDir(reposVPath, srcDocVName, reposVPath, dstDocVName, false) == false)
 		{
-			rt.setMsgData("moveVirtualDoc() moveFile " + " reposRefVPath:" + reposRefVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
+			rt.setMsgData("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
 			return false;
 		}
 		return true;
