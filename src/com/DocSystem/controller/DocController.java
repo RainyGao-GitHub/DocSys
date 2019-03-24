@@ -3393,7 +3393,7 @@ public class DocController extends BaseController{
 		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
 		if(type == 1)
 		{
-			if(copyFile(docPath, wcDocPath, false) == false)
+			if(copyFile(docPath, wcDocPath, true) == false)
 			{
 				System.out.println("gitRealDocCommit() copy File to working directory failed");					
 				return false;
