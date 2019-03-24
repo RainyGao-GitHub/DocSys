@@ -340,7 +340,7 @@ public class GITUtil  extends BaseController{
 	//Commit will commit change to Git Repos and Push to remote
 	public boolean Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
-		System.out.println("Commit");	
+		System.out.println("Commit() " + parentPath + entryName);	
 
         Git git = null;
 		try {
@@ -362,7 +362,7 @@ public class GITUtil  extends BaseController{
 				git.add().addFilepattern(parentPath+entryName).call();
 			}
 		} catch (Exception e) {
-			System.out.println("Commit add Index Error");	
+			System.out.println("Commit() Commit add Index Error");	
 			e.printStackTrace();
 			//TODO: Do roll back WorkingCopy
 			rollBackIndex(git, entryPath, null);	
@@ -370,9 +370,10 @@ public class GITUtil  extends BaseController{
 		}
 		
         try {
-			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			System.out.println("Commit() commitId:" + ret.getName());
 		} catch (Exception e) {
-			System.out.println("Commit commit error");
+			System.out.println("Commit() commit error");
 			e.printStackTrace();
 			//TODO: Do roll back Index
 			rollBackIndex(git, entryPath, null);			
@@ -449,7 +450,7 @@ public class GITUtil  extends BaseController{
 
 	public boolean gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
-		System.out.println("gitAdd()");	
+		System.out.println("gitAdd() " + parentPath + entryName);	
 		
 		Git git = null;
 		try {
@@ -472,7 +473,8 @@ public class GITUtil  extends BaseController{
 		}
 		
         try {
-			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			System.out.println("gitAdd() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("gitAdd() commit error");
 			e.printStackTrace();
@@ -510,7 +512,7 @@ public class GITUtil  extends BaseController{
 	public boolean gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
 			String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
-		System.out.println("gitMove()");	
+		System.out.println("gitMove() move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
 		
 		Git git = null;
 		try {
@@ -548,9 +550,10 @@ public class GITUtil  extends BaseController{
 		}
 		
         try {
-			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			System.out.println("gitMove() commitId:" + ret.getName());
 		} catch (Exception e) {
-			System.out.println("gitAdd() commit error");
+			System.out.println("gitMove() commit error");
 			e.printStackTrace();
 			//TODO: Do roll back Index
 			rollBackIndex(git, srcEntryPath, null);
@@ -588,7 +591,7 @@ public class GITUtil  extends BaseController{
 	public boolean gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
 			String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
-		System.out.println("gitCopy()");	
+		System.out.println("gitCopy() copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
 		
 		Git git = null;
 		try {
@@ -599,7 +602,6 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 
-		String srcEntryPath = srcParentPath + srcEntryName;
 		String dstEntryPath = dstParentPath + dstEntryName;
 		
 		//Add Index for add dstEntry
@@ -614,7 +616,8 @@ public class GITUtil  extends BaseController{
 		}
 		
         try {
-			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			System.out.println("gitCopy() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("gitCopy() commit error");
 			e.printStackTrace();
@@ -698,9 +701,10 @@ public class GITUtil  extends BaseController{
         }
         
         try {
-			git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			System.out.println("doAutoCommmit() commitId:" + ret.getName());
 		} catch (Exception e) {
-			System.out.println("gitCopy() commit error");
+			System.out.println("doAutoCommmit() commit error");
 			e.printStackTrace();
 			//TODO: Do roll back Index
 			if(true == rollBackIndex(git, entryPath, null))
