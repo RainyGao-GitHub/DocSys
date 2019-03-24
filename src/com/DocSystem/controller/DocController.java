@@ -2018,11 +2018,11 @@ public class DocController extends BaseController{
 
 		if(isSubCopy)
 		{
-			System.out.println("copyDoc() copy " +docId+ " " + srcName + " to " + dstName + " isSubCopy");
+			System.out.println("copyDoc() copy " +docId+ " " + parentPath+srcName + " to " + dstParentPath+dstName + " isSubCopy");
 		}
 		else
 		{
-			System.out.println("copyDoc() copy " +docId+ " " + srcName + " to " + dstName);
+			System.out.println("copyDoc() copy " +docId+ " " + parentPath+srcName + " to " + dstParentPath+dstName);
 			
 			//判断节点是否已存在
 			if(isNodeExist(dstName,dstPid,reposId) == true)
@@ -2706,14 +2706,14 @@ public class DocController extends BaseController{
 
 		if(isFileExist(srcDocPath) == false)
 		{
-			System.out.println("文件: " + srcDocPath + " 不存在");
+			System.out.println("copyRealDoc() 文件: " + srcDocPath + " 不存在");
 			rt.setMsgData("文件: " + srcDocPath + " 不存在");
 			return false;
 		}
 		
 		if(isFileExist(dstDocPath) == true)
 		{
-			System.out.println("文件: " + dstDocPath + " 已存在");
+			System.out.println("copyRealDoc() 文件: " + dstDocPath + " 已存在");
 			rt.setMsgData("文件: " + dstDocPath + " 已存在");
 			return false;
 		}
@@ -2722,8 +2722,8 @@ public class DocController extends BaseController{
 		{
 			if(false == createDir(dstDocPath))
 			{
-				System.out.println("目录: " + dstDocPath + " 创建");
-				rt.setMsgData("目录: " + dstDocPath + " 创建");
+				System.out.println("copyRealDoc() 目录: " + dstDocPath + " 创建失败");
+				rt.setMsgData("目录: " + dstDocPath + " 创建失败");
 				return false;
 			}
 		}
@@ -2731,7 +2731,7 @@ public class DocController extends BaseController{
 		{
 			if(copyFile(srcDocPath,dstDocPath,false) == false)	//强制覆盖
 			{
-				System.out.println("文件: " + srcDocPath + " 复制失败");
+				System.out.println("copyRealDoc() 文件: " + srcDocPath + " 复制失败");
 				rt.setMsgData("文件: " + srcDocPath + " 复制失败");
 				return false;
 			}
