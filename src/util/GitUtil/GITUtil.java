@@ -251,20 +251,35 @@ public class GITUtil  extends BaseController{
         }
 	}
 
+	private boolean isFile(FileMode fileMode)
+	{
+		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_FILE? true: false;
+	}
+	
+	private boolean isDir(FileMode fileMode)
+	{
+		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_TREE? true: false;
+	}
+	
+	private boolean isMissing(FileMode fileMode)
+	{
+		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
+	}
+	
 	private boolean recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, String parentPath, String entryName, String localParentPath, String targetName) {
 		// TODO Auto-generated method stub
 		System.out.println("recurGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		try {
 			FileMode fileMode = treeWalk.getFileMode();
-	        if(FileMode.TYPE_FILE == fileMode.getObjectType())
+	        if(isFile(fileMode))
 	        {
-	        	System.out.println("recurGetEntry() isFile:" + fileMode.getObjectType());
+	        	System.out.println("recurGetEntry() isFile:" + fileMode.getBits());
 
 	            FileOutputStream out = null;
 	    		try {
 	    			out = new FileOutputStream(localParentPath + targetName);
-	    		} catch (FileNotFoundException e) {
+	    		} catch (Exception e) {
 	    			System.out.println("recurGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
 	    			e.printStackTrace();
 	    			return false;
@@ -276,9 +291,9 @@ public class GITUtil  extends BaseController{
 	            out.close();
 	            return true;
 	        }
-	        else if(FileMode.TYPE_TREE == fileMode.getObjectType())
+	        else if(isDir(fileMode))
 	        {
-	        	System.out.println("recurGetEntry() isDir:" + fileMode.getObjectType());
+	        	System.out.println("recurGetEntry() isDir:" + fileMode.getBits());
 
 	        	File dir = new File(localParentPath,targetName);
 				dir.mkdir();
@@ -292,11 +307,12 @@ public class GITUtil  extends BaseController{
 					{
 						return false;
 					}
-				}				
+				}
+				return true;
 	        }
-	        else
+	        else 
 	        {
-	        	System.out.println("recurGetEntry() unknown FileMode:" + fileMode.getObjectType());
+	        	System.out.println("recurGetEntry() unknown FileMode:" + fileMode.getBits());
 	        	return false;
 	        }
         }catch (Exception e) {
@@ -305,7 +321,6 @@ public class GITUtil  extends BaseController{
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 	
     //Get the Entry from git Repository

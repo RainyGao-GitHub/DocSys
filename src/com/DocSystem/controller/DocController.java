@@ -3522,9 +3522,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		gitUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
-		
-		return false;
+		return gitUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
 	}
 	
 	private boolean gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) {
