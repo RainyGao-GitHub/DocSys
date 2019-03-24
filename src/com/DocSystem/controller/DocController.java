@@ -2329,10 +2329,7 @@ public class DocController extends BaseController{
 		{
 			if(saveVirtualDocContent(reposVPath,docVName, content,rt) == true)
 			{
-				if(repos.getVerCtrl() == 1)
-				{
-					verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
-				}
+				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 			}
 		}
 		else
@@ -2340,10 +2337,7 @@ public class DocController extends BaseController{
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
-				if(repos.getVerCtrl() == 1)
-				{
-					verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
-				}
+				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 			}
 		}
 		
