@@ -3289,7 +3289,7 @@ public class DocController extends BaseController{
 	private List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
 		// TODO Auto-generated method stub
 		GITUtil gitUtil = new GITUtil();
-		gitUtil.Init(repos, true, null);
+		gitUtil.Init(repos, isRealDoc, null);
 		return gitUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
 	}
 	
