@@ -3041,8 +3041,7 @@ public class DocController extends BaseController{
 	}
 	
 	
-	/*************** Functions For verRepos 
-	 * @param isRealDoc *********************/
+	/*************** Functions For verRepos *********************/
 	private List<LogEntry> verReposGetHistory(Repos repos,boolean isRealDoc, String entryPath, int maxLogNum) {
 		if(repos.getVerCtrl() == 1)
 		{
@@ -3053,6 +3052,27 @@ public class DocController extends BaseController{
 			return gitGetHistory(repos, isRealDoc, entryPath, maxLogNum);
 		}
 		return null;
+	}
+	
+	private List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
+		GITUtil gitUtil = new GITUtil();
+		if(false == gitUtil.Init(repos, isRealDoc, null))
+		{
+			System.out.println("gitGetHistory() gitUtil.Init Failed");
+			return null;
+		}
+		return gitUtil.getHistoryLogs(docPath, null, null, maxLogNum);
+	}
+	
+	private List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
+
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, isRealDoc, null))
+		{
+			System.out.println("svnGetHistory() svnUtil.Init Failed");
+			return null;
+		}
+		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
 	}
 	
 	private boolean verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
@@ -3286,13 +3306,6 @@ public class DocController extends BaseController{
 	}
 	
 	/********************** Functions For git *************************************/
-	private List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
-		// TODO Auto-generated method stub
-		GITUtil gitUtil = new GITUtil();
-		gitUtil.Init(repos, isRealDoc, null);
-		return gitUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
-	}
-	
 	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		if(entryName == null || entryName.isEmpty())
@@ -3658,18 +3671,7 @@ public class DocController extends BaseController{
 		int entryType = svnUtil.getEntryType(remoteEntryPath, revision);
 		
 		return entryType;
-	}
-
-	private List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
-
-		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, isRealDoc, null))
-		{
-			System.out.println("svnGetHistory() svnUtil.Init Failed");
-			return null;
-		}
-		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
-	}
+	}	
 
 	private boolean svnRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{

@@ -146,9 +146,14 @@ public class GITUtil  extends BaseController{
         return wcDir;
 	}
 	
-
+	//getHistoryDetail filePath: remote File Path under repositoryURL
+    public LogEntry getHistoryDetail(String filePath, String revision) 
+    {
+    	return null;
+    }
+	
 	//getHistory filePath: remote File Path under repositoryURL
-    public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision,int maxLogNum) 
+    public List<LogEntry> getHistoryLogs(String filePath,String startRevision, String endRevision,int maxLogNum) 
     {
     	System.out.println("getHistoryLogs filePath:" + filePath);	
 
@@ -171,27 +176,27 @@ public class GITUtil  extends BaseController{
 		    Iterator<RevCommit> iter=iterable.iterator();
 	        while (iter.hasNext()){
 	            RevCommit commit=iter.next();
-	            String authorEmail=commit.getAuthorIdent().getEmailAddress();
-	            String author=commit.getAuthorIdent().getName();  //作者
+	            //String authorEmail=commit.getAuthorIdent().getEmailAddress();
+	            //String author=commit.getAuthorIdent().getName();  //作者
 	
 	            String commitUser=commit.getCommitterIdent().getName();
-	            String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
 	
 	            long commitTime=commit.getCommitTime();
 	
 	            String fullMessage=commit.getFullMessage();
-	            String shortMessage=commit.getShortMessage();  //返回message的firstLine
+	            //String shortMessage=commit.getShortMessage();  //返回message的firstLine
 	
 	            String commitId=commit.getName();  //这个应该就是提交的版本号
 	
-	            System.out.println("authorEmail:"+authorEmail);
-	            System.out.println("authorName:"+author);
-	            System.out.println("commitEmail:"+commitUserEmail);
-	            System.out.println("commitName:"+commitUser);
-	            System.out.println("time:"+commitTime);
-	            System.out.println("fullMessage:"+fullMessage);
-	            System.out.println("shortMessage:"+shortMessage);
-	            System.out.println("commitId:"+commitId);
+//	            System.out.println("authorEmail:"+authorEmail);
+//	            System.out.println("authorName:"+author);
+//	            System.out.println("commitEmail:"+commitUserEmail);
+//	            System.out.println("commitName:"+commitUser);
+//	            System.out.println("time:"+commitTime);
+//	            System.out.println("fullMessage:"+fullMessage);
+//	            System.out.println("shortMessage:"+shortMessage);
+//	            System.out.println("commitId:"+commitId);
 	            
 	            LogEntry log = new LogEntry();
 	            log.setCommitId(commitId);
