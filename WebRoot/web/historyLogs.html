@@ -38,8 +38,9 @@
 		showHistoryLogList(reposId,parentPath,docName,historyType);	
 	}
 
-	function downloadHistory(commitId)
+	function downloadHistory(index)
 	{
+		var commitId = $("#commitId" + index).text();
 	   	console.log("download() commitId:" +commitId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 
 	   	var encParentPath = encodeURI(parentPath);
@@ -47,8 +48,9 @@
 	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName + "&historyType=" + historyType;	
 	}
 	
-	function showHistoryDetail(commitId)
+	function showHistoryDetail(index)
 	{
+		var commitId = $("#commitId" + index).text();
 		console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 	}
 
@@ -91,23 +93,27 @@
 			
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
-				var commitTime = formatTime(d.commitTime);  
-				var opBtn = "		<a href='javascript:void(0)' onclick='showHistoryDetail("+d.commitId+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
-				var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+d.commitId+ ")' class='mybtn-primary'>下载</a>";							
+				var commitId = d.commitId;
+				var commitUser = d.commitUser;
+				var commitMsg = d.commitMsg;
+				var commitTime = formatTime(d.commitTime);
+				
+				var opBtn = "		<a href='javascript:void(0)' onclick='showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
+				var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary'>下载</a>";							
 				var se = "<li id='popover" +i+"' + + value="+ i +">"
 					+"	<i class='cell commitId w10'>"
 					+"		<span class='name  breakAll'>"
-					+"			<a id='commitId"+i+"' href='javascript:void(0)'>"+d.commitId+"</a>"
+					+"			<a id='commitId"+i+"' href='javascript:void(0)'>"+commitId+"</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell commitMsg w30'>"
 					+"		<span class='name breakAll'>"
-					+"			<a id='commitMsg"+i+"' href='javascript:void(0)'>"+d.commitMsg+"</a>"
+					+"			<a id='commitMsg"+i+"' href='javascript:void(0)'>"+commitMsg+"</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell commitUser w13'>"
 					+"		<span class='name'>"
-					+"			<a id='commitUser"+i+"' href='javascript:void(0)'>"+d.commitUser+"</a>"
+					+"			<a id='commitUser"+i+"' href='javascript:void(0)'>"+commitUser+"</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell commitTime w10'>"
