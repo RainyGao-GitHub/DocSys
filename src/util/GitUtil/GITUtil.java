@@ -203,7 +203,6 @@ public class GITUtil  extends BaseController{
 	        
 	        return logList;
 	    } catch (Exception e) {
-			// TODO Auto-generated catch block
 			System.out.println("getHistoryLogs Error");	
 			e.printStackTrace();
 			return null;
@@ -211,7 +210,6 @@ public class GITUtil  extends BaseController{
     }
     
 	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
-		// TODO Auto-generated method stub
 		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		//check targetName and set
@@ -267,7 +265,6 @@ public class GITUtil  extends BaseController{
 	}
 	
 	private boolean recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, String parentPath, String entryName, String localParentPath, String targetName) {
-		// TODO Auto-generated method stub
 		System.out.println("recurGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		try {
@@ -316,7 +313,6 @@ public class GITUtil  extends BaseController{
 	        	return false;
 	        }
         }catch (Exception e) {
-        	//TODO
             System.out.println("recurGetEntry() Exception"); 
             e.printStackTrace();
             return false;
@@ -371,7 +367,6 @@ public class GITUtil  extends BaseController{
  	
 	//Commit will commit change to Git Repos and Push to remote
 	public boolean Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
 		System.out.println("Commit() " + parentPath + entryName);	
 
         Git git = null;
@@ -396,7 +391,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("Commit() Commit add Index Error");	
 			e.printStackTrace();
-			//TODO: Do roll back WorkingCopy
+			//Do roll back WorkingCopy
 			rollBackIndex(git, entryPath, null);	
 			return false;
 		}
@@ -407,7 +402,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("Commit() commit error");
 			e.printStackTrace();
-			//TODO: Do roll back Index
+			//Do roll back Index
 			rollBackIndex(git, entryPath, null);			
 			return false;
 		}
@@ -417,10 +412,9 @@ public class GITUtil  extends BaseController{
 			try {
 				git.push().call();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				System.out.println("Push Error");	
 				e.printStackTrace();
-				//TODO: Do roll back commit and Index 
+				//Do roll back commit and Index 
 				if(rollBackCommit(git, null) == false)
 				{
 					rollBackIndex(git, entryPath, null);
@@ -447,7 +441,7 @@ public class GITUtil  extends BaseController{
 	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
 	        repository.close(); 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("rollBackCommit() Exception");
 			e.printStackTrace();
 			return false;
 		}
@@ -456,7 +450,6 @@ public class GITUtil  extends BaseController{
 
 	//将工作区和暂存区恢复指定版本（revision==null表示恢复到最新版本）
     private boolean rollBackIndex(Git git, String entryPath, String revision) {
-		// TODO Auto-generated method stub
 		//checkout操作会丢失工作区的数据，暂存区和工作区的数据会恢复到指定（revision）的版本内容
         CheckoutCommand checkoutCmd = git.checkout();
         checkoutCmd.addPath(entryPath);
@@ -466,7 +459,7 @@ public class GITUtil  extends BaseController{
         try {
 			checkoutCmd.call();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("rollBackIndex() Exception");
 			e.printStackTrace();
 			return false;
 		}
@@ -474,7 +467,6 @@ public class GITUtil  extends BaseController{
 	}
 
 	public boolean gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
 		System.out.println("gitAdd() " + parentPath + entryName);	
 		
 		Git git = null;
@@ -492,7 +484,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitAdd() add Index Error");	
 			e.printStackTrace();
-			//TODO: Do roll back WorkingCopy
+			//Do roll back WorkingCopy
 			delFileOrDir(entryPath);
 			return false;
 		}
@@ -503,7 +495,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitAdd() commit error");
 			e.printStackTrace();
-			//TODO: Do roll back Index
+			//Do roll back Index
 			if(rollBackIndex(git, entryPath, null))
 			{
 				delFileOrDir(entryPath);
@@ -516,10 +508,9 @@ public class GITUtil  extends BaseController{
 			try {
 				git.push().call();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				System.out.println("gitAdd() Push Error");	
 				e.printStackTrace();
-				//TODO: Do roll back commit and Index 
+				//Do roll back commit and Index 
 				if(rollBackCommit(git, null))
 				{
 					if(rollBackIndex(git, entryPath, null))
@@ -536,7 +527,6 @@ public class GITUtil  extends BaseController{
 
 	public boolean gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
 			String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
 		System.out.println("gitMove() move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
 		
 		Git git = null;
@@ -557,7 +547,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitMove() add Index for srcEntry delete Failed");	
 			e.printStackTrace();
-			//TODO: Do roll back WorkingCopy for srcEntry
+			//Do roll back WorkingCopy for srcEntry
 			rollBackIndex(git, srcEntryPath, null);
 			return false;
 		}
@@ -568,7 +558,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitMove() add Index for dstEntry add Failed");	
 			e.printStackTrace();
-			//TODO: Do roll back WorkingCopy for srcEntry and dstEntry
+			//Do roll back WorkingCopy for srcEntry and dstEntry
 			rollBackIndex(git, srcEntryPath, null);
 			delFileOrDir(dstEntryPath);
 			return false;
@@ -580,7 +570,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitMove() commit error");
 			e.printStackTrace();
-			//TODO: Do roll back Index
+			//Do roll back Index
 			rollBackIndex(git, srcEntryPath, null);
 			if(true == rollBackIndex(git, dstEntryPath, null))
 			{
@@ -594,10 +584,9 @@ public class GITUtil  extends BaseController{
 			try {
 				git.push().call();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				System.out.println("gitAdd() Push Error");	
 				e.printStackTrace();
-				//TODO: Do roll back commit and Index 
+				//Do roll back commit and Index 
 				if(rollBackCommit(git, null) == false)
 				{
 					rollBackIndex(git, srcEntryPath, null);
@@ -610,12 +599,11 @@ public class GITUtil  extends BaseController{
 			}
 		}
 		
-		return false;
+		return true;
 	}
 
 	public boolean gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
 			String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
 		System.out.println("gitCopy() copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
 		
 		Git git = null;
@@ -635,7 +623,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitCopy() add Index for dstEntry add Failed");	
 			e.printStackTrace();
-			//TODO: Do roll back WorkingCopy for srcEntry and dstEntry
+			//Do roll back WorkingCopy for srcEntry and dstEntry
 			delFileOrDir(dstEntryPath);
 			return false;
 		}
@@ -646,7 +634,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitCopy() commit error");
 			e.printStackTrace();
-			//TODO: Do roll back Index
+			//Do roll back Index
 			if(true == rollBackIndex(git, dstEntryPath, null))
 			{
 				delFileOrDir(dstEntryPath);
@@ -659,10 +647,9 @@ public class GITUtil  extends BaseController{
 			try {
 				git.push().call();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				System.out.println("gitCopy() Push Error");	
 				e.printStackTrace();
-				//TODO: Do roll back commit and Index 
+				//Do roll back commit and Index 
 				if(rollBackCommit(git, null) == false)
 				{
 					if(rollBackIndex(git, dstEntryPath, null))
@@ -674,11 +661,10 @@ public class GITUtil  extends BaseController{
 			}
 		}
 		
-		return false;
+		return true;
 	}
 
 	public boolean doAutoCommit(String parentPath, String entryName, String localPath, String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
-		// TODO Auto-generated method stub
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
 		
 		Git git = null;
@@ -731,7 +717,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("doAutoCommmit() commit error");
 			e.printStackTrace();
-			//TODO: Do roll back Index
+			//Do roll back Index
 			if(true == rollBackIndex(git, entryPath, null))
 			{
 				rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录
@@ -744,10 +730,9 @@ public class GITUtil  extends BaseController{
 			try {
 				git.push().call();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				System.out.println("gitCopy() Push Error");	
 				e.printStackTrace();
-				//TODO: Do roll back commit and Index 
+				//Do roll back commit and Index 
 				if(rollBackCommit(git, null) == false)
 				{
 					if(rollBackIndex(git, entryPath, null))
@@ -762,7 +747,6 @@ public class GITUtil  extends BaseController{
 	}
 
 	private boolean scheduleForDelete(List<CommitAction> actionList, String localPath, String parentPath, String entryName) {
-		// TODO Auto-generated method stub
 		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath);
 	    if(entryName.isEmpty())	//If the entryName is empty, means we need to go through the subNodes directly
         {
@@ -826,7 +810,6 @@ public class GITUtil  extends BaseController{
 	}
 
 	private boolean scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath, boolean modifyEnable, boolean isSubAction) {
-		// TODO Auto-generated method stub
     	System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
     	if(entryName.isEmpty())	//Go through the sub files for add and modify
@@ -930,7 +913,6 @@ public class GITUtil  extends BaseController{
  	}
 
 	private void rollBackWcDir(List<CommitAction> commitActionList) {
-		// TODO Auto-generated method stub
     	for(int i=0;i<commitActionList.size();i++)
     	{
     		CommitAction action = commitActionList.get(i);
