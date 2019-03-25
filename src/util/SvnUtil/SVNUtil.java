@@ -261,12 +261,19 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	//检查仓库指定revision的节点是否存在
-	public boolean doCheckPath(String remoteFilePath,long revision) throws SVNException
+	public boolean doCheckPath(String remoteFilePath,long revision)
 	{
-		SVNNodeKind	nodeKind = repository.checkPath(remoteFilePath, revision);
-		
-		if(nodeKind == SVNNodeKind.NONE) 
-		{
+		SVNNodeKind nodeKind;
+		try {
+			nodeKind = repository.checkPath(remoteFilePath, revision);
+			if(nodeKind == SVNNodeKind.NONE) 
+			{
+				return false;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("doCheckPath() Exception");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
