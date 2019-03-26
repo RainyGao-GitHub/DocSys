@@ -495,7 +495,10 @@ public class GITUtil  extends BaseController{
 		}
 		
         try {
-			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+        	CommitCommand commitCmd = git.commit();
+			commitCmd.setCommitter(commitUser, "").setMessage(commitMsg);
+			
+			RevCommit ret = commitCmd.call();
 			System.out.println("gitAdd() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("gitAdd() commit error");
