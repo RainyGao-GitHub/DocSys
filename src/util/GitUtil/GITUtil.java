@@ -203,7 +203,7 @@ public class GITUtil  extends BaseController{
 	            log.setCommitUser(commitUser);
 	            log.setCommitMsg(fullMessage);
 	            log.setCommitTime(commitTime);
-	            logList.add(0,log);	//add to the top
+	            logList.add(log);
 	        }
 	        
 	        return logList;
