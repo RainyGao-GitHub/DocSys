@@ -1620,10 +1620,9 @@ public class DocController extends BaseController{
 			String name = doc.getName();
 			
 			String nameForDelete = "deleteing-"+name; 
-			if(moveRealDoc(reposRPath,parentPath,name,parentPath,nameForDelete,doc.getType(),rt) == false)
+			if(deleteRealDoc(reposRPath,parentPath,name, doc.getType(),rt) == false)
 			{
-				String MsgInfo = "moveRealDoc For delete Failed";
-				rt.setError(parentPath + name + "删除失败！");
+				String MsgInfo = parentPath + name + " 删除失败！";
 				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc Failed";						
@@ -1638,22 +1637,17 @@ public class DocController extends BaseController{
 				System.out.println("verReposRealDocDelete Failed");
 				String MsgInfo = "verReposRealDocDelete Failed";
 				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-				if(moveRealDoc(reposRPath,parentPath,nameForDelete,parentPath,name,doc.getType(),rt) == false)
+				if(verReposRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
 				{						
 					MsgInfo += " and revertFile Failed";
 				}
+				
 				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc Failed";						
 				}
 				rt.setError(MsgInfo);
 				return false;
-			}
-			
-			//Do delete really
-			if(deleteRealDoc(reposRPath, parentPath, nameForDelete,doc.getType(),rt) == false)
-			{
-				System.out.println("deleteDoc() 删除 " + nameForDelete +" 失败");	
 			}
 		}
 		

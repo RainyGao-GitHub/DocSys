@@ -223,6 +223,11 @@ public class GITUtil  extends BaseController{
 			targetName = entryName;
 		}
 		
+        if(revision == null || revision.isEmpty())
+        {
+        	revision = "HEAD";
+        }
+		
 		String remoteEntryPath = parentPath + entryName;
 		
 		Repository repository = null;
@@ -231,19 +236,28 @@ public class GITUtil  extends BaseController{
         	Git git = Git.open(new File(gitDir));
             repository = git.getRepository();
             
-            //get tree at dedicated revision
+            //New RevWalk
             RevWalk walk = new RevWalk(repository);
-            if(revision == null || revision.isEmpty())
-            {
-            	revision = "HEAD";
-            }
+
+            //Get objId for revision
             ObjectId objId = repository.resolve(revision);
+            
             RevCommit revCommit = walk.parseCommit(objId);
             RevTree revTree = revCommit.getTree();
     		
-            //Get Entry Node
-            TreeWalk treeWalk = TreeWalk.forPath(repository, remoteEntryPath, revTree);
-            
+            TreeWalk treeWalk = null;
+            if(entryName.isEmpty())
+            {
+            	//Get treeWalk For whole repos
+            	treeWalk = new TreeWalk( repository );
+                treeWalk.setRecursive(false);
+                treeWalk.reset(revTree);
+            }
+            else
+            {            
+            	//Get treeWalk For dedicated Entry
+            	treeWalk = TreeWalk.forPath(repository, remoteEntryPath, revTree);
+            }
             boolean ret = recurGetEntry(git, repository, treeWalk, parentPath, entryName, localParentPath, targetName);
             repository.close();
             return ret;
@@ -276,7 +290,7 @@ public class GITUtil  extends BaseController{
 			FileMode fileMode = treeWalk.getFileMode();
 	        if(isFile(fileMode))
 	        {
-	        	System.out.println("recurGetEntry() isFile:" + fileMode.getBits());
+	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isFile:" + fileMode.getBits());
 
 	            FileOutputStream out = null;
 	    		try {
@@ -295,7 +309,7 @@ public class GITUtil  extends BaseController{
 	        }
 	        else if(isDir(fileMode))
 	        {
-	        	System.out.println("recurGetEntry() isDir:" + fileMode.getBits());
+	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isDir:" + fileMode.getBits());
 
 	        	File dir = new File(localParentPath,targetName);
 				dir.mkdir();
