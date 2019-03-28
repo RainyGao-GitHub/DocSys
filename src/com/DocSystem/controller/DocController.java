@@ -207,7 +207,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		deleteDoc(id,reposId, parentId, commitMsg, commitUser, login_user, rt,false);
+		Repos repos = reposService.getRepos(reposId);
+		deleteDoc(repos,id,parentId, commitMsg, commitUser, login_user, rt,false);
 		
 		writeJson(rt, response);
 	}
@@ -1578,20 +1579,20 @@ public class DocController extends BaseController{
 
 	//底层deleteDoc接口
 	//isSubDelete: true: 文件已删除，只负责删除VDOC、LuceneIndex、previewFile、DBRecord
-	private boolean deleteDoc(Integer docId, Integer reposId,Integer parentId, 
+	private boolean deleteDoc(Repos repos, Integer docId, Integer parentId, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete) 
 	{
+		Integer reposId = repos.getId();
+		
 		Doc doc = null;
-		Repos repos = null;
 		if(isSubDelete)	//Do not lock
 		{
 			doc = reposService.getDoc(docId);
 			if(doc == null)
 			{
 				System.out.println("deleteDoc() " + docId + " not exists");
-				return false;			
+				return true;			
 			}
-			repos = reposService.getRepos(reposId);
 			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " isSubDelete");
 		}
 		else
@@ -1610,7 +1611,6 @@ public class DocController extends BaseController{
 			}
 			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " Lock OK");
 			
-			repos = reposService.getRepos(reposId);
 			//get parentPath
 			String parentPath = getParentPath(parentId);		
 			//get RealDoc Full ParentPath
@@ -1619,7 +1619,6 @@ public class DocController extends BaseController{
 			//删除实体文件
 			String name = doc.getName();
 			
-			String nameForDelete = "deleteing-"+name; 
 			if(deleteRealDoc(reposRPath,parentPath,name, doc.getType(),rt) == false)
 			{
 				String MsgInfo = parentPath + name + " 删除失败！";
@@ -1677,7 +1676,7 @@ public class DocController extends BaseController{
 		}
 
 		//Delete SubDocs
-		if(false == deleteSubDocs(docId,reposId,commitMsg,commitUser,login_user,rt))
+		if(false == deleteSubDocs(repos, docId, commitMsg,commitUser,login_user,rt))
 		{
 			System.out.println("deleteDoc() deleteSubDocs Failed ");
 		}
@@ -1699,16 +1698,14 @@ public class DocController extends BaseController{
 		delFileOrDir(dstPath);
 	}
 
-	private boolean deleteSubDocs(Integer docId, Integer reposId,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		
+	private boolean deleteSubDocs(Repos repos, Integer docId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		Doc doc = new Doc();
 		doc.setPid(docId);
 		List<Doc> subDocList = reposService.getDocList(doc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			deleteDoc(subDoc.getId(),reposId,docId,commitMsg,commitUser,login_user,rt,true);
+			deleteDoc(repos, subDoc.getId(), docId,commitMsg,commitUser,login_user,rt,true);
 		}
 		return true;
 	}
