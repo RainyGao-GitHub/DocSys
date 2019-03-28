@@ -1185,7 +1185,7 @@ public class SVNUtil  extends BaseController{
     }
     
 	//get the subEntries under remoteEntryPath,only useful for Directory
-	private List<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
+	public List<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
 	{
 		List <SVNDirEntry> subEntryList =  new ArrayList<SVNDirEntry>();
 		

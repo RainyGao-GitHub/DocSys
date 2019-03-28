@@ -2,6 +2,7 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
@@ -34,12 +36,14 @@ import org.tmatesoft.svn.core.SVNNodeKind;
 
 import util.CompressPic;
 import util.DateFormat;
+import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.UUid;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
@@ -50,13 +54,17 @@ import com.alibaba.fastjson.JSON;
 
 import util.Base64File;
 import util.Encrypt.MD5;
+import util.GitUtil.GITUtil;
 import util.SvnUtil.CommitAction;
+import util.SvnUtil.SVNUtil;
 @SuppressWarnings("rawtypes")
 public class BaseController{
 	@Autowired
 	private ReposServiceImpl reposService;
 	@Autowired
 	private UserServiceImpl userService;
+	//线程锁
+	protected static final Object syncLock = new Object(); 
 	
 	protected Map session;
 	protected static String SUCCESS = "success";
@@ -1877,6 +1885,2657 @@ public class BaseController{
     	action.setLocalPath(localPath);
     	action.setLocalRefPath(localRefPath);
     	actionList.add(action);	
+	}
+	
+	/********************************** Functions For Application Layer ****************************************/
+	//底层addDoc接口
+	protected Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+		Repos repos = reposService.getRepos(reposId);
+		//get parentPath
+		String parentPath = getParentPath(parentId);
+		String reposRPath = getReposRealPath(repos);
+		String localDocRPath = reposRPath + parentPath + name;
+		
+		//判断目录下是否有同名节点 
+		Doc tempDoc = getDocByName(name,parentId,reposId);
+		if(tempDoc != null)
+		{
+			if(type == 2)	//如果是则目录直接成功
+			{
+				rt.setMsg("Node: " + name +" 已存在！", "dirExists");
+				rt.setData(tempDoc);
+			}
+			else
+			{
+				rt.setError("Node: " + name +" 已存在！");
+				System.out.println("addDoc() " + name + " 已存在");
+			}
+			return null;		
+		}
+		
+		//以下代码不可重入，使用syncLock进行同步
+		Doc doc = new Doc();
+		synchronized(syncLock)
+		{
+			//Check if parentDoc was absolutely locked (LockState == 2)
+			if(isParentDocLocked(parentId,null,rt))
+			{	
+				unlock(); //线程锁
+				rt.setError("ParentNode: " + parentId +" is locked！");	
+				System.out.println("ParentNode: " + parentId +" is locked！");
+				return null;			
+			}
+				
+			//新建doc记录,并锁定
+			doc.setName(name);
+			doc.setType(type);
+			doc.setSize(fileSize);
+			doc.setCheckSum(checkSum);
+			doc.setContent(content);
+			doc.setPath(parentPath);
+			doc.setVid(reposId);
+			doc.setPid(parentId);
+			doc.setCreator(login_user.getId());
+			//set createTime
+			long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+			doc.setCreateTime(nowTimeStamp);
+			doc.setLatestEditTime(nowTimeStamp);
+			doc.setLatestEditor(login_user.getId());
+			doc.setState(2);	//doc的状态为不可用
+			doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
+			long lockTime = nowTimeStamp + 24*60*60*1000;
+			doc.setLockTime(lockTime);	//Set lockTime
+			if(reposService.addDoc(doc) == 0)
+			{			
+				unlock();
+				rt.setError("Add Node: " + name +" Failed！");
+				System.out.println("addDoc() addDoc to db failed");
+				return null;
+			}
+			unlock();
+		}
+		
+		System.out.println("id: " + doc.getId());
+		
+		if(uploadFile == null)
+		{
+			if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
+			{		
+				String MsgInfo = "createRealDoc " + name +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("createRealDoc Failed");
+				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
+				if(reposService.deleteDoc(doc.getId()) == 0)	
+				{
+					MsgInfo += " and delete Node Failed";
+					System.out.println("Delete Node: " + doc.getId() +" failed!");
+					rt.setError(MsgInfo);
+				}
+				return null;
+			}
+		}
+		else
+		{
+			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			{		
+				String MsgInfo = "updateRealDoc " + name +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("updateRealDoc Failed");
+				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
+				if(reposService.deleteDoc(doc.getId()) == 0)	
+				{
+					MsgInfo += " and delete Node Failed";
+					System.out.println("Delete Node: " + doc.getId() +" failed!");
+					rt.setError(MsgInfo);
+				}
+				return null;
+			}
+		}
+		//commit to history db
+		if(verReposRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser,rt) == false)
+		{
+			System.out.println("verReposRealDocAdd Failed");
+			String MsgInfo = "verReposRealDocAdd Failed";
+			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+			if(delFile(localDocRPath) == false)
+			{						
+				MsgInfo += " and deleteFile Failed";
+			}
+			if(reposService.deleteDoc(doc.getId()) == 0)
+			{
+				MsgInfo += " and delete Node Failed";						
+			}
+			rt.setError(MsgInfo);
+			return null;
+		}
+		
+		Integer docId = doc.getId();
+		if(type == 1)
+		{
+			//Update Lucene Index
+			updateIndexForRDoc(docId, localDocRPath);
+		}
+		
+		//只有在content非空的时候才创建VDOC
+		if(null != content && !"".equals(content))
+		{
+			String reposVPath = getReposVirtualPath(repos);
+			String docVName = getDocVPath(parentPath,doc.getName());
+			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
+			{
+				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
+				{
+					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
+					rt.setMsgInfo("svnVirtualDocAdd Failed");			
+				}
+			}
+			else
+			{
+				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
+				rt.setMsgInfo("createVirtualDoc Failed");
+			}
+			//Add Lucene Index For Vdoc
+			addIndexForVDoc(docId,content);
+		}
+		
+		//启用doc
+		if(unlockDoc(docId,login_user,null) == false)
+		{
+			rt.setError("unlockDoc Failed");
+			return null;
+		}
+		rt.setMsg("新增成功", "isNewNode");
+		rt.setData(doc);
+		
+		return docId;
+	}
+	
+	//释放线程锁
+	protected void unlock() {
+		unlockSyncLock(syncLock);
+	}	
+	private void unlockSyncLock(Object syncLock) {
+		syncLock.notifyAll();//唤醒等待线程
+		//下面这段代码是因为参考了网上的一个Demo说wait是释放锁，我勒了个区去，留着作纪念
+		//try {
+		//	syncLock.wait();	//线程睡眠，等待syncLock.notify/notifyAll唤醒
+		//} catch (InterruptedException e) {
+		//	e.printStackTrace();
+		//}
+	}  
+
+	//底层deleteDoc接口
+	//isSubDelete: true: 文件已删除，只负责删除VDOC、LuceneIndex、previewFile、DBRecord
+	protected boolean deleteDoc(Repos repos, Integer docId, Integer parentId, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit) 
+	{
+		Doc doc = null;
+		if(isSubDelete)	//Do not lock
+		{
+			doc = reposService.getDoc(docId);
+			if(doc == null)
+			{
+				System.out.println("deleteDoc() " + docId + " not exists");
+				return true;			
+			}
+			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " isSubDelete");
+		}
+		else
+		{
+			synchronized(syncLock)
+			{							
+				//Try to lock the Doc
+				doc = lockDoc(docId,2,login_user,rt,true);
+				if(doc == null)
+				{
+					unlock(); //线程锁
+					System.out.println("deleteDoc() Failed to lock Doc: " + docId);
+					return false;			
+				}
+				unlock(); //线程锁
+			}
+			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " Lock OK");
+			
+			//get parentPath
+			String parentPath = getParentPath(parentId);		
+			//get RealDoc Full ParentPath
+			String reposRPath = getReposRealPath(repos);
+			
+			//删除实体文件
+			String name = doc.getName();
+			
+			if(deleteRealDoc(reposRPath,parentPath,name, doc.getType(),rt) == false)
+			{
+				String MsgInfo = parentPath + name + " 删除失败！";
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc Failed";						
+				}
+				rt.setError(MsgInfo);
+				return false;
+			}
+			
+			if(skipRealDocCommit)	//忽略版本仓库，用于使用版本仓库同步时调用（相当于已经commit过了）
+			{
+				//需要将文件Commit到verRepos上去
+				if(verReposRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+				{
+					System.out.println("verReposRealDocDelete Failed");
+					String MsgInfo = "verReposRealDocDelete Failed";
+					//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+					if(verReposRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+					{						
+						MsgInfo += " and revertFile Failed";
+					}
+					
+					if(unlockDoc(docId,login_user,doc) == false)
+					{
+						MsgInfo += " and unlockDoc Failed";						
+					}
+					rt.setError(MsgInfo);
+					return false;
+				}
+			}
+		}
+		
+		//Delete Lucene index For RDoc and VDoc
+		deleteIndexForDoc(docId,"doc");
+		//Delete previewFile (previewFile use checksum as name)
+		deletePreviewFile(doc.getCheckSum());
+		
+		//删除虚拟文件
+		String reposVPath = getReposVirtualPath(repos);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath ,doc.getName());
+		String localDocVPath = reposVPath + docVName;
+		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
+		{
+			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
+			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
+		}
+		else
+		{
+			if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
+			{
+				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
+				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
+				verReposRevertVirtualDoc(repos,docVName);
+			}
+		}
+
+		//Delete SubDocs
+		if(false == deleteSubDocs(repos, docId, commitMsg,commitUser,login_user,rt))
+		{
+			System.out.println("deleteDoc() deleteSubDocs Failed ");
+		}
+						
+		//Delete DataBase Record
+		if(reposService.deleteDoc(docId) == 0)
+		{	
+			rt.setError("不可恢复系统错误：deleteDoc Failed");
+			return false;
+		}
+		rt.setData(doc);
+		return true;
+	}
+
+	//删除预览文件
+	private void deletePreviewFile(String checkSum) {
+		String dstName = checkSum + ".pdf";
+		String dstPath = getWebTmpPath() + "preview/" + dstName;
+		delFileOrDir(dstPath);
+	}
+
+	private boolean deleteSubDocs(Repos repos, Integer docId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		Doc doc = new Doc();
+		doc.setPid(docId);
+		List<Doc> subDocList = reposService.getDocList(doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			deleteDoc(repos, subDoc.getId(), docId,commitMsg,commitUser,login_user,rt,true,false);
+		}
+		return true;
+	}
+
+	//底层updateDoc接口
+	protected void updateDoc(Integer docId, MultipartFile uploadFile,Integer fileSize,String checkSum,Integer reposId,Integer parentId, 
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+
+		Doc doc = null;
+		synchronized(syncLock)
+		{
+			//Try to lock the doc
+			doc = lockDoc(docId, 1, login_user, rt,false);
+			if(doc == null)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("updateDoc() lockDoc " + docId +" Failed！");
+				return;
+			}
+			unlock(); //线程锁
+			
+		}
+		
+		//Save oldCheckSum
+		String oldCheckSum = doc.getCheckSum();
+		
+		//为了避免执行到SVNcommit成功但数据库操作失败，所以先将checkSum更新掉
+		doc.setCheckSum(checkSum);
+		if(reposService.updateDoc(doc) == 0)
+		{
+			rt.setError("系统异常：操作数据库失败");
+			rt.setMsgData("updateDoc() update Doc CheckSum Failed");
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		//get RealDoc Full ParentPath
+		String reposRPath =  getReposRealPath(repos);
+		//get parentPath
+		String parentPath = getParentPath(parentId);		
+		//Get the file name
+		String name = doc.getName();
+		System.out.println("updateDoc() name:" + name);
+
+		//保存文件信息
+		if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+		{
+			if(unlockDoc(docId,login_user,doc) == false)
+			{
+				System.out.println("updateDoc() saveFile " + docId +" Failed and unlockDoc Failed");
+				rt.setError("Failed to updateRealDoc " + name + " and unlock Doc");
+			}
+			else
+			{	
+				System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
+				rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
+			}
+			return;
+		}
+		
+		//需要将文件Commit到版本仓库上去
+		if(verReposRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+		{
+			System.out.println("updateDoc() verReposRealDocCommit Failed:" + parentPath + name);
+			String MsgInfo = "verReposRealDocCommit Failed";
+			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+			if(verReposRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+			{						
+				MsgInfo += " and revertFile Failed";
+			}
+			//还原doc记录的状态
+			if(unlockDoc(docId,login_user,doc) == false)
+			{
+				MsgInfo += " and unlockDoc Failed";						
+			}
+			rt.setError(MsgInfo);	
+			return;
+		}
+		
+		//Update Lucene Index
+		String localDocRPath = reposRPath + parentPath + name;
+		updateIndexForRDoc(docId, localDocRPath);
+		
+		//Delete PreviewFile
+		deletePreviewFile(oldCheckSum);
+		
+		//updateDoc Info and unlock
+		doc.setSize(fileSize);
+		doc.setCheckSum(checkSum);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		doc.setLatestEditTime(nowTimeStamp);
+		doc.setLatestEditor(login_user.getId());
+		
+		if(reposService.updateDoc(doc) == 0)
+		{
+			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
+			return;
+		}
+
+	}
+
+	//底层renameDoc接口
+	protected void renameDoc(Integer docId, String newname,Integer reposId,Integer parentId, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+		
+		Doc doc = null;
+		synchronized(syncLock)
+		{
+			//Try to lockDoc
+			doc = lockDoc(docId,2,login_user,rt,true);
+			if(doc == null)
+			{
+				unlock(); //线程锁
+				
+				System.out.println("renameDoc() lockDoc " + docId +" Failed！");
+				return;
+			}
+			unlock(); //线程锁
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		String reposRPath = getReposRealPath(repos);
+		String parentPath = getParentPath(parentId);
+		String oldname = doc.getName();
+		
+		//修改实文件名字	
+		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname,doc.getType(),rt) == false)
+		{
+			if(unlockDoc(docId,login_user,doc) == false)
+			{
+				rt.setError(oldname + " renameRealDoc失败！ and unlockDoc " + docId +" Failed！");
+				return;
+			}
+			else
+			{
+				rt.setError(oldname + " renameRealDoc失败！");
+				return;
+			}
+		}
+		else
+		{
+			//commit to history db
+			if(verReposRealDocMove(repos,parentPath,oldname,parentPath,newname,doc.getType(),commitMsg,commitUser,rt) == false)
+			{
+				//我们假定版本提交总是会成功，因此报错不处理
+				System.out.println("renameDoc() svnRealDocMove Failed");
+				String MsgInfo = "svnRealDocMove Failed";
+				
+				if(moveRealDoc(reposRPath,parentPath,newname,parentPath,oldname,doc.getType(),rt) == false)
+				{
+					MsgInfo += " and moveRealDoc Back Failed";
+				}
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc Failed";						
+				}
+				rt.setError(MsgInfo);
+				return;
+			}	
+		}
+		
+		//更新doc name
+		Doc tempDoc = new Doc();
+		tempDoc.setId(docId);
+		tempDoc.setName(newname);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		tempDoc.setLatestEditTime(nowTimeStamp);
+		tempDoc.setLatestEditor(login_user.getId());
+		if(reposService.updateDoc(tempDoc) == 0)
+		{
+			rt.setError("不可恢复系统错误：Failed to update doc name");
+			return;
+		}
+		
+		//更新DocVPath
+		String reposVPath = getReposVirtualPath(repos);
+		updateDocVPath(repos, doc, reposVPath, parentPath, oldname, parentPath, newname, commitMsg, commitUser, rt);
+		
+		//unlock doc
+		if(unlockDoc(docId,login_user,doc) == false)
+		{
+			rt.setError("unlockDoc failed");	
+		}
+		return;
+	}
+	
+	//更新Doc和其SubDoc的VirtualDocPath（Only For rename and move of Dir）
+	void updateDocVPath(Repos repos, Doc doc, String reposVPath, String srcParentPath, String oldName, String dstParentPath, String newName, String commitMsg,String commitUser, ReturnAjax rt)
+	{
+		System.out.println("moveVirtualDoc move " + srcParentPath+oldName + " to " + dstParentPath + newName);
+		
+		String srcDocVPath = getDocVPath(srcParentPath, oldName);
+		String dstDocVPath = getDocVPath(dstParentPath, newName);
+		if(!srcDocVPath.equals(dstDocVPath))
+		{
+			//修改虚拟文件的目录名称 when VDoc exists
+			File srcEntry = new File(reposVPath, srcDocVPath);
+			if(srcEntry.exists())
+			{
+				if(moveVirtualDoc(reposVPath,srcDocVPath, dstDocVPath,rt) == true)
+				{
+					if(verReposVirtualDocMove(repos, srcDocVPath, dstDocVPath, commitMsg, commitUser,rt) == false)
+					{
+						System.out.println("moveVirtualDoc() svnVirtualDocMove Failed");
+					}
+				}
+			}
+		}
+		
+		//Get all subDocs of Doc( and Update Their VDoc Path)
+		Doc queryConditon = new Doc();
+		queryConditon.setPid(doc.getId());
+		List <Doc> list = reposService.getDocList(queryConditon);
+		if(list != null)
+		{
+			for(int i = 0 ; i < list.size() ; i++) {
+				Doc subDoc = list.get(i);
+				updateDocVPath(repos,subDoc,reposVPath, srcParentPath + newName+"/", subDoc.getName() ,dstParentPath + newName+"/", subDoc.getName(), commitMsg,commitUser,rt);
+			}
+		}
+	}
+	
+	//底层moveDoc接口
+	protected void moveDoc(Integer docId, Integer reposId,Integer parentId,Integer dstPid,  
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+
+		Doc doc = null;
+		Doc dstPDoc = null;
+		synchronized(syncLock)
+		{
+			doc = lockDoc(docId,2,login_user,rt,true);
+			if(doc == null)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("lockDoc " + docId +" Failed！");
+				return;
+			}
+			
+			//Try to lock dstPid
+			if(dstPid !=0)
+			{
+				dstPDoc = lockDoc(dstPid,2,login_user,rt,false);
+				if(dstPDoc== null)
+				{
+					unlock(); //线程锁
+	
+					System.out.println("moveDoc() fail to lock dstPid" + dstPid);
+					unlockDoc(docId,login_user,doc);	//Try to unlock the doc
+					return;
+				}
+			}
+			unlock(); //线程锁
+		}
+		
+		//移动当前节点
+		Integer orgPid = doc.getPid();
+		System.out.println("moveDoc id:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
+		
+		String srcParentPath = getParentPath(orgPid);		
+		String dstParentPath = getParentPath(dstPid);
+		
+		Repos repos = reposService.getRepos(reposId);
+		String reposRPath = getReposRealPath(repos);
+		
+		String filename = doc.getName();
+		String srcDocRPath = srcParentPath + filename;
+		String dstDocRPath = dstParentPath + filename;
+		System.out.println("srcDocRPath: " + srcDocRPath + " dstDocRPath: " + dstDocRPath);
+		
+		//只有当orgPid != dstPid 不同时才进行文件移动，否则文件已在正确位置，只需要更新Doc记录
+		if(!orgPid.equals(dstPid))
+		{
+			System.out.println("moveDoc() docId:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
+			if(moveRealDoc(reposRPath,srcParentPath,filename,dstParentPath,filename,doc.getType(),rt) == false)
+			{
+				String MsgInfo = "文件移动失败！";
+				System.out.println("moveDoc() 文件: " + filename + " 移动失败");
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc " + docId+ " failed ";
+				}
+				if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
+				{
+					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+				}
+				rt.setError(MsgInfo);
+				return;
+			}
+			
+			//需要将文件Commit到SVN上去：先执行svn的移动
+			if(verReposRealDocMove(repos, srcParentPath,filename, dstParentPath, filename,doc.getType(),commitMsg, commitUser,rt) == false)
+			{
+				System.out.println("moveDoc() svnRealDocMove Failed");
+				String MsgInfo = "svnRealDocMove Failed";
+				if(moveRealDoc(reposRPath,dstParentPath,filename,srcParentPath,filename,doc.getType(),rt) == false)
+				{
+					MsgInfo += "and changeDirectory Failed";
+				}
+				
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc " + docId+ " failed ";
+				}
+				if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
+				{
+					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+				}
+				rt.setError(MsgInfo);
+				return;					
+			}
+		}
+		
+		//更新doc pid and path
+		Doc tempDoc = new Doc();
+		tempDoc.setId(docId);
+		tempDoc.setPath(dstParentPath);
+		tempDoc.setPid(dstPid);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		tempDoc.setLatestEditTime(nowTimeStamp);
+		tempDoc.setLatestEditor(login_user.getId());
+		if(reposService.updateDoc(tempDoc) == 0)
+		{
+			rt.setError("不可恢复系统错误：Failed to update doc pid and path");
+			return;				
+		}
+		
+		//更新DocVPath
+		String reposVPath = getReposVirtualPath(repos);
+		updateDocVPath(repos, doc, reposVPath, srcParentPath, filename, dstParentPath, filename, commitMsg, commitUser, rt);
+		
+		//Unlock Docs
+		String MsgInfo = null; 
+		if(unlockDoc(docId,login_user,doc) == false)
+		{
+			MsgInfo = "unlockDoc " + docId+ " failed ";
+		}
+		if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
+		{
+			MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+		}
+		if(MsgInfo!=null)
+		{
+			rt.setError(MsgInfo);
+		}
+		return;
+	}
+	
+	//底层copyDoc接口
+	//isSubCopy: true no need to do lock check and lock
+	protected boolean copyDoc(Integer docId,String srcName,String dstName, Integer type, Integer reposId,Integer parentId, Integer dstPid,
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, boolean isSubCopy) {
+		
+		Repos repos = reposService.getRepos(reposId);
+		String reposRPath =  getReposRealPath(repos);
+
+		//get parentPath
+		String srcParentPath = getParentPath(parentId);		
+		//目标路径
+		String dstParentPath = getParentPath(dstPid);
+
+		if(isSubCopy)
+		{
+			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName + " isSubCopy");
+		}
+		else
+		{
+			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);
+			
+			//判断节点是否已存在
+			if(isNodeExist(dstName,dstPid,reposId) == true)
+			{
+				rt.setError("Node: " + dstName +" 已存在！");
+				return false;
+			}
+		}
+
+		Doc srcDoc = null;
+		Doc dstDoc = null;
+		synchronized(syncLock)
+		{
+			if(isSubCopy)
+			{
+				srcDoc = reposService.getDoc(docId);
+			}
+			else
+			{
+				//Try to lock the srcDoc
+				srcDoc = lockDoc(docId,1,login_user,rt,true);
+				if(srcDoc == null)
+				{
+					unlock(); //线程锁
+		
+					System.out.println("copyDoc lock " + docId + " Failed");
+					return false;
+				}
+			}
+			
+			//新建doc记录，并锁定（if isSubCopy is false）
+			dstDoc = new Doc();
+			dstDoc.setId(null);	//置空id,以便新建一个doc
+			dstDoc.setName(dstName);
+			dstDoc.setType(type);
+			dstDoc.setContent(srcDoc.getContent());
+			dstDoc.setPath(dstParentPath);
+			dstDoc.setVid(reposId);
+			dstDoc.setPid(dstPid);
+			dstDoc.setCreator(login_user.getId());
+			//set createTime
+			long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
+			dstDoc.setCreateTime(nowTimeStamp);
+			//set lastEditTime
+			dstDoc.setLatestEditTime(nowTimeStamp);
+			dstDoc.setLatestEditor(login_user.getId());
+			if(false == isSubCopy)
+			{
+				dstDoc.setState(2);	//doc的状态为不可用
+				dstDoc.setLockBy(login_user.getId());	//set LockBy
+				long lockTime = nowTimeStamp + 24*60*60*1000;
+				dstDoc.setLockTime(lockTime);	//Set lockTime
+			}
+			else
+			{
+				dstDoc.setState(0);	//doc的状态为不可用
+				dstDoc.setLockBy(0);	//set LockBy
+				dstDoc.setLockTime((long)0);	//Set lockTime				
+			}
+			
+			if(reposService.addDoc(dstDoc) == 0)
+			{
+				unlock(); //线程锁
+	
+				rt.setError("Add Node: " + dstName +" Failed！");
+				
+				//unlock SrcDoc
+				unlockDoc(docId,login_user,srcDoc);
+				return false;
+			}
+			unlock(); //线程锁
+		}
+		
+		Integer dstDocId =  dstDoc.getId();
+		System.out.println("dstDoc id: " + dstDoc.getId());
+		
+		//复制文件或目录，注意这个接口只会复制单个文件
+		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
+		{
+			System.out.println("copy " + srcName + " to " + dstName + " 失败");
+			String MsgInfo = "copyRealDoc from " + srcName + " to " + dstName + "Failed";
+			//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
+			if(reposService.deleteDoc(dstDocId) == 0)	
+			{
+				System.out.println("Delete Node: " + dstDocId +" failed!");
+				MsgInfo += " and delete dstDoc " + dstDocId + "Failed";
+			}
+			if(unlockDoc(docId,login_user,srcDoc) == false)
+			{
+				System.out.println("unlock srcDoc: " + docId +" failed!");
+				MsgInfo += " and unlock srcDoc " + docId +" Failed";	
+			}
+			rt.setError(MsgInfo);
+			return false;
+		}
+			
+		//需要将文件Commit到SVN上去
+		boolean ret = false;
+		String MsgInfo = "";
+		if(type == 1) 
+		{
+			ret = verReposRealDocCopy(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt);
+			MsgInfo = "verReposRealDocCopy Failed";
+		}
+		else //目录则在版本仓库新建，因为复制操作每次只复制一个节点，直接调用copy会导致目录下的所有节点都被复制
+		{
+			ret = verReposRealDocAdd(repos,dstParentPath,dstName,type,commitMsg,commitUser,rt);
+			MsgInfo = "verReposRealDocAdd Failed";
+		}			
+			
+		if(ret == false)
+		{
+			System.out.println("copyDoc() " + MsgInfo);
+			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+			if(deleteRealDoc(reposRPath,srcParentPath,dstName,type,rt) == false)
+			{						
+				MsgInfo += " and deleteFile Failed";
+			}
+			if(reposService.deleteDoc(dstDocId) == 0)
+			{
+				MsgInfo += " and delete dstDoc " + dstDocId + " Failed";						
+			}
+			if(unlockDoc(docId,login_user,srcDoc) == false)
+			{
+				MsgInfo += " and unlock srcDoc " + docId +" Failed";	
+			}
+			rt.setError(MsgInfo);
+			return false;
+		}				
+		
+		if(type == 1)
+		{
+			//Update Lucene Index
+			String localDocRPath = reposRPath + dstParentPath + dstName;
+			updateIndexForRDoc(dstDocId,localDocRPath);
+		}
+		
+		//content非空时才去创建虚拟文件目录
+		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
+		{
+			String reposVPath = getReposVirtualPath(repos);
+			String srcDocVName = getDocVPath(srcParentPath, srcDoc.getName());
+			String dstDocVName = getDocVPath(dstParentPath, dstDoc.getName());
+			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
+			{
+				if(verReposVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
+				{
+					System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
+				}
+			}
+			else
+			{
+				System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
+			}
+			addIndexForVDoc(dstDocId,dstDoc.getContent());
+		}
+				
+		//copySubDocs
+		copySubDocs(docId, reposId, dstDocId,commitMsg,commitUser,login_user,rt); 
+		
+		if(false == isSubCopy)
+		{
+			//启用doc
+			MsgInfo = null;
+			if(unlockDoc(dstDoc.getId(),login_user,null) == false)
+			{	
+				MsgInfo ="unlockDoc " +dstDoc.getId() + " Failed";;
+			}
+			//Unlock srcDoc 
+			if(unlockDoc(docId,login_user,null) == false)
+			{
+				MsgInfo += " and unlock " + docId +" Failed";	
+			}
+			if(MsgInfo != null)
+			{
+				rt.setError(MsgInfo);
+			}
+	
+			//只返回最上层的doc记录
+			rt.setData(dstDoc);				
+		}	
+		return true;
+	}
+
+	private boolean copySubDocs(Integer docId, Integer reposId, Integer dstParentId,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		boolean ret = true;
+		Doc doc = new Doc();
+		doc.setPid(docId);
+		List<Doc> subDocList = reposService.getDocList(doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			String subDocName = subDoc.getName();
+			if(false == copyDoc(subDoc.getId(),subDocName,subDocName, subDoc.getType(), reposId, docId, dstParentId,commitMsg,commitUser,login_user,rt,true))
+			{
+				ret = false;
+			}
+		}
+		return ret;
+	}
+
+	protected void updateDocContent(Integer id,String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
+		Doc doc = null;
+		synchronized(syncLock)
+		{
+			//Try to lock Doc
+			doc = lockDoc(id,1,login_user,rt,false);
+			if(doc== null)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("updateDocContent() lockDoc Failed");
+				return;
+			}
+			unlock(); //线程锁
+		}
+		
+		Repos repos = reposService.getRepos(doc.getVid());
+		
+		//只更新内容部分
+		Doc newDoc = new Doc();
+		newDoc.setId(id);
+		newDoc.setContent(content);
+		//System.out.println("before: " + content);
+		if(reposService.updateDoc(newDoc) == 0)
+		{
+			rt.setError("更新文件失败");
+			return;			
+		}	
+		
+		//Save the content to virtual file
+		String reposVPath = getReposVirtualPath(repos);
+		String parentPath = getParentPath(doc.getPid());
+		String docVName = getDocVPath(parentPath, doc.getName());
+		String localVDocPath = reposVPath + docVName;
+		
+		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
+		if(isFileExist(localVDocPath) == true)
+		{
+			if(saveVirtualDocContent(reposVPath,docVName, content,rt) == true)
+			{
+				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+			}
+		}
+		else
+		{	
+			//创建虚拟文件目录：用户编辑保存时再考虑创建
+			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
+			{
+				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+			}
+		}
+		
+		//Update Index For VDoc
+		updateIndexForVDoc(id,content);
+		
+		//Delete tmp saved doc content
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		delFileOrDir(userTmpDir+docVName);
+		
+		if(unlockDoc(id,login_user,doc) == false)
+		{
+			rt.setError("unlockDoc failed");	
+		}		
+	}
+	
+	/*********************Functions For DocLock *******************************/
+	//Lock Doc
+	protected Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
+		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
+				
+		//确定文件节点是否可用
+		Doc doc = reposService.getDoc(docId);
+		if(doc == null)
+		{
+			rt.setError("Doc " + docId +" 不存在！");
+			System.out.println("lockDoc() Doc: " + docId +" 不存在！");
+			return null;
+		}
+		
+		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
+		if(isDocLocked(doc,login_user,rt))
+		{
+			System.out.println("lockDoc() Doc " + docId +" was locked");
+			return null;
+		}
+		
+		//Check if repos was locked
+		Repos repos = reposService.getRepos(doc.getVid());
+		if(repos == null)
+		{
+			rt.setError("仓库 " + doc.getVid() +" 不存在！");
+			System.out.println("lockDoc() Repos: " + doc.getVid() +" 不存在！");
+			return null;
+		}
+		if(isReposLocked(repos, login_user,rt))
+		{
+			System.out.println("lockDoc() Repos:" + repos.getId() +" was locked！");				
+			return null;			
+		}
+		
+		//检查其父节点是否强制锁定
+		if(isParentDocLocked(doc.getPid(),login_user,rt))
+		{
+			System.out.println("lockDoc() Parent Doc of " + docId +" was locked！");				
+			return null;
+		}
+		
+		//Check If SubDoc was locked
+		if(subDocCheckFlag)
+		{
+			if(isSubDocLocked(docId,rt) == true)
+			{
+				System.out.println("lockDoc() subDoc of " + docId +" was locked！");
+				return null;
+			}
+		}
+		
+		//lockTime is the time to release lock 
+		Doc lockDoc= new Doc();
+		lockDoc.setId(docId);
+		lockDoc.setState(lockType);	//doc的状态为不可用
+		lockDoc.setLockBy(login_user.getId());
+		long lockTime = new Date().getTime() + 24*60*60*1000;
+		lockDoc.setLockTime(lockTime);	//Set lockTime
+		if(reposService.updateDoc(lockDoc) == 0)
+		{
+			rt.setError("lock Doc:" + docId +"[" + doc.getName() +"]  failed");
+			return null;
+		}
+		System.out.println("lockDoc() success docId:" + docId + " lockType:" + lockType + " by " + login_user.getName());
+		return doc;
+	}
+	
+	//确定仓库是否被锁定
+	private boolean isReposLocked(Repos repos, User login_user, ReturnAjax rt) {
+		int lockState = repos.getState();	//0: not locked  1: locked	
+		if(lockState != 0)
+		{
+			if(isLockOutOfDate(repos.getLockTime()) == false)
+			{	
+				User lockBy = userService.getUser(repos.getLockBy());
+				rt.setError("仓库 " + repos.getName() +" was locked by " + lockBy.getName());
+				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
+				return true;						
+			}
+			else 
+			{
+				System.out.println("Repos " + repos.getId()+ " " + repos.getName()  +" lock was out of date！");
+				return false;
+			}
+		}
+		return false;
+	}
+
+	//确定当前doc是否被锁定
+	private boolean isDocLocked(Doc doc,User login_user,ReturnAjax rt) {
+		int lockState = doc.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
+		if(lockState != 0)
+		{
+			//
+			if(lockState != 2)
+			{
+				if(doc.getLockBy() == login_user.getId())	//locked by login_user
+				{
+					System.out.println("Doc: " + doc.getId() +" was locked by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
+					return false;
+				}
+			}
+			
+			if(isLockOutOfDate(doc.getLockTime()) == false)
+			{	
+				User lockBy = userService.getUser(doc.getLockBy());
+				rt.setError(doc.getName() +" was locked by " + lockBy.getName());
+				System.out.println("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy() + " lockState:"+ doc.getState());;
+				return true;						
+			}
+			else 
+			{
+				System.out.println("doc " + doc.getId()+ " " + doc.getName()  +" lock was out of date！");
+				return false;
+			}
+		}
+		return false;
+	}
+
+	private boolean isLockOutOfDate(long lockTime) {
+		//check if the lock was out of date
+		long curTime = new Date().getTime();
+		//System.out.println("isLockOutOfDate() curTime:"+curTime+" lockTime:"+lockTime);
+		if(curTime < lockTime)	//
+		{
+			return false;
+		}
+
+		//Lock 自动失效
+		return true;
+	}
+
+	//确定parentDoc is Force Locked
+	private boolean isParentDocLocked(Integer parentDocId, User login_user,ReturnAjax rt) {
+		if(parentDocId == 0)
+		{
+			return false;	//已经到了最上层
+		}
+		
+		Doc doc = reposService.getDoc(parentDocId);
+		if(doc == null)
+		{
+			System.out.println("isParentDocLocked() doc is null for parentDocId=" + parentDocId);
+			return false;
+		}
+		
+		Integer lockState = doc.getState();
+		
+		if(lockState == 2)	//Force Locked
+		{	
+			long curTime = new Date().getTime();
+			long lockTime = doc.getLockTime();	//time for lock release
+			System.out.println("isParentDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
+			if(curTime < lockTime)
+			{
+				rt.setError("parentDoc " + parentDocId + "[" + doc.getName() + "] was locked:" + lockState);
+				System.out.println("getParentLockState() " + parentDocId + " is locked!");
+				return true;
+			}
+		}
+		return isParentDocLocked(doc.getPid(),login_user,rt);
+	}
+	
+	//docId目录下是否有锁定的doc(包括所有锁定状态)
+	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
+	private boolean isSubDocLocked(Integer docId, ReturnAjax rt)
+	{
+		//Set the query condition to get the SubDocList of DocId
+		Doc qDoc = new Doc();
+		qDoc.setPid(docId);
+
+		//get the subDocList 
+		List<Doc> SubDocList = reposService.getDocList(qDoc);
+		for(int i=0;i<SubDocList.size();i++)
+		{
+			Doc subDoc =SubDocList.get(i);
+			if(subDoc.getState() != 0)
+			{
+				long curTime = new Date().getTime();
+				long lockTime = subDoc.getLockTime();	//time for lock release
+				System.out.println("isSubDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
+				if(curTime < lockTime)
+				{
+					rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
+					System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
+					return true;
+				}
+				return false;
+			}
+		}
+		
+		//If there is subDoc which is directory, we need to go into the subDoc to check the lockSatate of subSubDoc
+		for(int i=0;i<SubDocList.size();i++)
+		{
+			Doc subDoc =SubDocList.get(i);
+			if(subDoc.getType() == 2)
+			{
+				if(isSubDocLocked(subDoc.getId(),rt) == true)
+				{
+					return true;
+				}
+			}
+		}
+				
+		return false;
+	}
+	
+
+	//Unlock Doc
+	private boolean unlockDoc(Integer docId, User login_user, Doc preLockInfo) {
+		Doc curDoc = reposService.getDocInfo(docId);
+		if(curDoc == null)
+		{
+			System.out.println("unlockDoc() doc is null " + docId);
+			return false;
+		}
+		
+		if(curDoc.getState() == 0)
+		{
+			System.out.println("unlockDoc() doc was not locked:" + curDoc.getState());			
+			return true;
+		}
+		
+		Integer lockBy = curDoc.getLockBy();
+		if(lockBy != null && lockBy == login_user.getId())
+		{
+			Doc revertDoc = new Doc();
+			revertDoc.setId(docId);	
+			
+			if(preLockInfo == null)	//Unlock
+			{
+				revertDoc.setState(0);	//
+				revertDoc.setLockBy(0);	//
+				revertDoc.setLockTime((long)0);	//Set lockTime
+			}
+			else	//Revert to preLockState
+			{
+				revertDoc.setState(preLockInfo.getState());	//
+				revertDoc.setLockBy(preLockInfo.getLockBy());	//
+				revertDoc.setLockTime(preLockInfo.getLockTime());	//Set lockTime
+			}
+			
+			if(reposService.updateDoc(revertDoc) == 0)
+			{
+				System.out.println("unlockDoc() updateDoc Failed!");
+				return false;
+			}
+		}
+		else
+		{
+			System.out.println("unlockDoc() doc was not locked by " + login_user.getName());
+			return false;
+		}
+		
+		System.out.println("unlockDoc() success:" + docId);
+		return true;
+	}
+	
+	/*************************** Functions For Real and Virtual Doc Operation ***********************************/
+	//create Real Doc
+	private boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, ReturnAjax rt) {
+		//获取 doc parentPath
+		String localParentPath =  reposRPath + parentPath;
+		String localDocPath = localParentPath + name;
+		System.out.println("createRealDoc() localParentPath:" + localParentPath);
+		
+		if(type == 2) //目录
+		{
+			if(isFileExist(localDocPath) == true)
+			{
+				System.out.println("createRealDoc() 目录 " +localDocPath + "　已存在！");
+				rt.setMsgData("createRealDoc() 目录 " +localDocPath + "　已存在！");
+				return false;
+			}
+			
+			if(false == createDir(localDocPath))
+			{
+				System.out.println("createRealDoc() 目录 " +localDocPath + " 创建失败！");
+				rt.setMsgData("createRealDoc() 目录 " +localDocPath + " 创建失败！");
+				return false;
+			}				
+		}
+		else
+		{
+			if(isFileExist(localDocPath) == true)
+			{
+				System.out.println("createRealDoc() 文件 " +localDocPath + " 已存在！");
+				rt.setMsgData("createRealDoc() 文件 " +localDocPath + " 已存在！");
+				return false;
+			}
+			
+			if(false == createFile(localParentPath,name))
+			{
+				System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
+				rt.setMsgData("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
+				return false;					
+			}
+		}
+		return true;
+	}
+	
+	private boolean deleteRealDoc(String reposRPath, String parentPath, String name, Integer type, ReturnAjax rt) {
+		String localDocPath = reposRPath + parentPath + name;
+		if(type == 2)
+		{
+			if(delDir(localDocPath) == false)
+			{
+				System.out.println("deleteRealDoc() delDir " + localDocPath + "删除失败！");
+				rt.setMsgData("deleteRealDoc() delDir " + localDocPath + "删除失败！");
+				return false;
+			}
+		}	
+		else 
+		{
+			if(delFile(localDocPath) == false)
+			{
+				System.out.println("deleteRealDoc() deleteFile " + localDocPath + "删除失败！");
+				rt.setMsgData("deleteRealDoc() deleteFile " + localDocPath + "删除失败！");
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Integer fileSize, String fileCheckSum,
+			MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
+		String localDocParentPath = reposRPath + parentPath;
+		String retName = null;
+		try {
+			if(null == chunkNum)	//非分片上传
+			{
+				retName = saveFile(uploadFile, localDocParentPath,name);
+			}
+			else
+			{
+				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
+			}
+			//Verify the size and FileCheckSum
+			if(false == checkFileSizeAndCheckSum(localDocParentPath,name,fileSize,fileCheckSum))
+			{
+				System.out.println("updateRealDoc() checkFileSizeAndCheckSum Error");
+				return false;
+			}
+			
+		} catch (Exception e) {
+			System.out.println("updateRealDoc() saveFile " + name +" 异常！");
+			e.printStackTrace();
+			rt.setMsgData(e);
+			return false;
+		}
+		
+		System.out.println("updateRealDoc() saveFile return: " + retName);
+		if(retName == null  || !retName.equals(name))
+		{
+			System.out.println("updateRealDoc() saveFile " + name +" Failed！");
+			return false;
+		}
+		return true;
+	}
+	
+	private String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer cutSize, String chunkParentPath) {
+		try {
+			String targetFilePath = targetParentPath + fileName;
+			FileOutputStream out;
+
+			out = new FileOutputStream(targetFilePath);
+	        FileChannel outputChannel = out.getChannel();   
+
+        	long offset = 0;
+	        for(int chunkIndex = 0; chunkIndex < chunkNum; chunkIndex ++)
+	        {
+	        	String chunkFilePath = chunkParentPath + fileName + "_" + chunkIndex;
+	        	FileInputStream in=new FileInputStream(chunkFilePath);
+	            FileChannel inputChannel = in.getChannel();    
+	            outputChannel.transferFrom(inputChannel, offset, inputChannel.size());
+	        	offset += inputChannel.size();	        			
+	    	   	inputChannel.close();
+	    	   	in.close();
+	    	}
+	        outputChannel.close();
+		    out.close();
+		    return fileName;
+		} catch (Exception e) {
+			System.out.println("combineChunks() Failed to combine the chunks");
+			e.printStackTrace();
+			return null;
+		}        
+	}
+	
+	protected void deleteChunks(String name, Integer chunkIndex, Integer chunkNum, String chunkParentPath) {
+		System.out.println("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
+		
+		if(null == chunkIndex || chunkIndex < (chunkNum-1))
+		{
+			return;
+		}
+		
+		System.out.println("deleteChunks() name:" + name + " chunkIndex:" + chunkIndex  + " chunkNum:" + chunkNum + " chunkParentPath:" + chunkParentPath);
+		try {
+	        for(int i = 0; i < chunkNum; i ++)
+	        {
+	        	String chunkFilePath = chunkParentPath + name + "_" + i;
+	        	delFile(chunkFilePath);
+	    	}
+		} catch (Exception e) {
+			System.out.println("deleteChunks() Failed to combine the chunks");
+			e.printStackTrace();
+		}  
+	}
+
+	protected boolean isChunkMatched(String chunkFilePath, String chunkHash) {
+		//检查文件是否存在
+		File f = new File(chunkFilePath);
+		if(!f.exists()){
+			return false;
+		}
+
+		//Check if chunkHash is same
+		try {
+			FileInputStream file = new FileInputStream(chunkFilePath);
+			String hash=DigestUtils.md5Hex(file);
+			file.close();
+			if(hash.equals(chunkHash))
+			{
+				return true;
+			}
+		} catch (Exception e) {
+			System.out.println("isChunkMatched() Exception"); 
+			e.printStackTrace();
+			return false;
+		}
+
+		return false;
+	}
+	
+	private boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Integer fileSize,
+			String fileCheckSum) {
+		File file = new File(localDocParentPath,name);
+		if(fileSize != file.length())
+		{
+			System.out.println("checkFileSizeAndCheckSum() fileSize " + file.length() + "not match with ExpectedSize" + fileSize);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean moveRealDoc(String reposRPath, String srcParentPath, String srcName, String dstParentPath,String dstName,Integer type, ReturnAjax rt) 
+	{
+		System.out.println("moveRealDoc() " + " reposRPath:"+reposRPath + " srcParentPath:"+srcParentPath + " srcName:"+srcName + " dstParentPath:"+dstParentPath + " dstName:"+dstName);
+		String localOldParentPath = reposRPath + srcParentPath;
+		String oldFilePath = localOldParentPath+ srcName;
+		String localNewParentPath = reposRPath + dstParentPath;
+		String newFilePath = localNewParentPath + dstName;
+		//检查orgFile是否存在
+		if(isFileExist(oldFilePath) == false)
+		{
+			System.out.println("moveRealDoc() " + oldFilePath + " not exists");
+			rt.setMsgData("moveRealDoc() " + oldFilePath + " not exists");
+			return false;
+		}
+		
+		//检查dstFile是否存在
+		if(isFileExist(newFilePath) == true)
+		{
+			System.out.println("moveRealDoc() " + newFilePath + " already exists");
+			rt.setMsgData("moveRealDoc() " + newFilePath + " already exists");
+			return false;
+		}
+	
+		/*移动文件或目录*/		
+		if(moveFileOrDir(localOldParentPath,srcName,localNewParentPath,dstName,false) == false)	//强制覆盖
+		{
+			System.out.println("moveRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
+			rt.setMsgData("moveRealDoc() move " + oldFilePath + " to "+ newFilePath + " Failed");
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean copyRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt) {
+		String srcDocPath = reposRPath + srcParentPath + srcName;
+		String dstDocPath = reposRPath + dstParentPath + dstName;
+
+		if(isFileExist(srcDocPath) == false)
+		{
+			System.out.println("copyRealDoc() 文件: " + srcDocPath + " 不存在");
+			rt.setMsgData("文件: " + srcDocPath + " 不存在");
+			return false;
+		}
+		
+		if(isFileExist(dstDocPath) == true)
+		{
+			System.out.println("copyRealDoc() 文件: " + dstDocPath + " 已存在");
+			rt.setMsgData("文件: " + dstDocPath + " 已存在");
+			return false;
+		}
+		
+		if(type == 2)	//如果是目录则创建目录
+		{
+			if(false == createDir(dstDocPath))
+			{
+				System.out.println("copyRealDoc() 目录: " + dstDocPath + " 创建失败");
+				rt.setMsgData("目录: " + dstDocPath + " 创建失败");
+				return false;
+			}
+		}
+		else	//如果是文件则复制文件
+		{
+			if(copyFile(srcDocPath,dstDocPath,false) == false)	//强制覆盖
+			{
+				System.out.println("copyRealDoc() 文件: " + srcDocPath + " 复制失败");
+				rt.setMsgData("文件: " + srcDocPath + " 复制失败");
+				return false;
+			}
+		}
+		return true;
+	}
+
+	//create Virtual Doc
+	private boolean createVirtualDoc(String reposVPath, String docVName,String content, ReturnAjax rt) {
+		String vDocPath = reposVPath + docVName;
+		System.out.println("vDocPath: " + vDocPath);
+		if(isFileExist(vDocPath) == true)
+		{
+			System.out.println("目录 " +vDocPath + "　已存在！");
+			rt.setMsgData("目录 " +vDocPath + "　已存在！");
+			return false;
+		}
+			
+		if(false == createDir(vDocPath))
+		{
+			System.out.println("目录 " + vDocPath + " 创建失败！");
+			rt.setMsgData("目录 " + vDocPath + " 创建失败！");
+			return false;
+		}
+		if(createDir(vDocPath + "/res") == false)
+		{
+			System.out.println("目录 " + vDocPath + "/res" + " 创建失败！");
+			rt.setMsgData("目录 " + vDocPath + "/res" + " 创建失败！");
+			return false;
+		}
+		if(createFile(vDocPath,"content.md") == false)
+		{
+			System.out.println("目录 " + vDocPath + "/content.md" + " 创建失败！");
+			rt.setMsgData("目录 " + vDocPath + "/content.md" + " 创建失败！");
+			return false;			
+		}
+		if(content !=null && !"".equals(content))
+		{
+			saveVirtualDocContent(reposVPath,docVName, content,rt);
+		}
+		
+		return true;
+	}
+	
+	private boolean deleteVirtualDoc(String reposVPath, String docVName, ReturnAjax rt) {
+		String localDocVPath = reposVPath + docVName;
+		if(delDir(localDocVPath) == false)
+		{
+			rt.setMsgData("deleteVirtualDoc() delDir失败 " + localDocVPath);
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean moveVirtualDoc(String reposVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
+		if(moveFileOrDir(reposVPath, srcDocVName, reposVPath, dstDocVName, false) == false)
+		{
+			rt.setMsgData("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName, ReturnAjax rt) {
+		String srcDocFullVPath = reposVPath + srcDocVName;
+		String dstDocFullVPath = reposVPath + dstDocVName;
+		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
+		{
+			rt.setMsgData("copyVirtualDoc() copyDir " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
+			return false;
+		}
+		return true;
+	}
+
+	protected boolean saveVirtualDocContent(String localParentPath, String docVName, String content, ReturnAjax rt) {
+		String vDocPath = localParentPath + docVName + "/";
+		File folder = new File(vDocPath);
+		if(!folder.exists())
+		{
+			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
+			if(folder.mkdir() == false)
+			{
+				System.out.println("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
+				rt.setMsgData("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
+				return false;
+			}
+		}
+		
+		//set the md file Path
+		String mdFilePath = vDocPath + "content.md";
+		//创建文件输入流
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(mdFilePath);
+		} catch (FileNotFoundException e) {
+			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
+			e.printStackTrace();
+			rt.setMsgData(e);
+			return false;
+		}
+		try {
+			out.write(content.getBytes(), 0, content.length());
+			//关闭输出流
+			out.close();
+		} catch (IOException e) {
+			System.out.println("saveVirtualDocContent() out.write exception");
+			e.printStackTrace();
+			rt.setMsgData(e);
+			return false;
+		}
+		return true;
+	}
+	
+	protected Integer getMaxFileSize() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private boolean isNodeExist(String name, Integer parentId, Integer reposId) {
+		Doc qdoc = new Doc();
+		qdoc.setName(name);
+		qdoc.setPid(parentId);
+		qdoc.setVid(reposId);
+		List <Doc> docList = reposService.getDocList(qdoc);
+		if(docList != null && docList.size() > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	Doc getDocByName(String name, Integer parentId, Integer reposId)
+	{
+		Doc qdoc = new Doc();
+		qdoc.setName(name);
+		qdoc.setPid(parentId);
+		qdoc.setVid(reposId);
+		List <Doc> docList = reposService.getDocList(qdoc);
+		if(docList != null && docList.size() > 0)
+		{
+			return docList.get(0);
+		}
+		return null;
+	}
+
+	//0：虚拟文件系统  1：实文件系统 
+	boolean isRealFS(Integer type)
+	{
+		if(type == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	/********************* Functions For User Opertion Right****************************/
+	//检查用户的新增权限
+	protected boolean checkUserAddRight(ReturnAjax rt, Integer userId,
+			Integer parentId, Integer reposId) {
+		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
+		if(docUserAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			return false;
+		}
+		else
+		{
+			if(docUserAuth.getAccess() == 0)
+			{
+				rt.setError("您无权访问该目录，请联系管理员");
+				return false;
+			}
+			else if(docUserAuth.getAddEn() != 1)
+			{
+				rt.setError("您没有该目录的新增权限，请联系管理员");
+				return false;				
+			}
+		}
+		return true;
+	}
+
+	protected boolean checkUserDeleteRight(ReturnAjax rt, Integer userId,
+			Integer parentId, Integer reposId) {
+		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
+		if(docUserAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			return false;
+		}
+		else
+		{
+			if(docUserAuth.getAccess() == 0)
+			{
+				rt.setError("您无权访问该目录，请联系管理员");
+				return false;
+			}
+			else if(docUserAuth.getDeleteEn() != 1)
+			{
+				rt.setError("您没有该目录的删除权限，请联系管理员");
+				return false;				
+			}
+		}
+		return true;
+	}
+	
+	protected boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId,
+			Integer reposId) {
+		DocAuth docUserAuth = getUserDocAuth(userId,docId,reposId);
+		if(docUserAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			return false;
+		}
+		else
+		{
+			if(docUserAuth.getAccess() == 0)
+			{
+				rt.setError("您无权访问该文件，请联系管理员");
+				return false;
+			}
+			else if(docUserAuth.getEditEn() != 1)
+			{
+				rt.setError("您没有该文件的编辑权限，请联系管理员");
+				return false;				
+			}
+		}
+		return true;
+	}
+	
+	protected boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId,
+			Integer reposId) {
+		DocAuth docAuth = getUserDocAuth(userId,docId,reposId);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			return false;
+		}
+		else
+		{
+			Integer access = docAuth.getAccess();
+			if(access == null || access.equals(0))
+			{
+				rt.setError("您无权访问该文件，请联系管理员");
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	/*************** Functions For verRepos *********************/
+	protected List<LogEntry> verReposGetHistory(Repos repos,boolean isRealDoc, String entryPath, int maxLogNum) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnGetHistory(repos, isRealDoc, entryPath, maxLogNum);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitGetHistory(repos, isRealDoc, entryPath, maxLogNum);
+		}
+		return null;
+	}
+	
+	private List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
+		GITUtil gitUtil = new GITUtil();
+		if(false == gitUtil.Init(repos, isRealDoc, null))
+		{
+			System.out.println("gitGetHistory() gitUtil.Init Failed");
+			return null;
+		}
+		return gitUtil.getHistoryLogs(docPath, null, null, maxLogNum);
+	}
+	
+	private List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
+
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, isRealDoc, null))
+		{
+			System.out.println("svnGetHistory() svnUtil.Init Failed");
+			return null;
+		}
+		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
+	}
+	
+	private boolean verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(commitMsg == null)
+		{
+			commitMsg = "Add " + parentPath +  entryName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnRealDocCommit(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocAdd(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
+		}
+		return true;
+	}
+
+	private boolean svnRealDocCommit(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		String remotePath = parentPath + entryName;
+		String reposRPath = getReposRealPath(repos);
+		
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.Init失败！");	
+			return false;
+		}
+		
+		Integer entryType = svnUtil.getEntryType(remotePath, -1);
+		if(entryType == 0)	//检查文件是否已经存在于仓库中
+		{
+			if(type == 1)
+			{
+				String localFilePath = reposRPath + remotePath;
+				if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg,commitUser) == false)
+				{
+					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
+					rt.setMsgData("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
+					return false;
+				}
+			}
+			else
+			{
+				if(svnUtil.svnAddDir(parentPath,entryName,commitMsg,commitUser) == false)
+				{
+					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");	
+					rt.setMsgData("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");
+					return false;
+				}
+			}
+		}
+		else //如果已经存在（需要检查Entry类型是否相同）
+		{
+			if(type != entryType)
+			{
+				System.out.println("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
+				rt.setMsgData("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
+				return true;	
+			}
+			
+			if(type == 1)
+			{				
+				String localFilePath = reposRPath + remotePath;
+				if(svnUtil.svnModifyFile(parentPath,entryName,null, localFilePath, commitMsg,commitUser) == false)
+				{
+					System.out.println("svnRealDocCommit() " + remotePath + " remoteModifyFile失败！");
+					System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + entryName + " localFilePath:" + localFilePath);
+					return false;
+				}
+			}
+			else	//For Dir
+			{
+				System.out.println("svnRealDocCommit() " + remotePath + " 已存在！");
+				return true;
+			}
+		}
+		
+		return true;
+	}
+	
+	private boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocAdd() entryName can not be empty");
+			return false;
+		}
+		
+		//Do Commit
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			return false;
+		}
+
+		//Add to Doc to WorkingDirectory
+		String docPath = getReposRealPath(repos) + parentPath + entryName;
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		if(type == 1)
+		{
+			if(copyFile(docPath, wcDocPath, false) == false)
+			{
+				System.out.println("gitRealDocAdd() add File to WD error");					
+				return false;
+			}
+		}
+		else
+		{
+			//Add Dir
+			File dir = new File(wcDocPath);
+			if(dir.mkdir() == false)
+			{
+				System.out.println("gitRealDocAdd() add Dir to WD error");										
+				return false;
+			}
+		}			
+		
+		//Commit will roll back WC if there is error
+		if(gitUtil.gitAdd(parentPath, entryName,commitMsg, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean verReposRealDocDelete(Repos repos, String parentPath, String entryName,Integer type,
+			String commitMsg, String commitUser, ReturnAjax rt) {	
+		if(commitMsg == null)
+		{
+			commitMsg = "Delete " + parentPath + entryName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnRealDocDelete(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocDelete(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
+			String commitMsg, String commitUser, ReturnAjax rt) {
+		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
+
+		String docRPath = parentPath + name;
+		SVNUtil svnUtil = new SVNUtil();
+		
+		if(false == svnUtil.Init(repos, true, commitUser))
+		{
+			System.out.println("svnRealDocDelete() svnUtil.Init 失败！");
+			return false;
+		}
+		
+		if(svnUtil.doCheckPath(docRPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
+		{
+			if(svnUtil.svnDelete(parentPath,name,commitMsg,commitUser) == false)
+			{
+				System.out.println("svnRealDocDelete() " + docRPath + " remoteDeleteEntry失败！");
+				rt.setMsgData("svnRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	private boolean verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type,
+			String commitMsg, String commitUser, ReturnAjax rt) {
+		
+		if(commitMsg == null)
+		{
+			commitMsg = "Commit " + parentPath + entryName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean verReposRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
+			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(commitMsg == null)
+		{
+			commitMsg = "Move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnRealDocMove(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocMove(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean verReposRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
+			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(commitMsg == null)
+		{
+			commitMsg = "Copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	protected boolean verReposCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId) {
+		if(repos.getVerCtrl() == 1)
+		{
+			long revision = Long.parseLong(commitId);
+			return svnCheckOut(repos, isRealDoc, parentPath, entryName, localParentPath, targetName, revision);		
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitCheckOut(repos, isRealDoc, parentPath, entryName, localParentPath, targetName, commitId);
+		}
+		return true;
+	}
+	
+	private boolean verReposRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
+	{
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnRevertRealDoc(repos, parentPath, entryName, type, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRevertRealDoc(repos, parentPath, entryName, type, rt);
+		}
+		return true;
+	}
+	
+	private boolean verReposVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) 
+	{	
+		if(commitMsg == null)
+		{
+			commitMsg = "Add " + docVName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnVirtualDocAdd(repos, docVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocAdd(repos, docVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+	
+	private boolean verReposVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(commitMsg == null)
+		{
+			commitMsg = "Delete " + docVName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnVirtualDocDelete(repos, docVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocDelete(repos, docVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean verReposVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
+		if(commitMsg == null)
+		{
+			commitMsg = "Commit " + docVName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean verReposVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(commitMsg == null)
+		{
+			commitMsg = "Move " + srcDocVName + " to " + dstDocVName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser, rt);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean verReposVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		if(commitMsg == null)
+		{
+			commitMsg = "Copy " + srcDocVName + " to " + dstDocVName;
+		}
+		
+		if(repos.getVerCtrl() == 1)
+		{
+			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			return svnVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);		
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);
+		}
+		return true;
+	}
+
+	private boolean verReposRevertVirtualDoc(Repos repos, String docVName) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnRevertVirtualDoc(repos, docVName);		
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitRevertVirtualDoc(repos, docVName);
+		}
+		return true;
+	}
+	
+	/********************** Functions For git *************************************/
+	private boolean gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocDelete() entryName can not be empty");
+			return false;
+		}
+
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocDelete() GITUtil Init failed");
+			return false;
+		}
+		
+		//Add to Doc to WorkingDirectory
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		if(delFileOrDir(wcDocPath) == false)
+		{
+			System.out.println("gitRealDocDelete() delete working copy failed");
+		}
+			
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser)== false)
+		{
+			System.out.println("gitRealDocDelete() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitRealDocCommit() entryName can not be empty");
+			return false;
+		}
+
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Init failed");
+			return false;
+		}
+	
+		//Copy to Doc to WorkingDirectory
+		String docPath = getReposRealPath(repos) + parentPath + entryName;
+		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		if(type == 1)
+		{
+			if(copyFile(docPath, wcDocPath, true) == false)
+			{
+				System.out.println("gitRealDocCommit() copy File to working directory failed");					
+				return false;
+			}
+		}
+		else
+		{
+			System.out.println("gitRealDocCommit() dir can not modify");
+			return false;
+		}			
+				
+		//Commit will roll back WC if there is error
+		if(gitUtil.Commit(parentPath, entryName,commitMsg, commitUser) == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;	
+	}
+	
+	private boolean gitRealDocMove(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {	
+		
+		return gitDocMove(repos, true, srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg, commitUser, rt);
+	}
+	
+	private boolean gitRealDocCopy(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		return  gitDocCopy(repos, true, srcParentPath, srcEntryName, dstParentPath, dstEntryName,  commitMsg, commitUser, rt);
+	}
+	
+	private boolean gitDocMove(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		System.out.println("gitDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		if(srcEntryName == null || srcEntryName.isEmpty())
+		{
+			System.out.println("gitDocMove() srcEntryName can not be empty");
+			return false;
+		}
+		
+		if(dstEntryName == null || dstEntryName.isEmpty())
+		{
+			System.out.println("gitDocMove() dstEntryName can not be empty");
+			return false;
+		}
+		
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitDocMove() GITUtil Init failed");
+			return false;
+		}
+	
+		//Do move at Working Directory
+		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
+		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
+		if(moveFileOrDir(wcSrcDocParentPath, srcEntryName,wcDstParentDocPath, dstEntryName,false) == false)
+		{
+			System.out.println("gitDocMove() moveFileOrDir Failed");					
+			return false;
+		}
+				
+		//Commit will roll back WC if there is error
+		if(gitUtil.gitMove(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser) == false)
+		{
+			System.out.println("gitDocMove() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;	
+	}
+	
+	private boolean gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		System.out.println("gitDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		if(srcEntryName == null || srcEntryName.isEmpty())
+		{
+			System.out.println("gitDocCopy() srcEntryName can not be empty");
+			return false;
+		}
+
+		if(dstEntryName == null || dstEntryName.isEmpty())
+		{
+			System.out.println("gitDocCopy() dstEntryName can not be empty");
+			return false;
+		}
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitDocCopy() GITUtil Init failed");
+			return false;
+		}
+	
+		//Do move at Working Directory
+		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
+		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
+		if(copyFileOrDir(wcSrcDocParentPath+srcEntryName,wcDstParentDocPath+dstEntryName,false) == false)
+		{
+			System.out.println("gitDocCopy() moveFileOrDir Failed");					
+			return false;
+		}
+				
+		//Commit will roll back WC if there is error
+		if(gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser) == false)
+		{
+			System.out.println("gitDocCopy() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;	
+	}
+
+	private boolean gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String revision) {
+		// TODO Auto-generated method stub
+		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, null) == false)
+		{
+			System.out.println("gitCheckOut() GITUtil Init failed");
+			return false;
+		}
+		
+		return gitUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
+	}
+	
+	private boolean gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		System.out.println("gitRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
+		String localParentPath = getReposRealPath(repos) + parentPath;
+
+		//revert from svn server
+		return gitCheckOut(repos, true, parentPath, entryName, localParentPath, entryName,null);
+	}
+		
+	private boolean gitVirtualDocAdd(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(docVName == null || docVName.isEmpty())
+		{
+			System.out.println("gitVirtualDocAdd() entryName can not be empty");
+			return false;
+		}
+		
+		//Do Commit
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, false, commitUser) == false)
+		{
+			System.out.println("gitVirtualDocAdd() GITUtil Init failed");
+			return false;
+		}
+
+		//Commit will roll back WC if there is error
+		String localPath = getReposVirtualPath(repos);		
+		if(gitUtil.doAutoCommit("", docVName, localPath,commitMsg, commitUser, true, null) == false)
+		{
+			System.out.println("gitVirtualDocAdd() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean gitVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser,
+			ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(docVName == null || docVName.isEmpty())
+		{
+			System.out.println("gitVirtualDocDelete() docVName can not be empty");
+			return false;
+		}
+
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, false, commitUser) == false)
+		{
+			System.out.println("gitVirtualDocDelete() GITUtil Init failed");
+			return false;
+		}
+		
+		//Add to Doc to WorkingDirectory
+		String wcDocPath = getLocalVerReposPath(repos, false) + docVName;
+		if(delDir(wcDocPath) == false)
+		{
+			System.out.println("gitVirtualDocDelete() delete working copy failed");
+		}
+			
+		if(gitUtil.Commit("", docVName,commitMsg, commitUser)== false)
+		{
+			System.out.println("gitVirtualDocDelete() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean gitVirtualDocCommit(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		if(docVName == null || docVName.isEmpty())
+		{
+			System.out.println("gitRealDocCommit() entryName can not be empty");
+			return false;
+		}
+
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, false, commitUser) == false)
+		{
+			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			return false;
+		}
+	
+				
+		//Commit will roll back WC if there is error
+		String localPath = getReposVirtualPath(repos);		
+		if(gitUtil.doAutoCommit("", docVName, localPath,commitMsg, commitUser, true, null) == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Commit failed");
+			return false;
+		}
+		
+		return true;
+	}
+
+	private boolean gitVirtualDocMove(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return gitDocMove(repos, false, "", srcDocVName, "", dstDocVName, commitMsg, commitUser, rt);
+	}
+	
+	private boolean gitVirtualDocCopy(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
+			String commitUser, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return  gitDocCopy(repos, false, "", srcDocVName, "", dstDocVName,  commitMsg, commitUser, rt);
+	}
+	
+	private boolean gitRevertVirtualDoc(Repos repos, String docVName) {
+		// TODO Auto-generated method stub
+		System.out.println("svnRevertRealDoc() docVName:" + docVName);
+		String localParentPath = getReposVirtualPath(repos);
+
+		//revert from svn server
+		return gitCheckOut(repos, false, "", docVName, localParentPath, docVName,null);
+	}
+	
+	/********************** Functions for SVN ***************************/
+	private boolean svnRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
+			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		
+		System.out.println("svnRealDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		if(svnMove(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg, commitUser, rt) == false)
+		{
+			System.out.println("svnRealDocMove() svnMove Failed！");
+			rt.setMsgData("svnMove Failed！");
+			return false;
+		}
+			
+		return true;
+	}
+	
+	private boolean svnCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, isRealDoc, commitUser))
+		{
+			System.out.println("svnCopy() svnUtil.Init Failed: srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			return false;
+		}
+		
+		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, false) == false)
+		{
+			System.out.println("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			rt.setMsgData("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean svnMove(Repos repos, boolean isRealDoc, String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt)  
+	{
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, isRealDoc, commitUser))
+		{
+			System.out.println("svnMove() svnUtil.Init Failed: srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			return false;
+		}
+		
+		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath,dstEntryName, commitMsg,commitUser,true) == false)
+		{
+			System.out.println("svnMove() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			rt.setMsgData("svnMove() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean svnRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
+			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
+		
+		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+			
+		if(svnCopy(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,commitUser,rt) == false)
+		{
+			System.out.println("文件: " + srcEntryName + " svnCopy失败");
+			return false;
+		}
+		return true;
+	}
+
+	private boolean svnCheckOut(Repos repos, boolean isRealDoc, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
+	{
+		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
+		
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, isRealDoc, null) == false)
+		{
+			System.out.println("svnCheckOut() svnUtil Init Failed");
+			return false;
+		}
+
+		return svnUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
+	}
+
+	private boolean svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
+	{
+		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
+		String localParentPath = getReposRealPath(repos) + parentPath;
+
+		//revert from svn server
+		return svnCheckOut(repos, true, parentPath, entryName, localParentPath, entryName,-1);
+	}
+
+	private boolean svnVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
+		
+		System.out.println("svnVirtualDocAdd() docVName:" + docVName);
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, false, commitUser) == false)
+		{
+			System.out.println("svnVirtualDocAdd() svnUtil Init Failed!");
+			rt.setMsgData("svnVirtualDocAdd() svnUtil Init Failed!");
+			return false;
+		}
+		
+		String reposVPath =  getReposVirtualPath(repos);
+		
+		//modifyEnable set to false
+		if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null) == false)
+		{
+			System.out.println(docVName + " doAutoCommit失败！");
+			rt.setMsgData("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean svnVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		System.out.println("svnVirtualDocDelete() docVName:" + docVName);
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, false, commitUser))
+		{
+			System.out.println("svnVirtualDocDelete()  svnUtil.Init 失败！");
+			return false;
+		}
+		
+		if(svnUtil.doCheckPath(docVName,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
+		{
+			if(svnUtil.svnDelete("",docVName,commitMsg,commitUser) == false)
+			{
+				System.out.println("svnVirtualDocDelete() " + docVName + " remoteDeleteEntry失败！");
+				rt.setMsgData("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ");
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean svnVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
+		System.out.println("svnVirtualDocCommit() docVName:" + docVName);
+		String reposVPath =  getReposVirtualPath(repos);
+		
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, false, commitUser))
+		{
+			System.out.println("svnVirtualDocCommit() svnUtil.Init 失败！");
+			return false;
+		}
+		
+		if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,null) == false)
+		{
+			System.out.println("svnVirtualDocCommit() " + docVName + " doCommit失败！");
+			rt.setMsgData(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
+			return false;
+		}
+		
+		return true;
+	}
+
+	private boolean svnVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser, ReturnAjax rt) {
+		System.out.println("svnVirtualDocMove() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);
+		if(svnMove(repos, false,"",srcDocVName,"",dstDocVName,commitMsg,commitUser, rt) == false)
+		{
+			System.out.println("svnMove Failed！");
+			rt.setMsgData("svnVirtualDocMove() svnMove Failed！");
+			return false;
+		}
+		return true;
+	}
+
+	private boolean svnVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) {
+
+		System.out.println("svnVirtualDocCopy() srcDocVName:" + srcDocVName + " dstDocVName:" + dstDocVName);			
+		if(svnCopy(repos, false, "",srcDocVName,"",dstDocVName,commitMsg,commitUser,rt) == false)
+		{
+			System.out.println("文件: " + srcDocVName + " svnCopy失败");
+			return false;
+		}
+		return true;
+	}
+
+	private boolean svnRevertVirtualDoc(Repos repos, String docVName) {
+		System.out.println("svnRevertVirtualDoc() docVName:" + docVName);
+		
+		String localDocVParentPath = getReposVirtualPath(repos);
+
+		return svnCheckOut(repos, false, "", docVName, localDocVParentPath, docVName,-1);
+	}
+	
+	private String commitMsgFormat(String commitMsg, String commitUser) {
+		commitMsg = commitMsg + " by [" + commitUser + "] ";
+		return commitMsg;
+	}
+	
+	//Add Index For VDoc
+	private void addIndexForVDoc(Integer docId, String content) {
+		if(content == null || "".equals(content))
+		{
+			return;
+		}
+		
+		try {
+			System.out.println("addIndexForVDoc() add index in lucne: docId " + docId + " content:" + content);
+			//Add Index For Content
+			LuceneUtil2.addIndex(docId + "-0", docId,content, "doc");
+		} catch (Exception e) {
+			System.out.println("addIndexForVDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
+	private void updateIndexForVDoc(Integer id, String content) {
+		try {
+			System.out.println("updateIndexForVDoc() updateIndexForVDoc in lucene: docId " + id);
+			LuceneUtil2.updateIndexForVDoc(id,content,"doc");
+		} catch (Exception e) {
+			System.out.println("updateIndexForVDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
+	private void updateIndexForRDoc(Integer docId, String localDocRPath) {
+		//Add the doc to lucene Index
+		try {
+			System.out.println("updateIndexForRDoc() add index in lucne: docId " + docId);
+			//Add Index For File
+			LuceneUtil2.updateIndexForRDoc(docId,localDocRPath, "doc");
+		} catch (Exception e) {
+			System.out.println("updateIndexForRDoc() Failed to update lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
+	private void deleteIndexForDoc(Integer docId, String string) {
+		try {
+			System.out.println("DeleteDoc() delete index in lucne: docId " + docId);
+			LuceneUtil2.deleteIndexForDoc(docId,"doc");
+		} catch (Exception e) {
+			System.out.println("DeleteDoc() Failed to delete lucene Index");
+			e.printStackTrace();
+		}
 	}
 	
 }

@@ -13,6 +13,9 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.tmatesoft.svn.core.SVNDirEntry;
+import org.tmatesoft.svn.core.SVNNodeKind;
+
 import util.ReturnAjax;
 import util.GitUtil.GITUtil;
 import util.SvnUtil.SVNUtil;
@@ -1206,11 +1209,11 @@ public class ReposController extends BaseController{
 		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(login_user.getId(), 0, repos);
+			docList = getAccessableSubDocList(repos, 0, login_user, rt);
 		}
 		else
 		{
-			docList = getDocListFromRootToDoc(repos,docId,login_user.getId());
+			docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
 		}
 		
 		if(docList == null)
@@ -1225,12 +1228,34 @@ public class ReposController extends BaseController{
 		return;		
 	}
 	
-	private List<Doc> getDocListFromRootToDoc(Repos repos, Integer docId, Integer UserId) 
-	{
-		System.out.println("getDocListFromRootToDoc() userId:" + UserId + " vid:" + repos.getId()  + " docId:" + docId);
+	//getAccessableSubDocList
+	private List<Doc> getAccessableSubDocList(Repos repos, Integer pid, User login_user, ReturnAjax rt) {		
+		System.out.println("getAccessableSubDocList()  pid:" + pid + " vid:" + repos.getId());
 		
 		//Get the userDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(UserId,repos.getId());
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		
+		//get the rootDocAuth
+		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(),pid,repos.getId());
+		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
+		{
+			System.out.println("getAccessableSubDocList() 用户没有该目录的权限");
+			return null;
+		}
+		
+		//获取子目录所有authed subDocs
+		Doc parentDoc = reposService.getDoc(pid);
+		String parentPath = getParentPath(parentDoc.getPid()) + parentDoc.getName() + "/";
+		List <Doc> resultList = getAuthedSubDocList(repos, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
+		return resultList;
+	}
+
+	private List<Doc> getDocListFromRootToDoc(Repos repos, Integer docId, User login_user, ReturnAjax rt)
+	{
+		System.out.println("getDocListFromRootToDoc() vid:" + repos.getId()  + " docId:" + docId);
+		
+		//Get the userDocAuthHashMap
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Integer> docIdList = new ArrayList<Integer>();
@@ -1240,7 +1265,7 @@ public class ReposController extends BaseController{
 		if(docIdList.size() <= 2)
 		{
 			DocAuth docAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
-			List<Doc> docList = getAuthedSubDocList(repos, 0 ,docAuth,docAuthHashMap);
+			List<Doc> docList = getAuthedSubDocList(repos, null ,"", docAuth,docAuthHashMap, login_user, rt);
 			return docList;
 		}
 		
@@ -1248,45 +1273,45 @@ public class ReposController extends BaseController{
 		List<Doc> resultList = new ArrayList<Doc>();
 		DocAuth parentDocAuth = null;
 		int docPathDeepth = docIdList.size();
+		String parentPath = "";
 		for(int i=(docPathDeepth-1);i>0;i--)	//We should not to get subDocList with index 0 (which is the docId) 
 		{
 			Integer curDocId = docIdList.get(i);
+			Doc curDoc = reposService.getDoc(curDocId);
 			System.out.println("getDocListFromRootToDoc() curDocId[" + i+ "]:" + curDocId); 
 			DocAuth docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
-			List<Doc> subDocList = getAuthedSubDocList(repos, curDocId ,docAuth,docAuthHashMap);
+			List<Doc> subDocList = getAuthedSubDocList(repos, curDoc, parentPath+curDoc.getName(), docAuth,docAuthHashMap , login_user, rt);
 			if(subDocList != null && subDocList.size() > 0)
 			{
 				resultList.addAll(subDocList);
 			}
+			
+			//Update the parentPath and parentDocAuth
 			parentDocAuth = docAuth;
+			parentPath = parentPath + curDoc.getName();
 		}		
 		return resultList;
 	}
 	
 	//获取pid下的SubDocList
-	private List <Doc> getAuthedSubDocList(Repos repos, Integer pid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap)
+	private List <Doc> getAuthedSubDocList(Repos repos, Doc parentDoc, String parentPath, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap,User login_user,ReturnAjax rt)
 	{
-		Integer vid = repos.getId();
-		System.out.println("getAuthedDocList()" + " pid:" + pid + " vid:" + vid);
+		System.out.println("getAuthedDocList()" + " pid:" + parentDoc.getId() + " vid:" + repos.getId());
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			return null;
 		}
+		
 		//printObject("getAuthedDocList() parentDocAuth:",pDocAuth);
 		
 		//获取子目录所有文件
-		List <Doc> docList = getSubDocList(pid,vid);
-		if(docList == null || docList.size() == 0)
+		List <Doc> subDocList = getSubDocList(repos, parentDoc, parentPath, login_user, rt);
+		if(subDocList == null || subDocList.size() == 0)
 		{
 			return null;
 		}
 		
-		//if(repos.getVerCtrl())
-		//获取版本仓库下的所有目录的子节点
-		//List docListForVerRepos = verReposGetSubDocList(repos,parentPath,entryName);
-		//count == DoSyncUp(docList1, docList);
-		//if(count > 0) do get docList again
-		
+		/**Use DocAuth to filter not authed docs**/
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
 		if(rootDocAuth == null)
@@ -1295,93 +1320,164 @@ public class ReposController extends BaseController{
 			return null;
 		}
 		
-		//Go through the docList if the doc can be access, add it to resultList
+		//Go through the subDocList if the doc can be access, add it to resultList
 		List <Doc> resultList = new ArrayList<Doc>();
-		for(int i=0;i<docList.size();i++)
+		for(int i=0;i<subDocList.size();i++)
 		{
-			Doc doc = docList.get(i);
-			Integer docId = doc.getId();
-			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
+			Doc subDoc = subDocList.get(i);
+			Integer subDocId = subDoc.getId();
+			DocAuth docAuth = getDocAuthFromHashMap(subDocId,pDocAuth,docAuthHashMap);
 			//System.out.println("getAuthedSubDocList() docId:"+docId + " docName:" + doc.getName());
 			//printObject("getAuthedSubDocList() docAuth:",docAuth);
 			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 			{
-				resultList.add(doc);
+				resultList.add(subDoc);
 			}
 		}
 		return resultList;
 	}
 	
-	//获取仓库下用户可访问的doclist
-	//已被证实一口气获取所有文件列表是不现实的，因此采用目录动态加载的方式，该接口将不再使用
-	private List<Doc> getAccessableDocList(Integer userID, Integer vid) {		
-		System.out.println("getAccessableDocList() userId:" + userID + " vid:" + vid);
-		
-		//Get the userDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(userID,vid);
-		
-		//get the rootDocAuth
-		DocAuth rootDocAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
-		if(rootDocAuth == null)
+	//获取目录pid下的子节点
+	private List <Doc> getSubDocList(Repos repos,Doc parentDoc, String parentPath,User login_user,ReturnAjax rt)
+	{
+		//Get the SubDocList from DataBase
+		List <Doc> subDoclist = getSubDocListFromDB(repos, parentDoc.getId());
+
+		//If there is no verCtrl
+		if(repos.getVerCtrl() == 0)
 		{
-			System.out.println("getAccessableDocList() 用户根目录权限未设置");
-			return null;
+			return subDoclist;
 		}
 		
-		//用户在仓库中有权限设置，需要一层一层递归来获取文件列表
-		System.out.println("getAccessableDocList() rootDocAuth access:" + rootDocAuth.getAccess() + " docAuthType:" + rootDocAuth.getType() + " heritable:" + rootDocAuth.getHeritable());
-				
-		//get authedDocList: 需要从根目录开始递归往下查询目录权限		
-		List <Doc> docList = new ArrayList<Doc>();
-		return recurGetAuthedSubDocList(0,vid,rootDocAuth,docAuthHashMap,docList);
+		//Get the SubDocList from verRepos
+		int ret = SyncUpDBWithVerRepos(repos, parentDoc, parentPath, subDoclist, login_user, rt);
+		if(ret == 0)	//There is no update in DB
+		{
+			return subDoclist;
+		}
+		
+		//Get the list from DB again
+		return getSubDocListFromDB(repos, parentDoc.getId());
+	}
+	
+	private int SyncUpDBWithVerRepos(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt)
+	{
+		if(repos.getVerCtrl() == 1)
+		{
+			return SyncUpDBWithSvnRepos(repos, parentDoc, parentPath, subDocList, login_user, rt);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return SyncUpDBWithGitRepos(repos, parentDoc, parentPath, subDocList, login_user, rt);
+		}
+		return 0;
+	}
+	
+
+
+	private int SyncUpDBWithGitRepos(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
-	//这是个递归调用函数
-	private List <Doc> recurGetAuthedSubDocList(Integer pid,Integer vid,DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, List<Doc> resultList)
-	{
-		//System.out.println("recurGetAuthedDocList()" + " pid:" + pid + " vid:" + vid);
-		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
+	private int SyncUpDBWithSvnRepos(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt) {
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, true, null))
 		{
-			return resultList;
-		}
-		//printObject("recurGetAuthedDocList() parentDocAuth:",pDocAuth);
-		
-		//获取子目录所有文件
-		List <Doc> docList = getSubDocList(pid,vid);
-		if(docList == null || docList.size() == 0)
-		{
-			return resultList;
+			System.out.println("svnGetHistory() svnUtil.Init Failed");
+			return -1;
 		}
 		
-		//Go through the docList if the doc can be access, add it to resultList
-		for(int i=0;i<docList.size();i++)
+		//RealDocRPath
+		String reposRPath = getReposRealPath(repos);
+		String localParentPath = reposRPath + parentPath;
+		
+		int count = 0;
+		
+		//Schedule For Delete
+		for(int i=0; i < subDocList.size(); i++)
 		{
-			Doc doc = docList.get(i);
-			Integer docId = doc.getId();
-			DocAuth docAuth = getDocAuthFromHashMap(docId,pDocAuth,docAuthHashMap);
-			//System.out.println("recurGetAuthedDocList() docId:"+docId + " docName:" + doc.getName());
-			//printObject("recurGetAuthedDocList() docAuth:",docAuth);
-			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+			Doc subDoc = subDocList.get(i);
+			String subDocName = subDoc.getName();
+			int entryType =	svnUtil.getEntryType(parentPath+subDocName, -1);
+			if(0 == entryType)
+			{	
+				deleteDoc(repos,subDoc.getId(),parentDoc.getId(), null, login_user.getName(), login_user, rt, false, true);
+				count++;
+			}
+		}
+		
+		//Schedule For Add
+		//Get list from verRepos
+		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntries(parentPath, -1); 
+		for(int i=0; i < subEntryList.size(); i++)
+		{
+			SVNDirEntry subEntry = subEntryList.get(i);
+			String subEntryName = subEntry.getName();
+			//SyncUp with localDir
+			File localSubEntry = new File(localParentPath, subEntryName);
+			if(!localSubEntry.exists())
 			{
-				resultList.add(doc);
-				if(doc.getType() == 2)
+				if(addDocFromSvnEntry(repos, svnUtil, subEntry, localSubEntry, parentDoc, parentPath, localParentPath, login_user) == true)
 				{
-					recurGetAuthedSubDocList(docId,vid,docAuth,docAuthHashMap,resultList);
+					count++;
 				}
 			}
 		}
-		return resultList;
+		return count;
 	}
 
-	//获取目录pid下的子节点
-	private List <Doc> getSubDocList(Integer pid,Integer vid)
+	private boolean addDocFromSvnEntry(Repos repos, SVNUtil svnUtil, SVNDirEntry remoteEntry, File localEntry, Doc parentDoc, String parentPath, String localParentPath, User login_user) {
+		//Do add File or add Dir
+		boolean ret = false;
+		Integer entryType = null;
+		String entryName = remoteEntry.getName();
+
+		if(remoteEntry.getKind() == SVNNodeKind.DIR)
+		{
+			ret = localEntry.mkdir();
+			entryType = 2;
+		}
+		else
+		{
+			ret = svnUtil.getEntry(parentPath, entryName, localParentPath, entryName, -1);
+			entryType = 1;
+		}
+
+		//Add DB Node
+		if(true == ret)
+		{
+			//新建doc记录
+			Doc subDoc = new Doc();
+			subDoc.setName(entryName);
+			subDoc.setType(entryType);
+			subDoc.setSize((int) remoteEntry.getSize());
+			//subDoc.setCheckSum(checkSum);
+			subDoc.setVid(repos.getId());
+			subDoc.setPid(parentDoc.getId());
+			subDoc.setCreator(login_user.getId());
+			//set createTime
+			long nowTimeStamp = remoteEntry.getDate().getTime();	//get subEntry latestModify Time
+			subDoc.setCreateTime(nowTimeStamp);
+			subDoc.setLatestEditTime(nowTimeStamp);
+			subDoc.setLatestEditor(login_user.getId());
+			if(reposService.addDoc(subDoc) == 0)
+			{
+				return false;					
+			}
+		}
+		return true;
+	}
+	
+	//获取子节点List in DataBase
+	private List <Doc> getSubDocListFromDB(Repos repos, Integer pid)
 	{
 		Doc doc = new Doc();
 		doc.setPid(pid);
-		doc.setVid(vid);
+		doc.setVid(repos.getId());
 		return reposService.getDocList(doc);
 	}
-	
+
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")
 	public void getSubDocList(Integer id,Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -1405,7 +1501,7 @@ public class ReposController extends BaseController{
 		Repos repos = reposService.getRepos(vid);
 		
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(login_user.getId(),pid, repos);
+		List <Doc> docList = getAccessableSubDocList(repos, id, login_user, rt);
 		if(docList == null)
 		{
 			rt.setData("");
@@ -1416,27 +1512,6 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
-	//getAccessableSubDocList
-	private List<Doc> getAccessableSubDocList(Integer userID, Integer pid, Repos repos) {		
-		System.out.println("getAccessableSubDocList() userId:" + userID + " pid:" + pid + " vid:" + repos.getId());
-		
-		//Get the userDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(userID,repos.getId());
-		
-		//get the rootDocAuth
-		DocAuth pDocAuth = getUserDispDocAuth(userID,pid,repos.getId());
-		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
-		{
-			System.out.println("getAccessableSubDocList() 用户没有该目录的权限");
-			return null;
-		}
-		
-		//获取子目录所有authed subDocs
-		List <Doc> resultList = getAuthedSubDocList(repos, pid, pDocAuth, docAuthHashMap);
-		return resultList;
-	}
-	
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
@@ -1470,7 +1545,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private List<Doc> getReposManagerMenu(Integer vid, User login_user) {
+	private List<Doc> getReposManagerMenu(Repos repos, User login_user) {
 		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
 			System.out.println("超级管理员");
@@ -1483,8 +1558,8 @@ public class ReposController extends BaseController{
 		else
 		{
 			System.out.println("普通用户");
-			Integer userID = login_user.getId();
-			List <Doc> docList = getAccessableDocList(userID,vid);
+			Repos repos = reposService.getRepos(vid);
+			List <Doc> docList = getAccessableDocList(repos, 0, login_user, rt);
 			return docList;
 		}
 	}
