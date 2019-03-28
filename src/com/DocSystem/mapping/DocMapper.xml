@@ -7,6 +7,7 @@
     <result column="TYPE" jdbcType="INTEGER" property="type" />
     <result column="SIZE" jdbcType="INTEGER" property="size" />
     <result column="CHECK_SUM" jdbcType="VARCHAR" property="checkSum" />
+    <result column="REVISION" jdbcType="VARCHAR" property="revision" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
     <result column="PID" jdbcType="INTEGER" property="pid" />
     <result column="VID" jdbcType="INTEGER" property="vid" />
@@ -23,8 +24,8 @@
     <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, SIZE, CHECK_SUM, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, LATEST_EDITOR, 
-    LATEST_EDIT_TIME, STATE, LOCK_BY, LOCK_TIME
+    ID, NAME, TYPE, SIZE, CHECK_SUM, REVISION, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, 
+    LATEST_EDITOR, LATEST_EDIT_TIME, STATE, LOCK_BY, LOCK_TIME
   </sql>
   <sql id="Blob_Column_List">
     CONTENT
@@ -43,17 +44,17 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.Doc">
     insert into doc (ID, NAME, TYPE, 
-      SIZE, CHECK_SUM, PATH, 
-      PID, VID, PWD, CREATOR, 
-      CREATE_TIME, LATEST_EDITOR, LATEST_EDIT_TIME, 
-      STATE, LOCK_BY, LOCK_TIME, 
-      CONTENT)
+      SIZE, CHECK_SUM, REVISION, 
+      PATH, PID, VID, PWD, 
+      CREATOR, CREATE_TIME, LATEST_EDITOR, 
+      LATEST_EDIT_TIME, STATE, LOCK_BY, 
+      LOCK_TIME, CONTENT)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{size,jdbcType=INTEGER}, #{checkSum,jdbcType=VARCHAR}, #{path,jdbcType=VARCHAR}, 
-      #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, #{creator,jdbcType=INTEGER}, 
-      #{createTime,jdbcType=BIGINT}, #{latestEditor,jdbcType=INTEGER}, #{latestEditTime,jdbcType=BIGINT}, 
-      #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT}, 
-      #{content,jdbcType=LONGVARCHAR})
+      #{size,jdbcType=INTEGER}, #{checkSum,jdbcType=VARCHAR}, #{revision,jdbcType=VARCHAR}, 
+      #{path,jdbcType=VARCHAR}, #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, 
+      #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, #{latestEditor,jdbcType=INTEGER}, 
+      #{latestEditTime,jdbcType=BIGINT}, #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, 
+      #{lockTime,jdbcType=BIGINT}, #{content,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
     insert into doc
@@ -72,6 +73,9 @@
       </if>
       <if test="checkSum != null">
         CHECK_SUM,
+      </if>
+      <if test="revision != null">
+        REVISION,
       </if>
       <if test="path != null">
         PATH,
@@ -126,6 +130,9 @@
       <if test="checkSum != null">
         #{checkSum,jdbcType=VARCHAR},
       </if>
+      <if test="revision != null">
+        #{revision,jdbcType=VARCHAR},
+      </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
@@ -179,6 +186,9 @@
       <if test="checkSum != null">
         CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       </if>
+      <if test="revision != null">
+        REVISION = #{revision,jdbcType=VARCHAR},
+      </if>
       <if test="path != null">
         PATH = #{path,jdbcType=VARCHAR},
       </if>
@@ -224,6 +234,7 @@
       TYPE = #{type,jdbcType=INTEGER},
       SIZE = #{size,jdbcType=INTEGER},
       CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
+      REVISION = #{revision,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
       PID = #{pid,jdbcType=INTEGER},
       VID = #{vid,jdbcType=INTEGER},
@@ -244,6 +255,7 @@
       TYPE = #{type,jdbcType=INTEGER},
       SIZE = #{size,jdbcType=INTEGER},
       CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
+      REVISION = #{revision,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
       PID = #{pid,jdbcType=INTEGER},
       VID = #{vid,jdbcType=INTEGER},
@@ -274,6 +286,9 @@
       </if>
       <if test="checkSum != null">
         CHECK_SUM,
+      </if>
+      <if test="revision != null">
+        REVISION,
       </if>
       <if test="path != null">
         PATH,
@@ -324,6 +339,9 @@
       </if>
       <if test="checkSum != null">
         #{checkSum,jdbcType=VARCHAR},
+      </if>
+      <if test="revision != null">
+        #{revision,jdbcType=VARCHAR},
       </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
@@ -380,6 +398,9 @@
     </if>
     <if test="checkSum != null">
         and CHECK_SUM = #{checkSum,jdbcType=VARCHAR}
+    </if>
+    <if test="revision != null">
+        and REVISION = #{revision,jdbcType=VARCHAR}
     </if>
     <if test="path != null">
         and PATH = #{path,jdbcType=VARCHAR}

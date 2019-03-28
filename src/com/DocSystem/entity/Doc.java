@@ -11,6 +11,8 @@ public class Doc {
 
     private String checkSum;
 
+    private String revision;
+
     private String path;
 
     private Integer pid;
@@ -73,6 +75,14 @@ public class Doc {
 
     public void setCheckSum(String checkSum) {
         this.checkSum = checkSum == null ? null : checkSum.trim();
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public void setRevision(String revision) {
+        this.revision = revision == null ? null : revision.trim();
     }
 
     public String getPath() {
