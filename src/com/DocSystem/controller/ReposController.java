@@ -1242,8 +1242,13 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取子目录所有authed subDocs
-		Doc parentDoc = reposService.getDoc(pid);
-		String parentPath = getParentPath(parentDoc.getPid()) + parentDoc.getName() + "/";
+		Doc parentDoc = null;
+		String parentPath = "";
+		if(pid != 0)
+		{
+			parentDoc = reposService.getDoc(pid);
+			parentPath = getParentPath(parentDoc.getId());
+		}
 		List <Doc> resultList = getAuthedSubDocList(repos, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
 		return resultList;
 	}
@@ -1294,7 +1299,7 @@ public class ReposController extends BaseController{
 	//获取pid下的SubDocList
 	private List <Doc> getAuthedSubDocList(Repos repos, Doc parentDoc, String parentPath, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap,User login_user,ReturnAjax rt)
 	{
-		System.out.println("getAuthedDocList()" + " pid:" + parentDoc.getId() + " vid:" + repos.getId());
+		System.out.println("getAuthedDocList()  vid:" + repos.getId() + " pid:" + parentDoc==null?0:parentDoc.getId());
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			return null;
