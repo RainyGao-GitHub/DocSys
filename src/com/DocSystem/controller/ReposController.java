@@ -880,7 +880,7 @@ public class ReposController extends BaseController{
 		return svnPath;
 	}
 
-	private boolean syncupReposWithLocalEntry(Repos repos, User login_user, ReturnAjax rt) {
+	private boolean syncupWithLocalEntry(Repos repos, User login_user, ReturnAjax rt) {
 		System.out.println("syncupWithLocalEntry()");
 		
 		//Real Doc 带版本控制，则需要同步本地和版本仓库
