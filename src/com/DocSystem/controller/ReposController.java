@@ -237,11 +237,13 @@ public class ReposController extends BaseController{
 			return;			
 		}
 
-		if(false == syncupVerRepos(repos,login_user,rt))
+		String reposRPath = getReposRealPath(repos);
+		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, login_user, rt, true);
+		if(ret < 0)
 		{
 			deleteRepos(repos);
 			writeJson(rt, response);	
-			return;				
+			return;
 		}
 		
 		InitReposAuthInfo(repos,login_user,rt);		
@@ -262,7 +264,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 	}
 
-	
 	private boolean checkReposInfoForAdd(Repos repos, ReturnAjax rt) {
 		//检查传入的参数
 		String name = repos.getName();
@@ -879,8 +880,8 @@ public class ReposController extends BaseController{
 		return svnPath;
 	}
 
-	private boolean syncupVerRepos(Repos repos, User login_user, ReturnAjax rt) {
-		System.out.println("syncupVerRepos()");
+	private boolean syncupWithLocalEntry(Repos repos, User login_user, ReturnAjax rt) {
+		System.out.println("syncupWithLocalEntry()");
 		
 		//Real Doc 带版本控制，则需要同步本地和版本仓库
 		Integer verCtrl = repos.getVerCtrl();
@@ -1140,7 +1141,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		syncupVerRepos(repos,login_user,rt);
+		syncupWithLocalEntry(repos,login_user,rt);
 		
 		writeJson(rt, response);	
 	}
@@ -1347,20 +1348,21 @@ public class ReposController extends BaseController{
 		List <Doc> subDoclist = getSubDocListFromDB(repos, pid);
 
 		//If there is no verCtrl
-		if(repos.getVerCtrl() == 0)
+		if(repos.getVerCtrl()== null || repos.getVerCtrl()== 0 || repos.getIsRemote() == null || repos.getIsRemote() == 0)
 		{
 			return subDoclist;
 		}
 		
-		//Get the SubDocList from verRepos
-		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, subDoclist, login_user, rt);
-		if(ret == 0)	//There is no update in DB
+		//Do SyncUp with 
+		String reposRPath = getReposRealPath(repos);
+		String localParentPath = reposRPath + parentPath;
+		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, localParentPath, subDoclist, login_user, rt, false);
+		if(ret > 0)	//There is update in DB, do get again
 		{
-			return subDoclist;
+			return getSubDocListFromDB(repos, pid);
 		}
 		
-		//Get the list from DB again
-		return getSubDocListFromDB(repos, pid);
+		return subDoclist;
 	}
 	
 	//SyncUp DB/LocalEntry/RemoteEntry with entryNode in verRepos For display
@@ -1374,18 +1376,21 @@ public class ReposController extends BaseController{
 	
 	//SyncUp docNode in DataBase with entryNode in verRepos For display
 	//Attention: localEntryNode will also be deleted or added but will not be updated
-	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt)
-	{
-		//SyncUp will only For remoteVerRepos
-		if(repos.getIsRemote() == null || repos.getIsRemote() == 0 || repos.getVerCtrl() == null )
-		{
-			return 0;
-		}
-		
+	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, String localParentPath, List<Doc> subDocList,User login_user,ReturnAjax rt, boolean recurEnable)
+	{	
 		//Do SyncUp
 		if(repos.getVerCtrl() == 1)
 		{
-			return SyncUpWithSvnRepos(repos, parentDoc, parentPath, subDocList, login_user, rt);
+			SVNUtil svnUtil = new SVNUtil();
+			if(false == svnUtil.Init(repos, true, null))
+			{
+				System.out.println("initReposWithSvnRepos() svnUtil.Init Failed");
+				return -1;
+			}
+
+			List<Doc> subDoclist = getSubDocListFromDB(repos, pid);
+
+			return SyncUpWithSvnRepos(svnUtil, repos, pid, parentDoc, parentPath, localParentPath, subDoclist, login_user, rt, recurEnable);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
@@ -1400,37 +1405,30 @@ public class ReposController extends BaseController{
 		return 0;
 	}
 
-	private int SyncUpWithSvnRepos(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt) {
-		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, true, null))
-		{
-			System.out.println("svnGetHistory() svnUtil.Init Failed");
-			return -1;
-		}
-		
-		//RealDocRPath
-		String reposRPath = getReposRealPath(repos);
-		String localParentPath = reposRPath + parentPath;
+	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, List<Doc> subDocList, 
+			User login_user,ReturnAjax rt, boolean recurEnable) {	
 		
 		int count = 0;
 		
 		//Schedule For Delete
 		HashMap<String,Doc> docHashMap = new HashMap<String,Doc>();
-		for(int i=0; i < subDocList.size(); i++)
+		if(subDocList != null)
 		{
-			Doc subDoc = subDocList.get(i);
-			String subDocName = subDoc.getName();
-			docHashMap.put(subDocName, subDoc);	//Add to docHashMap
-			
-			int entryType =	svnUtil.getEntryType(parentPath+subDocName, -1);
-			if(0 == entryType)
-			{	
-				String commitMsg = "[RemoteSyncUp] delete " + parentPath+subDocName;
-				deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
-				count++;
+			for(int i=0; i < subDocList.size(); i++)
+			{
+				Doc subDoc = subDocList.get(i);
+				String subDocName = subDoc.getName();
+				docHashMap.put(subDocName, subDoc);	//Add to docHashMap
+				
+				int entryType =	svnUtil.getEntryType(parentPath+subDocName, -1);
+				if(0 == entryType)
+				{	
+					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subDocName;
+					deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
+					count++;
+				}
 			}
 		}
-		
 		
 		//Schedule For Add
 		//Get list from verRepos
@@ -1439,19 +1437,78 @@ public class ReposController extends BaseController{
 		{
 			SVNDirEntry subEntry = subEntryList.get(i);
 			String subEntryName = subEntry.getName();
+			Integer subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
 			//SyncUp with localDir
 			Doc subDoc = docHashMap.get(subEntryName);
 			if(null == subDoc)
 			{
-				if(addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user) == true)
+				subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user);
+				if(subDoc != null)
 				{
 					count++;
+					if(recurEnable)
+					{
+						if(subEntryType == 2)
+						{
+							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", null, login_user, rt, recurEnable);
+						}
+					}
+				}
+			}
+			else
+			{
+				//If the type is not matched, do delete and add back
+				if(subDoc.getType() != subEntryType)
+				{
+					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subEntryName;
+					deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
+					count++;
+					
+					subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user);
+					if(subDoc != null)
+					{
+						count++;
+						if(recurEnable)
+						{
+							if(subEntryType == 2)
+							{
+								count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", null, login_user, rt, recurEnable);
+							}
+						}
+					}
+				}
+				else
+				{
+					if(recurEnable)
+					{
+						if(subEntryType == 2)
+						{
+							List<Doc> doclist = getSubDocListFromDB(repos, subDoc.getId());
+							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", doclist, login_user, rt, recurEnable);
+						}
+					}
 				}
 			}
 		}
 		return count;
 	}
 	
+	private Integer convertSVNNodeKindToEntryType(SVNNodeKind nodeKind) {
+		if(nodeKind == SVNNodeKind.NONE) 
+		{
+			return 0;
+		}
+		else if(nodeKind == SVNNodeKind.FILE)
+		{
+			return 1;
+		}
+		else if(nodeKind == SVNNodeKind.DIR)
+		{
+			return 2;
+		}
+		return -1;
+	}
+
 	protected HashMap<String,Doc> BuildHashMapByDocList(List<Doc> docList) {
 		HashMap<String,Doc> hashMap = new HashMap<String,Doc>();
 		for(int i=0;i<docList.size();i++)
@@ -1463,7 +1520,7 @@ public class ReposController extends BaseController{
 		return hashMap;
 	}
 
-	private boolean addDocFromSvnEntry(Repos repos, SVNUtil svnUtil, SVNDirEntry remoteEntry, Doc parentDoc, String parentPath, String localParentPath, User login_user) {
+	private Doc addDocFromSvnEntry(Repos repos, SVNUtil svnUtil, SVNDirEntry remoteEntry, Doc parentDoc, String parentPath, String localParentPath, User login_user) {
 		//Do add File or add Dir
 		boolean ret = false;
 		Integer entryType = null;
@@ -1500,10 +1557,10 @@ public class ReposController extends BaseController{
 			subDoc.setLatestEditor(login_user.getId());
 			if(reposService.addDoc(subDoc) == 0)
 			{
-				return false;					
+				return subDoc;					
 			}
 		}
-		return true;
+		return null;
 	}
 	
 	//获取子节点List in DataBase
