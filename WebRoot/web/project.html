@@ -92,6 +92,17 @@
     	}
     </style>
 
+    <style>
+        /* 强制不换行 */
+        .nowrap{white-space:nowrap;}
+        /* 允许单词内断句，首先会尝试挪到下一行，看看下一行的宽度够不够，
+        不够的话就进行单词内的断句 */
+        .breakword{word-wrap: break-word;}
+        /* 断句时，不会把长单词挪到下一行，而是直接进行单词内的断句 */
+        .breakAll{word-break:break-all;}            
+        /* 超出部分显示省略号 */
+        .ellipsis{text-overflow:ellipsis;overflow:hidden;}
+    </style>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
