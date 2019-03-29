@@ -890,7 +890,7 @@ public class ReposController extends BaseController{
 			String reposRPath = getReposRealPath(repos);
 			String commitUser = login_user.getName();
 			String commitMsg = "RealDoc版本仓库初始化";
-			if(verReposAutoCommit(repos, true, reposRPath,commitMsg,commitUser,false,null) == false)
+			if(verReposAutoCommit(repos, true, reposRPath,commitMsg,commitUser,true,null) == false)
 			{
 				System.out.println("RealDoc版本仓库初始化失败:");
 				rt.setError("版本仓库初始化失败");
@@ -905,7 +905,7 @@ public class ReposController extends BaseController{
 			String reposVPath = getReposVirtualPath(repos);
 			String commitUser = login_user.getName();
 			String commitMsg = "VirtualDoc版本仓库初始化";
-			if(verReposAutoCommit(repos, false, reposVPath, commitMsg,commitUser,false,null) == false)
+			if(verReposAutoCommit(repos, false, reposVPath, commitMsg,commitUser,true,null) == false)
 			{
 				System.out.println("VirtualDoc版本仓库初始化失败:");
 				rt.setError("VirtualDoc版本仓库初始化失败");

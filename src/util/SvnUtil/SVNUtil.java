@@ -557,7 +557,7 @@ public class SVNUtil  extends BaseController{
 
 	public boolean scheduleForDelete(List<CommitAction> actionList, String localPath,String parentPath, String entryName)
 	{
-		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath);
+		//System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath);
 
 		//遍历仓库所有子目录
 		try {
@@ -620,7 +620,7 @@ public class SVNUtil  extends BaseController{
 	}
 
 	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction) throws SVNException {
-    	System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
+    	//System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
     	if(entryName.isEmpty())	//Go through the sub files for add and modify
     	{
