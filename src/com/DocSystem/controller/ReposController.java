@@ -1515,7 +1515,7 @@ public class ReposController extends BaseController{
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
-	public void getReposManagerMenu(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void getReposManagerMenu(Integer vid,Integer docId, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1537,31 +1537,21 @@ public class ReposController extends BaseController{
 		rootDoc.setPid(0);	//设置成自己
 		
 		//获取用户可见仓库文件列表
-		List <Doc> docList = getReposManagerMenu(vid,login_user);
+		//获取用户可访问文件列表(From Root to docId)
+		List <Doc> docList = null;
+		if(docId == null || docId == 0)
+		{
+			docList = getAccessableSubDocList(repos, 0, login_user, rt);
+		}
+		else
+		{
+			docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
+		}
 		
 		//合并列表
 		docList.add(rootDoc);
 		rt.setData(docList);
 		writeJson(rt, response);
-	}
-	
-	private List<Doc> getReposManagerMenu(Repos repos, User login_user) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			//get the data from doc
-			Doc doc = new Doc();
-			doc.setVid(vid);
-			List <Doc> docList = reposService.getDocList(doc);
-			return docList;
-		}
-		else
-		{
-			System.out.println("普通用户");
-			Repos repos = reposService.getRepos(vid);
-			List <Doc> docList = getAccessableDocList(repos, 0, login_user, rt);
-			return docList;
-		}
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
