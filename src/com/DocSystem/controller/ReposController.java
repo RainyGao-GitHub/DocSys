@@ -1538,7 +1538,7 @@ public class ReposController extends BaseController{
 		Repos repos = reposService.getRepos(vid);
 		
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, id, login_user, rt);
+		List <Doc> docList = getAccessableSubDocList(repos, pid, login_user, rt);
 		if(docList == null)
 		{
 			rt.setData("");
