@@ -854,6 +854,51 @@ public class ReposController extends BaseController{
 		return true;
 	}
 
+	
+
+	private boolean ChangeReposPath(Repos newReposInfo, Repos previousReposInfo, User login_user,ReturnAjax rt) {
+		String path = newReposInfo.getPath();
+		String oldPath = previousReposInfo.getPath();
+		if(path != null && !path.equals(oldPath))
+		{
+			System.out.println("ChangeReposPath oldPath:" + oldPath + " newPath:" + path);
+			
+			if(login_user.getType() != 2)
+			{
+				System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
+				rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
+				return false;							
+			}
+			
+			//newReposRootDir	
+			File newReposRootDir = new File(path);
+			if(newReposRootDir.exists() == false)
+			{
+				System.out.println("ChangeReposPath() path:" + path + " not exists, do create it!");
+				if(newReposRootDir.mkdirs() == false)
+				{
+					rt.setError("创建reposRootDir目录失败:" + path);
+					return false;	
+				}
+			}
+			
+			//Do move the repos
+			String reposName = previousReposInfo.getId()+"";
+			if(copyFileOrDir(oldPath+reposName, path+reposName,false) == false)
+			{
+				System.out.println("仓库目录迁移失败！");
+				rt.setError("修改仓库位置失败！");					
+				return false;
+			}
+			else
+			{
+				delFileOrDir(oldPath+reposName);
+			}
+		}
+		return true;
+	}	
+	
+	
 	private boolean UpdateReposPath(Integer reposId, String path,User login_user,ReturnAjax rt) {
 		//如果传入的Path没有带/,给他加一个
 		String endChar = path.substring(path.length()-1, path.length());
@@ -881,15 +926,29 @@ public class ReposController extends BaseController{
 				return false;							
 			}
 			
-			//
-			String oldReposDir = oldReposInfo.getPath();
-			String newReposDir = path;
+			File newReposRootDir = new File(path);
+			if(newReposRootDir.exists() == false)
+			{
+				System.out.println("UpdateReposPath() path:" + path + " not exists, do create it!");
+				if(newReposRootDir.mkdirs() == false)
+				{
+					rt.setError("创建reposRootDir目录失败:" + path);
+					return false;	
+				}
+			}
+			
+			
+			String oldPath = oldReposInfo.getPath();
 			String reposName = oldReposInfo.getId()+"";
-			if(moveFile(oldReposDir, reposName,newReposDir,reposName,false) == false)
+			if(copyFileOrDir(oldPath+reposName, path+reposName,false) == false)
 			{
 				System.out.println("仓库目录迁移失败！");
 				rt.setError("修改仓库位置失败！");					
 				return false;
+			}
+			else
+			{
+				delFileOrDir(oldPath+reposName);
 			}
 			
 			//new ReposInfo
@@ -900,7 +959,7 @@ public class ReposController extends BaseController{
 			{
 				//删除新建的仓库目录
 				System.out.println("updateRepos for path failed");
-				moveFile(newReposDir,reposName, oldReposDir,reposName,false);	//还原回去
+				copyFileOrDir(path+reposName, oldPath+reposName,false); 	//还原回去
 				rt.setError("设置仓库path失败！");
 				//writeJson(rt, response);
 				return false;			
