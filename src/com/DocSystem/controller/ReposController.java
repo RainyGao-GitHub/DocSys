@@ -31,8 +31,6 @@ import com.DocSystem.controller.BaseController;
 @Controller
 @RequestMapping("/Repos")
 public class ReposController extends BaseController{
-	@Autowired
-	private ReposServiceImpl reposService;
 	
 	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
 	/****************** get Repository List **************/

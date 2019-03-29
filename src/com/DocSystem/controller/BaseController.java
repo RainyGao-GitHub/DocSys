@@ -60,9 +60,9 @@ import util.SvnUtil.SVNUtil;
 @SuppressWarnings("rawtypes")
 public class BaseController{
 	@Autowired
-	private ReposServiceImpl reposService;
+	protected ReposServiceImpl reposService;
 	@Autowired
-	private UserServiceImpl userService;
+	protected UserServiceImpl userService;
 	//线程锁
 	protected static final Object syncLock = new Object(); 
 	

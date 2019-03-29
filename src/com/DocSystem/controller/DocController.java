@@ -84,11 +84,6 @@ Something you need to know
 @Controller
 @RequestMapping("/Doc")
 public class DocController extends BaseController{
-	@Autowired
-	private ReposServiceImpl reposService;
-	@Autowired
-	private UserServiceImpl userService;
-	
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
