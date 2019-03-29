@@ -238,7 +238,7 @@ public class ReposController extends BaseController{
 		}
 
 		String reposRPath = getReposRealPath(repos);
-		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, login_user, rt, true, true);
+		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, null, login_user, rt, true, true);
 		if(ret < 0)
 		{
 			deleteRepos(repos);
@@ -915,7 +915,7 @@ public class ReposController extends BaseController{
 		
 		//Do SyncUpWithVerRepos
 		String reposRPath = getReposRealPath(repos);
-		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, login_user, rt, true, true);
+		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, null, login_user, rt, true, true);
 		if(ret < 0)
 		{
 			System.out.println("SyncUpWithVerRepos Failed");
@@ -1365,7 +1365,7 @@ public class ReposController extends BaseController{
 		//Do SyncUp with 
 		String reposRPath = getReposRealPath(repos);
 		String localParentPath = reposRPath + parentPath;
-		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, localParentPath, subDoclist, login_user, rt, false, false);
+		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, localParentPath, null,subDoclist, login_user, rt, false, false);
 		if(ret > 0)	//There is update in DB, do get again
 		{
 			return getSubDocListFromDB(repos, pid);
@@ -1385,9 +1385,9 @@ public class ReposController extends BaseController{
 	
 	//SyncUp docNode in DataBase with entryNode in verRepos For display
 	//Attention: localEntryNode will also be deleted or added but will not be updated
-	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, String localParentPath, List<Doc> subDocList,User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd)
+	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, String localParentPath, String commitId,List<Doc> subDocList,User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd)
 	{	
-		System.out.println("SyncUpWithVerRepos() pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
+		System.out.println("SyncUpWithVerRepos() pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " commitId:" + commitId + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
 		//Do SyncUp
 		if(repos.getVerCtrl() == 1)
 		{
@@ -1399,8 +1399,13 @@ public class ReposController extends BaseController{
 			}
 
 			List<Doc> subDoclist = getSubDocListFromDB(repos, pid);
-
-			int ret = SyncUpWithSvnRepos(svnUtil, repos, pid, parentDoc, parentPath, localParentPath, subDoclist, login_user, rt, recurEnable, skipRealDocAdd);
+			
+			long revision = -1;
+			if(commitId != null)
+			{
+				revision = Long.parseLong(commitId);
+			}
+			int ret = SyncUpWithSvnRepos(svnUtil, repos, pid, parentDoc, parentPath, localParentPath, revision, subDoclist, login_user, rt, recurEnable, skipRealDocAdd);
 			System.out.println("SyncUpWithSvnRepos() count=" + ret); 
 			return ret;
 		}
@@ -1417,7 +1422,7 @@ public class ReposController extends BaseController{
 		return 0;
 	}
 
-	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, List<Doc> subDocList, 
+	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, long revision,List<Doc> subDocList, 
 			User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd) {	
 		System.out.println("SyncUpWithSvnRepos() reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
 
@@ -1444,7 +1449,7 @@ public class ReposController extends BaseController{
 		
 		//Schedule For Add
 		//Get list from verRepos
-		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntries(parentPath, -1); 
+		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntries(parentPath, revision); 
 		for(int i=0; i < subEntryList.size(); i++)
 		{
 			SVNDirEntry subEntry = subEntryList.get(i);
@@ -1462,7 +1467,7 @@ public class ReposController extends BaseController{
 					{
 						if(subEntryType == 2)
 						{
-							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", null, login_user, rt, recurEnable, skipRealDocAdd);
+							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", revision, null, login_user, rt, recurEnable, skipRealDocAdd);
 						}
 					}
 				}
@@ -1484,7 +1489,7 @@ public class ReposController extends BaseController{
 						{
 							if(subEntryType == 2)
 							{
-								count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", null, login_user, rt, recurEnable, false);
+								count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/",revision, null, login_user, rt, recurEnable, false);
 							}
 						}
 					}
@@ -1496,7 +1501,7 @@ public class ReposController extends BaseController{
 						if(subEntryType == 2)
 						{
 							List<Doc> doclist = getSubDocListFromDB(repos, subDoc.getId());
-							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", doclist, login_user, rt, recurEnable, skipRealDocAdd);
+							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", revision, doclist, login_user, rt, recurEnable, skipRealDocAdd);
 						}
 					}
 				}
