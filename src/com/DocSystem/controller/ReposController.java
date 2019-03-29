@@ -1387,6 +1387,7 @@ public class ReposController extends BaseController{
 	//Attention: localEntryNode will also be deleted or added but will not be updated
 	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, String localParentPath, List<Doc> subDocList,User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd)
 	{	
+		System.out.println("SyncUpWithVerRepos() pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
 		//Do SyncUp
 		if(repos.getVerCtrl() == 1)
 		{
@@ -1399,7 +1400,9 @@ public class ReposController extends BaseController{
 
 			List<Doc> subDoclist = getSubDocListFromDB(repos, pid);
 
-			return SyncUpWithSvnRepos(svnUtil, repos, pid, parentDoc, parentPath, localParentPath, subDoclist, login_user, rt, recurEnable, skipRealDocAdd);
+			int ret = SyncUpWithSvnRepos(svnUtil, repos, pid, parentDoc, parentPath, localParentPath, subDoclist, login_user, rt, recurEnable, skipRealDocAdd);
+			System.out.println("SyncUpWithSvnRepos() count=" + ret); 
+			return ret;
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
@@ -1416,9 +1419,9 @@ public class ReposController extends BaseController{
 
 	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, List<Doc> subDocList, 
 			User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd) {	
-		
+		System.out.println("SyncUpWithSvnRepos() reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
+
 		int count = 0;
-		
 		//Schedule For Delete
 		HashMap<String,Doc> docHashMap = new HashMap<String,Doc>();
 		if(subDocList != null)
@@ -1648,7 +1651,7 @@ public class ReposController extends BaseController{
 		
 		//获取用户可见仓库文件列表
 		//获取用户可访问文件列表(From Root to docId)
-		List <Doc> docList = null;
+		List <Doc> docList =  new ArrayList<Doc>();
 		if(docId == null || docId == 0)
 		{
 			docList = getAccessableSubDocList(repos, 0, login_user, rt);
