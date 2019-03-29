@@ -1425,7 +1425,16 @@ public class ReposController extends BaseController{
 	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, long revision,List<Doc> subDocList, 
 			User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd) {	
 		System.out.println("SyncUpWithSvnRepos() reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
-
+		
+		if(pid != 0)
+		{
+			if(parentDoc == null)
+			{
+				System.out.println("SyncUpWithSvnRepos() parentDoc 不存在无法同步"); 
+			}
+			return 0;
+		}
+		
 		int count = 0;
 		//Schedule For Delete
 		HashMap<String,Doc> docHashMap = new HashMap<String,Doc>();
