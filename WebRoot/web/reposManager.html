@@ -345,6 +345,8 @@
 			//bootstrapQ.alert("请选择仓库！");
 			return;
 		}
+		gReposId = reposId;
+		alert("gReposId:" + gReposId);
 		
         $.ajax({
             url : "/DocSystem/Repos/getRepos.do",
@@ -618,27 +620,61 @@
 
 <SCRIPT type="text/javascript" >
 	/********************** zTree设置与接口**********************************/
-    var curDoc = 0;	
-    //zTree's setting
-	var setting = {
-        //zTree数据格式
-	   	data: {
-	   			//使用简单数据模式
-	            simpleData: {
-	                enable: true,
-	            },
-	            //不允许修改leaf node and parent node的isParent属性
-	            keep: {
-	            	leaf: true,
-	            	parent: true,
-	            },
-	    },
-	    //zTree各种操作的回调函数定义
-	    callback: {
-	            onClick: zTreeOnClick,
-	            beforeRightClick: zTreeBeforeRightClick,
-	    },
-	};
+    var gReposId = null;
+	var curDoc = 0;	
+	
+	//zTree初始化接口:根据data和setting生成zTree
+	function zTreeInit(data) {
+	    console.log("zTreeInit gReposId:" + gReposId);
+	    console.log(setting);
+	    
+	    //zTree's setting
+		var setting = {
+			//异步加载的工作原理
+			async : {  
+	    		enable : true,//设置 zTree 是否开启异步加载模式  
+	            url : "/DocSystem/Repos/getSubDocList.do",
+	            type : "post",
+	    		autoParam : ["id"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
+	    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
+	    		dataFilter: asyncDataFilter, 
+			},
+	        //zTree数据格式
+		   	data: {
+		   			//使用简单数据模式
+		            simpleData: {
+		                enable: true,
+		            },
+		            //不允许修改leaf node and parent node的isParent属性
+		            keep: {
+		            	leaf: true,
+		            	parent: true,
+		            },
+		    },
+		    //zTree各种操作的回调函数定义
+		    callback: {
+		            onClick: zTreeOnClick,
+		            beforeRightClick: zTreeBeforeRightClick,
+		    },
+		};
+	    
+	    var doctree = zTree.init($("#doctree"), setting, data);
+	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
+	}
+	
+	function asyncDataFilter(treeId, parentNode, responseData) {
+		console.log("asyncDataFilter");
+		var docList = responseData.data;
+		//遍历jason_arry, convert the node type to isParent flag
+      	for(var i=0; i<docList.length; i++)
+      	{
+           var jsonObj = docList[i];
+           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+       }
+       console.log(docList);
+	   return docList;
+	}
 
 	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
 	var curRightClickedTreeNode = null;
@@ -718,15 +754,6 @@
 			}
 		}
 		return remoteDir;
-	}
-
-	//zTree初始化接口:根据data和setting生成zTree
-	function zTreeInit(data) {
-	    console.log("zTreeInit");
-	    console.log(setting);
-	
-	    var doctree = zTree.init($("#doctree"), setting, data);
-	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
 	}
 	
 	//PageInit
