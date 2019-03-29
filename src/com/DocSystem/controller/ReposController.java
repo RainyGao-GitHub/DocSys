@@ -1249,7 +1249,7 @@ public class ReposController extends BaseController{
 			parentDoc = reposService.getDoc(pid);
 			parentPath = getParentPath(parentDoc.getId());
 		}
-		List <Doc> resultList = getAuthedSubDocList(repos, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
+		List <Doc> resultList = getAuthedSubDocList(repos, pid, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
 		return resultList;
 	}
 
@@ -1268,7 +1268,7 @@ public class ReposController extends BaseController{
 		if(docIdList.size() <= 2)
 		{
 			DocAuth docAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
-			List<Doc> docList = getAuthedSubDocList(repos, null ,"", docAuth,docAuthHashMap, login_user, rt);
+			List<Doc> docList = getAuthedSubDocList(repos, 0, null ,"", docAuth,docAuthHashMap, login_user, rt);
 			return docList;
 		}
 		
@@ -1283,7 +1283,7 @@ public class ReposController extends BaseController{
 			Doc curDoc = reposService.getDoc(curDocId);
 			System.out.println("getDocListFromRootToDoc() curDocId[" + i+ "]:" + curDocId); 
 			DocAuth docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
-			List<Doc> subDocList = getAuthedSubDocList(repos, curDoc, parentPath+curDoc.getName(), docAuth,docAuthHashMap , login_user, rt);
+			List<Doc> subDocList = getAuthedSubDocList(repos, curDocId, curDoc, parentPath+curDoc.getName(), docAuth,docAuthHashMap , login_user, rt);
 			if(subDocList != null && subDocList.size() > 0)
 			{
 				resultList.addAll(subDocList);
@@ -1297,9 +1297,9 @@ public class ReposController extends BaseController{
 	}
 	
 	//获取pid下的SubDocList
-	private List <Doc> getAuthedSubDocList(Repos repos, Doc parentDoc, String parentPath, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap,User login_user,ReturnAjax rt)
+	private List <Doc> getAuthedSubDocList(Repos repos, Integer pid, Doc parentDoc, String parentPath, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap,User login_user,ReturnAjax rt)
 	{
-		System.out.println("getAuthedDocList()  vid:" + repos.getId() + " pid:" + parentDoc==null?0:parentDoc.getId());
+		System.out.println("getAuthedDocList()  vid:" + repos.getId() + " pid:" + pid);
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			return null;
@@ -1308,7 +1308,7 @@ public class ReposController extends BaseController{
 		//printObject("getAuthedDocList() parentDocAuth:",pDocAuth);
 		
 		//获取子目录所有文件
-		List <Doc> subDocList = getSubDocList(repos, parentDoc, parentPath, login_user, rt);
+		List <Doc> subDocList = getSubDocList(repos, pid, parentDoc, parentPath, login_user, rt);
 		if(subDocList == null || subDocList.size() == 0)
 		{
 			return null;
@@ -1341,10 +1341,10 @@ public class ReposController extends BaseController{
 	}
 	
 	//获取目录pid下的子节点
-	private List <Doc> getSubDocList(Repos repos,Doc parentDoc, String parentPath,User login_user,ReturnAjax rt)
+	private List <Doc> getSubDocList(Repos repos, Integer pid, Doc parentDoc, String parentPath,User login_user,ReturnAjax rt)
 	{
 		//Get the SubDocList from DataBase
-		List <Doc> subDoclist = getSubDocListFromDB(repos, parentDoc.getId());
+		List <Doc> subDoclist = getSubDocListFromDB(repos, pid);
 
 		//If there is no verCtrl
 		if(repos.getVerCtrl() == 0)
@@ -1353,14 +1353,14 @@ public class ReposController extends BaseController{
 		}
 		
 		//Get the SubDocList from verRepos
-		int ret = SyncUpWithVerRepos(repos, parentDoc, parentPath, subDoclist, login_user, rt);
+		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, subDoclist, login_user, rt);
 		if(ret == 0)	//There is no update in DB
 		{
 			return subDoclist;
 		}
 		
 		//Get the list from DB again
-		return getSubDocListFromDB(repos, parentDoc.getId());
+		return getSubDocListFromDB(repos, pid);
 	}
 	
 	//SyncUp DB/LocalEntry/RemoteEntry with entryNode in verRepos For display
@@ -1374,7 +1374,7 @@ public class ReposController extends BaseController{
 	
 	//SyncUp docNode in DataBase with entryNode in verRepos For display
 	//Attention: localEntryNode will also be deleted or added but will not be updated
-	private int SyncUpWithVerRepos(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt)
+	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt)
 	{
 		//SyncUp will only For remoteVerRepos
 		if(repos.getIsRemote() == null || repos.getIsRemote() == 0 || repos.getVerCtrl() == null )
