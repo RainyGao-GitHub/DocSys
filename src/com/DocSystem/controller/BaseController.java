@@ -2835,6 +2835,62 @@ public class BaseController{
 	}
 	
 	/*********************Functions For DocLock *******************************/
+	//Lock Repos
+	protected Repos lockRepos(Integer reposId,Integer lockType, User login_user, ReturnAjax rt, boolean docLockCheckFlag) 
+	{
+		System.out.println("lockRepos() reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
+		//确定Repos是否可用
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("repos " + reposId +" 不存在！");
+			System.out.println("lockDoc() Repos: " + reposId +" 不存在！");
+			return null;
+		}
+		
+		//Check if repos was locked
+		if(isReposLocked(repos, login_user,rt))
+		{
+			System.out.println("lockDoc() Repos:" + repos.getId() +" was locked！");				
+			return null;			
+		}
+		
+		//
+		//Set the query condition to get the SubDocList of DocId
+		Doc qDoc = new Doc();
+		qDoc.setVid(reposId);
+		qDoc.setState(1); //Force Locked Doc
+		List<Doc> lockedDocList = reposService.getDocList(qDoc);
+		long curTime = new Date().getTime();
+		for(int i=0;i<lockedDocList.size();i++)
+		{
+			Doc subDoc =lockedDocList.get(i);
+			long lockTime = subDoc.getLockTime();	//time for lock release
+			//System.out.println("isSubDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
+			if(curTime < lockTime)
+			{
+				rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
+				System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
+				return null;
+			}
+		}
+		
+		//lockTime is the time to release lock 
+		Repos lockRepos= new Repos();
+		lockRepos.setId(reposId);
+		lockRepos.setState(lockType);
+		lockRepos.setLockBy(login_user.getId());
+		long lockTime = new Date().getTime() + 24*60*60*1000;
+		lockRepos.setLockTime(lockTime);	//Set lockTime
+		if(reposService.updateRepos(lockRepos) == 0)
+		{
+			rt.setError("lock Repos:" + reposId +"[" + repos.getName() +"]  failed");
+			return null;
+		}
+		System.out.println("lockRepos() success reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName());
+		return repos;	
+	}
+	
 	//Lock Doc
 	protected Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
