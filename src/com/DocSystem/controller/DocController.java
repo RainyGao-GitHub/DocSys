@@ -2676,33 +2676,26 @@ public class DocController extends BaseController{
 			rt.setMsgData("文件: " + dstDocPath + " 已存在");
 			return false;
 		}
-		
-		try {
 			
-			if(type == 2)	//如果是目录则创建目录
+		if(type == 2)	//如果是目录则创建目录
+		{
+			if(false == createDir(dstDocPath))
 			{
-				if(false == createDir(dstDocPath))
-				{
-					System.out.println("目录: " + dstDocPath + " 创建");
-					rt.setMsgData("目录: " + dstDocPath + " 创建");
-					return false;
-				}
+				System.out.println("目录: " + dstDocPath + " 创建");
+				rt.setMsgData("目录: " + dstDocPath + " 创建");
+				return false;
 			}
-			else	//如果是文件则复制文件
-			{
-				if(copyFile(srcDocPath,dstDocPath,false) == false)	//强制覆盖
-				{
-					System.out.println("文件: " + srcDocPath + " 复制失败");
-					rt.setMsgData("文件: " + srcDocPath + " 复制失败");
-					return false;
-				}
-			}
-		} catch (IOException e) {
-			System.out.println("系统异常：文件复制失败！");
-			e.printStackTrace();
-			rt.setMsgData(e);
-			return false;
 		}
+		else	//如果是文件则复制文件
+		{
+			if(copyFile(srcDocPath,dstDocPath,false) == false)	//强制覆盖
+			{
+				System.out.println("文件: " + srcDocPath + " 复制失败");
+				rt.setMsgData("文件: " + srcDocPath + " 复制失败");
+				return false;
+			}
+		}
+
 		return true;
 	}
 
