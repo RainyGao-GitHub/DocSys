@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.7.4
+-- version 4.8.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 2018-01-29 06:36:56
--- 服务器版本： 10.1.28-MariaDB
--- PHP Version: 7.1.10
+-- Generation Time: 2018-08-17 16:43:49
+-- 服务器版本： 10.1.33-MariaDB
+-- PHP Version: 7.2.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -32,15 +32,20 @@ CREATE TABLE `doc` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
-  `CONTENT` longtext COMMENT '文章内容',
+  `SIZE` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT '文件大小',
+  `CHECK_SUM` varchar(32) DEFAULT NULL COMMENT '文件的MD5校验值',
+  `CONTENT` longtext COMMENT 'doc''s virtual content',
   `PATH` varchar(1000) NOT NULL DEFAULT '/' COMMENT '基于仓库目录的相对路径',
   `PID` int(10) UNSIGNED DEFAULT NULL COMMENT 'Parent Node id',
   `VID` int(10) UNSIGNED DEFAULT NULL COMMENT '所属仓库id',
   `PWD` varchar(20) DEFAULT NULL,
   `CREATOR` int(11) DEFAULT NULL,
-  `CREATE_TIME` varchar(100) DEFAULT NULL,
-  `STATE` int(1) NOT NULL DEFAULT '1' COMMENT '0:未启用  1:启用',
-  `LOCK_BY` int(11) UNSIGNED DEFAULT NULL COMMENT 'UserID用于给Doc上锁'
+  `CREATE_TIME` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Doc CreateTime',
+  `LATEST_EDITOR` int(11) DEFAULT NULL,
+  `LATEST_EDIT_TIME` bigint(20) DEFAULT '0',
+  `STATE` int(1) NOT NULL DEFAULT '1' COMMENT 'Doc LockState 0:unlock  1:lock doc 2:lock doc and subDocs',
+  `LOCK_BY` int(11) UNSIGNED DEFAULT NULL COMMENT 'UserID用于给Doc上锁',
+  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0' COMMENT '文件锁定时间，该参数用于Lock的自动解锁'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -51,9 +56,12 @@ CREATE TABLE `doc` (
 
 CREATE TABLE `doc_auth` (
   `ID` int(11) NOT NULL,
-  `USER_ID` int(11) NOT NULL,
+  `USER_ID` int(11) DEFAULT NULL,
+  `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
+  `TYPE` int(1) DEFAULT NULL,
+  `PRIORITY` int(1) NOT NULL DEFAULT '0' COMMENT '权限的优先级，值越大优先级越高',
   `DOC_ID` int(11) NOT NULL,
-  `REPOS_ID` int(11) NOT NULL,
+  `REPOS_ID` int(11) NOT NULL DEFAULT '0' COMMENT '权限类型：1：User 2:Group 3: anyUser',
   `IS_ADMIN` int(1) DEFAULT NULL,
   `ACCESS` int(2) NOT NULL DEFAULT '0' COMMENT '0:不可见  1:只读',
   `EDIT_EN` int(1) DEFAULT NULL,
@@ -61,6 +69,18 @@ CREATE TABLE `doc_auth` (
   `DELETE_EN` int(1) DEFAULT NULL,
   `HERITABLE` int(1) NOT NULL DEFAULT '0' COMMENT '0:不可继承  1:可继承'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `group_member`
+--
+
+CREATE TABLE `group_member` (
+  `ID` int(11) NOT NULL COMMENT 'GroupMember ID',
+  `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
+  `USER_ID` int(11) DEFAULT NULL COMMENT 'USER ID'
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
 
 -- --------------------------------------------------------
 
@@ -85,7 +105,7 @@ CREATE TABLE `repos` (
   `MENU` varchar(5000) DEFAULT NULL,
   `PWD` varchar(20) DEFAULT NULL,
   `OWNER` int(11) DEFAULT NULL,
-  `CREATE_TIME` varchar(100) DEFAULT NULL
+  `CREATE_TIME` bigint(20) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -97,6 +117,9 @@ CREATE TABLE `repos` (
 CREATE TABLE `repos_auth` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
+  `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
+  `TYPE` int(1) DEFAULT '0' COMMENT '权限类型：1 User, 2 Group, 3 anyUser',
+  `PRIORITY` int(1) DEFAULT '0' COMMENT '权限优先级：值越大优先级越高',
   `REPOS_ID` int(11) DEFAULT NULL,
   `IS_ADMIN` int(1) DEFAULT NULL,
   `ACCESS` int(2) DEFAULT NULL,
@@ -157,6 +180,22 @@ CREATE TABLE `user` (
   `CREATE_TIME` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `user_group`
+--
+
+CREATE TABLE `user_group` (
+  `ID` int(11) NOT NULL,
+  `NAME` varchar(200) CHARACTER SET utf8 DEFAULT NULL COMMENT 'GroupName',
+  `TYPE` int(1) DEFAULT NULL COMMENT 'Group Type: reserved',
+  `INFO` varchar(1000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'Group Description',
+  `IMG` varchar(200) CHARACTER SET utf8 DEFAULT NULL COMMENT 'Group IMG',
+  `PRIORITY` int(2) DEFAULT NULL COMMENT 'Group Priority: reserved',
+  `CREATE_TIME` varchar(50) CHARACTER SET utf8 DEFAULT NULL COMMENT 'Group create time'
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 ROW_FORMAT=COMPACT;
+
 --
 -- Indexes for dumped tables
 --
@@ -171,6 +210,12 @@ ALTER TABLE `doc`
 -- Indexes for table `doc_auth`
 --
 ALTER TABLE `doc_auth`
+  ADD PRIMARY KEY (`ID`);
+
+--
+-- Indexes for table `group_member`
+--
+ALTER TABLE `group_member`
   ADD PRIMARY KEY (`ID`);
 
 --
@@ -205,6 +250,12 @@ ALTER TABLE `user`
   ADD UNIQUE KEY `id` (`ID`);
 
 --
+-- Indexes for table `user_group`
+--
+ALTER TABLE `user_group`
+  ADD PRIMARY KEY (`ID`);
+
+--
 -- 在导出的表使用AUTO_INCREMENT
 --
 
@@ -212,7 +263,7 @@ ALTER TABLE `user`
 -- 使用表AUTO_INCREMENT `doc`
 --
 ALTER TABLE `doc`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=370;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- 使用表AUTO_INCREMENT `doc_auth`
@@ -221,16 +272,22 @@ ALTER TABLE `doc_auth`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- 使用表AUTO_INCREMENT `group_member`
+--
+ALTER TABLE `group_member`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT COMMENT 'GroupMember ID';
+
+--
 -- 使用表AUTO_INCREMENT `repos`
 --
 ALTER TABLE `repos`
-  MODIFY `ID` int(8) NOT NULL AUTO_INCREMENT COMMENT '主键', AUTO_INCREMENT=8;
+  MODIFY `ID` int(8) NOT NULL AUTO_INCREMENT COMMENT '主键';
 
 --
 -- 使用表AUTO_INCREMENT `repos_auth`
 --
 ALTER TABLE `repos_auth`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- 使用表AUTO_INCREMENT `role`
@@ -248,7 +305,13 @@ ALTER TABLE `sys_config`
 -- 使用表AUTO_INCREMENT `user`
 --
 ALTER TABLE `user`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 使用表AUTO_INCREMENT `user_group`
+--
+ALTER TABLE `user_group`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
