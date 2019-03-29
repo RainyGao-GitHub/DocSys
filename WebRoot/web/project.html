@@ -6376,6 +6376,14 @@ function CompareObj(objA, objB, flag) {
 					showDocDetail(curRightClickedTreeNode);
 				}
 			},
+//			{text: '备注', action: function(e){
+//					e.preventDefault();
+//					var docId = curRightClickedTreeNode.id;
+//					var docName = curRightClickedTreeNode.name;
+//		 			getDoc(docId,false);
+//		 			showRightDiv();
+//				}
+//			},
 			{divider: true},
 			{text: '更多...', subMenu: [
 			           	{text: '复制名字', action: function(e){
@@ -6418,20 +6426,11 @@ function CompareObj(objA, objB, flag) {
 				        			showDocHistory(curRightClickedTreeNode,0);
 								}
 						},
-						
-						{text: '查看备注', action: function(e){
+						{text: '查看备注历史', action: function(e){
 								e.preventDefault();
-								var docId = curRightClickedTreeNode.id;
-								var docName = curRightClickedTreeNode.name;
-					 			getDoc(docId,false);
-					 			showRightDiv();
+		        				showDocHistory(curRightClickedTreeNode,1);
 							}
 						},
-						{text: '查看历史备注', action: function(e){
-							e.preventDefault();
-		        			showDocHistory(curRightClickedTreeNode,1);
-						}
-				},
    				]
    			},
 		]);
@@ -6540,6 +6539,14 @@ function CompareObj(objA, objB, flag) {
 				}
 			},
 			{divider: true},
+			{text: '备注', action: function(e){
+					e.preventDefault();
+					var docId = curRightClickedDocListNode.docId;
+		 			getDoc(docId,false);
+		 			showRightDiv();
+				}
+			},
+			{divider: true},
 			{text: '更多...', subMenu: [
 			           	{text: '复制名字', action: function(e){
 									e.preventDefault();
@@ -6589,14 +6596,7 @@ function CompareObj(objA, objB, flag) {
 								    showDocHistory(node,0);
 								}
 						},
-						{text: '查看备注', action: function(e){
-								e.preventDefault();
-								var docId = curRightClickedDocListNode.docId;
-					 			getDoc(docId,false);
-					 			showRightDiv();
-							}
-						},
-						{text: '查看历史备注', action: function(e){
+						{text: '查看备注历史', action: function(e){
 								e.preventDefault();
 								var docId = curRightClickedDocListNode.docId;
 								var node = getNodeByNodeId(docId);
