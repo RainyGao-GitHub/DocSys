@@ -1651,7 +1651,7 @@ public class ReposController extends BaseController{
 		
 		//获取用户可见仓库文件列表
 		//获取用户可访问文件列表(From Root to docId)
-		List <Doc> docList =  new ArrayList<Doc>();
+		List <Doc> docList =  null;
 		if(docId == null || docId == 0)
 		{
 			docList = getAccessableSubDocList(repos, 0, login_user, rt);
@@ -1662,6 +1662,10 @@ public class ReposController extends BaseController{
 		}
 		
 		//合并列表
+		if(docList == null)
+		{
+			docList = new ArrayList<Doc>();
+		}
 		docList.add(rootDoc);
 		rt.setData(docList);
 		writeJson(rt, response);
