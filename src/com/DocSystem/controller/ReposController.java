@@ -924,58 +924,6 @@ public class ReposController extends BaseController{
 		return true;
 	}
 	
-	private boolean verReposAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) {
-		Integer verCtrl = null;
-		if(isRealDoc)
-		{
-			verCtrl = repos.getVerCtrl();
-		}	
-		else
-		{
-			verCtrl = repos.getVerCtrl1();
-		}
-			
-		if(verCtrl == 1)
-		{
-			return svnAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);
-		}
-		else if(verCtrl == 2)
-		{
-			return gitAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);			
-		}
-		return false;
-	}
-	
-	private boolean gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
-		// TODO Auto-generated method stub
-		GITUtil gitUtil = new GITUtil();
-		//svn初始化
-		if(gitUtil.Init(repos, isRealDoc, commitUser) == false)
-		{
-			System.out.println("do Init Failed");
-			return false;
-		}
-		
-		return gitUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);
-	}
-
-	//Commit the localPath to svnPath
-	boolean svnAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
-	{			
-		SVNUtil svnUtil = new SVNUtil();
-		//svn初始化
-		if(svnUtil.Init(repos,isRealDoc,commitUser) == false)
-		{
-			System.out.println("do Init Failed");
-			return false;
-		}
-		
-		return svnUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);		
-	}
-	
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){

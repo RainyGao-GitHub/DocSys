@@ -1308,12 +1308,22 @@ public class DocController extends BaseController{
 		}
 		
 		//Do commit to verRepos
-		
+		if(verReposAutoCommit(repos, true, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null) == false)
+		{			
+			//Revert Local Entries
+			verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
+
+			System.out.println("RealDoc版本仓库初始化失败:");
+			rt.setError("版本仓库初始化失败");
+			return false;
+		}
 		
 		//Do SyncWithVerRepos (skipRealDocAdd)
 		String reposRPath = getReposRealPath(repos);
 		int ret = SyncUpWithVerRepos(repos, docId, null, "", reposRPath, null, null, login_user, rt, true, true);
-	
+		
+		System.out.println("revertRealDocHistory() SyncUpWithVerRepos return:" + ret);
+		
 		return false;
 	}
 
