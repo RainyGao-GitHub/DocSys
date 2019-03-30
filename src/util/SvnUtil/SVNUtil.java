@@ -1231,11 +1231,18 @@ public class SVNUtil  extends BaseController{
             System.out.println("svnGetEntry() There is no entry at '" + repositoryURL + "'.");
             return false;
         } else if (nodeKind == SVNNodeKind.DIR) {
-			File dir = new File(localParentPath,targetName);
-			dir.mkdir();
-        	
-			//Get the subEntries and call svnGetEntry
+        	//Get the subEntries and call svnGetEntry
 			String localEntryPath = localParentPath + targetName + "/";
+        	if(!targetName.isEmpty())
+			{
+				File dir = new File(localParentPath,targetName);
+				dir.mkdir();
+			}
+			else
+			{
+				localEntryPath = localParentPath;
+			}
+        	
 			List <SVNDirEntry> subEntries = getSubEntries(remoteEntryPath,revision);
 			for(int i=0;i<subEntries.size();i++)
 			{

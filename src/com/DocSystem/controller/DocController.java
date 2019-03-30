@@ -1157,8 +1157,8 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId,String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getDocHistory reposId:" + reposId + " docPath:" + parentPath+docName +" historyType:" + historyType);
+	public void getDocHistory(Integer reposId, Integer docId, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1207,6 +1207,96 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/****************   revert Document History ******************/
+	@RequestMapping("/revertDocHistory.do")
+	public void revertDocHistory(String commitId,Integer reposId, Integer docId, String parentPath, String docName, Integer historyType, HttpServletRequest request,HttpServletResponse response){
+		System.out.println("revertDocHistory commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(reposId == null)
+		{
+			rt.setError("reposId is null");
+			writeJson(rt, response);
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		boolean isRealDoc = true;
+		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		{
+			isRealDoc = false;
+		}
+		
+		boolean ret = false;
+		if(isRealDoc)
+		{
+			ret = revertRealDocHistory(repos,docId,parentPath,docName,commitId,rt);
+		}
+		else
+		{
+			ret = revertVirtualDocHistory(repos,docId,parentPath,docName,commitId,rt);
+		}
+		
+		if(ret == false)
+		{
+			System.out.println("revertDocHistory Failed");
+		}
+		
+		writeJson(rt, response);
+	}
+	
+	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName,
+			String commitId, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		String entryPath = getDocVPath(parentPath, docName);
+		return false;
+	}
+
+	private boolean revertRealDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
+		
+		if(docId == null || docId == 0)
+		{
+			//恢复整个仓库到指定版本
+			
+			
+			return false;
+		}
+		
+		Doc doc = reposService.getDoc(docId);
+		if(doc == null)
+		{
+			rt.setError("Doc " + docId + " 不存在！");
+			return false;	
+		}
+		
+		//Checkout to localParentPath
+		String localParentPath = getReposRealPath(repos) + parentPath;
+		
+		//If localParentPath not exists do mkdirs
+		
+		//Do checkout the entry to 
+		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == false)
+		{
+			System.out.println("revertRealDocHistory() verReposCheckOut Failed!");
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
+			return false;
+		}
+		
+		//Try to get real pid
+	
+		return false;
+	}
+
 	/* 文件搜索与排序  */
 	@RequestMapping("/searchDoc.do")
 	public void searchDoc(HttpServletResponse response,HttpSession session,String searchWord,String sort,Integer reposId,Integer pDocId){

@@ -20,19 +20,22 @@
 </div>
 
 <script type="text/javascript">
-	//This two value need to be set
+	//These value is for commit
+	var reposId;
+	var docId;
 	var parentPath = "";
 	var docName = "";
 	var docPath = "";
-	var reposId;
 	var historyType = 0;
-	function historyLogsPageInit(vid, pPath, name, type)
+	
+	function historyLogsPageInit(vid, nodeId, pPath, name, type)
 	{
-		console.log("historyLogsPageInit vid:" + vid + " pPath:" + pPath + " name:" + name + " historyType:" + historyType);
-		parentPath = pPath;
+		console.log("historyLogsPageInit vid:" + vid + " nodeId:" + nodeId + " pPath:" + pPath + " name:" + name + " historyType:" + historyType);
+		reposId = vid;
+		docId = nodeId;
+		parentPath = pPath;	
 		docName = name;
 		docPath = pPath + name;
-		reposId = vid;
 		historyType = type;
 		
 		showHistoryLogList(reposId,parentPath,docName,historyType);	
@@ -41,28 +44,100 @@
 	function downloadHistory(index)
 	{
 		var commitId = $("#commitId" + index).text();
-	   	console.log("download() commitId:" +commitId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+	   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 
 	   	var encParentPath = encodeURI(parentPath);
 	   	var encDocName = encodeURI(docName);
-	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName + "&historyType=" + historyType;	
+	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&parentPath=" + encParentPath + "&docName="+encDocName + "&historyType=" + historyType;	
+	}
+	
+	function revertHistory(index)
+	{
+		var commitId = $("#commitId" + index).text();
+	   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+
+	   	var encParentPath = encodeURI(parentPath);
+	   	var encDocName = encodeURI(docName);
+	   	
+   		$.ajax({
+             url : "/DocSystem/Doc/revertHistory.do",
+             type : "post",
+             dataType : "json",
+             data : {
+            	 commitId: commitId,
+                 reposId : reposId, 
+                 docId: docId,
+            	 parentPath : encParentPath,
+             	 docName: encDocName,
+             	 historyType: historyType,
+             },
+             success : function (ret) {
+             	if( "ok" == ret.status){
+        		  	console.log(ret.data);
+        		  	alert("恢复成功！");
+                }
+                else
+                {
+                	showErrorMessage("历史版本恢复失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("历史版本恢复失败:服务器异常");
+            }
+        });
 	}
 	
 	function showHistoryDetail(index)
 	{
 		var commitId = $("#commitId" + index).text();
-		console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+	   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+
+	   	var encParentPath = encodeURI(parentPath);
+	   	var encDocName = encodeURI(docName);
+	   	
+   		$.ajax({
+             url : "/DocSystem/Doc/getHistoryDetail.do",
+             type : "post",
+             dataType : "json",
+             data : {
+            	 commitId: commitId,
+                 reposId : reposId, 
+                 docId: docId,
+            	 parentPath : encParentPath,
+             	 docName: encDocName,
+             	 historyType: historyType,
+             },
+             success : function (ret) {
+             	if( "ok" == ret.status){
+        		  	console.log(ret.data);
+        		  	showList(ret.data);
+                }
+                else
+                {
+                	showErrorMessage("获取历史版本详情失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("获取历史版本详情失败:服务器异常");
+            }
+        });
+   		
+		//根据获取到的列表数据，绘制列表
+		function showList(data){
+			
+		}
 	}
 
 	function showHistoryLogList(reposId,parentPath,docName,historyType)
 	{
-   		console.log("showHistoryLogList  reposId:" +  reposId + " docPath:" + parentPath + docName + " historyType:" + historyType);
+   		console.log("showHistoryLogList  reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
     	$.ajax({
              url : "/DocSystem/Doc/getDocHistory.do",
              type : "post",
              dataType : "json",
              data : {
                  reposId : reposId, 
+                 docId: docId,
             	 parentPath : parentPath,
              	 docName: docName,
              	 historyType: historyType,
@@ -82,7 +157,7 @@
             }
         });
 
-		//根据获取到的目录权限用户列表数据，绘制列表
+		//根据获取到的列表数据，绘制列表
 		function showList(data){
 			console.log(data);
 			var c = $("#historyLogs").children();
@@ -99,7 +174,8 @@
 				var commitTime = formatTime(d.commitTime);
 				
 				var opBtn = "		<a href='javascript:void(0)' onclick='showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
-				var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary'>下载</a>";							
+				var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
+				var opBtn2 = "		<a href='javascript:void(0)' onclick='revertHistory("+i+ ")' class='mybtn-primary'>还原</a>";
 				var se = "<li id='popover" +i+"' + + value="+ i +">"
 					+"	<i class='cell commitId w10'>"
 					+"		<span class='name  breakAll'>"
@@ -124,6 +200,7 @@
 					+"	<i class='cell operation w10'>"
 					+		opBtn
 					+ 		opBtn1 
+					+ 		opBtn2 
 					+"	</i>"
 					+"</li>";
 				

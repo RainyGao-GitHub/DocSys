@@ -3108,10 +3108,11 @@
 		var treeNode = node;
 		if(treeNode != null)
 		{
+			docId = treeNode.id;
 			parentPath = getTreeNodeParentPath(treeNode);
 			docName = treeNode.name;
 		}
-		console.log("parentPath:" + parentPath + " docName:"+docName);
+		console.log("docId:" + "parentPath:" + parentPath + " docName:"+docName);
 		
 		//show HistoryLogs page
 		bootstrapQ.dialog({
@@ -3121,7 +3122,7 @@
 			foot: false,
 			big: true,
 			callback: function(){
-				historyLogsPageInit(gReposId,parentPath,docName,historyType);
+				historyLogsPageInit(gReposId,docId,parentPath,docName,historyType);
 			},
 		});
 	}
