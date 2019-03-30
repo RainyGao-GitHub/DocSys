@@ -890,7 +890,7 @@ public class ReposController extends BaseController{
 			String reposRPath = getReposRealPath(repos);
 			String commitUser = login_user.getName();
 			String commitMsg = "RealDoc版本仓库初始化";
-			if(verReposAutoCommit(repos, true, reposRPath,commitMsg,commitUser,true,null) == false)
+			if(verReposAutoCommit(repos, true, "", "", reposRPath, "", commitMsg,commitUser,true,null) == false)
 			{
 				System.out.println("RealDoc版本仓库初始化失败:");
 				rt.setError("版本仓库初始化失败");
@@ -905,7 +905,7 @@ public class ReposController extends BaseController{
 			String reposVPath = getReposVirtualPath(repos);
 			String commitUser = login_user.getName();
 			String commitMsg = "VirtualDoc版本仓库初始化";
-			if(verReposAutoCommit(repos, false, reposVPath, commitMsg,commitUser,true,null) == false)
+			if(verReposAutoCommit(repos, false, "","", reposVPath,"", commitMsg,commitUser,true,null) == false)
 			{
 				System.out.println("VirtualDoc版本仓库初始化失败:");
 				rt.setError("VirtualDoc版本仓库初始化失败");
@@ -924,7 +924,8 @@ public class ReposController extends BaseController{
 		return true;
 	}
 	
-	private boolean verReposAutoCommit(Repos repos,boolean isRealDoc, String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) {
+	private boolean verReposAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
+			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) {
 		Integer verCtrl = null;
 		if(isRealDoc)
 		{
@@ -937,16 +938,17 @@ public class ReposController extends BaseController{
 			
 		if(verCtrl == 1)
 		{
-			return svnAutoCommit(repos,isRealDoc,localPath,commitMsg,commitUser,modifyEnable,localRefPath);
+			return svnAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitAutoCommit(repos,isRealDoc,localPath,commitMsg,commitUser,modifyEnable,localRefPath);			
+			return gitAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);			
 		}
 		return false;
 	}
 	
-	private boolean gitAutoCommit(Repos repos,boolean isRealDoc, String localPath, String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
+	private boolean gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
+			String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
 		// TODO Auto-generated method stub
 		GITUtil gitUtil = new GITUtil();
 		//svn初始化
@@ -955,11 +957,13 @@ public class ReposController extends BaseController{
 			System.out.println("do Init Failed");
 			return false;
 		}
-		return gitUtil.doAutoCommit("","",localPath,commitMsg,commitUser,modifyEnable,localRefPath);
+		
+		return gitUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);
 	}
 
 	//Commit the localPath to svnPath
-	boolean svnAutoCommit(Repos repos,boolean isRealDoc,String localPath,String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
+	boolean svnAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
+			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
 	{			
 		SVNUtil svnUtil = new SVNUtil();
 		//svn初始化
@@ -969,7 +973,7 @@ public class ReposController extends BaseController{
 			return false;
 		}
 		
-		return svnUtil.doAutoCommit("","",localPath,commitMsg,commitUser,modifyEnable,localRefPath);		
+		return svnUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);		
 	}
 	
 	/****************   delete a Repository ******************/
