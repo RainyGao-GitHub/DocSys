@@ -1276,14 +1276,7 @@ public class DocController extends BaseController{
 	private boolean revertRealDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
-		
-		if(docId == null || docId == 0)
-		{
-			//恢复整个仓库到指定版本
-			
-			return false;
-		}
-		
+				
 		if(docId != 0)
 		{
 			Doc doc = reposService.getDoc(docId);
@@ -1298,6 +1291,7 @@ public class DocController extends BaseController{
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		
 		//If localParentPath not exists do mkdirs
+		
 		
 		//Do checkout the entry to 
 		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == false)

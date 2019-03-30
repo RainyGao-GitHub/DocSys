@@ -3104,7 +3104,7 @@
 
 		var parentPath ="";
 		var docName = "";
-
+		var docId = 0;
 		var treeNode = node;
 		if(treeNode != null)
 		{
@@ -3112,7 +3112,7 @@
 			parentPath = getTreeNodeParentPath(treeNode);
 			docName = treeNode.name;
 		}
-		console.log("docId:" + "parentPath:" + parentPath + " docName:"+docName);
+		console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 		
 		//show HistoryLogs page
 		bootstrapQ.dialog({
