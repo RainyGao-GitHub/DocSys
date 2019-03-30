@@ -4796,17 +4796,22 @@ public class BaseController{
 		if(true == ret)
 		{
 			//新建doc记录
+			Integer pid = 0;
+			if(parentDoc != null)
+			{
+				pid = parentDoc.getId();
+			}
 			Doc subDoc = new Doc();
 			subDoc.setName(entryName);
 			subDoc.setType(entryType);
 			subDoc.setSize((int) remoteEntry.getSize());
 			//subDoc.setCheckSum(checkSum);
 			subDoc.setVid(repos.getId());
-			subDoc.setPid(parentDoc.getId());
-			subDoc.setCreator(login_user.getId());
+			subDoc.setPid(pid);
 			//set createTime
 			long nowTimeStamp = remoteEntry.getDate().getTime();	//get subEntry latestModify Time
 			subDoc.setCreateTime(nowTimeStamp);
+			subDoc.setCreator(login_user.getId());
 			subDoc.setLatestEditTime(nowTimeStamp);
 			subDoc.setLatestEditor(login_user.getId());
 			if(reposService.addDoc(subDoc) == 0)

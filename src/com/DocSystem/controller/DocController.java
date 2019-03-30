@@ -1302,14 +1302,17 @@ public class DocController extends BaseController{
 		}
 		
 		//Do commit to verRepos
+		if(commitMsg == null)
+		{
+			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
+		}
 		if(verReposAutoCommit(repos, true, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null) == false)
 		{			
 			//Revert Local Entries
-			verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
+			//verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
 
-			System.out.println("RealDoc版本仓库初始化失败:");
-			rt.setError("版本仓库初始化失败");
-			return false;
+			System.out.println("verReposAutoCommit 失败");
+			rt.setMsgData("verReposAutoCommit 失败");
 		}
 		
 		//Do SyncWithVerRepos (skipRealDocAdd)
