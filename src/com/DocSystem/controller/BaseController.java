@@ -4671,7 +4671,7 @@ public class BaseController{
 				if(0 == entryType)
 				{	
 					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subDocName;
-					deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
+					deleteDoc(repos,subDoc.getId(), pid, commitMsg, "RemoteSyncUp", login_user, rt, false, true);
 					count++;
 				}
 			}
@@ -4708,7 +4708,7 @@ public class BaseController{
 				if(subDoc.getType() != subEntryType)
 				{
 					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subEntryName;
-					deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
+					deleteDoc(repos,subDoc.getId(), pid, commitMsg, "RemoteSyncUp", login_user, rt, false, true);
 					count++;
 					
 					subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, false);
@@ -4805,7 +4805,7 @@ public class BaseController{
 			subDoc.setName(entryName);
 			subDoc.setType(entryType);
 			subDoc.setSize((int) remoteEntry.getSize());
-			//subDoc.setCheckSum(checkSum);
+			subDoc.setCheckSum("");
 			subDoc.setVid(repos.getId());
 			subDoc.setPid(pid);
 			//set createTime
