@@ -1321,7 +1321,7 @@ public class DocController extends BaseController{
 		
 		System.out.println("revertRealDocHistory() SyncUpWithVerRepos return:" + ret);
 		
-		return false;
+		return true;
 	}
 
 	/* 文件搜索与排序  */
