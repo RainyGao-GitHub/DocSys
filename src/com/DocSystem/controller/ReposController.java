@@ -1374,236 +1374,25 @@ public class ReposController extends BaseController{
 		return subDoclist;
 	}
 	
-	//SyncUp DB/LocalEntry/RemoteEntry with entryNode in verRepos For display
-	//Attention:	(1)this function should be called after SyncUpDBWithVerRepos 
-	//				(2)这个函数会调用add/delete/update接口来同步，因此相当于从远程上传
-	private int SyncUpWithMirror(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt)
-	{
-		//TODO: 
-		return 0;
-	}
+	//从本地目录获取subDocList: 可用于前台展示后台的文件系统目录结构
+	//repos: 仓库信息
+	//pid: 是一个虚拟parentId用于方便前台展示为目录树
+	//localParentPath: localDir所在的目录
+	//dirName: localDir的名字，如果为空，表示获取localParentPath下的subDocs
+	//type: 1: Get File Only 2: Get Dir Only 0: both File and Dir
+	//private List <Doc> getSubDocListFromLocalDir(Repos repos, Integer pid, Doc parentDoc, String parentPath, Integer type, User login_user,ReturnAjax rt)
+	//{}
 	
-	//SyncUp docNode in DataBase with entryNode in verRepos For display
-	//Attention: localEntryNode will also be deleted or added but will not be updated
-	private int SyncUpWithVerRepos(Repos repos, Integer pid, Doc parentDoc, String parentPath, String localParentPath, String commitId,List<Doc> subDocList,User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd)
-	{	
-		System.out.println("SyncUpWithVerRepos() pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " commitId:" + commitId + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
-		//Do SyncUp
-		if(repos.getVerCtrl() == 1)
-		{
-			SVNUtil svnUtil = new SVNUtil();
-			if(false == svnUtil.Init(repos, true, null))
-			{
-				System.out.println("initReposWithSvnRepos() svnUtil.Init Failed");
-				return -1;
-			}
-
-			List<Doc> subDoclist = getSubDocListFromDB(repos, pid);
-			
-			long revision = -1;
-			if(commitId != null)
-			{
-				revision = Long.parseLong(commitId);
-			}
-			int ret = SyncUpWithSvnRepos(svnUtil, repos, pid, parentDoc, parentPath, localParentPath, revision, subDoclist, login_user, rt, recurEnable, skipRealDocAdd);
-			System.out.println("SyncUpWithSvnRepos() count=" + ret); 
-			return ret;
-		}
-		else if(repos.getVerCtrl() == 2)
-		{
-			return SyncUpWithGitRepos(repos, parentDoc, parentPath, subDocList, login_user, rt);
-		}
-		return 0;
-	}
-	
-
-	private int SyncUpWithGitRepos(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, long revision,List<Doc> subDocList, 
-			User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd) {	
-		System.out.println("SyncUpWithSvnRepos() reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
-		
-		if(pid != 0)
-		{
-			if(parentDoc == null)
-			{
-				System.out.println("SyncUpWithSvnRepos() parentDoc 不存在无法同步"); 
-			}
-			return 0;
-		}
-		
-		int count = 0;
-		//Schedule For Delete
-		HashMap<String,Doc> docHashMap = new HashMap<String,Doc>();
-		if(subDocList != null)
-		{
-			for(int i=0; i < subDocList.size(); i++)
-			{
-				Doc subDoc = subDocList.get(i);
-				String subDocName = subDoc.getName();
-				docHashMap.put(subDocName, subDoc);	//Add to docHashMap
-				
-				int entryType =	svnUtil.getEntryType(parentPath+subDocName, -1);
-				if(0 == entryType)
-				{	
-					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subDocName;
-					deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
-					count++;
-				}
-			}
-		}
-		
-		//Schedule For Add
-		//Get list from verRepos
-		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntries(parentPath, revision); 
-		for(int i=0; i < subEntryList.size(); i++)
-		{
-			SVNDirEntry subEntry = subEntryList.get(i);
-			String subEntryName = subEntry.getName();
-			Integer subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
-			//SyncUp with localDir
-			Doc subDoc = docHashMap.get(subEntryName);
-			if(null == subDoc)
-			{
-				subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, skipRealDocAdd);
-				if(subDoc != null)
-				{
-					count++;
-					if(recurEnable)
-					{
-						if(subEntryType == 2)
-						{
-							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", revision, null, login_user, rt, recurEnable, skipRealDocAdd);
-						}
-					}
-				}
-			}
-			else
-			{
-				//If the type is not matched, do delete and add back
-				if(subDoc.getType() != subEntryType)
-				{
-					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subEntryName;
-					deleteDoc(repos,subDoc.getId(),parentDoc.getId(), commitMsg, "RemoteSyncUp", login_user, rt, false, true);
-					count++;
-					
-					subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, false);
-					if(subDoc != null)
-					{
-						count++;
-						if(recurEnable)
-						{
-							if(subEntryType == 2)
-							{
-								count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/",revision, null, login_user, rt, recurEnable, false);
-							}
-						}
-					}
-				}
-				else
-				{
-					if(recurEnable)
-					{
-						if(subEntryType == 2)
-						{
-							List<Doc> doclist = getSubDocListFromDB(repos, subDoc.getId());
-							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", revision, doclist, login_user, rt, recurEnable, skipRealDocAdd);
-						}
-					}
-				}
-			}
-		}
-		return count;
-	}
-	
-	private Integer convertSVNNodeKindToEntryType(SVNNodeKind nodeKind) {
-		if(nodeKind == SVNNodeKind.NONE) 
-		{
-			return 0;
-		}
-		else if(nodeKind == SVNNodeKind.FILE)
-		{
-			return 1;
-		}
-		else if(nodeKind == SVNNodeKind.DIR)
-		{
-			return 2;
-		}
-		return -1;
-	}
-
-	protected HashMap<String,Doc> BuildHashMapByDocList(List<Doc> docList) {
-		HashMap<String,Doc> hashMap = new HashMap<String,Doc>();
-		for(int i=0;i<docList.size();i++)
-		{
-			Doc doc = docList.get(i);
-			String docName = doc.getName();
-			hashMap.put(docName, doc);			
-		}		
-		return hashMap;
-	}
-
-	private Doc addDocFromSvnEntry(Repos repos, SVNUtil svnUtil, SVNDirEntry remoteEntry, Doc parentDoc, String parentPath, String localParentPath, User login_user, boolean skipRealDocAdd) {
-		//Do add File or add Dir
-		boolean ret = false;
-		Integer entryType = null;
-		String entryName = remoteEntry.getName();
-
-		if(skipRealDocAdd)
-		{
-			ret = true;
-		}
-		else
-		{
-			File localEntry = new File(localParentPath, entryName);
-			if(remoteEntry.getKind() == SVNNodeKind.DIR)
-			{
-				ret = localEntry.mkdir();
-				entryType = 2;
-			}
-			else
-			{
-				ret = svnUtil.getEntry(parentPath, entryName, localParentPath, entryName, -1);
-				entryType = 1;
-			}
-		}
-		
-		//Add DB Node
-		if(true == ret)
-		{
-			//新建doc记录
-			Doc subDoc = new Doc();
-			subDoc.setName(entryName);
-			subDoc.setType(entryType);
-			subDoc.setSize((int) remoteEntry.getSize());
-			//subDoc.setCheckSum(checkSum);
-			subDoc.setVid(repos.getId());
-			subDoc.setPid(parentDoc.getId());
-			subDoc.setCreator(login_user.getId());
-			//set createTime
-			long nowTimeStamp = remoteEntry.getDate().getTime();	//get subEntry latestModify Time
-			subDoc.setCreateTime(nowTimeStamp);
-			subDoc.setLatestEditTime(nowTimeStamp);
-			subDoc.setLatestEditor(login_user.getId());
-			if(reposService.addDoc(subDoc) == 0)
-			{
-				return subDoc;					
-			}
-		}
-		return null;
-	}
-	
-	//获取子节点List in DataBase
-	private List <Doc> getSubDocListFromDB(Repos repos, Integer pid)
-	{
-		Doc doc = new Doc();
-		doc.setPid(pid);
-		doc.setVid(repos.getId());
-		return reposService.getDocList(doc);
-	}
+	//从版本仓库获取subDocList: 可用于向前台直接展示版本仓库目录结构，可应用于svn或git前置
+	//repos: 仓库信息
+	//pid: 是一个虚拟parentId用于方便前台展示为目录树
+	//parentPath: remoteDir所在的目录
+	//dirName: remoteDir的名字，如果为空，表示获取remoteParentPath下的subDocs
+	//localParentPath: localDir所在的目录
+	//dirName: localDir的名字，如果为空，表示获取remoteParentPath下的subDocs
+	//type: 1: Get File Only 2: Get Dir Only 0: both File and Dir
+	//private List <Doc> getSubDocListFromLocalDir(Repos repos, Integer pid, Doc parentDoc, String parentPath, Iteger type, User login_user,ReturnAjax rt)
+	//{}
 
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")

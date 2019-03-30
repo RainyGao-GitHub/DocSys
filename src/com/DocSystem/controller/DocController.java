@@ -1157,10 +1157,17 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Integer docId, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpServletRequest request,HttpServletResponse response){
+	public void getDocHistory(Integer reposId, Integer docId, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		if(reposId == null)
 		{
@@ -1209,10 +1216,17 @@ public class DocController extends BaseController{
 	
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
-	public void revertDocHistory(String commitId,Integer reposId, Integer docId, String parentPath, String docName, Integer historyType, HttpServletRequest request,HttpServletResponse response){
+	public void revertDocHistory(String commitId,Integer reposId, Integer docId, String parentPath, String docName, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("revertDocHistory commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		if(reposId == null)
 		{
@@ -1234,15 +1248,15 @@ public class DocController extends BaseController{
 		{
 			isRealDoc = false;
 		}
-		
+
 		boolean ret = false;
 		if(isRealDoc)
 		{
-			ret = revertRealDocHistory(repos,docId,parentPath,docName,commitId,rt);
+			ret = revertRealDocHistory(repos,docId,parentPath,docName,commitId,null, login_user.getName(), login_user, rt);
 		}
 		else
 		{
-			ret = revertVirtualDocHistory(repos,docId,parentPath,docName,commitId,rt);
+			ret = revertVirtualDocHistory(repos,docId,parentPath,docName,commitId,null, login_user.getName(), login_user, rt);
 		}
 		
 		if(ret == false)
@@ -1253,14 +1267,13 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName,
-			String commitId, ReturnAjax rt) {
+	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		String entryPath = getDocVPath(parentPath, docName);
 		return false;
 	}
 
-	private boolean revertRealDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, ReturnAjax rt) {
+	private boolean revertRealDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
 		
@@ -1268,15 +1281,17 @@ public class DocController extends BaseController{
 		{
 			//恢复整个仓库到指定版本
 			
-			
 			return false;
 		}
 		
-		Doc doc = reposService.getDoc(docId);
-		if(doc == null)
+		if(docId != 0)
 		{
-			rt.setError("Doc " + docId + " 不存在！");
-			return false;	
+			Doc doc = reposService.getDoc(docId);
+			if(doc == null)
+			{
+				rt.setError("Doc " + docId + " 不存在！");
+				return false;	
+			}
 		}
 		
 		//Checkout to localParentPath
@@ -1292,7 +1307,12 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		//Try to get real pid
+		//Do commit to verRepos
+		
+		
+		//Do SyncWithVerRepos (skipRealDocAdd)
+		String reposRPath = getReposRealPath(repos);
+		int ret = SyncUpWithVerRepos(repos, docId, null, "", reposRPath, null, null, login_user, rt, true, true);
 	
 		return false;
 	}
