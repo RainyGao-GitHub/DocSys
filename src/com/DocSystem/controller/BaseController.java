@@ -3195,24 +3195,14 @@ public class BaseController{
 	
 	private boolean deleteRealDoc(String reposRPath, String parentPath, String name, Integer type, ReturnAjax rt) {
 		String localDocPath = reposRPath + parentPath + name;
-		if(type == 2)
+
+		if(delFileOrDir(localDocPath) == false)
 		{
-			if(delDir(localDocPath) == false)
-			{
-				System.out.println("deleteRealDoc() delDir " + localDocPath + "删除失败！");
-				rt.setMsgData("deleteRealDoc() delDir " + localDocPath + "删除失败！");
-				return false;
-			}
-		}	
-		else 
-		{
-			if(delFile(localDocPath) == false)
-			{
-				System.out.println("deleteRealDoc() deleteFile " + localDocPath + "删除失败！");
-				rt.setMsgData("deleteRealDoc() deleteFile " + localDocPath + "删除失败！");
-				return false;
-			}
+			System.out.println("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
+			rt.setMsgData("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
+			return false;
 		}
+		
 		return true;
 	}
 	
