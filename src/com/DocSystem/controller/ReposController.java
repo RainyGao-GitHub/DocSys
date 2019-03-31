@@ -1306,26 +1306,54 @@ public class ReposController extends BaseController{
 	private List <Doc> getSubDocList(Repos repos, Integer pid, Doc parentDoc, String parentPath,User login_user,ReturnAjax rt)
 	{
 		//Get the SubDocList from DataBase
-		List <Doc> subDoclist = getSubDocListFromDB(repos, pid);
+		List <Doc> subDocList = getSubDocListFromDB(repos, pid);
 
 		//If there is no verCtrl
-		if(repos.getVerCtrl()== null || repos.getVerCtrl()== 0 || repos.getIsRemote() == null || repos.getIsRemote() == 0)
+		if(repos.getVerCtrl()== null || repos.getVerCtrl()== 0)
 		{
-			return subDoclist;
+			System.out.println("getSubDocList() no verCtrl");
+			return subDocList;
 		}
 		
-		//Do SyncUp with 
+		//Get revision of parentDoc in verRepos
+		String verReposRevision = getDocRevisionInVerRepos(repos,pid,parentDoc);
+		if(verReposRevision == null)
+		{
+			System.out.println("getSubDocList() Failed to get revision from verRepos for doc:" + pid);
+			return subDocList;
+		}
+		else
+		{
+			String curRevision = getDocRevisionInDB(repos,pid,parentDoc);
+			if(curRevision != null && curRevision.equals(verReposRevision))
+			{
+				System.out.println("getSubDocList() revision matched with verRepos for doc:" + pid);				
+				return subDocList;
+			}
+		}
+		
+		//Do SyncUp with verRepos 
 		String reposRPath = getReposRealPath(repos);
 		String localParentPath = reposRPath + parentPath;
-		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, localParentPath, null,subDoclist, login_user, rt, false, false);
+		int ret = SyncUpWithVerRepos(repos, pid, parentDoc, parentPath, localParentPath, null,subDocList, login_user, rt, false, false);
 		if(ret > 0)	//There is update in DB, do get again
 		{
 			return getSubDocListFromDB(repos, pid);
 		}
 		
-		return subDoclist;
+		return subDocList;
 	}
 	
+	private String getDocRevisionInDB(Repos repos, Integer pid, Doc parentDoc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private String getDocRevisionInVerRepos(Repos repos, Integer pid, Doc parentDoc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	//从本地目录获取subDocList: 可用于前台展示后台的文件系统目录结构
 	//repos: 仓库信息
 	//pid: 是一个虚拟parentId用于方便前台展示为目录树

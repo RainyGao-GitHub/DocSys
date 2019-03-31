@@ -4633,6 +4633,7 @@ public class BaseController{
 		return 0;
 	}
 
+	//与版本仓库进行同步
 	private int SyncUpWithSvnRepos(SVNUtil svnUtil, Repos repos,Integer pid, Doc parentDoc, String parentPath, String localParentPath, long revision,List<Doc> subDocList, 
 			User login_user,ReturnAjax rt, boolean recurEnable, boolean skipRealDocAdd) {	
 		System.out.println("SyncUpWithSvnRepos() reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath + " localParentPath:" + localParentPath + " recurEnable:" + recurEnable + " skipRealDocAdd:" + skipRealDocAdd); 
@@ -4648,21 +4649,30 @@ public class BaseController{
 		
 		int count = 0;
 		//Schedule For Delete
-		HashMap<String,Doc> docHashMap = new HashMap<String,Doc>();
+		HashMap<String,Doc> docHashMap = new HashMap<String,Doc>();	//用来存放已经Schedule For Delete 之后的Docs
 		if(subDocList != null)
 		{
 			for(int i=0; i < subDocList.size(); i++)
 			{
 				Doc subDoc = subDocList.get(i);
 				String subDocName = subDoc.getName();
-				docHashMap.put(subDocName, subDoc);	//Add to docHashMap
 				
-				int entryType =	svnUtil.getEntryType(parentPath+subDocName, -1);
+				int entryType =	svnUtil.getEntryType(parentPath+subDocName, revision);
 				if(0 == entryType)
 				{	
-					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subDocName;
-					deleteDoc(repos,subDoc.getId(), pid, commitMsg, "RemoteSyncUp", login_user, rt, false, true);
-					count++;
+					//deleteDoc(skipRealDocCommit), so we do not need the commitMsg and commitUser, but virtualDoc delete will be done by using default commitMsg and commitUser
+					if(true == deleteDoc(repos,subDoc.getId(), pid, null, null, login_user, rt, false, true))
+					{
+						count++;
+					}
+					else
+					{
+						docHashMap.put(subDocName, subDoc);	//Add to docHashMap
+					}
+				}
+				else
+				{
+					docHashMap.put(subDocName, subDoc);	//Add to docHashMap
 				}
 			}
 		}
@@ -4679,16 +4689,17 @@ public class BaseController{
 			Doc subDoc = docHashMap.get(subEntryName);
 			if(null == subDoc)
 			{
-				subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, skipRealDocAdd);
-				if(subDoc != null)
+				Doc newSubDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, skipRealDocAdd);
+				if(newSubDoc != null)
 				{
 					count++;
 					if(recurEnable)
 					{
 						if(subEntryType == 2)
 						{
-							count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", revision, null, login_user, rt, recurEnable, skipRealDocAdd);
+							count += SyncUpWithSvnRepos(svnUtil, repos, newSubDoc.getId(), newSubDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/", revision, null, login_user, rt, recurEnable, skipRealDocAdd);
 						}
+						
 					}
 				}
 			}
@@ -4697,19 +4708,19 @@ public class BaseController{
 				//If the type is not matched, do delete and add back
 				if(subDoc.getType() != subEntryType)
 				{
-					String commitMsg = "[RemoteSyncUp] delete " + parentPath+subEntryName;
-					deleteDoc(repos,subDoc.getId(), pid, commitMsg, "RemoteSyncUp", login_user, rt, false, true);
-					count++;
-					
-					subDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, false);
-					if(subDoc != null)
+					if(true == deleteDoc(repos,subDoc.getId(), pid, null, null, login_user, rt, false, true))
 					{
 						count++;
-						if(recurEnable)
+						Doc newSubDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, false);
+						if(newSubDoc != null)
 						{
-							if(subEntryType == 2)
+							count++;
+							if(recurEnable)
 							{
-								count += SyncUpWithSvnRepos(svnUtil, repos, subDoc.getId(), subDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/",revision, null, login_user, rt, recurEnable, false);
+								if(subEntryType == 2)
+								{
+									count += SyncUpWithSvnRepos(svnUtil, repos, newSubDoc.getId(), newSubDoc, parentPath + subEntryName +"/", localParentPath + subEntryName + "/",revision, null, login_user, rt, recurEnable, false);
+								}
 							}
 						}
 					}
