@@ -1235,12 +1235,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
+		Repos repos = null;
+		synchronized(syncLock)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);
-			return;
+			repos = lockRepos(reposId, 1, login_user, rt, true);
+			if(repos == null)
+			{
+				unlock(); //线程锁
+				System.out.println("revertDocHistory lock repos:" + reposId + " Failed");
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		boolean isRealDoc = true;
@@ -1262,6 +1267,7 @@ public class DocController extends BaseController{
 		if(ret == false)
 		{
 			System.out.println("revertDocHistory Failed");
+			unlockRepos(reposId,login_user,null);
 		}
 		
 		writeJson(rt, response);
@@ -1286,12 +1292,11 @@ public class DocController extends BaseController{
 				return false;	
 			}
 		}
-		
+	
 		//Checkout to localParentPath
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		
 		//If localParentPath not exists do mkdirs
-		
 		
 		//Do checkout the entry to 
 		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == false)

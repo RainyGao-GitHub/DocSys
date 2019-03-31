@@ -2892,6 +2892,57 @@ public class BaseController{
 		return repos;	
 	}
 	
+	//Unlock Doc
+	protected boolean unlockRepos(Integer reposId, User login_user, Repos preLockInfo) {
+		Repos curRepos = reposService.getRepos(reposId);
+		if(curRepos == null)
+		{
+			System.out.println("unlockRepos() curRepos is null " + reposId);
+			return false;
+		}
+		
+		if(curRepos.getState() == 0)
+		{
+			System.out.println("unlockRepos() repos was not locked:" + curRepos.getState());			
+			return true;
+		}
+		
+		Integer lockBy = curRepos.getLockBy();
+		if(lockBy != null && lockBy == login_user.getId())
+		{
+			Repos revertRepos = new Repos();
+			revertRepos.setId(reposId);	
+			
+			if(preLockInfo == null)	//Unlock
+			{
+				revertRepos.setState(0);	//
+				revertRepos.setLockBy(0);	//
+				revertRepos.setLockTime((long)0);	//Set lockTime
+			}
+			else	//Revert to preLockState
+			{
+				revertRepos.setState(preLockInfo.getState());	//
+				revertRepos.setLockBy(preLockInfo.getLockBy());	//
+				revertRepos.setLockTime(preLockInfo.getLockTime());	//Set lockTime
+			}
+			
+			if(reposService.updateRepos(revertRepos) == 0)
+			{
+				System.out.println("unlockRepos() updateRepos Failed!");
+				return false;
+			}
+		}
+		else
+		{
+			System.out.println("unlockRepos() repos was not locked by " + login_user.getName());
+			return false;
+		}
+		
+		System.out.println("unlockRepos() success:" + reposId);
+		return true;
+	}
+	
+	
 	//Lock Doc
 	protected Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
@@ -2985,7 +3036,7 @@ public class BaseController{
 		int lockState = doc.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
 		if(lockState != 0)
 		{
-			//
+			//Not force locked (user can access it by himself)
 			if(lockState != 2)
 			{
 				if(doc.getLockBy() == login_user.getId())	//locked by login_user
@@ -2999,7 +3050,7 @@ public class BaseController{
 			{	
 				User lockBy = userService.getUser(doc.getLockBy());
 				rt.setError(doc.getName() +" was locked by " + lockBy.getName());
-				System.out.println("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy() + " lockState:"+ doc.getState());;
+				System.out.println("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy() + " lockState:"+ doc.getState());
 				return true;						
 			}
 			else 
