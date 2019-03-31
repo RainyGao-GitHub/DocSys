@@ -2087,7 +2087,7 @@ public class BaseController{
 			synchronized(syncLock)
 			{							
 				//Try to lock the Doc
-				doc = lockDoc(docId,2,login_user,rt,true);
+				doc = lockDoc(docId,2, 7200000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 				if(doc == null)
 				{
 					unlock(); //线程锁
@@ -2208,7 +2208,7 @@ public class BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lock the doc
-			doc = lockDoc(docId, 1, login_user, rt,false);
+			doc = lockDoc(docId, 1, 7200000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -2307,7 +2307,7 @@ public class BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lockDoc
-			doc = lockDoc(docId,2,login_user,rt,true);
+			doc = lockDoc(docId,2, 7200000,login_user,rt,true);
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -2429,7 +2429,7 @@ public class BaseController{
 		Doc dstPDoc = null;
 		synchronized(syncLock)
 		{
-			doc = lockDoc(docId,2,login_user,rt,true);
+			doc = lockDoc(docId,2, 7200000, login_user,rt,true);
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -2441,7 +2441,7 @@ public class BaseController{
 			//Try to lock dstPid
 			if(dstPid !=0)
 			{
-				dstPDoc = lockDoc(dstPid,2,login_user,rt,false);
+				dstPDoc = lockDoc(dstPid,2, 7200000, login_user,rt,false);
 				if(dstPDoc== null)
 				{
 					unlock(); //线程锁
@@ -2588,7 +2588,7 @@ public class BaseController{
 			else
 			{
 				//Try to lock the srcDoc
-				srcDoc = lockDoc(docId,1,login_user,rt,true);
+				srcDoc = lockDoc(docId,1, 7200000,login_user,rt,true);
 				if(srcDoc == null)
 				{
 					unlock(); //线程锁
@@ -2775,7 +2775,7 @@ public class BaseController{
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			doc = lockDoc(id,1,login_user,rt,false);
+			doc = lockDoc(id,1, 3600000, login_user,rt,false);
 			if(doc== null)
 			{
 				unlock(); //线程锁
@@ -2837,7 +2837,7 @@ public class BaseController{
 	
 	/*********************Functions For DocLock *******************************/
 	//Lock Repos
-	protected Repos lockRepos(Integer reposId,Integer lockType, User login_user, ReturnAjax rt, boolean docLockCheckFlag) 
+	protected Repos lockRepos(Integer reposId,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) 
 	{
 		System.out.println("lockRepos() reposId:" + reposId + " lockType:" + lockType + " by " + login_user.getName() + " docLockCheckFlag:" + docLockCheckFlag);
 		//确定Repos是否可用
@@ -2881,7 +2881,7 @@ public class BaseController{
 		lockRepos.setId(reposId);
 		lockRepos.setState(lockType);
 		lockRepos.setLockBy(login_user.getId());
-		long lockTime = new Date().getTime() + 24*60*60*1000;
+		long lockTime = new Date().getTime() + lockDuration; //24*60*60*1000;
 		lockRepos.setLockTime(lockTime);	//Set lockTime
 		if(reposService.updateRepos(lockRepos) == 0)
 		{
@@ -2944,7 +2944,7 @@ public class BaseController{
 	
 	
 	//Lock Doc
-	protected Doc lockDoc(Integer docId,Integer lockType, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
+	protected Doc lockDoc(Integer docId,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 				
 		//确定文件节点是否可用
@@ -2999,7 +2999,7 @@ public class BaseController{
 		lockDoc.setId(docId);
 		lockDoc.setState(lockType);	//doc的状态为不可用
 		lockDoc.setLockBy(login_user.getId());
-		long lockTime = new Date().getTime() + 24*60*60*1000;
+		long lockTime = new Date().getTime() + lockDuration; //24*60*60*1000;
 		lockDoc.setLockTime(lockTime);	//Set lockTime
 		if(reposService.updateDoc(lockDoc) == 0)
 		{

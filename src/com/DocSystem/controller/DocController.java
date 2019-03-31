@@ -1139,7 +1139,7 @@ public class DocController extends BaseController{
 			}
 			
 			//Try to lock the Doc
-			doc = lockDoc(docId,lockType,login_user,rt,subDocCheckFlag);
+			doc = lockDoc(docId,lockType,86400000,login_user,rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -1238,7 +1238,7 @@ public class DocController extends BaseController{
 		Repos repos = null;
 		synchronized(syncLock)
 		{
-			repos = lockRepos(reposId, 1, login_user, rt, true);
+			repos = lockRepos(reposId, 1, 28800000, login_user, rt, true);	//8 Hours 8*60*60*1000 = 28800,000 
 			if(repos == null)
 			{
 				unlock(); //线程锁
