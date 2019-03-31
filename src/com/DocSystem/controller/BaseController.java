@@ -4660,6 +4660,7 @@ public class BaseController{
 				int entryType =	svnUtil.getEntryType(parentPath+subDocName, revision);
 				if(0 == entryType)
 				{	
+					System.out.println("SyncUpWithSvnRepos() deleteDoc:" + subDoc.getId() + " and localEntry:" +localParentPath +subDocName); 
 					//deleteDoc(skipRealDocCommit), so we do not need the commitMsg and commitUser, but virtualDoc delete will be done by using default commitMsg and commitUser
 					if(true == deleteDoc(repos,subDoc.getId(), pid, null, null, login_user, rt, false, true))
 					{
@@ -4689,6 +4690,7 @@ public class BaseController{
 			Doc subDoc = docHashMap.get(subEntryName);
 			if(null == subDoc)
 			{
+				System.out.println("SyncUpWithSvnRepos() addDoc:" + subEntryName + " and localEntry:" +localParentPath +subEntryName); 
 				Doc newSubDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, skipRealDocAdd);
 				if(newSubDoc != null)
 				{
@@ -4708,9 +4710,11 @@ public class BaseController{
 				//If the type is not matched, do delete and add back
 				if(subDoc.getType() != subEntryType)
 				{
+					System.out.println("SyncUpWithSvnRepos() Doc type:" + subDoc.getType() + " not matched with remoteEntry type:" + subEntryType); 
+					System.out.println("SyncUpWithSvnRepos() deleteDoc:" + subDoc.getId() + " and localEntry:" +localParentPath +subDoc.getName()); 
 					if(true == deleteDoc(repos,subDoc.getId(), pid, null, null, login_user, rt, false, true))
 					{
-						count++;
+						System.out.println("SyncUpWithSvnRepos() addDoc:" + subEntryName + " and localEntry:" +localParentPath +subEntryName); 
 						Doc newSubDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, false);
 						if(newSubDoc != null)
 						{
