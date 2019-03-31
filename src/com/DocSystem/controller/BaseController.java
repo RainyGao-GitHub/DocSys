@@ -4643,8 +4643,8 @@ public class BaseController{
 			if(parentDoc == null)
 			{
 				System.out.println("SyncUpWithSvnRepos() parentDoc 不存在无法同步"); 
+				return 0;
 			}
-			return 0;
 		}
 		
 		int count = 0;
