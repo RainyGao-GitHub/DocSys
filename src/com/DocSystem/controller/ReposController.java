@@ -1167,13 +1167,20 @@ public class ReposController extends BaseController{
 		
 		//获取用户可访问文件列表(From Root to docId)
 		List <Doc> docList = null;
-		if(docId == null || docId == 0)
+		if(repos.getType() == 1)	//本地存储仓库，直接获取文件
 		{
-			docList = getAccessableSubDocList(repos, 0, login_user, rt);
+			docList = getSubDocListFromFS(repos,0,0,"");
 		}
 		else
 		{
-			docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
+			if(docId == null || docId == 0)
+			{
+				docList = getAccessableSubDocList(repos, 0, login_user, rt);
+			}
+			else
+			{
+				docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
+			}
 		}
 		
 		if(docList == null)
@@ -1354,34 +1361,15 @@ public class ReposController extends BaseController{
 		return null;
 	}
 
-	//从本地目录获取subDocList: 可用于前台展示后台的文件系统目录结构
-	//repos: 仓库信息
-	//pid: 是一个虚拟parentId用于方便前台展示为目录树
-	//localParentPath: localDir所在的目录
-	//dirName: localDir的名字，如果为空，表示获取localParentPath下的subDocs
-	//type: 1: Get File Only 2: Get Dir Only 0: both File and Dir
-	//private List <Doc> getSubDocListFromLocalDir(Repos repos, Integer pid, Doc parentDoc, String parentPath, Integer type, User login_user,ReturnAjax rt)
-	//{}
-	
-	//从版本仓库获取subDocList: 可用于向前台直接展示版本仓库目录结构，可应用于svn或git前置
-	//repos: 仓库信息
-	//pid: 是一个虚拟parentId用于方便前台展示为目录树
-	//parentPath: remoteDir所在的目录
-	//dirName: remoteDir的名字，如果为空，表示获取remoteParentPath下的subDocs
-	//localParentPath: localDir所在的目录
-	//dirName: localDir的名字，如果为空，表示获取remoteParentPath下的subDocs
-	//type: 1: Get File Only 2: Get Dir Only 0: both File and Dir
-	//private List <Doc> getSubDocListFromLocalDir(Repos repos, Integer pid, Doc parentDoc, String parentPath, Iteger type, User login_user,ReturnAjax rt)
-	//{}
-
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer id,Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getSubDocList pid: " + id + " vid: " + vid);
-		Integer pid = id;
+	public void getSubDocList(Integer vid, Integer pid, Integer pLevel, String parentPath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getSubDocList reposId: " + vid + " pid: " + pid + " pLevel:" + pLevel + " parentPath:" + parentPath);
 		if(pid == null)
 		{
 			pid = 0;
+			pLevel = 0;
+			parentPath = "";		
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1395,9 +1383,17 @@ public class ReposController extends BaseController{
 		
 		//Get Repos
 		Repos repos = reposService.getRepos(vid);
-		
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, pid, login_user, rt);
+		List <Doc> docList = null;
+		if(repos.getType() == 1)
+		{
+			docList = getSubDocListFromFS(repos, pid, 1, parentPath,login_user, rt);
+		}
+		else
+		{
+			docList = getAccessableSubDocList(repos, pid, login_user, rt);			
+		}
+
 		if(docList == null)
 		{
 			rt.setData("");
