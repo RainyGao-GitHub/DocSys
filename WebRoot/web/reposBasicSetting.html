@@ -8,14 +8,14 @@
             <label>位置</label>
             <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
             <label>类型<span style="color:#F00">*</span></label>
-            <select class="form-control" name="RBStype" onchange="doSelectFS();" style="width: 100%">   
+            <select class="form-control" id="RBStype" onchange="doSelectFS();" disabled="disabled" style="width: 100%">   
             	<option value="1" selected="selected">默认</option>   
             	<option value="2">文件系统前置</option>
             	<option value="3">SVN前置</option>   
             	<option value="4">GIT前置</option>   
             </select>
-            <div name="RBSverCtrlDiv">
-	            <div name="RBSrealDocVerCtrlDiv">
+            <div id="RBSverCtrlDiv">
+	            <div id="RBSrealDocVerCtrlDiv">
 		            <label>版本仓库 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
 		            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
@@ -37,7 +37,7 @@
 						</div>
 					</div>
 				</div>
-				<div name="RBSvirtualDocVerCtrlDiv">
+				<div id="RBSvirtualDocVerCtrlDiv">
 					<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
 		            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1()" style="width: 100%">   
 		            	<option value="0">无</option>   
@@ -80,6 +80,7 @@
 	function doSelectFS()
 	{
 		var type = $("#RBStype").val();
+		console.log("doSelectFS type:" + type);
 		
 		if(type == 1)
 		{
@@ -269,7 +270,7 @@ function saveReposBasicSetting()
 	newReposSetting.vid = getQueryString("vid");
 	newReposSetting.name = $("#RBSname").val();
 	newReposSetting.info = $("#RBSinfo").val();
-	newReposSetting.type = 1;	//Real DocSystem
+	newReposSetting.type =  $("#RBStype").val();	//Real DocSystem
 	newReposSetting.path = $("#RBSpath").val();
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
 	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 0: 1;

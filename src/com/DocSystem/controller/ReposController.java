@@ -1229,7 +1229,7 @@ public class ReposController extends BaseController{
 		
 		//获取用户可访问文件列表(From Root to docId)
 		List <Doc> docList = null;
-		if(repos.getType() == 1)	//本地存储仓库，直接获取文件
+		if(repos.getType() == 2)	//本地存储仓库，直接获取文件
 		{
 			docList = getSubDocListFromFS(repos,0,0,"", login_user, rt);
 		}
@@ -1450,7 +1450,7 @@ public class ReposController extends BaseController{
 		List <Doc> docList = null;
 		if(repos.getType() == 2)	//文件系统前置将直接从指定的目录获取
 		{
-			docList = getSubDocListFromFS(repos, pid, 1, parentPath,login_user, rt);
+			docList = getSubDocListFromFS(repos, pid, pLevel, parentPath,login_user, rt);
 		}
 		else
 		{
