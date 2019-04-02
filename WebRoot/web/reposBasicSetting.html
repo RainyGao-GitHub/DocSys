@@ -7,44 +7,57 @@
             <input class="form-control" type="text" id="RBSinfo" value="" style="width: 100%"></input>
             <label>位置</label>
             <input class="form-control" type="text" id="RBSpath"  value="" style="width: 100%"></input>
-            <label>版本仓库 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
-            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
-            	<option value="0">无</option>   
-            	<option value="1">SVN</option>   
-            	<option value="2">GIT</option> 
+            <label>类型<span style="color:#F00">*</span></label>
+            <select class="form-control" name="RBStype" onchange="doSelectFS();" style="width: 100%">   
+            	<option value="1" selected="selected">默认</option>   
+            	<option value="2">文件系统前置</option>
+            	<option value="3">SVN前置</option>   
+            	<option value="4">GIT前置</option>   
             </select>
-            <div id="RBSverReposSetting">
-	            <div id="RBSlocalVerRepos">
-		            <label>版本仓库所在目录</label>
-		            <input class="form-control" type="text" id="RBSlocalSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
-	            </div>
-	            <div id="RBSremoteVerRepos">
-		            <label>版本仓库链接</label>
-		            <input class="form-control" type="text" id="RBSsvnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"></input>
-		            <label>用户名</label>
-		            <input class="form-control" type="text" id="RBSsvnUser" value="" style="width: 100%"></input>
-		            <label>密码</label>
-		            <input class="form-control" type="password" id="RBSsvnPwd" value="" style="width: 100%"></input>
+            <div name="RBSverCtrlDiv">
+	            <div name="RBSrealDocVerCtrlDiv">
+		            <label>版本仓库 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
+		            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
+		            	<option value="0">无</option>   
+		            	<option value="1">SVN</option>   
+		            	<option value="2">GIT</option> 
+		            </select>
+		            <div id="RBSverReposSetting">
+			            <div id="RBSlocalVerRepos">
+				            <label>版本仓库所在目录</label>
+				            <input class="form-control" type="text" id="RBSlocalSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+			            </div>
+			            <div id="RBSremoteVerRepos">
+				            <label>版本仓库链接</label>
+				            <input class="form-control" type="text" id="RBSsvnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"></input>
+				            <label>用户名</label>
+				            <input class="form-control" type="text" id="RBSsvnUser" value="" style="width: 100%"></input>
+				            <label>密码</label>
+				            <input class="form-control" type="password" id="RBSsvnPwd" value="" style="width: 100%"></input>
+						</div>
+					</div>
 				</div>
-			</div>
-			<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
-            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1()" style="width: 100%">   
-            	<option value="0">无</option>   
-            	<option value="1">SVN</option>   
-            	<option value="2">GIT</option>  
-            </select>
-            <div id="RBSverReposSetting1">
-	            <div id="RBSlocalVerRepos1">
-		            <label>版本仓库所在目录</label>
-		            <input class="form-control" type="text" id="RBSlocalSvnPath1"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
-	            </div>
-				<div id="RBSremoteVerRepos1">
-		            <label>版本仓库链接</label>
-		            <input class="form-control" type="text" id="RBSsvnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"></input>
-		            <label>用户名</label>
-		            <input class="form-control" type="text" id="RBSsvnUser1" value="" style="width: 100%"></input>
-		            <label>密码</label>
-		            <input class="form-control" type="password" id="RBSsvnPwd1" value="" style="width: 100%"></input>              
+				<div name="RBSvirtualDocVerCtrlDiv">
+					<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
+		            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1()" style="width: 100%">   
+		            	<option value="0">无</option>   
+		            	<option value="1">SVN</option>   
+		            	<option value="2">GIT</option>  
+		            </select>
+		            <div id="RBSverReposSetting1">
+			            <div id="RBSlocalVerRepos1">
+				            <label>版本仓库所在目录</label>
+				            <input class="form-control" type="text" id="RBSlocalSvnPath1"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+			            </div>
+						<div id="RBSremoteVerRepos1">
+				            <label>版本仓库链接</label>
+				            <input class="form-control" type="text" id="RBSsvnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"></input>
+				            <label>用户名</label>
+				            <input class="form-control" type="text" id="RBSsvnUser1" value="" style="width: 100%"></input>
+				            <label>密码</label>
+				            <input class="form-control" type="password" id="RBSsvnPwd1" value="" style="width: 100%"></input>              
+						</div>
+					</div>
 				</div>
 			</div>
         </div>
@@ -63,6 +76,55 @@
 		reposBasicSettingPageInit();
 	});
 
+	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
+	function doSelectFS()
+	{
+		var type = $("#RBStype").val();
+		
+		if(type == 1)
+		{
+			$("#RBSverCtrlDiv").show();
+			//RealDoc verCtrl
+			$("#RBSverCtrl").get(0).selectedIndex=0;
+			$("#RBSverCtrl").attr('disabled',false);
+			//virtualDoc verCtrl
+			$("#RBSverCtrl1").get(0).selectedIndex=0;
+			$("#RBSvirtualDocVerCtrlDiv").show();
+			
+			doSelectVerCtrl();
+		}
+		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+		{
+			$("#RBSverCtrlDiv").hide();
+			$("#RBSverCtrl").get(0).selectedIndex=0;
+			$("#RBSverCtrl1").get(0).selectedIndex=0;
+		}
+		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
+		{
+			$("#RBSverCtrlDiv").show();
+			//RealDoc verCtrl
+			$("#RBSverCtrl").get(0).selectedIndex=1;
+			$("#RBSverCtrl").attr('disabled',true);
+			//virtualDoc verCtrl
+			$("#RBSverCtrl1").get(0).selectedIndex=0;
+			$("#RBSvirtualDocVerCtrlDiv").hide();
+
+			doSelectVerCtrl();
+		}
+		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
+		{
+			$("#RBSverCtrlDiv").show();
+			//RealDoc verCtrl
+			$("#RBSverCtrl").get(0).selectedIndex=2;
+			$("#RBSverCtrl").attr('disabled',true);
+			//virtualDoc verCtrl
+			$("#RBSverCtrl1").get(0).selectedIndex=0;
+			$("#RBSvirtualDocVerCtrlDiv").hide();
+
+			doSelectVerCtrl();
+		}
+	}
+	
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
 	function doSelectVerCtrl()
 	{
