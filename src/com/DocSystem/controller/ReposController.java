@@ -282,16 +282,17 @@ public class ReposController extends BaseController{
 			{
 				path = path + repos.getName() + "/";
 			}
-			if(true == isReposPathBeUsed(null,path))
-			{
-				rt.setError("仓库存储目录 " + path + " 已被使用！");		
-				return false;
-			}
 		}
 		else
 		{
 			//检查path的格式并修正：必须以/结尾
 			path = dirPathFormat(path);
+		}
+		
+		if(true == isReposPathBeUsed(null,path))
+		{
+			rt.setError("仓库存储目录 " + path + " 已被使用！");		
+			return false;
 		}
 		repos.setPath(path);
 
