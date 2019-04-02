@@ -1199,7 +1199,7 @@ public class ReposController extends BaseController{
 				}
 			}
 
-			if(copyFileOrDir(oldPath+reposName, path+reposName,false) == false)
+			if(copyFileOrDir(oldPath+reposName, path+reposName,true) == false)
 			{
 				System.out.println("仓库目录迁移失败！");
 				rt.setError("修改仓库位置失败！");					
