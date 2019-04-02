@@ -168,7 +168,7 @@ public class BaseController{
 	//获取仓库的实文件的本地存储根路径
 	protected String getReposRealPath(Repos repos)
 	{
-		if(repos.getType() == 1)
+		if(repos.getType() == 2)
 		{
 			return repos.getPath();
 		}
