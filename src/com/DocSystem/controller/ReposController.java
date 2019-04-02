@@ -735,6 +735,12 @@ public class ReposController extends BaseController{
 			}
 		}
 		
+		if(repos.getType() == 2)
+		{
+			//对于文件系统前置，repos.path就是存储路径
+			return true;
+		}
+		
 		String reposDir = getReposPath(repos);
 		if(createDir(reposDir) == true)
 		{
@@ -1178,6 +1184,20 @@ public class ReposController extends BaseController{
 			
 			//Do move the repos
 			String reposName = previousReposInfo.getId()+"";
+			if(previousReposInfo.getType() == 2)
+			{
+				reposName = "";
+			}
+			else
+			{
+				if(path.contains(oldPath))
+				{
+					System.out.println("禁止将仓库目录迁移到仓库的子目录中！");
+					rt.setError("修改仓库位置失败：禁止迁移到本仓库的子目录");	
+					return false;
+				}
+			}
+
 			if(copyFileOrDir(oldPath+reposName, path+reposName,false) == false)
 			{
 				System.out.println("仓库目录迁移失败！");
