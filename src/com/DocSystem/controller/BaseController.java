@@ -193,7 +193,7 @@ public class BaseController{
 		Doc doc = reposService.getDocInfo(id); //获取当前doc的信息
 		if(doc != null)
 		{
-			if(doc.getType() == 2)
+			if(doc.getType() == 1)
 			{
 				parentPath = getParentPath(doc.getPid()) + doc.getName() + "/";
 			}
