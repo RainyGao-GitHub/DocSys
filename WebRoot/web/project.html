@@ -441,10 +441,12 @@
 	//初始化全局变量 //Repos Info
 	var gReposId;
 	var gReposInfo = [];
+	var gReposType = 0;	//0: Unknown Type
 	var gReposName = "";
 	var gReposCreateTime = "";
 	//Doc Info
 	var gDocId;
+	var gParentPath = "";
 	var gDocContent;
 	var gEdit; 
 	
@@ -2893,6 +2895,7 @@
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
                     gReposName = gReposInfo.name;
+                    gReposType = gReposInfo.type;
                     gReposCreateTime = gReposInfo.createTime;
                     $("#projectName").text(gReposName);
 					//回调函数	
@@ -5026,8 +5029,11 @@ function CompareObj(objA, objB, flag) {
               	 //showDocList
            		 showDocList(pId);
            	     
-             	 //show Doc
-            	 getDoc(gDocId,false);
+             	 //show VirtualDoc (前置没有VirtualDoc)
+            	 if(gReposType == 1)
+            	 {
+	             	 getDoc(gDocId,false);
+            	 }
              }
           }
       }
@@ -5611,23 +5617,28 @@ function CompareObj(objA, objB, flag) {
 		showDocList(pId);
 		
 		//获取DocContent
-		getDoc(gDocId,gEdit);
+		if(gReposType == 1)
+		{
+			getDoc(gDocId,gEdit);
+		}
 	}
 	
-	function showDocList(parentDocId)
+	function showDocList(parentDocId,pLevel,parentPath)
 	{
-		console.log("showDocList() parentDocId:" + parentDocId);
+		console.log("showDocList() parentDocId:" + parentDocId + " parentPath:" +parentPath);
 		//Set DocListState and DocListParentDocId
 		DocListState = 0;
     	DocListParentDocId = parentDocId;
-
+		
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
             dataType : "json",
             data : {
-                id: parentDocId,
                 vid: gReposId,
+                id: parentDocId,
+                pLevel: pLevel,
+                parentPath: parentPath,
             },
             success : function (ret) {
          		console.log("showDocList ret:", ret)
@@ -6123,8 +6134,11 @@ function CompareObj(objA, objB, flag) {
     		enable : true,//设置 zTree 是否开启异步加载模式  
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
-    		autoParam : ["id"],//异步加载时需要自动提交父节点属性的参数  
-    		otherParam:{"vid":gReposId},
+    		autoParam : ["id","name"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{
+    			"vid":gReposId,
+    			"parentPath": gParentPath,
+    		},
     		dataFilter: asyncDataFilter, 
 		};
 		setting.async = async;
