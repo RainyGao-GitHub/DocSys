@@ -168,6 +168,10 @@ public class BaseController{
 	//获取仓库的实文件的本地存储根路径
 	protected String getReposRealPath(Repos repos)
 	{
+		if(repos.getType() == 1)
+		{
+			return repos.getPath();
+		}
 		String reposRPath = repos.getPath() + repos.getId() + "/data/rdata/";	//实文件系统的存储数据放在data目录下 
 		System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;

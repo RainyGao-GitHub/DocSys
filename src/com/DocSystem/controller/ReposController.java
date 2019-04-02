@@ -278,6 +278,15 @@ public class ReposController extends BaseController{
 		if((path == null) || path.equals(""))
 		{
 			path = getDefaultReposRootPath();
+			if(repos.getType() == 2)
+			{
+				path = path + repos.getName() + "/";
+			}
+			if(true == isReposPathBeUsed(null,path))
+			{
+				rt.setError("仓库存储目录 " + path + " 已被使用！");		
+				return false;
+			}
 		}
 		else
 		{
@@ -616,6 +625,35 @@ public class ReposController extends BaseController{
 			System.out.println("新增用户仓库根目录权限失败");
 		}		
 	}
+	
+	private boolean isReposPathBeUsed(Integer reposId, String newReposPath) {
+		
+		List<Repos> reposList = reposService.getAllReposList();
+		
+		newReposPath = dirPathFormat(newReposPath);
+		
+		for(int i=0; i< reposList.size(); i++)
+		{
+			Repos repos = reposList.get(i);
+			if(reposId != null && repos.getId() == reposId)
+			{
+				continue;
+			}
+			
+			String reposPath = getReposPath(repos);
+			if(reposPath != null && !reposPath.isEmpty())
+			{
+				reposPath = dirPathFormat(reposPath);
+				if(reposPath.contains(newReposPath) || newReposPath.contains(reposPath))
+				{					
+					System.out.println("仓库存储目录：" + newReposPath + " 已被使用"); 
+					System.out.println("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + repos.getPath()); 
+					return true;
+				}
+			}			
+		}
+		return false;
+	}
 
 	private boolean isVerReposPathBeUsed(Integer reposId, String newVerReposPath) {
 		
@@ -753,6 +791,10 @@ public class ReposController extends BaseController{
 	}
 
 	private String getReposPath(Repos repos) {
+		if(repos.getType() == 2)
+		{
+			return repos.getPath();
+		}
 		return repos.getPath() + repos.getId() + "/";
 	}
 
@@ -1169,7 +1211,7 @@ public class ReposController extends BaseController{
 		List <Doc> docList = null;
 		if(repos.getType() == 1)	//本地存储仓库，直接获取文件
 		{
-			docList = getSubDocListFromFS(repos,0,0,"");
+			docList = getSubDocListFromFS(repos,0,0,"", login_user, rt);
 		}
 		else
 		{
@@ -1363,8 +1405,9 @@ public class ReposController extends BaseController{
 
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Integer pid, Integer pLevel, String parentPath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getSubDocList reposId: " + vid + " pid: " + pid + " pLevel:" + pLevel + " parentPath:" + parentPath);
+	public void getSubDocList(Integer vid, Integer id, Integer pLevel, String parentPath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getSubDocList reposId: " + vid + " pid: " + id + " pLevel:" + pLevel + " parentPath:" + parentPath);
+		Integer pid = id;
 		if(pid == null)
 		{
 			pid = 0;
@@ -1385,7 +1428,7 @@ public class ReposController extends BaseController{
 		Repos repos = reposService.getRepos(vid);
 		//获取用户可访问文件列表
 		List <Doc> docList = null;
-		if(repos.getType() == 1)
+		if(repos.getType() == 2)	//文件系统前置将直接从指定的目录获取
 		{
 			docList = getSubDocListFromFS(repos, pid, 1, parentPath,login_user, rt);
 		}
