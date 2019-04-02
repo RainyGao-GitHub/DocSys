@@ -214,8 +214,9 @@ function getReposBasicSetting()
                		gReposBasicSetting = ret.data;
                		console.log(gReposBasicSetting);
                		showReposBasicSetting(ret.data);
-               		doSelectVerCtrl();
-               		doSelectVerCtrl1();
+               		doSelectFS();
+               		//doSelectVerCtrl();
+               		//doSelectVerCtrl1();
                }else {
 					showErrorMessage(ret.msgInfo);
                }
@@ -231,6 +232,7 @@ function getReposBasicSetting()
 	   	$("#RBSname").val(reposInfo.name);
 	   	$("#RBSinfo").val(reposInfo.info);
 	   	$("#RBSpath").val(reposInfo.path);
+	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
 	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
