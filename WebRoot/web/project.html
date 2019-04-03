@@ -5583,7 +5583,7 @@ function CompareObj(objA, objB, flag) {
 	function showDoc()
 	{
 		console.log("showDoc gDocId:" + gDocId);
-		if(gDocId)
+		if(gDocId && gDocId != null)
 		{
 			 //select the zTreeNode with gDocId
 			 var zTree = $.fn.zTree.getZTreeObj("doctree");

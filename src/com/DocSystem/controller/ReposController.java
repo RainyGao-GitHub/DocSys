@@ -1292,6 +1292,7 @@ public class ReposController extends BaseController{
     	{
     		File subEntry = tmp[i];
     		int subEntryType = subEntry.isDirectory()? 2: 1;
+    		String subEntryName = subEntry.getName();
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
@@ -1299,8 +1300,9 @@ public class ReposController extends BaseController{
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
-    		subDoc.setName(subEntry.getName());
+    		subDoc.setName(subEntryName);
     		subDoc.setType(subEntryType);
+    		subDoc.setPath(parentPath);
     		docList.add(subDoc);
     	}
     	return docList;
