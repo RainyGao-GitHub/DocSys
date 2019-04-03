@@ -3031,8 +3031,8 @@
 	}
 
 	//读取文件信息
-    function getDoc(docId,edit) {
-      	console.log("getDoc() docId:"+docId + " edit:" + edit);
+    function showVirtualDoc(docId,edit) {
+      	console.log("showVirtualDoc() docId:"+docId + " edit:" + edit);
       	if(docId)	//undefine do clean the info of rightDiv
         {
 	      	//To get the Doc  
@@ -3045,7 +3045,7 @@
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
-	                	console.log("getDoc ret",ret);
+	                	console.log("showVirtualDoc ret",ret);
 	                	$('#filetitle').html(ret.data.name);
 	                    gDocId = ret.data.id;
 	                    if(ret.data.content == "null")
@@ -4399,7 +4399,7 @@
         if(newDocId)
         {
         	var edit = false;
-        	getDoc(newDocId,edit);	//
+        	showVirtualDoc(newDocId,edit);	//
         }
         else
         {
@@ -4747,7 +4747,7 @@ function CompareObj(objA, objB, flag) {
     		enable : true,//设置 zTree 是否开启异步加载模式  
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
-    		autoParam : ["id"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
+    		autoParam : ["id","level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
     		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
     		dataFilter: asyncDataFilter, 
 		},
@@ -5018,21 +5018,21 @@ function CompareObj(objA, objB, flag) {
           {
         	 if(gEdit)
              {
-              	//exitEdit then getDoc
+              	//exitEdit then showVirtualDoc
               	exitEdit(gDocId,treeNode.id);
              }
              else
              {              
             	 gDocId = treeNode.id;
-              	 var pId = getParentNodeIdByNode(treeNode);
 
               	 //showDocList
-           		 showDocList(pId);
+            	 var parentNode = getParentNodeByNode(treeNode);
+              	 showDocList(parentNode);
            	     
-             	 //show VirtualDoc (前置没有VirtualDoc)
-            	 if(gReposType == 1)
+             	 //show VirtualDoc (文件系统前置没有VirtualDoc)
+            	 if(gReposType != 2)
             	 {
-	             	 getDoc(gDocId,false);
+	             	 showVirtualDoc(treeNode,false);
             	 }
              }
           }
@@ -5468,36 +5468,41 @@ function CompareObj(objA, objB, flag) {
  		{
 	 		//Change curent gDocId to docId
 		 	gDocId = docId;
-			var node = getNodeByNodeId(docId);
-			if(node == null)
-			{
-				console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
-				syncUpMenu();
-			}
-			else
-			{
-				var zTree = $.fn.zTree.getZTreeObj("doctree");
-				//select this node in zTree
-		 		zTree.selectNode(node);
-				
-				if(type == 1)	//For File, show RightDiv
-		 		{
-		 			showRightDiv();
-		 		}
-		 		else
-		 		{
-		 			//Open the dir in zTree
-					zTree.reAsyncChildNodes(node, "refresh",true);
-		      		
-		 			//show DocList under this dir
-		 			showDocList(docId);
-		 		}
-			}
-			
-			//ShowDoc
-			getDoc(docId,false);
  		}
- 	}
+		
+ 		var node = getNodeByNodeId(docId);
+		if(node == null)
+		{
+			console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
+			syncUpMenu();
+	 		showDocList(null);
+		}
+		else
+		{
+			var zTree = $.fn.zTree.getZTreeObj("doctree");
+			//select this node in zTree
+		 	zTree.selectNode(node);
+				
+			if(type == 1)	//For File, show RightDiv
+		 	{
+		 		showRightDiv();
+		 	}
+		 	else
+		 	{
+		 		//Open the dir in zTree
+				zTree.reAsyncChildNodes(node, "refresh",true);
+		      		
+		 		//show DocList under this dir
+		 		showDocList(node);
+		 	}
+		
+			//ShowDoc
+			if(gReposType != 2)
+			{
+				showVirtualDoc(node,false);
+			}
+		}		
+  	}
  	
  	function fx(obj,event){
  		var id = $(obj).parents('li').attr('dataId');
@@ -5588,73 +5593,75 @@ function CompareObj(objA, objB, flag) {
 			 //select the zTreeNode with gDocId
 			 var zTree = $.fn.zTree.getZTreeObj("doctree");
 			 var node = zTree.getNodeByParam("id",gDocId);
-			 var pId = 0;
 			 if(node != null)
 			 {
 				 zTree.selectNode(node);
 			
 				//showDocList
-				if(node.isParent)
+				var parentNode = node.getParentNode();
+				showDocList(parentNode);
+			 
+				//获取DocContent并显示
+				if(gReposType != 2)
 				{
-					pId = gDocId;
-				}
-				else
-				{
-					var parentNode = node.getParentNode();
-					if(parentNode && parentNode.id)
-					{
-	          			pId = parentNode.id;          		
-					}
-					else
-					{
-						pId = 0;
-					}
+					showVirtualDoc(node,gEdit);
 				}
 			 }
+			 else
+			 {
+				 showDocList(null);
+			 }
 	   	}
-		
-		//showDocList
-		showDocList(pId);
-		
-		//获取DocContent
-		if(gReposType == 1)
-		{
-			getDoc(gDocId,gEdit);
-		}
 	}
 	
-	function showDocList(parentDocId,pLevel,parentPath)
+	function showDocList(parentNode)
 	{
-		console.log("showDocList() parentDocId:" + parentDocId + " parentPath:" +parentPath);
-		//Set DocListState and DocListParentDocId
-		DocListState = 0;
-    	DocListParentDocId = parentDocId;
-		
-		$.ajax({
-            url : "/DocSystem/Repos/getSubDocList.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                vid: gReposId,
-                id: parentDocId,
-                pLevel: pLevel,
-                parentPath: parentPath,
-            },
-            success : function (ret) {
-         		console.log("showDocList ret:", ret)
-         		if(ret.status == "ok")
-            	{
-         			DocList.showList(ret.data);
-                }
-                else
-                {
-                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	showErrorMessage('服务器异常: 获取子目录异常');
-            }
-        });
+		console.log("showDocList() parentNode:", parentNode);
+		if(parentNode)
+		{
+	    	var pid = 0;
+			var level = 0;
+			var path = "";
+			var name = "";
+	    	if(parentNode != null)
+	    	{
+	    		pid = parentNode.id;
+	    		level = parentNode.level;
+	    		path = parentNode.path;
+	    		name = parentNode.name;
+	    	}
+	    	
+			//Set DocListState and DocListParentDocId
+	    	DocListState = 0;
+	    	DocListParentDocId = pid;
+			
+			$.ajax({
+	            url : "/DocSystem/Repos/getSubDocList.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	                vid: gReposId,
+	                id: pid,
+	                level: level,
+	                path: path,
+	                name: name,
+	            },
+	            success : function (ret) {
+	         		console.log("showDocList ret:", ret)
+	         		if(ret.status == "ok")
+	            	{
+	         			DocList.showList(ret.data);
+	                }
+	                else
+	                {
+	                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	            	showErrorMessage('服务器异常: 获取子目录异常');
+	            }
+	        });
+		}
 	}
 	
 	function backToParentDoc()
@@ -5662,14 +5669,14 @@ function CompareObj(objA, objB, flag) {
 		console.log("backToParentDoc() gDocId:" + gDocId);
 		var zTree = $.fn.zTree.getZTreeObj("doctree");
 		var node = zTree.getNodeByParam("id",gDocId);
-		var pId = 0;
 		
 		//current Doc not exists, update gDocId and URL and showDocList under root dir
 		if(node == null)
 		{
 			console.log("backToParentDoc node not exist:" + gDocId);
 			gDocId = undefined;
-			pId = 0;
+			//Show DocList
+			showDocList(null);
 		}
 		else
 		{
@@ -5677,27 +5684,25 @@ function CompareObj(objA, objB, flag) {
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
-				
 				gDocId = parentNode.id;
-				pId = parentNode.id;
+				showDocList(parentNode);
 			}
 			else
 			{
 				zTree.cancelSelectedNode(node);
-
 				gDocId = undefined;
-				pId = 0;	
+				showDocList(null);
 			}
 		}
 		
 		//update URL
 		updateUrl(gReposId,gDocId);
-		
-		//Show DocList
-		showDocList(pId);
-		
+
 		//Update doc preview zone
-		getDoc(gDocId,false);
+		if(gReposType != 2)
+		{
+			showVirtualDoc(node,false);
+		}
 		return;
    	}         
 	
@@ -6395,7 +6400,7 @@ function CompareObj(objA, objB, flag) {
 //					e.preventDefault();
 //					var docId = curRightClickedTreeNode.id;
 //					var docName = curRightClickedTreeNode.name;
-//		 			getDoc(docId,false);
+//		 			showVirtualDoc(docId,false);
 //		 			showRightDiv();
 //				}
 //			},
@@ -6536,14 +6541,15 @@ function CompareObj(objA, objB, flag) {
 			{text: '预览', action: function(e){
 						e.preventDefault();
 						var docId = curRightClickedDocListNode.docId;
-						doPreviewDoc(docId);
+						var node = getNodeByNodeId(docId);
+						doPreviewDoc(node);
 					}
 			},
 			{text: '下载', action: function(e){
 					e.preventDefault();
 					var docId = curRightClickedDocListNode.docId;
-					var name = curRightClickedDocListNode.docName;
-					downloadDoc(docId,name,true);
+					var node = getNodeByNodeId(docId);
+					downloadDoc(node,true);
 				}
 			},
 			{text: '详细信息', action: function(e){
@@ -6557,7 +6563,8 @@ function CompareObj(objA, objB, flag) {
 			{text: '备注', action: function(e){
 					e.preventDefault();
 					var docId = curRightClickedDocListNode.docId;
-		 			getDoc(docId,false);
+					var node = getNodeByNodeId(docId);
+		 			showVirtualDoc(node,false);
 		 			showRightDiv();
 				}
 			},

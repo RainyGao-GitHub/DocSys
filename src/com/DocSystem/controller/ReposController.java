@@ -1529,14 +1529,24 @@ public class ReposController extends BaseController{
 
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Integer id, Integer pLevel, String parentPath, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getSubDocList reposId: " + vid + " pid: " + id + " pLevel:" + pLevel + " parentPath:" + parentPath);
+	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " parentPath:" + path + name + " pLevel:" + level);
 		Integer pid = id;
 		if(pid == null)
 		{
 			pid = 0;
-			pLevel = 0;
-			parentPath = "";		
+			level = 0;
+			
+		}
+		
+		String parentPath = "";
+		if(name != null && !name.isEmpty())
+		{
+			parentPath = path + name +"/";
+		}
+		else
+		{
+			parentPath = path;
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1554,7 +1564,7 @@ public class ReposController extends BaseController{
 		List <Doc> docList = null;
 		if(repos.getType() == 2)	//文件系统前置将直接从指定的目录获取
 		{
-			docList = getSubDocListFromFS(repos, pid, pLevel, parentPath,login_user, rt);
+			docList = getSubDocListFromFS(repos, pid, level, parentPath,login_user, rt);
 		}
 		else
 		{
