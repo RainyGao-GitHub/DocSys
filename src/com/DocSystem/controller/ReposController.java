@@ -1308,6 +1308,7 @@ public class ReposController extends BaseController{
     		subDoc.setName(subEntryName);
     		subDoc.setType(subEntryType);
     		subDoc.setPath(parentPath);
+    		subDoc.setSize((int)subEntry.length());
     		subDoc.setState(0);
     		subDoc.setCreateTime(lastModifyTime);
     		subDoc.setLatestEditTime(lastModifyTime);
