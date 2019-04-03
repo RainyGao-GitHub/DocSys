@@ -4800,7 +4800,7 @@ public class BaseController{
 		return count;
 	}
 	
-	private Integer convertSVNNodeKindToEntryType(SVNNodeKind nodeKind) {
+	protected Integer convertSVNNodeKindToEntryType(SVNNodeKind nodeKind) {
 		if(nodeKind == SVNNodeKind.NONE) 
 		{
 			return 0;
@@ -4889,49 +4889,7 @@ public class BaseController{
 		doc.setPid(pid);
 		doc.setVid(repos.getId());
 		return reposService.getDocList(doc);
-	}
-	
-	//获取目录parentPath下的所有子节点
-	protected List <Doc> getSubDocListFromFS(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt)
-	{
-		String localParentPath = getReposRealPath(repos) + parentPath;
-		File dir = new File(localParentPath);
-    	if(false == dir.exists())
-    	{
-    		System.out.println("getSubDocList() " + parentPath + " 不存在！");
-    		rt.setError( parentPath + " 不存在！");
-    		return null;
-    	}
-    	
-        //Go through the subEntries
-    	if(false == dir.isDirectory())
-    	{
-    		System.out.println("getSubDocList() " + parentPath + " 不是目录！");
-    		rt.setError( parentPath + " 不是目录！");
-    		return null;
-    	}
- 	
-        //Get fileList and add it to docList
-    	List<Doc> docList = new ArrayList<Doc>();
-    	File[] tmp=dir.listFiles();
-    	for(int i=0;i<tmp.length;i++)
-    	{
-    		File subEntry = tmp[i];
-    		int subEntryType = subEntry.isDirectory()? 2: 1;
-    		
-    		//Create Doc to save subEntry Info
-    		Doc subDoc = new Doc();
-    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
-    		subDoc.setVid(repos.getId());
-    		subDoc.setPid(pid);
-       		subDoc.setId(subDocId);
-    		subDoc.setName(subEntry.getName());
-    		subDoc.setType(subEntryType);
-    		docList.add(subDoc);
-    	}
-    	return docList;
-	}
-	
+	}	
 	
 	protected boolean verReposAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
 			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) {
