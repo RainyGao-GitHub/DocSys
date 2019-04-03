@@ -1228,7 +1228,6 @@ public class ReposController extends BaseController{
 		//Get Repos
 		Repos repos = reposService.getRepos(vid);
 		
-		//获取用户可访问文件列表(From Root to docId)
 		List <Doc> docList = null;
 		switch(repos.getType())
 		{
@@ -1239,6 +1238,7 @@ public class ReposController extends BaseController{
 			}
 			else
 			{
+				//获取用户可访问文件列表(From Root to docId)
 				docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
 			}
 			break;
