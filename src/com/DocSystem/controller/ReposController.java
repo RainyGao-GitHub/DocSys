@@ -1554,10 +1554,14 @@ public class ReposController extends BaseController{
 	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " pLevel:" + level + " path:" + path + " name:"+ name );
 		Integer pid = id;
-		if(pid == null)
+		if(pid == null || pid == 0)
 		{
 			pid = 0;
 			level = 0;
+		}
+		else
+		{
+			level = level + 1;
 		}
 		
 		String parentPath = "";
