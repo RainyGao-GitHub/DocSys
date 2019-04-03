@@ -1,6 +1,10 @@
 package com.DocSystem.controller;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -1293,6 +1297,7 @@ public class ReposController extends BaseController{
     		File subEntry = tmp[i];
     		int subEntryType = subEntry.isDirectory()? 2: 1;
     		String subEntryName = subEntry.getName();
+    		long lastModifyTime = getFileLastModifiedTime(subEntry);
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
@@ -1303,10 +1308,26 @@ public class ReposController extends BaseController{
     		subDoc.setName(subEntryName);
     		subDoc.setType(subEntryType);
     		subDoc.setPath(parentPath);
+    		subDoc.setState(0);
+    		subDoc.setCreateTime(lastModifyTime);
+    		subDoc.setLatestEditTime(lastModifyTime);
     		docList.add(subDoc);
     	}
     	return docList;
 	}
+	private long getFileLastModifiedTime(File file) {
+		// TODO Auto-generated method stub
+		try {
+			BasicFileAttributes bAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+			FileTime changeTime = bAttributes.lastModifiedTime();
+			return changeTime.toMillis();
+		} catch (Exception e) {
+			System.out.println("getFile ");
+		    e.printStackTrace();
+		}
+		return 0;
+	}
+
 	private List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		switch(repos.getVerCtrl())

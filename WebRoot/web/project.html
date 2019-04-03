@@ -5612,56 +5612,58 @@ function CompareObj(objA, objB, flag) {
 				 showDocList(null);
 			 }
 	   	}
+		else
+		{
+			 showDocList(null);
+		}
 	}
 	
 	function showDocList(parentNode)
 	{
 		console.log("showDocList() parentNode:", parentNode);
-		if(parentNode)
+		var pid = 0;
+		var level = 0;
+		var path = "";
+		var name = "";
+    
+		if(parentNode &&  parentNode != null)
 		{
-	    	var pid = 0;
-			var level = 0;
-			var path = "";
-			var name = "";
-	    	if(parentNode != null)
-	    	{
-	    		pid = parentNode.id;
-	    		level = parentNode.level;
-	    		path = parentNode.path;
-	    		name = parentNode.name;
-	    	}
+	    	pid = parentNode.id;
+	    	level = parentNode.level;
+	    	path = parentNode.path;
+	    	name = parentNode.name;
+	    }
 	    	
-			//Set DocListState and DocListParentDocId
-	    	DocListState = 0;
-	    	DocListParentDocId = pid;
+		//Set DocListState and DocListParentDocId
+	    DocListState = 0;
+	    DocListParentDocId = pid;
 			
-			$.ajax({
-	            url : "/DocSystem/Repos/getSubDocList.do",
-	            type : "post",
-	            dataType : "json",
-	            data : {
-	                vid: gReposId,
-	                id: pid,
-	                level: level,
-	                path: path,
-	                name: name,
-	            },
-	            success : function (ret) {
-	         		console.log("showDocList ret:", ret)
-	         		if(ret.status == "ok")
-	            	{
-	         			DocList.showList(ret.data);
-	                }
-	                else
-	                {
-	                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
-	                }
-	            },
-	            error : function () {
-	            	showErrorMessage('服务器异常: 获取子目录异常');
-	            }
-	        });
-		}
+		$.ajax({
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                vid: gReposId,
+                id: pid,
+                level: level,
+                path: path,
+                name: name,
+            },
+            success : function (ret) {
+         		console.log("showDocList ret:", ret)
+         		if(ret.status == "ok")
+            	{
+         			DocList.showList(ret.data);
+                }
+                else
+                {
+                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage('服务器异常: 获取子目录异常');
+            }
+        });
 	}
 	
 	function backToParentDoc()
