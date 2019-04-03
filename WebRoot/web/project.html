@@ -4811,8 +4811,8 @@ function CompareObj(objA, objB, flag) {
 	   return docList;
 	}
 	
-    function zTreeBeforeAsync() {  
-    	console.log("zTreeBeforeAsync");
+    function zTreeBeforeAsync(treeId, treeNode) {  
+    	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
     }  
       
     function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
@@ -6141,10 +6141,9 @@ function CompareObj(objA, objB, flag) {
     		enable : true,//设置 zTree 是否开启异步加载模式  
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
-    		autoParam : ["id","name"],//异步加载时需要自动提交父节点属性的参数  
+    		autoParam : ["id","level","path","name"],//异步加载时需要自动提交父节点属性的参数  
     		otherParam:{
     			"vid":gReposId,
-    			"parentPath": gParentPath,
     		},
     		dataFilter: asyncDataFilter, 
 		};

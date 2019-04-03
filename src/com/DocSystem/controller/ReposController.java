@@ -1276,7 +1276,7 @@ public class ReposController extends BaseController{
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
     	{
-    		System.out.println("getSubDocList() " + parentPath + " 不存在！");
+    		System.out.println("getSubDocListFromFS() " + parentPath + " 不存在！");
     		rt.setError( parentPath + " 不存在！");
     		return null;
     	}
@@ -1284,7 +1284,7 @@ public class ReposController extends BaseController{
         //Go through the subEntries
     	if(false == dir.isDirectory())
     	{
-    		System.out.println("getSubDocList() " + parentPath + " 不是目录！");
+    		System.out.println("getSubDocListFromFS() " + parentPath + " 不是目录！");
     		rt.setError( parentPath + " 不是目录！");
     		return null;
     	}
@@ -1552,13 +1552,12 @@ public class ReposController extends BaseController{
 	/****************   get subDocList under pid ******************/
 	@RequestMapping("/getSubDocList.do")
 	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " parentPath:" + path + name + " pLevel:" + level);
+		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " pLevel:" + level + " path:" + path + " name:"+ name );
 		Integer pid = id;
 		if(pid == null)
 		{
 			pid = 0;
 			level = 0;
-			
 		}
 		
 		String parentPath = "";
