@@ -1230,12 +1230,9 @@ public class ReposController extends BaseController{
 		
 		//获取用户可访问文件列表(From Root to docId)
 		List <Doc> docList = null;
-		if(repos.getType() == 2)	//本地存储仓库，直接获取文件
+		switch(repos.getType())
 		{
-			docList = getSubDocListFromFS(repos,0,0,"", login_user, rt);
-		}
-		else
-		{
+		case 1:	//默认
 			if(docId == null || docId == 0)
 			{
 				docList = getAccessableSubDocList(repos, 0, login_user, rt);
@@ -1244,6 +1241,14 @@ public class ReposController extends BaseController{
 			{
 				docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
 			}
+			break;
+		case 2:	//文件系统前置
+			docList = getSubDocListFromFS(repos,0,0,"", login_user, rt);
+			break;
+		case 3:	//SVN前置
+		case 4: //GIT前置
+			docList = getSubDocListFromVerRepos(repos,0,0,"", login_user, rt);
+			break;
 		}
 		
 		if(docList == null)
@@ -1258,6 +1263,28 @@ public class ReposController extends BaseController{
 		return;		
 	}
 	
+	private List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		switch(repos.getVerCtrl())
+		{
+		case 1: //SVN
+			return getSubDocListFromSVN(repos, pid, pLevel, parentPath, login_user, rt);
+		case 2: //GIT
+			return getSubDocListFromGIT(repos, pid, pLevel, parentPath, login_user, rt);
+		}
+		return null;
+	}
+
+	private List<Doc>  getSubDocListFromGIT(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user,ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc>  getSubDocListFromSVN(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	//getAccessableSubDocList
 	private List<Doc> getAccessableSubDocList(Repos repos, Integer pid, User login_user, ReturnAjax rt) {		
 		System.out.println("getAccessableSubDocList()  pid:" + pid + " vid:" + repos.getId());
