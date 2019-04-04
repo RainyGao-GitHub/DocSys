@@ -6,6 +6,7 @@
     <result column="NAME" jdbcType="VARCHAR" property="name" />
     <result column="TYPE" jdbcType="INTEGER" property="type" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
+    <result column="REAL_DOC_PATH" jdbcType="VARCHAR" property="realDocPath" />
     <result column="VER_CTRL" jdbcType="INTEGER" property="verCtrl" />
     <result column="IS_REMOTE" jdbcType="INTEGER" property="isRemote" />
     <result column="LOCAL_SVN_PATH" jdbcType="VARCHAR" property="localSvnPath" />
@@ -29,9 +30,9 @@
     <result column="LOCK_TIME" jdbcType="BIGINT" property="lockTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, PATH, VER_CTRL, IS_REMOTE, LOCAL_SVN_PATH, SVN_PATH, SVN_USER, SVN_PWD, 
-    REVISION, VER_CTRL1, IS_REMOTE1, LOCAL_SVN_PATH1, SVN_PATH1, SVN_USER1, SVN_PWD1, 
-    REVISION1, INFO, PWD, OWNER, CREATE_TIME, STATE, LOCK_BY, LOCK_TIME
+    ID, NAME, TYPE, PATH, REAL_DOC_PATH, VER_CTRL, IS_REMOTE, LOCAL_SVN_PATH, SVN_PATH, 
+    SVN_USER, SVN_PWD, REVISION, VER_CTRL1, IS_REMOTE1, LOCAL_SVN_PATH1, SVN_PATH1, SVN_USER1, 
+    SVN_PWD1, REVISION1, INFO, PWD, OWNER, CREATE_TIME, STATE, LOCK_BY, LOCK_TIME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -45,23 +46,23 @@
   </delete>
   <insert id="insert" parameterType="com.DocSystem.entity.Repos">
     insert into repos (ID, NAME, TYPE, 
-      PATH, VER_CTRL, IS_REMOTE, 
-      LOCAL_SVN_PATH, SVN_PATH, SVN_USER, 
-      SVN_PWD, REVISION, VER_CTRL1, 
-      IS_REMOTE1, LOCAL_SVN_PATH1, SVN_PATH1, 
-      SVN_USER1, SVN_PWD1, REVISION1, 
-      INFO, PWD, OWNER, CREATE_TIME, 
-      STATE, LOCK_BY, LOCK_TIME
-      )
+      PATH, REAL_DOC_PATH, VER_CTRL, 
+      IS_REMOTE, LOCAL_SVN_PATH, SVN_PATH, 
+      SVN_USER, SVN_PWD, REVISION, 
+      VER_CTRL1, IS_REMOTE1, LOCAL_SVN_PATH1, 
+      SVN_PATH1, SVN_USER1, SVN_PWD1, 
+      REVISION1, INFO, PWD, 
+      OWNER, CREATE_TIME, STATE, 
+      LOCK_BY, LOCK_TIME)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{path,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, #{isRemote,jdbcType=INTEGER}, 
-      #{localSvnPath,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, #{svnUser,jdbcType=VARCHAR}, 
-      #{svnPwd,jdbcType=VARCHAR}, #{revision,jdbcType=VARCHAR}, #{verCtrl1,jdbcType=INTEGER}, 
-      #{isRemote1,jdbcType=INTEGER}, #{localSvnPath1,jdbcType=VARCHAR}, #{svnPath1,jdbcType=VARCHAR}, 
-      #{svnUser1,jdbcType=VARCHAR}, #{svnPwd1,jdbcType=VARCHAR}, #{revision1,jdbcType=VARCHAR}, 
-      #{info,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, 
-      #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT}
-      )
+      #{path,jdbcType=VARCHAR}, #{realDocPath,jdbcType=VARCHAR}, #{verCtrl,jdbcType=INTEGER}, 
+      #{isRemote,jdbcType=INTEGER}, #{localSvnPath,jdbcType=VARCHAR}, #{svnPath,jdbcType=VARCHAR}, 
+      #{svnUser,jdbcType=VARCHAR}, #{svnPwd,jdbcType=VARCHAR}, #{revision,jdbcType=VARCHAR}, 
+      #{verCtrl1,jdbcType=INTEGER}, #{isRemote1,jdbcType=INTEGER}, #{localSvnPath1,jdbcType=VARCHAR}, 
+      #{svnPath1,jdbcType=VARCHAR}, #{svnUser1,jdbcType=VARCHAR}, #{svnPwd1,jdbcType=VARCHAR}, 
+      #{revision1,jdbcType=VARCHAR}, #{info,jdbcType=VARCHAR}, #{pwd,jdbcType=VARCHAR}, 
+      #{owner,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, #{state,jdbcType=INTEGER}, 
+      #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Repos">
     insert into repos
@@ -77,6 +78,9 @@
       </if>
       <if test="path != null">
         PATH,
+      </if>
+      <if test="realDocPath != null">
+        REAL_DOC_PATH,
       </if>
       <if test="verCtrl != null">
         VER_CTRL,
@@ -155,6 +159,9 @@
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
+      <if test="realDocPath != null">
+        #{realDocPath,jdbcType=VARCHAR},
+      </if>
       <if test="verCtrl != null">
         #{verCtrl,jdbcType=INTEGER},
       </if>
@@ -232,6 +239,9 @@
       <if test="path != null">
         PATH = #{path,jdbcType=VARCHAR},
       </if>
+      <if test="realDocPath != null">
+        REAL_DOC_PATH = #{realDocPath,jdbcType=VARCHAR},
+      </if>
       <if test="verCtrl != null">
         VER_CTRL = #{verCtrl,jdbcType=INTEGER},
       </if>
@@ -303,6 +313,7 @@
     set NAME = #{name,jdbcType=VARCHAR},
       TYPE = #{type,jdbcType=INTEGER},
       PATH = #{path,jdbcType=VARCHAR},
+      REAL_DOC_PATH = #{realDocPath,jdbcType=VARCHAR},
       VER_CTRL = #{verCtrl,jdbcType=INTEGER},
       IS_REMOTE = #{isRemote,jdbcType=INTEGER},
       LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR},
@@ -340,6 +351,9 @@
       </if>
       <if test="path != null">
         PATH,
+      </if>
+      <if test="realDocPath != null">
+        REAL_DOC_PATH,
       </if>
       <if test="verCtrl != null">
         VER_CTRL,
@@ -414,6 +428,9 @@
       </if>
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="realDocPath != null">
+        #{realDocPath,jdbcType=VARCHAR},
       </if>
       <if test="verCtrl != null">
         #{verCtrl,jdbcType=INTEGER},
@@ -499,6 +516,9 @@
     </if>
     <if test="path != null">
       and PATH = #{path,jdbcType=VARCHAR}
+    </if>
+    <if test="realDocPath != null">
+      and REAL_DOC_PATH = #{realDocPath,jdbcType=VARCHAR}
     </if>
     <if test="localSvnPath != null">
       and LOCAL_SVN_PATH = #{localSvnPath,jdbcType=VARCHAR}

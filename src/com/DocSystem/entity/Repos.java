@@ -9,6 +9,8 @@ public class Repos {
 
     private String path;
 
+    private String realDocPath;
+
     private Integer verCtrl;
 
     private Integer isRemote;
@@ -81,6 +83,14 @@ public class Repos {
 
     public void setPath(String path) {
         this.path = path == null ? null : path.trim();
+    }
+
+    public String getRealDocPath() {
+        return realDocPath;
+    }
+
+    public void setRealDocPath(String realDocPath) {
+        this.realDocPath = realDocPath == null ? null : realDocPath.trim();
     }
 
     public Integer getVerCtrl() {
