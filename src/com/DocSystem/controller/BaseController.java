@@ -170,7 +170,7 @@ public class BaseController{
 	{
 		if(repos.getType() == 2)
 		{
-			return repos.getPath();
+			return repos.getRealDocPath();
 		}
 		String reposRPath = repos.getPath() + repos.getId() + "/data/rdata/";	//实文件系统的存储数据放在data目录下 
 		System.out.println("getReposRealPath() " + reposRPath);

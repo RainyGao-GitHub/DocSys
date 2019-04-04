@@ -14,6 +14,10 @@
             	<option value="3">SVN前置</option>   
             	<option value="4">GIT前置</option>   
             </select>
+            <div id="RBSrealDocPathDiv">
+		        <label>文件存储目录</label>
+				<input class="form-control" type="text" id="RBSrealDocPath"  placeholder="请选择文件存储目录！"  value="" style="width: 100%"/>
+			</div>
             <div id="RBSverCtrlDiv">
 	            <div id="RBSrealDocVerCtrlDiv">
 		            <label>版本仓库 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
@@ -91,14 +95,15 @@
 			//virtualDoc verCtrl
 			$("#RBSverCtrl1").get(0).selectedIndex=0;
 			$("#RBSvirtualDocVerCtrlDiv").show();
-			
-			doSelectVerCtrl();
+
+			$("#RBSrealDocPathDiv").hide();
 		}
 		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
 		{
 			$("#RBSverCtrlDiv").hide();
 			$("#RBSverCtrl").get(0).selectedIndex=0;
 			$("#RBSverCtrl1").get(0).selectedIndex=0;
+			$("#RBSrealDocPathDiv").show();
 		}
 		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
 		{
@@ -110,7 +115,7 @@
 			$("#RBSverCtrl1").get(0).selectedIndex=0;
 			$("#RBSvirtualDocVerCtrlDiv").hide();
 
-			doSelectVerCtrl();
+			$("#RBSrealDocPathDiv").hide();
 		}
 		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
 		{
@@ -122,8 +127,10 @@
 			$("#RBSverCtrl1").get(0).selectedIndex=0;
 			$("#RBSvirtualDocVerCtrlDiv").hide();
 
-			doSelectVerCtrl();
+			$("#RBSrealDocPathDiv").hide();
 		}
+		doSelectVerCtrl();
+		doSelectVerCtrl1();
 	}
 	
 	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
@@ -216,8 +223,6 @@ function getReposBasicSetting()
                		console.log(gReposBasicSetting);
                		showReposBasicSetting(ret.data);
                		doSelectFS();
-               		//doSelectVerCtrl();
-               		//doSelectVerCtrl1();
                }else {
 					showErrorMessage(ret.msgInfo);
                }
@@ -234,6 +239,7 @@ function getReposBasicSetting()
 	   	$("#RBSinfo").val(reposInfo.info);
 	   	$("#RBSpath").val(reposInfo.path);
 	   	$("#RBStype option[value='"+reposInfo.type+"']").attr("selected","selected");
+	   	$("#RBSrealDocPath").val(reposInfo.realDocPath);
 	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
@@ -357,6 +363,12 @@ function saveReposBasicSetting()
        		{
        			return true;
        		}
+       		
+       		if(oldSetting.realDocPath != newSetting.realDocPath)
+       		{
+       			return true;
+       		}
+
        		if(oldSetting.info != newSetting.info)
        		{
        			return true;
