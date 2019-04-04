@@ -346,6 +346,16 @@ public class ReposController extends BaseController{
 			return false;
 		}
 		
+		//文件系统前置，必须有realDocPath
+		if(repos.getType() == 2)
+		{
+			if(repos.getRealDocPath() == null || repos.getRealDocPath().isEmpty())
+			{
+				rt.setError("文件存储目录不能为空！");						
+				return false;
+			}
+		}
+		
 		if(true == isReposRealDocPathBeUsed(repos))
 		{
 			rt.setError("文件存储目录 " + repos.getRealDocPath() + " 已被使用！");		
@@ -527,6 +537,18 @@ public class ReposController extends BaseController{
 			{
 				rt.setError("文件存储目录 " + realDocPath + " 已被使用！");		
 				return false;
+			}
+		}
+		else
+		{
+			//文件系统前置，必须有realDocPath
+			if(newReposInfo.getType() == 2)
+			{
+				if(realDocPath != null && realDocPath.isEmpty())
+				{
+					rt.setError("文件存储目录不能为空！");						
+					return false;
+				}
 			}
 		}
 		
