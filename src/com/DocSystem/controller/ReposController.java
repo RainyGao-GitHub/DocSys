@@ -322,6 +322,15 @@ public class ReposController extends BaseController{
 	//检查path1和path2是否互相包含
 	private boolean isPathConflict(String path1, String path2) 
 	{
+		if(path1 == null || path1.isEmpty())
+		{
+			return false;
+		}
+		if(path2 == null || path2.isEmpty())
+		{
+			return false;
+		}
+		
 		path1 = dirPathFormat(path1);
 		path2 = dirPathFormat(path2);
 		if(path1.contains(path2) || path2.contains(path1))
