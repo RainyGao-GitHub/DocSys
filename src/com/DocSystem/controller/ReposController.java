@@ -153,9 +153,9 @@ public class ReposController extends BaseController{
 
 	/****************   add a Repository ******************/
 	@RequestMapping("/addRepos.do")
-	public void addRepos(String name,String info, Integer type, String path, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
+	public void addRepos(String name,String info, Integer type, String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd, 
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, Long createTime,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path + " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
+		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  + " realDocPath: " + realDocPath + " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -172,13 +172,35 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//格式化参数
+		if((path == null) || path.equals(""))
+		{
+			path = getDefaultReposRootPath();
+		}
+		else
+		{
+			path = dirPathFormat(path);
+		}
+		if(realDocPath != null && !realDocPath.isEmpty())
+		{
+			realDocPath = dirPathFormat(realDocPath);
+		}
+		if(localSvnPath != null && !localSvnPath.isEmpty())
+		{
+			localSvnPath = dirPathFormat(localSvnPath);
+		}
+		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
+		{
+			localSvnPath1 = dirPathFormat(localSvnPath1);
+		}
+		
 		//Set reposInfo
-
 		Repos repos = new Repos();
 		repos.setName(name);
 		repos.setInfo(info);
 		repos.setType(type);
 		repos.setPath(path);
+		repos.setRealDocPath(realDocPath);
 		repos.setOwner(login_user.getId());
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		repos.setCreateTime(nowTimeStamp);
@@ -268,6 +290,36 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 	}
 
+	//检查path是否和paths互相包含
+	private boolean isPathsConflict(String[] paths) 
+	{		
+		int size = paths.length;
+		for(int i=0; i< size; i++)
+		{
+			for(int j=0; j < size; j++)
+			{
+				if(isPathConflict(paths[i],paths[j]) == true)
+				{	
+					System.out.println("isPathsConflict() " + paths[i] + " 与 " + paths[j] + " 冲突"); 
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	//检查path1和path2是否互相包含
+	private boolean isPathConflict(String path1, String path2) 
+	{
+		path1 = dirPathFormat(path1);
+		path2 = dirPathFormat(path2);
+		if(path1.contains(path2) || path2.contains(path1))
+		{
+			return true;
+		}
+		return false;
+	}
+
 	private boolean checkReposInfoForAdd(Repos repos, ReturnAjax rt) {
 		//检查传入的参数
 		String name = repos.getName();
@@ -277,29 +329,18 @@ public class ReposController extends BaseController{
 			return false;
 		}
 
-		//修正path参数
-		String path = repos.getPath();
-		if((path == null) || path.equals(""))
+		if(true == isReposPathBeUsed(repos))
 		{
-			path = getDefaultReposRootPath();
-			if(repos.getType() == 2)
-			{
-				path = path + repos.getName() + "/";
-			}
-		}
-		else
-		{
-			//检查path的格式并修正：必须以/结尾
-			path = dirPathFormat(path);
-		}
-		
-		if(true == isReposPathBeUsed(null,path))
-		{
-			rt.setError("仓库存储目录 " + path + " 已被使用！");		
+			rt.setError("仓库存储目录 " + repos.getPath() + " 已被使用！");		
 			return false;
 		}
-		repos.setPath(path);
-
+		
+		if(true == isReposRealDocPathBeUsed(repos))
+		{
+			rt.setError("文件存储目录 " + repos.getRealDocPath() + " 已被使用！");		
+			return false;
+		}
+			
 		//svnPath and svnPath1 duplicate check
 		String verReposURI = repos.getSvnPath();
 		String verReposURI1 = repos.getSvnPath1();
@@ -309,7 +350,7 @@ public class ReposController extends BaseController{
 			{
 				verReposURI = dirPathFormat(verReposURI);
 				verReposURI1 = dirPathFormat(verReposURI1);
-				if(verReposURI.contains(verReposURI1) || verReposURI1.contains(verReposURI))
+				if(isPathConflict(verReposURI1,verReposURI))
 				{
 					rt.setError("不能使用相同的版本仓库链接！");			
 					return false;
@@ -317,14 +358,14 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//确定是否存在相同路径的仓库
+		//检查仓库是否已存在
 		Repos tmpRepos = new Repos();
 		tmpRepos.setName(name);
-		tmpRepos.setPath(path);
+		tmpRepos.setPath(repos.getPath());
 		List<Repos> list = reposService.getReposList(tmpRepos);
 		if((list != null) && (list.size() > 0))
 		{
-			rt.setError("仓库已存在:" + path + name);
+			rt.setError("仓库已存在:" + repos.getPath() + name);
 			return false;
 		}
 		
@@ -342,7 +383,7 @@ public class ReposController extends BaseController{
 
 		return true;
 	}
-
+	
 	private boolean checkVerReposInfo(Repos repos,  Repos oldRepos, boolean isRealDoc,ReturnAjax rt) {
 		//Check RealDoc VerRepos Settings
 		Integer verCtrl = null;
@@ -456,6 +497,24 @@ public class ReposController extends BaseController{
 			if(newReposInfo.getPath().isEmpty())
 			{
 				rt.setError("位置不能为空！");
+				return false;
+			}
+			
+			if(true == isReposPathBeUsed(newReposInfo))
+			{
+				rt.setError("仓库存储目录 " + newReposInfo.getPath() + " 已被使用！");	
+				return false;
+			}
+		}
+		
+		String realDocPath = newReposInfo.getRealDocPath();
+		if(realDocPath != null && !realDocPath.isEmpty())
+		{
+			realDocPath = dirPathFormat(realDocPath);
+			newReposInfo.setRealDocPath(realDocPath);
+			if(true == isReposRealDocPathBeUsed(newReposInfo))
+			{
+				rt.setError("文件存储目录 " + realDocPath + " 已被使用！");		
 				return false;
 			}
 		}
@@ -631,31 +690,90 @@ public class ReposController extends BaseController{
 		}		
 	}
 	
-	private boolean isReposPathBeUsed(Integer reposId, String newReposPath) {
+	private boolean isReposPathBeUsed(Repos newRepos) {
+		Integer reposId = newRepos.getId();
+		String newReposPath = getReposPath(newRepos);
 		
+		String paths[];
+		paths[0] = newReposPath;
+				
 		List<Repos> reposList = reposService.getAllReposList();
-		
-		newReposPath = dirPathFormat(newReposPath);
-		
 		for(int i=0; i< reposList.size(); i++)
 		{
 			Repos repos = reposList.get(i);
-			if(reposId != null && repos.getId() == reposId)
+			paths[1] = getReposPath(repos);
+			paths[2] = repos.getRealDocPath();
+			paths[3] = repos.getLocalSvnPath();
+			paths[4] = repos.getLocalSvnPath1();		
+			
+			//检查是否与仓库RealDocPath冲突（包括本仓库）
+			if(realDocPath != null && !realDocPath.isEmpty())
 			{
-				continue;
+				realDocPath = dirPathFormat(realDocPath);
+				if(realDocPath.contains(newReposPath) || newReposPath.contains(realDocPath))
+				{					
+					System.out.println("文件存储目录：" + newReposPath + " 已被使用"); 
+					System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
+					return true;
+				}
 			}
 			
+			if(reposId == null || repos.getId() != reposId)
+			{
+				String reposPath = getReposPath(repos);
+				if(reposPath != null && !reposPath.isEmpty())
+				{
+					reposPath = dirPathFormat(reposPath);
+					if(reposPath.contains(newReposPath) || newReposPath.contains(reposPath))
+					{					
+						System.out.println("仓库存储目录：" + newReposPath + " 已被使用"); 
+						System.out.println("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + repos.getPath()); 
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean isReposRealDocPathBeUsed(Repos newRepos) {
+		
+		Integer reposId = newRepos.getId();
+		String newRealDocPath = dirPathFormat(newRepos.getRealDocPath());
+		
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0; i< reposList.size(); i++)
+		{
+			Repos repos = reposList.get(i);
+			
+			//检查是否与仓库的存储路径冲突（包括本仓库）
 			String reposPath = getReposPath(repos);
 			if(reposPath != null && !reposPath.isEmpty())
 			{
 				reposPath = dirPathFormat(reposPath);
-				if(reposPath.contains(newReposPath) || newReposPath.contains(reposPath))
+				if(reposPath.contains(newRealDocPath) || newRealDocPath.contains(reposPath))
 				{					
-					System.out.println("仓库存储目录：" + newReposPath + " 已被使用"); 
-					System.out.println("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + repos.getPath()); 
+					System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
+					System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + repos.getPath()); 
 					return true;
 				}
-			}			
+			}
+			
+			//检查是否与其他的仓库realDocPath冲突
+			if(reposId == null || repos.getId() != reposId)
+			{
+				String realDocPath = repos.getRealDocPath();
+				if(realDocPath != null && !realDocPath.isEmpty())
+				{
+					realDocPath = dirPathFormat(realDocPath);
+					if(realDocPath.contains(newRealDocPath) || newRealDocPath.contains(realDocPath))
+					{					
+						System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
+						System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
+						return true;
+					}
+				}
+			}		
 		}
 		return false;
 	}
@@ -1040,10 +1158,10 @@ public class ReposController extends BaseController{
 	
 	/****************   set a Repository ******************/
 	@RequestMapping("/updateReposInfo.do")
-	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
+	public void updateReposInfo(Integer reposId, String name,String info, Integer type,String path, String realDocPath, Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
+		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " realDocPath" + realDocPath +" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1070,10 +1188,14 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//Path re
+		//参数格式化
 		if(path != null && !path.isEmpty())
 		{
 			path = dirPathFormat(path);
+		}
+		if(realDocPath != null && !realDocPath.isEmpty())
+		{
+			realDocPath = dirPathFormat(realDocPath);
 		}
 		if(localSvnPath != null && !localSvnPath.isEmpty())
 		{
@@ -1090,6 +1212,7 @@ public class ReposController extends BaseController{
 		newReposInfo.setName(name);
 		newReposInfo.setInfo(info);
 		newReposInfo.setPath(path);
+		newReposInfo.setRealDocPath(realDocPath);
 		newReposInfo.setVerCtrl(verCtrl);
 		newReposInfo.setIsRemote(isRemote);
 		newReposInfo.setLocalSvnPath(localSvnPath);
@@ -1129,6 +1252,14 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		if(ChangeReposRealDocPath(newReposInfo, reposInfo, login_user, rt) == false)
+		{
+			reposService.updateRepos(reposInfo);	//Revert reposInfo
+			System.out.println("仓库RealDoc目录修改失败");
+			writeJson(rt, response);	
+			return;
+		}
+		
 		//To get updated reposInfo
 		Repos repos = reposService.getRepos(reposId);
 		if(isVerReposInfoChanged(newReposInfo, reposInfo, true))
@@ -1160,6 +1291,39 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 	}
 
+
+	private boolean ChangeReposRealDocPath(Repos newReposInfo, Repos reposInfo, User login_user, ReturnAjax rt) {
+		String path = getReposRealPath(newReposInfo);
+		String oldPath = getReposRealPath(reposInfo);
+		if(!path.equals(oldPath))
+		{
+			if(path.isEmpty())
+			{
+				path = getReposRealPath(newReposInfo);
+			}
+			System.out.println("ChangeReposRealDocPath oldPath:" + oldPath + " newPath:" + path);
+			
+			if(login_user.getType() != 2)
+			{
+				System.out.println("普通用户无权修改仓库存储位置，请联系管理员！");
+				rt.setError("普通用户无权修改仓库存储位置，请联系管理员！");
+				return false;							
+			}
+			
+			//Do move the repos
+			if(copyFileOrDir(oldPath, path,true) == false)
+			{
+				System.out.println("文件目录迁移失败！");
+				rt.setError("修改仓库文件目录失败！");					
+				return false;
+			}
+			else
+			{
+				delFileOrDir(oldPath);
+			}
+		}
+		return true;
+	}
 
 	private boolean ChangeReposPath(Repos newReposInfo, Repos previousReposInfo, User login_user,ReturnAjax rt) {
 		String path = newReposInfo.getPath();
