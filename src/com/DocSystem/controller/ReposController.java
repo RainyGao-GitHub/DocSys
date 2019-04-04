@@ -194,6 +194,16 @@ public class ReposController extends BaseController{
 			localSvnPath1 = dirPathFormat(localSvnPath1);
 		}
 		
+		//仓库位置与RealDoc存储位置不能重复
+		if(isPathConflict(path,realDocPath) == false)
+		{
+			System.out.println("addRepos() 仓库存储路径与RealDoc存储路径冲突");
+			String ErrMsg = "reposRootPath:" + path + " 与 realDocPath:" + realDocPath + " 冲突";
+			rt.setError(ErrMsg);
+			writeJson(rt, response);		
+			return;	
+		}
+		
 		//Set reposInfo
 		Repos repos = new Repos();
 		repos.setName(name);
@@ -291,7 +301,7 @@ public class ReposController extends BaseController{
 	}
 
 	//检查path是否和paths互相包含
-	private boolean isPathsConflict(String[] paths) 
+	private boolean isPathsConflict(String[] paths, ReturnAjax rt) 
 	{		
 		int size = paths.length;
 		for(int i=0; i< size; i++)
@@ -300,6 +310,7 @@ public class ReposController extends BaseController{
 			{
 				if(isPathConflict(paths[i],paths[j]) == true)
 				{	
+					rt.setError("路径 " + paths[i] + " 与 " + paths[j] + "冲突"); 
 					System.out.println("isPathsConflict() " + paths[i] + " 与 " + paths[j] + " 冲突"); 
 					return true;
 				}
@@ -350,7 +361,7 @@ public class ReposController extends BaseController{
 			{
 				verReposURI = dirPathFormat(verReposURI);
 				verReposURI1 = dirPathFormat(verReposURI1);
-				if(isPathConflict(verReposURI1,verReposURI))
+				if(isPathConflict(verReposURI,verReposURI))
 				{
 					rt.setError("不能使用相同的版本仓库链接！");			
 					return false;
@@ -358,7 +369,7 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//检查仓库是否已存在
+		//确定是否存在相同路径的仓库
 		Repos tmpRepos = new Repos();
 		tmpRepos.setName(name);
 		tmpRepos.setPath(repos.getPath());
@@ -692,25 +703,19 @@ public class ReposController extends BaseController{
 	
 	private boolean isReposPathBeUsed(Repos newRepos) {
 		Integer reposId = newRepos.getId();
-		String newReposPath = getReposPath(newRepos);
+		String newReposPath = dirPathFormat(newRepos.getPath());
 		
-		String paths[];
-		paths[0] = newReposPath;
-				
 		List<Repos> reposList = reposService.getAllReposList();
 		for(int i=0; i< reposList.size(); i++)
 		{
 			Repos repos = reposList.get(i);
-			paths[1] = getReposPath(repos);
-			paths[2] = repos.getRealDocPath();
-			paths[3] = repos.getLocalSvnPath();
-			paths[4] = repos.getLocalSvnPath1();		
 			
 			//检查是否与仓库RealDocPath冲突（包括本仓库）
+			String realDocPath = repos.getRealDocPath();
 			if(realDocPath != null && !realDocPath.isEmpty())
 			{
 				realDocPath = dirPathFormat(realDocPath);
-				if(realDocPath.contains(newReposPath) || newReposPath.contains(realDocPath))
+				if(isPathConflict(realDocPath, newReposPath))
 				{					
 					System.out.println("文件存储目录：" + newReposPath + " 已被使用"); 
 					System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
@@ -724,7 +729,7 @@ public class ReposController extends BaseController{
 				if(reposPath != null && !reposPath.isEmpty())
 				{
 					reposPath = dirPathFormat(reposPath);
-					if(reposPath.contains(newReposPath) || newReposPath.contains(reposPath))
+					if(isPathConflict(reposPath, newReposPath))
 					{					
 						System.out.println("仓库存储目录：" + newReposPath + " 已被使用"); 
 						System.out.println("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + repos.getPath()); 
@@ -751,7 +756,7 @@ public class ReposController extends BaseController{
 			if(reposPath != null && !reposPath.isEmpty())
 			{
 				reposPath = dirPathFormat(reposPath);
-				if(reposPath.contains(newRealDocPath) || newRealDocPath.contains(reposPath))
+				if(isPathConflict(reposPath,newRealDocPath))
 				{					
 					System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
 					System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + repos.getPath()); 
@@ -766,7 +771,7 @@ public class ReposController extends BaseController{
 				if(realDocPath != null && !realDocPath.isEmpty())
 				{
 					realDocPath = dirPathFormat(realDocPath);
-					if(realDocPath.contains(newRealDocPath) || newRealDocPath.contains(realDocPath))
+					if(isPathConflict(realDocPath,newRealDocPath))
 					{					
 						System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
 						System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
@@ -796,7 +801,7 @@ public class ReposController extends BaseController{
 			if(verReposURI != null && !verReposURI.isEmpty())
 			{
 				verReposURI = dirPathFormat(verReposURI);
-				if(verReposURI.contains(newVerReposPath) || newVerReposPath.contains(verReposURI))
+				if(isPathConflict(verReposURI,verReposURI))
 				{					
 					System.out.println("该版本仓库连接已被使用"); 
 					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath=" + repos.getSvnPath()); 
@@ -808,7 +813,7 @@ public class ReposController extends BaseController{
 			if(verReposURI1 != null && !verReposURI1.isEmpty())
 			{
 				verReposURI1 = dirPathFormat(verReposURI1);
-				if(verReposURI1.contains(newVerReposPath) || newVerReposPath.contains(verReposURI1))
+				if(isPathConflict(verReposURI1,verReposURI1))
 				{					
 					System.out.println("该版本仓库连接已被使用"); 
 					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath1=" + repos.getSvnPath1()); 
@@ -821,7 +826,7 @@ public class ReposController extends BaseController{
 			if(localVerReposURI != null && !localVerReposURI.isEmpty())
 			{
 				localVerReposURI = dirPathFormat(localVerReposURI);
-				if(localVerReposURI.contains(newVerReposPath) || newVerReposPath.contains(localVerReposURI))
+				if(isPathConflict(localVerReposURI,localVerReposURI))
 				{					
 					System.out.println("该版本仓库连接已被使用"); 
 					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " localVerReposPath=" + repos.getLocalSvnPath()); 
@@ -833,7 +838,7 @@ public class ReposController extends BaseController{
 			if(localVerReposURI1 != null && !localVerReposURI1.isEmpty())
 			{
 				localVerReposURI1 = dirPathFormat(localVerReposURI1);
-				if(localVerReposURI1.contains(newVerReposPath) || newVerReposPath.contains(localVerReposURI1))
+				if(isPathConflict(localVerReposURI1,localVerReposURI1))
 				{					
 					System.out.println("该版本仓库连接已被使用"); 
 					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " localVerReposURI1=" + repos.getLocalSvnPath1()); 
