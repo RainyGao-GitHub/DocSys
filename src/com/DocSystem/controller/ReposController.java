@@ -1026,7 +1026,7 @@ public class ReposController extends BaseController{
 		return null;
 	}
 	
-	private String createGitLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+	public String createGitLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
 		System.out.println("createGitLocalRepos isRealDoc:"+isRealDoc);	
 
 		String localVerRepos = getLocalVerReposPath(repos, isRealDoc);
@@ -1044,7 +1044,7 @@ public class ReposController extends BaseController{
 		return gitPath;
 	}
 
-	private String createSvnLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+	protected String createSvnLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
 		System.out.println("createSvnLocalRepos isRealDoc:"+isRealDoc);	
 		
 		String path = repos.getPath();

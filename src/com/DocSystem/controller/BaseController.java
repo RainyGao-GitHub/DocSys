@@ -4914,7 +4914,7 @@ public class BaseController{
 		return false;
 	}
 	
-	private boolean gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
+	protected boolean gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
 			String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
 		// TODO Auto-generated method stub
 		GITUtil gitUtil = new GITUtil();
