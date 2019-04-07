@@ -40,6 +40,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
@@ -254,9 +255,12 @@ public class GITUtil  extends BaseController{
                 treeWalk.reset(revTree);
             }
             else
-            {            
-            	//Get treeWalk For dedicated Entry
-            	treeWalk = TreeWalk.forPath(repository, remoteEntryPath, revTree);
+            {   
+            	treeWalk = new TreeWalk(repository, repository.newObjectReader());
+                PathFilter pathFileter = PathFilter.create(parentPath+entryName);
+                treeWalk.setFilter(pathFileter);
+                treeWalk.reset(revTree);
+                treeWalk.setRecursive(false);
             }
             boolean ret = recurGetEntry(git, repository, treeWalk, parentPath, entryName, localParentPath, targetName);
             repository.close();
