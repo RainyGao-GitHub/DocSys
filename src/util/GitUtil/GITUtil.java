@@ -29,7 +29,9 @@ import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.CorruptObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
@@ -215,6 +217,131 @@ public class GITUtil  extends BaseController{
 		}
     }
     
+	//get the subEntryList under remoteEntryPath,only useful for Directory
+	public List<GitEntry> getSubEntryList(String parentPath, String revision)
+	{
+    	System.out.println("getSubEntryList() revision:" + revision);
+    	if(revision == null || revision.isEmpty())
+        {
+        	revision = "HEAD";
+        }
+    	
+    	Repository repository = null;
+        try {
+            //gitDir表示git库目录
+        	Git git = Git.open(new File(gitDir));
+            repository = git.getRepository();
+            
+            //New RevWalk
+            RevWalk walk = new RevWalk(repository);
+
+            //Get objId for revision
+            ObjectId objId = repository.resolve(revision);
+            if(objId == null)
+            {
+            	System.out.println("There is no any commit history for:" + revision);
+            	return null;
+            }
+            
+            RevCommit revCommit = walk.parseCommit(objId);
+            System.out.println("revCommit name:" + revCommit.getName());
+            System.out.println("revCommit type:" + revCommit.getType());
+            System.out.println("revCommit commitMsg:" + revCommit.getShortMessage());
+    		
+            RevTree revTree = revCommit.getTree();
+            System.out.println("revTree name:" + revTree.getName());
+            System.out.println("revTree id:" + revTree.getId());
+            
+            TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, parentPath);
+            List <GitEntry> subEntryList =  null;
+            if(treeWalk != null) 
+            {
+            	subEntryList =  new ArrayList<GitEntry>();
+            	while(treeWalk.next())
+            	{
+            		GitEntry subEntry = new GitEntry();
+            		subEntry.setFileMode(treeWalk.getFileMode(0));
+            		subEntry.setPath(treeWalk.getPathString());
+            		subEntry.setName(treeWalk.getNameString());
+            		int typeHint;
+					subEntry.setSize(treeWalk.getObjectReader().getObjectSize(revCommit, typeHint));
+					treeWalk.getAttributes();
+            	}
+            }
+            
+            repository.close();
+            
+            return subEntryList;
+        } catch (Exception e) {
+           System.out.println("ReposTreeWalk() Exception"); 
+           e.printStackTrace();
+           return null;
+        }
+	}
+	
+	private TreeWalk getTreeWalkByPath(Repository repository, RevTree revTree, String path) {
+		
+		try {
+			TreeWalk tw = new TreeWalk(repository,  repository.newObjectReader());
+    		tw.reset(revTree);
+	    	tw.setRecursive(false);
+	    	if(path == null || path.isEmpty())
+	    	{
+	    		return tw;
+	    	}
+	    	
+	    	//Find out the treeWalk for Path
+	    	tw = findTreeWalkForPath(tw, path);
+	    	return tw;
+		} catch (Exception e) {
+			System.out.println("getTreeWalkByPath() Exception!"); 
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private TreeWalk findTreeWalkForPath(TreeWalk treeWalk, String path) {
+		//Split the path by "/"
+		String [] paths = path.split("/");
+		int expLevel = paths.length;
+		for(int i=0; i< expLevel; i++)
+		{
+			System.out.println("paths:" + paths[i]);
+		}
+		
+		int curLevel = 0;
+    	try {
+			while (treeWalk.next()) 
+			{
+				String entryName = treeWalk.getNameString();
+				if(entryName.equals(paths[curLevel]))
+				{
+					if(curLevel < expLevel)
+					{
+						if(treeWalk.isSubtree()) 
+						{
+							treeWalk.enterSubtree();
+							curLevel ++;
+						}
+						else
+						{
+							return null;
+						}
+					}
+					else
+					{
+						//Find the treeWalk
+						return treeWalk;
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.out.println();
+			e.printStackTrace();
+		}
+    	return null;
+	}
+
 	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
 		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		

@@ -89,7 +89,7 @@ class JGitTest extends ReposController{
         	Git git = Git.open(new File(gitDir));
             repository = git.getRepository();
             
-            //New RevWalk
+            //Get RevWalk
             RevWalk walk = new RevWalk(repository);
 
             //Get objId for revision

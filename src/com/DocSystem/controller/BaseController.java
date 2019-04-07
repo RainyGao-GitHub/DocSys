@@ -4735,7 +4735,7 @@ public class BaseController{
 		
 		//Schedule For Add
 		//Get list from verRepos
-		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntries(parentPath, revision); 
+		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntryList(parentPath, revision); 
 		for(int i=0; i < subEntryList.size(); i++)
 		{
 			SVNDirEntry subEntry = subEntryList.get(i);

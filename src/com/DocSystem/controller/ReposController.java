@@ -1459,6 +1459,113 @@ public class ReposController extends BaseController{
 		return;		
 	}
 	
+	/****************   get subDocList under pid ******************/
+	@RequestMapping("/getSubDocList.do")
+	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " pLevel:" + level + " path:" + path + " name:"+ name );
+		Integer pid = id;
+		if(pid == null || pid == 0)
+		{
+			pid = 0;
+			level = 0;
+		}
+		else
+		{
+			level = level + 1;
+		}
+		
+		String parentPath = "";
+		if(name != null && !name.isEmpty())
+		{
+			parentPath = path + name +"/";
+		}
+		else
+		{
+			parentPath = path;
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}		
+		
+		//Get Repos
+		Repos repos = reposService.getRepos(vid);
+		//获取用户可访问文件列表
+		List <Doc> docList = null;
+		switch(repos.getType())
+		{
+		case 1:	//默认
+			docList = getAccessableSubDocList(repos, pid, login_user, rt);
+			break;
+		case 2:	//文件系统前置
+			docList = getSubDocListFromFS(repos, pid, level, parentPath,login_user, rt);
+			break;
+		case 3:	//SVN前置
+		case 4: //GIT前置
+			docList = getSubDocListFromVerRepos(repos, pid, level, parentPath,login_user, rt);
+			break;
+		}
+
+		if(docList == null)
+		{
+			rt.setData("");
+		}
+		else
+		{
+			rt.setData(docList);	
+		}
+		writeJson(rt, response);
+	}
+	
+	/****************   get Repository Menu Info (Directory structure) ******************/
+	@RequestMapping("/getReposManagerMenu.do")
+	public void getReposManagerMenu(Integer vid,Integer docId, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getReposManagerMenu vid: " + vid);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+
+		//获取的仓库权限
+		//获取整个仓库的目录结构，包括仓库本身（作为ID=0的存在）
+		//获取仓库信息，并转换成rootDoc
+		Repos repos = reposService.getRepos(vid);
+		Doc rootDoc = new Doc();
+		rootDoc.setId(0);
+		rootDoc.setName(repos.getName());
+		rootDoc.setType(2);
+		rootDoc.setPid(0);	//设置成自己
+		
+		//获取用户可见仓库文件列表
+		//获取用户可访问文件列表(From Root to docId)
+		List <Doc> docList =  null;
+		if(docId == null || docId == 0)
+		{
+			docList = getAccessableSubDocList(repos, 0, login_user, rt);
+		}
+		else
+		{
+			docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
+		}
+		
+		//合并列表
+		if(docList == null)
+		{
+			docList = new ArrayList<Doc>();
+		}
+		docList.add(rootDoc);
+		rt.setData(docList);
+		writeJson(rt, response);
+	}
 	
 	
 	//获取目录parentPath下的所有子节点
@@ -1508,6 +1615,7 @@ public class ReposController extends BaseController{
     	}
     	return docList;
 	}
+	
 	private long getFileLastModifiedTime(File file) {
 		// TODO Auto-generated method stub
 		try {
@@ -1550,7 +1658,7 @@ public class ReposController extends BaseController{
 		long revision = -1;
 		
 		//Get list from verRepos
-		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntries(parentPath, revision); 
+		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntryList(parentPath, revision); 
 		List<Doc> docList = new ArrayList<Doc>();
 		for(int i=0; i < subEntryList.size(); i++)
 		{
@@ -1739,109 +1847,6 @@ public class ReposController extends BaseController{
 	private String getDocRevisionInVerRepos(Repos repos, Integer pid, Doc parentDoc) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	/****************   get subDocList under pid ******************/
-	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " pLevel:" + level + " path:" + path + " name:"+ name );
-		Integer pid = id;
-		if(pid == null || pid == 0)
-		{
-			pid = 0;
-			level = 0;
-		}
-		else
-		{
-			level = level + 1;
-		}
-		
-		String parentPath = "";
-		if(name != null && !name.isEmpty())
-		{
-			parentPath = path + name +"/";
-		}
-		else
-		{
-			parentPath = path;
-		}
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}		
-		
-		//Get Repos
-		Repos repos = reposService.getRepos(vid);
-		//获取用户可访问文件列表
-		List <Doc> docList = null;
-		if(repos.getType() == 2)	//文件系统前置将直接从指定的目录获取
-		{
-			docList = getSubDocListFromFS(repos, pid, level, parentPath,login_user, rt);
-		}
-		else
-		{
-			docList = getAccessableSubDocList(repos, pid, login_user, rt);			
-		}
-
-		if(docList == null)
-		{
-			rt.setData("");
-		}
-		else
-		{
-			rt.setData(docList);	
-		}
-		writeJson(rt, response);
-	}
-	
-	/****************   get Repository Menu Info (Directory structure) ******************/
-	@RequestMapping("/getReposManagerMenu.do")
-	public void getReposManagerMenu(Integer vid,Integer docId, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getReposManagerMenu vid: " + vid);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-
-		//获取的仓库权限
-		//获取整个仓库的目录结构，包括仓库本身（作为ID=0的存在）
-		//获取仓库信息，并转换成rootDoc
-		Repos repos = reposService.getRepos(vid);
-		Doc rootDoc = new Doc();
-		rootDoc.setId(0);
-		rootDoc.setName(repos.getName());
-		rootDoc.setType(2);
-		rootDoc.setPid(0);	//设置成自己
-		
-		//获取用户可见仓库文件列表
-		//获取用户可访问文件列表(From Root to docId)
-		List <Doc> docList =  null;
-		if(docId == null || docId == 0)
-		{
-			docList = getAccessableSubDocList(repos, 0, login_user, rt);
-		}
-		else
-		{
-			docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
-		}
-		
-		//合并列表
-		if(docList == null)
-		{
-			docList = new ArrayList<Doc>();
-		}
-		docList.add(rootDoc);
-		rt.setData(docList);
-		writeJson(rt, response);
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
