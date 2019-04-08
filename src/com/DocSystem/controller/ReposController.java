@@ -22,6 +22,7 @@ import org.tmatesoft.svn.core.SVNNodeKind;
 
 import util.ReturnAjax;
 import util.GitUtil.GITUtil;
+import util.GitUtil.GitEntry;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;
@@ -1642,8 +1643,38 @@ public class ReposController extends BaseController{
 	}
 
 	private List<Doc>  getSubDocListFromGIT(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user,ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		GITUtil gitUtil = new GITUtil();
+		if(false == gitUtil.Init(repos, true, null))
+		{
+			System.out.println("getSubDocListFromGIT() gitUtil.Init Failed");
+			return null;
+		}
+		
+		String revision = null;
+		
+		//Get list from verRepos
+		List<GitEntry> subEntryList =  gitUtil.getSubEntryList(parentPath, revision); 
+		List<Doc> docList = new ArrayList<Doc>();
+		for(int i=0; i < subEntryList.size(); i++)
+		{
+			GitEntry subEntry = subEntryList.get(i);
+			String subEntryName = subEntry.getName();
+			Integer subEntryType = subEntry.getType();
+			if(subEntryType > 0)
+			{
+				//Create Doc to save subEntry Info
+				Doc subDoc = new Doc();
+				int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+				subDoc.setVid(repos.getId());
+				subDoc.setPid(pid);
+				subDoc.setId(subDocId);
+				subDoc.setName(subEntryName);
+				subDoc.setType(subEntryType);
+				docList.add(subDoc);
+			}
+    	}
+		return docList;
 	}
 
 	private List<Doc>  getSubDocListFromSVN(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {

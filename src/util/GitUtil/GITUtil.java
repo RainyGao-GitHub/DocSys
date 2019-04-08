@@ -259,16 +259,17 @@ public class GITUtil  extends BaseController{
             	subEntryList =  new ArrayList<GitEntry>();
             	while(treeWalk.next())
             	{
-            		GitEntry subEntry = new GitEntry();
-            		subEntry.setFileMode(treeWalk.getFileMode(0));
-            		subEntry.setPath(treeWalk.getPathString());
-            		subEntry.setName(treeWalk.getNameString());
-            		int typeHint;
-					subEntry.setSize(treeWalk.getObjectReader().getObjectSize(revCommit, typeHint));
-					treeWalk.getAttributes();
+            		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
+            		if(type > 0)
+            		{
+                		GitEntry subEntry = new GitEntry();
+                		subEntry.setType(type);
+                		subEntry.setPath(treeWalk.getPathString());
+                		subEntry.setName(treeWalk.getNameString());
+                		subEntryList.add(subEntry);
+            		}
             	}
             }
-            
             repository.close();
             
             return subEntryList;
@@ -399,6 +400,21 @@ public class GITUtil  extends BaseController{
         }
 	}
 
+	private int getTypeFromFileMode(FileMode fileMode)
+	{
+		int bits = fileMode.getBits();
+		switch(bits & FileMode.TYPE_MASK)
+		{
+		case FileMode.TYPE_FILE:
+			return 1;
+		case FileMode.TYPE_TREE:
+			return 2;
+		case FileMode.TYPE_MISSING:
+			return 0;
+		}
+		return -1;
+	}
+	
 	private boolean isFile(FileMode fileMode)
 	{
 		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_FILE? true: false;
