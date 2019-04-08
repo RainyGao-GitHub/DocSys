@@ -197,7 +197,7 @@ public class ReposController extends BaseController{
 		else
 		{
 			//检查path的格式并修正：必须以/结尾
-			path = reposRootPathFormat(path);
+			path = localDirPathFormat(path);
 		}
 
 		//确定是否存在相同路径的仓库
