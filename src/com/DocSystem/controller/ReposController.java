@@ -195,11 +195,12 @@ public class ReposController extends BaseController{
 			localSvnPath1 = dirPathFormat(localSvnPath1);
 		}
 		
+		//如果去除realDocPath的限制，文件系统前置将具备非常大的灵活性和破坏性（可以查看和删除后台的所有文件）
 		//仓库位置与RealDoc存储位置不能重复
 		if(isPathConflict(path,realDocPath))
 		{
-			System.out.println("addRepos() 仓库存储路径与RealDoc存储路径冲突");
-			String ErrMsg = "reposRootPath:" + path + " 与 realDocPath:" + realDocPath + " 冲突";
+			System.out.println("addRepos() 仓库存储路径与文件存储路径冲突");
+			String ErrMsg = "仓库存储路径:" + path + " 与文件存储路径:" + realDocPath + " 冲突";
 			rt.setError(ErrMsg);
 			writeJson(rt, response);		
 			return;	
@@ -235,6 +236,7 @@ public class ReposController extends BaseController{
 		long lockTime = nowTimeStamp + 4*60*60*1000;
 		repos.setLockTime(lockTime);
 		
+		//由于仓库还未创建，因此无法确定仓库路径是否存在冲突
 		if(checkReposInfoForAdd(repos, rt) == false)
 		{
 			System.out.println("checkReposInfoForAdd() failed");
@@ -346,12 +348,14 @@ public class ReposController extends BaseController{
 		String name = repos.getName();
 		if((name == null) || name.isEmpty())
 		{
+			System.out.println("仓库名不能为空！");
 			rt.setError("仓库名不能为空！");			
 			return false;
 		}
 
 		if(true == isReposPathBeUsed(repos))
 		{
+			System.out.println("仓库存储目录 " + repos.getPath() + " 已被使用！");
 			rt.setError("仓库存储目录 " + repos.getPath() + " 已被使用！");		
 			return false;
 		}
@@ -735,36 +739,34 @@ public class ReposController extends BaseController{
 	
 	private boolean isReposPathBeUsed(Repos newRepos) {
 		Integer reposId = newRepos.getId();
-		String newReposPath = getReposPath(newRepos);
+		String path = newRepos.getPath();
 		
 		List<Repos> reposList = reposService.getAllReposList();
 		for(int i=0; i< reposList.size(); i++)
 		{
 			Repos repos = reposList.get(i);
-			
-			//检查是否与仓库RealDocPath冲突（包括本仓库）
-			String realDocPath = repos.getRealDocPath();
-			if(realDocPath != null && !realDocPath.isEmpty())
-			{
-				realDocPath = dirPathFormat(realDocPath);
-				if(isPathConflict(realDocPath, newReposPath))
-				{					
-					System.out.println("文件存储目录：" + newReposPath + " 已被使用"); 
-					System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
-					return true;
-				}
-			}
-			
-			if(reposId == null || repos.getId() != reposId)
+			if(reposId == null || !reposId.equals(repos.getId()))
 			{
 				String reposPath = getReposPath(repos);
 				if(reposPath != null && !reposPath.isEmpty())
 				{
 					reposPath = getReposPath(repos);
-					if(isPathConflict(reposPath, newReposPath))
+					if(path.contains(reposPath))	//不能把仓库放到其他仓库下面
 					{					
-						System.out.println("仓库存储目录：" + newReposPath + " 已被使用"); 
+						System.out.println(path + " 已被使用"); 
 						System.out.println("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath); 
+						return true;
+					}
+				}
+				
+				String realDocPath = repos.getRealDocPath();
+				if(realDocPath != null && !realDocPath.isEmpty())
+				{
+					realDocPath = dirPathFormat(realDocPath);
+					if(path.contains(realDocPath))	//不能把仓库放到其他仓库的文件存储目录
+					{					
+						System.out.println(path + " 已被使用"); 
+						System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
 						return true;
 					}
 				}
