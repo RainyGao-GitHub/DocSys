@@ -77,6 +77,95 @@ public class BaseController{
 		System.out.println(Head + json);		
 	}
 	
+	protected String localDirPathFormat(String path)
+	{
+		//Replace "\" with "/"
+		path = path.replace('\\', '/');
+		
+		//Split path with '/'
+		String [] paths = path.split("/");
+		
+		 String startChar = path.substring(0, 1);
+		if(startChar.equals("/"))
+		{
+			//Build Path
+			if(isWindowsOS())
+			{
+				path = "C:/" + buildPath(paths);
+			}
+			else
+			{
+				path = "/" + buildPath(paths);
+			}	
+			
+			path = path + buildPath(paths);
+ 			return path;
+		}
+		else
+		{
+			if(isWindowsOS())
+			{
+				if(isDiskStr(paths[0]))
+				{
+					paths[0] = paths[0].toUpperCase();
+					path = buildPath(paths);
+				}
+				else
+				{
+					path = "C:/" + buildPath(paths);
+				}
+			}
+			else
+			{
+				path = "/" + buildPath(paths);
+			}
+			return path;
+		}
+	}
+	
+	
+	
+	private boolean isDiskStr(String str) {
+		if(str.length() != 2)
+		{
+			return false;
+		}
+		
+		char endChar = str.charAt(1);
+		if(endChar != ':')
+		{
+			return false;
+		}
+		
+		char disk = str.charAt(0);
+		if((disk >= 'C' && disk <= 'Z') || (disk >= 'c' || disk <= 'z'))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private String buildPath(String[] paths) {
+		String path = "";
+		for(int i=0; i<paths.length; i++)
+		{
+			if(!paths[i].isEmpty())
+			{
+				path = path + paths[i] + "/";
+			}
+		}
+		return path;
+	}
+
+	private boolean isWindowsOS() {
+		String os = System.getProperty("os.name");  
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){  
+			return true;
+		}
+		return false;
+	}
+
 	//获取默认的仓库根路径
 	protected String getDefaultReposRootPath() {
 		String path = null;
