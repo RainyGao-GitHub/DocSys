@@ -196,7 +196,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//仓库位置与RealDoc存储位置不能重复
-		if(isPathConflict(path,realDocPath) == false)
+		if(isPathConflict(path,realDocPath))
 		{
 			System.out.println("addRepos() 仓库存储路径与RealDoc存储路径冲突");
 			String ErrMsg = "reposRootPath:" + path + " 与 realDocPath:" + realDocPath + " 冲突";
@@ -1576,7 +1576,7 @@ public class ReposController extends BaseController{
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
     	{
-    		System.out.println("getSubDocListFromFS() " + parentPath + " 不存在！");
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
     		rt.setError( parentPath + " 不存在！");
     		return null;
     	}
@@ -1584,7 +1584,7 @@ public class ReposController extends BaseController{
         //Go through the subEntries
     	if(false == dir.isDirectory())
     	{
-    		System.out.println("getSubDocListFromFS() " + parentPath + " 不是目录！");
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
     		rt.setError( parentPath + " 不是目录！");
     		return null;
     	}
