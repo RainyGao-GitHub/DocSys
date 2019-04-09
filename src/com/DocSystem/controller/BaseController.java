@@ -94,18 +94,21 @@ public class BaseController{
 		path = ReadProperties.read("docSysConfig.properties", "defaultReposRootPath");
 	    if(path == null || "".equals(path))
 	    {
-		    String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
+			if(isWinOS())
+			{  
 				path = "C:/DocSysReposes/";
 			}
 			else
 			{
-				path = "/data/DocSysReposes/";	//Linux系统放在  /data	
+				path = "/DocSysReposes/";
 			}
 	    }
+	    else
+	    {
+	    	path = localDirPathFormat(path);
+	    }
 	    
-		File dir = new File(path);
+	    File dir = new File(path);
 		if(dir.exists() == false)
 		{
 			System.out.println("getDefaultReposRootPath() defaultReposRootPath:" + path + " not exists, do create it!");
@@ -134,15 +137,101 @@ public class BaseController{
 		return path;
 	}
 
+	//格式化本地路径
+	protected String localDirPathFormat(String path) {
+		if(path.isEmpty())
+		{
+			return path;
+		}
+
+		path = path.replace('\\','/');
+		
+		String [] paths = path.split("/");
+		
+		char startChar = path.charAt(0);
+		if(startChar == '/')	
+		{
+			if(isWinOS())
+			{
+				path = "C:/" + buildPath(paths);
+			}
+			else
+			{
+				path = "/" + buildPath(paths);
+			}
+		}
+		else
+		{
+			if(isWinOS())
+			{
+				if(isWinDiskStr(paths[0]))
+				{
+					path = buildPath(paths);					
+				}
+				else
+				{
+					path = "C:/" + buildPath(paths);
+				}
+			}
+			else
+			{
+				path = "/" + buildPath(paths);
+			}
+		}	
+
+		return path;
+	}
+
+	private boolean isWinOS() {
+		String os = System.getProperty("os.name"); 
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){
+			return true;
+		}
+		return false;
+	}
+
+	private String buildPath(String[] paths) {
+		String path = "";
+		for(int i=0; i<paths.length; i++)
+		{
+			String subPath = paths[i];
+			if(!subPath.isEmpty())
+			{
+				path = path + subPath + "/";
+			}
+		}
+		return path;
+	}
+
+	private boolean isWinDiskStr(String Str) 
+	{
+		if(Str.length() != 2)
+		{
+			return false;
+		}
+		
+		char endChar = Str.charAt(1);
+		if(endChar != ':')
+		{
+			return false;
+		}
+		
+		char diskChar = Str.charAt(0);
+		if((diskChar >= 'C' && diskChar <= 'Z') ||(diskChar >= 'c' && diskChar <= 'z') ) 
+		{
+			return true;
+		}
+		return false;
+	}
+
 	//系统日志所在的目录
 	protected String getSystemLogParentPath() {
 		String path = "";		
 		path = ReadProperties.read("docSysConfig.properties", "SystemLogParentPath");
 	    if(path == null || "".equals(path))
 	    {
-			String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
+			if(isWinOS()){  
 				path = "C:/xampp/tomcat/logs/";
 			}
 			else

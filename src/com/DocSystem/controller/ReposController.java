@@ -184,7 +184,7 @@ public class ReposController extends BaseController{
 		}
 		if(realDocPath != null && !realDocPath.isEmpty())
 		{
-			realDocPath = dirPathFormat(realDocPath);
+			realDocPath = localDirPathFormat(realDocPath);
 		}
 		if(localSvnPath != null && !localSvnPath.isEmpty())
 		{
