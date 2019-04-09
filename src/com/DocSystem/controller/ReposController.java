@@ -1248,6 +1248,7 @@ public class ReposController extends BaseController{
 		//Get reposInfo (It will be used to revert the reposInfo)
 		Repos reposInfo = reposService.getRepos(reposId);
 		
+		newReposInfo.setType(reposInfo.getType());
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
 		{
 			writeJson(rt, response);	
