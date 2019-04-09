@@ -875,7 +875,7 @@ public class ReposController extends BaseController{
 			System.out.println("addRepos() path:" + path + " not exists, do create it!");
 			if(reposRootDir.mkdirs() == false)
 			{
-				rt.setError("创建reposRootDir目录失败:" + path);
+				rt.setError("创建仓库目录失败:" + path);
 				return false;	
 			}
 		}
