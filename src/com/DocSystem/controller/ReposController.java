@@ -1540,14 +1540,19 @@ public class ReposController extends BaseController{
 		//获取用户可见仓库文件列表
 		//获取用户可访问文件列表(From Root to docId)
 		List <Doc> docList =  null;
-		if(docId == null || docId == 0)
+		
+		//对于前置类型因为文件节点不存在因此只能设置根目录权限
+		if(repos.getType() == 1)
 		{
-			docList = getAccessableSubDocList(repos, 0, login_user, rt);
-		}
-		else
-		{
-			docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
-		}
+			if(docId == null || docId == 0)
+			{
+				docList = getAccessableSubDocList(repos, 0, login_user, rt);
+			}
+			else
+			{
+				docList = getDocListFromRootToDoc(repos, docId, login_user ,rt);
+			}
+		}	
 		
 		//合并列表
 		if(docList == null)
