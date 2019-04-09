@@ -891,12 +891,6 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		if(repos.getType() == 2)
-		{
-			//对于文件系统前置，repos.path就是存储路径
-			return true;
-		}
-		
 		String reposDir = getReposPath(repos);
 		if(createDir(reposDir) == true)
 		{
@@ -948,6 +942,17 @@ public class ReposController extends BaseController{
 		{
 			rt.setError("创建仓库目录失败："+reposDir);
 			return false;
+		}
+		
+		if(repos.getType() == 2)
+		{
+			String reposRealDocDir = repos.getRealDocPath();
+			if(createDir(reposRealDocDir) == false)
+			{
+				rt.setError("创建文件存储目录失败："+reposRealDocDir);
+				return false;
+			}
+			return true;
 		}
 		return true;
 	}
