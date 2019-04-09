@@ -393,17 +393,6 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//确定是否存在相同路径的仓库
-		Repos tmpRepos = new Repos();
-		tmpRepos.setName(name);
-		tmpRepos.setPath(repos.getPath());
-		List<Repos> list = reposService.getReposList(tmpRepos);
-		if((list != null) && (list.size() > 0))
-		{
-			rt.setError("仓库已存在:" + repos.getPath() + name);
-			return false;
-		}
-		
 		//RealDoc verRepos Settings check
 		if(checkVerReposInfo(repos, null, true, rt) == false)
 		{
