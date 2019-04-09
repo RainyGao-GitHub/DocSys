@@ -166,6 +166,7 @@ public class BaseController{
 			{
 				if(isWinDiskStr(paths[0]))
 				{
+					paths[0] = paths[0].toUpperCase();
 					path = buildPath(paths);					
 				}
 				else
