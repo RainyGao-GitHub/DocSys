@@ -750,7 +750,7 @@ public class ReposController extends BaseController{
 				String reposPath = getReposPath(repos);
 				if(reposPath != null && !reposPath.isEmpty())
 				{
-					reposPath = getReposPath(repos);
+					reposPath = localDirPathFormat(reposPath);
 					if(path.contains(reposPath))	//不能把仓库放到其他仓库下面
 					{					
 						System.out.println(path + " 已被使用"); 
@@ -762,7 +762,7 @@ public class ReposController extends BaseController{
 				String realDocPath = repos.getRealDocPath();
 				if(realDocPath != null && !realDocPath.isEmpty())
 				{
-					realDocPath = dirPathFormat(realDocPath);
+					realDocPath = localDirPathFormat(realDocPath);
 					if(path.contains(realDocPath))	//不能把仓库放到其他仓库的文件存储目录
 					{					
 						System.out.println(path + " 已被使用"); 
@@ -789,6 +789,7 @@ public class ReposController extends BaseController{
 			String reposPath = getReposPath(repos);
 			if(reposPath != null && !reposPath.isEmpty())
 			{
+				reposPath = localDirPathFormat(reposPath);
 				if(isPathConflict(reposPath,newRealDocPath))
 				{					
 					System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
@@ -803,6 +804,7 @@ public class ReposController extends BaseController{
 				String realDocPath = repos.getRealDocPath();
 				if(realDocPath != null && !realDocPath.isEmpty())
 				{
+					realDocPath = localDirPathFormat(realDocPath);
 					if(isPathConflict(realDocPath,newRealDocPath))
 					{					
 						System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
@@ -1214,19 +1216,19 @@ public class ReposController extends BaseController{
 		//参数格式化
 		if(path != null && !path.isEmpty())
 		{
-			path = dirPathFormat(path);
+			path = localDirPathFormat(path);
 		}
 		if(realDocPath != null && !realDocPath.isEmpty())
 		{
-			realDocPath = dirPathFormat(realDocPath);
+			realDocPath = localDirPathFormat(realDocPath);
 		}
 		if(localSvnPath != null && !localSvnPath.isEmpty())
 		{
-			localSvnPath = dirPathFormat(localSvnPath);
+			localSvnPath = localDirPathFormat(localSvnPath);
 		}
 		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
 		{
-			localSvnPath1 = dirPathFormat(localSvnPath1);
+			localSvnPath1 = localDirPathFormat(localSvnPath1);
 		}
 		
 		//Set new ReposInfo
