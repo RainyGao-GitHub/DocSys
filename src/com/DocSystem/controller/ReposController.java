@@ -1329,16 +1329,16 @@ public class ReposController extends BaseController{
 				return false;							
 			}
 			
-			//Do move the repos
-			if(copyFileOrDir(oldPath, path,true) == false)
+			//如果目标目录已存在则不复制
+			File newDir = new File(path);
+			if(!newDir.exists())
 			{
-				System.out.println("文件目录迁移失败！");
-				rt.setError("修改仓库文件目录失败！");					
-				return false;
-			}
-			else
-			{
-				delFileOrDir(oldPath);
+				if(copyFileOrDir(oldPath, path,true) == false)
+				{
+					System.out.println("文件目录迁移失败！");
+					rt.setError("修改仓库文件目录失败！");					
+					return false;
+				}
 			}
 		}
 		return true;
