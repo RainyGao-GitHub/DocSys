@@ -255,6 +255,11 @@ public class BaseController{
 		return name;
 	}
 	
+	protected String getReposPath(Repos repos) {
+		String path = repos.getPath();
+		return path + repos.getId() + "/";
+	}
+	
 	//获取仓库的实文件的本地存储根路径
 	protected String getReposRealPath(Repos repos)
 	{
@@ -262,7 +267,7 @@ public class BaseController{
 		{
 			return repos.getRealDocPath();
 		}
-		String reposRPath = repos.getPath() + repos.getId() + "/data/rdata/";	//实文件系统的存储数据放在data目录下 
+		String reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
 		System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;
 	}
@@ -270,7 +275,7 @@ public class BaseController{
 	//获取仓库的虚拟文件的本地存储根路径
 	protected String getReposVirtualPath(Repos repos)
 	{
-		String reposVPath = repos.getPath() + repos.getId() + "/data/vdata/";	//实文件系统的存储数据放在data目录下 
+		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
 		System.out.println("getReposVirtualPath() " + reposVPath);
 		return reposVPath;
 	}

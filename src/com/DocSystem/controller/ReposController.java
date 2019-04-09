@@ -180,7 +180,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			path = dirPathFormat(path);
+			path = localDirPathFormat(path);
 		}
 		if(realDocPath != null && !realDocPath.isEmpty())
 		{
@@ -188,11 +188,11 @@ public class ReposController extends BaseController{
 		}
 		if(localSvnPath != null && !localSvnPath.isEmpty())
 		{
-			localSvnPath = dirPathFormat(localSvnPath);
+			localSvnPath = localDirPathFormat(localSvnPath);
 		}
 		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
 		{
-			localSvnPath1 = dirPathFormat(localSvnPath1);
+			localSvnPath1 = localDirPathFormat(localSvnPath1);
 		}
 		
 		//如果去除realDocPath的限制，文件系统前置将具备非常大的灵活性和破坏性（可以查看和删除后台的所有文件）
@@ -948,14 +948,6 @@ public class ReposController extends BaseController{
 			return false;
 		}
 		return true;
-	}
-
-	private String getReposPath(Repos repos) {
-		if(repos.getType() == 2)
-		{
-			return repos.getPath();
-		}
-		return repos.getPath() + repos.getId() + "/";
 	}
 
 	private boolean deleteRepos(Repos repos) {
