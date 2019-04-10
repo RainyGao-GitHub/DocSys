@@ -1988,16 +1988,95 @@ public class BaseController{
 	}
 	
 	/********************************** Functions For Application Layer ****************************************/
-	//底层addDoc接口
-	protected Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
+	protected Integer addDocToSVN(Integer docId, String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
-		Repos repos = reposService.getRepos(reposId);
+		return null;
+	}
+
+	protected Integer addDocToGIT(Integer docId, String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+		return null;
+	}
+
+	//底层addDocToFS接口
+	protected Integer addDocToFS(Integer docId, String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+
+		String reposRPath = getReposRealPath(repos);		
+		if(uploadFile == null)
+		{
+			if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
+			{		
+				String MsgInfo = "createRealDoc " + name +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("createRealDoc Failed");
+				return null;
+			}
+		}
+		else
+		{
+			if(updateRealDoc(reposRPath,parentPath,name,type,fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			{		
+				String MsgInfo = "updateRealDoc " + name +" Failed";
+				rt.setError(MsgInfo);
+				System.out.println("updateRealDoc Failed");
+				return null;
+			}
+		}
+				
+		//只有在content非空的时候才创建VDOC
+		if(null != content && !"".equals(content))
+		{
+			String reposVPath = getReposVirtualPath(repos);
+			String docVName = getDocVPath(parentPath,name);
+			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
+			{
+				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
+				{
+					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
+					rt.setMsgInfo("svnVirtualDocAdd Failed");			
+				}
+			}
+			else
+			{
+				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
+				rt.setMsgInfo("createVirtualDoc Failed");
+			}
+		}
+		
+		Doc doc = new Doc();
+		doc.setId(docId);
+		doc.setPath(parentPath);
+		doc.setName(name);
+		doc.setType(type);
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		doc.setCreateTime(nowTimeStamp);
+		doc.setLatestEditTime(nowTimeStamp);
+		doc.setSize(fileSize);
+		doc.setCheckSum(checkSum);
+		doc.setContent(content);
+		doc.setVid(repos.getId());
+		doc.setPid(parentId);
+		doc.setCreator(login_user.getId());
+		doc.setLatestEditor(login_user.getId());
+		doc.setState(0);	//doc的状态为不可用
+		
+		rt.setMsg("新增成功", "isNewNode");
+		rt.setData(doc);
+		
+		return docId;
+	}
+	
+	//底层addDoc接口
+	protected Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		//get parentPath
-		String parentPath = getParentPath(parentId);
+		parentPath = getParentPath(parentId);
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + name;
 		
 		//判断目录下是否有同名节点 
+		Integer reposId = repos.getId();
 		Doc tempDoc = getDocByName(name,parentId,reposId);
 		if(tempDoc != null)
 		{
@@ -2399,7 +2478,7 @@ public class BaseController{
 	}
 
 	//底层renameDoc接口
-	protected void renameDoc(Integer docId, String newname,Integer reposId,Integer parentId, 
+	protected void renameDoc(Integer docId, String name, String newname,Integer reposId,Integer parentId, String parentPath, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		
 		Doc doc = null;
@@ -2419,7 +2498,7 @@ public class BaseController{
 		
 		Repos repos = reposService.getRepos(reposId);
 		String reposRPath = getReposRealPath(repos);
-		String parentPath = getParentPath(parentId);
+		parentPath = getParentPath(parentId);
 		String oldname = doc.getName();
 		
 		//修改实文件名字	
@@ -3700,8 +3779,16 @@ public class BaseController{
 	
 	/********************* Functions For User Opertion Right****************************/
 	//检查用户的新增权限
-	protected boolean checkUserAddRight(ReturnAjax rt, Integer userId,
-			Integer parentId, Integer reposId) {
+	protected boolean checkUserAddRight(ReturnAjax rt, Integer userId, Integer parentId, Repos repos) 
+	{
+		//对于前置系统只有仓库权限
+		if(repos.getType() != 1)
+		{
+			parentId = 0;
+		}
+		
+		Integer reposId = repos.getId();
+		
 		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
 		if(docUserAuth == null)
 		{
@@ -3725,8 +3812,15 @@ public class BaseController{
 	}
 
 	protected boolean checkUserDeleteRight(ReturnAjax rt, Integer userId,
-			Integer parentId, Integer reposId) {
-		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
+			Integer parentId, Repos repos) {
+		
+		//对于前置系统只有仓库权限
+		if(repos.getType() != 1)
+		{
+			parentId = 0;
+		}
+		
+		DocAuth docUserAuth = getUserDocAuth(userId,parentId,repos.getId());
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3748,9 +3842,14 @@ public class BaseController{
 		return true;
 	}
 	
-	protected boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId,
-			Integer reposId) {
-		DocAuth docUserAuth = getUserDocAuth(userId,docId,reposId);
+	protected boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId, Repos repos) {
+		
+		if(repos.getType() != 1)
+		{
+			docId = 0;
+		}
+		
+		DocAuth docUserAuth = getUserDocAuth(userId,docId,repos.getId());
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3772,9 +3871,13 @@ public class BaseController{
 		return true;
 	}
 	
-	protected boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId,
-			Integer reposId) {
-		DocAuth docAuth = getUserDocAuth(userId,docId,reposId);
+	protected boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId, Repos repos) {
+		if(repos.getType() != 1)
+		{
+			docId = 0;
+		}		
+		
+		DocAuth docAuth = getUserDocAuth(userId,docId,repos.getId());
 		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");

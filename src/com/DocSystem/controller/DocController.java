@@ -87,8 +87,8 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(String name,String content,Integer type,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addDoc name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId + " content: " + content);
+	public void addDoc(Integer docId, String name,String content,Integer type,Integer reposId,Integer parentId, String parentPath,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("addDoc docId:" + docId +" name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId + " parentPath: " + parentPath + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -102,16 +102,30 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		
 		//检查用户是否有权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(),parentId,reposId) == false)
+		Repos repos = reposService.getRepos(reposId);
+		if(checkUserAddRight(rt,login_user.getId(),parentId,repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
+		switch(repos.getType())
+		{
+		case 1:
+			addDoc(name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
+			break;
+		case 2:
+			addDocToFS(docId,name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
+			break;
+		case 3:
+			addDocToSVN(docId,name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
+		case 4:
+			addDocToGIT(docId,name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
+			break;
+		}
 		writeJson(rt, response);
 	}
-	
+
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
 	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -133,7 +147,8 @@ public class DocController extends BaseController{
 		Integer parentId = getParentIdForFeeback();
 		
 		String commitMsg = "User Feeback by " + name;
-		Integer docId = addDoc(name,content,1,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
+		Repos repos = reposService.getRepos(reposId);
+		Integer docId = addDoc(name,content,1,null,0,"",repos,parentId,"",null,null,null,commitMsg,commitUser,login_user,rt);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -206,8 +221,8 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(String name,Integer docId,  Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId);
+	public void checkChunkUploaded(String name,Integer docId, Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId, String parentPath, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId + " parentPath: " + parentPath);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -218,7 +233,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
 
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		rt.setMsgData("0");
@@ -236,13 +250,27 @@ public class DocController extends BaseController{
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
 				String commitUser = login_user.getName();
-				if(-1 == docId)	//新建文件则新建记录，否则
+				switch(repos.getType())
 				{
-					docId = addDoc(name,null, 1, null,size, checkSum,reposId, parentId, chunkNum, cutSize, chunkParentPath,commitMsg, commitUser,login_user, rt);
-				}
-				else
-				{
-					updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, cutSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
+				case 1:
+					if(-1 == docId)	//新建文件则新建记录，否则
+					{
+						docId = addDoc(name,null, 1, null,size, checkSum,repos, parentId, parentPath, chunkNum, cutSize, chunkParentPath,commitMsg, commitUser,login_user, rt);
+					}
+					else
+					{
+						updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, cutSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
+					}
+					break;
+				case 2:
+					addDocToFS(docId,name,null,1,null,size,checkSum,repos,parentId, parentPath, chunkNum,cutSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
+					break;
+				case 3:
+					addDocToSVN(docId,name,null,1,null,size,checkSum,repos,parentId, parentPath, chunkNum,cutSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
+					break;
+				case 4:
+					addDocToGIT(docId,name,null,1,null,size,checkSum,repos,parentId, parentPath, chunkNum,cutSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
+					break;
 				}
 				
 				if("ok".equals(rt.getStatus()))
@@ -268,6 +296,12 @@ public class DocController extends BaseController{
 			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
 			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos.getType() != 1)
+		{
+			parentId = 0;
 		}
 		
 		//检查登录用户的权限
@@ -303,10 +337,10 @@ public class DocController extends BaseController{
 				}
 			}
 		}
-		
-		if("".equals(checkSum))
+				
+		if(repos.getType() != 1 || checkSum.isEmpty())
 		{
-			//CheckSum is empty, mean no need 
+			//CheckSum is empty, mean no need to check any more 
 			writeJson(rt, response);
 			return;
 		}
@@ -395,10 +429,10 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile,String name,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
+	public void uploadDoc(MultipartFile uploadFile,String name,Integer size, String checkSum, Integer reposId, Integer parentId, String parentPath, Integer docId, String filePath,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc name " + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath 
+		System.out.println("uploadDoc name " + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId + " filePath:" + filePath 
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -418,11 +452,13 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+
+		Repos repos = reposService.getRepos(reposId);
 		
 		//检查用户是否有权限新增文件
 		if(-1 == docId)
 		{
-			if(checkUserAddRight(rt,login_user.getId(),parentId,reposId) == false)
+			if(checkUserAddRight(rt,login_user.getId(),parentId,repos) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -430,14 +466,13 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(checkUserEditRight(rt,login_user.getId(),docId,reposId) == false)
+			if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
 			{
 				writeJson(rt, response);	
 				return;
 			}
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
 
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
@@ -466,13 +501,26 @@ public class DocController extends BaseController{
 		{
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
 
-			if(-1 == docId)	//新建文件则新建记录，否则
+			switch(repos.getType())
 			{
-				docId = addDoc(name,null, 1, uploadFile,size, checkSum,reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
-			}
-			else
-			{
-				updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+			case 1:
+				if(-1 == docId)	//新建文件则新建记录，否则
+				{
+					docId = addDoc(name,null, 1, uploadFile,size, checkSum,repos, parentId, parentPath, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+				}
+				else
+				{
+					updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+				}
+				break;
+			case 2:
+				addDocToFS(docId,name,null,1,uploadFile,size,checkSum,repos,parentId, parentPath, chunkNum,chunkSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
+				break;
+			case 3:
+				addDocToSVN(docId,name,null,1,uploadFile,size,checkSum,repos,parentId, parentPath, chunkNum,chunkSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
+			case 4:
+				addDocToGIT(docId,name,null,1,uploadFile,size,checkSum,repos,parentId, parentPath, chunkNum,chunkSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
+				break;
 			}
 			
 			if("ok".equals(rt.getStatus()))
@@ -563,8 +611,8 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer id,String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("renameDoc id: " + id + " newname: " + newname);
+	public void renameDoc(Integer id,String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("renameDoc id: " + id + " parentPath: " + parentPath+ " name: " + name+ " newname: " + newname);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -585,8 +633,10 @@ public class DocController extends BaseController{
 			return;			
 		}
 		
+		Repos repos = reposService.getRepos(doc.getVid());
+		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),id,doc.getVid()) == false)
+		if(checkUserEditRight(rt,login_user.getId(),id,repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -596,12 +646,43 @@ public class DocController extends BaseController{
 		Integer reposId = doc.getVid();
 		Integer parentId = doc.getPid();
 		
-		renameDoc(id,newname,reposId,parentId,commitMsg,commitUser,login_user,rt);
+		switch(repos.getType())
+		{
+		case 1:
+			renameDoc(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
+			break;
+		case 2:
+			renameDocInFS(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
+			break;
+		case 3:
+			renameDocInSVN(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
+			break;
+		case 4:
+			renameDocInGIT(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
+			break;
+		
+		}
 		writeJson(rt, response);	
 	}
 	
+	private void renameDocInGIT(Integer id, String name, String newname, Integer reposId, Integer parentId,
+			String parentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
 
-	
+	private void renameDocInSVN(Integer id, String name, String newname, Integer reposId, Integer parentId,
+			String parentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void renameDocInFS(Integer id, String name, String newname, Integer reposId, Integer parentId,
+			String parentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
 	public void moveDoc(Integer id,Integer dstPid,Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -624,16 +705,18 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;			
 		}
+		
+		Repos repos = reposService.getRepos(vid);
 	
 		//检查是否有源目录的删除权限
-		if(checkUserDeleteRight(rt,login_user.getId(),doc.getPid(),vid) == false)
+		if(checkUserDeleteRight(rt,login_user.getId(),doc.getPid(),repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(),dstPid,vid) == false)
+		if(checkUserAddRight(rt,login_user.getId(),dstPid,repos) == false)
 		{
 				writeJson(rt, response);	
 				return;
@@ -666,8 +749,10 @@ public class DocController extends BaseController{
 			return;			
 		}
 	
+		Repos repos = reposService.getRepos(vid);
+				
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(),dstPid,vid) == false)
+		if(checkUserAddRight(rt,login_user.getId(),dstPid,repos) == false)
 		{
 			writeJson(rt, response);
 			return;
@@ -686,7 +771,7 @@ public class DocController extends BaseController{
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer id,String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void updateDocContent(Integer reposId, Integer id, String parentPath, String name, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent id: " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -707,20 +792,22 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Repos repos = reposService.getRepos(reposId);
+		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),id,doc.getVid()) == false)
+		if(checkUserEditRight(rt,login_user.getId(),id, repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		updateDocContent(id, content, commitMsg, commitUser, login_user, rt);
+		updateDocContent(repos, id, parentPath, name, content, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);
 	}
 
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
-	public void tmpSaveVirtualDocContent(Integer id,String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void tmpSaveVirtualDocContent(Integer reposId, Integer id, String parentPath, String name, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("tmpSaveVirtualDocContent() id: " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -731,25 +818,9 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),id,doc.getVid()) == false)
-		{
-			writeJson(rt, response);	
-			return;
-		}
-		
-		Repos repos = reposService.getRepos(doc.getVid());
-		String parentPath = getParentPath(doc.getPid());
-		String docVName = getDocVPath(parentPath,doc.getName());
+				
+		Repos repos = reposService.getRepos(reposId);
+		String docVName = getDocVPath(parentPath,name);
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
@@ -761,6 +832,11 @@ public class DocController extends BaseController{
 	}
 	
 	/**************** download Doc  ******************/
+	@RequestMapping("/downloadDoc.do")
+	public void downloadDoc(Integer reposId,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("doGet reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
+	}
+	
 	@RequestMapping("/doGet.do")
 	public void doGet(Integer id,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("doGet id: " + id);
