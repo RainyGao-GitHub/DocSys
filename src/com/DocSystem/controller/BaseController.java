@@ -2002,13 +2002,9 @@ public class BaseController{
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt);
 		case 2:
-			return addDocToFS(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
-					uploadFile, fileSize, checkSum, //For upload
-					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt);
 		case 3:
 		case 4:
-			return addDocToVerRepos(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+			return addDocToFS(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt);
@@ -2017,22 +2013,50 @@ public class BaseController{
 	}
 	
 	//addDocToVerRepos
-	protected Integer addDocToVerRepos(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
-			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
-	{
-		return null;
-	}
-	
-	//addDocToFS
 	protected Integer addDocToFS(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
 	{
-
-		String reposRPath = getReposRealPath(repos);		
+		String reposRPath = getReposRealPath(repos);
+		String localDocRPath = reposRPath + parentPath + docName;
+		
+		//以下代码不可重入，使用syncLock进行同步
+		synchronized(syncLock)
+		{
+			repos = lockRepos(repos.getId(), 1, chunkSize, login_user, rt, false); //Lock repos for 2 hours
+			if(repos == null)
+			{
+				unlock();
+				rt.setError("Lock Repos " + repos.getName() +" Failed！");
+				System.out.println("addDocToVerRepos() lockRepos Failed");
+				return null;
+			}
+			unlock();
+		}
+		
+		//This is virtual Doc
+		Doc doc = new Doc();
+		doc.setId(docId);
+		doc.setName(docName);
+		doc.setType(type);
+		doc.setSize(fileSize);
+		doc.setCheckSum(checkSum);
+		doc.setContent(content);
+		doc.setPath(parentPath);
+		doc.setVid(repos.getId());
+		doc.setPid(parentId);
+		doc.setCreator(login_user.getId());
+		//set createTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		doc.setCreateTime(nowTimeStamp);
+		doc.setLatestEditTime(nowTimeStamp);
+		doc.setLatestEditor(login_user.getId());
+		doc.setState(2);	//doc的状态为不可用
+		doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
+		long lockTime = nowTimeStamp + 2*60*60*1000;
+		doc.setLockTime(lockTime);	//Set lockTime
+				
 		if(uploadFile == null)
 		{
 			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
@@ -2040,28 +2064,61 @@ public class BaseController{
 				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
+				if(unlockRepos(repos.getId(), login_user, null))
+				{
+					MsgInfo += " and unlock Repos Failed";
+					System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+					rt.setError(MsgInfo);
+				}
 				return null;
 			}
 		}
 		else
 		{
-			if(updateRealDoc(reposRPath,parentPath,docName,type,fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{		
 				String MsgInfo = "updateRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
+				if(unlockRepos(repos.getId(), login_user, null))
+				{
+					MsgInfo += " and unlock Repos Failed";
+					System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+					rt.setError(MsgInfo);
+				}
 				return null;
 			}
 		}
-				
+		//commit to history db
+		if(verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt) == false)
+		{
+			System.out.println("verReposRealDocAdd Failed");
+			String MsgInfo = "verReposRealDocAdd Failed";
+			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+			if(delFile(localDocRPath) == false)
+			{						
+				MsgInfo += " and deleteFile Failed";
+			}
+			if(unlockRepos(repos.getId(), login_user, null))
+			{
+				MsgInfo += " and unlock Repos Failed";
+				System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+				rt.setError(MsgInfo);
+			}
+			rt.setError(MsgInfo);
+			return null;
+		}
+		
+		updateIndexForRDoc(repos, docId, type, parentPath, docName);
+		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getDocVPath(parentPath,docName);
+			String docVName = getDocVPath(parentPath, docName);
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
-				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
+				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) == false)
 				{
 					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
 					rt.setMsgInfo("svnVirtualDocAdd Failed");			
@@ -2072,29 +2129,39 @@ public class BaseController{
 				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
+			//Add Lucene Index For Vdoc
+			addIndexForVDoc(repos, docId, type, parentPath, docName, content);
 		}
 		
-		Doc doc = new Doc();
-		doc.setId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		doc.setType(type);
-		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-		doc.setCreateTime(nowTimeStamp);
-		doc.setLatestEditTime(nowTimeStamp);
-		doc.setSize(fileSize);
-		doc.setCheckSum(checkSum);
-		doc.setContent(content);
-		doc.setVid(repos.getId());
-		doc.setPid(parentId);
-		doc.setCreator(login_user.getId());
-		doc.setLatestEditor(login_user.getId());
-		doc.setState(0);	//doc的状态为不可用
+		//启用doc
+		if(unlockRepos(repos.getId(), login_user, null))
+		{
+			String MsgInfo = "unlockRepos Failed";
+			System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+			rt.setError(MsgInfo);
+		}
 		
 		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
 		
 		return docId;
+	}
+	
+	private void updateIndexForRDoc(Repos repos, Integer docId, Integer type, String localDocRPath) {
+		switch(repot.getType())
+		{
+		case 1:
+			if(type == 1)
+			{
+				updateIndexForRDoc(docId, localDocRPath);
+			}
+			break;
+		case 2:
+		case 3:
+		case 4:
+			updateIndexForRDocInFS(repos, docId, type, localDocRPath);
+			break;
+		}
 	}
 	
 	protected Integer addDocToDB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
