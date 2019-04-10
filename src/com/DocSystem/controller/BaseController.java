@@ -4889,7 +4889,7 @@ public class BaseController{
 	}
 	
 	//Add Index For VDoc
-	private void addIndexForVDoc(Integer docId, String content) {
+	private void addIndexForVDoc(Repos repos, Integer docId, Integer type, String parentPath, String docName, String content) {
 		if(content == null || "".equals(content))
 		{
 			return;
@@ -4898,7 +4898,7 @@ public class BaseController{
 		try {
 			System.out.println("addIndexForVDoc() add index in lucne: docId " + docId + " content:" + content);
 			//Add Index For Content
-			LuceneUtil2.addIndex(docId + "-0", docId,content, "doc");
+			LuceneUtil2.addIndex(docId + "-0", docId,content, "repos");
 		} catch (Exception e) {
 			System.out.println("addIndexForVDoc() Failed to update lucene Index");
 			e.printStackTrace();
@@ -4935,15 +4935,6 @@ public class BaseController{
 			System.out.println("DeleteDoc() Failed to delete lucene Index");
 			e.printStackTrace();
 		}
-	}
-	
-	//SyncUp DB/LocalEntry/RemoteEntry with entryNode in verRepos For display
-	//Attention:	(1)this function should be called after SyncUpDBWithVerRepos 
-	//				(2)这个函数会调用add/delete/update接口来同步，因此相当于从远程上传
-	private int SyncUpWithMirror(Repos repos, Doc parentDoc, String parentPath, List<Doc> subDocList,User login_user,ReturnAjax rt)
-	{
-		//TODO: 
-		return 0;
 	}
 	
 	//SyncUp docNode in DataBase with entryNode in verRepos For display

@@ -53,6 +53,8 @@ import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.DocSystem.entity.Doc;
+
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
 import info.monitorenter.cpdetector.io.JChardetFacade;
@@ -61,12 +63,15 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 
 
 /**  
- * 类描述：   lucene索引增删改查的公共类
- * 创建人：高雨
+ * 类描述：全文搜索库
+ * 创建人：Rainy Gao
  * 创建时间：2018-10-1
- * @version    
- * This class is the full-text search driver for DocSys
- * There are multi-lucence document mapped to one doc in DocSys, if the content of this Doc is very large    
+ * @version 1.00   
+ * @Description
+ * 功能: 该搜索引擎接口支持通过文件名、文件内容和备注内容进行搜索，搜索结果包含文件路径、文件名、HashId、docId、luceneDocumentId
+ * 实现原理: 
+ * （1）文件内容和备注内容，通过索引库进行查询（分别建库以便能够进行分类搜索）
+ * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
 public class LuceneUtil2 {
 
@@ -101,14 +106,18 @@ public class LuceneUtil2 {
 	}
     
 	/**
-	 *     	增加索引
-     * @param id: lucence document id
-     * @param docId:  docId of DocSys 
-     * @param content: 文件内容或markdown文件内容 
-     * @param indexLib: 索引库名字
+	 *
+	 * 功能: 在指定的索引库里增加索引文件
+     * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 
+     * @param reposId:  文件所在仓库ID 
+     * @param parentPath:  文件所在目录 
+     * @param name:  文件名
+     * @param docId:  docId of DocSys In DataBase 
+     * @param content: 文件名、文件内容或备注内容
+     * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
      */
     @SuppressWarnings("deprecation")
-	public static void addIndex(String id,Integer docId, String content,String indexLib) throws Exception {
+	public static void addIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib) throws Exception {
     	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("addIndex() content:" + content);
@@ -123,6 +132,10 @@ public class LuceneUtil2 {
 
         Document doc = new Document();
         doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new IntField("reposId", reposId, Store.YES));
+        doc.add(new Field("parentPath", parentPath, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
         doc.add(new IntField("docId", docId, Store.YES));
         doc.add(new TextField("content", content, Store.YES));
         indexWriter.addDocument(doc);
@@ -135,17 +148,20 @@ public class LuceneUtil2 {
     }
 
 	/**
-     * 	 更新索引
-     * @param id: lucence document id
-     * @param docId:  docId of DocSys 
-     * @param content: 文件内容或markdown文件内容 
-     * @param indexLib: 索引库名字
+	 * 功能: 在指定的索引库里更新索引文件
+     * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 
+     * @param reposId:  文件所在仓库ID 
+     * @param parentPath:  文件所在目录 
+     * @param name:  文件名
+     * @param docId:  docId of DocSys In DataBase 
+     * @param content: 文件名、文件内容或备注内容
+     * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
      */
     @SuppressWarnings("deprecation")
-	public static void updateIndex(String id,Integer docId,String content,String indexLib) throws Exception {
+	public static void updateIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib) throws Exception {
 
     	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
-    	System.out.println("updateIndex() content:" + content);
+    	//System.out.println("updateIndex() content:" + content);
     	
     	Date date1 = new Date();
         Analyzer analyzer = new IKAnalyzer();
@@ -155,12 +171,16 @@ public class LuceneUtil2 {
                 Version.LUCENE_CURRENT, analyzer);
         IndexWriter indexWriter = new IndexWriter(directory, config);
          
-        Document doc1 = new Document();
-        doc1.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc1.add(new IntField("docId", docId, Store.YES));
-        doc1.add(new TextField("content", content, Store.YES));
+        Document doc = new Document();
+        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new IntField("reposId", reposId, Store.YES));
+        doc.add(new Field("parentPath", parentPath, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new IntField("docId", docId, Store.YES));
+        doc.add(new TextField("content", content, Store.YES));
         
-        indexWriter.updateDocument(new Term("id",id), doc1);
+        indexWriter.updateDocument(new Term("id",id), doc);
         indexWriter.close();
          
         Date date2 = new Date();
@@ -197,7 +217,7 @@ public class LuceneUtil2 {
      * @param indexLib: 索引库名字
      */
     @SuppressWarnings("deprecation")
-	public static List<String> search(String str,String indexLib) throws Exception {
+	public static List<Document> search(String str,String indexLib) throws Exception {
         Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
         Analyzer analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
@@ -207,16 +227,10 @@ public class LuceneUtil2 {
         Query query = parser.parse(str);
 
         ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-        List<String> res = new ArrayList<String>();
+        List<Document> res = new ArrayList<Document>();
         for (int i = 0; i < hits.length; i++) {
             Document hitDoc = isearcher.doc(hits[i].doc);
-            String docId = hitDoc.get("docId");
-            if(docId != null && !"".equals(docId))
-            {
-            	res.add(docId);
-                System.out.println("search()  id:" + hitDoc.get("id") + " docId:"+ docId);
-                //System.out.println("search()  content:" + hitDoc.get("content"));	
-            }
+            res.add(hitDoc);
         }
         ireader.close();
         directory.close();
@@ -228,7 +242,7 @@ public class LuceneUtil2 {
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static List<String> fuzzySearch(String str,String indexLib) throws Exception {
+	public static List<Document> fuzzySearch(String str,String indexLib) throws Exception {
         Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
         Analyzer analyzer = new IKAnalyzer();
         DirectoryReader ireader = DirectoryReader.open(directory);
@@ -237,16 +251,10 @@ public class LuceneUtil2 {
         FuzzyQuery query = new FuzzyQuery(new Term("content",str));
 
         ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-        List<String> res = new ArrayList<String>();
+        List<Document> res = new ArrayList<Document>();
         for (int i = 0; i < hits.length; i++) {
             Document hitDoc = isearcher.doc(hits[i].doc);
-            String docId = hitDoc.get("docId");
-            if(docId != null && !"".equals(docId))
-            {
-            	res.add(docId);
-                System.out.println("fuzzySearch()  id:" + hitDoc.get("id") + " docId:"+ docId);
-                //System.out.println("fuzzySearch()  content:" + hitDoc.get("content"));	
-            }
+            res.add(hitDoc);
         }
         ireader.close();
         directory.close();
@@ -281,26 +289,15 @@ public class LuceneUtil2 {
     }
 
     //Delete All Index For Doc
-	public static void deleteIndexForDoc(Integer docId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForDoc() docId:" + docId + " indexLib:" + indexLib);
-		List<String> res = getIdListForDoc(docId, indexLib);
+	public static void deleteIndexForDoc(Integer hashId, String indexLib) throws Exception {
+		System.out.println("deleteIndexForDoc() hashId:" + hashId + " indexLib:" + indexLib);
+		List<String> res = getIdListForDoc(hashId, indexLib);
 		for(int i=0;i < res.size(); i++)
 		{
 			deleteIndex(res.get(i),indexLib);
 		}
 	}
-	
-	//Delete Indexs For Real Doc
-	public static void deleteIndexForRDoc(Integer docId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForRDoc() docId:" + docId + " indexLib:" + indexLib);
-		List<String> res = getIdListForDoc(docId, indexLib);
-		for(int i=0;i < res.size(); i++)
-		{
-			deleteIndex(generateRDocId(docId,i), indexLib);
-		}
-	}
-	
-	
+		
 	//Add Index For RDoc
 	public static void addIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
 		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + filePath + " indexLib:" + indexLib);
@@ -609,16 +606,6 @@ public class LuceneUtil2 {
 	public static void updateIndexForVDoc(Integer docId, String content, String indexLib) throws Exception {
 		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
 		updateIndex(generateVDocId(docId,0),docId,content,indexLib);
-	}
-	
-	private static String generateVDocId(Integer docId, int index) {
-		return "VDoc-" + docId + "-" + index;
-		//return docId+"-0";
-	}
-
-	private static String generateRDocId(Integer docId, int index) {
-		return "RDoc-" + docId + "-" + index;
-		//return docId+"-"+ (index+1);
 	}
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
