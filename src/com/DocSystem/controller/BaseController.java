@@ -1988,26 +1988,56 @@ public class BaseController{
 	}
 	
 	/********************************** Functions For Application Layer ****************************************/
-	protected Integer addDocToSVN(Integer docId, String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+	//底层addDoc接口
+	protected Integer addDoc(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			return addDocToDB(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+					uploadFile, fileSize, checkSum, //For upload
+					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
+					commitMsg, commitUser, login_user, rt);
+		case 2:
+			return addDocToFS(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+					uploadFile, fileSize, checkSum, //For upload
+					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
+					commitMsg, commitUser, login_user, rt);
+		case 3:
+		case 4:
+			return addDocToVerRepos(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+					uploadFile, fileSize, checkSum, //For upload
+					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
+					commitMsg, commitUser, login_user, rt);
+		}
 		return null;
 	}
-
-	protected Integer addDocToGIT(Integer docId, String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+	
+	//addDocToVerRepos
+	protected Integer addDocToVerRepos(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+	{
 		return null;
 	}
-
-	//底层addDocToFS接口
-	protected Integer addDocToFS(Integer docId, String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+	
+	//addDocToFS
+	protected Integer addDocToFS(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+	{
 
 		String reposRPath = getReposRealPath(repos);		
 		if(uploadFile == null)
 		{
-			if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
+			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
 			{		
-				String MsgInfo = "createRealDoc " + name +" Failed";
+				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
 				return null;
@@ -2015,9 +2045,9 @@ public class BaseController{
 		}
 		else
 		{
-			if(updateRealDoc(reposRPath,parentPath,name,type,fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(updateRealDoc(reposRPath,parentPath,docName,type,fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{		
-				String MsgInfo = "updateRealDoc " + name +" Failed";
+				String MsgInfo = "updateRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
 				return null;
@@ -2028,7 +2058,7 @@ public class BaseController{
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getDocVPath(parentPath,name);
+			String docVName = getDocVPath(parentPath,docName);
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
@@ -2047,7 +2077,7 @@ public class BaseController{
 		Doc doc = new Doc();
 		doc.setId(docId);
 		doc.setPath(parentPath);
-		doc.setName(name);
+		doc.setName(docName);
 		doc.setType(type);
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		doc.setCreateTime(nowTimeStamp);
@@ -2067,28 +2097,30 @@ public class BaseController{
 		return docId;
 	}
 	
-	//底层addDoc接口
-	protected Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Repos repos,Integer parentId, String parentPath, 
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+	protected Integer addDocToDB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+	{
 		//get parentPath
 		parentPath = getParentPath(parentId);
 		String reposRPath = getReposRealPath(repos);
-		String localDocRPath = reposRPath + parentPath + name;
+		String localDocRPath = reposRPath + parentPath + docName;
 		
 		//判断目录下是否有同名节点 
 		Integer reposId = repos.getId();
-		Doc tempDoc = getDocByName(name,parentId,reposId);
+		Doc tempDoc = getDocByName(docName,parentId,reposId);
 		if(tempDoc != null)
 		{
 			if(type == 2)	//如果是则目录直接成功
 			{
-				rt.setMsg("Node: " + name +" 已存在！", "dirExists");
+				rt.setMsg("Node: " + docName +" 已存在！", "dirExists");
 				rt.setData(tempDoc);
 			}
 			else
 			{
-				rt.setError("Node: " + name +" 已存在！");
-				System.out.println("addDoc() " + name + " 已存在");
+				rt.setError("Node: " + docName +" 已存在！");
+				System.out.println("addDoc() " + docName + " 已存在");
 			}
 			return null;		
 		}
@@ -2107,7 +2139,7 @@ public class BaseController{
 			}
 				
 			//新建doc记录,并锁定
-			doc.setName(name);
+			doc.setName(docName);
 			doc.setType(type);
 			doc.setSize(fileSize);
 			doc.setCheckSum(checkSum);
@@ -2128,7 +2160,7 @@ public class BaseController{
 			if(reposService.addDoc(doc) == 0)
 			{			
 				unlock();
-				rt.setError("Add Node: " + name +" Failed！");
+				rt.setError("Add Node: " + docName +" Failed！");
 				System.out.println("addDoc() addDoc to db failed");
 				return null;
 			}
@@ -2139,9 +2171,9 @@ public class BaseController{
 		
 		if(uploadFile == null)
 		{
-			if(createRealDoc(reposRPath,parentPath,name,type, rt) == false)
+			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
 			{		
-				String MsgInfo = "createRealDoc " + name +" Failed";
+				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
 				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
@@ -2156,9 +2188,9 @@ public class BaseController{
 		}
 		else
 		{
-			if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{		
-				String MsgInfo = "updateRealDoc " + name +" Failed";
+				String MsgInfo = "updateRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
 				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
@@ -2172,7 +2204,7 @@ public class BaseController{
 			}
 		}
 		//commit to history db
-		if(verReposRealDocAdd(repos,parentPath,name,type,commitMsg,commitUser,rt) == false)
+		if(verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt) == false)
 		{
 			System.out.println("verReposRealDocAdd Failed");
 			String MsgInfo = "verReposRealDocAdd Failed";
@@ -2189,7 +2221,7 @@ public class BaseController{
 			return null;
 		}
 		
-		Integer docId = doc.getId();
+		docId = doc.getId();
 		if(type == 1)
 		{
 			//Update Lucene Index

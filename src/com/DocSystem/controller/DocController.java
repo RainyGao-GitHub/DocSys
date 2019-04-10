@@ -87,8 +87,9 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(Integer docId, String name,String content,Integer type,Integer reposId,Integer parentId, String parentPath,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addDoc docId:" + docId +" name: " + name + " type: " + type+ " reposId: " + reposId + " parentId: " + parentId + " parentPath: " + parentPath + " content: " + content);
+	public void addDoc(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,
+			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("addDoc reposId:" + reposId + " docId:" + docId + " type: " + type +" parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -109,6 +110,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		addDoc(repos, docId, type, parentId, parentPath, docName, content, type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
 		switch(repos.getType())
 		{
 		case 1:
@@ -728,8 +730,9 @@ public class DocController extends BaseController{
 	
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer id,Integer dstPid, String dstDocName, Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("copyDoc id: " + id  + " dstPid: " + dstPid + " dstDocName: " + dstDocName + " vid: " + vid);
+	public void copyDoc(Integer reposId, Integer docId, Integer type, Integer srcPid, Integer dstPid, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -741,7 +744,7 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		Doc doc = reposService.getDocInfo(id);
+		Doc doc = reposService.getDocInfo(docId);
 		if(doc == null)
 		{
 			rt.setError("文件不存在");
@@ -749,7 +752,7 @@ public class DocController extends BaseController{
 			return;			
 		}
 	
-		Repos repos = reposService.getRepos(vid);
+		Repos repos = reposService.getRepos(reposId);
 				
 		//检查用户是否有目标目录权限新增文件
 		if(checkUserAddRight(rt,login_user.getId(),dstPid,repos) == false)
@@ -758,13 +761,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String srcDocName = doc.getName();
 		if(dstDocName == null || "".equals(dstDocName))
 		{
 			dstDocName = srcDocName;
 		}
 		
-		copyDoc(id,srcDocName,dstDocName,doc.getType(),vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt,false);
+		copyDoc(repos, docId, type, srcParentPath,srcDocName,dstParentPath,dstDocName, srcPid, dstPid, commitMsg, commitUser, login_user, rt, false);
 		
 		writeJson(rt, response);
 	}
