@@ -54,6 +54,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
@@ -299,9 +300,13 @@ public class LuceneUtil2 {
 	}
 		
 	//Add Index For RDoc
-	public static void addIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
-		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + filePath + " indexLib:" + indexLib);
+	public static void addIndexForRDoc(Repos repos, String id, String parentPath, String name, String hashId, Integer docId, String content) throws Exception {
 		
+		Integer reposId = repos.getId();
+		String reposRPath = getReposRealPath(repos); 
+		String indexLib = "repos_" + reposId + "_RDoc";
+		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + parentPath + name + " indexLib:" + indexLib);
+				
 		File file =new File(filePath);
 		if(file.length() == 0)
 		{
