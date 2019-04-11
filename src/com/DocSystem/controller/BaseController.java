@@ -1598,7 +1598,7 @@ public class BaseController  extends BaseFunction{
 		}		
 	}
 	
-	/*********************Functions For DocLock *******************************/
+	/************************ DocSys仓库与文件锁定接口 *******************************/
 	//Lock Repos
 	protected Repos lockRepos(Integer reposId,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) 
 	{
@@ -1913,7 +1913,6 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-
 	//Unlock Doc
 	private boolean unlockDoc(Integer docId, User login_user, Doc preLockInfo) {
 		Doc curDoc = reposService.getDocInfo(docId);
@@ -1962,41 +1961,8 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("unlockDoc() success:" + docId);
 		return true;
-	}
-	
-	protected Integer getMaxFileSize() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private boolean isNodeExist(String name, Integer parentId, Integer reposId) {
-		Doc qdoc = new Doc();
-		qdoc.setName(name);
-		qdoc.setPid(parentId);
-		qdoc.setVid(reposId);
-		List <Doc> docList = reposService.getDocList(qdoc);
-		if(docList != null && docList.size() > 0)
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	Doc getDocByName(String name, Integer parentId, Integer reposId)
-	{
-		Doc qdoc = new Doc();
-		qdoc.setName(name);
-		qdoc.setPid(parentId);
-		qdoc.setVid(reposId);
-		List <Doc> docList = reposService.getDocList(qdoc);
-		if(docList != null && docList.size() > 0)
-		{
-			return docList.get(0);
-		}
-		return null;
-	}
-	
-	/********************* Functions For User Opertion Right****************************/
+	}	
+	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
 	protected boolean checkUserAddRight(ReturnAjax rt, Integer userId, Integer parentId, Repos repos) 
 	{
@@ -2468,6 +2434,14 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		return true;
+	}
+	
+	//删除预览文件
+	protected void deletePreviewFile(String checkSum) 
+	{
+		String dstName = checkSum + ".pdf";
+		String dstPath = getWebTmpPath() + "preview/" + dstName;
+		delFileOrDir(dstPath);
 	}
 	
 	/*************** DocSys verRepos操作接口 *********************/
@@ -3648,7 +3622,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-    /************************* 全文搜索操作接口 ***********************************/
+    /************************* DocSys全文搜索操作接口 ***********************************/
 	protected static String getIndexLibName(Integer reposId, boolean isRealDoc) {
 		String indexLib = "repos_" + reposId + "_RDoc";
 		if(isRealDoc)
@@ -3670,7 +3644,7 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	//Add Index For RDoc
-	public static void addIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
+	public static boolean addIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
 	{		
 		String indexLib = getIndexLibName(reposId, true);
 		String localParentPath = reposRPath + parentPath;
@@ -3679,12 +3653,24 @@ public class BaseController  extends BaseFunction{
 		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + filePath + name + " indexLib:" + indexLib);
 				
 		File file =new File(localParentPath,name);
+		if(!file.exists())
+		{
+			System.out.println("addIndexForRDoc() " + filePath + " 不存在");
+			return false;
+		}
+		
+		if(file.isDirectory())
+		{
+			System.out.println("addIndexForRDoc() isDirectory");
+			return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, "", indexLib);
+		}
+		
 		if(file.length() == 0)
 		{
-			System.out.println("addIndexForRDoc() file  size is 0");
-			return;
+			System.out.println("addIndexForRDoc() fileSize is 0");
+			return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, "", indexLib);
 		}
-	
+		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
 		String fileSuffix = FileUtils2.getFileSuffix(name);
 		if(fileSuffix != null)
@@ -3692,40 +3678,33 @@ public class BaseController  extends BaseFunction{
 			switch(fileSuffix)
 			{
 			case "doc":
-				LuceneUtil2.addIndexForWord(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForWord(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "docx":
-				LuceneUtil2.addIndexForWord2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForWord2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "xls":
-				LuceneUtil2.addIndexForExcel(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForExcel(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "xlsx":
-				LuceneUtil2.addIndexForExcel2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForExcel2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "ppt":
-				LuceneUtil2.addIndexForPPT(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForPPT(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "pptx":
-				LuceneUtil2.addIndexForPPT2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForPPT2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "pdf":
-				LuceneUtil2.addIndexForPdf(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForPdf(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			case "txt":
 			case "TXT":
 			case "log":
 			case "LOG":
 			case "md":
 			case "MD":
-				addIndexForFile(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
+				return LuceneUtil2.addIndexForFile(reposId, parentPath, name, hashId, docId, filePath,indexLib);
 			}
 		}
+		return false;
 	}
 
 	//Update Index For RDoc
-	public static void updateIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
+	public static boolean updateIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
 	{
 		String indexLib = getIndexLibName(reposId, true);
 		String localParentPath = reposRPath + parentPath;
@@ -3735,7 +3714,7 @@ public class BaseController  extends BaseFunction{
 
 		deleteIndexForRDoc(reposId,hashId);
 		
-		addIndexForRDoc(reposId, reposRPath, parentPath, name, hashId, docId);
+		return addIndexForRDoc(reposId, reposRPath, parentPath, name, hashId, docId);
 	}
 	
 	//Add Index For VDoc
@@ -3745,27 +3724,54 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
 		
-		return addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+		return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
 	}
 		
 	//Update Index For RDoc
-	public static void updateIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
+	public static boolean updateIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
 	{
 		String indexLib = getIndexLibName(reposId,false);
 		
 		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		
-		try {
-			updateIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		return LuceneUtil2.updateIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
 	}
 	
 	//Delete Indexs For Virtual Doc
-	public static void deleteIndexForVDoc(String hashId, String indexLib) throws Exception {
+	public static boolean deleteIndexForVDoc(String hashId, String indexLib) throws Exception {
 		System.out.println("deleteIndexForVDoc() hashId:" + hashId + " indexLib:" + indexLib);
-		deleteIndex(buildDocumentId(hashId,0), indexLib);
+		return LuceneUtil2.deleteIndex(LuceneUtil2.buildDocumentId(hashId,0), indexLib);
+	}
+	
+	/****************************DocSys其他接口 *********************************/
+	protected Integer getMaxFileSize() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private boolean isNodeExist(String name, Integer parentId, Integer reposId) {
+		Doc qdoc = new Doc();
+		qdoc.setName(name);
+		qdoc.setPid(parentId);
+		qdoc.setVid(reposId);
+		List <Doc> docList = reposService.getDocList(qdoc);
+		if(docList != null && docList.size() > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	Doc getDocByName(String name, Integer parentId, Integer reposId)
+	{
+		Doc qdoc = new Doc();
+		qdoc.setName(name);
+		qdoc.setPid(parentId);
+		qdoc.setVid(reposId);
+		List <Doc> docList = reposService.getDocList(qdoc);
+		if(docList != null && docList.size() > 0)
+		{
+			return docList.get(0);
+		}
+		return null;
 	}
 }

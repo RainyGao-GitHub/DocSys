@@ -2,7 +2,6 @@ package com.DocSystem.common;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,41 +15,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
-import org.tmatesoft.svn.core.SVNDirEntry;
-import org.tmatesoft.svn.core.SVNNodeKind;
-
 import util.CompressPic;
 import util.DateFormat;
-import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
-import util.UUid;
 
-import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
-import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.User;
-import com.DocSystem.entity.UserGroup;
-import com.DocSystem.service.impl.ReposServiceImpl;
-import com.DocSystem.service.impl.UserServiceImpl;
+
 import com.alibaba.fastjson.JSON;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
@@ -63,10 +50,6 @@ import util.Encrypt.MD5;
 import util.SvnUtil.CommitAction;
 @SuppressWarnings("rawtypes")
 public class BaseFunction{
-	
-	//线程锁
-	protected static final Object syncLock = new Object(); 
-	
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 	
@@ -1547,16 +1530,8 @@ public class BaseFunction{
 		
 		return true;
 	}
-	
-	//删除预览文件
-	protected void deletePreviewFile(String checkSum) {
-		String dstName = checkSum + ".pdf";
-		String dstPath = getWebTmpPath() + "preview/" + dstName;
-		delFileOrDir(dstPath);
-	}
 
-
-	/*************** Commont Interfaces for verRepos ***************/
+	/********************** 版本仓库通用操作接口  **************************/
 	protected void insertAddFileAction(List<CommitAction> actionList,
 			String parentPath, String entryName, String localPath, boolean isSubAction) {
     	CommitAction action = new CommitAction();
@@ -1606,6 +1581,8 @@ public class BaseFunction{
     	actionList.add(action);	
 	}
 	
+	/****************** 线程锁接口 *********************************************/
+	protected static final Object syncLock = new Object(); 
 	//释放线程锁
 	protected void unlock() {
 		unlockSyncLock(syncLock);

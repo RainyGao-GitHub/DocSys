@@ -338,7 +338,7 @@ public class LuceneUtil2   extends BaseFunction{
 		}
     }
 
-	private static String buildDocumentId(String hashId, int index) {
+	public static String buildDocumentId(String hashId, int index) {
 		return hashId + "-" + index;
 	}
 	
