@@ -1412,6 +1412,7 @@ public class ReposController extends BaseController{
 		{
 			pid = 0;
 			level = 0;
+			path = "";
 		}
 		else
 		{
