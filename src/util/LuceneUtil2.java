@@ -6,15 +6,12 @@ package util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -29,7 +26,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
@@ -44,7 +40,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.Paragraph;
 import org.apache.poi.hwpf.usermodel.Range;
-import org.apache.poi.poifs.filesystem.FileMagic;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.xslf.extractor.XSLFPowerPointExtractor;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
@@ -55,14 +50,6 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
-import com.DocSystem.entity.Doc;
-import com.DocSystem.entity.Repos;
-
-import info.monitorenter.cpdetector.io.ASCIIDetector;
-import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
-import info.monitorenter.cpdetector.io.JChardetFacade;
-import info.monitorenter.cpdetector.io.ParsingDetector;
-import info.monitorenter.cpdetector.io.UnicodeDetector;
 
 
 /**  
@@ -76,6 +63,7 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
  * （1）文件内容和备注内容，通过索引库进行查询（分别建库以便能够进行分类搜索）
  * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
+@SuppressWarnings("deprecation")
 public class LuceneUtil2   extends BaseFunction{
 
 	// 保存路径
@@ -120,8 +108,7 @@ public class LuceneUtil2   extends BaseFunction{
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    @SuppressWarnings("deprecation")
-	public static boolean addIndex(String id, Integer reposId,  Integer docId, String parentPath, String name, String hashId,String content, String indexLib)
+    public static boolean addIndex(String id, Integer reposId,  Integer docId, String parentPath, String name, String hashId,String content, String indexLib)
     {	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("addIndex() content:" + content);
@@ -152,7 +139,7 @@ public class LuceneUtil2   extends BaseFunction{
 	        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 			return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("addIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -169,8 +156,7 @@ public class LuceneUtil2   extends BaseFunction{
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    @SuppressWarnings("deprecation")
-	public static boolean updateIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib)
+    public static boolean updateIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib)
     {
     	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("updateIndex() content:" + content);
@@ -200,7 +186,7 @@ public class LuceneUtil2   extends BaseFunction{
 	        System.out.println("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("updateIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -213,8 +199,7 @@ public class LuceneUtil2   extends BaseFunction{
      * @return 
      * @throws Exception
      */
-    @SuppressWarnings("deprecation")
-	public static boolean deleteIndex(String id,String indexLib)
+    public static boolean deleteIndex(String id,String indexLib)
     {
     	try {
 	    	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
@@ -233,7 +218,7 @@ public class LuceneUtil2   extends BaseFunction{
 	        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("deleteIndex() 异常");
 			e.printStackTrace();
 			return false;
 		}
@@ -244,9 +229,9 @@ public class LuceneUtil2   extends BaseFunction{
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-    @SuppressWarnings("deprecation")
-	public static List<Document> search(String str,String indexLib)
+    public static List<Document> search(String str,String indexLib)
     {
+    	System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
     	try {
 	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
 	        Analyzer analyzer = new IKAnalyzer();
@@ -266,7 +251,7 @@ public class LuceneUtil2   extends BaseFunction{
 	        directory.close();
 	        return res;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("getDocumentIdListByHashId() 异常");
 			e.printStackTrace();
 			return null;
 		}
@@ -279,6 +264,7 @@ public class LuceneUtil2   extends BaseFunction{
      */
 	public static List<Document> fuzzySearch(String str,String indexLib)
 	{
+		System.out.println("fuzzySearch() keyWord:" + str + " indexLib:" + indexLib);
 		try {
 				
 	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
@@ -297,7 +283,7 @@ public class LuceneUtil2   extends BaseFunction{
 	        directory.close();
 	        return res;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("getDocumentIdListByHashId() 异常");
 			e.printStackTrace();
 			return null;
 		}
@@ -326,13 +312,13 @@ public class LuceneUtil2   extends BaseFunction{
 	        for (int i = 0; i < hits.length; i++) {
 	            Document hitDoc = isearcher.doc(hits[i].doc);
 	            res.add(hitDoc.get("id"));
-	            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId"));
+	            System.out.println("getDocumentIdListByHashId() searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId"));
 	        }
 	        ireader.close();
 	        directory.close();
 	        return res;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("getDocumentIdListByHashId() 异常");
 			e.printStackTrace();
 			return null;
 		}
@@ -577,30 +563,30 @@ public class LuceneUtil2   extends BaseFunction{
 		return true;
 	}
 
-	private static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
-	{
-		try {
-			
-			String code = getFileEncode(filePath);
-			InputStream is = new FileInputStream(filePath);
-			String line; // 用来保存每行读取的内容
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
-			line = reader.readLine(); // 读取第一行
-			while (line != null) { // 如果 line 为空说明读完了
-				buffer.append(line); // 将读到的内容添加到 buffer 中
-				buffer.append("\n"); // 添加换行符
-				line = reader.readLine(); // 读取下一行
-		    }
-		    reader.close();
-		    is.close();
-		} catch(Exception e){
-		       e.printStackTrace();
-		}		
-	}
+//	private static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
+//	{
+//		try {
+//			
+//			String code = getFileEncode(filePath);
+//			InputStream is = new FileInputStream(filePath);
+//			String line; // 用来保存每行读取的内容
+//			BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
+//			line = reader.readLine(); // 读取第一行
+//			while (line != null) { // 如果 line 为空说明读完了
+//				buffer.append(line); // 将读到的内容添加到 buffer 中
+//				buffer.append("\n"); // 添加换行符
+//				line = reader.readLine(); // 读取下一行
+//		    }
+//		    reader.close();
+//		    is.close();
+//		} catch(Exception e){
+//		       e.printStackTrace();
+//		}		
+//	}
 	
-	private static String readFile(String filePath) throws Exception {
-	    StringBuffer sb = new StringBuffer();
-	    readToBuffer(sb, filePath);
-	    return sb.toString();
-	}
+//	private static String readFile(String filePath) throws Exception {
+//	    StringBuffer sb = new StringBuffer();
+//	    readToBuffer(sb, filePath);
+//	    return sb.toString();
+//	}
 }

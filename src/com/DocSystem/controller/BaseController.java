@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -17,20 +16,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.Zip;
-import org.apache.tools.ant.types.FileSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
@@ -38,13 +30,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNNodeKind;
 
-import util.CompressPic;
-import util.DateFormat;
 import util.FileUtils2;
 import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
-import util.UUid;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.entity.Doc;
@@ -56,15 +45,13 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
-import com.alibaba.fastjson.JSON;
 
-import util.Base64File;
 import util.Encrypt.MD5;
 import util.GitUtil.GITUtil;
 import util.GitUtil.GitEntry;
 import util.SvnUtil.CommitAction;
 import util.SvnUtil.SVNUtil;
-@SuppressWarnings("rawtypes")
+
 public class BaseController  extends BaseFunction{
 	@Autowired
 	protected ReposServiceImpl reposService;

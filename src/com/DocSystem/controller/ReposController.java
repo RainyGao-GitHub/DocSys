@@ -1,10 +1,6 @@
 package com.DocSystem.controller;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,15 +10,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.tmatesoft.svn.core.SVNDirEntry;
-import org.tmatesoft.svn.core.SVNNodeKind;
+
 
 import util.ReturnAjax;
 import util.GitUtil.GITUtil;
-import util.GitUtil.GitEntry;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;
@@ -30,7 +23,6 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
-import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -255,25 +247,6 @@ public class ReposController extends BaseController{
 		}
 		
 		writeJson(rt, response);	
-	}
-
-	//检查path是否和paths互相包含
-	private boolean isPathsConflict(String[] paths, ReturnAjax rt) 
-	{		
-		int size = paths.length;
-		for(int i=0; i< size; i++)
-		{
-			for(int j=0; j < size; j++)
-			{
-				if(isPathConflict(paths[i],paths[j]) == true)
-				{	
-					rt.setError("路径 " + paths[i] + " 与 " + paths[j] + "冲突"); 
-					System.out.println("isPathsConflict() " + paths[i] + " 与 " + paths[j] + " 冲突"); 
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 	
 	//检查path1和path2是否互相包含
