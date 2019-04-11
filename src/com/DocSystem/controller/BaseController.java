@@ -1775,7 +1775,7 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		//copySubDocs
-		copySubDocs(docId, reposId, dstDocId,commitMsg,commitUser,login_user,rt); 
+		copySubDocs(repos, docId, dstDocId, srcParentPath + srcName + "/", dstParentPath + dstName + "/", commitMsg,commitUser,login_user,rt); 
 		
 		if(false == isSubCopy)
 		{
@@ -1801,17 +1801,17 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean copySubDocs(Integer docId, Integer reposId, Integer dstParentId,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+	private boolean copySubDocs(Repos repos, Integer srcPid, Integer dstPid, String srcParentPath, String dstParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
+	{
 		boolean ret = true;
 		Doc doc = new Doc();
-		doc.setPid(docId);
+		doc.setPid(srcPid);
 		List<Doc> subDocList = reposService.getDocList(doc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
 			String subDocName = subDoc.getName();
-			if(false == copyDoc(subDoc.getId(),subDocName,subDocName, subDoc.getType(), reposId, docId, dstParentId,commitMsg,commitUser,login_user,rt,true))
+			if(false == copyDoc(repos, subDoc.getId(), srcPid, dstPid, subDoc.getType(), srcParentPath, subDocName, dstParentPath, subDocName, commitMsg,commitUser,login_user,rt,true))
 			{
 				ret = false;
 			}
