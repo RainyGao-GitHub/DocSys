@@ -1032,7 +1032,46 @@ public class DocController extends BaseController{
 
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Integer docId,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+	public void DocToPDF(Integer reposId, Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		Repos repos = reposService.getRepos(reposId);
+		switch(repos.getType())
+		{
+		case 1:
+			DocToPDF_DB(repos, docId, parentPath, name, response, request, session);
+			break;
+		case 2:
+			DocToPDF_FS(repos, docId, parentPath, name, response, request, session);
+			break;
+		case 3:
+			DocToPDF_SVN(repos, docId, parentPath, name, response, request, session);
+			break;
+		case 4:
+			DocToPDF_GIT(repos, docId, parentPath, name, response, request, session);
+			break;
+		}
+		
+	}	
+	private void DocToPDF_GIT(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void DocToPDF_SVN(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void DocToPDF_FS(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void DocToPDF_DB(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
 		System.out.println("DocToPDF docId: " + docId);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -1053,7 +1092,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(rt,login_user.getId(),docId,doc.getVid()) == false)
+		if(checkUseAccessRight(rt,login_user.getId(),docId,repos) == false)
 		{
 			System.out.println("DocToPDF() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
@@ -1066,9 +1105,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
-		//虚拟文件下载
-		Repos repos = reposService.getRepos(doc.getVid());
 				
 		//get reposRPath
 		String reposRPath = getReposRealPath(repos);
@@ -1144,8 +1180,47 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
-	public void getDoc(Integer id,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getDoc id: " + id);
+	public void getDoc(Integer reposId, Integer docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Repos repos = reposService.getRepos(reposId);
+		switch(repos.getType())
+		{
+		case 1:
+			getDoc_DB(repos, docId, parentPath, docName, session, request, response);
+			break;		
+		case 2:
+			getDoc_FS(repos, docId, parentPath, docName, session, request, response);
+			break;	
+		case 3:
+			getDoc_SVN(repos, docId, parentPath, docName, session, request, response);
+			break;		
+		case 4:
+			getDoc_GIT(repos, docId, parentPath, docName, session, request, response);
+			break;	
+		}	
+	}
+	
+	private void getDoc_GIT(Repos repos, Integer docId, String parentPath, String docName, HttpSession session,
+			HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void getDoc_SVN(Repos repos, Integer docId, String parentPath, String docName, HttpSession session,
+			HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void getDoc_FS(Repos repos, Integer docId, String parentPath, String docName, HttpSession session,
+			HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void getDoc_DB(Repos repos, Integer docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getDoc docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = (User) session.getAttribute("login_user");
@@ -1156,7 +1231,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = reposService.getDoc(id);
+		Doc doc = reposService.getDoc(docId);
 		if(doc == null)
 		{
 			rt.setError("文件不存在");
@@ -1164,14 +1239,15 @@ public class DocController extends BaseController{
 			return;			
 		}
 		
+		//TODO: need to fix for FS
 		//Set currentDocId to session which will be used MarkDown ImgUpload
-		session.setAttribute("currentDocId", id);
-		System.out.println("getDoc currentDocId:" + id);
-	
+		session.setAttribute("currentDocId", docId);
+		System.out.println("getDoc currentDocId:" + docId);
+		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(rt,login_user.getId(),id,doc.getVid()) == false)
+		if(checkUseAccessRight(rt,login_user.getId(),docId, repos) == false)
 		{
-			System.out.println("getDoc() you have no access right on doc:" + id);
+			System.out.println("getDoc() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
 			return;
 		}
@@ -1201,8 +1277,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Repos repos = reposService.getRepos(reposId);
+		
 		//检查用户是否有权限新增文件
-		if(checkUserEditRight(rt,login_user.getId(),docId,reposId) == false)
+		if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
 		{
 			writeJson(rt, response);	
 			return;

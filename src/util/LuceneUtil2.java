@@ -363,7 +363,7 @@ public class LuceneUtil2   extends BaseFunction{
     		doc.close();
     	    fis.close();
     		
-    	    addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+    	    addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, content.toString().trim(), indexLib);
 		} catch (Exception e) {
     		e.printStackTrace();
     		return false;
@@ -389,7 +389,7 @@ public class LuceneUtil2   extends BaseFunction{
         	xdoc.close();
         	fis.close();
         	
-        	addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, str.toString().trim(), indexLib);
+        	addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, str.toString().trim(), indexLib);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -415,7 +415,7 @@ public class LuceneUtil2   extends BaseFunction{
             wb.close();
             is.close();
               
-            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
 
         } catch(Exception e)
         {
@@ -440,7 +440,7 @@ public class LuceneUtil2   extends BaseFunction{
             workBook.close();
             is.close();
              
-            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
         	e.printStackTrace();  
         	return false;
@@ -460,7 +460,7 @@ public class LuceneUtil2   extends BaseFunction{
             extractor.close();
             is.close();            
             
-            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -480,7 +480,7 @@ public class LuceneUtil2   extends BaseFunction{
             extractor.close();  
             is.close();
             
-            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
         } catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -506,7 +506,7 @@ public class LuceneUtil2   extends BaseFunction{
 			document.close();
 			//System.out.println(content);     
 			
-			addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+			addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, content.toString().trim(), indexLib);
 	   }
 	   catch(Exception e)
 	   {
@@ -551,7 +551,7 @@ public class LuceneUtil2   extends BaseFunction{
 				totalSize += bufSize;
 				if(bufSize >= 10485760)	//10MByte
 				{
-					addIndex(buildDocumentId(hashId,chunkIndex), reposId, parentPath, name, hashId, docId, buffer.toString().trim(), indexLib);
+					addIndex(buildDocumentId(hashId,chunkIndex), reposId, docId, parentPath, name, hashId, buffer.toString().trim(), indexLib);
 					chunkIndex ++;
 					System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 					//Clear StringBuffer
@@ -562,7 +562,7 @@ public class LuceneUtil2   extends BaseFunction{
 		    }
 			if(bufSize > 0)
 			{
-				addIndex(buildDocumentId(hashId,chunkIndex), reposId, parentPath, name, hashId, docId, buffer.toString().trim(), indexLib);
+				addIndex(buildDocumentId(hashId,chunkIndex), reposId, docId, parentPath, name, hashId, buffer.toString().trim(), indexLib);
 				chunkIndex ++;
 				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 			}

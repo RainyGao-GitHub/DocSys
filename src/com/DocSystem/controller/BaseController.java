@@ -894,7 +894,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		updateIndexForRDoc(repos, docId, type, parentPath, docName);
+		updateIndexForRDoc(repos.getId(), docId, reposRPath,parentPath, docName);
 		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
@@ -915,7 +915,7 @@ public class BaseController  extends BaseFunction{
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
 			//Add Lucene Index For Vdoc
-			addIndexForVDoc(repos, docId, type, parentPath, docName, content);
+			addIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
 		}
 		
 		//启用doc
@@ -930,23 +930,6 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		
 		return docId;
-	}
-	
-	private void updateIndexForRDoc(Repos repos, Integer docId, Integer type, String localDocRPath) {
-		switch(repot.getType())
-		{
-		case 1:
-			if(type == 1)
-			{
-				updateIndexForRDoc(docId, localDocRPath);
-			}
-			break;
-		case 2:
-		case 3:
-		case 4:
-			updateIndexForRDocInFS(repos, docId, type, localDocRPath);
-			break;
-		}
 	}
 	
 	protected Integer addDocToDB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
@@ -1074,11 +1057,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		docId = doc.getId();
-		if(type == 1)
-		{
-			//Update Lucene Index
-			updateIndexForRDoc(docId, localDocRPath);
-		}
+
+		//Update Lucene Index
+		updateIndexForRDoc(reposId, docId, reposRPath, parentPath, docName);
 		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
@@ -1099,7 +1080,7 @@ public class BaseController  extends BaseFunction{
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
 			//Add Lucene Index For Vdoc
-			addIndexForVDoc(docId,content);
+			addIndexForVDoc(reposId, docId, parentPath, docName, content);
 		}
 		
 		//启用doc
@@ -1116,7 +1097,45 @@ public class BaseController  extends BaseFunction{
 
 	//底层deleteDoc接口
 	//isSubDelete: true: 文件已删除，只负责删除VDOC、LuceneIndex、previewFile、DBRecord
-	protected boolean deleteDoc(Repos repos, Integer docId, Integer parentId, 
+	protected boolean deleteDoc(Repos repos, Integer docId, String parentPath, String docName, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			return deleteDoc_DB(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);
+		case 2:
+			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);
+		case 3:
+			return deleteDoc_SVN(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);
+		case 4:
+			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);			
+		}
+		return false;
+	}
+	
+	private boolean deleteDoc_GIT(Repos repos, Integer docId, String parentPath, String docName,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt, boolean isSubDelete,
+			boolean skipRealDocCommit) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean deleteDoc_SVN(Repos repos, Integer docId, String parentPath, String docName,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt, boolean isSubDelete,
+			boolean skipRealDocCommit) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean deleteDoc_FS(Repos repos, Integer docId, String parentPath, String docName,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt, boolean isSubDelete,
+			boolean skipRealDocCommit) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit) 
 	{
 		Doc doc = null;
@@ -1145,9 +1164,7 @@ public class BaseController  extends BaseFunction{
 				unlock(); //线程锁
 			}
 			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " Lock OK");
-			
-			//get parentPath
-			String parentPath = getParentPath(parentId);		
+				
 			//get RealDoc Full ParentPath
 			String reposRPath = getReposRealPath(repos);
 			
@@ -1189,13 +1206,14 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Delete Lucene index For RDoc and VDoc
-		deleteIndexForDoc(docId,"doc");
+		deleteIndexForRDoc(repos.getId(), docId, parentPath, docName);
+		deleteIndexForVDoc(repos.getId(), docId, parentPath, docName);
+		
 		//Delete previewFile (previewFile use checksum as name)
 		deletePreviewFile(doc.getCheckSum());
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
-		String parentPath = getParentPath(doc.getPid());
 		String docVName = getDocVPath(parentPath ,doc.getName());
 		String localDocVPath = reposVPath + docVName;
 		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
@@ -1214,7 +1232,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//Delete SubDocs
-		if(false == deleteSubDocs(repos, docId, commitMsg,commitUser,login_user,rt))
+		if(false == deleteSubDocs(repos, docId, parentPath, docName, commitMsg,commitUser,login_user,rt))
 		{
 			System.out.println("deleteDoc() deleteSubDocs Failed ");
 		}
@@ -1229,14 +1247,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean deleteSubDocs(Repos repos, Integer docId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+	private boolean deleteSubDocs(Repos repos, Integer docId, String parentPath, String docName, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		Doc doc = new Doc();
 		doc.setPid(docId);
 		List<Doc> subDocList = reposService.getDocList(doc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			deleteDoc(repos, subDoc.getId(), docId,commitMsg,commitUser,login_user,rt,true,false);
+			deleteDoc(repos, subDoc.getId(), parentPath+docName+"/", subDoc.getName(),commitMsg,commitUser,login_user,rt,true,false);
 		}
 		return true;
 	}
@@ -1318,8 +1336,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Update Lucene Index
-		String localDocRPath = reposRPath + parentPath + name;
-		updateIndexForRDoc(docId, localDocRPath);
+		updateIndexForRDoc(reposId, docId, reposRPath, parentPath, name);
 		
 		//Delete PreviewFile
 		deletePreviewFile(oldCheckSum);
@@ -1740,8 +1757,7 @@ public class BaseController  extends BaseFunction{
 		}				
 		
 		//Update Lucene Index
-		String localDocRPath = reposRPath + dstParentPath + dstName;
-		updateIndexForRDoc(reposId, dstDocId,localDocRPath);
+		addIndexForRDoc(reposId, dstDocId, reposRPath, dstParentPath, dstName);
 		
 		//content非空时才去创建虚拟文件目录
 		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
@@ -1760,7 +1776,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
 			}
-			addIndexForVDoc(reposId, reposVPath, parentPath, name, docId);
+			addIndexForVDoc(reposId, dstDocId, dstParentPath, dstName, dstDoc.getContent());
 		}
 				
 		//copySubDocs
@@ -1808,7 +1824,41 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	protected void updateDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
+	protected boolean updateDocContent(Repos repos, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			return updateDocContent_DB(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt);
+		case 2:
+			return updateDocContent_FS(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt);
+		case 3:
+			return updateDocContent_SVN(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt);
+		case 4:
+			return updateDocContent_GIT(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt);			
+		}
+		return false;
+	}
+	
+	private boolean updateDocContent_GIT(Repos repos, Integer docId, String parentPath, String docName, String content,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean updateDocContent_SVN(Repos repos, Integer docId, String parentPath, String docName, String content,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean updateDocContent_FS(Repos repos, Integer docId, String parentPath, String docName, String content,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	protected boolean updateDocContent_DB(Repos repos, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
 		Doc doc = null;
 		synchronized(syncLock)
 		{
@@ -1819,12 +1869,10 @@ public class BaseController  extends BaseFunction{
 				unlock(); //线程锁
 	
 				System.out.println("updateDocContent() lockDoc Failed");
-				return;
+				return false;
 			}
 			unlock(); //线程锁
 		}
-		
-		Repos repos = reposService.getRepos(doc.getVid());
 		
 		//只更新内容部分
 		Doc newDoc = new Doc();
@@ -1834,14 +1882,13 @@ public class BaseController  extends BaseFunction{
 		if(reposService.updateDoc(newDoc) == 0)
 		{
 			rt.setError("更新文件失败");
-			return;			
+			return false;			
 		}	
 		
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
 		parentPath = getParentPath(doc.getPid());
 		String docVName = getDocVPath(parentPath, doc.getName());
-		String hashId = getHashId(parentPath+doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
@@ -1870,8 +1917,10 @@ public class BaseController  extends BaseFunction{
 		
 		if(unlockDoc(docId,login_user,doc) == false)
 		{
-			rt.setError("unlockDoc failed");	
+			rt.setError("unlockDoc failed");
+			return false;
 		}		
+		return true;
 	}
 	
 	/************************ DocSys仓库与文件锁定接口 *******************************/
@@ -4325,7 +4374,7 @@ public class BaseController  extends BaseFunction{
 				{	
 					System.out.println("SyncUpWithSvnRepos() deleteDoc:" + subDoc.getId() + " and localEntry:" +localParentPath +subDocName); 
 					//deleteDoc(skipRealDocCommit), so we do not need the commitMsg and commitUser, but virtualDoc delete will be done by using default commitMsg and commitUser
-					if(true == deleteDoc(repos,subDoc.getId(), pid, null, null, login_user, rt, false, true))
+					if(true == deleteDoc(repos,subDoc.getId(), parentPath, subDocName, null, null, login_user, rt, false, true))
 					{
 						count++;
 					}
@@ -4375,7 +4424,7 @@ public class BaseController  extends BaseFunction{
 				{
 					System.out.println("SyncUpWithSvnRepos() Doc type:" + subDoc.getType() + " not matched with remoteEntry type:" + subEntryType); 
 					System.out.println("SyncUpWithSvnRepos() deleteDoc:" + subDoc.getId() + " and localEntry:" +localParentPath +subDoc.getName()); 
-					if(true == deleteDoc(repos,subDoc.getId(), pid, null, null, login_user, rt, false, true))
+					if(true == deleteDoc(repos,subDoc.getId(), parentPath, subDoc.getName(), null, null, login_user, rt, false, true))
 					{
 						System.out.println("SyncUpWithSvnRepos() addDoc:" + subEntryName + " and localEntry:" +localParentPath +subEntryName); 
 						Doc newSubDoc = addDocFromSvnEntry(repos, svnUtil, subEntry, parentDoc, parentPath, localParentPath, login_user, false);
@@ -4523,9 +4572,10 @@ public class BaseController  extends BaseFunction{
 		return indexLib;
 	}
 	
-	public static void deleteIndexForRDoc(Integer reposId, String hashId)
+	public static void deleteIndexForRDoc(Integer reposId, Integer docId, String parentPath, String name)
 	{
 		String indexLib = getIndexLibName(reposId, true);
+		String hashId = getHashId(parentPath+name);
 		System.out.println("deleteIndexForDoc() hashId:" + hashId + " indexLib:" + indexLib);
 		List<String> documentIdList = LuceneUtil2.getDocumentIdListByHashId(hashId, indexLib);
 		for(int i=0;i < documentIdList.size(); i++)
@@ -4599,15 +4649,8 @@ public class BaseController  extends BaseFunction{
 	//Update Index For RDoc
 	public static boolean updateIndexForRDoc(Integer reposId, Integer docId, String reposRPath, String parentPath, String name)
 	{
-		String indexLib = getIndexLibName(reposId, true);
-		String hashId = getHashId(parentPath + name);
-		
-		String localParentPath = reposRPath + parentPath;
-		String filePath = localParentPath + name;
-		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
-
-		deleteIndexForRDoc(reposId,hashId);
-		
+		System.out.println("updateIndexForRDoc() docId:" + docId + " parentPath:" + parentPath+ " name:" + name);
+		deleteIndexForRDoc(reposId, docId, parentPath, name);
 		return addIndexForRDoc(reposId, docId, reposRPath, parentPath, name);
 	}
 	
@@ -4633,7 +4676,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Delete Indexs For Virtual Doc
-	public static boolean deleteIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name) throws Exception {
+	public static boolean deleteIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name)
+	{
 		String indexLib = getIndexLibName(reposId,false);
 		String hashId = getHashId(parentPath + name);
 		
