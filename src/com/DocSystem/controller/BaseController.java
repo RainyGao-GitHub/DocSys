@@ -659,7 +659,7 @@ public class BaseController  extends BaseFunction{
 		return 0;
 	}
 
-	private List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
+	protected List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		switch(repos.getVerCtrl())
 		{
