@@ -731,7 +731,7 @@ public class DocController extends BaseController{
 	
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer reposId, Integer docId, Integer type, Integer srcPid, Integer dstPid, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+	public void copyDoc(Integer reposId, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
 		
@@ -767,7 +767,7 @@ public class DocController extends BaseController{
 			dstDocName = srcDocName;
 		}
 		
-		copyDoc(repos, docId, type, srcParentPath,srcDocName,dstParentPath,dstDocName, srcPid, dstPid, commitMsg, commitUser, login_user, rt, false);
+		copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, false);
 		
 		writeJson(rt, response);
 	}

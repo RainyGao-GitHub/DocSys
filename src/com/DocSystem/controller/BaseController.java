@@ -1608,16 +1608,11 @@ public class BaseController  extends BaseFunction{
 	
 	//底层copyDoc接口
 	//isSubCopy: true no need to do lock check and lock
-	protected boolean copyDoc(Integer docId,String srcName,String dstName, Integer type, Integer reposId,Integer parentId, Integer dstPid,
+	protected boolean copyDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, boolean isSubCopy) {
 		
-		Repos repos = reposService.getRepos(reposId);
+		Integer reposId = repos.getId();
 		String reposRPath =  getReposRealPath(repos);
-
-		//get parentPath
-		String srcParentPath = getParentPath(parentId);		
-		//目标路径
-		String dstParentPath = getParentPath(dstPid);
 
 		if(isSubCopy)
 		{
