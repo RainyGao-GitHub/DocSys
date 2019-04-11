@@ -820,7 +820,7 @@ public class BaseController  extends BaseFunction{
 		//以下代码不可重入，使用syncLock进行同步
 		synchronized(syncLock)
 		{
-			repos = lockRepos(repos.getId(), 1, chunkSize, login_user, rt, false); //Lock repos for 2 hours
+			repos = lockRepos(repos.getId(), 1, 2*60*60*1000, login_user, rt, false); //Lock repos for 2 hours
 			if(repos == null)
 			{
 				unlock();
