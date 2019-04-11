@@ -4686,9 +4686,12 @@ public class BaseController  extends BaseFunction{
 		String hashId = getHashId(parentPath+name);
 		System.out.println("deleteIndexForDoc() hashId:" + hashId + " indexLib:" + indexLib);
 		List<String> documentIdList = LuceneUtil2.getDocumentIdListByHashId(hashId, indexLib);
-		for(int i=0;i < documentIdList.size(); i++)
+		if(documentIdList != null)
 		{
-			LuceneUtil2.deleteIndex(documentIdList.get(i),indexLib);
+			for(int i=0;i < documentIdList.size(); i++)
+			{
+				LuceneUtil2.deleteIndex(documentIdList.get(i),indexLib);
+			}
 		}
 	}
 		
