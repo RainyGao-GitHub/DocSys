@@ -66,6 +66,52 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	protected UserServiceImpl userService;
 
+	protected List<Repos> getAccessableReposList(Integer userId) {
+		System.out.println("getAccessableReposList() userId:" + userId);
+		
+		//取出用户在系统上的所有仓库权限列表
+		//将仓库权限列表转换成HashMap,方便快速从列表中取出仓库的用户权限
+		HashMap<Integer,ReposAuth> reposAuthHashMap = getUserReposAuthHashMap(userId);
+		printObject("reposAuthHashMap:",reposAuthHashMap);
+		if(reposAuthHashMap == null || reposAuthHashMap.size() == 0)
+		{
+			return null;
+		}
+		
+		//get all reposAuthList to pick up the accessable List
+		List<Repos> resultList = new ArrayList<Repos>();
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0;i<reposList.size();i++)
+		{
+			Repos repos = reposList.get(i);
+			printObject("repos",repos);
+			ReposAuth reposAuth = reposAuthHashMap.get(repos.getId());
+			printObject("reposAuth",reposAuth);
+			if(reposAuth != null && reposAuth.getAccess()!=null && reposAuth.getAccess().equals(1))
+			{
+				resultList.add(repos);
+			}
+		}
+		
+		return resultList;
+	}
+	
+	//获取用户的仓库权限设置
+	private HashMap<Integer, ReposAuth> getUserReposAuthHashMap(Integer userId) {
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setUserId(userId);
+		List <ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
+		printObject("getUserReposAuthHashMap() userID[" + userId +"] reposAuthList:", reposAuthList);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;
+	}
+	
 	//获取Parentpath: 如果是File则返回其parentPath，如果是Directory则返回全路径
 	protected String getParentPath(Integer id)
 	{

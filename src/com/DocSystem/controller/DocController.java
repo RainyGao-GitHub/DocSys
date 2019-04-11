@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -1407,9 +1408,14 @@ public class DocController extends BaseController{
 		return true;
 	}
 
-	/* 文件搜索与排序  */
+	/* 文件搜索与排序 
+	 * reposId: 在指定的仓库下搜索，如果为空表示搜索所有可见仓库下的文件
+	 * pDocId: 在仓库指定的目录下搜索，如果为空表示搜索整个仓库（对默认类型仓库有效）
+	 * parentPath: 在仓库指定的目录下搜索，如果为空表示搜索整个仓库（对文件类型仓库有效）
+	 * searchWord: 支持文件名、文件内容和备注搜索，关键字可以支持空格分开 
+	*/
 	@RequestMapping("/searchDoc.do")
-	public void searchDoc(HttpServletResponse response,HttpSession session,String searchWord,String sort,Integer reposId,Integer pDocId){
+	public void searchDoc(Integer reposId,Integer pDocId, String parentPath, String searchWord,String sort,HttpServletResponse response,HttpSession session){
 		System.out.println("searchDoc searchWord: " + searchWord + " sort:" + sort);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1419,48 +1425,116 @@ public class DocController extends BaseController{
 			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
 			return;
-			
-		}else{
-			HashMap<String, Object> params = new HashMap<String, Object>();
-			params.put("reposId", reposId);	//reposId为空则search所有仓库下的文件
-			params.put("pDocId", pDocId);	//pDocId为空则search仓库下所有文件
-					
-			if(sort!=null&&sort.length()>0)
-			{
-				List<Map<String, Object>> sortList = GsonUtils.getMapList(sort);
-				params.put("sortList", sortList);
-			}
-			
-			//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
-			if(searchWord!=null&&!"".equals(searchWord)){
-				try {
-					params.put("name", searchWord);
-					List<String> idList = LuceneUtil2.fuzzySearch(searchWord, "doc");
-		        	for(int i=0; i < idList.size(); i++)
-		        	{
-		        		System.out.println(idList.get(i));
-		        	}
-		        	
-					List<String> ids = new ArrayList<String>();
-					for(String s:idList){
-						String[] tmp = s.split(":");
-						ids.add(tmp[0]);
-					}
-					params.put("ids", ids.toString().replace("[", "").replace("]", ""));
-					System.out.println(idList.toString());
-				} catch (Exception e) {
-					System.out.println("LuceneUtil2.search 异常");
-					e.printStackTrace();
-				}
-			}else{
-				params.put("name", "");
-			}
-			
-			//根据params参数查询docList
-			List<Doc> list = reposService.queryDocList(params);
-			rt.setData(list);
 		}
+
+		List<Repos> reposList = new ArrayList<Repos>();
+		if(reposId == null || reposId == -1)
+		{
+			//Do search all AccessableRepos
+			reposList = getAccessableReposList(login_user.getId());
+			pDocId = 0;
+			parentPath = "";
+		}
+		else
+		{
+			Repos repos = reposService.getRepos(reposId);
+			reposList.add(repos);
+		}
+		
+		List<Doc> searchResult = new ArrayList<Doc>();
+		for(int i=0; i< reposList.size(); i++)
+		{
+			Repos queryRepos = reposList.get(i);
+			List<Doc> result =  searchInRepos(queryRepos, pDocId, parentPath, searchWord, sort);
+			if(result != null && result.size() > 0)
+			{
+				searchResult.addAll(result);
+			}
+		}
+		
+		rt.setData(searchResult);
 		writeJson(rt, response);
+	}
+
+	private List<Doc> searchInRepos(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			return searchInReposDB(repos, pDocId, parentPath, searchWord, sort);
+		case 2:
+			return searchInReposFS(repos, pDocId, parentPath, searchWord, sort);
+		case 3:
+			return searchInReposSVN(repos, pDocId, parentPath, searchWord, sort);
+		case 4:
+			return searchInReposGIT(repos, pDocId, parentPath, searchWord, sort);
+		}
+		return null;
+	}
+
+	private List<Doc> searchInReposGIT(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> searchInReposSVN(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> searchInReposFS(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> searchInReposDB(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
+		HashMap<String, Object> params = new HashMap<String, Object>();
+		params.put("reposId", repos.getId());
+		params.put("pDocId", pDocId);
+					
+		if(sort!=null&&sort.length()>0)
+		{
+			List<Map<String, Object>> sortList = GsonUtils.getMapList(sort);
+			params.put("sortList", sortList);
+		}
+			
+		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
+		if(searchWord!=null&&!"".equals(searchWord))
+		{
+			params.put("name", searchWord);
+			List<Document> luceneDocList = luceneSearch(repos, searchWord, parentPath);
+			
+			String docIds = "";
+			for(int i=0; i<luceneDocList.size(); i++)
+			{
+				Document luceneDoc = luceneDocList.get(i);
+				docIds += luceneDoc.get("docId");
+			}
+			params.put("ids", docIds);
+			System.out.println(docIds);
+		}
+		else
+		{
+			params.put("name", "");
+		}
+			
+		//根据params参数查询docList
+		List<Doc> list = reposService.queryDocList(params);
+		return list;
+	}
+
+	private List<Document> luceneSearch(Repos repos, String searchWord, String parentPath) 
+	{
+		String [] keyWords = searchWord.split(" ");
+		
+		List<Document> result = new ArrayList<Document>();
+		for(int i=0; i< keyWords.length; i++)
+		{
+			List<Document> list1 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos,true));
+			List<Document> list2 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos,false));
+		}
+		
+		return result;
 	}
 }
 	

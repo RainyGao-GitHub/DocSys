@@ -117,36 +117,44 @@ public class LuceneUtil2 {
      * @param docId:  docId of DocSys In DataBase 
      * @param content: 文件名、文件内容或备注内容
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
+	 * @return 
      */
     @SuppressWarnings("deprecation")
-	public static void addIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib) throws Exception {
-    	
+	public static boolean addIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib)
+    {	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("addIndex() content:" + content);
+		try {
     	
-    	Date date1 = new Date();
-    	Analyzer analyzer = new IKAnalyzer();
-    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
+	    	Date date1 = new Date();
+	    	Analyzer analyzer = new IKAnalyzer();
+	    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
-        IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_CURRENT, analyzer);
-        IndexWriter indexWriter = new IndexWriter(directory, config);
-
-        Document doc = new Document();
-        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc.add(new IntField("reposId", reposId, Store.YES));
-        doc.add(new Field("parentPath", parentPath, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc.add(new IntField("docId", docId, Store.YES));
-        doc.add(new TextField("content", content, Store.YES));
-        indexWriter.addDocument(doc);
-        
-        indexWriter.commit();
-        indexWriter.close();
-
-        Date date2 = new Date();
-        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        IndexWriterConfig config = new IndexWriterConfig(
+	                Version.LUCENE_CURRENT, analyzer);
+	        IndexWriter indexWriter = new IndexWriter(directory, config);
+	
+	        Document doc = new Document();
+	        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        doc.add(new IntField("reposId", reposId, Store.YES));
+	        doc.add(new Field("parentPath", parentPath, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        doc.add(new IntField("docId", docId, Store.YES));
+	        doc.add(new TextField("content", content, Store.YES));
+	        indexWriter.addDocument(doc);
+	        
+	        indexWriter.commit();
+	        indexWriter.close();
+	
+	        Date date2 = new Date();
+	        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
     }
 
 	/**
@@ -189,12 +197,12 @@ public class LuceneUtil2 {
 	         
 	        Date date2 = new Date();
 	        System.out.println("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
-		return true;
     }
     
     /**
@@ -222,12 +230,12 @@ public class LuceneUtil2 {
 	        
 	        Date date2 = new Date();
 	        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
-    	return true;
     }    
 
     /**
@@ -273,7 +281,6 @@ public class LuceneUtil2 {
 		try {
 				
 	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
-	        Analyzer analyzer = new IKAnalyzer();
 	        DirectoryReader ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
@@ -301,45 +308,55 @@ public class LuceneUtil2 {
      * @param docId: DocSys doc id
      * @param indexLib: 索引库名字
      */
-    public static List<String> getIdListForDoc(String hashId,String indexLib) throws Exception {
-    	System.out.println("getIdListForDoc() docId:" + hashId + " indexLib:" + indexLib);
-    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+    public static List<String> getDocumentIdListByHashId(String hashId,String indexLib)
+    {
+    	System.out.println("getDocumentIdListByHashId() hashId:" + hashId + " indexLib:" + indexLib);
+    	try {
+    		Directory directory;
+			directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
 
-    	DirectoryReader ireader = DirectoryReader.open(directory);
-        IndexSearcher isearcher = new IndexSearcher(ireader);
-
-        TermQuery query = new TermQuery(new Term("hashId", hashId));	//精确查找
-
-        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-        List<String> res = new ArrayList<String>();
-        for (int i = 0; i < hits.length; i++) {
-            Document hitDoc = isearcher.doc(hits[i].doc);
-            res.add(hitDoc.get("id"));
-            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId"));
-        }
-        ireader.close();
-        directory.close();
-        return res;
+	    	DirectoryReader ireader = DirectoryReader.open(directory);
+	        IndexSearcher isearcher = new IndexSearcher(ireader);
+	
+	        TermQuery query = new TermQuery(new Term("hashId", hashId));	//精确查找
+	
+	        ScoreDoc[] hits = isearcher.search(query, null, 100).scoreDocs;
+	        List<String> res = new ArrayList<String>();
+	        for (int i = 0; i < hits.length; i++) {
+	            Document hitDoc = isearcher.doc(hits[i].doc);
+	            res.add(hitDoc.get("id"));
+	            System.out.println("searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId"));
+	        }
+	        ireader.close();
+	        directory.close();
+	        return res;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
     }
 
     //Delete All Index For Doc
-	public static void deleteIndexForDoc(String hashId, String indexLib) throws Exception {
+	public static void deleteIndexForRDoc(Integer reposId, String hashId)
+	{
+		String indexLib = getIndexLibName(reposId, true);
 		System.out.println("deleteIndexForDoc() hashId:" + hashId + " indexLib:" + indexLib);
-		List<String> res = getIdListForDoc(hashId, indexLib);
-		for(int i=0;i < res.size(); i++)
+		List<String> documentIdList = getDocumentIdListByHashId(hashId, indexLib);
+		for(int i=0;i < documentIdList.size(); i++)
 		{
-			deleteIndex(res.get(i),indexLib);
+			deleteIndex(documentIdList.get(i),indexLib);
 		}
 	}
 	
-	private static String getLuceneDocId(String hashId, int index) {
+	private static String buildDocumentId(String hashId, int index) {
 		return hashId + "-" + index;
 	}
 		
 	//Add Index For RDoc
 	public static void addIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
 	{		
-		String indexLib = "repos_" + reposId + "_RDoc";
+		String indexLib = getIndexLibName(reposId, true);
 		String localParentPath = reposRPath + parentPath;
 		String filePath = localParentPath + name;
 		
@@ -391,6 +408,51 @@ public class LuceneUtil2 {
 		}
 	}
 
+	//Update Index For RDoc
+	public static void updateIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
+	{
+		String indexLib = getIndexLibName(reposId, true);
+		String localParentPath = reposRPath + parentPath;
+		String filePath = localParentPath + name;
+		
+		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
+
+		deleteIndexForRDoc(reposId,hashId);
+		
+		addIndexForRDoc(reposId, reposRPath, parentPath, name, hashId, docId);
+	}
+	
+	//Add Index For VDoc
+	public static boolean addIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
+	{
+		String indexLib = getIndexLibName(reposId,false);
+		
+		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
+		
+		return addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+	}
+		
+	//Update Index For RDoc
+	public static void updateIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
+	{
+		String indexLib = getIndexLibName(reposId,false);
+		
+		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
+		
+		try {
+			updateIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	//Delete Indexs For Virtual Doc
+	public static void deleteIndexForVDoc(String hashId, String indexLib) throws Exception {
+		System.out.println("deleteIndexForVDoc() hashId:" + hashId + " indexLib:" + indexLib);
+		deleteIndex(buildDocumentId(hashId,0), indexLib);
+	}
+
 	private static boolean addIndexForWord(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		try {
@@ -410,7 +472,7 @@ public class LuceneUtil2 {
     		doc.close();
     	    fis.close();
     		
-    	    addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+    	    addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
 		} catch (Exception e) {
     		e.printStackTrace();
     		return false;
@@ -436,7 +498,7 @@ public class LuceneUtil2 {
         	xdoc.close();
         	fis.close();
         	
-        	addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, str.toString().trim(), indexLib);
+        	addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, str.toString().trim(), indexLib);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -462,7 +524,7 @@ public class LuceneUtil2 {
             wb.close();
             is.close();
               
-            addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
 
         } catch(Exception e)
         {
@@ -487,7 +549,7 @@ public class LuceneUtil2 {
             workBook.close();
             is.close();
              
-            addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
         	e.printStackTrace();  
         	return false;
@@ -509,7 +571,7 @@ public class LuceneUtil2 {
             extractor.close();
             is.close();            
             
-            addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -529,7 +591,7 @@ public class LuceneUtil2 {
             extractor.close();  
             is.close();
             
-            addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, text.toString().trim(), indexLib);
         } catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -555,7 +617,7 @@ public class LuceneUtil2 {
 			document.close();
 			//System.out.println(content);     
 			
-			addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+			addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
 	   }
 	   catch(Exception e)
 	   {
@@ -600,7 +662,7 @@ public class LuceneUtil2 {
 				totalSize += bufSize;
 				if(bufSize >= 10485760)	//10MByte
 				{
-					addIndex(getLuceneDocId(hashId,chunkIndex), reposId, parentPath, name, hashId, docId, buffer.toString().trim(), indexLib);
+					addIndex(buildDocumentId(hashId,chunkIndex), reposId, parentPath, name, hashId, docId, buffer.toString().trim(), indexLib);
 					chunkIndex ++;
 					System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 					//Clear StringBuffer
@@ -611,7 +673,7 @@ public class LuceneUtil2 {
 		    }
 			if(bufSize > 0)
 			{
-				addIndex(getLuceneDocId(hashId,chunkIndex), reposId, parentPath, name, hashId, docId, buffer.toString().trim(), indexLib);
+				addIndex(buildDocumentId(hashId,chunkIndex), reposId, parentPath, name, hashId, docId, buffer.toString().trim(), indexLib);
 				chunkIndex ++;
 				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 			}
@@ -625,61 +687,16 @@ public class LuceneUtil2 {
 		}
 		return true;
 	}
-
-	//Update Index For RDoc
-	public static void updateIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
-	{
+	
+	private static String getIndexLibName(Integer reposId, boolean isRealDoc) {
 		String indexLib = "repos_" + reposId + "_RDoc";
-		String localParentPath = reposRPath + parentPath;
-		String filePath = localParentPath + name;
-		
-		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
-		try {
-			deleteIndexForDoc(hashId,indexLib);
-		} catch(Exception e) {
-			System.out.println("deleteIndexForRDoc Failed!");
-			e.printStackTrace();
+		if(isRealDoc)
+		{
+			indexLib = "repos_" + reposId + "_VDoc";
 		}
-		
-		addIndexForRDoc(reposId, reposRPath, parentPath, name, hashId, docId);
-	}
-	
-	
-	//Delete Indexs For Virtual Doc
-	public static void deleteIndexForVDoc(String hashId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForVDoc() hashId:" + hashId + " indexLib:" + indexLib);
-		deleteIndex(getLuceneDocId(hashId,0), indexLib);
+		return indexLib;
 	}
 
-	//Add Index For VDoc
-	public static void addIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
-	{
-		String indexLib = "repos_" + reposId + "_VDoc";
-		
-		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		try {
-			addIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-		
-	//Update Index For RDoc
-	public static void updateIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
-	{
-		String indexLib = "repos_" + reposId + "_VDoc";
-		
-		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		
-		try {
-			updateIndex(getLuceneDocId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
 	{
 		try {
