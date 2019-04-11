@@ -54,6 +54,7 @@ import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.DocSystem.common.BaseFunction;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
@@ -75,7 +76,7 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
  * （1）文件内容和备注内容，通过索引库进行查询（分别建库以便能够进行分类搜索）
  * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
-public class LuceneUtil2 {
+public class LuceneUtil2   extends BaseFunction{
 
 	// 保存路径
     private static String INDEX_DIR = getLucenePath();
@@ -337,123 +338,13 @@ public class LuceneUtil2 {
 		}
     }
 
-    //Delete All Index For Doc
-	public static void deleteIndexForRDoc(Integer reposId, String hashId)
-	{
-		String indexLib = getIndexLibName(reposId, true);
-		System.out.println("deleteIndexForDoc() hashId:" + hashId + " indexLib:" + indexLib);
-		List<String> documentIdList = getDocumentIdListByHashId(hashId, indexLib);
-		for(int i=0;i < documentIdList.size(); i++)
-		{
-			deleteIndex(documentIdList.get(i),indexLib);
-		}
-	}
-	
 	private static String buildDocumentId(String hashId, int index) {
 		return hashId + "-" + index;
 	}
-		
-	//Add Index For RDoc
-	public static void addIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
-	{		
-		String indexLib = getIndexLibName(reposId, true);
-		String localParentPath = reposRPath + parentPath;
-		String filePath = localParentPath + name;
-		
-		System.out.println("addIndexForRDoc() docId:" + docId + " filePath:" + filePath + name + " indexLib:" + indexLib);
-				
-		File file =new File(localParentPath,name);
-		if(file.length() == 0)
-		{
-			System.out.println("addIndexForRDoc() file  size is 0");
-			return;
-		}
 	
-		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
-		String fileSuffix = FileUtils2.getFileSuffix(name);
-		if(fileSuffix != null)
-		{
-			switch(fileSuffix)
-			{
-			case "doc":
-				addIndexForWord(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "docx":
-				addIndexForWord2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "xls":
-				addIndexForExcel(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "xlsx":
-				addIndexForExcel2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "ppt":
-				addIndexForPPT(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "pptx":
-				addIndexForPPT2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "pdf":
-				addIndexForPdf(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			case "txt":
-			case "TXT":
-			case "log":
-			case "LOG":
-			case "md":
-			case "MD":
-				addIndexForFile(reposId, parentPath, name, hashId, docId, filePath,indexLib);
-				break;
-			}
-		}
-	}
 
-	//Update Index For RDoc
-	public static void updateIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
-	{
-		String indexLib = getIndexLibName(reposId, true);
-		String localParentPath = reposRPath + parentPath;
-		String filePath = localParentPath + name;
-		
-		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
 
-		deleteIndexForRDoc(reposId,hashId);
-		
-		addIndexForRDoc(reposId, reposRPath, parentPath, name, hashId, docId);
-	}
-	
-	//Add Index For VDoc
-	public static boolean addIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
-	{
-		String indexLib = getIndexLibName(reposId,false);
-		
-		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		
-		return addIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
-	}
-		
-	//Update Index For RDoc
-	public static void updateIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
-	{
-		String indexLib = getIndexLibName(reposId,false);
-		
-		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		
-		try {
-			updateIndex(buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	//Delete Indexs For Virtual Doc
-	public static void deleteIndexForVDoc(String hashId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForVDoc() hashId:" + hashId + " indexLib:" + indexLib);
-		deleteIndex(buildDocumentId(hashId,0), indexLib);
-	}
-
-	private static boolean addIndexForWord(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForWord(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		try {
 			StringBuffer content = new StringBuffer("");// 文档内容
@@ -480,7 +371,7 @@ public class LuceneUtil2 {
     	return true;		
 	}
 
-	private static boolean addIndexForWord2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForWord2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		try {
 	    	
@@ -506,7 +397,7 @@ public class LuceneUtil2 {
     	return true;
 	}
 
-	private static boolean addIndexForExcel(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForExcel(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
         try {  
 	
@@ -535,7 +426,7 @@ public class LuceneUtil2 {
         return true;
 	}
 
-	private static boolean addIndexForExcel2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForExcel2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		try {  
 	        InputStream is = new FileInputStream(filePath);
@@ -557,9 +448,7 @@ public class LuceneUtil2 {
         return true;
 	}
 
-
-
-	private static boolean addIndexForPPT(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForPPT(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		try {
 			InputStream is = new FileInputStream(filePath);
@@ -579,7 +468,7 @@ public class LuceneUtil2 {
 		return true;
 	}
 
-	private static boolean addIndexForPPT2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForPPT2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
         try {  
 			InputStream is = new FileInputStream(filePath); 
@@ -599,7 +488,7 @@ public class LuceneUtil2 {
         return true;
 	}
 	
-	private static boolean addIndexForPdf(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForPdf(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		File pdfFile=new File(filePath);
 		String content = "";
@@ -627,7 +516,7 @@ public class LuceneUtil2 {
 	   return true;
 	}
 
-	private static boolean addIndexForFile(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForFile(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
 	{
 		try {
 			int lineCount = 0;
@@ -687,17 +576,8 @@ public class LuceneUtil2 {
 		}
 		return true;
 	}
-	
-	private static String getIndexLibName(Integer reposId, boolean isRealDoc) {
-		String indexLib = "repos_" + reposId + "_RDoc";
-		if(isRealDoc)
-		{
-			indexLib = "repos_" + reposId + "_VDoc";
-		}
-		return indexLib;
-	}
 
-	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
+	private static void readToBuffer(StringBuffer buffer, String filePath) throws Exception
 	{
 		try {
 			
@@ -718,34 +598,7 @@ public class LuceneUtil2 {
 		}		
 	}
 	
-	/**
-	 * 获取文件编码格式
-	 * @param filePath
-	 * @return UTF-8/Unicode/UTF-16BE/GBK
-	 * @throws Exception
-	 */
-	public static String getFileEncode(String filePath) throws Exception {
-        String charsetName = null;
-        try {
-            File file = new File(filePath);
-            CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
-            detector.add(new ParsingDetector(false));
-            detector.add(JChardetFacade.getInstance());
-            detector.add(ASCIIDetector.getInstance());
-            detector.add(UnicodeDetector.getInstance());
-            java.nio.charset.Charset charset = null;
-            charset = detector.detectCodepage(file.toURI().toURL());
-            if (charset != null) {
-                charsetName = charset.name();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
-        return charsetName;
-	}
-	
-	public static String readFile(String filePath) throws Exception {
+	private static String readFile(String filePath) throws Exception {
 	    StringBuffer sb = new StringBuffer();
 	    readToBuffer(sb, filePath);
 	    return sb.toString();

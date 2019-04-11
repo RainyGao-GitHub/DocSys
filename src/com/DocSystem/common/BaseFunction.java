@@ -53,11 +53,14 @@ import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 
+import info.monitorenter.cpdetector.io.ASCIIDetector;
+import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
+import info.monitorenter.cpdetector.io.JChardetFacade;
+import info.monitorenter.cpdetector.io.ParsingDetector;
+import info.monitorenter.cpdetector.io.UnicodeDetector;
 import util.Base64File;
 import util.Encrypt.MD5;
-import util.GitUtil.GITUtil;
 import util.SvnUtil.CommitAction;
-import util.SvnUtil.SVNUtil;
 @SuppressWarnings("rawtypes")
 public class BaseFunction{
 	
@@ -863,6 +866,33 @@ public class BaseFunction{
 	}
 	
 	/****************************** 文件操作相关接口 ***********************************/
+	/**
+	 * 获取文件编码格式
+	 * @param filePath
+	 * @return UTF-8/Unicode/UTF-16BE/GBK
+	 * @throws Exception
+	 */
+	public static String getFileEncode(String filePath) throws Exception {
+        String charsetName = null;
+        try {
+            File file = new File(filePath);
+            CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
+            detector.add(new ParsingDetector(false));
+            detector.add(JChardetFacade.getInstance());
+            detector.add(ASCIIDetector.getInstance());
+            detector.add(UnicodeDetector.getInstance());
+            java.nio.charset.Charset charset = null;
+            charset = detector.detectCodepage(file.toURI().toURL());
+            if (charset != null) {
+                charsetName = charset.name();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return charsetName;
+	}
+	
     public boolean compressExe(String srcPathName,String finalFile) {
     	File zipFile = new File(finalFile);	//finalFile
     	

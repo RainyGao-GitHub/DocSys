@@ -1530,8 +1530,8 @@ public class DocController extends BaseController{
 		List<Document> result = new ArrayList<Document>();
 		for(int i=0; i< keyWords.length; i++)
 		{
-			List<Document> list1 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos,true));
-			List<Document> list2 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos,false));
+			List<Document> list1 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos.getId(),true));
+			List<Document> list2 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos.getId(),false));
 		}
 		
 		return result;
