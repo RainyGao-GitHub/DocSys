@@ -3165,16 +3165,27 @@
    	function addDoc(name,type,content,parentNode,parentId,vid)
    	{
    		console.log("addDoc name:" + name + " type:" +  type + " content:" +  content + " parentNode:" +  parentNode + " vid:" +  vid);
+   		var parentPath = "";
+   		var level = 0;
+   		if(parentNode && parentNode != null)
+   		{
+   			level = parentNode.level + 1;
+   			parentPath = parentNode.path + parentNode.name + "/";
+   	   		
+   		}
+
     	$.ajax({
              url : "/DocSystem/Doc/addDoc.do",
              type : "post",
              dataType : "json",
              data : {
-             	name : name,
-             	content: content,
-                type : type, //文件类型
                 reposId : vid, 
-                parentId : parentId,
+				level: level, 
+				type : type, //文件类型
+	            parentId : parentId,
+                parentPath: parentPath,
+                docName : name,
+             	content: content,
              },
              success : function (ret) {
              	if( "ok" == ret.status && ret.data.id){
