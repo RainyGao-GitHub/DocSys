@@ -206,15 +206,6 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//Add Lucene IndexLib
-		if(createLucenIndexLib(repos,rt) == false)
-		{
-			deleteRepos(repos);			
-			writeJson(rt, response);	
-			return;			
-		}
-		
-		
 		//Init verRepos for RealDoc
 		if(initVerRepos(repos,true,rt) == false)
 		{
@@ -256,11 +247,6 @@ public class ReposController extends BaseController{
 		}
 		
 		writeJson(rt, response);	
-	}
-	
-	private boolean createLucenIndexLib(Repos repos, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 	//检查path1和path2是否互相包含
