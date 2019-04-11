@@ -261,6 +261,13 @@ public class BaseController  extends BaseFunction{
 		return VPath;
 	}
 	
+	protected static String getHashId(String path) 
+	{
+		String hashId = MD5.md5(path);
+		System.out.println("getHashId() " + hashId + " for " + path);
+		return hashId;
+	}
+	
 	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
@@ -1732,12 +1739,9 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}				
 		
-		if(type == 1)
-		{
-			//Update Lucene Index
-			String localDocRPath = reposRPath + dstParentPath + dstName;
-			updateIndexForRDoc(dstDocId,localDocRPath);
-		}
+		//Update Lucene Index
+		String localDocRPath = reposRPath + dstParentPath + dstName;
+		updateIndexForRDoc(reposId, dstDocId,localDocRPath);
 		
 		//content非空时才去创建虚拟文件目录
 		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
@@ -1756,7 +1760,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
 			}
-			addIndexForVDoc(dstDocId,dstDoc.getContent());
+			addIndexForVDoc(reposId, reposVPath, parentPath, name, docId);
 		}
 				
 		//copySubDocs
@@ -1804,12 +1808,12 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	protected void updateDocContent(Integer id,String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
+	protected void updateDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
 		Doc doc = null;
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			doc = lockDoc(id,1, 3600000, login_user,rt,false);
+			doc = lockDoc(docId,1, 3600000, login_user,rt,false);
 			if(doc== null)
 			{
 				unlock(); //线程锁
@@ -1824,7 +1828,7 @@ public class BaseController  extends BaseFunction{
 		
 		//只更新内容部分
 		Doc newDoc = new Doc();
-		newDoc.setId(id);
+		newDoc.setId(docId);
 		newDoc.setContent(content);
 		//System.out.println("before: " + content);
 		if(reposService.updateDoc(newDoc) == 0)
@@ -1835,8 +1839,9 @@ public class BaseController  extends BaseFunction{
 		
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
-		String parentPath = getParentPath(doc.getPid());
+		parentPath = getParentPath(doc.getPid());
 		String docVName = getDocVPath(parentPath, doc.getName());
+		String hashId = getHashId(parentPath+doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
@@ -1857,13 +1862,13 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Update Index For VDoc
-		updateIndexForVDoc(id,content);
+		updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
 		
 		//Delete tmp saved doc content
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		delFileOrDir(userTmpDir+docVName);
 		
-		if(unlockDoc(id,login_user,doc) == false)
+		if(unlockDoc(docId,login_user,doc) == false)
 		{
 			rt.setError("unlockDoc failed");	
 		}		
@@ -4530,9 +4535,11 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	//Add Index For RDoc
-	public static boolean addIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
+	public static boolean addIndexForRDoc(Integer reposId, Integer docId, String reposRPath, String parentPath, String name)
 	{		
 		String indexLib = getIndexLibName(reposId, true);
+		String hashId = getHashId(parentPath + name);
+		
 		String localParentPath = reposRPath + parentPath;
 		String filePath = localParentPath + name;
 		
@@ -4548,13 +4555,13 @@ public class BaseController  extends BaseFunction{
 		if(file.isDirectory())
 		{
 			System.out.println("addIndexForRDoc() isDirectory");
-			return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, "", indexLib);
+			return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
 		}
 		
 		if(file.length() == 0)
 		{
 			System.out.println("addIndexForRDoc() fileSize is 0");
-			return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, "", indexLib);
+			return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
 		}
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
@@ -4564,66 +4571,72 @@ public class BaseController  extends BaseFunction{
 			switch(fileSuffix)
 			{
 			case "doc":
-				return LuceneUtil2.addIndexForWord(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForWord(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "docx":
-				return LuceneUtil2.addIndexForWord2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForWord2007(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "xls":
-				return LuceneUtil2.addIndexForExcel(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForExcel(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "xlsx":
-				return LuceneUtil2.addIndexForExcel2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForExcel2007(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "ppt":
-				return LuceneUtil2.addIndexForPPT(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForPPT(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "pptx":
-				return LuceneUtil2.addIndexForPPT2007(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForPPT2007(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "pdf":
-				return LuceneUtil2.addIndexForPdf(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForPdf(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "txt":
 			case "TXT":
 			case "log":
 			case "LOG":
 			case "md":
 			case "MD":
-				return LuceneUtil2.addIndexForFile(reposId, parentPath, name, hashId, docId, filePath,indexLib);
+				return LuceneUtil2.addIndexForFile(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			}
 		}
 		return false;
 	}
 
 	//Update Index For RDoc
-	public static boolean updateIndexForRDoc(Integer reposId, String reposRPath, String parentPath, String name, String hashId, Integer docId)
+	public static boolean updateIndexForRDoc(Integer reposId, Integer docId, String reposRPath, String parentPath, String name)
 	{
 		String indexLib = getIndexLibName(reposId, true);
+		String hashId = getHashId(parentPath + name);
+		
 		String localParentPath = reposRPath + parentPath;
 		String filePath = localParentPath + name;
-		
 		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
 
 		deleteIndexForRDoc(reposId,hashId);
 		
-		return addIndexForRDoc(reposId, reposRPath, parentPath, name, hashId, docId);
+		return addIndexForRDoc(reposId, docId, reposRPath, parentPath, name);
 	}
 	
 	//Add Index For VDoc
-	public static boolean addIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
+	public boolean addIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name, String content)
 	{
 		String indexLib = getIndexLibName(reposId,false);
+		String hashId = getHashId(parentPath + name);
 		
 		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
 		
-		return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
+		return LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, content.toString().trim(), indexLib);
 	}
 		
 	//Update Index For RDoc
-	public static boolean updateIndexForVDoc(Integer reposId, String parentPath, String name, String hashId, Integer docId, String content)
+	public static boolean updateIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name, String content)
 	{
 		String indexLib = getIndexLibName(reposId,false);
+		String hashId = getHashId(parentPath + name);
 		
 		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
 		return LuceneUtil2.updateIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, parentPath, name, hashId, docId, content.toString().trim(), indexLib);
 	}
 	
 	//Delete Indexs For Virtual Doc
-	public static boolean deleteIndexForVDoc(String hashId, String indexLib) throws Exception {
+	public static boolean deleteIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name) throws Exception {
+		String indexLib = getIndexLibName(reposId,false);
+		String hashId = getHashId(parentPath + name);
+		
 		System.out.println("deleteIndexForVDoc() hashId:" + hashId + " indexLib:" + indexLib);
 		return LuceneUtil2.deleteIndex(LuceneUtil2.buildDocumentId(hashId,0), indexLib);
 	}

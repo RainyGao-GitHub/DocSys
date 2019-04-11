@@ -121,7 +121,7 @@ public class LuceneUtil2   extends BaseFunction{
 	 * @return 
      */
     @SuppressWarnings("deprecation")
-	public static boolean addIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib)
+	public static boolean addIndex(String id, Integer reposId,  Integer docId, String parentPath, String name, String hashId,String content, String indexLib)
     {	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("addIndex() content:" + content);
@@ -344,7 +344,7 @@ public class LuceneUtil2   extends BaseFunction{
 	
 
 
-	public static boolean addIndexForWord(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForWord(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
 		try {
 			StringBuffer content = new StringBuffer("");// 文档内容
@@ -371,7 +371,7 @@ public class LuceneUtil2   extends BaseFunction{
     	return true;		
 	}
 
-	public static boolean addIndexForWord2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForWord2007(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
 		try {
 	    	
@@ -397,7 +397,7 @@ public class LuceneUtil2   extends BaseFunction{
     	return true;
 	}
 
-	public static boolean addIndexForExcel(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForExcel(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
         try {  
 	
@@ -426,7 +426,7 @@ public class LuceneUtil2   extends BaseFunction{
         return true;
 	}
 
-	public static boolean addIndexForExcel2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForExcel2007(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
 		try {  
 	        InputStream is = new FileInputStream(filePath);
@@ -448,7 +448,7 @@ public class LuceneUtil2   extends BaseFunction{
         return true;
 	}
 
-	public static boolean addIndexForPPT(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForPPT(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
 		try {
 			InputStream is = new FileInputStream(filePath);
@@ -468,7 +468,7 @@ public class LuceneUtil2   extends BaseFunction{
 		return true;
 	}
 
-	public static boolean addIndexForPPT2007(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForPPT2007(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
         try {  
 			InputStream is = new FileInputStream(filePath); 
@@ -488,7 +488,7 @@ public class LuceneUtil2   extends BaseFunction{
         return true;
 	}
 	
-	public static boolean addIndexForPdf(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForPdf(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
 		File pdfFile=new File(filePath);
 		String content = "";
@@ -516,7 +516,7 @@ public class LuceneUtil2   extends BaseFunction{
 	   return true;
 	}
 
-	public static boolean addIndexForFile(Integer reposId, String parentPath, String name, String hashId, Integer docId, String filePath, String indexLib)
+	public static boolean addIndexForFile(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
 	{
 		try {
 			int lineCount = 0;
