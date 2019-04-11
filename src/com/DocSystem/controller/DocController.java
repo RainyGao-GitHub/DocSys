@@ -91,6 +91,13 @@ public class DocController extends BaseController{
 		
 		//检查用户是否有权限新增文件
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		if(checkUserAddRight(rt,login_user.getId(),parentId,repos) == false)
 		{
 			writeJson(rt, response);	
@@ -124,6 +131,12 @@ public class DocController extends BaseController{
 		
 		String commitMsg = "User Feeback by " + name;
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		addDoc(repos, -1, 1, parentId, parentPath, name, content, null, 0, "", null,null,null,commitMsg,commitUser,login_user,rt);
 		
@@ -173,9 +186,11 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		
 		Repos repos = reposService.getRepos(reposId);
-		if(repos.getType() != 1)
+		if(repos == null)
 		{
-			parentId = 0;	//only check the repos Auth
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//检查用户是否有权限新增文件
@@ -208,10 +223,19 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		rt.setMsgData("0");
 		String fileChunkName = docName + "_" + chunkIndex;
-		Repos repos = reposService.getRepos(reposId);
+		
+		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		String chunkParentPath = userTmpDir;
 		String chunkFilePath = chunkParentPath + fileChunkName;
@@ -264,9 +288,11 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
-		if(repos.getType() != 1)
+		if(repos == null)
 		{
-			parentId = 0;
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//检查登录用户的权限
@@ -421,6 +447,12 @@ public class DocController extends BaseController{
 		}
 
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//检查用户是否有权限新增文件
 		if(uploadType == 0)	//0: add  1: update
@@ -569,8 +601,8 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer id,String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("renameDoc id: " + id + " parentPath: " + parentPath+ " name: " + name+ " newname: " + newname);
+	public void renameDoc(Integer reposId, Integer docId, Integer parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("renameDoc reposId: " + reposId + " parentPath: " + parentPath+ " name: " + name+ " newname: " + newname);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -582,63 +614,24 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		//get doc
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
 		{
-			rt.setError("文件不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！");
 			writeJson(rt, response);			
-			return;			
+			return;
 		}
 		
-		Repos repos = reposService.getRepos(doc.getVid());
-		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),id,repos) == false)
+		if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		//开始更改名字了
-		Integer reposId = doc.getVid();
-		Integer parentId = doc.getPid();
+		renameDoc(repos, docId, parentId, parentPath, name, newname, commitMsg,commitUser,login_user,rt);
 		
-		switch(repos.getType())
-		{
-		case 1:
-			renameDoc(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
-			break;
-		case 2:
-			renameDocInFS(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
-			break;
-		case 3:
-			renameDocInSVN(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
-			break;
-		case 4:
-			renameDocInGIT(id,name, newname,reposId,parentId, parentPath,commitMsg,commitUser,login_user,rt);
-			break;
-		
-		}
 		writeJson(rt, response);	
-	}
-	
-	private void renameDocInGIT(Integer id, String name, String newname, Integer reposId, Integer parentId,
-			String parentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void renameDocInSVN(Integer id, String name, String newname, Integer reposId, Integer parentId,
-			String parentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void renameDocInFS(Integer id, String name, String newname, Integer reposId, Integer parentId,
-			String parentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/****************   move a Document ******************/
@@ -709,6 +702,12 @@ public class DocController extends BaseController{
 		}
 	
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 				
 		//检查用户是否有目标目录权限新增文件
 		if(checkUserAddRight(rt,login_user.getId(),dstPid,repos) == false)
@@ -751,6 +750,12 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//检查用户是否有权限编辑文件
 		if(checkUserEditRight(rt,login_user.getId(),id, repos) == false)
@@ -778,6 +783,13 @@ public class DocController extends BaseController{
 		}
 				
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		String docVName = getDocVPath(parentPath,name);
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
@@ -793,7 +805,16 @@ public class DocController extends BaseController{
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(Integer reposId,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		switch(repos.getType())
 		{
 		case 1:
@@ -879,6 +900,12 @@ public class DocController extends BaseController{
 		
 		//虚拟文件下载
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//get userTmpDir
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
@@ -908,6 +935,12 @@ public class DocController extends BaseController{
 		
 		//get reposInfo to 
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//URL was encode by EncodeURI, so just decode it here
 		docName = new String(docName.getBytes("ISO8859-1"),"UTF-8");  
@@ -973,7 +1006,15 @@ public class DocController extends BaseController{
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer reposId, Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
+		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		switch(repos.getType())
 		{
 		case 1:
@@ -1121,7 +1162,16 @@ public class DocController extends BaseController{
 	@RequestMapping("/getDoc.do")
 	public void getDoc(Integer reposId, Integer docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		ReturnAjax rt = new ReturnAjax();
+		
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		switch(repos.getType())
 		{
 		case 1:
@@ -1217,6 +1267,12 @@ public class DocController extends BaseController{
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//检查用户是否有权限新增文件
 		if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
@@ -1455,7 +1511,17 @@ public class DocController extends BaseController{
 		else
 		{
 			Repos repos = reposService.getRepos(reposId);
-			reposList.add(repos);
+			if(repos != null)
+			{
+				reposList.add(repos);
+			}
+		}
+		
+		if(reposList == null)
+		{
+			System.out.println("searchDoc reposList is null");
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		List<Doc> searchResult = new ArrayList<Doc>();

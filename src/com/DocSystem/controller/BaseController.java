@@ -1426,8 +1426,47 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层renameDoc接口
-	protected void renameDoc(Integer docId, String name, String newname,Integer reposId,Integer parentId, String parentPath, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+	protected void renameDoc(Repos repos, Integer docId, Integer parentId, String parentPath, String name, String newname, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			renameDoc_DB(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			break;
+		case 2:
+			renameDoc_FS(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			break;
+		case 3:
+			renameDoc_SVN(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			break;
+		case 4:
+			renameDoc_GIT(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			break;			
+		}
+	}
+	
+	private void renameDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String name,
+			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void renameDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String name,
+			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void renameDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String name,
+			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	protected void renameDoc_DB(Repos repos, Integer docId, Integer parentId, String parentPath, String name, String newname, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+	{
 		
 		Doc doc = null;
 		synchronized(syncLock)
@@ -1444,35 +1483,32 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
 		String reposRPath = getReposRealPath(repos);
-		parentPath = getParentPath(parentId);
-		String oldname = doc.getName();
 		
 		//修改实文件名字	
-		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname,doc.getType(),rt) == false)
+		if(moveRealDoc(reposRPath,parentPath,name,parentPath,newname,doc.getType(),rt) == false)
 		{
 			if(unlockDoc(docId,login_user,doc) == false)
 			{
-				rt.setError(oldname + " renameRealDoc失败！ and unlockDoc " + docId +" Failed！");
+				rt.setError(name + " renameRealDoc失败！ and unlockDoc " + docId +" Failed！");
 				return;
 			}
 			else
 			{
-				rt.setError(oldname + " renameRealDoc失败！");
+				rt.setError(name + " renameRealDoc失败！");
 				return;
 			}
 		}
 		else
 		{
 			//commit to history db
-			if(verReposRealDocMove(repos,parentPath,oldname,parentPath,newname,doc.getType(),commitMsg,commitUser,rt) == false)
+			if(verReposRealDocMove(repos,parentPath,name,parentPath,newname,doc.getType(),commitMsg,commitUser,rt) == false)
 			{
 				//我们假定版本提交总是会成功，因此报错不处理
 				System.out.println("renameDoc() svnRealDocMove Failed");
 				String MsgInfo = "svnRealDocMove Failed";
 				
-				if(moveRealDoc(reposRPath,parentPath,newname,parentPath,oldname,doc.getType(),rt) == false)
+				if(moveRealDoc(reposRPath,parentPath,newname,parentPath,name,doc.getType(),rt) == false)
 				{
 					MsgInfo += " and moveRealDoc Back Failed";
 				}
@@ -1501,7 +1537,7 @@ public class BaseController  extends BaseFunction{
 		
 		//更新DocVPath
 		String reposVPath = getReposVirtualPath(repos);
-		updateDocVPath(repos, doc, reposVPath, parentPath, oldname, parentPath, newname, commitMsg, commitUser, rt);
+		updateDocVPath(repos, doc, reposVPath, parentPath, name, parentPath, newname, commitMsg, commitUser, rt);
 		
 		//unlock doc
 		if(unlockDoc(docId,login_user,doc) == false)
