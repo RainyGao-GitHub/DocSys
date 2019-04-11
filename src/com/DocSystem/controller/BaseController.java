@@ -10,6 +10,9 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,6 +61,7 @@ import com.alibaba.fastjson.JSON;
 import util.Base64File;
 import util.Encrypt.MD5;
 import util.GitUtil.GITUtil;
+import util.GitUtil.GitEntry;
 import util.SvnUtil.CommitAction;
 import util.SvnUtil.SVNUtil;
 @SuppressWarnings("rawtypes")
@@ -67,6 +71,487 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	protected UserServiceImpl userService;
 
+	/*************************** 路径相关接口 ********************************/
+	//获取Parentpath: 如果是File则返回其parentPath，如果是Directory则返回全路径
+	protected String getParentPath(Integer id)
+	{
+		String parentPath = "";
+		Doc doc = reposService.getDocInfo(id); //获取当前doc的信息
+		if(doc != null)
+		{
+			if(doc.getType() == 1)
+			{
+				parentPath = getParentPath(doc.getPid()) + doc.getName() + "/";
+			}
+			else
+			{
+				parentPath = getParentPath(doc.getPid());				
+			}
+		}
+		return parentPath;
+	}	
+	
+	//获取默认的仓库根路径
+	protected String getDefaultReposRootPath() {
+		String path = null;
+		
+		path = ReadProperties.read("docSysConfig.properties", "defaultReposRootPath");
+	    if(path == null || "".equals(path))
+	    {
+			if(isWinOS())
+			{  
+				path = "C:/DocSysReposes/";
+			}
+			else
+			{
+				path = "/DocSysReposes/";
+			}
+	    }
+	    else
+	    {
+	    	path = localDirPathFormat(path);
+	    }
+	    
+	    File dir = new File(path);
+		if(dir.exists() == false)
+		{
+			System.out.println("getDefaultReposRootPath() defaultReposRootPath:" + path + " not exists, do create it!");
+			if(dir.mkdirs() == false)
+			{
+				System.out.println("getDefaultReposRootPath() Failed to create dir:" + path);
+			}
+		}	 
+	    
+		return path;
+	}
+	
+	//正确格式化仓库根路径
+	protected String dirPathFormat(String path) {
+		//如果传入的Path没有带/,给他加一个
+		if(path.isEmpty())
+		{
+			return path;
+		}
+		
+		String endChar = path.substring(path.length()-1, path.length());
+		if(!endChar.equals("/"))	
+		{
+			path = path + "/";
+		}
+		return path;
+	}
+
+	//格式化本地路径
+	protected String localDirPathFormat(String path) {
+		if(path.isEmpty())
+		{
+			return path;
+		}
+
+		path = path.replace('\\','/');
+		
+		String [] paths = path.split("/");
+		
+		char startChar = path.charAt(0);
+		if(startChar == '/')	
+		{
+			if(isWinOS())
+			{
+				path = "C:/" + buildPath(paths);
+			}
+			else
+			{
+				path = "/" + buildPath(paths);
+			}
+		}
+		else
+		{
+			if(isWinOS())
+			{
+				if(isWinDiskStr(paths[0]))
+				{
+					paths[0] = paths[0].toUpperCase();
+					path = buildPath(paths);					
+				}
+				else
+				{
+					path = "C:/" + buildPath(paths);
+				}
+			}
+			else
+			{
+				path = "/" + buildPath(paths);
+			}
+		}	
+
+		return path;
+	}
+	
+	private String buildPath(String[] paths) {
+		String path = "";
+		for(int i=0; i<paths.length; i++)
+		{
+			String subPath = paths[i];
+			if(!subPath.isEmpty())
+			{
+				path = path + subPath + "/";
+			}
+		}
+		return path;
+	}
+	
+	//系统日志所在的目录
+	protected String getSystemLogParentPath() {
+		String path = "";		
+		path = ReadProperties.read("docSysConfig.properties", "SystemLogParentPath");
+	    if(path == null || "".equals(path))
+	    {
+			if(isWinOS()){  
+				path = "C:/xampp/tomcat/logs/";
+			}
+			else
+			{
+				path = "/var/lib/tomcat7/logs/";	//Linux系统放在  /data	
+			}
+	    }    
+		return path;
+	}
+	
+	//系统日志的名字，可以是目录或文件
+	protected String getSystemLogFileName() {
+		String name = "";
+		
+		name = ReadProperties.read("docSysConfig.properties", "SystemLogFileName");
+	    if(name == null || "".equals(name))
+	    {
+			name = "catalina.log";
+	    }	    
+		return name;
+	}
+	
+	protected String getReposPath(Repos repos) {
+		String path = repos.getPath();
+		return path + repos.getId() + "/";
+	}
+	
+	//获取仓库的实文件的本地存储根路径
+	protected String getReposRealPath(Repos repos)
+	{
+		if(repos.getType() == 2)
+		{
+			return repos.getRealDocPath();
+		}
+		String reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
+		System.out.println("getReposRealPath() " + reposRPath);
+		return reposRPath;
+	}
+	
+	//获取仓库的虚拟文件的本地存储根路径
+	protected String getReposVirtualPath(Repos repos)
+	{
+		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
+		System.out.println("getReposVirtualPath() " + reposVPath);
+		return reposVPath;
+	}
+	
+	protected String getDocVPath(String parentPath, String docName) 
+	{
+		String VPath = MD5.md5(parentPath) + "_" + docName;
+		System.out.println("getDocVPath() " + VPath + " for " + parentPath + docName);
+		return VPath;
+	}
+	
+	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
+	protected String getReposUserTmpPath(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
+		createDir(userTmpDir);
+		return userTmpDir;
+	}
+	
+	//WebTmpPath was accessable for web
+	protected String getWebUserTmpPath(User login_user) {
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        
+        String webUserTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/" + login_user.getId() + "/";
+        System.out.println("getWebUserTmpPath() webUserTmpPath" + webUserTmpPath);
+		return webUserTmpPath;
+	}
+	
+	//WebTmpPath was 
+	protected String getWebTmpPath() {
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        
+        String webTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/";
+        System.out.println("getWebTmpPath() webTmpPath" + webTmpPath);
+		return webTmpPath;
+	}
+	
+	//获取本地仓库默认存储位置（相对于仓库的存储路径）
+	protected String getDefaultLocalVerReposPath(String path) {
+		String localSvnPath = path + "DocSysVerReposes/";
+		return localSvnPath;
+	}
+	
+	protected String getLocalVerReposURI(Repos repos, boolean isRealDoc) {
+		String localVerReposURI = null;
+
+		Integer verCtrl = null;
+		String localSvnPath = null;
+
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+			localSvnPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+
+		String reposName = getVerReposName(repos,isRealDoc);
+		
+		if(verCtrl == 1)
+		{
+			localVerReposURI = "file:///" + localSvnPath + reposName;
+		}
+		else
+		{
+			localVerReposURI = null;
+			
+		}
+		return localVerReposURI;
+	}
+	
+	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
+		String localVerReposPath = null;
+		
+		String localSvnPath = null;
+		if(isRealDoc)
+		{
+			localSvnPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+		
+		localSvnPath = dirPathFormat(localSvnPath);
+
+		String reposName = getVerReposName(repos,isRealDoc);
+		
+		localVerReposPath = localSvnPath + reposName + "/";
+		return localVerReposPath;
+	}
+
+	protected String getVerReposName(Repos repos,boolean isRealDoc) {
+		String reposName = null;
+		
+		Integer id = repos.getId();
+		if(isRealDoc)
+		{
+			Integer verCtrl = repos.getVerCtrl();
+			if(verCtrl == 1)
+			{
+				reposName = id + "_SVN_RRepos";
+			}
+			else if(verCtrl == 2)
+			{ 
+				if(repos.getIsRemote() == 0)
+				{
+					reposName = id + "_GIT_RRepos";
+				}
+				else
+				{
+					reposName = id + "_GIT_RRepos_Remote";					
+				}
+			}
+		}
+		else
+		{
+			Integer verCtrl = repos.getVerCtrl1();			
+			if(verCtrl == 1)
+			{
+				reposName = id + "_SVN_VRepos";
+			}
+			else if(verCtrl == 2)
+			{
+				if(repos.getIsRemote1() == 0)
+				{
+					reposName = id + "_GIT_VRepos";
+				}
+				else
+				{
+					reposName = id + "_GIT_VRepos_Remote";					
+				}
+			}
+		}
+		return reposName;
+	}
+	
+	/******************************* 文件下载接口 *********************************************/
+	protected void sendDataToWebPage(String file_name, byte[] data, HttpServletResponse response, HttpServletRequest request)  throws Exception{ 
+		//解决中文编码问题: https://blog.csdn.net/u012117531/article/details/54808960
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
+		{  
+			file_name = URLEncoder.encode(file_name, "UTF-8");  
+		}else{  
+			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+		}  
+		System.out.println("doGet file_name:" + file_name);
+		//解决空格问题
+		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+		
+		try {
+			//创建输出流
+			OutputStream out = response.getOutputStream();
+			out.write(data, 0, data.length);		
+			//关闭输出流
+			out.close();	
+		}catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("sendDataToWebPage() Exception");
+		}
+	}
+	
+	private int getLocalEntryType(String localParentPath, String entryName) {
+		
+		File entry = new File(localParentPath,entryName);
+		if(!entry.exists())
+		{
+			System.out.println("getLocalEntryType() Failed: " + localParentPath + entryName + " 不存在 ！");
+			return -1;
+		}	
+		
+		if(entry.isFile())
+		{
+			return 1;
+		}
+		else if(entry.isDirectory())
+		{
+			return 2;
+		}
+
+		System.out.println("getLocalEntryType() Failed: 未知文件类型！");
+		return -1;
+	}
+	
+	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request) throws Exception {
+		
+		int entryType = getLocalEntryType(localParentPath,targetName);
+
+		//For dir 
+		if(entryType == 2) //目录
+		{
+			//doCompressDir and save the zip File under userTmpDir
+			String zipFileName = targetName + ".zip";
+			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩目录失败！");
+				writeJson(rt, response);
+				return;
+			}
+			
+			sendFileToWebPage(tmpDir,zipFileName,rt,response, request); 
+			
+			//Delete zip file
+			delFile(tmpDir+zipFileName);
+		}
+		else	//for File
+		{
+			//Send the file to webPage
+			sendFileToWebPage(localParentPath,targetName,rt, response, request); 			
+		}
+	}
+	
+	protected void sendFileToWebPage(String localParentPath, String file_name,  ReturnAjax rt,HttpServletResponse response,HttpServletRequest request) throws Exception{
+		
+		String dstPath = localParentPath + file_name;
+
+		//检查文件是否存在
+		File file = new File(dstPath);
+		if(!file.exists()){
+			System.out.println("doGet() " + dstPath + " 不存在！");	
+			//request.setAttribute("message", "您要下载的资源已被删除！！");
+			//request.getRequestDispatcher("/message.jsp").forward(request, response);
+			rt.setError(dstPath + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		System.out.println("sendFileToWebPage() file_name befor convert:" + file_name);
+		
+		//解决中文编码问题
+		String userAgent = request.getHeader("User-Agent").toUpperCase();
+		if(userAgent.indexOf("MSIE")>0 || userAgent.indexOf("LIKE GECKO")>0)	//LIKE GECKO is for IE10
+		{  
+			file_name = URLEncoder.encode(file_name, "UTF-8");  
+			System.out.println("sendFileToWebPage() file_name after URL Encode:" + file_name);
+		}else{  
+			file_name = new String(file_name.getBytes("UTF-8"),"ISO8859-1");  
+			
+			
+			System.out.println("sendFileToWebPage() file_name after convert to ISO8859-1:" + file_name);
+		}
+		//解决空格问题（空格变加号和兼容性问题）
+		file_name = file_name.replaceAll("\\+", "%20").replaceAll("%28", "\\(").replaceAll("%29", "\\)").replaceAll("%3B", ";").replaceAll("%40", "@").replaceAll("%23", "\\#").replaceAll("%26", "\\&");
+		System.out.println("sendFileToWebPage() file_name:" + file_name);
+		
+		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
+
+		try {
+			//读取要下载的文件，保存到文件输入流
+			FileInputStream in = new FileInputStream(dstPath);
+			//创建输出流
+			OutputStream out = response.getOutputStream();
+			//创建缓冲区
+			byte buffer[] = new byte[1024];
+			int len = 0;
+			//循环将输入流中的内容读取到缓冲区当中
+			while((len=in.read(buffer))>0){
+				//输出缓冲区的内容到浏览器，实现文件下载
+				out.write(buffer, 0, len);
+			}
+			//关闭文件输入流
+			in.close();
+			//关闭输出流
+			out.close();
+		}catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("sendFileToWebPage() Exception");
+		}
+	}
+
+	private boolean doCompressDir(String srcParentPath, String dirName, String dstParentPath, String zipFileName,ReturnAjax rt) {
+		
+		//if dstDir not exists create it
+		File dstDir = new File(dstParentPath);
+		if(!dstDir.exists())
+		{
+			if(createDir(dstParentPath) == false)
+			{
+				System.out.println("doCompressDir() Failed to create:" + dstParentPath);	
+				rt.setMsgData("创建目录 " + dstParentPath + " 失败");
+				return false;
+			}
+		}
+		//开始压缩
+		if(compressExe(srcParentPath + dirName,dstParentPath + zipFileName) == true)
+		{
+			System.out.println("压缩完成！");	
+		}
+		else
+		{
+			System.out.println("doCompressDir()  压缩失败！");
+			rt.setMsgData("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/******************************  仓库与文件列表获取接口 ***************************************/
 	protected List<Repos> getAccessableReposList(Integer userId) {
 		System.out.println("getAccessableReposList() userId:" + userId);
 		
@@ -97,372 +582,158 @@ public class BaseController  extends BaseFunction{
 		return resultList;
 	}
 	
-	//获取用户的仓库权限设置
-	private HashMap<Integer, ReposAuth> getUserReposAuthHashMap(Integer userId) {
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setUserId(userId);
-		List <ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
-		printObject("getUserReposAuthHashMap() userID[" + userId +"] reposAuthList:", reposAuthList);
-		
-		if(reposAuthList == null || reposAuthList.size() == 0)
-		{
-			return null;
-		}
-		
-		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
-		return hashMap;
-	}
-	
-	//获取Parentpath: 如果是File则返回其parentPath，如果是Directory则返回全路径
-	protected String getParentPath(Integer id)
+	//获取子节点List in DataBase
+	protected List <Doc> getSubDocListFromDB(Repos repos, Integer pid)
 	{
-		String parentPath = "";
-		Doc doc = reposService.getDocInfo(id); //获取当前doc的信息
-		if(doc != null)
-		{
-			if(doc.getType() == 1)
-			{
-				parentPath = getParentPath(doc.getPid()) + doc.getName() + "/";
-			}
-			else
-			{
-				parentPath = getParentPath(doc.getPid());				
-			}
-		}
-		return parentPath;
-	}	
-	
-	protected boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			return true;
-		}
-		
-		DocAuth userDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
-		if(userDocAuth != null && userDocAuth.getIsAdmin() != null && userDocAuth.getIsAdmin() == 1)
-		{
-			return true;
-		}
-		return false;
+		Doc doc = new Doc();
+		doc.setPid(pid);
+		doc.setVid(repos.getId());
+		return reposService.getDocList(doc);
 	}
 	
-	protected boolean isAdminOfRepos(User login_user,Integer reposId) {
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			System.out.println("超级管理员");
-			return true;
-		}
-		
-		ReposAuth reposAuth = getUserReposAuth(login_user.getId(),reposId);
-		if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
-		{
-			return true;
-		}			
-		return false;
-	}
-	
-	
-	
-	//获取用户真正的仓库权限(已考虑了所在组以及任意用户权限)
-	public ReposAuth getUserDispReposAuth(Integer UserID,Integer ReposID)
+	//获取目录parentPath下的所有子节点
+	protected List <Doc> getSubDocListFromFS(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt)
 	{
-		ReposAuth reposAuth = getUserReposAuth(UserID,ReposID);
-		
-		String userName = getUserName(UserID);
-		if(reposAuth!=null)
-		{
-			reposAuth.setUserName(userName);
-		}
-		else
-		{
-			reposAuth = new ReposAuth();
-			//reposAuth.setUserId(UserID);
-			reposAuth.setUserName(userName);
-			//reposAuth.setReposId(ReposID);
-			//reposAuth.setIsAdmin(0);
-			//reposAuth.setAccess(0);
-			//reposAuth.setEditEn(0);
-			//reposAuth.setAddEn(0);
-			//reposAuth.setDeleteEn(0);
-			//reposAuth.setHeritable(0);	
-		}
-		return reposAuth;
+		String localParentPath = getReposRealPath(repos) + parentPath;
+		File dir = new File(localParentPath);
+    	if(false == dir.exists())
+    	{
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
+    		rt.setError( parentPath + " 不存在！");
+    		return null;
+    	}
+    	
+        //Go through the subEntries
+    	if(false == dir.isDirectory())
+    	{
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
+    		rt.setError( parentPath + " 不是目录！");
+    		return null;
+    	}
+ 	
+        //Get fileList and add it to docList
+    	List<Doc> docList = new ArrayList<Doc>();
+    	File[] tmp=dir.listFiles();
+    	for(int i=0;i<tmp.length;i++)
+    	{
+    		File subEntry = tmp[i];
+    		int subEntryType = subEntry.isDirectory()? 2: 1;
+    		String subEntryName = subEntry.getName();
+    		long lastModifyTime = getFileLastModifiedTime(subEntry);
+    		
+    		//Create Doc to save subEntry Info
+    		Doc subDoc = new Doc();
+    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		subDoc.setVid(repos.getId());
+    		subDoc.setPid(pid);
+       		subDoc.setId(subDocId);
+    		subDoc.setName(subEntryName);
+    		subDoc.setType(subEntryType);
+    		subDoc.setPath(parentPath);
+    		subDoc.setSize((int)subEntry.length());
+    		subDoc.setState(0);
+    		subDoc.setCreateTime(lastModifyTime);
+    		subDoc.setLatestEditTime(lastModifyTime);
+    		docList.add(subDoc);
+    	}
+    	return docList;
 	}
 	
-	public ReposAuth getUserReposAuth(Integer UserID,Integer ReposID)
-	{
-		System.out.println("getUserReposAuth() UserID:"+UserID);
-		ReposAuth qReposAuth = new ReposAuth();
-		qReposAuth.setUserId(UserID);
-		qReposAuth.setReposId(ReposID);
-		List<ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
-		if(reposAuthList == null || reposAuthList.size() == 0)
-		{
-			return null;
+	private long getFileLastModifiedTime(File file) {
+		// TODO Auto-generated method stub
+		try {
+			BasicFileAttributes bAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+			FileTime changeTime = bAttributes.lastModifiedTime();
+			return changeTime.toMillis();
+		} catch (Exception e) {
+			System.out.println("getFile ");
+		    e.printStackTrace();
 		}
-		
-		//reposAuth Init
-		ReposAuth reposAuth = reposAuthList.get(0);
-		Integer oldPriority = reposAuth.getPriority();
-		for(int i=1;i<reposAuthList.size();i++){
-			//Find the reposAuth with highest priority
-			ReposAuth tmpReposAuth = reposAuthList.get(i);
-			Integer newPriority = tmpReposAuth.getPriority();
-			if(newPriority > oldPriority)
-			{
-				reposAuth = tmpReposAuth;
-			}
-			else if(newPriority == oldPriority)
-			{
-				xorReposAuth(reposAuth,tmpReposAuth);
-			}
-		}
-		return reposAuth;
-	}
-	
-	
-	//应该考虑将获取Group、User的合并到一起
-	protected DocAuth getGroupDispDocAuth(Integer groupId,Integer docId, Integer reposId) {
-		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
-		DocAuth docAuth = getGroupDocAuth(groupId,docId,reposId);	//获取用户真实的权限
-		
-		 String groupName = getGroupName(groupId);
-		 Doc doc = getDocInfo(docId);
-		//转换成可显示的权限
-		if(docAuth == null)
-		{
-			docAuth = new DocAuth();
-			docAuth.setGroupId(groupId);
-			docAuth.setGroupName(groupName);
-			docAuth.setDocId(docId);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
-			docAuth.setReposId(reposId);
-		}
-		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
-		{
-			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(docId))
-			{
-				System.out.println("getGroupDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置groupId、groupName");
-				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
-			}
-			//修改信息
-			docAuth.setGroupId(groupId);
-			docAuth.setGroupName(groupName);
-			docAuth.setDocId(docId);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
-			docAuth.setReposId(reposId);
-		}
-		return docAuth;
+		return 0;
 	}
 
-	protected Doc getDocInfo(Integer docId) {
-		if(docId == 0)
+	private List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		switch(repos.getVerCtrl())
 		{
-			return null;
+		case 1: //SVN
+			return getSubDocListFromSVN(repos, pid, pLevel, parentPath, login_user, rt);
+		case 2: //GIT
+			return getSubDocListFromGIT(repos, pid, pLevel, parentPath, login_user, rt);
 		}
-		return reposService.getDocInfo(docId);
+		return null;
 	}
 
-	//获取用户的用于显示的docAuth
-	public DocAuth getUserDispDocAuth(Integer UserID,Integer DocID,Integer ReposID)
-	{
-		System.out.println("getUserDispDocAuth() UserID:"+UserID);
-		DocAuth docAuth = getUserDocAuth(UserID,DocID,ReposID);	//获取用户真实的权限
-		printObject("getUserDispDocAuth() docAuth:",docAuth);
+	private List<Doc>  getSubDocListFromGIT(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user,ReturnAjax rt) {
 		
-		//Get UserName
-		String UserName = getUserName(UserID);
-		Doc doc = getDocInfo(DocID);
-		
-		//转换成可显示的权限
-		if(docAuth == null)
+		GITUtil gitUtil = new GITUtil();
+		if(false == gitUtil.Init(repos, true, null))
 		{
-			docAuth = new DocAuth();
-			docAuth.setUserId(UserID);
-			docAuth.setUserName(UserName);
-			docAuth.setDocId(DocID);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
-			docAuth.setReposId(ReposID);
-		}
-		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
-		{
-			printObject("getUserDispDocAuth() docAuth:",docAuth);
-			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
-			{
-				System.out.println("getUserDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
-				docAuth.setId(null);	//clear docAuthID, so that we know this setting was not on user directly
-			}
-			
-			docAuth.setUserId(UserID);
-			docAuth.setUserName(UserName);
-			docAuth.setDocId(DocID);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
-			docAuth.setReposId(ReposID);
-		}
-		return docAuth;
-	}
-	
-	private String getGroupName(Integer groupId) {
-		UserGroup group = reposService.getGroupInfo(groupId);
-		if(group == null)
-		{
-			System.out.println("getGroupName() Group:" +groupId+ "not exists");
+			System.out.println("getSubDocListFromGIT() gitUtil.Init Failed");
 			return null;
 		}
-		return group.getName();
-	}
-	
-	protected String getUserName(Integer userId) {
-		if(userId == null)
+		
+		String revision = null;
+		
+		//Get list from verRepos
+		List<GitEntry> subEntryList =  gitUtil.getSubEntryList(parentPath, revision); 
+		List<Doc> docList = new ArrayList<Doc>();
+		for(int i=0; i < subEntryList.size(); i++)
 		{
-			return "";
-		}	
-		else if(userId == 0)
-		{
-			return "任意用户";
-		}
-		else
-		{
-			//GetUserInfo
-			User user = reposService.getUserInfo(userId);
-			if(user == null)
+			GitEntry subEntry = subEntryList.get(i);
+			String subEntryName = subEntry.getName();
+			Integer subEntryType = subEntry.getType();
+			if(subEntryType > 0)
 			{
-				System.out.println("getUserName() user:" +userId+ "not exists");
-				return null;
+				//Create Doc to save subEntry Info
+				Doc subDoc = new Doc();
+				int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+				subDoc.setVid(repos.getId());
+				subDoc.setPid(pid);
+				subDoc.setId(subDocId);
+				subDoc.setName(subEntryName);
+				subDoc.setType(subEntryType);
+				docList.add(subDoc);
 			}
-			return user.getName();
-		}
+    	}
+		return docList;
 	}
 
-	protected DocAuth getGroupDocAuth(Integer groupId,Integer docId, Integer reposId)
-	{
-		return getRealDocAuth(null, groupId, docId, reposId);
-	}
-	
-	protected DocAuth getUserDocAuth(Integer userId,Integer docId, Integer reposId) 
-	{
-		return getRealDocAuth(userId, null, docId, reposId);
-	}
-	
-	//Function:getUserDocAuth
-	protected DocAuth getRealDocAuth(Integer userId,Integer groupId,Integer docId, Integer reposId) 
-	{
-		System.out.println("getRealDocAuth() userId:"+userId + " groupId:"+ groupId + " docId:"+docId  + " reposId:"+reposId);
+	private List<Doc>  getSubDocListFromSVN(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
 		
-		//获取从docId到rootDoc的全路径，put it to docPathList
-		List<Integer> docIdList = new ArrayList<Integer>();
-		docIdList = getDocIdList(docId,docIdList);
-		if(docIdList == null || docIdList.size() == 0)
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, true, null))
 		{
-			return null;
-		}
-		printObject("getRealDocAuth() docIdList:",docIdList); 
-		
-		//Get UserDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = null;
-		if(userId != null)
-		{
-			docAuthHashMap = getUserDocAuthHashMap(userId,reposId);
-		}
-		else
-		{
-			docAuthHashMap = getGroupDocAuthHashMap(groupId,reposId);
-		}
-		
-		//go throug the docIdList to get the UserDocAuthFromHashMap
-		DocAuth parentDocAuth = null;
-		DocAuth docAuth = null;
-		int docPathDeepth = docIdList.size();
-		for(int i=(docPathDeepth-1);i>=0;i--)
-		{
-			Integer curDocId = docIdList.get(i);
-			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
-			docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
-			parentDocAuth = docAuth;
-		}		
-		return docAuth;
-	}
-
-	protected List<Integer> getDocIdList(Integer docId,List<Integer> docIdList) {
-		if(docId == null || docId == 0)
-		{
-			docIdList.add(0);
-			return docIdList;
-		}
-		
-		//If the doc exist
-		Doc doc = reposService.getDocInfo(docId);
-		if(doc != null)
-		{
-			docIdList.add(docId);
-			return getDocIdList(doc.getPid(),docIdList);
-		}
-		
-		System.out.println("getDocIdList() docId:" + docId + " is null");
-		return docIdList;
-	}
-	
-	protected HashMap<Integer,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
-	{
-		DocAuth docAuth = new DocAuth();
-		docAuth.setUserId(UserID);			
-		docAuth.setReposId(reposID);
-	
-		List <DocAuth> docAuthList = null;
-		if(UserID == 0)
-		{
-			docAuthList = reposService.getDocAuthForAnyUser(docAuth);
-		}
-		else
-		{
-			docAuthList = reposService.getDocAuthForUser(docAuth);
-		}
-		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
-		
-		if(docAuthList == null || docAuthList.size() == 0)
-		{
+			System.out.println("getSubDocListFromSVN() svnUtil.Init Failed");
 			return null;
 		}
 		
-		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
-		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
-		return hashMap;
-	}
-	
-	//获取组在仓库上所有doc的权限设置: 仅用于显示group的权限
-	protected HashMap<Integer,DocAuth> getGroupDocAuthHashMap(Integer GroupID,Integer reposID) 
-	{
-		DocAuth docAuth = new DocAuth();
-		docAuth.setGroupId(GroupID);
-		docAuth.setReposId(reposID);
-		List <DocAuth> docAuthList = reposService.getDocAuthForGroup(docAuth);
-		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] docAuthList:", docAuthList);
+		long revision = -1;
 		
-		if(docAuthList == null || docAuthList.size() == 0)
+		//Get list from verRepos
+		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntryList(parentPath, revision); 
+		List<Doc> docList = new ArrayList<Doc>();
+		for(int i=0; i < subEntryList.size(); i++)
 		{
-			return null;
-		}
-		
-		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
-		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
-		return hashMap;
+			SVNDirEntry subEntry = subEntryList.get(i);
+			String subEntryName = subEntry.getName();
+			Integer subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
+			if(subEntryType != 1 && subEntryType != 2)
+			{
+				continue;
+			}
+    		
+			//Create Doc to save subEntry Info
+    		Doc subDoc = new Doc();
+    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		subDoc.setVid(repos.getId());
+    		subDoc.setPid(pid);
+       		subDoc.setId(subDocId);
+    		subDoc.setName(subEntryName);
+    		subDoc.setType(subEntryType);
+    		docList.add(subDoc);
+    	}
+		return docList;
 	}
 		
 	/***************************Basic Functions For Driver Level  **************************/
@@ -2079,6 +2350,572 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
+
+	protected Doc getDocInfo(Integer docId) {
+		if(docId == 0)
+		{
+			return null;
+		}
+		return reposService.getDocInfo(docId);
+	}
+	
+	protected String getUserName(Integer userId) {
+		if(userId == null)
+		{
+			return "";
+		}	
+		else if(userId == 0)
+		{
+			return "任意用户";
+		}
+		else
+		{
+			//GetUserInfo
+			User user = reposService.getUserInfo(userId);
+			if(user == null)
+			{
+				System.out.println("getUserName() user:" +userId+ "not exists");
+				return null;
+			}
+			return user.getName();
+		}
+	}
+
+	
+	private String getGroupName(Integer groupId) {
+		UserGroup group = reposService.getGroupInfo(groupId);
+		if(group == null)
+		{
+			System.out.println("getGroupName() Group:" +groupId+ "not exists");
+			return null;
+		}
+		return group.getName();
+	}
+	
+
+	//获取用户的仓库权限设置
+	private HashMap<Integer, ReposAuth> getUserReposAuthHashMap(Integer userId) {
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setUserId(userId);
+		List <ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
+		printObject("getUserReposAuthHashMap() userID[" + userId +"] reposAuthList:", reposAuthList);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;
+	}
+	
+	protected boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			return true;
+		}
+		
+		DocAuth userDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
+		if(userDocAuth != null && userDocAuth.getIsAdmin() != null && userDocAuth.getIsAdmin() == 1)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	protected boolean isAdminOfRepos(User login_user,Integer reposId) {
+		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+		{
+			System.out.println("超级管理员");
+			return true;
+		}
+		
+		ReposAuth reposAuth = getUserReposAuth(login_user.getId(),reposId);
+		if(reposAuth != null && reposAuth.getIsAdmin() != null && reposAuth.getIsAdmin() == 1)
+		{
+			return true;
+		}			
+		return false;
+	}
+	
+	//获取用户真正的仓库权限(已考虑了所在组以及任意用户权限)
+	public ReposAuth getUserDispReposAuth(Integer UserID,Integer ReposID)
+	{
+		ReposAuth reposAuth = getUserReposAuth(UserID,ReposID);
+		
+		String userName = getUserName(UserID);
+		if(reposAuth!=null)
+		{
+			reposAuth.setUserName(userName);
+		}
+		else
+		{
+			reposAuth = new ReposAuth();
+			//reposAuth.setUserId(UserID);
+			reposAuth.setUserName(userName);
+			//reposAuth.setReposId(ReposID);
+			//reposAuth.setIsAdmin(0);
+			//reposAuth.setAccess(0);
+			//reposAuth.setEditEn(0);
+			//reposAuth.setAddEn(0);
+			//reposAuth.setDeleteEn(0);
+			//reposAuth.setHeritable(0);	
+		}
+		return reposAuth;
+	}
+	
+	public ReposAuth getUserReposAuth(Integer UserID,Integer ReposID)
+	{
+		System.out.println("getUserReposAuth() UserID:"+UserID);
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setUserId(UserID);
+		qReposAuth.setReposId(ReposID);
+		List<ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
+		if(reposAuthList == null || reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		//reposAuth Init
+		ReposAuth reposAuth = reposAuthList.get(0);
+		Integer oldPriority = reposAuth.getPriority();
+		for(int i=1;i<reposAuthList.size();i++){
+			//Find the reposAuth with highest priority
+			ReposAuth tmpReposAuth = reposAuthList.get(i);
+			Integer newPriority = tmpReposAuth.getPriority();
+			if(newPriority > oldPriority)
+			{
+				reposAuth = tmpReposAuth;
+			}
+			else if(newPriority == oldPriority)
+			{
+				xorReposAuth(reposAuth,tmpReposAuth);
+			}
+		}
+		return reposAuth;
+	}
+	
+	
+	//应该考虑将获取Group、User的合并到一起
+	protected DocAuth getGroupDispDocAuth(Integer groupId,Integer docId, Integer reposId) {
+		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
+		DocAuth docAuth = getGroupDocAuth(groupId,docId,reposId);	//获取用户真实的权限
+		
+		 String groupName = getGroupName(groupId);
+		 Doc doc = getDocInfo(docId);
+		//转换成可显示的权限
+		if(docAuth == null)
+		{
+			docAuth = new DocAuth();
+			docAuth.setGroupId(groupId);
+			docAuth.setGroupName(groupName);
+			docAuth.setDocId(docId);
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(reposId);
+		}
+		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
+		{
+			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(docId))
+			{
+				System.out.println("getGroupDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置groupId、groupName");
+				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
+			}
+			//修改信息
+			docAuth.setGroupId(groupId);
+			docAuth.setGroupName(groupName);
+			docAuth.setDocId(docId);
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(reposId);
+		}
+		return docAuth;
+	}
+	
+	//获取用户的用于显示的docAuth
+	public DocAuth getUserDispDocAuth(Integer UserID,Integer DocID,Integer ReposID)
+	{
+		System.out.println("getUserDispDocAuth() UserID:"+UserID);
+		DocAuth docAuth = getUserDocAuth(UserID,DocID,ReposID);	//获取用户真实的权限
+		printObject("getUserDispDocAuth() docAuth:",docAuth);
+		
+		//Get UserName
+		String UserName = getUserName(UserID);
+		Doc doc = getDocInfo(DocID);
+		
+		//转换成可显示的权限
+		if(docAuth == null)
+		{
+			docAuth = new DocAuth();
+			docAuth.setUserId(UserID);
+			docAuth.setUserName(UserName);
+			docAuth.setDocId(DocID);
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(ReposID);
+		}
+		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
+		{
+			printObject("getUserDispDocAuth() docAuth:",docAuth);
+			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
+			{
+				System.out.println("getUserDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
+				docAuth.setId(null);	//clear docAuthID, so that we know this setting was not on user directly
+			}
+			
+			docAuth.setUserId(UserID);
+			docAuth.setUserName(UserName);
+			docAuth.setDocId(DocID);
+			if(doc != null)
+			{
+				docAuth.setDocName(doc.getName());
+				docAuth.setDocPath(doc.getPath());
+			}
+			docAuth.setReposId(ReposID);
+		}
+		return docAuth;
+	}
+
+	protected DocAuth getGroupDocAuth(Integer groupId,Integer docId, Integer reposId)
+	{
+		return getRealDocAuth(null, groupId, docId, reposId);
+	}
+	
+	protected DocAuth getUserDocAuth(Integer userId,Integer docId, Integer reposId) 
+	{
+		return getRealDocAuth(userId, null, docId, reposId);
+	}
+	
+	//Function:getUserDocAuth
+	protected DocAuth getRealDocAuth(Integer userId,Integer groupId,Integer docId, Integer reposId) 
+	{
+		System.out.println("getRealDocAuth() userId:"+userId + " groupId:"+ groupId + " docId:"+docId  + " reposId:"+reposId);
+		
+		//获取从docId到rootDoc的全路径，put it to docPathList
+		List<Integer> docIdList = new ArrayList<Integer>();
+		docIdList = getDocIdList(docId,docIdList);
+		if(docIdList == null || docIdList.size() == 0)
+		{
+			return null;
+		}
+		printObject("getRealDocAuth() docIdList:",docIdList); 
+		
+		//Get UserDocAuthHashMap
+		HashMap<Integer,DocAuth> docAuthHashMap = null;
+		if(userId != null)
+		{
+			docAuthHashMap = getUserDocAuthHashMap(userId,reposId);
+		}
+		else
+		{
+			docAuthHashMap = getGroupDocAuthHashMap(groupId,reposId);
+		}
+		
+		//go throug the docIdList to get the UserDocAuthFromHashMap
+		DocAuth parentDocAuth = null;
+		DocAuth docAuth = null;
+		int docPathDeepth = docIdList.size();
+		for(int i=(docPathDeepth-1);i>=0;i--)
+		{
+			Integer curDocId = docIdList.get(i);
+			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
+			docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
+			parentDocAuth = docAuth;
+		}		
+		return docAuth;
+	}
+
+	protected List<Integer> getDocIdList(Integer docId,List<Integer> docIdList) {
+		if(docId == null || docId == 0)
+		{
+			docIdList.add(0);
+			return docIdList;
+		}
+		
+		//If the doc exist
+		Doc doc = reposService.getDocInfo(docId);
+		if(doc != null)
+		{
+			docIdList.add(docId);
+			return getDocIdList(doc.getPid(),docIdList);
+		}
+		
+		System.out.println("getDocIdList() docId:" + docId + " is null");
+		return docIdList;
+	}
+	
+	protected HashMap<Integer,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
+	{
+		DocAuth docAuth = new DocAuth();
+		docAuth.setUserId(UserID);			
+		docAuth.setReposId(reposID);
+	
+		List <DocAuth> docAuthList = null;
+		if(UserID == 0)
+		{
+			docAuthList = reposService.getDocAuthForAnyUser(docAuth);
+		}
+		else
+		{
+			docAuthList = reposService.getDocAuthForUser(docAuth);
+		}
+		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
+		
+		if(docAuthList == null || docAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
+		return hashMap;
+	}
+	
+	//获取组在仓库上所有doc的权限设置: 仅用于显示group的权限
+	protected HashMap<Integer,DocAuth> getGroupDocAuthHashMap(Integer GroupID,Integer reposID) 
+	{
+		DocAuth docAuth = new DocAuth();
+		docAuth.setGroupId(GroupID);
+		docAuth.setReposId(reposID);
+		List <DocAuth> docAuthList = reposService.getDocAuthForGroup(docAuth);
+		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] docAuthList:", docAuthList);
+		
+		if(docAuthList == null || docAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
+		return hashMap;
+	}
+	
+	protected Integer getAuthType(Integer userId, Integer groupId) {
+
+		if(userId == null)
+		{
+			if(groupId != null)
+			{
+				return 2;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		else if(userId > 0)
+		{
+			return 3; //权限类型：用户权限
+		}
+		else
+		{
+			if(groupId != null)
+			{
+				return 2;
+			}
+			return 1; //权限类型：任意用户权限
+		}
+	}
+	
+	protected Integer getPriorityByAuthType(Integer type) {
+		if(type == 3)
+		{
+			return 10;
+		}
+		else if(type == 2)
+		{
+			return 1;
+		}
+		else if(type ==1)
+		{
+			return 0;
+		}
+		return null;
+	}
+	
+	protected void xorReposAuth(ReposAuth auth, ReposAuth tmpAuth) {
+		if(tmpAuth.getIsAdmin()!=null && tmpAuth.getIsAdmin().equals(1))
+		{
+			auth.setIsAdmin(1);
+		}
+		if(tmpAuth.getAccess()!=null && tmpAuth.getAccess().equals(1))
+		{
+			auth.setAccess(1);
+		}
+		if(tmpAuth.getAddEn()!=null && tmpAuth.getAddEn().equals(1))
+		{
+			auth.setAddEn(1);
+		}
+		if(tmpAuth.getDeleteEn()!=null && tmpAuth.getDeleteEn().equals(1))
+		{
+			auth.setDeleteEn(1);
+		}
+		if(tmpAuth.getEditEn()!=null && tmpAuth.getEditEn().equals(1))
+		{
+			auth.setEditEn(1);
+		}
+		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
+		{
+			auth.setHeritable(1);
+		}	
+	}
+	
+	protected void xorDocAuth(DocAuth auth, DocAuth tmpAuth) {
+		if(tmpAuth.getIsAdmin()!=null && tmpAuth.getIsAdmin().equals(1))
+		{
+			auth.setIsAdmin(1);
+		}
+		if(tmpAuth.getAccess()!=null && tmpAuth.getAccess().equals(1))
+		{
+			auth.setAccess(1);
+		}
+		if(tmpAuth.getAddEn()!=null && tmpAuth.getAddEn().equals(1))
+		{
+			auth.setAddEn(1);
+		}
+		if(tmpAuth.getDeleteEn()!=null && tmpAuth.getDeleteEn().equals(1))
+		{
+			auth.setDeleteEn(1);
+		}
+		if(tmpAuth.getEditEn()!=null && tmpAuth.getEditEn().equals(1))
+		{
+			auth.setEditEn(1);
+		}
+		if(tmpAuth.getHeritable()!=null && tmpAuth.getHeritable().equals(1))
+		{
+			auth.setHeritable(1);
+		}	
+	}
+	
+	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
+	protected DocAuth getDocAuthFromHashMap(int docId, DocAuth parentDocAuth,HashMap<Integer,DocAuth> docAuthHashMap)
+	{
+		//System.out.println("getDocAuthFromHashMap() docId:" + docId);
+		if(docAuthHashMap == null)
+		{
+			return null;
+		}
+		
+		//For rootDoc parentDocAuth is useless
+		if(docId == 0)
+		{
+			DocAuth docAuth = docAuthHashMap.get(docId);
+			return docAuth;
+		}
+		
+		//Not root Doc, if parentDocAuth is null, return null
+		if(parentDocAuth == null)
+		{
+			System.out.println("getDocAuthFromHashMap() docId:" + docId + " parentDocAuth is null");
+			return null;
+		}
+		
+		//Not root Doc and parentDocAuth is set
+		Integer parentPriority = parentDocAuth.getPriority();
+		Integer parentHeritable = parentDocAuth.getHeritable();
+		DocAuth docAuth = docAuthHashMap.get(docId);
+		if(docAuth == null)
+		{
+			//设置为空，继承父节点权限
+			if(parentHeritable == null || parentHeritable == 0)
+			{
+				//不可继承
+				return null;
+			}
+			return parentDocAuth;
+		}
+		else
+		{
+			if(docAuth.getPriority() >= parentPriority)
+			{
+				//Use the docAuth
+				return docAuth;
+			}
+			else
+			{
+				//无效设置，则继承父节点权限
+				if(parentHeritable == null || parentHeritable == 0)
+				{
+					//不可继承
+					return null;
+				}
+				return parentDocAuth;
+			}
+		}
+	}
+		
+	protected HashMap<Integer,ReposAuth> BuildHashMapByReposAuthList(List<ReposAuth> reposAuthList) {
+		//去重并将参数放入HashMap
+		HashMap<Integer,ReposAuth> hashMap = new HashMap<Integer,ReposAuth>();
+		for(int i=0;i<reposAuthList.size();i++)
+		{
+			ReposAuth reposAuth = reposAuthList.get(i);
+			Integer reposId = reposAuth.getReposId();
+			ReposAuth hashEntry = hashMap.get(reposId);
+			if(hashEntry == null)
+			{
+				hashMap.put(reposId, reposAuth);
+			}
+			else
+			{
+				Integer oldPriority = hashEntry.getPriority();
+				Integer newPriority = reposAuth.getPriority();
+				if(newPriority > oldPriority)
+				{
+					//Update to new ReposAuth
+					hashMap.put(reposId, reposAuth);
+				}
+				else if(newPriority == oldPriority)
+				{
+					xorReposAuth(hashEntry,reposAuth);
+				}
+			}
+			
+		}		
+		return hashMap;
+	}
+	
+	protected HashMap<Integer,DocAuth> BuildHashMapByDocAuthList(List<DocAuth> docAuthList) {
+		//去重并将参数放入HashMap
+		HashMap<Integer,DocAuth> hashMap = new HashMap<Integer,DocAuth>();
+		for(int i=0;i<docAuthList.size();i++)
+		{
+			DocAuth docAuth = docAuthList.get(i);
+			Integer docId = docAuth.getDocId();
+			DocAuth hashEntry = hashMap.get(docId);
+			if(hashEntry == null)
+			{
+				hashMap.put(docId, docAuth);
+			}
+			else
+			{
+				Integer oldPriority = hashEntry.getPriority();
+				Integer newPriority = docAuth.getPriority();
+				if(newPriority > oldPriority)
+				{
+					//Update to new DocAuth
+					hashMap.put(docId, docAuth);
+				}
+				else if(newPriority == oldPriority)
+				{
+					xorDocAuth(hashEntry,docAuth);
+				}
+			}
+			
+		}		
+		return hashMap;
+	}
+
 	
 	/*************************** DocSys文件操作接口 ***********************************/
 	//create Real Doc
@@ -3148,7 +3985,6 @@ public class BaseController  extends BaseFunction{
 		return gitCheckOut(repos, false, "", docVName, localParentPath, docVName,null);
 	}
 	
-	/********************** Functions for SVN ***************************/
 	protected boolean svnRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
 			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
 		
@@ -3621,6 +4457,56 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
+	
+	//版本仓库底层通用接口
+	protected void insertAddFileAction(List<CommitAction> actionList,
+			String parentPath, String entryName, String localPath, boolean isSubAction) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setEntryType(1);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	action.setLocalPath(localPath);
+    	action.isSubAction = isSubAction;
+    	actionList.add(action);
+		
+	}
+    
+	protected void insertAddDirAction(List<CommitAction> actionList,
+			String parentPath, String entryName, boolean isSubAction, boolean hasSubList, List<CommitAction> subActionList) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setEntryType(2);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	action.isSubAction = isSubAction;
+    	action.hasSubList = hasSubList;
+    	action.setSubActionList(subActionList);
+    	actionList.add(action);
+    	
+	}
+	
+	protected void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(2);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	actionList.add(action);
+	}
+    
+	protected void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(3);
+    	action.setEntryParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setEntryPath(parentPath + entryName);
+    	action.setLocalPath(localPath);
+    	action.setLocalRefPath(localRefPath);
+    	actionList.add(action);	
+	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/
 	protected static String getIndexLibName(Integer reposId, boolean isRealDoc) {
@@ -3746,6 +4632,28 @@ public class BaseController  extends BaseFunction{
 	protected Integer getMaxFileSize() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	//获取当前登录用户信息
+	protected User getCurrentUser(HttpSession session){
+		User user = (User) session.getAttribute("login_user");
+		System.out.println("get sessionId:"+session.getId());
+		return user;
+	}
+	
+	public static String getEmailProps(Object obj,String pName){
+		Properties props = new Properties();
+		String basePath = obj.getClass().getClassLoader().getResource("/").getPath();
+		File config = new File(basePath+"emailConfig.properties");
+		try {
+			InputStream in = new FileInputStream(config);
+			props.load(in);
+			String pValue = (String) props.get(pName);
+			return pValue;
+		} catch (Exception e) {
+			System.out.println("获取emailConfig.properties失败");
+			return null;
+		}	
 	}
 
 	private boolean isNodeExist(String name, Integer parentId, Integer reposId) {
