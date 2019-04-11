@@ -2032,33 +2032,22 @@ public class BaseController  extends BaseFunction{
 		if(repos == null)
 		{
 			rt.setError("repos " + reposId +" 不存在！");
-			System.out.println("lockDoc() Repos: " + reposId +" 不存在！");
+			System.out.println("lockRepos() Repos: " + reposId +" 不存在！");
 			return null;
 		}
 		
 		//Check if repos was locked
 		if(isReposLocked(repos, login_user,rt))
 		{
-			System.out.println("lockDoc() Repos:" + repos.getId() +" was locked！");				
+			System.out.println("lockRepos() Repos:" + repos.getId() +" was locked！");				
 			return null;			
 		}
 		
-		//
-		//Set the query condition to get the SubDocList of DocId
-		Doc qDoc = new Doc();
-		qDoc.setVid(reposId);
-		qDoc.setState(1); //Force Locked Doc
-		List<Doc> lockedDocList = reposService.getDocList(qDoc);
-		long curTime = new Date().getTime();
-		for(int i=0;i<lockedDocList.size();i++)
+		if(docLockCheckFlag)
 		{
-			Doc subDoc =lockedDocList.get(i);
-			long lockTime = subDoc.getLockTime();	//time for lock release
-			//System.out.println("isSubDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
-			if(curTime < lockTime)
+			if(isSubDocLocked(0,rt) == true)
 			{
-				rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
-				System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
+				System.out.println("lockRepos() doc was locked！");
 				return null;
 			}
 		}
