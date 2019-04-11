@@ -111,21 +111,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		addDoc(repos, docId, type, parentId, parentPath, docName, content, type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
-		switch(repos.getType())
-		{
-		case 1:
-			addDoc(name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
-			break;
-		case 2:
-			addDocToFS(docId,name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
-			break;
-		case 3:
-			addDocToSVN(docId,name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
-		case 4:
-			addDocToGIT(docId,name,content,type,null,0,"",repos,parentId, parentPath, null,null,null,commitMsg,commitUser,login_user,rt);
-			break;
-		}
+		addDoc(repos, docId, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);
 	}
 
@@ -148,10 +134,12 @@ public class DocController extends BaseController{
 		}
 		Integer reposId = getReposIdForFeeback();		
 		Integer parentId = getParentIdForFeeback();
+		String parentPath = getParentPath(parentId);
 		
 		String commitMsg = "User Feeback by " + name;
 		Repos repos = reposService.getRepos(reposId);
-		Integer docId = addDoc(name,content,1,null,0,"",repos,parentId,"",null,null,null,commitMsg,commitUser,login_user,rt);
+		
+		addDoc(repos, -1, 1, parentId, parentPath, name, content, null, 0, "", null,null,null,commitMsg,commitUser,login_user,rt);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -185,8 +173,8 @@ public class DocController extends BaseController{
 
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
-	public void deleteDoc(Integer id,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("deleteDoc id: " + id);
+	public void deleteDoc(Integer reposId, Integer docId, Integer parentId, String parentPath, String docName, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("deleteDoc docId: " + docId);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -198,34 +186,31 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		//get doc
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
+		Repos repos = reposService.getRepos(reposId);
+		if(repos.getType() != 1)
 		{
-			rt.setError("文件不存在！");
-			writeJson(rt, response);			
-			return;			
+			parentId = 0;	//only check the repos Auth
 		}
 		
-		//获取仓库信息
-		Integer reposId = doc.getVid();
-		Integer parentId = doc.getPid();
 		//检查用户是否有权限新增文件
-		if(checkUserDeleteRight(rt,login_user.getId(),parentId,reposId) == false)
+		if(checkUserDeleteRight(rt,login_user.getId(),parentId,repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
-		
-		Repos repos = reposService.getRepos(reposId);
-		deleteDoc(repos,id,parentId, commitMsg, commitUser, login_user, rt, false, false);
+				
+		deleteDoc(repos, docId, parentPath, docName, commitMsg, commitUser, login_user, rt, false, false);
 		
 		writeJson(rt, response);
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(String name,Integer docId, Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId, String parentPath, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId + " parentPath: " + parentPath);
+	public void checkChunkUploaded(Integer uploadType, Integer reposId, Integer docId, Integer parentId, String parentPath, String docName, 
+			Integer size, String checkSum,
+			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
+			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("checkChunkUploaded docName: " + docName + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId + " parentPath: " + parentPath);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -239,7 +224,7 @@ public class DocController extends BaseController{
 
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		rt.setMsgData("0");
-		String fileChunkName = name + "_" + chunkIndex;
+		String fileChunkName = docName + "_" + chunkIndex;
 		Repos repos = reposService.getRepos(reposId);
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		String chunkParentPath = userTmpDir;
@@ -253,33 +238,24 @@ public class DocController extends BaseController{
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
 				String commitUser = login_user.getName();
-				switch(repos.getType())
+				if(uploadType == 0)
 				{
-				case 1:
-					if(-1 == docId)	//新建文件则新建记录，否则
-					{
-						docId = addDoc(name,null, 1, null,size, checkSum,repos, parentId, parentPath, chunkNum, cutSize, chunkParentPath,commitMsg, commitUser,login_user, rt);
-					}
-					else
-					{
-						updateDoc(docId, null, size,checkSum, reposId, parentId, chunkNum, cutSize, chunkParentPath, commitMsg, commitUser, login_user, rt);
-					}
-					break;
-				case 2:
-					addDocToFS(docId,name,null,1,null,size,checkSum,repos,parentId, parentPath, chunkNum,cutSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
-					break;
-				case 3:
-					addDocToSVN(docId,name,null,1,null,size,checkSum,repos,parentId, parentPath, chunkNum,cutSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
-					break;
-				case 4:
-					addDocToGIT(docId,name,null,1,null,size,checkSum,repos,parentId, parentPath, chunkNum,cutSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
-					break;
+					docId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
+								null, 
+								null,size, checkSum, 
+								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+				}
+				else
+				{
+					updateDoc(repos, docId, parentId, parentPath, docName, 
+							null, size,checkSum,   
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);				
 				}
 				
 				if("ok".equals(rt.getStatus()))
 				{	
 					//Delete All Trunks if trunks have been combined
-					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 				}
 				writeJson(rt, response);
 				return;
@@ -289,8 +265,8 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(String name,Integer type,Integer size,String checkSum,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("checkDocInfo name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
+	public void checkDocInfo(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String docName,Integer size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("checkDocInfo docName: " + docName + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -349,22 +325,22 @@ public class DocController extends BaseController{
 		}
 		
 		//判断目录下是否有同名节点 
-		Doc doc = getDocByName(name,parentId,reposId);
+		Doc doc = getDocByName(docName,parentId,reposId);
 		if(doc != null)
 		{
 			rt.setData(doc);
-			rt.setMsgInfo("Node: " + name +" 已存在！");
+			rt.setMsgInfo("Node: " + docName +" 已存在！");
 			rt.setMsgData("0");
-			System.out.println("checkDocInfo() " + name + " 已存在");
+			System.out.println("checkDocInfo() " + docName + " 已存在");
 	
 			//检查checkSum是否相同
 			if(type == 1)
 			{
 				if(true == isDocCheckSumMatched(doc,size,checkSum))
 				{
-					rt.setMsgInfo("Node: " + name +" 已存在，且checkSum相同！");
+					rt.setMsgInfo("Node: " + docName +" 已存在，且checkSum相同！");
 					rt.setMsgData("1");
-					System.out.println("checkDocInfo() " + name + " 已存在，且checkSum相同！");
+					System.out.println("checkDocInfo() " + docName + " 已存在，且checkSum相同！");
 				}
 			}
 			writeJson(rt, response);
@@ -380,8 +356,9 @@ public class DocController extends BaseController{
 				{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
-					copyDoc(sameDoc.getId(),sameDoc.getName(),name,sameDoc.getType(),reposId,sameDoc.getPid(),parentId,commitMsg,login_user.getName(),login_user,rt,false);
-					Doc newDoc = getDocByName(name,parentId,reposId);
+					String srcParentPath = getParentPath(sameDoc.getPid());
+					copyDoc(repos, sameDoc.getId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,false);
+					Doc newDoc = getDocByName(docName,parentId,reposId);
 					if(null != newDoc)
 					{
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
@@ -432,10 +409,11 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile,String name,Integer size, String checkSum, Integer reposId, Integer parentId, String parentPath, Integer docId, String filePath,
+	public void uploadDoc(Integer uploadType, Integer reposId, Integer docId, Integer parentId, String parentPath, String docName,
+			MultipartFile uploadFile, Integer size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc name " + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId + " filePath:" + filePath 
+		System.out.println("uploadDoc uploadType:" + uploadType + " docName:" + docName + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -459,7 +437,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		
 		//检查用户是否有权限新增文件
-		if(-1 == docId)
+		if(uploadType == 0)	//0: add  1: update
 		{
 			if(checkUserAddRight(rt,login_user.getId(),parentId,repos) == false)
 			{
@@ -481,7 +459,7 @@ public class DocController extends BaseController{
 		if(null != chunkIndex)
 		{
 			//Save File chunk to tmp dir with name_chunkIndex
-			String fileChunkName = name + "_" + chunkIndex;
+			String fileChunkName = docName + "_" + chunkIndex;
 			String userTmpDir = getReposUserTmpPath(repos,login_user);
 			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
@@ -503,33 +481,24 @@ public class DocController extends BaseController{
 		if(uploadFile != null) 
 		{
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
-
-			switch(repos.getType())
+			if(uploadType == 0)
 			{
-			case 1:
-				if(-1 == docId)	//新建文件则新建记录，否则
-				{
-					docId = addDoc(name,null, 1, uploadFile,size, checkSum,repos, parentId, parentPath, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
-				}
-				else
-				{
-					updateDoc(docId, uploadFile, size,checkSum, reposId, parentId, chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
-				}
-				break;
-			case 2:
-				addDocToFS(docId,name,null,1,uploadFile,size,checkSum,repos,parentId, parentPath, chunkNum,chunkSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
-				break;
-			case 3:
-				addDocToSVN(docId,name,null,1,uploadFile,size,checkSum,repos,parentId, parentPath, chunkNum,chunkSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
-			case 4:
-				addDocToGIT(docId,name,null,1,uploadFile,size,checkSum,repos,parentId, parentPath, chunkNum,chunkSize,chunkParentPath,commitMsg,commitUser,login_user,rt);
-				break;
+				docId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
+								null, 
+								uploadFile,size, checkSum, 
+								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+			}
+			else
+			{
+				updateDoc(repos, docId, parentId, parentPath, docName, 
+						uploadFile, size,checkSum,   
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);				
 			}
 			
 			if("ok".equals(rt.getStatus()))
 			{				
 				//Delete All Trunks if trunks have been combined
-				deleteChunks(name,chunkIndex,chunkNum,chunkParentPath);
+				deleteChunks(docName,chunkIndex,chunkNum,chunkParentPath);
 			}
 			writeJson(rt, response);
 			return;
