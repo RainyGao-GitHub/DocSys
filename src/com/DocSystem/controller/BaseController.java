@@ -759,12 +759,14 @@ public class BaseController  extends BaseFunction{
 	}
 	/********************************** Functions For Application Layer ****************************************/
 	//底层addDoc接口
-	protected Integer addDoc(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, 
+	protected Integer addDoc(Repos repos, Integer level, Integer type, Integer parentId, String parentPath, String docName, 
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
 	{
+		Integer docId = getNewDocId(repos, level, parentPath);
+		
 		switch(repos.getType())
 		{
 		case 1:
@@ -790,6 +792,17 @@ public class BaseController  extends BaseFunction{
 			
 		}
 		return null;
+	}
+	
+	private Integer getNewDocId(Repos repos, Integer level, String parentPath) 
+	{
+		String reposRPath = getReposRealPath(repos);
+		File file = new File(reposRPath + parentPath);
+		File[] tmp = file.listFiles();
+		int size = tmp.length;
+		
+		Integer docId = level*1000000 + size + 1000;	//
+		return docId;
 	}
 	
 	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,

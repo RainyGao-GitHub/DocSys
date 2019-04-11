@@ -74,9 +74,9 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,
+	public void addDoc(Integer reposId, Integer level, Integer type, Integer parentId, String parentPath, String docName, String content,
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("addDoc reposId:" + reposId + " docId:" + docId + " type: " + type +" parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName + " content: " + content);
+		System.out.println("addDoc reposId:" + reposId + " type: " + type + " level: " + level +" parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -104,10 +104,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		addDoc(repos, docId, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt);
+		addDoc(repos, level, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);
 	}
-
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
 	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
