@@ -830,19 +830,19 @@ public class BaseController  extends BaseFunction{
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + docName;
 		
-		//以下代码不可重入，使用syncLock进行同步
-		synchronized(syncLock)
-		{
-			repos = lockRepos(repos.getId(), 1, 2*60*60*1000, login_user, rt, false); //Lock repos for 2 hours
-			if(repos == null)
-			{
-				unlock();
-				rt.setError("Lock Repos Failed!");
-				System.out.println("addDocToVerRepos() lockRepos Failed");
-				return null;
-			}
-			unlock();
-		}
+//		//以下代码不可重入，使用syncLock进行同步
+//		synchronized(syncLock)
+//		{
+//			repos = lockRepos(repos.getId(), 1, 2*60*60*1000, login_user, rt, false); //Lock repos for 2 hours
+//			if(repos == null)
+//			{
+//				unlock();
+//				rt.setError("Lock Repos Failed!");
+//				System.out.println("addDoc_FS() lockRepos Failed");
+//				return null;
+//			}
+//			unlock();
+//		}
 		
 		//This is virtual Doc
 		Doc doc = new Doc();
@@ -876,7 +876,7 @@ public class BaseController  extends BaseFunction{
 				if(unlockRepos(repos.getId(), login_user, null) == false)
 				{
 					MsgInfo += " and unlock Repos Failed";
-					System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+					System.out.println("addDoc_FS unlock Repos: " + repos.getId() +" Failed!");
 					rt.setError(MsgInfo);
 				}
 				return null;
@@ -888,11 +888,11 @@ public class BaseController  extends BaseFunction{
 			{		
 				String MsgInfo = "updateRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
-				System.out.println("updateRealDoc Failed");
+				System.out.println("addDoc_FS updateRealDoc Failed");
 				if(unlockRepos(repos.getId(), login_user, null))
 				{
 					MsgInfo += " and unlock Repos Failed";
-					System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+					System.out.println("addDoc_FS unlock Repos: " + repos.getId() +" Failed!");
 					rt.setError(MsgInfo);
 				}
 				return null;
@@ -901,7 +901,7 @@ public class BaseController  extends BaseFunction{
 		//commit to history db
 		if(verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt) == false)
 		{
-			System.out.println("verReposRealDocAdd Failed");
+			System.out.println("addDoc_FS verReposRealDocAdd Failed");
 			String MsgInfo = "verReposRealDocAdd Failed";
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
 			if(delFile(localDocRPath) == false)
@@ -911,7 +911,7 @@ public class BaseController  extends BaseFunction{
 			if(unlockRepos(repos.getId(), login_user, null) == false)
 			{
 				MsgInfo += " and unlock Repos Failed";
-				System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+				System.out.println("addDoc_FS unlock Repos: " + repos.getId() +" Failed!");
 				rt.setError(MsgInfo);
 			}
 			rt.setError(MsgInfo);
@@ -942,13 +942,13 @@ public class BaseController  extends BaseFunction{
 			addIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
 		}
 		
-		//启用doc
-		if(unlockRepos(repos.getId(), login_user, null) == false)
-		{
-			String MsgInfo = "unlockRepos Failed";
-			System.out.println("unlock Repos: " + repos.getId() +" Failed!");
-			rt.setError(MsgInfo);
-		}
+//		//启用doc
+//		if(unlockRepos(repos.getId(), login_user, null) == false)
+//		{
+//			String MsgInfo = "unlockRepos Failed";
+//			System.out.println("unlock Repos: " + repos.getId() +" Failed!");
+//			rt.setError(MsgInfo);
+//		}
 		
 		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
@@ -4670,7 +4670,8 @@ public class BaseController  extends BaseFunction{
 	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/
-	protected static String getIndexLibName(Integer reposId, boolean isRealDoc) {
+	protected static String getIndexLibName(Integer reposId, boolean isRealDoc) 
+	{
 		String indexLib = "repos_" + reposId + "_RDoc";
 		if(isRealDoc == false)
 		{
