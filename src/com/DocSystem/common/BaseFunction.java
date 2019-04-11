@@ -721,7 +721,7 @@ public class BaseFunction{
     }
 	
     //Delete Directory or File
-    public boolean delFileOrDir(String path){
+    public static boolean delFileOrDir(String path){
         File file=new File(path);
         if(file.exists())
         {
@@ -803,7 +803,7 @@ public class BaseFunction{
 		System.out.println(Head + json);		
 	}
 
-	protected boolean isWinOS() {
+	protected static boolean isWinOS() {
 		String os = System.getProperty("os.name"); 
 		System.out.println("OS:"+ os);  
 		if(os.toLowerCase().startsWith("win")){

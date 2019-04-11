@@ -64,19 +64,17 @@ import com.DocSystem.common.BaseFunction;
  * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
 @SuppressWarnings("deprecation")
-public class LuceneUtil2   extends BaseFunction{
-
-	// 保存路径
+public class LuceneUtil2   extends BaseFunction
+{
     private static String INDEX_DIR = getLucenePath();
-    
+
     private static String getLucenePath() {
 		String path = ReadProperties.read("docSysConfig.properties", "lucenePath");
 	    if(path == null || "".equals(path))
 	    {
-			String os = System.getProperty("os.name");  
-			System.out.println("OS:"+ os);  
-			if(os.toLowerCase().startsWith("win")){  
-				path = "C:/DocSysLucene/";
+	    	if(isWinOS())
+	    	{
+	    		path = "C:/DocSysLucene/";
 			}
 			else
 			{
@@ -96,7 +94,12 @@ public class LuceneUtil2   extends BaseFunction{
 		return path;
 	}
     
-	/**
+    public static boolean deleteIndexLib(String indexLib)
+    {
+    	return delFileOrDir(INDEX_DIR + File.separator+ indexLib);
+    }
+    
+    /**
 	 *
 	 * 功能: 在指定的索引库里增加索引文件
      * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 

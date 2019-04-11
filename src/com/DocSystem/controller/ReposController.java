@@ -13,7 +13,7 @@ import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-
+import util.LuceneUtil2;
 import util.ReturnAjax;
 import util.GitUtil.GITUtil;
 import util.SvnUtil.SVNUtil;
@@ -206,6 +206,15 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//Add Lucene IndexLib
+		if(createLucenIndexLib(repos,rt) == false)
+		{
+			deleteRepos(repos);			
+			writeJson(rt, response);	
+			return;			
+		}
+		
+		
 		//Init verRepos for RealDoc
 		if(initVerRepos(repos,true,rt) == false)
 		{
@@ -249,6 +258,11 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 	}
 	
+	private boolean createLucenIndexLib(Repos repos, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	//检查path1和path2是否互相包含
 	private boolean isPathConflict(String path1, String path2) 
 	{
@@ -876,11 +890,18 @@ public class ReposController extends BaseController{
 	private boolean deleteRepos(Repos repos) {
 		//Delete Repos in DB
 		reposService.deleteRepos(repos.getId());
+		
 		//Delete Repos LocalDir
 		deleteReposLocalDir(repos);
+		
 		//Delete Repos LocalVerRepos
 		deleteLocalVerRepos(repos,true);
 		deleteLocalVerRepos(repos,false);
+
+		//Delete IndexLib
+    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),true));
+    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),false));
+		
 		return true;
 	}
 
