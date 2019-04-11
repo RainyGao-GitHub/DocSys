@@ -837,63 +837,46 @@ public class DocController extends BaseController{
 	/**************** download Doc  ******************/
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(Integer reposId,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("doGet reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
-	}
-	
-	@RequestMapping("/doGet.do")
-	public void doGet(Integer id,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("doGet id: " + id);
-
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
+		Repos repos = reposService.getRepos(reposId);
+		switch(repos.getType())
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
+		case 1:
+			downloadDoc_DB(repos, docId, parentPath, name, response, request, session);
+			break;
+		case 2:
+			downloadDoc_FS(repos, docId, parentPath, name, response, request, session);
+			break;
+		case 3:
+			downloadDoc_SVN(repos, docId, parentPath, name, response, request, session);
+			break;
+		case 4:
+			downloadDoc_GIT(repos, docId, parentPath, name, response, request, session);
+			break;
 		}
 		
-		Doc doc = reposService.getDoc(id);
-		if(doc==null){
-			System.out.println("doGet() Doc " + id + " 不存在");
-			rt.setError("doc " + id + "不存在！");
-			writeJson(rt, response);
-			return;
-		}
-		
-		//得到要下载的文件名
-		String file_name = doc.getName();
-		
-		//虚拟文件下载
-		Repos repos = reposService.getRepos(doc.getVid());
-		//虚拟文件系统下载，直接将数据库的文件内容传回去，未来需要优化
-		if(isRealFS(repos.getType()) == false)
-		{
-			String content = doc.getContent();
-			byte [] data = content.getBytes();
-			sendDataToWebPage(file_name,data, response, request); 
-			return;
-		}
-		
-		//get reposRPath
-		String reposRPath = getReposRealPath(repos);
-				
-		//get srcParentPath
-		String srcParentPath = getParentPath(doc.getPid());	//doc的ParentPath
-
-		//文件的localParentPath
-		String localParentPath = reposRPath + srcParentPath;
-		System.out.println("doGet() localParentPath:" + localParentPath);
-		
-		//get userTmpDir
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		
-		sendTargetToWebPage(localParentPath,file_name, userTmpDir, rt, response, request);
 	}
-	
-	@RequestMapping("/getVDocRes.do")
-	public void getVDocRes(Integer docId,String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("getVDocRes docId:" + docId + " fileName: " + fileName);
+	private void downloadDoc_GIT(Repos repos, Integer docId, String parentPath, String name,
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void downloadDoc_SVN(Repos repos, Integer docId, String parentPath, String name,
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void downloadDoc_FS(Repos repos, Integer docId, String parentPath, String name,
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void downloadDoc_DB(Repos repos,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("downloadDoc_DB reposId: " + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -912,16 +895,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//Get the file
-		Repos repos = reposService.getRepos(doc.getVid());
-		String reposVPath = getReposVirtualPath(repos);
-		String parentPath = getParentPath(doc.getPid());
-		String docVName = getDocVPath(parentPath, doc.getName());
-		String localVDocPath = reposVPath + docVName;
-		String localParentPath = localVDocPath + "/res/";		
-		System.out.println("getVDocRes() localParentPath:" + localParentPath);
+		//get reposRPath
+		String reposRPath = getReposRealPath(repos);
+
+		//文件的localParentPath
+		String localParentPath = reposRPath + parentPath;
+		System.out.println("doGet() localParentPath:" + localParentPath);
 		
-		sendFileToWebPage(localParentPath,fileName, rt, response, request);
+		//get userTmpDir
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		
+		sendTargetToWebPage(localParentPath,name, userTmpDir, rt, response, request);
 	}
 	
 	/**************** get Tmp File ******************/
