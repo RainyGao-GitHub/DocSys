@@ -634,20 +634,18 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private long getFileLastModifiedTime(File file) {
-		// TODO Auto-generated method stub
 		try {
 			BasicFileAttributes bAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
 			FileTime changeTime = bAttributes.lastModifiedTime();
 			return changeTime.toMillis();
 		} catch (Exception e) {
-			System.out.println("getFile ");
+			System.out.println("getFileLastModifiedTime() 异常");
 		    e.printStackTrace();
+		    return 0;
 		}
-		return 0;
 	}
 
 	protected List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
 		switch(repos.getVerCtrl())
 		{
 		case 1: //SVN
@@ -826,7 +824,7 @@ public class BaseController  extends BaseFunction{
 			if(repos == null)
 			{
 				unlock();
-				rt.setError("Lock Repos " + repos.getName() +" Failed！");
+				rt.setError("Lock Repos Failed!");
 				System.out.println("addDocToVerRepos() lockRepos Failed");
 				return null;
 			}
@@ -3517,8 +3515,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		System.out.println("gitRealDocAdd() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
 		{
 			System.out.println("gitRealDocAdd() entryName can not be empty");
@@ -3803,8 +3802,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Git realDoc Delete
-	protected boolean gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) 
+	{
+		System.out.println("gitRealDocDelete() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
 		{
 			System.out.println("gitRealDocDelete() entryName can not be empty");
@@ -3834,8 +3834,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		System.out.println("gitRealDocCommit() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
 		{
 			System.out.println("gitRealDocCommit() entryName can not be empty");
@@ -3889,9 +3890,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean gitDocMove(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
 		System.out.println("gitDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		
 		if(srcEntryName == null || srcEntryName.isEmpty())
 		{
 			System.out.println("gitDocMove() srcEntryName can not be empty");
@@ -3932,9 +3934,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
 		System.out.println("gitDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		
 		if(srcEntryName == null || srcEntryName.isEmpty())
 		{
 			System.out.println("gitDocCopy() srcEntryName can not be empty");
@@ -3973,8 +3976,8 @@ public class BaseController  extends BaseFunction{
 		return true;	
 	}
 
-	protected boolean gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String revision) {
-		// TODO Auto-generated method stub
+	protected boolean gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String revision) 
+	{
 		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
@@ -3987,8 +3990,8 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
 	}
 	
-	protected boolean gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) 
+	{
 		System.out.println("gitRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
 
@@ -3996,8 +3999,8 @@ public class BaseController  extends BaseFunction{
 		return gitCheckOut(repos, true, parentPath, entryName, localParentPath, entryName,null);
 	}
 		
-	protected boolean gitVirtualDocAdd(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitVirtualDocAdd(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
 		if(docVName == null || docVName.isEmpty())
 		{
 			System.out.println("gitVirtualDocAdd() entryName can not be empty");
@@ -4023,9 +4026,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean gitVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser,
-			ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
 		if(docVName == null || docVName.isEmpty())
 		{
 			System.out.println("gitVirtualDocDelete() docVName can not be empty");
@@ -4055,11 +4057,13 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean gitVirtualDocCommit(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitVirtualDocCommit(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		System.out.println("gitVirtualDocCommit() reposId:" + repos.getId() + " docVName:" + docVName);
+
 		if(docVName == null || docVName.isEmpty())
 		{
-			System.out.println("gitRealDocCommit() entryName can not be empty");
+			System.out.println("gitVirtualDocCommit() entryName can not be empty");
 			return false;
 		}
 
@@ -4067,7 +4071,7 @@ public class BaseController  extends BaseFunction{
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, false, commitUser) == false)
 		{
-			System.out.println("gitRealDocAdd() GITUtil Init failed");
+			System.out.println("gitVirtualDocCommit() GITUtil Init failed");
 			return false;
 		}
 	
@@ -4076,27 +4080,25 @@ public class BaseController  extends BaseFunction{
 		String localPath = getReposVirtualPath(repos);		
 		if(gitUtil.doAutoCommit("", docVName, localPath,commitMsg, commitUser, true, null) == false)
 		{
-			System.out.println("gitRealDocCommit() GITUtil Commit failed");
+			System.out.println("gitVirtualDocCommit() GITUtil Commit failed");
 			return false;
 		}
 		
 		return true;
 	}
 
-	protected boolean gitVirtualDocMove(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
-			String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitVirtualDocMove(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,String commitUser, ReturnAjax rt) 
+	{
 		return gitDocMove(repos, false, "", srcDocVName, "", dstDocVName, commitMsg, commitUser, rt);
 	}
 	
-	protected boolean gitVirtualDocCopy(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,
-			String commitUser, ReturnAjax rt) {
-		// TODO Auto-generated method stub
+	protected boolean gitVirtualDocCopy(Repos repos, String srcDocVName, String dstDocVName, String commitMsg,String commitUser, ReturnAjax rt) 
+	{
 		return  gitDocCopy(repos, false, "", srcDocVName, "", dstDocVName,  commitMsg, commitUser, rt);
 	}
 	
-	protected boolean gitRevertVirtualDoc(Repos repos, String docVName) {
-		// TODO Auto-generated method stub
+	protected boolean gitRevertVirtualDoc(Repos repos, String docVName) 
+	{
 		System.out.println("svnRevertRealDoc() docVName:" + docVName);
 		String localParentPath = getReposVirtualPath(repos);
 
@@ -4343,13 +4345,15 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected boolean gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
-		// TODO Auto-generated method stub
+			String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) 
+	{
+		System.out.println("gitAutoCommit() reposId:" + repos.getId() + " isRealDoc:" + isRealDoc + " parentPath:" + parentPath + " entryName:" + entryName);
+		
 		GITUtil gitUtil = new GITUtil();
 		//svn初始化
 		if(gitUtil.Init(repos, isRealDoc, commitUser) == false)
 		{
-			System.out.println("do Init Failed");
+			System.out.println("gitAutoCommit() do Init Failed");
 			return false;
 		}
 		
