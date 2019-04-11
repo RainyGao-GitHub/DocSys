@@ -38,44 +38,6 @@ import util.Base64File;
 public class BaseFunction{
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
-	
-	/**************************** 通用接口 ******************************/
-	//To print the obj by convert it to json format
-	protected void printObject(String Head,Object obj)
-	{
-		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-		System.out.println(Head + json);		
-	}
-
-	protected boolean isWinOS() {
-		String os = System.getProperty("os.name"); 
-		System.out.println("OS:"+ os);  
-		if(os.toLowerCase().startsWith("win")){
-			return true;
-		}
-		return false;
-	}
-
-	protected boolean isWinDiskStr(String Str) 
-	{
-		if(Str.length() != 2)
-		{
-			return false;
-		}
-		
-		char endChar = Str.charAt(1);
-		if(endChar != ':')
-		{
-			return false;
-		}
-		
-		char diskChar = Str.charAt(0);
-		if((diskChar >= 'C' && diskChar <= 'Z') ||(diskChar >= 'c' && diskChar <= 'z') ) 
-		{
-			return true;
-		}
-		return false;
-	}
 
 	/***************************** json相关接口 ***************************/
 	/**
@@ -832,5 +794,43 @@ public class BaseFunction{
 		//	e.printStackTrace();
 		//}
 	}  
+	
+	/**************************** 其他通用接口 ******************************/
+	//To print the obj by convert it to json format
+	protected void printObject(String Head,Object obj)
+	{
+		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
+		System.out.println(Head + json);		
+	}
+
+	protected boolean isWinOS() {
+		String os = System.getProperty("os.name"); 
+		System.out.println("OS:"+ os);  
+		if(os.toLowerCase().startsWith("win")){
+			return true;
+		}
+		return false;
+	}
+
+	protected boolean isWinDiskStr(String Str) 
+	{
+		if(Str.length() != 2)
+		{
+			return false;
+		}
+		
+		char endChar = Str.charAt(1);
+		if(endChar != ':')
+		{
+			return false;
+		}
+		
+		char diskChar = Str.charAt(0);
+		if((diskChar >= 'C' && diskChar <= 'Z') ||(diskChar >= 'c' && diskChar <= 'z') ) 
+		{
+			return true;
+		}
+		return false;
+	}
 	
 }
