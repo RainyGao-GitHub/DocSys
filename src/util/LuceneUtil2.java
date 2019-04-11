@@ -167,8 +167,8 @@ public class LuceneUtil2   extends BaseFunction
 		try {
 	    	Date date1 = new Date();
 	        Analyzer analyzer = new IKAnalyzer();
-	        
-	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
+    		File file = new File(INDEX_DIR + File.separator +indexLib);
+	        Directory directory = FSDirectory.open(file);
 	        IndexWriterConfig config = new IndexWriterConfig(
 	                Version.LUCENE_CURRENT, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
@@ -207,7 +207,14 @@ public class LuceneUtil2   extends BaseFunction
     	try {
 	    	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
 	        Date date1 = new Date();
-	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
+    		
+	        File file = new File(INDEX_DIR + File.separator +indexLib);
+    		if(!file.exists())
+    		{
+    			return true;
+    		}
+    		
+	        Directory directory = FSDirectory.open(file);
 	
 	        IndexWriterConfig config = new IndexWriterConfig(
 	                Version.LUCENE_CURRENT, null);
@@ -236,7 +243,13 @@ public class LuceneUtil2   extends BaseFunction
     {
     	System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
     	try {
-	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+    		File file = new File(INDEX_DIR + File.separator +indexLib);
+    		if(!file.exists())
+    		{
+    			return null;
+    		}
+    		
+	        Directory directory = FSDirectory.open(file);
 	        Analyzer analyzer = new IKAnalyzer();
 	        DirectoryReader ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
@@ -269,8 +282,13 @@ public class LuceneUtil2   extends BaseFunction
 	{
 		System.out.println("fuzzySearch() keyWord:" + str + " indexLib:" + indexLib);
 		try {
-				
-	        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+    		File file = new File(INDEX_DIR + File.separator +indexLib);
+    		if(!file.exists())
+    		{
+    			return null;
+    		}
+    		
+	        Directory directory = FSDirectory.open(file);
 	        DirectoryReader ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
@@ -302,8 +320,13 @@ public class LuceneUtil2   extends BaseFunction
     {
     	System.out.println("getDocumentIdListByHashId() hashId:" + hashId + " indexLib:" + indexLib);
     	try {
-    		Directory directory;
-			directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
+    		File file = new File(INDEX_DIR + File.separator +indexLib);
+    		if(!file.exists())
+    		{
+    			return null;
+    		}
+    		
+    		Directory directory = FSDirectory.open(file);
 
 	    	DirectoryReader ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
