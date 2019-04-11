@@ -860,7 +860,7 @@ public class BaseController  extends BaseFunction{
 				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
-				if(unlockRepos(repos.getId(), login_user, null))
+				if(unlockRepos(repos.getId(), login_user, null) == false)
 				{
 					MsgInfo += " and unlock Repos Failed";
 					System.out.println("unlock Repos: " + repos.getId() +" Failed!");
@@ -895,7 +895,7 @@ public class BaseController  extends BaseFunction{
 			{						
 				MsgInfo += " and deleteFile Failed";
 			}
-			if(unlockRepos(repos.getId(), login_user, null))
+			if(unlockRepos(repos.getId(), login_user, null) == false)
 			{
 				MsgInfo += " and unlock Repos Failed";
 				System.out.println("unlock Repos: " + repos.getId() +" Failed!");
@@ -930,7 +930,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//启用doc
-		if(unlockRepos(repos.getId(), login_user, null))
+		if(unlockRepos(repos.getId(), login_user, null) == false)
 		{
 			String MsgInfo = "unlockRepos Failed";
 			System.out.println("unlock Repos: " + repos.getId() +" Failed!");
