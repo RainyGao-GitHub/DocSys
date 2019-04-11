@@ -4672,7 +4672,7 @@ public class BaseController  extends BaseFunction{
     /************************* DocSys全文搜索操作接口 ***********************************/
 	protected static String getIndexLibName(Integer reposId, boolean isRealDoc) {
 		String indexLib = "repos_" + reposId + "_RDoc";
-		if(isRealDoc)
+		if(isRealDoc == false)
 		{
 			indexLib = "repos_" + reposId + "_VDoc";
 		}
