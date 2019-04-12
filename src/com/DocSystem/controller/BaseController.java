@@ -280,11 +280,11 @@ public class BaseController  extends BaseFunction{
 		case 1:
 			return getDocListFromRootToDoc_DB(repos, rootDocId, level, parentPath, doc, login_user, rt);
 		case 2:
-			return getDocListFromRootToDoc_FS(repos, doc, login_user, rt);
+			return getDocListFromRootToDoc_FS(repos, rootDocId, level, parentPath, doc, login_user, rt);
 		case 3:
-			return getDocListFromRootToDoc_SVN(repos, doc, login_user, rt);
+			return getDocListFromRootToDoc_SVN(repos, rootDocId, level, parentPath, doc, login_user, rt);
 		case 4:
-			return getDocListFromRootToDoc_GIT(repos, doc, login_user, rt);
+			return getDocListFromRootToDoc_GIT(repos, rootDocId, level, parentPath, doc, login_user, rt);
 		}
 		return null;
 	}
