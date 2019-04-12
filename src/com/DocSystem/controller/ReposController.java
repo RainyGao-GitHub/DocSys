@@ -885,8 +885,9 @@ public class ReposController extends BaseController{
 		deleteLocalVerRepos(repos,false);
 
 		//Delete IndexLib
-    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),true));
-    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),false));
+    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),0));
+		LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),1));
+    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),2));
 		
 		return true;
 	}
@@ -1105,8 +1106,9 @@ public class ReposController extends BaseController{
 			deleteLocalVerRepos(repos, false);
 			
 			//Delete IndexLib
-	    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),true));
-	    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),false));
+	    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),0));
+			LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),1));
+	    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),2));
 		}
 		
 		

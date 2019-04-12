@@ -159,7 +159,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    public static boolean updateIndex(String id, Integer reposId, String parentPath, String name, String hashId, Integer docId, String content, String indexLib)
+    public static boolean updateIndex(String id, Integer reposId,  Integer docId, String parentPath, String name, String hashId, String content, String indexLib)
     {
     	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	//System.out.println("updateIndex() content:" + content);
