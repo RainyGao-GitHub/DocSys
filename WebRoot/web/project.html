@@ -4759,7 +4759,7 @@ function CompareObj(objA, objB, flag) {
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
     		autoParam : ["id","level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
-    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
+    		otherParam:{"reposId":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
     		dataFilter: asyncDataFilter, 
 		},
 	   	//可编辑功能设置
