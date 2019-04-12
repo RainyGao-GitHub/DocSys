@@ -92,15 +92,21 @@ public class BaseController  extends BaseFunction{
 	private List<Doc> getAccessableSubDocList_FS(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
 	{
 		System.out.println("getAccessableSubDocList_FS()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
+		
+		//get the rootDocAuth
+		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(), 0, repos.getId());
+		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
+		{
+			System.out.println("getAccessableSubDocList_FS() 用户没有该目录的权限");
+			return null;
+		}
+		
 		return getSubDocListFromFS(repos, pid, level, parentPath, login_user, rt);
 	}
 
 	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt)
 	{
 		System.out.println("getAccessableSubDocList_DB()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
-		
-		//Get the userDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		//get the rootDocAuth
 		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(),pid,repos.getId());
@@ -117,6 +123,9 @@ public class BaseController  extends BaseFunction{
 			parentDoc = reposService.getDoc(pid);
 			//parentPath = getParentPath(parentDoc.getId());
 		}
+
+		//Get the userDocAuthHashMap and call recursive getAuthedDocList
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		List <Doc> resultList = getAuthedSubDocList(repos, pid, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
 		return resultList;
 	}
@@ -293,46 +302,7 @@ public class BaseController  extends BaseFunction{
 	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer docId, String parentPath, String docName, User login_user, ReturnAjax rt)
 	{
 		System.out.println("getDocListFromRootToDoc_DB() reposId:" + repos.getId()  + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
-
-		String docPath = getReposRealPath(repos) + parentPath + docName;
-		File file = new File(docPath);
-		if(!file.exists())
-		{
-			getDocList
-		}
-		
-		String [] paths = parentPath.split("/"); 
-		
-		//size <=2，表明docId位于rootDoc下或不存在，都只取出根目录下的subDocs
-		if(docIdList.size() <= 2)
-		{
-			DocAuth docAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
-			List<Doc> docList = getAuthedSubDocList(repos, 0, null ,"", docAuth,docAuthHashMap, login_user, rt);
-			return docList;
-		}
-		
-		//go throug the docIdList to get the UserDocAuthFromHashMap
-		List<Doc> resultList = new ArrayList<Doc>();
-		DocAuth parentDocAuth = null;
-		int docPathDeepth = docIdList.size();
-		String tempParentPath = "";
-		for(int i=(docPathDeepth-1);i>0;i--)	//We should not to get subDocList with index 0 (which is the docId) 
-		{
-			Integer curDocId = docIdList.get(i);
-			Doc curDoc = reposService.getDoc(curDocId);
-			System.out.println("getDocListFromRootToDoc() curDocId[" + i+ "]:" + curDocId); 
-			DocAuth docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
-			List<Doc> subDocList = getAuthedSubDocList(repos, curDocId, curDoc, tempParentPath+curDoc.getName(), docAuth,docAuthHashMap , login_user, rt);
-			if(subDocList != null && subDocList.size() > 0)
-			{
-				resultList.addAll(subDocList);
-			}
-			
-			//Update the parentPath and parentDocAuth
-			parentDocAuth = docAuth;
-			tempParentPath = tempParentPath + curDoc.getName();
-		}		
-		return resultList;
+		return getAccessableSubDocList_FS(repos, 0, 0, "", login_user, rt);
 	}
 
 	private List<Doc> getDocListFromRootToDoc_DB(Repos repos, Integer docId, String parentPath, String docName, User login_user, ReturnAjax rt)
