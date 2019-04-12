@@ -475,6 +475,9 @@ public class ReposController extends BaseController{
 		}
 		
 		List <Doc> docList = null;
+		Doc doc = new Doc();
+		doc.setId(docId);
+		doc.setName(docName);
 		if(docId == null || docId == 0)
 		{
 			docList = getAccessableSubDocList(repos, 0, 0, "", login_user, rt);
@@ -482,7 +485,7 @@ public class ReposController extends BaseController{
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, docId, parentPath, docName, login_user ,rt);
+			docList = getDocListFromRootToDoc(repos, 0, 0, parentPath, doc, login_user ,rt);
 		}
 
 		if(docList == null)
@@ -504,9 +507,9 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSubDocList(Integer reposId, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getSubDocList reposId: " + vid + " pid: " + id  + " pLevel:" + level + " path:" + path + " name:"+ name );
+		System.out.println("getSubDocList reposId: " + reposId + " pid: " + id  + " level:" + level + " path:" + path + " name:"+ name );
 		Integer pid = id;
 		if(pid == null || pid == 0)
 		{
