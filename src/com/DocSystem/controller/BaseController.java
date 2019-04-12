@@ -61,30 +61,41 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Integer pid, String parentPath, User login_user, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
 	{		
 		switch(repos.getType())
 		{
 		case 1:
-			return getAccessableSubDocList_DB(repos, pid, parentPath, login_user, rt);
+			return getAccessableSubDocList_DB(repos, pid, level, parentPath, login_user, rt);
 		case 2:
-			return getAccessableSubDocList_FS(repos, pid, parentPath, login_user, rt);
+			return getAccessableSubDocList_FS(repos, pid, level, parentPath, login_user, rt);
 		case 3:
-			return getAccessableSubDocList_SVN(repos, pid, parentPath, login_user, rt);
+			return getAccessableSubDocList_SVN(repos, pid, level, parentPath, login_user, rt);
 		case 4:
-			return getAccessableSubDocList_GIT(repos, pid, parentPath, login_user, rt);			
+			return getAccessableSubDocList_GIT(repos, pid, level, parentPath, login_user, rt);			
 		}
 		return null;
 	}
 	
-	private List<Doc> getAccessableSubDocList_FS(Repos repos, Integer pid, String parentPath, User login_user, ReturnAjax rt) 
+	private List<Doc> getAccessableSubDocList_GIT(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
 	{
-		System.out.println("getAccessableSubDocList_FS()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
-		
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer pid, String parentPath, User login_user, ReturnAjax rt) 
+	private List<Doc> getAccessableSubDocList_SVN(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getAccessableSubDocList_FS(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
+	{
+		System.out.println("getAccessableSubDocList_FS()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
+		return getSubDocListFromFS(repos, pid, level, parentPath, login_user, rt);
+	}
+
+	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt)
 	{
 		System.out.println("getAccessableSubDocList_DB()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
 		
@@ -109,6 +120,148 @@ public class BaseController  extends BaseFunction{
 		List <Doc> resultList = getAuthedSubDocList(repos, pid, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
 		return resultList;
 	}
+	
+	//获取子节点List in DataBase
+	protected List <Doc> getSubDocListFromDB(Repos repos, Integer pid)
+	{
+		Doc doc = new Doc();
+		doc.setPid(pid);
+		doc.setVid(repos.getId());
+		return reposService.getDocList(doc);
+	}
+	
+	//获取目录parentPath下的所有子节点
+	protected List <Doc> getSubDocListFromFS(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt)
+	{
+		String localParentPath = getReposRealPath(repos) + parentPath;
+		File dir = new File(localParentPath);
+    	if(false == dir.exists())
+    	{
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
+    		rt.setError( parentPath + " 不存在！");
+    		return null;
+    	}
+    	
+        //Go through the subEntries
+    	if(false == dir.isDirectory())
+    	{
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
+    		rt.setError( parentPath + " 不是目录！");
+    		return null;
+    	}
+ 	
+        //Get fileList and add it to docList
+    	List<Doc> docList = new ArrayList<Doc>();
+    	File[] tmp=dir.listFiles();
+    	for(int i=0;i<tmp.length;i++)
+    	{
+    		File subEntry = tmp[i];
+    		int subEntryType = subEntry.isDirectory()? 2: 1;
+    		String subEntryName = subEntry.getName();
+    		long lastModifyTime = getFileLastModifiedTime(subEntry);
+    		
+    		//Create Doc to save subEntry Info
+    		Doc subDoc = new Doc();
+    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		subDoc.setVid(repos.getId());
+    		subDoc.setPid(pid);
+       		subDoc.setId(subDocId);
+    		subDoc.setName(subEntryName);
+    		subDoc.setType(subEntryType);
+    		subDoc.setPath(parentPath);
+    		subDoc.setSize((int)subEntry.length());
+    		subDoc.setState(0);
+    		subDoc.setCreateTime(lastModifyTime);
+    		subDoc.setLatestEditTime(lastModifyTime);
+    		docList.add(subDoc);
+    	}
+    	return docList;
+	}
+	
+	private long getFileLastModifiedTime(File file) {
+		try {
+			BasicFileAttributes bAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+			FileTime changeTime = bAttributes.lastModifiedTime();
+			return changeTime.toMillis();
+		} catch (Exception e) {
+			System.out.println("getFileLastModifiedTime() 异常");
+		    e.printStackTrace();
+		    return 0;
+		}
+	}
+
+	private List<Doc> getSubDocListFromGIT(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user,ReturnAjax rt) {
+		
+		GITUtil gitUtil = new GITUtil();
+		if(false == gitUtil.Init(repos, true, null))
+		{
+			System.out.println("getSubDocListFromGIT() gitUtil.Init Failed");
+			return null;
+		}
+		
+		String revision = null;
+		
+		//Get list from verRepos
+		List<GitEntry> subEntryList =  gitUtil.getSubEntryList(parentPath, revision); 
+		List<Doc> docList = new ArrayList<Doc>();
+		for(int i=0; i < subEntryList.size(); i++)
+		{
+			GitEntry subEntry = subEntryList.get(i);
+			String subEntryName = subEntry.getName();
+			Integer subEntryType = subEntry.getType();
+			if(subEntryType > 0)
+			{
+				//Create Doc to save subEntry Info
+				Doc subDoc = new Doc();
+				int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+				subDoc.setVid(repos.getId());
+				subDoc.setPid(pid);
+				subDoc.setId(subDocId);
+				subDoc.setName(subEntryName);
+				subDoc.setType(subEntryType);
+				docList.add(subDoc);
+			}
+    	}
+		return docList;
+	}
+
+	private List<Doc>  getSubDocListFromSVN(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
+		
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, true, null))
+		{
+			System.out.println("getSubDocListFromSVN() svnUtil.Init Failed");
+			return null;
+		}
+		
+		long revision = -1;
+		
+		//Get list from verRepos
+		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntryList(parentPath, revision); 
+		List<Doc> docList = new ArrayList<Doc>();
+		for(int i=0; i < subEntryList.size(); i++)
+		{
+			SVNDirEntry subEntry = subEntryList.get(i);
+			String subEntryName = subEntry.getName();
+			Integer subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
+			if(subEntryType != 1 && subEntryType != 2)
+			{
+				continue;
+			}
+    		
+			//Create Doc to save subEntry Info
+    		Doc subDoc = new Doc();
+    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		subDoc.setVid(repos.getId());
+    		subDoc.setPid(pid);
+       		subDoc.setId(subDocId);
+    		subDoc.setName(subEntryName);
+    		subDoc.setType(subEntryType);
+    		docList.add(subDoc);
+    	}
+		return docList;
+	}
+	
 	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer docId, String parentPath, String docName, User login_user, ReturnAjax rt)
 	{
 		switch(repos.getType())
@@ -125,6 +278,18 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Integer docId, String parentPath, String docName,
+			User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Integer docId, String parentPath, String docName,
+			User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer docId, String parentPath, String docName, User login_user, ReturnAjax rt)
 	{
 		System.out.println("getDocListFromRootToDoc_DB() reposId:" + repos.getId()  + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
@@ -309,6 +474,35 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	protected List<Repos> getAccessableReposList(Integer userId) {
+		System.out.println("getAccessableReposList() userId:" + userId);
+		
+		//取出用户在系统上的所有仓库权限列表
+		//将仓库权限列表转换成HashMap,方便快速从列表中取出仓库的用户权限
+		HashMap<Integer,ReposAuth> reposAuthHashMap = getUserReposAuthHashMap(userId);
+		printObject("reposAuthHashMap:",reposAuthHashMap);
+		if(reposAuthHashMap == null || reposAuthHashMap.size() == 0)
+		{
+			return null;
+		}
+		
+		//get all reposAuthList to pick up the accessable List
+		List<Repos> resultList = new ArrayList<Repos>();
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0;i<reposList.size();i++)
+		{
+			Repos repos = reposList.get(i);
+			printObject("repos",repos);
+			ReposAuth reposAuth = reposAuthHashMap.get(repos.getId());
+			printObject("reposAuth",reposAuth);
+			if(reposAuth != null && reposAuth.getAccess()!=null && reposAuth.getAccess().equals(1))
+			{
+				resultList.add(repos);
+			}
+		}
+		
+		return resultList;
+	}
 	
 	/****************************** 仓库操作接口 ***************************************************/
 	//检查path1和path2是否互相包含
@@ -1684,189 +1878,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return true;
-	}
-	
-	/******************************  仓库与文件列表获取接口 ***************************************/
-	protected List<Repos> getAccessableReposList(Integer userId) {
-		System.out.println("getAccessableReposList() userId:" + userId);
-		
-		//取出用户在系统上的所有仓库权限列表
-		//将仓库权限列表转换成HashMap,方便快速从列表中取出仓库的用户权限
-		HashMap<Integer,ReposAuth> reposAuthHashMap = getUserReposAuthHashMap(userId);
-		printObject("reposAuthHashMap:",reposAuthHashMap);
-		if(reposAuthHashMap == null || reposAuthHashMap.size() == 0)
-		{
-			return null;
-		}
-		
-		//get all reposAuthList to pick up the accessable List
-		List<Repos> resultList = new ArrayList<Repos>();
-		List<Repos> reposList = reposService.getAllReposList();
-		for(int i=0;i<reposList.size();i++)
-		{
-			Repos repos = reposList.get(i);
-			printObject("repos",repos);
-			ReposAuth reposAuth = reposAuthHashMap.get(repos.getId());
-			printObject("reposAuth",reposAuth);
-			if(reposAuth != null && reposAuth.getAccess()!=null && reposAuth.getAccess().equals(1))
-			{
-				resultList.add(repos);
-			}
-		}
-		
-		return resultList;
-	}
-	
-	//获取子节点List in DataBase
-	protected List <Doc> getSubDocListFromDB(Repos repos, Integer pid)
-	{
-		Doc doc = new Doc();
-		doc.setPid(pid);
-		doc.setVid(repos.getId());
-		return reposService.getDocList(doc);
-	}
-	
-	//获取目录parentPath下的所有子节点
-	protected List <Doc> getSubDocListFromFS(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt)
-	{
-		String localParentPath = getReposRealPath(repos) + parentPath;
-		File dir = new File(localParentPath);
-    	if(false == dir.exists())
-    	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
-    		rt.setError( parentPath + " 不存在！");
-    		return null;
-    	}
-    	
-        //Go through the subEntries
-    	if(false == dir.isDirectory())
-    	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
-    		rt.setError( parentPath + " 不是目录！");
-    		return null;
-    	}
- 	
-        //Get fileList and add it to docList
-    	List<Doc> docList = new ArrayList<Doc>();
-    	File[] tmp=dir.listFiles();
-    	for(int i=0;i<tmp.length;i++)
-    	{
-    		File subEntry = tmp[i];
-    		int subEntryType = subEntry.isDirectory()? 2: 1;
-    		String subEntryName = subEntry.getName();
-    		long lastModifyTime = getFileLastModifiedTime(subEntry);
-    		
-    		//Create Doc to save subEntry Info
-    		Doc subDoc = new Doc();
-    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
-    		subDoc.setVid(repos.getId());
-    		subDoc.setPid(pid);
-       		subDoc.setId(subDocId);
-    		subDoc.setName(subEntryName);
-    		subDoc.setType(subEntryType);
-    		subDoc.setPath(parentPath);
-    		subDoc.setSize((int)subEntry.length());
-    		subDoc.setState(0);
-    		subDoc.setCreateTime(lastModifyTime);
-    		subDoc.setLatestEditTime(lastModifyTime);
-    		docList.add(subDoc);
-    	}
-    	return docList;
-	}
-	
-	private long getFileLastModifiedTime(File file) {
-		try {
-			BasicFileAttributes bAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-			FileTime changeTime = bAttributes.lastModifiedTime();
-			return changeTime.toMillis();
-		} catch (Exception e) {
-			System.out.println("getFileLastModifiedTime() 异常");
-		    e.printStackTrace();
-		    return 0;
-		}
-	}
-
-	protected List<Doc> getSubDocListFromVerRepos(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
-		switch(repos.getVerCtrl())
-		{
-		case 1: //SVN
-			return getSubDocListFromSVN(repos, pid, pLevel, parentPath, login_user, rt);
-		case 2: //GIT
-			return getSubDocListFromGIT(repos, pid, pLevel, parentPath, login_user, rt);
-		}
-		return null;
-	}
-
-	private List<Doc>  getSubDocListFromGIT(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user,ReturnAjax rt) {
-		
-		GITUtil gitUtil = new GITUtil();
-		if(false == gitUtil.Init(repos, true, null))
-		{
-			System.out.println("getSubDocListFromGIT() gitUtil.Init Failed");
-			return null;
-		}
-		
-		String revision = null;
-		
-		//Get list from verRepos
-		List<GitEntry> subEntryList =  gitUtil.getSubEntryList(parentPath, revision); 
-		List<Doc> docList = new ArrayList<Doc>();
-		for(int i=0; i < subEntryList.size(); i++)
-		{
-			GitEntry subEntry = subEntryList.get(i);
-			String subEntryName = subEntry.getName();
-			Integer subEntryType = subEntry.getType();
-			if(subEntryType > 0)
-			{
-				//Create Doc to save subEntry Info
-				Doc subDoc = new Doc();
-				int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
-				subDoc.setVid(repos.getId());
-				subDoc.setPid(pid);
-				subDoc.setId(subDocId);
-				subDoc.setName(subEntryName);
-				subDoc.setType(subEntryType);
-				docList.add(subDoc);
-			}
-    	}
-		return docList;
-	}
-
-	private List<Doc>  getSubDocListFromSVN(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt) {
-		
-		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, true, null))
-		{
-			System.out.println("getSubDocListFromSVN() svnUtil.Init Failed");
-			return null;
-		}
-		
-		long revision = -1;
-		
-		//Get list from verRepos
-		List<SVNDirEntry> subEntryList =  svnUtil.getSubEntryList(parentPath, revision); 
-		List<Doc> docList = new ArrayList<Doc>();
-		for(int i=0; i < subEntryList.size(); i++)
-		{
-			SVNDirEntry subEntry = subEntryList.get(i);
-			String subEntryName = subEntry.getName();
-			Integer subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
-			if(subEntryType != 1 && subEntryType != 2)
-			{
-				continue;
-			}
-    		
-			//Create Doc to save subEntry Info
-    		Doc subDoc = new Doc();
-    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
-    		subDoc.setVid(repos.getId());
-    		subDoc.setPid(pid);
-       		subDoc.setId(subDocId);
-    		subDoc.setName(subEntryName);
-    		subDoc.setType(subEntryType);
-    		docList.add(subDoc);
-    	}
-		return docList;
 	}
 		
 	/***************************Basic Functions For Driver Level  **************************/

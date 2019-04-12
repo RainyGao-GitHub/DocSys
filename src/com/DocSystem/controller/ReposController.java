@@ -477,7 +477,7 @@ public class ReposController extends BaseController{
 		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, 0, "", login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, 0, "", login_user, rt);
 		}
 		else
 		{
@@ -541,7 +541,7 @@ public class ReposController extends BaseController{
 		//Get Repos
 		Repos repos = reposService.getRepos(vid);
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, pid, parentPath, login_user, rt);
+		List <Doc> docList = getAccessableSubDocList(repos, pid, level, parentPath, login_user, rt);
 
 		if(docList == null)
 		{
@@ -582,16 +582,13 @@ public class ReposController extends BaseController{
 		List <Doc> docList =  null;
 		
 		//对于前置类型因为文件节点不存在因此只能设置根目录权限
-		if(repos.getType() == 1)
+		if(docId == null || docId == 0)
 		{
-			if(docId == null || docId == 0)
-			{
-				docList = getAccessableSubDocList(repos, 0, "", login_user, rt);
-			}
-			else
-			{
-				docList = getDocListFromRootToDoc(repos, docId, parentPath, docName, login_user ,rt);
-			}
+			docList = getAccessableSubDocList(repos, 0, 0, "", login_user, rt);
+		}
+		else
+		{
+			docList = getDocListFromRootToDoc(repos, docId, parentPath, docName, login_user ,rt);
 		}	
 		
 		//合并列表
