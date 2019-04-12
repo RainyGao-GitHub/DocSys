@@ -514,9 +514,9 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer reposId, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getSubDocList reposId: " + reposId + " id: " + id  + " level:" + level + " path:" + path + " name:"+ name );
+		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " level:" + level + " path:" + path + " name:"+ name );
 		Integer pid = id;
 		if(pid == null || pid == 0)
 		{
@@ -549,10 +549,10 @@ public class ReposController extends BaseController{
 		}		
 		
 		//Get Repos
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = reposService.getRepos(vid);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + vid + " 不存在！");
 			writeJson(rt, response);			
 			return;
 		}
