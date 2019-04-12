@@ -319,6 +319,9 @@ public class BaseController  extends BaseFunction{
 			List<Doc> subDocList = getSubDocListFromParentToDoc_FS(repos, tempPid, level+i, tempParentPath, tempSubDoc, login_user , rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
+				System.out.println("getDocListFromRootToDoc_FS() Failed to get the doc: " + doc.getName());
+				doc.setId(0);	//0 不存在的节点	
+				doc.setName("");
 				break;
 			}
 			resultList.addAll(subDocList);
@@ -326,6 +329,8 @@ public class BaseController  extends BaseFunction{
 			tempPid = tempSubDoc.getId();
 			tempParentPath = tempParentPath + paths[i] + "/";
 		}
+		
+		doc.setId(tempPid);
 		return resultList;
 	}
 

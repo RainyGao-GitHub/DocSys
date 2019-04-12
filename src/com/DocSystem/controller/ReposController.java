@@ -501,7 +501,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			rt.setData(docList);	
+			rt.setData(docList);
 		}
 		writeJson(rt, response);
 		return;		
@@ -609,7 +609,6 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			
 			docList = getDocListFromRootToDoc(repos, 1, 1, parentPath, doc, login_user ,rt);
 		}	
 		
