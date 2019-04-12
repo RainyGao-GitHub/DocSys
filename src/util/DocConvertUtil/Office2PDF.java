@@ -33,7 +33,7 @@ public class Office2PDF {
      *            源文件路径，如："e:/test.docx"
      * @return
      */
-    public static File openOfficeToPDF(String inputFilePath,String outputFilePath) {    	 
+    public static boolean openOfficeToPDF(String inputFilePath,String outputFilePath) {    	 
     	 return office2pdf(inputFilePath,outputFilePath);
     }
 
@@ -117,16 +117,17 @@ public class Office2PDF {
      * @param outputFilePath
      * @param converter
      */
-    public static File converterFile(File inputFile, String outputFilePath_end, String inputFilePath,
+    public static boolean converterFile(File inputFile, String outputFilePath_end, String inputFilePath,
             OfficeDocumentConverter converter) {
         File outputFile = new File(outputFilePath_end);
         // 假如目标路径不存在,则新建该路径
         if (!outputFile.getParentFile().exists()) {
             outputFile.getParentFile().mkdirs();
         }
+        
         converter.convert(inputFile, outputFile);
-        System.out.println("文件：" + inputFilePath + "\n转换为\n目标文件：" + outputFile + "\n成功!");
-        return outputFile;
+        System.out.println("文件 " + inputFilePath + "转换为 目标文件:" + outputFile + " 成功!");
+        return true;
     }
 
     /**
@@ -139,19 +140,19 @@ public class Office2PDF {
      *            目标文件路径，如："e:/test_docx.pdf"
      * @return
      */
-    public static File office2pdf(String inputFilePath, String outputFilePath) {
+    public static boolean office2pdf(String inputFilePath, String outputFilePath) {
         OfficeManager officeManager = null;
         try {
             if (inputFilePath == null || "".equals(inputFilePath)) {
                 System.out.println("office2pdf() 输入文件地址为空，转换终止!");
-                return null;
+                return false;
             }
 
             File inputFile = new File(inputFilePath);
 
             if (!inputFile.exists()) {
                 System.out.println("office2pdf() 输入文件不存在，转换终止!");
-                return null;
+                return false;
             }
 
             // 获取OpenOffice的安装路劲
@@ -169,7 +170,7 @@ public class Office2PDF {
                 officeManager.stop();
             }
         }
-        return null;
+        return false;
     }
 
     /**

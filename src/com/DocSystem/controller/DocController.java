@@ -1132,8 +1132,7 @@ public class DocController extends BaseController{
 			case "xlsx":
 			case "ppt":
 			case "pptx":
-				File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
-				if(pdf == null)
+				if(Office2PDF.openOfficeToPDF(srcPath,dstPath) == false)
 				{
 					rt.setError("预览失败");
 					rt.setMsgData("Failed execute openOfficeToPDF " + srcPath + " to " + dstPath);
