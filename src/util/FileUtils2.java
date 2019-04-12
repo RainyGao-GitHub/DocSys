@@ -171,13 +171,6 @@ public class FileUtils2 {
         return charsetName;
     }
     
-    public static String getFileSuffix(String filePath)
-    {
-    	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
-    	System.out.println("getFileSuffix() " + suffix);
-    	return suffix;
-    }
-    
     public static FileMagic getFileMagic(String filePath) throws Exception {
     	InputStream istream = new FileInputStream(filePath);
     	InputStream is = FileMagic.prepareToCheckMagic(istream);
@@ -216,34 +209,6 @@ public class FileUtils2 {
 		}
 		return false;
 	}
-	
-	public static boolean copyFile(String srcFilePath,String dstFilePath){
-        try {
-            File dstFile=new File(dstFilePath);
-            if(!dstFile.exists())
-            {
-            	dstFile.createNewFile();
-            }
-        	
-        	//Copy by Channel
-	        FileInputStream in=new FileInputStream(srcFilePath);
-	        FileOutputStream out=new FileOutputStream(dstFilePath);
-	        FileChannel inputChannel = in.getChannel();    
-	        FileChannel outputChannel = out.getChannel();   
-
-	        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
-		   	inputChannel.close();
-		    outputChannel.close();
-		    in.close();	
-			out.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-        return true;
-	}
-	
     
     public static void main(String[] args) throws Exception {
         
@@ -282,20 +247,4 @@ public class FileUtils2 {
         System.out.println("code: "+code);
         System.out.println();             
     }
-
-	public static boolean isOfficeFile(String fileType) {
-		// TODO Auto-generated method stub
-		switch(fileType)
-		{
-		case "doc":
-		case "docx":
-		case "xls":
-		case "xlsx":
-		case "ppt":
-		case "pptx":
-			return true;
-		}
-		return false;
-	}
-
 }

@@ -4794,7 +4794,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
-		String fileSuffix = FileUtils2.getFileSuffix(name);
+		String fileSuffix = getFileSuffix(name);
 		if(fileSuffix != null)
 		{
 			switch(fileSuffix)

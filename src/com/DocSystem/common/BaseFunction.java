@@ -777,7 +777,28 @@ public class BaseFunction{
 		}
 		return fileName;
 	}
-
+	
+    public static String getFileSuffix(String filePath)
+    {
+    	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
+    	System.out.println("getFileSuffix() " + suffix);
+    	return suffix;
+    }
+    
+	public static boolean isOfficeFile(String fileSuffix) {
+		// TODO Auto-generated method stub
+		switch(fileSuffix)
+		{
+		case "doc":
+		case "docx":
+		case "xls":
+		case "xlsx":
+		case "ppt":
+		case "pptx":
+			return true;
+		}
+		return false;
+	}
 	/****************** 线程锁接口 *********************************************/
 	protected static final Object syncLock = new Object(); 
 	//释放线程锁
