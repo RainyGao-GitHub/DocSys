@@ -2911,20 +2911,26 @@
         });
 
     }
+	
+    function getCurrentNode()
+   	{
+    	if(gDocId && gDocId != null)
+    	{
+			var zTree = $.fn.zTree.getZTreeObj("doctree");
+			var node = zTree.getNodeByParam("id",gDocId);
+			return node;
+    	}
+    	return null;
+   	}
+
 
 	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
 	function getMenu(callback1,callback2) {
-		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);
-		
-		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",gDocId);
+		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);		
+		var node = getCurrentNode(gDocId);
 		var parentPath = "";
 		var docName = "";
 		if(node != null)
-		{
-			gDocId = 0;
-		}
-		else
 		{
 			parentPath = node.path;
 			docName = node.name;
@@ -2943,9 +2949,15 @@
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
 		        		console.log("getMenu() ret",ret);
-		                callback1 && callback1(ret.data.docList);
+		                callback1 && callback1(ret.data);
+		                var retDocId = ret.MsgData;
+		                
+		                if(retDocId && retDocId != 0)
+		                {
+		                	gDocId = retDocId;
+		                }
 		                callback2 && callback2();
-		                gDocId = ret.data.docId;
+		            	
 		            }
 		            else
 		           	{
