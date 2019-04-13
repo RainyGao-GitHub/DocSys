@@ -3206,7 +3206,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean updateDocContent_DB(Repos repos, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
+	protected boolean updateDocContent_DB(Repos repos, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) 
+	{
 		Doc doc = null;
 		synchronized(syncLock)
 		{

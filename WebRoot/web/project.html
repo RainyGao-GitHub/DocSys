@@ -2960,15 +2960,27 @@
 
 	/******************************** Doc Interfaces***************************************/
 	//文件保存操作: callback是指成功后的回调函数
-    function saveDoc(curDocId, content,newDocId){
+    function saveDoc(curDocId, content,newDocId)
+	{
 		console.log("saveDoc curDocId:" + curDocId + " newDocId" + newDocId);
-        $.ajax({
+        
+		var curNode = getNodeById(curDocId);
+		if(curNode && curNode == null)
+		{
+			bootstrapQ.alert("保存失败: 文件不存在");
+			return;
+		}
+		
+		$.ajax({
             url : "/DocSystem/Doc/updateDocContent.do",
             type : "post",
             dataType : "json",
             data : {
-                id : curDocId,
-                content : content
+                reposId: gReposId,
+            	docId : curDocId,
+                parentPath: curNode.path,
+                docName: curNode.name,
+            	content : content
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
