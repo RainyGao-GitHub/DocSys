@@ -1,11 +1,13 @@
 package com.DocSystem.controller;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
@@ -4584,36 +4586,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean deleteVirtualDoc(String reposVPath, String docVName, ReturnAjax rt) {
-		String localDocVPath = reposVPath + docVName;
-		if(delDir(localDocVPath) == false)
-		{
-			rt.setMsgData("deleteVirtualDoc() delDir失败 " + localDocVPath);
-			return false;
-		}
-		return true;
-	}
-	
-	protected boolean moveVirtualDoc(String reposVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
-		if(moveFileOrDir(reposVPath, srcDocVName, reposVPath, dstDocVName, false) == false)
-		{
-			rt.setMsgData("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
-			return false;
-		}
-		return true;
-	}
-	
-	protected boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName, ReturnAjax rt) {
-		String srcDocFullVPath = reposVPath + srcDocVName;
-		String dstDocFullVPath = reposVPath + dstDocVName;
-		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
-		{
-			rt.setMsgData("copyVirtualDoc() copyDir " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
-			return false;
-		}
-		return true;
-	}
-
 	protected boolean saveVirtualDocContent(String localParentPath, String docVName, String content, ReturnAjax rt) {
 		String vDocPath = localParentPath + docVName + "/";
 		File folder = new File(vDocPath);
@@ -4648,6 +4620,67 @@ public class BaseController  extends BaseFunction{
 			System.out.println("saveVirtualDocContent() out.write exception");
 			e.printStackTrace();
 			rt.setMsgData(e);
+			return false;
+		}
+		return true;
+	}
+	
+	protected String readVirtualDocContent(String reposVPath, String parentPath, String docName) {
+		
+		String vDocPath = reposVPath + getVDocName(parentPath,docName) + "/";
+		String mdFilePath = vDocPath + "content.md";
+
+		try 
+		{
+				
+			File file = new File(mdFilePath);
+			if(!file.exists())
+			{
+				return null;
+			}
+			
+			int fileSize = (int) file.length();
+			byte buffer[] = new byte[fileSize];
+	
+			FileInputStream in;
+				in = new FileInputStream(mdFilePath);
+				in.read(buffer, 0, fileSize);
+				in.close();
+	
+			
+			String content = new String(buffer);
+			return content;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	protected boolean deleteVirtualDoc(String reposVPath, String docVName, ReturnAjax rt) {
+		String localDocVPath = reposVPath + docVName;
+		if(delDir(localDocVPath) == false)
+		{
+			rt.setMsgData("deleteVirtualDoc() delDir失败 " + localDocVPath);
+			return false;
+		}
+		return true;
+	}
+	
+	protected boolean moveVirtualDoc(String reposVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
+		if(moveFileOrDir(reposVPath, srcDocVName, reposVPath, dstDocVName, false) == false)
+		{
+			rt.setMsgData("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
+			return false;
+		}
+		return true;
+	}
+	
+	protected boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName, ReturnAjax rt) {
+		String srcDocFullVPath = reposVPath + srcDocVName;
+		String dstDocFullVPath = reposVPath + dstDocVName;
+		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
+		{
+			rt.setMsgData("copyVirtualDoc() copyDir " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
 			return false;
 		}
 		return true;

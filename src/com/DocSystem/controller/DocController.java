@@ -728,6 +728,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/updateDocContent.do")
 	public void updateDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1195,7 +1196,8 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		String content = getContentFromVDoc(repos, docId, parentPath, docName);
+		String content = readVirtualDocContent(getReposVirtualPath(repos),parentPath, docName);
+		
 				
 		//Create Doc to save subEntry Info
 		Doc doc = new Doc();
@@ -1220,6 +1222,7 @@ public class DocController extends BaseController{
 		String vDocName = getVDocName(parentPath, docName);
 				
 		String content = readFile(reposVPath + vDocName + "/content.md");
+		System.out.println("content:[" + content + "]");
 		return content;
 	}
 	
