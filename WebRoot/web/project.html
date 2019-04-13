@@ -2912,12 +2912,12 @@
 
     }
 	
-    function getCurrentNode()
+    function getNodeById(docId)
    	{
-    	if(gDocId && gDocId != null)
+    	if(docId && docId != null)
     	{
 			var zTree = $.fn.zTree.getZTreeObj("doctree");
-			var node = zTree.getNodeByParam("id",gDocId);
+			var node = zTree.getNodeByParam("id",docId);
 			return node;
     	}
     	return null;
@@ -2927,7 +2927,7 @@
 	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
 	function getMenu(callback1,callback2) {
 		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);		
-		var node = getCurrentNode(gDocId);
+		var node = getNodeById(gDocId);
 		var parentPath = "";
 		var docName = "";
 		if(node != null)
@@ -3050,11 +3050,23 @@
     
     function updateUrl(reposId,docId,edit)
     {
+    	//Get Node by Id
+    	var node = getNodeById(docId);
+    	var path;
+    	var name;
+    	if(node && node != null)
+    	{
+    		path = node.path;
+    		name = node.name;
+    	}
+    	
         //Update URL 保证页面刷新后还是处于正确的状态
         var param = {
         	vid : reposId,
             doc : docId,
-            edit: edit,
+            path: path,
+            name: name,
+            edit: edit,   
         };
         var url = makeUrl(param);
 		window.history.pushState({}, "wiki", url);
@@ -4628,7 +4640,6 @@
               str += "&" + k + "=" + params[k];
             }
         }
-
 
         return href + "?" + str.substr(1);
     }
