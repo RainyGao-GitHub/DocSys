@@ -48,7 +48,7 @@ import util.Encrypt.MD5;
 import util.FileUtil.FileUtils2;
 import util.GitUtil.GITUtil;
 import util.GitUtil.GitEntry;
-import util.Lucene.LuceneUtil2;
+import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.CommitAction;
 import util.SvnUtil.SVNUtil;
 
@@ -1630,10 +1630,10 @@ public class BaseController  extends BaseFunction{
 		return reposVPath;
 	}
 	
-	protected String getDocVPath(String parentPath, String docName) 
+	protected String getVDocName(String parentPath, String docName) 
 	{
 		String VPath = MD5.md5(parentPath) + "_" + docName;
-		System.out.println("getDocVPath() " + VPath + " for " + parentPath + docName);
+		System.out.println("getVDocName() " + VPath + " for " + parentPath + docName);
 		return VPath;
 	}
 	
@@ -2131,7 +2131,7 @@ public class BaseController  extends BaseFunction{
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getDocVPath(parentPath, docName);
+			String docVName = getVDocName(parentPath, docName);
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) == false)
@@ -2296,7 +2296,7 @@ public class BaseController  extends BaseFunction{
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getDocVPath(parentPath,doc.getName());
+			String docVName = getVDocName(parentPath,doc.getName());
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
@@ -2445,7 +2445,7 @@ public class BaseController  extends BaseFunction{
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getDocVPath(parentPath ,doc.getName());
+		String docVName = getVDocName(parentPath ,doc.getName());
 		String localDocVPath = reposVPath + docVName;
 		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
 		{
@@ -2772,8 +2772,8 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("moveVirtualDoc move " + srcParentPath+oldName + " to " + dstParentPath + newName);
 		
-		String srcDocVPath = getDocVPath(srcParentPath, oldName);
-		String dstDocVPath = getDocVPath(dstParentPath, newName);
+		String srcDocVPath = getVDocName(srcParentPath, oldName);
+		String dstDocVPath = getVDocName(dstParentPath, newName);
 		if(!srcDocVPath.equals(dstDocVPath))
 		{
 			//修改虚拟文件的目录名称 when VDoc exists
@@ -3082,8 +3082,8 @@ public class BaseController  extends BaseFunction{
 		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String srcDocVName = getDocVPath(srcParentPath, srcDoc.getName());
-			String dstDocVName = getDocVPath(dstParentPath, dstDoc.getName());
+			String srcDocVName = getVDocName(srcParentPath, srcDoc.getName());
+			String dstDocVName = getVDocName(dstParentPath, dstDoc.getName());
 			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
 			{
 				if(verReposVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
@@ -3207,7 +3207,7 @@ public class BaseController  extends BaseFunction{
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
 		parentPath = getParentPath(doc.getPid());
-		String docVName = getDocVPath(parentPath, doc.getName());
+		String docVName = getVDocName(parentPath, doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);

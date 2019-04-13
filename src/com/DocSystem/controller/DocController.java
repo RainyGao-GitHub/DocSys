@@ -570,7 +570,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(doc.getVid());
 		String reposVPath = getReposVirtualPath(repos);
 		String parentPath = getParentPath(doc.getPid());
-		String docVName = getDocVPath(parentPath, doc.getName());
+		String docVName = getVDocName(parentPath, doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
 		
@@ -788,7 +788,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String docVName = getDocVPath(parentPath,name);
+		String docVName = getVDocName(parentPath,name);
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
@@ -981,7 +981,7 @@ public class DocController extends BaseController{
 				targetName = docName + "_Node_" + commitId;
 			}
 			
-			entryName = getDocVPath(parentPath, docName);
+			entryName = getVDocName(parentPath, docName);
 			parentPath = "";
 		}
 		
@@ -1225,9 +1225,9 @@ public class DocController extends BaseController{
 	private String getContentFromVDoc(Repos repos, Integer docId, String parentPath, String docName) {
 		
 		String reposVPath = getReposVirtualPath(repos);
-		String vDocName = getDocVPath(parentPath, docName);
+		String vDocName = getVDocName(parentPath, docName);
 				
-		String content = readFile(reposVPath + vDocName + "content.md");
+		String content = readFile(reposVPath + vDocName + "/content.md");
 		return content;
 	}
 	
@@ -1336,7 +1336,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				entryPath = getDocVPath(parentPath, docName);
+				entryPath = getVDocName(parentPath, docName);
 			}
 		}
 		
@@ -1406,7 +1406,7 @@ public class DocController extends BaseController{
 	
 	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
-		String entryPath = getDocVPath(parentPath, docName);
+		String entryPath = getVDocName(parentPath, docName);
 		return false;
 	}
 

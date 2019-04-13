@@ -806,7 +806,6 @@ public class BaseFunction{
 	private static void readToBuffer(StringBuffer buffer, String filePath)
 	{
 		try {
-			
 			String code = getFileEncode(filePath);
 			FileInputStream is = new FileInputStream(filePath);
 			String line; // 用来保存每行读取的内容
@@ -826,6 +825,12 @@ public class BaseFunction{
 	
 	protected static String readFile(String filePath)
 	{
+		File file = new File(filePath);
+		if(!file.exists())
+		{
+			return null;
+		}
+		
 	    StringBuffer sb = new StringBuffer();
 	    readToBuffer(sb, filePath);
 	    return sb.toString();
