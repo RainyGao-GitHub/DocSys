@@ -1,7 +1,7 @@
 /**
  * 
  */
-package util;
+package util.LuceneUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -50,6 +50,9 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
+
+import util.ReadProperties;
+import util.FileUtil.FileUtils2;
 
 
 /**  
