@@ -446,7 +446,8 @@
 	var gReposCreateTime = "";
 	//Doc Info
 	var gDocId;
-	var gParentPath = "";
+	var gParentPath;
+	var gDocName;
 	var gDocContent;
 	var gEdit; 
 	
@@ -2923,18 +2924,10 @@
     	return null;
    	}
 
-
 	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
-	function getMenu(callback1,callback2) {
-		//console.log("getMenu callback1:" +callback1 + " callback2:" + callback2);		
-		var node = getNodeById(gDocId);
-		var parentPath = "";
-		var docName = "";
-		if(node != null)
-		{
-			parentPath = node.path;
-			docName = node.name;
-		}
+	function getInitMenu(docId, parentPath, docName) 
+   	{
+		console.log("getInitMenu docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		$.ajax({
 		    url : "/DocSystem/Repos/getReposInitMenu.do",
@@ -2942,22 +2935,17 @@
 		    dataType : "json",
 		    data : {
 		        reposId : gReposId,  
-		    	docId: gDocId,
+		    	docId:  docId,
 		    	parentPath: parentPath,
 		    	docName: docName,
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
 		        		console.log("getMenu() ret",ret);
-		                callback1 && callback1(ret.data);
-		                var retDocId = ret.MsgData;
-		                
-		                if(retDocId && retDocId != 0)
-		                {
-		                	gDocId = retDocId;
-		                }
-		                callback2 && callback2();
-		            	
+		                reDrawMenu(ret.data);
+		  
+		                var retDocId = ret.msgData;
+		                showDoc(retDocId);           	
 		            }
 		            else
 		           	{
@@ -5359,14 +5347,14 @@ function CompareObj(objA, objB, flag) {
 	function InitMenu()
 	{
 		console.log("InitMenu");
-	    getMenu(reDrawMenu,showDoc);
+	    getInitMenu(gDocId, gParentPath, gDocName);
 	}
 	
 	//将后台Menu,同步回前台
-	function syncUpMenu(callback)
+	function syncUpMenu()
 	{
 		console.log("syncUpMenu");
-	    getMenu(reDrawMenu,callback);
+	    getInitMenu(gDocId, gParentPath, gDocName);
 	}
 	
 	function reDrawMenu(data)
@@ -5633,14 +5621,15 @@ function CompareObj(objA, objB, flag) {
  		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
  	}
  	
-	function showDoc()
+ 	//ShowDoc 需要在zTree初始化完之后才能调用
+	function showDoc(docId)
 	{
-		console.log("showDoc gDocId:" + gDocId);
-		if(gDocId && gDocId != null)
+		console.log("showDoc docId:" + docId);
+		if(docId && docId != null)
 		{
 			 //select the zTreeNode with gDocId
 			 var zTree = $.fn.zTree.getZTreeObj("doctree");
-			 var node = zTree.getNodeByParam("id",gDocId);
+			 var node = zTree.getNodeByParam("id",docId);
 			 if(node != null)
 			 {
 				 zTree.selectNode(node);
@@ -6167,6 +6156,8 @@ function CompareObj(objA, objB, flag) {
     	//初始化全局变量
     	gReposId = getQueryString("vid");
 		gDocId = getQueryString("doc");
+		gParentPath = getQueryString("path");
+		gDocName = getQueryString("name");
 		gEdit = getQueryString("edit");
 		if(!gEdit)
 		{
