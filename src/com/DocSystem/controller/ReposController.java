@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import util.ReturnAjax;
 import util.GitUtil.GITUtil;
-import util.Lucene.LuceneUtil2;
+import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;
