@@ -3075,72 +3075,72 @@
 	//读取文件信息
     function showVirtualDoc(docId,edit) {
       	console.log("showVirtualDoc() docId:"+docId + " edit:" + edit);
-      	if(docId)	//undefine do clean the info of rightDiv
-        {
-	      	//To get the Doc  
-	        $.ajax({
-	            url : "/DocSystem/Doc/getDoc.do",
-	            type : "post",
-	            dataType : "json",
-	            data : {
-	                id : docId,
-	            },
-	            success : function (ret) {
-	                if( "ok" == ret.status ){
-	                	console.log("showVirtualDoc ret",ret);
-	                	$('#filetitle').html(ret.data.name);
-	                    gDocId = ret.data.id;
-	                    if(ret.data.content == "null")
-	                    {
-	                    	gDocContent = "";	//Convert it to empty String
-	                    }
-	                    else
-	                    {	
-	                    	gDocContent = JSON.parse(ret.data.content);
-	                    }
-	                    
-						//Update URL 保证页面刷新后还是处于正确的状态
-						updateUrl(gReposId,gDocId,edit);
-						
-						DocEdit.loadmd(gDocContent,edit);
-	                    
-	                    WikiEditBtnCtrl(edit);		
-						
-	                    //we need to clear debounce when a new doc was loaded
-						debounce.clear();
-						if(edit)
-						{
-							//start the autoTmpSaver
-							DocEdit.startAutoTmpSaver();
-						}
-						else
-						{
-							DocEdit.stopAutoTmpSaver();
-						}
-	                }
-	                else
-	                {
-	                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
-	                }
-	            },
-	            error : function () {
-	                showErrorMessage("获取文件信息失败：服务器异常");
-	                $btn.button('reset');
-	            }
-	        });
-        }
-      	else	//docId undefined
+      	if(!docId)	//undefine do clean the info of rightDiv
       	{
       		//Clean FileName
-      		$('#filetitle').html("");
-      		
-      		//Clean the display content
-      		DocEdit.stopAutoTmpSaver();
-      		debounce.clear();
-      		gDocContent = "";
-      		gEdit = false;
-      		DocEdit.loadmd(gDocContent,gEdit);
-      	}
+          	$('#filetitle').html("");
+          		
+          	//Clean the display content
+          	DocEdit.stopAutoTmpSaver();
+          	debounce.clear();
+          	gDocContent = "";
+          	gEdit = false;
+          	DocEdit.loadmd(gDocContent,gEdit);
+        }
+      	
+        //To get DocInfo and Show Content
+    	$.ajax({
+            url : "/DocSystem/Doc/getDoc.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: gReposId,
+                id : docId,
+                
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("showVirtualDoc ret",ret);
+                	$('#filetitle').html(ret.data.name);
+                    gDocId = ret.data.id;
+                    if(ret.data.content == "null")
+                    {
+                    	gDocContent = "";	//Convert it to empty String
+                    }
+                    else
+                    {	
+                    	gDocContent = JSON.parse(ret.data.content);
+                    }
+                    
+					//Update URL 保证页面刷新后还是处于正确的状态
+					updateUrl(gReposId,gDocId,edit);
+					
+					DocEdit.loadmd(gDocContent,edit);
+                    
+                    WikiEditBtnCtrl(edit);		
+					
+                    //we need to clear debounce when a new doc was loaded
+					debounce.clear();
+					if(edit)
+					{
+						//start the autoTmpSaver
+						DocEdit.startAutoTmpSaver();
+					}
+					else
+					{
+						DocEdit.stopAutoTmpSaver();
+					}
+                }
+                else
+                {
+                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
+                }
+            },
+            error : function () {
+                showErrorMessage("获取文件信息失败：服务器异常");
+                $btn.button('reset');
+            }
+        });
     }
 	
 	function showDocHistory(node,historyType)

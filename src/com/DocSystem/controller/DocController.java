@@ -1171,11 +1171,13 @@ public class DocController extends BaseController{
 	@RequestMapping("/getDoc.do")
 	public void getDoc(Integer reposId, Integer docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
 		ReturnAjax rt = new ReturnAjax();
 		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
+			System.out.println("getDoc 仓库 " + reposId + " 不存在！");
 			rt.setError("仓库 " + reposId + " 不存在！");
 			writeJson(rt, response);			
 			return;
