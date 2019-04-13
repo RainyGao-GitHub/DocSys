@@ -1215,6 +1215,7 @@ public class DocController extends BaseController{
 		//Try to read tmpSavedContent
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		String tmpSavedContent = readVirtualDocContent(userTmpDir, vDocName);
+		rt.setMsgData(tmpSavedContent);
 		
 		writeJson(rt, response);
 	}
