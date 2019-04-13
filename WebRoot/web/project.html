@@ -2937,6 +2937,8 @@
 		    data : {
 		        reposId : gReposId,  
 		    	docId: gDocId,
+		    	parentPath: parentPath,
+		    	docName: docName,
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
@@ -5056,11 +5058,8 @@ function CompareObj(objA, objB, flag) {
             	 var parentNode = getParentNodeByNode(treeNode);
               	 showDocList(parentNode);
            	     
-             	 //show VirtualDoc (文件系统前置没有VirtualDoc)
-            	 if(gReposType != 2)
-            	 {
-	             	 showVirtualDoc(treeNode,false);
-            	 }
+              	 //显示预览或备注
+             	 showVirtualDoc(treeNode,false);
              }
           }
       }
@@ -5523,11 +5522,8 @@ function CompareObj(objA, objB, flag) {
 		 		showDocList(node);
 		 	}
 		
-			//ShowDoc
-			if(gReposType != 2)
-			{
-				showVirtualDoc(node,false);
-			}
+			//显示预览或备注
+			showVirtualDoc(node,false);
 		}		
   	}
  	
@@ -5629,10 +5625,7 @@ function CompareObj(objA, objB, flag) {
 				showDocList(parentNode);
 			 
 				//获取DocContent并显示
-				if(gReposType != 2)
-				{
-					showVirtualDoc(node,gEdit);
-				}
+				showVirtualDoc(node,gEdit);
 			 }
 			 else
 			 {
@@ -5728,10 +5721,7 @@ function CompareObj(objA, objB, flag) {
 		updateUrl(gReposId,gDocId);
 
 		//Update doc preview zone
-		if(gReposType != 2)
-		{
-			showVirtualDoc(node,false);
-		}
+		showVirtualDoc(node,false);
 		return;
    	}         
 	

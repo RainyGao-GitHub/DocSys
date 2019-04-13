@@ -495,6 +495,7 @@ public class ReposController extends BaseController{
 			docList = getDocListFromRootToDoc(repos, 0, 0, parentPath, doc, login_user ,rt);
 		}
 
+		rt.setMsgData(doc.getId());
 		if(docList == null)
 		{
 			rt.setData("");
