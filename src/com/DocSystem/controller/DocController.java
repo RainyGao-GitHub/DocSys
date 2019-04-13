@@ -1202,40 +1202,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
-		
-		switch(repos.getType())
-		{
-		case 1:
-			getDoc_DB(repos, docId, parentPath, docName, rt);
-			break;		
-		case 2:
-			getDoc_FS(repos, docId, parentPath, docName, rt);
-			break;	
-		case 3:
-			getDoc_SVN(repos, docId, parentPath, docName, rt);
-			break;		
-		case 4:
-			getDoc_GIT(repos, docId, parentPath, docName, rt);
-			break;	
-		}	
-		
-		writeJson(rt, response);
-	}
-	
-	private void getDoc_GIT(Repos repos, Integer docId, String parentPath, String docName, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		
-	}
 
-	private void getDoc_SVN(Repos repos, Integer docId, String parentPath, String docName, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void getDoc_FS(Repos repos, Integer docId, String parentPath, String docName, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		System.out.println("getDoc_FS docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
-		
 		String content = getContentFromVDoc(repos, docId, parentPath, docName);
 				
 		//Create Doc to save subEntry Info
@@ -1243,9 +1210,16 @@ public class DocController extends BaseController{
 		doc.setId(docId);
 		doc.setName(docName);
 		doc.setPath(parentPath);
+		
+        if( null !=content)
+        {
+        	content = content.replaceAll("\t","");
+        }
 		doc.setContent(JSONObject.toJSONString(content));
 
 		rt.setData(doc);
+
+		writeJson(rt, response);
 	}
 
 	private String getContentFromVDoc(Repos repos, Integer docId, String parentPath, String docName) {
@@ -1257,27 +1231,6 @@ public class DocController extends BaseController{
 		return content;
 	}
 	
-	public void getDoc_DB(Repos repos, Integer docId, String parentPath, String docName,ReturnAjax rt)
-	{	
-		System.out.println("getDoc_DB docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
-		
-		Doc doc = reposService.getDoc(docId);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			return;		
-		}
-		
-		String content = doc.getContent();
-        if( null !=content){
-        	content = content.replaceAll("\t","");
-        }
-		doc.setContent(JSONObject.toJSONString(content));
-		
-		//System.out.println(rt.getData());
-		rt.setData(doc);
-	}
-
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer docId,Integer reposId, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
