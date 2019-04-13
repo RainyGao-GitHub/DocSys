@@ -4625,9 +4625,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected String readVirtualDocContent(String reposVPath, String parentPath, String docName) {
+	protected String readVirtualDocContent(String localParentPath, String vDocName) {
 		
-		String vDocPath = reposVPath + getVDocName(parentPath,docName) + "/";
+		String vDocPath = localParentPath + vDocName + "/";
 		String mdFilePath = vDocPath + "content.md";
 
 		try 

@@ -1196,34 +1196,27 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		String content = readVirtualDocContent(getReposVirtualPath(repos),parentPath, docName);
-		
-				
 		//Create Doc to save subEntry Info
 		Doc doc = new Doc();
 		doc.setId(docId);
 		doc.setName(docName);
 		doc.setPath(parentPath);
-		
+
+		String vDocName = getVDocName(parentPath, docName);
+		String reposVPath = getReposVirtualPath(repos);
+		String content = readVirtualDocContent(reposVPath, vDocName);
         if( null !=content)
         {
         	content = content.replaceAll("\t","");
         }
 		doc.setContent(JSONObject.toJSONString(content));
-
 		rt.setData(doc);
-
-		writeJson(rt, response);
-	}
-
-	private String getContentFromVDoc(Repos repos, Integer docId, String parentPath, String docName) {
 		
-		String reposVPath = getReposVirtualPath(repos);
-		String vDocName = getVDocName(parentPath, docName);
-				
-		String content = readFile(reposVPath + vDocName + "/content.md");
-		System.out.println("content:[" + content + "]");
-		return content;
+		//Try to read tmpSavedContent
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String tmpSavedContent = readVirtualDocContent(userTmpDir, vDocName);
+		
+		writeJson(rt, response);
 	}
 	
 	/****************   lock a Doc ******************/
