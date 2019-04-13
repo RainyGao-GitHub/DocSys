@@ -3173,8 +3173,37 @@ public class BaseController  extends BaseFunction{
 
 	private boolean updateDocContent_FS(Repos repos, Integer docId, String parentPath, String docName, String content,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		//Save the content to virtual file
+		String reposVPath = getReposVirtualPath(repos);
+		String docVName = getVDocName(parentPath, docName);
+		String localVDocPath = reposVPath + docVName;
+		
+		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
+		if(isFileExist(localVDocPath) == true)
+		{
+			if(saveVirtualDocContent(reposVPath,docVName, content,rt) == true)
+			{
+				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+			}
+		}
+		else
+		{	
+			//创建虚拟文件目录：用户编辑保存时再考虑创建
+			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
+			{
+				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+			}
+		}
+		
+		//Update Index For VDoc
+		updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
+		
+		//Delete tmp saved doc content
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		delFileOrDir(userTmpDir+docVName);
+		
+		return true;
 	}
 
 	protected boolean updateDocContent_DB(Repos repos, Integer docId, String parentPath, String docName, String content, String commitMsg, String commitUser, User login_user,ReturnAjax rt) {
@@ -3193,21 +3222,9 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		//只更新内容部分
-		Doc newDoc = new Doc();
-		newDoc.setId(docId);
-		newDoc.setContent(content);
-		//System.out.println("before: " + content);
-		if(reposService.updateDoc(newDoc) == 0)
-		{
-			rt.setError("更新文件失败");
-			return false;			
-		}	
-		
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
-		parentPath = getParentPath(doc.getPid());
-		String docVName = getVDocName(parentPath, doc.getName());
+		String docVName = getVDocName(parentPath, docName);
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);

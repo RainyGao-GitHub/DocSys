@@ -2997,15 +2997,31 @@
     }
     
     //文件临时保存操作
-    function tmpSaveDoc(id, content){
-		console.log("tmpSaveDoc: " + content);
+    function tmpSaveDoc(docId, content){
+		console.log("tmpSaveDoc: docId:" + docId);
+		
+		var node = getNodeById(docId);
+		if(node && node == null)
+		{
+            console.log("临时保存失败 :" , (new Date()).toLocaleDateString());
+            bootstrapQ.msg({
+				msg : "临时保存失败 : 文件不存在",
+				type : 'danger',
+				time : 1000,
+			});	
+            return;
+		}
+		
         $.ajax({
             url : "/DocSystem/Doc/tmpSaveDocContent.do",
             type : "post",
             dataType : "json",
             data : {
-                id : id,
-                content : content
+            	reposId: gReposId,
+                docId : docId,
+                parentPath: node.path,
+                docName: node.name,
+                content : content,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){

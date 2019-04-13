@@ -726,8 +726,8 @@ public class DocController extends BaseController{
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer reposId, Integer id, String parentPath, String name, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("updateDocContent id: " + id);
+	public void updateDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -739,14 +739,6 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);			
-			return;
-		}
-		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -756,20 +748,20 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),id, repos) == false)
+		if(checkUserEditRight(rt,login_user.getId(),docId, repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		updateDocContent(repos, id, parentPath, name, content, commitMsg, commitUser, login_user, rt);
+		updateDocContent(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt);
 		writeJson(rt, response);
 	}
 
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
-	public void tmpSaveVirtualDocContent(Integer reposId, Integer id, String parentPath, String name, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("tmpSaveVirtualDocContent() id: " + id);
+	public void tmpSaveVirtualDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("tmpSaveVirtualDocContent() reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -788,7 +780,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String docVName = getVDocName(parentPath,name);
+		String docVName = getVDocName(parentPath,docName);
 		//Save the content to virtual file
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
@@ -1233,7 +1225,7 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer docId,Integer reposId, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void lockDoc(Integer reposId, Integer docId, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1261,24 +1253,33 @@ public class DocController extends BaseController{
 		}
 		
 		Doc doc = null;
-		synchronized(syncLock)
+		if(repos.getType() == 1)
 		{
-			boolean subDocCheckFlag = false;
-			if(lockType == 2)	//If want to force lock, must check all subDocs not locked
+			synchronized(syncLock)
 			{
-				subDocCheckFlag = true;
-			}
-			
-			//Try to lock the Doc
-			doc = lockDoc(docId,lockType,86400000,login_user,rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
-			if(doc == null)
-			{
+				boolean subDocCheckFlag = false;
+				if(lockType == 2)	//If want to force lock, must check all subDocs not locked
+				{
+					subDocCheckFlag = true;
+				}
+				
+				//Try to lock the Doc
+				doc = lockDoc(docId,lockType,86400000,login_user,rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
+				if(doc == null)
+				{
+					unlock(); //线程锁
+					System.out.println("lockDoc() Failed to lock Doc: " + docId);
+					writeJson(rt, response);
+					return;			
+				}
 				unlock(); //线程锁
-				System.out.println("lockDoc() Failed to lock Doc: " + docId);
-				writeJson(rt, response);
-				return;			
 			}
-			unlock(); //线程锁
+		}
+		else
+		{
+			doc = new Doc();
+			doc.setVid(reposId);
+			doc.setId(docId);
 		}
 		
 		System.out.println("lockDoc docId: " + docId + " success");
