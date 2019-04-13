@@ -1,9 +1,11 @@
 package com.DocSystem.common;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -799,6 +801,34 @@ public class BaseFunction{
 			return true;
 		}
 		return false;
+	}
+	
+	private static void readToBuffer(StringBuffer buffer, String filePath)
+	{
+		try {
+			
+			String code = getFileEncode(filePath);
+			FileInputStream is = new FileInputStream(filePath);
+			String line; // 用来保存每行读取的内容
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
+			line = reader.readLine(); // 读取第一行
+			while (line != null) { // 如果 line 为空说明读完了
+				buffer.append(line); // 将读到的内容添加到 buffer 中
+				buffer.append("\n"); // 添加换行符
+				line = reader.readLine(); // 读取下一行
+		    }
+		    reader.close();
+		    is.close();
+		} catch(Exception e){
+		       e.printStackTrace();
+		}
+	}
+	
+	protected static String readFile(String filePath)
+	{
+	    StringBuffer sb = new StringBuffer();
+	    readToBuffer(sb, filePath);
+	    return sb.toString();
 	}
 	/****************** 线程锁接口 *********************************************/
 	protected static final Object syncLock = new Object(); 

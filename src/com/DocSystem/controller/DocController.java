@@ -20,7 +20,7 @@ import util.GsonUtils;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
-import util.Lucene.LuceneUtil2;
+import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -1252,9 +1252,9 @@ public class DocController extends BaseController{
 		
 		String reposVPath = getReposVirtualPath(repos);
 		String vDocName = getDocVPath(parentPath, docName);
-		
-		File file = new File(reposVPath+vDocName, "content.md");
-		String content = 
+				
+		String content = readFile(reposVPath + vDocName + "content.md");
+		return content;
 	}
 	
 	public void getDoc_DB(Repos repos, Integer docId, String parentPath, String docName,ReturnAjax rt)
