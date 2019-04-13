@@ -13,9 +13,9 @@ import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import util.LuceneUtil2;
 import util.ReturnAjax;
 import util.GitUtil.GITUtil;
+import util.Lucene.LuceneUtil2;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.DocAuth;

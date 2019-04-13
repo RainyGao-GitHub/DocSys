@@ -1,7 +1,7 @@
 /**
  * 
  */
-package util;
+package util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;

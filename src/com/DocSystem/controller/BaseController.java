@@ -30,8 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNNodeKind;
 
-import util.FileUtils2;
-import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
 
@@ -47,8 +45,10 @@ import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 
 import util.Encrypt.MD5;
+import util.FileUtil.FileUtils2;
 import util.GitUtil.GITUtil;
 import util.GitUtil.GitEntry;
+import util.Lucene.LuceneUtil2;
 import util.SvnUtil.CommitAction;
 import util.SvnUtil.SVNUtil;
 

@@ -1,4 +1,4 @@
-package util;
+package util.Encrypt;
 
 import java.io.IOException;
 import java.security.*;
@@ -8,7 +8,7 @@ import java.util.Calendar;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import util.Encrypt.DES;
+import util.HexString;
 
 public class EncryptUtil {
 	

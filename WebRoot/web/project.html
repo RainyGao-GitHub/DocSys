@@ -3073,9 +3073,10 @@
 	}
 
 	//读取文件信息
-    function showVirtualDoc(docId,edit) {
-      	console.log("showVirtualDoc() docId:"+docId + " edit:" + edit);
-      	if(!docId)	//undefine do clean the info of rightDiv
+    function showVirtualDoc(node,edit) {
+      	
+		console.log("showVirtualDoc() edit:" + edit + " treeNode:", treeNode);
+      	if(!node || node == null)	//undefine do clean the info of rightDiv
       	{
       		//Clean FileName
           	$('#filetitle').html("");
@@ -3095,8 +3096,9 @@
             dataType : "json",
             data : {
             	reposId: gReposId,
-                id : docId,
-                
+                docId : node.id,
+                parentPath: node.path,
+                docName: node.name,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){

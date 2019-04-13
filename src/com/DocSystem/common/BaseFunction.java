@@ -21,9 +21,11 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
 import org.springframework.web.multipart.MultipartFile;
-import util.CompressPic;
+
 import util.DateFormat;
 import util.ReturnAjax;
+import util.Encrypt.Base64File;
+import util.FileUtil.CompressPic;
 
 import com.alibaba.fastjson.JSON;
 
@@ -32,7 +34,6 @@ import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
 import info.monitorenter.cpdetector.io.JChardetFacade;
 import info.monitorenter.cpdetector.io.ParsingDetector;
 import info.monitorenter.cpdetector.io.UnicodeDetector;
-import util.Base64File;
 
 @SuppressWarnings("rawtypes")
 public class BaseFunction{

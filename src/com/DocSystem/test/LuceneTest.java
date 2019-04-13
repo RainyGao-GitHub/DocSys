@@ -1,7 +1,7 @@
 package com.DocSystem.test;
 import java.util.List;
 
-import util.LuceneUtil2;
+import util.Lucene.LuceneUtil2;
 
 class LuceneTest  
 {  

@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import util.FileUtils2;
 import util.GsonUtils;
-import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
+import util.Lucene.LuceneUtil2;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -1174,6 +1173,14 @@ public class DocController extends BaseController{
 		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
 		ReturnAjax rt = new ReturnAjax();
 		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1183,66 +1190,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		switch(repos.getType())
-		{
-		case 1:
-			getDoc_DB(repos, docId, parentPath, docName, session, request, response);
-			break;		
-		case 2:
-			getDoc_FS(repos, docId, parentPath, docName, session, request, response);
-			break;	
-		case 3:
-			getDoc_SVN(repos, docId, parentPath, docName, session, request, response);
-			break;		
-		case 4:
-			getDoc_GIT(repos, docId, parentPath, docName, session, request, response);
-			break;	
-		}	
-	}
-	
-	private void getDoc_GIT(Repos repos, Integer docId, String parentPath, String docName, HttpSession session,
-			HttpServletRequest request, HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void getDoc_SVN(Repos repos, Integer docId, String parentPath, String docName, HttpSession session,
-			HttpServletRequest request, HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void getDoc_FS(Repos repos, Integer docId, String parentPath, String docName, HttpSession session,
-			HttpServletRequest request, HttpServletResponse response) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void getDoc_DB(Repos repos, Integer docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("getDoc docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
-		ReturnAjax rt = new ReturnAjax();
-		
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		Doc doc = reposService.getDoc(docId);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);	
-			return;			
-		}
-		
-		//TODO: need to fix for FS
 		//Set currentDocId to session which will be used MarkDown ImgUpload
 		session.setAttribute("currentDocId", docId);
-		System.out.println("getDoc currentDocId:" + docId);
+		session.setAttribute("currentParentPath", parentPath);
+		session.setAttribute("currentDocName", docName);
 		
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(rt,login_user.getId(),docId, repos) == false)
@@ -1250,6 +1201,71 @@ public class DocController extends BaseController{
 			System.out.println("getDoc() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
 			return;
+		}
+		
+		switch(repos.getType())
+		{
+		case 1:
+			getDoc_DB(repos, docId, parentPath, docName, rt);
+			break;		
+		case 2:
+			getDoc_FS(repos, docId, parentPath, docName, rt);
+			break;	
+		case 3:
+			getDoc_SVN(repos, docId, parentPath, docName, rt);
+			break;		
+		case 4:
+			getDoc_GIT(repos, docId, parentPath, docName, rt);
+			break;	
+		}	
+		
+		writeJson(rt, response);
+	}
+	
+	private void getDoc_GIT(Repos repos, Integer docId, String parentPath, String docName, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void getDoc_SVN(Repos repos, Integer docId, String parentPath, String docName, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void getDoc_FS(Repos repos, Integer docId, String parentPath, String docName, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		System.out.println("getDoc_FS docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
+		
+		String content = getContentFromVDoc(repos, docId, parentPath, docName);
+				
+		//Create Doc to save subEntry Info
+		Doc doc = new Doc();
+		doc.setId(docId);
+		doc.setName(docName);
+		doc.setPath(parentPath);
+		doc.setContent(JSONObject.toJSONString(content));
+
+		rt.setData(doc);
+	}
+
+	private String getContentFromVDoc(Repos repos, Integer docId, String parentPath, String docName) {
+		
+		String reposVPath = getReposVirtualPath(repos);
+		String vDocName = getDocVPath(parentPath, docName);
+		
+		File file = new File(reposVPath+vDocName, "content.md");
+		String content = 
+	}
+	
+	public void getDoc_DB(Repos repos, Integer docId, String parentPath, String docName,ReturnAjax rt)
+	{	
+		System.out.println("getDoc_DB docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
+		
+		Doc doc = reposService.getDoc(docId);
+		if(doc == null)
+		{
+			rt.setError("文件不存在");
+			return;		
 		}
 		
 		String content = doc.getContent();
@@ -1260,7 +1276,6 @@ public class DocController extends BaseController{
 		
 		//System.out.println(rt.getData());
 		rt.setData(doc);
-		writeJson(rt, response);
 	}
 
 	/****************   lock a Doc ******************/
