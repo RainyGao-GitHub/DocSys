@@ -20,7 +20,9 @@ import util.GsonUtils;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
+import util.LuceneUtil.IndexAction;
 import util.LuceneUtil.LuceneUtil2;
+import util.SvnUtil.CommitAction;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -103,9 +105,16 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		addDoc(repos, level, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt);
+		List<IndexAction> indexActionList = new ArrayList<IndexAction>();
+		Integer ret = addDoc(repos, level, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt, indexActionList); 
 		writeJson(rt, response);
+		
+		if(ret > 0 )
+		{
+			executeIndexActionList(indexActionList);
+		}
 	}
+
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
 	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){

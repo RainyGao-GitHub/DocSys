@@ -50,6 +50,7 @@ import util.Encrypt.MD5;
 import util.FileUtil.FileUtils2;
 import util.GitUtil.GITUtil;
 import util.GitUtil.GitEntry;
+import util.LuceneUtil.IndexAction;
 import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.CommitAction;
 import util.SvnUtil.SVNUtil;
@@ -1976,7 +1977,8 @@ public class BaseController  extends BaseFunction{
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+			List<IndexAction> actionList) 
 	{
 		Integer docId = getNewDocId(repos, level, parentPath);
 		
@@ -1986,22 +1988,22 @@ public class BaseController  extends BaseFunction{
 			return addDoc_DB(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt ,actionList);
 		case 2:
 			return addDoc_FS(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
 			return addDoc_SVN(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
 			return addDoc_GIT(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 			
 		}
 		return null;
@@ -2021,7 +2023,7 @@ public class BaseController  extends BaseFunction{
 	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt) {
+			User login_user, ReturnAjax rt, List<IndexAction> actionList) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -2029,7 +2031,7 @@ public class BaseController  extends BaseFunction{
 	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt) {
+			User login_user, ReturnAjax rt, List<IndexAction> actionList) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -2038,8 +2040,10 @@ public class BaseController  extends BaseFunction{
 	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+			List<IndexAction> actionList) 
 	{
+		Integer reposId = repos.getId();
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + docName;
 		
@@ -2131,8 +2135,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		addIndexForDocName(repos.getId(), docId, parentPath, docName);
-		updateIndexForRDoc(repos.getId(), docId, reposRPath,parentPath, docName);
+		insertIndexAddForDocName(actionList, reposId, docId, reposRPath, parentPath, docName);
+		insertIndexAddForRDoc(actionList, reposId, docId, reposRPath,parentPath, docName);
 		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
@@ -2152,8 +2156,9 @@ public class BaseController  extends BaseFunction{
 				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
-			//Add Lucene Index For Vdoc
+			
 			addIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
+			
 		}
 		
 //		//启用doc
@@ -2169,11 +2174,11 @@ public class BaseController  extends BaseFunction{
 		
 		return docId;
 	}
-	
+
 	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<IndexAction> actionList) 
 	{
 		//get parentPath
 		parentPath = getParentPath(parentId);
@@ -5991,7 +5996,117 @@ public class BaseController  extends BaseFunction{
 		String content = newParentPath + newName;
 		return LuceneUtil2.addIndex(hashId, reposId, docId, parentPath, name, hashId, content.trim(), indexLib);
 	}
+
 	
+	private void insertIndexAddForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 1, 0, reposId, docId, reposRPath, parentPath, docName);
+	}
+	private void insertIndexDeleteForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 2, 0, reposId, docId, reposRPath, parentPath, docName);
+	}
+	private void insertIndexUpdateForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 3, 0, reposId, docId, reposRPath, parentPath, docName);
+	}	
+	
+	private void insertIndexAddForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 1, 1, reposId, docId, reposRPath, parentPath, docName);
+	}
+	private void insertIndexDeleteForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 2, 1, reposId, docId, reposRPath, parentPath, docName);
+	}
+	private void insertIndexUpdateForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 3, 1, reposId, docId, reposRPath, parentPath, docName);
+	}	
+
+	private void insertIndexAddForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 1, 2, reposId, docId, reposVPath, parentPath, docName);
+	}
+	private void insertIndexDeleteForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 2, 2, reposId, docId, reposVPath, parentPath, docName);
+	}
+	private void insertIndexUpdateForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
+		insertIndexAction(actionList, 3, 2, reposId, docId, reposVPath, parentPath, docName);
+	}	
+	
+	//localRootPath 本地文件根目录，用于找到本地文件
+	//actionType: 1:add 2:delete 3:modify
+	//indexType: 0: docName  1: RealDoc 2: VirtualDoc
+	private void insertIndexAction(List<IndexAction> actionList, int actionType, int indexType, Integer reposId,  Integer docId,  String localRootPath, String parentPath, String docName) 
+	{
+		// TODO Auto-generated method stub
+	}
+	
+	protected boolean executeIndexActionList(List<IndexAction> indexActionList) 
+	{
+		for(int i=0;i<indexActionList.size();i++)
+    	{
+			IndexAction action = indexActionList.get(i);
+    		boolean ret = false;
+    		
+    		switch(action.getAction())
+    		{
+    		case 1:	//add
+        		ret = executeIndexAddAction(action);
+    			break;
+    		case 2: //delete
+    			ret = executeIndexDeleteAction(action);
+    			break;
+    		case 3: //modify
+    			ret = executeIndexModifyAction(action);
+        		break;
+    		}
+    		
+    		if(ret == false)
+    		{
+    			System.out.println("executeIndexActionList() failed");	
+    			return false;
+    		} 
+    	}
+		return true;
+	}
+	
+	private boolean executeIndexModifyAction(IndexAction action) {
+		switch(action.getIndexType())
+		{
+		case 0:
+			return updateIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName(),action.getNewParentPath(), action.getNewDocName());
+		case 1:
+			return updateIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		case 2:
+			return updateIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		}
+		
+		return false;
+	}
+
+	private boolean executeIndexDeleteAction(IndexAction action) {
+		switch(action.getIndexType())
+		{
+		case 0:
+			return deleteIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		case 1:
+			return deleteIndexForRDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		case 2:
+			return deleteIndexForVDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		}
+		
+		return false;
+	}
+
+	private boolean executeIndexAddAction(IndexAction action) {
+		switch(action.getIndexType())
+		{
+		case 0:
+			return addIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		case 1:
+			return addIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		case 2:
+			return addIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		}
+		
+		return false;
+	}
+
 	//Add Index For VDoc
 	public boolean addIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name, String content)
 	{
@@ -6087,20 +6202,25 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	public static void deleteIndexForRDoc(Integer reposId, Integer docId, String parentPath, String name)
+	public static boolean deleteIndexForRDoc(Integer reposId, Integer docId, String parentPath, String name)
 	{
 		String indexLib = getIndexLibName(reposId, 1);
 		String hashId = getHashId(parentPath+name);
 		System.out.println("deleteIndexForRDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
 		
+		boolean ret = true;
 		List<String> documentIdList = LuceneUtil2.getDocumentIdListByHashId(hashId, indexLib);
 		if(documentIdList != null)
 		{
 			for(int i=0;i < documentIdList.size(); i++)
 			{
-				LuceneUtil2.deleteIndex(documentIdList.get(i),indexLib);
+				if(LuceneUtil2.deleteIndex(documentIdList.get(i),indexLib) == false)
+				{
+					ret = false;
+				}
 			}
 		}
+		return ret;
 	}
 	
 	//Update Index For RDoc
