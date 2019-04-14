@@ -277,6 +277,7 @@ public class BaseController  extends BaseFunction{
 	//
 	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{
+		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " level:" + level + " parentPath:" + parentPath +" docName:" + doc.getName());
 		switch(repos.getType())
 		{
 		case 1:
@@ -305,7 +306,7 @@ public class BaseController  extends BaseFunction{
 
 	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{	
-		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId()  + " rootDocId:" + rootDocId + " level:" + level + " parentPath:" + parentPath);
+		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " level:" + level + " parentPath:" + parentPath +" docName:" + doc.getName());
 		
 		String docPath = parentPath + doc.getName();
 		String [] paths = docPath.split("/");
@@ -315,9 +316,10 @@ public class BaseController  extends BaseFunction{
 		Integer tempPid = rootDocId;
 		String tempParentPath = "";
 		Doc tempSubDoc = new Doc();
-		for(int i=0; i<docPathDeepth-1; i++)
+		tempSubDoc.setName(paths[0]);
+		for(int i=0; i<docPathDeepth; i++)
 		{
-			tempSubDoc.setName(paths[i+1]);
+			tempSubDoc.setName(paths[i]);
 			
 			List<Doc> subDocList = getSubDocListFromParentToDoc_FS(repos, tempPid, level+i, tempParentPath, tempSubDoc, login_user , rt);
 			if(subDocList == null || subDocList.size() == 0)
