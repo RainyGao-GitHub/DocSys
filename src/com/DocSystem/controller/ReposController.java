@@ -460,7 +460,7 @@ public class ReposController extends BaseController{
 	
 	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposInitMenu.do")
-	public void getReposMenu(Integer reposId,Integer docId, String parentPath, String docName, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void getReposInitMenu(Integer reposId,Integer docId, String parentPath, String docName, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		ReturnAjax rt = new ReturnAjax();

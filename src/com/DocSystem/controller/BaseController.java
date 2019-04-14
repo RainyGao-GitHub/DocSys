@@ -315,9 +315,10 @@ public class BaseController  extends BaseFunction{
 		Integer tempPid = rootDocId;
 		String tempParentPath = "";
 		Doc tempSubDoc = new Doc();
-		tempSubDoc.setName(paths[0]);
 		for(int i=0; i<docPathDeepth-1; i++)
 		{
+			tempSubDoc.setName(paths[i+1]);
+			
 			List<Doc> subDocList = getSubDocListFromParentToDoc_FS(repos, tempPid, level+i, tempParentPath, tempSubDoc, login_user , rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
@@ -332,13 +333,14 @@ public class BaseController  extends BaseFunction{
 			tempParentPath = tempParentPath + paths[i] + "/";
 		}
 		
-		doc.setId(tempPid);
+		doc.setId(tempSubDoc.getId());
 		return resultList;
 	}
 
 	//该接口获取parentPath下的SubDocList（并设置doc中的docId）
 	private List<Doc> getSubDocListFromParentToDoc_FS(Repos repos, Integer pid, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt) 
 	{
+		System.out.println("getSubDocListFromParentToDoc_FS() parentPath:" + parentPath + " expected Doc:" + doc.getName());
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
@@ -385,6 +387,7 @@ public class BaseController  extends BaseFunction{
     		if(subEntryName.equals(doc.getName()))
     		{
     			doc.setId(subDocId);
+    			System.out.println("getSubDocListFromParentToDoc_FS() subDocId:" + subDocId);
     		}
     	}
     	return docList;

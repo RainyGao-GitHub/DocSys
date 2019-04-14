@@ -3076,6 +3076,11 @@
     		name = node.name;
     	}
     	
+    	//避免取回来时乱码
+	   	//path = encodeURI(path);
+	   	//name = encodeURI(name);
+	   	console.log("path:" + path + " name:" + name);
+    	
         //Update URL 保证页面刷新后还是处于正确的状态
         var param = {
         	vid : reposId,
@@ -6184,14 +6189,16 @@ function CompareObj(objA, objB, flag) {
     	//初始化全局变量
     	gReposId = getQueryString("vid");
 		gDocId = getQueryString("doc");
-		gParentPath = getQueryString("path");
-		gDocName = getQueryString("name");
+		gParentPath = decodeURI(getQueryString("path"));
+		gDocName = decodeURI(getQueryString("name"));
 		gEdit = getQueryString("edit");
 		if(!gEdit)
 		{
 			gEdit = false;
 		}
-    	console.log("ready() gDocId:"+gDocId +  " gReposId:" + gReposId + " gEdit:" + gEdit);
+		
+    	console.log("ready() gReposId:" + gReposId  + " gDocId:"+gDocId + " gParentPath:" + gParentPath + " gDocName:" + gDocName + " gEdit:" + gEdit);
+    	
     	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
         if( gEdit ){
             var edit = {};
