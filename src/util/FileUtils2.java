@@ -220,6 +220,12 @@ public class FileUtils2 {
 	public static boolean copyFile(String srcFilePath,String dstFilePath){
         try {
             File dstFile=new File(dstFilePath);
+            
+            // 假如目标路径不存在,则新建该路径
+            if (!dstFile.getParentFile().exists()) {
+            	dstFile.getParentFile().mkdirs();
+            }
+            
             if(!dstFile.exists())
             {
             	dstFile.createNewFile();
