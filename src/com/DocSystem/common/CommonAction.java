@@ -11,11 +11,15 @@ public class CommonAction {
     private Integer type; //0:DocName 1:RealDoc 2:VirtualDoc
     
     private Repos repos = null;
+    
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
     
     private String localRootPath;
-    private String indexLib;
+    
+    //For commitAction
+    private String commitMsg;
+    private String commitUser;    
     
     //subAction
     public boolean isSubAction = false;
@@ -77,13 +81,23 @@ public class CommonAction {
 		return localRootPath;
 	}
 
-	public void setIndexLib(String indexLib) {
-		this.indexLib = indexLib;
+
+	public void setCommitMsg(String commitMsg) {
+		this.commitMsg = commitMsg;
+	}
+
+	public String getCommitMsg()
+	{
+		return commitMsg;
 	}
 	
-	public String getIndexLib()
+	public void setCommitUser(String commitUser) {
+		this.commitUser = commitUser;	
+	}
+	
+	public String getCommitUser()
 	{
-		return indexLib;
+		return commitUser;
 	}
 	
 	public boolean getHasSubList()
@@ -103,5 +117,4 @@ public class CommonAction {
 	{
 		return subActionList;
 	}
-	
 }

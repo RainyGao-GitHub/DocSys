@@ -38,9 +38,6 @@ import util.ReturnAjax;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
-import com.DocSystem.common.DBAction;
-import com.DocSystem.common.IndexAction;
-import com.DocSystem.common.LocalAction;
 import com.DocSystem.common.MultiActionList;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -2139,7 +2136,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		BuildMultiActionListForDocAdd(actionList, repos, doc);
+		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
+		executeLocalActionList(actionList.getLocalActionList());
+		executeCommitActionList(actionList.getLocalActionList());
+		
 		
 //		//启用doc
 //		if(unlockRepos(repos.getId(), login_user, null) == false)
@@ -2153,6 +2153,33 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		
 		return docId;
+	}
+
+	private void executeCommitActionList(List<CommonAction> actionList) 
+	{
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeCommitAction(action);
+		}
+	}
+
+	private boolean executeCommitAction(CommonAction action) 
+	{
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc();
+		Integer type = action.getIndexType();
+		switch(type)
+		{
+		case 1:
+			String localParentPath = getReposRealPath(repos) + doc.getPath();
+			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localParentPath, doc.getName(), action.getCommitMsg(), action.getCommitUser(), true, null);
+		case 2:
+			String localVParentPath = getReposVirtualPath(repos) + doc.getPath();
+			String vDocName = getVDocName(doc.getPath(),doc.getName());			
+			verReposAutoCommit(repos, true, "", vDocName, localVParentPath, vDocName, action.getCommitMsg(), action.getCommitUser(), true, null);
+		}
+		return false;
 	}
 
 	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
@@ -2335,6 +2362,10 @@ public class BaseController  extends BaseFunction{
 			if(repos.getVerCtrl1() > 0)
 			{
 				List<CommonAction> commitActionList = actionList.getCommitActionList();
+				action.setRepos(repos);	//1: RDoc 2:VDoc
+				action.setCommitMsg(commitMsg);
+				action.setCommitUser(commitUser);
+				action.setLocalRootPath(reposVPath);
 				commitActionList.add(action);
 			}
 		}
@@ -2484,19 +2515,21 @@ public class BaseController  extends BaseFunction{
 		executeDBActionList(actionList.getDBActionList());
 	}
 
-	private void executeDBActionList(List<DBAction> dbActionList) {
+	private void executeDBActionList(List<CommonAction> actionList) {
 		// TODO Auto-generated method stub
-		
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeDBAction(action);
+		}
 	}
 
-	private void executeCommitActionList(List<CommitAction> commitActionList) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void executeLocalActionList(List<LocalAction> localActionList) {
-		// TODO Auto-generated method stub
-		
+	private void executeLocalActionList(List<CommonAction> actionList) {
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeLocalAction(action);
+		}
 	}
 
 	private void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Integer docId, String parentPath, String docName) 
@@ -5911,10 +5944,9 @@ public class BaseController  extends BaseFunction{
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setEntryType(1);
-    	action.setEntryParentPath(parentPath);
+    	action.setParentPath(parentPath);
     	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
-    	action.setLocalPath(localPath);
+    	action.setLocalRootPath(localPath);
     	action.isSubAction = isSubAction;
     	actionList.add(action);
 		
@@ -5925,9 +5957,8 @@ public class BaseController  extends BaseFunction{
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setEntryType(2);
-    	action.setEntryParentPath(parentPath);
+    	action.setParentPath(parentPath);
     	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
     	action.isSubAction = isSubAction;
     	action.hasSubList = hasSubList;
     	action.setSubActionList(subActionList);
@@ -5938,20 +5969,18 @@ public class BaseController  extends BaseFunction{
 	protected void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
     	CommitAction action = new CommitAction();
     	action.setAction(2);
-    	action.setEntryParentPath(parentPath);
+    	action.setParentPath(parentPath);
     	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
     	actionList.add(action);
 	}
     
 	protected void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
     	CommitAction action = new CommitAction();
     	action.setAction(3);
-    	action.setEntryParentPath(parentPath);
+    	action.setParentPath(parentPath);
     	action.setEntryName(entryName);
-    	action.setEntryPath(parentPath + entryName);
-    	action.setLocalPath(localPath);
-    	action.setLocalRefPath(localRefPath);
+    	action.setLocalRootPath(localPath);
+    	action.setLocalRefRootPath(localRefPath);
     	actionList.add(action);	
 	}
 
@@ -6022,19 +6051,11 @@ public class BaseController  extends BaseFunction{
 		return LuceneUtil2.addIndex(hashId, reposId, docId, parentPath, name, hashId, content.trim(), indexLib);
 	}	
 	
-	//localRootPath 本地文件根目录，用于找到本地文件
-	//actionType: 1:add 2:delete 3:modify
-	//indexType: 0: docName  1: RealDoc 2: VirtualDoc
-	private void insertIndexAction(List<IndexAction> actionList, int actionType, int indexType, Doc doc,  String localRootPath) 
-	{		
-		
-	}
-	
-	protected boolean executeIndexActionList(List<IndexAction> indexActionList) 
+	protected boolean executeIndexActionList(List<CommonAction> indexActionList) 
 	{
 		for(int i=0;i<indexActionList.size();i++)
     	{
-			IndexAction action = indexActionList.get(i);
+			CommonAction action = indexActionList.get(i);
     		boolean ret = false;
     		
     		switch(action.getAction())
@@ -6059,7 +6080,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean executeIndexModifyAction(IndexAction action) {
+	private boolean executeIndexModifyAction(CommonAction action) {
 		switch(action.getIndexType())
 		{
 		case 0:
@@ -6073,7 +6094,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean executeIndexDeleteAction(IndexAction action) {
+	private boolean executeIndexDeleteAction(CommonAction action) {
 		switch(action.getIndexType())
 		{
 		case 0:
@@ -6087,7 +6108,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean executeIndexAddAction(IndexAction action) {
+	private boolean executeIndexAddAction(CommonAction action) {
 		switch(action.getIndexType())
 		{
 		case 0:
