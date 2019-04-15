@@ -1741,8 +1741,8 @@ public class DocController extends BaseController{
 			}
 			else
 			{	
-				System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
-				rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
+				System.out.println("updateDoc() saveFile " + docId +" Failed");
+				rt.setError("Failed to updateRealDoc " + name);
 			}
 			return;
 		}
