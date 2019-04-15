@@ -37,8 +37,10 @@ import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.DBAction;
 import com.DocSystem.common.IndexAction;
 import com.DocSystem.common.LocalAction;
+import com.DocSystem.common.MultiActionList;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
@@ -1979,7 +1981,7 @@ public class BaseController  extends BaseFunction{
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-			List<IndexAction> actionList) 
+			MultiActionList actionList) 
 	{
 		Integer docId = getNewDocId(repos, level, parentPath);
 		
@@ -2179,7 +2181,7 @@ public class BaseController  extends BaseFunction{
 	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<IndexAction> actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
 		//get parentPath
 		parentPath = getParentPath(parentId);
@@ -2302,8 +2304,29 @@ public class BaseController  extends BaseFunction{
 		
 		docId = doc.getId();
 
+		//BuildMultiActionListForDocAdd();
+		BuildMultiActionListForDocAdd(actionList, repos, docId, parentPath, docName, content);
+		
+		//executeLocalActionList and CommitAction to add VDoc and commitVDoc
+		
+		//启用doc
+		if(unlockDoc(docId,login_user,null) == false)
+		{
+			rt.setError("unlockDoc Failed");
+			return null;
+		}
+		rt.setMsg("新增成功", "isNewNode");
+		rt.setData(doc);
+		
+		return docId;
+	}
+	
+
+	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Integer docId,
+			String parentPath, String docName, String content) {
+		// TODO Auto-generated method stub
 		//Update Lucene Index
-		insertIndexUpdateForRDoc(actionList, reposId, docId, reposRPath, parentPath, docName);
+		insertIndexUpdateForRDoc(indexActionList, reposId, docId, reposRPath, parentPath, docName);
 		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
@@ -2313,7 +2336,7 @@ public class BaseController  extends BaseFunction{
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
 				//Add Lucene Index For Vdoc
-				insertIndexUpdateForVDoc(actionList,reposId, docId, reposVPath, parentPath, docName);
+				insertIndexUpdateForVDoc(indexActionList,reposId, docId, reposVPath, parentPath, docName);
 
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
 				{
@@ -2327,34 +2350,24 @@ public class BaseController  extends BaseFunction{
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
 		}
-		
-		//启用doc
-		if(unlockDoc(docId,login_user,null) == false)
-		{
-			rt.setError("unlockDoc Failed");
-			return null;
-		}
-		rt.setMsg("新增成功", "isNewNode");
-		rt.setData(doc);
-		
-		return docId;
+
 	}
 
 	//底层deleteDoc接口
-	//isSubDelete: true: 文件已删除，只负责删除VDOC、LuceneIndex、previewFile、DBRecord
 	protected boolean deleteDoc(Repos repos, Integer docId, String parentPath, String docName, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+			boolean skipRealDocCommit, MultiActionList actionList) 
 	{
 		switch(repos.getType())
 		{
 		case 1:
-			return deleteDoc_DB(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);
+			return deleteDoc_DB(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);
 		case 2:
-			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);
+			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);
 		case 3:
-			return deleteDoc_SVN(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);
+			return deleteDoc_SVN(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);
 		case 4:
-			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, isSubDelete, skipRealDocCommit);			
+			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);			
 		}
 		return false;
 	}
@@ -2382,46 +2395,53 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit, 
-			List<IndexAction> indexActionList, List<LocalAction> localActionList, List<CommitAction> commitActionList) 
+			MultiActionList actionList) 
 	{
-		Integer reposId = repos.getId();
-		
 		Doc doc = null;
-		if(isSubDelete)	//Do not lock
-		{
-			doc = reposService.getDoc(docId);
+		synchronized(syncLock)
+		{							
+			//Try to lock the Doc
+			doc = lockDoc(docId,2, 7200000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 			if(doc == null)
 			{
-				System.out.println("deleteDoc() " + docId + " not exists");
-				return true;			
-			}
-			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " isSubDelete");
-		}
-		else
-		{
-			synchronized(syncLock)
-			{							
-				//Try to lock the Doc
-				doc = lockDoc(docId,2, 7200000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
-				if(doc == null)
-				{
-					unlock(); //线程锁
-					System.out.println("deleteDoc() Failed to lock Doc: " + docId);
-					return false;			
-				}
 				unlock(); //线程锁
+				System.out.println("deleteDoc() Failed to lock Doc: " + docId);
+				return false;			
 			}
-			System.out.println("deleteDoc() " + docId + " " + doc.getName() + " Lock OK");
-				
-			//get RealDoc Full ParentPath
-			String reposRPath = getReposRealPath(repos);
+			unlock(); //线程锁
+		}
+		System.out.println("deleteDoc() " + docId + " " + doc.getName() + " Lock OK");
 			
-			//Delete Lucene index For RDoc and VDoc
-			BuildActionListsForDocDelete(indexActionList, localActionList, commitActionList, repos, docId, parentPath, docName);
-						
-			if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
+		
+		//Build ActionList for Index/VDoc/Preview Delete
+		BuildMultiActionListForDocDelete(actionList, repos, docId, parentPath, docName);
+	
+		//get RealDoc Full ParentPath
+		String reposRPath = getReposRealPath(repos);
+		if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
+		{
+			String MsgInfo = parentPath + docName + " 删除失败！";
+			if(unlockDoc(docId,login_user,doc) == false)
 			{
-				String MsgInfo = parentPath + docName + " 删除失败！";
+				MsgInfo += " and unlockDoc Failed";						
+			}
+			rt.setError(MsgInfo);
+			return false;
+		}
+		
+		if(skipRealDocCommit)	//忽略版本仓库，用于使用版本仓库同步时调用（相当于已经commit过了）
+		{
+			//需要将文件Commit到verRepos上去
+			if(verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt) == false)
+			{
+				System.out.println("verReposRealDocDelete Failed");
+				String MsgInfo = "verReposRealDocDelete Failed";
+				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+				if(verReposRevertRealDoc(repos,parentPath,docName,doc.getType(),rt) == false)
+				{						
+					MsgInfo += " and revertFile Failed";
+				}
+				
 				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc Failed";						
@@ -2429,58 +2449,8 @@ public class BaseController  extends BaseFunction{
 				rt.setError(MsgInfo);
 				return false;
 			}
-			
-			if(skipRealDocCommit)	//忽略版本仓库，用于使用版本仓库同步时调用（相当于已经commit过了）
-			{
-				//需要将文件Commit到verRepos上去
-				if(verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt) == false)
-				{
-					System.out.println("verReposRealDocDelete Failed");
-					String MsgInfo = "verReposRealDocDelete Failed";
-					//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-					if(verReposRevertRealDoc(repos,parentPath,docName,doc.getType(),rt) == false)
-					{						
-						MsgInfo += " and revertFile Failed";
-					}
-					
-					if(unlockDoc(docId,login_user,doc) == false)
-					{
-						MsgInfo += " and unlockDoc Failed";						
-					}
-					rt.setError(MsgInfo);
-					return false;
-				}
-			}
 		}
 		
-		//Delete previewFile(对于文件型系统checkSum保存在DocName库里，因此可以考虑在执行删除DocName时进行)
-		deletePreviewFile(doc.getCheckSum());			
-		
-		//删除虚拟文件
-		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getVDocName(parentPath ,doc.getName());
-		String localDocVPath = reposVPath + docVName;
-		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
-		{
-			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
-			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-		}
-		else
-		{
-			if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
-			{
-				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
-				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-				verReposRevertVirtualDoc(repos,docVName);
-			}
-		}
-
-		//Delete SubDocs
-		if(false == deleteSubDocs(repos, docId, parentPath, docName, commitMsg,commitUser,login_user,rt))
-		{
-			System.out.println("deleteDoc() deleteSubDocs Failed ");
-		}
-						
 		//Delete DataBase Record
 		if(reposService.deleteDoc(docId) == 0)
 		{	
@@ -2491,10 +2461,67 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private void BuildActionListsForDocDelete(List<IndexAction> indexActionList, List<LocalAction> localActionList,
-			List<CommitAction> commitActionList, Repos repos, Integer docId, String parentPath, String docName) {
+	
+//	//Delete previewFile(对于文件型系统checkSum保存在DocName库里，因此可以考虑在执行删除DocName时进行)
+//	deletePreviewFile(doc.getCheckSum());			
+//	
+//	//删除虚拟文件
+//	String reposVPath = getReposVirtualPath(repos);
+//	String docVName = getVDocName(parentPath ,doc.getName());
+//	String localDocVPath = reposVPath + docVName;
+//	if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
+//	{
+//		System.out.println("deleteDoc() delDir Failed " + localDocVPath);
+//		rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
+//	}
+//	else
+//	{
+//		if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
+//		{
+//			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
+//			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
+//			verReposRevertVirtualDoc(repos,docVName);
+//		}
+//	}
+//
+//	//Delete SubDocs
+//	if(false == deleteSubDocs(repos, docId, parentPath, docName, commitMsg,commitUser,login_user,rt))
+//	{
+//		System.out.println("deleteDoc() deleteSubDocs Failed ");
+//	}
+	protected void executeMultiActionList(MultiActionList actionList) {
+		
+		executeIndexActionList(actionList.getIndexActionList());
+		executeLocalActionList(actionList.getLocalActionList());
+		executeCommitActionList(actionList.getCommitActionList());
+		executeDBActionList(actionList.getDBActionList());
+	}
+
+	private void executeDBActionList(List<DBAction> dbActionList) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	private void executeCommitActionList(List<CommitAction> commitActionList) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void executeLocalActionList(List<LocalAction> localActionList) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Integer docId, String parentPath, String docName) 
+	{
+		//TODO: 需要根据文件系统类型，来build预览文件、Index文件、VerRepos文件的DeleteActionList
+		
+		//Build IndexDeleteActionList for DocName and LocalDeleteActionList for previewFiles (For FS/SVN/GIT CheckSum was stored in LuceneDocName indexLib)
+		//insertIndexDeleteForDocName(indexActionList, reposId, docId, reposRPath, parentPath, docName);
+		
+		//insertIndexDeleteForRDoc(actionList, reposId, docId, reposRPath, parentPath, docName);
+		//String reposVPath = getReposVirtualPath(repos);
+		//insertIndexDeleteForVDoc(actionList, reposId, docId, reposVPath, parentPath, docName);
 	}
 
 	private boolean deleteSubDocs(Repos repos, Integer docId, String parentPath, String docName, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {

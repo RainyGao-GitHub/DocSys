@@ -29,6 +29,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.IndexAction;
+import com.DocSystem.common.MultiActionList;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
@@ -206,10 +207,16 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
-				
-		deleteDoc(repos, docId, parentPath, docName, commitMsg, commitUser, login_user, rt, false, false);
+		
+		MultiActionList actionList = new MultiActionList();
+		boolean ret = deleteDoc(repos, docId, parentPath, docName, commitMsg, commitUser, login_user, rt, false, actionList);
 		
 		writeJson(rt, response);
+		
+		if(ret == true)
+		{
+			executeMultiActionList(actionList);
+		}
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
