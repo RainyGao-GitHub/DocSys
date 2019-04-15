@@ -2044,7 +2044,7 @@ public class BaseController  extends BaseFunction{
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-			List<IndexAction> actionList) 
+			MultiActionList actionList) 
 	{
 		Integer reposId = repos.getId();
 		String reposRPath = getReposRealPath(repos);

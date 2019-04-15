@@ -50,7 +50,8 @@ public class SVNUtil  extends BaseController{
      * @param userName
      * @param password
      */
-    public boolean Init(Repos repos,boolean isRealDoc,String commitUser)
+    @SuppressWarnings("deprecation")
+	public boolean Init(Repos repos,boolean isRealDoc,String commitUser)
     {
     	String reposURL = null;
     	String svnUser = null;
@@ -272,7 +273,6 @@ public class SVNUtil  extends BaseController{
 				return false;
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			System.out.println("doCheckPath() Exception");
 			e.printStackTrace();
 			return false;
@@ -425,10 +425,10 @@ public class SVNUtil  extends BaseController{
 
 	private boolean executeModifyAction(ISVNEditor editor, CommitAction action) {
 		Integer entryType = action.getEntryType();
-		String parentPath = action.getEntryParentPath();
+		String parentPath = action.getNewParentPath();
 		String entryName = action.getEntryName();
-		String localPath = action.getLocalPath();
-		String localRefPath = action.getLocalRefPath();
+		String localPath = action.getLocalRootPath();
+		String localRefPath = action.getLocalRefRootPath();
 		System.out.println("executeModifyAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		
 		InputStream oldData = null;
@@ -456,21 +456,21 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeDeleteAction(ISVNEditor editor, CommitAction action) {
-		Integer entryType = action.getEntryType();
-		String parentPath = action.getEntryParentPath();
+		//Integer entryType = action.getEntryType();
+		String parentPath = action.getNewParentPath();
 		String entryName = action.getEntryName();
-		String localPath = action.getLocalPath();
-		String localRefPath = action.getLocalRefPath();
+		String localPath = action.getLocalRootPath();
+		String localRefPath = action.getLocalRefRootPath();
 		System.out.println("executeDeleteAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		return deleteEntry(editor,parentPath, entryName,false);
 	}
 
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
 		Integer entryType = action.getEntryType();
-		String parentPath = action.getEntryParentPath();
+		String parentPath = action.getNewParentPath();
 		String entryName = action.getEntryName();
-		String localPath = action.getLocalPath();
-		String localRefPath = action.getLocalRefPath();
+		String localPath = action.getLocalRootPath();
+		String localRefPath = action.getLocalRefRootPath();
 		System.out.println("executeAddAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
 		if(entryType == 1)	//File
