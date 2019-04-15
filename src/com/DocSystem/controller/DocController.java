@@ -20,15 +20,15 @@ import util.GsonUtils;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
-import util.LuceneUtil.IndexAction;
 import util.LuceneUtil.LuceneUtil2;
-import util.SvnUtil.CommitAction;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.IndexAction;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 

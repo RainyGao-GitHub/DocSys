@@ -1,4 +1,4 @@
-package util.SvnUtil;
+package com.DocSystem.common;
 
 import java.util.List;
 

@@ -36,6 +36,9 @@ import util.ReadProperties;
 import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.IndexAction;
+import com.DocSystem.common.LocalAction;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
@@ -50,9 +53,7 @@ import util.Encrypt.MD5;
 import util.FileUtil.FileUtils2;
 import util.GitUtil.GITUtil;
 import util.GitUtil.GitEntry;
-import util.LuceneUtil.IndexAction;
 import util.LuceneUtil.LuceneUtil2;
-import util.SvnUtil.CommitAction;
 import util.SvnUtil.SVNUtil;
 
 public class BaseController  extends BaseFunction{
@@ -2380,7 +2381,8 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit, List<IndexAction> actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit, 
+			List<IndexAction> indexActionList, List<LocalAction> localActionList, List<CommitAction> commitActionList) 
 	{
 		Integer reposId = repos.getId();
 		
@@ -2415,11 +2417,8 @@ public class BaseController  extends BaseFunction{
 			String reposRPath = getReposRealPath(repos);
 			
 			//Delete Lucene index For RDoc and VDoc
-			insertIndexDeleteForDocName(actionList, reposId, docId, reposRPath, parentPath, docName);
-			insertIndexDeleteForRDoc(actionList, reposId, docId, reposRPath, parentPath, docName);
-			String reposVPath = getReposVirtualPath(repos);
-			insertIndexDeleteForVDoc(actionList, reposId, docId, reposVPath, parentPath, docName);
-			
+			BuildActionListsForDocDelete(indexActionList, localActionList, commitActionList, repos, docId, parentPath, docName);
+						
 			if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
 			{
 				String MsgInfo = parentPath + docName + " 删除失败！";
@@ -2434,12 +2433,12 @@ public class BaseController  extends BaseFunction{
 			if(skipRealDocCommit)	//忽略版本仓库，用于使用版本仓库同步时调用（相当于已经commit过了）
 			{
 				//需要将文件Commit到verRepos上去
-				if(verReposRealDocDelete(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+				if(verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt) == false)
 				{
 					System.out.println("verReposRealDocDelete Failed");
 					String MsgInfo = "verReposRealDocDelete Failed";
 					//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-					if(verReposRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+					if(verReposRevertRealDoc(repos,parentPath,docName,doc.getType(),rt) == false)
 					{						
 						MsgInfo += " and revertFile Failed";
 					}
@@ -2454,10 +2453,8 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		
-		//Delete previewFile (previewFile use checksum as name)
-		deletePreviewFile(doc.getCheckSum());
-				
+		//Delete previewFile(对于文件型系统checkSum保存在DocName库里，因此可以考虑在执行删除DocName时进行)
+		deletePreviewFile(doc.getCheckSum());			
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
@@ -2492,6 +2489,12 @@ public class BaseController  extends BaseFunction{
 		}
 		rt.setData(doc);
 		return true;
+	}
+
+	private void BuildActionListsForDocDelete(List<IndexAction> indexActionList, List<LocalAction> localActionList,
+			List<CommitAction> commitActionList, Repos repos, Integer docId, String parentPath, String docName) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private boolean deleteSubDocs(Repos repos, Integer docId, String parentPath, String docName, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {

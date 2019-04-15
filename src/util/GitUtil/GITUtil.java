@@ -52,12 +52,11 @@ import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.io.ISVNEditor;
 
+import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
-
-import util.SvnUtil.CommitAction;
 
 public class GITUtil  extends BaseController{
     //For Low Level APIs
