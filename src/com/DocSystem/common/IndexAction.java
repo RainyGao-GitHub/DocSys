@@ -3,16 +3,20 @@ package com.DocSystem.common;
 import java.util.List;
 
 public class IndexAction{
-    private Integer action;	//1:add 2:delete 3:update 4:move
-    private Integer indexType;
+    private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
+    
+    private Integer indexType; //0:DocName 1:RealDoc 2:VirtualDoc
+    private String content;	//If content was set, then content will not get according to indexType
+    
     private Integer reposId;
     private Integer docId;
+    
     private String parentPath;
     private String docName;
-    private String newParentPath;	//This is for rename/move
-    private String newDocName;		//This is for rename/move
+    private String newParentPath;	//This is for rename/move/copy
+    private String newDocName;		//This is for rename/move/copy
     private String localRootPath;
-    private String indexLib;    
+    private String indexLib;
     
     //subAction
     public boolean isSubAction = false;
@@ -27,15 +31,6 @@ public class IndexAction{
 	public Integer getAction()
 	{
 		return action;
-	}
-	
-	public void setIndexType(Integer indexType) {
-		this.indexType = indexType;
-	}
-	
-	public Integer getIndexType()
-	{
-		return indexType;
 	}
 	
 	public void setReposId(Integer reposId) {
@@ -54,6 +49,24 @@ public class IndexAction{
 	public Integer getDocId()
 	{
 		return docId;
+	}
+	
+	public void setIndexType(Integer indexType) {
+		this.indexType = indexType;
+	}
+	
+	public Integer getIndexType()
+	{
+		return indexType;
+	}
+	
+	public void setContent(String content) {
+		this.content = content;
+	}
+	
+	public String getContent()
+	{
+		return content;
 	}
 	
 	public void setParentPath(String parentPath) {

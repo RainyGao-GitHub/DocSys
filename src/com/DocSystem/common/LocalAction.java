@@ -3,7 +3,7 @@ package com.DocSystem.common;
 import java.util.List;
 
 public class LocalAction{
-    private Integer action;	//1:add 2:delete 3:update 4:move
+    private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
     private String parentPath;
     private String docName;
     private String newParentPath;	//This is for rename/move
