@@ -8,6 +8,7 @@ public class LocalAction{
     private String docName;
     private String newParentPath;	//This is for rename/move
     private String newDocName;		//This is for rename/move
+    private String content;			//Content for Local Add or Update
     
     //subAction
     public boolean isSubAction = false;
@@ -58,6 +59,15 @@ public class LocalAction{
 	public String getNewDocName()
 	{
 		return newDocName;
+	}
+	
+	public void setContent(String content) {
+		this.content = content;
+	}
+	
+	public String getContent()
+	{
+		return content;
 	}
 	
 	public boolean getHasSubList()
