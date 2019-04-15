@@ -2,25 +2,16 @@ package com.DocSystem.common;
 
 import java.util.List;
 
+import com.DocSystem.entity.Doc;
+
 public class IndexAction{
     private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
-    
+ 
     private Integer indexType; //0:DocName 1:RealDoc 2:VirtualDoc
-    private String content;	//If content was set, then content will not get according to indexType
+ 
+    private Doc doc = null;
+    private Doc newDoc = null;	//This is for move/copy
     
-    private Integer reposId;
-    private Integer docId;
-    private String parentPath;
-    private String docName;
-    private Integer size;
-    private String checkSum;
-    private Long createdTime;
-    private String createdBy;
-    private Long lastModifiedTime;
-    private String lastModifiedBy;
-    
-    private String newParentPath;	//This is for rename/move/copy
-    private String newDocName;		//This is for rename/move/copy
     private String localRootPath;
     private String indexLib;
     
@@ -39,24 +30,6 @@ public class IndexAction{
 		return action;
 	}
 	
-	public void setReposId(Integer reposId) {
-		this.reposId = reposId;
-	}
-	
-	public Integer getReposId()
-	{
-		return reposId;
-	}
-	
-	public void setDocId(Integer docId) {
-		this.docId = docId;
-	}
-	
-	public Integer getDocId()
-	{
-		return docId;
-	}
-	
 	public void setIndexType(Integer indexType) {
 		this.indexType = indexType;
 	}
@@ -66,49 +39,22 @@ public class IndexAction{
 		return indexType;
 	}
 	
-	public void setContent(String content) {
-		this.content = content;
+	public void setDoc(Doc doc) {
+		this.doc = doc;
 	}
 	
-	public String getContent()
+	public Doc getDoc()
 	{
-		return content;
+		return doc;
 	}
 	
-	public void setParentPath(String parentPath) {
-		this.parentPath = parentPath;
+	public void setNewDoc(Doc newDoc) {
+		this.newDoc = newDoc;
 	}
 	
-	public String getParentPath()
+	public Doc getNewDoc()
 	{
-		return parentPath;
-	}
-
-	public void setDocName(String docName) {
-		this.docName = docName;
-	}
-	
-	public String getDocName()
-	{
-		return docName;
-	}
-	
-	public void setNewParentPath(String newParentPath) {
-		this.newParentPath = newParentPath;
-	}
-	
-	public String getNewParentPath()
-	{
-		return newParentPath;
-	}
-
-	public void setNewDocName(String newDocName) {
-		this.newDocName = newDocName;
-	}
-	
-	public String getNewDocName()
-	{
-		return newDocName;
+		return newDoc;
 	}
 
 	public void setLocalRootPath(String localRootPath) {

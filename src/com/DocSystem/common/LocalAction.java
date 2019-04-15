@@ -2,13 +2,14 @@ package com.DocSystem.common;
 
 import java.util.List;
 
+import com.DocSystem.entity.Doc;
+
 public class LocalAction{
     private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
-    private String parentPath;
-    private String docName;
-    private String newParentPath;	//This is for rename/move
-    private String newDocName;		//This is for rename/move
-    private String content;			//Content for Local Add or Update
+    private Doc doc = null;
+    private Doc newDoc = null;	//This is for move/copy
+    
+    private String localRootPath;
     
     //subAction
     public boolean isSubAction = false;
@@ -25,49 +26,31 @@ public class LocalAction{
 		return action;
 	}
 		
-	public void setParentPath(String parentPath) {
-		this.parentPath = parentPath;
+	public void setDoc(Doc doc) {
+		this.doc = doc;
 	}
 	
-	public String getParentPath()
+	public Doc getDoc()
 	{
-		return parentPath;
+		return doc;
+	}
+	
+	public void setNewDoc(Doc newDoc) {
+		this.newDoc = newDoc;
+	}
+	
+	public Doc getNewDoc()
+	{
+		return newDoc;
 	}
 
-	public void setDocName(String docName) {
-		this.docName = docName;
+	public void setLocalRootPath(String localRootPath) {
+		this.localRootPath = localRootPath;
 	}
 	
-	public String getDocName()
+	public String getLocalRootPath()
 	{
-		return docName;
-	}
-	
-	public void setNewParentPath(String newParentPath) {
-		this.newParentPath = newParentPath;
-	}
-	
-	public String getNewParentPath()
-	{
-		return newParentPath;
-	}
-
-	public void setNewDocName(String newDocName) {
-		this.newDocName = newDocName;
-	}
-	
-	public String getNewDocName()
-	{
-		return newDocName;
-	}
-	
-	public void setContent(String content) {
-		this.content = content;
-	}
-	
-	public String getContent()
-	{
-		return content;
+		return localRootPath;
 	}
 	
 	public boolean getHasSubList()

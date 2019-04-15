@@ -2026,7 +2026,7 @@ public class BaseController  extends BaseFunction{
 	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, List<IndexAction> actionList) {
+			User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -2034,7 +2034,7 @@ public class BaseController  extends BaseFunction{
 	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, List<IndexAction> actionList) {
+			User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		return null;
 	}
