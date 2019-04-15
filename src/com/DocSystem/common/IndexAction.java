@@ -10,9 +10,15 @@ public class IndexAction{
     
     private Integer reposId;
     private Integer docId;
-    
     private String parentPath;
     private String docName;
+    private Integer size;
+    private String checkSum;
+    private Long createdTime;
+    private String createdBy;
+    private Long lastModifiedTime;
+    private String lastModifiedBy;
+    
     private String newParentPath;	//This is for rename/move/copy
     private String newDocName;		//This is for rename/move/copy
     private String localRootPath;

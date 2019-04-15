@@ -1,22 +1,12 @@
 package com.DocSystem.common;
 
-import java.util.List;
+import com.DocSystem.entity.Doc;
 
 public class DBAction{
-    private Integer action;	//1:add 2:delete 3:update 4:move
-    private Integer reposId;
-    private Integer docId;
-    private String parentPath;
-    private String docName;
-    private String newParentPath;	//This is for rename/move
-    private String newDocName;		//This is for rename/move
-    
-    //subAction
-    public boolean isSubAction = false;
-    //Sub Action List
-    public boolean hasSubList = false;
-    private List<DBAction> subActionList = null;
-	
+    private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
+    private Doc doc = null;
+    private Doc newDoc = null;	//This is for move/copy
+
 	public void setAction(Integer action) {
 		this.action = action;
 	}
@@ -25,77 +15,22 @@ public class DBAction{
 	{
 		return action;
 	}
-		
-	public void setReposId(Integer reposId) {
-		this.reposId = reposId;
+	
+	public void setDoc(Doc doc) {
+		this.doc = doc;
 	}
 	
-	public Integer getReposId()
+	public Doc getDoc()
 	{
-		return reposId;
+		return doc;
 	}
 	
-	public void setDocId(Integer docId) {
-		this.docId = docId;
+	public void setNewDoc(Doc newDoc) {
+		this.newDoc = newDoc;
 	}
 	
-	public Integer getDocId()
+	public Doc getNewDoc()
 	{
-		return docId;
+		return newDoc;
 	}
-	
-	public void setParentPath(String parentPath) {
-		this.parentPath = parentPath;
-	}
-	
-	public String getParentPath()
-	{
-		return parentPath;
-	}
-
-	public void setDocName(String docName) {
-		this.docName = docName;
-	}
-	
-	public String getDocName()
-	{
-		return docName;
-	}
-	
-	public void setNewParentPath(String newParentPath) {
-		this.newParentPath = newParentPath;
-	}
-	
-	public String getNewParentPath()
-	{
-		return newParentPath;
-	}
-
-	public void setNewDocName(String newDocName) {
-		this.newDocName = newDocName;
-	}
-	
-	public String getNewDocName()
-	{
-		return newDocName;
-	}
-	
-	public boolean getHasSubList()
-	{
-		return hasSubList;
-	}
-	
-	public void setHasSubList(boolean hasSubList) {
-		this.hasSubList = hasSubList;
-	}
-	
-	public void setSubActionList(List<DBAction> subActionList) {
-		this.subActionList = subActionList;
-	}
-	
-	public List<DBAction> getSubActionList()
-	{
-		return subActionList;
-	}
-	
 }
