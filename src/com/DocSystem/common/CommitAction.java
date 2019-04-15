@@ -3,13 +3,17 @@ package com.DocSystem.common;
 import java.util.List;
 
 public class CommitAction{
-    private Integer action;
+    private Integer action; //1:add 2:delete 3:modify 4:move 5:copy
+    
     private Integer entryType;
-    private String entryParentPath;
+    
+    private String parentPath;
     private String entryName;
-    private String entryPath;
-    private String localPath;
-    private String localRefPath;
+    private String newParentPath;
+    private String newEntryName;
+
+    private String localRootPath;
+    private String localRefRootPath;
     
     //subAction
     public boolean isSubAction = false;
@@ -36,13 +40,13 @@ public class CommitAction{
 	}
 
 
-	public void setEntryParentPath(String entryParentPath) {
-		this.entryParentPath = entryParentPath;
+	public void setParentPath(String parentPath) {
+		this.parentPath = parentPath;
 	}
 	
-	public String getEntryParentPath()
+	public String getParentPath()
 	{
-		return entryParentPath;
+		return parentPath;
 	}
 
 	public void setEntryName(String entryName) {
@@ -54,31 +58,40 @@ public class CommitAction{
 		return entryName;
 	}
 
-	public void setEntryPath(String entryPath) {
-		this.entryPath = entryPath;
+	public void setNewParentPath(String newParentPath) {
+		this.newParentPath = newParentPath;
 	}
 	
-	public String getEntryPath()
+	public String getNewParentPath()
 	{
-		return entryPath;
+		return newParentPath;
 	}
 
-	public void setLocalRefPath(String localRefPath) {
-		this.localRefPath = localRefPath;
+	public void setNewEntryName(String newEntryName) {
+		this.newEntryName = newEntryName;
 	}
 	
-	public String getLocalRefPath()
+	public String getNewEntryName()
 	{
-		return localRefPath;
+		return newEntryName;
+	}
+
+	public void setLocalRefRootPath(String localRefRootPath) {
+		this.localRefRootPath = localRefRootPath;
 	}
 	
-	public void setLocalPath(String localPath) {
-		this.localPath = localPath;
-	}
-	
-	public String getLocalPath()
+	public String getLocalRefRootPath()
 	{
-		return localPath;
+		return localRefRootPath;
+	}
+	
+	public void setLocalRootPath(String localRootPath) {
+		this.localRootPath = localRootPath;
+	}
+	
+	public String getLocalRootPath()
+	{
+		return localRootPath;
 	}
 	
 	public boolean getHasSubList()
