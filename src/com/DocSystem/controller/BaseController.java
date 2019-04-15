@@ -2145,20 +2145,20 @@ public class BaseController  extends BaseFunction{
 			String docVName = getVDocName(parentPath, docName);
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
+				insertIndexAddForVDoc(actionList, repos.getId(), docId, reposVPath, parentPath, docName);			
+				
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) == false)
 				{
 					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
 					rt.setMsgInfo("svnVirtualDocAdd Failed");			
-				}
+				}	
 			}
 			else
 			{
 				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
-			
-			addIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
-			
+
 		}
 		
 //		//启用doc
