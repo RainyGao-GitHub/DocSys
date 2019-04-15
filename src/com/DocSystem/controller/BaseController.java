@@ -49,7 +49,6 @@ import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 
 import util.Base64File;
-import util.Encrypt.MD5;
 @SuppressWarnings("rawtypes")
 public class BaseController{
 	@Autowired
