@@ -50,6 +50,13 @@ public class UserController extends BaseController {
 	public void login(String userName,String pwd,String rememberMe,HttpServletRequest request,HttpSession session,HttpServletResponse response){
 		System.out.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
+		List<User> uList = userService.geAllUsers();
+		if(uList == null || uList.size() == 0)
+		{
+			//Add a default user(Admin)
+			addAdminUser();
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		
 		//tmp_user is used for store the query condition
@@ -82,6 +89,21 @@ public class UserController extends BaseController {
 		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
 		writeJson(rt, response);	
 		return;
+	}
+
+	private void addAdminUser() {
+		// TODO Auto-generated method stub
+		User user = new User();
+		user.setName("Admin");
+		user.setNickName("超级管理员");
+		user.setPwd(MD5.md5("Admin"));
+		user.setCreateType(0);	//系统自动创建
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置时间
+		user.setType(2);
+		userService.addUser(user);
 	}
 
 	/**
@@ -307,7 +329,7 @@ public class UserController extends BaseController {
 		//set createTime
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
 		String createTime = df.format(new Date());// new Date()为获取当前系统时间
-		user.setCreateTime(createTime);	//设置川剧时间
+		user.setCreateTime(createTime);	//设置时间
 		user.setType(0);
 		if(isFirstUser() == true)
 		{
