@@ -2302,7 +2302,7 @@ public class BaseController  extends BaseFunction{
 		docId = doc.getId();
 
 		//Update Lucene Index
-		updateIndexForRDoc(reposId, docId, reposRPath, parentPath, docName);
+		insertIndexUpdateForRDoc(actionList, reposId, docId, reposRPath, parentPath, docName);
 		
 		//只有在content非空的时候才创建VDOC
 		if(null != content && !"".equals(content))
@@ -2311,6 +2311,9 @@ public class BaseController  extends BaseFunction{
 			String docVName = getVDocName(parentPath,doc.getName());
 			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
 			{
+				//Add Lucene Index For Vdoc
+				insertIndexUpdateForVDoc(actionList,reposId, docId, reposVPath, parentPath, docName);
+
 				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
 				{
 					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
@@ -2322,8 +2325,6 @@ public class BaseController  extends BaseFunction{
 				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
 				rt.setMsgInfo("createVirtualDoc Failed");
 			}
-			//Add Lucene Index For Vdoc
-			addIndexForVDoc(reposId, docId, parentPath, docName, content);
 		}
 		
 		//启用doc
@@ -2379,8 +2380,10 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit, List<IndexAction> actionList) 
 	{
+		Integer reposId = repos.getId();
+		
 		Doc doc = null;
 		if(isSubDelete)	//Do not lock
 		{
@@ -2411,12 +2414,15 @@ public class BaseController  extends BaseFunction{
 			//get RealDoc Full ParentPath
 			String reposRPath = getReposRealPath(repos);
 			
-			//删除实体文件
-			String name = doc.getName();
+			//Delete Lucene index For RDoc and VDoc
+			insertIndexDeleteForDocName(actionList, reposId, docId, reposRPath, parentPath, docName);
+			insertIndexDeleteForRDoc(actionList, reposId, docId, reposRPath, parentPath, docName);
+			String reposVPath = getReposVirtualPath(repos);
+			insertIndexDeleteForVDoc(actionList, reposId, docId, reposVPath, parentPath, docName);
 			
-			if(deleteRealDoc(reposRPath,parentPath,name, doc.getType(),rt) == false)
+			if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
 			{
-				String MsgInfo = parentPath + name + " 删除失败！";
+				String MsgInfo = parentPath + docName + " 删除失败！";
 				if(unlockDoc(docId,login_user,doc) == false)
 				{
 					MsgInfo += " and unlockDoc Failed";						
@@ -2448,12 +2454,10 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		//Delete Lucene index For RDoc and VDoc
-		deleteIndexForRDoc(repos.getId(), docId, parentPath, docName);
-		deleteIndexForVDoc(repos.getId(), docId, parentPath, docName);
 		
 		//Delete previewFile (previewFile use checksum as name)
 		deletePreviewFile(doc.getCheckSum());
+				
 		
 		//删除虚拟文件
 		String reposVPath = getReposVirtualPath(repos);
@@ -6001,7 +6005,9 @@ public class BaseController  extends BaseFunction{
 	private void insertIndexAddForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
 		insertIndexAction(actionList, 1, 0, reposId, docId, reposRPath, parentPath, docName);
 	}
+	
 	private void insertIndexDeleteForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		//TODO: delete 操作需要使用递归调用方式
 		insertIndexAction(actionList, 2, 0, reposId, docId, reposRPath, parentPath, docName);
 	}
 	private void insertIndexUpdateForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
@@ -6012,6 +6018,7 @@ public class BaseController  extends BaseFunction{
 		insertIndexAction(actionList, 1, 1, reposId, docId, reposRPath, parentPath, docName);
 	}
 	private void insertIndexDeleteForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
+		//TODO: delete 操作需要使用递归调用方式
 		insertIndexAction(actionList, 2, 1, reposId, docId, reposRPath, parentPath, docName);
 	}
 	private void insertIndexUpdateForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
@@ -6022,6 +6029,7 @@ public class BaseController  extends BaseFunction{
 		insertIndexAction(actionList, 1, 2, reposId, docId, reposVPath, parentPath, docName);
 	}
 	private void insertIndexDeleteForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
+		//TODO: delete 操作需要使用递归调用方式
 		insertIndexAction(actionList, 2, 2, reposId, docId, reposVPath, parentPath, docName);
 	}
 	private void insertIndexUpdateForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
