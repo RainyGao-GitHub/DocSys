@@ -106,13 +106,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		List<IndexAction> indexActionList = new ArrayList<IndexAction>();
-		Integer ret = addDoc(repos, level, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt, indexActionList); 
+		MultiActionList actionList = new MultiActionList();
+		Integer ret = addDoc(repos, level, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret > 0 )
 		{
-			executeIndexActionList(indexActionList);
+			executeMultiActionList(actionList);
 		}
 	}
 
@@ -146,7 +146,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		addDoc(repos, -1, 1, parentId, parentPath, name, content, null, 0, "", null,null,null,commitMsg,commitUser,login_user,rt);
+		MultiActionList actionList = new MultiActionList();
+		Integer ret = addDoc(repos, -1, 1, parentId, parentPath, name, content, null, 0, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -154,6 +155,11 @@ public class DocController extends BaseController{
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");		
 
 		writeJson(rt, response);
+		
+		if(ret > 0 )
+		{
+			executeMultiActionList(actionList);
+		}
 	}
 	
 	private Integer getReposIdForFeeback() {
@@ -262,26 +268,33 @@ public class DocController extends BaseController{
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
 				String commitUser = login_user.getName();
+				MultiActionList actionList = new MultiActionList();
 				if(uploadType == 0)
 				{
-					docId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
+					Integer newDocId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
 								null, 
 								null,size, checkSum, 
-								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
+					writeJson(rt, response);
+					if(newDocId > 0)
+					{
+						executeMultiActionList(actionList);
+						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+					}					
 				}
 				else
 				{
-					updateDoc(repos, docId, parentId, parentPath, docName, 
+					boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 							null, size,checkSum,   
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);				
-				}
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
 				
-				if("ok".equals(rt.getStatus()))
-				{	
-					//Delete All Trunks if trunks have been combined
-					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+					writeJson(rt, response);	
+					if(ret == true)
+					{
+						executeMultiActionList(actionList);
+						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+					}
 				}
-				writeJson(rt, response);
 				return;
 			}
 		}
@@ -513,26 +526,33 @@ public class DocController extends BaseController{
 		if(uploadFile != null) 
 		{
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
+			MultiActionList actionList = new MultiActionList();
 			if(uploadType == 0)
 			{
-				docId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
-								null, 
-								uploadFile,size, checkSum, 
-								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);
+				Integer newDocId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
+						null, 
+						uploadFile,size, checkSum, 
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
+				writeJson(rt, response);
+				if(newDocId > 0)
+				{
+					executeMultiActionList(actionList);
+					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+				}					
 			}
 			else
 			{
-				updateDoc(repos, docId, parentId, parentPath, docName, 
+				boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 						uploadFile, size,checkSum,   
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt);				
-			}
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
 			
-			if("ok".equals(rt.getStatus()))
-			{				
-				//Delete All Trunks if trunks have been combined
-				deleteChunks(docName,chunkIndex,chunkNum,chunkParentPath);
+				writeJson(rt, response);	
+				if(ret == true)
+				{
+					executeMultiActionList(actionList);
+					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+				}
 			}
-			writeJson(rt, response);
 			return;
 		}
 		else

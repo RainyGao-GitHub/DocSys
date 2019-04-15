@@ -2537,38 +2537,35 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层updateDoc接口
-	protected void updateDoc(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
+	protected boolean updateDoc(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 								MultipartFile uploadFile,Integer fileSize,String checkSum, 
 								Integer chunkNum, Integer chunkSize, String chunkParentPath, 
-								String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+								String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
 		switch(repos.getType())
 		{
 		case 1:
-			updateDoc_DB(repos, docId, parentId, parentPath, docName,
+			return updateDoc_DB(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt);
-			break;		
 		case 2:
-			updateDoc_FS(repos, docId, parentId, parentPath, docName,
+			return updateDoc_FS(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt);
-			break;	
 		case 3:
-			updateDoc_SVN(repos, docId, parentId, parentPath, docName,
+			return updateDoc_SVN(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt);
-			break;	
 		case 4:
-			updateDoc_GIT(repos, docId, parentId, parentPath, docName,
+			return updateDoc_GIT(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt);
-			break;				
 		}
+		return false;
 	}
 	
 	private void updateDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
