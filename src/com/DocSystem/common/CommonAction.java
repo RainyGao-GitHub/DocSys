@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.DocSystem.entity.Doc;
 
-public class IndexAction{
+public class CommonAction {
     private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
  
-    private Integer indexType; //0:DocName 1:RealDoc 2:VirtualDoc
+    private Integer type; //0:DocName 1:RealDoc 2:VirtualDoc
  
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
@@ -19,7 +19,7 @@ public class IndexAction{
     public boolean isSubAction = false;
     //Sub Action List
     public boolean hasSubList = false;
-    private List<IndexAction> subActionList = null;
+    private List<CommonAction> subActionList = null;
 	
 	public void setAction(Integer action) {
 		this.action = action;
@@ -30,13 +30,13 @@ public class IndexAction{
 		return action;
 	}
 	
-	public void setIndexType(Integer indexType) {
-		this.indexType = indexType;
+	public void setType(Integer type) {
+		this.type = type;
 	}
 	
 	public Integer getIndexType()
 	{
-		return indexType;
+		return type;
 	}
 	
 	public void setDoc(Doc doc) {
@@ -84,11 +84,11 @@ public class IndexAction{
 		this.hasSubList = hasSubList;
 	}
 	
-	public void setSubActionList(List<IndexAction> subActionList) {
+	public void setSubActionList(List<CommonAction> subActionList) {
 		this.subActionList = subActionList;
 	}
 	
-	public List<IndexAction> getSubActionList()
+	public List<CommonAction> getSubActionList()
 	{
 		return subActionList;
 	}

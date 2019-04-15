@@ -4,51 +4,51 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MultiActionList{
-    private List<DBAction> dbActionList = null;
-    private List<IndexAction> indexActionList = null;
-    private List<LocalAction> localActionList = null;
-    private List<CommitAction> commitActionList = null;
+    private List<CommonAction> dbActionList = null;
+    private List<CommonAction> indexActionList = null;
+    private List<CommonAction> localActionList = null;
+    private List<CommonAction> commitActionList = null;
 
     public MultiActionList()
     {
-    	dbActionList = new ArrayList<DBAction>();
-    	indexActionList = new ArrayList<IndexAction>();
-    	localActionList = new ArrayList<LocalAction>();
-    	commitActionList = new ArrayList<CommitAction>();
+    	dbActionList = new ArrayList<CommonAction>();
+    	indexActionList = new ArrayList<CommonAction>();
+    	localActionList = new ArrayList<CommonAction>();
+    	commitActionList = new ArrayList<CommonAction>();
     }
     
-	public void setIndexActionList(List<IndexAction> indexActionList) {
+	public void setIndexActionList(List<CommonAction> indexActionList) {
 		this.indexActionList = indexActionList;
 	}
 	
-	public List<IndexAction> getIndexActionList()
+	public List<CommonAction> getIndexActionList()
 	{
 		return indexActionList;
 	}
 	
-	public void setLocalActionList(List<LocalAction> localActionList) {
+	public void setLocalActionList(List<CommonAction> localActionList) {
 		this.localActionList = localActionList;
 	}
 	
-	public List<LocalAction> getLocalActionList()
+	public List<CommonAction> getLocalActionList()
 	{
 		return localActionList;
 	}
 	
-	public void setCommitActionList(List<CommitAction> commitActionList) {
+	public void setCommitActionList(List<CommonAction> commitActionList) {
 		this.commitActionList = commitActionList;
 	}
 	
-	public List<CommitAction> getCommitActionList()
+	public List<CommonAction> getCommitActionList()
 	{
 		return commitActionList;
 	}
 	
-	public void setDBActionList(List<DBAction> dbActionList) {
+	public void setDBActionList(List<CommonAction> dbActionList) {
 		this.dbActionList = dbActionList;
 	}
 	
-	public List<DBAction> getDBActionList()
+	public List<CommonAction> getDBActionList()
 	{
 		return dbActionList;
 	}

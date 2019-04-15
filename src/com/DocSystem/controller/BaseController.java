@@ -2138,31 +2138,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		insertIndexAddForDocName(actionList, reposId, docId, reposRPath, parentPath, docName);
-		insertIndexAddForRDoc(actionList, reposId, docId, reposRPath,parentPath, docName);
-		
-		//只有在content非空的时候才创建VDOC
-		if(null != content && !"".equals(content))
-		{
-			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getVDocName(parentPath, docName);
-			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
-			{
-				insertIndexAddForVDoc(actionList, repos.getId(), docId, reposVPath, parentPath, docName);			
-				
-				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) == false)
-				{
-					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
-					rt.setMsgInfo("svnVirtualDocAdd Failed");			
-				}	
-			}
-			else
-			{
-				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
-				rt.setMsgInfo("createVirtualDoc Failed");
-			}
-
-		}
+		BuildMultiActionListForDocAdd(actionList, repos, doc);
 		
 //		//启用doc
 //		if(unlockRepos(repos.getId(), login_user, null) == false)
@@ -2305,7 +2281,7 @@ public class BaseController  extends BaseFunction{
 		docId = doc.getId();
 
 		//BuildMultiActionListForDocAdd();
-		BuildMultiActionListForDocAdd(actionList, repos, docId, parentPath, docName, content);
+		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
 		//executeLocalActionList and CommitAction to add VDoc and commitVDoc
 		
@@ -2322,34 +2298,55 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Integer docId,
-			String parentPath, String docName, String content) {
-		// TODO Auto-generated method stub
-		//Update Lucene Index
-		insertIndexUpdateForRDoc(indexActionList, reposId, docId, reposRPath, parentPath, docName);
+	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
+	{
 		
-		//只有在content非空的时候才创建VDOC
+		String reposRPath = getReposRealPath(repos);
+		
+		List<IndexAction> indexActionList = actionList.getIndexActionList();
+		IndexAction indexAction = new IndexAction();
+
+		//Insert index add action for DocName
+		indexAction.setAction(1);
+		indexAction.setIndexType(0);
+		indexAction.setLocalRootPath(reposRPath);
+		indexActionList.add(indexAction);
+		//Insert index add action for RDoc
+		indexAction.setIndexType(1);
+		indexActionList.add(indexAction);
+		
+		String content = doc.getContent();
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String docVName = getVDocName(parentPath,doc.getName());
-			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
-			{
-				//Add Lucene Index For Vdoc
-				insertIndexUpdateForVDoc(indexActionList,reposId, docId, reposVPath, parentPath, docName);
+			//Insert local add action for VDoc
+			List<LocalAction> localActionList = actionList.getLocalActionList();
+			LocalAction localAction = new LocalAction();
+			localAction.setAction(1);
+			localAction.setType(2);	//1: RDoc 2:VDoc
+			localAction.setDoc(doc);
+			localAction.setLocalRootPath(reposVPath);
+			localActionList.add(localAction);
+			
+			//Insert index add action for VDoc	
+			indexAction.setAction(1);
+			indexAction.setIndexType(2);
+			indexAction.setLocalRootPath(reposVPath);
+			indexActionList.add(indexAction);
 
-				if(verReposVirtualDocAdd(repos, docVName, commitMsg, commitUser,rt) ==false)
-				{
-					System.out.println("addDoc() svnVirtualDocAdd Failed " + docVName);
-					rt.setMsgInfo("svnVirtualDocAdd Failed");			
-				}
-			}
-			else
+			if(repos.getVerCtrl1() > 0)
 			{
-				System.out.println("addDoc() createVirtualDoc Failed " + reposVPath + docVName);
-				rt.setMsgInfo("createVirtualDoc Failed");
+				List<CommitAction> commitActionList = actionList.getCommitActionList();
+				CommitAction commitAction = new CommitAction();
+				commitAction.setAction(1);
+				commitAction.setType(2);	//1: RDoc 2:VDoc
+				commitAction.setDoc(doc);
+				commitAction.setLocalRootPath(reposVPath);	
+				commitActionList.add(commitAction);
+			
 			}
 		}
+
 
 	}
 
@@ -6010,8 +6007,15 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	//Update Index For DocName
-	public static boolean updateIndexForDocName(Integer reposId, Integer docId, String parentPath, String name, String newParentPath, String newName)
+	public static boolean updateIndexForDocName(Doc doc, Doc newDoc)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		String newParentPath = newDoc.getPath();
+		String newName = newDoc.getName();
+	
 		String indexLib = getIndexLibName(reposId,0);
 		System.out.println("updateIndexForDocName() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " newParentPath:" + newParentPath + " newName:" + newName + " indexLib:" + indexLib);
 
@@ -6026,49 +6030,14 @@ public class BaseController  extends BaseFunction{
 
 		String content = newParentPath + newName;
 		return LuceneUtil2.addIndex(hashId, reposId, docId, parentPath, name, hashId, content.trim(), indexLib);
-	}
-
-	
-	private void insertIndexAddForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
-		insertIndexAction(actionList, 1, 0, reposId, docId, reposRPath, parentPath, docName);
-	}
-	
-	private void insertIndexDeleteForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
-		//TODO: delete 操作需要使用递归调用方式
-		insertIndexAction(actionList, 2, 0, reposId, docId, reposRPath, parentPath, docName);
-	}
-	private void insertIndexUpdateForDocName(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
-		insertIndexAction(actionList, 3, 0, reposId, docId, reposRPath, parentPath, docName);
-	}	
-	
-	private void insertIndexAddForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
-		insertIndexAction(actionList, 1, 1, reposId, docId, reposRPath, parentPath, docName);
-	}
-	private void insertIndexDeleteForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
-		//TODO: delete 操作需要使用递归调用方式
-		insertIndexAction(actionList, 2, 1, reposId, docId, reposRPath, parentPath, docName);
-	}
-	private void insertIndexUpdateForRDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposRPath, String parentPath, String docName) {
-		insertIndexAction(actionList, 3, 1, reposId, docId, reposRPath, parentPath, docName);
-	}	
-
-	private void insertIndexAddForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
-		insertIndexAction(actionList, 1, 2, reposId, docId, reposVPath, parentPath, docName);
-	}
-	private void insertIndexDeleteForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
-		//TODO: delete 操作需要使用递归调用方式
-		insertIndexAction(actionList, 2, 2, reposId, docId, reposVPath, parentPath, docName);
-	}
-	private void insertIndexUpdateForVDoc(List<IndexAction> actionList, Integer reposId, Integer docId, String reposVPath, String parentPath, String docName) {
-		insertIndexAction(actionList, 3, 2, reposId, docId, reposVPath, parentPath, docName);
 	}	
 	
 	//localRootPath 本地文件根目录，用于找到本地文件
 	//actionType: 1:add 2:delete 3:modify
 	//indexType: 0: docName  1: RealDoc 2: VirtualDoc
-	private void insertIndexAction(List<IndexAction> actionList, int actionType, int indexType, Integer reposId,  Integer docId,  String localRootPath, String parentPath, String docName) 
-	{
-		// TODO Auto-generated method stub
+	private void insertIndexAction(List<IndexAction> actionList, int actionType, int indexType, Doc doc,  String localRootPath) 
+	{		
+		
 	}
 	
 	protected boolean executeIndexActionList(List<IndexAction> indexActionList) 
