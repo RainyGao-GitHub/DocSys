@@ -3,12 +3,14 @@ package com.DocSystem.common;
 import java.util.List;
 
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
 
 public class CommonAction {
     private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
  
     private Integer type; //0:DocName 1:RealDoc 2:VirtualDoc
- 
+    
+    private Repos repos = null;
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
     
@@ -37,6 +39,15 @@ public class CommonAction {
 	public Integer getIndexType()
 	{
 		return type;
+	}
+
+	public void setRepos(Repos repos) {
+		this.repos = repos;
+	}
+	
+	public Repos getRepos()
+	{
+		return repos;
 	}
 	
 	public void setDoc(Doc doc) {

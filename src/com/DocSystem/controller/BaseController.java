@@ -37,6 +37,7 @@ import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DBAction;
 import com.DocSystem.common.IndexAction;
 import com.DocSystem.common.LocalAction;
@@ -2283,7 +2284,8 @@ public class BaseController  extends BaseFunction{
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
-		//executeLocalActionList and CommitAction to add VDoc and commitVDoc
+		executeLocalActionList(actionList.getLocalActionList());
+		executeCommitActionList(actionList.getCommitActionList());
 		
 		//启用doc
 		if(unlockDoc(docId,login_user,null) == false)
@@ -2303,51 +2305,39 @@ public class BaseController  extends BaseFunction{
 		
 		String reposRPath = getReposRealPath(repos);
 		
-		List<IndexAction> indexActionList = actionList.getIndexActionList();
-		IndexAction indexAction = new IndexAction();
+		List<CommonAction> indexActionList = actionList.getIndexActionList();
+		CommonAction action = new CommonAction();
 
 		//Insert index add action for DocName
-		indexAction.setAction(1);
-		indexAction.setIndexType(0);
-		indexAction.setLocalRootPath(reposRPath);
-		indexActionList.add(indexAction);
+		action.setAction(1);
+		action.setType(0);
+		action.setDoc(doc);
+		action.setLocalRootPath(reposRPath);
+		indexActionList.add(action);
 		//Insert index add action for RDoc
-		indexAction.setIndexType(1);
-		indexActionList.add(indexAction);
+		action.setType(1);
+		indexActionList.add(action);
 		
 		String content = doc.getContent();
 		if(null != content && !"".equals(content))
 		{
 			String reposVPath = getReposVirtualPath(repos);
+			
 			//Insert local add action for VDoc
-			List<LocalAction> localActionList = actionList.getLocalActionList();
-			LocalAction localAction = new LocalAction();
-			localAction.setAction(1);
-			localAction.setType(2);	//1: RDoc 2:VDoc
-			localAction.setDoc(doc);
-			localAction.setLocalRootPath(reposVPath);
-			localActionList.add(localAction);
+			List<CommonAction> localActionList = actionList.getLocalActionList();
+			action.setType(2);	//1: RDoc 2:VDoc
+			action.setLocalRootPath(reposVPath);
+			localActionList.add(action);
 			
 			//Insert index add action for VDoc	
-			indexAction.setAction(1);
-			indexAction.setIndexType(2);
-			indexAction.setLocalRootPath(reposVPath);
-			indexActionList.add(indexAction);
+			indexActionList.add(action);
 
 			if(repos.getVerCtrl1() > 0)
 			{
-				List<CommitAction> commitActionList = actionList.getCommitActionList();
-				CommitAction commitAction = new CommitAction();
-				commitAction.setAction(1);
-				commitAction.setType(2);	//1: RDoc 2:VDoc
-				commitAction.setDoc(doc);
-				commitAction.setLocalRootPath(reposVPath);	
-				commitActionList.add(commitAction);
-			
+				List<CommonAction> commitActionList = actionList.getCommitActionList();
+				commitActionList.add(action);
 			}
 		}
-
-
 	}
 
 	//底层deleteDoc接口
