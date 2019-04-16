@@ -1978,8 +1978,7 @@ public class BaseController  extends BaseFunction{
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-			MultiActionList actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
 		Integer docId = getNewDocId(repos, level, parentPath);
 		
@@ -2944,22 +2943,22 @@ public class BaseController  extends BaseFunction{
 			return updateDoc_DB(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 2:
 			return updateDoc_FS(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
 			return updateDoc_SVN(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
 			return updateDoc_GIT(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt);
+					commitMsg, commitUser, login_user, rt, actionList);
 		}
 		return false;
 	}
@@ -3075,45 +3074,46 @@ public class BaseController  extends BaseFunction{
 
 	//底层renameDoc接口
 	protected void renameDoc(Repos repos, Integer docId, Integer parentId, String parentPath, String name, String newname, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+			MultiActionList actionList)
 	{
 		switch(repos.getType())
 		{
 		case 1:
-			renameDoc_DB(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			renameDoc_DB(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt, actionList);
 			break;
 		case 2:
-			renameDoc_FS(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			renameDoc_FS(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt, actionList);
 			break;
 		case 3:
-			renameDoc_SVN(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			renameDoc_SVN(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt, actionList);
 			break;
 		case 4:
-			renameDoc_GIT(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt);
+			renameDoc_GIT(repos, docId, parentId, parentPath, name, newname,commitMsg, commitUser, login_user, rt, actionList);
 			break;			
 		}
 	}
 	
 	private void renameDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String name,
-			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	private void renameDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String name,
-			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	private void renameDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String name,
-			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+			String newname, String commitMsg, String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	protected void renameDoc_DB(Repos repos, Integer docId, Integer parentId, String parentPath, String name, String newname, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
 		
 		Doc doc = null;
@@ -3361,7 +3361,7 @@ public class BaseController  extends BaseFunction{
 	//底层copyDoc接口
 	//isSubCopy: true no need to do lock check and lock
 	protected boolean copyDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, boolean isSubCopy) {
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, boolean isSubCopy,MultiActionList actionList) {
 		
 		Integer reposId = repos.getId();
 		String reposRPath =  getReposRealPath(repos);
@@ -3504,7 +3504,7 @@ public class BaseController  extends BaseFunction{
 		}				
 		
 		//Update Lucene Index
-		addIndexForRDoc(reposId, dstDocId, reposRPath, dstParentPath, dstName);
+		insertIndexAddForRDoc(actionList,reposId, dstDocId, reposRPath, dstParentPath, dstName);
 		
 		//content非空时才去创建虚拟文件目录
 		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
