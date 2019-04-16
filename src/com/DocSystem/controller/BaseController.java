@@ -2476,22 +2476,66 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private void BuildMultiActionListForDocDelete_GIT(MultiActionList actionList, Repos repos, Doc doc, String path,
+	private void BuildMultiActionListForDocDelete_GIT(MultiActionList actionList, Repos repos, Doc doc, String parentPath,
 			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void BuildMultiActionListForDocDelete_SVN(MultiActionList actionList, Repos repos, Doc doc, String path,
+	private void BuildMultiActionListForDocDelete_SVN(MultiActionList actionList, Repos repos, Doc doc, String parentPath,
 			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void BuildMultiActionListForDocDelete_FS(MultiActionList actionList, Repos repos, Doc doc, String path,
+	private void BuildMultiActionListForDocDelete_FS(MultiActionList actionList, Repos repos, Doc doc, String parentPath,
 			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
+		List<CommonAction> indexActionList = actionList.getIndexActionList();
+		List<CommonAction> localActionList = actionList.getLocalActionList();
+		List<CommonAction> commitActionList = actionList.getCommitActionList();
+		List<CommonAction> dbActionList = actionList.getDBActionList();
 		
+		CommonAction action = new CommonAction();
+
+		//Delete DB
+		action.setAction(2); //Delete
+		action.setDoc(doc);
+		dbActionList.add(action);
+		
+		//Delete VDoc
+		action.setType(2);	//VDoc
+		action.setLocalRootPath(reposVPath);
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		localActionList.add(action);	//local
+		commitActionList.add(action);	//commit
+		indexActionList.add(action);	//index
+				
+		
+		//Delete Index for RDoc and DocName
+		action.setType(1); //RDoc
+		action.setLocalRootPath(reposRPath);
+		indexActionList.add(action);
+		action.setType(0); //DocName
+		indexActionList.add(action);
+		
+		//deletePreviewFile(oldCheckSum);
+		Doc previewDoc = new Doc();
+		previewDoc.setPath("");
+		previewDoc.setName(doc.getCheckSum() + ".pdf");
+		String previewRootPath = getWebTmpPath() + "preview/";
+		action.setDoc(previewDoc);
+		action.setLocalRootPath(previewRootPath);
+		localActionList.add(action);	
+
+		//Get SubDocList
+		List<Doc> subDocList = reposService.getDocList(doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			BuildMultiActionListForDocDelete_DB(actionList, repos, subDoc, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);	
+		}	
 	}
 
 	private void BuildMultiActionListForDocDelete_DB(MultiActionList actionList, Repos repos, Doc doc, String parentPath, String reposRPath, String reposVPath, String commitMsg, String commitUser) 
@@ -2537,7 +2581,6 @@ public class BaseController  extends BaseFunction{
 		List<Doc> subDocList = reposService.getDocList(doc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
-			
 			Doc subDoc = subDocList.get(i);
 			BuildMultiActionListForDocDelete_DB(actionList, repos, subDoc, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);	
 		}
