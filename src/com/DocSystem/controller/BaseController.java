@@ -2575,16 +2575,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean executeIndexModifyActionForVDoc(CommonAction action, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean executeIndexDeleteActionForRDoc(CommonAction action, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	private boolean executeIndexAddActionForDocName(CommonAction action, ReturnAjax rt) 
 	{
 		Doc doc = action.getDoc();
@@ -6197,8 +6187,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Add Index For DocName
-	public boolean addIndexForDocName(Integer reposId, Integer docId, String parentPath, String name)
+	public boolean addIndexForDocName(Doc doc)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		
 		String indexLib = getIndexLibName(reposId,0);
 		String hashId = getHashId(parentPath + name);
 		String content = parentPath + name;
@@ -6209,8 +6204,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Delete Indexs For DocName
-	public static boolean deleteIndexForDocName(Integer reposId, Integer docId, String parentPath, String name)
+	public static boolean deleteIndexForDocName(Doc doc)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+
 		String indexLib = getIndexLibName(reposId,0);
 		String hashId = getHashId(parentPath + name);
 		
@@ -6245,8 +6245,19 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Add Index For VDoc
-	public boolean addIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name, String content)
+	public boolean addIndexForVDoc(Doc doc, String localRootPath)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		String content = doc.getContent();
+		if(content == null)
+		{
+			String VDocName = getVDocName(parentPath, name);
+			content = readVirtualDocContent(localRootPath, VDocName);
+		}
+		
 		String indexLib = getIndexLibName(reposId,2);
 		String hashId = getHashId(parentPath + name);
 		
@@ -6256,8 +6267,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Delete Indexs For VDoc
-	public static boolean deleteIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name)
+	public static boolean deleteIndexForVDoc(Doc doc, String localRootPath)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		
 		String indexLib = getIndexLibName(reposId,2);
 		String hashId = getHashId(parentPath + name);
 		
@@ -6267,8 +6283,19 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Update Index For VDoc
-	public static boolean updateIndexForVDoc(Integer reposId, Integer docId, String parentPath, String name, String content)
+	public boolean updateIndexForVDoc(Doc doc, String localRootPath)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		String content = doc.getContent();
+		if(content == null)
+		{
+			String VDocName = getVDocName(parentPath, name);
+			content = readVirtualDocContent(localRootPath, VDocName);
+		}		
+		
 		String indexLib = getIndexLibName(reposId,2);
 		String hashId = getHashId(parentPath + name);
 		
@@ -6278,12 +6305,17 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	//Add Index For RDoc
-	public static boolean addIndexForRDoc(Integer reposId, Integer docId, String reposRPath, String parentPath, String name)
+	public static boolean addIndexForRDoc(Doc doc, String localRootPath)
 	{		
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+
 		String indexLib = getIndexLibName(reposId, 1);
 		String hashId = getHashId(parentPath + name);
 		
-		String localParentPath = reposRPath + parentPath;
+		String localParentPath = localRootPath + parentPath;
 		String filePath = localParentPath + name;
 		
 		System.out.println("addIndexForRDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
@@ -6339,8 +6371,13 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	public static boolean deleteIndexForRDoc(Integer reposId, Integer docId, String parentPath, String name)
+	public static boolean deleteIndexForRDoc(Doc doc, String localRootPath)
 	{
+		Integer reposId = doc.getVid();
+		Integer docId = doc.getId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		
 		String indexLib = getIndexLibName(reposId, 1);
 		String hashId = getHashId(parentPath+name);
 		System.out.println("deleteIndexForRDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
@@ -6361,10 +6398,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Update Index For RDoc
-	public static boolean updateIndexForRDoc(Integer reposId, Integer docId, String reposRPath, String parentPath, String name)
+	public static boolean updateIndexForRDoc(Doc doc, String localRootPath)
 	{
-		deleteIndexForRDoc(reposId, docId, parentPath, name);
-		return addIndexForRDoc(reposId, docId, reposRPath, parentPath, name);
+		deleteIndexForRDoc(doc, localRootPath);
+		return addIndexForRDoc(doc, localRootPath);
 	}
 	
 	/****************************DocSys其他接口 *********************************/
