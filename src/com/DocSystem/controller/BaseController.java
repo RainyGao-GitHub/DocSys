@@ -2539,28 +2539,34 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean executeIndexActionList(List<CommonAction> indexActionList, ReturnAjax rt) 
 	{
+		int count = 0;
+		
 		for(int i=0;i<indexActionList.size();i++)
     	{
 			CommonAction action = indexActionList.get(i);
-    		switch(action.getType())
-    		{}
-			
-			boolean ret = false;
     		
-    		switch(action.getAction())
+    		switch(action.getType())
     		{
     		case 1:	//DocName
-        		ret = executeIndexAddActionForDocName(action, rt);
+        		if(executeIndexAddActionForDocName(action, rt) == true)
+        		{
+        			count++;
+        		}
     			break;
     		case 2: //RDoc
-    			ret = executeIndexDeleteActionForRDoc(action, rt);
+    			if(executeIndexDeleteActionForRDoc(action, rt) == true)
+    			{
+    				count++;
+    			}
     			break;
     		case 3: //VDoc
-    			ret = executeIndexModifyActionForVDoc(action, rt);
-        		break;
+    			if(executeIndexModifyActionForVDoc(action, rt) == true)
+        		{
+    				count++;
+        		}
     		}
     		
-    		if(ret == false)
+    		if(count != indexActionList.size())
     		{
     			System.out.println("executeIndexActionList() failed");	
     			return false;
@@ -2569,45 +2575,61 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean executeIndexModifyAction(CommonAction action) {
-		switch(action.getType())
-		{
-		case 0:
-			return updateIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName(),action.getNewParentPath(), action.getNewDocName());
-		case 1:
-			return updateIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		case 2:
-			return updateIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		}
-		
+	private boolean executeIndexModifyActionForVDoc(CommonAction action, ReturnAjax rt) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
-	private boolean executeIndexDeleteAction(CommonAction action) {
-		switch(action.getType())
-		{
-		case 0:
-			return deleteIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		case 1:
-			return deleteIndexForRDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		case 2:
-			return deleteIndexForVDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		}
-		
+	private boolean executeIndexDeleteActionForRDoc(CommonAction action, ReturnAjax rt) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
-	private boolean executeIndexAddAction(CommonAction action) {
-		switch(action.getType())
+	private boolean executeIndexAddActionForDocName(CommonAction action, ReturnAjax rt) 
+	{
+		Doc doc = action.getDoc();
+		switch(action.getAction())
 		{
-		case 0:
-			return addIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		case 1:
-			return addIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		case 2:
-			return addIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		case 1:	//Add Doc
+			return addIndexForDocName(doc, rt);
+		case 2: //Delete Doc
+			return deleteIndexForDocName(doc, rt);
+		case 3: //Update Doc
+			Doc newDoc = action.getNewDoc();
+			return updateIndexForDocName(doc, newDoc, rt);			
 		}
-		
+		return false;
+	}
+
+	private boolean executeIndexAddActionForRDoc(CommonAction action, ReturnAjax rt) 
+	{
+		Doc doc = action.getDoc();
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return addIndexForRDoc(doc);
+		case 2: //Delete Doc
+			return deleteIndexForRDoc(doc);
+		case 3: //Update Doc
+			Doc newDoc = action.getNewDoc();
+			return updateIndexForRDoc(doc, newDoc);		
+		}
+		return false;
+	}
+	
+	private boolean executeIndexAddActionForVDoc(CommonAction action, ReturnAjax rt) 
+	{
+		Doc doc = action.getDoc();
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return addIndexForRDoc(doc, rt);
+		case 2: //Delete Doc
+			return deleteIndexForRDoc(doc, rt);
+		case 3: //Update Doc
+			Doc newDoc = action.getNewDoc();
+			return updateIndexForRDoc(doc, newDoc, rt);		
+		}
 		return false;
 	}
 	
