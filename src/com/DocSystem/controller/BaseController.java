@@ -2307,41 +2307,44 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
-			return deleteDoc_DB(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);
+			return deleteDoc_DB(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit, actionList);
 		case 2:
-			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);
+			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit, actionList);
 		case 3:
-			return deleteDoc_SVN(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);
+			return deleteDoc_SVN(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit, actionList);
 		case 4:
-			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit);			
+			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, skipRealDocCommit, actionList);			
 		}
 		return false;
 	}
 	
 	private boolean deleteDoc_GIT(Repos repos, Integer docId, String parentPath, String docName,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt, boolean isSubDelete,
-			boolean skipRealDocCommit) {
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			boolean skipRealDocCommit, MultiActionList actionList) 
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	private boolean deleteDoc_SVN(Repos repos, Integer docId, String parentPath, String docName,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt, boolean isSubDelete,
-			boolean skipRealDocCommit) {
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			boolean skipRealDocCommit, MultiActionList actionList) 
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	private boolean deleteDoc_FS(Repos repos, Integer docId, String parentPath, String docName,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt, boolean isSubDelete,
-			boolean skipRealDocCommit) {
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			boolean skipRealDocCommit, MultiActionList actionList) 
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,boolean isSubDelete, boolean skipRealDocCommit, 
-			MultiActionList actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+			boolean skipRealDocCommit, MultiActionList actionList) 
 	{
 		Doc doc = null;
 		synchronized(syncLock)
@@ -2406,12 +2409,9 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		return true;
 	}
-	
-	
 
 	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
-		
 		String reposRPath = getReposRealPath(repos);
 		
 		List<CommonAction> indexActionList = actionList.getIndexActionList();
@@ -2492,17 +2492,17 @@ public class BaseController  extends BaseFunction{
 		//insertIndexDeleteForVDoc(actionList, reposId, docId, reposVPath, parentPath, docName);
 	}
 
-	private boolean deleteSubDocs(Repos repos, Integer docId, String parentPath, String docName, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		Doc doc = new Doc();
-		doc.setPid(docId);
-		List<Doc> subDocList = reposService.getDocList(doc);
-		for(int i=0; i< subDocList.size(); i++)
-		{
-			Doc subDoc = subDocList.get(i);
-			deleteDoc(repos, subDoc.getId(), parentPath+docName+"/", subDoc.getName(),commitMsg,commitUser,login_user,rt,true,false);
-		}
-		return true;
-	}
+//	private boolean deleteSubDocs(Repos repos, Integer docId, String parentPath, String docName, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+//		Doc doc = new Doc();
+//		doc.setPid(docId);
+//		List<Doc> subDocList = reposService.getDocList(doc);
+//		for(int i=0; i< subDocList.size(); i++)
+//		{
+//			Doc subDoc = subDocList.get(i);
+//			deleteDoc(repos, subDoc.getId(), parentPath+docName+"/", subDoc.getName(),commitMsg,commitUser,login_user,rt,true,false);
+//		}
+//		return true;
+//	}
 	
 	protected void executeMultiActionList(MultiActionList actionList, ReturnAjax rt) {
 		executeIndexActionList(actionList.getIndexActionList(), rt);
@@ -2548,19 +2548,19 @@ public class BaseController  extends BaseFunction{
     		switch(action.getType())
     		{
     		case 1:	//DocName
-        		if(executeIndexAddActionForDocName(action, rt) == true)
+        		if(executeIndexActionForDocName(action, rt) == true)
         		{
         			count++;
         		}
     			break;
     		case 2: //RDoc
-    			if(executeIndexDeleteActionForRDoc(action, rt) == true)
+    			if(executeIndexActionForRDoc(action, rt) == true)
     			{
     				count++;
     			}
     			break;
     		case 3: //VDoc
-    			if(executeIndexModifyActionForVDoc(action, rt) == true)
+    			if(executeIndexActionForVDoc(action, rt) == true)
         		{
     				count++;
         		}
@@ -2575,7 +2575,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean executeIndexAddActionForDocName(CommonAction action, ReturnAjax rt) 
+	private boolean executeIndexActionForDocName(CommonAction action, ReturnAjax rt) 
 	{
 		Doc doc = action.getDoc();
 		switch(action.getAction())
@@ -2623,7 +2623,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private void executeDBActionList(List<CommonAction> actionList) {
+	private void executeDBActionList(List<CommonAction> actionList, ReturnAjax rt) {
 		for(int i=0; i< actionList.size(); i++)
 		{
 			CommonAction action = actionList.get(i);
@@ -6187,7 +6187,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Add Index For DocName
-	public boolean addIndexForDocName(Doc doc)
+	public boolean addIndexForDocName(Doc doc, ReturnAjax rt)
 	{
 		Integer reposId = doc.getVid();
 		Integer docId = doc.getId();
@@ -6204,7 +6204,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Delete Indexs For DocName
-	public static boolean deleteIndexForDocName(Doc doc)
+	public static boolean deleteIndexForDocName(Doc doc, ReturnAjax rt)
 	{
 		Integer reposId = doc.getVid();
 		Integer docId = doc.getId();
@@ -6219,7 +6219,7 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	//Update Index For DocName
-	public static boolean updateIndexForDocName(Doc doc, Doc newDoc)
+	public static boolean updateIndexForDocName(Doc doc, Doc newDoc, ReturnAjax rt)
 	{
 		Integer reposId = doc.getVid();
 		Integer docId = doc.getId();

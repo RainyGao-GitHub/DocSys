@@ -110,7 +110,7 @@ public class DocController extends BaseController{
 		
 		if(ret > 0 )
 		{
-			executeMultiActionList(actionList);
+			executeMultiActionList(actionList, rt);
 		}
 	}
 
@@ -156,7 +156,7 @@ public class DocController extends BaseController{
 		
 		if(ret > 0 )
 		{
-			executeMultiActionList(actionList);
+			executeMultiActionList(actionList, rt);
 		}
 	}
 	
@@ -219,7 +219,7 @@ public class DocController extends BaseController{
 		
 		if(ret == true)
 		{
-			executeMultiActionList(actionList);
+			executeMultiActionList(actionList, rt);
 		}
 	}
 	/****************   Check a Document ******************/
@@ -276,7 +276,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);
 					if(newDocId > 0)
 					{
-						executeMultiActionList(actionList);
+						executeMultiActionList(actionList, rt);
 						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 					}					
 				}
@@ -289,7 +289,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);	
 					if(ret == true)
 					{
-						executeMultiActionList(actionList);
+						executeMultiActionList(actionList, rt);
 						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 					}
 				}
@@ -534,7 +534,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				if(newDocId > 0)
 				{
-					executeMultiActionList(actionList);
+					executeMultiActionList(actionList, rt);
 					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 				}					
 			}
@@ -547,7 +547,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);	
 				if(ret == true)
 				{
-					executeMultiActionList(actionList);
+					executeMultiActionList(actionList, rt);
 					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 				}
 			}
