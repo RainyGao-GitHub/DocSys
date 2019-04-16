@@ -2511,124 +2511,97 @@ public class BaseController  extends BaseFunction{
 		executeDBActionList(actionList.getDBActionList(), rt);
 	}
 
-	private void executeCommitActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	private boolean executeCommitActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
+		int size = actionList.size();
+		System.out.println("executeCommitActionList size:" + size);
+		
+		int count = 0;
+		
 		for(int i=0; i< actionList.size(); i++)
 		{
 			CommonAction action = actionList.get(i);
-			executeCommitAction(action, rt);
+			if(executeCommitAction(action, rt) == true)
+			{
+				count++;
+			}
 		}
-	}
-
-	private boolean executeCommitAction(CommonAction action, ReturnAjax rt) 
-	{
-		Repos repos = action.getRepos();
-		Doc doc = action.getDoc();
-		switch(action.getType())
-		{
-		case 1:	//RDoc autoCommit
-			String localParentPath = getReposRealPath(repos) + doc.getPath();
-			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localParentPath, doc.getName(), action.getCommitMsg(), action.getCommitUser(), true, null);
-		case 2: //VDoc autoCommit
-			String localVParentPath = getReposVirtualPath(repos) + doc.getPath();
-			String vDocName = getVDocName(doc.getPath(),doc.getName());			
-			return verReposAutoCommit(repos, false, doc.getPath(), doc.getName(), localVParentPath, vDocName, action.getCommitMsg(), action.getCommitUser(), true, null);
-		}
-		return false;
-	}
-	
-	protected boolean executeIndexActionList(List<CommonAction> indexActionList, ReturnAjax rt) 
-	{
-		int count = 0;
 		
-		for(int i=0;i<indexActionList.size();i++)
-    	{
-			CommonAction action = indexActionList.get(i);
-    		
-    		switch(action.getType())
-    		{
-    		case 1:	//DocName
-        		if(executeIndexActionForDocName(action, rt) == true)
-        		{
-        			count++;
-        		}
-    			break;
-    		case 2: //RDoc
-    			if(executeIndexActionForRDoc(action, rt) == true)
-    			{
-    				count++;
-    			}
-    			break;
-    		case 3: //VDoc
-    			if(executeIndexActionForVDoc(action, rt) == true)
-        		{
-    				count++;
-        		}
-    		}
-    		
-    		if(count != indexActionList.size())
-    		{
-    			System.out.println("executeIndexActionList() failed");	
-    			return false;
-    		}
-    	}
+		if(count != size)
+		{
+			System.out.println("executeCommitActionList() failed actions:" + (size - count));	
+			return false;
+		}
+		
 		return true;
 	}
 	
-	private boolean executeIndexActionForDocName(CommonAction action, ReturnAjax rt) 
+	private boolean executeDBActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
-		Doc doc = action.getDoc();
-		switch(action.getAction())
-		{
-		case 1:	//Add Doc
-			return addIndexForDocName(doc, rt);
-		case 2: //Delete Doc
-			return deleteIndexForDocName(doc, rt);
-		case 3: //Update Doc
-			Doc newDoc = action.getNewDoc();
-			return updateIndexForDocName(doc, newDoc, rt);			
-		}
-		return false;
-	}
-
-	private boolean executeIndexAddActionForRDoc(CommonAction action, ReturnAjax rt) 
-	{
-		Doc doc = action.getDoc();
-		switch(action.getAction())
-		{
-		case 1:	//Add Doc
-			return addIndexForRDoc(doc);
-		case 2: //Delete Doc
-			return deleteIndexForRDoc(doc);
-		case 3: //Update Doc
-			Doc newDoc = action.getNewDoc();
-			return updateIndexForRDoc(doc, newDoc);		
-		}
-		return false;
-	}
-	
-	private boolean executeIndexAddActionForVDoc(CommonAction action, ReturnAjax rt) 
-	{
-		Doc doc = action.getDoc();
-		switch(action.getAction())
-		{
-		case 1:	//Add Doc
-			return addIndexForRDoc(doc, rt);
-		case 2: //Delete Doc
-			return deleteIndexForRDoc(doc, rt);
-		case 3: //Update Doc
-			Doc newDoc = action.getNewDoc();
-			return updateIndexForRDoc(doc, newDoc, rt);		
-		}
-		return false;
-	}
-	
-	private void executeDBActionList(List<CommonAction> actionList, ReturnAjax rt) {
+		int size = actionList.size();
+		System.out.println("executeDBActionList size:" + size);
+		
+		int count = 0;
+		
 		for(int i=0; i< actionList.size(); i++)
 		{
 			CommonAction action = actionList.get(i);
 			executeDBAction(action);
 		}
+		
+		if(count != size)
+		{
+			System.out.println("executeDBActionList() failed actions:" + (size - count));	
+			return false;
+		}
+		return true;
+	}
+	
+	protected boolean executeIndexActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	{
+		int size = actionList.size();
+		System.out.println("executeIndexActionList size:" + size);
+		
+		int count = 0;
+
+		for(int i=0;i<actionList.size();i++)
+    	{
+			CommonAction action = actionList.get(i);
+			if(executeIndexAction(action, rt) == true)
+			{
+				count++;
+    		}
+    	}
+		
+		
+		if(count != size)
+		{
+			System.out.println("executeIndexActionList() failed actions:" + (size - count));	
+			return false;
+		}
+		return true;
+	}
+
+	private boolean executeLocalActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	{
+		int size = actionList.size();
+		System.out.println("executeLocalActionList size:" + size);
+		
+		int count = 0;
+		
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeLocalAction(action,rt);
+		}
+		
+		if(count != size)
+		{
+			System.out.println("executeLocalActionList() failed actions:" + (size - count));	
+			return false;
+		}
+		
+		return true;
 	}
 
 	private boolean executeDBAction(CommonAction action) 
@@ -2657,23 +2630,77 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
-
-	private void executeLocalActionList(List<CommonAction> actionList, ReturnAjax rt) 
-	{
-		for(int i=0; i< actionList.size(); i++)
+	
+	private boolean executeIndexAction(CommonAction action, ReturnAjax rt) {
+		switch(action.getType())
 		{
-			CommonAction action = actionList.get(i);
-			executeLocalAction(action,rt);
+		case 1:	//DocName
+    		return executeIndexActionForDocName(action, rt);
+    	case 2: //RDoc
+			return executeIndexActionForRDoc(action, rt);
+		case 3: //VDoc
+			return executeIndexActionForVDoc(action, rt);
 		}
+		return false;
+	}
+	
+	private boolean executeIndexActionForDocName(CommonAction action, ReturnAjax rt) 
+	{
+		Doc doc = action.getDoc();
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return addIndexForDocName(doc, rt);
+		case 2: //Delete Doc
+			return deleteIndexForDocName(doc, rt);
+		case 3: //Update Doc
+			Doc newDoc = action.getNewDoc();
+			return updateIndexForDocName(doc, newDoc, rt);			
+		}
+		return false;
 	}
 
+	private boolean executeIndexActionForRDoc(CommonAction action, ReturnAjax rt) 
+	{
+		Doc doc = action.getDoc();
+		String localRootPath = action.getLocalRootPath();
+		
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return addIndexForRDoc(doc, localRootPath);
+		case 2: //Delete Doc
+			return deleteIndexForRDoc(doc, localRootPath);
+		case 3: //Update Doc
+			return updateIndexForRDoc(doc, localRootPath);		
+		}
+		return false;
+	}
+	
+	private boolean executeIndexActionForVDoc(CommonAction action, ReturnAjax rt) 
+	{
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc();
+		
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return addIndexForVDoc(repos, doc);
+		case 2: //Delete Doc
+			return deleteIndexForVDoc(repos, doc);
+		case 3: //Update Doc
+			return updateIndexForVDoc(repos, doc);		
+		}
+		return false;
+	}
+	
 	private boolean executeLocalAction(CommonAction action, ReturnAjax rt) {
 		printObject("executeLocalAction() action:",action);
 		switch(action.getType())
 		{
-		case 1:
+		case 1:	//RDoc
 			return executeLocalActionForRDoc(action, rt);
-		case 2:
+		case 2: //VDoc
 			return executeLocalActionForVDoc(action, rt); 
 		}
 		return false;
@@ -2732,6 +2759,23 @@ public class BaseController  extends BaseFunction{
 		case 5: //Copy Doc
 			newVDocName = getVDocName(newDoc.getPath(), newDoc.getName());
 			return copyVirtualDoc(localRootPath, VDocName, newVDocName, rt);
+		}
+		return false;
+	}
+
+	private boolean executeCommitAction(CommonAction action, ReturnAjax rt) 
+	{
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc();
+		switch(action.getType())
+		{
+		case 1:	//RDoc autoCommit
+			String localParentPath = getReposRealPath(repos) + doc.getPath();
+			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localParentPath, doc.getName(), action.getCommitMsg(), action.getCommitUser(), true, null);
+		case 2: //VDoc autoCommit
+			String localVParentPath = getReposVirtualPath(repos) + doc.getPath();
+			String vDocName = getVDocName(doc.getPath(),doc.getName());			
+			return verReposAutoCommit(repos, false, doc.getPath(), doc.getName(), localVParentPath, vDocName, action.getCommitMsg(), action.getCommitUser(), true, null);
 		}
 		return false;
 	}
@@ -6245,7 +6289,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Add Index For VDoc
-	public boolean addIndexForVDoc(Doc doc, String localRootPath)
+	public boolean addIndexForVDoc(Repos repos, Doc doc)
 	{
 		Integer reposId = doc.getVid();
 		Integer docId = doc.getId();
@@ -6254,8 +6298,9 @@ public class BaseController  extends BaseFunction{
 		String content = doc.getContent();
 		if(content == null)
 		{
+			String reposVPath = getReposVirtualPath(repos);
 			String VDocName = getVDocName(parentPath, name);
-			content = readVirtualDocContent(localRootPath, VDocName);
+			content = readVirtualDocContent(reposVPath, VDocName);
 		}
 		
 		String indexLib = getIndexLibName(reposId,2);
@@ -6267,7 +6312,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Delete Indexs For VDoc
-	public static boolean deleteIndexForVDoc(Doc doc, String localRootPath)
+	public static boolean deleteIndexForVDoc(Repos repos, Doc doc)
 	{
 		Integer reposId = doc.getVid();
 		Integer docId = doc.getId();
@@ -6283,7 +6328,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Update Index For VDoc
-	public boolean updateIndexForVDoc(Doc doc, String localRootPath)
+	public boolean updateIndexForVDoc(Repos repos, Doc doc)
 	{
 		Integer reposId = doc.getVid();
 		Integer docId = doc.getId();
@@ -6292,8 +6337,9 @@ public class BaseController  extends BaseFunction{
 		String content = doc.getContent();
 		if(content == null)
 		{
+			String reposVPath = getReposVirtualPath(repos);
 			String VDocName = getVDocName(parentPath, name);
-			content = readVirtualDocContent(localRootPath, VDocName);
+			content = readVirtualDocContent(reposVPath, VDocName);
 		}		
 		
 		String indexLib = getIndexLibName(reposId,2);
