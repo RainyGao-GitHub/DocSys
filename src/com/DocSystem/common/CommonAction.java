@@ -2,28 +2,31 @@ package com.DocSystem.common;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
 public class CommonAction {
-    private Integer action;	//1:add 2:delete 3:update 4:move 5:copy
- 
-    private Integer type; //0:DocName 1:RealDoc 2:VirtualDoc
-    
+    private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy 
+    private Integer type = null; //0:DocName 1:RealDoc 2:VirtualDoc
     private Repos repos = null;
-    
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
-    
-    private String localRootPath;
+    private String localRootPath = null;
     
     //For commitAction
-    private String commitMsg;
-    private String commitUser;    
+    private String commitMsg = null;
+    private String commitUser = null;    
     
-    //subAction
+    //For localAction
+	MultipartFile uploadFile = null;
+	private String chunkParentPath = null;
+	private Integer chunkSize = null;
+	private Integer chunkNum = null;
+	
+    //For subAction
     public boolean isSubAction = false;
-    //Sub Action List
     public boolean hasSubList = false;
     private List<CommonAction> subActionList = null;
 	
@@ -40,7 +43,7 @@ public class CommonAction {
 		this.type = type;
 	}
 	
-	public Integer getIndexType()
+	public Integer getType()
 	{
 		return type;
 	}
@@ -81,7 +84,7 @@ public class CommonAction {
 		return localRootPath;
 	}
 
-
+	//For commitAction
 	public void setCommitMsg(String commitMsg) {
 		this.commitMsg = commitMsg;
 	}
@@ -100,6 +103,40 @@ public class CommonAction {
 		return commitUser;
 	}
 	
+	//For LocalAction
+	public MultipartFile getUploadFile() {
+		return uploadFile;
+	}
+	
+	public void setUploadFile(MultipartFile uploadFile) {
+		this.uploadFile = uploadFile;	
+	}
+
+	public Integer getChunkNum() {
+		return chunkNum;
+	}
+
+	public void setChunkNum(Integer chunkNum) {
+		this.chunkNum = chunkNum;	
+	}
+	
+	public Integer getChunkSize() {
+		return chunkSize;
+	}
+	
+	public void setChunkSize(Integer chunkSize) {
+		this.chunkSize = chunkSize;	
+	}
+
+	public String getChunkParentPath() {
+		return chunkParentPath;
+	}
+	
+	public void setChunkParentPath(String chunkParentPath) {
+		this.chunkParentPath = chunkParentPath;	
+	}
+	
+	//For SubAction
 	public boolean getHasSubList()
 	{
 		return hasSubList;

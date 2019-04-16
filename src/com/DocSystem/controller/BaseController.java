@@ -2137,8 +2137,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
-		executeLocalActionList(actionList.getLocalActionList());
-		executeCommitActionList(actionList.getLocalActionList());
+		executeLocalActionList(actionList.getLocalActionList(), rt);
+		executeCommitActionList(actionList.getLocalActionList(), rt);
 		
 		
 //		//启用doc
@@ -2153,33 +2153,6 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		
 		return docId;
-	}
-
-	private void executeCommitActionList(List<CommonAction> actionList) 
-	{
-		for(int i=0; i< actionList.size(); i++)
-		{
-			CommonAction action = actionList.get(i);
-			executeCommitAction(action);
-		}
-	}
-
-	private boolean executeCommitAction(CommonAction action) 
-	{
-		Repos repos = action.getRepos();
-		Doc doc = action.getDoc();
-		Integer type = action.getIndexType();
-		switch(type)
-		{
-		case 1:
-			String localParentPath = getReposRealPath(repos) + doc.getPath();
-			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localParentPath, doc.getName(), action.getCommitMsg(), action.getCommitUser(), true, null);
-		case 2:
-			String localVParentPath = getReposVirtualPath(repos) + doc.getPath();
-			String vDocName = getVDocName(doc.getPath(),doc.getName());			
-			verReposAutoCommit(repos, true, "", vDocName, localVParentPath, vDocName, action.getCommitMsg(), action.getCommitUser(), true, null);
-		}
-		return false;
 	}
 
 	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
@@ -2311,8 +2284,8 @@ public class BaseController  extends BaseFunction{
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
-		executeLocalActionList(actionList.getLocalActionList());
-		executeCommitActionList(actionList.getCommitActionList());
+		executeLocalActionList(actionList.getLocalActionList(), rt);
+		executeCommitActionList(actionList.getCommitActionList(), rt);
 		
 		//启用doc
 		if(unlockDoc(docId,login_user,null) == false)
@@ -2324,51 +2297,6 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		
 		return docId;
-	}
-	
-
-	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
-	{
-		
-		String reposRPath = getReposRealPath(repos);
-		
-		List<CommonAction> indexActionList = actionList.getIndexActionList();
-		CommonAction action = new CommonAction();
-
-		//Insert index add action for DocName
-		action.setAction(1);
-		action.setType(0);
-		action.setDoc(doc);
-		action.setLocalRootPath(reposRPath);
-		indexActionList.add(action);
-		//Insert index add action for RDoc
-		action.setType(1);
-		indexActionList.add(action);
-		
-		String content = doc.getContent();
-		if(null != content && !"".equals(content))
-		{
-			String reposVPath = getReposVirtualPath(repos);
-			
-			//Insert local add action for VDoc
-			List<CommonAction> localActionList = actionList.getLocalActionList();
-			action.setType(2);	//1: RDoc 2:VDoc
-			action.setLocalRootPath(reposVPath);
-			localActionList.add(action);
-			
-			//Insert index add action for VDoc	
-			indexActionList.add(action);
-
-			if(repos.getVerCtrl1() > 0)
-			{
-				List<CommonAction> commitActionList = actionList.getCommitActionList();
-				action.setRepos(repos);	//1: RDoc 2:VDoc
-				action.setCommitMsg(commitMsg);
-				action.setCommitUser(commitUser);
-				action.setLocalRootPath(reposVPath);
-				commitActionList.add(action);
-			}
-		}
 	}
 
 	//底层deleteDoc接口
@@ -2478,62 +2406,82 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		return true;
 	}
-
 	
-//	//Delete previewFile(对于文件型系统checkSum保存在DocName库里，因此可以考虑在执行删除DocName时进行)
-//	deletePreviewFile(doc.getCheckSum());			
-//	
-//	//删除虚拟文件
-//	String reposVPath = getReposVirtualPath(repos);
-//	String docVName = getVDocName(parentPath ,doc.getName());
-//	String localDocVPath = reposVPath + docVName;
-//	if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
-//	{
-//		System.out.println("deleteDoc() delDir Failed " + localDocVPath);
-//		rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-//	}
-//	else
-//	{
-//		if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
-//		{
-//			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
-//			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-//			verReposRevertVirtualDoc(repos,docVName);
-//		}
-//	}
-//
-//	//Delete SubDocs
-//	if(false == deleteSubDocs(repos, docId, parentPath, docName, commitMsg,commitUser,login_user,rt))
-//	{
-//		System.out.println("deleteDoc() deleteSubDocs Failed ");
-//	}
-	protected void executeMultiActionList(MultiActionList actionList) {
+	
+
+	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
+	{
 		
-		executeIndexActionList(actionList.getIndexActionList());
-		executeLocalActionList(actionList.getLocalActionList());
-		executeCommitActionList(actionList.getCommitActionList());
-		executeDBActionList(actionList.getDBActionList());
-	}
+		String reposRPath = getReposRealPath(repos);
+		
+		List<CommonAction> indexActionList = actionList.getIndexActionList();
+		CommonAction action = new CommonAction();
 
-	private void executeDBActionList(List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
-		for(int i=0; i< actionList.size(); i++)
+		//Insert index add action for DocName
+		action.setAction(1);
+		action.setType(0);
+		action.setDoc(doc);
+		action.setLocalRootPath(reposRPath);
+		indexActionList.add(action);
+		//Insert index add action for RDoc
+		action.setType(1);
+		indexActionList.add(action);
+		
+		String content = doc.getContent();
+		if(null != content && !"".equals(content))
 		{
-			CommonAction action = actionList.get(i);
-			executeDBAction(action);
-		}
-	}
+			String reposVPath = getReposVirtualPath(repos);
+			
+			//Insert local add action for VDoc
+			List<CommonAction> localActionList = actionList.getLocalActionList();
+			action.setType(2);	//1: RDoc 2:VDoc
+			action.setLocalRootPath(reposVPath);
+			localActionList.add(action);
+			
+			//Insert index add action for VDoc	
+			indexActionList.add(action);
 
-	private void executeLocalActionList(List<CommonAction> actionList) {
-		for(int i=0; i< actionList.size(); i++)
-		{
-			CommonAction action = actionList.get(i);
-			executeLocalAction(action);
+			if(repos.getVerCtrl1() > 0)
+			{
+				List<CommonAction> commitActionList = actionList.getCommitActionList();
+				action.setRepos(repos);	//1: RDoc 2:VDoc
+				action.setCommitMsg(commitMsg);
+				action.setCommitUser(commitUser);
+				action.setLocalRootPath(reposVPath);
+				commitActionList.add(action);
+			}
 		}
 	}
 
 	private void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Integer docId, String parentPath, String docName) 
 	{
+//		//Delete previewFile(对于文件型系统checkSum保存在DocName库里，因此可以考虑在执行删除DocName时进行)
+//		deletePreviewFile(doc.getCheckSum());			
+	//	
+//		//删除虚拟文件
+//		String reposVPath = getReposVirtualPath(repos);
+//		String docVName = getVDocName(parentPath ,doc.getName());
+//		String localDocVPath = reposVPath + docVName;
+//		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
+//		{
+//			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
+//			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
+//		}
+//		else
+//		{
+//			if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
+//			{
+//				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
+//				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
+//				verReposRevertVirtualDoc(repos,docVName);
+//			}
+//		}
+	//
+//		//Delete SubDocs
+//		if(false == deleteSubDocs(repos, docId, parentPath, docName, commitMsg,commitUser,login_user,rt))
+//		{
+//			System.out.println("deleteDoc() deleteSubDocs Failed ");
+//		}
 		//TODO: 需要根据文件系统类型，来build预览文件、Index文件、VerRepos文件的DeleteActionList
 		
 		//Build IndexDeleteActionList for DocName and LocalDeleteActionList for previewFiles (For FS/SVN/GIT CheckSum was stored in LuceneDocName indexLib)
@@ -2554,6 +2502,223 @@ public class BaseController  extends BaseFunction{
 			deleteDoc(repos, subDoc.getId(), parentPath+docName+"/", subDoc.getName(),commitMsg,commitUser,login_user,rt,true,false);
 		}
 		return true;
+	}
+	
+	protected void executeMultiActionList(MultiActionList actionList, , ReturnAjax rt) {
+		executeIndexActionList(actionList.getIndexActionList(), rt);
+		executeLocalActionList(actionList.getLocalActionList(), rt);
+		executeCommitActionList(actionList.getCommitActionList(), rt);
+		executeDBActionList(actionList.getDBActionList(), rt);
+	}
+
+	private void executeCommitActionList(List<CommonAction> actionList) 
+	{
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeCommitAction(action);
+		}
+	}
+
+	private boolean executeCommitAction(CommonAction action) 
+	{
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc();
+		switch(action.getType())
+		{
+		case 1:	//RDoc autoCommit
+			String localParentPath = getReposRealPath(repos) + doc.getPath();
+			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localParentPath, doc.getName(), action.getCommitMsg(), action.getCommitUser(), true, null);
+		case 2: //VDoc autoCommit
+			String localVParentPath = getReposVirtualPath(repos) + doc.getPath();
+			String vDocName = getVDocName(doc.getPath(),doc.getName());			
+			return verReposAutoCommit(repos, false, doc.getPath(), doc.getName(), localVParentPath, vDocName, action.getCommitMsg(), action.getCommitUser(), true, null);
+		}
+		return false;
+	}
+	
+	protected boolean executeIndexActionList(List<CommonAction> indexActionList) 
+	{
+		for(int i=0;i<indexActionList.size();i++)
+    	{
+			CommonAction action = indexActionList.get(i);
+    		boolean ret = false;
+    		
+    		switch(action.getAction())
+    		{
+    		case 1:	//add
+        		ret = executeIndexAddAction(action);
+    			break;
+    		case 2: //delete
+    			ret = executeIndexDeleteAction(action);
+    			break;
+    		case 3: //modify
+    			ret = executeIndexModifyAction(action);
+        		break;
+    		}
+    		
+    		if(ret == false)
+    		{
+    			System.out.println("executeIndexActionList() failed");	
+    			return false;
+    		} 
+    	}
+		return true;
+	}
+	
+	private boolean executeIndexModifyAction(CommonAction action) {
+		switch(action.getType())
+		{
+		case 0:
+			return updateIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName(),action.getNewParentPath(), action.getNewDocName());
+		case 1:
+			return updateIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		case 2:
+			return updateIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		}
+		
+		return false;
+	}
+
+	private boolean executeIndexDeleteAction(CommonAction action) {
+		switch(action.getType())
+		{
+		case 0:
+			return deleteIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		case 1:
+			return deleteIndexForRDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		case 2:
+			return deleteIndexForVDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		}
+		
+		return false;
+	}
+
+	private boolean executeIndexAddAction(CommonAction action) {
+		switch(action.getType())
+		{
+		case 0:
+			return addIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
+		case 1:
+			return addIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		case 2:
+			return addIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
+		}
+		
+		return false;
+	}
+	
+	private void executeDBActionList(List<CommonAction> actionList) {
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeDBAction(action);
+		}
+	}
+
+	private boolean executeDBAction(CommonAction action) 
+	{
+		printObject("executeDBAction() action:",action);
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			if(reposService.addDoc(action.getDoc()) == 0)
+			{
+				return false;
+			}
+			return true;
+		case 2: //Delete Doc
+			if(reposService.deleteDoc(action.getDoc().getId()) == 0)
+			{
+				return false;
+			}
+			return true;
+		case 3: //Update Doc
+			if(reposService.updateDoc(action.getDoc()) == 0)
+			{
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private void executeLocalActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	{
+		for(int i=0; i< actionList.size(); i++)
+		{
+			CommonAction action = actionList.get(i);
+			executeLocalAction(action,rt);
+		}
+	}
+
+	private boolean executeLocalAction(CommonAction action, ReturnAjax rt) {
+		printObject("executeLocalAction() action:",action);
+		switch(action.getType())
+		{
+		case 1:
+			return executeLocalActionForRDoc(action, rt);
+		case 2:
+			return executeLocalActionForVDoc(action, rt); 
+		}
+		return false;
+	}
+	
+	private boolean executeLocalActionForRDoc(CommonAction action, ReturnAjax rt)
+	{
+		printObject("executeLocalActionForRDoc() action:",action);
+		
+		Doc doc = action.getDoc();
+		Doc newDoc = action.getNewDoc();
+		String localRootPath = action.getLocalRootPath();
+		
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return createRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), rt);
+		case 2: //Delete Doc
+			return deleteRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), rt);
+		case 3: //Update Doc
+			MultipartFile uploadFile = action.getUploadFile();
+			Integer chunkNum = action.getChunkNum();
+			Integer chunkSize = action.getChunkSize();
+			String chunkParentPath = action.getChunkParentPath();
+			return updateRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), doc.getSize(), doc.getCheckSum(), 
+								uploadFile, chunkNum, chunkSize, chunkParentPath, rt);
+		case 4: //Move Doc
+			return moveRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt);
+		case 5: //Copy Doc
+			return copyRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt);
+		}
+		return false;
+	}
+	
+	private boolean executeLocalActionForVDoc(CommonAction action, ReturnAjax rt)
+	{
+		printObject("executeLocalActionForVDoc() action:",action);
+		
+		Doc doc = action.getDoc();
+		Doc newDoc = action.getNewDoc();
+		String localRootPath = action.getLocalRootPath();
+		String VDocName = getVDocName(doc.getPath(), doc.getName());
+		String newVDocName = null;
+		
+		switch(action.getAction())
+		{
+		case 1:	//Add Doc
+			return createVirtualDoc(localRootPath, VDocName, doc.getContent(), rt);
+		case 2: //Delete Doc
+			return deleteVirtualDoc(localRootPath, VDocName, rt);
+		case 3: //Update Doc
+			return saveVirtualDocContent(localRootPath, VDocName, doc.getContent(), rt);
+		case 4: //Move Doc
+			newVDocName = getVDocName(newDoc.getPath(), newDoc.getName());
+			return moveVirtualDoc(localRootPath, VDocName, newVDocName, rt);
+		case 5: //Copy Doc
+			newVDocName = getVDocName(newDoc.getPath(), newDoc.getName());
+			return copyVirtualDoc(localRootPath, VDocName, newVDocName, rt);
+		}
+		return false;
 	}
 
 	//底层updateDoc接口
@@ -5688,6 +5853,8 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			verCtrl = repos.getVerCtrl1();
+			entryName = getVDocName(parentPath, entryName);
+			parentPath = "";
 		}
 			
 		if(verCtrl == 1)
@@ -5696,6 +5863,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else if(verCtrl == 2)
 		{
+			
 			return gitAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);			
 		}
 		return false;
@@ -6049,77 +6217,6 @@ public class BaseController  extends BaseFunction{
 
 		String content = newParentPath + newName;
 		return LuceneUtil2.addIndex(hashId, reposId, docId, parentPath, name, hashId, content.trim(), indexLib);
-	}	
-	
-	protected boolean executeIndexActionList(List<CommonAction> indexActionList) 
-	{
-		for(int i=0;i<indexActionList.size();i++)
-    	{
-			CommonAction action = indexActionList.get(i);
-    		boolean ret = false;
-    		
-    		switch(action.getAction())
-    		{
-    		case 1:	//add
-        		ret = executeIndexAddAction(action);
-    			break;
-    		case 2: //delete
-    			ret = executeIndexDeleteAction(action);
-    			break;
-    		case 3: //modify
-    			ret = executeIndexModifyAction(action);
-        		break;
-    		}
-    		
-    		if(ret == false)
-    		{
-    			System.out.println("executeIndexActionList() failed");	
-    			return false;
-    		} 
-    	}
-		return true;
-	}
-	
-	private boolean executeIndexModifyAction(CommonAction action) {
-		switch(action.getIndexType())
-		{
-		case 0:
-			return updateIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName(),action.getNewParentPath(), action.getNewDocName());
-		case 1:
-			return updateIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		case 2:
-			return updateIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		}
-		
-		return false;
-	}
-
-	private boolean executeIndexDeleteAction(CommonAction action) {
-		switch(action.getIndexType())
-		{
-		case 0:
-			return deleteIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		case 1:
-			return deleteIndexForRDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		case 2:
-			return deleteIndexForVDoc(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		}
-		
-		return false;
-	}
-
-	private boolean executeIndexAddAction(CommonAction action) {
-		switch(action.getIndexType())
-		{
-		case 0:
-			return addIndexForDocName(action.getReposId(), action.getDocId(), action.getParentPath(), action.getDocName());
-		case 1:
-			return addIndexForRDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		case 2:
-			return addIndexForVDoc(action.getReposId(), action.getDocId(), action.getLocalRootPath(), action.getParentPath(), action.getDocName());
-		}
-		
-		return false;
 	}
 
 	//Add Index For VDoc
