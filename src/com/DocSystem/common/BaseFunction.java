@@ -773,11 +773,8 @@ public class BaseFunction{
 		}
 		
 		File dstFile = new File(path,fileName);
-		try {
-			srcFile.transferTo(dstFile);
-		} catch (Exception e) {
-			throw new Exception("文件保存到本地失败，源文件名：" + fileName);
-		}
+		
+		srcFile.transferTo(dstFile);
 		return fileName;
 	}
 	

@@ -2363,7 +2363,7 @@ public class BaseController  extends BaseFunction{
 			
 		
 		//Build ActionList for Index/VDoc/Preview Delete
-		BuildMultiActionListForDocDelete(actionList, repos, docId, parentPath, docName);
+		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser);
 	
 		//get RealDoc Full ParentPath
 		String reposRPath = getReposRealPath(repos);
@@ -2458,37 +2458,52 @@ public class BaseController  extends BaseFunction{
 	{
 		String reposRPath = getReposRealPath(repos);
 		String reposVPath = getReposVirtualPath(repos);
-
+		Integer level = 0;
+		
 		switch(repos.getType())
 		{
 		case 1:
 			BuildMultiActionListForDocDelete_DB(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
 			break;
 		case 2:
-			BuildMultiActionListForDocDelete_FS(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			level = getLevelByParentPath(doc.getPath());
+			BuildMultiActionListForDocDelete_FS(actionList, repos, doc, level, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
 			break;
 		case 3:
-			BuildMultiActionListForDocDelete_SVN(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			level = getLevelByParentPath(doc.getPath());
+			BuildMultiActionListForDocDelete_SVN(actionList, repos, doc, level, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
 			break;
 		case 4:
-			BuildMultiActionListForDocDelete_GIT(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			level = getLevelByParentPath(doc.getPath());
+			BuildMultiActionListForDocDelete_GIT(actionList, repos, doc, level, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
 			break;
 		}
 	}
 
-	private void BuildMultiActionListForDocDelete_GIT(MultiActionList actionList, Repos repos, Doc doc, String parentPath,
+	private Integer getLevelByParentPath(String path) 
+	{
+		if(path == null || path.isEmpty())
+		{
+			return 0;
+		}
+		
+		String [] paths = path.split("/");
+		return paths.length;
+	}
+
+	private void BuildMultiActionListForDocDelete_GIT(MultiActionList actionList, Repos repos, Doc doc, Integer level, String parentPath,
 			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void BuildMultiActionListForDocDelete_SVN(MultiActionList actionList, Repos repos, Doc doc, String parentPath,
+	private void BuildMultiActionListForDocDelete_SVN(MultiActionList actionList, Repos repos, Doc doc, Integer level, String parentPath,
 			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void BuildMultiActionListForDocDelete_FS(MultiActionList actionList, Repos repos, Doc doc, String parentPath,
+	private void BuildMultiActionListForDocDelete_FS(MultiActionList actionList, Repos repos, Doc doc, Integer level, String parentPath,
 			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		List<CommonAction> indexActionList = actionList.getIndexActionList();
@@ -2530,12 +2545,40 @@ public class BaseController  extends BaseFunction{
 		localActionList.add(action);	
 
 		//Get SubDocList
-		List<Doc> subDocList = reposService.getDocList(doc);
-		for(int i=0; i< subDocList.size(); i++)
+		File file = new File(reposRPath + parentPath, doc.getName());
+		if(file.isDirectory())
 		{
-			Doc subDoc = subDocList.get(i);
-			BuildMultiActionListForDocDelete_DB(actionList, repos, subDoc, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);	
+			File[] tmp = file.listFiles();
+	    	for(int i=0;i<tmp.length;i++)
+	    	{
+	    		File subEntry = tmp[i];
+	    		Doc subDoc = buildDocFromFile(subEntry, repos, doc.getId(), level, parentPath + doc.getName() + "/", i);
+	    		BuildMultiActionListForDocDelete_FS(actionList, repos, subDoc, level+1, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);
+	    	}
 		}	
+	}
+
+	private Doc buildDocFromFile(File entry, Repos repos, Integer pid, Integer level, String parentPath, int index) 
+	{
+		int entryType = entry.isDirectory()? 2: 1;
+		String entryName = entry.getName();
+		long lastModifyTime = getFileLastModifiedTime(entry);
+		
+		//Create Doc to save subEntry Info
+		Doc doc = new Doc();
+		int docId = level*1000000 + index + 1;	//单层目录支持100万个文件节点
+		doc.setVid(repos.getId());
+		doc.setPid(pid);
+		doc.setId(docId);
+		doc.setName(entryName);
+		doc.setType(entryType);
+		doc.setPath(parentPath);
+		doc.setSize((int)entry.length());
+		doc.setState(0);
+		doc.setCreateTime(lastModifyTime);
+		doc.setLatestEditTime(lastModifyTime);
+		
+		return doc;
 	}
 
 	private void BuildMultiActionListForDocDelete_DB(MultiActionList actionList, Repos repos, Doc doc, String parentPath, String reposRPath, String reposVPath, String commitMsg, String commitUser) 
@@ -2923,7 +2966,9 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean updateDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
-			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			MultiActionList actionList)
+	{
 		// TODO Auto-generated method stub
 		return false;
 		
@@ -2931,7 +2976,9 @@ public class BaseController  extends BaseFunction{
 
 	private boolean updateDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
-			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			MultiActionList actionList)
+	{
 		// TODO Auto-generated method stub
 		return false;
 		
@@ -2939,7 +2986,9 @@ public class BaseController  extends BaseFunction{
 
 	private boolean updateDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
-			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			MultiActionList actionList) 
+	{
 		// TODO Auto-generated method stub
 		return false;
 		
@@ -2948,11 +2997,9 @@ public class BaseController  extends BaseFunction{
 	protected boolean updateDoc_DB(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 				MultipartFile uploadFile,Integer fileSize,String checkSum, 
 				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
-				String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
-	{
-
-		Integer reposId = repos.getId();
-		
+				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
+				MultiActionList actionList) 
+	{	
 		Doc doc = null;
 		synchronized(syncLock)
 		{
@@ -2968,48 +3015,36 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 			
 		}
-		
-		//Save oldCheckSum
-		String oldCheckSum = doc.getCheckSum();
-		
-		//为了避免执行到SVNcommit成功但数据库操作失败，所以先将checkSum更新掉
-		doc.setCheckSum(checkSum);
-		if(reposService.updateDoc(doc) == 0)
-		{
-			rt.setError("系统异常：操作数据库失败");
-			rt.setMsgData("updateDoc() update Doc CheckSum Failed");
-			return false;
-		}
-		
+
 		//get RealDoc Full ParentPath
 		String reposRPath =  getReposRealPath(repos);		
-		//Get the file name
-		String name = doc.getName();
-		System.out.println("updateDoc() name:" + name);
 
+		//Build action list for index and preview filse
+		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
+		
 		//保存文件信息
-		if(updateRealDoc(reposRPath,parentPath,name,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+		if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
 			if(unlockDoc(docId,login_user,doc) == false)
 			{
 				System.out.println("updateDoc() saveFile " + docId +" Failed and unlockDoc Failed");
-				rt.setError("Failed to updateRealDoc " + name + " and unlock Doc");
+				rt.setError("Failed to updateRealDoc " + docName + " and unlock Doc Failed");
 			}
 			else
 			{	
 				System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
-				rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
+				rt.setError("Failed to updateRealDoc " + docName);
 			}
 			return false;
 		}
 		
 		//需要将文件Commit到版本仓库上去
-		if(verReposRealDocCommit(repos,parentPath,name,doc.getType(),commitMsg,commitUser,rt) == false)
+		if(verReposRealDocCommit(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt) == false)
 		{
-			System.out.println("updateDoc() verReposRealDocCommit Failed:" + parentPath + name);
+			System.out.println("updateDoc() verReposRealDocCommit Failed:" + parentPath + docName);
 			String MsgInfo = "verReposRealDocCommit Failed";
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(verReposRevertRealDoc(repos,parentPath,name,doc.getType(),rt) == false)
+			if(verReposRevertRealDoc(repos,parentPath,docName,doc.getType(),rt) == false)
 			{						
 				MsgInfo += " and revertFile Failed";
 			}
@@ -3021,9 +3056,6 @@ public class BaseController  extends BaseFunction{
 			rt.setError(MsgInfo);	
 			return false;
 		}
-		
-		//Build action list for index and preview filse
-		BuildMultiActionListForDocUpdate(repos, doc);
 		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
@@ -3038,7 +3070,7 @@ public class BaseController  extends BaseFunction{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
 			return false;
 		}
-
+		return true;
 	}
 
 	//底层renameDoc接口
