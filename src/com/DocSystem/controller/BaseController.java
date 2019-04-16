@@ -2423,6 +2423,7 @@ public class BaseController  extends BaseFunction{
 		action.setDoc(doc);
 		action.setLocalRootPath(reposRPath);
 		indexActionList.add(action);
+		
 		//Insert index add action for RDoc
 		action.setType(1);
 		indexActionList.add(action);
@@ -2453,56 +2454,121 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Integer docId, String parentPath, String docName) 
+	private void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
-//		//Delete previewFile(对于文件型系统checkSum保存在DocName库里，因此可以考虑在执行删除DocName时进行)
-//		deletePreviewFile(doc.getCheckSum());			
-	//	
-//		//删除虚拟文件
-//		String reposVPath = getReposVirtualPath(repos);
-//		String docVName = getVDocName(parentPath ,doc.getName());
-//		String localDocVPath = reposVPath + docVName;
-//		if(deleteVirtualDoc(reposVPath,docVName,rt) == false)
-//		{
-//			System.out.println("deleteDoc() delDir Failed " + localDocVPath);
-//			rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-//		}
-//		else
-//		{
-//			if(verReposVirtualDocDelete(repos,docVName,commitMsg,commitUser,rt) == false)
-//			{
-//				System.out.println("deleteDoc() delDir Failed " + localDocVPath);
-//				rt.setMsgInfo("Delete Virtual Doc Failed:" + localDocVPath);
-//				verReposRevertVirtualDoc(repos,docVName);
-//			}
-//		}
-	//
-//		//Delete SubDocs
-//		if(false == deleteSubDocs(repos, docId, parentPath, docName, commitMsg,commitUser,login_user,rt))
-//		{
-//			System.out.println("deleteDoc() deleteSubDocs Failed ");
-//		}
-		//TODO: 需要根据文件系统类型，来build预览文件、Index文件、VerRepos文件的DeleteActionList
-		
-		//Build IndexDeleteActionList for DocName and LocalDeleteActionList for previewFiles (For FS/SVN/GIT CheckSum was stored in LuceneDocName indexLib)
-		//insertIndexDeleteForDocName(indexActionList, reposId, docId, reposRPath, parentPath, docName);
-		
-		//insertIndexDeleteForRDoc(actionList, reposId, docId, reposRPath, parentPath, docName);
-		//String reposVPath = getReposVirtualPath(repos);
-		//insertIndexDeleteForVDoc(actionList, reposId, docId, reposVPath, parentPath, docName);
+		String reposRPath = getReposRealPath(repos);
+		String reposVPath = getReposVirtualPath(repos);
+
+		switch(repos.getType())
+		{
+		case 1:
+			BuildMultiActionListForDocDelete_DB(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			break;
+		case 2:
+			BuildMultiActionListForDocDelete_FS(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			break;
+		case 3:
+			BuildMultiActionListForDocDelete_SVN(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			break;
+		case 4:
+			BuildMultiActionListForDocDelete_GIT(actionList, repos, doc, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
+			break;
+		}
 	}
 
-//	private boolean deleteSubDocs(Repos repos, Integer docId, String parentPath, String docName, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-//		Doc doc = new Doc();
-//		doc.setPid(docId);
-//		List<Doc> subDocList = reposService.getDocList(doc);
-//		for(int i=0; i< subDocList.size(); i++)
-//		{
-//			Doc subDoc = subDocList.get(i);
-//			deleteDoc(repos, subDoc.getId(), parentPath+docName+"/", subDoc.getName(),commitMsg,commitUser,login_user,rt,true,false);
-//		}
-//		return true;
-//	}
+	private void BuildMultiActionListForDocDelete_GIT(MultiActionList actionList, Repos repos, Doc doc, String path,
+			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void BuildMultiActionListForDocDelete_SVN(MultiActionList actionList, Repos repos, Doc doc, String path,
+			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void BuildMultiActionListForDocDelete_FS(MultiActionList actionList, Repos repos, Doc doc, String path,
+			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void BuildMultiActionListForDocDelete_DB(MultiActionList actionList, Repos repos, Doc doc, String parentPath, String reposRPath, String reposVPath, String commitMsg, String commitUser) 
+	{
+		List<CommonAction> indexActionList = actionList.getIndexActionList();
+		List<CommonAction> localActionList = actionList.getLocalActionList();
+		List<CommonAction> commitActionList = actionList.getCommitActionList();
+		List<CommonAction> dbActionList = actionList.getDBActionList();
+		
+		CommonAction action = new CommonAction();
+
+		//Delete DB
+		action.setAction(2); //Delete
+		action.setDoc(doc);
+		dbActionList.add(action);
+		
+		//Delete VDoc
+		action.setType(2);	//VDoc
+		action.setLocalRootPath(reposVPath);
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		localActionList.add(action);	//local
+		commitActionList.add(action);	//commit
+		indexActionList.add(action);	//index
+				
+		
+		//Delete Index for RDoc
+		action.setType(1); //RDoc
+		action.setLocalRootPath(reposRPath);
+		indexActionList.add(action);
+
+		//deletePreviewFile(oldCheckSum);
+		Doc previewDoc = new Doc();
+		previewDoc.setPath("");
+		previewDoc.setName(doc.getCheckSum() + ".pdf");
+		String previewRootPath = getWebTmpPath() + "preview/";
+		action.setDoc(previewDoc);
+		action.setLocalRootPath(previewRootPath);
+		localActionList.add(action);	
+
+		Doc qDoc = new Doc();
+		qDoc.setPid(doc.getId());
+		List<Doc> subDocList = reposService.getDocList(doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			
+			Doc subDoc = subDocList.get(i);
+			BuildMultiActionListForDocDelete_DB(actionList, repos, subDoc, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);	
+		}
+	}
+	
+	void BuildMultiActionListForDocUpdate(MultiActionList actionList, Repos repos, Doc doc, String reposRPath) 
+	{
+		List<CommonAction> indexActionList = actionList.getIndexActionList();
+		List<CommonAction> localActionList = actionList.getLocalActionList();
+		
+		CommonAction action = new CommonAction();
+		
+		//updateIndexForRDoc(reposId, docId, reposRPath, parentPath, name);
+		action.setAction(3); //Update
+		action.setType(1); //RDoc
+		action.setRepos(repos);
+		action.setDoc(doc);
+		action.setLocalRootPath(reposRPath);
+		indexActionList.add(action);
+
+		//deletePreviewFile(oldCheckSum);
+		Doc previewDoc = new Doc();
+		previewDoc.setPath("");
+		previewDoc.setName(doc.getCheckSum() + ".pdf");
+		String previewRootPath = getWebTmpPath() + "preview/";
+		action.setAction(2); //Delete
+		action.setType(1); //RDoc
+		action.setDoc(previewDoc);
+		action.setLocalRootPath(previewRootPath);
+		localActionList.add(action);
+	}
 	
 	protected void executeMultiActionList(MultiActionList actionList, ReturnAjax rt) {
 		executeIndexActionList(actionList.getIndexActionList(), rt);
@@ -2812,28 +2878,31 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private void updateDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
+	private boolean updateDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
+		return false;
 		
 	}
 
-	private void updateDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
+	private boolean updateDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
+		return false;
 		
 	}
 
-	private void updateDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
+	private boolean updateDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		// TODO Auto-generated method stub
+		return false;
 		
 	}
 
-	protected void updateDoc_DB(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
+	protected boolean updateDoc_DB(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 				MultipartFile uploadFile,Integer fileSize,String checkSum, 
 				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt) 
@@ -2851,7 +2920,7 @@ public class BaseController  extends BaseFunction{
 				unlock(); //线程锁
 	
 				System.out.println("updateDoc() lockDoc " + docId +" Failed！");
-				return;
+				return false;
 			}
 			unlock(); //线程锁
 			
@@ -2866,7 +2935,7 @@ public class BaseController  extends BaseFunction{
 		{
 			rt.setError("系统异常：操作数据库失败");
 			rt.setMsgData("updateDoc() update Doc CheckSum Failed");
-			return;
+			return false;
 		}
 		
 		//get RealDoc Full ParentPath
@@ -2888,7 +2957,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
 				rt.setError("Failed to updateRealDoc " + name + ", unlockDoc Ok");
 			}
-			return;
+			return false;
 		}
 		
 		//需要将文件Commit到版本仓库上去
@@ -2907,14 +2976,11 @@ public class BaseController  extends BaseFunction{
 				MsgInfo += " and unlockDoc Failed";						
 			}
 			rt.setError(MsgInfo);	
-			return;
+			return false;
 		}
 		
-		//Update Lucene Index
-		updateIndexForRDoc(reposId, docId, reposRPath, parentPath, name);
-		
-		//Delete PreviewFile
-		deletePreviewFile(oldCheckSum);
+		//Build action list for index and preview filse
+		BuildMultiActionListForDocUpdate(repos, doc);
 		
 		//updateDoc Info and unlock
 		doc.setSize(fileSize);
@@ -2927,7 +2993,7 @@ public class BaseController  extends BaseFunction{
 		if(reposService.updateDoc(doc) == 0)
 		{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
-			return;
+			return false;
 		}
 
 	}
