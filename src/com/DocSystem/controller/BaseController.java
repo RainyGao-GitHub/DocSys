@@ -6547,11 +6547,8 @@ public class BaseController  extends BaseFunction{
 			case "pdf":
 				return LuceneUtil2.addIndexForPdf(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			case "txt":
-			case "TXT":
 			case "log":
-			case "LOG":
 			case "md":
-			case "MD":
 				return LuceneUtil2.addIndexForFile(reposId, docId, filePath, parentPath, hashId, name, indexLib);
 			}
 		}

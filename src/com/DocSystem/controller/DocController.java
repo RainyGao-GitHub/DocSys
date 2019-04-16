@@ -1158,6 +1158,14 @@ public class DocController extends BaseController{
 			case "xlsx":
 			case "ppt":
 			case "pptx":
+			case "txt":
+			case "log":	
+			case "md":
+			case "jpg":
+			case "jpeg":
+			case "png":
+			case "gif":
+			case "bmp":
 				if(Office2PDF.openOfficeToPDF(srcPath,dstPath) == false)
 				{
 					rt.setError("预览失败");

@@ -782,11 +782,11 @@ public class BaseFunction{
     {
     	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
     	System.out.println("getFileSuffix() " + suffix);
-    	return suffix;
+    	return suffix.toLowerCase();
     }
     
-	public static boolean isOfficeFile(String fileSuffix) {
-		// TODO Auto-generated method stub
+	public static boolean isOfficeFile(String fileSuffix) 
+	{
 		switch(fileSuffix)
 		{
 		case "doc":
