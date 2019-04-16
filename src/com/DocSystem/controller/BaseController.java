@@ -3503,8 +3503,8 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}				
 		
-		//Update Lucene Index
-		insertIndexAddForRDoc(actionList,reposId, dstDocId, reposRPath, dstParentPath, dstName);
+		//Add Lucene Index For dstDoc
+		insertIndexActionForDocCopy(actionList, repos, doc, ReturnAjax rt, dstDocId, dstParentPath, dstName);
 		
 		//content非空时才去创建虚拟文件目录
 		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
