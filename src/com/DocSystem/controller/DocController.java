@@ -1161,6 +1161,7 @@ public class DocController extends BaseController{
 			case "txt":
 			case "log":	
 			case "md":
+			case "html":	
 			case "jpg":
 			case "jpeg":
 			case "png":
