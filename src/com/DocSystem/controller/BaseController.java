@@ -2504,23 +2504,23 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected void executeMultiActionList(MultiActionList actionList, , ReturnAjax rt) {
+	protected void executeMultiActionList(MultiActionList actionList, ReturnAjax rt) {
 		executeIndexActionList(actionList.getIndexActionList(), rt);
 		executeLocalActionList(actionList.getLocalActionList(), rt);
 		executeCommitActionList(actionList.getCommitActionList(), rt);
 		executeDBActionList(actionList.getDBActionList(), rt);
 	}
 
-	private void executeCommitActionList(List<CommonAction> actionList) 
+	private void executeCommitActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		for(int i=0; i< actionList.size(); i++)
 		{
 			CommonAction action = actionList.get(i);
-			executeCommitAction(action);
+			executeCommitAction(action, rt);
 		}
 	}
 
-	private boolean executeCommitAction(CommonAction action) 
+	private boolean executeCommitAction(CommonAction action, ReturnAjax rt) 
 	{
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
@@ -2537,23 +2537,26 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	protected boolean executeIndexActionList(List<CommonAction> indexActionList) 
+	protected boolean executeIndexActionList(List<CommonAction> indexActionList, ReturnAjax rt) 
 	{
 		for(int i=0;i<indexActionList.size();i++)
     	{
 			CommonAction action = indexActionList.get(i);
-    		boolean ret = false;
+    		switch(action.getType())
+    		{}
+			
+			boolean ret = false;
     		
     		switch(action.getAction())
     		{
-    		case 1:	//add
-        		ret = executeIndexAddAction(action);
+    		case 1:	//DocName
+        		ret = executeIndexAddActionForDocName(action, rt);
     			break;
-    		case 2: //delete
-    			ret = executeIndexDeleteAction(action);
+    		case 2: //RDoc
+    			ret = executeIndexDeleteActionForRDoc(action, rt);
     			break;
-    		case 3: //modify
-    			ret = executeIndexModifyAction(action);
+    		case 3: //VDoc
+    			ret = executeIndexModifyActionForVDoc(action, rt);
         		break;
     		}
     		
@@ -2561,7 +2564,7 @@ public class BaseController  extends BaseFunction{
     		{
     			System.out.println("executeIndexActionList() failed");	
     			return false;
-    		} 
+    		}
     	}
 		return true;
 	}
