@@ -3360,13 +3360,13 @@ public class BaseController  extends BaseFunction{
 	//底层copyDoc接口
 	//isSubCopy: true no need to do lock check and lock
 	protected boolean copyDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, boolean isSubCopy,MultiActionList actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,MultiActionList actionList, boolean isMove) 
 	{
 		switch(repos.getType())
 		{
 		case 1:
 			return copyDoc_DB(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList, false);
+					commitMsg, commitUser, login_user, rt, actionList, isMove);
 		
 		}
 		return false;
@@ -3438,20 +3438,15 @@ public class BaseController  extends BaseFunction{
 		Integer dstDocId =  dstDoc.getId();
 		System.out.println("dstDoc id: " + dstDoc.getId());
 		
-		if(!isMove)
+		//Do copy DB SubDocs
+		if(CopySubDocs_DB(srcDoc, dstDoc, isMove) == false)
 		{
-			//Do copy DB SubDocs
-			List<CommonAction> dbActionList = BuildDBActionListForSubDocsCopy(srcDoc, dstDoc);
-			if(executeDBActionList(dbActionList,rt) == false)
-			{
-				//Do delete Doc and SubDocs
-				DeleteSubDocs_DB(dstDoc, isMove);
-				//Delete dstDoc
-				reposService.deleteDoc(dstDoc.getId());
-				//unlock SrcDoc
-				unlockDoc(docId,login_user,srcDoc);
-				return false;
-			}
+			//Do delete Doc and SubDocs
+			DeleteDocAndSubDocs_DB(dstDoc, isMove);
+				
+			//unlock SrcDoc
+			unlockDoc(docId,login_user,srcDoc);
+			return false;
 		}
 		
 		//复制文件或目录
@@ -3466,8 +3461,9 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("copy " + srcName + " to " + dstName + " 失败");
 				rt.setError("copyRealDoc copy " + srcName + " to " + dstName + "Failed");
-				reposService.deleteDoc(dstDocId);
 			}
+			
+			DeleteDocAndSubDocs_DB(dstDoc, isMove);
 			
 			unlockDoc(docId,login_user,srcDoc);
 			return false;
@@ -3478,77 +3474,94 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("copyDoc() verReposRealDocCopy failed");
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(deleteRealDoc(reposRPath,srcParentPath,dstName,type,rt) == false)
-			{						
-				MsgInfo += " and deleteFile Failed";
-			}
+			deleteRealDoc(reposRPath,srcParentPath,dstName,type,rt);
 			
 			//Delete doc and subDocs
-			deleteDocAndSubDocs(dstDocId);
+			DeleteDocAndSubDocs_DB(dstDoc, isMove);
 			
-			if(unlockDoc(docId,login_user,srcDoc) == false)
-			{
-				MsgInfo += " and unlock srcDoc " + docId +" Failed";	
-			}
-			rt.setError(MsgInfo);
+			unlockDoc(docId,login_user,srcDoc);
+			rt.setError("copyDoc() verReposRealDocCopy failed");
 			return false;
 		}				
 		
 		//Add Lucene Index For dstDoc
-		BuildMultiActionListForDocCopy(actionList, repos, dstDoc, rt, dstDocId, dstParentPath, dstName);
+		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc);
 
-		//启用doc
-		MsgInfo = null;
-		if(unlockDoc(dstDoc.getId(),login_user,null) == false)
-		{	
-			MsgInfo ="unlockDoc " +dstDoc.getId() + " Failed";;
+		if(!isMove)
+		{
+			//启用dstDoc
+			unlockDoc(dstDoc.getId(),login_user,null);
 		}
+		
 		//Unlock srcDoc 
-		if(unlockDoc(docId,login_user,null) == false)
-		{
-			MsgInfo += " and unlock " + docId +" Failed";	
-		}
-		if(MsgInfo != null)
-		{
-			rt.setError(MsgInfo);
-		}
-	
+		unlockDoc(docId,login_user,null);
+		
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
 		return true;
 	}
 
-	private List<CommonAction> BuildDBActionListForSubDocsCopy(Doc srcDoc, Doc dstDoc) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void BuildMultiActionListForDocCopy(MultiActionList actionList, Repos repos, Doc dstDoc, ReturnAjax rt,
-			Integer dstDocId, String dstParentPath, String dstName) {
-		// TODO Auto-generated method stub
+	private void BuildMultiActionListForDocCopy(MultiActionList actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, boolean isMove) 
+	{	
+		String reposRPath = getReposRealPath(repos);
+		String reposVPath = getReposVirtualPath(repos);
 		
-		//content非空时才去创建虚拟文件目录
-		if(null != dstDoc.getContent() && !"".equals(dstDoc.getContent()))
+		switch(repos.getType())
 		{
-			String reposVPath = getReposVirtualPath(repos);
-			String srcDocVName = getVDocName(srcParentPath, srcDoc.getName());
-			String dstDocVName = getVDocName(dstParentPath, dstDoc.getName());
-			if(copyVirtualDoc(reposVPath,srcDocVName,dstDocVName,rt) == true)
-			{
-				if(verReposVirtualDocCopy(repos,srcDocVName,dstDocVName, commitMsg, commitUser,rt) == false)
-				{
-					System.out.println("copyDoc() svnVirtualDocCopy " + srcDocVName + " to " + dstDocVName + " Failed");							
-				}
-			}
-			else
-			{
-				System.out.println("copyDoc() copyVirtualDoc " + srcDocVName + " to " + dstDocVName + " Failed");						
-			}
-			addIndexForVDoc(reposId, dstDocId, dstParentPath, dstName, dstDoc.getContent());
+		case 1:
+			BuildMultiActionListForDocCopy_DB(actionList, repos, dstDoc, dstDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user, isMove);
+			break;
 		}
+	}
+	
+	
+	private void BuildMultiActionListForDocCopy_DB(MultiActionList actionList, Repos repos, Doc srcDoc, Doc dstDoc,
+			String reposRPath, String reposVPath,
+			String commitMsg, String commitUser, User login_user,
+			boolean isMove) 
+	{
+		List<CommonAction> indexActionList = actionList.getIndexActionList();
+		List<CommonAction> localActionList = actionList.getLocalActionList();
+		List<CommonAction> commitActionList = actionList.getCommitActionList();
+		List<CommonAction> dbActionList = actionList.getDBActionList();
+		
+		CommonAction action = new CommonAction();
+
+		//Copy DB
+		if(isMove)
+		{
+			action.setAction(4); //Move
+		}
+		else
+		{
+			action.setAction(5); //Copy
+		}
+		action.setDoc(dstDoc);
+		dbActionList.add(action);
+		
+		//Copy VDoc
+		action.setType(2);	//VDoc
+		action.setLocalRootPath(reposVPath);
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		localActionList.add(action);	//local
+		commitActionList.add(action);	//commit
+		indexActionList.add(action);	//index
 				
-		//copySubDocs
-		copySubDocs(repos, docId, dstDocId, srcParentPath + srcName + "/", dstParentPath + dstName + "/", commitMsg,commitUser,login_user,rt); 
+		//Copy Index for RDoc
+		action.setType(1); //RDoc
+		action.setLocalRootPath(reposRPath);
+		indexActionList.add(action);
+
+		Doc qDoc = new Doc();
+		qDoc.setPid(srcDoc.getId());
+		List<Doc> subDocList = reposService.getDocList(qDoc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			Doc dstSubDoc = buildDocByDoc_DB(subDoc, dstDoc.getPid(), dstDoc.getPath(), login_user, false);
+			BuildMultiActionListForDocCopy_DB(actionList, repos, subDoc, dstSubDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user, isMove);	
+		}
 	}
 
 	private void deleteDocAndSubDocs(Integer dstDocId) {
@@ -3629,7 +3642,7 @@ public class BaseController  extends BaseFunction{
 		return dstDoc;
 	}
 
-	private boolean copySubDocs(Repos repos, Integer srcPid, Integer dstPid, String srcParentPath, String dstParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
+	private boolean CopySubDocs_DB(Repos repos, Integer srcPid, Integer dstPid, String srcParentPath, String dstParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{
 		boolean ret = true;
 		Doc doc = new Doc();
