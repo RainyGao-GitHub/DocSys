@@ -3543,7 +3543,11 @@
                 type : "post",
                 dataType : "json",
                 data : {
-                    id : treeNode.id,
+                	reposId: gReposId,
+                    docId : treeNode.id,
+                    parentId: treeNode.pid,
+                    parentPath: treeNode.path,
+                    docName: treeNode.name,
                 },
 	            success : function (ret) {
 	                if( "ok" == ret.status ) //后台删除成功

@@ -185,8 +185,8 @@ public class DocController extends BaseController{
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer reposId, Integer docId, Integer parentId, String parentPath, String docName, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("deleteDoc docId: " + docId);
-
+		System.out.println("deleteDoc reposId:" + reposId + " docId:" + docId + " parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName );
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)

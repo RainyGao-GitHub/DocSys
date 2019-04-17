@@ -2336,8 +2336,44 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt,
 			boolean skipRealDocCommit, MultiActionList actionList) 
 	{
-		// TODO Auto-generated method stub
-		return false;
+		Doc doc = new Doc();
+		doc.setVid(repos.getId());
+		doc.setId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		
+		//Build ActionList for Index/VDoc/Preview Delete
+		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser);
+	
+		//get RealDoc Full ParentPath
+		String reposRPath = getReposRealPath(repos);
+		if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
+		{
+			String MsgInfo = parentPath + docName + " 删除失败！";
+			rt.setError(MsgInfo);
+			return false;
+		}
+		
+		if(skipRealDocCommit == false)	//忽略版本仓库，用于使用版本仓库同步时调用（相当于已经commit过了）
+		{
+			//需要将文件Commit到verRepos上去
+			if(verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt) == false)
+			{
+				System.out.println("verReposRealDocDelete Failed");
+				String MsgInfo = "verReposRealDocDelete Failed";
+				//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+				if(verReposRevertRealDoc(repos,parentPath,docName,doc.getType(),rt) == false)
+				{						
+					MsgInfo += " and revertFile Failed";
+				}
+				rt.setError(MsgInfo);
+				return false;
+			}
+		}
+		
+		//Delete DataBase Record
+		rt.setData(doc));
+		return true;
 	}
 
 	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
