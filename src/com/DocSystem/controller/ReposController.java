@@ -223,7 +223,9 @@ public class ReposController extends BaseController{
 		}
 
 		String reposRPath = getReposRealPath(repos);
-		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, null, login_user, rt, true, true);
+		String commitMsg = "addRepos() SyncUpWithVerRepos";
+		String commitUser = login_user.getName();
+		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, null, commitMsg, commitUser, login_user, rt, true, true);
 		if(ret < 0)
 		{
 			deleteRepos(repos);
