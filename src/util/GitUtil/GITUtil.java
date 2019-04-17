@@ -1086,7 +1086,7 @@ public class GITUtil  extends BaseController{
     		CommitAction action = commitActionList.get(i);
     		if(1 == action.getAction()) //add
     		{
-        		delFileOrDir(wcDir + action.getEntryPath());
+        		delFileOrDir(wcDir + action.getParentPath() + action.getEntryName());
     		}
     	}
 	}
