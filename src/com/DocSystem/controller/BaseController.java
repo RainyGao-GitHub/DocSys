@@ -1676,7 +1676,7 @@ public class BaseController  extends BaseFunction{
         
         String webTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/";
         webTmpPath = localDirPathFormat(webTmpPath);
-        System.out.println("getWebTmpPath() webTmpPath" + webTmpPath);
+        System.out.println("getWebTmpPath() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
 	
