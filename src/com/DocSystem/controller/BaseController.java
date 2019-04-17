@@ -1664,8 +1664,9 @@ public class BaseController  extends BaseFunction{
 	protected String getWebUserTmpPath(User login_user) {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         
-        String webUserTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/" + login_user.getId() + "/";
-        System.out.println("getWebUserTmpPath() webUserTmpPath" + webUserTmpPath);
+        String webUserTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/" + login_user.getId() + "/";
+        webUserTmpPath = localDirPathFormat(webUserTmpPath);
+        System.out.println("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
 		return webUserTmpPath;
 	}
 	
@@ -1673,7 +1674,8 @@ public class BaseController  extends BaseFunction{
 	protected String getWebTmpPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         
-        String webTmpPath =  wac.getServletContext().getRealPath("/").replaceAll("/",File.separator) +  "/tmp/";
+        String webTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/";
+        webTmpPath = localDirPathFormat(webTmpPath);
         System.out.println("getWebTmpPath() webTmpPath" + webTmpPath);
 		return webTmpPath;
 	}
@@ -2372,7 +2374,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Delete DataBase Record
-		rt.setData(doc));
+		rt.setData(doc);
 		return true;
 	}
 
