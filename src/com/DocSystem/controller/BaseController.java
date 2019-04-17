@@ -1,13 +1,11 @@
 package com.DocSystem.controller;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
@@ -50,7 +48,6 @@ import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 
 import util.Encrypt.MD5;
-import util.FileUtil.FileUtils2;
 import util.GitUtil.GITUtil;
 import util.GitUtil.GitEntry;
 import util.LuceneUtil.LuceneUtil2;
