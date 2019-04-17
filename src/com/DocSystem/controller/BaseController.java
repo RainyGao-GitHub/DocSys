@@ -2846,7 +2846,9 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean executeIndexAction(CommonAction action, ReturnAjax rt) {
+	private boolean executeIndexAction(CommonAction action, ReturnAjax rt) 
+	{
+		printObject("executeIndexAction() action:",action);
 		switch(action.getType())
 		{
 		case 1:	//DocName
@@ -2922,9 +2924,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean executeLocalActionForRDoc(CommonAction action, ReturnAjax rt)
-	{
-		printObject("executeLocalActionForRDoc() action:",action);
-		
+	{		
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
 		String localRootPath = action.getLocalRootPath();
@@ -2951,9 +2951,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean executeLocalActionForVDoc(CommonAction action, ReturnAjax rt)
-	{
-		printObject("executeLocalActionForVDoc() action:",action);
-		
+	{	
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
 		String localRootPath = action.getLocalRootPath();
@@ -2980,6 +2978,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean executeCommitAction(CommonAction action, ReturnAjax rt) 
 	{
+		printObject("executeLocalAction() action:",action);
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
 		switch(action.getType())
