@@ -394,7 +394,8 @@ public class DocController extends BaseController{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
 					String srcParentPath = getParentPath(sameDoc.getPid());
-					copyDoc(repos, sameDoc.getId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,false);
+					MultiActionList actionList = new MultiActionList();
+					copyDoc(repos, sameDoc.getId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,actionList, false);
 					Doc newDoc = getDocByName(docName,parentId,reposId);
 					if(null != newDoc)
 					{
@@ -403,6 +404,7 @@ public class DocController extends BaseController{
 						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
 						rt.setMsgData("1");
 						writeJson(rt, response);
+						executeMultiActionList(actionList, rt);
 						return;
 					}
 					else
@@ -633,7 +635,7 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Integer docId, Integer parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void renameDoc(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("renameDoc reposId: " + reposId + " parentPath: " + parentPath+ " name: " + name+ " newname: " + newname);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -661,15 +663,22 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		renameDoc(repos, docId, parentId, parentPath, name, newname, commitMsg,commitUser,login_user,rt);
+		MultiActionList actionList = new MultiActionList();
+		boolean ret = copyDoc(repos, docId, parentId, parentId, type, parentPath, name, parentPath, newname, commitMsg,commitUser, login_user,rt, actionList , true);
+		writeJson(rt, response);
 		
-		writeJson(rt, response);	
+		if(ret == true)
+		{
+			executeMultiActionList(actionList, rt);
+		}
 	}
 
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer id,Integer dstPid,Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("moveDoc id: " + id + " dstPid: " + dstPid + " vid: " + vid);
+	public void moveDoc(Integer reposId, Integer docId, Integer type, Integer srcPid, Integer dstPid, String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, 
+			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		
+		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -681,32 +690,30 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);	
-			return;			
-		}
-		
-		Repos repos = reposService.getRepos(vid);
+		Repos repos = reposService.getRepos(reposId);
 	
 		//检查是否有源目录的删除权限
-		if(checkUserDeleteRight(rt,login_user.getId(),doc.getPid(),repos) == false)
+		if(checkUserDeleteRight(rt,login_user.getId(), srcPid, repos) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(),dstPid,repos) == false)
+		if(checkUserAddRight(rt,login_user.getId(), dstPid, repos) == false)
 		{
 				writeJson(rt, response);	
 				return;
 		}
 		
-		moveDoc(id,vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);		
+		MultiActionList actionList = new MultiActionList();
+		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath, srcDocName, dstParentPath, dstDocName, commitMsg, commitUser, login_user,rt, actionList , true);		
 		writeJson(rt, response);	
+		
+		if(ret)
+		{
+			executeMultiActionList(actionList, rt);
+		}
 	}
 	
 	/****************   move a Document ******************/
@@ -753,9 +760,14 @@ public class DocController extends BaseController{
 			dstDocName = srcDocName;
 		}
 		
-		copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, false);
-		
+		MultiActionList actionList = new MultiActionList();
+		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList, false);
 		writeJson(rt, response);
+		
+		if(ret)
+		{
+			executeMultiActionList(actionList, rt);
+		}
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
@@ -789,8 +801,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		updateDocContent(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt);
+		MultiActionList actionList = new MultiActionList();
+		boolean ret = updateDocContent(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
+		
+		if(ret)
+		{
+			executeMultiActionList(actionList, rt);
+		}
 	}
 
 	//this interface is for auto save of the virtual doc edit
@@ -1445,9 +1463,37 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		String entryPath = getVDocName(parentPath, docName);
+	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
+	{	
+		docName = getVDocName(parentPath, docName);
+		parentPath = "";
+		
+		//Checkout to localParentPath
+		String localParentPath = getReposVirtualPath(repos);
+		
+		//If localParentPath not exists do mkdirs
+		
+		//Do checkout the entry to 
+		if(verReposCheckOut(repos, false, "", docName, localParentPath, docName, commitId) == false)
+		{
+			System.out.println("revertVirtualDocHistory() verReposCheckOut Failed!");
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
+			return false;
+		}
+		
+		//Do commit to verRepos
+		if(commitMsg == null)
+		{
+			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
+		}
+		if(verReposAutoCommit(repos, false, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null) == false)
+		{			
+			//Revert Local Entries
+			//verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
+
+			System.out.println("verReposAutoCommit 失败");
+			rt.setMsgData("verReposAutoCommit 失败");
+		}
 		return false;
 	}
 
@@ -1494,7 +1540,7 @@ public class DocController extends BaseController{
 		
 		//Do SyncWithVerRepos (skipRealDocAdd)
 		String reposRPath = getReposRealPath(repos);
-		int ret = SyncUpWithVerRepos(repos, docId, null, "", reposRPath, null, null, login_user, rt, true, true);
+		int ret = SyncUpWithVerRepos(repos, docId, null, "", reposRPath, null, null, commitMsg, commitUser, login_user, rt, true, true);
 		
 		System.out.println("revertRealDocHistory() SyncUpWithVerRepos return:" + ret);
 		
