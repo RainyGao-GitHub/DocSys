@@ -1694,10 +1694,9 @@ public class DocController extends BaseController{
 		        for (int j = 0; j < list.size(); j++) 
 		        {
 		            Doc doc = list.get(j);
-		        	printObject("databaseSearch() matched doc:", doc);
-
 		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
 		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr);
+		        	printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	
 		}

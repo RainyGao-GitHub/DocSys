@@ -305,10 +305,10 @@ public class LuceneUtil2   extends BaseFunction
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;	        
 	        for (int i = 0; i < hits.length; i++) 
 	        {
-	    		printObject("fuzzySearch() hitDocument:", hits);
 	            Document hitDocument = isearcher.doc(hits[i].doc);
-	            HitDoc hitDoc = BuildHitDocFromDocument(hitDocument); 
+	            HitDoc hitDoc = BuildHitDocFromDocument(hitDocument);
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
+	    		printObject("fuzzySearch() hitDoc:", hitDoc);
 	        }
 	        
 	        ireader.close();
@@ -343,13 +343,21 @@ public class LuceneUtil2   extends BaseFunction
     	Doc doc = new Doc();
     	doc.setId(docId);
     	doc.setPath(hitDocument.get("path"));
-    	doc.setPath(hitDocument.get("name"));
+    	doc.setName(hitDocument.get("name"));
     	doc.setSize(size);
     	doc.setCheckSum(hitDocument.get("checkSum"));
     	
     	//Set Doc Path
-    	String docPath = doc.getPath() + doc.getName();
-    			
+    	String docPath = null;
+    	if(doc.getPath() == null)
+    	{
+    		docPath = doc.getName();
+    	}
+    	else
+    	{
+    		docPath = doc.getPath() + doc.getName();
+    	}
+    	
     	//Set HitDoc
     	HitDoc hitDoc = new HitDoc();
     	hitDoc.setDoc(doc);
