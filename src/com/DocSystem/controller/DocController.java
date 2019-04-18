@@ -1640,7 +1640,7 @@ public class DocController extends BaseController{
 			luceneSearch(repos, searchWord, parentPath, searchResult , 7);
 		}
 		
-		List<Doc> result = convertSearchResultToDocList(searchResult);
+		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
 		return result;
 	}
 
@@ -1655,18 +1655,30 @@ public class DocController extends BaseController{
 			databaseSearch(repos, pDocId, searchWord, parentPath, searchResult);
 		}
 		
-		List<Doc> result = convertSearchResultToDocList(searchResult);
+		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
 		return result;
 	}
 
-	private List<Doc> convertSearchResultToDocList(HashMap<String, HitDoc> searchResult) 
+	private List<Doc> convertSearchResultToDocList(Repos repos, HashMap<String, HitDoc> searchResult) 
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
-        for(HitDoc hitDoc: searchResult.values())
+		String reposRPath = getReposRealPath(repos);
+		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
-		    docList.add(doc);
+		    File file = new File(reposRPath + doc.getPath(), doc.getName());
+      	    if(file.exists())
+      	    {
+      	    	docList.add(doc);
+      	    }
+      	    else
+      	    {
+      	    	MultiActionList actionList = new MultiActionList();
+				BuildMultiActionListForDocDelete(actionList , repos, doc, "AutoDelete", "System");
+				ReturnAjax rt = new ReturnAjax();
+				executeMultiActionList(actionList, rt );
+      	    }
 		}
 	
 		Collections.sort(docList);

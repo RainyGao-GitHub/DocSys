@@ -241,45 +241,6 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }    
-    
-    /**
-     * 	关键字精确查询,返回docId List
-     * @param str: 关键字
-     * @param indexLib: 索引库名字
-     */
-    public static List<Document> search(String str,String indexLib)
-    {
-    	System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
-    	try {
-    		File file = new File(INDEX_DIR + File.separator +indexLib);
-    		if(!file.exists())
-    		{
-    			return null;
-    		}
-    		
-	        Directory directory = FSDirectory.open(file);
-	        Analyzer analyzer = new IKAnalyzer();
-	        DirectoryReader ireader = DirectoryReader.open(directory);
-	        IndexSearcher isearcher = new IndexSearcher(ireader);
-	
-	        QueryParser parser = new QueryParser(Version.LUCENE_CURRENT, "content",analyzer);
-	        Query query = parser.parse(str);
-	
-	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-	        List<Document> res = new ArrayList<Document>();
-	        for (int i = 0; i < hits.length; i++) {
-	            Document hitDoc = isearcher.doc(hits[i].doc);
-	            res.add(hitDoc);
-	        }
-	        ireader.close();
-	        directory.close();
-	        return res;
-		} catch (Exception e) {
-			System.out.println("getDocumentIdListByHashId() 异常");
-			e.printStackTrace();
-			return null;
-		}
-    }
 
     /**
      * 	关键字模糊查询， 返回docId List

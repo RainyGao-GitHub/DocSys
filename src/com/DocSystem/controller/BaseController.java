@@ -2502,7 +2502,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
+	protected void BuildMultiActionListForDocDelete(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		String reposRPath = getReposRealPath(repos);
 		String reposVPath = getReposVirtualPath(repos);
@@ -2950,7 +2950,12 @@ public class BaseController  extends BaseFunction{
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
 		String localRootPath = action.getLocalRootPath();
-		String VDocName = getVDocName(doc.getPath(), doc.getName());
+		String parentPath = "";
+		if(doc.getPath() != null)
+		{
+			parentPath = "";
+		}
+		String VDocName = getVDocName(parentPath, doc.getName());
 		String newVDocName = null;
 		
 		switch(action.getAction())
