@@ -1662,11 +1662,10 @@ public class DocController extends BaseController{
 	private List<Doc> convertSearchResultToDocList(HashMap<String, HitDoc> searchResult) 
 	{
 		List<Doc> docList = new ArrayList<Doc>();
-		Iterator<Entry<String, HitDoc>> iterator = searchResult.entrySet().iterator();      
-		while (iterator .hasNext()) 
-		{
-			HitDoc hitDoc = (HitDoc) iterator.next();
-		    Doc doc = hitDoc.getDoc();
+		
+        for(HitDoc hitDoc: searchResult.values())
+        {
+      	    Doc doc = hitDoc.getDoc();
 		    docList.add(doc);
 		}
 	
