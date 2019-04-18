@@ -2548,9 +2548,8 @@ public class BaseController  extends BaseFunction{
 		List<CommonAction> indexActionList = actionList.getIndexActionList();
 		List<CommonAction> localActionList = actionList.getLocalActionList();
 		
-		CommonAction action = new CommonAction();
-		
 		//updateIndexForVDoc(reposId, docId, reposRPath, parentPath, name);
+		CommonAction action = new CommonAction();
 		action.setAction(3); //Update
 		action.setType(2); //VDoc
 		action.setRepos(repos);
@@ -2558,6 +2557,7 @@ public class BaseController  extends BaseFunction{
 		indexActionList.add(action);		
 		
 		//Delete tmp saved doc content
+		action = new CommonAction();
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		String vDocName = getVDocName(doc.getPath(), doc.getName());
 		Doc tempSavedDoc = new Doc();
@@ -2851,11 +2851,11 @@ public class BaseController  extends BaseFunction{
 		printObject("executeIndexAction() action:",action);
 		switch(action.getType())
 		{
-		case 1:	//DocName
+		case 0:	//DocName
     		return executeIndexActionForDocName(action, rt);
-    	case 2: //RDoc
+    	case 1: //RDoc
 			return executeIndexActionForRDoc(action, rt);
-		case 3: //VDoc
+		case 2: //VDoc
 			return executeIndexActionForVDoc(action, rt);
 		}
 		return false;
@@ -3512,6 +3512,7 @@ public class BaseController  extends BaseFunction{
 		
 		//updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
 		Doc doc = new Doc();
+		doc.setVid(repos.getId());
 		doc.setId(docId);
 		doc.setPath(parentPath);
 		doc.setName(docName);
