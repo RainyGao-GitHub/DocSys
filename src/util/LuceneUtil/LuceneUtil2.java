@@ -281,11 +281,12 @@ public class LuceneUtil2   extends BaseFunction
 
     /**
      * 	关键字模糊查询， 返回docId List
+     * @param parentPath 
      * @param <SearchResult>
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean fuzzySearch(String str, String field, String indexLib, HashMap<String, HitDoc> searchResult)
+	public static boolean fuzzySearch(String str, String field, String indexLib, String parentPath, HashMap<String, HitDoc> searchResult)
 	{
 		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
@@ -302,10 +303,30 @@ public class LuceneUtil2   extends BaseFunction
 	
 	        FuzzyQuery query = new FuzzyQuery(new Term(field,str));
 	
-	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;	        
+	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+	        
+			boolean enablePathFilter = true;
+	        if(parentPath == null || parentPath.isEmpty())
+	        {
+	        	enablePathFilter = false;
+	        }
+	        
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
+	            if(enablePathFilter)
+	            {
+	            	String docParentPath = hitDocument.get("path");
+	            	if(docParentPath == null || docParentPath.isEmpty())
+	            	{
+	            		continue;
+	            	}
+	            	else if(!docParentPath.contains(parentPath))
+	            	{
+	            		continue;
+	            	}
+	            }
+	            
 	            HitDoc hitDoc = BuildHitDocFromDocument(hitDocument);
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
 	    		printObject("fuzzySearch() hitDoc:", hitDoc);

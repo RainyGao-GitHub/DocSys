@@ -1652,7 +1652,7 @@ public class DocController extends BaseController{
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
 			luceneSearch(repos, searchWord, parentPath, searchResult , 6);	//Search RDoc and VDoc only
-			databaseSearch(repos, pDocId, searchWord, searchResult);
+			databaseSearch(repos, pDocId, searchWord, parentPath, searchResult);
 		}
 		
 		List<Doc> result = convertSearchResultToDocList(searchResult);
@@ -1675,9 +1675,16 @@ public class DocController extends BaseController{
 	}
 
 	
-	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, HashMap<String, HitDoc> searchResult) 
+	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String parentPath, HashMap<String, HitDoc> searchResult) 
 	{
-		String [] keyWords = searchWord.split(" ");		
+		String [] keyWords = searchWord.split(" ");
+		
+		boolean enablePathFilter = true;
+        if(parentPath == null || parentPath.isEmpty())
+        {
+        	enablePathFilter = false;
+        }
+
 		for(int i=0; i< keyWords.length; i++)
 		{
 			String searchStr = keyWords[i];
@@ -1693,6 +1700,18 @@ public class DocController extends BaseController{
 		        for (int j = 0; j < list.size(); j++) 
 		        {
 		            Doc doc = list.get(j);
+		            if(enablePathFilter)
+		            {
+		            	String docParentPath = doc.getPath();
+		            	if(docParentPath == null || docParentPath.isEmpty())
+		            	{
+		            		continue;
+		            	}
+		            	else if(!docParentPath.contains(parentPath))
+		            	{
+		            		continue;
+		            	}
+		            }
 		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
 		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr);
 		        	printObject("databaseSearch() hitDoc:", hitDoc);
@@ -1717,6 +1736,7 @@ public class DocController extends BaseController{
 	private boolean luceneSearch(Repos repos, String searchWord, String parentPath, HashMap<String, HitDoc> searchResult, int searchMask) 
 	{
 		String [] keyWords = searchWord.split(" ");		
+        
 		for(int i=0; i< keyWords.length; i++)
 		{
 			String searchStr = keyWords[i];
@@ -1724,15 +1744,15 @@ public class DocController extends BaseController{
 			{
 				if((searchMask & SEARCH_MASK[0]) > 0)
 				{
-					LuceneUtil2.fuzzySearch(searchStr, "name", getIndexLibName(repos.getId(),0), searchResult); 	//Search By DocName
+					LuceneUtil2.fuzzySearch(searchStr, parentPath, "name", getIndexLibName(repos.getId(),0), searchResult); 	//Search By DocName
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
-					LuceneUtil2.fuzzySearch(searchStr, "content", getIndexLibName(repos.getId(),1), searchResult);	//Search By FileContent
+					LuceneUtil2.fuzzySearch(searchStr, parentPath, "content", getIndexLibName(repos.getId(),1), searchResult);	//Search By FileContent
 				}
 				if((searchMask & SEARCH_MASK[2]) > 0)
 				{	
-					LuceneUtil2.fuzzySearch(searchStr, "content", getIndexLibName(repos.getId(),2), searchResult);	//Search By VDoc
+					LuceneUtil2.fuzzySearch(searchStr, parentPath, "content", getIndexLibName(repos.getId(),2), searchResult);	//Search By VDoc
 				}
 			}
 		}

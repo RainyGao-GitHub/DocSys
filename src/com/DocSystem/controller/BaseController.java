@@ -3493,7 +3493,7 @@ public class BaseController  extends BaseFunction{
 		String docVName = getVDocName(parentPath, docName);
 		String localVDocPath = reposVPath + docVName;
 		
-		System.out.println("updateDocContent() localVDocPath: " + localVDocPath);
+		System.out.println("updateDocContent_FS() localVDocPath: " + localVDocPath);
 		if(isFileExist(localVDocPath) == true)
 		{
 			if(saveVirtualDocContent(reposVPath,docVName, content,rt) == true)
