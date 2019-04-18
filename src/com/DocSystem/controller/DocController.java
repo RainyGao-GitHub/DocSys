@@ -1744,7 +1744,7 @@ public class DocController extends BaseController{
 			{
 				if((searchMask & SEARCH_MASK[0]) > 0)
 				{
-					LuceneUtil2.search(searchStr, parentPath, "name", getIndexLibName(repos.getId(),0), searchResult, 2); 	//Search By DocName
+					LuceneUtil2.search(searchStr, parentPath, "name", getIndexLibName(repos.getId(),0), searchResult, 5); 	//Search By DocName
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
