@@ -28,6 +28,7 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.common.MultiActionList;
+import com.DocSystem.common.SearchResult;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
@@ -1631,8 +1632,32 @@ public class DocController extends BaseController{
 		return null;
 	}
 
-	private List<Doc> searchInReposFS(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
-		// TODO Auto-generated method stub
+	private List<Doc> searchInReposFS(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
+	{	
+		HashMap<String, SearchResult> docHashMap = new HashMap<String, SearchResult>();	//This hash Map was used to store the searchResult
+					
+		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
+		if(searchWord!=null&&!"".equals(searchWord))
+		{
+			List<Document> luceneDocList = luceneSearch(repos, searchWord, parentPath);
+			
+			String docIds = "";
+			for(int i=0; i<luceneDocList.size(); i++)
+			{
+				Document luceneDoc = luceneDocList.get(i);
+				docIds += luceneDoc.get("docId");
+			}
+			params.put("ids", docIds);
+			System.out.println(docIds);
+		}
+		else
+		{
+			params.put("name", "");
+		}
+			
+		//根据params参数查询docList
+		List<Doc> list = reposService.queryDocList(params);
+		return list;
 		return null;
 	}
 
@@ -1640,12 +1665,6 @@ public class DocController extends BaseController{
 		HashMap<String, Object> params = new HashMap<String, Object>();
 		params.put("reposId", repos.getId());
 		params.put("pDocId", pDocId);
-					
-		if(sort!=null&&sort.length()>0)
-		{
-			List<Map<String, Object>> sortList = GsonUtils.getMapList(sort);
-			params.put("sortList", sortList);
-		}
 			
 		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
 		if(searchWord!=null&&!"".equals(searchWord))
@@ -1672,16 +1691,18 @@ public class DocController extends BaseController{
 		return list;
 	}
 
-	private List<Document> luceneSearch(Repos repos, String searchWord, String parentPath) 
+	private List<Document> luceneSearch(Repos repos, String searchWord, String parentPath, HashMap<String, SearchResult> docHashMap) 
 	{
 		String [] keyWords = searchWord.split(" ");
 		
 		List<Document> result = new ArrayList<Document>();
 		for(int i=0; i< keyWords.length; i++)
 		{
-			List<Document> list0 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos.getId(),0)); 	//Search By DocName
-			List<Document> list1 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos.getId(),1));	//Search By FileContent
-			List<Document> list2 = LuceneUtil2.fuzzySearch(searchWord, getIndexLibName(repos.getId(),2));	//Search By VDoc
+			List<Document> list0 = LuceneUtil2.fuzzySearch(searchWord, "name", getIndexLibName(repos.getId(),0)); 	//Search By DocName
+			List<Document> list1 = LuceneUtil2.fuzzySearch(searchWord, "content", getIndexLibName(repos.getId(),1));	//Search By FileContent
+			List<Document> list2 = LuceneUtil2.fuzzySearch(searchWord, "content", getIndexLibName(repos.getId(),2));	//Search By VDoc
+			
+			//Add to docHashMap
 		}
 		
 		return result;

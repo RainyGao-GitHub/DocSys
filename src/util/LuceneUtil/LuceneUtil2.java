@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -50,6 +51,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.SearchResult;
 
 import util.ReadProperties;
 import util.FileUtil.FileUtils2;
@@ -278,30 +280,35 @@ public class LuceneUtil2   extends BaseFunction
 
     /**
      * 	关键字模糊查询， 返回docId List
+     * @param <SearchResult>
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static List<Document> fuzzySearch(String str,String indexLib)
+	public static boolean fuzzySearch(String str, String field, String indexLib, HashMap<String, SearchResult> searchResult)
 	{
-		System.out.println("fuzzySearch() keyWord:" + str + " indexLib:" + indexLib);
+		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
-    		File file = new File(INDEX_DIR + File.separator +indexLib);
+    		File file = new File(INDEX_DIR + "/" +indexLib);
     		if(!file.exists())
     		{
-    			return null;
+    			System.out.println("fuzzySearch() keyWord:" + str + " indexLib:" + indexLib);
+    			return false;
     		}
     		
 	        Directory directory = FSDirectory.open(file);
 	        DirectoryReader ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
-	        FuzzyQuery query = new FuzzyQuery(new Term("content",str));
+	        FuzzyQuery query = new FuzzyQuery(new Term(field,str));
 	
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+	        
+	        
 	        List<Document> res = new ArrayList<Document>();
 	        for (int i = 0; i < hits.length; i++) {
 	            Document hitDoc = isearcher.doc(hits[i].doc);
-	            res.add(hitDoc);
+	            SearchResult 
+	            .add(hitDoc);
 	        }
 	        ireader.close();
 	        directory.close();
