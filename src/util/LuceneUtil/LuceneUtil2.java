@@ -27,9 +27,11 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -186,7 +188,7 @@ public class LuceneUtil2   extends BaseFunction
 	        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
 	        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
 	        doc.add(new IntField("docId", docId, Store.YES));
-	        doc.add(new TextField("content", content, Store.YES));
+	        doc.add(new TextField("content", content, Store.NO));	//需要分析
 	        
 	        indexWriter.updateDocument(new Term("id",id), doc);
 	        indexWriter.close();
@@ -286,7 +288,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean fuzzySearch(String str, String parentPath, String field, String indexLib, HashMap<String, HitDoc> searchResult)
+	public static boolean search(String str, String parentPath, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
 	{
 		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
@@ -301,8 +303,28 @@ public class LuceneUtil2   extends BaseFunction
 	        DirectoryReader ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
-	        FuzzyQuery query = new FuzzyQuery(new Term(field,str));
-	
+	        Query query = null;
+	        switch(searchType)
+	        {
+	        case 1: //精确
+		        query = new TermQuery(new Term(field,str));
+		        break;
+	        case 2:	//模糊
+	        	query = new FuzzyQuery(new Term(field,str));
+	        	break;
+	        case 3: //智能 
+	        	Analyzer analyzer = new IKAnalyzer();
+	        	QueryParser parser = new QueryParser(Version.LUCENE_CURRENT, field,analyzer);
+		        query = parser.parse(str);
+	        	break;
+	        case 4:	//前缀
+	        	query = new PrefixQuery(new Term(field, str));
+	        	break;
+	        case 5: //通配
+	        	query = new WildcardQuery(new Term(field,"*"+str + "*"));
+	        	break;  
+	        }
+	        
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
 	        
 			boolean enablePathFilter = true;
