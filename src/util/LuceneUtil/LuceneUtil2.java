@@ -286,7 +286,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean fuzzySearch(String str, String field, String indexLib, String parentPath, HashMap<String, HitDoc> searchResult)
+	public static boolean fuzzySearch(String str, String parentPath, String field, String indexLib, HashMap<String, HitDoc> searchResult)
 	{
 		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {

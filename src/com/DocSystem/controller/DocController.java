@@ -1556,7 +1556,7 @@ public class DocController extends BaseController{
 	*/
 	@RequestMapping("/searchDoc.do")
 	public void searchDoc(Integer reposId,Integer pDocId, String parentPath, String searchWord,String sort,HttpServletResponse response,HttpSession session){
-		System.out.println("searchDoc searchWord: " + searchWord + " sort:" + sort);
+		System.out.println("searchDoc searchWord: " + searchWord + " pDocId:" + pDocId + " parentPath:" + parentPath);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
