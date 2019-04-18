@@ -36,6 +36,7 @@ import util.ReturnAjax;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
+import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.MultiActionList;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -6154,7 +6155,7 @@ public class BaseController  extends BaseFunction{
     	actionList.add(action);	
 	}
 
-    /************************* DocSys全文搜索操作接口 ***********************************/	
+    /************************* DocSys全文搜索操作接口 ***********************************/
 	protected static String getIndexLibName(Integer reposId, int indexLibType) 
 	{
 		String indexLib = null;

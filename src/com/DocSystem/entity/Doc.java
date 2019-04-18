@@ -1,6 +1,6 @@
 package com.DocSystem.entity;
 
-public class Doc {
+public class Doc  implements Comparable<Doc>{
     private Integer id;
 
     private String name;
@@ -36,6 +36,8 @@ public class Doc {
     private Long lockTime;
 
     private String content;
+
+	private int sortIndex;
 
     public Integer getId() {
         return id;
@@ -179,5 +181,17 @@ public class Doc {
 
     public void setContent(String content) {
         this.content = content == null ? null : content.trim();
+    }
+
+	public void setSortIndex(int sortIndex) {
+		this.sortIndex = sortIndex;
+	}
+	
+	public int getSortIndex() {
+		return sortIndex;
+	}
+	
+    public int compareTo(Doc doc) {
+        return this.sortIndex - doc.sortIndex;
     }
 }

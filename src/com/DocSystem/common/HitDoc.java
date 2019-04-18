@@ -1,13 +1,24 @@
 package com.DocSystem.common;
 
-import java.util.List;
-
+import java.util.HashMap;
 import com.DocSystem.entity.Doc;
 
 public class HitDoc {
 	
-    private List<HitInfo> hitInfoList = null;
     private Doc doc = null;
+    private String docPath = null;
+    private int hitCount = 0;
+    private HashMap<String, Integer> hitInfo = null;
+    
+    public void setDocPath(String docPath) {
+		this.docPath = docPath;
+	}
+	
+	public String getDocPath()
+	{
+		return docPath;
+	}
+	
     
 	public void setDoc(Doc doc) {
 		this.doc = doc;
@@ -18,12 +29,22 @@ public class HitDoc {
 		return doc;
 	}
 	
-	public void setHitInfoList(List<HitInfo> hitInfoList) {
-		this.hitInfoList = hitInfoList;
+	public void setHitInfo(HashMap<String, Integer> hitInfo) {
+		this.hitInfo = hitInfo;
 	}
 	
-	public List<HitInfo> getHitInfoList()
+	public HashMap<String, Integer> getHitInfo()
 	{
-		return hitInfoList;
+		return hitInfo;
+	}
+
+	public int getHitCount() 
+	{
+		// TODO Auto-generated method stub
+		return hitCount;
+	}
+	
+	public void getHitCount(int hitCount) {
+		this.hitCount = hitCount;
 	}
 }

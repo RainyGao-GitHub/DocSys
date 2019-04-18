@@ -51,7 +51,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
-import com.DocSystem.common.SearchResult;
+import com.DocSystem.common.HitDoc;
+import com.DocSystem.entity.Doc;
 
 import util.ReadProperties;
 import util.FileUtil.FileUtils2;
@@ -70,7 +71,7 @@ import util.FileUtil.FileUtils2;
  */
 @SuppressWarnings("deprecation")
 public class LuceneUtil2   extends BaseFunction
-{
+{	
     private static String INDEX_DIR = getLucenePath();
 
     private static String getLucenePath() {
@@ -238,7 +239,7 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }    
-
+    
     /**
      * 	关键字精确查询,返回docId List
      * @param str: 关键字
@@ -284,7 +285,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean fuzzySearch(String str, String field, String indexLib, HashMap<String, SearchResult> searchResult)
+	public static boolean fuzzySearch(String str, String field, String indexLib, HashMap<String, HitDoc> searchResult)
 	{
 		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
@@ -301,26 +302,46 @@ public class LuceneUtil2   extends BaseFunction
 	
 	        FuzzyQuery query = new FuzzyQuery(new Term(field,str));
 	
-	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-	        
-	        
-	        List<Document> res = new ArrayList<Document>();
-	        for (int i = 0; i < hits.length; i++) {
-	            Document hitDoc = isearcher.doc(hits[i].doc);
-	            SearchResult 
-	            .add(hitDoc);
+	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;	        
+	        for (int i = 0; i < hits.length; i++) 
+	        {
+	            Document hitDocument = isearcher.doc(hits[i].doc);
+	            HitDoc hitDoc = BuildHitDocFromDocument(hitDocument); 
+	            AddHitDocToSearchResult(searchResult,hitDoc, str);
 	        }
+	        
 	        ireader.close();
 	        directory.close();
-	        return res;
+	        return true;
 		} catch (Exception e) {
 			System.out.println("getDocumentIdListByHashId() 异常");
 			e.printStackTrace();
-			return null;
+			return false;
 		}
     }
     
-    /**
+    private static HitDoc BuildHitDocFromDocument(Document hitDocument) 
+    {
+    	//Set Doc 
+    	Doc doc = new Doc();
+    	doc.setId(Integer.parseInt(hitDocument.get("docId")));
+    	doc.setPath(hitDocument.get("path"));
+    	doc.setPath(hitDocument.get("name"));
+    	doc.setSize(Integer.parseInt(hitDocument.get("size")));
+    	doc.setCheckSum(hitDocument.get("checkSum"));
+    	
+    	//Set Doc Path
+    	String docPath = doc.getPath() + doc.getName();
+    			
+    	//Set HitDoc
+    	HitDoc hitDoc = new HitDoc();
+    	hitDoc.setDoc(doc);
+    	hitDoc.setDocPath(docPath);
+    	
+    	return hitDoc;
+ 	}
+
+	/**
 	 * 	根据docId查询idList，返回idList
      * 
      * @param docId: DocSys doc id

@@ -1,6 +1,5 @@
 package com.DocSystem.common;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,6 +28,7 @@ import util.ReturnAjax;
 import util.Encrypt.Base64File;
 import util.FileUtil.CompressPic;
 
+import com.DocSystem.entity.Doc;
 import com.alibaba.fastjson.JSON;
 
 import info.monitorenter.cpdetector.io.ASCIIDetector;
@@ -42,6 +42,51 @@ public class BaseFunction{
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 
+	/***********************  全文搜索接口 *******************************************/
+	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord) 
+	{
+		HitDoc tempHitDoc = searchResult.get(hitDoc.getDocPath());
+		if(tempHitDoc == null)
+		{
+			Doc doc = hitDoc.getDoc();
+			
+			//Create hitIfo
+			HashMap<String, Integer> hitInfo = new HashMap<String, Integer>();
+			hitInfo.put(keyWord,1);
+			
+			//int sortIndex = hitDoc.getHitInfo().size()*100 + hitDoc.getHitCount();
+			int sortIndex = 100 + 1;
+			doc.setSortIndex(sortIndex);
+			
+			//Set HitDoc
+			hitDoc.setDoc(doc);
+			hitDoc.setHitInfo(hitInfo);
+			searchResult.put(hitDoc.getDocPath(), hitDoc);
+		}
+		else
+		{
+			HashMap<String, Integer> hitInfo = tempHitDoc.getHitInfo();
+			Doc doc = tempHitDoc.getDoc();
+			int sortIndex = doc.getSortIndex();
+			
+			Integer hitCount = hitInfo.get(keyWord);
+			if(hitCount == null)
+			{
+				hitInfo.put(keyWord, 1);
+				sortIndex = sortIndex + 100 + 1;
+			}
+			else
+			{
+				hitInfo.put(keyWord, hitCount+1);
+				sortIndex = sortIndex + 1;
+				doc.setSortIndex(sortIndex);
+			}			
+			tempHitDoc.setHitInfo(hitInfo);
+			tempHitDoc.setDoc(doc);
+			searchResult.put(hitDoc.getDocPath(), tempHitDoc);	//Update searchResult
+		}
+	}
+	
 	/***************************** json相关接口 ***************************/
 	/**
 	 * 向页面返回json信息

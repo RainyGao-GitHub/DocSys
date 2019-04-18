@@ -2,9 +2,12 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,8 +30,8 @@ import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.MultiActionList;
-import com.DocSystem.common.SearchResult;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
@@ -1605,7 +1608,7 @@ public class DocController extends BaseController{
 		rt.setData(searchResult);
 		writeJson(rt, response);
 	}
-
+	
 	private List<Doc> searchInRepos(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
 	{
 		switch(repos.getType())
@@ -1634,78 +1637,109 @@ public class DocController extends BaseController{
 
 	private List<Doc> searchInReposFS(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
 	{	
-		HashMap<String, SearchResult> docHashMap = new HashMap<String, SearchResult>();	//This hash Map was used to store the searchResult
-					
-		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
+		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();	//This hash Map was used to store the searchResult
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
-			List<Document> luceneDocList = luceneSearch(repos, searchWord, parentPath);
-			
-			String docIds = "";
-			for(int i=0; i<luceneDocList.size(); i++)
-			{
-				Document luceneDoc = luceneDocList.get(i);
-				docIds += luceneDoc.get("docId");
-			}
-			params.put("ids", docIds);
-			System.out.println(docIds);
+			luceneSearch(repos, searchWord, parentPath, searchResult , 7);
 		}
-		else
-		{
-			params.put("name", "");
-		}
-			
-		//根据params参数查询docList
-		List<Doc> list = reposService.queryDocList(params);
-		return list;
-		return null;
+		
+		List<Doc> result = convertSearchResultToDocList(searchResult);
+		return result;
 	}
 
 	private List<Doc> searchInReposDB(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
-		HashMap<String, Object> params = new HashMap<String, Object>();
-		params.put("reposId", repos.getId());
-		params.put("pDocId", pDocId);
-			
+		
+		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
+		
 		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
-			params.put("name", searchWord);
-			List<Document> luceneDocList = luceneSearch(repos, searchWord, parentPath);
-			
-			String docIds = "";
-			for(int i=0; i<luceneDocList.size(); i++)
-			{
-				Document luceneDoc = luceneDocList.get(i);
-				docIds += luceneDoc.get("docId");
-			}
-			params.put("ids", docIds);
-			System.out.println(docIds);
+			luceneSearch(repos, searchWord, parentPath, searchResult , 6);	//Search RDoc and VDoc only
+			databaseSearch(repos, pDocId, searchWord, searchResult);
 		}
-		else
-		{
-			params.put("name", "");
-		}
-			
-		//根据params参数查询docList
-		List<Doc> list = reposService.queryDocList(params);
-		return list;
+		
+		List<Doc> result = convertSearchResultToDocList(searchResult);
+		return result;
 	}
 
-	private List<Document> luceneSearch(Repos repos, String searchWord, String parentPath, HashMap<String, SearchResult> docHashMap) 
+	private List<Doc> convertSearchResultToDocList(HashMap<String, HitDoc> searchResult) 
 	{
-		String [] keyWords = searchWord.split(" ");
-		
-		List<Document> result = new ArrayList<Document>();
+		List<Doc> docList = new ArrayList<Doc>();
+		Iterator<Entry<String, HitDoc>> iterator = searchResult.entrySet().iterator();      
+		while (iterator .hasNext()) 
+		{
+			HitDoc hitDoc = (HitDoc) iterator .next();
+		    Doc doc = hitDoc.getDoc();
+		    docList.add(doc);
+		}
+	
+		SortDocListBySortIndex(docList);
+		return docList;
+	}
+
+	private void SortDocListBySortIndex(List<Doc> docList) {
+		docList.sort(null);
+	}
+
+	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, HashMap<String, HitDoc> searchResult) 
+	{
+		String [] keyWords = searchWord.split(" ");		
 		for(int i=0; i< keyWords.length; i++)
 		{
-			List<Document> list0 = LuceneUtil2.fuzzySearch(searchWord, "name", getIndexLibName(repos.getId(),0)); 	//Search By DocName
-			List<Document> list1 = LuceneUtil2.fuzzySearch(searchWord, "content", getIndexLibName(repos.getId(),1));	//Search By FileContent
-			List<Document> list2 = LuceneUtil2.fuzzySearch(searchWord, "content", getIndexLibName(repos.getId(),2));	//Search By VDoc
-			
-			//Add to docHashMap
+			String searchStr = keyWords[i];
+			if(!searchStr.isEmpty())
+			{
+				HashMap<String, Object> params = new HashMap<String, Object>();
+				params.put("reposId", repos.getId());
+				params.put("pDocId", pDocId);
+				params.put("name", keyWords[0]);
+				List<Doc> list = reposService.queryDocList(params);
+		        for (int j = 0; j < list.size(); j++) 
+		        {
+		            Doc doc = list.get(j);
+		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
+		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr);
+		        }
+			}	
 		}
-		
-		return result;
+	}
+
+	private HitDoc BuildHitDocFromDoc(Doc doc) {
+    	//Set Doc Path
+    	String docPath = doc.getPath() + doc.getName();
+    			
+    	//Set HitDoc
+    	HitDoc hitDoc = new HitDoc();
+    	hitDoc.setDoc(doc);
+    	hitDoc.setDocPath(docPath);
+    	
+    	return hitDoc;
+	}
+
+	private static final int[] SEARCH_MASK = { 0x00000001, 0x00000002, 0x00000004};	//DocName RDOC VDOC
+	private boolean luceneSearch(Repos repos, String searchWord, String parentPath, HashMap<String, HitDoc> searchResult, int searchMask) 
+	{
+		String [] keyWords = searchWord.split(" ");		
+		for(int i=0; i< keyWords.length; i++)
+		{
+			String searchStr = keyWords[i];
+			if(!searchStr.isEmpty())
+			{
+				if((searchMask & SEARCH_MASK[0]) > 0)
+				{
+					LuceneUtil2.fuzzySearch(searchStr, "name", getIndexLibName(repos.getId(),0), searchResult); 	//Search By DocName
+				}
+				if((searchMask & SEARCH_MASK[1]) > 0)
+				{
+					LuceneUtil2.fuzzySearch(searchStr, "content", getIndexLibName(repos.getId(),1), searchResult);	//Search By FileContent
+				}
+				if((searchMask & SEARCH_MASK[2]) > 0)
+				{	
+					LuceneUtil2.fuzzySearch(searchStr, "content", getIndexLibName(repos.getId(),2), searchResult);	//Search By VDoc
+				}
+			}
+		}	
+		return true;
 	}
 }
 	
