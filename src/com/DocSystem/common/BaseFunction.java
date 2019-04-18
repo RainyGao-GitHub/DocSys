@@ -863,7 +863,7 @@ public class BaseFunction{
 	
 	/**************************** 其他通用接口 ******************************/
 	//To print the obj by convert it to json format
-	protected void printObject(String Head,Object obj)
+	protected static void printObject(String Head,Object obj)
 	{
 		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 		System.out.println(Head + json);		

@@ -305,6 +305,7 @@ public class LuceneUtil2   extends BaseFunction
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;	        
 	        for (int i = 0; i < hits.length; i++) 
 	        {
+	    		printObject("fuzzySearch() hitDocument:", hits);
 	            Document hitDocument = isearcher.doc(hits[i].doc);
 	            HitDoc hitDoc = BuildHitDocFromDocument(hitDocument); 
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
@@ -312,7 +313,9 @@ public class LuceneUtil2   extends BaseFunction
 	        
 	        ireader.close();
 	        directory.close();
-	        return true;
+	        
+	        System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+			return true;
 		} catch (Exception e) {
 			System.out.println("getDocumentIdListByHashId() 异常");
 			e.printStackTrace();

@@ -1644,8 +1644,8 @@ public class DocController extends BaseController{
 		return result;
 	}
 
-	private List<Doc> searchInReposDB(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
-		
+	private List<Doc> searchInReposDB(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
+	{	
 		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 		
 		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
@@ -1665,7 +1665,7 @@ public class DocController extends BaseController{
 		Iterator<Entry<String, HitDoc>> iterator = searchResult.entrySet().iterator();      
 		while (iterator .hasNext()) 
 		{
-			HitDoc hitDoc = (HitDoc) iterator .next();
+			HitDoc hitDoc = (HitDoc) iterator.next();
 		    Doc doc = hitDoc.getDoc();
 		    docList.add(doc);
 		}
@@ -1682,6 +1682,8 @@ public class DocController extends BaseController{
 		for(int i=0; i< keyWords.length; i++)
 		{
 			String searchStr = keyWords[i];
+			System.out.println("databaseSearch() searchStr:" + searchStr);
+			
 			if(!searchStr.isEmpty())
 			{
 				HashMap<String, Object> params = new HashMap<String, Object>();
@@ -1692,6 +1694,8 @@ public class DocController extends BaseController{
 		        for (int j = 0; j < list.size(); j++) 
 		        {
 		            Doc doc = list.get(j);
+		        	printObject("databaseSearch() matched doc:", doc);
+
 		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
 		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr);
 		        }
@@ -1733,7 +1737,8 @@ public class DocController extends BaseController{
 					LuceneUtil2.fuzzySearch(searchStr, "content", getIndexLibName(repos.getId(),2), searchResult);	//Search By VDoc
 				}
 			}
-		}	
+		}
+		
 		return true;
 	}
 }
