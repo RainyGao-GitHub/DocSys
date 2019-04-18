@@ -36,7 +36,6 @@ import util.ReturnAjax;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
-import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.MultiActionList;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;

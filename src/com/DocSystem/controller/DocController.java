@@ -2,24 +2,21 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.lucene.document.Document;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import util.GsonUtils;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
@@ -1673,14 +1670,12 @@ public class DocController extends BaseController{
 		    docList.add(doc);
 		}
 	
-		SortDocListBySortIndex(docList);
+		Collections.sort(docList);
+		
 		return docList;
 	}
 
-	private void SortDocListBySortIndex(List<Doc> docList) {
-		docList.sort(null);
-	}
-
+	
 	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, HashMap<String, HitDoc> searchResult) 
 	{
 		String [] keyWords = searchWord.split(" ");		
