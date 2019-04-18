@@ -313,8 +313,6 @@ public class LuceneUtil2   extends BaseFunction
 	        
 	        ireader.close();
 	        directory.close();
-	        
-	        System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 			return true;
 		} catch (Exception e) {
 			System.out.println("getDocumentIdListByHashId() 异常");
