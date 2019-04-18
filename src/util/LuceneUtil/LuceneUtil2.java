@@ -323,11 +323,25 @@ public class LuceneUtil2   extends BaseFunction
     private static HitDoc BuildHitDocFromDocument(Document hitDocument) 
     {
     	//Set Doc 
+    	Integer docId = null;
+    	String str = hitDocument.get("docId");
+    	if(str != null)
+    	{
+    		docId = Integer.parseInt(str);
+    	}
+    	
+    	Integer size = null;
+    	str = hitDocument.get("size");
+    	if(str != null)
+    	{
+    		size = Integer.parseInt(str);
+    	}
+    	
     	Doc doc = new Doc();
-    	doc.setId(Integer.parseInt(hitDocument.get("docId")));
+    	doc.setId(docId);
     	doc.setPath(hitDocument.get("path"));
     	doc.setPath(hitDocument.get("name"));
-    	doc.setSize(Integer.parseInt(hitDocument.get("size")));
+    	doc.setSize(size);
     	doc.setCheckSum(hitDocument.get("checkSum"));
     	
     	//Set Doc Path
