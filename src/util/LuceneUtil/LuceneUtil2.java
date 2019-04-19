@@ -55,6 +55,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
 
 import util.ReadProperties;
 import util.FileUtil.FileUtils2;
@@ -249,7 +250,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean search(String str, String parentPath, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
 	{
 		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
@@ -287,30 +288,17 @@ public class LuceneUtil2   extends BaseFunction
 	        }
 	        
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-	        
-			boolean enablePathFilter = true;
-	        if(parentPath == null || parentPath.isEmpty())
-	        {
-	        	enablePathFilter = false;
-	        }
-	        
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
-	            if(enablePathFilter)
+	            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
+	            if(hitDoc == null)
 	            {
-	            	String docParentPath = hitDocument.get("path");
-	            	if(docParentPath == null || docParentPath.isEmpty())
-	            	{
-	            		continue;
-	            	}
-	            	else if(!docParentPath.contains(parentPath))
-	            	{
-	            		continue;
-	            	}
+	            	continue;
 	            }
 	            
-	            HitDoc hitDoc = BuildHitDocFromDocument(hitDocument);
+
+	            
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
 	    		printObject("fuzzySearch() hitDoc:", hitDoc);
 	        }
@@ -325,8 +313,31 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    private static HitDoc BuildHitDocFromDocument(Document hitDocument) 
+    private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
     {
+        String reposRPath = getReposRealPath(repos);
+        String docParentPath = hitDocument.get("path");
+    	String docName =  hitDocument.get("name");	
+        File hitFile = new File(reposRPath + docParentPath, docName);
+        if(!hitFile.exists())
+        {
+        	//TODO: if file type not matched
+        	//Do delete all index for hitDoc
+        	return null;
+        }
+        
+	    if(pathFilter != null)
+        {
+        	if(docParentPath == null || docParentPath.isEmpty())
+            {
+        		return null;
+            }
+            else if(!docParentPath.contains(pathFilter))
+            {
+            	return null;
+            }    
+        }
+        
     	//Set Doc 
     	Integer docId = null;
     	String str = hitDocument.get("docId");
@@ -335,29 +346,22 @@ public class LuceneUtil2   extends BaseFunction
     		docId = Integer.parseInt(str);
     	}
     	
-    	Integer size = null;
-    	str = hitDocument.get("size");
-    	if(str != null)
-    	{
-    		size = Integer.parseInt(str);
-    	}
-    	
     	Doc doc = new Doc();
     	doc.setId(docId);
-    	doc.setPath(hitDocument.get("path"));
-    	doc.setName(hitDocument.get("name"));
-    	doc.setSize(size);
-    	doc.setCheckSum(hitDocument.get("checkSum"));
+    	doc.setPath(docParentPath);
+    	doc.setName(docName);
+    	doc.setSize((int) hitFile.length());
+    	doc.setLatestEditTime(hitFile.lastModified());
     	
     	//Set Doc Path
     	String docPath = null;
-    	if(doc.getPath() == null)
+    	if(docParentPath == null)
     	{
-    		docPath = doc.getName();
+    		docPath = docName;
     	}
     	else
     	{
-    		docPath = doc.getPath() + doc.getName();
+    		docPath = docParentPath + docName;
     	}
     	
     	//Set HitDoc

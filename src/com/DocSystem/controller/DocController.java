@@ -1756,15 +1756,15 @@ public class DocController extends BaseController{
 			{
 				if((searchMask & SEARCH_MASK[0]) > 0)
 				{
-					LuceneUtil2.search(searchStr, parentPath, "name", getIndexLibName(repos.getId(),0), searchResult, 5); 	//Search By DocName
+					LuceneUtil2.search(repos, searchStr, parentPath, "name", getIndexLibName(repos.getId(),0), searchResult, 5); 	//Search By DocName
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
-					LuceneUtil2.search(searchStr, parentPath, "content", getIndexLibName(repos.getId(),1), searchResult,3);	//Search By FileContent
+					LuceneUtil2.search(repos, searchStr, parentPath, "content", getIndexLibName(repos.getId(),1), searchResult,3);	//Search By FileContent
 				}
 				if((searchMask & SEARCH_MASK[2]) > 0)
 				{	
-					LuceneUtil2.search(searchStr, parentPath, "content", getIndexLibName(repos.getId(),2), searchResult,3);	//Search By VDoc
+					LuceneUtil2.search(repos, searchStr, parentPath, "content", getIndexLibName(repos.getId(),2), searchResult,3);	//Search By VDoc
 				}
 			}
 		}
