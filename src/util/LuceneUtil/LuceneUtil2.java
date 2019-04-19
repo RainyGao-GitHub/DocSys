@@ -297,8 +297,6 @@ public class LuceneUtil2   extends BaseFunction
 	            	continue;
 	            }
 	            
-
-	            
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
 	    		printObject("fuzzySearch() hitDoc:", hitDoc);
 	        }
@@ -315,6 +313,36 @@ public class LuceneUtil2   extends BaseFunction
     
     private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
     {
+    	switch(repos.getType())
+    	{
+    	case 1:
+    		return BuildHitDocFromDocument_DB(repos, pathFilter, hitDocument);
+    	case 2:
+    		return BuildHitDocFromDocument_FS(repos, pathFilter, hitDocument);
+    	case 3:
+    		return BuildHitDocFromDocument_SVN(repos, pathFilter, hitDocument);
+    	case 4:
+    		return BuildHitDocFromDocument_GIT(repos, pathFilter, hitDocument);
+    	}
+		return null;
+ 	}
+
+	private static HitDoc BuildHitDocFromDocument_GIT(Repos repos, String pathFilter, Document hitDocument) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static HitDoc BuildHitDocFromDocument_SVN(Repos repos, String pathFilter, Document hitDocument) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static HitDoc BuildHitDocFromDocument_DB(Repos repos, String pathFilter, Document hitDocument) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, String pathFilter, Document hitDocument) {
         String reposRPath = getReposRealPath(repos);
         String docParentPath = hitDocument.get("path");
     	String docName =  hitDocument.get("name");	
@@ -369,7 +397,7 @@ public class LuceneUtil2   extends BaseFunction
     	hitDoc.setDocPath(docPath);
     	
     	return hitDoc;
- 	}
+	}
 
 	/**
 	 * 	根据docId查询idList，返回idList
