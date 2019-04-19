@@ -173,7 +173,7 @@ public class BaseController  extends BaseFunction{
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = getNewDocId(pLevel, subEntryName);
+    		int subDocId = buildDocIdByName(pLevel, subEntryName);
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
@@ -224,7 +224,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//Create Doc to save subEntry Info
 				Doc subDoc = new Doc();
-				int subDocId = getNewDocId(pLevel, subEntryName);
+				int subDocId = buildDocIdByName(pLevel, subEntryName);
 				subDoc.setVid(repos.getId());
 				subDoc.setPid(pid);
 				subDoc.setId(subDocId);
@@ -262,7 +262,7 @@ public class BaseController  extends BaseFunction{
     		
 			//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = getNewDocId(pLevel, subEntryName);
+    		int subDocId = buildDocIdByName(pLevel, subEntryName);
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
@@ -371,7 +371,7 @@ public class BaseController  extends BaseFunction{
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = getNewDocId(level, subEntryName);
+    		int subDocId = buildDocIdByName(level, subEntryName);
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
@@ -1677,7 +1677,7 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
-		Integer docId = getNewDocId(repos, level, parentPath);
+		Integer docId = buildDocIdByName(repos, level, parentPath);
 		
 		switch(repos.getType())
 		{
@@ -2377,7 +2377,7 @@ public class BaseController  extends BaseFunction{
 		
 		//Create Doc to save subEntry Info
 		Doc doc = new Doc();
-		int docId = getNewDocId(level, entryName);
+		int docId = buildDocIdByName(level, entryName);
 		doc.setVid(repos.getId());
 		doc.setPid(pid);
 		doc.setId(docId);
@@ -3119,7 +3119,7 @@ public class BaseController  extends BaseFunction{
 	
 	private Doc buildDocByDoc_FS(Repos repos, Doc doc, Integer dstPid, Integer level, String dstParentPath, String localRootPath, User login_user, boolean lock) 
 	{
-		Integer docId = getNewDocId(repos, level, dstParentPath);
+		Integer docId = buildDocIdByName(repos, level, dstParentPath);
 				
 		Doc dstDoc = new Doc();
 		dstDoc.setId(docId);

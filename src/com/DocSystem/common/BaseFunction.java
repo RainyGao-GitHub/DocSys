@@ -355,6 +355,12 @@ public class BaseFunction{
 		return reposName;
 	}
 	
+	//Build DocId by DocName
+	protected Integer buildDocIdByName(Integer level, String docName) 
+	{
+		Integer docId = level*1000000 + docName.hashCode();	//为了避免文件重复使用level*10000000 + docName的hashCode
+		return docId;
+	}
 	/***********************  全文搜索接口 *******************************************/
 	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord) 
 	{
