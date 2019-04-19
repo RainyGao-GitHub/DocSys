@@ -173,7 +173,7 @@ public class BaseController  extends BaseFunction{
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		int subDocId = getNewDocId(pLevel, subEntryName);
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
@@ -224,7 +224,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//Create Doc to save subEntry Info
 				Doc subDoc = new Doc();
-				int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+				int subDocId = getNewDocId(pLevel, subEntryName);
 				subDoc.setVid(repos.getId());
 				subDoc.setPid(pid);
 				subDoc.setId(subDocId);
@@ -262,7 +262,7 @@ public class BaseController  extends BaseFunction{
     		
 			//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = pLevel*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		int subDocId = getNewDocId(pLevel, subEntryName);
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
@@ -371,7 +371,7 @@ public class BaseController  extends BaseFunction{
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = level*1000000 + i + 1;	//单层目录支持100万个文件节点
+    		int subDocId = getNewDocId(level, subEntryName);
     		subDoc.setVid(repos.getId());
     		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
@@ -1706,17 +1706,6 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private Integer getNewDocId(Repos repos, Integer level, String parentPath) 
-	{
-		String reposRPath = getReposRealPath(repos);
-		File file = new File(reposRPath + parentPath);
-		File[] tmp = file.listFiles();
-		int size = tmp.length;
-		
-		Integer docId = level*1000000 + size + 1000;	//
-		return docId;
-	}
-	
 	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
@@ -2388,7 +2377,7 @@ public class BaseController  extends BaseFunction{
 		
 		//Create Doc to save subEntry Info
 		Doc doc = new Doc();
-		int docId = level*1000000 + index + 1;	//单层目录支持100万个文件节点
+		int docId = getNewDocId(level, entryName);
 		doc.setVid(repos.getId());
 		doc.setPid(pid);
 		doc.setId(docId);

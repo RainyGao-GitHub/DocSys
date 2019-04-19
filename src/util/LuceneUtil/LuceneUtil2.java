@@ -345,14 +345,13 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		docId = Integer.parseInt(str);
     	}
-    	
     	Doc doc = new Doc();
     	doc.setId(docId);
     	doc.setPath(docParentPath);
     	doc.setName(docName);
     	doc.setSize((int) hitFile.length());
     	doc.setLatestEditTime(hitFile.lastModified());
-    	
+
     	//Set Doc Path
     	String docPath = null;
     	if(docParentPath == null)
