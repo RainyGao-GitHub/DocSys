@@ -5891,6 +5891,15 @@ function CompareObj(objA, objB, flag) {
 		var searchWord = $("#searchWord").val();
 		var sort = "";
 	
+		var pDocId = 0;
+		var parentPath = "";
+		var node = getParentNodeByNodeId(gDocId);
+		if(node != null)
+		{
+			pDocId = node.id;
+			parentPath = node.path + node.name;
+		}
+		
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
                type : "post",
@@ -5899,7 +5908,8 @@ function CompareObj(objA, objB, flag) {
                    searchWord:searchWord,
                    sort:sort,
                    reposId: gReposId,
-                   //pDocId: gDocId,
+                   pDocId: pDocId,
+         		   parentPath: parentPath,
                },
                success : function (ret) {
             		console.log("searchDoc ret:", ret)
