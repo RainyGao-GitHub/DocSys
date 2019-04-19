@@ -365,33 +365,41 @@ public class BaseController  extends BaseFunction{
     	for(int i=0;i<tmp.length;i++)
     	{
     		File subEntry = tmp[i];
-    		int subEntryType = subEntry.isDirectory()? 2: 1;
-    		String subEntryName = subEntry.getName();
-    		long lastModifyTime = getFileLastModifiedTime(subEntry);
-    		
-    		//Create Doc to save subEntry Info
-    		Doc subDoc = new Doc();
-    		int subDocId = buildDocIdByName(level, subEntryName);
-    		subDoc.setVid(repos.getId());
-    		subDoc.setPid(pid);
-       		subDoc.setId(subDocId);
-    		subDoc.setName(subEntryName);
-    		subDoc.setType(subEntryType);
-    		subDoc.setPath(parentPath);
-    		subDoc.setSize((int)subEntry.length());
-    		subDoc.setState(0);
-    		subDoc.setCreateTime(lastModifyTime);
-    		subDoc.setLatestEditTime(lastModifyTime);
+    	
+    		Doc subDoc = buildDocFromFile(repos, pid, level, parentPath, subEntry);
     		docList.add(subDoc);
     		
     		//Find the expected Doc
+    		String subEntryName = subEntry.getName();
     		if(subEntryName.equals(doc.getName()))
     		{
-    			doc.setId(subDocId);
-    			System.out.println("getSubDocListFromParentToDoc_FS() subDocId:" + subDocId);
+    			System.out.println("getSubDocListFromParentToDoc_FS() subDocId:" + doc.getId());
     		}
     	}
     	return docList;
+	}
+
+	private Doc buildDocFromFile(Repos repos, Integer pid, Integer level, String parentPath, File file) 
+	{
+		String name = file.getName();
+		int type = file.isDirectory()? 2: 1;
+		int docId = buildDocIdByName(level, name);
+		//long lastModifyTime = getFileLastModifiedTime(file);
+		long lastModifyTime = file.lastModified();
+		
+		//Create Doc to save subEntry Info
+		Doc doc = new Doc();
+		doc.setVid(repos.getId());
+		doc.setPid(pid);
+		doc.setId(docId);
+		doc.setName(name);
+		doc.setType(type);
+		doc.setPath(parentPath);
+		doc.setSize((int)file.length());
+		doc.setState(0);
+		doc.setCreateTime(lastModifyTime);
+		doc.setLatestEditTime(lastModifyTime);
+		return doc;
 	}
 
 	private List<Doc> getDocListFromRootToDoc_DB(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
@@ -1677,7 +1685,7 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
-		Integer docId = buildDocIdByName(repos, level, parentPath);
+		Integer docId = buildDocIdByName(level, parentPath);
 		
 		switch(repos.getType())
 		{
@@ -3119,7 +3127,7 @@ public class BaseController  extends BaseFunction{
 	
 	private Doc buildDocByDoc_FS(Repos repos, Doc doc, Integer dstPid, Integer level, String dstParentPath, String localRootPath, User login_user, boolean lock) 
 	{
-		Integer docId = buildDocIdByName(repos, level, dstParentPath);
+		Integer docId = buildDocIdByName(level, dstParentPath);
 				
 		Doc dstDoc = new Doc();
 		dstDoc.setId(docId);
