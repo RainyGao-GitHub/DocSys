@@ -1739,21 +1739,7 @@ public class BaseController  extends BaseFunction{
 	{
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + docName;
-		
-//		//以下代码不可重入，使用syncLock进行同步
-//		synchronized(syncLock)
-//		{
-//			repos = lockRepos(repos.getId(), 1, 2*60*60*1000, login_user, rt, false); //Lock repos for 2 hours
-//			if(repos == null)
-//			{
-//				unlock();
-//				rt.setError("Lock Repos Failed!");
-//				System.out.println("addDoc_FS() lockRepos Failed");
-//				return null;
-//			}
-//			unlock();
-//		}
-		
+				
 		//This is virtual Doc
 		Doc doc = new Doc();
 		doc.setId(docId);
@@ -1828,19 +1814,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
-		executeLocalActionList(actionList.getLocalActionList(), rt);
-		executeCommitActionList(actionList.getLocalActionList(), rt);
-		
-		
-//		//启用doc
-//		if(unlockRepos(repos.getId(), login_user, null) == false)
-//		{
-//			String MsgInfo = "unlockRepos Failed";
-//			System.out.println("unlock Repos: " + repos.getId() +" Failed!");
-//			rt.setError(MsgInfo);
-//		}
-		
+		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);		
+				
 		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
 		
@@ -2142,9 +2117,10 @@ public class BaseController  extends BaseFunction{
 	{
 		String reposRPath = getReposRealPath(repos);
 		
+		List<CommonAction> localActionList = actionList.getLocalActionList();		
+		List<CommonAction> commitActionList = actionList.getCommitActionList();
 		List<CommonAction> indexActionList = actionList.getIndexActionList();
 		
-
 		//Insert index add action for DocName
 		CommonAction action = new CommonAction();
 		action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
@@ -2167,7 +2143,6 @@ public class BaseController  extends BaseFunction{
 			String reposVPath = getReposVirtualPath(repos);
 			
 			//Insert local add action for VDoc
-			List<CommonAction> localActionList = actionList.getLocalActionList();
 			action = new CommonAction();
 			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
 			action.setType(2);	//0:DocName 1: RDoc 2:VDoc
@@ -2180,7 +2155,6 @@ public class BaseController  extends BaseFunction{
 
 			if(repos.getVerCtrl1() > 0)
 			{
-				List<CommonAction> commitActionList = actionList.getCommitActionList();
 				action = new CommonAction();
 				action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
 				action.setType(2);	//0:DocName 1: RDoc 2:VDoc
