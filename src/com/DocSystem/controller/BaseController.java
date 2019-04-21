@@ -1739,6 +1739,9 @@ public class BaseController  extends BaseFunction{
 	{
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + docName;
+		
+		int level  = getLevelByParentPath(parentPath);
+		docId = buildDocIdByName(level,docName);
 				
 		//This is virtual Doc
 		Doc doc = new Doc();
