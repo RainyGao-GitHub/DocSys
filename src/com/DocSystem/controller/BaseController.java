@@ -1679,7 +1679,7 @@ public class BaseController  extends BaseFunction{
 	}
 	/********************************** Functions For Application Layer ****************************************/
 	//底层addDoc接口
-	protected Integer addDoc(Repos repos, Integer level, Integer type, Integer parentId, String parentPath, String docName, 
+	protected Integer addDoc(Repos repos, Integer type,  Integer level, Integer parentId, String parentPath, String docName, 
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
@@ -1690,22 +1690,22 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
-			return addDoc_DB(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_DB(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt ,actionList);
 		case 2:
-			return addDoc_FS(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_FS(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
-			return addDoc_SVN(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_SVN(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
-			return addDoc_GIT(repos, docId, type, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_GIT(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
@@ -1714,7 +1714,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
+	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type,  Integer level,  Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, MultiActionList actionList) {
@@ -1722,7 +1722,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath,
+	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, MultiActionList actionList) {
@@ -1731,7 +1731,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//addDocToVerRepos
-	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type,  Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
@@ -1740,7 +1740,6 @@ public class BaseController  extends BaseFunction{
 		String reposRPath = getReposRealPath(repos);
 		String localDocRPath = reposRPath + parentPath + docName;
 		
-		int level  = getLevelByParentPath(parentPath);
 		docId = buildDocIdByName(level,docName);
 				
 		//This is virtual Doc
@@ -1825,7 +1824,7 @@ public class BaseController  extends BaseFunction{
 		return docId;
 	}
 
-	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 

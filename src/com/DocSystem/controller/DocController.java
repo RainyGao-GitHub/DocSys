@@ -75,7 +75,7 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(Integer reposId, Integer level, Integer type, Integer parentId, String parentPath, String docName, String content,
+	public void addDoc(Integer reposId,Integer type,  Integer level, Integer parentId, String parentPath, String docName, String content,
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addDoc reposId:" + reposId + " type: " + type + " level: " + level +" parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
@@ -106,7 +106,7 @@ public class DocController extends BaseController{
 		}
 		
 		MultiActionList actionList = new MultiActionList();
-		Integer ret = addDoc(repos, level, type, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		Integer ret = addDoc(repos, type,  level, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret > 0 )
