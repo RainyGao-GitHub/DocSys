@@ -1667,13 +1667,19 @@ public class DocController extends BaseController{
 		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
-		    File file = new File(reposRPath + doc.getPath(), doc.getName());
+      	    String filePath = reposRPath + doc.getName();
+      	    if(doc.getPath() != null)
+      	    {
+      	    	filePath = reposRPath +  doc.getPath() + doc.getName();
+      	    }
+		    File file = new File(filePath);
       	    if(file.exists())
       	    {
       	    	docList.add(doc);
       	    }
       	    else
       	    {
+      	    	System.out.println("convertSearchResultToDocList() " + filePath + " 不存在，清除index、VDoc和previewFiels");
       	    	MultiActionList actionList = new MultiActionList();
 				BuildMultiActionListForDocDelete(actionList , repos, doc, "AutoDelete", "System");
 				ReturnAjax rt = new ReturnAjax();
