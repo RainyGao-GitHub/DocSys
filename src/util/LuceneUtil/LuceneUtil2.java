@@ -283,7 +283,7 @@ public class LuceneUtil2   extends BaseFunction
 	        	query = new PrefixQuery(new Term(field, str));
 	        	break;
 	        case 5: //通配
-	        	query = new WildcardQuery(new Term(field,"*"+str + "*"));
+	        	query = new WildcardQuery(new Term(field,str + "*"));
 	        	break;  
 	        }
 	        
@@ -291,6 +291,8 @@ public class LuceneUtil2   extends BaseFunction
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
+	        	printObject("fuzzySearch() hitDocument:", hitDocument);
+		            
 	            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
 	            if(hitDoc == null)
 	            {
