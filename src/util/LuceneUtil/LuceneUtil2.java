@@ -348,22 +348,26 @@ public class LuceneUtil2   extends BaseFunction
         String reposRPath = getReposRealPath(repos);
         String docParentPath = hitDocument.get("path");
     	String docName =  hitDocument.get("name");	
-        File hitFile = new File(reposRPath + docParentPath, docName);
+    	String filePath = reposRPath + docParentPath + docName;
+        File hitFile = new File(filePath);
         if(!hitFile.exists())
         {
+        	System.out.print("BuildHitDocFromDocument_FS() " + filePath + " 不存在");
         	//TODO: if file type not matched
         	//Do delete all index for hitDoc
         	return null;
         }
         
-	    if(pathFilter != null)
+	    if(pathFilter != null && !pathFilter.isEmpty())
         {
         	if(docParentPath == null || docParentPath.isEmpty())
             {
+            	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " is empty");
         		return null;
             }
             else if(!docParentPath.contains(pathFilter))
             {
+               	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " was not under path:" + pathFilter);
             	return null;
             }    
         }
