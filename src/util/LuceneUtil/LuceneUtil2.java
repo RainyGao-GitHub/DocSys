@@ -349,6 +349,11 @@ public class LuceneUtil2   extends BaseFunction
         String docParentPath = hitDocument.get("path");
     	String docName =  hitDocument.get("name");	
     	String filePath = reposRPath + docParentPath + docName;
+    	if(docParentPath == null)
+    	{
+    		filePath = reposRPath + docName;
+    	}
+    	
         File hitFile = new File(filePath);
         if(!hitFile.exists())
         {
