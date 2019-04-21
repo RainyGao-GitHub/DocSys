@@ -283,7 +283,7 @@ public class LuceneUtil2   extends BaseFunction
 	        	query = new PrefixQuery(new Term(field, str));
 	        	break;
 	        case 5: //通配
-	        	query = new WildcardQuery(new Term(field,str + "*"));
+	        	query = new WildcardQuery(new Term(field,"*" + str + "*"));
 	        	break;  
 	        }
 	        
