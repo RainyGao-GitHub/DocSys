@@ -2291,6 +2291,7 @@ public class BaseController  extends BaseFunction{
 		action.setAction(2); //Delete
 		action.setType(2);	//VDoc
 		action.setDoc(doc);
+		action.setRepos(repos);
 		action.setLocalRootPath(reposVPath);
 		action.setCommitMsg(commitMsg);
 		action.setCommitUser(commitUser);
@@ -2315,7 +2316,7 @@ public class BaseController  extends BaseFunction{
 		//deletePreviewFile(oldCheckSum);
 		Doc previewDoc = new Doc();
 		previewDoc.setPath("");
-		previewDoc.setName(doc.getCheckSum() + ".pdf");
+		previewDoc.setName(getVDocName(doc.getPath(), doc.getName()));
 		String previewRootPath = getWebTmpPath() + "preview/";
 		action = new CommonAction();
 		action.setAction(2); //Delete

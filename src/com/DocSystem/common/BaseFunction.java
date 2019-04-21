@@ -213,6 +213,10 @@ public class BaseFunction{
 	
 	protected String getVDocName(String parentPath, String docName) 
 	{
+		if(parentPath  == null)
+		{
+			parentPath = "";
+		}
 		String VPath = MD5.md5(parentPath) + "_" + docName;
 		System.out.println("getVDocName() " + VPath + " for " + parentPath + docName);
 		return VPath;
