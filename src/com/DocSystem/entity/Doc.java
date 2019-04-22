@@ -192,6 +192,6 @@ public class Doc  implements Comparable<Doc>{
 	}
 	
     public int compareTo(Doc doc) {
-        return this.sortIndex - doc.sortIndex;
+        return doc.sortIndex - this.sortIndex;
     }
 }

@@ -368,9 +368,12 @@ public class BaseFunction{
 	/***********************  全文搜索接口 *******************************************/
 	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord) 
 	{
+		System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
 		HitDoc tempHitDoc = searchResult.get(hitDoc.getDocPath());
+
 		if(tempHitDoc == null)
 		{
+			System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
 			Doc doc = hitDoc.getDoc();
 			
 			//Create hitIfo
@@ -387,26 +390,34 @@ public class BaseFunction{
 			searchResult.put(hitDoc.getDocPath(), hitDoc);
 		}
 		else
-		{
+		{			
 			HashMap<String, Integer> hitInfo = tempHitDoc.getHitInfo();
 			Doc doc = tempHitDoc.getDoc();
-			int sortIndex = doc.getSortIndex();
+
 			
+			//Caculate sortIndex
 			Integer hitCount = hitInfo.get(keyWord);
+			int sortIndex = doc.getSortIndex();
 			if(hitCount == null)
 			{
+				System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, 1);
 				sortIndex = sortIndex + 100 + 1;
+				doc.setSortIndex(sortIndex);
 			}
 			else
 			{
+				hitCount++;	//hitCount++
+				System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is "+ hitCount +"th hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, hitCount+1);
 				sortIndex = sortIndex + 1;
 				doc.setSortIndex(sortIndex);
-			}			
-			tempHitDoc.setHitInfo(hitInfo);
-			tempHitDoc.setDoc(doc);
-			searchResult.put(hitDoc.getDocPath(), tempHitDoc);	//Update searchResult
+			}
+			System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
+
+			//tempHitDoc.setHitInfo(hitInfo);
+			//tempHitDoc.setDoc(doc);
+			//searchResult.put(hitDoc.getDocPath(), tempHitDoc);	//Update searchResult
 		}
 	}
 	

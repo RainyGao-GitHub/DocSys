@@ -291,16 +291,14 @@ public class LuceneUtil2   extends BaseFunction
 	        for (int i = 0; i < hits.length; i++) 
 	        {
 	            Document hitDocument = isearcher.doc(hits[i].doc);
-	        	printObject("fuzzySearch() hitDocument:", hitDocument);
-		            
 	            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
 	            if(hitDoc == null)
 	            {
 	            	continue;
 	            }
+	    		printObject("fuzzySearch() hitDoc:", hitDoc);
 	            
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
-	    		printObject("fuzzySearch() hitDoc:", hitDoc);
 	        }
 	        
 	        ireader.close();
