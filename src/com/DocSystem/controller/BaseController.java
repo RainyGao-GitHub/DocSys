@@ -62,56 +62,56 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt) 
 	{		
-		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " level:" + level +  " pid:" + pid + " parentPath:" + parentPath);
+		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " level:" + level +  " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		switch(repos.getType())
 		{
 		case 1:
-			return getAccessableSubDocList_DB(repos, pid, level, parentPath, login_user, rt);
+			return getAccessableSubDocList_DB(repos, docId, level, parentPath, docName, login_user, rt);
 		case 2:
-			return getAccessableSubDocList_FS(repos, pid, level, parentPath, login_user, rt);
+			return getAccessableSubDocList_FS(repos, docId, level, parentPath, docName, login_user, rt);
 		case 3:
-			return getAccessableSubDocList_SVN(repos, pid, level, parentPath, login_user, rt);
+			return getAccessableSubDocList_SVN(repos, docId, level, parentPath, docName, login_user, rt);
 		case 4:
-			return getAccessableSubDocList_GIT(repos, pid, level, parentPath, login_user, rt);			
+			return getAccessableSubDocList_GIT(repos, docId, level, parentPath, docName, login_user, rt);			
 		}
 		return null;
 	}
 	
-	private List<Doc> getAccessableSubDocList_GIT(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
+	private List<Doc> getAccessableSubDocList_GIT(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt) 
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getAccessableSubDocList_SVN(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
+	private List<Doc> getAccessableSubDocList_SVN(Repos repos, Integer docId, Integer level, String parentPath,  String docName, User login_user, ReturnAjax rt) 
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getAccessableSubDocList_FS(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt) 
+	private List<Doc> getAccessableSubDocList_FS(Repos repos, Integer docId, Integer level, String parentPath,  String docName, User login_user, ReturnAjax rt) 
 	{
-		System.out.println("getAccessableSubDocList_FS()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
+		System.out.println("getAccessableSubDocList_FS()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		//get the rootDocAuth
-		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(), 0, repos.getId());
+		DocAuth pDocAuth = getUserDispDocAuth(repos, login_user.getId(), docId, parentPath, docName);
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			System.out.println("getAccessableSubDocList_FS() 用户没有该目录的权限");
 			return null;
 		}
 		
-		return getSubDocListFromFS(repos, pid, level, parentPath, login_user, rt);
+		return getSubDocListFromFS(repos, docId, level, parentPath, docName, login_user, rt);
 	}
 
-	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer pid, Integer level, String parentPath, User login_user, ReturnAjax rt)
+	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer docId,  User login_user, ReturnAjax rt)
 	{
-		System.out.println("getAccessableSubDocList_DB()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
+		System.out.println("getAccessableSubDocList_DB()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath);
 		
 		//get the rootDocAuth
-		DocAuth pDocAuth = getUserDispDocAuth(repos, login_user.getId(), pid, );
+		DocAuth pDocAuth = getUserDispDocAuth(repos, login_user.getId(), docId, parentPath, docName);
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			System.out.println("getAccessableSubDocList() 用户没有该目录的权限");
@@ -120,15 +120,15 @@ public class BaseController  extends BaseFunction{
 		
 		//获取子目录所有authed subDocs
 		Doc parentDoc = null;
-		if(pid != 0)
+		if(docId != 0)
 		{
-			parentDoc = reposService.getDoc(pid);
+			parentDoc = reposService.getDoc(docId);
 			//parentPath = getParentPath(parentDoc.getId());
 		}
 
 		//Get the userDocAuthHashMap and call recursive getAuthedDocList
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
-		List <Doc> resultList = getAuthedSubDocList(repos, pid, parentDoc, parentPath, pDocAuth, docAuthHashMap, login_user, rt);
+		List <Doc> resultList = getAuthedSubDocList(repos, docId, parentDoc, parentPath,  pDocAuth, docAuthHashMap, login_user, rt);
 		return resultList;
 	}
 	
