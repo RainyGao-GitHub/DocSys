@@ -111,6 +111,7 @@ public class LuceneUtil2   extends BaseFunction
     /**
 	 *
 	 * 功能: 在指定的索引库里增加索引文件
+     * @param content 
      * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 
      * @param reposId:  文件所在仓库ID 
      * @param parentPath:  文件所在目录 
@@ -120,10 +121,11 @@ public class LuceneUtil2   extends BaseFunction
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    public static boolean addIndex(String id, Integer reposId,  Integer docId, String parentPath, String name, String hashId,String content, String indexLib)
+    public static boolean addIndex(String id, Doc doc, String content, String indexLib)
     {	
-    	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
+    	System.out.println("updateIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
     	//System.out.println("addIndex() content:" + content);
+    	
 		try {
     	
 	    	Date date1 = new Date();
@@ -134,15 +136,15 @@ public class LuceneUtil2   extends BaseFunction
 	                Version.LUCENE_CURRENT, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	
-	        Document doc = new Document();
-	        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new IntField("reposId", reposId, Store.YES));
-	        doc.add(new Field("parentPath", parentPath, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new IntField("docId", docId, Store.YES));
-	        doc.add(new TextField("content", content, Store.YES));
-	        indexWriter.addDocument(doc);
+	        Document document = new Document();
+	        document.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new IntField("reposId", doc.getId(), Store.YES));
+	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
+	        document.add(new Field("parentPath", doc.getPath(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new Field("name", doc.getName(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
+	        indexWriter.addDocument(document);
 	        
 	        indexWriter.commit();
 	        indexWriter.close();
@@ -159,6 +161,7 @@ public class LuceneUtil2   extends BaseFunction
 
 	/**
 	 * 功能: 在指定的索引库里更新索引文件
+	 * @param indexLib2 
      * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 
      * @param reposId:  文件所在仓库ID 
      * @param parentPath:  文件所在目录 
@@ -168,9 +171,9 @@ public class LuceneUtil2   extends BaseFunction
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    public static boolean updateIndex(String id, Integer reposId,  Integer docId, String parentPath, String name, String hashId, String content, String indexLib)
+    public static boolean updateIndex(String id, Doc doc, String content, String indexLib)
     {
-    	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
+    	System.out.println("updateIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
     	//System.out.println("updateIndex() content:" + content);
     
 		try {
@@ -182,16 +185,16 @@ public class LuceneUtil2   extends BaseFunction
 	                Version.LUCENE_CURRENT, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	         
-	        Document doc = new Document();
-	        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new IntField("reposId", reposId, Store.YES));
-	        doc.add(new Field("parentPath", parentPath, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new Field("name", name, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new Field("hashId", hashId, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        doc.add(new IntField("docId", docId, Store.YES));
-	        doc.add(new TextField("content", content, Store.NO));	//需要分析
+	        Document document = new Document();
+	        document.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new IntField("reposId", doc.getId(), Store.YES));
+	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
+	        document.add(new Field("parentPath", doc.getPath(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new Field("name", doc.getName(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
 	        
-	        indexWriter.updateDocument(new Term("id",id), doc);
+	        indexWriter.updateDocument(new Term("id",id), document);
 	        indexWriter.close();
 	         
 	        Date date2 = new Date();
@@ -448,32 +451,32 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
 
-	public static String buildDocumentId(String hashId, int index) {
-		return hashId + "-" + index;
+	public static String buildDocumentId(Integer integer, int index) {
+		return integer + "-" + index;
 	}
 	
 
 
-	public static boolean addIndexForWord(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForWord(String filePath, Doc doc, String indexLib)
 	{
 		try {
 			StringBuffer content = new StringBuffer("");// 文档内容
-	    	HWPFDocument doc;
+	    	HWPFDocument doc1;
 	    	FileInputStream fis = new FileInputStream(filePath);
     	
-    		doc = new HWPFDocument(fis);
+    		doc1 = new HWPFDocument(fis);
 
-    		Range range = doc.getRange();
+    		Range range = doc1.getRange();
     	    int paragraphCount = range.numParagraphs();// 段落
     	    for (int i = 0; i < paragraphCount; i++) {// 遍历段落读取数据
     	    	Paragraph pp = range.getParagraph(i);
     	    	content.append(pp.text());
     	    }
     	    
-    		doc.close();
+    		doc1.close();
     	    fis.close();
     		
-    	    addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, content.toString().trim(), indexLib);
+    	    addIndex(buildDocumentId(doc.getId(),0), doc, content.toString().trim(), indexLib);
 		} catch (Exception e) {
     		e.printStackTrace();
     		return false;
@@ -481,7 +484,7 @@ public class LuceneUtil2   extends BaseFunction
     	return true;		
 	}
 
-	public static boolean addIndexForWord2007(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForWord2007(String filePath, Doc doc, String indexLib)
 	{
 		try {
 	    	
@@ -499,7 +502,7 @@ public class LuceneUtil2   extends BaseFunction
         	xdoc.close();
         	fis.close();
         	
-        	addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, str.toString().trim(), indexLib);
+        	addIndex(buildDocumentId(doc.getId(),0), doc,str.toString().trim(), indexLib);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -507,7 +510,7 @@ public class LuceneUtil2   extends BaseFunction
     	return true;
 	}
 
-	public static boolean addIndexForExcel(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForExcel(String filePath, Doc doc, String indexLib)
 	{
         try {  
 	
@@ -525,8 +528,7 @@ public class LuceneUtil2   extends BaseFunction
             wb.close();
             is.close();
               
-            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
-
+            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
         } catch(Exception e)
         {
             e.printStackTrace();
@@ -536,7 +538,7 @@ public class LuceneUtil2   extends BaseFunction
         return true;
 	}
 
-	public static boolean addIndexForExcel2007(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForExcel2007(String filePath, Doc doc, String indexLib)
 	{
 		try {  
 	        InputStream is = new FileInputStream(filePath);
@@ -549,8 +551,8 @@ public class LuceneUtil2   extends BaseFunction
             extractor.close();
             workBook.close();
             is.close();
-             
-            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
+            
+            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
         	e.printStackTrace();  
         	return false;
@@ -558,7 +560,7 @@ public class LuceneUtil2   extends BaseFunction
         return true;
 	}
 
-	public static boolean addIndexForPPT(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForPPT(String filePath, Doc doc, String indexLib)
 	{
 		try {
 			InputStream is = new FileInputStream(filePath);
@@ -570,7 +572,7 @@ public class LuceneUtil2   extends BaseFunction
             extractor.close();
             is.close();            
             
-            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -578,7 +580,7 @@ public class LuceneUtil2   extends BaseFunction
 		return true;
 	}
 
-	public static boolean addIndexForPPT2007(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForPPT2007(String filePath, Doc doc, String indexLib)
 	{
         try {  
 			InputStream is = new FileInputStream(filePath); 
@@ -590,7 +592,7 @@ public class LuceneUtil2   extends BaseFunction
             extractor.close();  
             is.close();
             
-            addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, text.toString().trim(), indexLib);
+            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
         } catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -598,7 +600,7 @@ public class LuceneUtil2   extends BaseFunction
         return true;
 	}
 	
-	public static boolean addIndexForPdf(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForPdf(String filePath, Doc doc, String indexLib)
 	{
 		File pdfFile=new File(filePath);
 		String content = "";
@@ -616,7 +618,7 @@ public class LuceneUtil2   extends BaseFunction
 			document.close();
 			//System.out.println(content);     
 			
-			addIndex(buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, content.toString().trim(), indexLib);
+            addIndex(buildDocumentId(doc.getId(),0), doc, content.toString().trim(), indexLib);
 	   }
 	   catch(Exception e)
 	   {
@@ -626,7 +628,7 @@ public class LuceneUtil2   extends BaseFunction
 	   return true;
 	}
 
-	public static boolean addIndexForFile(Integer reposId, Integer docId, String filePath, String parentPath, String name, String hashId, String indexLib)
+	public static boolean addIndexForFile(String filePath, Doc doc, String indexLib)
 	{
 		try {
 			int lineCount = 0;
@@ -661,7 +663,8 @@ public class LuceneUtil2   extends BaseFunction
 				totalSize += bufSize;
 				if(bufSize >= 10485760)	//10MByte
 				{
-					addIndex(buildDocumentId(hashId,chunkIndex), reposId, docId, parentPath, name, hashId, buffer.toString().trim(), indexLib);
+					addIndex(buildDocumentId(doc.getId(),chunkIndex), doc, buffer.toString().trim(), indexLib);
+					
 					chunkIndex ++;
 					System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 					//Clear StringBuffer
@@ -672,7 +675,7 @@ public class LuceneUtil2   extends BaseFunction
 		    }
 			if(bufSize > 0)
 			{
-				addIndex(buildDocumentId(hashId,chunkIndex), reposId, docId, parentPath, name, hashId, buffer.toString().trim(), indexLib);
+				addIndex(buildDocumentId(doc.getId(),chunkIndex), doc, buffer.toString().trim(), indexLib);
 				chunkIndex ++;
 				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 			}

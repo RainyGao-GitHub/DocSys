@@ -365,6 +365,17 @@ public class BaseFunction{
 		Integer docId = level*1000000 + docName.hashCode();	//为了避免文件重复使用level*10000000 + docName的hashCode
 		return docId;
 	}
+	
+	protected String getDocPath(Doc doc) 
+	{
+		String path = doc.getPath();
+		if(path == null)
+		{
+			return doc.getName();
+		}
+
+		return path + doc.getName();
+	}
 	/***********************  全文搜索接口 *******************************************/
 	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord) 
 	{
