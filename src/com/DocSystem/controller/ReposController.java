@@ -592,7 +592,7 @@ public class ReposController extends BaseController{
 		//获取仓库信息，并转换成rootDoc
 		Repos repos = reposService.getRepos(vid);
 		Doc rootDoc = new Doc();
-		rootDoc.setId(1);
+		rootDoc.setId(0);
 		rootDoc.setName(repos.getName());
 		rootDoc.setType(2);
 		rootDoc.setPid(0);	//设置成自己
@@ -605,14 +605,13 @@ public class ReposController extends BaseController{
 		doc.setId(docId);
 		doc.setName(docName);
 		
-		//对于前置类型因为文件节点不存在因此只能设置根目录权限
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, 1, 1, "", login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, 0, "", login_user, rt);
 		}
 		else
 		{
-			docList = getDocListFromRootToDoc(repos, 1, 1, parentPath, doc, login_user ,rt);
+			docList = getDocListFromRootToDoc(repos, 0, 0, parentPath, doc, login_user ,rt);
 		}	
 		
 		//合并列表
