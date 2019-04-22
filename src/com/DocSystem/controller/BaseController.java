@@ -3575,13 +3575,7 @@ public class BaseController  extends BaseFunction{
 	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
 	protected boolean checkUserAddRight(ReturnAjax rt, Integer userId, Integer parentId, Repos repos) 
-	{
-		//对于前置系统只有仓库权限
-		if(repos.getType() != 1)
-		{
-			parentId = 0;
-		}
-		
+	{		
 		Integer reposId = repos.getId();
 		
 		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
@@ -3609,12 +3603,6 @@ public class BaseController  extends BaseFunction{
 	protected boolean checkUserDeleteRight(ReturnAjax rt, Integer userId,
 			Integer parentId, Repos repos) {
 		
-		//对于前置系统只有仓库权限
-		if(repos.getType() != 1)
-		{
-			parentId = 0;
-		}
-		
 		DocAuth docUserAuth = getUserDocAuth(userId,parentId,repos.getId());
 		if(docUserAuth == null)
 		{
@@ -3637,13 +3625,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId, Repos repos) {
-		
-		if(repos.getType() != 1)
-		{
-			docId = 0;
-		}
-		
+	protected boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId, Repos repos) 
+	{
 		DocAuth docUserAuth = getUserDocAuth(userId,docId,repos.getId());
 		if(docUserAuth == null)
 		{
