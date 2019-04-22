@@ -111,7 +111,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("getAccessableSubDocList_DB()  reposId:" + repos.getId() + " pid:" + pid + " parentPath:" + parentPath);
 		
 		//get the rootDocAuth
-		DocAuth pDocAuth = getUserDispDocAuth(login_user.getId(),pid,repos.getId());
+		DocAuth pDocAuth = getUserDispDocAuth(repos, login_user.getId(), pid, );
 		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
 			System.out.println("getAccessableSubDocList() 用户没有该目录的权限");
@@ -411,7 +411,7 @@ public class BaseController  extends BaseFunction{
 
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Integer> docIdList = new ArrayList<Integer>();
-		docIdList = getDocIdList(doc.getId(),docIdList);
+		docIdList = getDocIdList(repos, doc.getId(),parentPath, doc.getName(), docIdList);
 		
 		//size <=2，表明docId位于rootDoc下或不存在，都只取出根目录下的subDocs
 		if(docIdList.size() <= 2)
@@ -3574,11 +3574,9 @@ public class BaseController  extends BaseFunction{
 	}	
 	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
-	protected boolean checkUserAddRight(ReturnAjax rt, Integer userId, Integer parentId, Repos repos) 
+	protected boolean checkUserAddRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt) 
 	{		
-		Integer reposId = repos.getId();
-		
-		DocAuth docUserAuth = getUserDocAuth(userId,parentId,reposId);
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3600,10 +3598,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean checkUserDeleteRight(ReturnAjax rt, Integer userId,
-			Integer parentId, Repos repos) {
-		
-		DocAuth docUserAuth = getUserDocAuth(userId,parentId,repos.getId());
+	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt)
+	{	
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3625,9 +3622,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUserEditRight(ReturnAjax rt, Integer userId, Integer docId, Repos repos) 
+	protected boolean checkUserEditRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt)
 	{
-		DocAuth docUserAuth = getUserDocAuth(userId,docId,repos.getId());
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3649,13 +3646,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUseAccessRight(ReturnAjax rt, Integer userId, Integer docId, Repos repos) {
-		if(repos.getType() != 1)
-		{
-			docId = 0;
-		}		
-		
-		DocAuth docAuth = getUserDocAuth(userId,docId,repos.getId());
+	protected boolean checkUseAccessRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt)
+	{
+		DocAuth docAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3731,14 +3724,15 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 	
-	protected boolean isAdminOfDoc(User login_user, Integer docId, Integer reposId) {
+	protected boolean isAdminOfDoc(Repos repos, User login_user, Integer docId, String parentPath, String docName) 
+	{
 		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
 			System.out.println("超级管理员");
 			return true;
 		}
 		
-		DocAuth userDocAuth = getUserDocAuth(login_user.getId(), docId, reposId);
+		DocAuth userDocAuth = getUserDocAuth(repos, login_user.getId(), docId, parentPath, docName);
 		if(userDocAuth != null && userDocAuth.getIsAdmin() != null && userDocAuth.getIsAdmin() == 1)
 		{
 			return true;
@@ -3820,9 +3814,10 @@ public class BaseController  extends BaseFunction{
 	
 	
 	//应该考虑将获取Group、User的合并到一起
-	protected DocAuth getGroupDispDocAuth(Integer groupId,Integer docId, Integer reposId) {
+	protected DocAuth getGroupDispDocAuth(Repos repos, Integer groupId,Integer docId, String parentPath, String docName) 
+	{
 		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
-		DocAuth docAuth = getGroupDocAuth(groupId,docId,reposId);	//获取用户真实的权限
+		DocAuth docAuth = getGroupDocAuth(repos, groupId, docId, parentPath, docName);	//获取用户真实的权限
 		
 		 String groupName = getGroupName(groupId);
 		 Doc doc = getDocInfo(docId);
@@ -3838,7 +3833,7 @@ public class BaseController  extends BaseFunction{
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
-			docAuth.setReposId(reposId);
+			docAuth.setReposId(repos.getId());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
@@ -3856,16 +3851,16 @@ public class BaseController  extends BaseFunction{
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
-			docAuth.setReposId(reposId);
+			docAuth.setReposId(repos.getId());
 		}
 		return docAuth;
 	}
 	
 	//获取用户的用于显示的docAuth
-	public DocAuth getUserDispDocAuth(Integer UserID,Integer DocID,Integer ReposID)
+	public DocAuth getUserDispDocAuth(Repos repos, Integer UserID,Integer DocID,String parentPath, String docName)
 	{
 		System.out.println("getUserDispDocAuth() UserID:"+UserID);
-		DocAuth docAuth = getUserDocAuth(UserID,DocID,ReposID);	//获取用户真实的权限
+		DocAuth docAuth = getUserDocAuth(repos, UserID, DocID, parentPath, docName);	//获取用户真实的权限
 		printObject("getUserDispDocAuth() docAuth:",docAuth);
 		
 		//Get UserName
@@ -3884,7 +3879,7 @@ public class BaseController  extends BaseFunction{
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
-			docAuth.setReposId(ReposID);
+			docAuth.setReposId(repos.getId());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
@@ -3903,29 +3898,29 @@ public class BaseController  extends BaseFunction{
 				docAuth.setDocName(doc.getName());
 				docAuth.setDocPath(doc.getPath());
 			}
-			docAuth.setReposId(ReposID);
+			docAuth.setReposId(repos.getId());
 		}
 		return docAuth;
 	}
 
-	protected DocAuth getGroupDocAuth(Integer groupId,Integer docId, Integer reposId)
+	protected DocAuth getGroupDocAuth(Repos repos, Integer groupId,Integer docId, String parentPath, String docName)
 	{
-		return getRealDocAuth(null, groupId, docId, reposId);
+		return getRealDocAuth(repos, null, groupId, docId, parentPath, docName);
 	}
 	
-	protected DocAuth getUserDocAuth(Integer userId,Integer docId, Integer reposId) 
+	protected DocAuth getUserDocAuth(Repos repos, Integer userId,Integer docId, String parentPath, String docName) 
 	{
-		return getRealDocAuth(userId, null, docId, reposId);
+		return getRealDocAuth(repos, userId, null, docId,  parentPath, docName);
 	}
 	
 	//Function:getUserDocAuth
-	protected DocAuth getRealDocAuth(Integer userId,Integer groupId,Integer docId, Integer reposId) 
+	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId,Integer docId, String parentPath, String docName) 
 	{
-		System.out.println("getRealDocAuth() userId:"+userId + " groupId:"+ groupId + " docId:"+docId  + " reposId:"+reposId);
+		System.out.println("getRealDocAuth() userId:"+userId + " groupId:"+ groupId + " docId:"+docId  + " reposId:"+ repos.getId());
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Integer> docIdList = new ArrayList<Integer>();
-		docIdList = getDocIdList(docId,docIdList);
+		docIdList = getDocIdList(repos, docId,parentPath, docName, docIdList);
 		if(docIdList == null || docIdList.size() == 0)
 		{
 			return null;
@@ -3936,11 +3931,11 @@ public class BaseController  extends BaseFunction{
 		HashMap<Integer,DocAuth> docAuthHashMap = null;
 		if(userId != null)
 		{
-			docAuthHashMap = getUserDocAuthHashMap(userId,reposId);
+			docAuthHashMap = getUserDocAuthHashMap(userId,repos.getId());
 		}
 		else
 		{
-			docAuthHashMap = getGroupDocAuthHashMap(groupId,reposId);
+			docAuthHashMap = getGroupDocAuthHashMap(groupId,repos.getId());
 		}
 		
 		//go throug the docIdList to get the UserDocAuthFromHashMap
@@ -3957,7 +3952,21 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 
-	protected List<Integer> getDocIdList(Integer docId,List<Integer> docIdList) {
+	protected List<Integer> getDocIdList(Repos repos, Integer docId, String parentPath, String docName, List<Integer> docIdList) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			return getDocIdList_DB(docId, docIdList);
+		case 2:
+		case 3:
+		case 4:
+			return getDocIdList_FS(docId, parentPath, docName, docIdList); 	
+		}
+		return null;
+	}
+	
+	protected List<Integer> getDocIdList_DB(Integer docId,List<Integer> docIdList) {
 		if(docId == null || docId == 0)
 		{
 			docIdList.add(0);
@@ -3969,10 +3978,32 @@ public class BaseController  extends BaseFunction{
 		if(doc != null)
 		{
 			docIdList.add(docId);
-			return getDocIdList(doc.getPid(),docIdList);
+			return getDocIdList_DB(doc.getPid(),docIdList);
 		}
 		
 		System.out.println("getDocIdList() docId:" + docId + " is null");
+		return docIdList;
+	}
+	
+	protected List<Integer> getDocIdList_FS(Integer docId, String parentPath, String docName, List<Integer> docIdList) 
+	{
+		if(docId == null || docId == 0)
+		{
+			docIdList.add(0);
+			return docIdList;
+		}
+		
+		String docPath = parentPath + docName;
+		String [] paths = docPath.split("/");
+		int docPathDeepth = paths.length;
+			
+		for(int i=0; i<docPathDeepth; i++)
+		{
+			docName = paths[i];
+			docId = buildDocIdByName(i, docName);
+			docIdList.add(docId);
+		}
+		
 		return docIdList;
 	}
 	
