@@ -3942,7 +3942,7 @@ public class BaseController  extends BaseFunction{
 		DocAuth parentDocAuth = null;
 		DocAuth docAuth = null;
 		int docPathDeepth = docIdList.size();
-		for(int i=(docPathDeepth-1);i>=0;i--)
+		for(int i= 0; i < docPathDeepth; i++)
 		{
 			Integer curDocId = docIdList.get(i);
 			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
@@ -3967,9 +3967,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected List<Integer> getDocIdList_DB(Integer docId,List<Integer> docIdList) {
+		docIdList.add(0);
 		if(docId == null || docId == 0)
 		{
-			docIdList.add(0);
 			return docIdList;
 		}
 		
@@ -3977,7 +3977,7 @@ public class BaseController  extends BaseFunction{
 		Doc doc = reposService.getDocInfo(docId);
 		if(doc != null)
 		{
-			docIdList.add(docId);
+			docIdList.add(0, docId);
 			return getDocIdList_DB(doc.getPid(),docIdList);
 		}
 		
@@ -3987,9 +3987,9 @@ public class BaseController  extends BaseFunction{
 	
 	protected List<Integer> getDocIdList_FS(Integer docId, String parentPath, String docName, List<Integer> docIdList) 
 	{
+		docIdList.add(0);
 		if(docId == null || docId == 0)
 		{
-			docIdList.add(0);
 			return docIdList;
 		}
 		

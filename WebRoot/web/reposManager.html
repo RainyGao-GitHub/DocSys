@@ -533,6 +533,20 @@
                 }
         });
 	}
+    
+</script>
+
+<script type="text/javascript">
+	//Interfaces for Tree Operation
+	
+	//Get Node by NodeId
+	function getNodeByNodeId(nodeId)
+	{
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",nodeId);
+		return node;
+	}
+	
 </script>
 
 <script type="text/javascript">
@@ -760,16 +774,15 @@
 	function SysInit()
 	{
 		console.log("SysInit");
-		//绘制zTree
-		syncUpMenu();	    
-	    //仓库获取成功后再获取仓库用户列表
-		showAuthList();
+		//绘制zTree并显示权限列表
+		syncUpMenu(showAuthList);	    
+
 		//初始化zTree的右键菜单 
 		zTreeContextMenuInit();
 	}
 	
 	//将后台Menu,同步回前台
-	function syncUpMenu()
+	function syncUpMenu(callback)
 	{
 		console.log("syncUpMenu");
 	    getMenu(function (data) {
@@ -780,6 +793,8 @@
 	            console.log("重新绘制菜单，因为当前菜单数据与zTree不一致");
 	            drawMenu(data);
 	        }
+		    //仓库获取成功后再获取仓库用户列表
+			showAuthList();
 	    });
 	}
 
@@ -889,16 +904,27 @@ function showAuthList()
 function showDocAuthList(){
    	console.log("showDocAuthList()");
    	var docId = curDoc;
+   	var parentPath = "";
+   	var docName = "";
+   	var node = getNodeByNodeId(docId);
+	if(node && node != null)
+	{
+		parentPath = node.path;
+		docName = node.name;
+	}
+   	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+   	
    	var vid = getQueryString("vid");
-	console.log(docId);
-
+	
     $.ajax({
                 url : "/DocSystem/Repos/getDocAuthList.do",
                 type : "post",
                 dataType : "json",
                 data : {
-                	docId: docId,
                     reposId : vid,
+                	docId: docId,
+                	parentPath: parentPath,
+                	docName: docName,
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
