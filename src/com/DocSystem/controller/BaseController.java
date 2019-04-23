@@ -62,7 +62,7 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, String parentPath, String docName, User login_user, ReturnAjax rt) 
 	{	
 		//Format parentPath and docName
 		if(parentPath == null)
@@ -73,6 +73,7 @@ public class BaseController  extends BaseFunction{
 		{
 			docName = "";
 		}
+		Integer level = getLevelByParentPath(parentPath + docName);
 		
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " level:" + level +  " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		switch(repos.getType())
@@ -289,38 +290,38 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{
-		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " level:" + level + " parentPath:" + parentPath +" docName:" + doc.getName());
+		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + doc.getName());
 		switch(repos.getType())
 		{
 		case 1:
-			return getDocListFromRootToDoc_DB(repos, rootDocId, level, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_DB(repos, rootDocId, parentPath, doc, login_user, rt);
 		case 2:
-			return getDocListFromRootToDoc_FS(repos, rootDocId, level, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_FS(repos, rootDocId, parentPath, doc, login_user, rt);
 		case 3:
-			return getDocListFromRootToDoc_SVN(repos, rootDocId, level, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_SVN(repos, rootDocId, parentPath, doc, login_user, rt);
 		case 4:
-			return getDocListFromRootToDoc_GIT(repos, rootDocId, level, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_GIT(repos, rootDocId, parentPath, doc, login_user, rt);
 		}
 		return null;
 	}
 	
-	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{	
-		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " level:" + level + " parentPath:" + parentPath +" docName:" + doc.getName());
+		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + doc.getName());
 		
 		String docPath = parentPath + doc.getName();
 		String [] paths = docPath.split("/");
@@ -335,7 +336,7 @@ public class BaseController  extends BaseFunction{
 		{
 			tempSubDoc.setName(paths[i]);
 			
-			List<Doc> subDocList = getSubDocListFromParentToDoc_FS(repos, tempPid, level+i, tempParentPath, tempSubDoc, login_user , rt);
+			List<Doc> subDocList = getSubDocListFromParentToDoc_FS(repos, tempPid, i, tempParentPath, tempSubDoc, login_user , rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				System.out.println("getDocListFromRootToDoc_FS() Failed to get the doc: " + doc.getName());
@@ -356,7 +357,7 @@ public class BaseController  extends BaseFunction{
 	//该接口获取parentPath下的SubDocList（并设置doc中的docId）
 	private List<Doc> getSubDocListFromParentToDoc_FS(Repos repos, Integer pid, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt) 
 	{
-		System.out.println("getSubDocListFromParentToDoc_FS() parentPath:" + parentPath + " expected Doc:" + doc.getName());
+		System.out.println("getSubDocListFromParentToDoc_FS() pid:" + pid + " level:" + level + " parentPath:" + parentPath + " expected Doc:" + doc.getName());
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
@@ -417,9 +418,9 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_DB(Repos repos, Integer rootDocId, Integer level, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_DB(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
 	{
-		System.out.println("getDocListFromRootToDoc_DB() reposId:" + repos.getId()  + " rootDocId:" + rootDocId + " level:" + level + " parentPath:" + parentPath);
+		System.out.println("getDocListFromRootToDoc_DB() reposId:" + repos.getId()  + " rootDocId:" + rootDocId + " parentPath:" + parentPath);
 		
 		//Get the userDocAuthHashMap
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());

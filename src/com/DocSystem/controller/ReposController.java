@@ -490,12 +490,12 @@ public class ReposController extends BaseController{
 		if(docId == null || docId == 0)
 		{
 			docId = 0;
-			docList = getAccessableSubDocList(repos, 0, 0, "", docName, login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, "", "", login_user, rt);
 		}
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, 0, 0, parentPath, doc, login_user ,rt);
+			docList = getDocListFromRootToDoc(repos, 0, parentPath, doc, login_user ,rt);
 		}
 
 		rt.setMsgData(doc.getId());
@@ -520,8 +520,7 @@ public class ReposController extends BaseController{
 	@RequestMapping("/getSubDocList.do")
 	public void getSubDocList(Integer vid, Integer id, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		Integer level = getLevelByParentPath(path + name);
-		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " level:" + level + " path:" + path + " name:"+ name );
+		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " path:" + path + " name:"+ name );
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -542,7 +541,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, id, level, path, name, login_user, rt);
+		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, login_user, rt);
 
 		if(docList == null)
 		{
@@ -588,11 +587,11 @@ public class ReposController extends BaseController{
 		
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, 0, 0, "", "", login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, "", "", login_user, rt);
 		}
 		else
 		{
-			docList = getDocListFromRootToDoc(repos, 0, 0, parentPath, doc, login_user ,rt);
+			docList = getDocListFromRootToDoc(repos, 0, parentPath, doc, login_user ,rt);
 		}	
 		
 		//合并列表
