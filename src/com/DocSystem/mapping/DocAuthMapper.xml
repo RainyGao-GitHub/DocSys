@@ -247,10 +247,10 @@
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER},
     </if>
-    <if test="path != null">
+    <if test="docPath != null">
       and DOC_PATH = #{docPath,jdbcType=VARCHAR},
     </if>
-    <if test="name != null">
+    <if test="docName != null">
       and DOC_NAME = #{docName,jdbcType=VARCHAR},
     </if>    
   </select>
@@ -292,10 +292,10 @@
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
-    <if test="path != null">
+    <if test="docPath != null">
       and DOC_PATH = #{docPath,jdbcType=VARCHAR}
     </if>
-    <if test="name != null">
+    <if test="docName != null">
       and DOC_NAME = #{docName,jdbcType=VARCHAR}
     </if> 
   </select>
