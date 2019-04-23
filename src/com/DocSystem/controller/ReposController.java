@@ -518,8 +518,9 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSubDocList(Integer vid, Integer id, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
+		Integer level = getLevelByParentPath(path + name);
 		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " level:" + level + " path:" + path + " name:"+ name );
 		
 		ReturnAjax rt = new ReturnAjax();

@@ -63,7 +63,17 @@ public class BaseController  extends BaseFunction{
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt) 
-	{		
+	{	
+		//Format parentPath and docName
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+		if(docName == null)
+		{
+			docName = "";
+		}
+		
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " level:" + level +  " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		switch(repos.getType())
 		{
@@ -103,7 +113,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return getSubDocListFromFS(repos, docId, level, parentPath, docName, login_user, rt);
+		return getSubDocListFromFS(repos, level, docId, parentPath+docName+"/", login_user, rt);
 	}
 
 	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt)
@@ -142,14 +152,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//获取目录parentPath下的所有子节点
-	protected List <Doc> getSubDocListFromFS(Repos repos, Integer docId, Integer pLevel, String parentPath, String docName, User login_user, ReturnAjax rt)
+	protected List <Doc> getSubDocListFromFS(Repos repos, Integer level, Integer pid, String path, User login_user, ReturnAjax rt)
 	{
-		String localParentPath = getReposRealPath(repos) + parentPath;
-		File dir = new File(localParentPath, docName);
+		String localParentPath = getReposRealPath(repos) + path;
+		File dir = new File(localParentPath);
     	if(false == dir.exists())
     	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + docName + " 不存在！");
-    		rt.setError( parentPath + " 不存在！");
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
+    		rt.setError( path + " 不存在！");
     		return null;
     	}
     	
@@ -157,7 +167,7 @@ public class BaseController  extends BaseFunction{
     	if(false == dir.isDirectory())
     	{
     		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
-    		rt.setError( parentPath + " 不是目录！");
+    		rt.setError( path + " 不是目录！");
     		return null;
     	}
  	
@@ -173,13 +183,13 @@ public class BaseController  extends BaseFunction{
     		
     		//Create Doc to save subEntry Info
     		Doc subDoc = new Doc();
-    		int subDocId = buildDocIdByName(pLevel, subEntryName);
+    		int subDocId = buildDocIdByName(level, subEntryName);
     		subDoc.setVid(repos.getId());
-    		subDoc.setPid(docId);
+    		subDoc.setPid(pid);
        		subDoc.setId(subDocId);
     		subDoc.setName(subEntryName);
     		subDoc.setType(subEntryType);
-    		subDoc.setPath(parentPath);
+    		subDoc.setPath(path);
     		subDoc.setSize((int)subEntry.length());
     		subDoc.setState(0);
     		subDoc.setCreateTime(lastModifyTime);
@@ -188,7 +198,7 @@ public class BaseController  extends BaseFunction{
     	}
     	return docList;
 	}
-	
+
 	private long getFileLastModifiedTime(File file) {
 		try {
 			BasicFileAttributes bAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
@@ -2243,7 +2253,7 @@ public class BaseController  extends BaseFunction{
 		localActionList.add(action);
 	}
 
-	private Integer getLevelByParentPath(String path) 
+	protected Integer getLevelByParentPath(String path) 
 	{
 		if(path == null || path.isEmpty())
 		{
