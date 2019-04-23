@@ -1147,35 +1147,48 @@ public class DocController extends BaseController{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{
-			if(srcPath.endsWith(".pdf"))
+			String fileType = FileUtils2.getFileSuffix(srcPath);
+			switch(fileType)
 			{
+			case "pdf":
 				FileUtils2.copyFile(srcPath, dstPath);
-			}
-			else
-			{
-				String fileType = FileUtils2.getFileSuffix(srcPath);
-				if(fileType != null && fileType == "pdf")
+				break;
+			case "doc":
+			case "docx":
+			case "xls":
+			case "xlsx":
+			case "ppt":
+			case "pptx":
+			case "jpg":
+			case "jpeg":
+			case "gif":
+			case "tif":
+			case "bmp":
+			case "txt":
+			case "log":
+			case "xml":
+			case "html":
+			case "htm":
+			case "css":
+			case "js":
+			case "properties":
+			case "sql":
+			case "bat":
+			case "sh":
+				File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
+				if(pdf == null)
 				{
-					FileUtils2.copyFile(srcPath, dstPath);
-				}
-				else if(FileUtils2.isOfficeFile(fileType))
-				{
-					File pdf = Office2PDF.openOfficeToPDF(srcPath,dstPath);
-					if(pdf == null)
-					{
-						rt.setError("Failed to convert office to pdf");
-						rt.setMsgData("srcPath:"+srcPath);
-						writeJson(rt, response);
-						return;
-					}
-				}
-				else
-				{
-					rt.setError("该文件类型不支持预览");
+					rt.setError("Failed to convert office to pdf");
 					rt.setMsgData("srcPath:"+srcPath);
 					writeJson(rt, response);
 					return;
 				}
+				break;
+			default:
+				rt.setError("该文件类型不支持预览");
+				rt.setMsgData("srcPath:"+srcPath);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		//Save the pdf to web
