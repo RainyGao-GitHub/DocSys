@@ -27,6 +27,10 @@ public class DocAuth {
 
     private Integer heritable;
 
+    private String path;
+
+    private String name;
+
     public Integer getId() {
         return id;
     }
@@ -131,7 +135,23 @@ public class DocAuth {
         this.heritable = heritable;
     }
 
-    //DocAuth 闄勫姞淇℃伅: 闇�瑕侀�氳繃joint doc and user or group Table to get these info
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path == null ? null : path.trim();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name == null ? null : name.trim();
+    }
+
+        //DocAuth 附加信息: 需要通过joint doc and user or group Table to get these info
     private String  userName="";	//from user Table
     private String  realName="";	//from user Table
     private String  groupName="";	//from group Table
