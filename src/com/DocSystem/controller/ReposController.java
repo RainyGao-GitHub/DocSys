@@ -674,6 +674,7 @@ public class ReposController extends BaseController{
 	public void getDocAuthList(Integer reposId, Integer docId, String parentPath, String docName, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -848,6 +849,8 @@ public class ReposController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("configDocAuth userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1104,6 +1107,7 @@ public class ReposController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
+
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)

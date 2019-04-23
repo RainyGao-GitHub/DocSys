@@ -3833,6 +3833,13 @@ public class BaseController  extends BaseFunction{
 	protected DocAuth getGroupDispDocAuth(Repos repos, Integer groupId,Integer docId, String parentPath, String docName) 
 	{
 		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
+		//For rootDoc
+		if(docId == null || docId == 0)
+		{
+			parentPath = "";
+			docName = "";
+		}
+		
 		DocAuth docAuth = getGroupDocAuth(repos, groupId, docId, parentPath, docName);	//获取用户真实的权限
 		
 		 String groupName = getGroupName(groupId);
@@ -3870,6 +3877,13 @@ public class BaseController  extends BaseFunction{
 	public DocAuth getUserDispDocAuth(Repos repos, Integer UserID,Integer DocID,String parentPath, String docName)
 	{
 		System.out.println("getUserDispDocAuth() UserID:"+UserID);
+		//For rootDoc
+		if(DocID == null || DocID == 0)
+		{
+			parentPath = "";
+			docName = "";
+		}
+		
 		DocAuth docAuth = getUserDocAuth(repos, UserID, DocID, parentPath, docName);	//获取用户真实的权限
 		printObject("getUserDispDocAuth() docAuth:",docAuth);
 		
