@@ -736,30 +736,7 @@ public class ReposController extends BaseController{
 		//如果是根目录，则将仓库下其他所有的值直接设置显示出来
 		if(docId == null || docId == 0)
 		{
-			List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(reposId);
-			if(allDocAuthList != null)
-			{
-				//add the docAuth to docAuthList which docId is not 0
-				for(int i=0;i<allDocAuthList.size();i++)
-				{
-					DocAuth tmpDocAuth = allDocAuthList.get(i);
-					Integer tmpDocId = tmpDocAuth.getDocId();
-					if(!tmpDocId.equals(0))
-					{
-						/* userName groupName should be query directly in get allDocAuth sql 
-						String userName = getUserName(tmpDocAuth.getUserId());
-						tmpDocAuth.setUserName(userName);
-						*/
-						Doc doc = getDocInfo(tmpDocId);
-						if(doc != null)
-						{
-							tmpDocAuth.setDocName(doc.getName());
-							tmpDocAuth.setDocPath(doc.getPath());
-						}
-						docAuthList.add(tmpDocAuth);						
-					}
-				}
-			}
+			docAuthList = reposService.getAllDocAuthList(reposId);
 		}
 		printObject("docAuthList:",docAuthList);
 

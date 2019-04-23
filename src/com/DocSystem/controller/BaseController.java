@@ -3836,19 +3836,16 @@ public class BaseController  extends BaseFunction{
 		DocAuth docAuth = getGroupDocAuth(repos, groupId, docId, parentPath, docName);	//获取用户真实的权限
 		
 		 String groupName = getGroupName(groupId);
-		 Doc doc = getDocInfo(docId);
-		//转换成可显示的权限
+		 
+		 //转换成可显示的权限
 		if(docAuth == null)
 		{
 			docAuth = new DocAuth();
 			docAuth.setGroupId(groupId);
 			docAuth.setGroupName(groupName);
 			docAuth.setDocId(docId);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
+			docAuth.setDocName(docName);
+			docAuth.setDocPath(parentPath);
 			docAuth.setReposId(repos.getId());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
@@ -3862,11 +3859,8 @@ public class BaseController  extends BaseFunction{
 			docAuth.setGroupId(groupId);
 			docAuth.setGroupName(groupName);
 			docAuth.setDocId(docId);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
+			docAuth.setDocName(docName);
+			docAuth.setDocPath(parentPath);
 			docAuth.setReposId(repos.getId());
 		}
 		return docAuth;
@@ -3881,7 +3875,6 @@ public class BaseController  extends BaseFunction{
 		
 		//Get UserName
 		String UserName = getUserName(UserID);
-		Doc doc = getDocInfo(DocID);
 		
 		//转换成可显示的权限
 		if(docAuth == null)
@@ -3890,11 +3883,8 @@ public class BaseController  extends BaseFunction{
 			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
 			docAuth.setDocId(DocID);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
+			docAuth.setDocName(docName);
+			docAuth.setDocPath(parentPath);
 			docAuth.setReposId(repos.getId());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
@@ -3909,11 +3899,8 @@ public class BaseController  extends BaseFunction{
 			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
 			docAuth.setDocId(DocID);
-			if(doc != null)
-			{
-				docAuth.setDocName(doc.getName());
-				docAuth.setDocPath(doc.getPath());
-			}
+			docAuth.setDocName(docName);
+			docAuth.setDocPath(parentPath);
 			docAuth.setReposId(repos.getId());
 		}
 		return docAuth;
