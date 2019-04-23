@@ -848,7 +848,7 @@ public class ReposController extends BaseController{
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("configDocAuth userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		System.out.println("configDocAuth reposId:" + reposId + " userId: " + userId +" groupId: " + groupId+ " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
 		
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -919,6 +919,8 @@ public class ReposController extends BaseController{
 			qDocAuth.setAddEn(addEn);
 			qDocAuth.setDeleteEn(deleteEn);
 			qDocAuth.setHeritable(heritable);
+			qDocAuth.setDocPath(parentPath);
+			qDocAuth.setDocName(docName);
 			if(reposService.addDocAuth(qDocAuth) == 0)
 			{
 				if(type == 2)
