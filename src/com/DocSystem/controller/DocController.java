@@ -89,8 +89,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		String commitUser = login_user.getName();
-		
-		//检查用户是否有权限新增文件
+
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -99,7 +98,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(checkUserAddRight(rt,login_user.getId(),parentId,repos) == false)
+		//检查用户是否有权限新增文件
+		if(checkUserAddRight(repos, login_user.getId(), parentId, parentPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -207,7 +207,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限新增文件
-		if(checkUserDeleteRight(rt,login_user.getId(),parentId,repos) == false)
+		if(checkUserDeleteRight(repos, login_user.getId(), parentId, parentPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -322,7 +322,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查登录用户的权限
-		DocAuth UserDocAuth = getUserDocAuth(login_user.getId(),parentId,reposId);
+		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), parentId, parentPath, "");
 		if(UserDocAuth == null)
 		{
 			rt.setError("您无权在该目录上传文件!");
@@ -485,7 +485,7 @@ public class DocController extends BaseController{
 		//检查用户是否有权限新增文件
 		if(uploadType == 0)	//0: add  1: update
 		{
-			if(checkUserAddRight(rt,login_user.getId(),parentId,repos) == false)
+			if(checkUserAddRight(repos,login_user.getId(),parentId, parentPath, "" ,rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -493,7 +493,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
+			if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -658,12 +658,13 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
+		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, name, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
+		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
 		MultiActionList actionList = new MultiActionList();
 		boolean ret = copyDoc(repos, docId, parentId, parentId, type, parentPath, name, parentPath, newname, commitMsg,commitUser, login_user,rt, actionList , true);
 		writeJson(rt, response);
@@ -694,19 +695,20 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 	
 		//检查是否有源目录的删除权限
-		if(checkUserDeleteRight(rt,login_user.getId(), srcPid, repos) == false)
+		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(), dstPid, repos) == false)
+		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstParentPath, "", rt) == false)
 		{
 				writeJson(rt, response);	
 				return;
 		}
 		
+		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
 		MultiActionList actionList = new MultiActionList();
 		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath, srcDocName, dstParentPath, dstDocName, commitMsg, commitUser, login_user,rt, actionList , true);		
 		writeJson(rt, response);	
@@ -750,7 +752,7 @@ public class DocController extends BaseController{
 		}
 				
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(),dstPid,repos) == false)
+		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstParentPath, "", rt) == false)
 		{
 			writeJson(rt, response);
 			return;
@@ -796,7 +798,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),docId, repos) == false)
+		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -1116,7 +1118,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(rt,login_user.getId(),docId,repos) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), docId, parentPath, name, rt) == false)
 		{
 			System.out.println("DocToPDF() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
@@ -1251,7 +1253,7 @@ public class DocController extends BaseController{
 		session.setAttribute("currentDocName", docName);
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(rt,login_user.getId(),docId, repos) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 		{
 			System.out.println("getDoc() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
@@ -1284,7 +1286,7 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer reposId, Integer docId, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void lockDoc(Integer reposId, Integer docId, String parentPath, String docName, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1304,8 +1306,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//检查用户是否有权限新增文件
-		if(checkUserEditRight(rt,login_user.getId(),docId,repos) == false)
+		//检查用户是否有权限编辑文件
+		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;

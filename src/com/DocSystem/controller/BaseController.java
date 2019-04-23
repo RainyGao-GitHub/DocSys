@@ -106,7 +106,7 @@ public class BaseController  extends BaseFunction{
 		return getSubDocListFromFS(repos, docId, level, parentPath, docName, login_user, rt);
 	}
 
-	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer docId,  User login_user, ReturnAjax rt)
+	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt)
 	{
 		System.out.println("getAccessableSubDocList_DB()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath);
 		
@@ -142,13 +142,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//获取目录parentPath下的所有子节点
-	protected List <Doc> getSubDocListFromFS(Repos repos, Integer pid, Integer pLevel, String parentPath, User login_user, ReturnAjax rt)
+	protected List <Doc> getSubDocListFromFS(Repos repos, Integer docId, Integer pLevel, String parentPath, String docName, User login_user, ReturnAjax rt)
 	{
 		String localParentPath = getReposRealPath(repos) + parentPath;
-		File dir = new File(localParentPath);
+		File dir = new File(localParentPath, docName);
     	if(false == dir.exists())
     	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
+    		System.out.println("getSubDocListFromFS() " + localParentPath + docName + " 不存在！");
     		rt.setError( parentPath + " 不存在！");
     		return null;
     	}
@@ -175,7 +175,7 @@ public class BaseController  extends BaseFunction{
     		Doc subDoc = new Doc();
     		int subDocId = buildDocIdByName(pLevel, subEntryName);
     		subDoc.setVid(repos.getId());
-    		subDoc.setPid(pid);
+    		subDoc.setPid(docId);
        		subDoc.setId(subDocId);
     		subDoc.setName(subEntryName);
     		subDoc.setType(subEntryType);

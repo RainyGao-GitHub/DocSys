@@ -489,7 +489,8 @@ public class ReposController extends BaseController{
 		doc.setName(docName);
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, 0, 0, "", login_user, rt);
+			docId = 0;
+			docList = getAccessableSubDocList(repos, 0, 0, "", docName, login_user, rt);
 		}
 		else
 		{
@@ -520,27 +521,6 @@ public class ReposController extends BaseController{
 	public void getSubDocList(Integer vid, Integer id,Integer level, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " level:" + level + " path:" + path + " name:"+ name );
-		Integer pid = id;
-		if(pid == null || pid == 0)
-		{
-			pid = 0;
-			level = 0;
-			path = "";
-		}
-		else
-		{
-			level = level + 1;
-		}
-		
-		String parentPath = "";
-		if(name != null && !name.isEmpty())
-		{
-			parentPath = path + name +"/";
-		}
-		else
-		{
-			parentPath = path;
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -561,7 +541,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, pid, level, parentPath, login_user, rt);
+		List <Doc> docList = getAccessableSubDocList(repos, id, level, path, name, login_user, rt);
 
 		if(docList == null)
 		{
@@ -607,7 +587,7 @@ public class ReposController extends BaseController{
 		
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, 0, 0, "", login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, 0, "", "", login_user, rt);
 		}
 		else
 		{
@@ -691,9 +671,9 @@ public class ReposController extends BaseController{
 	
 	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
-	public void getDocAuthList(Integer docId, Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDocAuthList(Integer reposId, Integer docId, String parentPath, String docName, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getDocAuthList docId: " + docId + " reposId:" + reposId);
+		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -704,8 +684,16 @@ public class ReposController extends BaseController{
 			return;
 		}
 
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//检查当前用户的权限
-		if(isAdminOfDoc(login_user,docId,reposId) == false)
+		if(isAdminOfDoc(repos, login_user, docId, parentPath, docName) == false)
 		{
 			System.out.println("getDocAuthList() isAdminOfDoc return false");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
@@ -731,11 +719,11 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = null;
 			if(userId!= null)	//It is user
 			{
-				docAuth = getUserDispDocAuth(userId,docId,reposId);
+				docAuth = getUserDispDocAuth(repos, userId, docId, parentPath, docName);
 			}
 			else if(groupId != null)
 			{
-				docAuth = getGroupDispDocAuth(groupId,docId,reposId);
+				docAuth = getGroupDispDocAuth(repos, groupId, docId, parentPath, docName);
 			}
 			printObject("docAuth:", docAuth);
 			
@@ -878,7 +866,7 @@ public class ReposController extends BaseController{
 	
 	/****************  Config User or Group or anyUser DocAuth ******************/
 	@RequestMapping("/configDocAuth.do")
-	public void configUserAuth(Integer userId, Integer groupId, Integer docId, Integer reposId,
+	public void configUserAuth( Integer reposId, Integer userId, Integer groupId, Integer docId, String parentPath, String docName,
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -892,8 +880,16 @@ public class ReposController extends BaseController{
 			return;
 		}
 
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//检查当前用户的权限
-		if(isAdminOfDoc(login_user, docId, reposId) == false)
+		if(isAdminOfDoc(repos, login_user, docId, parentPath, docName) == false)
 		{
 			System.out.println("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
@@ -902,7 +898,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//login_user不得设置超过自己的权限：超过了则无效
-		if(isUserAuthExpanded(login_user,docId,reposId,isAdmin,access,editEn,addEn,deleteEn,heritable,rt) == true)
+		if(isUserAuthExpanded(repos, login_user, docId, parentPath, docName, isAdmin,access,editEn,addEn,deleteEn,heritable,rt) == true)
 		{
 			System.out.println("超过设置者的权限 ！");
 			writeJson(rt, response);			
@@ -1034,7 +1030,7 @@ public class ReposController extends BaseController{
 		
 	/****************   delete User or Group or anyUser  DocAuth ******************/
 	@RequestMapping("/deleteDocAuth.do")
-	public void deleteUserDocAuth(Integer docAuthId,Integer userId, Integer groupId, Integer docId, Integer reposId,
+	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Integer docId, String parentPath, String docName,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
@@ -1046,9 +1042,17 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 
 		//检查当前用户的权限
-		if(isAdminOfDoc(login_user,docId,reposId) == false)
+		if(isAdminOfDoc(repos, login_user, docId, parentPath, docName) == false)
 		{
 			rt.setError("您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
@@ -1065,8 +1069,10 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 	}
 
-	private boolean isUserAuthExpanded(User login_user,Integer docId,Integer reposId, Integer isAdmin, Integer access,
-			Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,ReturnAjax rt) {
+	private boolean isUserAuthExpanded(Repos repos, User login_user, Integer docId, String parentPath, String docName, 
+			Integer isAdmin, Integer access, Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,
+			ReturnAjax rt) 
+	{
 		
 		if(login_user.getType() == 2)
 		{
@@ -1074,8 +1080,7 @@ public class ReposController extends BaseController{
 			return false;
 		}
 		
-		
-		DocAuth docAuth = getUserDocAuth(login_user.getId(),docId,reposId); 
+		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), docId, parentPath, docName); 
 		if(docAuth == null)
 		{
 			rt.setError("您没有该目录/文件的权限");
@@ -1118,10 +1123,10 @@ public class ReposController extends BaseController{
 	
 	/********************* get UserDocAuth ******************************/
 	@RequestMapping("/getUserDocAuth.do")
-	public void getUserDocAuth(Integer docId, Integer reposId,
+	public void getUserDocAuth(Integer reposId, Integer docId, String parentPath, String docName,   
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId);
+		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1131,8 +1136,16 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//检查该用户是否设置了目录权限
-		DocAuth docAuth = getUserDispDocAuth(login_user.getId(),docId,reposId); 
+		DocAuth docAuth = getUserDispDocAuth(repos, login_user.getId(), docId, parentPath, docName); 
 		if(docAuth == null)
 		{
 			rt.setError("您没有该目录/文件的权限");
