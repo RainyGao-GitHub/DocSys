@@ -119,7 +119,8 @@ public class FileUtils2 {
      * @param filePaht
      * @return
      */
-    public static String getFileType(String filePaht){
+    public static String getFileType(String filePaht)
+    {
         String res = null;
         try {
             FileInputStream is = new FileInputStream(filePaht);
@@ -174,6 +175,10 @@ public class FileUtils2 {
     public static String getFileSuffix(String filePath)
     {
     	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
+    	if(suffix != null && !suffix.isEmpty())
+    	{
+    		suffix = suffix.toLowerCase();
+    	}
     	System.out.println("getFileSuffix() " + suffix);
     	return suffix;
     }
