@@ -113,7 +113,12 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return getSubDocListFromFS(repos, level, docId, parentPath+docName+"/", login_user, rt);
+		String dirPath = parentPath+docName;
+		if(!docName.isEmpty())
+		{
+			dirPath = parentPath+docName+"/";
+		}
+		return getSubDocListFromFS(repos, level, docId, dirPath, login_user, rt);
 	}
 
 	private List<Doc> getAccessableSubDocList_DB(Repos repos, Integer docId, Integer level, String parentPath, String docName, User login_user, ReturnAjax rt)
