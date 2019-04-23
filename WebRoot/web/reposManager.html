@@ -1313,6 +1313,15 @@ function showReposSettingPanel(){
 			//set docAuth
     		var docAuth = docAuthList[index];
     		console.log(docAuth);
+    		
+    		var node = getNodeByNodeId(docAuth.docId);
+    		var parentPath = "";
+    		var docName = "";
+    		if(node && node != null && node.id != 0)
+    		{
+    			parentPath = node.path;
+    			docName = node.name;
+    		}
     		   		
     		$.ajax({
 				  url : "/DocSystem/Repos/configDocAuth.do",
@@ -1329,6 +1338,8 @@ function showReposSettingPanel(){
 				         addEn: docAuth.addEn, 
 				         deleteEn: docAuth.deleteEn, 
 				         heritable: docAuth.heritable,
+				         parentPath: node.path,
+				         docName: node.name,
 				     },
 				     success : function (ret) {
 				         if( "ok" == ret.status){
