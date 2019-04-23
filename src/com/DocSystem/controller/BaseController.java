@@ -3967,9 +3967,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected List<Integer> getDocIdList_DB(Integer docId,List<Integer> docIdList) {
-		docIdList.add(0);
 		if(docId == null || docId == 0)
 		{
+			docIdList.add(0);			
 			return docIdList;
 		}
 		
@@ -3987,16 +3987,17 @@ public class BaseController  extends BaseFunction{
 	
 	protected List<Integer> getDocIdList_FS(Integer docId, String parentPath, String docName, List<Integer> docIdList) 
 	{
-		docIdList.add(0);
 		if(docId == null || docId == 0)
 		{
+			docIdList.add(0);
 			return docIdList;
 		}
 		
 		String docPath = parentPath + docName;
 		String [] paths = docPath.split("/");
 		int docPathDeepth = paths.length;
-			
+
+		docIdList.add(0);	
 		for(int i=0; i<docPathDeepth; i++)
 		{
 			docName = paths[i];
