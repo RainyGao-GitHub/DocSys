@@ -399,6 +399,19 @@
     </div>
 </div>
 
+<div id="renameConfirmDialog" style="display:none">
+    <div class="modal-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">文件名：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="docName" title="rename">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+
 <!-- multiple file and dir upload triger div -->
 <div style="display:none">
 	<input id="checkInFile" name="checkInFile" type="file" onchange="checkInUploadConfirm(event)"/>
@@ -513,6 +526,63 @@
 			    	return true;   
 			 	});
 		}
+	}
+	
+	function showRenameDialog(docId, docName)
+	{
+		console.log("showRenameDialog docId:" + docId + " docName:" + docName);
+		
+		//Show dialog
+	    qiao.bs.dialog({
+	        id: "dialog-renameDialog",
+	        url: '#renameConfirmDialog',
+	        title: '重命名',
+	        okbtn: "确定",
+	        callback: function () {
+	            setTimeout(function () {
+	                $("#dialog-renameDialog input[name='docName']").val(docName);	                 
+	            },100);
+	        }
+	    },function () {
+			var newName = $("#dialog-renameDialog input[name='docName']").val();
+			doRenameDoc(docId, newName);
+	    	return true;   
+	    });
+		return true;
+	}
+		
+	function doRenameDoc(id, newName)
+	{
+		$.ajax({
+            url : "/DocSystem/Doc/renameDoc.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                id : id,
+                newname: newName,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    //Rename NodeName in docList
+			     	DocList.renameNode(id,newName);
+		            //Rename doc
+                    renameTreeNode(id, newName);
+                    
+		            bootstrapQ.msg({
+							msg : "重命名完成！",
+							type : 'success',
+							time : 2000,
+					});
+                }
+                else
+                {
+                	showErrorMessage("重命名失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+	               showErrorMessage("重命名失败:服务器异常！");
+            }
+    });
 	}
 
 	function getCopiedNodes()
@@ -5829,6 +5899,24 @@ function CompareObj(objA, objB, flag) {
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
+	
+	function renameTreeNode(id, newName)
+	{
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",id);
+		if(node && node != null)
+		{
+			node.name = newName;
+		}
+		zTree.updateNode(node);
+		
+		if(node.isParent == true && parentNode.open == true) //刷新目录
+		{
+			//强制异步刷新子目录，以保证子目录的信息正确
+			zTree.reAsyncChildNodes(node, "refresh",true);	
+		}
+	}
+	
 	//Get Node by NodeId
 	function getNodeByNodeId(nodeId)
 	{
@@ -6358,7 +6446,9 @@ function CompareObj(objA, objB, flag) {
 						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						if(curRightClickedTreeNode !== null)
 						{
-							treeObj.editName(curRightClickedTreeNode);
+							//Show Rename Dialog
+							showRenameDialog(curRightClickedTreeNode.id, curRightClickedTreeNode.name);
+							//treeObj.editName(curRightClickedTreeNode);
 							curRightClickedTreeNode = null;
 	        			}
 					}
@@ -6516,8 +6606,11 @@ function CompareObj(objA, objB, flag) {
 						var node = getNodeByNodeId(docId);
 						if(node !== null)
 						{
-							var treeObj = $.fn.zTree.getZTreeObj("doctree");
-							treeObj.editName(node);
+							//Show Rename Dialog
+							showRenameDialog(node.id, node.name);
+
+							//var treeObj = $.fn.zTree.getZTreeObj("doctree");
+							//treeObj.editName(node);
 	        			}
 					}
 			},
