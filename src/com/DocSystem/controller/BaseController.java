@@ -3916,7 +3916,7 @@ public class BaseController  extends BaseFunction{
 	//Function:getUserDocAuth
 	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId,Integer docId, String parentPath, String docName) 
 	{
-		System.out.println("getRealDocAuth() userId:"+userId + " groupId:"+ groupId + " docId:"+docId  + " reposId:"+ repos.getId());
+		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Integer> docIdList = new ArrayList<Integer>();
