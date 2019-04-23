@@ -15,12 +15,12 @@
     <result column="ADD_EN" jdbcType="INTEGER" property="addEn" />
     <result column="DELETE_EN" jdbcType="INTEGER" property="deleteEn" />
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
-    <result column="PATH" jdbcType="VARCHAR" property="path" />
-    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="DOC_PATH" jdbcType="VARCHAR" property="docPath" />
+    <result column="DOC_NAME" jdbcType="VARCHAR" property="docName" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, USER_ID, GROUP_ID, TYPE, PRIORITY, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, 
-    ADD_EN, DELETE_EN, HERITABLE, PATH, NAME
+    ADD_EN, DELETE_EN, HERITABLE, DOC_PATH, DOC_NAME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -37,13 +37,13 @@
       TYPE, PRIORITY, DOC_ID, 
       REPOS_ID, IS_ADMIN, ACCESS, 
       EDIT_EN, ADD_EN, DELETE_EN, 
-      HERITABLE, PATH, NAME
+      HERITABLE, DOC_PATH, DOC_NAME
       )
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
       #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{docId,jdbcType=INTEGER}, 
       #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
       #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, 
-      #{heritable,jdbcType=INTEGER}, #{path,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}
+      #{heritable,jdbcType=INTEGER}, #{docPath,jdbcType=VARCHAR}, #{docName,jdbcType=VARCHAR}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.DocAuth">
@@ -88,11 +88,11 @@
       <if test="heritable != null">
         HERITABLE,
       </if>
-      <if test="path != null">
-        PATH,
+      <if test="docPath != null">
+        DOC_PATH,
       </if>
-      <if test="name != null">
-        NAME,
+      <if test="docName != null">
+        DOC_NAME,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -135,11 +135,11 @@
       <if test="heritable != null">
         #{heritable,jdbcType=INTEGER},
       </if>
-      <if test="path != null">
-        #{path,jdbcType=VARCHAR},
+      <if test="docPath != null">
+        #{docPath,jdbcType=VARCHAR},
       </if>
-      <if test="name != null">
-        #{name,jdbcType=VARCHAR},
+      <if test="docName != null">
+        #{docName,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -182,11 +182,11 @@
       <if test="heritable != null">
         HERITABLE = #{heritable,jdbcType=INTEGER},
       </if>
-      <if test="path != null">
-        PATH = #{path,jdbcType=VARCHAR},
+      <if test="docPath != null">
+        DOC_PATH = #{docPath,jdbcType=VARCHAR},
       </if>
-      <if test="name != null">
-        NAME = #{name,jdbcType=VARCHAR},
+      <if test="docName != null">
+        DOC_NAME = #{docName,jdbcType=VARCHAR},
       </if>
     </set>
     where ID = #{id,jdbcType=INTEGER}
@@ -205,8 +205,8 @@
       ADD_EN = #{addEn,jdbcType=INTEGER},
       DELETE_EN = #{deleteEn,jdbcType=INTEGER},
       HERITABLE = #{heritable,jdbcType=INTEGER},
-      PATH = #{path,jdbcType=VARCHAR},
-      NAME = #{name,jdbcType=VARCHAR}
+      DOC_PATH = #{docPath,jdbcType=VARCHAR},
+      DOC_NAME = #{docName,jdbcType=VARCHAR}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <select id="selectSelective" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
@@ -248,10 +248,10 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER},
     </if>
     <if test="path != null">
-      and PATH = #{path,jdbcType=VARCHAR},
+      and DOC_PATH = #{docPath,jdbcType=VARCHAR},
     </if>
     <if test="name != null">
-      and NAME = #{name,jdbcType=VARCHAR},
+      and DOC_NAME = #{docName,jdbcType=VARCHAR},
     </if>    
   </select>
   <select id="getDocAuth" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
@@ -293,10 +293,10 @@
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
     <if test="path != null">
-      and PATH = #{path,jdbcType=VARCHAR}
+      and DOC_PATH = #{docPath,jdbcType=VARCHAR}
     </if>
     <if test="name != null">
-      and NAME = #{name,jdbcType=VARCHAR}
+      and DOC_NAME = #{docName,jdbcType=VARCHAR}
     </if> 
   </select>
   
