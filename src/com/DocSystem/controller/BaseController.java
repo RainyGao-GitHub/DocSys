@@ -2866,7 +2866,16 @@ public class BaseController  extends BaseFunction{
 		case 1:
 			return copyDoc_DB(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
 					commitMsg, commitUser, login_user, rt, actionList, isMove);
-		
+		case 2:
+			return copyDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+					commitMsg, commitUser, login_user, rt, actionList, isMove);
+		case 3:
+			return copyDoc_SVN(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+					commitMsg, commitUser, login_user, rt, actionList, isMove);
+		case 4:
+			return copyDoc_GIT(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+					commitMsg, commitUser, login_user, rt, actionList, isMove);
+
 		}
 		return false;
 	}

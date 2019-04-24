@@ -637,7 +637,7 @@ public class DocController extends BaseController{
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
 	public void renameDoc(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("renameDoc reposId: " + reposId + " parentPath: " + parentPath+ " name: " + name+ " newname: " + newname);
+		System.out.println("renameDoc reposId: " + reposId + " docId:"+ docId + " parentPath:" + parentPath+ " name: " + name+ " newname: " + newname);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");

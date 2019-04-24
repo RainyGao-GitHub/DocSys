@@ -556,26 +556,27 @@
 		return true;
 	}
 		
-	function doRenameDoc(id, parentPath, docName, newName)
+	function doRenameDoc(docId, parentPath, docName, newName)
 	{
 		$.ajax({
             url : "/DocSystem/Doc/renameDoc.do",
             type : "post",
             dataType : "json",
             data : {
-                id : id,
+            	reposId: gReposId,
+                docId : docId,
                 parentPath: parentPath,
-                docName: docName,
-                newname: newName,
+                name: docName,
+                newName: newName,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
                     //Rename NodeName in docList
                     var newDocId = ret.data.id;
-			     	DocList.renameNode(id, newDocId, newName);
+			     	DocList.renameNode(docId, newDocId, newName);
 		            
                     //Rename doc
-                    renameTreeNode(id, newDocId, newName);
+                    renameTreeNode(docId, newDocId, newName);
                     
 		            bootstrapQ.msg({
 							msg : "重命名完成！",
@@ -591,7 +592,7 @@
             error : function () {
 	               showErrorMessage("重命名失败:服务器异常！");
             }
-    });
+    	});
 	}
 	
 	function renameTreeNode(id, newDocId, newName)
@@ -5024,10 +5025,6 @@ function CompareObj(objA, objB, flag) {
 	            onDrop : zTreeOnDrop,
 	            onChange: zTreeOnChange,
 	            onClick: zTreeOnClick,
-	            //beforeRemove: zTreeBeforeRemove,	//remove操作将改为主动触发
-	            //onRemove: zTreeOnRemove,
-	            beforeRename: zTreeBeforeRename,
-	            onRename: zTreeOnRename,
 	            beforeRightClick: zTreeBeforeRightClick
 	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
