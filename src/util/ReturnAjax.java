@@ -12,9 +12,16 @@ public class ReturnAjax {
 	//以下是默认成功信息
 	private String status =	"ok";
 	private String msgInfo = "获取数据成功";
-	private Object msgData;	//用于向前台传递更详细的信息,方便调试
-	private Object data;
-
+	private Object msgData;	//用于存储额外的状态或数据
+	private Object data;	//用于存储返回结果
+	private String debugLog = ""; //用于向前台传递更详细调试
+	
+	/* 设置自定义信息和额外数据 */
+	public void setMsg(String msg,Object msgData){
+		this.msgInfo = msg;
+		this.msgData = msgData;			
+	}
+	
 	/**
 	 * 设置默认错误信息
 	 */
@@ -29,29 +36,21 @@ public class ReturnAjax {
 			this.msgInfo = "获取数据失败";			
 		}
 	}
-	
+
 	/**
-	 * 设置默认错误信息 with detail
+	 * 设置调试信息
 	 */
-	public void setErrorDetail(String errmsg,Object msgData){
-		this.status = "fail";
-		if(errmsg != null)
+	public void setDebugLog(String debugLog)
+	{
+		if(debugLog != null)
 		{
-			this.msgInfo = errmsg;
+			this.debugLog += "\n" + debugLog;
 		}
-		else
-		{
-			this.msgInfo = "获取数据失败";			
-		}
-		this.msgData = msgData;			
 	}
 	
-	/**
-	 * 设置msg和msgData,方便向前台传递更详细的信息
-	 */
-	public void setMsg(String msg,Object msgData){
-		this.msgInfo = msg;
-		this.msgData = msgData;			
+	public String getDebugLog() 
+	{
+		return debugLog;
 	}
 	//================================ getters and setters ===================================
 	public String getMsgInfo() {
@@ -61,6 +60,7 @@ public class ReturnAjax {
 	public void setMsgInfo(String msgInfo) {
 		this.msgInfo = msgInfo;
 	}
+	
 	public Object getMsgData() {
 		return msgData;
 	}
@@ -68,6 +68,7 @@ public class ReturnAjax {
 	public void setMsgData(Object msgData) {
 		this.msgData = msgData;
 	}
+	
 	public Object getData() {
 		return data;
 	}

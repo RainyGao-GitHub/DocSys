@@ -970,7 +970,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("addRepos() addReposAuth return:" + ret);
 		if(ret == 0)
 		{
-			rt.setMsgData("addRepos() addReposAuth return:" + ret);
+			rt.setDebugLog("addRepos() addReposAuth return:" + ret);
 			System.out.println("新增用户仓库权限失败");
 		}
 				
@@ -991,7 +991,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("addRepos() addDocAuth return:" + ret);
 		if(ret == 0)
 		{
-			rt.setMsgData("addRepos() addReposAuth return:" + ret);
+			rt.setDebugLog("addRepos() addReposAuth return:" + ret);
 			System.out.println("新增用户仓库根目录权限失败");
 		}		
 	}
@@ -1303,7 +1303,7 @@ public class BaseController  extends BaseFunction{
 		if(dir.exists())
 		{
 			System.out.println("GIT仓库:"+localVerRepos + "已存在，请直接设置！");	
-			rt.setMsgData("GIT仓库:"+localVerRepos + "已存在，已直接设置！");
+			rt.setDebugLog("GIT仓库:"+localVerRepos + "已存在，已直接设置！");
 			return localVerRepos;
 		}
 		
@@ -1340,7 +1340,7 @@ public class BaseController  extends BaseFunction{
 		if(dir.exists())
 		{
 			System.out.println("SVN仓库:"+localPath+reposName + "已存在，请直接设置！");	
-			rt.setMsgData("SVN仓库:"+localPath+reposName + "已存在，已直接设置！");
+			rt.setDebugLog("SVN仓库:"+localPath+reposName + "已存在，已直接设置！");
 			return "file:///" + localPath + reposName;
 		}
 		
@@ -1646,7 +1646,7 @@ public class BaseController  extends BaseFunction{
 			if(createDir(dstParentPath) == false)
 			{
 				System.out.println("doCompressDir() Failed to create:" + dstParentPath);	
-				rt.setMsgData("创建目录 " + dstParentPath + " 失败");
+				rt.setDebugLog("创建目录 " + dstParentPath + " 失败");
 				return false;
 			}
 		}
@@ -1658,7 +1658,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			System.out.println("doCompressDir()  压缩失败！");
-			rt.setMsgData("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败");
+			rt.setDebugLog("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败");
 			return false;
 		}
 		
@@ -2627,9 +2627,9 @@ public class BaseController  extends BaseFunction{
 			return updateRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), doc.getSize(), doc.getCheckSum(), 
 								uploadFile, chunkNum, chunkSize, chunkParentPath, rt);
 		case 4: //Move Doc
-			return copyRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt, true);
+			return moveRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt);
 		case 5: //Copy Doc
-			return copyRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt, false);
+			return copyRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt);
 		}
 		return false;
 	}
@@ -2867,17 +2867,38 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
+			if(isMove)
+			{
+				return moveDoc_DB(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+						commitMsg, commitUser, login_user, rt, actionList);				
+			}
+			
 			return copyDoc_DB(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList, isMove);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 2:
-			return copyDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList, isMove);
+			if(isMove)
+			{
+				return moveDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+						commitMsg, commitUser, login_user, rt, actionList);
+			}
+			return 	copyDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
+			if(isMove)
+			{
+				return moveDoc_SVN(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+						commitMsg, commitUser, login_user, rt, actionList);				
+			}
 			return copyDoc_SVN(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList, isMove);
+					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
+			if(isMove)
+			{
+				return moveDoc_GIT(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
+						commitMsg, commitUser, login_user, rt, actionList);				
+			}
 			return copyDoc_GIT(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList, isMove);
+					commitMsg, commitUser, login_user, rt, actionList);
 
 		}
 		return false;
@@ -2885,33 +2906,26 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean copyDoc_GIT(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
 			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove) {
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	private boolean copyDoc_SVN(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
 			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove) {
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	private boolean copyDoc_FS(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
 			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove) {
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) 
+	{
+		System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
 		
-		// TODO Auto-generated method stub
 		Integer reposId = repos.getId();
 		String reposRPath =  getReposRealPath(repos);
-		if(isMove)
-		{
-			System.out.println("copyDoc() move " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);
-		}
-		else
-		{
-			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
-		}
 		
 		//Check if dstFile exists
 		File dstFile = new File(reposRPath + dstParentPath + dstName);
@@ -2932,7 +2946,7 @@ public class BaseController  extends BaseFunction{
 		Doc dstDoc = buildDocByDoc_FS(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
 		
 		//Build MultiActionList For DocCopy/Move
-		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, isMove);
+		BuildMultiActionListForDocMove(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
 		
 		//复制文件或目录
 		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt, isMove) == false)
@@ -2984,20 +2998,127 @@ public class BaseController  extends BaseFunction{
 		return true;
 		return false;
 	}
-
-	protected boolean copyDoc_DB(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove)
+	
+	protected boolean moveDoc_DB(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList)
 	{
+		System.out.println("moveDoc_DB() move " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
+		
 		Integer reposId = repos.getId();
 		String reposRPath =  getReposRealPath(repos);
-		if(isMove)
+		
+		//判断节点是否已存在
+		if(isNodeExist(dstName,dstPid,reposId) == true)
 		{
-			System.out.println("copyDoc() move " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);
+			rt.setError("Node: " + dstName +" 已存在！");
+			return false;
 		}
-		else
+
+		Doc srcDoc = null;
+		Doc dstDoc = null;	//dstDoc have the info 
+		Doc dstPDoc = null;
+		synchronized(syncLock)
 		{
-			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
+			//Try to lock the srcDoc
+			srcDoc = lockDoc(docId,1, 7200000,login_user,rt,true);
+			if(srcDoc == null)
+			{
+				unlock(); //线程锁
+		
+				System.out.println("moveDoc_DB lock " + docId + " Failed");
+				return false;
+			}
+			
+			//Try to lock dstPid
+			if(dstPid != 0)
+			{
+				dstPDoc = lockDoc(dstPid,2, 7200000, login_user,rt,false);
+				if(dstPDoc== null)
+				{
+					unlock(); //线程锁
+	
+					System.out.println("moveDoc() fail to lock dstPid" + dstPid);
+					unlockDoc(docId,login_user, srcDoc);	//Try to unlock the doc
+					return false;
+				}
+			}
+			unlock(); //线程锁
 		}
+		
+		//dstDoc was used for build multiActionList
+		Doc dstDoc = copyDocByDoc_DB(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
+		if(reposService.updateDoc(dstDoc) == 0)	//Update pid/path/name/lastEditTime/lastEditor
+		{
+			rt.setError("移动失败");
+			rt.setDebugLog("moveDoc_DB reposService.updateDoc(" + dstName + ") Failed");
+			return false;				
+		}
+		
+		//Add Lucene Index For dstDoc
+		BuildMultiActionListForDocMove(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
+		
+		//Move Real Doc
+		if(moveRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
+		{
+			System.out.println("moveDoc_DB move " + srcName + " to " + dstName + " 失败");
+			rt.setError("移动失败");
+			rt.setDebugLog("moveDoc_DB moveRealDoc " + srcName + " to " + dstName + "Failed");
+			
+			//unlock doc and revert
+			unlockDoc(docId,login_user,srcDoc);
+			
+			return false;
+		}
+			
+		//Commit the Change to verRepos
+		if(verReposRealDocMove(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt) == false)
+		{
+			System.out.println("moveDoc_DB() verReposRealDocMove failed");
+			
+			//Roll Back Real Doc
+			moveRealDoc(reposRPath,dstParentPath,dstName,srcParentPath,srcName,type,rt);
+			
+			unlockDoc(docId,login_user,srcDoc);
+			rt.setError("移动失败");
+			return false;
+		}
+		
+		//Unlock srcDoc
+		unlockDoc(docId,login_user,null);
+		
+		//只返回最上层的doc记录
+		rt.setData(dstDoc);
+		return true;
+	}
+
+	//isMove: true: just delete subDocs
+	private void DeleteDocAndSubDocs_DB(Doc doc) 
+	{
+		Doc qDoc = new Doc();
+		qDoc.setPid(doc.getId());
+		
+		List<Doc> subDocList = reposService.getDocList(qDoc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			DeleteDocAndSubDocs_DB(subDoc, false);
+		}
+		
+		if(!isMove)
+		{
+			reposService.deleteDoc(doc.getId());
+		}
+		
+	}
+
+	protected boolean copyDoc_DB(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList)
+	{
+		System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
+		
+		Integer reposId = repos.getId();
+		String reposRPath =  getReposRealPath(repos);
+
 		
 		//判断节点是否已存在
 		if(isNodeExist(dstName,dstPid,reposId) == true)
@@ -3115,7 +3236,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	//isMove: true: just delete subDocs
 	private void DeleteDocAndSubDocs_DB(Doc doc, boolean isMove) 
 	{
 		// TODO Auto-generated method stub
@@ -3129,11 +3249,7 @@ public class BaseController  extends BaseFunction{
 			DeleteDocAndSubDocs_DB(subDoc, false);
 		}
 		
-		if(!isMove)
-		{
-			reposService.deleteDoc(doc.getId());
-		}
-		
+		reposService.deleteDoc(doc.getId());
 	}
 
 	private void BuildMultiActionListForDocCopy(MultiActionList actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, boolean isMove) 
@@ -3194,7 +3310,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			Doc dstSubDoc = buildDocByDoc_DB(subDoc, dstDoc.getPid(), dstDoc.getPath(), login_user, false);
+			Doc dstSubDoc = buildDocByDoc_DB(subDoc, dstDoc.getPid(), dstDoc.getPath(), subDoc.getName(), login_user, false);
 			BuildMultiActionListForDocCopy_DB(actionList, repos, subDoc, dstSubDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user, isMove);	
 		}
 	}
@@ -4420,14 +4536,14 @@ public class BaseController  extends BaseFunction{
 			if(isFileExist(localDocPath) == true)
 			{
 				System.out.println("createRealDoc() 目录 " +localDocPath + "　已存在！");
-				rt.setMsgData("createRealDoc() 目录 " +localDocPath + "　已存在！");
+				rt.setDebugLog("createRealDoc() 目录 " +localDocPath + "　已存在！");
 				return false;
 			}
 			
 			if(false == createDir(localDocPath))
 			{
 				System.out.println("createRealDoc() 目录 " +localDocPath + " 创建失败！");
-				rt.setMsgData("createRealDoc() 目录 " +localDocPath + " 创建失败！");
+				rt.setDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！");
 				return false;
 			}				
 		}
@@ -4436,14 +4552,14 @@ public class BaseController  extends BaseFunction{
 			if(isFileExist(localDocPath) == true)
 			{
 				System.out.println("createRealDoc() 文件 " +localDocPath + " 已存在！");
-				rt.setMsgData("createRealDoc() 文件 " +localDocPath + " 已存在！");
+				rt.setDebugLog("createRealDoc() 文件 " +localDocPath + " 已存在！");
 				return false;
 			}
 			
 			if(false == createFile(localParentPath,name))
 			{
 				System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
-				rt.setMsgData("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
+				rt.setDebugLog("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
 				return false;					
 			}
 		}
@@ -4456,7 +4572,7 @@ public class BaseController  extends BaseFunction{
 		if(delFileOrDir(localDocPath) == false)
 		{
 			System.out.println("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
-			rt.setMsgData("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
+			rt.setDebugLog("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
 			return false;
 		}
 		
@@ -4486,7 +4602,7 @@ public class BaseController  extends BaseFunction{
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() saveFile " + name +" 异常！");
 			e.printStackTrace();
-			rt.setMsgData(e);
+			rt.setDebugLog(e.toString());
 			return false;
 		}
 		
@@ -4585,7 +4701,35 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean copyRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt, boolean isMove) 
+	protected boolean moveRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt) 
+	{
+		String srcDocPath = reposRPath + srcParentPath + srcName;
+		String dstDocPath = reposRPath + dstParentPath + dstName;
+
+		if(isFileExist(srcDocPath) == false)
+		{
+			System.out.println("moveRealDoc() 文件: " + srcDocPath + " 不存在");
+			rt.setDebugLog("文件: " + srcDocPath + " 不存在");
+			return false;
+		}
+		
+		if(isFileExist(dstDocPath) == true)
+		{
+			System.out.println("moveRealDoc() 文件: " + dstDocPath + " 已存在");
+			rt.setDebugLog("文件: " + dstDocPath + " 已存在");
+			return false;
+		}
+		
+		if(moveFileOrDir(reposRPath + srcParentPath,srcName,reposRPath + dstParentPath,dstName,true) == false)	//强制覆盖
+		{
+			System.out.println("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed");
+			rt.setDebugLog("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed");
+			return false;
+		}
+		return true;
+	}
+	
+	protected boolean copyRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt) 
 	{
 		String srcDocPath = reposRPath + srcParentPath + srcName;
 		String dstDocPath = reposRPath + dstParentPath + dstName;
@@ -4593,34 +4737,23 @@ public class BaseController  extends BaseFunction{
 		if(isFileExist(srcDocPath) == false)
 		{
 			System.out.println("copyRealDoc() 文件: " + srcDocPath + " 不存在");
-			rt.setMsgData("文件: " + srcDocPath + " 不存在");
+			rt.setDebugLog("文件: " + srcDocPath + " 不存在");
 			return false;
 		}
 		
 		if(isFileExist(dstDocPath) == true)
 		{
 			System.out.println("copyRealDoc() 文件: " + dstDocPath + " 已存在");
-			rt.setMsgData("文件: " + dstDocPath + " 已存在");
+			rt.setDebugLog("文件: " + dstDocPath + " 已存在");
 			return false;
 		}
 		
-		if(isMove)
+
+		if(false == copyFileOrDir(srcDocPath, dstDocPath, true))
 		{
-			if(moveFileOrDir(reposRPath + srcParentPath,srcName,reposRPath + dstParentPath,dstName,true) == false)	//强制覆盖
-			{
-				System.out.println("copyRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed");
-				rt.setMsgData("copyRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed");
-				return false;
-			}
-		}
-		else
-		{
-			if(false == copyFileOrDir(srcDocPath, dstDocPath, true))
-			{
-				System.out.println("copyRealDoc() copy " + srcDocPath + " to " + dstDocPath + " Failed");
-				rt.setMsgData("copy " + srcDocPath + " to " + dstDocPath + " 失败");
-				return false;
-			}
+			System.out.println("copyRealDoc() copy " + srcDocPath + " to " + dstDocPath + " Failed");
+			rt.setDebugLog("copyRealDoc copy " + srcDocPath + " to " + dstDocPath + " 失败");
+			return false;
 		}
 		return true;
 	}
@@ -4632,26 +4765,26 @@ public class BaseController  extends BaseFunction{
 		if(isFileExist(vDocPath) == true)
 		{
 			System.out.println("目录 " +vDocPath + "　已存在！");
-			rt.setMsgData("目录 " +vDocPath + "　已存在！");
+			rt.setDebugLog("目录 " +vDocPath + "　已存在！");
 			return false;
 		}
 			
 		if(false == createDir(vDocPath))
 		{
 			System.out.println("目录 " + vDocPath + " 创建失败！");
-			rt.setMsgData("目录 " + vDocPath + " 创建失败！");
+			rt.setDebugLog("目录 " + vDocPath + " 创建失败！");
 			return false;
 		}
 		if(createDir(vDocPath + "/res") == false)
 		{
 			System.out.println("目录 " + vDocPath + "/res" + " 创建失败！");
-			rt.setMsgData("目录 " + vDocPath + "/res" + " 创建失败！");
+			rt.setDebugLog("目录 " + vDocPath + "/res" + " 创建失败！");
 			return false;
 		}
 		if(createFile(vDocPath,"content.md") == false)
 		{
 			System.out.println("目录 " + vDocPath + "/content.md" + " 创建失败！");
-			rt.setMsgData("目录 " + vDocPath + "/content.md" + " 创建失败！");
+			rt.setDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！");
 			return false;			
 		}
 		if(content !=null && !"".equals(content))
@@ -4671,7 +4804,7 @@ public class BaseController  extends BaseFunction{
 			if(folder.mkdir() == false)
 			{
 				System.out.println("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
-				rt.setMsgData("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
+				rt.setDebugLog("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
 				return false;
 			}
 		}
@@ -4685,7 +4818,7 @@ public class BaseController  extends BaseFunction{
 		} catch (FileNotFoundException e) {
 			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
 			e.printStackTrace();
-			rt.setMsgData(e);
+			rt.setDebugLog(e.toString());
 			return false;
 		}
 		try {
@@ -4695,7 +4828,7 @@ public class BaseController  extends BaseFunction{
 		} catch (IOException e) {
 			System.out.println("saveVirtualDocContent() out.write exception");
 			e.printStackTrace();
-			rt.setMsgData(e);
+			rt.setDebugLog(e.toString());
 			return false;
 		}
 		return true;
@@ -4736,7 +4869,7 @@ public class BaseController  extends BaseFunction{
 		String localDocVPath = reposVPath + docVName;
 		if(delDir(localDocVPath) == false)
 		{
-			rt.setMsgData("deleteVirtualDoc() delDir失败 " + localDocVPath);
+			rt.setDebugLog("deleteVirtualDoc() delDir失败 " + localDocVPath);
 			return false;
 		}
 		return true;
@@ -4745,7 +4878,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean moveVirtualDoc(String reposVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
 		if(moveFileOrDir(reposVPath, srcDocVName, reposVPath, dstDocVName, false) == false)
 		{
-			rt.setMsgData("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
+			rt.setDebugLog("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
 			return false;
 		}
 		return true;
@@ -4756,7 +4889,7 @@ public class BaseController  extends BaseFunction{
 		String dstDocFullVPath = reposVPath + dstDocVName;
 		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
 		{
-			rt.setMsgData("copyVirtualDoc() copyDir " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
+			rt.setDebugLog("copyVirtualDoc() copyDir " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
 			return false;
 		}
 		return true;
@@ -4844,7 +4977,7 @@ public class BaseController  extends BaseFunction{
 				if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg,commitUser) == false)
 				{
 					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
-					rt.setMsgData("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
+					rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
 					return false;
 				}
 			}
@@ -4853,7 +4986,7 @@ public class BaseController  extends BaseFunction{
 				if(svnUtil.svnAddDir(parentPath,entryName,commitMsg,commitUser) == false)
 				{
 					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");	
-					rt.setMsgData("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");
+					rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");
 					return false;
 				}
 			}
@@ -4863,7 +4996,7 @@ public class BaseController  extends BaseFunction{
 			if(type != entryType)
 			{
 				System.out.println("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
-				rt.setMsgData("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
+				rt.setDebugLog("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
 				return true;	
 			}
 			
@@ -4973,7 +5106,7 @@ public class BaseController  extends BaseFunction{
 			if(svnUtil.svnDelete(parentPath,name,commitMsg,commitUser) == false)
 			{
 				System.out.println("svnRealDocDelete() " + docRPath + " remoteDeleteEntry失败！");
-				rt.setMsgData("svnRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
+				rt.setDebugLog("svnRealDocDelete() svnUtil.svnDelete失败" + " docRPath:" + docRPath + " name:" + name);
 				return false;
 			}
 		}
@@ -5491,7 +5624,7 @@ public class BaseController  extends BaseFunction{
 		if(svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, isMove) == false)
 		{
 			System.out.println("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
-			rt.setMsgData("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			rt.setDebugLog("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
 			return false;
 		}
 		return true;
@@ -5540,7 +5673,7 @@ public class BaseController  extends BaseFunction{
 		if(svnUtil.Init(repos, false, commitUser) == false)
 		{
 			System.out.println("svnVirtualDocAdd() svnUtil Init Failed!");
-			rt.setMsgData("svnVirtualDocAdd() svnUtil Init Failed!");
+			rt.setDebugLog("svnVirtualDocAdd() svnUtil Init Failed!");
 			return false;
 		}
 		
@@ -5550,7 +5683,7 @@ public class BaseController  extends BaseFunction{
 		if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null) == false)
 		{
 			System.out.println(docVName + " doAutoCommit失败！");
-			rt.setMsgData("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
+			rt.setDebugLog("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
 			return false;
 		}
 		return true;
@@ -5570,7 +5703,7 @@ public class BaseController  extends BaseFunction{
 			if(svnUtil.svnDelete("",docVName,commitMsg,commitUser) == false)
 			{
 				System.out.println("svnVirtualDocDelete() " + docVName + " remoteDeleteEntry失败！");
-				rt.setMsgData("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ");
+				rt.setDebugLog("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ");
 				return false;
 			}
 		}
@@ -5591,7 +5724,7 @@ public class BaseController  extends BaseFunction{
 		if(svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,null) == false)
 		{
 			System.out.println("svnVirtualDocCommit() " + docVName + " doCommit失败！");
-			rt.setMsgData(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
+			rt.setDebugLog(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
 			return false;
 		}
 		
@@ -5603,7 +5736,7 @@ public class BaseController  extends BaseFunction{
 		if(svnCopy(repos, false,"",srcDocVName,"",dstDocVName,commitMsg,commitUser, rt, true) == false)
 		{
 			System.out.println("svnMove Failed！");
-			rt.setMsgData("svnVirtualDocMove() svnMove Failed！");
+			rt.setDebugLog("svnVirtualDocMove() svnMove Failed！");
 			return false;
 		}
 		return true;

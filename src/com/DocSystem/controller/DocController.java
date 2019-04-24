@@ -251,17 +251,17 @@ public class DocController extends BaseController{
 		}
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
-		rt.setMsgData("0");
 		String fileChunkName = docName + "_" + chunkIndex;
-		
-		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		String chunkParentPath = userTmpDir;
 		String chunkFilePath = chunkParentPath + fileChunkName;
-		if(true == isChunkMatched(chunkFilePath,chunkHash))
+		if(false == isChunkMatched(chunkFilePath,chunkHash))
 		{
-			rt.setMsgInfo("chunk: " + fileChunkName +" 已存在，且checkSum相同！");
-			rt.setMsgData("1");
+			rt.setMsg("chunk: " + fileChunkName +" 不存在，或checkSum不同！", "0");
+		}
+		else
+		{
+			rt.setMsg("chunk: " + fileChunkName +" 已存在，且checkSum相同！", "1");
 			
 			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
@@ -367,8 +367,7 @@ public class DocController extends BaseController{
 		if(doc != null)
 		{
 			rt.setData(doc);
-			rt.setMsgInfo("Node: " + docName +" 已存在！");
-			rt.setMsgData("0");
+			rt.setMsg("Node: " + docName +" 已存在！","0");
 			System.out.println("checkDocInfo() " + docName + " 已存在");
 	
 			//检查checkSum是否相同
@@ -376,8 +375,7 @@ public class DocController extends BaseController{
 			{
 				if(true == isDocCheckSumMatched(doc,size,checkSum))
 				{
-					rt.setMsgInfo("Node: " + docName +" 已存在，且checkSum相同！");
-					rt.setMsgData("1");
+					rt.setMsg("Node: " + docName +" 已存在，且checkSum相同！", "1");
 					System.out.println("checkDocInfo() " + docName + " 已存在，且checkSum相同！");
 				}
 			}
@@ -402,8 +400,7 @@ public class DocController extends BaseController{
 					{
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
 						rt.setData(newDoc);
-						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found and do copy OK！");
-						rt.setMsgData("1");
+						rt.setMsg("SameDoc " + sameDoc.getName() +" found and do copy OK！", "1");
 						writeJson(rt, response);
 						executeMultiActionList(actionList, rt);
 						return;
@@ -412,8 +409,7 @@ public class DocController extends BaseController{
 					{
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied failed！");
 						rt.setStatus("ok");
-						rt.setMsgInfo("SameDoc " + sameDoc.getName() +" found but do copy Failed！");
-						rt.setMsgData("3");
+						rt.setMsg("SameDoc " + sameDoc.getName() +" found but do copy Failed！", "3");
 						writeJson(rt, response);
 						return;
 					}
@@ -1157,7 +1153,7 @@ public class DocController extends BaseController{
 			if(fileSuffix == null)
 			{
 				rt.setError("未知文件类型");
-				rt.setMsgData("srcPath:"+srcPath);
+				rt.setDebugLog("srcPath:"+srcPath);
 				writeJson(rt, response);
 				return;
 			}
@@ -1168,7 +1164,7 @@ public class DocController extends BaseController{
 				if(copyFile(srcPath, dstPath,true) == false)
 				{
 					rt.setError("预览失败");
-					rt.setMsgData("Failed to copy " + srcPath + " to " + dstPath);
+					rt.setDebugLog("Failed to copy " + srcPath + " to " + dstPath);
 					writeJson(rt, response);
 					return;					
 				}
@@ -1191,14 +1187,14 @@ public class DocController extends BaseController{
 				if(Office2PDF.openOfficeToPDF(srcPath,dstPath) == false)
 				{
 					rt.setError("预览失败");
-					rt.setMsgData("Failed execute openOfficeToPDF " + srcPath + " to " + dstPath);
+					rt.setDebugLog("Failed execute openOfficeToPDF " + srcPath + " to " + dstPath);
 					writeJson(rt, response);
 					return;
 				}
 				break;
 			default:
 				rt.setError("该文件类型不支持预览");
-				rt.setMsgData("srcPath:"+srcPath);
+				rt.setDebugLog("srcPath:"+srcPath);
 				writeJson(rt, response);
 				return;
 			}
@@ -1495,7 +1491,7 @@ public class DocController extends BaseController{
 			//verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
 
 			System.out.println("verReposAutoCommit 失败");
-			rt.setMsgData("verReposAutoCommit 失败");
+			rt.setDebugLog("verReposAutoCommit 失败");
 		}
 		return false;
 	}
@@ -1538,7 +1534,7 @@ public class DocController extends BaseController{
 			//verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
 
 			System.out.println("verReposAutoCommit 失败");
-			rt.setMsgData("verReposAutoCommit 失败");
+			rt.setDebugLog("verReposAutoCommit 失败");
 		}
 		
 		//Do SyncWithVerRepos (skipRealDocAdd)
