@@ -2363,31 +2363,34 @@ public class BaseController  extends BaseFunction{
 		    	for(int i=0;i<tmp.length;i++)
 		    	{
 		    		File subEntry = tmp[i];
-		    		Doc subDoc = buildDocByFile(subEntry, repos, doc.getId(), level, parentPath + doc.getName() + "/", i);
+		    		Doc subDoc = buildDocByFile(subEntry, repos, doc.getId(), parentPath + doc.getName() + "/", subEntry.getName());
 		    		BuildMultiActionListForDocDelete(actionList, repos, subDoc, level+1, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);
 		    	}
 			}	
 		}
 	}
 
-	private Doc buildDocByFile(File entry, Repos repos, Integer pid, Integer level, String parentPath, int index) 
+	private Doc buildDocByFile(File entry, Repos repos, Integer pid, String parentPath, String docName) 
 	{
+		Integer level = getLevelByParentPath(parentPath);
+		int docId = buildDocIdByName(level, docName);
+		
 		int entryType = entry.isDirectory()? 2: 1;
-		String entryName = entry.getName();
-		long lastModifyTime = getFileLastModifiedTime(entry);
+		long lastModifyTime = entry.lastModified();
 		String checkSum = getCheckSumFormFile(entry);
 		
 		//Create Doc to save subEntry Info
 		Doc doc = new Doc();
-		int docId = buildDocIdByName(level, entryName);
+		doc.setId(docId);
 		doc.setVid(repos.getId());
 		doc.setPid(pid);
-		doc.setId(docId);
-		doc.setName(entryName);
-		doc.setType(entryType);
 		doc.setPath(parentPath);
+		doc.setName(docName);
+		doc.setType(entryType);
+		
 		doc.setSize((int)entry.length());
 		doc.setCheckSum(checkSum);
+		
 		doc.setState(0);
 		doc.setCreateTime(lastModifyTime);
 		doc.setLatestEditTime(lastModifyTime);
@@ -2880,6 +2883,108 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private boolean copyDoc_GIT(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean copyDoc_SVN(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean copyDoc_FS(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove) {
+		
+		// TODO Auto-generated method stub
+		Integer reposId = repos.getId();
+		String reposRPath =  getReposRealPath(repos);
+		if(isMove)
+		{
+			System.out.println("copyDoc() move " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);
+		}
+		else
+		{
+			System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
+		}
+		
+		//Check if dstFile exists
+		File dstFile = new File(reposRPath + dstParentPath + dstName);
+		if(dstFile.exists() == true)
+		{
+			rt.setError("Node: " + dstName +" 已存在！");
+			return false;
+		}
+		
+		File srcFile = new File(reposRPath + srcParentPath + srcName);
+		if(srcFile.exists() == true)
+		{
+			rt.setError("Node: " + srcName +" 不存在！");
+			return false;
+		}
+		
+		Doc srcDoc = buildDocByFile(srcFile, repos, srcPid, srcParentPath, srcName);
+		Doc dstDoc = buildDocByDoc_FS(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
+		
+		//Build MultiActionList For DocCopy/Move
+		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, isMove);
+		
+		//复制文件或目录
+		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt, isMove) == false)
+		{
+			if(isMove)
+			{
+				System.out.println("move " + srcName + " to " + dstName + " 失败");
+				rt.setError("copyRealDoc move " + srcName + " to " + dstName + "Failed");
+			}
+			else
+			{
+				System.out.println("copy " + srcName + " to " + dstName + " 失败");
+				rt.setError("copyRealDoc copy " + srcName + " to " + dstName + "Failed");
+			}
+			
+			DeleteDocAndSubDocs_FS(dstDoc, isMove);
+			
+			unlockDoc(docId,login_user,srcDoc);
+			return false;
+		}
+			
+		//需要将文件Commit到VerRepos上去
+		if(verReposRealDocCopy(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt) == false)
+		{
+			System.out.println("copyDoc() verReposRealDocCopy failed");
+			
+			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
+			deleteRealDoc(reposRPath,dstParentPath,dstName,type,rt);
+			
+			//Delete doc and subDocs
+			DeleteDocAndSubDocs_FS(dstDoc, isMove);
+			
+			unlockDoc(docId,login_user,srcDoc);
+			rt.setError("copyDoc() verReposRealDocCopy failed");
+			return false;
+		}				
+
+		if(!isMove)
+		{
+			//启用dstDoc
+			unlockDoc(dstDoc.getId(),login_user,null);
+		}
+		
+		//Unlock srcDoc 
+		unlockDoc(docId,login_user,null);
+		
+		//只返回最上层的doc记录
+		rt.setData(dstDoc);
+		return true;
+		return false;
+	}
+
 	protected boolean copyDoc_DB(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList, boolean isMove)
 	{
@@ -2916,7 +3021,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//新建doc记录，并锁定
-			dstDoc = buildDocByDoc_DB(srcDoc, dstPid, dstParentPath, login_user, true);
+			dstDoc = buildDocByDoc_DB(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
 			if(isMove)
 			{
 				dstDoc.setId(srcDoc.getId());
@@ -3094,17 +3199,19 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private Doc buildDocByDoc_DB(Doc doc, Integer dstPid, String dstParentPath, User login_user, boolean lock) 
+	private Doc buildDocByDoc_DB(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
 	{
 		Doc dstDoc = new Doc();
 		dstDoc.setId(null);	//置空id,以便新建一个doc
-		dstDoc.setName(doc.getName());
-		dstDoc.setType(doc.getType());
-		dstDoc.setContent(doc.getContent());
-		dstDoc.setPath(dstParentPath);
 		dstDoc.setVid(doc.getVid());
 		dstDoc.setPid(dstPid);
+		dstDoc.setPath(dstParentPath);
+		dstDoc.setName(dstName);
+		dstDoc.setType(doc.getType());
+		
+		dstDoc.setContent(doc.getContent());
 		dstDoc.setCreator(login_user.getId());
+		
 		//set createTime
 		long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
 		dstDoc.setCreateTime(nowTimeStamp);
@@ -3128,18 +3235,20 @@ public class BaseController  extends BaseFunction{
 		return dstDoc;
 	}
 	
-	private Doc buildDocByDoc_FS(Repos repos, Doc doc, Integer dstPid, Integer level, String dstParentPath, String localRootPath, User login_user, boolean lock) 
+	private Doc buildDocByDoc_FS(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
 	{
+		Integer level = getLevelByParentPath(dstParentPath);
 		Integer docId = buildDocIdByName(level, dstParentPath);
 				
 		Doc dstDoc = new Doc();
 		dstDoc.setId(docId);
-		dstDoc.setName(doc.getName());
-		dstDoc.setType(doc.getType());
-		dstDoc.setContent(doc.getContent());
-		dstDoc.setPath(dstParentPath);
 		dstDoc.setVid(doc.getVid());
 		dstDoc.setPid(dstPid);
+		dstDoc.setPath(dstParentPath);
+		dstDoc.setName(dstName);
+		dstDoc.setType(doc.getType());
+		
+		dstDoc.setContent(doc.getContent());
 		dstDoc.setCreator(login_user.getId());
 		//set createTime
 		long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
