@@ -662,13 +662,20 @@ public class DocController extends BaseController{
 		
 		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
 		MultiActionList actionList = new MultiActionList();
-		boolean ret = copyDoc(repos, docId, parentId, parentId, type, parentPath, name, parentPath, newname, commitMsg,commitUser, login_user,rt, actionList , true);
+		boolean ret = renameDoc(repos, docId, parentId, parentId, type, parentPath, name, parentPath, newname, commitMsg,commitUser, login_user,rt, actionList , true);
 		writeJson(rt, response);
 		
 		if(ret == true)
 		{
 			executeMultiActionList(actionList, rt);
 		}
+	}
+
+	private boolean renameDoc(Repos repos, Integer docId, Integer parentId, Integer parentId2, Integer type,
+			String parentPath, String name, String parentPath2, String newname, String commitMsg, String commitUser,
+			User login_user, ReturnAjax rt, MultiActionList actionList, boolean b) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	/****************   move a Document ******************/
@@ -706,7 +713,7 @@ public class DocController extends BaseController{
 		
 		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
 		MultiActionList actionList = new MultiActionList();
-		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath, srcDocName, dstParentPath, dstDocName, commitMsg, commitUser, login_user,rt, actionList , true);		
+		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcParentPath, srcDocName, dstParentPath, dstDocName, commitMsg, commitUser, login_user,rt, actionList , true);		
 		writeJson(rt, response);	
 		
 		if(ret)
@@ -715,6 +722,13 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private boolean moveDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean b) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
 	public void copyDoc(Integer reposId, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 

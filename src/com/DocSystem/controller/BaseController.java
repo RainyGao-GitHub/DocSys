@@ -2904,6 +2904,27 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private boolean moveDoc_GIT(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean moveDoc_SVN(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean moveDoc_FS(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
+			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean copyDoc_GIT(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
 			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
 			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList) {
@@ -2946,7 +2967,7 @@ public class BaseController  extends BaseFunction{
 		Doc dstDoc = buildDocByDoc_FS(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
 		
 		//Build MultiActionList For DocCopy/Move
-		BuildMultiActionListForDocMove(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
+		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
 		
 		//复制文件或目录
 		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt, isMove) == false)
@@ -3045,7 +3066,7 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		//dstDoc was used for build multiActionList
+		//Generator dstDoc by Doc
 		Doc dstDoc = copyDocByDoc_DB(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
 		if(reposService.updateDoc(dstDoc) == 0)	//Update pid/path/name/lastEditTime/lastEditor
 		{
@@ -3101,14 +3122,10 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			DeleteDocAndSubDocs_DB(subDoc, false);
+			DeleteDocAndSubDocs_DB(subDoc);
 		}
 		
-		if(!isMove)
-		{
-			reposService.deleteDoc(doc.getId());
-		}
-		
+		reposService.deleteDoc(doc.getId());
 	}
 
 	protected boolean copyDoc_DB(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
@@ -3178,7 +3195,7 @@ public class BaseController  extends BaseFunction{
 		if(executeDBActionList(actionList.getDBActionList(), rt) == false)
 		{
 			//Do delete Doc and SubDocs
-			DeleteDocAndSubDocs_DB(dstDoc, isMove);
+			DeleteDocAndSubDocs_DB(dstDoc);
 				
 			//unlock SrcDoc
 			unlockDoc(docId,login_user,srcDoc);
@@ -3215,7 +3232,7 @@ public class BaseController  extends BaseFunction{
 			deleteRealDoc(reposRPath,srcParentPath,dstName,type,rt);
 			
 			//Delete doc and subDocs
-			DeleteDocAndSubDocs_DB(dstDoc, isMove);
+			DeleteDocAndSubDocs_DB(dstDoc);
 			
 			unlockDoc(docId,login_user,srcDoc);
 			rt.setError("copyDoc() verReposRealDocCopy failed");
@@ -3315,6 +3332,40 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
+	//This is for docMove
+	private Doc copyDocByDoc_DB(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
+	{
+		Doc dstDoc = new Doc();
+		dstDoc.setId(doc.getId());
+		dstDoc.setVid(doc.getVid());
+		dstDoc.setType(doc.getType());
+		dstDoc.setContent(doc.getContent());
+		
+		//Info which need to change
+		dstDoc.setPid(dstPid);
+		dstDoc.setPath(dstParentPath);
+		dstDoc.setName(dstName);
+		long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
+		dstDoc.setLatestEditTime(nowTimeStamp);
+		dstDoc.setLatestEditor(login_user.getId());
+		
+		if(lock)
+		{
+			dstDoc.setState(2);	//doc的状态为不可用
+			dstDoc.setLockBy(login_user.getId());	//set LockBy
+			long lockTime = nowTimeStamp + 24*60*60*1000;
+			dstDoc.setLockTime(lockTime);	//Set lockTime
+		}
+		else
+		{
+			dstDoc.setState(0);
+			dstDoc.setLockBy(0);
+			dstDoc.setLockTime((long)0);			
+		}
+		return dstDoc;
+	}
+	
+	//For copyDoc
 	private Doc buildDocByDoc_DB(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
 	{
 		Doc dstDoc = new Doc();
