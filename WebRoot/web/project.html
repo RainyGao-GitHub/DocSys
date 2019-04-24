@@ -399,6 +399,18 @@
     </div>
 </div>
 
+<div id="renameConfirmDialog" style="display:none">
+    <div class="modal-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">文件名：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="docName" title="rename">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
 <!-- multiple file and dir upload triger div -->
 <div style="display:none">
 	<input id="checkInFile" name="checkInFile" type="file" onchange="checkInUploadConfirm(event)"/>
@@ -517,6 +529,89 @@
 			 	});
 		}
 	}
+
+	function showRenameDialog(node)
+	{
+		var docId = node.id;
+		var parentPath = node.path;
+		var docName = node.name;
+		console.log("showRenameDialog docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+		
+		//Show dialog
+	    qiao.bs.dialog({
+	        id: "dialog-renameDialog",
+	        url: '#renameConfirmDialog',
+	        title: '重命名',
+	        okbtn: "确定",
+	        callback: function () {
+	            setTimeout(function () {
+	                $("#dialog-renameDialog input[name='docName']").val(docName);	                 
+	            },100);
+	        }
+	    },function () {
+			var newName = $("#dialog-renameDialog input[name='docName']").val();
+			doRenameDoc(docId,parentPath, docName,newName);
+	    	return true;   
+	    });
+		return true;
+	}
+		
+	function doRenameDoc(id, parentPath, docName, newName)
+	{
+		$.ajax({
+            url : "/DocSystem/Doc/renameDoc.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                id : id,
+                parentPath: parentPath,
+                docName: docName,
+                newname: newName,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    //Rename NodeName in docList
+                    var newDocId = ret.data.id;
+			     	DocList.renameNode(id, newDocId, newName);
+		            
+                    //Rename doc
+                    renameTreeNode(id, newDocId, newName);
+                    
+		            bootstrapQ.msg({
+							msg : "重命名完成！",
+							type : 'success',
+							time : 2000,
+					});
+                }
+                else
+                {
+                	showErrorMessage("重命名失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+	               showErrorMessage("重命名失败:服务器异常！");
+            }
+    });
+	}
+	
+	function renameTreeNode(id, newDocId, newName)
+	{
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",id);
+		if(node && node != null)
+		{
+			node.name = newName;
+			node.id = newDocId;
+		}
+		zTree.updateNode(node);
+		
+		if(node.isParent == true && parentNode.open == true) //刷新目录
+		{
+			//强制异步刷新子目录，以保证子目录的信息正确
+			zTree.reAsyncChildNodes(node, "refresh",true);	
+		}
+	}
+	
 
 	function getCopiedNodes()
 	{
@@ -3381,41 +3476,6 @@
         });
     }
     
-    //renameDoc接口
-    function renameDoc(id,newName)
-    {
-    	console.log("renameDoc id:" + id + " newName:" +  newName);
-        $.ajax({
-                url : "/DocSystem/Doc/renameDoc.do",
-                type : "post",
-                dataType : "json",
-                data : {
-                    id : id,
-                    newname: newName,
-                },
-                success : function (ret) {
-                    if( "ok" == ret.status ){
-                        //Rename NodeName in docList
-				     	DocList.renameNode(id,newName);
-                        bootstrapQ.msg({
-								msg : "重命名完成！",
-								type : 'success',
-								time : 2000,
-						});
-                    }
-                    else
-                    {
-                    	syncUpMenu();
-                    	showErrorMessage("重命名失败:" + ret.msgInfo);
-                    }
-                },
-                error : function () {
-	               syncUpMenu();
- 	               showErrorMessage("重命名失败:服务器异常！");
-                }
-        });
-    }
-    
 	//DocDelete类
     var DocDelete = (function () {
     	var busy = 0;
@@ -5282,85 +5342,6 @@ function CompareObj(objA, objB, flag) {
 		return remoteDir;
 	}
 
-	//Rename and Delete Implemenation Start: confirm rename operation
-	var isCanceled = 0; //定义这个全局变量是因为OnRename有个bug,isCancel的状态不对
-	function zTreeBeforeRename(treeId, treeNode, newName, isCancel) {
-		if(isCancel == true)
-		{
-			//alert("isCancel");
-			return true;
-		}
-		
-		//文件同名表示放弃修改
-		var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		if(treeNode.name == newName)
-		{
-			//alert("名字未修改");
-			isCanceled = 1;
-			treeObj.cancelEditName();
-			return false;
-		}
-			
-		//检查同名文件是否已存在
-		var parentNode = treeNode.getParentNode();
-		if(isNodeExist(newName,parentNode) == true)
-		{
-			bootstrapQ.alert(newName + " 已存在！");
-			isCanceled = 1;
-			treeObj.cancelEditName();
-			return false;
-		}
-		
-		//确认是否修改
-		if(confirm("确定修改?") == false)
-		{
-			isCanceled = 1;
-			treeObj.cancelEditName();
-			return false;
-		}
-		else
-		{
-			isCanceled = 0;
-			return true;
-		}
-	}
-    function zTreeOnRename(event, treeId, treeNode, isCancel) {
-        console.log("zTreeOnRename()");
-        if(isCanceled == 1)
-        {
-        	//alert("取消修改");
-           	return;
-        }
-        
-        renameDoc(treeNode.id,treeNode.name);
-    }
-    
-	/* I will call doDelete to delete treeNodes
-	function zTreeBeforeRemove(treeId, treeNode) {	
-		if(treeNode)
-		{
-			if(treeNode.isParent == true)
-			{
-				return confirm("警告：是否删除整个目录，请确认？");			
-			}
-			else
-			{
-				return confirm("是否删除文件");		
-			}
-		}
-		return false;
-	}
-	
-    function zTreeOnRemove(event, treeId, treeNode) {
-    	console.log("zTreeOnRemove()");
-    	var treeNodes = [];
-    	treeNodes.push(treeNode);
-		DocDelete.deleteDocs(treeNodes);
-    }
-	*/
-	
-    //Rename and Delete Implemenation End	
-
     //该接口是为了避免新增Node时触发的异步加载导致出现多个Node
 	function addTreeNode(node,parentNode)
 	{
@@ -5575,11 +5556,12 @@ function CompareObj(objA, objB, flag) {
 		}
     	
     	//Rename Node
-		function renameNode(docId,newName)
+		function renameNode(docId, newDocId, newName)
 		{
     		var obj = $("[dataId='"+ docId +"']");
     		if(obj)
     		{
+    			obj.attr("dataId", newDocId);
 	    		obj.attr("dataName",newName);
 				var domObj = obj.children("div").get(0);
 				var firstDivObj = $(domObj);
@@ -5612,8 +5594,8 @@ function CompareObj(objA, objB, flag) {
             deleteNode: function(docId){
             	deleteNode(docId);
             },
-            renameNode: function(docId,newName){
-            	renameNode(docId,newName);
+            renameNode: function(docId, newDocId, newName){
+            	renameNode(docId, newDocId, newName);
             },
             focusNode: function(docId){
             	focusNode(docId);
@@ -6555,7 +6537,8 @@ function CompareObj(objA, objB, flag) {
 						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						if(curRightClickedTreeNode !== null)
 						{
-							treeObj.editName(curRightClickedTreeNode);
+							showRenameDialog(curRightClickedTreeNode);
+							//treeObj.editName(curRightClickedTreeNode);
 							curRightClickedTreeNode = null;
 	        			}
 					}
@@ -6718,8 +6701,7 @@ function CompareObj(objA, objB, flag) {
 						var node = getNodeByNodeId(docId);
 						if(node !== null)
 						{
-							var treeObj = $.fn.zTree.getZTreeObj("doctree");
-							treeObj.editName(node);
+							showRenameDialog(node);
 	        			}
 					}
 			},
