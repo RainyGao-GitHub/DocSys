@@ -703,12 +703,12 @@ public class ReposController extends BaseController{
 		}
 		
 		//获取DocAuthList
-		//Step1: get reposAuthList (包含了user和group)
+		//Step1: 获取仓库可访问用户和组列表
 		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
 		System.out.println("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
 		printObject("reposAuthList:", reposAuthList);
 		
-		//Step2: go through the reposAuthList and get the docAuth for the user or group on doc one by one
+		//Step2: 获取可访问的用户、组的权限列表
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		for(int i=0;i<reposAuthList.size();i++)
 		{
