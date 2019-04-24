@@ -734,10 +734,22 @@ public class ReposController extends BaseController{
 			}	
 		}
 		
-		//如果是根目录，则将仓库下其他所有的值直接设置显示出来
+		//如果是根目录，则要将仓库下其他的 直接设置 显示出来
 		if(docId == null || docId == 0)
 		{
-			docAuthList = reposService.getAllDocAuthList(reposId);
+			List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(reposId);
+			if(allDocAuthList != null)
+			{
+				//add the docAuth to docAuthList which docId is not 0
+				for(int i=0;i<allDocAuthList.size();i++)
+				{
+					DocAuth tmpDocAuth = allDocAuthList.get(i);
+					if(tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
+					{
+						docAuthList.add(tmpDocAuth);						
+					}
+				}
+			}
 		}
 		printObject("docAuthList:",docAuthList);
 
