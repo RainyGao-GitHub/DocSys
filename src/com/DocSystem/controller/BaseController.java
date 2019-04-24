@@ -389,6 +389,7 @@ public class BaseController  extends BaseFunction{
     		String subEntryName = subEntry.getName();
     		if(subEntryName.equals(doc.getName()))
     		{
+    			doc.setId(subDoc.getId());
     			System.out.println("getSubDocListFromParentToDoc_FS() subDocId:" + doc.getId());
     		}
     	}
