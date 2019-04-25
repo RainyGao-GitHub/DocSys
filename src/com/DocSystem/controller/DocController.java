@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.common.HitDoc;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
@@ -1342,50 +1344,211 @@ public class DocController extends BaseController{
 			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
 			return;
-			
-		}else{
-			HashMap<String, Object> params = new HashMap<String, Object>();
-			params.put("reposId", reposId);	//reposId为空则search所有仓库下的文件
-			params.put("pDocId", pDocId);	//pDocId为空则search仓库下所有文件
-					
-			if(sort!=null&&sort.length()>0)
-			{
-				List<Map<String, Object>> sortList = GsonUtils.getMapList(sort);
-				params.put("sortList", sortList);
-			}
-			
-			//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
-			if(searchWord!=null&&!"".equals(searchWord)){
-				try {
-					params.put("name", searchWord);
-					List<String> idList = LuceneUtil2.fuzzySearch(searchWord, "doc");
-		        	for(int i=0; i < idList.size(); i++)
-		        	{
-		        		System.out.println(idList.get(i));
-		        	}
-		        	
-					List<String> ids = new ArrayList<String>();
-					for(String s:idList){
-						String[] tmp = s.split(":");
-						ids.add(tmp[0]);
-					}
-					params.put("ids", ids.toString().replace("[", "").replace("]", ""));
-					System.out.println(idList.toString());
-				} catch (Exception e) {
-					System.out.println("LuceneUtil2.search 异常");
-					e.printStackTrace();
-				}
-			}else{
-				params.put("name", "");
-			}
-			
-			//根据params参数查询docList
-			List<Doc> list = reposService.queryDocList(params);
-			rt.setData(list);
 		}
+
+		List<Repos> reposList = new ArrayList<Repos>();
+		String parentPath = "";
+		if(reposId == null || reposId == -1)
+		{
+			//Do search all AccessableRepos
+			reposList = getAccessableReposList(login_user.getId());
+			pDocId = 0;
+			parentPath  = "";
+		}
+		else
+		{
+			Repos repos = reposService.getRepos(reposId);
+			if(repos != null)
+			{
+				reposList.add(repos);
+			}
+		}
+		
+		if(reposList == null)
+		{
+			System.out.println("searchDoc reposList is null");
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		List<Doc> searchResult = new ArrayList<Doc>();
+		for(int i=0; i< reposList.size(); i++)
+		{
+			Repos queryRepos = reposList.get(i);
+			List<Doc> result =  searchInRepos(queryRepos, pDocId, parentPath, searchWord, sort);
+			if(result != null && result.size() > 0)
+			{
+				searchResult.addAll(result);
+			}
+		}
+		
+		rt.setData(searchResult);
 		writeJson(rt, response);
 	}
+	
+	private List<Doc> searchInRepos(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+			return searchInReposDB(repos, pDocId, parentPath, searchWord, sort);
+		case 2:
+			return searchInReposFS(repos, pDocId, parentPath, searchWord, sort);
+		case 3:
+			return searchInReposSVN(repos, pDocId, parentPath, searchWord, sort);
+		case 4:
+			return searchInReposGIT(repos, pDocId, parentPath, searchWord, sort);
+		}
+		return null;
+	}
 
+	private List<Doc> searchInReposGIT(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> searchInReposSVN(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<Doc> searchInReposFS(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
+	{	
+		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();	//This hash Map was used to store the searchResult
+		if(searchWord!=null&&!"".equals(searchWord))
+		{
+			luceneSearch(repos, searchWord, parentPath, searchResult , 7);
+		}
+		
+		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
+		return result;
+	}
+
+	private List<Doc> searchInReposDB(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
+	{	
+		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
+		
+		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
+		if(searchWord!=null&&!"".equals(searchWord))
+		{
+			luceneSearch(repos, searchWord, parentPath, searchResult , 6);	//Search RDoc and VDoc only
+			
+			databaseSearch(repos, pDocId, searchWord, parentPath, searchResult);
+		}
+		
+		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
+		return result;
+	}
+
+	private List<Doc> convertSearchResultToDocList(Repos repos, HashMap<String, HitDoc> searchResult) 
+	{
+		List<Doc> docList = new ArrayList<Doc>();
+		
+		for(HitDoc hitDoc: searchResult.values())
+        {
+      	    Doc doc = hitDoc.getDoc();
+      	    if(doc != null)
+      	    {
+      	    	docList.add(doc);
+      	    }
+		}
+	
+		Collections.sort(docList);
+		
+		return docList;
+	}
+
+	
+	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String parentPath, HashMap<String, HitDoc> searchResult) 
+	{
+		String [] keyWords = searchWord.split(" ");
+		
+		boolean enablePathFilter = true;
+        if(parentPath == null || parentPath.isEmpty())
+        {
+        	enablePathFilter = false;
+        }
+
+		for(int i=0; i< keyWords.length; i++)
+		{
+			String searchStr = keyWords[i];
+			System.out.println("databaseSearch() searchStr:" + searchStr);
+			
+			if(!searchStr.isEmpty())
+			{
+				HashMap<String, Object> params = new HashMap<String, Object>();
+				params.put("reposId", repos.getId());
+				params.put("pDocId", pDocId);
+				params.put("name", keyWords[0]);
+				List<Doc> list = reposService.queryDocList(params);
+		        for (int j = 0; j < list.size(); j++) 
+		        {
+		            Doc doc = list.get(j);
+		            if(enablePathFilter)
+		            {
+		            	String docParentPath = doc.getPath();
+		            	if(docParentPath == null || docParentPath.isEmpty())
+		            	{
+		            		continue;
+		            	}
+		            	else if(!docParentPath.contains(parentPath))
+		            	{
+		            		continue;
+		            	}
+		            }
+		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
+		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr);
+		        	printObject("databaseSearch() hitDoc:", hitDoc);
+		        }
+			}	
+		}
+	}
+
+	private HitDoc BuildHitDocFromDoc(Doc doc) {
+    	//Set Doc Path
+    	String docPath = doc.getPath() + doc.getName();
+    			
+    	//Set HitDoc
+    	HitDoc hitDoc = new HitDoc();
+    	hitDoc.setDoc(doc);
+    	hitDoc.setDocPath(docPath);
+    	
+    	return hitDoc;
+	}
+
+	private boolean luceneSearch(Repos repos, String searchWord, String parentPath, HashMap<String, HitDoc> searchResult, int searchMask) 
+	{
+		String [] keyWords = searchWord.split(" ");		
+        
+		for(int i=0; i< keyWords.length; i++)
+		{
+			String searchStr = keyWords[i];
+			if(!searchStr.isEmpty())
+			{
+				//采用通配符搜索
+				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 5);
+			}
+		}
+		
+		//update DocInfo for searchResult
+		for(HitDoc hitDoc: searchResult.values())
+        {
+      	    Doc doc = hitDoc.getDoc();
+      	    
+      	    Doc dbDoc = reposService.getDoc(doc.getId());
+      	    if(dbDoc == null)
+      	    {
+      	    	hitDoc.setDoc(null);
+      	    	continue;
+      	    }
+      	    
+      	    dbDoc.setSortIndex(doc.getSortIndex());
+      	    hitDoc.setDoc(dbDoc);
+		}
+		
+		return true;
+	}
+	
 	/********************************** Functions For Application Layer
 	 * @param content 
 	 * @param commitUser2 
@@ -1553,20 +1716,6 @@ public class DocController extends BaseController{
 		
 		return docId;
 	}
-	
-	//释放线程锁
-	private void unlock() {
-		unlockSyncLock(syncLock);
-	}	
-	private void unlockSyncLock(Object syncLock) {
-		syncLock.notifyAll();//唤醒等待线程
-		//下面这段代码是因为参考了网上的一个Demo说wait是释放锁，我勒了个区去，留着作纪念
-		//try {
-		//	syncLock.wait();	//线程睡眠，等待syncLock.notify/notifyAll唤醒
-		//} catch (InterruptedException e) {
-		//	e.printStackTrace();
-		//}
-	}  
 
 	//底层deleteDoc接口
 	//isSubDelete: true: 文件已删除，只负责删除VDOC、LuceneIndex、previewFile、DBRecord

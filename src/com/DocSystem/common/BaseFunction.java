@@ -194,10 +194,6 @@ public class BaseFunction{
 	//获取仓库的实文件的本地存储根路径
 	protected static String getReposRealPath(Repos repos)
 	{
-		if(repos.getType() == 2)
-		{
-			return repos.getRealDocPath();
-		}
 		String reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
 		System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;
@@ -260,103 +256,6 @@ public class BaseFunction{
 	protected String getDefaultLocalVerReposPath(String path) {
 		String localSvnPath = path + "DocSysVerReposes/";
 		return localSvnPath;
-	}
-	
-	protected String getLocalVerReposURI(Repos repos, boolean isRealDoc) {
-		String localVerReposURI = null;
-
-		Integer verCtrl = null;
-		String localSvnPath = null;
-
-		if(isRealDoc)
-		{
-			verCtrl = repos.getVerCtrl();
-			localSvnPath = repos.getLocalSvnPath();
-		}
-		else
-		{
-			verCtrl = repos.getVerCtrl1();
-			localSvnPath = repos.getLocalSvnPath1();
-		}	
-
-		String reposName = getVerReposName(repos,isRealDoc);
-		
-		if(verCtrl == 1)
-		{
-			localVerReposURI = "file:///" + localSvnPath + reposName;
-		}
-		else
-		{
-			localVerReposURI = null;
-			
-		}
-		return localVerReposURI;
-	}
-	
-	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
-		String localVerReposPath = null;
-		
-		String localSvnPath = null;
-		if(isRealDoc)
-		{
-			localSvnPath = repos.getLocalSvnPath();
-		}
-		else
-		{
-			localSvnPath = repos.getLocalSvnPath1();
-		}	
-		
-		localSvnPath = dirPathFormat(localSvnPath);
-
-		String reposName = getVerReposName(repos,isRealDoc);
-		
-		localVerReposPath = localSvnPath + reposName + "/";
-		return localVerReposPath;
-	}
-
-	protected String getVerReposName(Repos repos,boolean isRealDoc) {
-		String reposName = null;
-		
-		Integer id = repos.getId();
-		if(isRealDoc)
-		{
-			Integer verCtrl = repos.getVerCtrl();
-			if(verCtrl == 1)
-			{
-				reposName = id + "_SVN_RRepos";
-			}
-			else if(verCtrl == 2)
-			{ 
-				if(repos.getIsRemote() == 0)
-				{
-					reposName = id + "_GIT_RRepos";
-				}
-				else
-				{
-					reposName = id + "_GIT_RRepos_Remote";					
-				}
-			}
-		}
-		else
-		{
-			Integer verCtrl = repos.getVerCtrl1();			
-			if(verCtrl == 1)
-			{
-				reposName = id + "_SVN_VRepos";
-			}
-			else if(verCtrl == 2)
-			{
-				if(repos.getIsRemote1() == 0)
-				{
-					reposName = id + "_GIT_VRepos";
-				}
-				else
-				{
-					reposName = id + "_GIT_VRepos_Remote";					
-				}
-			}
-		}
-		return reposName;
 	}
 	
 	//Build DocId by DocName
