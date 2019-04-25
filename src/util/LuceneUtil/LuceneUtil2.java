@@ -67,7 +67,7 @@ import util.FileUtil.FileUtils2;
  * Lucene全文搜索工作原理：
  * Lucene数据库中包括两个最重要的内容：索引表和Document，Lucene应该是每一个Field会有一个索引表，这是为什么可以可以根据不同Field进行搜索的原因
  * 1. 索引的建立（新增Document并根据Document每个Field的内容更新索引表）
- *  对Document的Field的内容进行切词，例如 “我们，一起出去” 切成多个Term “我” “们” “一” “起” “出” “去” “我们” “出去”（不同的切词器的结果会不一样），
+ *  对Document的Field的内容进行切词，例如 “我们，一起出去” 切成多个Term “我” “们” “一” “起” “出” “去” “我们” “出去”（不同的切词器的结果会不一样），如果不进行切词的话那么整个会被当做一个Term
  *  每个Term被转换成HashCode，放入HashMap<HashCode, DocumentIdList>,所以HashCode可以快速找到包含了该Term的文档ID
  * 2. 搜索
  * 	将用户输入的关键字转换成HashCode，相应的Field的索引表里有对应的HashCode(Term)，如果存在则根据DocementIdList找到DocumentList并返回，因此理论上Lucene库本身只支持精确查找
@@ -195,8 +195,8 @@ public class LuceneUtil2   extends BaseFunction
 	        document.add(new IntField("reposId", doc.getId(), Store.YES));
 	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
 	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-	        document.add(new TextField("parentPath", doc.getPath(), Store.YES));
-	        document.add(new TextField("name", doc.getName(), Store.YES));
+	        document.add(new Field("parentPath", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+	        document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
 	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	     
 	        
 	        indexWriter.updateDocument(new Term("id",id), document);
@@ -349,7 +349,6 @@ public class LuceneUtil2   extends BaseFunction
 			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, 1);
 		}
 		return true;
-
     }
 	
     private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
