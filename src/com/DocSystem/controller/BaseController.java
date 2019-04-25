@@ -37,8 +37,9 @@ import util.ReadProperties;
 import util.ReturnAjax;
 import util.UUid;
 import util.Encrypt.Base64File;
-import util.FileUtil.FileUtils.CompressPic;
+import util.FileUtil.CompressPic;
 
+import com.DocSystem.common.BaseFunction;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.Repos;
@@ -49,7 +50,7 @@ import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
 @SuppressWarnings("rawtypes")
-public class BaseController{
+public class BaseController extends BaseFunction{
 	@Autowired
 	private ReposServiceImpl reposService;
 	@Autowired
@@ -67,14 +68,53 @@ public class BaseController{
 	public static String uploadBasePath = "";
 
 
-	/***************************Basic Functions For Application Level  **************************/
-	//To print the obj by convert it to json format
-	protected void printObject(String Head,Object obj)
-	{
-		String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
-		System.out.println(Head + json);		
+	/*********************** DocSystem Interfaces ********************************/
+	protected List<Repos> getAccessableReposList(Integer userId) {
+		System.out.println("getAccessableReposList() userId:" + userId);
+		
+		//取出用户在系统上的所有仓库权限列表
+		//将仓库权限列表转换成HashMap,方便快速从列表中取出仓库的用户权限
+		HashMap<Integer,ReposAuth> reposAuthHashMap = getUserReposAuthHashMap(userId);
+		printObject("reposAuthHashMap:",reposAuthHashMap);
+		if(reposAuthHashMap == null || reposAuthHashMap.size() == 0)
+		{
+			return null;
+		}
+		
+		//get all reposAuthList to pick up the accessable List
+		List<Repos> resultList = new ArrayList<Repos>();
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0;i<reposList.size();i++)
+		{
+			Repos repos = reposList.get(i);
+			printObject("repos",repos);
+			ReposAuth reposAuth = reposAuthHashMap.get(repos.getId());
+			printObject("reposAuth",reposAuth);
+			if(reposAuth != null && reposAuth.getAccess()!=null && reposAuth.getAccess().equals(1))
+			{
+				resultList.add(repos);
+			}
+		}
+		
+		return resultList;
 	}
 	
+	//获取用户的仓库权限设置
+	private HashMap<Integer, ReposAuth> getUserReposAuthHashMap(Integer userId) {
+		ReposAuth qReposAuth = new ReposAuth();
+		qReposAuth.setUserId(userId);
+		List <ReposAuth> reposAuthList = reposService.getReposAuthListForUser(qReposAuth);
+		printObject("getUserReposAuthHashMap() userID[" + userId +"] reposAuthList:", reposAuthList);
+		
+		if(reposAuthList == null || reposAuthList.size() == 0)
+		{
+			return null;
+		}
+		
+		HashMap<Integer,ReposAuth> hashMap = BuildHashMapByReposAuthList(reposAuthList);
+		return hashMap;
+	}
+	/***************************Basic Functions For Application Level  **************************/
 	protected String localDirPathFormat(String path)
 	{
 		//Replace "\" with "/"
@@ -265,15 +305,6 @@ public class BaseController{
 			}
 		}	    
 		return path;
-	}
-
-	
-	//获取仓库的实文件的本地存储根路径
-	protected String getReposRealPath(Repos repos)
-	{
-		String reposRPath = repos.getPath() + repos.getId() + "/data/rdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposRealPath() " + reposRPath);
-		return reposRPath;
 	}
 
 	//获取仓库的LastVersion实文件的本地存储根路径
@@ -1595,34 +1626,6 @@ public class BaseController{
             if(dir.delete() == false)
             {
             	System.out.println("delDir() delete Dir Failed:" + path);
-                return false;
-            }
-        }
-        return true;
-    }
-	
-    //Delete Directory or File
-    public boolean delFileOrDir(String path){
-        File file=new File(path);
-        if(file.exists())
-        {
-            if(file.isDirectory())
-            {
-	            File[] tmp=file.listFiles();            
-	            for(int i=0;i<tmp.length;i++)
-	            {
-	            	String subDirPath = path+"/"+tmp[i].getName();
-	                if(delFileOrDir(subDirPath) == false)
-	                {
-	                	System.out.println("delFileOrDir() delete subDir Failed:" + subDirPath);
-	                    return false;
-	                }
-	            }
-            }
-            
-            if(file.delete() == false)
-            {
-            	System.out.println("delFileOrDir() delete Dir Failed:" + path);
                 return false;
             }
         }
