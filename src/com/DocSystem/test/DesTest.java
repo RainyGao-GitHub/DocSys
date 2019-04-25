@@ -1,6 +1,7 @@
+package com.DocSystem.test;
 import util.Encrypt.DES;
 
-class test  
+class DesTest  
 {  
     public static void main(String[] args)    
     {  

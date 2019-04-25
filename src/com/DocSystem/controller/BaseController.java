@@ -32,11 +32,12 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNNodeKind;
 
-import util.CompressPic;
 import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.UUid;
+import util.Encrypt.Base64File;
+import util.FileUtil.FileUtils.CompressPic;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -47,8 +48,6 @@ import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.alibaba.fastjson.JSON;
-
-import util.Base64File;
 @SuppressWarnings("rawtypes")
 public class BaseController{
 	@Autowired

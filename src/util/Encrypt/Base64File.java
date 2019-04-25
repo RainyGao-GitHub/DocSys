@@ -1,13 +1,15 @@
 /**
  * 
  */
-package util;
+package util.Encrypt;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.ibm.misc.BASE64Decoder;
+
+import util.DebugHelper;
 
 /**
  * @author Administrator
