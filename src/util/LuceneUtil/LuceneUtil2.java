@@ -1,7 +1,7 @@
 /**
  * 
  */
-package util;
+package util.LuceneUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,12 +10,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
@@ -30,8 +34,11 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -53,11 +60,19 @@ import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.HitDoc;
+import com.DocSystem.controller.BaseController;
+import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
+
 import info.monitorenter.cpdetector.io.ASCIIDetector;
 import info.monitorenter.cpdetector.io.CodepageDetectorProxy;
 import info.monitorenter.cpdetector.io.JChardetFacade;
 import info.monitorenter.cpdetector.io.ParsingDetector;
 import info.monitorenter.cpdetector.io.UnicodeDetector;
+import util.ReadProperties;
+import util.FileUtil.FileUtils2;
 
 
 /**  
@@ -68,7 +83,7 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
  * This class is the full-text search driver for DocSys
  * There are multi-lucence document mapped to one doc in DocSys, if the content of this Doc is very large    
  */
-public class LuceneUtil2 {
+public class LuceneUtil2  extends BaseFunction{
 
 	// 保存路径
     private static String INDEX_DIR = getLucenePath();
@@ -107,7 +122,6 @@ public class LuceneUtil2 {
      * @param content: 文件内容或markdown文件内容 
      * @param indexLib: 索引库名字
      */
-    @SuppressWarnings("deprecation")
 	public static void addIndex(String id,Integer docId, String content,String indexLib) throws Exception {
     	
     	System.out.println("addIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
@@ -118,13 +132,10 @@ public class LuceneUtil2 {
     	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_CURRENT, analyzer);
+                Version.LUCENE_46, analyzer);
         IndexWriter indexWriter = new IndexWriter(directory, config);
 
-        Document doc = new Document();
-        doc.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc.add(new IntField("docId", docId, Store.YES));
-        doc.add(new TextField("content", content, Store.YES));
+        Document doc = buildDocument(id, docId, content);
         indexWriter.addDocument(doc);
         
         indexWriter.commit();
@@ -133,6 +144,15 @@ public class LuceneUtil2 {
         Date date2 = new Date();
         System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
     }
+    
+	private static Document buildDocument(String id, Integer docId, String content) {
+		Document document = new Document();
+		document.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+		document.add(new IntField("docId", docId, Store.YES));
+		document.add(new TextField("content", content, Store.YES));     
+        
+		return document;
+	}
 
 	/**
      * 	 更新索引
@@ -141,8 +161,7 @@ public class LuceneUtil2 {
      * @param content: 文件内容或markdown文件内容 
      * @param indexLib: 索引库名字
      */
-    @SuppressWarnings("deprecation")
-	public static void updateIndex(String id,Integer docId,String content,String indexLib) throws Exception {
+    public static void updateIndex(String id,Integer docId,String content,String indexLib) throws Exception {
 
     	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
     	System.out.println("updateIndex() content:" + content);
@@ -152,13 +171,10 @@ public class LuceneUtil2 {
         Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_CURRENT, analyzer);
+                Version.LUCENE_46, analyzer);
         IndexWriter indexWriter = new IndexWriter(directory, config);
          
-        Document doc1 = new Document();
-        doc1.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-        doc1.add(new IntField("docId", docId, Store.YES));
-        doc1.add(new TextField("content", content, Store.YES));
+        Document doc1 = buildDocument(id, docId, content);
         
         indexWriter.updateDocument(new Term("id",id), doc1);
         indexWriter.close();
@@ -173,14 +189,13 @@ public class LuceneUtil2 {
      * @param id: lucene document id
      * @throws Exception
      */
-    @SuppressWarnings("deprecation")
-	public static void deleteIndex(String id,String indexLib) throws Exception {
+    public static void deleteIndex(String id,String indexLib) throws Exception {
     	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
         Date date1 = new Date();
         Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
         IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_CURRENT, null);
+                Version.LUCENE_46, null);
         IndexWriter indexWriter = new IndexWriter(directory, config);
         
         indexWriter.deleteDocuments(new Term("id",id));  
@@ -192,65 +207,110 @@ public class LuceneUtil2 {
     }    
 
     /**
-     * 	关键字精确查询,返回docId List
+     * 	关键字模糊查询， 返回docId List
+     * @param parentPath 
+     * @param <SearchResult>
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-    @SuppressWarnings("deprecation")
-	public static List<String> search(String str,String indexLib) throws Exception {
-        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
-        Analyzer analyzer = new IKAnalyzer();
-        DirectoryReader ireader = DirectoryReader.open(directory);
-        IndexSearcher isearcher = new IndexSearcher(ireader);
-
-        QueryParser parser = new QueryParser(Version.LUCENE_CURRENT, "content",analyzer);
-        Query query = parser.parse(str);
-
-        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-        List<String> res = new ArrayList<String>();
-        for (int i = 0; i < hits.length; i++) {
-            Document hitDoc = isearcher.doc(hits[i].doc);
-            String docId = hitDoc.get("docId");
-            if(docId != null && !"".equals(docId))
-            {
-            	res.add(docId);
-                System.out.println("search()  id:" + hitDoc.get("id") + " docId:"+ docId);
-                //System.out.println("search()  content:" + hitDoc.get("content"));	
-            }
-        }
-        ireader.close();
-        directory.close();
-        return res;
+	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	{
+		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		try {
+    		File file = new File(INDEX_DIR + "/" +indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
+    			return false;
+    		}
+    		
+	        Directory directory = FSDirectory.open(file);
+	        DirectoryReader ireader = DirectoryReader.open(directory);
+	        IndexSearcher isearcher = new IndexSearcher(ireader);
+	
+	        Query query = null;
+	        switch(searchType)
+	        {
+	        case 1: //精确
+		        query = new TermQuery(new Term(field,str));
+		        break;
+	        case 2:	//模糊
+	        	query = new FuzzyQuery(new Term(field,str));
+	        	break;
+	        case 3: //智能 
+	        	Analyzer analyzer = new IKAnalyzer();
+	        	QueryParser parser = new QueryParser(Version.LUCENE_46, field,analyzer);
+		        query = parser.parse(str);
+	        	break;
+	        case 4:	//前缀
+	        	query = new PrefixQuery(new Term(field, str));
+	        	break;
+	        case 5: //通配
+	        	query = new WildcardQuery(new Term(field,"*" + str + "*"));
+	        	break;  
+	        }
+	        
+	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+	        for (int i = 0; i < hits.length; i++) 
+	        {
+	            Document hitDocument = isearcher.doc(hits[i].doc);
+	            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
+	            if(hitDoc == null)
+	            {
+	            	continue;
+	            }
+	    		printObject("search() hitDoc:", hitDoc);
+	            
+	            AddHitDocToSearchResult(searchResult,hitDoc, str);
+	        }
+	        
+	        ireader.close();
+	        directory.close();
+	        
+			return true;
+		} catch (Exception e) {
+			System.out.println("search() 异常");
+			e.printStackTrace();
+			return false;
+		}
     }
 
-    /**
-     * 	关键字模糊查询， 返回docId List
-     * @param str: 关键字
-     * @param indexLib: 索引库名字
-     */
-	public static List<String> fuzzySearch(String str,String indexLib) throws Exception {
-        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator +indexLib));
-        Analyzer analyzer = new IKAnalyzer();
-        DirectoryReader ireader = DirectoryReader.open(directory);
-        IndexSearcher isearcher = new IndexSearcher(ireader);
+	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	{
+		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		//利用Index的切词器将查询条件切词后进行精确查找
 
-        FuzzyQuery query = new FuzzyQuery(new Term("content",str));
-
-        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-        List<String> res = new ArrayList<String>();
-        for (int i = 0; i < hits.length; i++) {
-            Document hitDoc = isearcher.doc(hits[i].doc);
-            String docId = hitDoc.get("docId");
-            if(docId != null && !"".equals(docId))
-            {
-            	res.add(docId);
-                System.out.println("fuzzySearch()  id:" + hitDoc.get("id") + " docId:"+ docId);
-                //System.out.println("fuzzySearch()  content:" + hitDoc.get("content"));	
-            }
-        }
-        ireader.close();
-        directory.close();
-        return res;
+		List <String> list = new ArrayList<String>();
+		try {
+			Analyzer analyzer = new IKAnalyzer();;
+			TokenStream stream = analyzer.tokenStream("field", new StringReader(str));
+		
+			//保存分词后的结果词汇
+			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
+	
+			stream.reset(); //这句很重要
+	
+			while(stream.incrementToken()) {
+				System.out.println(cta.toString());
+				list.add(cta.toString());
+			}
+	
+			stream.end(); //这句很重要
+	
+			stream.close();
+			analyzer.close();
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for(int i=0; i<list.size(); i++)
+		{
+			String searchStr = list.get(i);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType);
+		}
+		return true;
     }
     
     /**
@@ -277,6 +337,7 @@ public class LuceneUtil2 {
         }
         ireader.close();
         directory.close();
+        analyzer.close();
         return res;
     }
 

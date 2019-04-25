@@ -13,8 +13,8 @@ import org.artofsolving.jodconverter.OfficeDocumentConverter;
 import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
 
-import util.FileUtils2;
 import util.ReadProperties;
+import util.FileUtil.FileUtils2;
 
 /**
  * 这是一个工具类，主要是为了使Office2003-2007全部格式的文档(.doc|.docx|.xls|.xlsx|.ppt|.pptx)
