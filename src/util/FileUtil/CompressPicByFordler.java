@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import util.FileUtil.FileUtils.CompressPic;
+import util.FileUtil.CompressPic;
 
 
 /**  

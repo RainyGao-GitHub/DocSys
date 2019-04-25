@@ -275,6 +275,73 @@ public class LuceneUtil2  extends BaseFunction{
 		}
     }
 
+    private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
+    {
+        String reposRPath = getReposRealPath(repos);
+        String docParentPath = hitDocument.get("path");
+    	String docName =  hitDocument.get("name");	
+    	String filePath = reposRPath + docParentPath + docName;
+    	if(docParentPath == null)
+    	{
+    		filePath = reposRPath + docName;
+    	}
+    	
+        File hitFile = new File(filePath);
+        if(!hitFile.exists())
+        {
+        	System.out.print("BuildHitDocFromDocument_FS() " + filePath + " 不存在");
+        	//TODO: if file type not matched
+        	//Do delete all index for hitDoc
+        	return null;
+        }
+        
+	    if(pathFilter != null && !pathFilter.isEmpty())
+        {
+        	if(docParentPath == null || docParentPath.isEmpty())
+            {
+            	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " is empty");
+        		return null;
+            }
+            else if(!docParentPath.contains(pathFilter))
+            {
+               	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " was not under path:" + pathFilter);
+            	return null;
+            }    
+        }
+        
+    	//Set Doc 
+    	Integer docId = null;
+    	String str = hitDocument.get("docId");
+    	if(str != null)
+    	{
+    		docId = Integer.parseInt(str);
+    	}
+    	Doc doc = new Doc();
+    	doc.setId(docId);
+    	doc.setPath(docParentPath);
+    	doc.setName(docName);
+    	doc.setSize((int) hitFile.length());
+    	doc.setLatestEditTime(hitFile.lastModified());
+
+    	//Set Doc Path
+    	String docPath = null;
+    	if(docParentPath == null)
+    	{
+    		docPath = docName;
+    	}
+    	else
+    	{
+    		docPath = docParentPath + docName;
+    	}
+    	
+    	//Set HitDoc
+    	HitDoc hitDoc = new HitDoc();
+    	hitDoc.setDoc(doc);
+    	hitDoc.setDocPath(docPath);
+    	
+    	return hitDoc;
+	}
+
 	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
