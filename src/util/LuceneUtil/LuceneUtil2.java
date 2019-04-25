@@ -9,11 +9,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
@@ -132,17 +135,16 @@ public class LuceneUtil2   extends BaseFunction
 	    	Analyzer analyzer = new IKAnalyzer();
 	    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
-	        IndexWriterConfig config = new IndexWriterConfig(
-	                Version.LUCENE_CURRENT, analyzer);
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	
 	        Document document = new Document();
-	        document.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new TextField("id", id, Store.YES));
 	        document.add(new IntField("reposId", doc.getId(), Store.YES));
 	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
 	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-	        document.add(new Field("parentPath", doc.getPath(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        document.add(new Field("name", doc.getName(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new TextField("parentPath", doc.getPath(), Store.YES));
+	        document.add(new TextField("name", doc.getName(), Store.YES));
 	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
 	        indexWriter.addDocument(document);
 	        
@@ -255,12 +257,12 @@ public class LuceneUtil2   extends BaseFunction
      */
 	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
 	{
-		System.out.println("fuzzySearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
     		File file = new File(INDEX_DIR + "/" +indexLib);
     		if(!file.exists())
     		{
-    			System.out.println("fuzzySearch() keyWord:" + str + " indexLib:" + indexLib);
+    			System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
     			return false;
     		}
     		
@@ -299,7 +301,7 @@ public class LuceneUtil2   extends BaseFunction
 	            {
 	            	continue;
 	            }
-	    		printObject("fuzzySearch() hitDoc:", hitDoc);
+	    		printObject("search() hitDoc:", hitDoc);
 	            
 	            AddHitDocToSearchResult(searchResult,hitDoc, str);
 	        }
@@ -308,12 +310,51 @@ public class LuceneUtil2   extends BaseFunction
 	        directory.close();
 			return true;
 		} catch (Exception e) {
-			System.out.println("getDocumentIdListByHashId() 异常");
+			System.out.println("search() 异常");
 			e.printStackTrace();
 			return false;
 		}
     }
     
+	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult)
+	{
+		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		//利用Index的切词器将查询条件切词后进行精确查找
+
+		List <String> list = new ArrayList<String>();
+		try {
+			Analyzer analyzer = new IKAnalyzer();;
+			TokenStream stream = analyzer.tokenStream("field", new StringReader(str));
+		
+			//保存分词后的结果词汇
+			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
+	
+			stream.reset(); //这句很重要
+	
+			while(stream.incrementToken()) {
+				System.out.println(cta.toString());
+				list.add(cta.toString());
+			}
+	
+			stream.end(); //这句很重要
+	
+			stream.close();
+
+			analyzer.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for(int i=0; i<list.size(); i++)
+		{
+			String searchStr = list.get(i);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, 1);
+		}
+		return true;
+
+    }
+	
     private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
     {
     	switch(repos.getType())

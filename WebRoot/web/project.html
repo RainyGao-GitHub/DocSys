@@ -5879,6 +5879,10 @@ function CompareObj(objA, objB, flag) {
 			parentPath = node.path + node.name;
 		}
 		
+		//当前默认总是根目录下
+		pDocId = 0;
+		parentPath = "";
+		
        	$.ajax({
                url : "/DocSystem/Doc/searchDoc.do",
                type : "post",
