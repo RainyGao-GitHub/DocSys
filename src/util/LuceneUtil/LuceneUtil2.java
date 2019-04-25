@@ -145,18 +145,15 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	
-	        Document document = new Document();
-	        document.add(new TextField("id", id, Store.YES));
-	        document.add(new IntField("reposId", doc.getId(), Store.YES));
-	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
-	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-	        document.add(new TextField("parentPath", doc.getPath(), Store.YES));
-	        document.add(new TextField("name", doc.getName(), Store.YES));
-	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
+	        Document document = buildDocument(id, doc, content);
 	        indexWriter.addDocument(document);
 	        
 	        indexWriter.commit();
+	        
 	        indexWriter.close();
+	        directory.close();
+	        analyzer.close();
+	        
 	    	System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 			return true;
 		} catch (IOException e) {
@@ -165,6 +162,19 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }
+
+	private static Document buildDocument(String id, Doc doc, String content) {
+		Document document = new Document();
+        document.add(new TextField("id", id, Store.YES));
+        document.add(new IntField("reposId", doc.getId(), Store.YES));
+        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
+        document.add(new Field("parentPath", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+        document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
+        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
+        
+		return document;
+	}
 
 	/**
 	 * 功能: 在指定的索引库里更新索引文件
@@ -190,20 +200,16 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	         
-	        Document document = new Document();
-	        document.add(new TextField("id", id, Store.YES));
-	        document.add(new IntField("reposId", doc.getId(), Store.YES));
-	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
-	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-	        document.add(new Field("parentPath", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-	        document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
-	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	     
-	        
+	        Document document = buildDocument(id, doc, content);	        
 	        indexWriter.updateDocument(new Term("id",id), document);
-	        indexWriter.close();
+	        
+	        indexWriter.commit();
 
-	        System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
-	         
+	        indexWriter.close();
+	        directory.close();
+	        analyzer.close();
+
+	        System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	                 
 	        return true;
 		} catch (IOException e) {
 			System.out.println("updateIndex() 异常");
@@ -236,7 +242,10 @@ public class LuceneUtil2   extends BaseFunction
 	        
 	        indexWriter.deleteDocuments(new Term("id",id));  
 	        indexWriter.commit();
+
 	        indexWriter.close();
+	        directory.close();
+
 	        return true;
 		} catch (IOException e) {
 			System.out.println("deleteIndex() 异常");
@@ -305,6 +314,7 @@ public class LuceneUtil2   extends BaseFunction
 	        
 	        ireader.close();
 	        directory.close();
+	        
 			return true;
 		} catch (Exception e) {
 			System.out.println("search() 异常");
@@ -336,8 +346,8 @@ public class LuceneUtil2   extends BaseFunction
 			stream.end(); //这句很重要
 	
 			stream.close();
-
 			analyzer.close();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
