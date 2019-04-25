@@ -27,12 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 
-import util.FileUtils2;
 import util.GsonUtils;
-import util.LuceneUtil2;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
+import util.FileUtil.FileUtils2;
+import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.SVNUtil;
 
 import com.DocSystem.entity.Doc;
