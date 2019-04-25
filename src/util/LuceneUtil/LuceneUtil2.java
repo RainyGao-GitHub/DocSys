@@ -63,6 +63,17 @@ import com.DocSystem.entity.Repos;
 import util.ReadProperties;
 import util.FileUtil.FileUtils2;
 
+/*
+ * Lucene全文搜索工作原理：
+ * Lucene数据库中包括两个最重要的内容：索引表和Document，Lucene应该是每一个Field会有一个索引表，这是为什么可以可以根据不同Field进行搜索的原因
+ * 1. 索引的建立（新增Document并根据Document每个Field的内容更新索引表）
+ *  对Document的Field的内容进行切词，例如 “我们，一起出去” 切成多个Term “我” “们” “一” “起” “出” “去” “我们” “出去”（不同的切词器的结果会不一样），
+ *  每个Term被转换成HashCode，放入HashMap<HashCode, DocumentIdList>,所以HashCode可以快速找到包含了该Term的文档ID
+ * 2. 搜索
+ * 	将用户输入的关键字转换成HashCode，相应的Field的索引表里有对应的HashCode(Term)，如果存在则根据DocementIdList找到DocumentList并返回，因此理论上Lucene库本身只支持精确查找
+ * 为了实现智能查找的功能（通常用户也只能模糊记得一些关键字），所以实际应用中需要先对用户输入的关键字进行切词处理，根据关键字命中次数进行排序，这样用户就能得到他所期望的结果
+ *  
+ * */
 
 /**  
  * 类描述：全文搜索库
@@ -75,7 +86,6 @@ import util.FileUtil.FileUtils2;
  * （1）文件内容和备注内容，通过索引库进行查询（分别建库以便能够进行分类搜索）
  * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
-@SuppressWarnings("deprecation")
 public class LuceneUtil2   extends BaseFunction
 {	
     private static String INDEX_DIR = getLucenePath();
@@ -126,12 +136,9 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean addIndex(String id, Doc doc, String content, String indexLib)
     {	
-    	System.out.println("updateIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
-    	//System.out.println("addIndex() content:" + content);
+    	System.out.println("addIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
     	
 		try {
-    	
-	    	Date date1 = new Date();
 	    	Analyzer analyzer = new IKAnalyzer();
 	    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
@@ -150,9 +157,7 @@ public class LuceneUtil2   extends BaseFunction
 	        
 	        indexWriter.commit();
 	        indexWriter.close();
-	
-	        Date date2 = new Date();
-	        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 			return true;
 		} catch (IOException e) {
 			System.out.println("addIndex() 异常");
@@ -179,28 +184,26 @@ public class LuceneUtil2   extends BaseFunction
     	//System.out.println("updateIndex() content:" + content);
     
 		try {
-	    	Date date1 = new Date();
-	        Analyzer analyzer = new IKAnalyzer();
+			Analyzer analyzer = new IKAnalyzer();	//选择分词器
     		File file = new File(INDEX_DIR + File.separator +indexLib);
 	        Directory directory = FSDirectory.open(file);
-	        IndexWriterConfig config = new IndexWriterConfig(
-	                Version.LUCENE_CURRENT, analyzer);
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	         
 	        Document document = new Document();
-	        document.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
+	        document.add(new TextField("id", id, Store.YES));
 	        document.add(new IntField("reposId", doc.getId(), Store.YES));
 	        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
 	        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-	        document.add(new Field("parentPath", doc.getPath(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        document.add(new Field("name", doc.getName(), Store.YES,Index.NOT_ANALYZED_NO_NORMS));
-	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
+	        document.add(new TextField("parentPath", doc.getPath(), Store.YES));
+	        document.add(new TextField("name", doc.getName(), Store.YES));
+	        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	     
 	        
 	        indexWriter.updateDocument(new Term("id",id), document);
 	        indexWriter.close();
+
+	        System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 	         
-	        Date date2 = new Date();
-	        System.out.println("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (IOException e) {
 			System.out.println("updateIndex() 异常");
@@ -220,26 +223,20 @@ public class LuceneUtil2   extends BaseFunction
     {
     	try {
 	    	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
-	        Date date1 = new Date();
-    		
-	        File file = new File(INDEX_DIR + File.separator +indexLib);
+	        
+	    	File file = new File(INDEX_DIR + File.separator +indexLib);
     		if(!file.exists())
     		{
     			return true;
     		}
     		
 	        Directory directory = FSDirectory.open(file);
-	
-	        IndexWriterConfig config = new IndexWriterConfig(
-	                Version.LUCENE_CURRENT, null);
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	        
 	        indexWriter.deleteDocuments(new Term("id",id));  
 	        indexWriter.commit();
 	        indexWriter.close();
-	        
-	        Date date2 = new Date();
-	        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (IOException e) {
 			System.out.println("deleteIndex() 异常");
@@ -281,7 +278,7 @@ public class LuceneUtil2   extends BaseFunction
 	        	break;
 	        case 3: //智能 
 	        	Analyzer analyzer = new IKAnalyzer();
-	        	QueryParser parser = new QueryParser(Version.LUCENE_CURRENT, field,analyzer);
+	        	QueryParser parser = new QueryParser(Version.LUCENE_46, field,analyzer);
 		        query = parser.parse(str);
 	        	break;
 	        case 4:	//前缀
