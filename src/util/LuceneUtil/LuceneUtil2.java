@@ -323,7 +323,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult)
+	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		//利用Index的切词器将查询条件切词后进行精确查找
@@ -356,7 +356,7 @@ public class LuceneUtil2   extends BaseFunction
 		for(int i=0; i<list.size(); i++)
 		{
 			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, 1);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType);
 		}
 		return true;
     }
