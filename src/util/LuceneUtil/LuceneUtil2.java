@@ -149,7 +149,7 @@ public class LuceneUtil2  extends BaseFunction{
 		Document document = new Document();
 		document.add(new Field("id", id, Store.YES,Index.NOT_ANALYZED_NO_NORMS));
 		document.add(new IntField("docId", docId, Store.YES));
-		document.add(new TextField("content", content, Store.YES));     
+		document.add(new TextField("content", content, Store.NO));     
         
 		return document;
 	}
@@ -189,16 +189,15 @@ public class LuceneUtil2  extends BaseFunction{
      * @param id: lucene document id
      * @throws Exception
      */
-    public static void deleteIndex(String id,String indexLib) throws Exception {
-    	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
+    public static void deleteIndex(Integer docId,String indexLib) throws Exception {
+    	System.out.println("deleteIndex() docId:" + docId + " indexLib:"+indexLib);
         Date date1 = new Date();
         Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
-        IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_46, null);
+        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
         IndexWriter indexWriter = new IndexWriter(directory, config);
         
-        indexWriter.deleteDocuments(new Term("id",id));  
+        indexWriter.deleteDocuments(NumericRangeQuery.newIntRange("docId", docId,docId, true,true));// 没问题
         indexWriter.commit();
         indexWriter.close();
         
@@ -364,27 +363,6 @@ public class LuceneUtil2  extends BaseFunction{
         analyzer.close();
         return res;
     }
-
-    //Delete All Index For Doc
-	public static void deleteIndexForDoc(Integer docId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForDoc() docId:" + docId + " indexLib:" + indexLib);
-		List<String> res = getIdListForDoc(docId, indexLib);
-		for(int i=0;i < res.size(); i++)
-		{
-			deleteIndex(res.get(i),indexLib);
-		}
-	}
-	
-	//Delete Indexs For Real Doc
-	public static void deleteIndexForRDoc(Integer docId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForRDoc() docId:" + docId + " indexLib:" + indexLib);
-		List<String> res = getIdListForDoc(docId, indexLib);
-		for(int i=0;i < res.size(); i++)
-		{
-			deleteIndex(generateRDocId(docId,i), indexLib);
-		}
-	}
-	
 	
 	//Add Index For RDoc
 	public static void addIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
@@ -668,42 +646,45 @@ public class LuceneUtil2  extends BaseFunction{
 	public static void updateIndexForRDoc(Integer docId, String filePath, String indexLib) throws Exception {
 		System.out.println("updateIndexForRDoc() docId:" + docId + " indexLib:" + indexLib + " filePath:" + filePath);
 		try {
-			deleteIndexForRDoc(docId,indexLib);
+			deleteIndex(docId,indexLib);
+			addIndexForRDoc(docId,filePath,indexLib);
 		} catch(Exception e) {
 			System.out.println("deleteIndexForRDoc Failed!");
 			e.printStackTrace();
 		}
-		
-		addIndexForRDoc(docId,filePath,indexLib);
 	}
 	
-	
-	//Delete Indexs For Virtual Doc
-	public static void deleteIndexForVDoc(Integer docId, String indexLib) throws Exception {
-		System.out.println("deleteIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		deleteIndex(generateVDocId(docId,0), indexLib);
-	}
-
 	//Add Index For VDoc
-	public static void addIndexForVDoc(Integer docId, String content, String indexLib) throws Exception {
+	public static void addIndexForVDoc(Integer docId, String content, String indexLib)
+	{
 		System.out.println("addIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		addIndex(generateVDocId(docId,0),docId,content,indexLib);
+		try {
+			addIndex(generateVDocId(docId,0),docId,content,indexLib);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 		
 	//Update Index For RDoc
-	public static void updateIndexForVDoc(Integer docId, String content, String indexLib) throws Exception {
+	public static void updateIndexForVDoc(Integer docId, String content, String indexLib)
+	{
 		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
-		updateIndex(generateVDocId(docId,0),docId,content,indexLib);
+		try {
+			deleteIndex(docId,indexLib);
+			updateIndex(generateVDocId(docId,0),docId,content,indexLib);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private static String generateVDocId(Integer docId, int index) {
 		return "VDoc-" + docId + "-" + index;
-		//return docId+"-0";
 	}
 
 	private static String generateRDocId(Integer docId, int index) {
 		return "RDoc-" + docId + "-" + index;
-		//return docId+"-"+ (index+1);
 	}
 	
 	public static void readToBuffer(StringBuffer buffer, String filePath) throws Exception

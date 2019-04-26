@@ -591,6 +591,19 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	
+	//Add Index For RDoc
+	private void addIndexForRDoc(Integer docId, String localDocRPath) {
+		try {
+			System.out.println("addIndexForRDoc() add index in lucne: docId " + docId + " localDocRPath:" + localDocRPath);
+			//Add Index For Content
+			LuceneUtil2.addIndexForVDoc(docId,localDocRPath, "doc");
+		} catch (Exception e) {
+			System.out.println("addIndexForRDoc() Failed to add lucene Index");
+			e.printStackTrace();
+		}
+	}
+	
 	//Add Index For VDoc
 	private void addIndexForVDoc(Integer docId, String content) {
 		if(content == null || "".equals(content))
@@ -601,7 +614,7 @@ public class DocController extends BaseController{
 		try {
 			System.out.println("addIndexForVDoc() add index in lucne: docId " + docId + " content:" + content);
 			//Add Index For Content
-			LuceneUtil2.addIndex(docId + "-0", docId,content, "doc");
+			LuceneUtil2.addIndexForVDoc(docId,content, "VDoc");
 		} catch (Exception e) {
 			System.out.println("addIndexForVDoc() Failed to update lucene Index");
 			e.printStackTrace();
@@ -612,7 +625,7 @@ public class DocController extends BaseController{
 		// TODO Auto-generated method stub
 		try {
 			System.out.println("updateIndexForVDoc() updateIndexForVDoc in lucene: docId " + id);
-			LuceneUtil2.updateIndexForVDoc(id,content,"doc");
+			LuceneUtil2.updateIndexForVDoc(id,content,"VDoc");
 		} catch (Exception e) {
 			System.out.println("updateIndexForVDoc() Failed to update lucene Index");
 			e.printStackTrace();
@@ -634,7 +647,8 @@ public class DocController extends BaseController{
 	private void deleteIndexForDoc(Integer docId, String string) {
 		try {
 			System.out.println("DeleteDoc() delete index in lucne: docId " + docId);
-			LuceneUtil2.deleteIndexForDoc(docId,"doc");
+			LuceneUtil2.deleteIndex(docId,"doc");
+			LuceneUtil2.deleteIndex(docId,"VDoc");
 		} catch (Exception e) {
 			System.out.println("DeleteDoc() Failed to delete lucene Index");
 			e.printStackTrace();
