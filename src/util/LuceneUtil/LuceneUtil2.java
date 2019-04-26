@@ -208,12 +208,13 @@ public class LuceneUtil2  extends BaseFunction{
 
     /**
      * 	关键字模糊查询， 返回docId List
+     * @param weight 
      * @param parentPath 
      * @param <SearchResult>
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
@@ -261,7 +262,7 @@ public class LuceneUtil2  extends BaseFunction{
 	            }
 	    		printObject("search() hitDoc:", hitDoc);
 	            
-	            AddHitDocToSearchResult(searchResult,hitDoc, str);
+	            AddHitDocToSearchResult(searchResult,hitDoc, str, weight);
 	        }
 	        
 	        ireader.close();
@@ -276,73 +277,29 @@ public class LuceneUtil2  extends BaseFunction{
     }
 
     private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
-    {
-        String reposRPath = getReposRealPath(repos);
-        String docParentPath = hitDocument.get("path");
-    	String docName =  hitDocument.get("name");	
-    	String filePath = reposRPath + docParentPath + docName;
-    	if(docParentPath == null)
-    	{
-    		filePath = reposRPath + docName;
-    	}
-    	
-        File hitFile = new File(filePath);
-        if(!hitFile.exists())
-        {
-        	System.out.print("BuildHitDocFromDocument_FS() " + filePath + " 不存在");
-        	//TODO: if file type not matched
-        	//Do delete all index for hitDoc
-        	return null;
-        }
-        
-	    if(pathFilter != null && !pathFilter.isEmpty())
-        {
-        	if(docParentPath == null || docParentPath.isEmpty())
-            {
-            	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " is empty");
-        		return null;
-            }
-            else if(!docParentPath.contains(pathFilter))
-            {
-               	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " was not under path:" + pathFilter);
-            	return null;
-            }    
-        }
-        
+    {	
     	//Set Doc 
     	Integer docId = null;
     	String str = hitDocument.get("docId");
-    	if(str != null)
+    	if(str == null)
     	{
-    		docId = Integer.parseInt(str);
+    		return null;
     	}
+
+		docId = Integer.parseInt(str);
+
     	Doc doc = new Doc();
     	doc.setId(docId);
-    	doc.setPath(docParentPath);
-    	doc.setName(docName);
-    	doc.setSize((int) hitFile.length());
-    	doc.setLatestEditTime(hitFile.lastModified());
-
-    	//Set Doc Path
-    	String docPath = null;
-    	if(docParentPath == null)
-    	{
-    		docPath = docName;
-    	}
-    	else
-    	{
-    		docPath = docParentPath + docName;
-    	}
-    	
+    		
     	//Set HitDoc
     	HitDoc hitDoc = new HitDoc();
     	hitDoc.setDoc(doc);
-    	hitDoc.setDocPath(docPath);
+    	hitDoc.setDocPath(docId+"");
     	
     	return hitDoc;
 	}
 
-	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		//利用Index的切词器将查询条件切词后进行精确查找
@@ -375,7 +332,7 @@ public class LuceneUtil2  extends BaseFunction{
 		for(int i=0; i<list.size(); i++)
 		{
 			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, weight);
 		}
 		return true;
     }
