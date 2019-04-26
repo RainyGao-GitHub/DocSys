@@ -1535,8 +1535,8 @@ public class DocController extends BaseController{
 			String searchStr = keyWords[i];
 			if(!searchStr.isEmpty())
 			{
-				//采用通配符搜索
-				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 5, 1);
+				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 1, 1);
+				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "VDoc", searchResult, 1, 1);
 			}
 		}
 		
