@@ -1497,21 +1497,19 @@ public class DocController extends BaseController{
 		            	}
 		            }
 		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
-		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr);
+		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr,10);
 		        	printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	
 		}
 	}
 
-	private HitDoc BuildHitDocFromDoc(Doc doc) {
-    	//Set Doc Path
-    	String docPath = doc.getPath() + doc.getName();
-    			
+	private HitDoc BuildHitDocFromDoc(Doc doc) 
+	{
     	//Set HitDoc
     	HitDoc hitDoc = new HitDoc();
     	hitDoc.setDoc(doc);
-    	hitDoc.setDocPath(docPath);
+    	hitDoc.setDocPath(doc.getId() + "");
     	
     	return hitDoc;
 	}
@@ -1526,7 +1524,7 @@ public class DocController extends BaseController{
 			if(!searchStr.isEmpty())
 			{
 				//采用通配符搜索
-				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 5);
+				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 5, 1);
 			}
 		}
 		
