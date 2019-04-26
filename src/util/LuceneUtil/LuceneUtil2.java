@@ -153,35 +153,6 @@ public class LuceneUtil2  extends BaseFunction{
         
 		return document;
 	}
-
-	/**
-     * 	 更新索引
-     * @param id: lucence document id
-     * @param docId:  docId of DocSys 
-     * @param content: 文件内容或markdown文件内容 
-     * @param indexLib: 索引库名字
-     */
-    public static void updateIndex(String id,Integer docId,String content,String indexLib) throws Exception {
-
-    	System.out.println("updateIndex() id:" + id + " docId:"+ docId + " indexLib:"+indexLib);
-    	System.out.println("updateIndex() content:" + content);
-    	
-    	Date date1 = new Date();
-        Analyzer analyzer = new IKAnalyzer();
-        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
-
-        IndexWriterConfig config = new IndexWriterConfig(
-                Version.LUCENE_46, analyzer);
-        IndexWriter indexWriter = new IndexWriter(directory, config);
-         
-        Document doc1 = buildDocument(id, docId, content);
-        
-        indexWriter.updateDocument(new Term("id",id), doc1);
-        indexWriter.close();
-         
-        Date date2 = new Date();
-        System.out.println("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
-    }
     
     /**
      * 	删除索引
@@ -672,7 +643,7 @@ public class LuceneUtil2  extends BaseFunction{
 		System.out.println("updateIndexForVDoc() docId:" + docId + " indexLib:" + indexLib);
 		try {
 			deleteIndex(docId,indexLib);
-			updateIndex(generateVDocId(docId,0),docId,content,indexLib);
+			addIndex(generateVDocId(docId,0),docId,content,indexLib);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
