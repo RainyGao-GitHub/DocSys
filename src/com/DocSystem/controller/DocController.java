@@ -89,8 +89,6 @@ public class DocController extends BaseController{
 	private ReposServiceImpl reposService;
 	@Autowired
 	private UserServiceImpl userService;
-	//线程锁
-	private static final Object syncLock = new Object(); 
 	
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
@@ -644,7 +642,7 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private void deleteIndexForDoc(Integer docId, String string) {
+	private void deleteIndexForDoc(Integer docId) {
 		try {
 			System.out.println("DeleteDoc() delete index in lucne: docId " + docId);
 			LuceneUtil2.deleteIndex(docId,"doc");
@@ -1550,6 +1548,7 @@ public class DocController extends BaseController{
       	    Doc dbDoc = reposService.getDoc(doc.getId());
       	    if(dbDoc == null)
       	    {
+      	    	deleteIndexForDoc(doc.getId());
       	    	hitDoc.setDoc(null);
       	    	continue;
       	    }
@@ -1804,7 +1803,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Delete Lucene index For RDoc and VDoc
-		deleteIndexForDoc(docId,"doc");
+		deleteIndexForDoc(docId);
 		//Delete previewFile (previewFile use checksum as name)
 		deletePreviewFile(doc.getCheckSum());
 		
