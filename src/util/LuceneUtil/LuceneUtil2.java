@@ -273,7 +273,7 @@ public class LuceneUtil2  extends BaseFunction{
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		//利用Index的切词器将查询条件切词后进行精确查找
-
+		
 		List <String> list = new ArrayList<String>();
 		try {
 			Analyzer analyzer = new IKAnalyzer();;
@@ -283,13 +283,13 @@ public class LuceneUtil2  extends BaseFunction{
 			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
 	
 			stream.reset(); //这句很重要
-	
+			
 			while(stream.incrementToken()) {
 				System.out.println(cta.toString());
 				list.add(cta.toString());
 			}
 	
-			stream.end(); //这句很重要
+			stream.end(); //这句很重要 
 	
 			stream.close();
 			analyzer.close();
@@ -299,10 +299,11 @@ public class LuceneUtil2  extends BaseFunction{
 			e.printStackTrace();
 		}
 		
+		int subWeight = list.size() > 0? weight/list.size() : weight;
 		for(int i=0; i<list.size(); i++)
 		{
 			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, weight);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, subWeight);
 		}
 		return true;
     }
