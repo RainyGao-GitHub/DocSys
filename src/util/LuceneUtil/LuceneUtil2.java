@@ -30,6 +30,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -139,6 +140,7 @@ public class LuceneUtil2   extends BaseFunction
     	System.out.println("addIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
     	
 		try {
+	    	Date date1 = new Date();
 	    	Analyzer analyzer = new IKAnalyzer();
 	    	Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
 
@@ -154,8 +156,10 @@ public class LuceneUtil2   extends BaseFunction
 	        directory.close();
 	        analyzer.close();
 	        
-	    	System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
-			return true;
+	        System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
+			Date date2 = new Date();
+	        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	    	return true;
 		} catch (IOException e) {
 			System.out.println("addIndex() 异常");
 			e.printStackTrace();
@@ -175,93 +179,38 @@ public class LuceneUtil2   extends BaseFunction
         
 		return document;
 	}
-
-	/**
-	 * 功能: 在指定的索引库里更新索引文件
-	 * @param indexLib2 
-     * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 
-     * @param reposId:  文件所在仓库ID 
-     * @param parentPath:  文件所在目录 
-     * @param name:  文件名
-     * @param docId:  docId of DocSys In DataBase 
-     * @param content: 文件名、文件内容或备注内容
-     * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
-	 * @return 
-     */
-    public static boolean updateIndex(String id, Doc doc, String content, String indexLib)
-    {
-    	System.out.println("updateIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
-    	//System.out.println("updateIndex() content:" + content);
-    
-		try {
-			Analyzer analyzer = new IKAnalyzer();	//选择分词器
-    		File file = new File(INDEX_DIR + File.separator +indexLib);
-	        Directory directory = FSDirectory.open(file);
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
-	        IndexWriter indexWriter = new IndexWriter(directory, config);
-	         
-	        Document document = buildDocument(id, doc, content);	        
-	        indexWriter.updateDocument(new Term("id",id), document);
-	        
-	        indexWriter.commit();
-
-	        indexWriter.close();
-	        directory.close();
-	        analyzer.close();
-
-	        System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	                 
-	        return true;
-		} catch (IOException e) {
-			System.out.println("updateIndex() 异常");
-			e.printStackTrace();
-			return false;
-		}
-    }
     
     /**
      * 	删除索引
      * 
      * @param id: lucene document id
-     * @return 
      * @throws Exception
      */
-    public static boolean deleteIndex(String id,String indexLib)
-    {
-    	try {
-	    	System.out.println("deleteIndex() id:" + id + " indexLib:"+indexLib);
-	        
-	    	File file = new File(INDEX_DIR + File.separator +indexLib);
-    		if(!file.exists())
-    		{
-    			return true;
-    		}
-    		
-	        Directory directory = FSDirectory.open(file);
-	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
-	        IndexWriter indexWriter = new IndexWriter(directory, config);
-	        
-	        indexWriter.deleteDocuments(new Term("id",id));  
-	        indexWriter.commit();
+    public static void deleteIndex(Integer docId,String indexLib) throws Exception {
+    	System.out.println("deleteIndex() docId:" + docId + " indexLib:"+indexLib);
+        Date date1 = new Date();
+        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
 
-	        indexWriter.close();
-	        directory.close();
-
-	        return true;
-		} catch (IOException e) {
-			System.out.println("deleteIndex() 异常");
-			e.printStackTrace();
-			return false;
-		}
-    }    
+        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+        IndexWriter indexWriter = new IndexWriter(directory, config);
+        
+        indexWriter.deleteDocuments(NumericRangeQuery.newIntRange("docId", docId,docId, true,true));// 没问题
+        indexWriter.commit();
+        indexWriter.close();
+        
+        Date date2 = new Date();
+        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+    }  
 
     /**
      * 	关键字模糊查询， 返回docId List
+     * @param weight 
      * @param parentPath 
      * @param <SearchResult>
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		try {
@@ -309,7 +258,7 @@ public class LuceneUtil2   extends BaseFunction
 	            }
 	    		printObject("search() hitDoc:", hitDoc);
 	            
-	            AddHitDocToSearchResult(searchResult,hitDoc, str);
+	            AddHitDocToSearchResult(searchResult,hitDoc, str, weight);
 	        }
 	        
 	        ireader.close();
@@ -323,7 +272,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType)
+	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 		//利用Index的切词器将查询条件切词后进行精确查找
@@ -353,10 +302,11 @@ public class LuceneUtil2   extends BaseFunction
 			e.printStackTrace();
 		}
 		
+		int subWeight = list.size() > 0? weight/list.size() : weight;
 		for(int i=0; i<list.size(); i++)
 		{
 			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, subWeight);
 		}
 		return true;
     }

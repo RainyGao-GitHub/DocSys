@@ -376,8 +376,9 @@ public class BaseFunction{
 
 		return path + doc.getName();
 	}
-	/***********************  全文搜索接口 *******************************************/
-	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord) 
+	/***********************  全文搜索接口 
+	 * @param weight *******************************************/
+	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord, int weight) 
 	{
 		System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
 		HitDoc tempHitDoc = searchResult.get(hitDoc.getDocPath());
@@ -391,8 +392,7 @@ public class BaseFunction{
 			HashMap<String, Integer> hitInfo = new HashMap<String, Integer>();
 			hitInfo.put(keyWord,1);
 			
-			//int sortIndex = hitDoc.getHitInfo().size()*100 + hitDoc.getHitCount();
-			int sortIndex = 100 + 1;
+			int sortIndex = weight*100 + 1;
 			doc.setSortIndex(sortIndex);
 			
 			//Set HitDoc
@@ -413,7 +413,7 @@ public class BaseFunction{
 			{
 				System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, 1);
-				sortIndex = sortIndex + 100 + 1;
+				sortIndex = sortIndex + weight*100 + 1;
 				doc.setSortIndex(sortIndex);
 			}
 			else
@@ -426,6 +426,7 @@ public class BaseFunction{
 			}
 			System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
 
+			//Java默认是引用，所以下面的操作是不需要的
 			//tempHitDoc.setHitInfo(hitInfo);
 			//tempHitDoc.setDoc(doc);
 			//searchResult.put(hitDoc.getDocPath(), tempHitDoc);	//Update searchResult
