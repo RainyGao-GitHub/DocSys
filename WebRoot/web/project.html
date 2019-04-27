@@ -1221,7 +1221,7 @@
       			//Check if all items drawed
       			if(drawedNum >= totalNum)
       			{
-      				//console.log("druawUploadItems() all items drawed");
+      				console.log("druawUploadItems() all items drawed");
       				return;
       			}
       			
@@ -1746,11 +1746,11 @@
  	      	//由于FileReader是异步调用，因此该接口也是异步调用，结果会保存在SubContext.checkSum中
  	      	function caculate()
  	      	{
- 	      		console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
+ 	      		//console.log("caculateFileCheckSum() caculateIndex:" + caculateIndex);
  	      		var SubContext = SubContextList[caculateIndex];
  	 			if(1 == SubContext.checkSumState)
  	          	{
- 	      			console.log("caculateFileCheckSum() checkSum is caculating for: " + SubContext.name );
+ 	      			//console.log("caculateFileCheckSum() checkSum is caculating for: " + SubContext.name );
  	      			return;
  	          	}
  	      		else if(2 == SubContext.checkSumState)
@@ -1761,7 +1761,7 @@
  	      		}
  	      		
  	      		//start to caculate the checkSum for SubContext
- 	      		console.log("caculateFileCheckSum() start caculate checkSum for:",SubContext);
+ 	      		//console.log("caculateFileCheckSum() start caculate checkSum for:",SubContext);
  	      		var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
  	            	file = SubContext.file,
  	            	chunkSize = 2097152,                           // read in chunks of 2MB
@@ -1784,12 +1784,12 @@
  		            }
  		            
  		            if (currentChunk === 0) {
- 		                console.log("caculateFileCheckSum() Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
+ 		                //console.log("caculateFileCheckSum() Read chunk number id=" + uniqueId + " + currentChunk=" + (currentChunk + 1) + " chunks=" + chunks);
  		                if(chunks > 10)
  		                {
  		                	chunkStep = chunks / 10;
  		                }
- 		                console.log("caculateFileCheckSum() chunkStep=" + chunkStep);
+ 		                //console.log("caculateFileCheckSum() chunkStep=" + chunkStep);
  		            }
  		
  		            spark.appendBinary(e.target.result);                 // append array buffer
@@ -1800,7 +1800,7 @@
  		            } else {
 
  		            	SubContext.checkSum = spark.end();	            	
- 		                console.log("caculateFileCheckSum() Computed hash:" + SubContext.checkSum); // computed hash
+ 		                //console.log("caculateFileCheckSum() Computed hash:" + SubContext.checkSum); // computed hash
  		            	SubContext.checkSumState = 2; 		                
  		                
  		                //To caculateNext
@@ -1902,6 +1902,9 @@
 			case 2:
 				//CheckSum ok
 				return true;
+			case 3:
+				//CheckSum Failed, Skip to upload this file
+				return true;
 			default:
 				//CheckSum Error
 				SubContext.checkSum = "";
@@ -1973,6 +1976,57 @@
 	             		}
 	                }
 	                else
+	                {
+					 	uploadErrorConfirmHandler(name,ret.msgInfo);
+			            return;
+	                }
+	            },
+	            error : function () {
+				 	uploadErrorConfirmHandler(name,"doCheck "+nodeName+ " 异常");
+		            return;
+	            }
+	        });
+    		
+   			return false;
+      	}
+      	
+      	//addDoc(SubConext) for such file size is 0
+      	function addDoc(SubContext)
+      	{      		
+      		var name = SubContext.name;
+	  	 	console.log("addDoc() file:" + name);
+      		
+      		//检查服务器端是否存在同名文件，并确认文件内容是否相同
+   			//调用后台接口检查DocInfo，回调函数需要根据情况决定具体的操作
+  			$.ajax({
+	             url : "/DocSystem/Doc/addDoc.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	             	name : name,
+					type: 1,
+					size: SubContext.size,
+	             	checkSum: SubContext.checkSum,
+	             	reposId : SubContext.vid, 
+	                parentId : SubContext.realParentId,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status)
+	             	{		
+	             		console.log("addDoc() ret",ret);
+		                if(SubContext.docId == -1) //文件新建成功
+			            {	
+			            	addTreeNode(ret.data,SubContext.realParentNode);
+			             	//set the docId so that We can open it 
+		             		SubContext.docId = ret.data.id;	                
+			             }
+	             			
+	             		 $('.file'+index).removeClass('is-uploading');
+		    			 $('.file'+index).addClass('is-success');
+		                 uploadSuccessHandler(name,ret.msgInfo);
+						return;
+	             	}
+	             	else
 	                {
 					 	uploadErrorConfirmHandler(name,ret.msgInfo);
 			            return;
@@ -2615,11 +2669,18 @@
     			return;
     		}
    			//console.log("uploadDoc() checkAddParentNode completed");
-   		 	
+   			
    			if(false == getFileCheckSum(SubContext))
    			{
    				//checkSum is not ready, timer be called, callback will re-enter uploadDoc 100ms later
    				return;
+   			}
+   			
+   			if(3 == SubContext.checkSumState)
+   			{
+				//uploadErrorHandler(SubContext.name,"文件校验码计算错误");
+				uploadErrorConfirmHandler(SubContext.name,"文件校验码计算错误")
+				return;
    			}
    			
    			//检查文件是否存在且是否相同，return false 表示内部有异步调用
@@ -2630,6 +2691,13 @@
    			}
    			//console.log("uploadDoc() checkDocInfo completed"); 
 			
+   			//如果文件size是0，无需上传直接调用addDoc新增文件
+   			if(0 == SubContext.size)
+   			{
+   				addDoc(SubContext);
+   				return;
+   			}	
+   			
    			//该接口只对大于50M的文件进行切片，设置chunked标记，生成chunkList（chunkHash或者叫chunkCheckSum并没有完全生成，所以后续getChunkedSum可能需要等待）
    			CutFile(SubContext); 
    			
