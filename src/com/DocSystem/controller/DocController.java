@@ -1509,7 +1509,7 @@ public class DocController extends BaseController{
 		            	}
 		            }
 		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
-		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr,10);
+		            AddHitDocToSearchResult(searchResult, hitDoc, searchStr,3);
 		        	printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	
@@ -1535,8 +1535,8 @@ public class DocController extends BaseController{
 			String searchStr = keyWords[i];
 			if(!searchStr.isEmpty())
 			{
-				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 1, 1);
-				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "VDoc", searchResult, 1, 1);
+				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "doc", searchResult, 1, 2);
+				LuceneUtil2.smartSearch(repos, searchStr, parentPath, "content", "VDoc", searchResult, 1, 2);
 			}
 		}
 		
