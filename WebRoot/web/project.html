@@ -2540,6 +2540,9 @@
 				if(tot <= 0)
 				{
 					xhr.abort(); //结束当前上传	
+					//update the uploadStatus
+					$('.file'+index).removeClass('is-uploading');
+					$('.file'+index).addClass('is-fail');
 					uploadErrorConfirmHandler(name, "文件读取失败！");
 					return;
 				}
