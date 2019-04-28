@@ -1474,7 +1474,7 @@
     		},function(){
     	    	//alert("点击了取消");
     	    	clearTimeout(uploadErrorTimer);
-      			SubContextList[index].uploadErrorConfirmSet = 2; //结束所有上传
+      			SubContextList[index].uploadErrorConfirmSet = 2; //结束所有上传 
           		uploadErrorConfirmSet = 2; //全局取消上传    	 		
 		 		uploadErrorAbortHandler(FileName,errMsg);
       		});
@@ -2539,6 +2539,7 @@
 				var tot = evt.total;
 				if(tot <= 0)
 				{
+					xhr.abort(); //结束当前上传	
 					uploadErrorConfirmHandler(name, "文件读取失败！");
 					return;
 				}
