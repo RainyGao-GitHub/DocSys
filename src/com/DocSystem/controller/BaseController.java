@@ -5556,10 +5556,9 @@ public class BaseController  extends BaseFunction{
 		String name = doc.getName();
 
 		String indexLib = getIndexLibName(reposId,0);
-		String hashId = getHashId(parentPath + name);
 		
 		System.out.println("deleteIndexForDocName() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
-		return LuceneUtil2.deleteIndex(hashId, indexLib);
+		return LuceneUtil2.deleteIndex(docId+"", indexLib);
 	}
 		
 	//Update Index For DocName
@@ -5581,8 +5580,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		String hashId = getHashId(parentPath + name);
-		LuceneUtil2.deleteIndex(hashId, indexLib);
+		LuceneUtil2.deleteIndex(docId+"", indexLib);
 
 		String content = newParentPath + newName;
 		return LuceneUtil2.addIndex(doc.getId() +"", newDoc, content.trim(), indexLib);

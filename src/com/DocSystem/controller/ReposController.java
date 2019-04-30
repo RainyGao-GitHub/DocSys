@@ -222,17 +222,6 @@ public class ReposController extends BaseController{
 			return;			
 		}
 
-		String reposRPath = getReposRealPath(repos);
-		String commitMsg = "addRepos() SyncUpWithVerRepos";
-		String commitUser = login_user.getName();
-		int ret = SyncUpWithVerRepos(repos, 0, null, "", reposRPath, null, null, commitMsg, commitUser, login_user, rt, true, true);
-		if(ret < 0)
-		{
-			deleteRepos(repos);
-			writeJson(rt, response);	
-			return;
-		}
-		
 		InitReposAuthInfo(repos,login_user,rt);		
 		
 		//UnLock Repos
@@ -454,8 +443,6 @@ public class ReposController extends BaseController{
 				return;
 			}
 		}
-		
-		syncupWithLocalEntry(repos,login_user,rt);
 		
 		writeJson(rt, response);	
 	}

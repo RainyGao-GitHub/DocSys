@@ -179,27 +179,41 @@ public class LuceneUtil2   extends BaseFunction
         
 		return document;
 	}
+	
+	public static boolean updateIndex(String string, Doc doc, String trim, String indexLib) {
+		// TODO Auto-generated method stub
+		return false;
+	}
     
     /**
      * 	删除索引
      * 
      * @param id: lucene document id
+     * @return 
      * @throws Exception
      */
-    public static void deleteIndex(Integer docId,String indexLib) throws Exception {
+    public static boolean deleteIndex(String docId,String indexLib)
+    {
     	System.out.println("deleteIndex() docId:" + docId + " indexLib:"+indexLib);
-        Date date1 = new Date();
-        Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
-
-        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
-        IndexWriter indexWriter = new IndexWriter(directory, config);
-        
-        indexWriter.deleteDocuments(NumericRangeQuery.newIntRange("docId", docId,docId, true,true));// 没问题
-        indexWriter.commit();
-        indexWriter.close();
-        
-        Date date2 = new Date();
-        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+		try {
+			Date date1 = new Date();
+			Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        IndexWriter indexWriter = new IndexWriter(directory, config);
+	        
+	        indexWriter.deleteDocuments(new Term("docId", docId));// 没问题
+	        indexWriter.commit();
+	        indexWriter.close();
+	        
+	        Date date2 = new Date();
+	        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
     }  
 
     /**

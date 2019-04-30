@@ -874,8 +874,6 @@ public class DocController extends BaseController{
 		switch(repos.getType())
 		{
 		case 1:
-			downloadDoc_DB(repos, docId, parentPath, name, response, request, session);
-			break;
 		case 2:
 			downloadDoc_FS(repos, docId, parentPath, name, response, request, session);
 			break;
@@ -900,13 +898,7 @@ public class DocController extends BaseController{
 		
 	}
 
-	private void downloadDoc_FS(Repos repos, Integer docId, String parentPath, String name,
-			HttpServletResponse response, HttpServletRequest request, HttpSession session) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void downloadDoc_DB(Repos repos,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void downloadDoc_FS(Repos repos,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc_DB reposId: " + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
 
@@ -1551,12 +1543,6 @@ public class DocController extends BaseController{
 			rt.setDebugLog("verReposAutoCommit 失败");
 		}
 		
-		//Do SyncWithVerRepos (skipRealDocAdd)
-		String reposRPath = getReposRealPath(repos);
-		int ret = SyncUpWithVerRepos(repos, docId, null, "", reposRPath, null, null, commitMsg, commitUser, login_user, rt, true, true);
-		
-		System.out.println("revertRealDocHistory() SyncUpWithVerRepos return:" + ret);
-		
 		return true;
 	}
 
@@ -1619,44 +1605,6 @@ public class DocController extends BaseController{
 	}
 	
 	private List<Doc> searchInRepos(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
-	{
-		switch(repos.getType())
-		{
-		case 1:
-			return searchInReposDB(repos, pDocId, parentPath, searchWord, sort);
-		case 2:
-			return searchInReposFS(repos, pDocId, parentPath, searchWord, sort);
-		case 3:
-			return searchInReposSVN(repos, pDocId, parentPath, searchWord, sort);
-		case 4:
-			return searchInReposGIT(repos, pDocId, parentPath, searchWord, sort);
-		}
-		return null;
-	}
-
-	private List<Doc> searchInReposGIT(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private List<Doc> searchInReposSVN(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private List<Doc> searchInReposFS(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
-	{	
-		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();	//This hash Map was used to store the searchResult
-		if(searchWord!=null&&!"".equals(searchWord))
-		{
-			luceneSearch(repos, searchWord, parentPath, searchResult , 7);
-		}
-		
-		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
-		return result;
-	}
-
-	private List<Doc> searchInReposDB(Repos repos, Integer pDocId, String parentPath, String searchWord, String sort) 
 	{	
 		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 		
