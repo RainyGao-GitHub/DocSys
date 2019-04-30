@@ -35,6 +35,7 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
+import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
@@ -1186,6 +1187,41 @@ public class SVNUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
+	public List<Doc> getDocList(Repos repos, Integer pid, String remoteEntryPath, long revision) 
+	{
+		List <Doc> subEntryList =  new ArrayList<Doc>();
+		
+		Collection<SVNDirEntry> entries = null;
+		try {
+			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
+		} catch (SVNException e) {
+			System.out.println("getDocList() getDir Failed:" + remoteEntryPath);
+			e.printStackTrace();
+			return null;
+		}
+	    Iterator<SVNDirEntry> iterator = entries.iterator();
+	    while (iterator.hasNext()) 
+	    {
+	    	SVNDirEntry entry = iterator.next();
+	    	int type = convertSVNNodeKindToEntryType(entry.getKind());
+	    	if(type <= 0)
+	    	{
+	    		continue;
+	    	}
+	    	
+	    	Doc doc = new Doc();
+	    	doc.setVid(repos.getId());
+	    	doc.setPid(pid);
+	    	doc.setPath(remoteEntryPath);	    	
+
+	    	doc.setName(entry.getName());
+	    	doc.setType(type);
+	        subEntryList.add(doc);
+	    }
+	    return subEntryList;
+	}
+    
+	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<SVNDirEntry> getSubEntryList(String remoteEntryPath, long revision) 
 	{
 		List <SVNDirEntry> subEntryList =  new ArrayList<SVNDirEntry>();
@@ -1205,6 +1241,20 @@ public class SVNUtil  extends BaseController{
 	        subEntryList.add(entry);
 	    }
 	    return subEntryList;
+	}
+	
+	//get the subEntryList under remoteEntryPath,only useful for Directory
+	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
+	{
+		Collection<SVNDirEntry> entries = null;
+		try {
+			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
+		} catch (Exception e) {
+			System.out.println("getSubEntries() getDir Failed:" + remoteEntryPath);
+			e.printStackTrace();
+			return null;
+		}
+		return entries;
 	}
 	
 	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,long revision) {

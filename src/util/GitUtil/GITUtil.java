@@ -23,6 +23,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
+import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
@@ -183,6 +184,69 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
     }
+    
+	//get the subEntryList under remoteEntryPath,only useful for Directory
+	public List<Doc> getDocList(Repos repos, Integer pid, String parentPath, String revision)
+	{
+    	System.out.println("getSubEntryList() revision:" + revision);
+    	if(revision == null || revision.isEmpty())
+        {
+        	revision = "HEAD";
+        }
+    	
+    	Repository repository = null;
+        try {
+            //gitDir表示git库目录
+        	Git git = Git.open(new File(gitDir));
+            repository = git.getRepository();
+            
+            //New RevWalk
+            RevWalk walk = new RevWalk(repository);
+
+            //Get objId for revision
+            ObjectId objId = repository.resolve(revision);
+            if(objId == null)
+            {
+            	System.out.println("There is no any commit history for:" + revision);
+            	return null;
+            }
+            
+            RevCommit revCommit = walk.parseCommit(objId);
+            System.out.println("revCommit name:" + revCommit.getName());
+            System.out.println("revCommit type:" + revCommit.getType());
+            System.out.println("revCommit commitMsg:" + revCommit.getShortMessage());
+    		
+            RevTree revTree = revCommit.getTree();
+            System.out.println("revTree name:" + revTree.getName());
+            System.out.println("revTree id:" + revTree.getId());
+            
+            TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, parentPath);
+            List <Doc> subEntryList =  null;
+            if(treeWalk != null) 
+            {
+            	subEntryList =  new ArrayList<Doc>();
+            	while(treeWalk.next())
+            	{
+            		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
+            		if(type > 0)
+            		{
+                		Doc subEntry = new Doc();
+                		subEntry.setType(type);
+                		subEntry.setPath(treeWalk.getPathString());
+                		subEntry.setName(treeWalk.getNameString());
+                		subEntryList.add(subEntry);
+            		}
+            	}
+            }
+            repository.close();
+            
+            return subEntryList;
+        } catch (Exception e) {
+           System.out.println("ReposTreeWalk() Exception"); 
+           e.printStackTrace();
+           return null;
+        }
+	}
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<GitEntry> getSubEntryList(String parentPath, String revision)
