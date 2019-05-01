@@ -91,64 +91,101 @@ public class BaseController  extends BaseFunction{
 			dirPath = parentPath;
 		}
 		
-		HashMap<String, Doc> indexHashMap = getSubDocHashMap(repos, docId, dirPath, pDocAuth, login_user, rt);
+		//Get subDocHashMap
+		MultiActionList actionList = new MultiActionList();
+		HashMap<String, Doc> subDocHashMap = getSubDocHashMap(repos, docId, dirPath, pDocAuth, login_user, rt, actionList);
 		
-        //Get fileList, indexList and verList
-    	List<Doc> docList = convertHashMapToDocList(indexHashMap);
+		//Convert docHashMap to docList
+    	List<Doc> docList = convertHashMapToDocList(subDocHashMap);
     	
+    	//Filter with docAuthHashMap
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		List <Doc> resultList = getAuthedSubDocList(repos, docList,  pDocAuth, docAuthHashMap, login_user, rt);
     	return resultList;
 	}
 	
-	protected HashMap<String, Doc> getSubDocHashMap(Repos repos, Integer pid, String path, DocAuth pDocAuth, User login_user, ReturnAjax rt)
+	//getSubDocHashMap will do get HashMap for subDocList under pid, and will trigger sync-up behavior 
+	//It is the most powerful function for DocSys
+	protected HashMap<String, Doc> getSubDocHashMap(Repos repos, Integer pid, String path, DocAuth pDocAuth, User login_user, ReturnAjax rt, MultiActionList actionList)
 	{
-		String localParentPath = getReposRealPath(repos) + path;
-		File dir = new File(localParentPath);
-    	if(false == dir.exists())
-    	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
-    		rt.setError( path + " 不存在！");
-    		return null;
-    	}
-    	
-        //Go through the subEntries
-    	if(false == dir.isDirectory())
-    	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
-    		rt.setError( path + " 不是目录！");
-    		return null;
-    	}
- 	
-
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
     	
-    	File[] localFileList = dir.listFiles();
-    	for(int i=0;i<localFileList.length;i++)
-    	{
-    		File file = localFileList[i];
-    		String name = file.getName();    		
-    		Doc doc = indexHashMap.get(name);
-    		if(doc == null)	//Doc was local added
-    		{
-    			//Synclock
-    			//Add new doc index and lock(set version to -1 to mark local was not commited, when commit success then do set it)
-    			//Syncunlock
-    			
-    			//Commit doc to verRepos(Async commit to verRepos if success do set version and unlock it, else just unlock it)
-    			//Add doc to hashMap
-    		}
-    		else if(isDocLocalChanged(doc, file) == true)	//Doc was local changed
-    		{
-    			//Synclock
-    			//Update doc index and lock(if doc is locked means update is pennding,set version to -1 to mark local was not commited, when commit success then do set it)
-    			//Syncunlock
-    			
-    			//Commit doc to verRepos(Async commit to verRepos if success do set version and unlock it, else just unlock it)
-    			
-    			//Update doc to hashMap(User should get the latestFileInfo)
-    		}    		
-    	}
+    	if(repos.getType() == 1)
+		{
+    		
+	    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path);
+	    	for(int i=0;i<localEntryList.size();i++)
+	    	{
+	    		Doc localEntry = localEntryList.get(i);
+	    		Doc doc = indexHashMap.get(localEntry.getName());
+	    		if(doc == null)	//Doc was local added
+	    		{
+	    			//Add new doc index and lock(set version to null (means that local was not commited, when commit success then do set it))
+	    			synchronized(syncLock)
+	    			{
+	    				//Check if parentDoc was absolutely locked (LockState == 2)
+	    				if(isParentDocLocked(pid,null,rt))
+	    				{	
+	    					unlock(); //线程锁
+	    					System.out.println("ParentNode: " + pid +" is locked！");
+	    					continue;			
+	    				}
+	    					
+	    				//新建doc记录,并锁定
+	    				localEntry.setRevision(null);
+	    				long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+	    				localEntry.setState(2);	//doc的状态为不可用
+	    				localEntry.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
+	    				long lockTime = nowTimeStamp + 24*60*60*1000;
+	    				localEntry.setLockTime(lockTime);	//Set lockTime
+	    				if(reposService.addDoc(localEntry) == 0)
+	    				{			
+	    					unlock();
+	    					rt.setError("Add Node: " + doc.getName() +" Failed！");
+	    					System.out.println("addDoc() addDoc to db failed");
+	    					continue;
+	    				}
+	    				unlock();
+	    			}
+	    			
+	    			//Add localEntry to docHashMap
+	    			indexHashMap.put(localEntry.getName(), localEntry);
+	    			
+	    			//Insert RealDoc Commit and Index action
+	    			String reposRPath = getReposRealPath(repos);
+	    			List<CommonAction> commitActionList = actionList.getCommitActionList();
+	    			List<CommonAction> indexActionList = actionList.getIndexActionList();
+	    			
+	    			//Insert RealDoc Commit action(Async commit to verRepos if success do set version and unlock it, else just unlock it)
+	    			CommonAction action = new CommonAction();
+	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+	    			action.setType(1);	//0:DocName 1: RDoc 2:VDoc
+	    			action.setDoc(localEntry);
+	    			action.setLocalRootPath(reposRPath);
+	    			action.setCommitUser(login_user.getName());
+	    			action.setCommitMsg("add " + localEntry.getName());
+	    			commitActionList.add(action);	    			
+	    			
+	    			//Insert index add action for RealDoc
+	    			action = new CommonAction();
+	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+	    			action.setType(1);	//0:DocName 1: RDoc 2:VDoc
+	    			action.setDoc(localEntry);
+	    			action.setLocalRootPath(reposRPath);
+	    			indexActionList.add(action);
+	    		}
+	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
+	    		{
+	    			//Synclock
+	    			//Update doc index and lock(if doc is locked means update is pennding,set version to -1 to mark local was not commited, when commit success then do set it)
+	    			//Syncunlock
+	    			
+	    			//Commit doc to verRepos(Async commit to verRepos if success do set version and unlock it, else just unlock it)
+	    			
+	    			//Update doc to hashMap(User should get the latestFileInfo)
+	    		}    		
+	    	}
+		}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path);
     	for(int i=0;i<remoteEntryList.size();i++)
@@ -175,6 +212,41 @@ public class BaseController  extends BaseFunction{
     	return indexHashMap;
 	}
 	
+	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path) {
+		String localParentPath = getReposRealPath(repos) + path;
+		File dir = new File(localParentPath);
+    	if(false == dir.exists())
+    	{
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
+    		return null;
+    	}
+    	
+        //Go through the subEntries
+    	if(false == dir.isDirectory())
+    	{
+    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
+    		return null;
+    	}
+    	
+    	List <Doc> subEntryList =  new ArrayList<Doc>();
+    	
+    	File[] localFileList = dir.listFiles();
+    	for(int i=0;i<localFileList.length;i++)
+    	{
+    		File file = localFileList[i];
+    		int type = file.isDirectory()? 1:2;
+    		Doc subEntry = new Doc();
+    		subEntry.setType(type);
+    		subEntry.setPath(path);
+    		subEntry.setName(file.getName());
+    		subEntry.setSize((int) file.length());
+    		subEntry.setLatestEditTime(file.lastModified());
+    		subEntryList.add(subEntry);
+    	}
+    	return subEntryList;
+	}
+    	
+
 	private List<Doc> getRemoteEntryList(Repos repos, Integer pid, String path) {
 		switch(repos.getVerCtrl())
 		{
@@ -213,9 +285,9 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private boolean isDocLocalChanged(Doc doc, File file) {
+	private boolean isDocLocalChanged(Doc doc, Doc localEntry) {
 
-		if(doc.getLatestEditTime() != file.lastModified() || doc.getSize() != file.length())
+		if(doc.getLatestEditTime() != localEntry.getLatestEditTime() || doc.getSize() != localEntry.getSize())
 		{
 			return true;
 		}
