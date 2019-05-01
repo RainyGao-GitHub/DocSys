@@ -127,7 +127,7 @@ public class BaseController  extends BaseFunction{
 	    				if(isParentDocLocked(pid,null,rt))
 	    				{	
 	    					unlock(); //线程锁
-	    					System.out.println("ParentNode: " + pid +" is locked！");
+	    					System.out.println("getSubDocHashMap() ParentNode: " + pid +" is locked！");
 	    					continue;			
 	    				}
 	    					
@@ -141,8 +141,8 @@ public class BaseController  extends BaseFunction{
 	    				if(reposService.addDoc(localEntry) == 0)
 	    				{			
 	    					unlock();
-	    					rt.setError("Add Node: " + doc.getName() +" Failed！");
-	    					System.out.println("addDoc() addDoc to db failed");
+	    					System.out.println("getSubDocHashMap() addDoc to db failed");
+	    					rt.setDebugLog("getSubDocHashMap() Add Node: " + localEntry.getName() +" Failed！");
 	    					continue;
 	    				}
 	    				unlock();
@@ -176,9 +176,31 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
-	    			//Synclock
-	    			//Update doc index and lock(if doc is locked means update is pennding,set version to -1 to mark local was not commited, when commit success then do set it)
-	    			//Syncunlock
+	    			//Update doc index and lock()
+	    			synchronized(syncLock)
+	    			{
+	    				//Try to lock the doc
+	    				doc = lockDoc(doc.getId(), 1, 7200000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
+	    				if(doc == null)
+	    				{
+	    					unlock(); //线程锁
+	    		
+	    					System.out.println("getSubDocHashMap() lockDoc " + doc.getId() +" Failed！");
+	    					rt.setDebugLog("getSubDocHashMap()  lockDoc " + doc.getId() + " Failed！");
+	    					continue;
+	    				}
+	    				unlock(); //线程锁	
+	    			}
+	    			
+	    			//Update DocInfo
+	    			localEntry.setId(doc.getId());
+    				if(reposService.updateDoc(localEntry) == 0)
+    				{	
+    					unlockDoc
+    					System.out.println("getSubDocHashMap() updateDoc to db failed");
+    					rt.setDebugLog("getSubDocHashMap() update Node: " + localEntry.getName() +" Failed！");
+    					continue;
+    				}	    			
 	    			
 	    			//Commit doc to verRepos(Async commit to verRepos if success do set version and unlock it, else just unlock it)
 	    			
