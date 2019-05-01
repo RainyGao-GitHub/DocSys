@@ -180,10 +180,51 @@ public class LuceneUtil2   extends BaseFunction
 		return document;
 	}
 	
-	public static boolean updateIndex(String string, Doc doc, String trim, String indexLib) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+
+	/**
+	 * 功能: 在指定的索引库里更新索引文件
+	 * @param indexLib2 
+     * @param id: lucene document id 在当前索引库具有唯一性（使用 HashId_index来标识），以便更新索引时能够快速查找到，多个id可以对应一个相同的文件（文件内容过多无法一次性建立索引的情况） 
+     * @param reposId:  文件所在仓库ID 
+     * @param parentPath:  文件所在目录 
+     * @param name:  文件名
+     * @param docId:  docId of DocSys In DataBase 
+     * @param content: 文件名、文件内容或备注内容
+     * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
+	 * @return 
+     */
+    public static boolean updateIndex(String id, Doc doc, String content, String indexLib)
+    {
+    	System.out.println("updateIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
+    	//System.out.println("updateIndex() content:" + content);
+    
+		try {
+	    	Date date1 = new Date();
+	        Analyzer analyzer = new IKAnalyzer();
+    		File file = new File(INDEX_DIR + File.separator +indexLib);
+	        Directory directory = FSDirectory.open(file);
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        IndexWriter indexWriter = new IndexWriter(directory, config);
+	         
+	        Document document = buildDocument(id, doc, content);
+	        indexWriter.addDocument(document); 
+	        
+	        indexWriter.updateDocument(new Term("id",id), document);
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        directory.close();
+	        analyzer.close();
+	         
+	        Date date2 = new Date();
+	        System.out.println("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        return true;
+		} catch (IOException e) {
+			System.out.println("updateIndex() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
     
     /**
      * 	删除索引
