@@ -104,15 +104,15 @@ public class BaseController  extends BaseFunction{
     	return resultList;
 	}
 	
-	//getSubDocHashMap will do get HashMap for subDocList under pid, and will trigger sync-up behavior 
-	//It is the most powerful function for DocSys
-	protected HashMap<String, Doc> getSubDocHashMap(Repos repos, Integer pid, String path, DocAuth pDocAuth, User login_user, ReturnAjax rt, MultiActionList actionList)
+	//getSubDocHashMap will do get HashMap for subDocList under pid,
+	protected HashMap<String, Doc> getSubDocHashMap(Repos repos, Integer pid, String path, DocAuth pDocAuth, User login_user, ReturnAjax rt, List<CommonAction> actionList)
 	{
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
     	
+		String reposRPath = getReposRealPath(repos);
+		
     	if(repos.getType() == 1)
-		{
-    		
+		{	
 	    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path);
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
@@ -121,90 +121,75 @@ public class BaseController  extends BaseFunction{
 	    		if(doc == null)	//Doc was local added
 	    		{
 	    			//Add new doc index and lock(set version to null (means that local was not commited, when commit success then do set it))
-	    			synchronized(syncLock)
+	    			doc = syncAddDoc(localEntry, login_user, rt);
+	    			if(doc == null)
 	    			{
-	    				//Check if parentDoc was absolutely locked (LockState == 2)
-	    				if(isParentDocLocked(pid,null,rt))
-	    				{	
-	    					unlock(); //线程锁
-	    					System.out.println("getSubDocHashMap() ParentNode: " + pid +" is locked！");
-	    					continue;			
-	    				}
-	    					
-	    				//新建doc记录,并锁定
-	    				localEntry.setRevision(null);
-	    				long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-	    				localEntry.setState(2);	//doc的状态为不可用
-	    				localEntry.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-	    				long lockTime = nowTimeStamp + 24*60*60*1000;
-	    				localEntry.setLockTime(lockTime);	//Set lockTime
-	    				if(reposService.addDoc(localEntry) == 0)
-	    				{			
-	    					unlock();
-	    					System.out.println("getSubDocHashMap() addDoc to db failed");
-	    					rt.setDebugLog("getSubDocHashMap() Add Node: " + localEntry.getName() +" Failed！");
-	    					continue;
-	    				}
-	    				unlock();
+	    				System.out.println("getSubDocHashMap() syncAddDoc " + localEntry.getName() + " failed");
+		    			rt.setDebugLog("getSubDocHashMap() syncAddDoc: " + localEntry.getName() +" Failed！");
+		    			continue;
 	    			}
 	    			
-	    			//Add localEntry to docHashMap
-	    			indexHashMap.put(localEntry.getName(), localEntry);
+	    			//Add doc to docHashMap
+		    		indexHashMap.put(localEntry.getName(), doc);
 	    			
-	    			//Insert RealDoc Commit and Index action
-	    			String reposRPath = getReposRealPath(repos);
-	    			List<CommonAction> commitActionList = actionList.getCommitActionList();
-	    			List<CommonAction> indexActionList = actionList.getIndexActionList();
-	    			
-	    			//Insert RealDoc Commit action(Async commit to verRepos if success do set version and unlock it, else just unlock it)
+	    			//Insert RealDoc Add Commit action(If commit success need to update the doc revision)
 	    			CommonAction action = new CommonAction();
 	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-	    			action.setType(1);	//0:DocName 1: RDoc 2:VDoc
-	    			action.setDoc(localEntry);
-	    			action.setLocalRootPath(reposRPath);
+	    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
+	    			action.setRepos(repos);
+	    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
+	    			action.setDoc(doc);
+	    			action.setLocalRootPath(reposRPath);	//Local 
 	    			action.setCommitUser(login_user.getName());
 	    			action.setCommitMsg("add " + localEntry.getName());
-	    			commitActionList.add(action);	    			
+	    			actionList.add(action);		
 	    			
 	    			//Insert index add action for RealDoc
 	    			action = new CommonAction();
 	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-	    			action.setType(1);	//0:DocName 1: RDoc 2:VDoc
-	    			action.setDoc(localEntry);
+	    			action.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
+	    			action.setRepos(repos);
+	    			action.setDocType(1);	//1: RDoc 2:VDoc
+	    			action.setDoc(doc);
 	    			action.setLocalRootPath(reposRPath);
-	    			indexActionList.add(action);
+	    			actionList.add(action);
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
-	    			//Update doc index and lock()
-	    			synchronized(syncLock)
+	    			//lock and Update doc index
+	    			localEntry.setId(doc.getId());
+	    			doc = syncUpdateDoc(localEntry, login_user, rt);	    			
+	    			if(doc == null)
 	    			{
-	    				//Try to lock the doc
-	    				doc = lockDoc(doc.getId(), 1, 7200000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
-	    				if(doc == null)
-	    				{
-	    					unlock(); //线程锁
-	    		
-	    					System.out.println("getSubDocHashMap() lockDoc " + doc.getId() +" Failed！");
-	    					rt.setDebugLog("getSubDocHashMap()  lockDoc " + doc.getId() + " Failed！");
-	    					continue;
-	    				}
-	    				unlock(); //线程锁	
+	    				System.out.println("getSubDocHashMap() syncUpdateDoc " + localEntry.getName() + " failed");
+		    			rt.setDebugLog("getSubDocHashMap() syncUpdateDoc: " + localEntry.getName() +" Failed！");
+		    			continue;
 	    			}
 	    			
-	    			//Update DocInfo
-	    			localEntry.setId(doc.getId());
-    				if(reposService.updateDoc(localEntry) == 0)
-    				{	
-    					unlockDoc
-    					System.out.println("getSubDocHashMap() updateDoc to db failed");
-    					rt.setDebugLog("getSubDocHashMap() update Node: " + localEntry.getName() +" Failed！");
-    					continue;
-    				}	    			
+	    			//Update doc to docHashMap
+		    		indexHashMap.put(localEntry.getName(), doc);
 	    			
-	    			//Commit doc to verRepos(Async commit to verRepos if success do set version and unlock it, else just unlock it)
+	    			//Insert RealDoc Update Commit action(Async commit to verRepos if success do set version and unlock it, else just unlock it)
+	    			CommonAction action = new CommonAction();
+	    			action.setAction(3); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+	    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
+	    			action.setRepos(repos);
+	    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
+	    			action.setDoc(doc);
+	    			action.setLocalRootPath(reposRPath);	//Local 
+	    			action.setCommitUser(login_user.getName());
+	    			action.setCommitMsg("update " + localEntry.getName());	
+	    			actionList.add(action);
 	    			
-	    			//Update doc to hashMap(User should get the latestFileInfo)
+	    			//Insert index add action for RealDoc
+	    			action = new CommonAction();
+	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+	    			action.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
+	    			action.setRepos(repos);
+	    			action.setDocType(1);	//1: RDoc 2:VDoc
+	    			action.setDoc(doc);
+	    			action.setLocalRootPath(reposRPath);
+	    			actionList.add(action);
 	    		}    		
 	    	}
 		}
@@ -212,21 +197,77 @@ public class BaseController  extends BaseFunction{
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path);
     	for(int i=0;i<remoteEntryList.size();i++)
     	{
-    		Doc entry = remoteEntryList.get(i);
+    		Doc remoteEntry = remoteEntryList.get(i);
     		
-    		Doc doc = indexHashMap.get(entry.getName());
+    		Doc doc = indexHashMap.get(remoteEntry.getName());
     		if(doc == null)	//Doc was remote added
     		{
-       			//Add new doc index and lock
-    			//Checkout doc to local(Async to checkout to local, if success do unlock the doc)
-    			//Add doc to hashMap
+    			doc = syncAddDoc(remoteEntry, login_user, rt);
+    			if(doc == null)
+    			{
+    				System.out.println("getSubDocHashMap() syncAddDoc " + remoteEntry.getName() + " failed");
+	    			rt.setDebugLog("getSubDocHashMap() syncAddDoc: " + remoteEntry.getName() +" Failed！");
+	    			continue;
+    			}
+    			
+    			//Add doc to docHashMap
+	    		indexHashMap.put(remoteEntry.getName(), doc);
+    			
+    			//Insert RealDoc CheckOut action(If CheckOut success need to update the doc Index, else need )
+    			CommonAction action = new CommonAction();
+    			action.setAction(6); //1: Add 2: Delete 3:Update 4:Move 5:Copy 6: CheckOut
+    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
+    			action.setRepos(repos);
+    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
+    			action.setDoc(doc);
+    			action.setLocalRootPath(reposRPath);	//Local 
+    			//Insert index add action after checkout success
+    			List<CommonAction> subActionList = new ArrayList<CommonAction>();
+    			CommonAction subAction = new CommonAction();
+    			subAction.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+    			subAction.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
+    			subAction.setRepos(repos);
+    			subAction.setDocType(1);	//1: RDoc 2:VDoc
+    			subAction.setDoc(doc);
+    			subAction.setLocalRootPath(reposRPath);
+    			subActionList.add(subAction);
+    			action.setSubActionList(subActionList);
+    			actionList.add(action);
     		}
-    		else if(isDocRemoteChanged(doc, entry) == true)	//Doc was remote changed
+    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
     		{
-       			//Update doc index and lock
-    			//Checkout doc to local(Async to checkout to local, if success do unlock the doc)
-    			//unlock doc index
-    			//Add doc to hashMap
+    			//lock and Update doc index
+    			remoteEntry.setId(doc.getId());
+    			doc = syncUpdateDoc(remoteEntry, login_user, rt);	    			
+    			if(doc == null)
+    			{
+    				System.out.println("getSubDocHashMap() syncUpdateDoc " + remoteEntry.getName() + " failed");
+	    			rt.setDebugLog("getSubDocHashMap() syncUpdateDoc: " + remoteEntry.getName() +" Failed！");
+	    			continue;
+    			}
+    			
+    			//Update doc to docHashMap
+	    		indexHashMap.put(remoteEntry.getName(), doc);
+    			
+    			CommonAction action = new CommonAction();
+    			action.setAction(6); //1: Add 2: Delete 3:Update 4:Move 5:Copy 6: CheckOut
+    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
+    			action.setRepos(repos);
+    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
+    			action.setDoc(doc);
+    			action.setLocalRootPath(reposRPath);	//Local 
+    			//Insert index add action after checkout success
+    			List<CommonAction> subActionList = new ArrayList<CommonAction>();
+    			CommonAction subAction = new CommonAction();
+    			subAction.setAction(3); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+    			subAction.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
+    			subAction.setRepos(repos);
+    			subAction.setDocType(1);	//1: RDoc 2:VDoc
+    			subAction.setDoc(doc);
+    			subAction.setLocalRootPath(reposRPath);
+    			subActionList.add(subAction);
+    			action.setSubActionList(subActionList);
+    			actionList.add(action);
     		}    		
     	}
     	
@@ -234,6 +275,68 @@ public class BaseController  extends BaseFunction{
     	return indexHashMap;
 	}
 	
+	private Doc syncUpdateDoc(Doc doc, User login_user, ReturnAjax rt) 
+	{
+		Integer docId = doc.getId();
+		synchronized(syncLock)
+		{
+			//Try to lock the doc
+			Doc lock = lockDoc(docId, 1, 7200000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
+			if(lock == null)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("getSubDocHashMap() lockDoc " + docId +" Failed！");
+				rt.setDebugLog("getSubDocHashMap()  lockDoc " + docId + " Failed！");
+				return null;
+			}
+			unlock(); //线程锁	
+		}
+		
+		//Update DocInfo
+		if(reposService.updateDoc(doc) == 0)
+		{	
+			unlockDoc(doc.getId(), login_user, doc);
+			System.out.println("getSubDocHashMap() update Node: " + doc.getName() +" Failed！");
+			rt.setDebugLog("getSubDocHashMap() update Node: " + doc.getName() +" Failed！");
+			return null;
+		}
+		
+		unlockDoc(docId, login_user, doc);
+		return doc;
+	}
+
+	private Doc syncAddDoc(Doc doc,  User login_user,  ReturnAjax rt) {
+		synchronized(syncLock)
+		{
+			//Check if parentDoc was absolutely locked (LockState == 2)
+			if(isParentDocLocked(doc.getPid(),login_user,rt))
+			{	
+				unlock(); //线程锁
+				System.out.println("getSubDocHashMap() ParentNode: " + doc.getPid() +" is locked！");
+				rt.setDebugLog("getSubDocHashMap() ParentNode: " + doc.getPid() + " is locked！");
+				return null;
+			}
+				
+			//新建doc记录(注意这里并不负责锁定，在真正进行文件操作的时候才进行锁定)
+			doc.setRevision(null);
+//			long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+//			localEntry.setState(2);	//Lock Doc
+//			localEntry.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
+//			long lockTime = nowTimeStamp + 24*60*60*1000;
+//			localEntry.setLockTime(lockTime);	//Set lockTime
+			if(reposService.addDoc(doc) == 0)
+			{			
+				unlock();
+				System.out.println("getSubDocHashMap() reposService.addDoc: " + doc.getName() +" Failed！");
+				rt.setDebugLog("getSubDocHashMap() reposService.addDoc: " + doc.getName() +" Failed！");
+				return null;
+			}
+			unlock();
+		}
+		return doc;
+	}
+
 	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path) {
 		String localParentPath = getReposRealPath(repos) + path;
 		File dir = new File(localParentPath);

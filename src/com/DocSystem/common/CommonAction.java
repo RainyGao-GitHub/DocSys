@@ -9,8 +9,9 @@ import com.DocSystem.entity.Repos;
 
 public class CommonAction {
     private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy 
-    private Integer type = null; //0:DocName 1:RealDoc 2:VirtualDoc
+    private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index 
     private Repos repos = null;
+    private Integer docType = null; //0:DocName 1:RealDoc 2:VirtualDoc
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
     private String localRootPath = null;
@@ -28,8 +29,9 @@ public class CommonAction {
     //For subAction
     public boolean isSubAction = false;
     public boolean hasSubList = false;
-    private List<CommonAction> subActionList = null;
-	
+    private List<CommonAction> subActionList = null;	//subActionList when action success
+	private List<CommonAction> subActionListForFail = null;	//subActionList when action failed 
+    
 	public void setAction(Integer action) {
 		this.action = action;
 	}
@@ -56,6 +58,16 @@ public class CommonAction {
 	{
 		return repos;
 	}
+	
+	public void setDocType(Integer docType) {
+		this.docType = docType;
+	}
+	
+	public Integer getDocType()
+	{
+		return docType;
+	}
+
 	
 	public void setDoc(Doc doc) {
 		this.doc = doc;
@@ -137,6 +149,16 @@ public class CommonAction {
 	}
 	
 	//For SubAction
+	//For SubAction
+	public boolean getIsSubAction()
+	{
+		return isSubAction;
+	}
+	
+	public void setIsSubAction(boolean isSubAction) {
+		this.isSubAction = isSubAction;
+	}
+	
 	public boolean getHasSubList()
 	{
 		return hasSubList;
@@ -153,5 +175,14 @@ public class CommonAction {
 	public List<CommonAction> getSubActionList()
 	{
 		return subActionList;
+	}
+	
+	public void setSubActionListForFail(List<CommonAction> subActionListForFail) {
+		this.subActionListForFail = subActionListForFail;
+	}
+	
+	public List<CommonAction> getSubActionListForFail()
+	{
+		return subActionListForFail;
 	}
 }
