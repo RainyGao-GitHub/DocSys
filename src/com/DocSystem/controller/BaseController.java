@@ -14,6 +14,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -100,6 +101,8 @@ public class BaseController  extends BaseFunction{
     	//Filter with docAuthHashMap
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		List <Doc> resultList = getAuthedSubDocList(repos, docList,  pDocAuth, docAuthHashMap, login_user, rt);
+		
+		Collections.sort(resultList);
     	return resultList;
 	}
 	
