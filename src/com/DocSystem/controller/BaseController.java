@@ -101,7 +101,7 @@ public class BaseController  extends BaseFunction{
     	//Filter with docAuthHashMap
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		List <Doc> resultList = getAuthedSubDocList(repos, docList,  pDocAuth, docAuthHashMap, login_user, rt);
-		
+	
 		Collections.sort(resultList);
     	return resultList;
 	}
@@ -396,20 +396,24 @@ public class BaseController  extends BaseFunction{
 	{	
 		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + doc.getName());
 		
-		String docPath = parentPath + doc.getName();
-		String [] paths = docPath.split("/");
-		int docPathDeepth = paths.length;
+		String [] paths = parentPath.split("/");
+		int deepth = paths.length;
 		
-		List<Doc> resultList = new ArrayList<Doc>();
-		Integer tempPid = rootDocId;
-		String tempParentPath = "";
-		Doc tempSubDoc = new Doc();
-		tempSubDoc.setName(paths[0]);
-		for(int i=0; i<docPathDeepth; i++)
+		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", login_user , rt);	//get subDocList under root
+		if(resultList == null || resultList.size() == 0)
 		{
-			tempSubDoc.setName(paths[i]);
-			
-			List<Doc> subDocList = getAccessableSubDocList(repos, tempPid, tempParentPath, tempSubDoc.getName(), login_user , rt);
+			System.out.println("getDocListFromRootToDoc_FS() docList under root is empty");			
+			return null;
+		}
+		
+		String tempParentPath = "";
+		for(int i=0; i<deepth; i++)
+		{
+			String name = paths[i];
+			Integer tempPid = buildDocIdByName(i,name);
+			tempParentPath = tempParentPath + paths[i] + "/";
+
+			List<Doc> subDocList = getAccessableSubDocList(repos, tempPid, tempParentPath, name, login_user , rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				System.out.println("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + doc.getName());
@@ -417,9 +421,6 @@ public class BaseController  extends BaseFunction{
 				break;
 			}
 			resultList.addAll(subDocList);
-			
-			tempPid = tempSubDoc.getId();
-			tempParentPath = tempParentPath + paths[i] + "/";
 		}
 		
 		return resultList;

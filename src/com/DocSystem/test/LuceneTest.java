@@ -1,8 +1,6 @@
 package com.DocSystem.test;
 import java.util.List;
 
-import util.Lucene.LuceneUtil2;
-
 class LuceneTest  
 {  
     public static void main(String[] args)    
