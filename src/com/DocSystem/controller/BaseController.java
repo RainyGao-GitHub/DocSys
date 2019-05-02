@@ -244,14 +244,14 @@ public class BaseController  extends BaseFunction{
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
     	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不存在！");
+    		System.out.println("getLocalEntryList() " + localParentPath + " 不存在！");
     		return null;
     	}
     	
         //Go through the subEntries
     	if(false == dir.isDirectory())
     	{
-    		System.out.println("getSubDocListFromFS() " + localParentPath + " 不是目录！");
+    		System.out.println("getLocalEntryList() " + localParentPath + " 不是目录！");
     		return null;
     	}
     	
@@ -261,7 +261,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0;i<localFileList.length;i++)
     	{
     		File file = localFileList[i];
-    		int type = file.isDirectory()? 1:2;
+    		int type = file.isDirectory()? 2:1;
     		String name = file.getName();
     		Doc subEntry = new Doc();
     		subEntry.setId(buildDocIdByName(level,name));
