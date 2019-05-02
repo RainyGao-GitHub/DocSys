@@ -114,7 +114,7 @@
             <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
             <label>类型<span style="color:#F00">*</span></label>
             <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
-            	<option value="1" selected="selected">默认</option>   
+            	<option value="1" selected="selected">文件管理系统</option>   
             	<option value="2">文件系统前置</option>
             	<option value="3">SVN前置</option>   
             	<option value="4">GIT前置</option>   
@@ -506,7 +506,7 @@
             var name = $("#dialog-new-repos input[name='name']").val();
             var info = $("#dialog-new-repos input[name='info']").val();
             var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
-            var type = $("#dialog-new-repos select[name='type']").val();	//1:默认 2:文件系统前置 3: SVN前置 4: Git前置
+            var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
             var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
             var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
             var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
