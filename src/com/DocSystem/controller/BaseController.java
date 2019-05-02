@@ -110,62 +110,68 @@ public class BaseController  extends BaseFunction{
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
 		
-    	if(repos.getType() == 1)
+    	if(repos.getType() == 1 || repos.getType() == 2)
 		{	
 	    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
-	    	for(int i=0;i<localEntryList.size();i++)
+	    	if(localEntryList != null)
 	    	{
-	    		Doc localEntry = localEntryList.get(i);
-	    		Doc doc = indexHashMap.get(localEntry.getName());
-	    		if(doc == null)	//Doc was local added
-	    		{	    			
-	    			//Add doc to docHashMap
-		    		doc = localEntry;
-	    			indexHashMap.put(doc.getName(), doc);
-	    			
-		    		//Insert verRepos add and Index add
-	    		}
-	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
-	    		{
-	    			doc = localEntry;
-	    			//Update doc to docHashMap
-		    		indexHashMap.put(doc.getName(), doc);
-		    		
-		    		//Insert verRepos update and Index update
-	    		}
-	    		//Add to docList
-	    		docList.add(doc);
+		    	for(int i=0;i<localEntryList.size();i++)
+		    	{
+		    		Doc localEntry = localEntryList.get(i);
+		    		Doc doc = indexHashMap.get(localEntry.getName());
+		    		if(doc == null)	//Doc was local added
+		    		{	    			
+		    			//Add doc to docHashMap
+			    		doc = localEntry;
+		    			indexHashMap.put(doc.getName(), doc);
+		    			
+			    		//Insert verRepos add and Index add
+		    		}
+		    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
+		    		{
+		    			doc = localEntry;
+		    			//Update doc to docHashMap
+			    		indexHashMap.put(doc.getName(), doc);
+			    		
+			    		//Insert verRepos update and Index update
+		    		}
+		    		//Add to docList
+		    		docList.add(doc);
+		    	}
 	    	}
 		}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
-    	for(int i=0;i<remoteEntryList.size();i++)
+    	if(remoteEntryList != null)
     	{
-    		Doc remoteEntry = remoteEntryList.get(i);
-    		
-    		Doc doc = indexHashMap.get(remoteEntry.getName());
-    		if(doc == null)	//Doc was remote added
-    		{
-    			doc = remoteEntry;
-    			//Add doc to docHashMap
-	    		indexHashMap.put(doc.getName(), doc);
-    			
-	    		//Insert verRepos checkout and Index add, checkout 似乎并不重要，因为不会导致文件丢失，只要下载的时候能够根据Index信息确定下载的来源即可
+	    	for(int i=0;i<remoteEntryList.size();i++)
+	    	{
+	    		Doc remoteEntry = remoteEntryList.get(i);
 	    		
-	    		//Add to docList
-	    		docList.add(doc);
-    		}
-    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
-    		{
-    			doc = remoteEntry;
-    			
-    			//Update doc to docHashMap
-	    		indexHashMap.put(doc.getName(), doc);
-    			
-    			//Insert verRepos Checkout and Index update
-	    		
-	    		//Update to docList (??) 效率太低下，远程只负责增加本地没有的节点，以便通过网页能够下载或删除、
-    		}    		
+	    		Doc doc = indexHashMap.get(remoteEntry.getName());
+	    		if(doc == null)	//Doc was remote added
+	    		{
+	    			doc = remoteEntry;
+	    			//Add doc to docHashMap
+		    		indexHashMap.put(doc.getName(), doc);
+	    			
+		    		//Insert verRepos checkout and Index add, checkout 似乎并不重要，因为不会导致文件丢失，只要下载的时候能够根据Index信息确定下载的来源即可
+		    		
+		    		//Add to docList
+		    		docList.add(doc);
+	    		}
+	    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
+	    		{
+	    			doc = remoteEntry;
+	    			
+	    			//Update doc to docHashMap
+		    		indexHashMap.put(doc.getName(), doc);
+	    			
+	    			//Insert verRepos Checkout and Index update
+		    		
+		    		//Update to docList (??) 效率太低下，远程只负责增加本地没有的节点，以便通过网页能够下载或删除、
+	    		} 
+	    	}
     	}
     	
     	return docList;
