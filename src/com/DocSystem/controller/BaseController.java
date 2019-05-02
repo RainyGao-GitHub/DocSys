@@ -91,12 +91,11 @@ public class BaseController  extends BaseFunction{
 			dirPath = parentPath;
 		}
 		
-		//Get subDocHashMap
-		MultiActionList actionList = new MultiActionList();
-		HashMap<String, Doc> subDocHashMap = getSubDocHashMap(repos, docId, dirPath, pDocAuth, login_user, rt, actionList);
+		int level = getLevelByParentPath(dirPath);
 		
-		//Convert docHashMap to docList
-    	List<Doc> docList = convertHashMapToDocList(subDocHashMap);
+		//Get subDocHashMap
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		List<Doc> docList = getSubDocList(repos, docId, dirPath, level, pDocAuth, login_user, rt, actionList);
     	
     	//Filter with docAuthHashMap
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
@@ -105,96 +104,41 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected HashMap<String, Doc> getSubDocHashMap(Repos repos, Integer pid, String path, DocAuth pDocAuth, User login_user, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getSubDocList(Repos repos, Integer pid, String path, int level, DocAuth pDocAuth, User login_user, ReturnAjax rt, List<CommonAction> actionList)
 	{
+		List<Doc> docList = new ArrayList<Doc>();
+		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
-    	
-		String reposRPath = getReposRealPath(repos);
 		
     	if(repos.getType() == 1)
 		{	
-	    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path);
+	    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
 	    		Doc localEntry = localEntryList.get(i);
 	    		Doc doc = indexHashMap.get(localEntry.getName());
 	    		if(doc == null)	//Doc was local added
-	    		{
-	    			//Add new doc index and lock(set version to null (means that local was not commited, when commit success then do set it))
-	    			doc = syncAddDoc(localEntry, login_user, rt);
-	    			if(doc == null)
-	    			{
-	    				System.out.println("getSubDocHashMap() syncAddDoc " + localEntry.getName() + " failed");
-		    			rt.setDebugLog("getSubDocHashMap() syncAddDoc: " + localEntry.getName() +" Failed！");
-		    			continue;
-	    			}
-	    			
+	    		{	    			
 	    			//Add doc to docHashMap
-		    		indexHashMap.put(localEntry.getName(), doc);
+		    		doc = localEntry;
+	    			indexHashMap.put(doc.getName(), doc);
 	    			
-	    			//Insert RealDoc Add Commit action(If commit success need to update the doc revision)
-	    			CommonAction action = new CommonAction();
-	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-	    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
-	    			action.setRepos(repos);
-	    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
-	    			action.setDoc(doc);
-	    			action.setLocalRootPath(reposRPath);	//Local 
-	    			action.setCommitUser(login_user.getName());
-	    			action.setCommitMsg("add " + localEntry.getName());
-	    			actionList.add(action);		
-	    			
-	    			//Insert index add action for RealDoc
-	    			action = new CommonAction();
-	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-	    			action.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
-	    			action.setRepos(repos);
-	    			action.setDocType(1);	//1: RDoc 2:VDoc
-	    			action.setDoc(doc);
-	    			action.setLocalRootPath(reposRPath);
-	    			actionList.add(action);
+		    		//Insert verRepos add and Index add
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
-	    			//lock and Update doc index
-	    			localEntry.setId(doc.getId());
-	    			doc = syncUpdateDoc(localEntry, login_user, rt);	    			
-	    			if(doc == null)
-	    			{
-	    				System.out.println("getSubDocHashMap() syncUpdateDoc " + localEntry.getName() + " failed");
-		    			rt.setDebugLog("getSubDocHashMap() syncUpdateDoc: " + localEntry.getName() +" Failed！");
-		    			continue;
-	    			}
-	    			
+	    			doc = localEntry;
 	    			//Update doc to docHashMap
-		    		indexHashMap.put(localEntry.getName(), doc);
-	    			
-	    			//Insert RealDoc Update Commit action(Async commit to verRepos if success do set version and unlock it, else just unlock it)
-	    			CommonAction action = new CommonAction();
-	    			action.setAction(3); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-	    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
-	    			action.setRepos(repos);
-	    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
-	    			action.setDoc(doc);
-	    			action.setLocalRootPath(reposRPath);	//Local 
-	    			action.setCommitUser(login_user.getName());
-	    			action.setCommitMsg("update " + localEntry.getName());	
-	    			actionList.add(action);
-	    			
-	    			//Insert index add action for RealDoc
-	    			action = new CommonAction();
-	    			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-	    			action.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
-	    			action.setRepos(repos);
-	    			action.setDocType(1);	//1: RDoc 2:VDoc
-	    			action.setDoc(doc);
-	    			action.setLocalRootPath(reposRPath);
-	    			actionList.add(action);
-	    		}    		
+		    		indexHashMap.put(doc.getName(), doc);
+		    		
+		    		//Insert verRepos update and Index update
+	    		}
+	    		//Add to docList
+	    		docList.add(doc);
 	    	}
 		}
     	
-    	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path);
+    	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
     	for(int i=0;i<remoteEntryList.size();i++)
     	{
     		Doc remoteEntry = remoteEntryList.get(i);
@@ -202,77 +146,29 @@ public class BaseController  extends BaseFunction{
     		Doc doc = indexHashMap.get(remoteEntry.getName());
     		if(doc == null)	//Doc was remote added
     		{
-    			doc = syncAddDoc(remoteEntry, login_user, rt);
-    			if(doc == null)
-    			{
-    				System.out.println("getSubDocHashMap() syncAddDoc " + remoteEntry.getName() + " failed");
-	    			rt.setDebugLog("getSubDocHashMap() syncAddDoc: " + remoteEntry.getName() +" Failed！");
-	    			continue;
-    			}
-    			
+    			doc = remoteEntry;
     			//Add doc to docHashMap
-	    		indexHashMap.put(remoteEntry.getName(), doc);
+	    		indexHashMap.put(doc.getName(), doc);
     			
-    			//Insert RealDoc CheckOut action(If CheckOut success need to update the doc Index, else need )
-    			CommonAction action = new CommonAction();
-    			action.setAction(6); //1: Add 2: Delete 3:Update 4:Move 5:Copy 6: CheckOut
-    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
-    			action.setRepos(repos);
-    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
-    			action.setDoc(doc);
-    			action.setLocalRootPath(reposRPath);	//Local 
-    			//Insert index add action after checkout success
-    			List<CommonAction> subActionList = new ArrayList<CommonAction>();
-    			CommonAction subAction = new CommonAction();
-    			subAction.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-    			subAction.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
-    			subAction.setRepos(repos);
-    			subAction.setDocType(1);	//1: RDoc 2:VDoc
-    			subAction.setDoc(doc);
-    			subAction.setLocalRootPath(reposRPath);
-    			subActionList.add(subAction);
-    			action.setSubActionList(subActionList);
-    			actionList.add(action);
+	    		//Insert verRepos checkout and Index add, checkout 似乎并不重要，因为不会导致文件丢失，只要下载的时候能够根据Index信息确定下载的来源即可
+	    		
+	    		//Add to docList
+	    		docList.add(doc);
     		}
     		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
     		{
-    			//lock and Update doc index
-    			remoteEntry.setId(doc.getId());
-    			doc = syncUpdateDoc(remoteEntry, login_user, rt);	    			
-    			if(doc == null)
-    			{
-    				System.out.println("getSubDocHashMap() syncUpdateDoc " + remoteEntry.getName() + " failed");
-	    			rt.setDebugLog("getSubDocHashMap() syncUpdateDoc: " + remoteEntry.getName() +" Failed！");
-	    			continue;
-    			}
+    			doc = remoteEntry;
     			
     			//Update doc to docHashMap
-	    		indexHashMap.put(remoteEntry.getName(), doc);
+	    		indexHashMap.put(doc.getName(), doc);
     			
-    			CommonAction action = new CommonAction();
-    			action.setAction(6); //1: Add 2: Delete 3:Update 4:Move 5:Copy 6: CheckOut
-    			action.setType(2);	 //1:FS  2: VerRepos 3: DB 4: Index
-    			action.setRepos(repos);
-    			action.setDocType(1); //1:RealDoc 2: VirtualDoc
-    			action.setDoc(doc);
-    			action.setLocalRootPath(reposRPath);	//Local 
-    			//Insert index add action after checkout success
-    			List<CommonAction> subActionList = new ArrayList<CommonAction>();
-    			CommonAction subAction = new CommonAction();
-    			subAction.setAction(3); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-    			subAction.setType(4); //1:FS  2: VerRepos 3: DB 4: Index
-    			subAction.setRepos(repos);
-    			subAction.setDocType(1);	//1: RDoc 2:VDoc
-    			subAction.setDoc(doc);
-    			subAction.setLocalRootPath(reposRPath);
-    			subActionList.add(subAction);
-    			action.setSubActionList(subActionList);
-    			actionList.add(action);
+    			//Insert verRepos Checkout and Index update
+	    		
+	    		//Update to docList (??) 效率太低下，远程只负责增加本地没有的节点，以便通过网页能够下载或删除、
     		}    		
     	}
     	
-    	
-    	return indexHashMap;
+    	return docList;
 	}
 	
 	private Doc syncUpdateDoc(Doc doc, User login_user, ReturnAjax rt) 
@@ -337,7 +233,7 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 
-	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path) {
+	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path, int level) {
 		String localParentPath = getReposRealPath(repos) + path;
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
@@ -360,7 +256,9 @@ public class BaseController  extends BaseFunction{
     	{
     		File file = localFileList[i];
     		int type = file.isDirectory()? 1:2;
+    		String name = file.getName();
     		Doc subEntry = new Doc();
+    		subEntry.setId(buildDocIdByName(level,name));
     		subEntry.setType(type);
     		subEntry.setPath(path);
     		subEntry.setName(file.getName());
@@ -372,7 +270,7 @@ public class BaseController  extends BaseFunction{
 	}
     	
 
-	private List<Doc> getRemoteEntryList(Repos repos, Integer pid, String path) {
+	private List<Doc> getRemoteEntryList(Repos repos, Integer pid, String path, int level) {
 		switch(repos.getVerCtrl())
 		{
 		case 1:	//SVN
@@ -386,7 +284,7 @@ public class BaseController  extends BaseFunction{
 			long svnRevision = -1;
 			
 			//Get list from verRepos
-			return svnUtil.getDocList(repos, pid, path, svnRevision); 
+			return svnUtil.getDocList(repos, pid, path, level, svnRevision); 
 		case 2:	//GIT
 			
 			GITUtil gitUtil = new GITUtil();
@@ -399,7 +297,7 @@ public class BaseController  extends BaseFunction{
 			String gitRevision = null;
 			
 			//Get list from verRepos
-			return gitUtil.getDocList(repos, pid, path, gitRevision); 
+			return gitUtil.getDocList(repos, pid, path, level, gitRevision); 
 		}
 		return null;
 	}

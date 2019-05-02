@@ -1187,7 +1187,7 @@ public class SVNUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Integer pid, String remoteEntryPath, long revision) 
+	public List<Doc> getDocList(Repos repos, Integer pid, String remoteEntryPath, int level, long revision) 
 	{
 		List <Doc> subEntryList =  new ArrayList<Doc>();
 		
@@ -1209,12 +1209,14 @@ public class SVNUtil  extends BaseController{
 	    		continue;
 	    	}
 	    	
+	    	String name = entry.getName();
 	    	Doc doc = new Doc();
 	    	doc.setVid(repos.getId());
 	    	doc.setPid(pid);
 	    	doc.setPath(remoteEntryPath);	    	
 
-	    	doc.setName(entry.getName());
+	    	doc.setId(buildDocIdByName(level,name));
+	    	doc.setName(name);
 	    	doc.setType(type);
 	        subEntryList.add(doc);
 	    }

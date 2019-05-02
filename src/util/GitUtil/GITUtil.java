@@ -186,7 +186,7 @@ public class GITUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Integer pid, String parentPath, String revision)
+	public List<Doc> getDocList(Repos repos, Integer pid, String parentPath, int level, String revision)
 	{
     	System.out.println("getSubEntryList() revision:" + revision);
     	if(revision == null || revision.isEmpty())
@@ -230,10 +230,16 @@ public class GITUtil  extends BaseController{
             		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
             		if(type > 0)
             		{
+            			String name = treeWalk.getNameString();
                 		Doc subEntry = new Doc();
-                		subEntry.setType(type);
-                		subEntry.setPath(treeWalk.getPathString());
+                		subEntry.setVid(repos.getId());
+                		subEntry.setPid(pid);
+                		subEntry.setPath(parentPath);
+                		
+                		subEntry.setId(buildDocIdByName(level,name));
                 		subEntry.setName(treeWalk.getNameString());
+                   		subEntry.setType(type);
+                   		subEntry.setRevision(revision);
                 		subEntryList.add(subEntry);
             		}
             	}
