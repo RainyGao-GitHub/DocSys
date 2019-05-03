@@ -65,26 +65,9 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, String parentPath, String docName, User login_user, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, String parentPath, String docName, DocAuth docAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
-		//Format parentPath and docName
-		if(parentPath == null)
-		{
-			parentPath = "";
-		}
-		if(docName == null)
-		{
-			docName = "";
-		}
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
-		
-		//get the rootDocAuth
-		DocAuth pDocAuth = getUserDispDocAuth(repos, login_user.getId(), docId, parentPath, docName);
-		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
-		{
-			System.out.println("getAccessableSubDocList_FS() 用户没有该目录的权限");
-			return null;
-		}
 		
 		String dirPath = parentPath+docName+"/";
 		if(docName.isEmpty())
@@ -96,18 +79,17 @@ public class BaseController  extends BaseFunction{
 		
 		//Get subDocHashMap
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		List<Doc> docList = getSubDocList(repos, docId, dirPath, level, pDocAuth, login_user, rt, actionList);
+		List<Doc> docList = getSubDocList(repos, docId, dirPath, level, rt, actionList);
     	
     	//Filter with docAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
-		List <Doc> resultList = getAuthedSubDocList(repos, docList,  pDocAuth, docAuthHashMap, login_user, rt);
+		List <Doc> resultList = getAuthedSubDocList(repos, docList,  docAuth, docAuthHashMap, rt);
 	
 		Collections.sort(resultList);
     	return resultList;
 	}
 	
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getSubDocList(Repos repos, Integer pid, String path, int level, DocAuth pDocAuth, User login_user, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getSubDocList(Repos repos, Integer pid, String path, int level, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
@@ -180,66 +162,45 @@ public class BaseController  extends BaseFunction{
     	return docList;
 	}
 	
-	private Doc syncUpdateDoc(Doc doc, User login_user, ReturnAjax rt) 
+	//获取pid下的SubDocList
+	private List <Doc> getAuthedSubDocList(Repos repos, List<Doc> subDocList, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, ReturnAjax rt)
 	{
-		Integer docId = doc.getId();
-		synchronized(syncLock)
+		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
 		{
-			//Try to lock the doc
-			Doc lock = lockDoc(docId, 1, 7200000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
-			if(lock == null)
-			{
-				unlock(); //线程锁
-	
-				System.out.println("getSubDocHashMap() lockDoc " + docId +" Failed！");
-				rt.setDebugLog("getSubDocHashMap()  lockDoc " + docId + " Failed！");
-				return null;
-			}
-			unlock(); //线程锁	
-		}
-		
-		//Update DocInfo
-		if(reposService.updateDoc(doc) == 0)
-		{	
-			unlockDoc(doc.getId(), login_user, doc);
-			System.out.println("getSubDocHashMap() update Node: " + doc.getName() +" Failed！");
-			rt.setDebugLog("getSubDocHashMap() update Node: " + doc.getName() +" Failed！");
 			return null;
 		}
 		
-		unlockDoc(docId, login_user, doc);
-		return doc;
-	}
-
-	private Doc syncAddDoc(Doc doc,  User login_user,  ReturnAjax rt) {
-		synchronized(syncLock)
+		//printObject("getAuthedDocList() parentDocAuth:",pDocAuth);
+		
+		if(subDocList == null || subDocList.size() == 0)
 		{
-			//Check if parentDoc was absolutely locked (LockState == 2)
-			if(isParentDocLocked(doc.getPid(),login_user,rt))
-			{	
-				unlock(); //线程锁
-				System.out.println("getSubDocHashMap() ParentNode: " + doc.getPid() +" is locked！");
-				rt.setDebugLog("getSubDocHashMap() ParentNode: " + doc.getPid() + " is locked！");
-				return null;
-			}
-				
-			//新建doc记录(注意这里并不负责锁定，在真正进行文件操作的时候才进行锁定)
-			doc.setRevision(null);
-//			long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-//			localEntry.setState(2);	//Lock Doc
-//			localEntry.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-//			long lockTime = nowTimeStamp + 24*60*60*1000;
-//			localEntry.setLockTime(lockTime);	//Set lockTime
-			if(reposService.addDoc(doc) == 0)
-			{			
-				unlock();
-				System.out.println("getSubDocHashMap() reposService.addDoc: " + doc.getName() +" Failed！");
-				rt.setDebugLog("getSubDocHashMap() reposService.addDoc: " + doc.getName() +" Failed！");
-				return null;
-			}
-			unlock();
+			return null;
 		}
-		return doc;
+		
+		/**Use DocAuth to filter not authed docs**/
+		//get the rootDocAuth
+		DocAuth rootDocAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
+		if(rootDocAuth == null)
+		{
+			System.out.println("getAuthedSubDocList() 用户根目录权限未设置");
+			return null;
+		}
+		
+		//Go through the subDocList if the doc can be access, add it to resultList
+		List <Doc> resultList = new ArrayList<Doc>();
+		for(int i=0;i<subDocList.size();i++)
+		{
+			Doc subDoc = subDocList.get(i);
+			Integer subDocId = subDoc.getId();
+			DocAuth docAuth = getDocAuthFromHashMap(subDocId,pDocAuth,docAuthHashMap);
+			//System.out.println("getAuthedSubDocList() docId:"+docId + " docName:" + doc.getName());
+			//printObject("getAuthedSubDocList() docAuth:",docAuth);
+			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+			{
+				resultList.add(subDoc);
+			}
+		}
+		return resultList;
 	}
 
 	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path, int level) {
@@ -310,12 +271,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
-	
-	private List<Doc> convertHashMapToDocList(HashMap<String, Doc> indexHashMap) {
-		// TODO Auto-generated method stub
-		
-		return null;
-	}
 
 	private boolean isDocLocalChanged(Doc doc, Doc localEntry) {
 
@@ -364,106 +319,68 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
-		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + doc.getName());
+		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
+
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
-			return getDocListFromRootToDoc_FS(repos, rootDocId, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_FS(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		case 3:
-			return getDocListFromRootToDoc_SVN(repos, rootDocId, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_SVN(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		case 4:
-			return getDocListFromRootToDoc_GIT(repos, rootDocId, parentPath, doc, login_user, rt);
+			return getDocListFromRootToDoc_GIT(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		}
 		return null;
 	}
 	
-	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer rootDocId, String parentPath, Doc doc, User login_user, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{	
-		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + doc.getName());
+		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 		
 		String [] paths = parentPath.split("/");
 		int deepth = paths.length;
 		
-		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", login_user , rt);	//get subDocList under root
+		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", rootDocAuth, docAuthHashMap, rt);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
 			System.out.println("getDocListFromRootToDoc_FS() docList under root is empty");			
 			return null;
 		}
 		
-		String tempParentPath = "";
+		String  path = "";
+		DocAuth pDocAuth = rootDocAuth;
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
-			Integer tempPid = buildDocIdByName(i,name);
-			tempParentPath = tempParentPath + paths[i] + "/";
-
-			List<Doc> subDocList = getAccessableSubDocList(repos, tempPid, tempParentPath, name, login_user , rt);
+			Integer pid = buildDocIdByName(i,name);
+			path = path + paths[i] + "/";
+			pDocAuth = getDocAuthFromHashMap(pid, pDocAuth, docAuthHashMap);
+			
+			List<Doc> subDocList = getAccessableSubDocList(repos, pid, path, name, pDocAuth, docAuthHashMap, rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
-				System.out.println("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + doc.getName());
-				rt.setDebugLog("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + doc.getName());
+				System.out.println("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + path+name);
+				rt.setDebugLog("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + path+name);
 				break;
 			}
 			resultList.addAll(subDocList);
 		}
 		
-		return resultList;
-	}
-	
-	//获取pid下的SubDocList
-	private List <Doc> getAuthedSubDocList(Repos repos, List<Doc> subDocList, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap,User login_user,ReturnAjax rt)
-	{
-		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
-		{
-			return null;
-		}
-		
-		//printObject("getAuthedDocList() parentDocAuth:",pDocAuth);
-		
-		if(subDocList == null || subDocList.size() == 0)
-		{
-			return null;
-		}
-		
-		/**Use DocAuth to filter not authed docs**/
-		//get the rootDocAuth
-		DocAuth rootDocAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
-		if(rootDocAuth == null)
-		{
-			System.out.println("getAuthedSubDocList() 用户根目录权限未设置");
-			return null;
-		}
-		
-		//Go through the subDocList if the doc can be access, add it to resultList
-		List <Doc> resultList = new ArrayList<Doc>();
-		for(int i=0;i<subDocList.size();i++)
-		{
-			Doc subDoc = subDocList.get(i);
-			Integer subDocId = subDoc.getId();
-			DocAuth docAuth = getDocAuthFromHashMap(subDocId,pDocAuth,docAuthHashMap);
-			//System.out.println("getAuthedSubDocList() docId:"+docId + " docName:" + doc.getName());
-			//printObject("getAuthedSubDocList() docAuth:",docAuth);
-			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-			{
-				resultList.add(subDoc);
-			}
-		}
 		return resultList;
 	}
 	

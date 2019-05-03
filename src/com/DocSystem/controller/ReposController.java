@@ -470,22 +470,42 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//get the rootDocAuth
+		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
+		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
+		{
+			System.out.println("getReposInitMenu() 您没有该目录的访问权限，请联系管理员！");
+			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//docAuthHashMap for login_user
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		
 		List <Doc> docList = null;
-		Doc doc = new Doc();
-		doc.setId(docId);
-		doc.setName(docName);
 		if(docId == null || docId == 0)
 		{
 			docId = 0;
-			docList = getAccessableSubDocList(repos, 0, "", "", login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, "", "", rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
+			//Format parentPath and docName
+			if(parentPath == null)
+			{
+				parentPath = "";
+			}
+			if(docName == null)
+			{
+				docName = "";
+			}
+			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, 0, parentPath, doc, login_user ,rt);
+			docList = getDocListFromRootToDoc(repos, 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		}
 
-		rt.setMsg("获取成功",doc.getId());
+		rt.setMsg("获取成功",docId);
 		if(docList == null)
 		{
 			rt.setData("");
@@ -527,8 +547,22 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//get the rootDocAuth
+		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), id, path, name);
+		
+		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
+		{
+			System.out.println("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
+			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//docAuthHashMap for login_user
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		
 		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, login_user, rt);
+		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, docAuth, docAuthHashMap, rt);
 
 		if(docList == null)
 		{
@@ -568,17 +602,26 @@ public class ReposController extends BaseController{
 		//获取用户可访问文件列表(From Root to docId)
 		List <Doc> docList =  null;
 		
-		Doc doc = new Doc();
-		doc.setId(docId);
-		doc.setName(docName);
+		//get the rootDocAuth
+		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
+		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
+		{
+			System.out.println("getReposInitMenu() 您没有该目录的访问权限，请联系管理员！");
+			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//docAuthHashMap for login_user
+		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, 0, "", "", login_user, rt);
+			docList = getAccessableSubDocList(repos, 0, "", "", rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
-			docList = getDocListFromRootToDoc(repos, 0, parentPath, doc, login_user ,rt);
+			docList = getDocListFromRootToDoc(repos, 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		}	
 		
 		//合并列表
