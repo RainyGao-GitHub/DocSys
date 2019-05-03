@@ -505,7 +505,6 @@ public class ReposController extends BaseController{
 			docList = getDocListFromRootToDoc(repos, 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		}
 
-		rt.setMsg("获取成功",docId);
 		if(docList == null)
 		{
 			rt.setData("");
