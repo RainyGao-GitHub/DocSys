@@ -1218,6 +1218,7 @@ public class SVNUtil  extends BaseController{
 	    	doc.setId(buildDocIdByName(level,name));
 	    	doc.setName(name);
 	    	doc.setType(type);
+	    	doc.setSize(entry.getSize());
 	        subEntryList.add(doc);
 	    }
 	    return subEntryList;

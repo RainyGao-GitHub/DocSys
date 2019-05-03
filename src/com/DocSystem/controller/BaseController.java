@@ -210,8 +210,10 @@ public class BaseController  extends BaseFunction{
     		subEntry.setId(buildDocIdByName(level,name));
     		subEntry.setName(name);
     		subEntry.setType(type);    		
-    		subEntry.setSize((int) file.length());
+    		subEntry.setSize(file.length());
+    		subEntry.setCreateTime(file.lastModified());
     		subEntry.setLatestEditTime(file.lastModified());
+    		subEntry.setState(0);   		
     		subEntryList.add(subEntry);
     	}
     	return subEntryList;
@@ -1469,7 +1471,7 @@ public class BaseController  extends BaseFunction{
 	//底层addDoc接口
 	protected Integer addDoc(Repos repos, Integer type,  Integer level, Integer parentId, String parentPath, String docName, 
 			String content,	//VDoc Content
-			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
@@ -1503,7 +1505,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type,  Integer level,  Integer parentId, String parentPath,
-			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
+			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
@@ -1511,7 +1513,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath,
-			String docName, String content, MultipartFile uploadFile, Integer fileSize, String checkSum,
+			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, MultiActionList actionList) {
 		// TODO Auto-generated method stub
@@ -1520,7 +1522,7 @@ public class BaseController  extends BaseFunction{
 
 	//addDocToVerRepos
 	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type,  Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
-			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
 			MultiActionList actionList) 
@@ -1613,7 +1615,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
-			MultipartFile uploadFile, Integer fileSize, String checkSum, //For upload
+			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
@@ -2159,7 +2161,7 @@ public class BaseController  extends BaseFunction{
 		doc.setName(docName);
 		doc.setType(entryType);
 		
-		doc.setSize((int)entry.length());
+		doc.setSize(entry.length());
 		doc.setCheckSum(checkSum);
 		
 		doc.setState(0);
@@ -2456,7 +2458,7 @@ public class BaseController  extends BaseFunction{
 
 	//底层updateDoc接口
 	protected boolean updateDoc(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
-								MultipartFile uploadFile,Integer fileSize,String checkSum, 
+								MultipartFile uploadFile,Long fileSize,String checkSum, 
 								Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
 	{
@@ -2487,7 +2489,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean updateDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
-			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
+			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
 			MultiActionList actionList)
 	{
@@ -2497,7 +2499,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean updateDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
-			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
+			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
 			MultiActionList actionList)
 	{
@@ -2507,7 +2509,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean updateDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
-			MultipartFile uploadFile, Integer fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
+			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
 			MultiActionList actionList) 
 	{
@@ -2517,7 +2519,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean updateDoc_DB(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
-				MultipartFile uploadFile,Integer fileSize,String checkSum, 
+				MultipartFile uploadFile,Long fileSize,String checkSum, 
 				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
 				MultiActionList actionList) 
@@ -4183,7 +4185,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Integer fileSize, String fileCheckSum,
+	protected boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Long fileSize, String fileCheckSum,
 			MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
 		String localDocParentPath = reposRPath + parentPath;
 		String retName = null;
@@ -4294,7 +4296,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	protected boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Integer fileSize,
+	protected boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Long fileSize,
 			String fileCheckSum) {
 		File file = new File(localDocParentPath,name);
 		if(fileSize != file.length())

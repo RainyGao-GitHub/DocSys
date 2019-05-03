@@ -106,7 +106,7 @@ public class DocController extends BaseController{
 		}
 		
 		MultiActionList actionList = new MultiActionList();
-		Integer ret = addDoc(repos, type,  level, parentId, parentPath, docName, content, null,0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		Integer ret = addDoc(repos, type,  level, parentId, parentPath, docName, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret > 0 )
@@ -146,7 +146,7 @@ public class DocController extends BaseController{
 		}
 		
 		MultiActionList actionList = new MultiActionList();
-		Integer ret = addDoc(repos, -1, 1, parentId, parentPath, name, content, null, 0, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
+		Integer ret = addDoc(repos, -1, 1, parentId, parentPath, name, content, null, (long) 0, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -226,7 +226,7 @@ public class DocController extends BaseController{
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
 	public void checkChunkUploaded(Integer uploadType, Integer reposId, Integer docId, Integer parentId, String parentPath, String docName, 
-			Integer size, String checkSum,
+			Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -301,7 +301,7 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String docName,Integer size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String docName,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkDocInfo docName: " + docName + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -420,7 +420,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private Doc getSameDoc(Integer size, String checkSum, Integer reposId) {
+	private Doc getSameDoc(Long size, String checkSum, Integer reposId) {
 
 		Doc qdoc = new Doc();
 		qdoc.setSize(size);
@@ -434,7 +434,7 @@ public class DocController extends BaseController{
 		return null;
 	}
 
-	private boolean isDocCheckSumMatched(Doc doc,Integer size, String checkSum) {
+	private boolean isDocCheckSumMatched(Doc doc,Long size, String checkSum) {
 		System.out.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
 		if(size.equals(doc.getSize()) && !"".equals(checkSum) && checkSum.equals(doc.getCheckSum()))
 		{
@@ -446,7 +446,7 @@ public class DocController extends BaseController{
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer uploadType, Integer reposId, Integer docId, Integer parentId, String parentPath, String docName,
-			MultipartFile uploadFile, Integer size, String checkSum,
+			MultipartFile uploadFile, Long size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("uploadDoc uploadType:" + uploadType + " docName:" + docName + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId
