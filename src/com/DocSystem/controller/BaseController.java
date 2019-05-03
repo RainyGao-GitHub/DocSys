@@ -331,11 +331,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String  path = "";
+		Integer pid = rootDocId;
 		DocAuth pDocAuth = rootDocAuth;
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
-			Integer pid = buildDocIdByName(i,name);
 			pDocAuth = getDocAuthFromHashMap(pid, pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, pid, path, name, pDocAuth, docAuthHashMap, rt);
@@ -348,6 +348,7 @@ public class BaseController  extends BaseFunction{
 			resultList.addAll(subDocList);
 
 			path = path + paths[i] + "/";
+			pid = buildDocIdByName(i,name);
 		}
 		
 		return resultList;
