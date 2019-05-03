@@ -1210,6 +1210,7 @@ public class SVNUtil  extends BaseController{
 	    	}
 	    	
 	    	String name = entry.getName();
+	    	Long lastChangeTime = entry.getDate().getTime();
 	    	Doc doc = new Doc();
 	    	doc.setVid(repos.getId());
 	    	doc.setPid(pid);
@@ -1219,6 +1220,10 @@ public class SVNUtil  extends BaseController{
 	    	doc.setName(name);
 	    	doc.setType(type);
 	    	doc.setSize(entry.getSize());
+	    	doc.setCreateTime(lastChangeTime);
+	    	doc.setLatestEditTime(lastChangeTime);
+	    	doc.setState(0);
+	    	doc.setRevision(entry.getRevision()+"");
 	        subEntryList.add(doc);
 	    }
 	    return subEntryList;
