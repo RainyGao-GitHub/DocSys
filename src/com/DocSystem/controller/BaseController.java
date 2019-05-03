@@ -79,17 +79,17 @@ public class BaseController  extends BaseFunction{
 		
 		//Get subDocHashMap
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		List<Doc> docList = getSubDocList(repos, docId, dirPath, level, rt, actionList);
-    	
-    	//Filter with docAuthHashMap
-		List <Doc> resultList = getAuthedSubDocList(repos, docList,  docAuth, docAuthHashMap, rt);
+		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, docAuth, docAuthHashMap, rt, actionList);
 	
-		Collections.sort(resultList);
-    	return resultList;
+		if(docList != null)
+		{
+			Collections.sort(docList);
+		}
+		return docList;
 	}
 	
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getSubDocList(Repos repos, Integer pid, String path, int level, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Integer pid, String path, int level, DocAuth pDocAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
@@ -120,8 +120,13 @@ public class BaseController  extends BaseFunction{
 			    		
 			    		//Insert verRepos update and Index update
 		    		}
-		    		//Add to docList
-		    		docList.add(doc);
+		    		
+					DocAuth docAuth = getDocAuthFromHashMap(doc.getId(), pDocAuth,docAuthHashMap);
+					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+					{
+			    		//Add to docList
+			    		docList.add(doc);
+					}
 		    	}
 	    	}
 		}
@@ -142,8 +147,12 @@ public class BaseController  extends BaseFunction{
 	    			
 		    		//Insert verRepos checkout and Index add, checkout 似乎并不重要，因为不会导致文件丢失，只要下载的时候能够根据Index信息确定下载的来源即可
 		    		
-		    		//Add to docList
-		    		docList.add(doc);
+		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getId(), pDocAuth,docAuthHashMap);
+					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+					{
+			    		//Add to docList
+			    		docList.add(doc);
+					}
 	    		}
 	    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
 	    		{
@@ -160,38 +169,6 @@ public class BaseController  extends BaseFunction{
     	}
     	
     	return docList;
-	}
-	
-	//获取pid下的SubDocList
-	private List <Doc> getAuthedSubDocList(Repos repos, List<Doc> subDocList, DocAuth pDocAuth, HashMap<Integer,DocAuth> docAuthHashMap, ReturnAjax rt)
-	{
-		if(pDocAuth == null || pDocAuth.getAccess() == null || pDocAuth.getAccess() == 0)
-		{
-			return null;
-		}
-		
-		//printObject("getAuthedDocList() parentDocAuth:",pDocAuth);
-		
-		if(subDocList == null || subDocList.size() == 0)
-		{
-			return null;
-		}
-		
-		//Go through the subDocList if the doc can be access, add it to resultList
-		List <Doc> resultList = new ArrayList<Doc>();
-		for(int i=0;i<subDocList.size();i++)
-		{
-			Doc subDoc = subDocList.get(i);
-			Integer subDocId = subDoc.getId();
-			DocAuth docAuth = getDocAuthFromHashMap(subDocId,pDocAuth,docAuthHashMap);
-			//System.out.println("getAuthedSubDocList() docId:"+docId + " docName:" + doc.getName());
-			//printObject("getAuthedSubDocList() docAuth:",docAuth);
-			if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-			{
-				resultList.add(subDoc);
-			}
-		}
-		return resultList;
 	}
 
 	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path, int level) {
