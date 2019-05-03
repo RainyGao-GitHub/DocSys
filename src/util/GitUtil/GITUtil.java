@@ -11,6 +11,8 @@ import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.lib.ConfigConstants;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -231,6 +233,8 @@ public class GITUtil  extends BaseController{
             		if(type > 0)
             		{
             			String name = treeWalk.getNameString();
+            			ObjectId objectId = treeWalk.getObjectId(0);
+            			
                 		Doc subEntry = new Doc();
                 		subEntry.setVid(repos.getId());
                 		subEntry.setPid(pid);
@@ -239,7 +243,11 @@ public class GITUtil  extends BaseController{
                 		subEntry.setId(buildDocIdByName(level,name));
                 		subEntry.setName(treeWalk.getNameString());
                    		subEntry.setType(type);
-                   		subEntry.setRevision(revision);
+                		//subEntry.setSize();
+                		//subEntry.setCreateTime();
+                		//subEntry.setLatestEditTime();
+                		subEntry.setState(0);   		
+                   		//subEntry.setRevision("");
                 		subEntryList.add(subEntry);
             		}
             	}
