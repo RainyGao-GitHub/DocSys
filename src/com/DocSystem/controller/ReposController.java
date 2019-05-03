@@ -547,6 +547,16 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//Format parentPath and docName
+		if(path == null)
+		{
+			path = "";
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		
 		//get the rootDocAuth
 		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), id, path, name);
 		
