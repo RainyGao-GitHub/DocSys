@@ -128,6 +128,9 @@ public class BaseController  extends BaseFunction{
 			    		docList.add(doc);
 					}
 		    	}
+		    	System.out.println("docList size:" + docList.size());
+		    	printObject("docList", docList);
+		    	
 	    	}
 		}
     	
@@ -166,6 +169,8 @@ public class BaseController  extends BaseFunction{
 		    		//Update to docList (??) 效率太低下，远程只负责增加本地没有的节点，以便通过网页能够下载或删除、
 	    		} 
 	    	}
+	    	System.out.println("docList size1:" + docList.size());
+	    	printObject("docList1", docList);
     	}
     	
     	return docList;
@@ -334,6 +339,7 @@ public class BaseController  extends BaseFunction{
 		
 		String [] paths = parentPath.split("/");
 		int deepth = paths.length;
+		System.out.println("getDocListFromRootToDoc_FS() deepth:" + deepth); 
 		if(deepth < 1)
 		{
 			return resultList;
@@ -341,10 +347,16 @@ public class BaseController  extends BaseFunction{
 		
 		String  path = "";
 		DocAuth pDocAuth = rootDocAuth;
+		int level = 0;
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
-			Integer docId = buildDocIdByName(i,name);
+			if(name.isEmpty())
+			{
+				continue;
+			}	
+			
+			Integer docId = buildDocIdByName(level,name);
 			System.out.println("docId:" + docId);
 			DocAuth docAuth = getDocAuthFromHashMap(docId, pDocAuth, docAuthHashMap);
 			
@@ -359,6 +371,7 @@ public class BaseController  extends BaseFunction{
 			
 			path = path + name + "/";
 			pDocAuth = docAuth;
+			level++;
 		}
 		
 		return resultList;
