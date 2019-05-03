@@ -177,15 +177,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		/**Use DocAuth to filter not authed docs**/
-		//get the rootDocAuth
-		DocAuth rootDocAuth = getDocAuthFromHashMap(0,null,docAuthHashMap);
-		if(rootDocAuth == null)
-		{
-			System.out.println("getAuthedSubDocList() 用户根目录权限未设置");
-			return null;
-		}
-		
 		//Go through the subDocList if the doc can be access, add it to resultList
 		List <Doc> resultList = new ArrayList<Doc>();
 		for(int i=0;i<subDocList.size();i++)
@@ -2923,39 +2914,6 @@ public class BaseController  extends BaseFunction{
 			Doc dstSubDoc = buildDocByDoc_DB(subDoc, dstDoc.getPid(), dstDoc.getPath(), subDoc.getName(), login_user, false);
 			BuildMultiActionListForDocCopy_DB(actionList, repos, subDoc, dstSubDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);	
 		}
-	}
-
-	//This is for docMove
-	private Doc copyDocByDoc_DB(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
-	{
-		Doc dstDoc = new Doc();
-		dstDoc.setId(doc.getId());
-		dstDoc.setVid(doc.getVid());
-		dstDoc.setType(doc.getType());
-		dstDoc.setContent(doc.getContent());
-		
-		//Info which need to change
-		dstDoc.setPid(dstPid);
-		dstDoc.setPath(dstParentPath);
-		dstDoc.setName(dstName);
-		long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
-		dstDoc.setLatestEditTime(nowTimeStamp);
-		dstDoc.setLatestEditor(login_user.getId());
-		
-		if(lock)
-		{
-			dstDoc.setState(2);	//doc的状态为不可用
-			dstDoc.setLockBy(login_user.getId());	//set LockBy
-			long lockTime = nowTimeStamp + 24*60*60*1000;
-			dstDoc.setLockTime(lockTime);	//Set lockTime
-		}
-		else
-		{
-			dstDoc.setState(0);
-			dstDoc.setLockBy(0);
-			dstDoc.setLockTime((long)0);			
-		}
-		return dstDoc;
 	}
 	
 	//For copyDoc
