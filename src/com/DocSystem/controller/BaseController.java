@@ -336,7 +336,6 @@ public class BaseController  extends BaseFunction{
 		{
 			String name = paths[i];
 			Integer pid = buildDocIdByName(i,name);
-			path = path + paths[i] + "/";
 			pDocAuth = getDocAuthFromHashMap(pid, pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, pid, path, name, pDocAuth, docAuthHashMap, rt);
@@ -347,6 +346,8 @@ public class BaseController  extends BaseFunction{
 				break;
 			}
 			resultList.addAll(subDocList);
+
+			path = path + paths[i] + "/";
 		}
 		
 		return resultList;
