@@ -193,13 +193,18 @@ public class BaseController  extends BaseFunction{
     	for(int i=0;i<localFileList.length;i++)
     	{
     		File file = localFileList[i];
+    		
     		int type = file.isDirectory()? 2:1;
+
     		String name = file.getName();
     		Doc subEntry = new Doc();
-    		subEntry.setId(buildDocIdByName(level,name));
-    		subEntry.setType(type);
+    		subEntry.setVid(repos.getId());
+    		subEntry.setPid(pid);
     		subEntry.setPath(path);
-    		subEntry.setName(file.getName());
+
+    		subEntry.setId(buildDocIdByName(level,name));
+    		subEntry.setName(name);
+    		subEntry.setType(type);    		
     		subEntry.setSize((int) file.length());
     		subEntry.setLatestEditTime(file.lastModified());
     		subEntryList.add(subEntry);
@@ -320,9 +325,6 @@ public class BaseController  extends BaseFunction{
 	{	
 		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 		
-		String [] paths = parentPath.split("/");
-		int deepth = paths.length;
-		
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", rootDocAuth, docAuthHashMap, rt);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
@@ -330,15 +332,23 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
+		String [] paths = parentPath.split("/");
+		int deepth = paths.length;
+		if(deepth < 1)
+		{
+			return resultList;
+		}
+		
 		String  path = "";
-		Integer pid = rootDocId;
 		DocAuth pDocAuth = rootDocAuth;
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
-			pDocAuth = getDocAuthFromHashMap(pid, pDocAuth, docAuthHashMap);
+			Integer docId = buildDocIdByName(i,name);
+			System.out.println("docId:" + docId);
+			DocAuth docAuth = getDocAuthFromHashMap(docId, pDocAuth, docAuthHashMap);
 			
-			List<Doc> subDocList = getAccessableSubDocList(repos, pid, path, name, pDocAuth, docAuthHashMap, rt);
+			List<Doc> subDocList = getAccessableSubDocList(repos, docId, path, name, docAuth, docAuthHashMap, rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				System.out.println("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + path+name);
@@ -346,9 +356,9 @@ public class BaseController  extends BaseFunction{
 				break;
 			}
 			resultList.addAll(subDocList);
-
-			path = path + paths[i] + "/";
-			pid = buildDocIdByName(i,name);
+			
+			path = path + name + "/";
+			pDocAuth = docAuth;
 		}
 		
 		return resultList;
