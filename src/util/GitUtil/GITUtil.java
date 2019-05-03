@@ -349,8 +349,8 @@ public class GITUtil  extends BaseController{
 	private TreeWalk findTreeWalkForPath(TreeWalk treeWalk, String path) {
 		//Split the path by "/"
 		String [] paths = path.split("/");
-		int expLevel = paths.length;
-		for(int i=0; i< expLevel; i++)
+		int deepth = paths.length;
+		for(int i=0; i< deepth; i++)
 		{
 			System.out.println("paths:" + paths[i]);
 		}
@@ -362,7 +362,7 @@ public class GITUtil  extends BaseController{
 				String entryName = treeWalk.getNameString();
 				if(entryName.equals(paths[curLevel]))
 				{
-					if(curLevel < expLevel)
+					if(curLevel < deepth-1)
 					{
 						if(treeWalk.isSubtree()) 
 						{
