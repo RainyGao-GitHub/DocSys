@@ -474,8 +474,8 @@ public class ReposController extends BaseController{
 		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
-			System.out.println("getReposInitMenu() 您没有该目录的访问权限，请联系管理员！");
-			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			System.out.println("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
+			rt.setError("您没有该仓库的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -607,16 +607,14 @@ public class ReposController extends BaseController{
 		rootDoc.setType(2);
 		rootDoc.setPid(0);	//设置成自己
 		
-		//获取用户可见仓库文件列表
 		//获取用户可访问文件列表(From Root to docId)
-		List <Doc> docList =  null;
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
-			System.out.println("getReposInitMenu() 您没有该目录的访问权限，请联系管理员！");
-			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			System.out.println("getReposManagerMenu() 您没有该仓库的访问权限，请联系管理员！");
+			rt.setError("您没有该仓库的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -624,20 +622,34 @@ public class ReposController extends BaseController{
 		//docAuthHashMap for login_user
 		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
+		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
+			docId = 0;
 			docList = getAccessableSubDocList(repos, 0, "", "", rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
+			//Format parentPath and docName
+			if(parentPath == null)
+			{
+				parentPath = "";
+			}
+			if(docName == null)
+			{
+				docName = "";
+			}
+			
+			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
-		}	
+		}
 		
 		//合并列表
 		if(docList == null)
 		{
 			docList = new ArrayList<Doc>();
 		}
+		
 		docList.add(rootDoc);
 		rt.setData(docList);
 		writeJson(rt, response);
