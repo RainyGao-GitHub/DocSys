@@ -3811,46 +3811,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected List<Integer> getDocIdList(Repos repos, Integer docId, String parentPath, String docName, List<Integer> docIdList) 
-	{
-		switch(repos.getType())
-		{
-		case 1:
-			return getDocIdList_DB(docId, docIdList);
-		case 2:
-		case 3:
-		case 4:
-			return getDocIdList_FS(docId, parentPath, docName, docIdList); 	
-		}
-		return null;
-	}
-	
-	protected List<Integer> getDocIdList_DB(Integer docId,List<Integer> docIdList) {
-		if(docId == null || docId == 0)
-		{
-			docIdList.add(0);			
-			return docIdList;
-		}
-		
-		//If the doc exist
-		Doc doc = reposService.getDocInfo(docId);
-		if(doc != null)
-		{
-			docIdList.add(0, docId);
-			return getDocIdList_DB(doc.getPid(),docIdList);
-		}
-		
-		System.out.println("getDocIdList() docId:" + docId + " is null");
-		return docIdList;
-	}
-	
-	protected List<Integer> getDocIdList_FS(Integer docId, String parentPath, String docName, List<Integer> docIdList) 
-	{
-		if(docId == null || docId == 0)
-		{
-			docIdList.add(0);
-			return docIdList;
-		}
-		
+	{		
 		String docPath = parentPath + docName;
 		String [] paths = docPath.split("/");
 		int docPathDeepth = paths.length;
@@ -3865,7 +3826,7 @@ public class BaseController  extends BaseFunction{
 		
 		return docIdList;
 	}
-	
+		
 	protected HashMap<Integer,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
 		DocAuth docAuth = new DocAuth();
