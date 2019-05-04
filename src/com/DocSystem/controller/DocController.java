@@ -27,8 +27,8 @@ import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.HitDoc;
-import com.DocSystem.common.MultiActionList;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 
@@ -105,19 +105,22 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		Integer ret = addDoc(repos, type,  level, parentId, parentPath, docName, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
-		if(ret > 0 )
+		if(ret == null || ret <= 0 )
 		{
-			executeMultiActionList(actionList, rt);
+			System.out.println("add() add Doc Failed");
+			return;
 		}
+
+		executeCommonActionList(actionList, rt);
 	}
 
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
-	public void addDoc(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void feeback(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("feeback name: " + name + " content: " + content);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -145,7 +148,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		Integer ret = addDoc(repos, -1, 1, parentId, parentPath, name, content, null, (long) 0, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
@@ -155,10 +158,13 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 		
-		if(ret > 0 )
+		if(ret == null || ret <= 0)
 		{
-			executeMultiActionList(actionList, rt);
+			System.out.println("feeback() addDoc failed");
+			return;
 		}
+		
+		executeCommonActionList(actionList, rt);
 	}
 	
 	private Integer getReposIdForFeeback() {
@@ -213,14 +219,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = deleteDoc(repos, docId, parentPath, docName, commitMsg, commitUser, login_user, rt, false, actionList);
 		
 		writeJson(rt, response);
 		
 		if(ret == true)
 		{
-			executeMultiActionList(actionList, rt);
+			executeCommonActionList(actionList, rt);
 		}
 	}
 	/****************   Check a Document ******************/
@@ -267,7 +273,7 @@ public class DocController extends BaseController{
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
 				String commitUser = login_user.getName();
-				MultiActionList actionList = new MultiActionList();
+				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				if(uploadType == 0)
 				{
 					Integer newDocId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
@@ -277,7 +283,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);
 					if(newDocId > 0)
 					{
-						executeMultiActionList(actionList, rt);
+						executeCommonActionList(actionList, rt);
 						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 					}					
 				}
@@ -290,7 +296,7 @@ public class DocController extends BaseController{
 					writeJson(rt, response);	
 					if(ret == true)
 					{
-						executeMultiActionList(actionList, rt);
+						executeCommonActionList(actionList, rt);
 						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 					}
 				}
@@ -393,7 +399,7 @@ public class DocController extends BaseController{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
 					String srcParentPath = getParentPath(sameDoc.getPid());
-					MultiActionList actionList = new MultiActionList();
+					List<CommonAction> actionList = new ArrayList<CommonAction>();
 					copyDoc(repos, sameDoc.getId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,actionList, false);
 					Doc newDoc = getDocByName(docName,parentId,reposId);
 					if(null != newDoc)
@@ -402,7 +408,7 @@ public class DocController extends BaseController{
 						rt.setData(newDoc);
 						rt.setMsg("SameDoc " + sameDoc.getName() +" found and do copy OK！", "1");
 						writeJson(rt, response);
-						executeMultiActionList(actionList, rt);
+						executeCommonActionList(actionList, rt);
 						return;
 					}
 					else
@@ -523,7 +529,7 @@ public class DocController extends BaseController{
 		if(uploadFile != null) 
 		{
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
-			MultiActionList actionList = new MultiActionList();
+			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(uploadType == 0)
 			{
 				Integer newDocId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
@@ -533,7 +539,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				if(newDocId > 0)
 				{
-					executeMultiActionList(actionList, rt);
+					executeCommonActionList(actionList, rt);
 					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 				}					
 			}
@@ -546,7 +552,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);	
 				if(ret == true)
 				{
-					executeMultiActionList(actionList, rt);
+					executeCommonActionList(actionList, rt);
 					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
 				}
 			}
@@ -661,13 +667,13 @@ public class DocController extends BaseController{
 		}
 		
 		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = renameDoc(repos, docId, parentId, parentId, type, parentPath, name, parentPath, newname, commitMsg,commitUser, login_user,rt, actionList , true);
 		writeJson(rt, response);
 		
 		if(ret == true)
 		{
-			executeMultiActionList(actionList, rt);
+			executeCommonActionList(actionList, rt);
 		}
 	}
 
@@ -712,13 +718,13 @@ public class DocController extends BaseController{
 		}
 		
 		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcParentPath, srcDocName, dstParentPath, dstDocName, commitMsg, commitUser, login_user,rt, actionList , true);		
 		writeJson(rt, response);	
 		
 		if(ret)
 		{
-			executeMultiActionList(actionList, rt);
+			executeCommonActionList(actionList, rt);
 		}
 	}
 	
@@ -773,13 +779,13 @@ public class DocController extends BaseController{
 			dstDocName = srcDocName;
 		}
 		
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList, false);
 		writeJson(rt, response);
 		
 		if(ret)
 		{
-			executeMultiActionList(actionList, rt);
+			executeCommonActionList(actionList, rt);
 		}
 	}
 
@@ -814,13 +820,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		MultiActionList actionList = new MultiActionList();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = updateDocContent(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
 		{
-			executeMultiActionList(actionList, rt);
+			executeCommonActionList(actionList, rt);
 		}
 	}
 
@@ -1643,7 +1649,7 @@ public class DocController extends BaseController{
       	    	MultiActionList actionList = new MultiActionList();
 				BuildMultiActionListForDocDelete(actionList , repos, doc, "AutoDelete", "System");
 				ReturnAjax rt = new ReturnAjax();
-				executeMultiActionList(actionList, rt );
+				executeCommonActionList(actionList, rt );
       	    }
 		}
 	

@@ -1,8 +1,10 @@
 package com.DocSystem.entity;
 
 public class Doc  implements Comparable<Doc>{
-    private Integer id;
-
+    private Integer id;	//id in dataBase
+    
+    private Integer docId;	//docId get by level and name
+    		
     private String name;
 
     private Integer type;
@@ -47,6 +49,15 @@ public class Doc  implements Comparable<Doc>{
         this.id = id;
     }
 
+    public Integer getDocId() {
+        return docId;
+    }
+
+    public void setDocId(Integer docId) {
+        this.docId = docId;
+    }
+
+    
     public String getName() {
         return name;
     }

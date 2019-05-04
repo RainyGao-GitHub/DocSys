@@ -1473,17 +1473,13 @@ public class BaseController  extends BaseFunction{
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		Integer docId = buildDocIdByName(level, parentPath);
 		
 		switch(repos.getType())
 		{
 		case 1:
-			return addDoc_DB(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
-					uploadFile, fileSize, checkSum, //For upload
-					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt ,actionList);
 		case 2:
 			return addDoc_FS(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
@@ -1507,7 +1503,7 @@ public class BaseController  extends BaseFunction{
 	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type,  Integer level,  Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, MultiActionList actionList) {
+			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -1515,176 +1511,92 @@ public class BaseController  extends BaseFunction{
 	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, MultiActionList actionList) {
+			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	//addDocToVerRepos
-	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type,  Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-			MultiActionList actionList) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		String reposRPath = getReposRealPath(repos);
-		String localDocRPath = reposRPath + parentPath + docName;
+		String localParentPath =  reposRPath + parentPath;
+		String localDocPath = localParentPath + docName;
 		
-		docId = buildDocIdByName(level,docName);
-				
-		//This is virtual Doc
-		Doc doc = new Doc();
-		doc.setId(docId);
-		doc.setName(docName);
-		doc.setType(type);
-		doc.setSize(fileSize);
-		doc.setCheckSum(checkSum);
-		doc.setContent(content);
-		doc.setPath(parentPath);
-		doc.setVid(repos.getId());
-		doc.setPid(parentId);
-		doc.setCreator(login_user.getId());
-		//set createTime
-		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-		doc.setCreateTime(nowTimeStamp);
-		doc.setLatestEditTime(nowTimeStamp);
-		doc.setLatestEditor(login_user.getId());
-		doc.setState(2);	//doc的状态为不可用
-		doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-		long lockTime = nowTimeStamp + 2*60*60*1000;
-		doc.setLockTime(lockTime);	//Set lockTime
-				
-		if(uploadFile == null)
-		{
-			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
-			{		
-				String MsgInfo = "createRealDoc " + docName +" Failed";
-				rt.setError(MsgInfo);
-				System.out.println("createRealDoc Failed");
-				if(unlockRepos(repos.getId(), login_user, null) == false)
-				{
-					MsgInfo += " and unlock Repos Failed";
-					System.out.println("addDoc_FS unlock Repos: " + repos.getId() +" Failed!");
-					rt.setError(MsgInfo);
-				}
-				return null;
-			}
-		}
-		else
-		{
-			if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
-			{		
-				String MsgInfo = "updateRealDoc " + docName +" Failed";
-				rt.setError(MsgInfo);
-				System.out.println("addDoc_FS updateRealDoc Failed");
-				if(unlockRepos(repos.getId(), login_user, null))
-				{
-					MsgInfo += " and unlock Repos Failed";
-					System.out.println("addDoc_FS unlock Repos: " + repos.getId() +" Failed!");
-					rt.setError(MsgInfo);
-				}
-				return null;
-			}
-		}
-		//commit to history db
-		if(verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt) == false)
-		{
-			System.out.println("addDoc_FS verReposRealDocAdd Failed");
-			String MsgInfo = "verReposRealDocAdd Failed";
-			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(delFile(localDocRPath) == false)
-			{						
-				MsgInfo += " and deleteFile Failed";
-			}
-			if(unlockRepos(repos.getId(), login_user, null) == false)
-			{
-				MsgInfo += " and unlock Repos Failed";
-				System.out.println("addDoc_FS unlock Repos: " + repos.getId() +" Failed!");
-				rt.setError(MsgInfo);
-			}
-			rt.setError(MsgInfo);
-			return null;
-		}
-		
-		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);		
-				
-		rt.setMsg("新增成功", "isNewNode");
-		rt.setData(doc);
-		
-		return docId;
-	}
-
-	protected Integer addDoc_DB(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
-			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
-	{
-		//get parentPath
-		parentPath = getParentPath(parentId);
-		String reposRPath = getReposRealPath(repos);
-		String localDocRPath = reposRPath + parentPath + docName;
+		Doc doc = null;
 		
 		//判断目录下是否有同名节点 
 		Integer reposId = repos.getId();
-		Doc tempDoc = getDocByName(docName,parentId,reposId);
-		if(tempDoc != null)
+		synchronized(syncLock)
 		{
-			if(type == 2)	//如果是则目录直接成功
+			Doc tempDoc = getDocByName(docName,parentId,reposId);
+			if(tempDoc != null)
 			{
-				rt.setMsg("Node: " + docName +" 已存在！", "dirExists");
-				rt.setData(tempDoc);
+				doc = lockDoc(tempDoc.getId(), 2, 2*60*60*1000, login_user, rt, false);
+				if(doc == null)
+				{
+					unlock(); //线程锁
+					System.out.println("addDoc() lockDoc " + docName + " Failed!");
+					return null;
+				}			
 			}
 			else
 			{
-				rt.setError("Node: " + docName +" 已存在！");
-				System.out.println("addDoc() " + docName + " 已存在");
-			}
-			return null;		
-		}
-		
-		//以下代码不可重入，使用syncLock进行同步
-		Doc doc = new Doc();
-		synchronized(syncLock)
-		{
-			//Check if parentDoc was absolutely locked (LockState == 2)
-			if(isParentDocLocked(parentId,null,rt))
-			{	
-				unlock(); //线程锁
-				rt.setError("ParentNode: " + parentId +" is locked！");	
-				System.out.println("ParentNode: " + parentId +" is locked！");
-				return null;			
-			}
-				
-			//新建doc记录,并锁定
-			doc.setName(docName);
-			doc.setType(type);
-			doc.setSize(fileSize);
-			doc.setCheckSum(checkSum);
-			doc.setContent(content);
-			doc.setPath(parentPath);
-			doc.setVid(reposId);
-			doc.setPid(parentId);
-			doc.setCreator(login_user.getId());
-			//set createTime
-			long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-			doc.setCreateTime(nowTimeStamp);
-			doc.setLatestEditTime(nowTimeStamp);
-			doc.setLatestEditor(login_user.getId());
-			doc.setState(2);	//doc的状态为不可用
-			doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-			long lockTime = nowTimeStamp + 24*60*60*1000;
-			doc.setLockTime(lockTime);	//Set lockTime
-			if(reposService.addDoc(doc) == 0)
-			{			
+				doc = new Doc();
+	
+				//Check if parentDoc was absolutely locked (LockState == 2)
+				if(isParentDocLocked(parentId,null,rt))
+				{	
+					unlock(); //线程锁
+					rt.setError("ParentNode: " + parentId +" is locked！");	
+					System.out.println("ParentNode: " + parentId +" is locked！");
+					return null;			
+				}
+								
+				//新建doc记录,并锁定
+				doc.setVid(reposId);
+				doc.setPid(parentId);
+				doc.setName(docName);
+				doc.setType(type);
+				doc.setSize(fileSize);
+				doc.setCheckSum(checkSum);
+				doc.setContent(content);
+				doc.setPath(parentPath);
+				doc.setCreator(login_user.getId());
+				//set createTime
+				long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+				doc.setCreateTime(nowTimeStamp);
+				doc.setLatestEditTime(nowTimeStamp);
+				doc.setLatestEditor(login_user.getId());
+				doc.setState(2);	//doc的状态为不可用
+				doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
+				long lockTime = nowTimeStamp + 2*60*60*1000;
+				doc.setLockTime(lockTime);	//Set lockTime
+				if(reposService.addDoc(doc) == 0)
+				{				
+					unlock();
+					rt.setError("Add Node: " + docName +" Failed！");
+					System.out.println("addDoc() addDoc to db failed");
+					return null;
+				}
 				unlock();
-				rt.setError("Add Node: " + docName +" Failed！");
-				System.out.println("addDoc() addDoc to db failed");
-				return null;
+				
+				File localEntry = new File(localDocPath);
+				if(localEntry.exists())
+				{	
+					//Update Doc from localFIle
+					System.out.println("addDoc() " +localDocPath + "　已存在！");
+					rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
+					return null;
+				}
 			}
-			unlock();
 		}
 		
 		System.out.println("id: " + doc.getId());
+		docId = buildDocIdByName(level,docName);
+		doc.setDocId(docId);
 		
 		if(uploadFile == null)
 		{
@@ -1726,7 +1638,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("verReposRealDocAdd Failed");
 			String MsgInfo = "verReposRealDocAdd Failed";
 			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(delFile(localDocRPath) == false)
+			if(delFile(localDocPath) == false)
 			{						
 				MsgInfo += " and deleteFile Failed";
 			}
@@ -1738,13 +1650,11 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
+		doc.setId(buildDocIdByName(level,docName));
 		docId = doc.getId();
 
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
-		
-		executeLocalActionList(actionList.getLocalActionList(), rt);
-		executeCommitActionList(actionList.getCommitActionList(), rt);
 		
 		//启用doc
 		if(unlockDoc(docId,login_user,null) == false)
@@ -1761,7 +1671,7 @@ public class BaseController  extends BaseFunction{
 	//底层deleteDoc接口
 	protected boolean deleteDoc(Repos repos, Integer docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-			boolean skipRealDocCommit, MultiActionList actionList) 
+			boolean skipRealDocCommit, List<CommonAction> actionList) 
 	{
 		switch(repos.getType())
 		{
@@ -1905,30 +1815,21 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private void BuildMultiActionListForDocAdd(MultiActionList actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
+	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		String reposRPath = getReposRealPath(repos);
 		
-		List<CommonAction> localActionList = actionList.getLocalActionList();		
-		List<CommonAction> commitActionList = actionList.getCommitActionList();
-		List<CommonAction> indexActionList = actionList.getIndexActionList();
-		
-		//Insert index add action for DocName
-		CommonAction action = new CommonAction();
-		action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-		action.setType(0);	//0:DocName 1: RDoc 2:VDoc
-		action.setDoc(doc);
-		action.setLocalRootPath(reposRPath);
-		indexActionList.add(action);
 		
 		//Insert index add action for RDoc
-		action = new CommonAction();
-		action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-		action.setType(1);	//0:DocName 1: RDoc 2:VDoc
+		CommonAction action = new CommonAction();
+		action.setAction(1); 	//1: Add 2: Delete 3:Update 4:Move 5:Copy
+		action.setType(4); 		//1:FS 2:VerRepos 3:DB 4:Index 
+		action.setDocType(1);	//0:DocName 1: RDoc 2:VDoc
 		action.setDoc(doc);
 		action.setLocalRootPath(reposRPath);
-		indexActionList.add(action);
+		actionList.add(action);
 		
+		//Insert add actions for VDoc
 		String content = doc.getContent();
 		if(null != content && !"".equals(content))
 		{
@@ -1937,26 +1838,31 @@ public class BaseController  extends BaseFunction{
 			//Insert local add action for VDoc
 			action = new CommonAction();
 			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-			action.setType(2);	//0:DocName 1: RDoc 2:VDoc
+			action.setType(1); 		//1:FS 2:VerRepos 3:DB 4:Index
+			action.setRepos(repos);
+			action.setDocType(2);	//0:DocName 1: RDoc 2:VDoc
 			action.setDoc(doc);
 			action.setLocalRootPath(reposVPath);
-			localActionList.add(action);
 			
+			List<CommonAction> subActionList = new ArrayList<CommonAction>();
 			//Insert index add action for VDoc	
-			indexActionList.add(action);
-
+			CommonAction subAction = new CommonAction();
+			subAction.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+			subAction.setType(4); 		//1:FS 2:VerRepos 3:DB 4:Index 
+			subAction.setDocType(2);	//0:DocName 1: RDoc 2:VDoc
+			subActionList.add(subAction);
 			if(repos.getVerCtrl1() > 0)
 			{
-				action = new CommonAction();
-				action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-				action.setType(2);	//0:DocName 1: RDoc 2:VDoc
-				action.setDoc(doc);
-				action.setLocalRootPath(reposVPath);
-				action.setRepos(repos);
-				action.setCommitMsg(commitMsg);
-				action.setCommitUser(commitUser);
-				commitActionList.add(action);
+				subAction = new CommonAction();
+				subAction.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
+				action.setType(2); 		//1:FS 2:VerRepos 3:DB 4:Index 
+				subAction.setType(2);	//0:DocName 1: RDoc 2:VDoc
+				subAction.setCommitMsg(commitMsg);
+				subAction.setCommitUser(commitUser);
+				subActionList.add(action);
 			}
+			action.setSubActionList(subActionList);
+			actionList.add(action);
 		}
 	}
 
@@ -2176,107 +2082,55 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected void executeMultiActionList(MultiActionList actionList, ReturnAjax rt) {
-		executeIndexActionList(actionList.getIndexActionList(), rt);
-		executeLocalActionList(actionList.getLocalActionList(), rt);
-		executeCommitActionList(actionList.getCommitActionList(), rt);
-		executeDBActionList(actionList.getDBActionList(), rt);
-	}
-
-	private boolean executeCommitActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		int size = actionList.size();
-		System.out.println("executeCommitActionList size:" + size);
+		System.out.println("executeActionList size:" + size);
 		
 		int count = 0;
 		
 		for(int i=0; i< actionList.size(); i++)
 		{
 			CommonAction action = actionList.get(i);
-			if(executeCommitAction(action, rt) == true)
+			switch(action.getType())
 			{
-				count++;
+			case 1:
+				if(executeLocalAction(action, rt) == true)
+				{
+					count++;
+				}
+				break;
+			case 2:
+				if(executeCommitAction(action, rt) == true)
+				{
+					count++;
+				}
+				break;
+			case 3:
+				if(executeDBAction(action, rt) == true)
+				{
+					count++;
+				}
+				break;			
+			case 4:
+				if(executeIndexAction(action, rt) == true)
+				{
+					count++;
+				}
+				break;
 			}
 		}
 		
 		if(count != size)
 		{
-			System.out.println("executeCommitActionList() failed actions:" + (size - count));	
+			System.out.println("executeActionList() failed actions:" + (size - count));	
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean executeDBActionList(List<CommonAction> actionList, ReturnAjax rt) 
-	{
-		int size = actionList.size();
-		System.out.println("executeDBActionList size:" + size);
-		
-		int count = 0;
-		
-		for(int i=0; i< actionList.size(); i++)
-		{
-			CommonAction action = actionList.get(i);
-			executeDBAction(action);
-		}
-		
-		if(count != size)
-		{
-			System.out.println("executeDBActionList() failed actions:" + (size - count));	
-			return false;
-		}
-		return true;
-	}
-	
-	protected boolean executeIndexActionList(List<CommonAction> actionList, ReturnAjax rt) 
-	{
-		int size = actionList.size();
-		System.out.println("executeIndexActionList size:" + size);
-		
-		int count = 0;
-
-		for(int i=0;i<actionList.size();i++)
-    	{
-			CommonAction action = actionList.get(i);
-			if(executeIndexAction(action, rt) == true)
-			{
-				count++;
-    		}
-    	}
-		
-		
-		if(count != size)
-		{
-			System.out.println("executeIndexActionList() failed actions:" + (size - count));	
-			return false;
-		}
-		return true;
-	}
-
-	private boolean executeLocalActionList(List<CommonAction> actionList, ReturnAjax rt) 
-	{
-		int size = actionList.size();
-		System.out.println("executeLocalActionList size:" + size);
-		
-		int count = 0;
-		
-		for(int i=0; i< actionList.size(); i++)
-		{
-			CommonAction action = actionList.get(i);
-			executeLocalAction(action,rt);
-		}
-		
-		if(count != size)
-		{
-			System.out.println("executeLocalActionList() failed actions:" + (size - count));	
-			return false;
-		}
-		
-		return true;
-	}
-
-	private boolean executeDBAction(CommonAction action) 
+	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
 	{
 		printObject("executeDBAction() action:",action);
 		switch(action.getAction())
@@ -2460,7 +2314,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean updateDoc(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 								MultipartFile uploadFile,Long fileSize,String checkSum, 
 								Integer chunkNum, Integer chunkSize, String chunkParentPath, 
-								String commitMsg,String commitUser,User login_user, ReturnAjax rt, MultiActionList actionList) 
+								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		switch(repos.getType())
 		{
@@ -2491,7 +2345,7 @@ public class BaseController  extends BaseFunction{
 	private boolean updateDoc_GIT(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			MultiActionList actionList)
+			List<CommonAction> actionList)
 	{
 		// TODO Auto-generated method stub
 		return false;
@@ -2501,7 +2355,7 @@ public class BaseController  extends BaseFunction{
 	private boolean updateDoc_SVN(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			MultiActionList actionList)
+			List<CommonAction> actionList)
 	{
 		// TODO Auto-generated method stub
 		return false;
@@ -2511,7 +2365,7 @@ public class BaseController  extends BaseFunction{
 	private boolean updateDoc_FS(Repos repos, Integer docId, Integer parentId, String parentPath, String docName,
 			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
 			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			MultiActionList actionList) 
+			List<CommonAction> actionList) 
 	{
 		// TODO Auto-generated method stub
 		return false;
@@ -2522,7 +2376,7 @@ public class BaseController  extends BaseFunction{
 				MultipartFile uploadFile,Long fileSize,String checkSum, 
 				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
-				MultiActionList actionList) 
+				List<CommonAction> actionList) 
 	{	
 		Doc doc = null;
 		synchronized(syncLock)
@@ -2635,7 +2489,7 @@ public class BaseController  extends BaseFunction{
 	
 	//底层copyDoc接口
 	protected boolean copyDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt,MultiActionList actionList, boolean isMove) 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt,List<CommonAction> actionList, boolean isMove) 
 	{
 		switch(repos.getType())
 		{
