@@ -679,7 +679,7 @@ public class DocController extends BaseController{
 
 	private boolean renameDoc(Repos repos, Integer docId, Integer parentId, Integer parentId2, Integer type,
 			String parentPath, String name, String parentPath2, String newname, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, MultiActionList actionList, boolean b) {
+			User login_user, ReturnAjax rt, List<CommonAction> actionList, boolean b) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -728,9 +728,10 @@ public class DocController extends BaseController{
 		}
 	}
 	
+
 	private boolean moveDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
 			String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, MultiActionList actionList, boolean b) {
+			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList, boolean b) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -1646,7 +1647,7 @@ public class DocController extends BaseController{
       	    else
       	    {
       	    	System.out.println("convertSearchResultToDocList() " + filePath + " 不存在，清除index、VDoc和previewFiels");
-      	    	MultiActionList actionList = new MultiActionList();
+      	    	List<CommonAction> actionList = new ArrayList<CommonAction>();
 				BuildMultiActionListForDocDelete(actionList , repos, doc, "AutoDelete", "System");
 				ReturnAjax rt = new ReturnAjax();
 				executeCommonActionList(actionList, rt );
