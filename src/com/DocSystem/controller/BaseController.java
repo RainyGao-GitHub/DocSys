@@ -121,7 +121,7 @@ public class BaseController  extends BaseFunction{
 			    		//Insert verRepos update and Index update
 		    		}
 		    		
-					DocAuth docAuth = getDocAuthFromHashMap(doc.getId(), pDocAuth,docAuthHashMap);
+					DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
 					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 					{
 			    		//Add to docList
@@ -150,7 +150,7 @@ public class BaseController  extends BaseFunction{
 	    			
 		    		//Insert verRepos checkout and Index add, checkout 似乎并不重要，因为不会导致文件丢失，只要下载的时候能够根据Index信息确定下载的来源即可
 		    		
-		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getId(), pDocAuth,docAuthHashMap);
+		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
 					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 					{
 			    		//Add to docList
@@ -207,7 +207,7 @@ public class BaseController  extends BaseFunction{
     		subEntry.setPid(pid);
     		subEntry.setPath(path);
 
-    		subEntry.setId(buildDocIdByName(level,name));
+    		subEntry.setDocId(buildDocIdByName(level,name));
     		subEntry.setName(name);
     		subEntry.setType(type);    		
     		subEntry.setSize(file.length());
@@ -1650,14 +1650,11 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		doc.setId(buildDocIdByName(level,docName));
-		docId = doc.getId();
-
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
 		//启用doc
-		if(unlockDoc(docId,login_user,null) == false)
+		if(unlockDoc(doc.getId(),login_user,null) == false)
 		{
 			rt.setError("unlockDoc Failed");
 			return null;

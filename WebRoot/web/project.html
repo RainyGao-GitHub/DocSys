@@ -5568,6 +5568,7 @@ function CompareObj(objA, objB, flag) {
       	for(var i=0; i<menu.length; i++)
       	{
            var jsonObj = menu[i];
+           jsonObj.id = jsonObj.docId;
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
        }
@@ -5585,7 +5586,7 @@ function CompareObj(objA, objB, flag) {
            	for(var i=0; i<data.length; i++)
      	    {
      	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-     	           var docId = data[i].id;
+     	           var docId = data[i].docId;
      	           var docType = data[i].type;
      	           var docName = data[i].name;
      	           if(data[i].state != 0)

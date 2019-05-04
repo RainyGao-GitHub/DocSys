@@ -1216,7 +1216,7 @@ public class SVNUtil  extends BaseController{
 	    	doc.setPid(pid);
 	    	doc.setPath(remoteEntryPath);	    	
 
-	    	doc.setId(buildDocIdByName(level,name));
+	    	doc.setDocId(buildDocIdByName(level,name));
 	    	doc.setName(name);
 	    	doc.setType(type);
 	    	doc.setSize(entry.getSize());
