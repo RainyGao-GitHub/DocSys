@@ -1742,12 +1742,21 @@
 			                parentId : tempParentId,
 			             },
 			             success : function (ret) {
-			             	if( "ok" == ret.status && ret.data.id){
-			  					addTreeNode(ret.data,tempParentNode);
-			             		
-			             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
-			        		  	uploadDoc();
-			        		  	return;
+			             	if( "ok" == ret.status)
+			             	{
+			             		if(ret.data && ret.data.id)
+			             		{
+				  					addTreeNode(ret.data,tempParentNode);
+				             		
+				             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
+				        		  	uploadDoc();
+				        		  	return;
+			             		}
+			             		else
+			             		{
+								 	uploadErrorConfirmHandler(name,ret.msgInfo);
+						            return;			             			
+			             		}
 				            }
 			                else
 			                {
