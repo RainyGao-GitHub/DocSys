@@ -3811,7 +3811,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected List<Integer> getDocIdList(Repos repos, Integer docId, String parentPath, String docName, List<Integer> docIdList) 
-	{		
+	{
+		if(docId == null || docId == 0)
+		{
+			docIdList.add(0);
+			return docIdList;
+		}
+		
 		String docPath = parentPath + docName;
 		String [] paths = docPath.split("/");
 		int docPathDeepth = paths.length;
@@ -3826,7 +3832,7 @@ public class BaseController  extends BaseFunction{
 		
 		return docIdList;
 	}
-		
+	
 	protected HashMap<Integer,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
 		DocAuth docAuth = new DocAuth();
