@@ -611,23 +611,23 @@ public class ReposController extends BaseController{
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = null;
-		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
-		{
-			rootDocAuth = new DocAuth();
-			rootDocAuth.setAccess(1);
-			System.out.println("超级管理员");
-		}
-		else
-		{
-			rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
-		}
-		
+		rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
-			System.out.println("getReposManagerMenu() 您没有该仓库的访问权限，请联系管理员！");
-			rt.setError("您没有该仓库的访问权限，请联系管理员！");
-			writeJson(rt, response);			
-			return;
+			if(login_user.getType() == 2)	//超级管理员可以访问所有目录
+			{
+				rootDocAuth = new DocAuth();
+				rootDocAuth.setAccess(1);
+				System.out.println("超级管理员");
+			}
+			else
+			{
+				
+				System.out.println("getReposManagerMenu() 您没有该仓库的访问权限，请联系管理员！");
+				rt.setError("您没有该仓库的访问权限，请联系管理员！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		//docAuthHashMap for login_user
