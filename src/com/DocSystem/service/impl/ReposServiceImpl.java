@@ -100,9 +100,9 @@ public class ReposServiceImpl implements ReposService {
     }
     
     //delete a Document
-    public int deleteDoc(Integer id)
+    public int deleteDoc(Long docId)
     {
-    	return docDao.deleteByPrimaryKey(id);
+    	return docDao.deleteByPrimaryKey(docId);
     }
     
     //Get the docList by doc

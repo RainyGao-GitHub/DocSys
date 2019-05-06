@@ -6,7 +6,7 @@ import java.util.List;
 import com.DocSystem.entity.Doc;
 
 public interface DocMapper {
-    int deleteByPrimaryKey(Integer id);
+    int deleteByPrimaryKey(Long docId);
 
     int insert(Doc record);
 
