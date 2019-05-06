@@ -1531,6 +1531,7 @@ public class BaseController  extends BaseFunction{
 		Integer reposId = repos.getId();
 		synchronized(syncLock)
 		{
+			//LockDoc
 			Doc tempDoc = getDocByName(docName,parentId,reposId);
 			if(tempDoc != null)
 			{
@@ -1582,31 +1583,33 @@ public class BaseController  extends BaseFunction{
 					return null;
 				}
 				unlock();
-				
-				File localEntry = new File(localDocPath);
-				if(localEntry.exists())
-				{	
-					//Update Doc from localFIle
-					System.out.println("addDoc() " +localDocPath + "　已存在！");
-					rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
-					return null;
-				}
 			}
 		}
 		
 		System.out.println("id: " + doc.getId());
 		docId = buildDocIdByName(level,docName);
 		doc.setDocId(docId);
+
+		File localEntry = new File(localDocPath);
+		if(localEntry.exists())
+		{	
+			//If the docInfo is not compliant with file???,no no no , the size info is from file, so it is only a lock
+			
+			System.out.println("addDoc() " +localDocPath + "　已存在！");
+			rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
+			return null;
+		}
 		
 		if(uploadFile == null)
-		{
+		{	
+			//File must not exists
 			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
 			{		
 				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
 				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
-				if(reposService.deleteDoc(doc.getId()) == 0)	
+				if(reposService.deleteDoc(doc.getId()) == 0)
 				{
 					MsgInfo += " and delete Node Failed";
 					System.out.println("Delete Node: " + doc.getId() +" failed!");
@@ -1632,6 +1635,7 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 		}
+		
 		//commit to history db
 		if(verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt) == false)
 		{
@@ -3887,13 +3891,6 @@ public class BaseController  extends BaseFunction{
 		
 		if(type == 2) //目录
 		{
-			if(isFileExist(localDocPath) == true)
-			{
-				System.out.println("createRealDoc() 目录 " +localDocPath + "　已存在！");
-				rt.setDebugLog("createRealDoc() 目录 " +localDocPath + "　已存在！");
-				return false;
-			}
-			
 			if(false == createDir(localDocPath))
 			{
 				System.out.println("createRealDoc() 目录 " +localDocPath + " 创建失败！");
@@ -3903,13 +3900,6 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(isFileExist(localDocPath) == true)
-			{
-				System.out.println("createRealDoc() 文件 " +localDocPath + " 已存在！");
-				rt.setDebugLog("createRealDoc() 文件 " +localDocPath + " 已存在！");
-				return false;
-			}
-			
 			if(false == createFile(localParentPath,name))
 			{
 				System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
