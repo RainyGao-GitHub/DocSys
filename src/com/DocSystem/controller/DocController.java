@@ -75,7 +75,7 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(Integer reposId,Integer type,  Integer level, Integer parentId, String parentPath, String docName, String content,
+	public void addDoc(Integer reposId,Integer type,  Integer level, Long parentId, String parentPath, String docName, String content,
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addDoc reposId:" + reposId + " type: " + type + " level: " + level +" parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
@@ -106,7 +106,7 @@ public class DocController extends BaseController{
 		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Integer ret = addDoc(repos, type,  level, parentId, parentPath, docName, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		Long ret = addDoc(repos, type,  level, parentId, parentPath, docName, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret == null || ret <= 0 )
@@ -136,7 +136,7 @@ public class DocController extends BaseController{
 			login_user.setId(0);
 		}
 		Integer reposId = getReposIdForFeeback();		
-		Integer parentId = getParentIdForFeeback();
+		Long parentId = getParentIdForFeeback();
 		String parentPath = path;
 		
 		String commitMsg = "User Feeback by " + name;
@@ -149,7 +149,7 @@ public class DocController extends BaseController{
 		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Integer ret = addDoc(repos, -1, 1, parentId, parentPath, name, content, null, (long) 0, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
+		Long ret = addDoc(repos, -1, 1, parentId, parentPath, name, content, null, (long) 0, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -178,20 +178,20 @@ public class DocController extends BaseController{
 	    return(Integer.parseInt(tempStr));
 	}
 
-	private Integer getParentIdForFeeback() {
+	private Long getParentIdForFeeback() {
 		String tempStr = null;
 		tempStr = ReadProperties.read("docSysConfig.properties", "feebackParentId");
 	    if(tempStr == null || "".equals(tempStr))
 	    {
-	    	return 0;
+	    	return (long) 0;
 	    }
 
-	    return(Integer.parseInt(tempStr));
+	    return (long) (Integer.parseInt(tempStr));
  	}
 
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
-	public void deleteDoc(Integer reposId, Integer docId, Integer parentId, String parentPath, String docName, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void deleteDoc(Integer reposId, Long docId, Long parentId, String parentPath, String docName, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("deleteDoc reposId:" + reposId + " docId:" + docId + " parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName );
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -231,7 +231,7 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(Integer uploadType, Integer reposId, Integer docId, Integer parentId, String parentPath, String docName, 
+	public void checkChunkUploaded(Integer uploadType, Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName, 
 			Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -276,7 +276,7 @@ public class DocController extends BaseController{
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				if(uploadType == 0)
 				{
-					Integer newDocId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
+					Long newDocId = addDoc(repos, 1, level, parentId, parentPath, docName, 
 								null, 
 								null,size, checkSum, 
 								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
@@ -307,7 +307,7 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String docName,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(Integer reposId, Long docId, Integer type, Long parentId, String parentPath, String docName,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkDocInfo docName: " + docName + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -561,6 +561,7 @@ public class DocController extends BaseController{
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{
+		//TODO: 取文件的地方有问题
 		System.out.println("uploadMarkdownPic ");
 		
 		JSONObject res = new JSONObject();
@@ -601,7 +602,7 @@ public class DocController extends BaseController{
 		//String localParentPath = getWebTmpPath() + "markdownImg/";
 		Repos repos = reposService.getRepos(doc.getVid());
 		String reposVPath = getReposVirtualPath(repos);
-		String parentPath = getParentPath(doc.getPid());
+		String parentPath = doc.getPath();
 		String docVName = getVDocName(parentPath, doc.getName());
 		String localVDocPath = reposVPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
