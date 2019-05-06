@@ -120,7 +120,7 @@ public class DocController extends BaseController{
 
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
-	public void feeback(String name,String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void feeback(String name, String path, String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("feeback name: " + name + " content: " + content);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -137,7 +137,7 @@ public class DocController extends BaseController{
 		}
 		Integer reposId = getReposIdForFeeback();		
 		Integer parentId = getParentIdForFeeback();
-		String parentPath = getParentPath(parentId);
+		String parentPath = path;
 		
 		String commitMsg = "User Feeback by " + name;
 		Repos repos = reposService.getRepos(reposId);
@@ -398,9 +398,9 @@ public class DocController extends BaseController{
 				{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
-					String srcParentPath = getParentPath(sameDoc.getPid());
+					String srcParentPath = sameDoc.getPath();
 					List<CommonAction> actionList = new ArrayList<CommonAction>();
-					copyDoc(repos, sameDoc.getId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,actionList, false);
+					copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,actionList, false);
 					Doc newDoc = getDocByName(docName,parentId,reposId);
 					if(null != newDoc)
 					{

@@ -42,6 +42,7 @@ import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.MultiActionList;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
@@ -357,7 +358,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Integer docId = buildDocIdByName(level,name);
+			Long docId = buildDocIdByName(level,name);
 			System.out.println("docId:" + docId);
 			DocAuth docAuth = getDocAuthFromHashMap(docId, pDocAuth, docAuthHashMap);
 			
@@ -1253,27 +1254,6 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}	
-	/*************************** 路径相关接口 ********************************/
-	//获取Parentpath: 如果是File则返回其parentPath，如果是Directory则返回全路径
-	protected String getParentPath(Integer id)
-	{
-		String parentPath = "";
-		Doc doc = reposService.getDocInfo(id); //获取当前doc的信息
-		if(doc != null)
-		{
-			if(doc.getType() == 1)
-			{
-				parentPath = getParentPath(doc.getPid()) + doc.getName() + "/";
-			}
-			else
-			{
-				parentPath = getParentPath(doc.getPid());				
-			}
-		}
-		return parentPath;
-	}	
-	
-
 	
 	/******************************* 文件下载接口 *********************************************/
 	protected void sendDataToWebPage(String file_name, byte[] data, HttpServletResponse response, HttpServletRequest request)  throws Exception{ 
@@ -1474,7 +1454,7 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		Integer docId = buildDocIdByName(level, parentPath);
+		Long docId = buildDocIdByName(level, parentPath);
 		
 		switch(repos.getType())
 		{
@@ -1515,7 +1495,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected Integer addDoc_FS(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected Integer addDoc_FS(Repos repos, Long docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -2433,14 +2413,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//底层copyDoc接口
-	protected boolean copyDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
+	protected boolean copyDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,List<CommonAction> actionList, boolean isMove) 
 	{
 		switch(repos.getType())
 		{
 		case 1:
-			return copyDoc_DB(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 2:
 			return 	copyDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
 					commitMsg, commitUser, login_user, rt, actionList);
@@ -2454,78 +2432,21 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean copyDoc_GIT(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+	private boolean copyDoc_GIT(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type,
 			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
 			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	private boolean copyDoc_SVN(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+	private boolean copyDoc_SVN(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type,
 			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
 			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	private boolean copyDoc_FS(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
-			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
-	{
-		System.out.println("copyDoc_FS() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
-		
-		String reposRPath =  getReposRealPath(repos);
-		
-		//Check if dstFile exists
-		File dstFile = new File(reposRPath + dstParentPath + dstName);
-		if(dstFile.exists() == true)
-		{
-			rt.setDebugLog("Node: " + reposRPath+dstParentPath+dstName +" 已存在！");
-			return false;
-		}
-		
-		File srcFile = new File(reposRPath + srcParentPath + srcName);
-		if(srcFile.exists() == true)
-		{
-			rt.setDebugLog("Node: " + reposRPath+srcParentPath+srcName +" 不存在！");
-			return false;
-		}
-		
-		Doc srcDoc = buildDocByFile(srcFile, repos, srcPid, srcParentPath, srcName);
-		Doc dstDoc = buildDocByDoc_FS(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
-		
-		//Build MultiActionList For DocCopy
-		//BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
-		
-		//Do Copy RealDoc
-		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
-		{
-			System.out.println("copy " + srcName + " to " + dstName + " 失败");
-			rt.setDebugLog("copyDoc_FS copy " + srcName + " to " + dstName + "Failed");
-			
-			//Do delete the copied Doc
-			deleteRealDoc(reposRPath, dstParentPath, dstName, type, rt);
-			return false;
-		}
-			
-		//Do Commit RealDoc
-		if(verReposRealDocCopy(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt) == false)
-		{
-			System.out.println("copyDoc() verReposRealDocCopy failed");
-			
-			//Do delete the copied Doc
-			deleteRealDoc(reposRPath,dstParentPath,dstName,type,rt);
-			
-			rt.setDebugLog("copyDoc() verReposRealDocCopy failed");
-			return false;
-		}				
-
-		//Return the copied Doc
-		rt.setData(dstDoc);
-		return true;
-	}
-
-	protected boolean copyDoc_DB(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
+	protected boolean copyDoc_FS(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
@@ -2533,19 +2454,12 @@ public class BaseController  extends BaseFunction{
 		Integer reposId = repos.getId();
 		String reposRPath =  getReposRealPath(repos);
 
-		//判断节点是否已存在
-		if(isNodeExist(dstName,dstPid,reposId) == true)
-		{
-			rt.setError("Node: " + dstName +" 已存在！");
-			return false;
-		}
-
 		Doc srcDoc = null;
 		Doc dstDoc = null;
 		synchronized(syncLock)
 		{
 			//Try to lock the srcDoc
-			srcDoc = lockDoc(docId,1, 7200000,login_user,rt,true);	//2 hours 2*60*60*1000
+			srcDoc = lockDoc(reposId,docId,1, 7200000,login_user,rt,true);	//2 hours 2*60*60*1000
 			if(srcDoc == null)
 			{
 				unlock(); //线程锁
@@ -2962,7 +2876,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 				
 		//确定文件节点是否可用
-		Doc doc = reposService.getDoc(docId);
+		Doc doc = reposService.getDocLock(reposId,docId);
 		if(doc == null)
 		{
 			rt.setError("Doc " + docId +" 不存在！");
@@ -3046,30 +2960,30 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//确定当前doc是否被锁定
-	private boolean isDocLocked(Doc doc,User login_user,ReturnAjax rt) {
-		int lockState = doc.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
+	private boolean isDocLocked(DocLock docLock,User login_user,ReturnAjax rt) {
+		int lockState = docLock.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
 		if(lockState != 0)
 		{
 			//Not force locked (user can access it by himself)
 			if(lockState != 2)
 			{
-				if(doc.getLockBy() == login_user.getId())	//locked by login_user
+				if(docLock.getLockBy() == login_user.getId())	//locked by login_user
 				{
-					System.out.println("Doc: " + doc.getId() +" was locked by user:" + doc.getLockBy() +" login_user:" + login_user.getId());
+					System.out.println("Doc: " + docLock.getName() +" was locked by user:" + docLock.getLockBy() +" login_user:" + login_user.getId());
 					return false;
 				}
 			}
 			
-			if(isLockOutOfDate(doc.getLockTime()) == false)
+			if(isLockOutOfDate(docLock.getLockTime()) == false)
 			{	
-				User lockBy = userService.getUser(doc.getLockBy());
-				rt.setError(doc.getName() +" was locked by " + lockBy.getName());
-				System.out.println("Doc " + doc.getId()+ "[" + doc.getName() +"] was locked by " + doc.getLockBy() + " lockState:"+ doc.getState());
+				User lockBy = userService.getUser(docLock.getLockBy());
+				rt.setError(docLock.getName() +" was locked by " + lockBy.getName());
+				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLockBy() + " lockState:"+ docLock.getState());
 				return true;						
 			}
 			else 
 			{
-				System.out.println("doc " + doc.getId()+ " " + doc.getName()  +" lock was out of date！");
+				System.out.println("doc " + docLock.getId()+ " " + docLock.getName()  +" lock was out of date！");
 				return false;
 			}
 		}
@@ -3090,58 +3004,58 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//确定parentDoc is Force Locked
-	private boolean isParentDocLocked(Integer parentDocId, User login_user,ReturnAjax rt) {
-		if(parentDocId == 0)
-		{
-			return false;	//已经到了最上层
-		}
+	private boolean isParentDocLocked(Integer reposId, String parentPath, User login_user,ReturnAjax rt) {
 		
-		Doc doc = reposService.getDoc(parentDocId);
-		if(doc == null)
+		if(parentPath == null || parentPath.isEmpty())
 		{
-			System.out.println("isParentDocLocked() doc is null for parentDocId=" + parentDocId);
 			return false;
 		}
 		
-		Integer lockState = doc.getState();
+		String [] paths = parentPath.split("/");
+		int level = 0;
 		
-		if(lockState == 2)	//Force Locked
-		{	
-			long curTime = new Date().getTime();
-			long lockTime = doc.getLockTime();	//time for lock release
-			System.out.println("isParentDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
-			if(curTime < lockTime)
+		for(int i=0; i< paths.length; i++)
+		{
+			String docName = paths[i];
+			if(docName.isEmpty())
 			{
-				rt.setError("parentDoc " + parentDocId + "[" + doc.getName() + "] was locked:" + lockState);
-				System.out.println("getParentLockState() " + parentDocId + " is locked!");
+				continue;
+			}
+			
+			Long docId = buildDocIdByName(level,docName);
+			DocLock lock = getDocLock(reposId, docId);
+			if(isDocLocked(lock, login_user, rt))
+			{
 				return true;
 			}
+			level++;			
 		}
-		return isParentDocLocked(doc.getPid(),login_user,rt);
+		return false;
 	}
 	
 	//docId目录下是否有锁定的doc(包括所有锁定状态)
 	//Check if any subDoc under docId was locked, you need to check it when you want to rename/move/copy/delete the Directory
-	private boolean isSubDocLocked(Integer docId, ReturnAjax rt)
+	private boolean isSubDocLocked(Integer reposId, Long docId, ReturnAjax rt)
 	{
 		//Set the query condition to get the SubDocList of DocId
-		Doc qDoc = new Doc();
-		qDoc.setPid(docId);
+		DocLock qDocLock = new DocLock();
+		qDocLock.setVid(reposId);
+		qDocLock.setPid(docId);
 
-		//get the subDocList 
-		List<Doc> SubDocList = reposService.getDocList(qDoc);
-		for(int i=0;i<SubDocList.size();i++)
+		//get the subDocLockList 
+		List<DocLock> SubDocLockList = reposService.getDocLockList(qDocLock);
+		for(int i=0;i<SubDocLockList.size();i++)
 		{
-			Doc subDoc =SubDocList.get(i);
-			if(subDoc.getState() != 0)
+			DocLock subDocLock =SubDocLockList.get(i);
+			if(subDocLock.getState() != 0)
 			{
 				long curTime = new Date().getTime();
-				long lockTime = subDoc.getLockTime();	//time for lock release
+				long lockTime = subDocLock.getLockTime();	//time for lock release
 				System.out.println("isSubDocLocked() curTime:"+curTime+" lockTime:"+lockTime);
 				if(curTime < lockTime)
 				{
-					rt.setError("subDoc " + subDoc.getId() + "[" +  subDoc.getName() + "] is locked:" + subDoc.getState());
-					System.out.println("isSubDocLocked() " + subDoc.getId() + " is locked!");
+					rt.setError("subDoc [" +  subDocLock.getName() + "] is locked:" + subDocLock.getState());
+					System.out.println("isSubDocLocked() " + subDocLock.getName() + " is locked!");
 					return true;
 				}
 				return false;
@@ -3149,12 +3063,12 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//If there is subDoc which is directory, we need to go into the subDoc to check the lockSatate of subSubDoc
-		for(int i=0;i<SubDocList.size();i++)
+		for(int i=0;i<SubDocLockList.size();i++)
 		{
-			Doc subDoc =SubDocList.get(i);
-			if(subDoc.getType() == 2)
+			DocLock subDocLock =SubDocLockList.get(i);
+			if(subDocLock.getType() == 2)
 			{
-				if(isSubDocLocked(subDoc.getId(),rt) == true)
+				if(isSubDocLocked(reposId,subDocLock.getDocId(),rt) == true)
 				{
 					return true;
 				}
@@ -3165,48 +3079,47 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Unlock Doc
-	private boolean unlockDoc(Integer docId, User login_user, Doc preLockInfo) {
-		Doc curDoc = reposService.getDocInfo(docId);
-		if(curDoc == null)
+	private boolean unlockDoc(Integer reposId, Long docId, User login_user, DocLock preDocLock) 
+	{
+		DocLock curDocLock = reposService.getDocLock(reposId, docId);
+		if(curDocLock == null)
 		{
 			System.out.println("unlockDoc() doc is null " + docId);
-			return false;
-		}
-		
-		if(curDoc.getState() == 0)
-		{
-			System.out.println("unlockDoc() doc was not locked:" + curDoc.getState());			
 			return true;
 		}
 		
-		Integer lockBy = curDoc.getLockBy();
+		if(curDocLock.getState() == 0)
+		{
+			System.out.println("unlockDoc() doc was not locked:" + curDocLock.getState());			
+			return true;
+		}
+		
+		Integer lockBy = curDocLock.getLockBy();
 		if(lockBy != null && lockBy == login_user.getId())
 		{
-			Doc revertDoc = new Doc();
-			revertDoc.setId(docId);	
-			
-			if(preLockInfo == null)	//Unlock
+			if(preDocLock != null)	//Revert to preDocLock
 			{
-				revertDoc.setState(0);	//
-				revertDoc.setLockBy(0);	//
-				revertDoc.setLockTime((long)0);	//Set lockTime
-			}
-			else	//Revert to preLockState
-			{
-				revertDoc.setState(preLockInfo.getState());	//
-				revertDoc.setLockBy(preLockInfo.getLockBy());	//
-				revertDoc.setLockTime(preLockInfo.getLockTime());	//Set lockTime
-			}
-			
-			if(reposService.updateDoc(revertDoc) == 0)
-			{
-				System.out.println("unlockDoc() updateDoc Failed!");
-				return false;
+				DocLock revertDocLock = new DocLock();
+				revertDocLock.setDocId(docId);	
+				revertDocLock.setState(preDocLock.getState());	//
+				revertDocLock.setLockBy(preDocLock.getLockBy());	//
+				revertDocLock.setLockTime(preDocLock.getLockTime());	//Set lockTime
+				if(reposService.updateDocLock(revertDocLock) == 0)
+				{
+					System.out.println("unlockDoc() updateDocLock Failed!");
+					return false;
+				}
 			}
 		}
 		else
 		{
 			System.out.println("unlockDoc() doc was not locked by " + login_user.getName());
+			return false;
+		}
+		
+		if(reposService.deleteDocLock(reposId, docId) == 0)
+		{
+			System.out.println("unlockDoc() deleteDocLock Failed!");
 			return false;
 		}
 		
