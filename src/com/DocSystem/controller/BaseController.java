@@ -2870,24 +2870,15 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	
 	//Lock Doc
-	protected Doc lockDoc(Integer docId,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
-		System.out.println("lockDoc() docId:" + docId + " lockType:" + lockType + " by " + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
-				
-		//确定文件节点是否可用
-		Doc doc = reposService.getDocLock(reposId,docId);
-		if(doc == null)
-		{
-			rt.setError("Doc " + docId +" 不存在！");
-			System.out.println("lockDoc() Doc: " + docId +" 不存在！");
-			return null;
-		}
+	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
+		System.out.println("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 		
+		DocLock docLock = getDocLock(doc);
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
-		if(isDocLocked(doc,login_user,rt))
+		if(isDocLocked(docLock,login_user,rt))
 		{
-			System.out.println("lockDoc() Doc " + docId +" was locked");
+			System.out.println("lockDoc() Doc " + doc.getName() +" was locked");
 			return null;
 		}
 		
@@ -2906,28 +2897,50 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//检查其父节点是否强制锁定
-		if(isParentDocLocked(doc.getPid(),login_user,rt))
+		if(isParentDocLocked(doc,login_user,rt))
 		{
-			System.out.println("lockDoc() Parent Doc of " + docId +" was locked！");				
+			System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
 			return null;
 		}
 		
 		//Check If SubDoc was locked
 		if(subDocCheckFlag)
 		{
-			if(isSubDocLocked(docId,rt) == true)
+			if(isSubDocLocked(doc,rt) == true)
 			{
-				System.out.println("lockDoc() subDoc of " + docId +" was locked！");
+				System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
 				return null;
 			}
 		}
 		
+		//Do Lock
 		//lockTime is the time to release lock 
-		Doc lockDoc= new Doc();
-		lockDoc.setId(docId);
+		long lockTime = new Date().getTime() + lockDuration;
+		
+		if(docLock == null)
+		{
+			docLock = new DocLock();
+			docLock.setVid(doc.getVid());
+			docLock.setPid(doc.getPid());			
+			docLock.setDocId(doc.getDocId());
+			docLock.setPath(doc.getPath());			
+			docLock.setName(doc.getName());			
+			docLock.setType(doc.getType());
+			
+			docLock.setState(lockType);	//doc的状态为不可用
+			docLock.setLockBy(login_user.getId());
+			docLock.setLockTime(lockTime);	//Set lockTime
+			if(reposService.updateDoc(lockDoc) == 0)
+			{
+				rt.setError("lock Doc:" + docId +"[" + doc.getName() +"]  failed");
+				return null;
+			}
+			
+		}
+		
+		docLock.setId(docId);
 		lockDoc.setState(lockType);	//doc的状态为不可用
 		lockDoc.setLockBy(login_user.getId());
-		long lockTime = new Date().getTime() + lockDuration; //24*60*60*1000;
 		lockDoc.setLockTime(lockTime);	//Set lockTime
 		if(reposService.updateDoc(lockDoc) == 0)
 		{
@@ -2938,6 +2951,15 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 	
+	private DocLock getDocLock(Doc doc) {
+		// TODO Auto-generated method stub
+		DocLock qDocLock = new DocLock();
+		qDocLock.setVid(doc.getVid());
+		qDocLock.setDocId(doc.getDocId());
+		DocLock lock = reposService.getDocLock(qDocLock);
+		return lock;
+	}
+
 	//确定仓库是否被锁定
 	private boolean isReposLocked(Repos repos, User login_user, ReturnAjax rt) {
 		int lockState = repos.getState();	//0: not locked  1: locked	
@@ -2961,6 +2983,11 @@ public class BaseController  extends BaseFunction{
 
 	//确定当前doc是否被锁定
 	private boolean isDocLocked(DocLock docLock,User login_user,ReturnAjax rt) {
+		if(docLock == null)
+		{
+			return false;
+		}
+		
 		int lockState = docLock.getState();	//0: not locked 2: 表示强制锁定（实文件正在新增、更新、删除），不允许被自己解锁；1: 表示RDoc处于CheckOut 3:表示正在编辑VDoc
 		if(lockState != 0)
 		{
@@ -3081,7 +3108,7 @@ public class BaseController  extends BaseFunction{
 	//Unlock Doc
 	private boolean unlockDoc(Integer reposId, Long docId, User login_user, DocLock preDocLock) 
 	{
-		DocLock curDocLock = reposService.getDocLock(reposId, docId);
+		DocLock curDocLock = reposService.getDocLock(qDocLock);
 		if(curDocLock == null)
 		{
 			System.out.println("unlockDoc() doc is null " + docId);
