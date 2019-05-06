@@ -15,7 +15,9 @@ import com.DocSystem.dao.ReposAuthMapper;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.dao.DocMapper;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.DocLock;
 import com.DocSystem.dao.DocAuthMapper;
+import com.DocSystem.dao.DocLockMapper;
 import com.DocSystem.entity.User;
 import com.DocSystem.dao.UserMapper;
 import com.DocSystem.entity.UserGroup;
@@ -28,6 +30,8 @@ public class ReposServiceImpl implements ReposService {
     private ReposMapper reposDao;
     @Autowired
     private DocMapper docDao;  
+    @Autowired
+    private DocLockMapper docLockDao;  
     @Autowired
     private DocAuthMapper docAuthDao;  
     @Autowired
@@ -101,12 +105,31 @@ public class ReposServiceImpl implements ReposService {
     	return docDao.deleteByPrimaryKey(id);
     }
     
-    //Get the ReposVersionList
+    //Get the docList by doc
     public List<Doc> getDocList(Doc doc) {  
         List<Doc> list = docDao.selectSelective(doc);  
         return list;
     }
+    
+	public int addDocLock(DocLock docLock) {
+    	return docLockDao.insertSelective(docLock);
+    }
 
+	public int deleteDocLock(DocLock docLock) {
+    	return docLockDao.deleteByPrimaryKey(docLock.getId());
+	}
+	
+	public int updateDocLock(DocLock docLock) {
+    	return docLockDao.updateByPrimaryKeySelective(docLock);
+	}
+	
+    //Get the docLockList by doc
+    public List<DocLock> getDocLockList(DocLock docLock) {  
+        List<DocLock> list = docLockDao.selectSelective(docLock);  
+        return list;
+    }
+
+    
 	public int addReposAuth(ReposAuth reposAuth) {
 		return reposAuthDao.insertSelective(reposAuth);
 	}
