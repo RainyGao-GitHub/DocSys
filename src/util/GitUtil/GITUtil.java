@@ -188,7 +188,7 @@ public class GITUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Integer pid, String parentPath, int level, String revision)
+	public List<Doc> getDocList(Repos repos, Long pid, String parentPath, int level, String revision)
 	{
     	System.out.println("getSubEntryList() revision:" + revision);
     	if(revision == null || revision.isEmpty())
@@ -246,7 +246,6 @@ public class GITUtil  extends BaseController{
                 		//subEntry.setSize();
                 		//subEntry.setCreateTime();
                 		//subEntry.setLatestEditTime();
-                		subEntry.setState(0);   		
                    		//subEntry.setRevision("");
                 		subEntryList.add(subEntry);
             		}

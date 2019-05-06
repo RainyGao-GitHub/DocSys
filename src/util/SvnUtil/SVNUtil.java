@@ -1187,7 +1187,7 @@ public class SVNUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Integer pid, String remoteEntryPath, int level, long revision) 
+	public List<Doc> getDocList(Repos repos, Long pid, String remoteEntryPath, int level, long revision) 
 	{
 		List <Doc> subEntryList =  new ArrayList<Doc>();
 		

@@ -65,7 +65,7 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Integer docId, String parentPath, String docName, DocAuth docAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
@@ -89,7 +89,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Integer pid, String path, int level, DocAuth pDocAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
@@ -176,7 +176,7 @@ public class BaseController  extends BaseFunction{
     	return docList;
 	}
 
-	private List<Doc> getLocalEntryList(Repos repos, Integer pid, String path, int level) {
+	private List<Doc> getLocalEntryList(Repos repos, Long pid, String path, int level) {
 		String localParentPath = getReposRealPath(repos) + path;
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
@@ -213,14 +213,13 @@ public class BaseController  extends BaseFunction{
     		subEntry.setSize(file.length());
     		subEntry.setCreateTime(file.lastModified());
     		subEntry.setLatestEditTime(file.lastModified());
-    		subEntry.setState(0);   		
     		subEntryList.add(subEntry);
     	}
     	return subEntryList;
 	}
     	
 
-	private List<Doc> getRemoteEntryList(Repos repos, Integer pid, String path, int level) {
+	private List<Doc> getRemoteEntryList(Repos repos, Long pid, String path, int level) {
 		switch(repos.getVerCtrl())
 		{
 		case 1:	//SVN
@@ -270,7 +269,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private HashMap<String, Doc> getIndexHashMap(Repos repos, Integer pid, String path) {
+	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) {
 		List<Doc> docList = null;
 		Doc doc = new Doc();
 		doc.setPid(pid);
@@ -299,7 +298,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 
@@ -316,19 +315,19 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Integer rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{	
 		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 		
@@ -796,7 +795,7 @@ public class BaseController  extends BaseFunction{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setReposId(repos.getId());		//仓库：新增仓库id
 		docAuth.setUserId(login_user.getId());	//访问用户：当前登录用户	
-		docAuth.setDocId(0); 		//目录：根目录
+		docAuth.setDocId((long) 0); 		//目录：根目录
 		docAuth.setType(1); 		//权限类型：用户权限
 		docAuth.setPriority(10); 	//权限优先级：user是10, group是1-9,anyUser是0
 		docAuth.setIsAdmin(1); 		//管理员：可以管理仓库，修改描述、设置密码、设置用户访问权限
@@ -3762,7 +3761,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
-	protected DocAuth getDocAuthFromHashMap(int docId, DocAuth parentDocAuth,HashMap<Integer,DocAuth> docAuthHashMap)
+	protected DocAuth getDocAuthFromHashMap(Long long1, DocAuth parentDocAuth,HashMap<Integer,DocAuth> docAuthHashMap)
 	{
 		//System.out.println("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
@@ -3771,23 +3770,23 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//For rootDoc parentDocAuth is useless
-		if(docId == 0)
+		if(long1 == 0)
 		{
-			DocAuth docAuth = docAuthHashMap.get(docId);
+			DocAuth docAuth = docAuthHashMap.get(long1);
 			return docAuth;
 		}
 		
 		//Not root Doc, if parentDocAuth is null, return null
 		if(parentDocAuth == null)
 		{
-			System.out.println("getDocAuthFromHashMap() docId:" + docId + " parentDocAuth is null");
+			System.out.println("getDocAuthFromHashMap() docId:" + long1 + " parentDocAuth is null");
 			return null;
 		}
 		
 		//Not root Doc and parentDocAuth is set
 		Integer parentPriority = parentDocAuth.getPriority();
 		Integer parentHeritable = parentDocAuth.getHeritable();
-		DocAuth docAuth = docAuthHashMap.get(docId);
+		DocAuth docAuth = docAuthHashMap.get(long1);
 		if(docAuth == null)
 		{
 			//设置为空，继承父节点权限
