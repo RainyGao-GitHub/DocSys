@@ -12,6 +12,7 @@ public class ReturnAjax {
 	//以下是默认成功信息
 	private String status =	"ok";
 	private String msgInfo = "获取数据成功";
+	private String warningMsg = "";
 	private Object msgData;	//用于存储额外的状态或数据
 	private Object data;	//用于存储返回结果
 	private String debugLog = ""; //用于向前台传递更详细调试
@@ -59,6 +60,17 @@ public class ReturnAjax {
 
 	public void setMsgInfo(String msgInfo) {
 		this.msgInfo = msgInfo;
+	}
+	
+	public String getWarningMsg() {
+		return warningMsg;
+	}
+
+	public void setWarningMsg(String warningMsg) {
+		if(warningMsg != null)
+		{
+			this.warningMsg += "\n" + warningMsg;
+		}
 	}
 	
 	public Object getMsgData() {

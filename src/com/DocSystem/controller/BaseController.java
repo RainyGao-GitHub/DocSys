@@ -1448,7 +1448,7 @@ public class BaseController  extends BaseFunction{
 	}
 	/********************************** Functions For Application Layer ****************************************/
 	//底层addDoc接口
-	protected Integer addDoc(Repos repos, Integer type,  Integer level, Integer parentId, String parentPath, String docName, 
+	protected Long addDoc(Repos repos, Integer type,  Integer level, Long parentId, String parentPath, String docName, 
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
@@ -1487,7 +1487,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private Integer addDoc_SVN(Repos repos, Integer docId, Integer type, Integer level, Integer parentId, String parentPath,
+	private Integer addDoc_SVN(Repos repos, Long docId, Integer type, Integer level, Long parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
@@ -1495,7 +1495,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected Integer addDoc_FS(Repos repos, Long docId, Integer type, Integer level, Integer parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected Long addDoc_FS(Repos repos, Long docId, Integer type, Integer level, Long parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -1504,76 +1504,42 @@ public class BaseController  extends BaseFunction{
 		String localParentPath =  reposRPath + parentPath;
 		String localDocPath = localParentPath + docName;
 		
-		Doc doc = null;
-		
-		//判断目录下是否有同名节点 
 		Integer reposId = repos.getId();
+		
+		//Build doc
+		Doc doc = new Doc();								
+		doc.setVid(reposId);
+		doc.setPid(parentId);
+		doc.setDocId(docId);
+		doc.setName(docName);
+		doc.setType(type);
+		doc.setSize(fileSize);
+		doc.setCheckSum(checkSum);
+		doc.setContent(content);
+		doc.setPath(parentPath);
+		doc.setCreator(login_user.getId());
+		//set createTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		doc.setCreateTime(nowTimeStamp);
+		doc.setLatestEditTime(nowTimeStamp);
+		doc.setLatestEditor(login_user.getId());
+		
 		synchronized(syncLock)
 		{
 			//LockDoc
-			Doc tempDoc = getDocByName(docName,parentId,reposId);
-			if(tempDoc != null)
+			DocLock docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			if(docLock == null)
 			{
-				doc = lockDoc(tempDoc.getId(), 2, 2*60*60*1000, login_user, rt, false);
-				if(doc == null)
-				{
-					unlock(); //线程锁
-					System.out.println("addDoc() lockDoc " + docName + " Failed!");
-					return null;
-				}			
-			}
-			else
-			{
-				doc = new Doc();
-	
-				//Check if parentDoc was absolutely locked (LockState == 2)
-				if(isParentDocLocked(parentId,null,rt))
-				{	
-					unlock(); //线程锁
-					rt.setError("ParentNode: " + parentId +" is locked！");	
-					System.out.println("ParentNode: " + parentId +" is locked！");
-					return null;			
-				}
-								
-				//新建doc记录,并锁定
-				doc.setVid(reposId);
-				doc.setPid(parentId);
-				doc.setName(docName);
-				doc.setType(type);
-				doc.setSize(fileSize);
-				doc.setCheckSum(checkSum);
-				doc.setContent(content);
-				doc.setPath(parentPath);
-				doc.setCreator(login_user.getId());
-				//set createTime
-				long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-				doc.setCreateTime(nowTimeStamp);
-				doc.setLatestEditTime(nowTimeStamp);
-				doc.setLatestEditor(login_user.getId());
-				doc.setState(2);	//doc的状态为不可用
-				doc.setLockBy(login_user.getId());	//LockBy login_user, it was used with state
-				long lockTime = nowTimeStamp + 2*60*60*1000;
-				doc.setLockTime(lockTime);	//Set lockTime
-				if(reposService.addDoc(doc) == 0)
-				{				
-					unlock();
-					rt.setError("Add Node: " + docName +" Failed！");
-					System.out.println("addDoc() addDoc to db failed");
-					return null;
-				}
-				unlock();
+				unlock(); //线程锁
+				System.out.println("addDoc() lockDoc " + docName + " Failed!");
+				return null;
 			}
 		}
 		
-		System.out.println("id: " + doc.getId());
-		docId = buildDocIdByName(level,docName);
-		doc.setDocId(docId);
-
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
-			//If the docInfo is not compliant with file???,no no no , the size info is from file, so it is only a lock
-			
+			unlockDoc(doc, login_user, null);
 			System.out.println("addDoc() " +localDocPath + "　已存在！");
 			rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
 			return null;
@@ -1583,34 +1549,24 @@ public class BaseController  extends BaseFunction{
 		{	
 			//File must not exists
 			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
-			{		
+			{	
+				unlockDoc(doc, login_user, null);
+				
 				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
-				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
-				if(reposService.deleteDoc(doc.getId()) == 0)
-				{
-					MsgInfo += " and delete Node Failed";
-					System.out.println("Delete Node: " + doc.getId() +" failed!");
-					rt.setError(MsgInfo);
-				}
 				return null;
 			}
 		}
 		else
 		{
 			if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
-			{		
+			{	
+				unlockDoc(doc, login_user, null);
+				
 				String MsgInfo = "updateRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
-				//删除新建的doc,我需要假设总是会成功,如果失败了也只是在Log中提示失败
-				if(reposService.deleteDoc(doc.getId()) == 0)	
-				{
-					MsgInfo += " and delete Node Failed";
-					System.out.println("Delete Node: " + doc.getId() +" failed!");
-					rt.setError(MsgInfo);
-				}
 				return null;
 			}
 		}
@@ -1619,33 +1575,28 @@ public class BaseController  extends BaseFunction{
 		if(verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt) == false)
 		{
 			System.out.println("verReposRealDocAdd Failed");
-			String MsgInfo = "verReposRealDocAdd Failed";
-			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			if(delFile(localDocPath) == false)
-			{						
-				MsgInfo += " and deleteFile Failed";
-			}
-			if(reposService.deleteDoc(doc.getId()) == 0)
-			{
-				MsgInfo += " and delete Node Failed";						
-			}
-			rt.setError(MsgInfo);
-			return null;
+			rt.setWarningMsg("verReposRealDocAdd Failed");
+		}
+		
+		if(reposService.addDoc(doc) == 0)
+		{
+			rt.setWarningMsg("Add Node: " + docName +" Failed！");
+			System.out.println("addDoc() addDoc to db failed");
 		}
 		
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
-		//启用doc
-		if(unlockDoc(doc.getId(),login_user,null) == false)
+		if(unlockDoc(doc,login_user,null) == false)
 		{
-			rt.setError("unlockDoc Failed");
+			rt.setWarningMsg("unlockDoc Failed");
 			return null;
 		}
+		
 		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
 		
-		return docId;
+		return doc.getDocId();
 	}
 
 	//底层deleteDoc接口
