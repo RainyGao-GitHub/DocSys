@@ -1479,7 +1479,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private Integer addDoc_GIT(Repos repos, Integer docId, Integer type,  Integer level,  Integer parentId, String parentPath,
+	private Long addDoc_GIT(Repos repos, Long docId, Integer type,  Integer level,  Long parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
@@ -1487,7 +1487,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private Integer addDoc_SVN(Repos repos, Long docId, Integer type, Integer level, Long parentId, String parentPath,
+	private Long addDoc_SVN(Repos repos, Long docId, Integer type, Integer level, Long parentId, String parentPath,
 			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
@@ -1634,15 +1634,20 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected boolean deleteDoc_DB(Repos repos, Integer docId, String parentPath, String docName, 
+	protected boolean deleteDoc_FS(Repos repos, Long docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,
 			boolean skipRealDocCommit, List<CommonAction> actionList) 
 	{
-		Doc doc = null;
+		Doc doc = new Doc();								
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		
 		synchronized(syncLock)
 		{							
 			//Try to lock the Doc
-			doc = lockDoc(docId,2, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
+			DocLock docLock = lockDoc(doc,2, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 			if(doc == null)
 			{
 				unlock(); //线程锁
@@ -1662,7 +1667,7 @@ public class BaseController  extends BaseFunction{
 		if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
 		{
 			String MsgInfo = parentPath + docName + " 删除失败！";
-			if(unlockDoc(docId,login_user,doc) == false)
+			if(unlockDoc(doc,login_user,null) == false)
 			{
 				MsgInfo += " and unlockDoc Failed";						
 			}
@@ -3103,9 +3108,9 @@ public class BaseController  extends BaseFunction{
 	}	
 	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
-	protected boolean checkUserAddRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt) 
+	protected boolean checkUserAddRight(Repos repos, Integer userId, Long parentId, String parentPath, String docName, ReturnAjax rt) 
 	{		
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, parentId, parentPath, docName);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3151,7 +3156,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUserEditRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt)
+	protected boolean checkUserEditRight(Repos repos, Integer userId, Long docId, String parentPath, String docName, ReturnAjax rt)
 	{
 		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docUserAuth == null)

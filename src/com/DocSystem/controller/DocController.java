@@ -451,7 +451,7 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(Integer uploadType, Integer reposId, Integer docId, Integer parentId, String parentPath, String docName,
+	public void uploadDoc(Integer uploadType, Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName,	//
 			MultipartFile uploadFile, Long size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
@@ -469,13 +469,6 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		if(null == docId)
-		{
-			rt.setError("异常请求，docId是空！");
-			writeJson(rt, response);			
-			return;
-		}
-
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -502,7 +495,6 @@ public class DocController extends BaseController{
 			}
 		}
 		
-
 		//如果是分片文件，则保存分片文件
 		if(null != chunkIndex)
 		{
@@ -532,12 +524,13 @@ public class DocController extends BaseController{
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(uploadType == 0)
 			{
-				Integer newDocId = addDoc(repos, docId, 1, parentId, parentPath, docName, 
+				Long newDocId = addDoc(repos, 1, level, parentId, parentPath, docName, 
 						null, 
 						uploadFile,size, checkSum, 
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 				writeJson(rt, response);
-				if(newDocId > 0)
+
+				if(newDocId != null)
 				{
 					executeCommonActionList(actionList, rt);
 					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);

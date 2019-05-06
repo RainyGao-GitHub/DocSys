@@ -30,11 +30,7 @@ public class ReturnAjax {
 		this.status = "fail";
 		if(errmsg != null)
 		{
-			this.msgInfo = errmsg;
-		}
-		else
-		{
-			this.msgInfo = "获取数据失败";			
+			this.msgInfo += "\n" + errmsg;
 		}
 	}
 
