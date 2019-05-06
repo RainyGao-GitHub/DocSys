@@ -11,7 +11,7 @@ public class DocAuth {
 
     private Integer priority;
 
-    private Integer docId;
+    private Long docId;
 
     private Integer reposId;
 
@@ -71,11 +71,11 @@ public class DocAuth {
         this.priority = priority;
     }
 
-    public Integer getDocId() {
+    public Long getDocId() {
         return docId;
     }
 
-    public void setDocId(Integer docId) {
+    public void setDocId(Long docId) {
         this.docId = docId;
     }
 
@@ -151,7 +151,7 @@ public class DocAuth {
         this.docName = docName == null ? null : docName.trim();
     }
     
-    //DocAuth 闄勫姞淇℃伅: 闇�瑕侀�氳繃joint doc and user or group Table to get these info
+    //DocAuth 附加信息: 需要通过joint doc and user or group Table to get these info
 	private String  userName="";	//from user Table
 	private String  realName="";	//from user Table
 	private String  groupName="";	//from group Table

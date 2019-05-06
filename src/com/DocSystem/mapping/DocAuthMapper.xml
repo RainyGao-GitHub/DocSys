@@ -7,7 +7,7 @@
     <result column="GROUP_ID" jdbcType="INTEGER" property="groupId" />
     <result column="TYPE" jdbcType="INTEGER" property="type" />
     <result column="PRIORITY" jdbcType="INTEGER" property="priority" />
-    <result column="DOC_ID" jdbcType="INTEGER" property="docId" />
+    <result column="DOC_ID" jdbcType="BIGINT" property="docId" />
     <result column="REPOS_ID" jdbcType="INTEGER" property="reposId" />
     <result column="IS_ADMIN" jdbcType="INTEGER" property="isAdmin" />
     <result column="ACCESS" jdbcType="INTEGER" property="access" />
@@ -40,7 +40,7 @@
       HERITABLE, DOC_PATH, DOC_NAME
       )
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
-      #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{docId,jdbcType=INTEGER}, 
+      #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{docId,jdbcType=BIGINT}, 
       #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
       #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, 
       #{heritable,jdbcType=INTEGER}, #{docPath,jdbcType=VARCHAR}, #{docName,jdbcType=VARCHAR}
@@ -112,7 +112,7 @@
         #{priority,jdbcType=INTEGER},
       </if>
       <if test="docId != null">
-        #{docId,jdbcType=INTEGER},
+        #{docId,jdbcType=BIGINT},
       </if>
       <if test="reposId != null">
         #{reposId,jdbcType=INTEGER},
@@ -159,7 +159,7 @@
         PRIORITY = #{priority,jdbcType=INTEGER},
       </if>
       <if test="docId != null">
-        DOC_ID = #{docId,jdbcType=INTEGER},
+        DOC_ID = #{docId,jdbcType=BIGINT},
       </if>
       <if test="reposId != null">
         REPOS_ID = #{reposId,jdbcType=INTEGER},
@@ -197,7 +197,7 @@
       GROUP_ID = #{groupId,jdbcType=INTEGER},
       TYPE = #{type,jdbcType=INTEGER},
       PRIORITY = #{priority,jdbcType=INTEGER},
-      DOC_ID = #{docId,jdbcType=INTEGER},
+      DOC_ID = #{docId,jdbcType=BIGINT},
       REPOS_ID = #{reposId,jdbcType=INTEGER},
       IS_ADMIN = #{isAdmin,jdbcType=INTEGER},
       ACCESS = #{access,jdbcType=INTEGER},
@@ -224,7 +224,7 @@
       and GROUP_ID = #{groupId,jdbcType=INTEGER}
     </if>
     <if test="docId != null">
-      and DOC_ID = #{docId,jdbcType=INTEGER}
+      and DOC_ID = #{docId,jdbcType=BIGINT}
     </if>
     <if test="reposId != null">
       and REPOS_ID = #{reposId,jdbcType=INTEGER}
@@ -269,7 +269,7 @@
       and (GROUP_ID = #{groupId,jdbcType=INTEGER} or USER_ID = 0)
     </if>
     <if test="docId != null">
-      and DOC_ID = #{docId,jdbcType=INTEGER}
+      and DOC_ID = #{docId,jdbcType=BIGINT}
     </if>
     <if test="reposId != null">
       and REPOS_ID = #{reposId,jdbcType=INTEGER}
@@ -313,7 +313,7 @@
         and GROUP_ID = #{groupId,jdbcType=INTEGER}
       </if>
       <if test="docId != null">
-        and DOC_ID = #{docId,jdbcType=INTEGER}
+        and DOC_ID = #{docId,jdbcType=BIGINT}
       </if>
       <if test="reposId != null">
         and REPOS_ID = #{reposId,jdbcType=INTEGER}

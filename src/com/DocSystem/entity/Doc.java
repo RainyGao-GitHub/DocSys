@@ -17,7 +17,9 @@ public class Doc  implements Comparable<Doc>{
 
     private String path;
 
-    private Integer pid;
+    private Long docId;
+
+    private Long pid;
 
     private Integer vid;
 
@@ -31,12 +33,6 @@ public class Doc  implements Comparable<Doc>{
 
     private Long latestEditTime;
 
-    private Integer state;
-
-    private Integer lockBy;
-
-    private Long lockTime;
-
     private String content;
 
 	private int sortIndex;
@@ -49,15 +45,6 @@ public class Doc  implements Comparable<Doc>{
         this.id = id;
     }
 
-    public Integer getDocId() {
-        return docId;
-    }
-
-    public void setDocId(Integer docId) {
-        this.docId = docId;
-    }
-
-    
     public String getName() {
         return name;
     }
@@ -106,11 +93,19 @@ public class Doc  implements Comparable<Doc>{
         this.path = path == null ? null : path.trim();
     }
 
-    public Integer getPid() {
+    public Long getDocId() {
+        return docId;
+    }
+
+    public void setDocId(Long docId) {
+        this.docId = docId;
+    }
+
+    public Long getPid() {
         return pid;
     }
 
-    public void setPid(Integer pid) {
+    public void setPid(Long pid) {
         this.pid = pid;
     }
 
@@ -160,30 +155,6 @@ public class Doc  implements Comparable<Doc>{
 
     public void setLatestEditTime(Long latestEditTime) {
         this.latestEditTime = latestEditTime;
-    }
-
-    public Integer getState() {
-        return state;
-    }
-
-    public void setState(Integer state) {
-        this.state = state;
-    }
-
-    public Integer getLockBy() {
-        return lockBy;
-    }
-
-    public void setLockBy(Integer lockBy) {
-        this.lockBy = lockBy;
-    }
-
-    public Long getLockTime() {
-        return lockTime;
-    }
-
-    public void setLockTime(Long lockTime) {
-        this.lockTime = lockTime;
     }
 
     public String getContent() {

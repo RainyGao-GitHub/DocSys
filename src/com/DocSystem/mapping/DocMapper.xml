@@ -9,23 +9,21 @@
     <result column="CHECK_SUM" jdbcType="VARCHAR" property="checkSum" />
     <result column="REVISION" jdbcType="VARCHAR" property="revision" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
-    <result column="PID" jdbcType="INTEGER" property="pid" />
+    <result column="DOC_ID" jdbcType="BIGINT" property="docId" />
+    <result column="PID" jdbcType="BIGINT" property="pid" />
     <result column="VID" jdbcType="INTEGER" property="vid" />
     <result column="PWD" jdbcType="VARCHAR" property="pwd" />
     <result column="CREATOR" jdbcType="INTEGER" property="creator" />
     <result column="CREATE_TIME" jdbcType="BIGINT" property="createTime" />
     <result column="LATEST_EDITOR" jdbcType="INTEGER" property="latestEditor" />
     <result column="LATEST_EDIT_TIME" jdbcType="BIGINT" property="latestEditTime" />
-    <result column="STATE" jdbcType="INTEGER" property="state" />
-    <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
-    <result column="LOCK_TIME" jdbcType="BIGINT" property="lockTime" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.DocSystem.entity.Doc">
     <result column="CONTENT" jdbcType="LONGVARCHAR" property="content" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, NAME, TYPE, SIZE, CHECK_SUM, REVISION, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, 
-    LATEST_EDITOR, LATEST_EDIT_TIME, STATE, LOCK_BY, LOCK_TIME
+    ID, NAME, TYPE, SIZE, CHECK_SUM, REVISION, PATH, DOC_ID, PID, VID, PWD, CREATOR, 
+    CREATE_TIME, LATEST_EDITOR, LATEST_EDIT_TIME
   </sql>
   <sql id="Blob_Column_List">
     CONTENT
@@ -45,16 +43,16 @@
   <insert id="insert" parameterType="com.DocSystem.entity.Doc">
     insert into doc (ID, NAME, TYPE, 
       SIZE, CHECK_SUM, REVISION, 
-      PATH, PID, VID, PWD, 
-      CREATOR, CREATE_TIME, LATEST_EDITOR, 
-      LATEST_EDIT_TIME, STATE, LOCK_BY, 
-      LOCK_TIME, CONTENT)
+      PATH, DOC_ID, PID, VID, 
+      PWD, CREATOR, CREATE_TIME, 
+      LATEST_EDITOR, LATEST_EDIT_TIME, CONTENT
+      )
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
       #{size,jdbcType=BIGINT}, #{checkSum,jdbcType=VARCHAR}, #{revision,jdbcType=VARCHAR}, 
-      #{path,jdbcType=VARCHAR}, #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, 
-      #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, #{latestEditor,jdbcType=INTEGER}, 
-      #{latestEditTime,jdbcType=BIGINT}, #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, 
-      #{lockTime,jdbcType=BIGINT}, #{content,jdbcType=LONGVARCHAR})
+      #{path,jdbcType=VARCHAR}, #{docId,jdbcType=BIGINT}, #{pid,jdbcType=BIGINT}, #{vid,jdbcType=INTEGER}, 
+      #{pwd,jdbcType=VARCHAR}, #{creator,jdbcType=INTEGER}, #{createTime,jdbcType=BIGINT}, 
+      #{latestEditor,jdbcType=INTEGER}, #{latestEditTime,jdbcType=BIGINT}, #{content,jdbcType=LONGVARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.Doc">
     insert into doc
@@ -80,6 +78,9 @@
       <if test="path != null">
         PATH,
       </if>
+      <if test="docId != null">
+        DOC_ID,
+      </if>
       <if test="pid != null">
         PID,
       </if>
@@ -100,15 +101,6 @@
       </if>
       <if test="latestEditTime != null">
         LATEST_EDIT_TIME,
-      </if>
-      <if test="state != null">
-        STATE,
-      </if>
-      <if test="lockBy != null">
-        LOCK_BY,
-      </if>
-      <if test="lockTime != null">
-        LOCK_TIME,
       </if>
       <if test="content != null">
         CONTENT,
@@ -136,8 +128,11 @@
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
+      <if test="docId != null">
+        #{docId,jdbcType=BIGINT},
+      </if>
       <if test="pid != null">
-        #{pid,jdbcType=INTEGER},
+        #{pid,jdbcType=BIGINT},
       </if>
       <if test="vid != null">
         #{vid,jdbcType=INTEGER},
@@ -156,15 +151,6 @@
       </if>
       <if test="latestEditTime != null">
         #{latestEditTime,jdbcType=BIGINT},
-      </if>
-      <if test="state != null">
-        #{state,jdbcType=INTEGER},
-      </if>
-      <if test="lockBy != null">
-        #{lockBy,jdbcType=INTEGER},
-      </if>
-      <if test="lockTime != null">
-        #{lockTime,jdbcType=BIGINT},
       </if>
       <if test="content != null">
         #{content,jdbcType=LONGVARCHAR},
@@ -192,8 +178,11 @@
       <if test="path != null">
         PATH = #{path,jdbcType=VARCHAR},
       </if>
+      <if test="docId != null">
+        DOC_ID = #{docId,jdbcType=BIGINT},
+      </if>
       <if test="pid != null">
-        PID = #{pid,jdbcType=INTEGER},
+        PID = #{pid,jdbcType=BIGINT},
       </if>
       <if test="vid != null">
         VID = #{vid,jdbcType=INTEGER},
@@ -213,15 +202,6 @@
       <if test="latestEditTime != null">
         LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
       </if>
-      <if test="state != null">
-        STATE = #{state,jdbcType=INTEGER},
-      </if>
-      <if test="lockBy != null">
-        LOCK_BY = #{lockBy,jdbcType=INTEGER},
-      </if>
-      <if test="lockTime != null">
-        LOCK_TIME = #{lockTime,jdbcType=BIGINT},
-      </if>
       <if test="content != null">
         CONTENT = #{content,jdbcType=LONGVARCHAR},
       </if>
@@ -236,16 +216,14 @@
       CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       REVISION = #{revision,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
-      PID = #{pid,jdbcType=INTEGER},
+      DOC_ID = #{docId,jdbcType=BIGINT},
+      PID = #{pid,jdbcType=BIGINT},
       VID = #{vid,jdbcType=INTEGER},
       PWD = #{pwd,jdbcType=VARCHAR},
       CREATOR = #{creator,jdbcType=INTEGER},
       CREATE_TIME = #{createTime,jdbcType=BIGINT},
       LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
       LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
-      STATE = #{state,jdbcType=INTEGER},
-      LOCK_BY = #{lockBy,jdbcType=INTEGER},
-      LOCK_TIME = #{lockTime,jdbcType=BIGINT},
       CONTENT = #{content,jdbcType=LONGVARCHAR}
     where ID = #{id,jdbcType=INTEGER}
   </update>
@@ -257,16 +235,14 @@
       CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       REVISION = #{revision,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
-      PID = #{pid,jdbcType=INTEGER},
+      DOC_ID = #{docId,jdbcType=BIGINT},
+      PID = #{pid,jdbcType=BIGINT},
       VID = #{vid,jdbcType=INTEGER},
       PWD = #{pwd,jdbcType=VARCHAR},
       CREATOR = #{creator,jdbcType=INTEGER},
       CREATE_TIME = #{createTime,jdbcType=BIGINT},
       LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER},
-      LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT},
-      STATE = #{state,jdbcType=INTEGER},
-      LOCK_BY = #{lockBy,jdbcType=INTEGER},
-      LOCK_TIME = #{lockTime,jdbcType=BIGINT}
+      LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT}
     where ID = #{id,jdbcType=INTEGER}
   </update>
   <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Doc" useGeneratedKeys="true">
@@ -293,6 +269,9 @@
       <if test="path != null">
         PATH,
       </if>
+      <if test="docId != null">
+        DOC_ID,
+      </if>
       <if test="pid != null">
         PID,
       </if>
@@ -311,15 +290,6 @@
 	  <if test="latestEditTime != null">
 		LATEST_EDIT_TIME,
 	  </if>
-      <if test="state != null">
-        STATE,
-      </if>
-      <if test="lockBy != null">
-        LOCK_BY,
-      </if>
-      <if test="lockTime != null">
-        LOCK_TIME,
-      </if>
       <if test="content != null">
         CONTENT,
       </if>
@@ -346,8 +316,11 @@
       <if test="path != null">
         #{path,jdbcType=VARCHAR},
       </if>
+      <if test="docId != null">
+        #{docId,jdbcType=BIGINT},
+      </if>
       <if test="pid != null">
-        #{pid,jdbcType=INTEGER},
+        #{pid,jdbcType=BIGINT},
       </if>
       <if test="vid != null">
         #{vid,jdbcType=INTEGER},
@@ -364,15 +337,6 @@
 	  <if test="latestEditTime != null">
 	  	#{latestEditTime,jdbcType=BIGINT},
 	  </if>
-      <if test="state != null">
-        #{state,jdbcType=INTEGER},
-      </if>
-      <if test="lockBy != null">
-        #{lockBy,jdbcType=INTEGER},
-      </if>
-      <if test="lockTime != null">
-        #{lockTime,jdbcType=BIGINT},
-      </if>
       <if test="content != null">
         #{content,jdbcType=LONGVARCHAR},
       </if>
@@ -405,8 +369,11 @@
     <if test="path != null">
         and PATH = #{path,jdbcType=VARCHAR}
     </if>
+    <if test="docId != null">
+        and DOC_ID = #{docId,jdbcType=BIGINT},
+    </if>
     <if test="pid != null">
-    	and PID = #{pid,jdbcType=INTEGER}
+        and PID = #{pid,jdbcType=BIGINT},
     </if>
     <if test="vid != null">
         and VID = #{vid,jdbcType=INTEGER}
@@ -423,15 +390,6 @@
 	<if test="latestEditTime != null">
 		and LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT}
 	</if>
-    <if test="state != null">
-        and STATE = #{state,jdbcType=INTEGER},
-    </if>
-    <if test="lockBy != null">
-        and LOCK_BY = #{lockBy,jdbcType=INTEGER},
-    </if>
-    <if test="lockTime != null">
-        and LOCK_TIME = #{lockTime,jdbcType=BIGINT},
-    </if>
     <if test="pwd != null">
         and PWD = #{pwd,jdbcType=VARCHAR}
     </if>
@@ -444,7 +402,7 @@
     select 
     <include refid="Base_Column_List" />
     from doc
-    where ID = #{id,jdbcType=INTEGER}
+    where DOC_ID = #{docId,jdbcType=BIGINT} and VID = #{vid,jdbcType=INTEGER}
   </select>
   <select id="getAuthedDocList" parameterType="java.util.Map" resultMap="BaseResultMap">
     select 
@@ -453,10 +411,10 @@
     LEFT JOIN doc_auth on doc.ID = doc_auth.DOC_ID and doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
     where doc_auth.ACCESS = 1
     <if test="docId != null">
-    	and doc.ID = #{docId,jdbcType=INTEGER}
+    	and doc.DOC_ID = #{docId,jdbcType=BIGINT}
     </if>
     <if test="pDocId != null">
-    	and doc.PID = #{pDocId,jdbcType=INTEGER}
+    	and doc.PID = #{pDocId,jdbcType=BIGINT}
     </if>
     <if test="reposId != null">
 		and doc.VID = #{reposId,jdbcType=INTEGER}
@@ -469,10 +427,10 @@
     LEFT JOIN doc_auth on doc.ID = doc_auth.DOC_ID and  doc_auth.USER_ID = #{userId,jdbcType=INTEGER} 
     where (doc_auth.ACCESS = 1 or doc_auth.ACCESS is null)
     <if test="docId != null">
-    	and doc.ID = #{docId,jdbcType=INTEGER}
+    	and doc.DOC_ID = #{docId,jdbcType=BIGINT}
     </if>
     <if test="pDocId != null">
-    	and doc.PID = #{pDocId,jdbcType=INTEGER}
+    	and doc.PID = #{pDocId,jdbcType=BIGINT}
     </if>
     <if test="reposId != null">
 		and doc.VID = #{reposId,jdbcType=INTEGER}
@@ -488,7 +446,7 @@
 		and (
 			NAME like '%${name}%'
 			<if test="ids!=null and ids!=&quot;&quot;">
-				or ID in (${ids})
+				or DOC_ID in (${ids})
 			 </if>
 			)
 	</if>
