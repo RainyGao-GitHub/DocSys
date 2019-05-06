@@ -66,7 +66,7 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
@@ -90,7 +90,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Integer, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
@@ -299,7 +299,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 
@@ -316,19 +316,19 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Integer,DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
 	{	
 		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 		
@@ -1823,7 +1823,7 @@ public class BaseController  extends BaseFunction{
 		actionList.add(action);
 	}
 
-	protected Integer getLevelByParentPath(String path) 
+	protected int getLevelByParentPath(String path) 
 	{
 		if(path == null || path.isEmpty())
 		{
@@ -2363,34 +2363,48 @@ public class BaseController  extends BaseFunction{
 		Integer reposId = repos.getId();
 		String reposRPath =  getReposRealPath(repos);
 
-		Doc srcDoc = null;
-		Doc dstDoc = null;
+		Doc srcDoc = new Doc();
+		srcDoc.setVid(reposId);
+		srcDoc.setDocId(docId);
+		srcDoc.setPid(srcPid);
+		srcDoc.setType(type);
+		srcDoc.setPath(srcParentPath);
+		srcDoc.setName(srcName);
+		
+		Doc dstDoc = new Doc();
+		int dstLevel = getLevelByParentPath(dstParentPath);
+		dstDoc.setVid(reposId);
+		dstDoc.setDocId(buildDocIdByName(dstLevel,dstName));
+		dstDoc.setPid(dstPid);
+		dstDoc.setType(type);
+		dstDoc.setPath(dstParentPath);
+		dstDoc.setName(dstName);
+		
 		synchronized(syncLock)
 		{
 			//Try to lock the srcDoc
-			srcDoc = lockDoc(reposId,docId,1, 7200000,login_user,rt,true);	//2 hours 2*60*60*1000
+			DocLock srcDocLock = lockDoc(srcDoc,1, 2*60*60*1000,login_user,rt,true);
 			if(srcDoc == null)
 			{
 				unlock(); //线程锁
 		
-				System.out.println("copyDoc lock " + docId + " Failed");
+				System.out.println("copyDoc lock srcDoc " + srcDoc.getName() + " Failed");
 				return false;
 			}
 			
-			//新建doc记录，并锁定
-			dstDoc = buildDocByDoc_DB(srcDoc, dstPid, dstParentPath, dstName, login_user, true);
-			if(reposService.addDoc(dstDoc) == 0)
+			DocLock dstDocLock = lockDoc(dstDoc,1, 2*60*60*1000,login_user,rt,true);
+			if(dstDoc == null)
 			{
 				unlock(); //线程锁
-				rt.setError("Add Node: " + dstName +" Failed！");
-				//unlock SrcDoc
-				unlockDoc(docId,login_user,srcDoc);
+				
+				unlockDoc(srcDoc, login_user, null);
+				
+				System.out.println("copyDoc lock srcDoc " + srcDoc.getName() + " Failed");
 				return false;
 			}
+			
 			unlock(); //线程锁
 		}
-		
-		System.out.println("dstDoc id: " + dstDoc.getId());		
 //		
 //		//Add Lucene Index For dstDoc
 //		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
@@ -2410,12 +2424,11 @@ public class BaseController  extends BaseFunction{
 		//复制文件或目录
 		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
 		{
+			unlockDoc(srcDoc,login_user,null);
+			unlockDoc(dstDoc,login_user,null);
+
 			System.out.println("copy " + srcName + " to " + dstName + " 失败");
-			rt.setDebugLog("copyRealDoc copy " + srcName + " to " + dstName + "Failed");
-			
-			DeleteDocAndSubDocs_DB(dstDoc);
-			
-			unlockDoc(docId,login_user,srcDoc);
+			rt.setError("copyRealDoc copy " + srcName + " to " + dstName + "Failed");
 			return false;
 		}
 			
@@ -2423,42 +2436,28 @@ public class BaseController  extends BaseFunction{
 		if(verReposRealDocCopy(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt) == false)
 		{
 			System.out.println("copyDoc() verReposRealDocCopy failed");
-			
-			//我们总是假设rollback总是会成功，失败了也是返回错误信息，方便分析
-			deleteRealDoc(reposRPath,srcParentPath,dstName,type,rt);
-			
-			//Delete doc and subDocs
-			DeleteDocAndSubDocs_DB(dstDoc);
-			
-			unlockDoc(docId,login_user,srcDoc);
-			rt.setError("copyDoc() verReposRealDocCopy failed");
-			return false;
-		}				
-
-		//启用dstDoc
-		unlockDoc(dstDoc.getId(),login_user,null);
+						
+			rt.setWarningMsg("copyDoc() verReposRealDocCopy failed");
+		}
 		
-		//Unlock srcDoc 
-		unlockDoc(docId,login_user,null);
+		if(dbCopyDoc(srcDoc, dstDoc, login_user, rt) == false)
+		{
+			System.out.println("copyDoc() dbCopyDoc failed");
+			
+			rt.setWarningMsg("copyDoc() dbCopyDoc failed");			
+		}
+
+		unlockDoc(srcDoc,login_user,null);
+		unlockDoc(dstDoc,login_user,null);
 		
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
 		return true;
 	}
 
-	private void DeleteDocAndSubDocs_DB(Doc doc) 
-	{
-		Doc qDoc = new Doc();
-		qDoc.setPid(doc.getId());
-		
-		List<Doc> subDocList = reposService.getDocList(qDoc);
-		for(int i=0; i< subDocList.size(); i++)
-		{
-			Doc subDoc = subDocList.get(i);
-			DeleteDocAndSubDocs_DB(subDoc);
-		}
-		
-		reposService.deleteDoc(doc.getId());
+	private boolean dbCopyDoc(Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	private void BuildMultiActionListForDocCopy(MultiActionList actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user) 
@@ -2532,100 +2531,50 @@ public class BaseController  extends BaseFunction{
 		indexActionList.add(action);
 
 		Doc qDoc = new Doc();
-		qDoc.setPid(srcDoc.getId());
+		qDoc.setPid(srcDoc.getDocId());
 		List<Doc> subDocList = reposService.getDocList(qDoc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
 			Doc subDoc = subDocList.get(i);
-			Doc dstSubDoc = buildDocByDoc_DB(subDoc, dstDoc.getPid(), dstDoc.getPath(), subDoc.getName(), login_user, false);
+			Doc dstSubDoc = copyDoc(subDoc);
+			int level = getLevelByParentPath(dstDoc.getPath());
+			dstSubDoc.setPid(dstDoc.getDocId());
+			dstSubDoc.setPath(dstDoc.getPath());
+			dstSubDoc.setDocId(buildDocIdByName(level, dstSubDoc.getName()));
 			BuildMultiActionListForDocCopy_DB(actionList, repos, subDoc, dstSubDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);	
 		}
 	}
 	
 	//For copyDoc
-	private Doc buildDocByDoc_DB(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
+	private Doc copyDoc(Doc doc)
 	{
 		Doc dstDoc = new Doc();
 		dstDoc.setId(null);	//置空id,以便新建一个doc
 		dstDoc.setVid(doc.getVid());
-		dstDoc.setPid(dstPid);
-		dstDoc.setPath(dstParentPath);
-		dstDoc.setName(dstName);
+		dstDoc.setPid(doc.getPid());
+		dstDoc.setPath(doc.getPath());
+		dstDoc.setName(doc.getName());
 		dstDoc.setType(doc.getType());
 		
 		dstDoc.setContent(doc.getContent());
-		dstDoc.setCreator(login_user.getId());
-		
-		//set createTime
-		long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
-		dstDoc.setCreateTime(nowTimeStamp);
-		//set lastEditTime
-		dstDoc.setLatestEditTime(nowTimeStamp);
-		dstDoc.setLatestEditor(login_user.getId());
-		
-		if(lock)
-		{
-			dstDoc.setState(2);	//doc的状态为不可用
-			dstDoc.setLockBy(login_user.getId());	//set LockBy
-			long lockTime = nowTimeStamp + 24*60*60*1000;
-			dstDoc.setLockTime(lockTime);	//Set lockTime
-		}
-		else
-		{
-			dstDoc.setState(0);
-			dstDoc.setLockBy(0);
-			dstDoc.setLockTime((long)0);			
-		}
-		return dstDoc;
-	}
-	
-	private Doc buildDocByDoc_FS(Doc doc, Integer dstPid, String dstParentPath, String dstName, User login_user, boolean lock) 
-	{
-		Integer level = getLevelByParentPath(dstParentPath);
-		Integer docId = buildDocIdByName(level, dstParentPath);
-				
-		Doc dstDoc = new Doc();
-		dstDoc.setId(docId);
-		dstDoc.setVid(doc.getVid());
-		dstDoc.setPid(dstPid);
-		dstDoc.setPath(dstParentPath);
-		dstDoc.setName(dstName);
-		dstDoc.setType(doc.getType());
-		
-		dstDoc.setContent(doc.getContent());
-		dstDoc.setCreator(login_user.getId());
-		//set createTime
-		long nowTimeStamp = new Date().getTime(); //当前时间的时间戳
-		dstDoc.setCreateTime(nowTimeStamp);
-		//set lastEditTime
-		dstDoc.setLatestEditTime(nowTimeStamp);
-		dstDoc.setLatestEditor(login_user.getId());
-		
-		if(lock)
-		{
-			dstDoc.setState(2);	//doc的状态为不可用
-			dstDoc.setLockBy(login_user.getId());	//set LockBy
-			long lockTime = nowTimeStamp + 24*60*60*1000;
-			dstDoc.setLockTime(lockTime);	//Set lockTime
-		}
-		else
-		{
-			dstDoc.setState(0);
-			dstDoc.setLockBy(0);
-			dstDoc.setLockTime((long)0);			
-		}
 		return dstDoc;
 	}
 
-	protected boolean updateDocContent(Repos repos, Integer docId, String parentPath, String docName, String content, 
+	protected boolean updateDocContent(Repos repos, Long docId, Long pid, String parentPath, String docName, String content, 
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		Doc doc = null;
+		Doc doc = new Doc();
+		doc.setDocId(docId);
+		doc.setPid(pid);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		doc.setContent(content);
+		
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			doc = lockDoc(docId,1, 3600000, login_user,rt,false);
-			if(doc== null)
+			DocLock docLock = lockDoc(doc,1, 3600000, login_user,rt,false);
+			if(docLock == null)
 			{
 				unlock(); //线程锁
 	
@@ -2636,16 +2585,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		updateDocContent_FS(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt, actionList);
-		
-		if(unlockDoc(docId,login_user,doc) == false)
-		{
-			rt.setError("unlockDoc failed");
-			return false;
-		}		
+				
 		return true;
 	}
 
-	private boolean updateDocContent_FS(Repos repos, Integer docId, String parentPath, String docName, String content,
+	private boolean updateDocContent_FS(Repos repos, Long docId, String parentPath, String docName, String content,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		
@@ -2674,7 +2618,7 @@ public class BaseController  extends BaseFunction{
 		//updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
 		Doc doc = new Doc();
 		doc.setVid(repos.getId());
-		doc.setId(docId);
+		doc.setDocId(docId);
 		doc.setPath(parentPath);
 		doc.setName(docName);
 		doc.setContent(content);
@@ -3085,7 +3029,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt)
+	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Long docId, String parentPath, String docName, ReturnAjax rt)
 	{	
 		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docUserAuth == null)
@@ -3133,7 +3077,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUseAccessRight(Repos repos, Integer userId, Integer docId, String parentPath, String docName, ReturnAjax rt)
+	protected boolean checkUseAccessRight(Repos repos, Integer userId, Long docId, String parentPath, String docName, ReturnAjax rt)
 	{
 		DocAuth docAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
 		if(docAuth == null)
@@ -3211,7 +3155,7 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 	
-	protected boolean isAdminOfDoc(Repos repos, User login_user, Integer docId, String parentPath, String docName) 
+	protected boolean isAdminOfDoc(Repos repos, User login_user, Long docId, String parentPath, String docName) 
 	{
 		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
@@ -3301,7 +3245,7 @@ public class BaseController  extends BaseFunction{
 	
 	
 	//应该考虑将获取Group、User的合并到一起
-	protected DocAuth getGroupDispDocAuth(Repos repos, Integer groupId,Integer docId, String parentPath, String docName) 
+	protected DocAuth getGroupDispDocAuth(Repos repos, Integer groupId,Long docId, String parentPath, String docName) 
 	{
 		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
 		//For rootDoc
@@ -3345,7 +3289,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//获取用户的用于显示的docAuth
-	public DocAuth getUserDispDocAuth(Repos repos, Integer UserID,Integer DocID,String parentPath, String docName)
+	public DocAuth getUserDispDocAuth(Repos repos, Integer UserID,Long DocID,String parentPath, String docName)
 	{
 		System.out.println("getUserDispDocAuth() UserID:"+UserID);
 		//For rootDoc
@@ -3391,24 +3335,24 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 
-	protected DocAuth getGroupDocAuth(Repos repos, Integer groupId,Integer docId, String parentPath, String docName)
+	protected DocAuth getGroupDocAuth(Repos repos, Integer groupId,Long docId, String parentPath, String docName)
 	{
 		return getRealDocAuth(repos, null, groupId, docId, parentPath, docName);
 	}
 	
-	protected DocAuth getUserDocAuth(Repos repos, Integer userId,Integer docId, String parentPath, String docName) 
+	protected DocAuth getUserDocAuth(Repos repos, Integer userId,Long parentId, String parentPath, String docName) 
 	{
-		return getRealDocAuth(repos, userId, null, docId,  parentPath, docName);
+		return getRealDocAuth(repos, userId, null, parentId,  parentPath, docName);
 	}
 	
 	//Function:getUserDocAuth
-	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId,Integer docId, String parentPath, String docName) 
+	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId,Long parentId, String parentPath, String docName) 
 	{
-		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
-		List<Integer> docIdList = new ArrayList<Integer>();
-		docIdList = getDocIdList(repos, docId,parentPath, docName, docIdList);
+		List<Long> docIdList = new ArrayList<Long>();
+		docIdList = getDocIdList(repos, parentId,parentPath, docName, docIdList);
 		if(docIdList == null || docIdList.size() == 0)
 		{
 			return null;
@@ -3416,7 +3360,7 @@ public class BaseController  extends BaseFunction{
 		printObject("getRealDocAuth() docIdList:",docIdList); 
 		
 		//Get UserDocAuthHashMap
-		HashMap<Integer,DocAuth> docAuthHashMap = null;
+		HashMap<Long, DocAuth> docAuthHashMap = null;
 		if(userId != null)
 		{
 			docAuthHashMap = getUserDocAuthHashMap(userId,repos.getId());
@@ -3432,7 +3376,7 @@ public class BaseController  extends BaseFunction{
 		int docPathDeepth = docIdList.size();
 		for(int i= 0; i < docPathDeepth; i++)
 		{
-			Integer curDocId = docIdList.get(i);
+			Long curDocId = docIdList.get(i);
 			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
 			docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
 			parentDocAuth = docAuth;
@@ -3440,11 +3384,11 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 
-	protected List<Integer> getDocIdList(Repos repos, Integer docId, String parentPath, String docName, List<Integer> docIdList) 
+	protected List<Long> getDocIdList(Repos repos, Long parentId, String parentPath, String docName, List<Long> docIdList) 
 	{
-		if(docId == null || docId == 0)
+		if(parentId == null || parentId == 0)
 		{
-			docIdList.add(0);
+			docIdList.add((long) 0);
 			return docIdList;
 		}
 		
@@ -3452,18 +3396,18 @@ public class BaseController  extends BaseFunction{
 		String [] paths = docPath.split("/");
 		int docPathDeepth = paths.length;
 
-		docIdList.add(0);	
+		docIdList.add((long) 0);	
 		for(int i=0; i<docPathDeepth; i++)
 		{
 			docName = paths[i];
-			docId = buildDocIdByName(i, docName);
-			docIdList.add(docId);
+			parentId = buildDocIdByName(i, docName);
+			docIdList.add(parentId);
 		}
 		
 		return docIdList;
 	}
 	
-	protected HashMap<Integer,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
+	protected HashMap<Long,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
 	{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setUserId(UserID);			
@@ -3485,13 +3429,13 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		HashMap<Long,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
 		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
 		return hashMap;
 	}
 	
 	//获取组在仓库上所有doc的权限设置: 仅用于显示group的权限
-	protected HashMap<Integer,DocAuth> getGroupDocAuthHashMap(Integer GroupID,Integer reposID) 
+	protected HashMap<Long, DocAuth> getGroupDocAuthHashMap(Integer GroupID,Integer reposID) 
 	{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setGroupId(GroupID);
@@ -3504,7 +3448,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		HashMap<Integer,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
+		HashMap<Long, DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
 		printObject("getGroupDocAuthHashMap() GroupID[" + GroupID +"] hashMap:", hashMap);
 		return hashMap;
 	}
@@ -3607,32 +3551,32 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
-	protected DocAuth getDocAuthFromHashMap(Long long1, DocAuth parentDocAuth,HashMap<Integer,DocAuth> docAuthHashMap)
+	protected DocAuth getDocAuthFromHashMap(Long docId, DocAuth parentDocAuth,HashMap<Long,DocAuth> docAuthHashMap)
 	{
-		//System.out.println("getDocAuthFromHashMap() docId:" + docId);
+		System.out.println("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
 		{
 			return null;
 		}
 		
 		//For rootDoc parentDocAuth is useless
-		if(long1 == 0)
+		if(docId == 0)
 		{
-			DocAuth docAuth = docAuthHashMap.get(long1);
+			DocAuth docAuth = docAuthHashMap.get(docId);
 			return docAuth;
 		}
 		
 		//Not root Doc, if parentDocAuth is null, return null
 		if(parentDocAuth == null)
 		{
-			System.out.println("getDocAuthFromHashMap() docId:" + long1 + " parentDocAuth is null");
+			System.out.println("getDocAuthFromHashMap() docId:" + docId + " parentDocAuth is null");
 			return null;
 		}
 		
 		//Not root Doc and parentDocAuth is set
 		Integer parentPriority = parentDocAuth.getPriority();
 		Integer parentHeritable = parentDocAuth.getHeritable();
-		DocAuth docAuth = docAuthHashMap.get(long1);
+		DocAuth docAuth = docAuthHashMap.get(docId);
 		if(docAuth == null)
 		{
 			//设置为空，继承父节点权限
@@ -3694,13 +3638,13 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 	
-	protected HashMap<Integer,DocAuth> BuildHashMapByDocAuthList(List<DocAuth> docAuthList) {
+	protected HashMap<Long,DocAuth> BuildHashMapByDocAuthList(List<DocAuth> docAuthList) {
 		//去重并将参数放入HashMap
-		HashMap<Integer,DocAuth> hashMap = new HashMap<Integer,DocAuth>();
+		HashMap<Long,DocAuth> hashMap = new HashMap<Long,DocAuth>();
 		for(int i=0;i<docAuthList.size();i++)
 		{
 			DocAuth docAuth = docAuthList.get(i);
-			Integer docId = docAuth.getDocId();
+			Long docId = docAuth.getDocId();
 			DocAuth hashEntry = hashMap.get(docId);
 			if(hashEntry == null)
 			{
@@ -5333,21 +5277,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}	
 	}
-
-	private boolean isNodeExist(String name, Integer parentId, Integer reposId) {
-		Doc qdoc = new Doc();
-		qdoc.setName(name);
-		qdoc.setPid(parentId);
-		qdoc.setVid(reposId);
-		List <Doc> docList = reposService.getDocList(qdoc);
-		if(docList != null && docList.size() > 0)
-		{
-			return true;
-		}
-		return false;
-	}
 	
-	Doc getDocByName(String name, Integer parentId, Integer reposId)
+	Doc getDocByName(String name, Long parentId, Integer reposId)
 	{
 		Doc qdoc = new Doc();
 		qdoc.setName(name);
