@@ -25,7 +25,7 @@ public interface DocMapper {
     //get DocList
     List<Doc> selectSelective(Doc record);
 
-	Doc getDocInfo(Integer docId);
+	Doc getDocInfo(Integer reposId, Long docId);
 
 	//获取给用户直接授权的文件列表
 	List<Doc> getAuthedDocList(HashMap<String, Object> params);

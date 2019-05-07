@@ -24,6 +24,7 @@ import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -632,7 +633,7 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Integer docId, Integer type, Integer parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void renameDoc(Integer reposId, Long docId, Integer type, Long parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("renameDoc reposId: " + reposId + " docId:"+ docId + " parentPath:" + parentPath+ " name: " + name+ " newname: " + newname);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -671,7 +672,7 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean renameDoc(Repos repos, Integer docId, Integer parentId, Integer parentId2, Integer type,
+	private boolean renameDoc(Repos repos, Long docId, Long parentId, Long parentId2, Integer type,
 			String parentPath, String name, String parentPath2, String newname, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, List<CommonAction> actionList, boolean b) {
 		// TODO Auto-generated method stub
@@ -680,7 +681,7 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer reposId, Integer docId, Integer type, Integer srcPid, Integer dstPid, String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, 
+	public void moveDoc(Integer reposId, Long docId, Integer type, Long srcPid, Long dstPid, String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, 
 			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
 		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
@@ -723,7 +724,7 @@ public class DocController extends BaseController{
 	}
 	
 
-	private boolean moveDoc(Repos repos, Integer docId, Integer srcPid, Integer dstPid, Integer type,
+	private boolean moveDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type,
 			String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, String commitMsg,
 			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList, boolean b) {
 		// TODO Auto-generated method stub
@@ -732,7 +733,7 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer reposId, Integer docId, Integer srcPid, Integer dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+	public void copyDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
 		
@@ -745,14 +746,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		String commitUser = login_user.getName();
-		
-		Doc doc = reposService.getDocInfo(docId);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);	
-			return;			
-		}
 	
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -786,7 +779,7 @@ public class DocController extends BaseController{
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void updateDocContent(Integer reposId, Long docId, String parentPath, String docName, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		System.out.println("content:[" + content + "]");
 		
@@ -1053,8 +1046,13 @@ public class DocController extends BaseController{
 
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Integer reposId, Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF(Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
+		Integer reposId = doc.getVid();
+		Long docId = doc.getDocId();
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		
 		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -1067,8 +1065,6 @@ public class DocController extends BaseController{
 		switch(repos.getType())
 		{
 		case 1:
-			DocToPDF_DB(repos, docId, parentPath, name, response, request, session);
-			break;
 		case 2:
 			DocToPDF_FS(repos, docId, parentPath, name, response, request, session);
 			break;
@@ -1081,25 +1077,19 @@ public class DocController extends BaseController{
 		}
 		
 	}	
-	private void DocToPDF_GIT(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,
+	private void DocToPDF_GIT(Repos repos, Long docId, String parentPath, String name, HttpServletResponse response,
 			HttpServletRequest request, HttpSession session) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void DocToPDF_SVN(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,
+	private void DocToPDF_SVN(Repos repos, Long docId, String parentPath, String name, HttpServletResponse response,
 			HttpServletRequest request, HttpSession session) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void DocToPDF_FS(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,
-			HttpServletRequest request, HttpSession session) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void DocToPDF_DB(Repos repos, Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF_FS(Repos repos, Long docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("DocToPDF docId: " + docId);
 
@@ -1112,14 +1102,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = reposService.getDoc(docId);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);	
-			return;			
-		}
-		
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, login_user.getId(), docId, parentPath, name, rt) == false)
 		{
@@ -1128,39 +1110,52 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(doc.getType() == 2)
+				
+		String reposRPath = getReposRealPath(repos);
+		String localParentPath = reposRPath + parentPath;
+		String localEntryPath = localParentPath + name;
+		System.out.println("DocToPDF() srcPath:" + localEntryPath);
+	
+		File localEntry = new File(localEntryPath);
+		if(localEntry.exists() == false)
+		{
+			rt.setError("文件不存在！");
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(localEntry.isDirectory())
 		{
 			rt.setError("目录无法预览");
 			writeJson(rt, response);
 			return;
 		}
-				
-		//get reposRPath
-		String reposRPath = getReposRealPath(repos);
-				
-		//get srcParentPath
-		String srcParentPath = getParentPath(docId);	//文件或目录的相对路径
-		//文件的真实全路径
-		String srcPath = reposRPath + srcParentPath;
-		srcPath = srcPath + doc.getName();			
-		System.out.println("DocToPDF() srcPath:" + srcPath);
-	
-		String webTmpPath = getWebTmpPath();
-		String dstName = doc.getCheckSum() + ".pdf";
-		if(doc.getCheckSum() == null)
+		
+		
+		String docCheckSum = "";
+		Doc doc = getDocInfo(repos.getId(), docId);
+		if(isDocLocalChanged(doc,localEntry))
 		{
-			dstName = doc.getName();
+			int chunkSize = 2097152;	//2M
+			docCheckSum = getCheckSum(localEntry, chunkSize);
 		}
+		else
+		{
+			docCheckSum = doc.getCheckSum();
+		}
+		
+		String webTmpPath = getWebTmpPath();
+		String dstName = docCheckSum + ".pdf";
 		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 		File file = new File(dstPath);
 		if(!file.exists())
 		{
-			String fileSuffix = getFileSuffix(srcPath);
+			String fileSuffix = getFileSuffix(name);
 			if(fileSuffix == null)
 			{
 				rt.setError("未知文件类型");
-				rt.setDebugLog("srcPath:"+srcPath);
+				rt.setDebugLog("localEntryPath:"+localEntryPath);
 				writeJson(rt, response);
 				return;
 			}
@@ -1168,10 +1163,10 @@ public class DocController extends BaseController{
 			switch(fileSuffix)
 			{
 			case "pdf":
-				if(copyFile(srcPath, dstPath,true) == false)
+				if(copyFile(localEntryPath, dstPath,true) == false)
 				{
 					rt.setError("预览失败");
-					rt.setDebugLog("Failed to copy " + srcPath + " to " + dstPath);
+					rt.setDebugLog("Failed to copy " + localEntryPath + " to " + dstPath);
 					writeJson(rt, response);
 					return;					
 				}
@@ -1191,17 +1186,17 @@ public class DocController extends BaseController{
 			case "png":
 			case "gif":
 			case "bmp":
-				if(Office2PDF.openOfficeToPDF(srcPath,dstPath) == false)
+				if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath) == false)
 				{
 					rt.setError("预览失败");
-					rt.setDebugLog("Failed execute openOfficeToPDF " + srcPath + " to " + dstPath);
+					rt.setDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath);
 					writeJson(rt, response);
 					return;
 				}
 				break;
 			default:
 				rt.setError("该文件类型不支持预览");
-				rt.setDebugLog("srcPath:"+srcPath);
+				rt.setDebugLog("srcPath:"+localEntryPath);
 				writeJson(rt, response);
 				return;
 			}
@@ -1228,7 +1223,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
-	public void getDoc(Integer reposId, Integer docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDoc(Integer reposId, Long docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
 		ReturnAjax rt = new ReturnAjax();
@@ -1263,9 +1258,8 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		//Create Doc to save subEntry Info
 		Doc doc = new Doc();
-		doc.setId(docId);
+		doc.setDocId(docId);
 		doc.setName(docName);
 		doc.setPath(parentPath);
 
@@ -1289,8 +1283,8 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer reposId, Integer docId, String parentPath, String docName, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
+	public void lockDoc(Doc doc, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("lockDoc docId: " + doc.getId() + " reposId: " + doc.getVid() + " lockType: " + lockType);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1301,6 +1295,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Integer reposId = doc.getVid();
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1310,43 +1305,33 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
+		if(checkUserEditRight(repos, login_user.getId(), doc.getDocId(), doc.getPath(), doc.getName(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
-		
-		Doc doc = null;
-		if(repos.getType() == 1)
+
+		synchronized(syncLock)
 		{
-			synchronized(syncLock)
+			boolean subDocCheckFlag = false;
+			if(lockType == 2)	//If want to force lock, must check all subDocs not locked
 			{
-				boolean subDocCheckFlag = false;
-				if(lockType == 2)	//If want to force lock, must check all subDocs not locked
-				{
-					subDocCheckFlag = true;
-				}
-				
-				//Try to lock the Doc
-				doc = lockDoc(docId,lockType,86400000,login_user,rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
-				if(doc == null)
-				{
-					unlock(); //线程锁
-					System.out.println("lockDoc() Failed to lock Doc: " + docId);
-					writeJson(rt, response);
-					return;			
-				}
-				unlock(); //线程锁
+				subDocCheckFlag = true;
 			}
-		}
-		else
-		{
-			doc = new Doc();
-			doc.setVid(reposId);
-			doc.setId(docId);
+				
+			//Try to lock the Doc
+			DocLock docLock = lockDoc(doc,lockType,86400000,login_user,rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				System.out.println("lockDoc() Failed to lock Doc: " + doc.getName());
+				writeJson(rt, response);
+				return;			
+			}
+			unlock(); //线程锁
 		}
 		
-		System.out.println("lockDoc docId: " + docId + " success");
+		System.out.println("lockDoc : " + doc.getName() + " success");
 		rt.setData(doc);
 		writeJson(rt, response);	
 	}

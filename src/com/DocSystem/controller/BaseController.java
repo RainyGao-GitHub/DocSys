@@ -252,9 +252,9 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private boolean isDocLocalChanged(Doc doc, Doc localEntry) {
+	protected boolean isDocLocalChanged(Doc doc, File localEntry) {
 
-		if(doc.getLatestEditTime() != localEntry.getLatestEditTime() || doc.getSize() != localEntry.getSize())
+		if(doc.getLatestEditTime() != localEntry.lastModified() || doc.getSize() != localEntry.length())
 		{
 			return true;
 		}
@@ -2560,12 +2560,11 @@ public class BaseController  extends BaseFunction{
 		return dstDoc;
 	}
 
-	protected boolean updateDocContent(Repos repos, Long docId, Long pid, String parentPath, String docName, String content, 
+	protected boolean updateDocContent(Repos repos, Long docId, String parentPath, String docName, String content, 
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		Doc doc = new Doc();
 		doc.setDocId(docId);
-		doc.setPid(pid);
 		doc.setPath(parentPath);
 		doc.setName(docName);
 		doc.setContent(content);
@@ -3097,12 +3096,13 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected Doc getDocInfo(Integer docId) {
-		if(docId == 0)
+	protected Doc getDocInfo(Integer reposId, Long docId) {
+		if(docId == null || docId == 0)
 		{
 			return null;
 		}
-		return reposService.getDocInfo(docId);
+		
+		return reposService.getDocInfo(reposId,docId);
 	}
 	
 	protected String getUserName(Integer userId) {
