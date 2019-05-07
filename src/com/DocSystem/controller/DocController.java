@@ -1,6 +1,10 @@
 package com.DocSystem.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1207,6 +1211,27 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	private String getCheckSum(File localEntry, int chunkSize) 
+	{
+	    FileInputStream fis;
+		try {
+			fis = new FileInputStream(localEntry);
+
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] buffer = new byte[1024];
+        int length = -1;
+        while ((length = fis.read(buffer, 0, 1024)) != -1) {
+            md.update(buffer, 0, length);
+        }
+        BigInteger bigInt = new BigInteger(1, md.digest());
+        System.out.println("文件md5值：" + bigInt.toString(16));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(Integer id,HttpServletRequest request,HttpServletResponse response,HttpSession session){
