@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -1140,8 +1141,7 @@ public class DocController extends BaseController{
 		Doc doc = getDocInfo(repos.getId(), docId);
 		if(isDocLocalChanged(doc,localEntry))
 		{
-			int chunkSize = 2097152;	//2M
-			docCheckSum = getCheckSum(localEntry, chunkSize);
+			docCheckSum = getCheckSum(localEntry, 2097152);	//2M chunk
 		}
 		else
 		{
@@ -1149,7 +1149,7 @@ public class DocController extends BaseController{
 		}
 		
 		String webTmpPath = getWebTmpPath();
-		String dstName = docCheckSum + ".pdf";
+		String dstName = localEntry.length() + "_" + docCheckSum + ".pdf";
 		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 		File file = new File(dstPath);
@@ -1213,22 +1213,20 @@ public class DocController extends BaseController{
 
 	private String getCheckSum(File localEntry, int chunkSize) 
 	{
-	    FileInputStream fis;
+		String hash = null;
 		try {
-			fis = new FileInputStream(localEntry);
-
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] buffer = new byte[1024];
-        int length = -1;
-        while ((length = fis.read(buffer, 0, 1024)) != -1) {
-            md.update(buffer, 0, length);
-        }
-        BigInteger bigInt = new BigInteger(1, md.digest());
-        System.out.println("文件md5值：" + bigInt.toString(16));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			
+			FileInputStream fis = new FileInputStream(localEntry);
+			hash=DigestUtils.md5Hex(fis);
+			fis.close();
+		} 
+		catch (Exception e) 
+		{
+			System.out.println("getCheckSum() Exception"); 
 			e.printStackTrace();
+			return null;
 		}
+		return hash;
 	}
 	
 	
