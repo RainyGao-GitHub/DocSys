@@ -83,8 +83,7 @@ public class ReposServiceImpl implements ReposService {
     //add a Document
     public int addDoc(Doc doc)
     {
-    	//return docDao.insertSelective(doc);
-    	return docDao.add(doc);
+    	return docDao.insertSelective(doc);
     }
     
     //get a Document
@@ -100,9 +99,9 @@ public class ReposServiceImpl implements ReposService {
     }
     
     //delete a Document
-    public int deleteDoc(Long docId)
+    public int deleteDoc(Integer id)
     {
-    	return docDao.deleteByPrimaryKey(docId);
+    	return docDao.deleteByPrimaryKey(id);
     }
     
     //Get the docList by doc
@@ -129,7 +128,6 @@ public class ReposServiceImpl implements ReposService {
         return list;
     }
 
-    
 	public int addReposAuth(ReposAuth reposAuth) {
 		return reposAuthDao.insertSelective(reposAuth);
 	}

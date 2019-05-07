@@ -149,4 +149,42 @@
       LOCK_TIME = #{lockTime,jdbcType=BIGINT}
     where ID = #{id,jdbcType=INTEGER}
   </update>
+  
+  <select id="selectSelective" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_lock
+    where 1=1
+      <if test="id != null">
+    	and ID = #{id,jdbcType=INTEGER}
+      </if>
+      <if test="type != null">
+        and TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        and NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null">
+        and PATH = #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="docId != null">
+        and DOC_ID = #{docId,jdbcType=BIGINT},
+      </if>
+      <if test="pid != null">
+        and PID = #{pid,jdbcType=BIGINT},
+      </if>
+      <if test="vid != null">
+        and VID = #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        and STATE = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="lockBy != null">
+        and LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        and LOCK_TIME = #{lockTime,jdbcType=BIGINT},
+      </if>
+  </select>
+
 </mapper>

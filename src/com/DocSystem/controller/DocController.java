@@ -1051,13 +1051,8 @@ public class DocController extends BaseController{
 
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		Integer reposId = doc.getVid();
-		Long docId = doc.getDocId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
-		
+	public void DocToPDF(Integer reposId, Long docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{		
 		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -1306,8 +1301,8 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Doc doc, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("lockDoc docId: " + doc.getId() + " reposId: " + doc.getVid() + " lockType: " + lockType);
+	public void lockDoc(Integer reposId, Long docId, String parentPath, String docName, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1318,7 +1313,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Integer reposId = doc.getVid();
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1328,12 +1322,17 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), doc.getDocId(), doc.getPath(), doc.getName(), rt) == false)
+		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 
+		Doc doc = new Doc();
+		doc.setVid(reposId);
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
 		synchronized(syncLock)
 		{
 			boolean subDocCheckFlag = false;

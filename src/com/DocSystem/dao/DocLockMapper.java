@@ -1,5 +1,8 @@
 package com.DocSystem.dao;
 
+import java.util.List;
+
+import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocLock;
 
 public interface DocLockMapper {
@@ -14,4 +17,7 @@ public interface DocLockMapper {
     int updateByPrimaryKeySelective(DocLock record);
 
     int updateByPrimaryKey(DocLock record);
+    
+    //get DocLockList
+    List<DocLock> selectSelective(DocLock record);
 }

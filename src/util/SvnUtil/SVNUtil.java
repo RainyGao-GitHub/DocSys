@@ -1222,7 +1222,6 @@ public class SVNUtil  extends BaseController{
 	    	doc.setSize(entry.getSize());
 	    	doc.setCreateTime(lastChangeTime);
 	    	doc.setLatestEditTime(lastChangeTime);
-	    	doc.setState(0);
 	    	doc.setRevision(entry.getRevision()+"");
 	        subEntryList.add(doc);
 	    }

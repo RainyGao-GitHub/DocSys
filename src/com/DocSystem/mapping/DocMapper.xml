@@ -245,105 +245,8 @@
       LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT}
     where ID = #{id,jdbcType=INTEGER}
   </update>
-  <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Doc" useGeneratedKeys="true">
-    insert into doc 
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        ID,
-      </if>
-      <if test="name != null">
-        NAME,
-      </if>
-      <if test="type != null">
-        TYPE,
-      </if>
-      <if test="size != null">
-        SIZE,
-      </if>
-      <if test="checkSum != null">
-        CHECK_SUM,
-      </if>
-      <if test="revision != null">
-        REVISION,
-      </if>
-      <if test="path != null">
-        PATH,
-      </if>
-      <if test="docId != null">
-        DOC_ID,
-      </if>
-      <if test="pid != null">
-        PID,
-      </if>
-      <if test="vid != null">
-        VID,
-      </if>
-      <if test="creator != null">
-		CREATOR,
-	  </if>
-	  <if test="createTime != null">
-		CREATE_TIME,
-	  </if>
-	  <if test="latestEditor != null">
-		LATEST_EDITOR,
-	  </if>
-	  <if test="latestEditTime != null">
-		LATEST_EDIT_TIME,
-	  </if>
-      <if test="content != null">
-        CONTENT,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id != null">
-        #{id,jdbcType=INTEGER},
-      </if>
-      <if test="name != null">
-        #{name,jdbcType=VARCHAR},
-      </if>
-      <if test="type != null">
-        #{type,jdbcType=INTEGER},
-      </if>
-      <if test="size != null">
-        #{size,jdbcType=BIGINT},
-      </if>
-      <if test="checkSum != null">
-        #{checkSum,jdbcType=VARCHAR},
-      </if>
-      <if test="revision != null">
-        #{revision,jdbcType=VARCHAR},
-      </if>
-      <if test="path != null">
-        #{path,jdbcType=VARCHAR},
-      </if>
-      <if test="docId != null">
-        #{docId,jdbcType=BIGINT},
-      </if>
-      <if test="pid != null">
-        #{pid,jdbcType=BIGINT},
-      </if>
-      <if test="vid != null">
-        #{vid,jdbcType=INTEGER},
-      </if>
-	  <if test="creator != null">
-	  	#{creator,jdbcType=INTEGER},
-	  </if>
-	  <if test="createTime != null">
-		#{createTime,jdbcType=BIGINT},
-	  </if>
-	  <if test="latestEditor != null">
-		#{latestEditor,jdbcType=INTEGER},
-	  </if>
-	  <if test="latestEditTime != null">
-	  	#{latestEditTime,jdbcType=BIGINT},
-	  </if>
-      <if test="content != null">
-        #{content,jdbcType=LONGVARCHAR},
-      </if>
-    </trim>
-  </insert>
   
-    <select id="selectSelective" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
+  <select id="selectSelective" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from doc
@@ -398,43 +301,12 @@
     </if>
     order by type desc,name asc
   </select>
+ 
   <select id="getDocInfo" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from doc
     where DOC_ID = #{docId,jdbcType=BIGINT} and VID = #{vid,jdbcType=INTEGER}
-  </select>
-  <select id="getAuthedDocList" parameterType="java.util.Map" resultMap="BaseResultMap">
-    select 
-    	doc.ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE
-    from doc
-    LEFT JOIN doc_auth on doc.ID = doc_auth.DOC_ID and doc_auth.USER_ID = #{userId,jdbcType=INTEGER}
-    where doc_auth.ACCESS = 1
-    <if test="docId != null">
-    	and doc.DOC_ID = #{docId,jdbcType=BIGINT}
-    </if>
-    <if test="pDocId != null">
-    	and doc.PID = #{pDocId,jdbcType=BIGINT}
-    </if>
-    <if test="reposId != null">
-		and doc.VID = #{reposId,jdbcType=INTEGER}
-    </if>
-  </select>
-  <select id="getAuthedDocListHeritable" parameterType="java.util.Map" resultMap="BaseResultMap">
-    select 
-    	doc.ID, NAME, TYPE, PATH, PID, VID, PWD, CREATOR, CREATE_TIME, STATE
-    from doc
-    LEFT JOIN doc_auth on doc.ID = doc_auth.DOC_ID and  doc_auth.USER_ID = #{userId,jdbcType=INTEGER} 
-    where (doc_auth.ACCESS = 1 or doc_auth.ACCESS is null)
-    <if test="docId != null">
-    	and doc.DOC_ID = #{docId,jdbcType=BIGINT}
-    </if>
-    <if test="pDocId != null">
-    	and doc.PID = #{pDocId,jdbcType=BIGINT}
-    </if>
-    <if test="reposId != null">
-		and doc.VID = #{reposId,jdbcType=INTEGER}
-    </if>
   </select>
  
   <select id="queryDocList" parameterType="HashMap" resultMap="BaseResultMap">
