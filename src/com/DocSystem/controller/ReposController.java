@@ -471,7 +471,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//get the rootDocAuth
-		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
+		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), (long) 0, "", "");
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
 			System.out.println("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
@@ -481,13 +481,13 @@ public class ReposController extends BaseController{
 		}
 		
 		//docAuthHashMap for login_user
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
 			docId = 0;
-			docList = getAccessableSubDocList(repos, 0, "", "", rootDocAuth, docAuthHashMap, rt);
+			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
@@ -502,7 +502,7 @@ public class ReposController extends BaseController{
 			}
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		}
 
 		if(docList == null)
@@ -524,7 +524,7 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Integer id, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSubDocList(Integer vid, Long id, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " path:" + path + " name:"+ name );
 		
@@ -568,7 +568,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//docAuthHashMap for login_user
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		//获取用户可访问文件列表
 		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, docAuth, docAuthHashMap, rt);
@@ -605,13 +605,13 @@ public class ReposController extends BaseController{
 		rootDoc.setId(0);
 		rootDoc.setName(repos.getName());
 		rootDoc.setType(2);
-		rootDoc.setPid(0);	//设置成自己
+		rootDoc.setPid((long) 0);	//设置成自己
 		
 		//获取用户可访问文件列表(From Root to docId)
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = null;
-		rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), 0, "", "");
+		rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), (long) 0, "", "");
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
 			if(login_user.getType() == 2)	//超级管理员可以访问所有目录
@@ -631,13 +631,13 @@ public class ReposController extends BaseController{
 		}
 		
 		//docAuthHashMap for login_user
-		HashMap<Integer,DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		List <Doc> docList = null;
 		if(docId == null || docId == 0)
 		{
 			docId = 0;
-			docList = getAccessableSubDocList(repos, 0, "", "", rootDocAuth, docAuthHashMap, rt);
+			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
@@ -652,7 +652,7 @@ public class ReposController extends BaseController{
 			}
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
 		}
 		
 		//合并列表
@@ -733,7 +733,7 @@ public class ReposController extends BaseController{
 	
 	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
-	public void getDocAuthList(Integer reposId, Integer docId, String parentPath, String docName, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDocAuthList(Integer reposId, Long docId, String parentPath, String docName, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
@@ -918,7 +918,7 @@ public class ReposController extends BaseController{
 	
 	/****************  Config User or Group or anyUser DocAuth ******************/
 	@RequestMapping("/configDocAuth.do")
-	public void configUserAuth( Integer reposId, Integer userId, Integer groupId, Integer docId, String parentPath, String docName,
+	public void configUserAuth( Integer reposId, Integer userId, Integer groupId, Long docId, String parentPath, String docName,
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -1086,7 +1086,7 @@ public class ReposController extends BaseController{
 		
 	/****************   delete User or Group or anyUser  DocAuth ******************/
 	@RequestMapping("/deleteDocAuth.do")
-	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Integer docId, String parentPath, String docName,
+	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, String parentPath, String docName,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
@@ -1125,7 +1125,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 	}
 
-	private boolean isUserAuthExpanded(Repos repos, User login_user, Integer docId, String parentPath, String docName, 
+	private boolean isUserAuthExpanded(Repos repos, User login_user, Long docId, String parentPath, String docName, 
 			Integer isAdmin, Integer access, Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,
 			ReturnAjax rt) 
 	{
@@ -1179,7 +1179,7 @@ public class ReposController extends BaseController{
 	
 	/********************* get UserDocAuth ******************************/
 	@RequestMapping("/getUserDocAuth.do")
-	public void getUserDocAuth(Integer reposId, Integer docId, String parentPath, String docName,   
+	public void getUserDocAuth(Integer reposId, Long docId, String parentPath, String docName,   
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
