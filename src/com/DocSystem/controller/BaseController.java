@@ -252,8 +252,13 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected boolean isDocLocalChanged(Doc doc, File localEntry) {
-
+	protected boolean isDocLocalChanged(Doc doc, File localEntry) 
+	{
+		if(doc == null)
+		{
+			return true;
+		}
+		
 		if(doc.getLatestEditTime() != localEntry.lastModified() || doc.getSize() != localEntry.length())
 		{
 			return true;
@@ -261,6 +266,18 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
+	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) {
+		if(doc == null)
+		{
+			return true;
+		}
+		
+		if(doc.getLatestEditTime() != localEntry.getLatestEditTime() || doc.getSize() != localEntry.getSize())
+		{
+			return true;
+		}
+		return false;
+	}
 	
 	private boolean isDocRemoteChanged(Doc doc, Doc entry) {
 		if(doc.getRevision() != entry.getRevision())
