@@ -11,11 +11,11 @@ public class ReturnAjax {
 	
 	//以下是默认成功信息
 	private String status =	"ok";
-	private String msgInfo = "获取数据成功";
-	private String warningMsg = "";
+	private String msgInfo = null;
+	private String warningMsg = null;
 	private Object msgData;	//用于存储额外的状态或数据
 	private Object data;	//用于存储返回结果
-	private String debugLog = ""; //用于向前台传递更详细调试
+	private String debugLog = null; //用于向前台传递更详细调试
 	
 	/* 设置自定义信息和额外数据 */
 	public void setMsg(String msg,Object msgData){
@@ -28,6 +28,12 @@ public class ReturnAjax {
 	 */
 	public void setError(String errmsg){
 		this.status = "fail";
+		if(this.msgInfo == null)
+		{
+			this.msgInfo = errmsg;
+			return;
+		}
+		
 		if(errmsg != null)
 		{
 			this.msgInfo += "\n" + errmsg;
@@ -39,6 +45,12 @@ public class ReturnAjax {
 	 */
 	public void setDebugLog(String debugLog)
 	{
+		if(this.debugLog == null)
+		{
+			this.debugLog = debugLog;
+			return;
+		}
+		
 		if(debugLog != null)
 		{
 			this.debugLog += "\n" + debugLog;
@@ -63,6 +75,12 @@ public class ReturnAjax {
 	}
 
 	public void setWarningMsg(String warningMsg) {
+		if(this.warningMsg == null)
+		{
+			this.warningMsg = warningMsg;
+			return;
+		}
+		
 		if(warningMsg != null)
 		{
 			this.warningMsg += "\n" + warningMsg;
