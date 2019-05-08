@@ -1011,6 +1011,7 @@
         //状态机变量，用于实现异步对话框的实现
         var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
         var uploadErrorConfirmSet = 0; //0:上传错误时弹出确认是否继续上传窗口，1：上传错误时继续上传后续文件， 2：上传错误时停止整个上传		
+        var uploadWarningConfirmSet =0; //0: 上传警告时弹出确认是否继续上传窗口，1：上传警告时继续上传后续文件 2：上传警告时停止整个上传
         
         //vars for reupload
         var reuploadFlag = false; //false: 正常上传  true: 重传
@@ -1097,6 +1098,7 @@
 			stopUploadFlag = false;
 			fileCoverConfirmSet = 0;
 			uploadErrorConfirmSet = 0;
+			uploadWarningConfirmSet = 0;
 			uploadedNum = 0;
 			successNum = 0;
 			failNum = 0;
@@ -1207,6 +1209,8 @@
 			    	   	
 			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
 			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
+			    		SubContext.uploadWarningConfirmSet = 0; //默认碰到警告需要用户确认
+			    		
 			    		SubContext.stopUploadFlag = false; //停止上传标记未false
 			      								    	   	
 			    	   	//Push the SubContext
@@ -1509,6 +1513,161 @@
       		});
       	}
       	
+      	//获取当上传的文件警告确认设置
+      	function getUploadWarningConfirmSetting()
+      	{
+	 		if(uploadWarningConfirmSet == 0) //全局设置为继续
+  	 		{
+  	 			if(SubContextList[index].uploadWarningConfirmSet == 0)
+  	 			{
+  	 				return 0;
+  	 			}
+  	 		
+  	 			return SubContextList[index].uploadWarningConfirmSet;	 			
+  	 		}
+  	 		
+	 		return uploadWarningConfirmSet;
+      	}
+      	
+      	//upload Warning Confirm
+      	function uploadWarningConfirm(FileName,msgInfo)
+      	{
+      		var uploadWarningTimer = setTimeout(function () {	//超时用户没有动作，则直接继续
+            	console.log("用户确认超时,继续上传后续文件");
+            	SubContextList[index].uploadWarningConfirmSet = 1; //继续上传
+            	uploadWarningConfirmSet = 1; //全局继续上传
+            	closeBootstrapDialog("uploadWarningConfirm");
+            	uploadErrorHandler(FileName,msgInfo);
+            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+      		
+			//弹出用户确认窗口
+      		qiao.bs.confirm({
+    	    	id: 'uploadWarningConfirm',
+    	        msg: FileName + "警告（"+msgInfo+"）,是否继续上传其他文件？",
+    	        close: false,		
+    	        okbtn: "继续",
+    	        qubtn: "结束上传",
+    	    },function () {
+    	    	//alert("点击了确定");
+				clearTimeout(uploadWarningTimer);			
+      			SubContextList[index].uploadWarningConfirmSet = 1; //继续上传
+    	 		if(index < (totalNum-1))	//后续还有文件
+                {
+    	      		var uploadWarningTimer1 = setTimeout(function () {	//超时用户没有动作，则直接继续
+    	            	console.log("用户确认超时,后续错误都继续上传");
+    	            	uploadWarningConfirmSet = 1; //全局继续上传
+    	            	closeBootstrapDialog("takeSameActionConfirm4");
+    	            	uploadWarningHandler(FileName,msgInfo);
+    	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
+    	 			
+  	 	    	    qiao.bs.confirm({
+  	 	    	    	id: 'takeSameActionConfirm4',
+  	 	    	        msg: "后续错误是否执行此操作？",
+  	 	    	        close: false,		
+  	 	    	        okbtn: "是",
+  	 	    	        qubtn: "否",
+  	 	    	    },function () {
+  	 	    	    	//后续错误将不再弹出窗口
+  	 	    	    	clearTimeout(uploadWarningTimer1);
+  	 	    	    	uploadWarningConfirmSet = 1;	//全局覆盖
+  	 	    	    	uploadWarningHandler(FileName,msgInfo); //reEnter uploadDoc
+  	  	 				return true;
+  	 				},function(){
+  	 					//后续错误将继续弹出错误确认窗口
+  	 					clearTimeout(uploadWarningTimer1);
+  	 	    	    	uploadWarningHandler(FileName,msgInfo);
+  	  	 				return true;
+  	 				});	
+                }
+    	 		else
+    	 		{
+             		uploadWarningConfirmHandler(FileName,msgInfo);
+             		return;
+    	 		}
+    		},function(){
+    	    	//alert("点击了取消");
+    	    	clearTimeout(uploadWarningTimer);
+      			SubContextList[index].uploadWarningConfirmSet = 2; //结束所有上传
+          		uploadWarningConfirmSet = 2; //全局取消上传    	 		
+		 		uploadWarningAbortHandler(FileName,msgInfo);
+      		});
+      	}
+      	
+      	//uploadWarnignConfirmHandler
+      	function uploadWarningConfirmHandler(FileName,msgInfo)
+      	{
+			console.log("警告：" + msgInfo);
+			var confirm = getUploadWarningConfirmSetting();
+			if(confirm == 1)
+			{
+				uploadWarningHandler(name, msgInfo);
+			}
+			else if(confirm == 2)	//结束上传
+			{
+				uploadWarningAbortHandler(name, msgInfo);
+			}
+			else
+			{
+				uploadWarningConfirm(name, msgInfo);
+			}
+      	}
+      	
+      	//uploadWarningHandler
+      	function uploadWarningHandler(FileName,msgInfo)
+      	{
+      		console.log("uploadWarningHandler() "+ FileName + " " + msgInfo);
+      	  	
+      		//If curCheckInDoc was set, means the upload is for CheckIn
+          	if(curCheckInDoc.id && curCheckInDoc.id > -1)
+          	{
+          		//CheckIn ok, do unlock the doc
+          		unlockDoc(curCheckInDoc.id);
+          		curCheckInDoc.id = -1;
+          	}
+          		
+          	successNum++;
+    	      	
+          	if(true == reuploadFlag)
+          	{	
+    	      	console.log("uploadWarningHandler() 重传成功");
+    	      	reuploadSuccessNum++;
+    	    }
+    	    SubContextList[index].state = 2;	//上传结束
+          	SubContextList[index].status = "success";
+          	SubContextList[index].msgInfo = msgInfo;
+    		//hide the reupload btn
+    		$(".reupload"+index).hide();
+    		uploadNextDoc();
+        }
+      	
+      	//uploadWarningAbortHandler
+      	function uploadErrorAbortHandler(FileName,errMsg)
+      	{
+      		console.log("uploadWarningAbortHandler() "+ FileName + " " + errMsg);
+      		
+      		//If curCheckInDoc was set, means the upload is for CheckIn
+          	if(curCheckInDoc.id && curCheckInDoc.id > -1)
+          	{
+          		//CheckIn ok, do unlock the doc
+          		unlockDoc(curCheckInDoc.id);
+          		curCheckInDoc.id = -1;
+          	}
+          		
+          	successNum++;
+    	      	
+          	if(true == reuploadFlag)
+          	{	
+    	      	console.log("uploadWarningHandler() 重传成功");
+    	      	reuploadSuccessNum++;
+    	    }
+    	    SubContextList[index].state = 2;	//上传结束
+          	SubContextList[index].status = "success";
+          	SubContextList[index].msgInfo = msgInfo;
+    		//hide the reupload btn
+    		$(".reupload"+index).hide();
+      		uploadEndHandler();
+      	}
+      	
       	//uploadErrorConfirmHandler
       	function uploadErrorConfirmHandler(FileName,errMsg)
       	{
@@ -1748,7 +1907,12 @@
 			             		{
 				  					addTreeNode(ret.data,tempParentNode);
 				             		
-				             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
+				  					if(ret.warningMsg)
+				  					{
+				  						uploadErrorConfirmHandler(name,ret.msgInfo);
+				  						return;
+				  					}
+				  					console.log("checkAddParentNode() call uploadDoc to reenter the code");
 				        		  	uploadDoc();
 				        		  	return;
 			             		}
@@ -2115,6 +2279,7 @@
 				stopUploadFlag = false;
 				fileCoverConfirmSet = 0;
 				uploadErrorConfirmSet = 0;
+				uploadWarningConfirmSet = 0;
 			}
 			else
 			{
@@ -2195,6 +2360,7 @@
 			//confirmSet should be clean
 			SubContext.fileCoverConfirmSet = 0;
 			SubContext.uploadErrorConfirmSet = 0;
+			SubContext.uploadWarningConfirmSet = 0;
 			
 			reuploadList.push(id);
 		}
