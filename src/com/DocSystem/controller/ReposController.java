@@ -1,6 +1,5 @@
 package com.DocSystem.controller;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,10 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import util.ReturnAjax;
-import util.GitUtil.GITUtil;
 import util.LuceneUtil.LuceneUtil2;
-import util.SvnUtil.SVNUtil;
-
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
