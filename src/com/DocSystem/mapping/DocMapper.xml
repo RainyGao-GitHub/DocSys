@@ -273,10 +273,10 @@
         and PATH = #{path,jdbcType=VARCHAR}
     </if>
     <if test="docId != null">
-        and DOC_ID = #{docId,jdbcType=BIGINT},
+        and DOC_ID = #{docId,jdbcType=BIGINT}
     </if>
     <if test="pid != null">
-        and PID = #{pid,jdbcType=BIGINT},
+        and PID = #{pid,jdbcType=BIGINT}
     </if>
     <if test="vid != null">
         and VID = #{vid,jdbcType=INTEGER}
