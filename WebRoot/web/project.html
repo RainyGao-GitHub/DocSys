@@ -3329,10 +3329,11 @@
     
     function updateUrl(reposId,docId,edit)
     {
+    	console.log("reposId:" + reposId + " docId:" + docId + " edit:" + edit);
     	//Get Node by Id
     	var node = getNodeById(docId);
-    	var path;
-    	var name;
+    	var path = "";
+    	var name = "";
     	if(node && node != null)
     	{
     		path = node.path;
@@ -5114,6 +5115,7 @@ function CompareObj(objA, objB, flag) {
       	for(var i=0; i<docList.length; i++)
       	{
            var jsonObj = docList[i];
+           jsonObj.id = jsonObj.docId;
            jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
        }
