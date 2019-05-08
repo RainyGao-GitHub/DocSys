@@ -732,6 +732,13 @@ public class UserController extends BaseController {
 		
 		ReturnAjax rt = new ReturnAjax();
 		
+		List<User> uList = userService.geAllUsers();
+		if(uList == null || uList.size() == 0)
+		{
+			//Add a default user(Admin)
+			addAdminUser();
+		}
+		
 		//Check if user is login
 		User loginUser = (User) session.getAttribute("login_user");
 		if(loginUser == null)
@@ -783,6 +790,21 @@ public class UserController extends BaseController {
 		writeJson(rt, response);
     }
 	
+	private void addAdminUser() {
+		// TODO Auto-generated method stub
+		User user = new User();
+		user.setName("Admin");
+		user.setNickName("超级管理员");
+		user.setPwd(MD5.md5("Admin"));
+		user.setCreateType(0);	//系统自动创建
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置时间
+		user.setType(2);
+		userService.addUser(user);
+	}
+
 	private String saveUserImg(MultipartFile uploadFile,User user) 
 	{
 		String fileName = uploadFile.getOriginalFilename();
