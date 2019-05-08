@@ -92,7 +92,6 @@ public class UserController extends BaseController {
 	}
 
 	private void addAdminUser() {
-		// TODO Auto-generated method stub
 		User user = new User();
 		user.setName("Admin");
 		user.setNickName("超级管理员");
@@ -387,7 +386,7 @@ public class UserController extends BaseController {
 
 		//根据注册类型不同，验证码需要放置在不同的session里面
 		String sessionName = "";	//0 注册，1忘记密码
-		if(type == null || "".equals(type))	//默认用于注册
+		if(type == null)	//默认用于注册
 		{
 			type = 0;	//默认验证码为用户注册
 		}
@@ -492,7 +491,7 @@ public class UserController extends BaseController {
 		//检查验证码是否正确
 		//根据注册类型不同，验证码需要放置在不同的session里面
 		String sessionName = "";	//0 注册，1忘记密码
-		if(type == null || "".equals(type))	//默认用于注册
+		if(type == null)	//默认用于注册
 		{
 			type = 0;	//默认验证码为用户注册
 		}
