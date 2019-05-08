@@ -246,7 +246,7 @@
     where ID = #{id,jdbcType=INTEGER}
   </update>
   
-  <select id="selectSelective" parameterType="com.DocSystem.entity.User" resultMap="BaseResultMap">
+  <select id="selectSelective" parameterType="com.DocSystem.entity.Doc" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from doc
@@ -300,13 +300,6 @@
         and CONTENT = #{content,jdbcType=LONGVARCHAR}
     </if>
     order by type desc,name asc
-  </select>
- 
-  <select id="getDocInfo" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
-    from doc
-    where DOC_ID = #{docId,jdbcType=BIGINT} and VID = #{vid,jdbcType=INTEGER}
   </select>
  
   <select id="queryDocList" parameterType="HashMap" resultMap="BaseResultMap">

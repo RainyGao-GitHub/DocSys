@@ -92,6 +92,8 @@ public class BaseController  extends BaseFunction{
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
 	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
+		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path);
+		
 		List<Doc> docList = new ArrayList<Doc>();
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
@@ -3119,7 +3121,17 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return reposService.getDocInfo(reposId,docId);
+		Doc qDoc = new Doc();
+		qDoc.setVid(reposId);
+		qDoc.setDocId(docId);
+		
+		List<Doc> list = reposService.getDocList(qDoc);
+		if(list == null || list.size() == 0)
+		{
+			return null;
+		}
+		
+		return list.get(0);
 	}
 	
 	protected String getUserName(Integer userId) {

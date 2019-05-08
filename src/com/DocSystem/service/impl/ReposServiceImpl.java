@@ -194,10 +194,6 @@ public class ReposServiceImpl implements ReposService {
 		return docAuthDao.deleteByPrimaryKey(id);
 	}
 
-	public Doc getDocInfo(Integer reposId, Long docId) {
-		return docDao.getDocInfo(reposId, docId);	//只获取文件的信息但不包括内容
-	}
-
 
 	public void deleteReposAuthSelective(ReposAuth reposAuth) {
 		reposAuthDao.deleteSelective(reposAuth);
