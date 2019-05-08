@@ -380,7 +380,7 @@ public class UserController extends BaseController {
 		if(userName == null || "".equals(userName))	//从session中取出用户名??
 		{
 			System.out.println("userName不能为空");
-			rt.setError("error#请填写正确的邮箱或手机");
+			rt.setError("请填写正确的邮箱或手机");
 			writeJson(rt, response);
 			return;
 		}
