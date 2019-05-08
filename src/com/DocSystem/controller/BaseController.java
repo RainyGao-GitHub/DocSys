@@ -1474,6 +1474,7 @@ public class BaseController  extends BaseFunction{
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		Long docId = buildDocIdByName(level, parentPath);
+		System.out.println("addDoc() docId:" + docId);
 		
 		switch(repos.getType())
 		{
@@ -1530,16 +1531,17 @@ public class BaseController  extends BaseFunction{
 		doc.setVid(reposId);
 		doc.setPid(parentId);
 		doc.setDocId(docId);
+		doc.setPath(parentPath);
 		doc.setName(docName);
 		doc.setType(type);
 		doc.setSize(fileSize);
 		doc.setCheckSum(checkSum);
 		doc.setContent(content);
-		doc.setPath(parentPath);
-		doc.setCreator(login_user.getId());
+		
 		//set createTime
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		doc.setCreateTime(nowTimeStamp);
+		doc.setCreator(login_user.getId());
 		doc.setLatestEditTime(nowTimeStamp);
 		doc.setLatestEditor(login_user.getId());
 		
