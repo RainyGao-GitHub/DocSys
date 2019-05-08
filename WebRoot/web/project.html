@@ -3329,7 +3329,7 @@
     
     function updateUrl(reposId,docId,edit)
     {
-    	console.log("reposId:" + reposId + " docId:" + docId + " edit:" + edit);
+    	console.log("updateUrl() reposId:" + reposId + " docId:" + docId + " edit:" + edit);
     	//Get Node by Id
     	var node = getNodeById(docId);
     	var path = "";
@@ -3380,6 +3380,11 @@
           	gEdit = false;
           	DocEdit.loadmd(gDocContent,gEdit);
         }
+      	else
+      	{
+			//Update URL 保证页面刷新后还是处于正确的状态
+			updateUrl(gReposId,node.id,edit);
+      	}
       	
         //To get DocInfo and Show Content
     	$.ajax({
@@ -3405,10 +3410,7 @@
                     {	
                     	gDocContent = JSON.parse(ret.data.content);
                     }
-                    
-					//Update URL 保证页面刷新后还是处于正确的状态
-					updateUrl(gReposId,gDocId,edit);
-					
+                    					
 					DocEdit.loadmd(gDocContent,edit);
                     
                     WikiEditBtnCtrl(edit);		
