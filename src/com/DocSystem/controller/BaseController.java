@@ -1675,7 +1675,7 @@ public class BaseController  extends BaseFunction{
 		{							
 			//Try to lock the Doc
 			DocLock docLock = lockDoc(doc,2, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
-			if(doc == null)
+			if(docLock == null)
 			{
 				unlock(); //线程锁
 				System.out.println("deleteDoc_FS() Failed to lock Doc: " + docId);
