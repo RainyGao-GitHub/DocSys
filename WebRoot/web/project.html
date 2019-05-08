@@ -3692,7 +3692,7 @@
              	content: content,
              },
              success : function (ret) {
-             	if( "ok" == ret.status && ret.data.id){
+             	if( "ok" == ret.status && ret.data.docId){
              		if(type == 2)
                     {
                     	isParent = true;
@@ -5618,10 +5618,10 @@ function CompareObj(objA, objB, flag) {
 			console.log("addTreeNode() pId = " + pId);
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
-			var treeNode = getNodeByNodeId(node.id);
+			var treeNode = getNodeByNodeId(node.docId);
 			if(treeNode == null)
 			{
-	      		var newNode = {name: nodeName, id : node.id, isParent: isParent, pId: pId, path: node.path};
+	      		var newNode = {name: nodeName, id : node.docId, isParent: isParent, pId: pId, path: node.path};
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
 		}
