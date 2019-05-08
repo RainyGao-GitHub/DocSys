@@ -5591,7 +5591,7 @@ function CompareObj(objA, objB, flag) {
      	           var docId = data[i].docId;
      	           var docType = data[i].type;
      	           var docName = data[i].name;
-     	           if(data[i].state != 0)
+     	           if(data[i].state && data[i].state != 0)
      	           {
      	        		str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
      	           }
