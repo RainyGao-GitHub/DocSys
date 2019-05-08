@@ -362,7 +362,7 @@ public class BaseFunction{
 	//Build DocId by DocName
 	protected Long buildDocIdByName(Integer level, String docName) 
 	{
-		Long docId = level*1000000000000L + docName.hashCode() + 1002147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
+		Long docId = level*100000000000L + docName.hashCode() + 102147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
 		return docId;
 	}
 	
