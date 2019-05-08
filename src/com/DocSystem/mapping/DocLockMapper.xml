@@ -159,31 +159,31 @@
     	and ID = #{id,jdbcType=INTEGER}
       </if>
       <if test="type != null">
-        and TYPE = #{type,jdbcType=INTEGER},
+        and TYPE = #{type,jdbcType=INTEGER}
       </if>
       <if test="name != null">
-        and NAME = #{name,jdbcType=VARCHAR},
+        and NAME = #{name,jdbcType=VARCHAR}
       </if>
       <if test="path != null">
-        and PATH = #{path,jdbcType=VARCHAR},
+        and PATH = #{path,jdbcType=VARCHAR}
       </if>
       <if test="docId != null">
-        and DOC_ID = #{docId,jdbcType=BIGINT},
+        and DOC_ID = #{docId,jdbcType=BIGINT}
       </if>
       <if test="pid != null">
-        and PID = #{pid,jdbcType=BIGINT},
+        and PID = #{pid,jdbcType=BIGINT}
       </if>
       <if test="vid != null">
-        and VID = #{vid,jdbcType=INTEGER},
+        and VID = #{vid,jdbcType=INTEGER}
       </if>
       <if test="state != null">
-        and STATE = #{state,jdbcType=INTEGER},
+        and STATE = #{state,jdbcType=INTEGER}
       </if>
       <if test="lockBy != null">
-        and LOCK_BY = #{lockBy,jdbcType=INTEGER},
+        and LOCK_BY = #{lockBy,jdbcType=INTEGER}
       </if>
       <if test="lockTime != null">
-        and LOCK_TIME = #{lockTime,jdbcType=BIGINT},
+        and LOCK_TIME = #{lockTime,jdbcType=BIGINT}
       </if>
   </select>
 
