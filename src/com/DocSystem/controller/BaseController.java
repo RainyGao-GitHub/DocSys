@@ -1611,7 +1611,6 @@ public class BaseController  extends BaseFunction{
 		if(unlockDoc(doc,login_user,null) == false)
 		{
 			rt.setWarningMsg("unlockDoc Failed");
-			return null;
 		}
 		
 		rt.setMsg("新增成功", "isNewNode");
@@ -1621,12 +1620,11 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean dbAddDoc(Doc doc) {
-		// TODO Auto-generated method stub
 		if(reposService.addDoc(doc) == 0)
 		{
 			return false;
 		}	
-		return false;
+		return true;
 	}
 
 	//底层deleteDoc接口
