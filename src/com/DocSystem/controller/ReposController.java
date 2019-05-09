@@ -19,6 +19,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.common.CommonAction;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -481,10 +482,11 @@ public class ReposController extends BaseController{
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		List <Doc> docList = null;
+		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		if(docId == null || docId == 0)
 		{
 			docId = 0L;
-			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt);
+			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 		else
 		{
@@ -499,7 +501,7 @@ public class ReposController extends BaseController{
 			}
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt, actionList);
 		}
 
 		if(docList == null)
@@ -511,6 +513,7 @@ public class ReposController extends BaseController{
 			rt.setData(docList);
 		}
 		writeJson(rt, response);
+		
 		return;		
 	}
 	

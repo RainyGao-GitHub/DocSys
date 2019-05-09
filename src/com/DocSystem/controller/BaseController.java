@@ -66,7 +66,7 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
 	{	
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
@@ -78,8 +78,6 @@ public class BaseController  extends BaseFunction{
 		
 		int level = getLevelByParentPath(dirPath);
 		
-		//Get subDocHashMap
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, docAuth, docAuthHashMap, rt, actionList);
 	
 		if(docList != null)
@@ -336,7 +334,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 
@@ -344,32 +342,32 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
-			return getDocListFromRootToDoc_FS(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			return getDocListFromRootToDoc_FS(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt, actionList);
 		case 3:
-			return getDocListFromRootToDoc_SVN(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			return getDocListFromRootToDoc_SVN(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt, actionList);
 		case 4:
-			return getDocListFromRootToDoc_GIT(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			return getDocListFromRootToDoc_GIT(repos, rootDocId, rootDocAuth, docAuthHashMap, parentPath, docName, rt, actionList);
 		}
 		return null;
 	}
 	
-	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_GIT(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_SVN(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt)
+	private List<Doc> getDocListFromRootToDoc_FS(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt, List<CommonAction> actionList)
 	{	
 		System.out.println("getDocListFromRootToDoc_FS() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 		
-		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", rootDocAuth, docAuthHashMap, rt);	//get subDocList under root
+		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
 			System.out.println("getDocListFromRootToDoc_FS() docList under root is empty");			
@@ -399,7 +397,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("docId:" + docId);
 			DocAuth docAuth = getDocAuthFromHashMap(docId, pDocAuth, docAuthHashMap);
 			
-			List<Doc> subDocList = getAccessableSubDocList(repos, docId, path, name, docAuth, docAuthHashMap, rt);
+			List<Doc> subDocList = getAccessableSubDocList(repos, docId, path, name, docAuth, docAuthHashMap, rt, actionList);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				System.out.println("getDocListFromRootToDoc_FS() Failed to get the subDocList under doc: " + path+name);
