@@ -8,8 +8,8 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
 public class CommonAction {
-    private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy 
-    private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index 
+    private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index            5:AutoSyncUp
+	private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy   (1:localAdd 2: localModify 3:localDelete 4:remoteAdd 5:remoteModify 6:remoteDelete)
     private Repos repos = null;
     private Integer docType = null; //0:DocName 1:RealDoc 2:VirtualDoc
     private Doc doc = null;

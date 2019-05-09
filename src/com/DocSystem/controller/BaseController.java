@@ -98,44 +98,52 @@ public class BaseController  extends BaseFunction{
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
 		
-    	if(repos.getType() == 1 || repos.getType() == 2)
-		{	
-	    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
-	    	if(localEntryList != null)
+		List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
+    	if(localEntryList != null)
+    	{
+	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
-		    	for(int i=0;i<localEntryList.size();i++)
-		    	{
-		    		Doc localEntry = localEntryList.get(i);
-		    		Doc doc = indexHashMap.get(localEntry.getName());
-		    		if(doc == null)	//Doc was local added
-		    		{	    			
-		    			//Add doc to docHashMap
-			    		doc = localEntry;
-		    			indexHashMap.put(doc.getName(), doc);
-		    			
-			    		//Insert verRepos add and Index add
-		    		}
-		    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
-		    		{
-		    			doc = localEntry;
-		    			//Update doc to docHashMap
-			    		indexHashMap.put(doc.getName(), doc);
-			    		
-			    		//Insert verRepos update and Index update
-		    		}
+	    		Doc localEntry = localEntryList.get(i);
+	    		Doc doc = indexHashMap.get(localEntry.getName());
+	    		if(doc == null)	//Doc was local added
+	    		{	    			
+	    			//Add doc to docHashMap
+		    		doc = localEntry;
+	    			indexHashMap.put(doc.getName(), doc);
+	    			
+	    			//Add to actionList for AutoSyncUp
+	    			CommonAction action = new CommonAction();
+	    			action.setType(5); //5: AutoSyncUp
+	    			action.setAction(1); //1: localAdd
+	    			action.setRepos(repos);
+	    			action.setDoc(doc);
+	    			actionList.add(action);
+	    		}
+	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
+	    		{
+	    			doc = localEntry;
+	    			//Update doc to docHashMap
+		    		indexHashMap.put(doc.getName(), doc);
 		    		
-					DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-					{
-			    		//Add to docList
-			    		docList.add(doc);
-					}
-		    	}
-		    	System.out.println("docList size:" + docList.size());
-		    	printObject("docList", docList);
-		    	
+		    		//Add to actionList for AutoSyncUp
+	    			CommonAction action = new CommonAction();
+	    			action.setType(5); //5: AutoSyncUp
+	    			action.setAction(2); //2: localModify
+	    			action.setRepos(repos);
+	    			action.setDoc(doc);
+	    			actionList.add(action);
+	    		}
+	    		
+				DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
+				if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+				{
+		    		//Add to docList
+		    		docList.add(doc);
+				}
 	    	}
-		}
+	    	System.out.println("localDocList size:" + docList.size());
+	    	printObject("localDocList", docList);		    	
+    	}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
     	if(remoteEntryList != null)
@@ -151,8 +159,14 @@ public class BaseController  extends BaseFunction{
 	    			//Add doc to docHashMap
 		    		indexHashMap.put(doc.getName(), doc);
 	    			
-		    		//Insert verRepos checkout and Index add, checkout 似乎并不重要，因为不会导致文件丢失，只要下载的时候能够根据Index信息确定下载的来源即可
-		    		
+		    		//Add to actionList for AutoSyncUp
+	    			CommonAction action = new CommonAction();
+	    			action.setType(5); //5: AutoSyncUp
+	    			action.setAction(4); //4: remoteAdd
+	    			action.setRepos(repos);
+	    			action.setDoc(doc);
+	    			actionList.add(action);
+		    			
 		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
 					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 					{
@@ -167,13 +181,17 @@ public class BaseController  extends BaseFunction{
 	    			//Update doc to docHashMap
 		    		indexHashMap.put(doc.getName(), doc);
 	    			
-	    			//Insert verRepos Checkout and Index update
-		    		
-		    		//Update to docList (??) 效率太低下，远程只负责增加本地没有的节点，以便通过网页能够下载或删除、
+		    		//Add to actionList for AutoSyncUp
+	    			CommonAction action = new CommonAction();
+	    			action.setType(5); //5: AutoSyncUp
+	    			action.setAction(5); //5: remoteModify
+	    			action.setRepos(repos);
+	    			action.setDoc(doc);
+	    			actionList.add(action);
 	    		} 
 	    	}
-	    	System.out.println("docList size1:" + docList.size());
-	    	printObject("docList1", docList);
+	    	System.out.println("docList size:" + docList.size());
+	    	printObject("docList", docList);
     	}
     	
     	return docList;
