@@ -3577,7 +3577,7 @@
                 if( "ok" == ret.status ){
                 	console.log("showVirtualDoc ret",ret);
                 	$('#filetitle').html(ret.data.name);
-                    gDocId = ret.data.id;
+                    gDocId = ret.data.docId;
                     if(ret.data.content == "null")
                     {
                     	gDocContent = "";	//Convert it to empty String
