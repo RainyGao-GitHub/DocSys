@@ -1545,10 +1545,11 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(nowTimeStamp);
 		doc.setLatestEditor(login_user.getId());
 		
+		DocLock docLock = null;
 		synchronized(syncLock)
 		{
 			//LockDoc
-			DocLock docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -1560,7 +1561,7 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
-			unlockDoc(doc, login_user, null);
+			unlockDoc(doc, login_user, docLock);
 			System.out.println("addDoc() " +localDocPath + "　已存在！");
 			rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
 			return null;
@@ -1571,7 +1572,7 @@ public class BaseController  extends BaseFunction{
 			//File must not exists
 			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
 			{	
-				unlockDoc(doc, login_user, null);
+				unlockDoc(doc, login_user, docLock);
 				
 				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
@@ -1671,10 +1672,11 @@ public class BaseController  extends BaseFunction{
 		doc.setPath(parentPath);
 		doc.setName(docName);
 		
+		DocLock docLock = null;
 		synchronized(syncLock)
 		{							
 			//Try to lock the Doc
-			DocLock docLock = lockDoc(doc,2, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc,2, 2*60*60*1000,login_user,rt,true);	//lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -1693,7 +1695,7 @@ public class BaseController  extends BaseFunction{
 		String reposRPath = getReposRealPath(repos);
 		if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
 		{
-			unlockDoc(doc,login_user,null);
+			unlockDoc(doc,login_user,docLock);
 			
 			System.out.println("deleteDoc_FS() deleteRealDoc Failed");
 			rt.setError(parentPath + docName + " 删除失败！");
@@ -1715,6 +1717,8 @@ public class BaseController  extends BaseFunction{
 		{	
 			rt.setWarningMsg("不可恢复系统错误：dbDeleteDoc Failed");
 		}
+		
+		unlockDoc(doc,login_user,null);
 		
 		rt.setData(doc);
 		return true;
@@ -2251,10 +2255,11 @@ public class BaseController  extends BaseFunction{
 		doc.setSize(fileSize);
 		doc.setCheckSum(checkSum);
 		
+		DocLock docLock = null;
 		synchronized(syncLock)
 		{
 			//Try to lock the doc
-			DocLock docLock = lockDoc(doc, 1, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
+			docLock = lockDoc(doc, 1, 2*60*60*1000, login_user, rt,false); //lock 2 Hours 2*60*60*1000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -2274,7 +2279,7 @@ public class BaseController  extends BaseFunction{
 		//保存文件信息
 		if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
-			unlockDoc(doc,login_user,null);
+			unlockDoc(doc,login_user,docLock);
 
 			System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
 			rt.setError("Failed to updateRealDoc " + docName);
@@ -2294,7 +2299,7 @@ public class BaseController  extends BaseFunction{
 			rt.setError("不可恢复系统错误：updateAndunlockDoc Failed");
 		}
 		
-		unlockDoc(doc,login_user,null);
+		unlockDoc(doc,login_user,docLock);
 		
 		return true;
 	}
@@ -2399,11 +2404,13 @@ public class BaseController  extends BaseFunction{
 		dstDoc.setPath(dstParentPath);
 		dstDoc.setName(dstName);
 		
+		DocLock srcDocLock = null;
+		DocLock dstDocLock = null;
 		synchronized(syncLock)
 		{
 			//Try to lock the srcDoc
-			DocLock srcDocLock = lockDoc(srcDoc,1, 2*60*60*1000,login_user,rt,true);
-			if(srcDoc == null)
+			srcDocLock = lockDoc(srcDoc,1, 2*60*60*1000,login_user,rt,true);
+			if(srcDocLock == null)
 			{
 				unlock(); //线程锁
 		
@@ -2411,12 +2418,12 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			DocLock dstDocLock = lockDoc(dstDoc,1, 2*60*60*1000,login_user,rt,true);
-			if(dstDoc == null)
+			dstDocLock = lockDoc(dstDoc,1, 2*60*60*1000,login_user,rt,true);
+			if(dstDocLock == null)
 			{
 				unlock(); //线程锁
 				
-				unlockDoc(srcDoc, login_user, null);
+				unlockDoc(srcDoc, login_user, srcDocLock);
 				
 				System.out.println("copyDoc lock srcDoc " + srcDoc.getName() + " Failed");
 				return false;
@@ -2466,8 +2473,8 @@ public class BaseController  extends BaseFunction{
 			rt.setWarningMsg("copyDoc() dbCopyDoc failed");			
 		}
 
-		unlockDoc(srcDoc,login_user,null);
-		unlockDoc(dstDoc,login_user,null);
+		unlockDoc(srcDoc,login_user,srcDocLock);
+		unlockDoc(dstDoc,login_user,dstDocLock);
 		
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
@@ -2809,13 +2816,18 @@ public class BaseController  extends BaseFunction{
 				rt.setError("lock Doc [" + doc.getName() +"]  failed");
 				return null;
 			}
+			
+			//Set LockState = 0, which will be used for unlockDoc
+			docLock.setState(0);
 		}
 		else
 		{
-			docLock.setState(lockType);	//doc的状态为不可用
-			docLock.setLockBy(login_user.getId());
-			docLock.setLockTime(lockTime);	//Set lockTime
-			if(reposService.updateDocLock(docLock) == 0)
+			DocLock newDocLock = new DocLock();
+			docLock.setId(docLock.getId());
+			newDocLock.setState(lockType);	//doc的状态为不可用
+			newDocLock.setLockBy(login_user.getId());
+			newDocLock.setLockTime(lockTime);	//Set lockTime
+			if(reposService.updateDocLock(newDocLock) == 0)
 			{
 				rt.setError("lock Doc [" + doc.getName() +"]  failed");
 				return null;
@@ -3003,7 +3015,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(preDocLock != null)	//Revert to preDocLock
+		if(preDocLock != null && preDocLock.getState() != 0)	//Revert to preDocLock
 		{
 			if(reposService.updateDocLock(preDocLock) == 0)
 			{
