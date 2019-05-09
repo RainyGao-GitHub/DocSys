@@ -514,6 +514,8 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);
 		
+		
+		executeCommonActionList(actionList, rt);
 		return;		
 	}
 	
@@ -570,8 +572,8 @@ public class ReposController extends BaseController{
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
-		//获取用户可访问文件列表
-		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, docAuth, docAuthHashMap, rt);
+		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
+		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, docAuth, docAuthHashMap, rt, actionList);
 
 		if(docList == null)
 		{
@@ -582,6 +584,8 @@ public class ReposController extends BaseController{
 			rt.setData(docList);	
 		}
 		writeJson(rt, response);
+		
+		executeCommonActionList(actionList, rt);
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
@@ -634,10 +638,11 @@ public class ReposController extends BaseController{
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		List <Doc> docList = null;
+		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		if(docId == null || docId == 0)
 		{
 			docId = 0;
-			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt);
+			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 		else
 		{
@@ -652,7 +657,7 @@ public class ReposController extends BaseController{
 			}
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt);
+			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, parentPath, docName, rt, actionList);
 		}
 		
 		//合并列表
@@ -664,6 +669,8 @@ public class ReposController extends BaseController{
 		docList.add(rootDoc);
 		rt.setData(docList);
 		writeJson(rt, response);
+		
+		executeCommonActionList(actionList, rt);
 	}
 	
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
