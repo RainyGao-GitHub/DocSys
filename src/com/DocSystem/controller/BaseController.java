@@ -2043,29 +2043,149 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case 1:	//local Doc Changed
-			if(syncupForLocalDocChanged(action,rt) == 0)
-			{
-				return false;
-			}
-			return true;
+			return syncupForLocalDocChanged(action,rt);
 		case 2: //remote Doc Changed
-			if(syncupForRemoteDocChanged(action,rt) == 0)
-			{
-				return false;
-			}
-			return true;
+			return syncupForRemoteDocChanged(action,rt);
 		}
 		return false;
 	}
 
-	private int syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return 0;
+	private boolean syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
+		printObject("syncupForRemoteDocChanged() action:",action);
+		
+		Doc doc = action.getDoc();
+		if(doc == null)
+		{
+			return false;
+		}
+		
+		User login_user = new User();
+		login_user.setId(0); //System User
+		
+		//LockDoc
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//Try to lock the Doc
+			docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				System.out.println("lockDoc() Failed to lock Doc: " + doc.getName());
+				return false;
+			}
+			unlock(); //线程锁
+		}
+		
+		//Check the localDocChange behavior
+		Repos repos = action.getRepos();
+		String reposRealPath = getReposRealPath(repos);
+		String localParentPath = reposRealPath + doc.getPath();
+		
+		Doc dbDoc = dbGetDoc(doc);
+		File localEntry = new File(localParentPath,doc.getName());
+		Doc remoteEntry = null;
+		
+		if(localEntry.exists())
+		{
+			if(dbDoc == null)	//localAdded
+			{
+				//Do commit to verRepos and addDbDoc 
+			}
+			else if(isLocalDocChanged(dbDoc,localEntry))	//localChanged (force commit)
+			{
+				//Do commmit to verRepos and updateDbDoc
+			}
+			else if(isRemoteDocChanged(dbDoc, remoteEntry))	//local No change but remoteChanged, we are not suere
+			{
+				//这里checkout是有风险的，要保证verRepos中对应的revision的文件的checkSum和本地相同，才可以checkOut到本地
+			}
+		}
+		else
+		{
+			if(dbDoc == null)
+			{
+				if(remoteEntry 存在)
+				{
+					则CheckOut过来
+				}
+			}
+			else
+			{
+				//localDeleted and remoteDeleted so just delete dbDoc
+				if(remoteEntry == null)
+				{
+					
+				}
+				else //localDeleted but remoteChanged, do checkout the remoteChange to local	
+				{
+					if(isRemoteDocChange(dbDoc, remoteEntry) == false)
+					{
+						//Do check out the changed doc to local
+					}
+				}
+			}
+		}
+		
+		unlockDoc(doc, login_user, docLock);
+		return true;
+		
 	}
 
-	private int syncupForLocalDocChanged(CommonAction action, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return 0;
+	private boolean syncupForLocalDocChanged(CommonAction action, ReturnAjax rt) {
+		Doc doc = action.getDoc();
+		if(doc == null)
+		{
+			return false;
+		}
+		
+		User login_user = new User();
+		login_user.setId(0); //System User
+		
+		//LockDoc
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//Try to lock the Doc
+			docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				System.out.println("lockDoc() Failed to lock Doc: " + doc.getName());
+				return false;
+			}
+			unlock(); //线程锁
+		}
+		
+		//Check the localDocChange behavior
+		Repos repos = action.getRepos();
+		String reposRealPath = getReposRealPath(repos);
+		String localParentPath = reposRealPath + doc.getPath();
+		File localEntry = new File(localParentPath,doc.getName());
+		if(localEntry.exists())
+		{
+			Doc dbDoc = dbGetDoc(doc);
+			if(dbDoc == null)
+			{
+				//Do commit to verRepos and addDbDoc 
+			}
+			else if(isLocalDocChanged(dbDoc,localEntry))
+			{
+				//Do commmit to verRepos and updateDbDoc
+			}
+		}
+		else
+		{
+			Doc dbDoc = dbGetDoc(doc);
+			Doc remoteEntry = null;
+			if(isRemoteDocChange(dbDoc, remoteEntry) == false)	//dbDoc 与 remoteEntry相同才表明是本地删除了
+			{
+				//Do commit to verRepos and deleteDbDoc
+			}
+		}
+		
+		unlockDoc(doc, login_user, docLock);
+		return true;
 	}
 
 	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
