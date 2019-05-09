@@ -2220,12 +2220,12 @@
 			            {	
 			            	addTreeNode(ret.data,SubContext.realParentNode);
 			             	//set the docId so that We can open it 
-		             		SubContext.docId = ret.data.id;	                
-			             }
+		             		SubContext.docId = ret.data.docId;	                
+			            }
 	             			
-	             		 $('.file'+index).removeClass('is-uploading');
-		    			 $('.file'+index).addClass('is-success');
-		                 uploadSuccessHandler(name,ret.msgInfo);
+	             		$('.file'+index).removeClass('is-uploading');
+		    			$('.file'+index).addClass('is-success');
+		                uploadSuccessHandler(name,ret.msgInfo);
 						return;
 	             	}
 	             	else
@@ -2741,6 +2741,16 @@
 				//文件上传进度(evt获取到的是上传的所有数据的百分比，所有比实际文件要大)
 				var loaded = evt.loaded;	//已上传大小
 				var tot = evt.total;
+				if(tot <= 0)
+				{
+					xhr.abort(); //结束当前上传	
+					//update the uploadStatus
+					$('.file'+index).removeClass('is-uploading');
+					$('.file'+index).addClass('is-fail');
+					uploadErrorConfirmHandler(name, "文件读取失败！");
+					return;
+				}
+				
 				var per = Math.floor(100 * loaded / tot); //已经上传的百分比
 				console.log("upload.onprogress loaded:" + loaded + " tot:" + tot + " per:" + per);
 				
