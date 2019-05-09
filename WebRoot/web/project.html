@@ -3555,12 +3555,11 @@
           	gDocContent = "";
           	gEdit = false;
           	DocEdit.loadmd(gDocContent,gEdit);
+          	return;
         }
-      	else
-      	{
-			//Update URL 保证页面刷新后还是处于正确的状态
-			updateUrl(gReposId,node.id,edit);
-      	}
+      	
+      	//Update URL 保证页面刷新后还是处于正确的状态
+		updateUrl(gReposId,node.id,edit);
       	
         //To get DocInfo and Show Content
     	$.ajax({
@@ -6088,6 +6087,7 @@ function CompareObj(objA, objB, flag) {
 		else
 		{
 			var parentNode = node.getParentNode();
+			console.log("backToParentDoc parentNode:" + parentNode);
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
@@ -6106,7 +6106,7 @@ function CompareObj(objA, objB, flag) {
 		updateUrl(gReposId,gDocId);
 
 		//Update doc preview zone
-		showVirtualDoc(node,false);
+		showVirtualDoc(parentNode,false);
 		return;
    	}         
 	
