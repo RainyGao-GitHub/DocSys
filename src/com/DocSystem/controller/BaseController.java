@@ -112,7 +112,8 @@ public class BaseController  extends BaseFunction{
 	    			//Add to actionList for AutoSyncUp
 	    			CommonAction action = new CommonAction();
 	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(1); //1: localAdd
+	    			action.setAction(1); //1: Add
+	    			action.setDocType(1); //1: local Doc Changed
 	    			action.setRepos(repos);
 	    			action.setDoc(doc);
 	    			actionList.add(action);
@@ -126,7 +127,8 @@ public class BaseController  extends BaseFunction{
 		    		//Add to actionList for AutoSyncUp
 	    			CommonAction action = new CommonAction();
 	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(2); //2: localModify
+	    			action.setAction(3); //3: localModify
+	    			action.setDocType(1); //1: local Doc Changed
 	    			action.setRepos(repos);
 	    			action.setDoc(doc);
 	    			actionList.add(action);
@@ -160,7 +162,8 @@ public class BaseController  extends BaseFunction{
 		    		//Add to actionList for AutoSyncUp
 	    			CommonAction action = new CommonAction();
 	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(4); //4: remoteAdd
+	    			action.setAction(1); //1: remoteAdd
+	    			action.setDocType(2); //2: remote Doc Changed
 	    			action.setRepos(repos);
 	    			action.setDoc(doc);
 	    			actionList.add(action);
@@ -182,7 +185,8 @@ public class BaseController  extends BaseFunction{
 		    		//Add to actionList for AutoSyncUp
 	    			CommonAction action = new CommonAction();
 	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(5); //5: remoteModify
+	    			action.setAction(3); //3: remoteModify
+	    			action.setDocType(2); //2: remote Doc Changed
 	    			action.setRepos(repos);
 	    			action.setDoc(doc);
 	    			actionList.add(action);
@@ -1993,13 +1997,13 @@ public class BaseController  extends BaseFunction{
 			switch(action.getType())
 			{
 			case 1:
-				if(executeLocalAction(action, rt) == true)
+				if(executeFSAction(action, rt) == true)
 				{
 					count++;
 				}
 				break;
 			case 2:
-				if(executeCommitAction(action, rt) == true)
+				if(executeVerReposAction(action, rt) == true)
 				{
 					count++;
 				}
@@ -2016,6 +2020,12 @@ public class BaseController  extends BaseFunction{
 					count++;
 				}
 				break;
+			case 5: //AutoSyncUp
+				if(executeSyncUpAction(action, rt) == true)
+				{
+					count++;
+				}
+				break;
 			}
 		}
 		
@@ -2028,6 +2038,36 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
+		printObject("executeSyncUpAction() action:",action);
+		switch(action.getDocType())
+		{
+		case 1:	//local Doc Changed
+			if(syncupForLocalDocChanged(action,rt) == 0)
+			{
+				return false;
+			}
+			return true;
+		case 2: //remote Doc Changed
+			if(syncupForRemoteDocChanged(action,rt) == 0)
+			{
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private int syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private int syncupForLocalDocChanged(CommonAction action, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
 	{
 		printObject("executeDBAction() action:",action);
@@ -2120,9 +2160,9 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean executeLocalAction(CommonAction action, ReturnAjax rt) {
-		printObject("executeLocalAction() action:",action);
-		switch(action.getType())
+	private boolean executeFSAction(CommonAction action, ReturnAjax rt) {
+		printObject("executeFSAction() action:",action);
+		switch(action.getDocType())
 		{
 		case 1:	//RDoc
 			return executeLocalActionForRDoc(action, rt);
@@ -2190,12 +2230,12 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean executeCommitAction(CommonAction action, ReturnAjax rt) 
+	private boolean executeVerReposAction(CommonAction action, ReturnAjax rt) 
 	{
-		printObject("executeLocalAction() action:",action);
+		printObject("executeVerReposAction() action:",action);
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
-		switch(action.getType())
+		switch(action.getDocType())
 		{
 		case 1:	//RDoc autoCommit
 			String localParentPath = getReposRealPath(repos) + doc.getPath();
