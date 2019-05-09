@@ -2345,6 +2345,212 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	//底层renameDoc接口
+	private void renameDoc(Integer docId, String newname,Integer reposId,Integer parentId, 
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+		
+		Doc doc = null;
+		synchronized(syncLock)
+		{
+			//Try to lockDoc
+			doc = lockDoc(docId,2,login_user,rt,true);
+			if(doc == null)
+			{
+				unlock(); //线程锁
+				
+				System.out.println("renameDoc() lockDoc " + docId +" Failed！");
+				return;
+			}
+			unlock(); //线程锁
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		String reposRPath = getReposRealPath(repos);
+		String parentPath = getParentPath(parentId);
+		String oldname = doc.getName();
+		
+		//修改实文件名字	
+		if(moveRealDoc(reposRPath,parentPath,oldname,parentPath,newname,doc.getType(),rt) == false)
+		{
+			if(unlockDoc(docId,login_user,doc) == false)
+			{
+				rt.setError(oldname + " renameRealDoc失败！ and unlockDoc " + docId +" Failed！");
+				return;
+			}
+			else
+			{
+				rt.setError(oldname + " renameRealDoc失败！");
+				return;
+			}
+		}
+		else
+		{
+			//commit to history db
+			if(svnRealDocMove(repos,parentPath,oldname,parentPath,newname,doc.getType(),commitMsg,commitUser,rt) == false)
+			{
+				//我们假定版本提交总是会成功，因此报错不处理
+				System.out.println("renameDoc() svnRealDocMove Failed");
+				String MsgInfo = "svnRealDocMove Failed";
+				
+				if(moveRealDoc(reposRPath,parentPath,newname,parentPath,oldname,doc.getType(),rt) == false)
+				{
+					MsgInfo += " and moveRealDoc Back Failed";
+				}
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc Failed";						
+				}
+				rt.setError(MsgInfo);
+				return;
+			}	
+		}
+		
+		//更新doc name
+		Doc tempDoc = new Doc();
+		tempDoc.setId(docId);
+		tempDoc.setName(newname);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		tempDoc.setLatestEditTime(nowTimeStamp);
+		tempDoc.setLatestEditor(login_user.getId());
+		if(reposService.updateDoc(tempDoc) == 0)
+		{
+			rt.setError("不可恢复系统错误：Failed to update doc name");
+			return;
+		}
+		
+		//unlock doc
+		if(unlockDoc(docId,login_user,doc) == false)
+		{
+			rt.setError("unlockDoc failed");	
+		}
+		return;
+	}
+	
+	//底层moveDoc接口
+	private void moveDoc(Integer docId, Integer reposId,Integer parentId,Integer dstPid,  
+			String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
+
+		Doc doc = null;
+		Doc dstPDoc = null;
+		synchronized(syncLock)
+		{
+			doc = lockDoc(docId,2,login_user,rt,true);
+			if(doc == null)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("lockDoc " + docId +" Failed！");
+				return;
+			}
+			
+			//Try to lock dstPid
+			if(dstPid !=0)
+			{
+				dstPDoc = lockDoc(dstPid,2,login_user,rt,false);
+				if(dstPDoc== null)
+				{
+					unlock(); //线程锁
+	
+					System.out.println("moveDoc() fail to lock dstPid" + dstPid);
+					unlockDoc(docId,login_user,doc);	//Try to unlock the doc
+					return;
+				}
+			}
+			unlock(); //线程锁
+		}
+		
+		//移动当前节点
+		Integer orgPid = doc.getPid();
+		System.out.println("moveDoc id:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
+		
+		String srcParentPath = getParentPath(orgPid);		
+		String dstParentPath = getParentPath(dstPid);
+		
+		Repos repos = reposService.getRepos(reposId);
+		String reposRPath = getReposRealPath(repos);
+		
+		String filename = doc.getName();
+		String srcDocRPath = srcParentPath + filename;
+		String dstDocRPath = dstParentPath + filename;
+		System.out.println("srcDocRPath: " + srcDocRPath + " dstDocRPath: " + dstDocRPath);
+		
+		//只有当orgPid != dstPid 不同时才进行文件移动，否则文件已在正确位置，只需要更新Doc记录
+		if(!orgPid.equals(dstPid))
+		{
+			System.out.println("moveDoc() docId:" + docId + " orgPid: " + orgPid + " dstPid: " + dstPid);
+			if(moveRealDoc(reposRPath,srcParentPath,filename,dstParentPath,filename,doc.getType(),rt) == false)
+			{
+				String MsgInfo = "文件移动失败！";
+				System.out.println("moveDoc() 文件: " + filename + " 移动失败");
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc " + docId+ " failed ";
+				}
+				if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
+				{
+					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+				}
+				rt.setError(MsgInfo);
+				return;
+			}
+			
+			//需要将文件Commit到SVN上去：先执行svn的移动
+			if(svnRealDocMove(repos, srcParentPath,filename, dstParentPath, filename,doc.getType(),commitMsg, commitUser,rt) == false)
+			{
+				System.out.println("moveDoc() svnRealDocMove Failed");
+				String MsgInfo = "svnRealDocMove Failed";
+				if(moveRealDoc(reposRPath,dstParentPath,filename,srcParentPath,filename,doc.getType(),rt) == false)
+				{
+					MsgInfo += "and changeDirectory Failed";
+				}
+				
+				if(unlockDoc(docId,login_user,doc) == false)
+				{
+					MsgInfo += " and unlockDoc " + docId+ " failed ";
+				}
+				if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
+				{
+					MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+				}
+				rt.setError(MsgInfo);
+				return;					
+			}
+		}
+		
+		//更新doc pid and path
+		Doc tempDoc = new Doc();
+		tempDoc.setId(docId);
+		tempDoc.setPath(dstParentPath);
+		tempDoc.setPid(dstPid);
+		//set lastEditTime
+		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		tempDoc.setLatestEditTime(nowTimeStamp);
+		tempDoc.setLatestEditor(login_user.getId());
+		if(reposService.updateDoc(tempDoc) == 0)
+		{
+			rt.setError("不可恢复系统错误：Failed to update doc pid and path");
+			return;				
+		}
+		
+		//Unlock Docs
+		String MsgInfo = null; 
+		if(unlockDoc(docId,login_user,doc) == false)
+		{
+			MsgInfo = "unlockDoc " + docId+ " failed ";
+		}
+		if(dstPid !=0 && unlockDoc(dstPid,login_user,dstPDoc) == false)
+		{
+			MsgInfo += " and unlockDoc " + dstPid+ " failed ";
+		}
+		if(MsgInfo!=null)
+		{
+			rt.setError(MsgInfo);
+		}
+		return;
+	}
+
+	
 	//底层copyDoc接口
 	protected boolean copyDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,List<CommonAction> actionList, boolean isMove) 

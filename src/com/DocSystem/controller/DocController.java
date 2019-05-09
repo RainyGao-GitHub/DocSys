@@ -632,8 +632,8 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Long docId, Integer type, Long parentId, String parentPath, String name, String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("renameDoc reposId: " + reposId + " docId:"+ docId + " parentPath:" + parentPath+ " name: " + name+ " newname: " + newname);
+	public void renameDoc(Integer id,String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("renameDoc id: " + id + " newname: " + newname);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -645,45 +645,40 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
+		//get doc
+		Doc doc = reposService.getDocInfo(id);
+		if(doc == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("文件不存在！");
 			writeJson(rt, response);			
-			return;
+			return;			
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, name, rt) == false)
+		if(checkUserEditRight(rt,login_user.getId(),id,doc.getVid()) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = renameDoc(repos, docId, parentId, parentId, type, parentPath, name, parentPath, newname, commitMsg,commitUser, login_user,rt, actionList , true);
-		writeJson(rt, response);
+		//开始更改名字了
+		Integer reposId = doc.getVid();
+		Integer parentId = doc.getPid();
 		
-		if(ret == true)
+		if(commitMsg == null)
 		{
-			executeCommonActionList(actionList, rt);
+			commitMsg = "renameDoc " + doc.getName();
 		}
+		renameDoc(id,newname,reposId,parentId,commitMsg,commitUser,login_user,rt);
+		writeJson(rt, response);	
 	}
+	
 
-	private boolean renameDoc(Repos repos, Long docId, Long parentId, Long parentId2, Integer type,
-			String parentPath, String name, String parentPath2, String newname, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, List<CommonAction> actionList, boolean b) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
+	
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer reposId, Long docId, Integer type, Long srcPid, Long dstPid, String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, 
-			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		
-		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
+	public void moveDoc(Integer id,Integer dstPid,Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("moveDoc id: " + id + " dstPid: " + dstPid + " vid: " + vid);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -695,40 +690,37 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		
-		Repos repos = reposService.getRepos(reposId);
+		Doc doc = reposService.getDocInfo(id);
+		if(doc == null)
+		{
+			rt.setError("文件不存在");
+			writeJson(rt, response);	
+			return;			
+		}
 	
 		//检查是否有源目录的删除权限
-		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		if(checkUserDeleteRight(rt,login_user.getId(),doc.getPid(),vid) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstParentPath, "", rt) == false)
+		if(checkUserAddRight(rt,login_user.getId(),dstPid,vid) == false)
 		{
 				writeJson(rt, response);	
 				return;
 		}
 		
-		//TODO: 这里有risk, 可能导致docId对应的权限失效，因为move操作对于文件型系统会导致docId改变，因此需要更新对应的权限设置
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcParentPath, srcDocName, dstParentPath, dstDocName, commitMsg, commitUser, login_user,rt, actionList , true);		
-		writeJson(rt, response);	
-		
-		if(ret)
+		//开始移动了
+		if(commitMsg == null)
 		{
-			executeCommonActionList(actionList, rt);
+			commitMsg = "moveDoc " + doc.getName();
 		}
+		moveDoc(id,vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);		
+		writeJson(rt, response);	
 	}
 	
-
-	private boolean moveDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type,
-			String srcParentPath, String srcDocName, String dstParentPath, String dstDocName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList, boolean b) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
