@@ -1614,8 +1614,9 @@ public class BaseController  extends BaseFunction{
 			rt.setWarningMsg("unlockDoc Failed");
 		}
 		
-		rt.setMsg("新增成功", "isNewNode");
 		rt.setData(doc);
+		rt.setMsgData("isNewNode");
+		rt.setDebugLog("新增成功"); 
 		
 		return doc.getDocId();
 	}
@@ -2345,11 +2346,9 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	private boolean renameDoc(Repos repos, Long docId, Long srcPid, Integer type, String srcParentPath,
+	protected boolean renameDoc(Repos repos, Long docId, Long srcPid, Integer type, String srcParentPath,
 			String srcName, String dstName, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
 			List<CommonAction> actionList) {
-		switch(repos.getType())
-		{
 		switch(repos.getType())
 		{
 		case 1:
@@ -2367,7 +2366,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	private boolean moveDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
+	protected boolean moveDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
 			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser,
 			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		switch(repos.getType())
@@ -2386,6 +2385,20 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private boolean moveDoc_GIT(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
+			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser, User login_user,
+			ReturnAjax rt, List<CommonAction> actionList) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean moveDoc_SVN(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
+			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser, User login_user,
+			ReturnAjax rt, List<CommonAction> actionList) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	private boolean moveDoc_FS(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
 			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser, User login_user,
 			ReturnAjax rt, List<CommonAction> actionList) {
@@ -2469,6 +2482,11 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
+
+	private boolean dbMoveDoc(Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	//底层copyDoc接口
 	protected boolean copyDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcName, String dstParentPath, String dstName,

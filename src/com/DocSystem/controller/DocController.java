@@ -415,11 +415,13 @@ public class DocController extends BaseController{
 		String chunkFilePath = chunkParentPath + fileChunkName;
 		if(false == isChunkMatched(chunkFilePath,chunkHash))
 		{
-			rt.setMsg("chunk: " + fileChunkName +" 不存在，或checkSum不同！", "0");
+			rt.setMsgData("0");
+			rt.setDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！");
 		}
 		else
 		{
-			rt.setMsg("chunk: " + fileChunkName +" 已存在，且checkSum相同！", "1");
+			rt.setMsgData("1");
+			rt.setDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！");
 			
 			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
@@ -525,7 +527,8 @@ public class DocController extends BaseController{
 		if(doc != null)
 		{
 			rt.setData(doc);
-			rt.setMsg("Node: " + docName +" 已存在！","0");
+			rt.setMsgData("0");
+			rt.setDebugLog("Node: " + docName +" 已存在！");
 			System.out.println("checkDocInfo() " + docName + " 已存在");
 	
 			//检查checkSum是否相同
@@ -533,7 +536,8 @@ public class DocController extends BaseController{
 			{
 				if(true == isDocCheckSumMatched(doc,size,checkSum))
 				{
-					rt.setMsg("Node: " + docName +" 已存在，且checkSum相同！", "1");
+					rt.setMsgData("1");
+					rt.setDebugLog("Node: " + docName +" 已存在，且checkSum相同！");
 					System.out.println("checkDocInfo() " + docName + " 已存在，且checkSum相同！");
 				}
 			}
@@ -552,14 +556,23 @@ public class DocController extends BaseController{
 					//Do copy the Doc
 					String srcParentPath = sameDoc.getPath();
 					List<CommonAction> actionList = new ArrayList<CommonAction>();
-					copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,actionList, false);
-					Doc newDoc = getDocByName(docName,parentId,reposId);
-					if(null != newDoc)
+					boolean ret = copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), parentId, sameDoc.getType(), srcParentPath, sameDoc.getName(), parentPath, docName, commitMsg,login_user.getName(),login_user,rt,actionList);
+					if(ret == true)
 					{
+						getDocByName(docName,parentId,reposId);
+						
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
-						rt.setData(newDoc);
-						rt.setMsg("SameDoc " + sameDoc.getName() +" found and do copy OK！", "1");
+						int level = getLevelByParentPath(parentPath);
+						sameDoc.setDocId(buildDocIdByName(level, docName));
+						sameDoc.setVid(repos.getId());
+						sameDoc.setPid(parentId);
+						sameDoc.setPath(parentPath);
+						sameDoc.setName(docName);
+						rt.setData(sameDoc);
+						rt.setMsgData("1");
+						rt.setDebugLog("SameDoc " + sameDoc.getName() +" found and do copy OK！");
 						writeJson(rt, response);
+						
 						executeCommonActionList(actionList, rt);
 						return;
 					}
@@ -567,7 +580,8 @@ public class DocController extends BaseController{
 					{
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied failed！");
 						rt.setStatus("ok");
-						rt.setMsg("SameDoc " + sameDoc.getName() +" found but do copy Failed！", "3");
+						rt.setMsgData("3");
+						rt.setDebugLog("SameDoc " + sameDoc.getName() +" found but do copy Failed！");
 						writeJson(rt, response);
 						return;
 					}

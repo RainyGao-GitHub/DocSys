@@ -16,13 +16,7 @@ public class ReturnAjax {
 	private Object msgData;	//用于存储额外的状态或数据
 	private Object data;	//用于存储返回结果
 	private String debugLog = null; //用于向前台传递更详细调试
-	
-	/* 设置自定义信息和额外数据 */
-	public void setMsg(String msg,Object msgData){
-		this.msgInfo = msg;
-		this.msgData = msgData;			
-	}
-	
+		
 	/**
 	 * 设置默认错误信息
 	 */
