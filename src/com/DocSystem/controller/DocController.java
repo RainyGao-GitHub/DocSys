@@ -98,7 +98,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//检查用户是否有权限新增文件
 		if(checkUserAddRight(repos, login_user.getId(), parentId, parentPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
@@ -212,7 +211,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//检查用户是否有权限新增文件
 		if(checkUserDeleteRight(repos, login_user.getId(), parentId, parentPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
@@ -229,6 +227,160 @@ public class DocController extends BaseController{
 			executeCommonActionList(actionList, rt);
 		}
 	}
+	
+
+	/****************   rename a Document ******************/
+	@RequestMapping("/renameDoc.do")
+	public void renameDoc(Integer reposId, Long docId, Long srcPid, Integer type, String srcParentPath, String srcDocName, String dstDocName, 
+							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstDocName:" + dstDocName);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		if(dstDocName == null || "".equals(dstDocName))
+		{
+			rt.setError("目标文件名不能为空！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		String commitUser = login_user.getName();
+	
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+	
+		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+	
+		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = renameDoc(repos, docId, srcPid, type, srcParentPath,srcDocName, dstDocName, commitMsg, commitUser, login_user, rt, actionList);
+		writeJson(rt, response);
+		
+		if(ret)
+		{
+			executeCommonActionList(actionList, rt);
+		}
+	}
+
+	/****************   move a Document ******************/
+	@RequestMapping("/moveDoc.do")
+	public void moveDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		String commitUser = login_user.getName();
+	
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+	
+		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+	
+		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(dstDocName == null || "".equals(dstDocName))
+		{
+			dstDocName = srcDocName;
+		}
+		
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList);
+		writeJson(rt, response);
+		
+		if(ret)
+		{
+			executeCommonActionList(actionList, rt);
+		}
+	}
+
+	/****************   move a Document ******************/
+	@RequestMapping("/copyDoc.do")
+	public void copyDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		String commitUser = login_user.getName();
+	
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+				
+		//检查用户是否有目标目录权限新增文件
+		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstParentPath, "", rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(dstDocName == null || "".equals(dstDocName))
+		{
+			dstDocName = srcDocName;
+		}
+		
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList);
+		writeJson(rt, response);
+		
+		if(ret)
+		{
+			executeCommonActionList(actionList, rt);
+		}
+	}
+	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
 	public void checkChunkUploaded(Integer uploadType, Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName, 
@@ -628,144 +780,6 @@ public class DocController extends BaseController{
 		res.put("success", 1);
 		res.put("message", "upload success!");
 		writeJson(res,response);
-	}
-
-	/****************   rename a Document ******************/
-	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer id,String newname, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("renameDoc id: " + id + " newname: " + newname);
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		String commitUser = login_user.getName();
-		
-		//get doc
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
-		{
-			rt.setError("文件不存在！");
-			writeJson(rt, response);			
-			return;			
-		}
-		
-		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(rt,login_user.getId(),id,doc.getVid()) == false)
-		{
-			writeJson(rt, response);	
-			return;
-		}
-		
-		//开始更改名字了
-		Integer reposId = doc.getVid();
-		Integer parentId = doc.getPid();
-		
-		if(commitMsg == null)
-		{
-			commitMsg = "renameDoc " + doc.getName();
-		}
-		renameDoc(id,newname,reposId,parentId,commitMsg,commitUser,login_user,rt);
-		writeJson(rt, response);	
-	}
-	
-
-	
-	/****************   move a Document ******************/
-	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer id,Integer dstPid,Integer vid,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("moveDoc id: " + id + " dstPid: " + dstPid + " vid: " + vid);
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		String commitUser = login_user.getName();
-		
-		Doc doc = reposService.getDocInfo(id);
-		if(doc == null)
-		{
-			rt.setError("文件不存在");
-			writeJson(rt, response);	
-			return;			
-		}
-	
-		//检查是否有源目录的删除权限
-		if(checkUserDeleteRight(rt,login_user.getId(),doc.getPid(),vid) == false)
-		{
-			writeJson(rt, response);	
-			return;
-		}
-	
-		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(rt,login_user.getId(),dstPid,vid) == false)
-		{
-				writeJson(rt, response);	
-				return;
-		}
-		
-		//开始移动了
-		if(commitMsg == null)
-		{
-			commitMsg = "moveDoc " + doc.getName();
-		}
-		moveDoc(id,vid,doc.getPid(),dstPid,commitMsg,commitUser,login_user,rt);		
-		writeJson(rt, response);	
-	}
-	
-
-	/****************   move a Document ******************/
-	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
-			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		String commitUser = login_user.getName();
-	
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
-		{
-			rt.setError("仓库 " + reposId + " 不存在！");
-			writeJson(rt, response);			
-			return;
-		}
-				
-		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstParentPath, "", rt) == false)
-		{
-			writeJson(rt, response);
-			return;
-		}
-		
-		if(dstDocName == null || "".equals(dstDocName))
-		{
-			dstDocName = srcDocName;
-		}
-		
-		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList, false);
-		writeJson(rt, response);
-		
-		if(ret)
-		{
-			executeCommonActionList(actionList, rt);
-		}
 	}
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
