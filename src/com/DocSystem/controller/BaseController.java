@@ -2092,7 +2092,8 @@ public class BaseController  extends BaseFunction{
 			if(dbDoc == null)	//localAdded
 			{
 				//Do commit to verRepos and addDbDoc
-				if(verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: add " + doc.getPath()+doc.getName(), login_user.getName(), rt))
+				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: add " + doc.getPath()+doc.getName(), login_user.getName(), rt);
+				if(revision != null)
 				{
 					doc.setRevision(revision);
 					dbAddDoc(doc);
@@ -2101,9 +2102,13 @@ public class BaseController  extends BaseFunction{
 			else if(isLocalDocChanged(dbDoc,localEntry))	//localChanged (force commit)
 			{
 				//Do commmit to verRepos and updateDbDoc
-				if(verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt))
+				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt);
 				{
-					dbUpdateDoc();
+					dbDoc.setSize(localEntry.length());
+					dbDoc.setLatestEditor(login_user.getId());
+					dbDoc.setLatestEditTime(localEntry.lastModified());
+					dbDoc.setRevision(revision);
+					dbUpdateDoc(dbDoc);
 				}
 			}
 			else if(isRemoteDocChanged(dbDoc, remoteEntry))	//local No change but remoteChanged, we are not suere
@@ -4414,7 +4419,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean svnRealDocCommit(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String svnRealDocCommit(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		String remotePath = parentPath + entryName;
 		String reposRPath = getReposRealPath(repos);
@@ -4423,17 +4428,10 @@ public class BaseController  extends BaseFunction{
 		if(svnUtil.Init(repos, true, commitUser) == false)
 		{
 			System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.Init失败！");	
-			return false;
+			return null;
 		}
 		
-		if(svnUtil.doAutoCommit(parentPath,entryName,reposRPath,commitMsg,commitUser,true, null) == false)
-		{
-			System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.doAutoCommit失败！");	
-			rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.doAutoCommit失败！");	
-			return false;
-		}
-		
-		return true;
+		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath,commitMsg,commitUser,true, null);
 	}
 	
 	protected boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -4530,7 +4528,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type,
+	protected String verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type,
 			String commitMsg, String commitUser, ReturnAjax rt) {
 		
 		if(commitMsg == null)

@@ -313,20 +313,20 @@ public class SVNUtil  extends BaseController{
 	//localPath是需要自动commit的目录
 	//modifyEnable: 表示是否commit已经存在的文件
 	//refLocalPath是存放参考文件的目录，如果对应文件存在且modifyEnable=true的话，则增量commit
-	public boolean doAutoCommit(String parentPath, String entryName,String localParentPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefParentPath){
+	public String doAutoCommit(String parentPath, String entryName,String localParentPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefParentPath){
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefParentPath:" + localRefParentPath);	
 	
 		File wcDir = new File(localParentPath);
 		if(!wcDir.exists())
 		{
 			System.out.println("doAutoCommit() localParentPath " + localParentPath + " not exists");
-			return false;
+			return null;
 		}
 		
 		if(!wcDir.isDirectory())
 		{
 			System.out.println("doAutoCommit() localParentPath " + localParentPath + " is not directory");
-			return false;
+			return null;
 		}
 
 		
@@ -341,7 +341,7 @@ public class SVNUtil  extends BaseController{
 		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 		        if (nodeKind == SVNNodeKind.NONE) 
 		        {
-		        	return true;
+		        	return "";
 		        }
 		        //Do delete remote Entry
 		        return svnDelete(parentPath, entryName, commitMsg, commitUser);
@@ -397,36 +397,35 @@ public class SVNUtil  extends BaseController{
 	        if(commitActionList == null || commitActionList.size() ==0)
 	        {
 	        	System.out.println("doAutoCommmit() There is nothing to commit");
-	        	return true;
+	        	return "";
 	        }
 	        ISVNEditor editor = getCommitEditor(commitMsg);
 	        if(editor == null)
 	        {
 	        	System.out.println("doAutoCommit() getCommitEditor Failed");
-	        	return false;
+	        	return null;
 	        }
 	        
 	        if(executeCommitActionList(editor,commitActionList,true) == false)
 	        {
 	        	System.out.println("doAutoCommit() executeCommitActionList Failed");
 	        	editor.abortEdit();	
-	        	return false;
+	        	return null;
 	        }
 	        
 	        SVNCommitInfo commitInfo = commit(editor);
 	        if(commitInfo == null)
 	        {
 	        	System.out.println("doAutoCommit() commit failed: " + commitInfo);
-	        	return false;
+	        	return null;
 	        }
 	        System.out.println("doAutoCommit() commit success: " + commitInfo);
-			
+	        return commitInfo.getNewRevision()+"";
 		} catch (Exception e) {
 			System.out.println("doAutoCommit() Exception");
 			e.printStackTrace();
-			return false;
+			return null;
 		}
-		return true;
 	}
     
     private void insertAddActionForParentPath(List<CommitAction> commitActionList, String parentPath) 
@@ -1013,7 +1012,7 @@ public class SVNUtil  extends BaseController{
 	}
 
 	//增加文件（如果parentPath不存在则也会增加）
-	public boolean svnAddFileEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser, boolean deleteOld)
+	public String svnAddFileEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser, boolean deleteOld)
 	{
 		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath);	
 		try {
@@ -1038,48 +1037,47 @@ public class SVNUtil  extends BaseController{
 		    if(commitActionList == null || commitActionList.size() ==0)
 		    {
 		    	System.out.println("svnAddFileEx() There is nothing to commit");
-		        return true;
+		        return "";
 		    }
 	        
 		    ISVNEditor editor = getCommitEditor(commitMsg);
 	        if(editor == null)
 	        {
 	        	System.out.println("svnAddFileEx() getCommitEditor Failed");
-	        	return false;
+	        	return null;
 	        }
 	        
 	        if(executeCommitActionList(editor,commitActionList,true) == false)
 	        {
 	        	System.out.println("svnAddFileEx() executeCommitActionList Failed");
 	        	editor.abortEdit();	
-	        	return false;
+	        	return null;
 	        }
 		        
 		    SVNCommitInfo commitInfo = commit(editor);
 		    if(commitInfo == null)
 		    {
 		    	System.out.println("svnAddFileEx() commit failed!");
-		    	return false;
+		    	return null;
 		    }
 		    
 		    System.out.println("svnAddFileEx() commit success: " + commitInfo);
-		    
+			return commitInfo.getNewRevision() + "";		    
 		} catch (Exception e) {
 			System.out.println("doAutoCommit() Exception");
 			e.printStackTrace();
-			return false;
+			return null;
 		}
-		return true;
 	}
 	
 	//修改文件
-	public boolean svnModifyFile(String parentPath,String entryName,String oldFilePath,String newFilePath,String commitMsg, String commitUser)
+	public String svnModifyFile(String parentPath,String entryName,String oldFilePath,String newFilePath,String commitMsg, String commitUser)
 	{
 		System.out.println("svnModifyFile() parentPath:"+parentPath + " entryName:" + entryName);
         ISVNEditor editor = getCommitEditor(commitMsg);
 		if(editor == null)
 		{
-			return false;
+			return null;
 		}	
 	    
 		boolean ret = false;
@@ -1108,18 +1106,18 @@ public class SVNUtil  extends BaseController{
 		
 		if(ret == false)
 		{
-			return false;
+			return null;
 		}
 		
 		SVNCommitInfo commitInfo = commit(editor);
 		if(commitInfo == null)
 		{
 			System.out.println("svnModifyFile() commit failed ");
-			return false;
+			return null;
 		}
 
 		System.out.println("svnModifyFile() The file was modified: " + commitInfo);
-		return true;
+		return commitInfo.getNewRevision()+"";
 	}
 	
 	//复制文件
@@ -1176,27 +1174,27 @@ public class SVNUtil  extends BaseController{
 	}
 	
     //删除文件或目录
-  	public boolean svnDelete(String parentPath,String entryName,String commitMsg, String commitUser)
+  	public String svnDelete(String parentPath,String entryName,String commitMsg, String commitUser)
   	{
         ISVNEditor editor = getCommitEditor(commitMsg);
         if(editor == null)
         {
-        	return false;
+        	return null;
         }
         
         if(deleteEntry(editor, parentPath,entryName,true) == false)
         {
-        	return false;
+        	return null;
         }
     	
 	    SVNCommitInfo commitInfo  = commit(editor);
     	if(commitInfo == null)
     	{
-    		return false;
+    		return null;
     	}
     	System.out.println("svnDelete(): " + commitInfo);
     	
-        return true;
+        return commitInfo.getNewRevision() + "";
   	}
   	
 	//getCommitEditor
