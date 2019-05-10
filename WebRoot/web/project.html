@@ -1897,7 +1897,7 @@
 		        console.log("getFileCheckSum() checkSum not ready, wait for result 100 ms later"); 
 				setTimeout(function () {
 		            uploadDoc(); //reEnter uploadDoc
-		        },100);	//check it one minute later
+		        },50);	//check it 50ms later
 				return false;
 			case 2:
 				//CheckSum ok
