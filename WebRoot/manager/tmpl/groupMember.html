@@ -17,6 +17,8 @@
                 <tr>
                   <th>#</th>
                   <th>组ID</th>
+                  <th>用户</th>
+                  <th>昵称</th>
                   <th>姓名</th>
                   <th>操作</th>
                 </tr>
@@ -28,6 +30,8 @@
                     <td>{{value.id}}</td>
                     <td>{{groupId}}</td>
                     <td>{{value.userName}}</td>
+                    <td>{{value.nickName}}</td>
+                    <td>{{value.realName}}</td>
                     <td class="edit">
                       {{if undefined != value.id}} 
                       <button onclick="delGroupMemeber({{value.id}},{{value.userId}},{{value.groupId}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
