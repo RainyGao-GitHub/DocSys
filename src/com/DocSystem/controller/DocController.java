@@ -733,23 +733,19 @@ public class DocController extends BaseController{
 		JSONObject res = new JSONObject();
 
 		//Get the currentDocId from Session which was set in getDocContent
-		Integer docId = (Integer) session.getAttribute("currentDocId");
+		Doc curDoc = new Doc();
+		Long docId = (Long) session.getAttribute("currentDocId");
 		if(docId == null || docId == 0)
 		{
 			res.put("success", 0);
-			res.put("message", "upload failed: currentDocId was not set!");
+			res.put("message", "upload failed: currentDoc was not set!");
 			writeJson(res,response);
 			return;
 		}
-		
-		Doc doc = reposService.getDoc(docId);
-		if(doc == null)
-		{
-			res.put("success", 0);
-			res.put("message", "upload failed: getDoc failed for docId:" + docId );
-			writeJson(res,response);
-			return;			
-		}
+		curDoc.setVid((Integer) session.getAttribute("currentReposId"));
+		curDoc.setDocId(docId);
+		curDoc.setPath((String)session.getAttribute("currentParentPath"));
+		curDoc.setName((String)session.getAttribute("currentDocName"));
 				
 		//MayBe We need to save current Edit docId in session, So that I can put the pic to dedicated VDoc Directory
 		if(file == null) 
@@ -766,10 +762,18 @@ public class DocController extends BaseController{
 		
 		//get localParentPath for Markdown Img
 		//String localParentPath = getWebTmpPath() + "markdownImg/";
-		Repos repos = reposService.getRepos(doc.getVid());
+		Repos repos = reposService.getRepos(curDoc.getVid());
+		if(repos == null)
+		{
+			res.put("success", 0);
+			res.put("message", "仓库 " + curDoc.getVid() + " 不存在！");
+			writeJson(res,response);
+			return;
+		}
+		
 		String reposVPath = getReposVirtualPath(repos);
-		String parentPath = doc.getPath();
-		String docVName = getVDocName(parentPath, doc.getName());
+		String parentPath = curDoc.getPath();
+		String docVName = getVDocName(parentPath, curDoc.getName());
 		String localVDocPath = reposVPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
 		
@@ -1279,6 +1283,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Set currentDocId to session which will be used MarkDown ImgUpload
+		session.setAttribute("currentReposId", reposId);
 		session.setAttribute("currentDocId", docId);
 		session.setAttribute("currentParentPath", parentPath);
 		session.setAttribute("currentDocName", docName);
