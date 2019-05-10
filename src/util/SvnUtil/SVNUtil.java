@@ -353,14 +353,19 @@ public class SVNUtil  extends BaseController{
 		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 		        if (nodeKind == SVNNodeKind.NONE) 
 		        {
-		        	return svnAddFileEx(parentPath, entryName, localParentPath, commitMsg, commitUser);
+		        	return svnAddFileEx(parentPath, entryName, localParentPath, commitMsg, commitUser, false);
 		        }
 		        else if(nodeKind != SVNNodeKind.FILE)
 		        {
-		         	return svnDelete(parentPath, entryName, commitMsg, commitUser);
+		         	return svnAddFileEx(parentPath, entryName, localParentPath, commitMsg, commitUser, true);
+		        }
+		        else
+		        {
+		        	return svnModifyFile(parentPath, entryName, null, localParentPath+entryName, commitMsg, commitUser);
 		        }
 			}
 
+			//LocalEntry is Directory
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 	        if (nodeKind == SVNNodeKind.NONE) 
@@ -376,7 +381,7 @@ public class SVNUtil  extends BaseController{
 	        } 
 	        else if (nodeKind == SVNNodeKind.FILE) 
 	        {
-	        	System.out.println(entryPath + " 是文件");
+	        	return svnAddDirEx(parentPath, entryName, localParentPath, commitMsg, commitUser, true);
 	            return false;
 	        }
 	        else
@@ -947,17 +952,26 @@ public class SVNUtil  extends BaseController{
 	
 	
 	//增加目录（如果parentPath不存在则也会增加）
-	public boolean svnAddDirEx(String parentPath,String entryName,String localPath,String commitMsg, String commitUser)
+	public boolean svnAddDirEx(String parentPath,String entryName,String localPath,String commitMsg, String commitUser, boolean deleteOld)
 	{
 		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath);	
 		try {
 			//Build commitAction
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-			insertAddDirAction(commitActionList,parentPath, entryName, false, false, null);
 			
-			if(!parentPath.isEmpty())
+			if(deleteOld)		
 			{
-				insertAddActionForParentPath(commitActionList, parentPath);
+				insertDeleteAction(commitActionList,parentPath, entryName);
+				insertAddDirAction(commitActionList,parentPath, entryName, false, false, null);
+			}
+			else
+			{
+				insertAddDirAction(commitActionList,parentPath, entryName, false, false, null);
+			
+				if(!parentPath.isEmpty())
+				{
+					insertAddActionForParentPath(commitActionList, parentPath);
+				}
 			}
 			
 		    if(commitActionList == null || commitActionList.size() ==0)
@@ -1008,13 +1022,16 @@ public class SVNUtil  extends BaseController{
 			if(deleteOld)		
 			{
 				insertDeleteAction(commitActionList,parentPath, entryName);
+				insertAddFileAction(commitActionList,parentPath, entryName,localParentPath,false);
 			}
-			
-			insertAddFileAction(commitActionList,parentPath, entryName,localParentPath,false);
-			
-			if(!parentPath.isEmpty())
+			else
 			{
-				insertAddActionForParentPath(commitActionList, parentPath);
+				insertAddFileAction(commitActionList,parentPath, entryName,localParentPath,false);
+				
+				if(!parentPath.isEmpty())
+				{
+					insertAddActionForParentPath(commitActionList, parentPath);
+				}
 			}
 			
 		    if(commitActionList == null || commitActionList.size() ==0)
