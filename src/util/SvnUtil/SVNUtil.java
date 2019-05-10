@@ -1121,7 +1121,7 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	//复制文件
-	public boolean svnCopy(String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,String commitMsg,String commitUser,boolean isMove)
+	public String svnCopy(String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,String commitMsg,String commitUser,boolean isMove)
 	{
 		//判断文件类型
 		boolean isDir = false;
@@ -1131,7 +1131,7 @@ public class SVNUtil  extends BaseController{
 			nodeKind = repository.checkPath(srcParentPath + srcEntryName,-1);
 			if (nodeKind == SVNNodeKind.NONE) {
 		    	System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
-		        return false;
+		        return null;
 		    } else if (nodeKind == SVNNodeKind.DIR) {
 		        	isDir = true;
 		    }
@@ -1139,7 +1139,7 @@ public class SVNUtil  extends BaseController{
 		} catch (SVNException e) {
 			System.out.println("remoteCopyEntry() Exception");
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 	        
 	    //Do copy File Or Dir
@@ -1155,22 +1155,22 @@ public class SVNUtil  extends BaseController{
         ISVNEditor editor = getCommitEditor(commitMsg);
         if(editor == null)
         {
-        	return false;
+        	return null;
         }
         
         if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName,true,latestRevision,isMove) == false)
         //if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName,isDir,latestRevision,isMove) == false)
         {
-        	return false;
+        	return null;
         }
         
      	SVNCommitInfo commitInfo  = commit(editor);
     	if(commitInfo == null)
     	{
-    		return false;
+    		return null;
     	}
     	System.out.println("remoteCopyEntry(): " + commitInfo);
-	    return true;
+	    return commitInfo.getNewRevision() + "";
 	}
 	
     //删除文件或目录

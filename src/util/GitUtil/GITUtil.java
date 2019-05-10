@@ -576,7 +576,7 @@ public class GITUtil  extends BaseController{
 
  	
 	//Commit will commit change to Git Repos and Push to remote
-	public boolean Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
+	public String Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
 		System.out.println("Commit() " + parentPath + entryName);	
 
         Git git = null;
@@ -585,7 +585,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("Commit() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 		
 		String entryPath = parentPath+entryName;
@@ -603,18 +603,19 @@ public class GITUtil  extends BaseController{
 			e.printStackTrace();
 			//Do roll back WorkingCopy
 			rollBackIndex(git, entryPath, null);	
-			return false;
+			return null;
 		}
 		
+		RevCommit ret = null;
         try {
-			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
 			System.out.println("Commit() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("Commit() commit error");
 			e.printStackTrace();
 			//Do roll back Index
 			rollBackIndex(git, entryPath, null);			
-			return false;
+			return null;
 		}
 		
 		if(isRemote)
@@ -629,11 +630,11 @@ public class GITUtil  extends BaseController{
 				{
 					rollBackIndex(git, entryPath, null);
 				}
-				return false;
+				return null;
 			}
 		}
 		
-        return true;
+        return ret.getName();
 	}
 	
 	private boolean rollBackCommit(Git git,String revision) {
