@@ -4461,53 +4461,11 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		Integer entryType = svnUtil.getEntryType(remotePath, -1);
-		if(entryType == 0)	//检查文件是否已经存在于仓库中
+		if(svnUtil.doAutoCommit(parentPath,entryName,reposRPath,commitMsg,commitUser,true, null) == false)
 		{
-			if(type == 1)
-			{
-				String localFilePath = reposRPath + remotePath;
-				if(svnUtil.svnAddFileEx(parentPath,entryName,localFilePath,commitMsg,commitUser) == false)
-				{
-					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
-					rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
-					return false;
-				}
-			}
-			else
-			{
-				if(svnUtil.svnAddDir(parentPath,entryName,commitMsg,commitUser) == false)
-				{
-					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");	
-					rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.svnAddDir失败！");
-					return false;
-				}
-			}
-		}
-		else //如果已经存在（需要检查Entry类型是否相同）
-		{
-			if(type != entryType)
-			{
-				System.out.println("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
-				rt.setDebugLog("svnRealDocCommit() remoteEntry 与 localEntry 类型不同: remoteType=" + entryType + " localType=" + type);
-				return true;	
-			}
-			
-			if(type == 1)
-			{				
-				String localFilePath = reposRPath + remotePath;
-				if(svnUtil.svnModifyFile(parentPath,entryName,null, localFilePath, commitMsg,commitUser) == false)
-				{
-					System.out.println("svnRealDocCommit() " + remotePath + " remoteModifyFile失败！");
-					System.out.println("svnRealDocCommit() svnUtil.svnModifyFile " + " parentPath:" + parentPath  + " name:" + entryName + " localFilePath:" + localFilePath);
-					return false;
-				}
-			}
-			else	//For Dir
-			{
-				System.out.println("svnRealDocCommit() " + remotePath + " 已存在！");
-				return true;
-			}
+			System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.doAutoCommit失败！");	
+			rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.doAutoCommit失败！");	
+			return false;
 		}
 		
 		return true;

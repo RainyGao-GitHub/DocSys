@@ -316,15 +316,51 @@ public class SVNUtil  extends BaseController{
 	public boolean doAutoCommit(String parentPath, String entryName,String localParentPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefParentPath){
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefParentPath:" + localRefParentPath);	
 	
-		String entryPath = parentPath + entryName;
-		try {
-			File wcDir = new File(localParentPath);
-			if(!wcDir.exists())
-			{
-				System.out.println("doAutoCommit() localPath " + localParentPath + " not exists");
-				return false;
-			}
+		File wcDir = new File(localParentPath);
+		if(!wcDir.exists())
+		{
+			System.out.println("doAutoCommit() localParentPath " + localParentPath + " not exists");
+			return false;
+		}
 		
+		if(!wcDir.isDirectory())
+		{
+			System.out.println("doAutoCommit() localParentPath " + localParentPath + " is not directory");
+			return false;
+		}
+
+		
+		try {
+	
+			String entryPath = parentPath + entryName;
+			
+			File localEntry = new File(localParentPath + entryName);
+			//LocalEntry does not exist
+			if(!localEntry.exists())	//Delete Commit
+			{
+		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
+		        if (nodeKind == SVNNodeKind.NONE) 
+		        {
+		        	return true;
+		        }
+		        //Do delete remote Entry
+		        return svnDelete(parentPath, entryName, commitMsg, commitUser);
+			}
+
+			//LocalEntry is File
+			if(!localEntry.isDirectory())
+			{
+		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
+		        if (nodeKind == SVNNodeKind.NONE) 
+		        {
+		        	return svnAddFileEx(parentPath, entryName, localParentPath, commitMsg, commitUser);
+		        }
+		        else if(nodeKind != SVNNodeKind.FILE)
+		        {
+		         	return svnDelete(parentPath, entryName, commitMsg, commitUser);
+		        }
+			}
+
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 	        if (nodeKind == SVNNodeKind.NONE) 
@@ -962,12 +998,18 @@ public class SVNUtil  extends BaseController{
 	}
 
 	//增加文件（如果parentPath不存在则也会增加）
-	public boolean svnAddFileEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser)
+	public boolean svnAddFileEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser, boolean deleteOld)
 	{
 		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath);	
 		try {
 			//Build commitAction
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+			
+			if(deleteOld)		
+			{
+				insertDeleteAction(commitActionList,parentPath, entryName);
+			}
+			
 			insertAddFileAction(commitActionList,parentPath, entryName,localParentPath,false);
 			
 			if(!parentPath.isEmpty())
