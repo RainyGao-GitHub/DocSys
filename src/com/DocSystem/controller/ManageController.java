@@ -60,6 +60,13 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//获取All UserList
 		List <User> UserList = getAllUsers();
 		
@@ -86,6 +93,13 @@ public class ManageController extends BaseController{
 			return;
 		}
 
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		String userName = user.getName();
 		String pwd = user.getPwd();
 		Integer type = user.getType();
@@ -173,6 +187,13 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		Integer userId = user.getId();
 		String userName = user.getName();
 		Integer type = user.getType();
@@ -227,6 +248,14 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		if(login_user.getType() < 2)
 		{
 			rt.setError("您无权进行此操作！");
@@ -284,6 +313,14 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		if(login_user.getType() < 2)
 		{
 			rt.setError("您无权进行此操作！");
@@ -330,6 +367,13 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//获取All UserList
 		List <UserGroup> GroupList = getAllGroups();
 		
@@ -346,12 +390,26 @@ public class ManageController extends BaseController{
 	public void addGroup(UserGroup group, HttpSession session,HttpServletResponse response)
 	{
 		System.out.println("addGroup");
-
 		String name = group.getName();
 		String info = group.getInfo();
 		
 		System.out.println("name:"+name + " info:"+info);
 		ReturnAjax rt = new ReturnAjax();
+		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//检查用户名是否为空
 		if(name ==null||"".equals(name))
@@ -405,6 +463,20 @@ public class ManageController extends BaseController{
 		System.out.println("delGroup " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		if(userService.delGroup(id) == 0)
 		{
@@ -444,6 +516,20 @@ public class ManageController extends BaseController{
 		System.out.println("name:"+name + " info:"+info);
 	
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		if(groupId == null || "".equals(groupId))
 		{
@@ -477,6 +563,13 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		List <GroupMember> UserList = userService.getGroupAllUsers(groupId);	
 		printObject("UserList:",UserList);
 		
@@ -490,6 +583,20 @@ public class ManageController extends BaseController{
 		System.out.println("addGroupMember groupId:" + groupId + " userId:" + userId);
 		
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		//检查GroupId是否为空
 		if(groupId ==null||"".equals(groupId))
@@ -545,6 +652,20 @@ public class ManageController extends BaseController{
 		System.out.println("delGroupMember " + id);
 		
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		if(userService.delGroupMember(id) == 0)
 		{
@@ -559,6 +680,20 @@ public class ManageController extends BaseController{
 	public void getSystemLog(String fileName,HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
 		System.out.println("getSystemLog: " + fileName);
 		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
 		
 		String localParentPath = getSystemLogParentPath();
 		if(fileName == null || "".equals(fileName))
