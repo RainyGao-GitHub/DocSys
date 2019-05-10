@@ -4400,7 +4400,7 @@ public class BaseController  extends BaseFunction{
 		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
 	}
 	
-	protected boolean verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		if(commitMsg == null)
 		{
@@ -4434,13 +4434,13 @@ public class BaseController  extends BaseFunction{
 		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath,commitMsg,commitUser,true, null);
 	}
 	
-	protected boolean gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		System.out.println("gitRealDocAdd() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
 		{
 			System.out.println("gitRealDocAdd() entryName can not be empty");
-			return false;
+			return null;
 		}
 		
 		//Do Commit
@@ -4448,7 +4448,7 @@ public class BaseController  extends BaseFunction{
 		if(gitUtil.Init(repos, true, commitUser) == false)
 		{
 			System.out.println("gitRealDocAdd() GITUtil Init failed");
-			return false;
+			return null;
 		}
 
 		//Add to Doc to WorkingDirectory
@@ -4459,7 +4459,7 @@ public class BaseController  extends BaseFunction{
 			if(copyFile(docPath, wcDocPath, false) == false)
 			{
 				System.out.println("gitRealDocAdd() add File to WD error");					
-				return false;
+				return null;
 			}
 		}
 		else
@@ -4469,18 +4469,12 @@ public class BaseController  extends BaseFunction{
 			if(dir.mkdir() == false)
 			{
 				System.out.println("gitRealDocAdd() add Dir to WD error");										
-				return false;
+				return null;
 			}
 		}			
 		
 		//Commit will roll back WC if there is error
-		if(gitUtil.gitAdd(parentPath, entryName,commitMsg, commitUser) == false)
-		{
-			System.out.println("gitRealDocAdd() GITUtil Commit failed");
-			return false;
-		}
-		
-		return true;
+		return gitUtil.gitAdd(parentPath, entryName,commitMsg, commitUser);
 	}
 	
 	protected boolean verReposRealDocDelete(Repos repos, String parentPath, String entryName,Integer type,

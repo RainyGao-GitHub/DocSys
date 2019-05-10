@@ -676,7 +676,7 @@ public class GITUtil  extends BaseController{
         return true;
 	}
 
-	public boolean gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
+	public String gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
 		System.out.println("gitAdd() " + parentPath + entryName);	
 		
 		Git git = null;
@@ -685,7 +685,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitAdd() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 
 		String entryPath = parentPath + entryName;
@@ -696,14 +696,15 @@ public class GITUtil  extends BaseController{
 			e.printStackTrace();
 			//Do roll back WorkingCopy
 			delFileOrDir(entryPath);
-			return false;
+			return null;
 		}
 		
+		RevCommit ret = null;
         try {
         	CommitCommand commitCmd = git.commit();
 			commitCmd.setCommitter(commitUser, "").setMessage(commitMsg);
 			
-			RevCommit ret = commitCmd.call();
+			ret = commitCmd.call();
 			System.out.println("gitAdd() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("gitAdd() commit error");
@@ -713,7 +714,7 @@ public class GITUtil  extends BaseController{
 			{
 				delFileOrDir(entryPath);
 			}
-			return false;
+			return null;
 		}
 		
 		if(isRemote)
@@ -731,11 +732,11 @@ public class GITUtil  extends BaseController{
 						delFileOrDir(entryPath);
 					}
 				}
-				return false;
+				return null;
 			}
 		}
 		
-        return true;
+        return ret.getName();
 	}
 
 	public boolean gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
