@@ -9,7 +9,11 @@ public class GroupMember {
 
     //ReposAuth 附加信息: 需要通过joint doc and user or group Table to get these info
     private String  userName="";	//from user Table
+    private String  nickName="";	//from user Table
+    private String  realName="";	//from user Table
+    
     private String  groupName="";	//from group Table
+    
     public String getUserName() {
         return userName;
     }
@@ -18,6 +22,22 @@ public class GroupMember {
         this.userName = userName == null ? null : userName.trim();
     }
     
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName == null ? null : nickName.trim();
+    }
+    
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName == null ? null : realName.trim();
+    }
+
     public String getGroupName() {
         return groupName;
     }
