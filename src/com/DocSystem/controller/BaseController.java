@@ -1486,6 +1486,117 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	/********************************** Functions For Application Layer ****************************************/
+	protected String revertVirtualDocHistory(Repos repos, Long docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
+	{	
+		Integer reposId = repos.getId();
+		
+		//Build doc
+		Doc doc = new Doc();								
+		doc.setVid(reposId);
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//LockDoc
+			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				System.out.println("addDoc() lockDoc " + docName + " Failed!");
+				return null;
+			}
+		}
+		
+		docName = getVDocName(parentPath, docName);
+		parentPath = "";
+		
+		//Checkout to localParentPath
+		String localParentPath = getReposVirtualPath(repos);
+		
+		//Do checkout the entry to 
+		if(verReposCheckOut(repos, false, "", docName, localParentPath, docName, commitId) == false)
+		{
+			unlockDoc(doc,login_user,docLock);
+			System.out.println("revertVirtualDocHistory() verReposCheckOut Failed!");
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
+			return null;
+		}
+		
+		//Do commit to verRepos
+		if(commitMsg == null)
+		{
+			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
+		}
+		
+		String revision = verReposAutoCommit(repos, false, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null);
+		unlockDoc(doc,login_user,docLock);
+		
+		if(revision == null)
+		{			
+			System.out.println("verReposAutoCommit 失败");
+			rt.setDebugLog("verReposAutoCommit 失败");
+		}
+		return revision;
+	}
+
+	protected String revertRealDocHistory(Repos repos, Long docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
+		
+		Integer reposId = repos.getId();
+		
+		//Build doc
+		Doc doc = new Doc();								
+		doc.setVid(reposId);
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//LockDoc
+			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				System.out.println("addDoc() lockDoc " + docName + " Failed!");
+				return null;
+			}
+		}
+		
+	
+		//Checkout to localParentPath
+		String localParentPath = getReposRealPath(repos) + parentPath;
+		
+		//Do checkout the entry to 
+		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == false)
+		{
+			unlockDoc(doc,login_user,docLock);
+			System.out.println("revertRealDocHistory() verReposCheckOut Failed!");
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
+			return null;
+		}
+		
+		//Do commit to verRepos
+		if(commitMsg == null)
+		{
+			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
+		}
+		
+		String revision = verReposAutoCommit(repos, true, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null);
+		unlockDoc(doc,login_user,docLock);
+		if(revision == null)
+		{			
+			System.out.println("verReposAutoCommit 失败");
+			rt.setDebugLog("verReposAutoCommit 失败");
+		}
+		
+		return revision;
+	}
+	
 	//底层addDoc接口
 	protected Long addDoc(Repos repos, Integer type,  Integer level, Long parentId, String parentPath, String docName, 
 			String content,	//VDoc Content
@@ -1652,7 +1763,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层deleteDoc接口
-	protected boolean deleteDoc(Repos repos, Long docId, String parentPath, String docName, 
+	protected String deleteDoc(Repos repos, Long docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		switch(repos.getType())
@@ -1665,24 +1776,24 @@ public class BaseController  extends BaseFunction{
 		case 4:
 			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, actionList);			
 		}
-		return false;
+		return null;
 	}
 	
-	private boolean deleteDoc_GIT(Repos repos, Long docId, String parentPath, String docName,
+	private String deleteDoc_GIT(Repos repos, Long docId, String parentPath, String docName,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		// TODO Auto-generated method stub
-		return false;
+		return null;
 	}
 
-	private boolean deleteDoc_SVN(Repos repos, Long docId, String parentPath, String docName,
+	private String deleteDoc_SVN(Repos repos, Long docId, String parentPath, String docName,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt,List<CommonAction> actionList) 
 	{
 		// TODO Auto-generated method stub
-		return false;
+		return null;
 	}
 
-	protected boolean deleteDoc_FS(Repos repos, Long docId, String parentPath, String docName, 
+	protected String deleteDoc_FS(Repos repos, Long docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		Doc doc = new Doc();								
@@ -1700,7 +1811,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 				System.out.println("deleteDoc_FS() Failed to lock Doc: " + docId);
-				return false;			
+				return null;			
 			}
 			unlock(); //线程锁
 		}
@@ -1718,11 +1829,12 @@ public class BaseController  extends BaseFunction{
 			
 			System.out.println("deleteDoc_FS() deleteRealDoc Failed");
 			rt.setError(parentPath + docName + " 删除失败！");
-			return false;
+			return null;
 		}
 		
 
-		if(verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt) == null)
+		String revision = verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt);
+		if(revision == null)
 		{
 			System.out.println("deleteDoc_FS() verReposRealDocDelete Failed");
 			rt.setWarningMsg("verReposRealDocDelete Failed");
@@ -1739,12 +1851,7 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(doc,login_user,null);
 		
 		rt.setData(doc);
-		return true;
-	}
-
-	private boolean dbDeleteDoc(Doc doc) {
-		// TODO Auto-generated method stub
-		return false;
+		return revision;
 	}
 
 	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
@@ -1976,10 +2083,6 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private String getCheckSumFormFile(File entry) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
@@ -2082,8 +2185,8 @@ public class BaseController  extends BaseFunction{
 		
 		Doc dbDoc = dbGetDoc(doc);
 		File localEntry = new File(localParentPath,doc.getName());
-		Doc remoteEntry = null;
-		
+		Doc remoteEntry = verReposGetDoc(repos, doc.getPath(), doc.getName(), null);
+
 		if(localEntry.exists())
 		{
 			if(dbDoc == null)	//localAdded
@@ -2096,7 +2199,7 @@ public class BaseController  extends BaseFunction{
 					dbAddDoc(doc);
 				}
 			}
-			else if(isLocalDocChanged(dbDoc,localEntry))	//localChanged (force commit)
+			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 			{
 				//Do commmit to verRepos and updateDbDoc
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt);
@@ -2108,22 +2211,21 @@ public class BaseController  extends BaseFunction{
 					dbUpdateDoc(dbDoc);
 				}
 			}
-			else if(isRemoteDocChanged(dbDoc, remoteEntry))	//local No change but remoteChanged, we are not suere
+			else if(isDocRemoteChanged(dbDoc, remoteEntry))	//local No change but remoteChanged, we are not suere
 			{
 				//这里checkout是有风险的，要保证verRepos中对应的revision的文件的checkSum和本地相同，才可以checkOut到本地
 				//verReposCheckout
-				dbUpdateDoc();
+				dbUpdateDoc(dbDoc);
 			}
 		}
 		else
 		{
 			if(dbDoc == null)
 			{
-				if(remoteEntry 存在)
+				if(remoteEntry != null)
 				{
-					则CheckOut过来
 					//verReposCheckout
-					dbAddDoc();
+					dbAddDoc(remoteEntry);
 				}
 			}
 			else
@@ -2131,15 +2233,15 @@ public class BaseController  extends BaseFunction{
 				//localDeleted and remoteDeleted so just delete dbDoc
 				if(remoteEntry == null)
 				{
-					dbDeleteDoc();					
+					dbDeleteDoc(doc);					
 				}
 				else //localDeleted but remoteChanged, do checkout the remoteChange to local	
 				{
-					if(isRemoteDocChange(dbDoc, remoteEntry) == false)
+					if(isDocRemoteChanged(dbDoc, remoteEntry) == false)
 					{
 						//Do check out the changed doc to local
 						//verReposCheckout
-						dbUpdateDoc();						
+						dbUpdateDoc(remoteEntry);						
 					}
 				}
 			}
@@ -2148,6 +2250,62 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(doc, login_user, docLock);
 		return true;
 		
+	}
+
+	protected Doc fsGetDoc(Repos repos, String parentPath, String name) 
+	{
+		String localParentPath = getReposRealPath(repos) + parentPath;
+		File localEntry = new File(localParentPath,name);
+		if(localEntry.exists() == false)
+		{
+			return null;
+		}
+		
+		Doc doc = new Doc();
+		doc.setVid(repos.getId());
+		int level = getLevelByParentPath(parentPath);
+		doc.setDocId(buildDocIdByName(level,name));
+		doc.setPath(parentPath);
+		doc.setName(name);
+		doc.setSize(localEntry.length());
+		doc.setLatestEditTime(localEntry.lastModified());
+		doc.setType(localEntry.isDirectory()? 2: 1);
+		
+		return doc;
+	}
+	
+	private Doc verReposGetDoc(Repos repos, String parentPath, String name, String revision)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	protected Doc dbGetDoc(Doc doc) 
+	{			
+		List<Doc> list = reposService.getDocList(doc);
+		if(list == null || list.size() == 0)
+		{
+			return null;
+		}
+			
+		return list.get(0);
+	}
+	
+	private boolean dbDeleteDoc(Doc doc) {
+		if(reposService.deleteDoc(doc.getId()) == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	private boolean dbUpdateDoc(Doc doc) 
+	{
+		if(reposService.updateDoc(doc) == 0)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private boolean syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
@@ -3418,25 +3576,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		return true;
-	}
-
-	protected Doc getDocInfo(Integer reposId, Long docId) {
-		if(docId == null || docId == 0)
-		{
-			return null;
-		}
-		
-		Doc qDoc = new Doc();
-		qDoc.setVid(reposId);
-		qDoc.setDocId(docId);
-		
-		List<Doc> list = reposService.getDocList(qDoc);
-		if(list == null || list.size() == 0)
-		{
-			return null;
-		}
-		
-		return list.get(0);
 	}
 	
 	protected String getUserName(Integer userId) {

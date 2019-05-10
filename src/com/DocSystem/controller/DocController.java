@@ -218,11 +218,11 @@ public class DocController extends BaseController{
 		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = deleteDoc(repos, docId, parentPath, docName, commitMsg, commitUser, login_user, rt, false, actionList);
+		String ret = deleteDoc(repos, docId, parentPath, docName, commitMsg, commitUser, login_user, rt, actionList);
 		
 		writeJson(rt, response);
 		
-		if(ret == true)
+		if(ret != null)
 		{
 			executeCommonActionList(actionList, rt);
 		}
@@ -1130,15 +1130,15 @@ public class DocController extends BaseController{
 		String localEntryPath = localParentPath + name;
 		System.out.println("DocToPDF() srcPath:" + localEntryPath);
 	
-		File localEntry = new File(localEntryPath);
-		if(localEntry.exists() == false)
+		Doc localEntry = fsGetDoc(repos, parentPath, name);
+		if(localEntry == null)
 		{
 			rt.setError("文件不存在！");
 			writeJson(rt, response);
 			return;
 		}
 		
-		if(localEntry.isDirectory())
+		if(localEntry.getType() == 2)
 		{
 			rt.setError("目录无法预览");
 			writeJson(rt, response);
@@ -1147,7 +1147,7 @@ public class DocController extends BaseController{
 		
 		
 		String docCheckSum = "";
-		Doc doc = getDocInfo(repos.getId(), docId);
+		Doc doc = dbGetDoc(localEntry);
 		if(isDocLocalChanged(doc,localEntry))
 		{
 			docCheckSum = getCheckSum(localEntry, 2097152);	//2M chunk
@@ -1158,7 +1158,7 @@ public class DocController extends BaseController{
 		}
 		
 		String webTmpPath = getWebTmpPath();
-		String dstName = localEntry.length() + "_" + docCheckSum + ".pdf";
+		String dstName = localEntry.getSize() + "_" + docCheckSum + ".pdf";
 		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 		File file = new File(dstPath);
@@ -1433,7 +1433,7 @@ public class DocController extends BaseController{
 	
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
-	public void revertDocHistory(String commitId,Integer reposId, Integer docId, String parentPath, String docName, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void revertDocHistory(String commitId,Integer reposId, Long docId, String parentPath, String docName, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("revertDocHistory commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1452,17 +1452,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Repos repos = null;
-		synchronized(syncLock)
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
 		{
-			repos = lockRepos(reposId, 1, 28800000, login_user, rt, true);	//8 Hours 8*60*60*1000 = 28800,000 
-			if(repos == null)
-			{
-				unlock(); //线程锁
-				System.out.println("revertDocHistory lock repos:" + reposId + " Failed");
-				writeJson(rt, response);
-				return;
-			}
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);
+			return;
 		}
 		
 		boolean isRealDoc = true;
@@ -1471,7 +1467,7 @@ public class DocController extends BaseController{
 			isRealDoc = false;
 		}
 
-		boolean ret = false;
+		String ret = null;
 		if(isRealDoc)
 		{
 			ret = revertRealDocHistory(repos,docId,parentPath,docName,commitId,null, login_user.getName(), login_user, rt);
@@ -1481,91 +1477,12 @@ public class DocController extends BaseController{
 			ret = revertVirtualDocHistory(repos,docId,parentPath,docName,commitId,null, login_user.getName(), login_user, rt);
 		}
 		
-		if(ret == false)
+		if(ret == null)
 		{
 			System.out.println("revertDocHistory Failed");
-			unlockRepos(reposId,login_user,null);
 		}
 		
 		writeJson(rt, response);
-	}
-	
-	private boolean revertVirtualDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
-	{	
-		docName = getVDocName(parentPath, docName);
-		parentPath = "";
-		
-		//Checkout to localParentPath
-		String localParentPath = getReposVirtualPath(repos);
-		
-		//If localParentPath not exists do mkdirs
-		
-		//Do checkout the entry to 
-		if(verReposCheckOut(repos, false, "", docName, localParentPath, docName, commitId) == false)
-		{
-			System.out.println("revertVirtualDocHistory() verReposCheckOut Failed!");
-			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
-			return false;
-		}
-		
-		//Do commit to verRepos
-		if(commitMsg == null)
-		{
-			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
-		}
-		if(verReposAutoCommit(repos, false, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null) == false)
-		{			
-			//Revert Local Entries
-			//verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
-
-			System.out.println("verReposAutoCommit 失败");
-			rt.setDebugLog("verReposAutoCommit 失败");
-		}
-		return false;
-	}
-
-	private boolean revertRealDocHistory(Repos repos, Integer docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
-				
-		if(docId != 0)
-		{
-			Doc doc = reposService.getDoc(docId);
-			if(doc == null)
-			{
-				rt.setError("Doc " + docId + " 不存在！");
-				return false;	
-			}
-		}
-	
-		//Checkout to localParentPath
-		String localParentPath = getReposRealPath(repos) + parentPath;
-		
-		//If localParentPath not exists do mkdirs
-		
-		//Do checkout the entry to 
-		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == false)
-		{
-			System.out.println("revertRealDocHistory() verReposCheckOut Failed!");
-			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
-			return false;
-		}
-		
-		//Do commit to verRepos
-		if(commitMsg == null)
-		{
-			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
-		}
-		if(verReposAutoCommit(repos, true, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null) == false)
-		{			
-			//Revert Local Entries
-			//verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, null);//Revert
-
-			System.out.println("verReposAutoCommit 失败");
-			rt.setDebugLog("verReposAutoCommit 失败");
-		}
-		
-		return true;
 	}
 
 	/* 文件搜索与排序 
