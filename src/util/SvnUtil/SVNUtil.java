@@ -313,15 +313,15 @@ public class SVNUtil  extends BaseController{
 	//localPath是需要自动commit的目录
 	//modifyEnable: 表示是否commit已经存在的文件
 	//refLocalPath是存放参考文件的目录，如果对应文件存在且modifyEnable=true的话，则增量commit
-	public boolean doAutoCommit(String parentPath, String entryName,String localPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefPath){
-		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
+	public boolean doAutoCommit(String parentPath, String entryName,String localParentPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefParentPath){
+		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefParentPath:" + localRefParentPath);	
 	
 		String entryPath = parentPath + entryName;
 		try {
-			File wcDir = new File(localPath);
+			File wcDir = new File(localParentPath);
 			if(!wcDir.exists())
 			{
-				System.out.println("doAutoCommit() localPath " + localPath + " not exists");
+				System.out.println("doAutoCommit() localPath " + localParentPath + " not exists");
 				return false;
 			}
 		
@@ -331,7 +331,12 @@ public class SVNUtil  extends BaseController{
 	        {
 	        	System.out.println(entryPath + " 不存在");
 	        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
+		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
+		        
+		        if(!parentPath.isEmpty())
+		        {
+		        	insertAddActionForParentPath(commitActionList, parentPath);
+		        }   
 	        } 
 	        else if (nodeKind == SVNNodeKind.FILE) 
 	        {
@@ -341,9 +346,9 @@ public class SVNUtil  extends BaseController{
 	        else
 	        {
 	        	System.out.println("doAutoCommit() scheduleForDelete Start");
-	        	scheduleForDelete(commitActionList,localPath,parentPath,entryName);
+	        	scheduleForDelete(commitActionList,localParentPath,parentPath,entryName);
 		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
+			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
 	        }
 	        
 	        
@@ -369,11 +374,12 @@ public class SVNUtil  extends BaseController{
 	        SVNCommitInfo commitInfo = commit(editor);
 	        if(commitInfo == null)
 	        {
+	        	System.out.println("doAutoCommit() commit failed: " + commitInfo);
 	        	return false;
 	        }
 	        System.out.println("doAutoCommit() commit success: " + commitInfo);
 			
-		} catch (SVNException e) {
+		} catch (Exception e) {
 			System.out.println("doAutoCommit() Exception");
 			e.printStackTrace();
 			return false;
@@ -381,7 +387,79 @@ public class SVNUtil  extends BaseController{
 		return true;
 	}
     
-    private boolean executeCommitActionList(ISVNEditor editor,List<CommitAction> commitActionList,boolean openRoot) {
+    private void insertAddActionForParentPath(List<CommitAction> commitActionList, String parentPath) 
+    {
+        System.out.println("insertAddActionForParentPath() parentPath:" + parentPath);
+    	if(parentPath == null || parentPath.isEmpty())
+    	{
+    		return;
+    	}
+    	
+    	String [] paths = parentPath.split("/");
+    	
+    	boolean isSubAction = true;	//fist Add will not be subAction
+    	String path = "";
+    	String name = "";
+    	CommitAction curAction = null;
+    	CommitAction topAction = null;
+    	try {
+	    	for(int i=0; i< paths.length; i++)
+	    	{
+	    		if(paths[i].isEmpty())
+	    		{
+	    			continue;
+	    		}
+	    		
+	    		name = paths[i];
+	    		if(SVNNodeKind.NONE == repository.checkPath(path+name, -1))
+	    		{
+		    		CommitAction action = new CommitAction();
+	    	    	action.setAction(1);
+	    	    	action.setEntryType(2);
+	    	    	action.setParentPath(path);
+	    	    	action.setEntryName(name);
+	    	    	action.isSubAction = isSubAction;
+	    	    	action.hasSubList = true;
+	    	    	
+	    			//Build commitAction
+	    	    	if(isSubAction == false)
+	    	    	{
+		    	    	isSubAction = true;
+		    	    	topAction = action;
+		    	    	curAction = action;    
+	    	    	}
+	    	    	else
+	    	    	{
+	    	    		//For subAction need to add to subActionList then add to curAction
+	    	    		List<CommitAction> subActionList = new ArrayList<CommitAction>();
+	    	    		subActionList.add(action);
+	    	    		curAction.setSubActionList(subActionList);
+	    	    		curAction = action;
+	    	    	}
+	    		}
+	    	}
+	    	
+	    	if(topAction == null)
+	    	{
+	    		System.out.println("insertAddActionForParentPath() topAction is null");
+	    		return; 
+	    	}
+	    	
+	    	//Update the commitActionList
+	    	List<CommitAction> tempSubActionList = new ArrayList<CommitAction>();
+	    	CommitAction tempTopAction = commitActionList.get(0);
+	    	tempTopAction.isSubAction = true;
+	    	tempSubActionList.add(tempTopAction);
+	    	
+	    	curAction.setSubActionList(tempSubActionList);
+	    	commitActionList.set(0, topAction);
+    	} catch (Exception e) {
+    		System.out.println("insertAddActionForParentPath() Exception");
+    		e.printStackTrace();
+    	}
+	}
+
+	private boolean executeCommitActionList(ISVNEditor editor,List<CommitAction> commitActionList,boolean openRoot) {
     	System.out.println("executeCommitActionList() szie: " + commitActionList.size());
 		try {
 	    	if(openRoot)
@@ -831,6 +909,108 @@ public class SVNUtil  extends BaseController{
 		return true;
 	}
 	
+	
+	//增加目录（如果parentPath不存在则也会增加）
+	public boolean svnAddDirEx(String parentPath,String entryName,String localPath,String commitMsg, String commitUser)
+	{
+		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath);	
+		try {
+			//Build commitAction
+			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+			insertAddDirAction(commitActionList,parentPath, entryName, false, false, null);
+			
+			if(!parentPath.isEmpty())
+			{
+				insertAddActionForParentPath(commitActionList, parentPath);
+			}
+			
+		    if(commitActionList == null || commitActionList.size() ==0)
+		    {
+		    	System.out.println("svnAddFileEx() There is nothing to commit");
+		        return true;
+		    }
+	        
+		    ISVNEditor editor = getCommitEditor(commitMsg);
+	        if(editor == null)
+	        {
+	        	System.out.println("svnAddFileEx() getCommitEditor Failed");
+	        	return false;
+	        }
+	        
+	        if(executeCommitActionList(editor,commitActionList,true) == false)
+	        {
+	        	System.out.println("svnAddFileEx() executeCommitActionList Failed");
+	        	editor.abortEdit();	
+	        	return false;
+	        }
+		        
+		    SVNCommitInfo commitInfo = commit(editor);
+		    if(commitInfo == null)
+		    {
+		    	System.out.println("svnAddFileEx() commit failed!");
+		    	return false;
+		    }
+		    
+		    System.out.println("svnAddFileEx() commit success: " + commitInfo);
+		    
+		} catch (Exception e) {
+			System.out.println("doAutoCommit() Exception");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	//增加文件（如果parentPath不存在则也会增加）
+	public boolean svnAddFileEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser)
+	{
+		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath);	
+		try {
+			//Build commitAction
+			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+			insertAddFileAction(commitActionList,parentPath, entryName,localParentPath,false);
+			
+			if(!parentPath.isEmpty())
+			{
+				insertAddActionForParentPath(commitActionList, parentPath);
+			}
+			
+		    if(commitActionList == null || commitActionList.size() ==0)
+		    {
+		    	System.out.println("svnAddFileEx() There is nothing to commit");
+		        return true;
+		    }
+	        
+		    ISVNEditor editor = getCommitEditor(commitMsg);
+	        if(editor == null)
+	        {
+	        	System.out.println("svnAddFileEx() getCommitEditor Failed");
+	        	return false;
+	        }
+	        
+	        if(executeCommitActionList(editor,commitActionList,true) == false)
+	        {
+	        	System.out.println("svnAddFileEx() executeCommitActionList Failed");
+	        	editor.abortEdit();	
+	        	return false;
+	        }
+		        
+		    SVNCommitInfo commitInfo = commit(editor);
+		    if(commitInfo == null)
+		    {
+		    	System.out.println("svnAddFileEx() commit failed!");
+		    	return false;
+		    }
+		    
+		    System.out.println("svnAddFileEx() commit success: " + commitInfo);
+		    
+		} catch (Exception e) {
+			System.out.println("doAutoCommit() Exception");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
 	
 	//修改文件
 	public boolean svnModifyFile(String parentPath,String entryName,String oldFilePath,String newFilePath,String commitMsg, String commitUser)

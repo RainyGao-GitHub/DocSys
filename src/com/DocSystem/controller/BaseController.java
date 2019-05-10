@@ -4467,7 +4467,7 @@ public class BaseController  extends BaseFunction{
 			if(type == 1)
 			{
 				String localFilePath = reposRPath + remotePath;
-				if(svnUtil.svnAddFile(parentPath,entryName,localFilePath,commitMsg,commitUser) == false)
+				if(svnUtil.svnAddFileEx(parentPath,entryName,localFilePath,commitMsg,commitUser) == false)
 				{
 					System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
 					rt.setDebugLog("svnRealDocCommit() " + remotePath + " svnUtil.svnAddFile失败！");	
