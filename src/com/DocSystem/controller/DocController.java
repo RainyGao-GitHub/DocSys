@@ -1150,7 +1150,8 @@ public class DocController extends BaseController{
 		Doc doc = dbGetDoc(localEntry);
 		if(isDocLocalChanged(doc,localEntry))
 		{
-			docCheckSum = getCheckSum(localEntry, 2097152);	//2M chunk
+			File file = new File(localEntryPath);
+			docCheckSum = getCheckSum(file, 2097152);	//2M chunk
 		}
 		else
 		{
