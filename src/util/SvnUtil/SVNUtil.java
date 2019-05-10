@@ -381,8 +381,9 @@ public class SVNUtil  extends BaseController{
 	        } 
 	        else if (nodeKind == SVNNodeKind.FILE) 
 	        {
-	        	return svnAddDirEx(parentPath, entryName, localParentPath, commitMsg, commitUser, true);
-	            return false;
+	        	System.out.println(entryPath + " is File");
+				insertDeleteAction(commitActionList,parentPath, entryName);
+	        	scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
 	        }
 	        else
 	        {
