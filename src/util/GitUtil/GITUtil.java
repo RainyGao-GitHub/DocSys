@@ -740,7 +740,7 @@ public class GITUtil  extends BaseController{
         return ret.getName();
 	}
 
-	public boolean gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
+	public String gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
 			String commitMsg, String commitUser) {
 		System.out.println("gitMove() move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
 		
@@ -750,7 +750,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitMove() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 
 		String srcEntryPath = srcParentPath + srcEntryName;
@@ -764,7 +764,7 @@ public class GITUtil  extends BaseController{
 			e.printStackTrace();
 			//Do roll back WorkingCopy for srcEntry
 			rollBackIndex(git, srcEntryPath, null);
-			return false;
+			return null;
 		}
 		
 		//Add Index for add dstEntry
@@ -776,11 +776,12 @@ public class GITUtil  extends BaseController{
 			//Do roll back WorkingCopy for srcEntry and dstEntry
 			rollBackIndex(git, srcEntryPath, null);
 			delFileOrDir(dstEntryPath);
-			return false;
+			return null;
 		}
 		
+		RevCommit ret = null;
         try {
-			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
 			System.out.println("gitMove() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("gitMove() commit error");
@@ -791,7 +792,7 @@ public class GITUtil  extends BaseController{
 			{
 				delFileOrDir(dstEntryPath);
 			}	
-			return false;
+			return null;
 		}
 		
 		if(isRemote)
@@ -810,14 +811,14 @@ public class GITUtil  extends BaseController{
 						delFileOrDir(dstEntryPath);
 					}
 				}
-				return false;
+				return null;
 			}
 		}
 		
-		return true;
+		return ret.getName();
 	}
 
-	public boolean gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
+	public String gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
 			String commitMsg, String commitUser) {
 		System.out.println("gitCopy() copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
 		
@@ -827,7 +828,7 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitCopy() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 
 		String dstEntryPath = dstParentPath + dstEntryName;
@@ -840,11 +841,12 @@ public class GITUtil  extends BaseController{
 			e.printStackTrace();
 			//Do roll back WorkingCopy for srcEntry and dstEntry
 			delFileOrDir(dstEntryPath);
-			return false;
+			return null;
 		}
 		
+		RevCommit ret = null;
         try {
-			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
 			System.out.println("gitCopy() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("gitCopy() commit error");
@@ -854,7 +856,7 @@ public class GITUtil  extends BaseController{
 			{
 				delFileOrDir(dstEntryPath);
 			}	
-			return false;
+			return null;
 		}
 		
 		if(isRemote)
@@ -872,14 +874,14 @@ public class GITUtil  extends BaseController{
 						delFileOrDir(dstEntryPath);
 					}
 				}
-				return false;
+				return null;
 			}
 		}
 		
-		return true;
+		return ret.getName();
 	}
 
-	public boolean doAutoCommit(String parentPath, String entryName, String localPath, String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
+	public String doAutoCommit(String parentPath, String entryName, String localPath, String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
 		
 		Git git = null;
@@ -888,14 +890,14 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("gitMove() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 		
 		File localEntry = new File(localPath);
 		if(!localEntry.exists())
 		{
 			System.out.println("doAutoCommit() localPath " + localPath + " not exists");
-			return false;
+			return null;
 		}
 	
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -910,7 +912,7 @@ public class GITUtil  extends BaseController{
         else if (remoteEntry.isFile()) 
         {
         	System.out.println(entryPath + " 是文件");
-            return false;
+            return null;
         }
         else
         {
@@ -923,11 +925,12 @@ public class GITUtil  extends BaseController{
         if(commitActionList == null || commitActionList.size() ==0)
         {
         	System.out.println("doAutoCommmit() There is nothing to commit");
-        	return true;
+        	return null;
         }
         
+        RevCommit ret = null;
         try {
-			RevCommit ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
+			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
 			System.out.println("doAutoCommmit() commitId:" + ret.getName());
 		} catch (Exception e) {
 			System.out.println("doAutoCommmit() commit error");
@@ -937,7 +940,7 @@ public class GITUtil  extends BaseController{
 			{
 				rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录
 			}	
-			return false;
+			return null;
 		}
 		
 		if(isRemote)
@@ -955,10 +958,10 @@ public class GITUtil  extends BaseController{
 						rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录
 					}
 				}
-				return false;
+				return null;
 			}
 		}
-		return true;
+		return ret.getName();
 	}
 
 	private boolean scheduleForDelete(List<CommitAction> actionList, String localPath, String parentPath, String entryName) {
