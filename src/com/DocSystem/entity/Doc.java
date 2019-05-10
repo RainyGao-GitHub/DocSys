@@ -35,6 +35,10 @@ public class Doc  implements Comparable<Doc>{
 
 	private int sortIndex;
 
+    private String creatorName;
+
+    private String latestEditorName;
+
     public Integer getId() {
         return id;
     }
@@ -188,5 +192,22 @@ public class Doc  implements Comparable<Doc>{
         
         //Sort by doName
         return doc.name.compareTo(this.name);   
+    }
+    
+
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName == null ? null : creatorName.trim();
+    }
+
+    public String getLatestEditorName() {
+        return latestEditorName;
+    }
+
+    public void setLatestEditorName(String latestEditorName) {
+        this.latestEditorName = latestEditorName == null ? null : latestEditorName.trim();
     }
 }

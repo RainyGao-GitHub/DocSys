@@ -2185,7 +2185,7 @@ public class BaseController  extends BaseFunction{
 		
 		Doc dbDoc = dbGetDoc(doc);
 		File localEntry = new File(localParentPath,doc.getName());
-		Doc remoteEntry = verReposGetDoc(repos, doc.getPath(), doc.getName(), null);
+		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
 
 		if(localEntry.exists())
 		{
@@ -2274,10 +2274,74 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 	
-	private Doc verReposGetDoc(Repos repos, String parentPath, String name, String revision)
+	private Doc verReposGetDoc(Repos repos, Long docId, String parentPath, String name, String revision)
 	{
-		// TODO Auto-generated method stub
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnGetDoc(repos, docId, parentPath,name, revision);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitGetDoc(repos, docId, parentPath,name, revision);	
+		}
 		return null;
+	}
+
+	private Doc svnGetDoc(Repos repos, Long docId, String parentPath, String entryName, String revision) {
+		System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("svnGetDoc() entryName can not be empty");
+			return null;
+		}
+		
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, true, "") == false)
+		{
+			System.out.println("svnGetDoc() svnUtil.Init失败！");	
+			return null;
+		}
+		
+		Doc doc = svnUtil.getDoc(parentPath+entryName, revision);
+		if(doc == null)
+		{
+			return null;
+		}
+		
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(entryName);
+		return doc;
+	}
+
+	private Doc gitGetDoc(Repos repos, Long docId, String parentPath, String entryName, String revision) {
+		System.out.println("gitGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
+		if(entryName == null || entryName.isEmpty())
+		{
+			System.out.println("gitGetDoc() entryName can not be empty");
+			return null;
+		}
+
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, "") == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Init failed");
+			return null;
+		}
+		
+		Doc doc = gitUtil.getDoc(parentPath+entryName, revision);
+		if(doc == null)
+		{
+			return null;
+		}
+		
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(entryName);
+		return doc;
 	}
 
 	protected Doc dbGetDoc(Doc doc) 

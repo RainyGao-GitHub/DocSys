@@ -143,6 +143,50 @@ public class SVNUtil  extends BaseController{
     }
     
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
+	public Doc getDoc(String filePath, String revision) 
+	{
+    	System.out.println("getDoc() filePath:" + filePath);	
+    	List<LogEntry> logList = new ArrayList<LogEntry>();
+        
+    	long startRevision = -1;
+    	long endRevision = -1;
+    	
+        try {
+	    	if(revision == null)
+	    	{
+	    		startRevision = endRevision = repository.getLatestRevision();
+	    	}
+	    	else
+	    	{
+	    		startRevision = endRevision = Long.parseLong(revision);
+	    	}
+	    	
+	        String[] targetPaths = new String[]{filePath};
+	        Collection<SVNLogEntry> logEntries = null;
+ 
+			logEntries = repository.log(targetPaths, null,startRevision, endRevision, true, true);
+
+	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
+	        {
+	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+	            revision = logEntry.getRevision() + "";
+	            String commitUser = logEntry.getAuthor(); //提交者
+	            long commitTime = logEntry.getDate().getTime();
+	            
+	            Doc doc = new Doc();
+	            doc.setRevision(revision);
+	            doc.setLatestEditorName(commitUser);
+	            doc.setLatestEditTime(commitTime);
+	            return doc;
+	        }
+	        return null;       
+		} catch (SVNException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+    
     //getHistory filePath: remote File Path under repositoryURL
 	public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision, int maxLogNum) 
     {

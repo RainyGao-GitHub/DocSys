@@ -126,6 +126,51 @@ public class GITUtil  extends BaseController{
     }
 	
 	//getHistory filePath: remote File Path under repositoryURL
+    public Doc getDoc(String filePath, String revision) 
+    {
+    	System.out.println("getDoc filePath:" + filePath);	
+
+    	Git git = null;
+		try {
+	    	git = Git.open(new File(wcDir));
+	    	
+		    Iterable<RevCommit> iterable = null;
+		    if(filePath == null || filePath.isEmpty())
+		    {
+		    	iterable = git.log().setMaxCount(1).call();
+		    }
+		    else
+		    {
+		    	iterable = git.log().addPath(filePath).setMaxCount(1).call();
+		    }
+		    
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();	
+
+	            String commitId=commit.getName();  //revision
+	            String author=commit.getAuthorIdent().getName();  //作者
+	            String commitUser=commit.getCommitterIdent().getName();
+	            long commitTime=commit.getCommitTime();
+	            
+	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+	            Doc doc = new Doc();
+	            doc.setRevision(commitId);
+	            doc.setCreatorName(author);
+	            doc.setLatestEditorName(commitUser);
+	            doc.setLatestEditTime(commitTime);
+	            return doc;
+	        }
+	        
+	        return null;
+	    } catch (Exception e) {
+			System.out.println("getDoc Error");	
+			e.printStackTrace();
+			return null;
+		}
+    }
+    
+	//getHistory filePath: remote File Path under repositoryURL
     public List<LogEntry> getHistoryLogs(String filePath,String startRevision, String endRevision,int maxLogNum) 
     {
     	System.out.println("getHistoryLogs filePath:" + filePath);	
