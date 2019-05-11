@@ -973,6 +973,13 @@
         var uploadStartTime = 0;//上传开始时间，用于计算已用时间
         var uploadSpeed = 1000;	//1k/s
         
+        /*uploadContent 用于保存文件上传的初始信息*/
+        var uploadContent = {};
+        uploadContent.uploadBatchList = [];
+        uploadContent.num = 0;	//totalBatchNum
+        uploadContent.index = 0;	//curBatchIndex
+        uploadContent.state = 0;	//0: all uploadBatch not inited 1: uploadBatch Init is on going 2: uplBatch Init completed
+        
         /*uploadDoc conditions 用于指示当前的上传文件及上传状态*/
         var index = 0; //当前操作的索引
         var totalNum = 0; 
@@ -1059,6 +1066,20 @@
       	function DocUploadInit(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("DocUploadInit");
+			
+			//Add uploadBatchInfo to uploadContent
+			var uploadBatch = {};
+			uploadBatch.files = files;
+			uploadBatch.parentNode = parentNode;
+			uploadBatch.parentId = parentId;
+			uploadBatch.vid = vid;
+			uploadBatch.state = 0;
+			uploadBatch.index = 0;
+			uploadBatch.size = files.length;			
+			uploadContent.uploadBatchList.push(uploadBatch);
+			uploadContent.batchIndex = 0;
+			uploadContent.batchNum = 1;
+			
 			//设置为正在上传，避免被其他上传中断
 			isUploading = true;
 			
@@ -1108,86 +1129,148 @@
       	function DocUploadAppend(files,parentNode,parentId,vid)	//多文件移动函数
 		{
 			console.log("DocUploadAppend");
-			
-			
-			//Go through files, and add files to SubContextList
-			var totSize = buildSubContextList(files,parentNode,parentId,vid,SubContextList);
-			totalSize += totSize;			
-			
-			var totNum = 0;
-			if(files && files.length)
+			if(!files)
 			{
-				totNum = files.length;
+				console.log("files:", files);
 			}
+				
+			var totNum = files.length;
 			totalNum += totNum;
-			
 			showUploadingInfo();
 			
+			//Add uploadBatchInfo to uploadContent
+			var uploadBatch = {};
+			uploadBatch.files = files;
+			uploadBatch.parentNode = parentNode;
+			uploadBatch.parentId = parentId;
+			uploadBatch.vid = vid;
+			uploadBatch.state = 0;
+			uploadBatch.index = 0;
+			uploadBatch.size = totNum;
+			uploadContent.uploadBatchList.push(uploadBatch);
+			uploadContent.num++;
+									
+			if(uploadContent.state == 2)	//uploadBatch already initiated, need to restart it
+			{
+				uploadContent.index++;
+				//Go through files, and add files to SubContextList
+				var totSize = buildSubContextList(uploadContent,SubContextList);
+				totalSize += totSize;			
+			}
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			checkAndDrawUploadItems(SubContextList);
       	}
       	
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
-		function buildSubContextList(files,parentNode,parentId,vid,SubContextList)
+		function buildSubContextList(uploadContent,SubContextList)
 		{
-			var totSize = 0;
 			console.log("buildSubContextList()");
-			if(files.length > 0)
-	   		{
-	    		console.log("files.length:" + files.length);
-	    		for( var i = 0 ; i < files.length ; i++ )
-	    		{
-	    			var file = files[i];
-	    	   		if(typeof file == 'object')
-	    	   		{
-	    	   		   	var SubContext ={};
-	    	   		   	//Basic Info
-	    	   		   	SubContext.file = file;
-	    	   		   	SubContext.parentNode = parentNode;
-	    	   		   	SubContext.parentId = parentId;
-	    	   		   	SubContext.vid = vid;
-	    	   		   	
-			    		SubContext.docId = -1; //-1: 新增  
-			    		
-	    	   		   	//advanced Info
-	    	   		   	SubContext.type = 1;	
-			    	   	SubContext.size = file.size;
-	    	   		   	SubContext.name = file.name;
-				    	SubContext.relativePath = file.webkitRelativePath;
-				    	if(file.fullPath)
-				    	{
-				    		SubContext.relativePath = file.fullPath;
-				    	}
-				    	
-				    	//Status Info
-			    		SubContext.index = i;
-			    	   	SubContext.state = 0;	//未开始上传
-			    	   	SubContext.status = "待上传";	//未开始上传
-			    	   	
-			    	   	//checkSum Init
-			    	   	SubContext.checkSumState = 0;
-			    	   	SubContext.checkSum = "";
-			    	   	
-			    	   	//StateMachine SMMain\SMSub
-			    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
-			    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
-			    	   	
-			    	   	//分片上传状态 
-			    	   	SubContext.cutFileState = 0;
-			    	   	SubContext.chunked = false;
-			    	   	
-			    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
-			    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
-			    		SubContext.stopUploadFlag = false; //停止上传标记未false
-			      								    	   	
-			    	   	//Push the SubContext
-			    	   	SubContextList.push(SubContext);
-			    	   	totSize += file.size;
-	    	   		}
-	    	   	}
+      		if(uploadCotent.batchInitState == 2)
+			{
+    			console.log("buildSubContextList() all uploadBatch was inited");      			
+				return 0;
+			}
+			
+      		var curBatchIndex = uploadContent.index;
+      		var uploadBatch = uploadContent.uploadBatchList[index];
+      		if(uploadBatch.state == 2)
+      		{
+      			curBatchIndex++;
+      			if(curBatchIndex == uploadCotent.num)
+      			{
+      				uploadCotent.state = 2;
+      				return 0;
+      			}
+      			else
+      			{
+      				uploadContent.index = curBatchIndex;
+      				uploadBatch = uploadContent.uploadBatchList[curBatchIndex];
+      				uploadBatch.index = 0;
+      				uploadBatch.state = 1;      				
+      			}
+      		}
+      		
+      		var files = uploadBatch.files;
+      		var parentNode = uploadBatch.uploadBatch;
+      		var parentId = uploadBatch.parentId;
+      		var vid = uploadBatch.vid;
+      		var index = uploadBatch.index;
+      		var num =  uploadBatch.num;
+			
+      		var totSize = 0;
+      		var count = 0;
+			console.log("num:" + files.length);
+    		for( var i = index ; i < num ; i++ )
+    		{
+ 				count++;
+ 				if(count > 300)
+ 				{
+ 					//buildSubContext 每次最多300个
+ 					return totSize;
+ 				}
+ 				
+ 				uploadBatch.index++;
+ 				
+    			var file = files[i];
+    	   		if(typeof file == 'object')
+    	   		{
+    	   		   	var SubContext ={};
+    	   		   	//Basic Info
+    	   		   	SubContext.file = file;
+    	   		   	SubContext.parentNode = parentNode;
+    	   		   	SubContext.parentId = parentId;
+    	   		   	SubContext.vid = vid;
+    	   		   	
+		    		SubContext.docId = -1; //-1: 新增  
+		    		
+    	   		   	//advanced Info
+    	   		   	SubContext.type = 1;	
+		    	   	SubContext.size = file.size;
+    	   		   	SubContext.name = file.name;
+			    	SubContext.relativePath = file.webkitRelativePath;
+			    	if(file.fullPath)
+			    	{
+			    		SubContext.relativePath = file.fullPath;
+			    	}
+			    	
+			    	//Status Info
+		    		SubContext.index = i;
+		    	   	SubContext.state = 0;	//未开始上传
+		    	   	SubContext.status = "待上传";	//未开始上传
+		    	   	
+		    	   	//checkSum Init
+		    	   	SubContext.checkSumState = 0;
+		    	   	SubContext.checkSum = "";
+		    	   	
+		    	   	//StateMachine SMMain\SMSub
+		    	   	SubContext.SMState = "init";	//uploadDoc状态机的主状态
+		    	   	SubContext.SMSubState = 0;	//uploadDoc状态机的子状态
+		    	   	
+		    	   	//分片上传状态 
+		    	   	SubContext.cutFileState = 0;
+		    	   	SubContext.chunked = false;
+		    	   	
+		    	   	SubContext.fileCoverConfirmSet = 0;	//默认碰到已存在文件需要用户确认是否覆盖
+		    		SubContext.uploadErrorConfirmSet = 0;	//默认碰到错误需要用户确认
+		    		SubContext.stopUploadFlag = false; //停止上传标记未false
+		      								    	   	
+		    	   	//Push the SubContext
+		    	   	SubContextList.push(SubContext);
+		    	   	totSize += file.size;
+    	   		}
 	    	}
-	    	//console.log(SubContextList);
+	    	
+    		uploadBatch.state = 2;
+    		uploadContent.index++;
+    		if(uploadContent.index == uploadContent.num)
+    		{
+    			uploadContent.state = 2;
+    		}
+    		
+    		//console.log(SubContextList);
 	    	console.log("buildSubContextList() totSize:" + totSize);
+	    	
+	    	
 	    	return totSize;
 	   	}
       	
