@@ -1083,12 +1083,14 @@
 			uploadBatch.num = fileNum;
 			uploadBatch.index = 0;
 			uploadBatch.state = 0;
+			uploadContent.uploadBatchList = [];
 			uploadContent.uploadBatchList.push(uploadBatch);
 			uploadContent.batchNum = 1;
 			uploadContent.batchIndex = 0;
 			uploadContent.state = 1;
-	        uploadContent.initedFileNum = 0;
-	        uploadContent.totalFileNum = fileNum; 
+	        uploadContent.totalFileNum = fileNum;
+			uploadContent.initedFileNum = 0;
+	        uploadContent.totalFileSize = 0;
 			console.log("DocUploadInit uploadContent:", uploadContent);
 	        
 			totalNum = uploadContent.totalFileNum;
@@ -1114,7 +1116,7 @@
 			index = 0;
 			
 			//Build SubContextList(totalFileNum and totalSize will also be caculated)
-			buildSubContextList(uploadContent,SubContextList,100);
+			buildSubContextList(uploadContent,SubContextList,10);
 			totalSize = uploadContent.totalFileSize;
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			
@@ -1167,7 +1169,7 @@
 			{
 				uploadContent.batchIndex++;
 				uploadContent.state = 1;
-				buildSubContextList(uploadContent,SubContextList,100);
+				buildSubContextList(uploadContent,SubContextList,10);
 				totalSize = uploadContent.totalFileSize;
 			}
 			
@@ -1178,7 +1180,7 @@
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
 		function buildSubContextList(uploadContent,SubContextList,maxInitNum)
 		{
-			if(uploadContent.batchState == 2)
+			if(uploadContent.state == 2)
 			{
 				return;
 			}
@@ -1267,7 +1269,7 @@
     		uploadContent.batchIndex++;
     		if(uploadContent.batchIndex == uploadContent.batchNum)
     		{
-    			uploadContent.batchState = 2;
+    			uploadContent.state = 2;
     			console.log("buildSubContextList() all uploadBatch Inited");
     		}
 	   	}
