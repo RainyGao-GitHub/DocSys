@@ -1178,7 +1178,12 @@
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
 		function buildSubContextList(uploadContent,SubContextList,maxInitNum)
 		{
-			console.log("buildSubContextList() maxInitNum:" + maxInitNum);
+			if(uploadContent.batchState == 2)
+			{
+				return;
+			}
+			
+      		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
 			
       		var curBatchIndex = uploadContent.batchIndex;
       		var uploadBatch = uploadContent.uploadBatchList[curBatchIndex];
@@ -1254,16 +1259,17 @@
 		    	   	uploadContent.totalFileSize += file.size;
     	   		}
 	    	}
-	    	
+    		
+    		//console.log(SubContextList);
+	    	console.log("buildSubContextList() totSize:" + uploadContent.totalFileSize);
+
     		uploadBatch.state = 2;
     		uploadContent.batchIndex++;
     		if(uploadContent.batchIndex == uploadContent.batchNum)
     		{
     			uploadContent.batchState = 2;
+    			console.log("buildSubContextList() all uploadBatch Inited");
     		}
-    		
-    		//console.log(SubContextList);
-	    	console.log("buildSubContextList() totSize:" + uploadContent.totalFileSize);
 	   	}
       	
       	function getFileShowSize(fileSize)
