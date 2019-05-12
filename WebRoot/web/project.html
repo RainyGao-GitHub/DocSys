@@ -2707,6 +2707,16 @@
 		//uploadDoc接口，该接口是个递归调用
     	function uploadDoc()
     	{
+    		//upload files 没有全部加入到SubContextList
+    		if(uploadContent.state != 2)
+    		{
+				buildSubContextList(uploadContent,SubContextList,1000);
+				totalSize = uploadContent.totalFileSize;	
+    		}
+    		
+    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
+    		checkAndDrawUploadItems(SubContextList);
+			
     		//console.log("uploadDoc() index:" + index + " totalNum:" + totalNum);
     		var SubContext = SubContextList[index];
 			
@@ -2752,16 +2762,6 @@
 					return; 
 				}
     		}
-    		
-    		//upload files 没有全部加入到SubContextList
-    		if(uploadContent.state != 2)
-    		{
-				buildSubContextList(uploadContent,SubContextList,1000);
-				totalSize = uploadContent.totalFileSize;	
-    		}
-    		
-    		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
-    		checkAndDrawUploadItems(SubContextList);
 			
     		//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
     		if(false == checkAddParentNode(SubContext))
