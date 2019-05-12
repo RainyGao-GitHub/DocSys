@@ -972,9 +972,12 @@
         /*uploadContent 用于保存文件上传的初始信息*/
         var uploadContent = {};
         uploadContent.uploadBatchList = [];
-        uploadContent.num = 0;	//totalBatchNum
-        uploadContent.index = 0;	//curBatchIndex
+        uploadContent.batchNum = 0;	//totalBatchNum
+        uploadContent.batchIndex = 0;	//curBatchIndex
         uploadContent.state = 0;	//0: all uploadBatch not inited 1: uploadBatch Init is on going 2: uplBatch Init completed
+        uploadContent.initedFileNum = 0;
+        uploadContent.totalFileNum = 0; 
+        uploadContent.totalFileSize = 0;
         
         /*uploadDoc conditions 用于指示当前的上传文件及上传状态*/
         var index = 0; //当前操作的索引
@@ -1061,21 +1064,31 @@
 		//初始化DocUpload设置
       	function DocUploadInit(files,parentNode,parentId,vid)	//多文件移动函数
 		{
-			console.log("DocUploadInit");
-			
+			console.log("DocUploadInit()");
+			if(!files)
+			{
+				console.log("DocUploadInit() files undefined");				
+				return;
+			}
+
+			var fileNum = files.length;
+			console.log("DocUploadInit() fileNum:" + fileNum);				
+
 			//Add uploadBatchInfo to uploadContent
 			var uploadBatch = {};
 			uploadBatch.files = files;
 			uploadBatch.parentNode = parentNode;
 			uploadBatch.parentId = parentId;
 			uploadBatch.vid = vid;
-			uploadBatch.num = files.length;
+			uploadBatch.num = fileNum;
 			uploadBatch.index = 0;
 			uploadBatch.state = 0;
 			uploadContent.uploadBatchList.push(uploadBatch);
-			uploadContent.num = 1;
-			uploadContent.index = 0;
+			uploadContent.batchNum = 1;
+			uploadContent.batchIndex = 0;
 			uploadContent.state = 1;
+	        uploadContent.initedFileNum = 0;
+	        uploadContent.totalFileNum = fileNum; 
 			console.log("DocUploadInit uploadContent:", uploadContent);
 			
 			//设置为正在上传，避免被其他上传中断
@@ -1098,15 +1111,10 @@
 			//Set the Index
 			index = 0;
 			
-			//Build SubContextList and get total Size
-			totalSize = buildSubContextList(uploadContent,SubContextList);
-			
-			//Set upload total file Num
-			totalNum = 0;
-			if(files && files.length)
-			{
-				totalNum = files.length;
-			}
+			//Build SubContextList(totalFileNum and totalSize will also be caculated)
+			buildSubContextList(uploadContent,SubContextList);
+			totalNum = uploadContent.totalFileNum;
+			totalSize = uploadContent.totalFileSize;
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			
 			//Draw UploadItems by Go through the SubContextList
@@ -1126,12 +1134,16 @@
       	//增加上传文件
       	function DocUploadAppend(files,parentNode,parentId,vid)	//多文件移动函数
 		{
-			console.log("DocUploadAppend");
+			console.log("DocUploadAppend()");
 			if(!files)
 			{
-				console.log("files:", files);
+				console.log("DocUploadAppend() files is null");
+				return;
 			}
-			
+
+			var fileNum = files.length;
+			console.log("DocUploadAppend() fileNum:" + fileNum);
+
 			//Add uploadBatchInfo to uploadContent
 			var uploadBatch = {};
 			uploadBatch.files = files;
@@ -1140,22 +1152,24 @@
 			uploadBatch.vid = vid;
 			uploadBatch.state = 0;
 			uploadBatch.index = 0;
-			uploadBatch.num = files.length;
+			uploadBatch.num = fileNum;
 			uploadContent.uploadBatchList.push(uploadBatch);
-			uploadContent.num++;
-			console.log("DocUploadAppend uploadContent:", uploadContent);
+			uploadContent.batchNum++;
+			uploadContent.totalFileNum += fileNum;
 			
-			totalNum += uploadBatch.num;
+			totalNum = uploadContent.totalFileNum;
 			showUploadingInfo();
+			console.log("DocUploadAppend uploadContent:", uploadContent);
 			
 			if(uploadContent.state == 2)	//uploadBatch already initiated, need to restart it
 			{
-				uploadContent.index++;
-				//Go through files, and add files to SubContextList
-				var totSize = buildSubContextList(uploadContent,SubContextList);
-				totalSize += totSize;	
+				uploadContent.batchIndex++;
+				uploadContent.state = 1;
+				buildSubContextList(uploadContent,SubContextList);
+				totalSize = uploadContent.totalFileSize;
 			}
-			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
+			
+			console.log("文件总的个数为："+uploadContent.totalFileNum + " 文件总的大小为："+totalSize);
 			checkAndDrawUploadItems(SubContextList);
       	}
       	
@@ -1164,31 +1178,31 @@
 		{
 			console.log("buildSubContextList()");
 			
-      		var curBatchIndex = uploadContent.index;
+      		var curBatchIndex = uploadContent.batchIndex;
       		var uploadBatch = uploadContent.uploadBatchList[curBatchIndex];
-      		console.log("buildSubContextList() uploadContent curBatchIndex:" + curBatchIndex + " num:" + uploadContent.num );
+      		console.log("buildSubContextList() uploadContent curBatchIndex:" + curBatchIndex + " num:" + uploadContent.batchNum );
     			
       		var files = uploadBatch.files;
       		var parentNode = uploadBatch.uploadBatch;
       		var parentId = uploadBatch.parentId;
       		var vid = uploadBatch.vid;
       		var index = uploadBatch.index;
-      		var num =  uploadBatch.num;
-      		console.log("buildSubContextList() uploadBatch index:" + index + " num:" + num );
-			
-      		var totSize = 0;
+      		var fileNum =  uploadBatch.num;
+      		console.log("buildSubContextList() uploadBatch index:" + index + " fileNum:" + fileNum );
+      		
       		var count = 0;
-			console.log("buildSubContextList num:" + files.length);
-    		for( var i = index ; i < num ; i++ )
+			console.log("buildSubContextList fileNum:" + fileNum);
+    		for( var i = index ; i < fileNum ; i++ )
     		{
  				count++;
  				if(count > 100)
  				{
- 					//buildSubContext 每次最多300个
- 					return totSize;
+ 					//buildSubContext 每次最多100个
+ 					return;
  				}
  				
  				uploadBatch.index++;
+ 				uploadContent.initedFileNum++;
  				
     			var file = files[i];
     	   		if(typeof file == 'object')
@@ -1235,21 +1249,19 @@
 		      								    	   	
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
-		    	   	totSize += file.size;
+		    	   	uploadContent.totalFileSize += file.size;
     	   		}
 	    	}
 	    	
     		uploadBatch.state = 2;
-    		uploadContent.index++;
-    		if(uploadContent.index == uploadContent.num)
+    		uploadContent.batchIndex++;
+    		if(uploadContent.batchIndex == uploadContent.batchNum)
     		{
-    			uploadContent.state = 2;
+    			uploadContent.batchState = 2;
     		}
     		
     		//console.log(SubContextList);
-	    	console.log("buildSubContextList() totSize:" + totSize);
-	    	
-	    	return totSize;
+	    	console.log("buildSubContextList() totSize:" + uploadContent.totalFileSize);
 	   	}
       	
       	function getFileShowSize(fileSize)
@@ -1279,6 +1291,7 @@
       	//初始化上传文件的SubContext,并绘制对应的进度条
       	function checkAndDrawUploadItems(SubContextList)
       	{
+      			var totalNum = uploadContent.initedFileNum;
       			//Check if all items drawed
       			if(drawedNum >= totalNum)
       			{
