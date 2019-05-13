@@ -119,7 +119,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "addDoc " + name;
 		}
-		addDoc(name,content,type,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
+		addDoc(name,content,type,null,(long) 0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
 		writeJson(rt, response);
 	}
 	
@@ -144,7 +144,7 @@ public class DocController extends BaseController{
 		Integer parentId = getParentIdForFeeback();
 		
 		String commitMsg = "User Feeback by " + name;
-		Integer docId = addDoc(name,content,1,null,0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
+		Integer docId = addDoc(name,content,1,null,(long) 0,"",reposId,parentId,null,null,null,commitMsg,commitUser,login_user,rt);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -221,7 +221,7 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(String name,Integer docId,  Integer size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkChunkUploaded(String name,Integer docId,  Long size, String checkSum,Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -353,7 +353,7 @@ public class DocController extends BaseController{
 
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(String name,Integer type,Integer size,String checkSum,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(String name,Integer type,Long size,String checkSum,Integer reposId,Integer parentId,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkDocInfo name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
 		ReturnAjax rt = new ReturnAjax();
 
@@ -376,7 +376,7 @@ public class DocController extends BaseController{
 		else 
 		{			
 			//Get File Size 
-			Integer MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
+			Long MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
 			if(MaxFileSize != null)
 			{
 				if(size > MaxFileSize.longValue()*1024*1024)
@@ -465,7 +465,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private Doc getSameDoc(Integer size, String checkSum, Integer reposId) {
+	private Doc getSameDoc(Long size, String checkSum, Integer reposId) {
 
 		Doc qdoc = new Doc();
 		qdoc.setSize(size);
@@ -479,7 +479,7 @@ public class DocController extends BaseController{
 		return null;
 	}
 
-	private boolean isDocCheckSumMatched(Doc doc,Integer size, String checkSum) {
+	private boolean isDocCheckSumMatched(Doc doc,Long size, String checkSum) {
 		System.out.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
 		if(size.equals(doc.getSize()) && !"".equals(checkSum) && checkSum.equals(doc.getCheckSum()))
 		{
@@ -490,7 +490,7 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(MultipartFile uploadFile,String name,Integer size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
+	public void uploadDoc(MultipartFile uploadFile,String name,Long size, String checkSum, Integer reposId, Integer parentId, Integer docId, String filePath,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("uploadDoc name " + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId  + " docId:" + docId + " filePath:" + filePath 
@@ -1566,7 +1566,7 @@ public class DocController extends BaseController{
 	 * @param chunkSize 
 	 * @param chunkNum ****************************************/
 	//底层addDoc接口
-	private Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Integer fileSize, String checkSum,Integer reposId,Integer parentId, 
+	private Integer addDoc(String name, String content, Integer type, MultipartFile uploadFile, Long fileSize, String checkSum,Integer reposId,Integer parentId, 
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 		Repos repos = reposService.getRepos(reposId);
 		//get parentPath
@@ -1864,7 +1864,7 @@ public class DocController extends BaseController{
 	}
 
 	//底层updateDoc接口
-	private void updateDoc(Integer docId, MultipartFile uploadFile,Integer fileSize,String checkSum,Integer reposId,Integer parentId, 
+	private void updateDoc(Integer docId, MultipartFile uploadFile,Long fileSize,String checkSum,Integer reposId,Integer parentId, 
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg,String commitUser,User login_user, ReturnAjax rt) {
 
 		Doc doc = null;
@@ -2752,7 +2752,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Integer fileSize, String fileCheckSum,
+	private boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Long fileSize, String fileCheckSum,
 			MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
 		String localDocParentPath = reposRPath + parentPath;
 		String retName = null;
@@ -2788,7 +2788,7 @@ public class DocController extends BaseController{
 		return true;
 	}
 	
-	private boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Integer fileSize,
+	private boolean checkFileSizeAndCheckSum(String localDocParentPath, String name, Long fileSize,
 			String fileCheckSum) {
 		File file = new File(localDocParentPath,name);
 		if(fileSize != file.length())
@@ -3047,7 +3047,7 @@ public class DocController extends BaseController{
 		*/
 	}
 	
-	private Integer getMaxFileSize() {
+	private Long getMaxFileSize() {
 		// TODO Auto-generated method stub
 		return null;
 	}
