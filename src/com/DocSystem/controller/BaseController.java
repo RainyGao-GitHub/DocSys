@@ -3055,7 +3055,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		System.out.println("lockDoc() " + doc.getName() + "success lockType:" + lockType + " by " + login_user.getName());
+		System.out.println("lockDoc() " + doc.getName() + " success lockType:" + lockType + " by " + login_user.getName());
 		return docLock;
 	}
 	
