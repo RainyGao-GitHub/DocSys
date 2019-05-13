@@ -144,8 +144,6 @@ public class BaseController  extends BaseFunction{
 		    		docList.add(doc);
 				}
 	    	}
-	    	System.out.println("localDocList size:" + docList.size());
-	    	printObject("localDocList", docList);		    	
     	}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
@@ -196,8 +194,6 @@ public class BaseController  extends BaseFunction{
 	    			actionList.add(action);
 	    		} 
 	    	}
-	    	System.out.println("docList size:" + docList.size());
-	    	printObject("docList", docList);
     	}
     	
     	return docList;
@@ -282,11 +278,15 @@ public class BaseController  extends BaseFunction{
 	{
 		if(doc == null)
 		{
+			System.out.println("isDocLocalChanged() doc is null"); 
 			return true;
 		}
 		
 		if(doc.getLatestEditTime() != localEntry.lastModified() || doc.getSize() != localEntry.length())
 		{
+			System.out.println("isDocLocalChanged() lastEditTime and size not matched");
+			printObject("isDocLocalChanged() doc:",doc);
+			printObject("isDocLocalChanged() localEntry:",localEntry);
 			return true;
 		}
 		return false;
@@ -295,19 +295,38 @@ public class BaseController  extends BaseFunction{
 	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) {
 		if(doc == null)
 		{
+			System.out.println("isDocLocalChanged() doc is null"); 
 			return true;
 		}
 		
 		if(doc.getLatestEditTime() != localEntry.getLatestEditTime() || doc.getSize() != localEntry.getSize())
 		{
+			System.out.println("isDocLocalChanged() lastEditTime and size not matched");
+			printObject("isDocLocalChanged() doc:",doc);
+			printObject("isDocLocalChanged() localEntry:",localEntry);
 			return true;
 		}
 		return false;
 	}
 	
 	private boolean isDocRemoteChanged(Doc doc, Doc entry) {
-		if(doc.getRevision() != entry.getRevision())
+		if(doc == null)
 		{
+			System.out.println("isDocRemoteChanged() doc is null"); 
+			return true;
+		}
+		
+		if(doc.getRevision() == null)
+		{
+			System.out.println("isDocRemoteChanged() doc.revision is null"); 
+			return true;
+		}
+			
+		if(!doc.getRevision().equals(entry.getRevision()))
+		{
+			System.out.println("isDocRemoteChanged() revision not matched");
+			printObject("isDocRemoteChanged() doc:",doc);
+			printObject("isDocRemoteChanged() remoteEntry:",entry);
 			return true;
 		}
 		return false;
