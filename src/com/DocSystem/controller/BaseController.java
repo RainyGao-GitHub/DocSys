@@ -241,8 +241,19 @@ public class BaseController  extends BaseFunction{
 	{
 		if(doc == null)
 		{
+			if(!localEntry.exists())
+			{
+				return false;
+			}
+			
 			System.out.println("isDocLocalChanged() doc is null"); 
 			return true;
+		}
+		
+		if(!localEntry.exists())
+		{
+			System.out.println("isDocLocalChanged() localEntry not exist"); 
+			return false;
 		}
 		
 		if(doc.getLatestEditTime() != localEntry.lastModified() || doc.getSize() != localEntry.length())
@@ -258,8 +269,19 @@ public class BaseController  extends BaseFunction{
 	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) {
 		if(doc == null)
 		{
+			if(localEntry == null)
+			{
+				return false;
+			}
+			
 			System.out.println("isDocLocalChanged() doc is null"); 
 			return true;
+		}
+		
+		if(localEntry == null)
+		{
+			System.out.println("isDocLocalChanged() localEntry is null"); 
+			return true;			
 		}
 		
 		if(doc.getLatestEditTime() != localEntry.getLatestEditTime() || doc.getSize() != localEntry.getSize())
