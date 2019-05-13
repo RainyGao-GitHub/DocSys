@@ -2251,9 +2251,9 @@
 			if(0 == SubContext.cutFileState)
 			{
 				console.log("CutFile() for", SubContext);
-				var cutSize = 2097152;
-				var minCutSize = cutSize * 10;
-				if(SubContext.size < minCutSize)	//< 20M do not cut
+				var cutSize = 20971520; //20M
+				var minCutSize = cutSize * 5;
+				if(SubContext.size < minCutSize)	//< 100M do not cut
 				{
 					SubContext.cutFileState = 2;
 					console.log("CutFile() file size less than minCutSize " + minCutSize);
