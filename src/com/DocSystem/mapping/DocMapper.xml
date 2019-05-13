@@ -5,7 +5,7 @@
     <id column="ID" jdbcType="INTEGER" property="id" />
     <result column="NAME" jdbcType="VARCHAR" property="name" />
     <result column="TYPE" jdbcType="INTEGER" property="type" />
-    <result column="SIZE" jdbcType="INTEGER" property="size" />
+    <result column="SIZE" jdbcType="BIGINT" property="size" />
     <result column="CHECK_SUM" jdbcType="VARCHAR" property="checkSum" />
     <result column="PATH" jdbcType="VARCHAR" property="path" />
     <result column="PID" jdbcType="INTEGER" property="pid" />
@@ -49,7 +49,7 @@
       STATE, LOCK_BY, LOCK_TIME, 
       CONTENT)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, 
-      #{size,jdbcType=INTEGER}, #{checkSum,jdbcType=VARCHAR}, #{path,jdbcType=VARCHAR}, 
+      #{size,jdbcType=BIGINT}, #{checkSum,jdbcType=VARCHAR}, #{path,jdbcType=VARCHAR}, 
       #{pid,jdbcType=INTEGER}, #{vid,jdbcType=INTEGER}, #{pwd,jdbcType=VARCHAR}, #{creator,jdbcType=INTEGER}, 
       #{createTime,jdbcType=BIGINT}, #{latestEditor,jdbcType=INTEGER}, #{latestEditTime,jdbcType=BIGINT}, 
       #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT}, 
@@ -121,7 +121,7 @@
         #{type,jdbcType=INTEGER},
       </if>
       <if test="size != null">
-        #{size,jdbcType=INTEGER},
+        #{size,jdbcType=BIGINT},
       </if>
       <if test="checkSum != null">
         #{checkSum,jdbcType=VARCHAR},
@@ -174,7 +174,7 @@
         TYPE = #{type,jdbcType=INTEGER},
       </if>
       <if test="size != null">
-        SIZE = #{size,jdbcType=INTEGER},
+        SIZE = #{size,jdbcType=BIGINT},
       </if>
       <if test="checkSum != null">
         CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
@@ -222,7 +222,7 @@
     update doc
     set NAME = #{name,jdbcType=VARCHAR},
       TYPE = #{type,jdbcType=INTEGER},
-      SIZE = #{size,jdbcType=INTEGER},
+      SIZE = #{size,jdbcType=BIGINT},
       CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
       PID = #{pid,jdbcType=INTEGER},
@@ -242,7 +242,7 @@
     update doc
     set NAME = #{name,jdbcType=VARCHAR},
       TYPE = #{type,jdbcType=INTEGER},
-      SIZE = #{size,jdbcType=INTEGER},
+      SIZE = #{size,jdbcType=BIGINT},
       CHECK_SUM = #{checkSum,jdbcType=VARCHAR},
       PATH = #{path,jdbcType=VARCHAR},
       PID = #{pid,jdbcType=INTEGER},
@@ -257,6 +257,7 @@
       LOCK_TIME = #{lockTime,jdbcType=BIGINT}
     where ID = #{id,jdbcType=INTEGER}
   </update>
+
   <insert id="add" keyColumn="id" keyProperty="id" parameterType="com.DocSystem.entity.Doc" useGeneratedKeys="true">
     insert into doc 
     <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -320,7 +321,7 @@
         #{type,jdbcType=INTEGER},
       </if>
       <if test="size != null">
-        #{size,jdbcType=INTEGER},
+        #{size,jdbcType=BIGINT},
       </if>
       <if test="checkSum != null">
         #{checkSum,jdbcType=VARCHAR},
@@ -376,7 +377,7 @@
     	and TYPE = #{type,jdbcType=INTEGER}
     </if>
     <if test="size != null">
-        and SIZE = #{size,jdbcType=INTEGER}
+        and SIZE = #{size,jdbcType=BIGINT}
     </if>
     <if test="checkSum != null">
         and CHECK_SUM = #{checkSum,jdbcType=VARCHAR}
@@ -458,23 +459,23 @@
     </if>
   </select>
  
-  <select id="queryDocList" resultMap="BaseResultMap" parameterType="HashMap">
+  <select id="queryDocList" parameterType="HashMap" resultMap="BaseResultMap">
 	select 
     <include refid="Base_Column_List" />
     from doc
 	where 1 = 1 
-	<if test='name!=null and name!=""'>
+	<if test="name!=null and name!=&quot;&quot;">
 		and (
 			NAME like '%${name}%'
-			<if test='ids!=null and ids!=""'>
+			<if test="ids!=null and ids!=&quot;&quot;">
 				or ID in (${ids})
 			 </if>
 			)
 	</if>
-	<if test='reposId!=null and reposId!=""'>
+	<if test="reposId!=null and reposId!=&quot;&quot;">
 		and VID = #{reposId}
 	</if>
-	<if test='pDocId!=null and pDocId!=""'>
+	<if test="pDocId!=null and pDocId!=&quot;&quot;">
 		and PID = #{pDocId}
 	</if>
   </select>
