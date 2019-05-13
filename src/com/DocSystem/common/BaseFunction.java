@@ -47,6 +47,148 @@ public class BaseFunction{
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 
+	/******************************** Basic Interface for CommonAction *************************************/
+	//CommonAction 主要用于异步行为
+	protected void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType) {
+		actionId = 5; //AutoSyncUp
+
+		CommonAction action = new CommonAction();
+		action.setType(actionId); //5: AutoSyncUp
+		action.setAction(actionType); //3: localModify
+		action.setDocType(docType); //1: local Doc Changed
+		action.setRepos(repos);
+		action.setDoc(doc);
+		actionList.add(action);
+	}
+	
+	protected void insertAddAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType) {
+		actionType = 1;	//Add
+		
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+		
+		action.setRepos(repos);
+		action.setDoc(doc);
+		
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		actionList.add(action);
+	}
+	
+	protected void insertDeleteAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType) {
+		actionType = 2;	//Delete
+		
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+		
+		action.setRepos(repos);
+		action.setDoc(doc);
+		
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		actionList.add(action);
+	}
+	
+	protected void insertUpdateAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType) {
+		actionType = 3;	//Update
+		
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+		
+		action.setRepos(repos);
+		action.setDoc(doc);
+		
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		actionList.add(action);
+	}
+	
+	protected void insertMoveAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType) 
+	{
+		actionType = 4; //Move
+		
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+		
+		action.setRepos(repos);
+		action.setDoc(srcDoc);
+		action.setNewDoc(dstDoc);
+		actionList.add(action);
+	}
+
+	protected void insertCopyAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType) 
+	{
+		actionType = 5; //Copy
+		
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+		
+		action.setRepos(repos);
+		action.setDoc(srcDoc);
+		action.setNewDoc(dstDoc);
+		actionList.add(action);
+	}
+	
+	/******************************** Basic Interface for CommitAction *************************************/
+	//版本仓库底层通用接口
+	protected void insertAddFileAction(List<CommitAction> actionList,
+			String parentPath, String entryName, String localPath, boolean isSubAction) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setEntryType(1);
+    	action.setParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setLocalRootPath(localPath);
+    	action.isSubAction = isSubAction;
+    	actionList.add(action);
+		
+	}
+    
+	protected void insertAddDirAction(List<CommitAction> actionList,
+			String parentPath, String entryName, boolean isSubAction, boolean hasSubList, List<CommitAction> subActionList) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setEntryType(2);
+    	action.setParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.isSubAction = isSubAction;
+    	action.hasSubList = hasSubList;
+    	action.setSubActionList(subActionList);
+    	actionList.add(action);
+    	
+	}
+	
+	protected void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(2);
+    	action.setParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	actionList.add(action);
+	}
+    
+	protected void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
+    	CommitAction action = new CommitAction();
+    	action.setAction(3);
+    	action.setParentPath(parentPath);
+    	action.setEntryName(entryName);
+    	action.setLocalRootPath(localPath);
+    	action.setLocalRefRootPath(localRefPath);
+    	actionList.add(action);	
+	}
+	
 	/******************************* 路径相关接口  *******************************/
 	//获取默认的仓库根路径
 	protected String getDefaultReposRootPath() {

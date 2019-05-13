@@ -443,6 +443,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
+					Doc doc = getDocInfo(repos.getId(), docId);
 					boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 							null, size,checkSum,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
@@ -452,6 +453,7 @@ public class DocController extends BaseController{
 					{
 						executeCommonActionList(actionList, rt);
 						deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+						deletePreviewFile(doc);
 					}
 				}
 				return;
@@ -459,6 +461,15 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
+	
+	private Doc getDocInfo(Integer reposId, Long docId) 
+	{
+		Doc qDoc = new Doc();
+		qDoc.setVid(reposId);
+		qDoc.setDocId(docId);
+		return dbGetDoc(qDoc);
+	}
+
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Integer type, Long parentId, String parentPath, String docName,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -704,6 +715,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
+				Doc doc = getDocInfo(repos.getId(), docId);
 				boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 						uploadFile, size,checkSum,   
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
@@ -713,6 +725,7 @@ public class DocController extends BaseController{
 				{
 					executeCommonActionList(actionList, rt);
 					deleteChunks(docName,chunkIndex, chunkNum,chunkParentPath);
+					deletePreviewFile(doc);
 				}
 			}
 			return;
@@ -837,8 +850,20 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
+			deleteTmpVirtualDocContent(repos, parentPath, docName, login_user);
+			
 			executeCommonActionList(actionList, rt);
 		}
+	}
+
+	private void deleteTmpVirtualDocContent(Repos repos, String parentPath, String docName, User login_user) {
+		String docVName = getVDocName(parentPath,docName);
+		//Save the content to virtual file
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		
+		String vDocPath = userTmpDir + docVName + "/";
+		
+		delFileOrDir(vDocPath);
 	}
 
 	//this interface is for auto save of the virtual doc edit

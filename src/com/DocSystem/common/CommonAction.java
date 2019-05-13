@@ -10,11 +10,11 @@ import com.DocSystem.entity.Repos;
 public class CommonAction {
     private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 	private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy
-    private Repos repos = null;
     private Integer docType = null; //0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+
+    private Repos repos = null;
     private Doc doc = null;
     private Doc newDoc = null;	//This is for move/copy
-    private String localRootPath = null;
     
     //For commitAction
     private String commitMsg = null;
@@ -85,15 +85,6 @@ public class CommonAction {
 	public Doc getNewDoc()
 	{
 		return newDoc;
-	}
-
-	public void setLocalRootPath(String localRootPath) {
-		this.localRootPath = localRootPath;
-	}
-	
-	public String getLocalRootPath()
-	{
-		return localRootPath;
 	}
 
 	//For commitAction

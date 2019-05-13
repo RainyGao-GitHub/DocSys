@@ -9,15 +9,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -27,19 +22,13 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.context.ContextLoader;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
-import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNNodeKind;
 
-import util.ReadProperties;
 import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
-import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
-import com.DocSystem.common.MultiActionList;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
@@ -51,9 +40,7 @@ import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 
-import util.Encrypt.MD5;
 import util.GitUtil.GITUtil;
-import util.GitUtil.GitEntry;
 import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.SVNUtil;
 
@@ -173,18 +160,6 @@ public class BaseController  extends BaseFunction{
     	}
     	
     	return docList;
-	}
-
-	private void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType) {
-		actionId = 5; //AutoSyncUp
-
-		CommonAction action = new CommonAction();
-		action.setType(actionId); //5: AutoSyncUp
-		action.setAction(actionType); //3: localModify
-		action.setDocType(docType); //1: local Doc Changed
-		action.setRepos(repos);
-		action.setDoc(doc);
-		actionList.add(action);
 	}
 
 	private List<Doc> getLocalEntryList(Repos repos, Long pid, String path, int level) {
@@ -1867,119 +1842,32 @@ public class BaseController  extends BaseFunction{
 
 	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
-		String reposRPath = getReposRealPath(repos);
-		
-		
 		//Insert index add action for RDoc
-		CommonAction action = new CommonAction();
-		action.setAction(1); 	//1: Add 2: Delete 3:Update 4:Move 5:Copy
-		action.setType(4); 		//1:FS 2:VerRepos 3:DB 4:Index 
-		action.setDocType(1);	//0:DocName 1: RDoc 2:VDoc
-		action.setDoc(doc);
-		action.setLocalRootPath(reposRPath);
-		actionList.add(action);
+		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 4, 1, 1);
 		
 		//Insert add actions for VDoc
-		String content = doc.getContent();
-		if(null != content && !"".equals(content))
-		{
-			String reposVPath = getReposVirtualPath(repos);
-			
-			//Insert local add action for VDoc
-			action = new CommonAction();
-			action.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-			action.setType(1); 		//1:FS 2:VerRepos 3:DB 4:Index
-			action.setRepos(repos);
-			action.setDocType(2);	//0:DocName 1: RDoc 2:VDoc
-			action.setDoc(doc);
-			action.setLocalRootPath(reposVPath);
-			
-			List<CommonAction> subActionList = new ArrayList<CommonAction>();
-			//Insert index add action for VDoc	
-			CommonAction subAction = new CommonAction();
-			subAction.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-			subAction.setType(4); 		//1:FS 2:VerRepos 3:DB 4:Index 
-			subAction.setDocType(2);	//0:DocName 1: RDoc 2:VDoc
-			subActionList.add(subAction);
-			if(repos.getVerCtrl1() > 0)
-			{
-				subAction = new CommonAction();
-				subAction.setAction(1); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-				action.setType(2); 		//1:FS 2:VerRepos 3:DB 4:Index 
-				subAction.setType(2);	//0:DocName 1: RDoc 2:VDoc
-				subAction.setCommitMsg(commitMsg);
-				subAction.setCommitUser(commitUser);
-				subActionList.add(action);
-			}
-			action.setSubActionList(subActionList);
-			actionList.add(action);
-		}
+		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 1, 1, 2);
 	}
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
-	{
-		String reposRPath = getReposRealPath(repos);
-		String reposVPath = getReposVirtualPath(repos);
-		Integer level = 0;
-		
-		
-		switch(repos.getType())
-		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:			
-			level = getLevelByParentPath(doc.getPath());
-			BuildMultiActionListForDocDelete(actionList, repos, doc, level, doc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
-			break;
-		}
+	{	
+		//Insert index delete action for RDoc
+		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 4, 2, 1);
+
+		//Insert index delete action for VDoc
+		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 1, 2, 2);
 	}
 	
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
-		CommonAction action = new CommonAction();
-		action.setAction(3); //1: Add 2: Delete 3:Update 4:Move 5:Copy
-		action.setType(1);	//0:DocName 1: RDoc 2:VDoc
-		action.setDoc(doc);
-		action.setLocalRootPath(reposRPath);
-		actionList.add(action);
-
-		//deletePreviewFile(oldCheckSum);
-		Doc previewDoc = new Doc();
-		previewDoc.setPath("");
-		previewDoc.setName(doc.getCheckSum() + ".pdf");
-		String previewRootPath = getWebTmpPath() + "preview/";
-		action = new CommonAction();
-		action.setAction(2); //Delete
-		action.setType(1); //RDoc
-		action.setDoc(previewDoc);
-		action.setLocalRootPath(previewRootPath);
-		actionList.add(action);
+		//Insert index delete action for RDoc
+		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 1);
 	}
 	
 	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user) 
 	{
-		//updateIndexForVDoc(reposId, docId, reposRPath, parentPath, name);
-		CommonAction action = new CommonAction();
-		action.setAction(3); //Update
-		action.setDocType(2); //VDoc
-		action.setRepos(repos);
-		action.setDoc(doc);
-		actionList.add(action);		
-		
-		//Delete tmp saved doc content
-		action = new CommonAction();
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String vDocName = getVDocName(doc.getPath(), doc.getName());
-		Doc tempSavedDoc = new Doc();
-		tempSavedDoc.setPath("");
-		tempSavedDoc.setName(vDocName);
-		action.setAction(2); //Delete
-		action.setType(1); //1: FS
-		action.setDocType(1); //RDoc
-		action.setDoc(tempSavedDoc);
-		action.setLocalRootPath(userTmpDir);
-		actionList.add(action);
+		//Insert index delete action for VDoc
+		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 2);
 	}
 
 	protected int getLevelByParentPath(String path) 
@@ -1992,108 +1880,6 @@ public class BaseController  extends BaseFunction{
 		String [] paths = path.split("/");
 		return paths.length;
 	}
-
-	private void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, Integer level, String parentPath,
-			String reposRPath, String reposVPath, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		
-		if(repos.getType() == 1)
-		{
-			CommonAction action = new CommonAction();
-			action.setAction(2); //Delete
-			action.setDoc(doc);
-			actionList.add(action);
-		}
-		else
-		{
-			//Delete DocName Index
-			CommonAction action = new CommonAction();
-			action.setAction(2); //Delete
-			action.setType(0); //DocName
-			action.setDoc(doc);
-			actionList.add(action);
-		}
-		
-		//Delete VDoc
-		CommonAction action = new CommonAction();
-		action.setAction(2); //Delete
-		action.setType(2);	//VDoc
-		action.setDoc(doc);
-		action.setLocalRootPath(reposVPath);
-		actionList.add(action);	//local
-		//Commit VDoc delete
-		action = new CommonAction();
-		action.setAction(2); //Delete
-		action.setType(2);	//VDoc
-		action.setDoc(doc);
-		action.setRepos(repos);
-		action.setLocalRootPath(reposVPath);
-		action.setCommitMsg(commitMsg);
-		action.setCommitUser(commitUser);
-		actionList.add(action);	//commit
-
-		//Delete VDOc Index
-		action = new CommonAction();
-		action.setAction(2); //Delete
-		action.setType(2);	//VDoc
-		action.setDoc(doc);
-		action.setLocalRootPath(reposVPath);
-		actionList.add(action);	//index
-				
-		//Delete Index for RDoc
-		action = new CommonAction();
-		action.setAction(2); //Delete
-		action.setType(1); //RDoc
-		action.setDoc(doc);
-		action.setLocalRootPath(reposRPath);
-		actionList.add(action);
-		
-		//deletePreviewFile(oldCheckSum);
-		Doc previewDoc = new Doc();
-		previewDoc.setPath("");
-		previewDoc.setName(getVDocName(doc.getPath(), doc.getName()));
-		String previewRootPath = getWebTmpPath() + "preview/";
-		action = new CommonAction();
-		action.setAction(2); //Delete
-		action.setType(1); //RDoc
-		action.setDoc(previewDoc);
-		action.setLocalRootPath(previewRootPath);
-		actionList.add(action);	
-
-		//Get SubDocList
-		if(repos.getType() == 1)
-		{
-			Doc qDoc = new Doc();
-			qDoc.setPid(doc.getDocId());
-			List<Doc> subDocList = reposService.getDocList(doc);
-			for(int i=0; i< subDocList.size(); i++)
-			{
-				Doc subDoc = subDocList.get(i);
-				BuildMultiActionListForDocDelete(actionList, repos, subDoc, null, parentPath + doc.getName() + "/", reposRPath, reposVPath, commitMsg, commitUser);	
-			}
-		}
-		else
-		{
-			File file = new File(reposRPath + parentPath, doc.getName());
-			if(file.isDirectory())
-			{
-				File[] tmp = file.listFiles();
-		    	for(int i=0;i<tmp.length;i++)
-		    	{
-		    		File subEntry = tmp[i];
-		    		String name = subEntry.getName();
-		    		Doc subDoc = new Doc();
-		    		subDoc.setVid(repos.getId());
-		    		subDoc.setDocId(buildDocIdByName(level,subEntry.getName()));
-		    		subDoc.setPid(doc.getDocId());
-		    		subDoc.setPath(parentPath + doc.getName() + "/");
-		    		subDoc.setName(name);
-		    		BuildMultiActionListForDocDelete(actionList, repos, subDoc, level+1, subDoc.getPath(), reposRPath, reposVPath, commitMsg, commitUser);
-		    	}
-			}	
-		}
-	}
-
 	
 	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
@@ -2449,7 +2235,9 @@ public class BaseController  extends BaseFunction{
 	private boolean executeIndexActionForRDoc(CommonAction action, ReturnAjax rt) 
 	{
 		Doc doc = action.getDoc();
-		String localRootPath = action.getLocalRootPath();
+		
+		Repos repos = action.getRepos();
+		String localRootPath = getReposRealPath(repos);
 		
 		switch(action.getAction())
 		{
@@ -2496,7 +2284,9 @@ public class BaseController  extends BaseFunction{
 	{		
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
-		String localRootPath = action.getLocalRootPath();
+		
+		Repos repos = action.getRepos();
+		String localRootPath = getReposRealPath(repos);
 		
 		switch(action.getAction())
 		{
@@ -2523,7 +2313,10 @@ public class BaseController  extends BaseFunction{
 	{	
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
-		String localRootPath = action.getLocalRootPath();
+		
+		Repos repos = action.getRepos();
+		String localRootPath = getReposRealPath(repos);
+		
 		String parentPath = "";
 		if(doc.getPath() != null)
 		{
@@ -2953,22 +2746,7 @@ public class BaseController  extends BaseFunction{
 			
 			unlock(); //线程锁
 		}
-//		
-//		//Add Lucene Index For dstDoc
-//		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, login_user);
-//		
-//		//Do copy DB SubDocs
-//		if(executeDBActionList(actionList.getDBActionList(), rt) == false)
-//		{
-//			//Do delete Doc and SubDocs
-//			DeleteDocAndSubDocs_DB(dstDoc);
-//				
-//			//unlock SrcDoc
-//			unlockDoc(docId,login_user,srcDoc);
-//			return false;
-//		}
-//		actionList.setDBActionList(null);
-		
+						
 		//复制文件或目录
 		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
 		{
@@ -2999,6 +2777,9 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
+		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
+		BuildMultiActionListForDocCopy(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser);
+		
 		unlockDoc(srcDoc,login_user,srcDocLock);
 		unlockDoc(dstDoc,login_user,dstDocLock);
 		
@@ -3012,104 +2793,17 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private void BuildMultiActionListForDocCopy(MultiActionList actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user) 
+	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
 	{	
-		String reposRPath = getReposRealPath(repos);
-		String reposVPath = getReposVirtualPath(repos);
+	    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+		//ActionType 1:add 2:delete 3:update 4:move 5:copy
+	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
 		
-		switch(repos.getType())
-		{
-		case 1:
-			BuildMultiActionListForDocCopy_DB(actionList, repos, dstDoc, dstDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);
-			break;
-		case 2:
-			BuildMultiActionListForDocCopy_FS(actionList, repos, dstDoc, dstDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);
-			break;
-		case 3:
-			BuildMultiActionListForDocCopy_SVN(actionList, repos, dstDoc, dstDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);
-			break;
-		case 4:
-			BuildMultiActionListForDocCopy_GIT(actionList, repos, dstDoc, dstDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);
-			break;			
-		}
-	}
-	
-	
-	private void BuildMultiActionListForDocCopy_GIT(MultiActionList actionList, Repos repos, Doc dstDoc, Doc dstDoc2,
-			String reposRPath, String reposVPath, String commitMsg, String commitUser, User login_user) {
-		// TODO Auto-generated method stub
+		//Insert copy Action For RealDoc Index Copy (对于目录则会进行递归)
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 5, 1);
 		
-	}
-
-	private void BuildMultiActionListForDocCopy_SVN(MultiActionList actionList, Repos repos, Doc dstDoc, Doc dstDoc2,
-			String reposRPath, String reposVPath, String commitMsg, String commitUser, User login_user) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void BuildMultiActionListForDocCopy_FS(MultiActionList actionList, Repos repos, Doc dstDoc, Doc dstDoc2,
-			String reposRPath, String reposVPath, String commitMsg, String commitUser, User login_user) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void BuildMultiActionListForDocCopy_DB(MultiActionList actionList, Repos repos, Doc srcDoc, Doc dstDoc,
-			String reposRPath, String reposVPath,
-			String commitMsg, String commitUser, User login_user) 
-	{
-		List<CommonAction> indexActionList = actionList.getIndexActionList();
-		List<CommonAction> localActionList = actionList.getLocalActionList();
-		List<CommonAction> commitActionList = actionList.getCommitActionList();
-		List<CommonAction> dbActionList = actionList.getDBActionList();
-		
-		CommonAction action = new CommonAction();
-
-		action.setAction(5); //Copy
-		action.setDoc(dstDoc);
-		dbActionList.add(action);
-		
-		//Copy VDoc
-		action.setType(2);	//VDoc
-		action.setLocalRootPath(reposVPath);
-		action.setCommitMsg(commitMsg);
-		action.setCommitUser(commitUser);
-		localActionList.add(action);	//local
-		commitActionList.add(action);	//commit
-		indexActionList.add(action);	//index
-				
-		//Copy Index for RDoc
-		action.setType(1); //RDoc
-		action.setLocalRootPath(reposRPath);
-		indexActionList.add(action);
-
-		Doc qDoc = new Doc();
-		qDoc.setPid(srcDoc.getDocId());
-		List<Doc> subDocList = reposService.getDocList(qDoc);
-		for(int i=0; i< subDocList.size(); i++)
-		{
-			Doc subDoc = subDocList.get(i);
-			Doc dstSubDoc = copyDoc(subDoc);
-			int level = getLevelByParentPath(dstDoc.getPath());
-			dstSubDoc.setPid(dstDoc.getDocId());
-			dstSubDoc.setPath(dstDoc.getPath());
-			dstSubDoc.setDocId(buildDocIdByName(level, dstSubDoc.getName()));
-			BuildMultiActionListForDocCopy_DB(actionList, repos, subDoc, dstSubDoc, reposRPath, reposVPath, commitMsg, commitUser, login_user);	
-		}
-	}
-	
-	//For copyDoc
-	private Doc copyDoc(Doc doc)
-	{
-		Doc dstDoc = new Doc();
-		dstDoc.setId(null);	//置空id,以便新建一个doc
-		dstDoc.setVid(doc.getVid());
-		dstDoc.setPid(doc.getPid());
-		dstDoc.setPath(doc.getPath());
-		dstDoc.setName(doc.getName());
-		dstDoc.setType(doc.getType());
-		
-		dstDoc.setContent(doc.getContent());
-		return dstDoc;
+		//Copy VDoc (包括VDoc VerRepos and Index)
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 5, 2);
 	}
 
 	protected boolean updateDocContent(Repos repos, Long docId, String parentPath, String docName, String content, 
@@ -3143,7 +2837,6 @@ public class BaseController  extends BaseFunction{
 	private boolean updateDocContent_FS(Repos repos, Long docId, String parentPath, String docName, String content,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getVDocName(parentPath, docName);
@@ -3174,6 +2867,8 @@ public class BaseController  extends BaseFunction{
 		doc.setName(docName);
 		doc.setContent(content);
 		BuildCommonActionListForDocContentUpdate(actionList, repos, doc, login_user);
+		
+		//Delete tmp saved doc content
 		
 		return true;
 	}
@@ -4579,9 +4274,15 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//删除预览文件
-	protected void deletePreviewFile(String checkSum) 
+	protected void deletePreviewFile(Doc doc) 
 	{
-		String dstName = checkSum + ".pdf";
+		if(doc == null || doc.getCheckSum() == null)
+		{
+			return;
+		}
+		
+		String checkSum = doc.getCheckSum();
+		String dstName = doc.getSize() + "_" + checkSum + ".pdf";
 		String dstPath = getWebTmpPath() + "preview/" + dstName;
 		delFileOrDir(dstPath);
 	}
@@ -5432,52 +5133,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return svnUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);		
-	}
-	
-	//版本仓库底层通用接口
-	protected void insertAddFileAction(List<CommitAction> actionList,
-			String parentPath, String entryName, String localPath, boolean isSubAction) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(1);
-    	action.setEntryType(1);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setLocalRootPath(localPath);
-    	action.isSubAction = isSubAction;
-    	actionList.add(action);
-		
-	}
-    
-	protected void insertAddDirAction(List<CommitAction> actionList,
-			String parentPath, String entryName, boolean isSubAction, boolean hasSubList, List<CommitAction> subActionList) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(1);
-    	action.setEntryType(2);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.isSubAction = isSubAction;
-    	action.hasSubList = hasSubList;
-    	action.setSubActionList(subActionList);
-    	actionList.add(action);
-    	
-	}
-	
-	protected void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(2);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	actionList.add(action);
-	}
-    
-	protected void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
-    	CommitAction action = new CommitAction();
-    	action.setAction(3);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setLocalRootPath(localPath);
-    	action.setLocalRefRootPath(localRefPath);
-    	actionList.add(action);	
 	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/
