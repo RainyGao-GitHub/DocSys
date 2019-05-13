@@ -259,10 +259,12 @@ public class GITUtil  extends BaseController{
             }
             
             RevCommit revCommit = walk.parseCommit(objId);
-            System.out.println("revCommit name:" + revCommit.getName());
-            System.out.println("revCommit type:" + revCommit.getType());
+            String commitId = revCommit.getName();	//revision
+            long commitTime = revCommit.getCommitTime();	//commitTime
+            System.out.println("revCommit revision:" + revCommit.getName());
+            System.out.println("revCommit commitTime:" + revCommit.getType());
             System.out.println("revCommit commitMsg:" + revCommit.getShortMessage());
-    		
+            
             RevTree revTree = revCommit.getTree();
             System.out.println("revTree name:" + revTree.getName());
             System.out.println("revTree id:" + revTree.getId());
@@ -277,9 +279,7 @@ public class GITUtil  extends BaseController{
             		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
             		if(type > 0)
             		{
-            			String name = treeWalk.getNameString();
-            			ObjectId objectId = treeWalk.getObjectId(0);
-            			
+            			String name = treeWalk.getNameString();			
                 		Doc subEntry = new Doc();
                 		subEntry.setVid(repos.getId());
                 		subEntry.setPid(pid);
@@ -290,8 +290,8 @@ public class GITUtil  extends BaseController{
                    		subEntry.setType(type);
                 		//subEntry.setSize();
                 		//subEntry.setCreateTime();
-                		//subEntry.setLatestEditTime();
-                   		//subEntry.setRevision("");
+                		subEntry.setLatestEditTime(commitTime);
+                   		subEntry.setRevision(commitId);
                 		subEntryList.add(subEntry);
             		}
             	}

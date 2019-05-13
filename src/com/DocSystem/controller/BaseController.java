@@ -95,9 +95,12 @@ public class BaseController  extends BaseFunction{
 		List<Doc> docList = new ArrayList<Doc>();
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
+    	printObject("getAccessableSubDocList() indexHashMap:", indexHashMap);
 		
 		List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
-    	if(localEntryList != null)
+		printObject("getAccessableSubDocList() localEntryList:", localEntryList);
+		
+		if(localEntryList != null)
     	{
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
@@ -146,6 +149,7 @@ public class BaseController  extends BaseFunction{
     	}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
+		printObject("getAccessableSubDocList() remoteEntryList:", remoteEntryList);
     	if(remoteEntryList != null)
     	{
 	    	for(int i=0;i<remoteEntryList.size();i++)
