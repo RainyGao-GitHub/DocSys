@@ -113,13 +113,7 @@ public class BaseController  extends BaseFunction{
 	    			indexHashMap.put(doc.getName(), doc);
 	    			
 	    			//Add to actionList for AutoSyncUp
-	    			CommonAction action = new CommonAction();
-	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(1); //1: Add
-	    			action.setDocType(1); //1: local Doc Changed
-	    			action.setRepos(repos);
-	    			action.setDoc(doc);
-	    			actionList.add(action);
+	    			insertSyncUpAction(actionList,repos,doc,5,1,1);
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
@@ -128,13 +122,7 @@ public class BaseController  extends BaseFunction{
 		    		indexHashMap.put(doc.getName(), doc);
 		    		
 		    		//Add to actionList for AutoSyncUp
-	    			CommonAction action = new CommonAction();
-	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(3); //3: localModify
-	    			action.setDocType(1); //1: local Doc Changed
-	    			action.setRepos(repos);
-	    			action.setDoc(doc);
-	    			actionList.add(action);
+		    		insertSyncUpAction(actionList,repos,doc,5,3,1);
 	    		}
 	    		
 				DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
@@ -162,13 +150,7 @@ public class BaseController  extends BaseFunction{
 		    		indexHashMap.put(doc.getName(), doc);
 	    			
 		    		//Add to actionList for AutoSyncUp
-	    			CommonAction action = new CommonAction();
-	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(1); //1: remoteAdd
-	    			action.setDocType(2); //2: remote Doc Changed
-	    			action.setRepos(repos);
-	    			action.setDoc(doc);
-	    			actionList.add(action);
+		    		insertSyncUpAction(actionList,repos,doc,5,1,2);
 		    			
 		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
 					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
@@ -185,18 +167,24 @@ public class BaseController  extends BaseFunction{
 		    		indexHashMap.put(doc.getName(), doc);
 	    			
 		    		//Add to actionList for AutoSyncUp
-	    			CommonAction action = new CommonAction();
-	    			action.setType(5); //5: AutoSyncUp
-	    			action.setAction(3); //3: remoteModify
-	    			action.setDocType(2); //2: remote Doc Changed
-	    			action.setRepos(repos);
-	    			action.setDoc(doc);
-	    			actionList.add(action);
+		    		insertSyncUpAction(actionList,repos,doc,5,3,2);
 	    		} 
 	    	}
     	}
     	
     	return docList;
+	}
+
+	private void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType) {
+		actionId = 5; //AutoSyncUp
+
+		CommonAction action = new CommonAction();
+		action.setType(actionId); //5: AutoSyncUp
+		action.setAction(actionType); //3: localModify
+		action.setDocType(docType); //1: local Doc Changed
+		action.setRepos(repos);
+		action.setDoc(doc);
+		actionList.add(action);
 	}
 
 	private List<Doc> getLocalEntryList(Repos repos, Long pid, String path, int level) {
@@ -4113,7 +4101,7 @@ public class BaseController  extends BaseFunction{
 	//这是一个非常重要的底层接口，每个doc的权限都是使用这个接口获取的
 	protected DocAuth getDocAuthFromHashMap(Long docId, DocAuth parentDocAuth,HashMap<Long,DocAuth> docAuthHashMap)
 	{
-		System.out.println("getDocAuthFromHashMap() docId:" + docId);
+		//System.out.println("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
 		{
 			return null;
@@ -4143,6 +4131,7 @@ public class BaseController  extends BaseFunction{
 			if(parentHeritable == null || parentHeritable == 0)
 			{
 				//不可继承
+				System.out.println("getDocAuthFromHashMap() docId:" + docId + "docAuth is null and parentHeritable is null or 0");
 				return null;
 			}
 			return parentDocAuth;
@@ -4160,6 +4149,7 @@ public class BaseController  extends BaseFunction{
 				if(parentHeritable == null || parentHeritable == 0)
 				{
 					//不可继承
+					System.out.println("getDocAuthFromHashMap() docId:" + docId + " docAuth priority < parentPriority and parentHeritable is null or 0");
 					return null;
 				}
 				return parentDocAuth;
