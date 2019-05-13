@@ -272,11 +272,22 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean isDocRemoteChanged(Doc doc, Doc entry) {
+	private boolean isDocRemoteChanged(Doc doc, Doc remoteEntry) {
 		if(doc == null)
 		{
+			if(remoteEntry == null)
+			{
+				return false;
+			}
+			
 			System.out.println("isDocRemoteChanged() doc is null"); 
 			return true;
+		}
+		
+		if(remoteEntry == null)
+		{
+			System.out.println("isDocRemoteChanged() remoteEntry is null"); 
+			return true;			
 		}
 		
 		if(doc.getRevision() == null)
@@ -285,11 +296,11 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 			
-		if(!doc.getRevision().equals(entry.getRevision()))
+		if(!doc.getRevision().equals(remoteEntry.getRevision()))
 		{
 			System.out.println("isDocRemoteChanged() revision not matched");
 			printObject("isDocRemoteChanged() doc:",doc);
-			printObject("isDocRemoteChanged() remoteEntry:",entry);
+			printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 			return true;
 		}
 		return false;
