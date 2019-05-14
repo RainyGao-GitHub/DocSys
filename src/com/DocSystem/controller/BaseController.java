@@ -2261,9 +2261,9 @@ public class BaseController  extends BaseFunction{
 	private boolean dbDeleteDoc(Doc doc) {
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
-		qDoc.setDocId(doc.getDocId());
-		//qDoc.setName(doc.getName());
-		//qDoc.setPath(doc.getPath());
+		//qDoc.setDocId(doc.getDocId());
+		qDoc.setName(doc.getName());
+		qDoc.setPath(doc.getPath());
 		if(reposService.deleteDoc(doc) == 0)
 		{
 			return false;
