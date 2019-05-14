@@ -2264,7 +2264,7 @@ public class BaseController  extends BaseFunction{
 		//qDoc.setDocId(doc.getDocId());
 		qDoc.setName(doc.getName());
 		qDoc.setPath(doc.getPath());
-		if(reposService.deleteDoc(doc) == 0)
+		if(reposService.deleteDoc(qDoc) == 0)
 		{
 			return false;
 		}
