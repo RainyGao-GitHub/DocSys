@@ -1405,7 +1405,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Integer docId, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void getDocHistory(Integer reposId, Long docId, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();

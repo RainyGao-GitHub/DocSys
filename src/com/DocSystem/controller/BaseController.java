@@ -2036,6 +2036,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//Do commmit to verRepos and updateDbDoc
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt);
+				if(revision != null)
 				{
 					dbDoc.setSize(localEntry.length());
 					dbDoc.setLatestEditor(login_user.getId());
