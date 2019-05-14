@@ -19,14 +19,13 @@ public interface DocMapper {
     int updateByPrimaryKeyWithBLOBs(Doc record);
 
     int updateByPrimaryKey(Doc record);
-
-   	int add(Doc doc);
    	
     //get DocList
     List<Doc> selectSelective(Doc record);
+    
+    //delete selctive
+	int deleteSelective(Doc record);
 
-	Doc getDocInfo(Integer reposId, Long docId);
-	
 	//For Doc Search
 	List<Doc> queryDocList(HashMap<String, Object> params);
 }

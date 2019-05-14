@@ -233,4 +233,8 @@ public class ReposServiceImpl implements ReposService {
 	{
 		return docDao.queryDocList(params);
 	}
+
+	public int deleteDoc(Doc doc) {
+		return docDao.deleteSelective(doc);	
+	}
 }  

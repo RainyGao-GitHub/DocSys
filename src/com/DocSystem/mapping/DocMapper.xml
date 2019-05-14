@@ -302,6 +302,59 @@
     order by type desc,name asc
   </select>
  
+  <delete id="deleteSelective" parameterType="com.DocSystem.entity.Doc" >
+    delete from doc
+    where 1 = 1
+    <if test="id != null">
+        and ID = #{id,jdbcType=INTEGER}
+    </if>
+    <if test="name != null">
+    	and NAME = #{name,jdbcType=VARCHAR}
+    </if>
+    <if test="type != null">
+    	and TYPE = #{type,jdbcType=INTEGER}
+    </if>
+    <if test="size != null">
+        and SIZE = #{size,jdbcType=BIGINT}
+    </if>
+    <if test="checkSum != null">
+        and CHECK_SUM = #{checkSum,jdbcType=VARCHAR}
+    </if>
+    <if test="revision != null">
+        and REVISION = #{revision,jdbcType=VARCHAR}
+    </if>
+    <if test="path != null">
+        and PATH = #{path,jdbcType=VARCHAR}
+    </if>
+    <if test="docId != null">
+        and DOC_ID = #{docId,jdbcType=BIGINT}
+    </if>
+    <if test="pid != null">
+        and PID = #{pid,jdbcType=BIGINT}
+    </if>
+    <if test="vid != null">
+        and VID = #{vid,jdbcType=INTEGER}
+    </if>
+	<if test="creator != null">
+		and CREATOR = #{creator,jdbcType=INTEGER}
+	</if>
+	<if test="createTime != null">
+		and CREATE_TIME = #{createTime,jdbcType=BIGINT}
+	</if>
+	<if test="latestEditor != null">
+		and LATEST_EDITOR = #{latestEditor,jdbcType=INTEGER}
+	</if>
+	<if test="latestEditTime != null">
+		and LATEST_EDIT_TIME = #{latestEditTime,jdbcType=BIGINT}
+	</if>
+    <if test="pwd != null">
+        and PWD = #{pwd,jdbcType=VARCHAR}
+    </if>
+    <if test="content != null">
+        and CONTENT = #{content,jdbcType=LONGVARCHAR}
+    </if>
+  </delete>
+  
   <select id="queryDocList" parameterType="HashMap" resultMap="BaseResultMap">
 	select 
     <include refid="Base_Column_List" />

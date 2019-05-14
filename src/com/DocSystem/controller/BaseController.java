@@ -1798,6 +1798,7 @@ public class BaseController  extends BaseFunction{
 	private boolean dbAddDoc(Doc doc) {
 		if(reposService.addDoc(doc) == 0)
 		{
+			System.out.println("dbAddDoc() addDoc to db failed");		
 			return false;
 		}	
 		return true;
@@ -2219,6 +2220,13 @@ public class BaseController  extends BaseFunction{
 		List<Doc> list = reposService.getDocList(doc);
 		if(list == null || list.size() == 0)
 		{
+			return null;
+		}
+		
+		if(list.size() > 1)
+		{
+			System.out.println("dbGetDoc() 数据库存在多个DOC记录"); 
+			reposService.deleteDoc(doc);
 			return null;
 		}
 			
