@@ -2017,10 +2017,10 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = reposRealPath + doc.getPath();
 		
 		Doc dbDoc = dbGetDoc(doc);
-		File localEntry = new File(localParentPath,doc.getName());
+		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
 
-		if(localEntry.exists())
+		if(localEntry != null)
 		{
 			if(dbDoc == null)	//localAdded
 			{
@@ -2028,8 +2028,9 @@ public class BaseController  extends BaseFunction{
 				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: add " + doc.getPath()+doc.getName(), login_user.getName(), rt);
 				if(revision != null)
 				{
-					doc.setRevision(revision);
-					dbAddDoc(doc);
+					localEntry.setRevision(revision);
+					localEntry.setLatestEditorName(login_user.getName());
+					dbAddDoc(localEntry);
 				}
 			}
 			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
@@ -2038,10 +2039,10 @@ public class BaseController  extends BaseFunction{
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt);
 				if(revision != null)
 				{
-					dbDoc.setSize(localEntry.length());
-					dbDoc.setLatestEditor(login_user.getId());
-					dbDoc.setLatestEditTime(localEntry.lastModified());
+					dbDoc.setSize(localEntry.getSize());
+					dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
 					dbDoc.setRevision(revision);
+					dbDoc.setLatestEditorName(login_user.getName());
 					dbUpdateDoc(dbDoc);
 				}
 			}
