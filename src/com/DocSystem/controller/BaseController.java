@@ -2005,7 +2005,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("lockDoc() Failed to lock Doc: " + doc.getName());
+				System.out.println("syncupForLocalDocChanged() Failed to lock Doc: " + doc.getName());
 				return false;
 			}
 			unlock(); //线程锁
@@ -2013,8 +2013,6 @@ public class BaseController  extends BaseFunction{
 		
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
-		String reposRealPath = getReposRealPath(repos);
-		String localParentPath = reposRealPath + doc.getPath();
 		
 		Doc dbDoc = dbGetDoc(doc);
 		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
@@ -2024,7 +2022,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc == null)	//localAdded
 			{
-				//Do commit to verRepos and addDbDoc
+				System.out.println("syncupForLocalDocChanged() verReposRealDocAdd: " + doc.getPath()+doc.getName());
 				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: add " + doc.getPath()+doc.getName(), login_user.getName(), rt);
 				if(revision != null)
 				{
@@ -2035,7 +2033,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 			{
-				//Do commmit to verRepos and updateDbDoc
+				System.out.println("syncupForLocalDocChanged() verReposRealDocCommit: " + doc.getPath()+doc.getName());
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt);
 				if(revision != null)
 				{
