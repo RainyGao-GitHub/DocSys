@@ -165,6 +165,11 @@ public class SVNUtil  extends BaseController{
 	    		startRevision = endRevision = Long.parseLong(revision);
 	    	}
 	    	
+	    	if(repository.checkPath(filePath, startRevision) ==  SVNNodeKind.NONE) 
+			{
+	        	return null;
+			}
+	    		    	
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
  

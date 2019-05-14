@@ -2130,6 +2130,12 @@ public class BaseController  extends BaseFunction{
 
 	private Doc svnGetDoc(Repos repos, Long docId, String parentPath, String entryName, String revision) {
 		System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
+		if(parentPath == null)
+		{
+			System.out.println("svnGetDoc() parentPath is null");
+			return null;			
+		}
+		
 		if(entryName == null || entryName.isEmpty())
 		{
 			System.out.println("svnGetDoc() entryName can not be empty");
