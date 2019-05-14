@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -157,6 +158,16 @@ public class BaseController  extends BaseFunction{
 		    		insertSyncUpAction(actionList,repos,doc,5,3,2, null);
 	    		} 
 	    	}
+    	}
+    	
+    	//All dbDocs which not in docList should be deleted
+    	for(int i=0; i< docList.size(); i++)
+    	{
+    		indexHashMap.remove(docList.get(i).getName());
+    	}
+    	for (Entry<String, Doc> entry : indexHashMap.entrySet()) {
+    		Doc deleteDoc = entry.getValue();
+    		insertDeleteAction(actionList, repos, deleteDoc, null, null, 3, 2, 1, null);
     	}
     	
     	return docList;
@@ -2247,7 +2258,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean dbDeleteDoc(Doc doc) {
-		if(reposService.deleteDoc(doc.getId()) == 0)
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setDocId(doc.getDocId());
+		//qDoc.setName(doc.getName());
+		//qDoc.setPath(doc.getPath());
+		if(reposService.deleteDoc(doc) == 0)
 		{
 			return false;
 		}
@@ -2274,23 +2290,11 @@ public class BaseController  extends BaseFunction{
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			if(reposService.addDoc(action.getDoc()) == 0)
-			{
-				return false;
-			}
-			return true;
+			return dbAddDoc(action.getDoc());
 		case 2: //Delete Doc
-			if(reposService.deleteDoc(action.getDoc().getId()) == 0)
-			{
-				return false;
-			}
-			return true;
+			return dbDeleteDoc(action.getDoc());
 		case 3: //Update Doc
-			if(reposService.updateDoc(action.getDoc()) == 0)
-			{
-				return false;
-			}
-			return true;
+			return dbUpdateDoc(action.getDoc());
 		}
 		return false;
 	}
