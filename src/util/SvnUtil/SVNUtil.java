@@ -422,7 +422,7 @@ public class SVNUtil  extends BaseController{
 		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 		        if (nodeKind == SVNNodeKind.NONE) 
 		        {
-		        	return "";
+		        	return repository.getLatestRevision()+"";
 		        }
 		        //Do delete remote Entry
 		        return svnDelete(parentPath, entryName, commitMsg, commitUser);
@@ -473,12 +473,11 @@ public class SVNUtil  extends BaseController{
 		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
 			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
 	        }
-	        
-	        
+	                
 	        if(commitActionList == null || commitActionList.size() ==0)
 	        {
 	        	System.out.println("doAutoCommmit() There is nothing to commit");
-	        	return "";
+	        	return repository.getLatestRevision() + "";
 	        }
 	        ISVNEditor editor = getCommitEditor(commitMsg);
 	        if(editor == null)
@@ -842,7 +841,12 @@ public class SVNUtil  extends BaseController{
     	{
 	    	String remoteEntryPath = parentPath + entryName;
 	    	String localEntryPath = localPath + entryName;
+
 	    	String localRefEntryPath = localRefPath + entryName;
+	    	if(localRefPath == null)
+	    	{
+	    		localRefEntryPath = null;
+	    	}
 	    	
 	    	File localEntry = new File(localEntryPath);
 	    	if(localEntry.exists())
@@ -855,6 +859,10 @@ public class SVNUtil  extends BaseController{
 	        		String subParentPath = remoteEntryPath + "/";
 		    		String subLocalPath = localEntryPath + "/";
 		    		String subLocalRefPath = localRefEntryPath + "/";
+		    		if(localRefEntryPath == null)
+		    		{
+		    			subLocalRefPath = null;
+		    		}
 		    		
 	    	        //If Remote path not exist
 	        		if (nodeKind == SVNNodeKind.NONE) {
