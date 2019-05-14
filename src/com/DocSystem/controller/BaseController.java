@@ -285,6 +285,19 @@ public class BaseController  extends BaseFunction{
 			return true;			
 		}
 		
+		if(doc.getType() != doc.getType())
+		{
+			System.out.println("isDocLocalChanged() type is not matched"); 
+			return true;
+		}
+		
+		//For dir
+		if(doc.getType() == 2)
+		{
+			return false;
+		}
+		
+		//For File
 		if(doc.getLatestEditTime().equals(localEntry.getLatestEditTime()) && doc.getSize().equals(localEntry.getSize()))
 		{
 			return false;
@@ -314,13 +327,19 @@ public class BaseController  extends BaseFunction{
 			return true;			
 		}
 		
-		if(doc.getRevision() == null)
+		if(doc.getType() != doc.getType())
 		{
-			System.out.println("isDocRemoteChanged() doc.revision is null"); 
+			System.out.println("isDocLocalChanged() type is not matched"); 
 			return true;
 		}
-			
-		if(doc.getRevision().equals(remoteEntry.getRevision()))
+		
+		//For dir
+		if(doc.getType() == 2)
+		{
+			return false;
+		}
+		
+		if(doc.getRevision() == null || doc.getRevision().equals(remoteEntry.getRevision()))
 		{
 			return false;
 		}
