@@ -17,8 +17,8 @@ public class CommitAction{
     
     //subAction
     public boolean isSubAction = false;
+
     //Sub Action List
-    public boolean hasSubList = false;
     private List<CommitAction> subActionList = null;
 	
 	public void setAction(Integer action) {
@@ -92,15 +92,6 @@ public class CommitAction{
 	public String getLocalRootPath()
 	{
 		return localRootPath;
-	}
-	
-	public boolean getHasSubList()
-	{
-		return hasSubList;
-	}
-	
-	public void setHasSubList(boolean hasSubList) {
-		this.hasSubList = hasSubList;
 	}
 	
 	public void setSubActionList(List<CommitAction> subActionList) {

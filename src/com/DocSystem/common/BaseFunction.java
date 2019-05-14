@@ -180,14 +180,13 @@ public class BaseFunction{
 	}
     
 	protected void insertAddDirAction(List<CommitAction> actionList,
-			String parentPath, String entryName, boolean isSubAction, boolean hasSubList, List<CommitAction> subActionList) {
+			String parentPath, String entryName, boolean isSubAction, List<CommitAction> subActionList) {
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setEntryType(2);
     	action.setParentPath(parentPath);
     	action.setEntryName(entryName);
     	action.isSubAction = isSubAction;
-    	action.hasSubList = hasSubList;
     	action.setSubActionList(subActionList);
     	actionList.add(action);
     	

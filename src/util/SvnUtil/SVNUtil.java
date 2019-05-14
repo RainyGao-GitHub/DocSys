@@ -540,7 +540,6 @@ public class SVNUtil  extends BaseController{
 	    	    	action.setParentPath(path);
 	    	    	action.setEntryName(name);
 	    	    	action.isSubAction = isSubAction;
-	    	    	action.hasSubList = true;
 	    	    	
 	    			//Build commitAction
 	    	    	if(isSubAction == false)
@@ -697,7 +696,7 @@ public class SVNUtil  extends BaseController{
 		//If entry is Dir we need to check if it have subActionList
     	if(action.isSubAction)	//No need to open the Root and Parent
     	{
-    		if(action.hasSubList == false)	
+    		if(action.getSubActionList() == null)	
     		{
     			return addEntry(editor, parentPath, entryName, false, null, false, false, false);
     		}
@@ -726,7 +725,7 @@ public class SVNUtil  extends BaseController{
     	}
     	else	//need to open the root and parent
     	{
-    		if(action.hasSubList == false)	
+    		if(action.getSubActionList() == null)	
     		{
     			return addDir(editor, parentPath, entryName);
     		}
@@ -878,7 +877,7 @@ public class SVNUtil  extends BaseController{
 			            }
 			        	
 			        	//Insert the DirAdd Action
-			        	insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
+			        	insertAddDirAction(actionList,parentPath,entryName,isSubAction,subActionList);
 			        	return;
 		            }
 	        		else
@@ -1054,11 +1053,11 @@ public class SVNUtil  extends BaseController{
 			if(deleteOld)		
 			{
 				insertDeleteAction(commitActionList,parentPath, entryName);
-				insertAddDirAction(commitActionList,parentPath, entryName, false, false, null);
+				insertAddDirAction(commitActionList,parentPath, entryName, false, null);
 			}
 			else
 			{
-				insertAddDirAction(commitActionList,parentPath, entryName, false, false, null);
+				insertAddDirAction(commitActionList,parentPath, entryName, false, null);
 			
 				if(!parentPath.isEmpty())
 				{

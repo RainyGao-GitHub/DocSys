@@ -1128,7 +1128,7 @@ public class GITUtil  extends BaseController{
 		            }
 		        	
 		        	//Insert the DirAdd Action
-		        	insertAddDirAction(actionList,parentPath,entryName,isSubAction,true,subActionList);
+		        	insertAddDirAction(actionList,parentPath,entryName,isSubAction,subActionList);
 		        	return true;
 	            }
         		
