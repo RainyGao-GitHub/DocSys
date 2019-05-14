@@ -253,17 +253,18 @@ public class BaseController  extends BaseFunction{
 		if(!localEntry.exists())
 		{
 			System.out.println("isDocLocalChanged() localEntry not exist"); 
+			return true;
+		}
+		
+		if(doc.getLatestEditTime().equals(localEntry.lastModified()) && doc.getSize().equals(localEntry.length()))
+		{
 			return false;
 		}
 		
-		if(doc.getLatestEditTime().equals(localEntry.lastModified()) || doc.getSize().equals(localEntry.length()))
-		{
-			System.out.println("isDocLocalChanged() lastEditTime and size not matched");
-			printObject("isDocLocalChanged() doc:",doc);
-			printObject("isDocLocalChanged() localEntry:",localEntry);
-			return true;
-		}
-		return false;
+		System.out.println("isDocLocalChanged() lastEditTime and size not matched");
+		printObject("isDocLocalChanged() doc:",doc);
+		printObject("isDocLocalChanged() localEntry:",localEntry);
+		return true;
 	}
 
 	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) {
@@ -284,14 +285,15 @@ public class BaseController  extends BaseFunction{
 			return true;			
 		}
 		
-		if(doc.getLatestEditTime().equals(localEntry.getLatestEditTime()) || doc.getSize().equals(localEntry.getSize()))
+		if(doc.getLatestEditTime().equals(localEntry.getLatestEditTime()) && doc.getSize().equals(localEntry.getSize()))
 		{
-			System.out.println("isDocLocalChanged() lastEditTime and size not matched");
-			printObject("isDocLocalChanged() doc:",doc);
-			printObject("isDocLocalChanged() localEntry:",localEntry);
-			return true;
-		}
-		return false;
+			return false;
+		}	
+		
+		System.out.println("isDocLocalChanged() lastEditTime and size not matched");
+		printObject("isDocLocalChanged() doc:",doc);
+		printObject("isDocLocalChanged() localEntry:",localEntry);
+		return true;
 	}
 	
 	private boolean isDocRemoteChanged(Doc doc, Doc remoteEntry) {
@@ -318,14 +320,15 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 			
-		if(!doc.getRevision().equals(remoteEntry.getRevision()))
+		if(doc.getRevision().equals(remoteEntry.getRevision()))
 		{
-			System.out.println("isDocRemoteChanged() revision not matched");
-			printObject("isDocRemoteChanged() doc:",doc);
-			printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
-			return true;
+			return false;
 		}
-		return false;
+		
+		System.out.println("isDocRemoteChanged() revision not matched");
+		printObject("isDocRemoteChanged() doc:",doc);
+		printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
+		return true;
 	}
 
 	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) {
