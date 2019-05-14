@@ -2041,21 +2041,26 @@ public class BaseController  extends BaseFunction{
 					dbUpdateDoc(dbDoc);
 				}
 			}
-			else if(isDocRemoteChanged(dbDoc, remoteEntry))	//local No change but remoteChanged, we are not suere
+			else if(isDocRemoteChanged(dbDoc, remoteEntry))
 			{
-				//这里checkout是有风险的，要保证verRepos中对应的revision的文件的checkSum和本地相同，才可以checkOut到本地
-				//verReposCheckout
-				dbUpdateDoc(dbDoc);
+				//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
+				//verReposCheckout == true
+				//{
+				//	dbUpdateDoc(dbDoc);
+				//}
 			}
 		}
 		else
 		{
 			if(dbDoc == null)
 			{
-				if(remoteEntry != null)
+				if(remoteEntry != null)	//Remote Added
 				{
-					//verReposCheckout
-					dbAddDoc(remoteEntry);
+					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
+					//verReposCheckout == true
+					//{
+					//	dbAddDoc(remoteEntry);
+					//}
 				}
 			}
 			else
@@ -2069,9 +2074,11 @@ public class BaseController  extends BaseFunction{
 				{
 					if(isDocRemoteChanged(dbDoc, remoteEntry) == false)
 					{
-						//Do check out the changed doc to local
-						//verReposCheckout
-						dbUpdateDoc(remoteEntry);						
+						//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
+						//verReposCheckout == true
+						//{
+						//	dbUpdateDoc(remoteEntry);
+						//}					
 					}
 				}
 			}
