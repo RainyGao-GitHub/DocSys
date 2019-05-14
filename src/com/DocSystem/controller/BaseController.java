@@ -5130,7 +5130,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected String verReposAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) {
+			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) 
+	{
+		System.out.println("verReposAutoCommit() isRealDoc:" + isRealDoc + " parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " localEntryName:" + localEntryName);
 		Integer verCtrl = null;
 		if(isRealDoc)
 		{
