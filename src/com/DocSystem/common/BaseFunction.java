@@ -49,7 +49,7 @@ public class BaseFunction{
 
 	/******************************** Basic Interface for CommonAction *************************************/
 	//CommonAction 主要用于异步行为
-	protected void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType) {
+	protected void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
 		actionId = 5; //AutoSyncUp
 
 		CommonAction action = new CommonAction();
@@ -58,10 +58,14 @@ public class BaseFunction{
 		action.setDocType(docType); //1: local Doc Changed
 		action.setRepos(repos);
 		action.setDoc(doc);
+		
+		action.setSubActionList(subActionList);
+		
 		actionList.add(action);
 	}
 	
-	protected void insertAddAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType) {
+	protected void insertAddAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
+	{
 		actionType = 1;	//Add
 		
 		CommonAction action = new CommonAction();
@@ -75,10 +79,12 @@ public class BaseFunction{
 		action.setCommitMsg(commitMsg);
 		action.setCommitUser(commitUser);
 		
+		action.setSubActionList(subActionList);
+		
 		actionList.add(action);
 	}
 	
-	protected void insertDeleteAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType) {
+	protected void insertDeleteAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
 		actionType = 2;	//Delete
 		
 		CommonAction action = new CommonAction();
@@ -92,10 +98,12 @@ public class BaseFunction{
 		action.setCommitMsg(commitMsg);
 		action.setCommitUser(commitUser);
 		
+		action.setSubActionList(subActionList);
+
 		actionList.add(action);
 	}
 	
-	protected void insertUpdateAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType) {
+	protected void insertUpdateAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
 		actionType = 3;	//Update
 		
 		CommonAction action = new CommonAction();
@@ -109,10 +117,12 @@ public class BaseFunction{
 		action.setCommitMsg(commitMsg);
 		action.setCommitUser(commitUser);
 		
+		action.setSubActionList(subActionList);
+		
 		actionList.add(action);
 	}
 	
-	protected void insertMoveAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType) 
+	protected void insertMoveAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
 	{
 		actionType = 4; //Move
 		
@@ -124,10 +134,16 @@ public class BaseFunction{
 		action.setRepos(repos);
 		action.setDoc(srcDoc);
 		action.setNewDoc(dstDoc);
+		
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		action.setSubActionList(subActionList);
+		
 		actionList.add(action);
 	}
 
-	protected void insertCopyAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType) 
+	protected void insertCopyAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
 	{
 		actionType = 5; //Copy
 		
@@ -139,6 +155,12 @@ public class BaseFunction{
 		action.setRepos(repos);
 		action.setDoc(srcDoc);
 		action.setNewDoc(dstDoc);
+		
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		action.setSubActionList(subActionList);
+		
 		actionList.add(action);
 	}
 	

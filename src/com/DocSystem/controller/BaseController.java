@@ -100,7 +100,7 @@ public class BaseController  extends BaseFunction{
 	    			indexHashMap.put(doc.getName(), doc);
 	    			
 	    			//Add to actionList for AutoSyncUp
-	    			insertSyncUpAction(actionList,repos,doc,5,1,1);
+	    			insertSyncUpAction(actionList,repos,doc,5,1,1, null);
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
@@ -109,7 +109,7 @@ public class BaseController  extends BaseFunction{
 		    		indexHashMap.put(doc.getName(), doc);
 		    		
 		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,doc,5,3,1);
+		    		insertSyncUpAction(actionList,repos,doc,5,3,1, null);
 	    		}
 	    		
 				DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
@@ -137,7 +137,7 @@ public class BaseController  extends BaseFunction{
 		    		indexHashMap.put(doc.getName(), doc);
 	    			
 		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,doc,5,1,2);
+		    		insertSyncUpAction(actionList,repos,doc,5,1,2, null);
 		    			
 		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
 					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
@@ -154,7 +154,7 @@ public class BaseController  extends BaseFunction{
 		    		indexHashMap.put(doc.getName(), doc);
 	    			
 		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,doc,5,3,2);
+		    		insertSyncUpAction(actionList,repos,doc,5,3,2, null);
 	    		} 
 	    	}
     	}
@@ -1899,31 +1899,41 @@ public class BaseController  extends BaseFunction{
 	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		//Insert index add action for RDoc
-		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 4, 1, 1);
+		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 4, 1, 1, null);
 		
-		//Insert add actions for VDoc
-		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 1, 1, 2);
+		if(doc.getContent() != null)
+		{
+			List<CommonAction> subActionList = new ArrayList<CommonAction>();
+			insertAddAction(subActionList, repos, doc, commitMsg, commitUser, 4, 1, 2, null);	//Add Index For VDoc
+			if(repos.getVerCtrl1() > 0)
+			{
+				insertAddAction(subActionList, repos, doc, commitMsg, commitUser, 2, 1, 2, null); //verRepos commit
+			}
+			
+			//Insert add actions for VDoc
+			insertAddAction(actionList, repos, doc, commitMsg, commitUser, 1, 1, 2, subActionList);			
+		}
 	}
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{	
 		//Insert index delete action for RDoc
-		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 4, 2, 1);
+		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 4, 2, 1, null);
 
 		//Insert index delete action for VDoc
-		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 1, 2, 2);
+		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 1, 2, 2, null);
 	}
 	
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index delete action for RDoc
-		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 1);
+		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 1, null);
 	}
 	
 	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user) 
 	{
 		//Insert index delete action for VDoc
-		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 2);
+		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 2, null);
 	}
 
 	protected int getLevelByParentPath(String path) 
@@ -1939,46 +1949,49 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
+		if(actionList == null || actionList.size() == 0)
+		{
+			return true;
+		}
+		
 		int size = actionList.size();
 		System.out.println("executeActionList size:" + size);
 		
 		int count = 0;
-		
+
 		for(int i=0; i< actionList.size(); i++)
 		{
+			boolean ret = false;
 			CommonAction action = actionList.get(i);
 			switch(action.getType())
 			{
 			case 1:
-				if(executeFSAction(action, rt) == true)
-				{
-					count++;
-				}
+				ret = executeFSAction(action, rt);
 				break;
 			case 2:
-				if(executeVerReposAction(action, rt) != null)
+				String revision = executeVerReposAction(action, rt);
+				if(revision != null)
 				{
-					count++;
+					action.getDoc().setRevision(revision);
+					ret = true;
 				}
 				break;
 			case 3:
-				if(executeDBAction(action, rt) == true)
-				{
-					count++;
-				}
+				ret = executeDBAction(action, rt);
 				break;			
 			case 4:
-				if(executeIndexAction(action, rt) == true)
-				{
-					count++;
-				}
+				ret = executeIndexAction(action, rt);
 				break;
 			case 5: //AutoSyncUp
-				if(executeSyncUpAction(action, rt) == true)
-				{
-					count++;
-				}
+				ret = executeSyncUpAction(action, rt);
 				break;
+			}
+			
+			if(ret == true)
+			{
+				//Execute SubActionList
+				executeCommonActionList(action.getSubActionList(), rt);
+				count++;
 			}
 		}
 		
@@ -2396,13 +2409,14 @@ public class BaseController  extends BaseFunction{
 		Doc newDoc = action.getNewDoc();
 		
 		Repos repos = action.getRepos();
-		String localRootPath = getReposRealPath(repos);
+		String localRootPath = getReposVirutalPath(repos);
 		
 		String parentPath = "";
 		if(doc.getPath() != null)
 		{
-			parentPath = "";
+			parentPath = doc.getPath();
 		}
+		
 		String VDocName = getVDocName(parentPath, doc.getName());
 		String newVDocName = null;
 		
@@ -2422,6 +2436,11 @@ public class BaseController  extends BaseFunction{
 			return copyVirtualDoc(localRootPath, VDocName, newVDocName, rt);
 		}
 		return false;
+	}
+
+	private String getReposVirutalPath(Repos repos) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private String executeVerReposAction(CommonAction action, ReturnAjax rt) 
@@ -2881,10 +2900,10 @@ public class BaseController  extends BaseFunction{
 	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
 		
 		//Insert copy Action For RealDoc Index Copy (对于目录则会进行递归)
-		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 5, 1);
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 5, 1, null);
 		
 		//Copy VDoc (包括VDoc VerRepos and Index)
-		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 5, 2);
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 5, 2, null);
 	}
 
 	protected boolean updateDocContent(Repos repos, Long docId, String parentPath, String docName, String content, 
