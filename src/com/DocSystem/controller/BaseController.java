@@ -365,7 +365,8 @@ public class BaseController  extends BaseFunction{
 	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) {
 		List<Doc> docList = null;
 		Doc doc = new Doc();
-		doc.setPid(pid);
+		//doc.setPid(pid);
+		doc.setPath(path);
 		doc.setVid(repos.getId());
 		docList = reposService.getDocList(doc);
 		
