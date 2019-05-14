@@ -2015,8 +2015,13 @@ public class BaseController  extends BaseFunction{
 		Repos repos = action.getRepos();
 		
 		Doc dbDoc = dbGetDoc(doc);
+		printObject("syncupForLocalDocChanged() dbDoc: ", dbDoc);
+		
 		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
+		printObject("syncupForLocalDocChanged() localEntry: ", localEntry);
+
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
+		printObject("syncupForLocalDocChanged() remoteEntry: ", remoteEntry);
 
 		if(localEntry != null)
 		{
