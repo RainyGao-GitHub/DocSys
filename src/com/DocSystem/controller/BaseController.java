@@ -256,7 +256,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(doc.getLatestEditTime() != localEntry.lastModified() || doc.getSize() != localEntry.length())
+		if(doc.getLatestEditTime().equals(localEntry.lastModified()) || doc.getSize().equals(localEntry.length()))
 		{
 			System.out.println("isDocLocalChanged() lastEditTime and size not matched");
 			printObject("isDocLocalChanged() doc:",doc);
@@ -284,7 +284,7 @@ public class BaseController  extends BaseFunction{
 			return true;			
 		}
 		
-		if(doc.getLatestEditTime() != localEntry.getLatestEditTime() || doc.getSize() != localEntry.getSize())
+		if(doc.getLatestEditTime().equals(localEntry.getLatestEditTime()) || doc.getSize().equals(localEntry.getSize()))
 		{
 			System.out.println("isDocLocalChanged() lastEditTime and size not matched");
 			printObject("isDocLocalChanged() doc:",doc);
