@@ -297,7 +297,13 @@ public class BaseController  extends BaseFunction{
 			return true;			
 		}
 		
-		if(doc.getType() != doc.getType())
+		if(doc.getType() == null)
+		{
+			System.out.println("isDocLocalChanged() type is null"); 
+			return true;
+		}
+		
+		if(doc.getType() != localEntry.getType())
 		{
 			System.out.println("isDocLocalChanged() type is not matched"); 
 			return true;
@@ -338,10 +344,16 @@ public class BaseController  extends BaseFunction{
 			System.out.println("isDocRemoteChanged() remoteEntry is null"); 
 			return true;			
 		}
-		
-		if(doc.getType() != doc.getType())
+
+		if(doc.getType() == null)
 		{
-			System.out.println("isDocLocalChanged() type is not matched"); 
+			System.out.println("isDocRemoteChanged() type is null"); 
+			return true;
+		}
+		
+		if(doc.getType() != remoteEntry.getType())
+		{
+			System.out.println("isDocRemoteChanged() type is not matched"); 
 			return true;
 		}
 		
