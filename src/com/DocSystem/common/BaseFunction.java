@@ -341,7 +341,7 @@ public class BaseFunction{
 			return repos.getRealDocPath();
 		}
 		String reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposRealPath() " + reposRPath);
+		//System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;
 	}
 	

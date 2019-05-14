@@ -145,7 +145,7 @@ public class SVNUtil  extends BaseController{
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
 	public Doc getDoc(String filePath, String revision) 
 	{
-    	System.out.println("getDoc() filePath:" + filePath);
+    	//System.out.println("getDoc() filePath:" + filePath);
     	if(filePath == null)
     	{
         	System.out.println("getDoc() 非法参数：filePath is null");

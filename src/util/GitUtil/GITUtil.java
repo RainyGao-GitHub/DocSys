@@ -128,7 +128,7 @@ public class GITUtil  extends BaseController{
 	//getHistory filePath: remote File Path under repositoryURL
     public Doc getDoc(String filePath, String revision) 
     {
-    	System.out.println("getDoc filePath:" + filePath);	
+    	//System.out.println("getDoc filePath:" + filePath);	
 
     	Git git = null;
 		try {

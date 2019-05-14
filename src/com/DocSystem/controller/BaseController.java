@@ -2152,7 +2152,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private Doc svnGetDoc(Repos repos, Long docId, String parentPath, String entryName, String revision) {
-		System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
+		//System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(parentPath == null)
 		{
 			System.out.println("svnGetDoc() parentPath is null");
@@ -2186,7 +2186,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private Doc gitGetDoc(Repos repos, Long docId, String parentPath, String entryName, String revision) {
-		System.out.println("gitGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
+		//System.out.println("gitGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
 		{
 			System.out.println("gitGetDoc() entryName can not be empty");
