@@ -145,9 +145,13 @@ public class SVNUtil  extends BaseController{
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
 	public Doc getDoc(String filePath, String revision) 
 	{
-    	System.out.println("getDoc() filePath:" + filePath);	
-    	List<LogEntry> logList = new ArrayList<LogEntry>();
-        
+    	System.out.println("getDoc() filePath:" + filePath);
+    	if(filePath == null)
+    	{
+        	System.out.println("getDoc() 非法参数：filePath is null");
+        	return null;
+    	}
+    	
     	long startRevision = -1;
     	long endRevision = -1;
     	
@@ -191,6 +195,12 @@ public class SVNUtil  extends BaseController{
 	public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision, int maxLogNum) 
     {
     	System.out.println("getHistoryLogs filePath:" + filePath);	
+    	if(filePath == null)
+    	{
+        	System.out.println("getHistoryLogs() 非法参数：filePath is null");
+        	return null;
+    	}
+    	
     	List<LogEntry> logList = new ArrayList<LogEntry>();
         
     	/*
@@ -290,7 +300,12 @@ public class SVNUtil  extends BaseController{
     //FSFS格式SVN仓库创建接口
 	public static String CreateRepos(String name,String path){
 		System.out.println("CreateRepos reposName:" + name + "under Path:" + path);
-		
+    	if(path == null || name == null)
+    	{
+        	System.out.println("CreateRepos() 非法参数：path or name is null");
+        	return null;
+    	}
+    	
 		SVNURL tgtURL = null;
 		//create svn repository
 		try {  			   
@@ -310,6 +325,12 @@ public class SVNUtil  extends BaseController{
 	//检查仓库指定revision的节点是否存在
 	public boolean doCheckPath(String remoteFilePath,long revision)
 	{
+    	if(remoteFilePath == null)
+    	{
+        	System.out.println("doCheckPath() 非法参数：remoteFilePath is null");
+        	return false;
+    	}
+    	
 		SVNNodeKind nodeKind;
 		try {
 			nodeKind = repository.checkPath(remoteFilePath, revision);
@@ -327,6 +348,12 @@ public class SVNUtil  extends BaseController{
 	
 	public int getEntryType(String remoteEntryPath, long revision) 
 	{
+    	if(remoteEntryPath == null)
+    	{
+        	System.out.println("getEntryType() 非法参数：remoteEntryPath is null");
+        	return -1;
+    	}
+		
 		SVNNodeKind nodeKind = null;
 		try {
 			nodeKind = repository.checkPath(remoteEntryPath, revision);
@@ -359,7 +386,12 @@ public class SVNUtil  extends BaseController{
 	//refLocalPath是存放参考文件的目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	public String doAutoCommit(String parentPath, String entryName,String localParentPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefParentPath){
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefParentPath:" + localRefParentPath);	
-	
+    	if(parentPath == null || entryName == null)
+    	{
+        	System.out.println("doAutoCommit() 非法参数：parentPath or entryName is null");
+        	return null;
+    	}
+    	
 		File wcDir = new File(localParentPath);
 		if(!wcDir.exists())
 		{
@@ -588,8 +620,7 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeModifyAction(ISVNEditor editor, CommitAction action) {
-		Integer entryType = action.getEntryType();
-		String parentPath = action.getNewParentPath();
+		String parentPath = action.getParentPath();
 		String entryName = action.getEntryName();
 		String localPath = action.getLocalRootPath();
 		String localRefPath = action.getLocalRefRootPath();
@@ -620,8 +651,7 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeDeleteAction(ISVNEditor editor, CommitAction action) {
-		//Integer entryType = action.getEntryType();
-		String parentPath = action.getNewParentPath();
+		String parentPath = action.getParentPath();
 		String entryName = action.getEntryName();
 		String localPath = action.getLocalRootPath();
 		String localRefPath = action.getLocalRefRootPath();
@@ -631,7 +661,7 @@ public class SVNUtil  extends BaseController{
 
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
 		Integer entryType = action.getEntryType();
-		String parentPath = action.getNewParentPath();
+		String parentPath = action.getParentPath();
 		String entryName = action.getEntryName();
 		String localPath = action.getLocalRootPath();
 		String localRefPath = action.getLocalRefRootPath();
@@ -640,6 +670,11 @@ public class SVNUtil  extends BaseController{
 		if(entryType == 1)	//File
     	{
     		String localEntryPath = localPath + entryName;
+    		if(parentPath == null)
+    		{
+    			localEntryPath = entryName;
+    		}
+    		
     		InputStream fileData = getFileInputStream(localEntryPath);
     		boolean ret = false;
     		if(action.isSubAction)
@@ -1167,8 +1202,12 @@ public class SVNUtil  extends BaseController{
 	//复制文件
 	public String svnCopy(String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,String commitMsg,String commitUser,boolean isMove)
 	{
-		//判断文件类型
-		boolean isDir = false;
+    	if(srcParentPath == null || srcEntryName == null || dstParentPath == null || dstEntryName == null)
+    	{
+    		System.out.println("svnCopy() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
+    		return null;
+    	}
+    	
 		long latestRevision = -1;
 		SVNNodeKind nodeKind;
 		try {
@@ -1176,8 +1215,6 @@ public class SVNUtil  extends BaseController{
 			if (nodeKind == SVNNodeKind.NONE) {
 		    	System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
 		        return null;
-		    } else if (nodeKind == SVNNodeKind.DIR) {
-		        	isDir = true;
 		    }
 			latestRevision = repository.getLatestRevision();
 		} catch (SVNException e) {
@@ -1273,6 +1310,13 @@ public class SVNUtil  extends BaseController{
 	//add Entry
     private boolean addEntry(ISVNEditor editor,String parentPath, String entryName,boolean isFile,InputStream fileData,boolean openRoot, boolean openParent,boolean keepOpen){    
     	System.out.println("addEntry() parentPath:" + parentPath + " entryName:" + entryName + " isFile:" + isFile);
+    	
+    	if(parentPath == null || entryName == null)
+    	{
+    		System.out.println("addEntry() 非法参数：parentPath or entryName is null!");
+    		return false;
+    	}
+    	
     	try {
     		if(openRoot)
     		{
@@ -1336,7 +1380,14 @@ public class SVNUtil  extends BaseController{
 
     private boolean deleteEntry(ISVNEditor editor, String parentPath,String entryName,boolean openRoot)
     {
+    	if(parentPath == null || entryName == null)
+    	{
+    		System.out.println("deleteEntry() 非法参数：parentPath or entryName is null!");
+    		return false;
+    	}
+    	
     	String entryPath = parentPath + entryName;
+		
         try{
 	    	if(openRoot)
 	    	{
@@ -1361,8 +1412,14 @@ public class SVNUtil  extends BaseController{
     //doModifyFile
     private boolean modifyFile(ISVNEditor editor,String parentPath, String entryName, InputStream oldFileData,InputStream newFileData,boolean openRoot,boolean openParent)
     {
+    	if(parentPath == null || entryName == null)
+    	{
+    		System.out.println("modifyFile() 非法参数：parentPath or entryName is null!");
+    		return false;
+    	}
+    	
     	String entryPath = parentPath + entryName;
-        try {
+    	try {
         	if(openRoot)
 			{
         		editor.openRoot(-1);
@@ -1423,6 +1480,12 @@ public class SVNUtil  extends BaseController{
     //doCopyFile
     private boolean copyEntry(ISVNEditor editor,String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName,boolean isDir,long revision,boolean isMove) 
     {
+    	if(srcParentPath == null || srcEntryName == null || dstParentPath == null || dstEntryName == null)
+    	{
+    		System.out.println("copyEntry() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
+    		return false;
+    	}
+
         try {
 			editor.openRoot(-1);
         
@@ -1471,6 +1534,12 @@ public class SVNUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<Doc> getDocList(Repos repos, Long pid, String remoteEntryPath, int level, long revision) 
 	{
+    	if(remoteEntryPath == null)
+    	{
+    		System.out.println("getDocList() 非法参数：remoteEntryPath is null!");
+    		return null;
+    	}
+		
 		List <Doc> subEntryList =  new ArrayList<Doc>();
 		
 		Collection<SVNDirEntry> entries = null;
@@ -1513,6 +1582,12 @@ public class SVNUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<SVNDirEntry> getSubEntryList(String remoteEntryPath, long revision) 
 	{
+    	if(remoteEntryPath == null)
+    	{
+    		System.out.println("getSubEntryList() 非法参数：remoteEntryPath is null!");
+    		return null;
+    	}
+		
 		List <SVNDirEntry> subEntryList =  new ArrayList<SVNDirEntry>();
 		
 		Collection<SVNDirEntry> entries = null;
@@ -1535,6 +1610,12 @@ public class SVNUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
 	{
+    	if(remoteEntryPath == null)
+    	{
+    		System.out.println("getSubEntries() 非法参数：remoteEntryPath is null!");
+    		return null;
+    	}
+    	
 		Collection<SVNDirEntry> entries = null;
 		try {
 			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
@@ -1547,8 +1628,13 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,long revision) {
-		// TODO Auto-generated method stub
 		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+    	if(parentPath == null || entryName == null)
+    	{
+    		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
+    		return false;
+    	}	
 		
 		//check targetName and set
 		if(targetName == null)
