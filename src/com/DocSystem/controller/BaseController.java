@@ -2137,65 +2137,17 @@ public class BaseController  extends BaseFunction{
 		Doc dbDoc = dbGetDoc(doc);
 		printObject("syncupForLocalDocChanged() dbDoc: ", dbDoc);
 		
-		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
-		printObject("syncupForLocalDocChanged() localEntry: ", localEntry);
-
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
 		printObject("syncupForLocalDocChanged() remoteEntry: ", remoteEntry);
 
-		String commitMsg = "自动同步 doc.getPath()+doc.getName()";
-		String commitUser = "AutoSync";
-		
-		if(localEntry != null)
-		{
-			if(dbDoc == null)	//localAdded
-			{
-				System.out.println("syncupForLocalDocChanged() local Added: " + doc.getPath()+doc.getName());
-				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
-				if(revision != null)
-				{
-					localEntry.setRevision(revision);
-					localEntry.setLatestEditorName(login_user.getName());
-					dbAddDoc(repos, localEntry, true);
-				}
-			}
-			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
-			{
-				System.out.println("syncupForLocalDocChanged() local Changed: " + doc.getPath()+doc.getName());
-				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
-				if(revision != null)
-				{
-					dbDoc.setSize(localEntry.getSize());
-					dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
-					dbDoc.setRevision(revision);
-					dbDoc.setLatestEditorName(login_user.getName());
-					dbUpdateDoc(dbDoc);
-				}
-			}
-			else if(isDocRemoteChanged(dbDoc, remoteEntry))
-			{
-				System.out.println("syncupForLocalDocChanged() remote Deleted or Changed: " + doc.getPath()+doc.getName());
-				
-				//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
-				//verReposCheckout == true
-				//{
-				//	dbUpdateDoc(dbDoc);
-				//}
-			}
-		}
-		else
+		if(repos.getType() == 3 || repos.getType() == 4)
 		{
 			if(dbDoc == null)
 			{
 				if(remoteEntry != null)	//Remote Added
 				{
 					System.out.println("syncupForLocalDocChanged() remote Added: " + doc.getPath()+doc.getName());
-					
-					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
-					//verReposCheckout == true
-					//{
-					//	dbAddDoc(remoteEntry);
-					//}
+					dbAddDoc(repos, remoteEntry, false);
 				}
 			}
 			else
@@ -2203,16 +2155,95 @@ public class BaseController  extends BaseFunction{
 				//localDeleted and remoteDeleted so just delete dbDoc
 				if(remoteEntry == null)
 				{
-					System.out.println("syncupForLocalDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForLocalDocChanged() remote deleted: " + doc.getPath()+doc.getName());
 					dbDeleteDoc(repos, doc, true);					
 				}
-				else	
+				else if(isDocRemoteChanged(dbDoc, remoteEntry))
 				{
-					System.out.println("syncupForLocalDocChanged() local deleted: " + doc.getPath()+doc.getName());
-					String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+					System.out.println("syncupForLocalDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+					dbDoc.setRevision(remoteEntry.getRevision());
+					dbUpdateDoc(dbDoc);
+				}
+			}
+		}
+		else
+		{
+			
+			Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
+			printObject("syncupForLocalDocChanged() localEntry: ", localEntry);
+				
+			
+			String commitMsg = "自动同步 doc.getPath()+doc.getName()";
+			String commitUser = "AutoSync";
+			
+			if(localEntry != null)
+			{
+				if(dbDoc == null)	//localAdded
+				{
+					System.out.println("syncupForLocalDocChanged() local Added: " + doc.getPath()+doc.getName());
+					String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 					if(revision != null)
 					{
-						dbDeleteDoc(repos, dbDoc, true);
+						localEntry.setRevision(revision);
+						localEntry.setLatestEditorName(login_user.getName());
+						dbAddDoc(repos, localEntry, true);
+					}
+				}
+				else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
+				{
+					System.out.println("syncupForLocalDocChanged() local Changed: " + doc.getPath()+doc.getName());
+					String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+					if(revision != null)
+					{
+						dbDoc.setSize(localEntry.getSize());
+						dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
+						dbDoc.setRevision(revision);
+						dbDoc.setLatestEditorName(login_user.getName());
+						dbUpdateDoc(dbDoc);
+					}
+				}
+				else if(isDocRemoteChanged(dbDoc, remoteEntry))
+				{
+					System.out.println("syncupForLocalDocChanged() remote Deleted or Changed: " + doc.getPath()+doc.getName());
+					
+					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
+					//verReposCheckout == true
+					//{
+					//	dbUpdateDoc(dbDoc);
+					//}
+				}
+			}
+			else
+			{
+				if(dbDoc == null)
+				{
+					if(remoteEntry != null)	//Remote Added
+					{
+						System.out.println("syncupForLocalDocChanged() remote Added: " + doc.getPath()+doc.getName());
+						
+						//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
+						//verReposCheckout == true
+						//{
+						//	dbAddDoc(remoteEntry);
+						//}
+					}
+				}
+				else
+				{
+					//localDeleted and remoteDeleted so just delete dbDoc
+					if(remoteEntry == null)
+					{
+						System.out.println("syncupForLocalDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+						dbDeleteDoc(repos, doc, true);					
+					}
+					else	
+					{
+						System.out.println("syncupForLocalDocChanged() local deleted: " + doc.getPath()+doc.getName());
+						String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+						if(revision != null)
+						{
+							dbDeleteDoc(repos, dbDoc, true);
+						}
 					}
 				}
 			}
