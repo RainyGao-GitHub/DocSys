@@ -78,15 +78,15 @@ public class BaseController  extends BaseFunction{
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
 	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
-		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path);
+		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path);
 		
 		List<Doc> docList = new ArrayList<Doc>();
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
-    	printObject("getAccessableSubDocList() indexHashMap:", indexHashMap);
+    	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
 		
 		List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
-		printObject("getAccessableSubDocList() localEntryList:", localEntryList);
+		printObject("getAuthedSubDocList() localEntryList:", localEntryList);
 		
 		if(localEntryList != null)
     	{
@@ -96,6 +96,8 @@ public class BaseController  extends BaseFunction{
 	    		Doc doc = indexHashMap.get(localEntry.getName());
 	    		if(doc == null)	//Doc was local added
 	    		{	    			
+	    			printObject("getAuthedSubDocList() local Added:", localEntry);
+	    			
 	    			//Add doc to docHashMap
 		    		doc = localEntry;
 	    			indexHashMap.put(doc.getName(), doc);
@@ -105,6 +107,8 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
+	    			printObject("getAuthedSubDocList() local Changed:", localEntry);
+	
 	    			doc = localEntry;
 	    			//Update doc to docHashMap
 		    		indexHashMap.put(doc.getName(), doc);
@@ -133,6 +137,8 @@ public class BaseController  extends BaseFunction{
 	    		Doc doc = indexHashMap.get(remoteEntry.getName());
 	    		if(doc == null)	//Doc was remote added
 	    		{
+	    			printObject("getAuthedSubDocList() remote Added:", remoteEntry);
+	    			
 	    			doc = remoteEntry;
 	    			//Add doc to docHashMap
 		    		indexHashMap.put(doc.getName(), doc);
@@ -147,16 +153,24 @@ public class BaseController  extends BaseFunction{
 			    		docList.add(doc);
 					}
 	    		}
-	    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
+	    		else
 	    		{
-	    			doc = remoteEntry;
+	    			Doc localDoc = fsGetDoc(repos, doc.getPath(), doc.getName());
+	    			if(localDoc == null)
+	    			{
+	    				indexHashMap.remove(doc.getName());
+
+	    				printObject("getAuthedSubDocList() local Deleted:", doc);
+	    				insertSyncUpAction(actionList,repos,doc,5,2,1, null);
+	    			}
+	    			else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
+	    			{
+	    				printObject("getAuthedSubDocList() remote Changed:", remoteEntry);
 	    			
-	    			//Update doc to docHashMap
-		    		indexHashMap.put(doc.getName(), doc);
-	    			
-		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-	    		} 
+	    				//Add to actionList for AutoSyncUp
+	    				insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+	    			}
+	    		}
 	    	}
     	}
     	
@@ -167,7 +181,7 @@ public class BaseController  extends BaseFunction{
     	}
     	for (Entry<String, Doc> entry : indexHashMap.entrySet()) {
     		Doc deleteDoc = entry.getValue();
-    		printObject("getAccessableSubDocList() insertDBDeleteAction for ", deleteDoc);
+    		printObject("getAuthedSubDocList() insertDBDeleteAction for ", deleteDoc);
     		insertDeleteAction(actionList, repos, deleteDoc, null, null, 3, 2, 1, null);
     	}
     	
