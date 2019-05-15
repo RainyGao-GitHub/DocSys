@@ -1852,12 +1852,27 @@ public class BaseController  extends BaseFunction{
 		return doc.getDocId();
 	}
 
-	private boolean dbAddDoc(Doc doc) {
+	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) {
 		if(reposService.addDoc(doc) == 0)
 		{
 			System.out.println("dbAddDoc() addDoc to db failed");		
 			return false;
-		}	
+		}
+		
+		if(addSubDocs)
+		{
+			int level = getLevelByParentPath(doc.getPath());
+			List<Doc> localEntryList = getLocalEntryList(repos, doc.getPid(), doc.getPath(), level);
+			if(localEntryList != null)
+			{
+				for(int i=0; i<localEntryList.size(); i++)
+				{
+					Doc subDoc = localEntryList.get(i);
+					subDoc.setRevision(doc.getRevision());
+					dbAddDoc(repos, subDoc, true);
+				}
+			}
+		}
 		return true;
 	}
 
@@ -2309,12 +2324,28 @@ public class BaseController  extends BaseFunction{
 		return list.get(0);
 	}
 	
-	private boolean dbDeleteDoc(Doc doc) {
+	private boolean dbDeleteDoc(Repos repos, Doc doc, boolean deleteSubDocs) {
+
+		if(deleteSubDocs)
+		{
+			Doc qSubDoc = new Doc();
+			qSubDoc.setVid(repos.getId());
+			qSubDoc.setPid(doc.getDocId());
+			List<Doc> subDocList = reposService.getDocList(qSubDoc);
+			if(subDocList != null)
+			{
+				for(int i=0; i<subDocList.size(); i++)
+				{
+					Doc subDoc = subDocList.get(i);
+					dbDeleteDoc(repos, subDoc, true);
+				}
+			}
+		}
+		
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
-		//qDoc.setDocId(doc.getDocId());
 		qDoc.setName(doc.getName());
-		qDoc.setPath(doc.getPath());
+		qDoc.setPid(doc.getPid());
 		if(reposService.deleteDoc(qDoc) == 0)
 		{
 			return false;
