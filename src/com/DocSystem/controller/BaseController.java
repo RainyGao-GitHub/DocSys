@@ -87,34 +87,34 @@ public class BaseController  extends BaseFunction{
 		
 		List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
 		printObject("getAuthedSubDocList() localEntryList:", localEntryList);
+		HashMap<String,Doc> localHashMap = new HashMap<String,Doc>();
 		
 		if(localEntryList != null)
     	{
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
 	    		Doc localEntry = localEntryList.get(i);
+	    		//Put localEntry to localHashMap
+	    		localHashMap.put(localEntry.getName(), localEntry);
+	    		
 	    		Doc doc = indexHashMap.get(localEntry.getName());
 	    		if(doc == null)	//Doc was local added
 	    		{	    			
 	    			printObject("getAuthedSubDocList() local Added:", localEntry);
 	    			
-	    			//Add doc to docHashMap
 		    		doc = localEntry;
-	    			indexHashMap.put(doc.getName(), doc);
 	    			
 	    			//Add to actionList for AutoSyncUp
-	    			insertSyncUpAction(actionList,repos,doc,5,1,1, null);
+	    			insertSyncUpAction(actionList,repos,localEntry,5,1,1, null);
 	    		}
 	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 	    		{
 	    			printObject("getAuthedSubDocList() local Changed:", localEntry);
 	
 	    			doc = localEntry;
-	    			//Update doc to docHashMap
-		    		indexHashMap.put(doc.getName(), doc);
-		    		
+	    			
 		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,doc,5,3,1, null);
+		    		insertSyncUpAction(actionList,repos,localEntry,5,3,1, null);
 	    		}
 	    		
 				DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
@@ -133,44 +133,58 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 	    	{
 	    		Doc remoteEntry = remoteEntryList.get(i);
-	    		
 	    		Doc doc = indexHashMap.get(remoteEntry.getName());
+    			Doc localDoc = localHashMap.get(remoteEntry.getName());
+    			
 	    		if(doc == null)	//Doc was remote added
 	    		{
+	    			if(localDoc != null)
+	    			{
+	    				//doc was already added when localEntryList scan
+	    				continue;
+	    			}
+		    		
 	    			printObject("getAuthedSubDocList() remote Added:", remoteEntry);
-	    			
-	    			doc = remoteEntry;
-	    			//Add doc to docHashMap
-		    		indexHashMap.put(doc.getName(), doc);
-	    			
-		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,doc,5,1,2, null);
 		    			
-		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-					{
-			    		//Add to docList
-			    		docList.add(doc);
-					}
+			    	//Add to actionList for AutoSyncUp
+			    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
+	
+		    		doc = remoteEntry;
 	    		}
 	    		else
 	    		{
-	    			Doc localDoc = fsGetDoc(repos, doc.getPath(), doc.getName());
 	    			if(localDoc == null)
 	    			{
-	    				indexHashMap.remove(doc.getName());
-
 	    				printObject("getAuthedSubDocList() local Deleted:", doc);
 	    				insertSyncUpAction(actionList,repos,doc,5,2,1, null);
+	    				
+	    				//To avoid the db node be deleted as useless node before delete syncup action
+	    				indexHashMap.remove(doc.getName());
+	    				
+	    				//doc was deleted so should not be added to docList
+	    				doc = null;
 	    			}
 	    			else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
 	    			{
 	    				printObject("getAuthedSubDocList() remote Changed:", remoteEntry);
 	    			
 	    				//Add to actionList for AutoSyncUp
-	    				insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+	    				insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
 	    			}
+
+	    			//doc was already added when localEntryList scan
+	    			doc = null;
 	    		}
+	    		
+    			if(doc != null)
+    			{
+			    	DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
+					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+					{
+				    	//Add to docList
+				    	docList.add(doc);
+					}
+				}
 	    	}
     	}
     	
