@@ -127,7 +127,7 @@ public class BaseController  extends BaseFunction{
     	}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
-		printObject("getAccessableSubDocList() remoteEntryList:", remoteEntryList);
+		printObject("getAuthedSubDocList() remoteEntryList:", remoteEntryList);
     	if(remoteEntryList != null)
     	{
 	    	for(int i=0;i<remoteEntryList.size();i++)
