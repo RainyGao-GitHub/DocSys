@@ -1551,11 +1551,17 @@ public class SVNUtil  extends BaseController{
     		System.out.println("getDocList() 非法参数：remoteEntryPath is null!");
     		return null;
     	}
-		
+    	
 		List <Doc> subEntryList =  new ArrayList<Doc>();
 		
 		Collection<SVNDirEntry> entries = null;
 		try {
+			SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, revision);
+	    	if(nodeKind == SVNNodeKind.NONE || nodeKind == SVNNodeKind.FILE)
+	    	{
+	    		return null;
+	    	}
+	    	
 			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
 		} catch (SVNException e) {
 			System.out.println("getDocList() getDir Failed:" + remoteEntryPath);
