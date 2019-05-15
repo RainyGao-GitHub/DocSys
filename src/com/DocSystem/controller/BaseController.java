@@ -186,6 +186,7 @@ public class BaseController  extends BaseFunction{
 					}
 				}
 	    	}
+	    	printObject("getAuthedSubDocList() docList:", docList);
     	}
     	
     	//All dbDocs which not in docList should be deleted
