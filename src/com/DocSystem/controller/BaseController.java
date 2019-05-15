@@ -2081,12 +2081,15 @@ public class BaseController  extends BaseFunction{
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
 		printObject("syncupForLocalDocChanged() remoteEntry: ", remoteEntry);
 
+		String commitMsg = "自动同步 doc.getPath()+doc.getName()";
+		String commitUser = "AutoSync";
+		
 		if(localEntry != null)
 		{
 			if(dbDoc == null)	//localAdded
 			{
 				System.out.println("syncupForLocalDocChanged() verReposRealDocAdd: " + doc.getPath()+doc.getName());
-				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: add " + doc.getPath()+doc.getName(), login_user.getName(), rt);
+				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 				if(revision != null)
 				{
 					localEntry.setRevision(revision);
@@ -2097,7 +2100,7 @@ public class BaseController  extends BaseFunction{
 			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 			{
 				System.out.println("syncupForLocalDocChanged() verReposRealDocCommit: " + doc.getPath()+doc.getName());
-				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), "AutoSyncup: commit " + doc.getPath()+doc.getName(), login_user.getName(), rt);
+				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 				if(revision != null)
 				{
 					dbDoc.setSize(localEntry.getSize());
@@ -4443,12 +4446,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(commitMsg == null)
 		{
-			commitMsg = "Add " + parentPath +  entryName;
+			//commitMsg = "Add " + parentPath +  entryName;
+			commitMsg = "新增 " + parentPath +  entryName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 			return svnRealDocCommit(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4520,12 +4524,13 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, ReturnAjax rt) {	
 		if(commitMsg == null)
 		{
-			commitMsg = "Delete " + parentPath + entryName;
+			//commitMsg = "Delete " + parentPath + entryName;
+			commitMsg = "删除 " + parentPath + entryName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 			return svnRealDocDelete(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4561,12 +4566,13 @@ public class BaseController  extends BaseFunction{
 		
 		if(commitMsg == null)
 		{
-			commitMsg = "Commit " + parentPath + entryName;
+			//commitMsg = "Commit " + parentPath + entryName;
+			commitMsg = "更新 " + parentPath + entryName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 			return svnRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4581,12 +4587,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(commitMsg == null)
 		{
-			commitMsg = "Move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
+			//commitMsg = "Move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
+			commitMsg = "移动 " + srcParentPath + srcEntryName + " 到 " + dstParentPath + dstEntryName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 			return svnRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt, true);			
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4601,12 +4608,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(commitMsg == null)
 		{
-			commitMsg = "Copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
+			//commitMsg = "Copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
+			commitMsg = "复制 " + srcParentPath + srcEntryName + " 到 " + dstParentPath + dstEntryName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 			return svnRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt, false);			
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4631,6 +4639,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean verReposRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
 	{
+		//TODO: Revert 应该是CheckOut后再Commit
 		if(repos.getVerCtrl() == 1)
 		{
 			return svnRevertRealDoc(repos, parentPath, entryName, type, rt);			
@@ -4646,12 +4655,13 @@ public class BaseController  extends BaseFunction{
 	{	
 		if(commitMsg == null)
 		{
-			commitMsg = "Add " + docVName;
+			//commitMsg = "Add " + docVName;
+			commitMsg = "新增 " + docVName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, false, commitMsg, commitUser);
 			return svnVirtualDocAdd(repos, docVName, commitMsg, commitUser, rt);			
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4665,12 +4675,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(commitMsg == null)
 		{
-			commitMsg = "Delete " + docVName;
+			//commitMsg = "Delete " + docVName;
+			commitMsg = "删除 " + docVName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, false, commitMsg, commitUser);
 			return svnVirtualDocDelete(repos, docVName, commitMsg, commitUser, rt);			
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4683,12 +4694,13 @@ public class BaseController  extends BaseFunction{
 	protected String verReposVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
 		if(commitMsg == null)
 		{
-			commitMsg = "Commit " + docVName;
+			//commitMsg = "Commit " + docVName;
+			commitMsg = "更新 " + docVName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, false, commitMsg, commitUser);
 			return svnVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);			
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4702,12 +4714,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(commitMsg == null)
 		{
-			commitMsg = "Move " + srcDocVName + " to " + dstDocVName;
+			//commitMsg = "Move " + srcDocVName + " to " + dstDocVName;
+			commitMsg = "移动 " + srcDocVName + " 到 " + dstDocVName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, false, commitMsg, commitUser);
 			return svnVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser, rt);			
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -4721,12 +4734,13 @@ public class BaseController  extends BaseFunction{
 	{
 		if(commitMsg == null)
 		{
-			commitMsg = "Copy " + srcDocVName + " to " + dstDocVName;
+			//commitMsg = "Copy " + srcDocVName + " to " + dstDocVName;
+			commitMsg = "复制 " + srcDocVName + " 到 " + dstDocVName;
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
-			commitMsg = commitMsgFormat(commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, false, commitMsg, commitUser);
 			return svnVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);		
 		}
 		else if(repos.getVerCtrl() == 2)
@@ -5164,8 +5178,24 @@ public class BaseController  extends BaseFunction{
 		return svnCheckOut(repos, false, "", docVName, localDocVParentPath, docVName,-1);
 	}
 	
-	protected String commitMsgFormat(String commitMsg, String commitUser) {
-		commitMsg = commitMsg + " by [" + commitUser + "] ";
+	protected String commitMsgFormat(Repos repos, boolean isRealDoc, String commitMsg, String commitUser) 
+	{
+		if(isRealDoc)
+		{
+			if(repos.getSvnUser() == null)
+			{
+				return commitMsg;
+			}
+		}
+		else
+		{
+			if(repos.getSvnUser1() == null)
+			{
+				return commitMsg;
+			}	
+		}
+		
+		commitMsg = commitMsg + " [" + commitUser + "] ";
 		return commitMsg;
 	}
 	
