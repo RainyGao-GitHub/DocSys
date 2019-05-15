@@ -1831,7 +1831,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		doc.setRevision(revision);
-		if(dbAddDoc(doc) == false)
+		if(dbAddDoc(repos, doc, false) == false)
 		{	
 			rt.setWarningMsg("Add Node: " + docName +" Failed！");
 			System.out.println("addDoc() addDoc to db failed");
@@ -1956,7 +1956,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			//Delete DataBase Record
-			if(dbDeleteDoc(doc) == false)
+			if(dbDeleteDoc(repos, doc, true) == false)
 			{	
 				rt.setWarningMsg("不可恢复系统错误：dbDeleteDoc Failed");
 			}
@@ -2141,7 +2141,7 @@ public class BaseController  extends BaseFunction{
 				{
 					localEntry.setRevision(revision);
 					localEntry.setLatestEditorName(login_user.getName());
-					dbAddDoc(localEntry);
+					dbAddDoc(repos, localEntry, true);
 				}
 			}
 			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
@@ -2189,7 +2189,7 @@ public class BaseController  extends BaseFunction{
 				if(remoteEntry == null)
 				{
 					System.out.println("syncupForLocalDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
-					dbDeleteDoc(doc);					
+					dbDeleteDoc(repos, doc, true);					
 				}
 				else	
 				{
@@ -2197,7 +2197,7 @@ public class BaseController  extends BaseFunction{
 					String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 					if(revision != null)
 					{
-						dbDeleteDoc(dbDoc);
+						dbDeleteDoc(repos, dbDoc, true);
 					}
 				}
 			}
@@ -2345,7 +2345,7 @@ public class BaseController  extends BaseFunction{
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
 		qDoc.setName(doc.getName());
-		qDoc.setPid(doc.getPid());
+		qDoc.setPath(doc.getPath());
 		if(reposService.deleteDoc(qDoc) == 0)
 		{
 			return false;
@@ -2373,9 +2373,9 @@ public class BaseController  extends BaseFunction{
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return dbAddDoc(action.getDoc());
+			return dbAddDoc(action.getRepos(), action.getDoc(), false);
 		case 2: //Delete Doc
-			return dbDeleteDoc(action.getDoc());
+			return dbDeleteDoc(action.getRepos(), action.getDoc(), true);
 		case 3: //Update Doc
 			return dbUpdateDoc(action.getDoc());
 		}
