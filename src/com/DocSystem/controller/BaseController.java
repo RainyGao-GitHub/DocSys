@@ -83,10 +83,10 @@ public class BaseController  extends BaseFunction{
 		List<Doc> docList = new ArrayList<Doc>();
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
-    	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
+    	//printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
 		
 		List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
-		printObject("getAuthedSubDocList() localEntryList:", localEntryList);
+		//printObject("getAuthedSubDocList() localEntryList:", localEntryList);
 		HashMap<String,Doc> localHashMap = new HashMap<String,Doc>();
 		
 		if(localEntryList != null)
@@ -121,13 +121,14 @@ public class BaseController  extends BaseFunction{
 				if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 				{
 		    		//Add to docList
+					doc.setPid(pid);
 		    		docList.add(doc);
 				}
 	    	}
     	}
     	
     	List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
-		printObject("getAuthedSubDocList() remoteEntryList:", remoteEntryList);
+		//printObject("getAuthedSubDocList() remoteEntryList:", remoteEntryList);
     	if(remoteEntryList != null)
     	{
 	    	for(int i=0;i<remoteEntryList.size();i++)
@@ -186,7 +187,7 @@ public class BaseController  extends BaseFunction{
 					}
 				}
 	    	}
-	    	printObject("getAuthedSubDocList() docList:", docList);
+	    	//printObject("getAuthedSubDocList() docList:", docList);
     	}
     	
     	//All dbDocs which not in docList should be deleted
@@ -408,15 +409,14 @@ public class BaseController  extends BaseFunction{
 	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) {
 		List<Doc> docList = null;
 		Doc doc = new Doc();
-		//doc.setPid(pid);
 		doc.setPath(path);
 		doc.setVid(repos.getId());
 		docList = reposService.getDocList(doc);
 		
-		return BuildHashMapByDocList(docList, path);
+		return BuildHashMapByDocList(docList, pid, path);
 	}
 	
-	protected HashMap<String, Doc> BuildHashMapByDocList(List<Doc> docList, String path) 
+	protected HashMap<String, Doc> BuildHashMapByDocList(List<Doc> docList, Long pid, String path) 
 	{
 		if(docList == null)
 		{
@@ -427,6 +427,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0;i<docList.size();i++)
     	{
 			Doc doc = docList.get(i);
+			doc.setPid(pid);
 			doc.setPath(path);
 			
 			hashMap.put(doc.getName(), doc);
@@ -1702,7 +1703,7 @@ public class BaseController  extends BaseFunction{
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		Long docId = buildDocIdByName(level, parentPath);
-		System.out.println("addDoc() docId:" + docId);
+		System.out.println("addDoc() docId:" + docId + " type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		switch(repos.getType())
 		{
