@@ -301,25 +301,25 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			System.out.println("isDocLocalChanged() doc is null"); 
+			System.out.println("isDocLocalChanged() local added:" + localEntry.getPath() + localEntry.getName()); 
 			return true;
 		}
 		
 		if(localEntry == null)
 		{
-			System.out.println("isDocLocalChanged() localEntry is null"); 
+			System.out.println("isDocLocalChanged() local deleted:" + doc.getPath() + doc.getName()); 
 			return true;			
 		}
 		
 		if(doc.getType() == null)
 		{
-			System.out.println("isDocLocalChanged() type is null"); 
+			System.out.println("isDocLocalChanged() local changed : dbDoc.type:" + doc.getType() + " localEntry.type:" + localEntry.getType()); 
 			return true;
 		}
 		
 		if(doc.getType() != localEntry.getType())
 		{
-			System.out.println("isDocLocalChanged() type is not matched"); 
+			System.out.println("isDocLocalChanged() local changed: dbDoc.type:" + doc.getType() + " localEntry.type:" + localEntry.getType()); 
 			return true;
 		}
 		
@@ -334,10 +334,12 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}	
-		
-		System.out.println("isDocLocalChanged() lastEditTime and size not matched");
-		printObject("isDocLocalChanged() doc:",doc);
-		printObject("isDocLocalChanged() localEntry:",localEntry);
+
+		System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + doc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
+		System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + doc.getSize() + " localEntry.size:" + localEntry.getSize()); 
+
+		//printObject("isDocLocalChanged() doc:",doc);
+		//printObject("isDocLocalChanged() localEntry:",localEntry);
 		return true;
 	}
 	
@@ -349,25 +351,25 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			System.out.println("isDocRemoteChanged() doc is null"); 
+			System.out.println("isDocRemoteChanged() remote added:" + remoteEntry.getPath() + remoteEntry.getName()); 
 			return true;
 		}
 		
 		if(remoteEntry == null)
 		{
-			System.out.println("isDocRemoteChanged() remoteEntry is null"); 
+			System.out.println("isDocRemoteChanged() remote deleted:" + doc.getPath() + doc.getName()); 
 			return true;			
 		}
 
 		if(doc.getType() == null)
 		{
-			System.out.println("isDocRemoteChanged() type is null"); 
+			System.out.println("isDocRemoteChanged() remote changed : dbDoc.type:" + doc.getType() + " remoteEntry.type:" + remoteEntry.getType()); 
 			return true;
 		}
 		
 		if(doc.getType() != remoteEntry.getType())
 		{
-			System.out.println("isDocRemoteChanged() type is not matched"); 
+			System.out.println("isDocRemoteChanged() remote changed : dbDoc.type:" + doc.getType() + " remoteEntry.type:" + remoteEntry.getType()); 
 			return true;
 		}
 		
@@ -382,9 +384,9 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		System.out.println("isDocRemoteChanged() revision not matched");
-		printObject("isDocRemoteChanged() doc:",doc);
-		printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
+		System.out.println("isDocRemoteChanged() remote changed: dbDoc.lastEditTime:" + doc.getLatestEditTime() + " remoteEntry.lastEditTime:" + remoteEntry.getLatestEditTime()); 
+		//printObject("isDocRemoteChanged() doc:",doc);
+		//printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 		return true;
 	}
 
@@ -2102,7 +2104,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc == null)	//localAdded
 			{
-				System.out.println("syncupForLocalDocChanged() verReposRealDocAdd: " + doc.getPath()+doc.getName());
+				System.out.println("syncupForLocalDocChanged() local Added: " + doc.getPath()+doc.getName());
 				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 				if(revision != null)
 				{
@@ -2113,7 +2115,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 			{
-				System.out.println("syncupForLocalDocChanged() verReposRealDocCommit: " + doc.getPath()+doc.getName());
+				System.out.println("syncupForLocalDocChanged() local Changed: " + doc.getPath()+doc.getName());
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 				if(revision != null)
 				{
@@ -2126,6 +2128,8 @@ public class BaseController  extends BaseFunction{
 			}
 			else if(isDocRemoteChanged(dbDoc, remoteEntry))
 			{
+				System.out.println("syncupForLocalDocChanged() remote Deleted or Changed: " + doc.getPath()+doc.getName());
+				
 				//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
 				//verReposCheckout == true
 				//{
@@ -2139,6 +2143,8 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteEntry != null)	//Remote Added
 				{
+					System.out.println("syncupForLocalDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					
 					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
 					//verReposCheckout == true
 					//{
@@ -2151,17 +2157,16 @@ public class BaseController  extends BaseFunction{
 				//localDeleted and remoteDeleted so just delete dbDoc
 				if(remoteEntry == null)
 				{
+					System.out.println("syncupForLocalDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
 					dbDeleteDoc(doc);					
 				}
-				else //localDeleted but remoteChanged, do checkout the remoteChange to local	
+				else	
 				{
-					if(isDocRemoteChanged(dbDoc, remoteEntry) == false)
+					System.out.println("syncupForLocalDocChanged() local deleted: " + doc.getPath()+doc.getName());
+					String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+					if(revision != null)
 					{
-						//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
-						//verReposCheckout == true
-						//{
-						//	dbUpdateDoc(remoteEntry);
-						//}					
+						dbDeleteDoc(dbDoc);
 					}
 				}
 			}
