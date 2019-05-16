@@ -3282,6 +3282,7 @@ public class BaseController  extends BaseFunction{
 			docLock.setType(doc.getType());
 			
 			docLock.setState(lockType);	//doc的状态为不可用
+			docLock.setLocker(login_user.getName());
 			docLock.setLockBy(login_user.getId());
 			docLock.setLockTime(lockTime);	//Set lockTime
 			if(reposService.addDocLock(docLock) == 0)
@@ -3298,6 +3299,7 @@ public class BaseController  extends BaseFunction{
 			DocLock newDocLock = new DocLock();
 			docLock.setId(docLock.getId());
 			newDocLock.setState(lockType);	//doc的状态为不可用
+			newDocLock.setLocker(login_user.getName());
 			newDocLock.setLockBy(login_user.getId());
 			newDocLock.setLockTime(lockTime);	//Set lockTime
 			if(reposService.updateDocLock(newDocLock) == 0)
