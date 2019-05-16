@@ -5435,14 +5435,14 @@ public class BaseController  extends BaseFunction{
 	{
 		if(isRealDoc)
 		{
-			if(repos.getSvnUser() == null)
+			if(repos.getSvnUser() == null || repos.getSvnUser().isEmpty())
 			{
 				return commitMsg;
 			}
 		}
 		else
 		{
-			if(repos.getSvnUser1() == null)
+			if(repos.getSvnUser1() == null  || repos.getSvnUser1().isEmpty())
 			{
 				return commitMsg;
 			}	
