@@ -2113,8 +2113,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		User login_user = new User();
-		login_user.setId(0); //System User
-		login_user.setName("SystemAdmin");
+		login_user.setId(0); //系统自动同步用户 AutoSync
+		login_user.setName("AutoSync");
 		
 		//LockDoc
 		DocLock docLock = null;
