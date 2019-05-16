@@ -2145,6 +2145,9 @@ public class BaseController  extends BaseFunction{
 		Doc dbDoc = dbGetDoc(doc);
 		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 		
+		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
+		printObject("syncupForDocChanged() localEntry: ", localEntry);
+			
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
 		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
 
@@ -2176,11 +2179,6 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			
-			Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
-			printObject("syncupForDocChanged() localEntry: ", localEntry);
-				
-			
 			String commitMsg = "自动同步 doc.getPath()+doc.getName()";
 			String commitUser = "AutoSync";
 			
