@@ -1982,7 +1982,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			//Delete DataBase Record
-			if(dbDeleteDoc(repos, doc, true) == false)
+			if(dbDeleteDoc(doc, true) == false)
 			{	
 				rt.setWarningMsg("不可恢复系统错误：dbDeleteDoc Failed");
 			}
@@ -2154,7 +2154,7 @@ public class BaseController  extends BaseFunction{
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(doc, true);
 		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 		
 		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
@@ -2179,7 +2179,7 @@ public class BaseController  extends BaseFunction{
 				if(remoteEntry == null)
 				{
 					System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
-					dbDeleteDoc(repos, doc, true);					
+					dbDeleteDoc(doc, true);					
 				}
 				else if(isDocRemoteChanged(dbDoc, remoteEntry))
 				{
@@ -2252,7 +2252,7 @@ public class BaseController  extends BaseFunction{
 					if(remoteEntry == null)
 					{
 						System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
-						dbDeleteDoc(repos, doc, true);					
+						dbDeleteDoc(doc, true);					
 					}
 					else	
 					{
@@ -2260,7 +2260,7 @@ public class BaseController  extends BaseFunction{
 						String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 						if(revision != null)
 						{
-							dbDeleteDoc(repos, dbDoc, true);
+							dbDeleteDoc(dbDoc, true);
 						}
 					}
 				}
@@ -2370,7 +2370,7 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 
-	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
+	protected Doc dbGetDoc(Doc doc, boolean dupCheck) 
 	{	
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
@@ -2390,7 +2390,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("dbGetDoc() 数据库存在多个DOC记录，自动清理"); 
 				for(int i=0; i <list.size(); i++)
 				{
-					dbDeleteDoc(repos, list.get(i), true);
+					dbDeleteDoc(list.get(i), true);
 				}
 			}
 			return null;
@@ -2399,20 +2399,20 @@ public class BaseController  extends BaseFunction{
 		return list.get(0);
 	}
 	
-	private boolean dbDeleteDoc(Repos repos, Doc doc, boolean deleteSubDocs) {
+	private boolean dbDeleteDoc(Doc doc, boolean deleteSubDocs) {
 
 		if(deleteSubDocs)
 		{
 			Doc qSubDoc = new Doc();
-			qSubDoc.setVid(repos.getId());
-			qSubDoc.setPid(doc.getDocId());
+			qSubDoc.setVid(doc.getVid());
+			qSubDoc.setPath(doc.getPath() + doc.getName() + "/");
 			List<Doc> subDocList = reposService.getDocList(qSubDoc);
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
 				{
 					Doc subDoc = subDocList.get(i);
-					dbDeleteDoc(repos, subDoc, true);
+					dbDeleteDoc(subDoc, true);
 				}
 			}
 		}
@@ -2445,7 +2445,7 @@ public class BaseController  extends BaseFunction{
 		case 1:	//Add Doc
 			return dbAddDoc(action.getRepos(), action.getDoc(), false);
 		case 2: //Delete Doc
-			return dbDeleteDoc(action.getRepos(), action.getDoc(), true);
+			return dbDeleteDoc(action.getDoc(), true);
 		case 3: //Update Doc
 			return dbUpdateDoc(action.getDoc());
 		}
