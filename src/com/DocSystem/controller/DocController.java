@@ -443,7 +443,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					Doc doc = getDocInfo(repos.getId(), docId);
+					Doc doc = getDocInfo(repos, parentPath, docName);
 					boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 							null, size,checkSum,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
@@ -462,12 +462,13 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private Doc getDocInfo(Integer reposId, Long docId) 
+	private Doc getDocInfo(Repos repos, String path, String name) 
 	{
 		Doc qDoc = new Doc();
-		qDoc.setVid(reposId);
-		qDoc.setDocId(docId);
-		return dbGetDoc(qDoc);
+		qDoc.setVid(repos.getId());
+		qDoc.setPath(path);
+		qDoc.setName(name);
+		return dbGetDoc(null, qDoc, true);
 	}
 
 	/****************   Check a Document ******************/
@@ -715,7 +716,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				Doc doc = getDocInfo(repos.getId(), docId);
+				Doc doc = getDocInfo(repos, parentPath, docName);
 				boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 						uploadFile, size,checkSum,   
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
@@ -1078,7 +1079,7 @@ public class DocController extends BaseController{
 		}
 		
 		//checkout the entry to local
-		if(verReposCheckOut(repos, isRealDoc, parentPath, entryName, userTmpDir, targetName, commitId) == false)
+		if(verReposCheckOut(repos, isRealDoc, parentPath, entryName, userTmpDir, targetName, commitId) == null)
 		{
 			System.out.println("getHistoryDoc() verReposCheckOut Failed!");
 			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + entryName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
@@ -1176,7 +1177,7 @@ public class DocController extends BaseController{
 		
 		
 		String docCheckSum = "";
-		Doc doc = dbGetDoc(localEntry);
+		Doc doc = dbGetDoc(repos, localEntry, true);
 		if(isDocLocalChanged(doc,localEntry))
 		{
 			File file = new File(localEntryPath);
