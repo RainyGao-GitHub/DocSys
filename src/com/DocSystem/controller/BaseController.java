@@ -1792,7 +1792,6 @@ public class BaseController  extends BaseFunction{
 		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		doc.setCreateTime(nowTimeStamp);
 		doc.setCreator(login_user.getId());
-		doc.setLatestEditTime(nowTimeStamp);
 		doc.setLatestEditor(login_user.getId());
 		
 		DocLock docLock = null;
@@ -1879,6 +1878,15 @@ public class BaseController  extends BaseFunction{
 			doc.setPath("");
 		}
 		
+		String reposRPath = getReposRealPath(repos);
+		String docPath = reposRPath + doc.getPath() + doc.getName();
+		File localEntry = new File(docPath);
+		if(!localEntry.exists())
+		{
+			return false;
+		}
+		doc.setSize(localEntry.length());
+		doc.setLatestEditTime(localEntry.lastModified());
 		if(reposService.addDoc(doc) == 0)
 		{
 			System.out.println("dbAddDoc() addDoc to db failed");		
