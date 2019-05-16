@@ -2148,7 +2148,7 @@ public class BaseController  extends BaseFunction{
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
-		Doc dbDoc = dbGetDoc(doc);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 		
 		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
@@ -2364,21 +2364,32 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 
-	protected Doc dbGetDoc(Doc doc) 
-	{			
-		List<Doc> list = reposService.getDocList(doc);
+	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
+	{	
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setPath(doc.getPath());
+		qDoc.setName(doc.getName());
+		
+		List<Doc> list = reposService.getDocList(qDoc);
 		if(list == null || list.size() == 0)
 		{
 			return null;
 		}
 		
-		if(list.size() > 1)
+		if(dupCheck)
 		{
-			System.out.println("dbGetDoc() 数据库存在多个DOC记录"); 
-			reposService.deleteDoc(doc);
+			if(list.size() > 1)
+			{
+				System.out.println("dbGetDoc() 数据库存在多个DOC记录，自动清理"); 
+				for(int i=0; i <list.size(); i++)
+				{
+					dbDeleteDoc(repos, list.get(i), true);
+				}
+			}
 			return null;
 		}
-			
+	
 		return list.get(0);
 	}
 	
@@ -3356,9 +3367,8 @@ public class BaseController  extends BaseFunction{
 			
 			if(isLockOutOfDate(docLock.getLockTime()) == false)
 			{	
-				User lockBy = userService.getUser(docLock.getLockBy());
-				rt.setError(docLock.getName() +" was locked by " + lockBy.getName());
-				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLockBy() + " lockState:"+ docLock.getState());
+				rt.setError(docLock.getName() +" was locked by " + docLock.getLocker());
+				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLocker() + " lockState:"+ docLock.getState());
 				return true;						
 			}
 			else 
