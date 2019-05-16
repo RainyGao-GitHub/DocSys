@@ -155,7 +155,7 @@ public class SVNUtil  extends BaseController{
 	}
     public Doc getDoc(String filePath, String revision) 
 	{
-    	//System.out.println("getDoc() filePath:" + filePath);
+    	System.out.println("getDoc() filePath:" + filePath);
     	if(filePath == null)
     	{
         	System.out.println("getDoc() 非法参数：filePath is null");
@@ -173,6 +173,7 @@ public class SVNUtil  extends BaseController{
 	    	
 	    	if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.NONE) 
 			{
+	    		System.out.println("getDoc() " + filePath + " not exist for revision:" + revision); 
 	        	return null;
 			}
 	    		    	
