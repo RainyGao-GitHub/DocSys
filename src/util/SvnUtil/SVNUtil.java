@@ -176,6 +176,18 @@ public class SVNUtil  extends BaseController{
 	    		System.out.println("getDoc() " + filePath + " not exist for revision:" + revision); 
 	        	return null;
 			}
+	    	else if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.DIR) 
+			{
+	            if(revision == null)
+	            {
+	            	revision = repository.getLatestRevision() + "";
+	            }
+	            
+	    		Doc doc = new Doc();
+	            doc.setType(2);
+	            doc.setRevision(revision);
+	            return doc;
+			}
 	    		    	
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
@@ -190,6 +202,7 @@ public class SVNUtil  extends BaseController{
 	            long commitTime = logEntry.getDate().getTime();
 	            
 	            Doc doc = new Doc();
+	            doc.setType(1);
 	            doc.setRevision(revision);
 	            doc.setLatestEditorName(commitUser);
 	            doc.setLatestEditTime(commitTime);
