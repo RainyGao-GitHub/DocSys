@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -3332,8 +3333,9 @@ public class BaseController  extends BaseFunction{
 			if(isLockOutOfDate(repos.getLockTime()) == false)
 			{	
 				User lockBy = getLocker(repos.getLockBy());
+				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(repos.getLockTime());
 				
-				rt.setError("仓库 " + repos.getName() +" was locked by " + lockBy.getName());
+				rt.setError("仓库 " + repos.getName() +" was locked by [" + repos.getLockBy() + "] "+ lockBy.getName() + " till " + lockTime);
 				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
 				return true;						
 			}
@@ -3381,7 +3383,8 @@ public class BaseController  extends BaseFunction{
 			
 			if(isLockOutOfDate(docLock.getLockTime()) == false)
 			{	
-				rt.setError(docLock.getName() +" was locked by " + docLock.getLocker());
+				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.getLockTime());
+				rt.setError(docLock.getName() +" was locked by [" + docLock.getLockBy() + "] " +docLock.getLocker() + " till " + lockTime);
 				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLocker() + " lockState:"+ docLock.getState());
 				return true;						
 			}
