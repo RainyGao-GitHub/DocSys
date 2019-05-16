@@ -1630,7 +1630,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = getReposVirtualPath(repos);
 		
 		//Do checkout the entry to 
-		if(verReposCheckOut(repos, false, "", docName, localParentPath, docName, commitId) == false)
+		if(verReposCheckOut(repos, false, "", docName, localParentPath, docName, commitId) == null)
 		{
 			unlockDoc(doc,login_user,docLock);
 			System.out.println("revertVirtualDocHistory() verReposCheckOut Failed!");
@@ -1685,7 +1685,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		
 		//Do checkout the entry to 
-		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == false)
+		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == null)
 		{
 			unlockDoc(doc,login_user,docLock);
 			System.out.println("revertRealDocHistory() verReposCheckOut Failed!");
@@ -4649,7 +4649,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitRealDocDelete(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 
 	private String svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
@@ -4670,7 +4670,7 @@ public class BaseController  extends BaseFunction{
 			return svnUtil.svnDelete(parentPath,name,commitMsg,commitUser);
 		}
 		
-		return "";
+		return null;
 	}
 
 	protected String verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type,
@@ -4691,7 +4691,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 
 	protected String verReposRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
@@ -4712,7 +4712,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt, true);
 		}
-		return "";
+		return null;
 	}
 
 	protected String verReposRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
@@ -4733,10 +4733,10 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt, false);
 		}
-		return "";
+		return null;
 	}
 	
-	protected boolean verReposCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId) {
+	protected String verReposCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId) {
 		if(repos.getVerCtrl() == 1)
 		{
 			long revision = Long.parseLong(commitId);
@@ -4746,10 +4746,10 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitCheckOut(repos, isRealDoc, parentPath, entryName, localParentPath, targetName, commitId);
 		}
-		return true;
+		return null;
 	}
 	
-	protected boolean verReposRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
+	protected String verReposRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
 	{
 		//TODO: Revert 应该是CheckOut后再Commit
 		if(repos.getVerCtrl() == 1)
@@ -4760,7 +4760,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitRevertRealDoc(repos, parentPath, entryName, type, rt);
 		}
-		return true;
+		return null;
 	}
 	
 	protected String verReposVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) 
@@ -4780,7 +4780,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitVirtualDocAdd(repos, docVName, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 	
 	protected String verReposVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -4800,7 +4800,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitVirtualDocDelete(repos, docVName, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 
 	protected String verReposVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
@@ -4819,7 +4819,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 
 	protected String verReposVirtualDocMove(Repos repos, String srcDocVName,String dstDocVName, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -4839,7 +4839,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitVirtualDocMove(repos, srcDocVName,dstDocVName, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 
 	protected String verReposVirtualDocCopy(Repos repos,String srcDocVName,String dstDocVName,String commitMsg, String commitUser, ReturnAjax rt) 
@@ -4859,10 +4859,10 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);
 		}
-		return "";
+		return null;
 	}
 
-	protected boolean verReposRevertVirtualDoc(Repos repos, String docVName) {
+	protected String verReposRevertVirtualDoc(Repos repos, String docVName) {
 		if(repos.getVerCtrl() == 1)
 		{
 			return svnRevertVirtualDoc(repos, docVName);		
@@ -4871,7 +4871,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitRevertVirtualDoc(repos, docVName);
 		}
-		return true;
+		return null;
 	}
 	
 	//Git realDoc Delete
@@ -5026,7 +5026,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
 	}
 
-	protected boolean gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String revision) 
+	protected String gitCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String revision) 
 	{
 		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
 		//GitUtil Init
@@ -5034,13 +5034,13 @@ public class BaseController  extends BaseFunction{
 		if(gitUtil.Init(repos, true, null) == false)
 		{
 			System.out.println("gitCheckOut() GITUtil Init failed");
-			return false;
+			return null;
 		}
 		
 		return gitUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
 	}
 	
-	protected boolean gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) 
+	protected String gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) 
 	{
 		System.out.println("gitRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
@@ -5130,7 +5130,7 @@ public class BaseController  extends BaseFunction{
 		return  gitDocCopy(repos, false, "", srcDocVName, "", dstDocVName,  commitMsg, commitUser, rt);
 	}
 	
-	protected boolean gitRevertVirtualDoc(Repos repos, String docVName) 
+	protected String gitRevertVirtualDoc(Repos repos, String docVName) 
 	{
 		System.out.println("svnRevertRealDoc() docVName:" + docVName);
 		String localParentPath = getReposVirtualPath(repos);
@@ -5172,7 +5172,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 
-	protected boolean svnCheckOut(Repos repos, boolean isRealDoc, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
+	protected String svnCheckOut(Repos repos, boolean isRealDoc, String parentPath,String entryName, String localParentPath,String targetName,long revision) 
 	{
 		System.out.println("svnCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
 		
@@ -5180,13 +5180,13 @@ public class BaseController  extends BaseFunction{
 		if(svnUtil.Init(repos, isRealDoc, null) == false)
 		{
 			System.out.println("svnCheckOut() svnUtil Init Failed");
-			return false;
+			return null;
 		}
 
 		return svnUtil.getEntry(parentPath, entryName, localParentPath, targetName, revision);
 	}
 
-	protected boolean svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
+	protected String svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
 	{
 		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
 		String localParentPath = getReposRealPath(repos) + parentPath;
@@ -5238,7 +5238,7 @@ public class BaseController  extends BaseFunction{
 			}
 			return revision;
 		}
-		return "";
+		return null;
 	}
 
 	protected String svnVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
@@ -5282,7 +5282,7 @@ public class BaseController  extends BaseFunction{
 		return svnCopy(repos, false, "",srcDocVName,"",dstDocVName,commitMsg,commitUser,rt, false);
 	}
 
-	protected boolean svnRevertVirtualDoc(Repos repos, String docVName) {
+	protected String svnRevertVirtualDoc(Repos repos, String docVName) {
 		System.out.println("svnRevertVirtualDoc() docVName:" + docVName);
 		
 		String localDocVParentPath = getReposVirtualPath(repos);
@@ -5363,7 +5363,7 @@ public class BaseController  extends BaseFunction{
 			
 			return gitAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);			
 		}
-		return "";
+		return null;
 	}
 	
 	protected String gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 

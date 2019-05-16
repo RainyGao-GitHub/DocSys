@@ -1645,13 +1645,13 @@ public class SVNUtil  extends BaseController{
 		return entries;
 	}
 	
-	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,long revision) {
+	public String getEntry(String parentPath, String entryName, String localParentPath, String targetName,long revision) {
 		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
     	if(parentPath == null || entryName == null)
     	{
     		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
-    		return false;
+    		return null;
     	}	
 		
 		//check targetName and set
@@ -1668,12 +1668,12 @@ public class SVNUtil  extends BaseController{
 			// TODO Auto-generated catch block
 			System.out.println("svnGetEntry() checkPath Exception");
 	        e.printStackTrace();
-			return false;
+			return null;
 		}
 		
 		if (nodeKind == SVNNodeKind.NONE) {
             System.out.println("svnGetEntry() There is no entry at '" + repositoryURL + "'.");
-            return false;
+            return null;
         } else if (nodeKind == SVNNodeKind.DIR) {
         	//Get the subEntries and call svnGetEntry
 			String localEntryPath = localParentPath + targetName + "/";
@@ -1692,13 +1692,13 @@ public class SVNUtil  extends BaseController{
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
-				if(getEntry(remoteEntryPath+"/",subEntryName,localEntryPath,null,revision) == false)
+				if(getEntry(remoteEntryPath+"/",subEntryName,localEntryPath,null,revision) == null)
 				{
 					System.out.println("svnGetEntry() svnGetEntry Failed: " + remoteEntryPath+ "/" + subEntryName);
-					return false;
+					return null;
 				}
 			}
-        	return true;
+        	return revision+"";
         }
         else if(nodeKind == SVNNodeKind.FILE)
         {	
@@ -1708,7 +1708,7 @@ public class SVNUtil  extends BaseController{
 			} catch (Exception e) {
 				System.out.println("svnGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
 				e.printStackTrace();
-				return false;
+				return null;
 			}
 			
 	        SVNProperties fileProperties = new SVNProperties();
@@ -1719,10 +1719,10 @@ public class SVNUtil  extends BaseController{
 				// TODO Auto-generated catch block
 				System.out.println("svnGetEntry() getFile Exception");
 				e.printStackTrace();
-				return false;
+				return null;
 			}
         }
-        return true;
+        return revision+"";
 	}
 	
     /*

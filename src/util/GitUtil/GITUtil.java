@@ -432,7 +432,7 @@ public class GITUtil  extends BaseController{
     	return null;
 	}
 
-	public boolean getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
+	public String getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
 		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		//check targetName and set
@@ -481,11 +481,15 @@ public class GITUtil  extends BaseController{
             }
             boolean ret = recurGetEntry(git, repository, treeWalk, parentPath, entryName, localParentPath, targetName);
             repository.close();
-            return ret;
+            if(ret)
+            {
+            	return revCommit.getName();
+            }	
+            return null;
         } catch (Exception e) {
            System.out.println("getEntry() Exception"); 
            e.printStackTrace();
-           return false;
+           return null;
         }
 	}
 
