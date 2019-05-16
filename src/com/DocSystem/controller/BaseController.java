@@ -2103,9 +2103,17 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
+	private boolean syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
+		printObject("syncupForRemoteDocChanged() action:",action);
+		return syncupForDocChanged(action, rt);
+	}
+
 	private boolean syncupForLocalDocChanged(CommonAction action, ReturnAjax rt) {
 		printObject("syncupForLocalDocChanged() action:",action);
-		
+		return syncupForDocChanged(action, rt);
+	}
+
+	private boolean syncupForDocChanged(CommonAction action, ReturnAjax rt) {		
 		Doc doc = action.getDoc();
 		if(doc == null)
 		{
@@ -2125,7 +2133,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("syncupForLocalDocChanged() Failed to lock Doc: " + doc.getName());
+				System.out.println("syncupForDocChanged() Failed to lock Doc: " + doc.getName());
 				return false;
 			}
 			unlock(); //线程锁
@@ -2135,10 +2143,10 @@ public class BaseController  extends BaseFunction{
 		Repos repos = action.getRepos();
 		
 		Doc dbDoc = dbGetDoc(doc);
-		printObject("syncupForLocalDocChanged() dbDoc: ", dbDoc);
+		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 		
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
-		printObject("syncupForLocalDocChanged() remoteEntry: ", remoteEntry);
+		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
 
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
@@ -2146,7 +2154,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteEntry != null)	//Remote Added
 				{
-					System.out.println("syncupForLocalDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 					dbAddDoc(repos, remoteEntry, false);
 				}
 			}
@@ -2155,12 +2163,12 @@ public class BaseController  extends BaseFunction{
 				//localDeleted and remoteDeleted so just delete dbDoc
 				if(remoteEntry == null)
 				{
-					System.out.println("syncupForLocalDocChanged() remote deleted: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
 					dbDeleteDoc(repos, doc, true);					
 				}
 				else if(isDocRemoteChanged(dbDoc, remoteEntry))
 				{
-					System.out.println("syncupForLocalDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
 					dbDoc.setRevision(remoteEntry.getRevision());
 					dbUpdateDoc(dbDoc);
 				}
@@ -2170,7 +2178,7 @@ public class BaseController  extends BaseFunction{
 		{
 			
 			Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
-			printObject("syncupForLocalDocChanged() localEntry: ", localEntry);
+			printObject("syncupForDocChanged() localEntry: ", localEntry);
 				
 			
 			String commitMsg = "自动同步 doc.getPath()+doc.getName()";
@@ -2180,7 +2188,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(dbDoc == null)	//localAdded
 				{
-					System.out.println("syncupForLocalDocChanged() local Added: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForDocChanged() local Added: " + doc.getPath()+doc.getName());
 					String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 					if(revision != null)
 					{
@@ -2191,7 +2199,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 				{
-					System.out.println("syncupForLocalDocChanged() local Changed: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForDocChanged() local Changed: " + doc.getPath()+doc.getName());
 					String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 					if(revision != null)
 					{
@@ -2204,7 +2212,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else if(isDocRemoteChanged(dbDoc, remoteEntry))
 				{
-					System.out.println("syncupForLocalDocChanged() remote Deleted or Changed: " + doc.getPath()+doc.getName());
+					System.out.println("syncupForDocChanged() remote Deleted or Changed: " + doc.getPath()+doc.getName());
 					
 					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
 					//verReposCheckout == true
@@ -2219,7 +2227,7 @@ public class BaseController  extends BaseFunction{
 				{
 					if(remoteEntry != null)	//Remote Added
 					{
-						System.out.println("syncupForLocalDocChanged() remote Added: " + doc.getPath()+doc.getName());
+						System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 						
 						//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
 						//verReposCheckout == true
@@ -2233,12 +2241,12 @@ public class BaseController  extends BaseFunction{
 					//localDeleted and remoteDeleted so just delete dbDoc
 					if(remoteEntry == null)
 					{
-						System.out.println("syncupForLocalDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+						System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
 						dbDeleteDoc(repos, doc, true);					
 					}
 					else	
 					{
-						System.out.println("syncupForLocalDocChanged() local deleted: " + doc.getPath()+doc.getName());
+						System.out.println("syncupForDocChanged() local deleted: " + doc.getPath()+doc.getName());
 						String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 						if(revision != null)
 						{
@@ -2406,11 +2414,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		return true;
-	}
-
-	private boolean syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
-
-		return syncupForLocalDocChanged(action, rt);
 	}
 
 	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
