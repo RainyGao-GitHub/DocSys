@@ -456,7 +456,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) {
+	private HashMap<String, Doc> getIndexHashMap(Repos repos, Long pid, String path) 
+	{
+		System.out.println("getIndexHashMap() path:" + path); 
 		List<Doc> docList = null;
 		Doc doc = new Doc();
 		doc.setPath(path);
@@ -477,9 +479,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0;i<docList.size();i++)
     	{
 			Doc doc = docList.get(i);
-			doc.setPid(pid);
-			doc.setPath(path);
-			
+			doc.setPid(pid);			
 			hashMap.put(doc.getName(), doc);
 		}		
 		return hashMap;
