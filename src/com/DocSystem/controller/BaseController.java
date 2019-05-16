@@ -2190,7 +2190,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			String commitMsg = "自动同步 doc.getPath()+doc.getName()";
+			String commitMsg = "自动同步" +  doc.getPath()+doc.getName();
 			String commitUser = "AutoSync";
 			
 			if(localEntry != null)
@@ -2198,6 +2198,7 @@ public class BaseController  extends BaseFunction{
 				if(dbDoc == null)	//localAdded
 				{
 					System.out.println("syncupForDocChanged() local Added: " + doc.getPath()+doc.getName());
+					commitMsg = "增加 " +  doc.getPath()+doc.getName();
 					String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 					if(revision != null)
 					{
@@ -2211,6 +2212,7 @@ public class BaseController  extends BaseFunction{
 					if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 					{
 						System.out.println("syncupForDocChanged() local Changed: " + doc.getPath()+doc.getName());
+						commitMsg = "更新 " +  doc.getPath()+doc.getName();
 						String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 						if(revision != null)
 						{
@@ -2296,6 +2298,7 @@ public class BaseController  extends BaseFunction{
 					else	
 					{
 						System.out.println("syncupForDocChanged() local deleted: " + doc.getPath()+doc.getName());
+						commitMsg = "删除 " +  doc.getPath()+doc.getName();
 						String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
 						if(revision != null)
 						{
