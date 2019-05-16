@@ -1820,7 +1820,7 @@ public class BaseController  extends BaseFunction{
 		if(uploadFile == null)
 		{	
 			//File must not exists
-			if(createRealDoc(reposRPath,parentPath,docName,type, rt) == false)
+			if(createRealDoc(repos, doc, rt) == false)
 			{	
 				unlockDoc(doc, login_user, docLock);
 				
@@ -1832,7 +1832,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+			if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 			{	
 				unlockDoc(doc, login_user, null);
 				
@@ -1962,8 +1962,7 @@ public class BaseController  extends BaseFunction{
 		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser);
 	
 		//get RealDoc Full ParentPath
-		String reposRPath = getReposRealPath(repos);
-		if(deleteRealDoc(reposRPath,parentPath,docName, doc.getType(),rt) == false)
+		if(deleteRealDoc(repos,doc,rt) == false)
 		{
 			unlockDoc(doc,login_user,docLock);
 			
@@ -2226,23 +2225,45 @@ public class BaseController  extends BaseFunction{
 					{	
 						if(remoteEntry == null)
 						{
-							System.out.println("syncupForDocChanged() remote Deleted: do nothing" + doc.getPath()+doc.getName());
-						}
-						else if(isDocRemoteChanged(dbDoc, remoteEntry))
-						{
-							System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
-							
-							//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
-							String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-							List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
-							if(successDocList != null)
+							System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+							if(deleteRealDoc(repos, doc, rt) == true)
 							{
-								//SuccessDocList中的doc包括了revision信息
-								for(int i=0; i<successDocList.size(); i++)
+								dbDeleteDoc(doc,true);
+							}
+						}
+						else 
+						{
+							if(dbDoc.getType() != remoteEntry.getType())
+							{
+								System.out.println("syncupForDocChanged() remoteEntry Type Changed(Delete and Add): " + doc.getPath()+doc.getName());
+								if(deleteRealDoc(repos, doc, rt) == true)
 								{
-									dbUpdateDoc(successDocList.get(i));
+									dbDeleteDoc(doc,true);
+								}
+								
+								String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+								List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+								if(successDocList != null)
+								{
+									dbAddDoc(repos, remoteEntry, true);
 								}
 							}
+							else if(isDocRemoteChanged(dbDoc, remoteEntry))
+							{
+								System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+								
+								//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
+								String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+								List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+								if(successDocList != null)
+								{
+									//SuccessDocList中的doc包括了revision信息
+									for(int i=0; i<successDocList.size(); i++)
+									{
+										dbUpdateDoc(successDocList.get(i));
+									}
+								}
+							}							
 						}
 					}
 				}
@@ -2256,10 +2277,12 @@ public class BaseController  extends BaseFunction{
 						System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 						
 						//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
-						//verReposCheckout == true
-						//{
-						//	dbAddDoc(remoteEntry);
-						//}
+						String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+						List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+						if(successDocList != null)
+						{
+							dbAddDoc(repos, remoteEntry, true);
+						}
 					}
 				}
 				else
@@ -2561,25 +2584,23 @@ public class BaseController  extends BaseFunction{
 		Doc newDoc = action.getNewDoc();
 		
 		Repos repos = action.getRepos();
-		String localRootPath = getReposRealPath(repos);
 		
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return createRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), rt);
+			return createRealDoc(repos, doc, rt);
 		case 2: //Delete Doc
-			return deleteRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), rt);
+			return deleteRealDoc(repos, doc, rt);
 		case 3: //Update Doc
 			MultipartFile uploadFile = action.getUploadFile();
 			Integer chunkNum = action.getChunkNum();
 			Integer chunkSize = action.getChunkSize();
 			String chunkParentPath = action.getChunkParentPath();
-			return updateRealDoc(localRootPath, doc.getPath(), doc.getName(), doc.getType(), doc.getSize(), doc.getCheckSum(), 
-								uploadFile, chunkNum, chunkSize, chunkParentPath, rt);
+			return updateRealDoc(repos, doc, uploadFile, chunkNum, chunkSize, chunkParentPath, rt);
 		case 4: //Move Doc
-			return moveRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt);
+			return moveRealDoc(repos, doc, newDoc, rt);
 		case 5: //Copy Doc
-			return copyRealDoc(localRootPath, doc.getPath(), doc.getName(), newDoc.getPath(), newDoc.getName(), doc.getType(), rt);
+			return copyRealDoc(repos, doc, newDoc, rt);
 		}
 		return false;
 	}
@@ -2728,7 +2749,7 @@ public class BaseController  extends BaseFunction{
 		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
 		
 		//保存文件信息
-		if(updateRealDoc(reposRPath,parentPath,docName,doc.getType(),fileSize,checkSum,uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
+		if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
 			unlockDoc(doc,login_user,docLock);
 
@@ -2855,7 +2876,6 @@ public class BaseController  extends BaseFunction{
 		System.out.println("moveDoc_FS() move " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
 		
 		Integer reposId = repos.getId();
-		String reposRPath =  getReposRealPath(repos);
 
 		Doc srcDoc = new Doc();
 		srcDoc.setVid(reposId);
@@ -2901,7 +2921,7 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		if(moveRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName, type, rt) == false)
+		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
 		{
 			unlockDoc(srcDoc, login_user, srcDocLock);
 			unlockDoc(dstDoc, login_user, dstDocLock);
@@ -2981,7 +3001,6 @@ public class BaseController  extends BaseFunction{
 		System.out.println("copyDoc() copy " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
 		
 		Integer reposId = repos.getId();
-		String reposRPath =  getReposRealPath(repos);
 
 		Doc srcDoc = new Doc();
 		srcDoc.setVid(reposId);
@@ -3029,7 +3048,7 @@ public class BaseController  extends BaseFunction{
 		}
 						
 		//复制文件或目录
-		if(copyRealDoc(reposRPath,srcParentPath,srcName,dstParentPath,dstName,type,rt) == false)
+		if(copyRealDoc(repos, srcDoc, dstDoc, rt) == false)
 		{
 			unlockDoc(srcDoc,login_user,null);
 			unlockDoc(dstDoc,login_user,null);
@@ -4215,10 +4234,16 @@ public class BaseController  extends BaseFunction{
 	
 	/*************************** DocSys文件操作接口 ***********************************/
 	//create Real Doc
-	protected boolean createRealDoc(String reposRPath,String parentPath, String name, Integer type, ReturnAjax rt) {
+	protected boolean createRealDoc(Repos repos, Doc doc, ReturnAjax rt) {
+		String name = doc.getName();
+		int type = doc.getType();
+		
+		String reposRPath = getReposRealPath(repos);
 		//获取 doc parentPath
-		String localParentPath =  reposRPath + parentPath;
+		String localParentPath =  reposRPath + doc.getPath();
+
 		String localDocPath = localParentPath + name;
+
 		System.out.println("createRealDoc() localParentPath:" + localParentPath);
 		
 		if(type == 2) //目录
@@ -4242,7 +4267,11 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean deleteRealDoc(String reposRPath, String parentPath, String name, Integer type, ReturnAjax rt) {
+	protected boolean deleteRealDoc(Repos repos, Doc doc, ReturnAjax rt) {
+		
+		String reposRPath = getReposRealPath(repos);
+		String parentPath = doc.getPath();
+		String name = doc.getName();
 		String localDocPath = reposRPath + parentPath + name;
 
 		if(delFileOrDir(localDocPath) == false)
@@ -4255,8 +4284,15 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean updateRealDoc(String reposRPath,String parentPath,String name,Integer type, Long fileSize, String fileCheckSum,
-			MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) {
+	protected boolean updateRealDoc(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) 
+	{
+		String parentPath = doc.getPath();
+		String name = doc.getName();
+		Long fileSize = doc.getSize();
+		String fileCheckSum = doc.getCheckSum();
+		
+		String reposRPath = getReposRealPath(repos);
+		
 		String localDocParentPath = reposRPath + parentPath;
 		String retName = null;
 		try {
@@ -4377,8 +4413,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean moveRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt) 
+	protected boolean moveRealDoc(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) 
 	{
+		String reposRPath = getReposRealPath(repos);
+		String srcParentPath = srcDoc.getPath();
+		String srcName = srcDoc.getName();
+		String dstParentPath = dstDoc.getPath();
+		String dstName = dstDoc.getName();
+		
 		String srcDocPath = reposRPath + srcParentPath + srcName;
 		String dstDocPath = reposRPath + dstParentPath + dstName;
 
@@ -4405,8 +4447,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean copyRealDoc(String reposRPath, String srcParentPath,String srcName,String dstParentPath,String dstName, Integer type, ReturnAjax rt) 
+	protected boolean copyRealDoc(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) 
 	{
+		String reposRPath = getReposRealPath(repos);
+		String srcParentPath = srcDoc.getPath();
+		String srcName = srcDoc.getName();
+		String dstParentPath = dstDoc.getPath();
+		String dstName = dstDoc.getName();
+		
 		String srcDocPath = reposRPath + srcParentPath + srcName;
 		String dstDocPath = reposRPath + dstParentPath + dstName;
 
