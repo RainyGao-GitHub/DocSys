@@ -4856,7 +4856,11 @@ public class BaseController  extends BaseFunction{
 		doc.setName(entryName);
 		if(repos.getVerCtrl() == 1)
 		{
-			long revision = Long.parseLong(commitId);
+			long revision = -1;
+			if(commitId != null)
+			{
+				Long.parseLong(commitId);
+			}
 			return svnCheckOut(repos, isRealDoc, doc, localParentPath, targetName, revision);		
 		}
 		else if(repos.getVerCtrl() == 2)

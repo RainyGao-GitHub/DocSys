@@ -188,7 +188,7 @@ public class SVNUtil  extends BaseController{
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
  
-			logEntries = repository.log(targetPaths, null,startRevision, endRevision, true, true);
+			logEntries = repository.log(targetPaths, null,0, endRevision, true, true);
 
 	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
 	        {
