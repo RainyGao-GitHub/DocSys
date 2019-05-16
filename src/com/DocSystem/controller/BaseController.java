@@ -3331,7 +3331,8 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isLockOutOfDate(repos.getLockTime()) == false)
 			{	
-				User lockBy = userService.getUser(repos.getLockBy());
+				User lockBy = getLocker(repos.getLockBy());
+				
 				rt.setError("仓库 " + repos.getName() +" was locked by " + lockBy.getName());
 				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
 				return true;						
@@ -3343,6 +3344,19 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		return false;
+	}
+
+	private User getLocker(Integer userId) {
+		User user = new User();
+		if(userId == 0)	//AutoSync
+		{
+			user.setId(0);
+			user.setName("AutoSync");
+			return user;
+		}
+
+		user = userService.getUser(userId);
+		return user;
 	}
 
 	//确定当前doc是否被锁定
