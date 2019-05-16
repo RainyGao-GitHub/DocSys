@@ -10,11 +10,12 @@
     <result column="PID" jdbcType="BIGINT" property="pid" />
     <result column="VID" jdbcType="INTEGER" property="vid" />
     <result column="STATE" jdbcType="INTEGER" property="state" />
+    <result column="LOCKER" jdbcType="VARCHAR" property="locker" />
     <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
     <result column="LOCK_TIME" jdbcType="BIGINT" property="lockTime" />
   </resultMap>
   <sql id="Base_Column_List">
-    ID, TYPE, NAME, PATH, DOC_ID, PID, VID, STATE, LOCK_BY, LOCK_TIME
+    ID, TYPE, NAME, PATH, DOC_ID, PID, VID, STATE, LOCKER, LOCK_BY, LOCK_TIME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -29,12 +30,12 @@
   <insert id="insert" parameterType="com.DocSystem.entity.DocLock">
     insert into doc_lock (ID, TYPE, NAME, 
       PATH, DOC_ID, PID, VID, 
-      STATE, LOCK_BY, LOCK_TIME
-      )
+      STATE, LOCKER, LOCK_BY, 
+      LOCK_TIME)
     values (#{id,jdbcType=INTEGER}, #{type,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, 
       #{path,jdbcType=VARCHAR}, #{docId,jdbcType=BIGINT}, #{pid,jdbcType=BIGINT}, #{vid,jdbcType=INTEGER}, 
-      #{state,jdbcType=INTEGER}, #{lockBy,jdbcType=INTEGER}, #{lockTime,jdbcType=BIGINT}
-      )
+      #{state,jdbcType=INTEGER}, #{locker,jdbcType=VARCHAR}, #{lockBy,jdbcType=INTEGER}, 
+      #{lockTime,jdbcType=BIGINT})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.DocLock">
     insert into doc_lock
@@ -62,6 +63,9 @@
       </if>
       <if test="state != null">
         STATE,
+      </if>
+      <if test="locker != null">
+        LOCKER,
       </if>
       <if test="lockBy != null">
         LOCK_BY,
@@ -95,6 +99,9 @@
       <if test="state != null">
         #{state,jdbcType=INTEGER},
       </if>
+      <if test="locker != null">
+        #{locker,jdbcType=VARCHAR},
+      </if>
       <if test="lockBy != null">
         #{lockBy,jdbcType=INTEGER},
       </if>
@@ -127,6 +134,9 @@
       <if test="state != null">
         STATE = #{state,jdbcType=INTEGER},
       </if>
+      <if test="locker != null">
+        LOCKER = #{locker,jdbcType=VARCHAR},
+      </if>
       <if test="lockBy != null">
         LOCK_BY = #{lockBy,jdbcType=INTEGER},
       </if>
@@ -145,6 +155,7 @@
       PID = #{pid,jdbcType=BIGINT},
       VID = #{vid,jdbcType=INTEGER},
       STATE = #{state,jdbcType=INTEGER},
+      LOCKER = #{locker,jdbcType=VARCHAR},
       LOCK_BY = #{lockBy,jdbcType=INTEGER},
       LOCK_TIME = #{lockTime,jdbcType=BIGINT}
     where ID = #{id,jdbcType=INTEGER}
@@ -181,6 +192,9 @@
       </if>
       <if test="lockBy != null">
         and LOCK_BY = #{lockBy,jdbcType=INTEGER}
+      </if>
+      <if test="locker != null">
+        and LOCKER = #{locker,jdbcType=INTEGER}
       </if>
       <if test="lockTime != null">
         and LOCK_TIME = #{lockTime,jdbcType=BIGINT}

@@ -17,6 +17,8 @@ public class DocLock {
 
     private Integer state;
 
+    private String locker;
+
     private Integer lockBy;
 
     private Long lockTime;
@@ -83,6 +85,14 @@ public class DocLock {
 
     public void setState(Integer state) {
         this.state = state;
+    }
+
+    public String getLocker() {
+        return locker;
+    }
+
+    public void setLocker(String locker) {
+        this.locker = locker == null ? null : locker.trim();
     }
 
     public Integer getLockBy() {
