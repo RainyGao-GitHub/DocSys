@@ -2378,6 +2378,8 @@ public class BaseController  extends BaseFunction{
 		qDoc.setName(doc.getName());
 		
 		List<Doc> list = reposService.getDocList(qDoc);
+		printObject("dbGetDoc() list:", list);
+		
 		if(list == null || list.size() == 0)
 		{
 			return null;
