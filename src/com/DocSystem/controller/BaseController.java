@@ -4783,7 +4783,7 @@ public class BaseController  extends BaseFunction{
 			return svnUtil.svnDelete(parentPath,name,commitMsg,commitUser);
 		}
 		
-		return null;
+		return "";
 	}
 
 	protected String verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type,
