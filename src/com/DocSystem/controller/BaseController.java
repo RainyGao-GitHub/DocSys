@@ -83,96 +83,101 @@ public class BaseController  extends BaseFunction{
 		List<Doc> docList = new ArrayList<Doc>();
 		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
-    	//printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
+    	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
 		
     	List<Doc> localEntryList = null;
     	HashMap<String,Doc> localHashMap = null;
+    	
+    	//Scan for local
     	if(repos.getType() == 1 || repos.getType() == 2)
     	{
     		localEntryList = getLocalEntryList(repos, pid, path, level);
-    		//printObject("getAuthedSubDocList() localEntryList:", localEntryList);
+    		printObject("getAuthedSubDocList() localEntryList:", localEntryList);
     		localHashMap = new HashMap<String,Doc>();
-    	}
-    	
-		if(localEntryList != null)
-    	{
-	    	for(int i=0;i<localEntryList.size();i++)
+	    	if(localEntryList != null)
 	    	{
-	    		Doc localEntry = localEntryList.get(i);
-	    		//Put localEntry to localHashMap
-	    		localHashMap.put(localEntry.getName(), localEntry);
-	    		
-	    		Doc doc = indexHashMap.get(localEntry.getName());
-	    		if(doc == null)	//Doc was local added
-	    		{	    			
-	    			printObject("getAuthedSubDocList() local Added:", localEntry);
-	    			
-		    		doc = localEntry;
-	    			
-	    			//Add to actionList for AutoSyncUp
-	    			insertSyncUpAction(actionList,repos,localEntry,5,1,1, null);
-	    		}
-	    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
-	    		{
-	    			printObject("getAuthedSubDocList() local Changed:", localEntry);
-	
-	    			doc = localEntry;
-	    			
-		    		//Add to actionList for AutoSyncUp
-		    		insertSyncUpAction(actionList,repos,localEntry,5,3,1, null);
-	    		}
-	    		
-				DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-				if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-				{
-		    		//Add to docList
-					doc.setPid(pid);
-		    		docList.add(doc);
-				}
+		    	for(int i=0;i<localEntryList.size();i++)
+		    	{
+		    		Doc localEntry = localEntryList.get(i);
+		    		//Put localEntry to localHashMap
+		    		localHashMap.put(localEntry.getName(), localEntry);
+		    		
+		    		Doc doc = indexHashMap.get(localEntry.getName());
+		    		if(doc == null)	//Doc was local added
+		    		{	    			
+		    			printObject("getAuthedSubDocList() local Added:", localEntry);
+		    			
+			    		doc = localEntry;
+		    			
+		    			//Add to actionList for AutoSyncUp
+		    			insertSyncUpAction(actionList,repos,localEntry,5,1,1, null);
+		    		}
+		    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
+		    		{
+		    			printObject("getAuthedSubDocList() local Changed:", localEntry);
+		
+		    			doc = localEntry;
+		    			
+			    		//Add to actionList for AutoSyncUp
+			    		insertSyncUpAction(actionList,repos,localEntry,5,3,1, null);
+		    		}
+		    		
+					DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
+					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+					{
+			    		//Add to docList
+						doc.setPid(pid);
+			    		docList.add(doc);
+					}
+		    	}
 	    	}
     	}
     	
+    		
     	List<Doc> remoteEntryList = null;
     	remoteEntryList = getRemoteEntryList(repos, pid, path, level);
-    	//printObject("getAuthedSubDocList() remoteEntryList:", remoteEntryList);
+    	printObject("getAuthedSubDocList() remoteEntryList:", remoteEntryList);
     	
-    	if(remoteEntryList != null)
-    	{	
-    		if(repos.getType() == 3 || repos.getType() == 4)
-    		{
-        		for(int i=0;i<remoteEntryList.size();i++)
-    	    	{
-    	    		Doc remoteEntry = remoteEntryList.get(i);
-    	    		Doc doc = indexHashMap.get(remoteEntry.getName());
-        			
-    	    		if(doc == null)	//Doc was remote added
-    	    		{    		    		
-    	    			printObject("getAuthedSubDocList() remote Added:", remoteEntry);
-    		    			
-    			    	//Add to actionList for AutoSyncUp
-    			    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
-    	
-    		    		doc = remoteEntry;
-    	    		}
-    	    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
-    	    		{
-    	    			printObject("getAuthedSubDocList() remote Changed:", remoteEntry);
-    	    			
-    	    			//Add to actionList for AutoSyncUp
-    	    			insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
-    	    			
-    	    			doc = remoteEntry;
-    	    		}
-    			    
-    	    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-    				if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-    				{
-    				    //Add to docList
-    				    docList.add(doc);
-    				}
-    	    	}
-    		}
-    		else
+		if(repos.getType() == 3 || repos.getType() == 4)
+		{
+	    	if(remoteEntryList != null)
+	    	{	
+	    		for(int i=0;i<remoteEntryList.size();i++)
+		    	{
+		    		Doc remoteEntry = remoteEntryList.get(i);
+		    		Doc doc = indexHashMap.get(remoteEntry.getName());
+	    			
+		    		if(doc == null)	//Doc was remote added
+		    		{    		    		
+		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry);
+			    			
+				    	//Add to actionList for AutoSyncUp
+				    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
+		
+			    		doc = remoteEntry;
+		    		}
+		    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
+		    		{
+		    			printObject("getAuthedSubDocList() remote Changed:", remoteEntry);
+		    			
+		    			//Add to actionList for AutoSyncUp
+		    			insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
+		    			
+		    			doc = remoteEntry;
+		    		}
+				    
+		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
+					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+					{
+					    //Add to docList
+					    docList.add(doc);
+					}
+		    	}
+	    	}
+		}
+		else
+		{	
+			if(remoteEntryList != null)
     		{
 	    		for(int i=0;i<remoteEntryList.size();i++)
 		    	{
@@ -231,7 +236,7 @@ public class BaseController  extends BaseFunction{
 					}
 	    		}
 	    	}
-	    	//printObject("getAuthedSubDocList() docList:", docList);
+	    	printObject("getAuthedSubDocList() docList:", docList);
     	}
     	
     	//All dbDocs which not in docList should be deleted
