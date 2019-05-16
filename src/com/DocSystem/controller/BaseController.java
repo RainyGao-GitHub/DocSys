@@ -1883,12 +1883,12 @@ public class BaseController  extends BaseFunction{
 		if(addSubDocs)
 		{
 			int level = getLevelByParentPath(doc.getPath());
-			List<Doc> localEntryList = getLocalEntryList(repos, doc.getPid(), doc.getPath(), level);
-			if(localEntryList != null)
+			List<Doc> subDocList = getLocalEntryList(repos, doc.getDocId(), doc.getPath() + doc.getName()+"/", level+1);
+			if(subDocList != null)
 			{
-				for(int i=0; i<localEntryList.size(); i++)
+				for(int i=0; i<subDocList.size(); i++)
 				{
-					Doc subDoc = localEntryList.get(i);
+					Doc subDoc = subDocList.get(i);
 					subDoc.setRevision(doc.getRevision());
 					dbAddDoc(repos, subDoc, true);
 				}
