@@ -2124,6 +2124,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
+		printObject("syncupForDocChanged() doc:",doc);
 		
 		User login_user = new User();
 		login_user.setId(0); //系统自动同步用户 AutoSync
