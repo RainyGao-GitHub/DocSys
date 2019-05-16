@@ -1874,6 +1874,11 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) {
+		if(doc.getPath() == null)
+		{
+			doc.setPath("");
+		}
+		
 		if(reposService.addDoc(doc) == 0)
 		{
 			System.out.println("dbAddDoc() addDoc to db failed");		
