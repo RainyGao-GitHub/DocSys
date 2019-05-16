@@ -370,7 +370,7 @@ public class BaseFunction{
 	protected String getReposVirtualPath(Repos repos)
 	{
 		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposVirtualPath() " + reposVPath);
+		//System.out.println("getReposVirtualPath() " + reposVPath);
 		return reposVPath;
 	}
 	
@@ -381,7 +381,7 @@ public class BaseFunction{
 			parentPath = "";
 		}
 		String VPath = MD5.md5(parentPath) + "_" + docName;
-		System.out.println("getVDocName() " + VPath + " for " + parentPath + docName);
+		//System.out.println("getVDocName() " + VPath + " for " + parentPath + docName);
 		return VPath;
 	}
 	
