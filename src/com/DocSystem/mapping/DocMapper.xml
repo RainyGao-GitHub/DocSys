@@ -296,9 +296,6 @@
     <if test="pwd != null">
         and PWD = #{pwd,jdbcType=VARCHAR}
     </if>
-    <if test="content != null">
-        and CONTENT = #{content,jdbcType=LONGVARCHAR}
-    </if>
     order by type desc,name asc
   </select>
  
@@ -349,9 +346,6 @@
 	</if>
     <if test="pwd != null">
         and PWD = #{pwd,jdbcType=VARCHAR}
-    </if>
-    <if test="content != null">
-        and CONTENT = #{content,jdbcType=LONGVARCHAR}
     </if>
   </delete>
   
