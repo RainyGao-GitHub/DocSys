@@ -3,6 +3,7 @@ package util.GitUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +24,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.tmatesoft.svn.core.SVNException;
+
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.Doc;
@@ -124,6 +127,39 @@ public class GITUtil  extends BaseController{
     {
     	return null;
     }
+    
+    public String getLatestRevision() 
+	{
+    	String revision = "HEAD";
+        
+		try {
+    	    Git git = Git.open(new File(gitDir));
+
+            Repository repository = git.getRepository();
+            
+            RevWalk walk = new RevWalk(repository);
+
+            //Get objId for revision
+            ObjectId objId = repository.resolve(revision);
+            if(objId == null)
+            {
+            	System.out.println("getLatestRevision() There is no any commit history for:" + revision);
+                walk.close();
+            	return null;
+            }
+            
+            RevCommit revCommit = walk.parseCommit(objId);        
+            
+            walk.close();
+            return revCommit.getName();
+            
+		} catch (IOException e) {
+			System.out.println("getLatestRevision() Exception");
+        	
+			e.printStackTrace();
+			return null;
+		}
+	}
 	
 	//getHistory filePath: remote File Path under repositoryURL
     public Doc getDoc(String filePath, String revision) 

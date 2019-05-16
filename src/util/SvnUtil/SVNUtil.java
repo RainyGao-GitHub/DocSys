@@ -143,7 +143,17 @@ public class SVNUtil  extends BaseController{
     }
     
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
-	public Doc getDoc(String filePath, String revision) 
+    public String getLatestRevision() 
+	{
+    	try {
+			return repository.getLatestRevision() + "";
+		} catch (SVNException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+    public Doc getDoc(String filePath, String revision) 
 	{
     	//System.out.println("getDoc() filePath:" + filePath);
     	if(filePath == null)
@@ -156,16 +166,12 @@ public class SVNUtil  extends BaseController{
     	long endRevision = -1;
     	
         try {
-	    	if(revision == null)
-	    	{
-	    		startRevision = endRevision = repository.getLatestRevision();
-	    	}
-	    	else
+	    	if(revision != null)
 	    	{
 	    		startRevision = endRevision = Long.parseLong(revision);
 	    	}
 	    	
-	    	if(repository.checkPath(filePath, startRevision) ==  SVNNodeKind.NONE) 
+	    	if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.NONE) 
 			{
 	        	return null;
 			}
