@@ -2378,7 +2378,7 @@ public class BaseController  extends BaseFunction{
 		qDoc.setName(doc.getName());
 		
 		List<Doc> list = reposService.getDocList(qDoc);
-		printObject("dbGetDoc() list:", list);
+		//printObject("dbGetDoc() list:", list);
 		
 		if(list == null || list.size() == 0)
 		{
@@ -2394,8 +2394,8 @@ public class BaseController  extends BaseFunction{
 				{
 					dbDeleteDoc(list.get(i), true);
 				}
+				return null;
 			}
-			return null;
 		}
 	
 		return list.get(0);
