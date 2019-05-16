@@ -468,7 +468,7 @@ public class DocController extends BaseController{
 		qDoc.setVid(repos.getId());
 		qDoc.setPath(path);
 		qDoc.setName(name);
-		return dbGetDoc(null, qDoc, true);
+		return dbGetDoc(qDoc, true);
 	}
 
 	/****************   Check a Document ******************/
@@ -1177,7 +1177,7 @@ public class DocController extends BaseController{
 		
 		
 		String docCheckSum = "";
-		Doc doc = dbGetDoc(repos, localEntry, true);
+		Doc doc = dbGetDoc(localEntry, true);
 		if(isDocLocalChanged(doc,localEntry))
 		{
 			File file = new File(localEntryPath);

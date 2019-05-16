@@ -468,7 +468,9 @@ public class GITUtil  extends BaseController{
     	return null;
 	}
 
-	public String getEntry(String parentPath, String entryName, String localParentPath, String targetName,String revision) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision) {
+		String parentPath = doc.getPath();
+		String entryName = doc.getName(); 
 		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		//check targetName and set
@@ -515,13 +517,9 @@ public class GITUtil  extends BaseController{
                 treeWalk.reset(revTree);
                 treeWalk.setRecursive(false);
             }
-            boolean ret = recurGetEntry(git, repository, treeWalk, parentPath, entryName, localParentPath, targetName);
+            List<Doc> ret = recurGetEntry(git, repository, treeWalk, doc, localParentPath, targetName);
             repository.close();
-            if(ret)
-            {
-            	return revCommit.getName();
-            }	
-            return null;
+            return ret;
         } catch (Exception e) {
            System.out.println("getEntry() Exception"); 
            e.printStackTrace();
@@ -559,9 +557,19 @@ public class GITUtil  extends BaseController{
 		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
 	}
 	
-	private boolean recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, String parentPath, String entryName, String localParentPath, String targetName) {
-		System.out.println("recurGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+	private List<Doc> recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, Doc doc, String localParentPath, String targetName) {
 		
+		String parentPath = doc.getPath();
+		String entryName = doc.getName();
+		System.out.println("recurGetEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		List<Doc> successDocList = new ArrayList<Doc>();
+    	if(parentPath == null || entryName == null)
+    	{
+    		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
+    		return null;
+    	}
+    	
 		try {
 			FileMode fileMode = treeWalk.getFileMode();
 	        if(isFile(fileMode))
@@ -574,14 +582,17 @@ public class GITUtil  extends BaseController{
 	    		} catch (Exception e) {
 	    			System.out.println("recurGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
 	    			e.printStackTrace();
-	    			return false;
+	    			return null;
 	    		}
 	
 	            ObjectId blobId = treeWalk.getObjectId(0);
 	            ObjectLoader loader = repository.open(blobId);
 	            loader.copyTo(out);
 	            out.close();
-	            return true;
+	            
+	            doc.setType(1);
+	            successDocList.add(doc);
+	            return successDocList;
 	        }
 	        else if(isDir(fileMode))
 	        {
@@ -595,22 +606,29 @@ public class GITUtil  extends BaseController{
 					String subEntryName = treeWalk.getNameString();
 					String subParentPath = parentPath + entryName +"/";
 					String subLocalParentPath = localParentPath + targetName + "/";
-					if(false == recurGetEntry(git, repository, treeWalk, subParentPath, subEntryName, subLocalParentPath, subEntryName))
+					
+					Doc subDoc = new Doc();
+					subDoc.setVid(doc.getVid());
+					subDoc.setPath(subParentPath);
+					subDoc.setName(subEntryName);
+					subDoc.setRevision(doc.getRevision());
+					List<Doc> subSuccessList = recurGetEntry(git, repository, treeWalk, subDoc, subLocalParentPath, subEntryName);
+					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
-						return false;
+						successDocList.addAll(subSuccessList);
 					}
 				}
-				return true;
+				return successDocList;
 	        }
 	        else 
 	        {
 	        	System.out.println("recurGetEntry() unknown FileMode:" + fileMode.getBits());
-	        	return false;
+	        	return null;
 	        }
         }catch (Exception e) {
             System.out.println("recurGetEntry() Exception"); 
             e.printStackTrace();
-            return false;
+            return null;
         }
     }
 	

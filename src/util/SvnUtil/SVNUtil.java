@@ -153,7 +153,7 @@ public class SVNUtil  extends BaseController{
 			return null;
 		}
 	}
-    public Doc getDoc(String filePath, String revision) 
+    public Doc getDoc(String filePath, Long revision) 
 	{
     	System.out.println("getDoc() filePath:" + filePath);
     	if(filePath == null)
@@ -162,15 +162,10 @@ public class SVNUtil  extends BaseController{
         	return null;
     	}
     	
-    	long startRevision = -1;
-    	long endRevision = -1;
+    	long startRevision = revision;
+    	long endRevision = revision;
     	
-        try {
-	    	if(revision != null)
-	    	{
-	    		startRevision = endRevision = Long.parseLong(revision);
-	    	}
-	    	
+        try {	    	
 	    	if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.NONE) 
 			{
 	    		System.out.println("getDoc() " + filePath + " not exist for revision:" + revision); 
@@ -178,14 +173,15 @@ public class SVNUtil  extends BaseController{
 			}
 	    	else if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.DIR) 
 			{
-	            if(revision == null)
+	    		String strRevision = revision +"";
+	            if(revision == -1)
 	            {
-	            	revision = repository.getLatestRevision() + "";
+	            	strRevision = repository.getLatestRevision() + "";
 	            }
 	            
 	    		Doc doc = new Doc();
 	            doc.setType(2);
-	            doc.setRevision(revision);
+	            doc.setRevision(strRevision);
 	            return doc;
 			}
 	    		    	
@@ -197,13 +193,13 @@ public class SVNUtil  extends BaseController{
 	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
 	        {
 	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-	            revision = logEntry.getRevision() + "";
+	            String strRevision = logEntry.getRevision() + "";
 	            String commitUser = logEntry.getAuthor(); //提交者
 	            long commitTime = logEntry.getDate().getTime();
 	            
 	            Doc doc = new Doc();
 	            doc.setType(1);
-	            doc.setRevision(revision);
+	            doc.setRevision(strRevision);
 	            doc.setLatestEditorName(commitUser);
 	            doc.setLatestEditTime(commitTime);
 	            return doc;
@@ -1665,9 +1661,13 @@ public class SVNUtil  extends BaseController{
 		return entries;
 	}
 	
-	public String getEntry(String parentPath, String entryName, String localParentPath, String targetName,long revision) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision) {
+		String parentPath = doc.getPath();
+		String entryName = doc.getName();
+
 		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
+		List<Doc> successDocList = new ArrayList<Doc>();
     	if(parentPath == null || entryName == null)
     	{
     		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
@@ -1681,26 +1681,29 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
-		SVNNodeKind nodeKind = null;
-		try {
-			nodeKind = repository.checkPath(remoteEntryPath,revision);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			System.out.println("svnGetEntry() checkPath Exception");
-	        e.printStackTrace();
+		Doc remoteDoc = getDoc(remoteEntryPath, revision);
+		if(remoteDoc == null)
+		{
 			return null;
 		}
 		
-		if (nodeKind == SVNNodeKind.NONE) {
-            System.out.println("svnGetEntry() There is no entry at '" + repositoryURL + "'.");
-            return null;
-        } else if (nodeKind == SVNNodeKind.DIR) {
+		if(remoteDoc.getType() == 2) 
+		{
         	//Get the subEntries and call svnGetEntry
 			String localEntryPath = localParentPath + targetName + "/";
         	if(!targetName.isEmpty())
 			{
 				File dir = new File(localParentPath,targetName);
-				dir.mkdir();
+				if(dir.mkdir())
+				{
+					doc.setType(2);
+					doc.setRevision(remoteDoc.getRevision());
+					successDocList.add(doc);
+				}
+				else
+				{
+					return null;
+				}
 			}
 			else
 			{
@@ -1712,15 +1715,20 @@ public class SVNUtil  extends BaseController{
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
-				if(getEntry(remoteEntryPath+"/",subEntryName,localEntryPath,null,revision) == null)
+				Long subEntryRevision = subEntry.getRevision();
+				Doc subDoc = new Doc();
+				subDoc.setVid(doc.getVid());
+				subDoc.setPath(remoteEntryPath+"/");
+				subDoc.setName(subEntryName);				
+				List<Doc> subSuccessList = getEntry(subDoc,localEntryPath,subEntryName,subEntryRevision);
+				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
-					System.out.println("svnGetEntry() svnGetEntry Failed: " + remoteEntryPath+ "/" + subEntryName);
-					return null;
+					successDocList.addAll(subSuccessList);
 				}
 			}
-        	return revision+"";
+        	return successDocList;
         }
-        else if(nodeKind == SVNNodeKind.FILE)
+        else
         {	
             FileOutputStream out = null;
 			try {
@@ -1741,8 +1749,12 @@ public class SVNUtil  extends BaseController{
 				e.printStackTrace();
 				return null;
 			}
+            
+			doc.setType(2);
+            doc.setRevision(remoteDoc.getRevision());
+            successDocList.add(doc);
+            return successDocList;
         }
-        return revision+"";
 	}
 	
     /*
