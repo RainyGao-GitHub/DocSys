@@ -106,7 +106,7 @@ public class BaseController  extends BaseFunction{
 		    		Doc doc = indexHashMap.get(localEntry.getName());
 		    		if(doc == null)	//Doc was local added
 		    		{	    			
-		    			printObject("getAuthedSubDocList() local Added:", localEntry);
+		    			printObject("getAuthedSubDocList() local Added:", localEntry.getName());
 		    			
 			    		doc = localEntry;
 		    			
@@ -115,7 +115,7 @@ public class BaseController  extends BaseFunction{
 		    		}
 		    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
 		    		{
-		    			printObject("getAuthedSubDocList() local Changed:", localEntry);
+		    			printObject("getAuthedSubDocList() local Changed:", localEntry.getName());
 		
 		    			doc = localEntry;
 		    			
@@ -150,7 +150,7 @@ public class BaseController  extends BaseFunction{
 	    			
 		    		if(doc == null)	//Doc was remote added
 		    		{    		    		
-		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry);
+		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry.getName());
 			    			
 				    	//Add to actionList for AutoSyncUp
 				    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
@@ -159,7 +159,7 @@ public class BaseController  extends BaseFunction{
 		    		}
 		    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
 		    		{
-		    			printObject("getAuthedSubDocList() remote Changed:", remoteEntry);
+		    			printObject("getAuthedSubDocList() remote Changed:", remoteEntry.getName());
 		    			
 		    			//Add to actionList for AutoSyncUp
 		    			insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
@@ -194,7 +194,7 @@ public class BaseController  extends BaseFunction{
 		    				continue;
 		    			}
 			    		
-		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry);
+		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry.getName());
 			    			
 				    	//Add to actionList for AutoSyncUp
 				    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
@@ -205,7 +205,7 @@ public class BaseController  extends BaseFunction{
 		    		{
 		    			if(localDoc == null)
 		    			{
-		    				printObject("getAuthedSubDocList() local Deleted:", doc);
+		    				printObject("getAuthedSubDocList() local Deleted:", doc.getName());
 		    				insertSyncUpAction(actionList,repos,doc,5,2,1, null);
 		    				
 		    				//To avoid the db node be deleted as useless node before delete syncup action
@@ -216,7 +216,7 @@ public class BaseController  extends BaseFunction{
 		    			}
 		    			else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
 		    			{
-		    				printObject("getAuthedSubDocList() remote Changed:", remoteEntry);
+		    				printObject("getAuthedSubDocList() remote Changed:", remoteEntry.getName());
 		    			
 		    				//Add to actionList for AutoSyncUp
 		    				insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
@@ -2170,7 +2170,7 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				//localDeleted and remoteDeleted so just delete dbDoc
+				//remoteDeleted so just delete dbDoc
 				if(remoteEntry == null)
 				{
 					System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
