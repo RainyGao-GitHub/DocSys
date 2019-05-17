@@ -58,7 +58,7 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
 	{	
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
-		
+				
 		String dirPath = parentPath+docName+"/";
 		if(docName.isEmpty())
 		{
@@ -67,7 +67,12 @@ public class BaseController  extends BaseFunction{
 		
 		int level = getLevelByParentPath(dirPath);
 		
-		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, docAuth, docAuthHashMap, rt, actionList);
+		User AutoSync = new User();
+		AutoSync.setId(0);
+		AutoSync.setName("AutoSync");
+		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, AutoSync);
+		
+		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, isDocLocked, docAuth, docAuthHashMap, rt, actionList);
 	
 		if(docList != null)
 		{
@@ -76,13 +81,52 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 	
+	private boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user) {
+		
+		DocLock qDocLock = new DocLock();
+		qDocLock.setVid(reposId);
+		qDocLock.setPath(parentPath);
+		qDocLock.setName(docName);
+		
+		List<DocLock> list = reposService.getDocLockList(qDocLock);
+		if(list == null || list.size() == 0)
+		{
+			return false;
+		}
+		
+		DocLock docLock = list.get(0);
+		return isDocLocked(docLock, login_user, null);
+	}
+
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, boolean isPDocLocked, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
-		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path);
-		
+		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path + " isPDocLocked:" + isPDocLocked);
+
 		List<Doc> docList = new ArrayList<Doc>();
-		
+
+		//When parent doc was locked, AutoSync should not be done
+		if(isPDocLocked) 
+		{
+			List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
+			if(dbDocList != null)
+	    	{
+		    	for(int i=0;i<dbDocList.size();i++)
+		    	{
+		    		Doc dbDoc = dbDocList.get(i);
+		    		    		
+					DocAuth docAuth = getDocAuthFromHashMap(dbDoc.getDocId(), pDocAuth,docAuthHashMap);
+					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+					{
+			    		//Add to docList
+						dbDoc.setPid(pid);
+			    		docList.add(dbDoc);
+					}
+		    	}
+	    	}
+			return docList;
+		}
+
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
     	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
 		
@@ -102,7 +146,7 @@ public class BaseController  extends BaseFunction{
 		    		Doc localEntry = localEntryList.get(i);
 		    		//Put localEntry to localHashMap
 		    		localHashMap.put(localEntry.getName(), localEntry);
-		    		
+
 		    		Doc doc = indexHashMap.get(localEntry.getName());
 		    		if(doc == null)	//Doc was local added
 		    		{	    			
@@ -252,6 +296,13 @@ public class BaseController  extends BaseFunction{
     	}
     	
     	return docList;
+	}
+
+	private List<Doc> getDBEntryList(Repos repos, Long pid, String path, int level) {
+		Doc qDoc = new Doc();
+		qDoc.setVid(repos.getId());
+		qDoc.setPath(path);
+		return reposService.getDocList(qDoc);
 	}
 
 	private List<Doc> getLocalEntryList(Repos repos, Long pid, String path, int level) {
@@ -3414,7 +3465,12 @@ public class BaseController  extends BaseFunction{
 			if(isLockOutOfDate(docLock.getLockTime()) == false)
 			{	
 				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.getLockTime());
-				rt.setError(docLock.getName() +" was locked by [" + docLock.getLockBy() + "] " +docLock.getLocker() + " till " + lockTime);
+
+				if(rt != null)
+				{
+					rt.setError(docLock.getName() +" was locked by [" + docLock.getLockBy() + "] " +docLock.getLocker() + " till " + lockTime);
+				}
+				
 				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLocker() + " lockState:"+ docLock.getState());
 				return true;						
 			}
