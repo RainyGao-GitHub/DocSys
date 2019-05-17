@@ -889,11 +889,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String docVName = getVDocName(parentPath,docName);
-		//Save the content to virtual file
+		Doc doc = new Doc();
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		doc.setContent(content);
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		
-		if(saveVirtualDocContent(userTmpDir,docVName,content,rt) == false)
+		if(saveVirtualDocContent(userTmpDir, doc, rt) == false)
 		{
 			rt.setError("saveVirtualDocContent Error!");
 		}

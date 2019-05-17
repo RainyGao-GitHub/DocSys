@@ -2622,31 +2622,19 @@ public class BaseController  extends BaseFunction{
 		Doc newDoc = action.getNewDoc();
 		
 		Repos repos = action.getRepos();
-		String localRootPath = getReposVirutalPath(repos);
-		
-		String parentPath = "";
-		if(doc.getPath() != null)
-		{
-			parentPath = doc.getPath();
-		}
-		
-		String VDocName = getVDocName(parentPath, doc.getName());
-		String newVDocName = null;
 		
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return createVirtualDoc(localRootPath, VDocName, doc.getContent(), rt);
+			return createVirtualDoc(repos, doc, rt);
 		case 2: //Delete Doc
-			return deleteVirtualDoc(localRootPath, VDocName, rt);
+			return deleteVirtualDoc(repos, doc, rt);
 		case 3: //Update Doc
-			return saveVirtualDocContent(localRootPath, VDocName, doc.getContent(), rt);
+			return saveVirtualDocContent(getReposVirtualPath(repos), doc, rt);
 		case 4: //Move Doc
-			newVDocName = getVDocName(newDoc.getPath(), newDoc.getName());
-			return moveVirtualDoc(localRootPath, VDocName, newVDocName, rt);
+			return moveVirtualDoc(repos, doc, newDoc, rt);
 		case 5: //Copy Doc
-			newVDocName = getVDocName(newDoc.getPath(), newDoc.getName());
-			return copyVirtualDoc(localRootPath, VDocName, newVDocName, rt);
+			return copyVirtualDoc(repos, doc, newDoc, rt);
 		}
 		return false;
 	}
@@ -2789,42 +2777,6 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(doc,login_user,docLock);
 		
 		return true;
-	}
-	
-	//更新Doc和其SubDoc的VirtualDocPath（Only For rename and move of Dir）
-	void updateDocVPath(Repos repos, Doc doc, String reposVPath, String srcParentPath, String oldName, String dstParentPath, String newName, String commitMsg,String commitUser, ReturnAjax rt)
-	{
-		System.out.println("moveVirtualDoc move " + srcParentPath+oldName + " to " + dstParentPath + newName);
-		
-		String srcDocVPath = getVDocName(srcParentPath, oldName);
-		String dstDocVPath = getVDocName(dstParentPath, newName);
-		if(!srcDocVPath.equals(dstDocVPath))
-		{
-			//修改虚拟文件的目录名称 when VDoc exists
-			File srcEntry = new File(reposVPath, srcDocVPath);
-			if(srcEntry.exists())
-			{
-				if(moveVirtualDoc(reposVPath,srcDocVPath, dstDocVPath,rt) == true)
-				{
-					if(verReposVirtualDocMove(repos, srcDocVPath, dstDocVPath, commitMsg, commitUser,rt) == null)
-					{
-						System.out.println("moveVirtualDoc() svnVirtualDocMove Failed");
-					}
-				}
-			}
-		}
-		
-		//Get all subDocs of Doc( and Update Their VDoc Path)
-		Doc queryConditon = new Doc();
-		queryConditon.setPid(doc.getDocId());
-		List <Doc> list = reposService.getDocList(queryConditon);
-		if(list != null)
-		{
-			for(int i = 0 ; i < list.size() ; i++) {
-				Doc subDoc = list.get(i);
-				updateDocVPath(repos,subDoc,reposVPath, srcParentPath + newName+"/", subDoc.getName() ,dstParentPath + newName+"/", subDoc.getName(), commitMsg,commitUser,rt);
-			}
-		}
 	}
 	
 	protected boolean renameDoc(Repos repos, Long docId, Long srcPid, Integer type, String srcParentPath,
@@ -3153,10 +3105,17 @@ public class BaseController  extends BaseFunction{
 		String docVName = getVDocName(parentPath, docName);
 		String localVDocPath = reposVPath + docVName;
 		
+		Doc doc = new Doc();
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		doc.setContent(content);
+		
 		System.out.println("updateDocContent_FS() localVDocPath: " + localVDocPath);
 		if(isFileExist(localVDocPath) == true)
 		{
-			if(saveVirtualDocContent(reposVPath,docVName, content,rt) == true)
+			if(saveVirtualDocContent(reposVPath, doc, rt) == true)
 			{
 				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 			}
@@ -3164,22 +3123,14 @@ public class BaseController  extends BaseFunction{
 		else
 		{	
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
-			if(createVirtualDoc(reposVPath,docVName,content,rt) == true)
+			if(createVirtualDoc(repos, doc, rt) == true)
 			{
 				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
 			}
 		}
 		
 		//updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		doc.setContent(content);
 		BuildCommonActionListForDocContentUpdate(actionList, repos, doc, login_user);
-		
-		//Delete tmp saved doc content
 		
 		return true;
 	}
@@ -4494,7 +4445,24 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//create Virtual Doc
-	protected boolean createVirtualDoc(String reposVPath, String docVName,String content, ReturnAjax rt) {
+	protected boolean createVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) 
+	{
+		String content = doc.getContent();
+		if(content == null || content.isEmpty())
+		{
+			System.out.println("createVirtualDoc() content is empty");
+			return false;
+		}
+		
+		String reposVPath = getReposVirutalPath(repos);
+		
+		String parentPath = "";
+		if(doc.getPath() != null)
+		{
+			parentPath = doc.getPath();
+		}
+		String docVName = getVDocName(parentPath, doc.getName());
+		
 		String vDocPath = reposVPath + docVName;
 		System.out.println("vDocPath: " + vDocPath);
 		if(isFileExist(vDocPath) == true)
@@ -4522,15 +4490,27 @@ public class BaseController  extends BaseFunction{
 			rt.setDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！");
 			return false;			
 		}
-		if(content !=null && !"".equals(content))
-		{
-			saveVirtualDocContent(reposVPath,docVName, content,rt);
-		}
 		
+		saveVirtualDocContent(reposVPath, doc, rt);
 		return true;
 	}
 	
-	protected boolean saveVirtualDocContent(String localParentPath, String docVName, String content, ReturnAjax rt) {
+	protected boolean saveVirtualDocContent(String localParentPath, Doc doc, ReturnAjax rt) 
+	{	
+		String content = doc.getContent();
+		if(content == null)
+		{
+			System.out.println("saveVirtualDocContent() content is null");
+			return false;
+		}
+
+		String parentPath = "";
+		if(doc.getPath() != null)
+		{
+			parentPath = doc.getPath();
+		}
+		String docVName = getVDocName(parentPath, doc.getName());
+		
 		String vDocPath = localParentPath + docVName + "/";
 		File folder = new File(vDocPath);
 		if(!folder.exists())
@@ -4543,7 +4523,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 		}
-		
+				
 		//set the md file Path
 		String mdFilePath = vDocPath + "content.md";
 		//创建文件输入流
@@ -4600,7 +4580,16 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	protected boolean deleteVirtualDoc(String reposVPath, String docVName, ReturnAjax rt) {
+	protected boolean deleteVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) {
+		String reposVPath = getReposVirtualPath(repos);
+
+		String parentPath = "";
+		if(doc.getPath() != null)
+		{
+			parentPath = doc.getPath();
+		}
+		String docVName = getVDocName(parentPath, doc.getName());
+		
 		String localDocVPath = reposVPath + docVName;
 		if(delDir(localDocVPath) == false)
 		{
@@ -4610,21 +4599,56 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean moveVirtualDoc(String reposVPath, String srcDocVName,String dstDocVName, ReturnAjax rt) {
-		if(moveFileOrDir(reposVPath, srcDocVName, reposVPath, dstDocVName, false) == false)
+	protected boolean moveVirtualDoc(Repos repos, Doc doc,Doc newDoc, ReturnAjax rt) 
+	{
+		String reposVPath = getReposVirtualPath(repos);
+		
+		String parentPath = "";
+		if(doc.getPath() != null)
 		{
-			rt.setDebugLog("moveVirtualDoc() moveFile " + " reposVPath:" + reposVPath + " srcDocVName:" + srcDocVName+ " dstDocVName:" + dstDocVName);
+			parentPath = doc.getPath();
+		}
+		String vDocName = getVDocName(parentPath, doc.getName());
+		
+		String newParentPath = "";
+		if(newDoc.getPath() != null)
+		{
+			newParentPath = newDoc.getPath();
+		}
+		String newVDocName = getVDocName(newParentPath, newDoc.getName());
+		
+		
+		if(moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, false) == false)
+		{
+			rt.setDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed");
 			return false;
 		}
 		return true;
 	}
 	
-	protected boolean copyVirtualDoc(String reposVPath, String srcDocVName, String dstDocVName, ReturnAjax rt) {
-		String srcDocFullVPath = reposVPath + srcDocVName;
-		String dstDocFullVPath = reposVPath + dstDocVName;
+	protected boolean copyVirtualDoc(Repos repos, Doc doc,Doc newDoc, ReturnAjax rt) 
+	{
+		String reposVPath = getReposVirtualPath(repos);
+		
+		String parentPath = "";
+		if(doc.getPath() != null)
+		{
+			parentPath = doc.getPath();
+		}
+		String vDocName = getVDocName(parentPath, doc.getName());
+		
+		String newParentPath = "";
+		if(newDoc.getPath() != null)
+		{
+			newParentPath = newDoc.getPath();
+		}
+		String newVDocName = getVDocName(newParentPath, newDoc.getName());
+		
+		String srcDocFullVPath = reposVPath + vDocName;
+		String dstDocFullVPath = reposVPath + newVDocName;
 		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
 		{
-			rt.setDebugLog("copyVirtualDoc() copyDir " + " srcDocFullVPath:" + srcDocFullVPath +  " dstDocFullVPath:" + dstDocFullVPath );
+			rt.setDebugLog("copyVirtualDoc() copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed");
 			return false;
 		}
 		return true;
