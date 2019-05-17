@@ -3493,7 +3493,9 @@ public class BaseController  extends BaseFunction{
 		//Set the query condition to get the SubDocList of DocId
 		DocLock qDocLock = new DocLock();
 		qDocLock.setVid(doc.getVid());
-		qDocLock.setPid(doc.getDocId());
+		qDocLock.setPath(doc.getPath());
+		qDocLock.setName(doc.getName());
+		
 		List<DocLock> SubDocLockList = reposService.getDocLockList(qDocLock);
 
 		for(int i=0;i<SubDocLockList.size();i++)
@@ -3515,7 +3517,8 @@ public class BaseController  extends BaseFunction{
 			{
 				Doc subDoc = new Doc();
 				subDoc.setVid(reposId);
-				subDoc.setDocId(subDocLock.getDocId());
+				subDoc.setPath(subDocLock.getPath());
+				subDoc.setName(subDocLock.getName());
 				if(isSubDocLocked(subDoc, login_user, rt) == true)
 				{
 					return true;
