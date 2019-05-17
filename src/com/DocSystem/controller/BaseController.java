@@ -314,13 +314,13 @@ public class BaseController  extends BaseFunction{
     		return null;
     	}
     	
-        //Go through the subEntries
-    	if(false == dir.isDirectory())
+    	if(dir.isFile())
     	{
-    		System.out.println("getLocalEntryList() " + localParentPath + " 不是目录！");
+    		//System.out.println("getLocalEntryList() " + localParentPath + " 不是目录！");
     		return null;
     	}
-    	
+
+        //Go through the subEntries
     	List <Doc> subEntryList =  new ArrayList<Doc>();
     	
     	File[] localFileList = dir.listFiles();
