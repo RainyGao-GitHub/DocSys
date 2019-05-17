@@ -3214,6 +3214,30 @@ public class BaseController  extends BaseFunction{
 		return repos;	
 	}
 	
+
+	//确定仓库是否被锁定
+	private boolean isReposLocked(Repos repos, User login_user, ReturnAjax rt) {
+		int lockState = repos.getState();	//0: not locked  1: locked	
+		if(lockState != 0)
+		{
+			if(isLockOutOfDate(repos.getLockTime()) == false)
+			{	
+				User lockBy = getLocker(repos.getLockBy());
+				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(repos.getLockTime());
+				
+				rt.setError("仓库 " + repos.getName() +" was locked by [" + repos.getLockBy() + "] "+ lockBy.getName() + " till " + lockTime);
+				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
+				return true;						
+			}
+			else 
+			{
+				System.out.println("Repos " + repos.getId()+ " " + repos.getName()  +" lock was out of date！");
+				return false;
+			}
+		}
+		return false;
+	}
+	
 	//Unlock Doc
 	protected boolean unlockRepos(Integer reposId, User login_user, Repos preLockInfo) {
 		Repos curRepos = reposService.getRepos(reposId);
@@ -3354,29 +3378,6 @@ public class BaseController  extends BaseFunction{
 		return list.get(0);
 	}
 
-	//确定仓库是否被锁定
-	private boolean isReposLocked(Repos repos, User login_user, ReturnAjax rt) {
-		int lockState = repos.getState();	//0: not locked  1: locked	
-		if(lockState != 0)
-		{
-			if(isLockOutOfDate(repos.getLockTime()) == false)
-			{	
-				User lockBy = getLocker(repos.getLockBy());
-				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(repos.getLockTime());
-				
-				rt.setError("仓库 " + repos.getName() +" was locked by [" + repos.getLockBy() + "] "+ lockBy.getName() + " till " + lockTime);
-				System.out.println("Repos " + repos.getId()+ "[" + repos.getName() +"] was locked by " + repos.getLockBy() + " lockState:"+ repos.getState());;
-				return true;						
-			}
-			else 
-			{
-				System.out.println("Repos " + repos.getId()+ " " + repos.getName()  +" lock was out of date！");
-				return false;
-			}
-		}
-		return false;
-	}
-
 	private User getLocker(Integer userId) {
 		User user = new User();
 		if(userId == 0)	//AutoSync
@@ -3493,9 +3494,7 @@ public class BaseController  extends BaseFunction{
 		//Set the query condition to get the SubDocList of DocId
 		DocLock qDocLock = new DocLock();
 		qDocLock.setVid(doc.getVid());
-		qDocLock.setPath(doc.getPath());
-		qDocLock.setName(doc.getName());
-		
+		qDocLock.setPath(doc.getPath() + doc.getName() + "/");
 		List<DocLock> SubDocLockList = reposService.getDocLockList(qDocLock);
 
 		for(int i=0;i<SubDocLockList.size();i++)
