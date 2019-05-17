@@ -3506,25 +3506,20 @@ public class BaseController  extends BaseFunction{
 				System.out.println("isSubDocLocked() " + subDocLock.getName() + " is locked!");
 				return true;
 			}
-		}
-		
-		//If there is subDoc which is directory, we need to go into the subDoc to check the lockSatate of subSubDoc
-		for(int i=0;i<SubDocLockList.size();i++)
-		{
-			DocLock subDocLock =SubDocLockList.get(i);
+			
+			//If SubDocLock is for directory, need to check its subDocLocks
 			if(subDocLock.getType() == 2)
 			{
 				Doc subDoc = new Doc();
 				subDoc.setVid(reposId);
 				subDoc.setPath(subDocLock.getPath());
 				subDoc.setName(subDocLock.getName());
-				if(isSubDocLocked(subDoc, login_user, rt) == true)
+				if(isSubDocLocked(subDoc, login_user, rt))
 				{
 					return true;
 				}
 			}
 		}
-				
 		return false;
 	}
 	
