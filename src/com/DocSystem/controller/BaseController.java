@@ -3354,10 +3354,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private DocLock getDocLock(Doc doc) {
-		// TODO Auto-generated method stub
 		DocLock qDocLock = new DocLock();
 		qDocLock.setVid(doc.getVid());
-		qDocLock.setDocId(doc.getDocId());
+		qDocLock.setPath(doc.getPath());
+		qDocLock.setName(doc.getName());
+		
 		List<DocLock> list = reposService.getDocLockList(qDocLock);
 		if(list == null || list.size() == 0)
 		{
@@ -3464,25 +3465,26 @@ public class BaseController  extends BaseFunction{
 		Integer reposId = doc.getVid();
 		
 		String [] paths = parentPath.split("/");
-		int level = 0;
+
+		String path = "";		
 		Doc tempDoc = new Doc();
-				
+		tempDoc.setVid(reposId);
 		for(int i=0; i< paths.length; i++)
 		{
-			String docName = paths[i];
-			if(docName.isEmpty())
+			String name = paths[i];
+			if(name.isEmpty())
 			{
 				continue;
 			}
 			
-			tempDoc.setDocId(buildDocIdByName(level,docName));
-			tempDoc.setVid(reposId);
+			tempDoc.setPath(path);
+			tempDoc.setName(name);
 			DocLock lock = getDocLock(doc);
 			if(isDocLocked(lock, login_user, rt))
 			{
 				return true;
 			}
-			level++;			
+			path = path + name +"/";
 		}
 		return false;
 	}
