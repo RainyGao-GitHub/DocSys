@@ -247,7 +247,7 @@ public class BaseController  extends BaseFunction{
     	}
     	for (Entry<String, Doc> entry : indexHashMap.entrySet()) {
     		Doc deleteDoc = entry.getValue();
-    		printObject("getAuthedSubDocList() insertDBDeleteAction for ", deleteDoc);
+    		printObject("getAuthedSubDocList() insertDBDeleteAction for ", deleteDoc.getName());
     		insertDeleteAction(actionList, repos, deleteDoc, null, null, 3, 2, 1, null);
     	}
     	
