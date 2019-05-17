@@ -1781,38 +1781,14 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
-			return addDoc_FS(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
-					uploadFile, fileSize, checkSum, //For upload
-					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
-			return addDoc_SVN(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
-					uploadFile, fileSize, checkSum, //For upload
-					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
-			return addDoc_GIT(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_FS(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
 			
 		}
-		return null;
-	}
-	
-	private Long addDoc_GIT(Repos repos, Long docId, Integer type,  Integer level,  Long parentId, String parentPath,
-			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Long addDoc_SVN(Repos repos, Long docId, Integer type, Integer level, Long parentId, String parentPath,
-			String docName, String content, MultipartFile uploadFile, Long fileSize, String checkSum,
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -1969,26 +1945,10 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
-			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, actionList);
 		case 3:
-			return deleteDoc_SVN(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, actionList);
 		case 4:
-			return deleteDoc_GIT(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, actionList);			
+			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, actionList);			
 		}
-		return null;
-	}
-	
-	private String deleteDoc_GIT(Repos repos, Long docId, String parentPath, String docName,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private String deleteDoc_SVN(Repos repos, Long docId, String parentPath, String docName,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt,List<CommonAction> actionList) 
-	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -2753,42 +2713,14 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
-			return updateDoc_FS(repos, docId, parentId, parentPath, docName,
-					uploadFile, fileSize, checkSum, 
-					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
-			return updateDoc_SVN(repos, docId, parentId, parentPath, docName,
-					uploadFile, fileSize, checkSum, 
-					chunkNum, chunkSize, chunkParentPath, 
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
-			return updateDoc_GIT(repos, docId, parentId, parentPath, docName,
+			return updateDoc_FS(repos, docId, parentId, parentPath, docName,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt, actionList);
 		}
 		return false;
-	}
-	
-	private boolean updateDoc_GIT(Repos repos, Long docId, Long parentId, String parentPath, String docName,
-			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
-			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			List<CommonAction> actionList)
-	{
-		// TODO Auto-generated method stub
-		return false;
-		
-	}
-
-	private boolean updateDoc_SVN(Repos repos, Long docId, Long parentId, String parentPath, String docName,
-			MultipartFile uploadFile, Long fileSize, String checkSum, Integer chunkNum, Integer chunkSize,
-			String chunkParentPath, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			List<CommonAction> actionList)
-	{
-		// TODO Auto-generated method stub
-		return false;
-		
 	}
 
 	protected boolean updateDoc_FS(Repos repos, Long docId, Long parentId, String parentPath, String docName,
@@ -2867,13 +2799,9 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
-			return 	moveDoc_FS(repos, docId, srcPid, srcPid, type, srcParentPath, srcName, srcParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 3:
-			return moveDoc_SVN(repos, docId, srcPid, srcPid, type, srcParentPath, srcName, srcParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
 		case 4:
-			return moveDoc_GIT(repos, docId, srcPid, srcPid, type, srcParentPath, srcName, srcParentPath, dstName,
+			return 	moveDoc_FS(repos, docId, srcPid, srcPid, type, srcParentPath, srcName, srcParentPath, dstName,
 					commitMsg, commitUser, login_user, rt, actionList);
 		}
 		return false;
@@ -2887,29 +2815,11 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
+		case 3:
+		case 4:
 			return 	moveDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
 					commitMsg, commitUser, login_user, rt, actionList);
-		case 3:
-			return moveDoc_SVN(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
-		case 4:
-			return moveDoc_GIT(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
 		}
-		return false;
-	}
-	
-	private boolean moveDoc_GIT(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
-			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser, User login_user,
-			ReturnAjax rt, List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean moveDoc_SVN(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
-			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser, User login_user,
-			ReturnAjax rt, List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -3013,29 +2923,11 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 		case 2:
+		case 3:
+		case 4:
 			return 	copyDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
 					commitMsg, commitUser, login_user, rt, actionList);
-		case 3:
-			return copyDoc_SVN(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
-		case 4:
-			return copyDoc_GIT(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
 		}
-		return false;
-	}
-	
-	private boolean copyDoc_GIT(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type,
-			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean copyDoc_SVN(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type,
-			String srcParentPath, String srcName, String dstParentPath, String dstName, String commitMsg,
-			String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
