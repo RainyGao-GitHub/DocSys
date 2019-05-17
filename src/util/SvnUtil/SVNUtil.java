@@ -434,9 +434,11 @@ public class SVNUtil  extends BaseController{
 			//LocalEntry does not exist
 			if(!localEntry.exists())	//Delete Commit
 			{
-		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
+				System.out.println("doAutoCommit() localEntry " + localParentPath + entryName + " not exists");
+				SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 		        if (nodeKind == SVNNodeKind.NONE) 
 		        {
+					System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
 		        	return repository.getLatestRevision()+"";
 		        }
 		        //Do delete remote Entry
@@ -446,6 +448,8 @@ public class SVNUtil  extends BaseController{
 			//LocalEntry is File
 			if(localEntry.isFile())
 			{
+				System.out.println("doAutoCommit() localEntry " + localParentPath + entryName + " is File");
+				
 		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 		        if (nodeKind == SVNNodeKind.NONE) 
 		        {
@@ -462,6 +466,7 @@ public class SVNUtil  extends BaseController{
 			}
 
 			//LocalEntry is Directory
+			System.out.println("doAutoCommit() localEntry " + localParentPath + entryName + " is Directory");
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 	        if (nodeKind == SVNNodeKind.NONE) 
@@ -483,6 +488,7 @@ public class SVNUtil  extends BaseController{
 	        }
 	        else
 	        {
+				System.out.println("doAutoCommit() remoteEntry " + entryPath + " is Directory");
 	        	System.out.println("doAutoCommit() scheduleForDelete Start");
 	        	scheduleForDelete(commitActionList,localParentPath,parentPath,entryName);
 		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");

@@ -4764,7 +4764,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath,commitMsg,commitUser,true, null);
+		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath+parentPath,commitMsg,commitUser,true, null);
 	}
 	
 	protected String gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
