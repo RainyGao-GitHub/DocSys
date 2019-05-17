@@ -3442,7 +3442,7 @@ public class BaseController  extends BaseFunction{
 	//确定parentDoc is Force Locked
 	private boolean isParentDocLocked(Doc doc, User login_user,ReturnAjax rt) 
 	{
-		//Check if the repos locked
+		//Check if the rootDoc locked
 		Integer reposId = doc.getVid();
 		Doc tempDoc = new Doc();
 		tempDoc.setVid(reposId);
