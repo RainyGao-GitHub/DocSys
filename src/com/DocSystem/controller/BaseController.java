@@ -3276,20 +3276,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		//Check if repos was locked
-		Repos repos = reposService.getRepos(doc.getVid());
-		if(repos == null)
-		{
-			rt.setError("仓库 " + doc.getVid() +" 不存在！");
-			System.out.println("lockDoc() Repos: " + doc.getVid() +" 不存在！");
-			return null;
-		}
-		if(isReposLocked(repos, login_user,rt))
-		{
-			System.out.println("lockDoc() Repos:" + repos.getId() +" was locked！");				
-			return null;			
-		}
-		
 		//检查其父节点是否强制锁定
 		if(isParentDocLocked(doc,login_user,rt))
 		{
@@ -3456,20 +3442,29 @@ public class BaseController  extends BaseFunction{
 	//确定parentDoc is Force Locked
 	private boolean isParentDocLocked(Doc doc, User login_user,ReturnAjax rt) 
 	{
+		//Check if the repos locked
+		Integer reposId = doc.getVid();
+		Doc tempDoc = new Doc();
+		tempDoc.setVid(reposId);
+		tempDoc.setPath("");
+		tempDoc.setName("");
+		DocLock lock = getDocLock(doc);
+		if(isDocLocked(lock, login_user, rt))
+		{
+			return true;
+		}
+		
+		//Check parentDoc locked
 		String parentPath = doc.getPath();
 		if(parentPath == null || parentPath.isEmpty())
 		{
 			return false;
 		}
-		
-		Integer reposId = doc.getVid();
-		
+				
 		String [] paths = parentPath.split("/");
 
 		String path = "";		
-		Doc tempDoc = new Doc();
-		tempDoc.setVid(reposId);
-		for(int i=0; i< paths.length; i++)
+		for(int i=0; i< paths.length+1; i++)
 		{
 			String name = paths[i];
 			if(name.isEmpty())
@@ -3479,7 +3474,7 @@ public class BaseController  extends BaseFunction{
 			
 			tempDoc.setPath(path);
 			tempDoc.setName(name);
-			DocLock lock = getDocLock(doc);
+			lock = getDocLock(doc);
 			if(isDocLocked(lock, login_user, rt))
 			{
 				return true;
