@@ -426,7 +426,6 @@ public class SVNUtil  extends BaseController{
 			return null;
 		}
 
-		
 		try {
 	
 			String entryPath = parentPath + entryName;
@@ -445,7 +444,7 @@ public class SVNUtil  extends BaseController{
 			}
 
 			//LocalEntry is File
-			if(!localEntry.isDirectory())
+			if(localEntry.isFile())
 			{
 		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 		        if (nodeKind == SVNNodeKind.NONE) 
@@ -467,7 +466,7 @@ public class SVNUtil  extends BaseController{
 	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
 	        if (nodeKind == SVNNodeKind.NONE) 
 	        {
-	        	System.out.println(entryPath + " 不存在");
+	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " not exists, do scan for add and modify");
 	        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
 		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
 		        
@@ -478,7 +477,7 @@ public class SVNUtil  extends BaseController{
 	        } 
 	        else if (nodeKind == SVNNodeKind.FILE) 
 	        {
-	        	System.out.println(entryPath + " is File");
+	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " is File, delete it and scan for add");
 				insertDeleteAction(commitActionList,parentPath, entryName);
 	        	scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
 	        }

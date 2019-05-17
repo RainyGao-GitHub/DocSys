@@ -1008,7 +1008,7 @@ public class GITUtil  extends BaseController{
 		File remoteEntry = new File(wcDir + entryPath);
 		if(!remoteEntry.exists())
         {
-        	System.out.println(entryPath + " 不存在");
+        	System.out.println("doAutoCommit() remoteEntry:" + entryPath + " not exists, so just scan for added and modified entries");
         	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
 	        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
         } 
