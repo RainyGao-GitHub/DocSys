@@ -2179,22 +2179,28 @@ public class BaseController  extends BaseFunction{
 					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 					dbAddDoc(repos, remoteEntry, false);
 				}
+				unlockDoc(doc, login_user, docLock);
+				return true;
 			}
-			else
+			
+			if(remoteEntry == null)
 			{
-				//remoteDeleted so just delete dbDoc
-				if(remoteEntry == null)
-				{
-					System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
-					dbDeleteDoc(doc, true);					
-				}
-				else if(isDocRemoteChanged(dbDoc, remoteEntry))
-				{
-					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
-					dbDoc.setRevision(remoteEntry.getRevision());
-					dbUpdateDoc(dbDoc);
-				}
+				System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
+				dbDeleteDoc(doc, true);	
+				unlockDoc(doc, login_user, docLock);
+				return true;
 			}
+			
+			if(isDocRemoteChanged(dbDoc, remoteEntry))
+			{
+				System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+				dbDoc.setRevision(remoteEntry.getRevision());
+				dbUpdateDoc(dbDoc);
+				unlockDoc(doc, login_user, docLock);
+				return true;
+			}
+			unlockDoc(doc, login_user, docLock);
+			return true;
 		}
 		else
 		{
@@ -2213,113 +2219,137 @@ public class BaseController  extends BaseFunction{
 						localEntry.setRevision(revision);
 						localEntry.setLatestEditorName(login_user.getName());
 						dbAddDoc(repos, localEntry, true);
+						unlockDoc(doc, login_user, docLock);
+						return true;
 					}
+					unlockDoc(doc, login_user, docLock);
+					return false;	
 				}
-				else	//dbDoc exists
+				
+				if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 				{
-					if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
+					System.out.println("syncupForDocChanged() local Changed: " + doc.getPath()+doc.getName());
+					commitMsg = "更新 " +  doc.getPath()+doc.getName();
+					String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+					if(revision != null)
 					{
-						System.out.println("syncupForDocChanged() local Changed: " + doc.getPath()+doc.getName());
-						commitMsg = "更新 " +  doc.getPath()+doc.getName();
-						String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
-						if(revision != null)
-						{
-							dbDoc.setSize(localEntry.getSize());
-							dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
-							dbDoc.setRevision(revision);
-							dbDoc.setLatestEditorName(login_user.getName());
-							dbUpdateDoc(dbDoc);
-						}
+						dbDoc.setSize(localEntry.getSize());
+						dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
+						dbDoc.setRevision(revision);
+						dbDoc.setLatestEditorName(login_user.getName());
+						dbUpdateDoc(dbDoc);
+						unlockDoc(doc, login_user, docLock);
+						return true;
 					}
-					else 
-					{	
-						if(remoteEntry == null)
-						{
-							System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
-							if(deleteRealDoc(repos, doc, rt) == true)
-							{
-								dbDeleteDoc(doc,true);
-							}
-						}
-						else 
-						{
-							if(dbDoc.getType() != remoteEntry.getType())
-							{
-								System.out.println("syncupForDocChanged() remoteEntry Type Changed(Delete and Add): " + doc.getPath()+doc.getName());
-								if(deleteRealDoc(repos, doc, rt) == true)
-								{
-									dbDeleteDoc(doc,true);
-								}
-								
-								String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-								List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
-								if(successDocList != null)
-								{
-									dbAddDoc(repos, remoteEntry, true);
-								}
-							}
-							else if(isDocRemoteChanged(dbDoc, remoteEntry))
-							{
-								System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
-								
-								//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
-								String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-								List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
-								if(successDocList != null)
-								{
-									//SuccessDocList中的doc包括了revision信息
-									for(int i=0; i<successDocList.size(); i++)
-									{
-										dbUpdateDoc(successDocList.get(i));
-									}
-								}
-							}							
-						}
-					}
+					unlockDoc(doc, login_user, docLock);
+					return false;
 				}
+				
+				
+				if(remoteEntry == null)
+				{
+					System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+					if(deleteRealDoc(repos, doc, rt) == true)
+					{
+						dbDeleteDoc(doc,true);
+						unlockDoc(doc, login_user, docLock);
+						return false;
+					}
+					unlockDoc(doc, login_user, docLock);
+					return false;
+				}
+				
+				if(dbDoc.getType() != remoteEntry.getType())
+				{
+					System.out.println("syncupForDocChanged() remoteEntry Type Changed: " + doc.getPath()+doc.getName());
+					if(deleteRealDoc(repos, doc, rt) == true)
+					{
+						dbDeleteDoc(doc,true);
+					}
+					else
+					{
+						unlockDoc(doc, login_user, docLock);
+						return false;
+					}
+					
+					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+					if(successDocList != null)
+					{
+						dbAddDoc(repos, remoteEntry, true);
+						unlockDoc(doc, login_user, docLock);
+						return true;						
+					}
+					unlockDoc(doc, login_user, docLock);
+					return false;						
+				}
+				
+				if(isDocRemoteChanged(dbDoc, remoteEntry))
+				{
+					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+					
+					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
+					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+					if(successDocList != null)
+					{
+						//SuccessDocList中的doc包括了revision信息
+						for(int i=0; i<successDocList.size(); i++)
+						{
+							dbUpdateDoc(successDocList.get(i));
+						}
+						unlockDoc(doc, login_user, docLock);
+						return true;
+					}
+					unlockDoc(doc, login_user, docLock);
+					return false;
+				}
+				
+				unlockDoc(doc, login_user, docLock);
+				return true;
 			}
-			else
+			
+			if(dbDoc == null)
 			{
-				if(dbDoc == null)
+				if(remoteEntry != null)	//Remote Added
 				{
-					if(remoteEntry != null)	//Remote Added
+					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					
+					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
+					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+					if(successDocList != null)
 					{
-						System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
-						
-						//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
-						String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-						List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
-						if(successDocList != null)
-						{
-							dbAddDoc(repos, remoteEntry, true);
-						}
+						dbAddDoc(repos, remoteEntry, true);
+						unlockDoc(doc, login_user, docLock);
+						return true;
 					}
-				}
-				else
-				{
-					//localDeleted and remoteDeleted so just delete dbDoc
-					if(remoteEntry == null)
-					{
-						System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
-						dbDeleteDoc(doc, true);					
-					}
-					else	
-					{
-						System.out.println("syncupForDocChanged() local deleted: " + doc.getPath()+doc.getName());
-						commitMsg = "删除 " +  doc.getPath()+doc.getName();
-						String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
-						if(revision != null)
-						{
-							dbDeleteDoc(dbDoc, true);
-						}
-					}
+					unlockDoc(doc, login_user, docLock);
+					return false;
 				}
 			}
+			
+			//localDeleted and remoteDeleted so just delete dbDoc
+			if(remoteEntry == null)
+			{
+				System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+				dbDeleteDoc(doc, true);
+				unlockDoc(doc, login_user, docLock);
+				return true;				
+			}
+			
+			System.out.println("syncupForDocChanged() local deleted: " + doc.getPath()+doc.getName());
+			commitMsg = "删除 " +  doc.getPath()+doc.getName();
+			String revision = verReposRealDocDelete(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+			if(revision != null)
+			{
+				dbDeleteDoc(dbDoc, true);
+				unlockDoc(doc, login_user, docLock);
+				return true;
+			}
+			unlockDoc(doc, login_user, docLock);
+			return false;
 		}
-		
-		unlockDoc(doc, login_user, docLock);
-		return true;
-		
 	}
 
 	protected Doc fsGetDoc(Repos repos, String parentPath, String name) 
