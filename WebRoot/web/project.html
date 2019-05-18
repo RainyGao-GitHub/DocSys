@@ -836,20 +836,30 @@
 	function checkUserUploadRight(files,parentNode,callback)
 	{
 		//get Pid
-		var pid = 0;
-		if(parentNode)
+	  	//get the parentNode
+	  	var parentPath = "";
+	  	var parentId = 0;
+	  	var level = 0;
+		if(parentNode && parentNode != null)
 		{
-			pid = parentNode.id;
+			parentPath = parentNode.path;
+			parentId=parentNode.id;
+			level = parentNode.level;
 		}
+		else
+		{
+			parentNode=null;
+		}
+		
 		var vid = gReposId;
-		var remoteDir = getNodePath(parentNode);	//only for display
+		var remoteDir = parentPath;	//only for display
 		
 		$.ajax({
 			url : "/DocSystem/Repos/getUserDocAuth.do",
 			type : "post",
 			dataType : "json",
 			data : {
-				docId : pid,
+				docId : parentId,
 				reposId : vid
 			},
 			success : function (ret){
@@ -919,10 +929,14 @@
 	  	}
 	  	
 	  	//get the parentNode
+	  	var parentPath = "";
 	  	var parentId = 0;
-		if(parentNode)
+	  	var level = 0;
+		if(parentNode && parentNode != null)
 		{
-			parentId=parentNode.id;	
+			parentPath = parentNode.path;
+			parentId=parentNode.id;
+			level = parentNode.level;
 		}
 		else
 		{
@@ -931,7 +945,7 @@
 		
 		var vid = gReposId;
 
-		var remoteDir = getNodePath(parentNode);	//only for display
+		var remoteDir = parentPath;	//only for display
 		
 	    qiao.bs.dialog({
 	        id: "dialog-uploadDialog",
@@ -952,7 +966,7 @@
 	    },function () {
 	    	//alert("点击了确定");
 			//开始上传
-			DocUpload.uploadDocs(files,parentNode,parentId,vid);
+			DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid);
 	    	return true;   
 	    });
 		return true;
@@ -1063,7 +1077,7 @@
     	}
     	
 		//多文件Upload接口
-		function uploadDocs(files,parentNode,parentId,vid)	//多文件上传函数
+		function uploadDocs(files,parentNode,parentPath,parentId,level,vid)	//多文件上传函数
 		{
 			console.log("uploadDocs()");
 			//console.log(files);
@@ -1076,12 +1090,12 @@
 				
 			if(isUploading == true)
 			{
-				DocUploadAppend(files,parentNode,parentId,vid);
+				DocUploadAppend(files,parentNode,parentPath,parentId,level,vid);
 			}
 			else
 			{
 				//初始化文件上传参数
-				DocUploadInit(files,parentNode,parentId,vid);
+				DocUploadInit(files,parentNode,parentPath,parentId,level,vid);
 				
 				uploadTime = new Date().getTime();	//初始化上传时间
 				uploadStartTime = uploadTime;
@@ -1092,7 +1106,7 @@
 		}
 		
 		//初始化DocUpload设置
-      	function DocUploadInit(files,parentNode,parentId,vid)	//多文件移动函数
+      	function DocUploadInit(files,parentNode, parentPath, parentId, level, vid)	//多文件移动函数
 		{
 			console.log("DocUploadInit()");
 			if(!files)
@@ -1108,7 +1122,9 @@
 			var uploadBatch = {};
 			uploadBatch.files = files;
 			uploadBatch.parentNode = parentNode;
+			uploadBatch.parentPath = parentPath;
 			uploadBatch.parentId = parentId;
+			uploadBatch.level = level;
 			uploadBatch.vid = vid;
 			uploadBatch.num = fileNum;
 			uploadBatch.index = 0;
@@ -1221,9 +1237,10 @@
       		var curBatchIndex = uploadContent.batchIndex;
       		var uploadBatch = uploadContent.uploadBatchList[curBatchIndex];
       		console.log("buildSubContextList() uploadContent curBatchIndex:" + curBatchIndex + " num:" + uploadContent.batchNum );
-    			
+    		
       		var files = uploadBatch.files;
-      		var parentNode = uploadBatch.uploadBatch;
+      		var parentPath = uploadBatch.parentPath;
+      		var level = uploadBatch.level;
       		var parentId = uploadBatch.parentId;
       		var vid = uploadBatch.vid;
       		var index = uploadBatch.index;
@@ -1250,9 +1267,10 @@
     	   		   	var SubContext ={};
     	   		   	//Basic Info
     	   		   	SubContext.file = file;
-    	   		   	SubContext.parentNode = parentNode;
+    	   		   	SubContext.parentPath = parentPath;
     	   		   	SubContext.parentId = parentId;
-    	   		   	SubContext.vid = vid;
+    	   		   	SubContext.level = level;
+        			SubContext.vid = vid;
     	   		   	
 		    		SubContext.docId = -1; //-1: 新增  
 		    		
@@ -1260,11 +1278,9 @@
     	   		   	SubContext.type = 1;	
 		    	   	SubContext.size = file.size;
     	   		   	SubContext.name = file.name;
-			    	SubContext.relativePath = file.webkitRelativePath;
-			    	if(file.fullPath)
-			    	{
-			    		SubContext.relativePath = file.fullPath;
-			    	}
+			    	
+    	   		   	//get the realParentPath
+    	   		   	getRealParentInfo(file, SubContext);
 			    	
 			    	//Status Info
 		    		SubContext.index = i;
@@ -1305,6 +1321,49 @@
     			console.log("buildSubContextList() all uploadBatch Inited");
     		}
 	   	}
+
+      	//getRealParentPath
+ 		function getRealParentInfo(SubContext)
+ 		{
+      		var file = SubContext.file;
+      		
+ 			var relativePath = file.webkitRelativePath;
+		 	if(file.fullPath)
+    		{
+    			relativePath = file.fullPath;
+    		}
+    		console.log("checkAndCorrectParentPath() relativePath:" + filePath);
+      		
+    		if(!relativePath || relativePath == "")
+    		{
+ 				SubContext.realParentPath = SubContext.parentPath;
+ 				SubContext.realParentId = SubContext.parentId;
+ 	 			SubContext.realLevel = SubContext.level;
+ 				return true;
+    		}
+			
+    		//get the realParentPath
+    		var realParentPath = SubContext.parentPath;
+    		var realLevel = SubContext.level;
+    		var pathArray = new Array(); //定义一数组 
+			pathArray = filePath.split("/"); //字符分割 
+			for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
+			{
+				var nodeName = pathArray[i];
+				if(!nodeName || nodeName == "")
+				{
+					continue;
+				}
+	 			realLevel++;				
+				realParentPath = realParentPath + nodeName +"/";
+			}
+			SubContext.realParentPath = realParentPath;
+			SubContext.realLevel = realParentPath;
+			SubContext.realParentId = undefined;
+			return true;
+ 		}
+    	
+    	
       	
       	function getFileShowSize(fileSize)
       	{
@@ -1924,106 +1983,6 @@
       		}
 		}
       	
-      	//检查当前上传文件的父节点是否存在，不存在则通知后台新建，直到全部新建完成
- 		function checkAddParentNode(SubContext)
- 		{
-      		var vid = SubContext.vid;
-			//parentNode maybe is not the real parent for the doc
-			var tempParentNode = SubContext.parentNode;
-    		//get filePath form file
-    		var filePath = SubContext.relativePath;
-    		//console.log("checkAddParentNode() relativePath:" + filePath);
-
-    		if(!filePath || filePath == "")
-    		{
-    			//文件没有相对路径，realParentNod = parentNode
- 				SubContext.realParentNode = tempParentNode;
- 				SubContext.realParentId = tempParentNode?tempParentNode.id:0;
-    			return true;
-    		}
-			
-    		//文件父目录检查部分
-			var pathArray = new Array(); //定义一数组 
-			pathArray = filePath.split("/"); //字符分割 
-
-			//检查其其父节点是否存在，如果不存在则需要先新建父节点目录
-			for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
-			{
-				var nodeName = pathArray[i];
-				var treeNode = getNodeByName(nodeName,tempParentNode);	//获取parentNode下名为name的子节点
-				if(treeNode)	//节点已存在
-				{
-					if(treeNode.isParent == true)
-					{
-						//节点存在且是目录，检查下一级parentNode
-						tempParentNode = treeNode;
-					}
-					else	//同名节点不是目录，此文件则上传失败
-					{
-						uploadErrorConfirmHandler(name,nodeName + " 不是目录");
-			            return false;
-					}
-				}
-				else	//节点不存在，则新建该节点
-				{
-					//由于后台新增节点是异步调用，所以成功后回调uploadDoc来触发下一级目录的检查
-			    	var tempParentId = 0;
-			    	if(tempParentNode)
-			    	{
-			    		tempParentId = tempParentNode.id;
-			    	}
-			   		console.log("checkAddParentNode() addDoc name:" + nodeName + " type:" +  2 + " tempParentId:" +  tempParentId + " vid:" +  vid);
-			    	$.ajax({
-			             url : "/DocSystem/Doc/addDoc.do",
-			             type : "post",
-			             dataType : "json",
-			             data : {
-			             	name : nodeName,
-			                type : 2, //文件类型
-			                reposId : vid, 
-			                parentId : tempParentId,
-			             },
-			             success : function (ret) {
-			             	if( "ok" == ret.status)
-			             	{
-			             		if(ret.data && ret.data.id)
-			             		{
-				  					addTreeNode(ret.data,tempParentNode);
-				             		
-				  					if(ret.warningMsg)
-				  					{
-				  						uploadErrorConfirmHandler(name,ret.msgInfo);
-				  						return;
-				  					}
-				  					console.log("checkAddParentNode() call uploadDoc to reenter the code");
-				        		  	uploadDoc();
-				        		  	return;
-			             		}
-			             		else
-			             		{
-								 	uploadErrorConfirmHandler(name,ret.msgInfo);
-						            return;			             			
-			             		}
-				            }
-			                else
-			                {
-							 	uploadErrorConfirmHandler(name,ret.msgInfo);
-					            return;
-			                }
-			            },
-			            error : function () {
-						 	uploadErrorConfirmHandler(name,"新增目录 "+nodeName+ " 异常");
-				            return;
-			            }
-			        });
-					return false;
-				}
-			}
-			SubContext.realParentNode = tempParentNode;
-			SubContext.realParentId = tempParentNode?tempParentNode.id:0;
-			return true;
- 		}
-      	
  		var CheckSumCaculator = (function(){
  			var caculateIndex = 0;
  			var reuploadCaculateIndex = 0;
@@ -2222,12 +2181,14 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	             	name : name,
+		            reposId : SubContext.vid,
+		            docId: SubContext.docId,
+		            parentId : SubContext.realParentId,
+		            parentPath: SubContext.path,
+	             	docName : name,
 					type: 1,
 					size: SubContext.size,
-	             	checkSum: SubContext.checkSum,
-	             	reposId : SubContext.vid, 
-	                parentId : SubContext.realParentId,
+	             	checkSum: SubContext.checkSum,	             	
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -2699,32 +2660,35 @@
 		
     	function startUpload(SubContext)
     	{
-
 			console.log("startUpload() docId:" + SubContext.docId,SubContext);
 
 			//新建文件上传表单
 			var form = new FormData();
 			if(false == SubContext.chunked)
 			{
+				form.append("reposId", SubContext.vid);
+				form.append("parentId", SubContext.realParentId);
+				form.append("parentPath", SubContext.realParentPath);
+				form.append("level", SubContext.realLevel);
+				form.append("docId", SubContext.docId);
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
-				form.append("docId", SubContext.docId);
-				form.append("parentId", SubContext.realParentId);
-				form.append("reposId", SubContext.vid);
 				form.append("uploadFile", SubContext.file);
 			}
 			else
 			{
 				//根据chunkIndex上传
+				form.append("reposId", SubContext.vid);
+				form.append("parentId", SubContext.realParentId);
+				form.append("parentPath", SubContext.realParentPath);
+				form.append("level", SubContext.realLevel);
+				form.append("docId", SubContext.docId);
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
-				form.append("docId", SubContext.docId);
-				form.append("parentId", SubContext.realParentId);
-				form.append("reposId", SubContext.vid);
 				
 				var chunkIndex = SubContext.chunkIndex;
 				var chunkNum = SubContext.chunkNum;
@@ -2965,15 +2929,7 @@
 					return; 
 				}
     		}
-			
-    		//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
-    		if(false == checkAddParentNode(SubContext))
-    		{
-    			console.log("uploadDoc() checkAddParentNode return false, addDoc have been called, callback will re-enter uploadDoc");
-    			return;
-    		}
-   			//console.log("uploadDoc() checkAddParentNode completed");
-   		 	
+    		
    			if(false == getFileCheckSum(SubContext))
    			{
    				//checkSum is not ready, timer be called, callback will re-enter uploadDoc 100ms later
@@ -3038,8 +2994,8 @@
 				
 		//开放给外部的调用接口
         return {
-            uploadDocs: function(files,parentNode,parentId,vid){
-            	uploadDocs(files,parentNode,parentId,vid);
+            uploadDocs: function(files,parentNode,parentPath,parentId,level,vid){
+            	uploadDocs(files,parentNode,parentPath,parentId,level,vid);
             },
             stopAllUpload: function(){
             	stopAllUpload();
