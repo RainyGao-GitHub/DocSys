@@ -383,7 +383,7 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(Integer uploadType, Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName, 
+	public void checkChunkUploaded(Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName, 
 			Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -408,6 +408,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		String fileChunkName = docName + "_" + chunkIndex;
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
@@ -428,6 +429,7 @@ public class DocController extends BaseController{
 			{
 				String commitUser = login_user.getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
+				int uploadType = getUploadType(repos, parentPath, docName);
 				if(uploadType == 0)
 				{
 					Long newDocId = addDoc(repos, 1, level, parentId, parentPath, docName, 
@@ -462,6 +464,18 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	private int getUploadType(Repos repos, String parentPath, String docName) {
+		
+		String reposRPath = getReposRealPath(repos);
+		
+		File localEntry = new File(reposRPath+parentPath, docName);
+		if(localEntry.exists())
+		{
+			return 1;
+		}
+		return 0;
+	}
+
 	private Doc getDocInfo(Repos repos, String path, String name) 
 	{
 		Doc qDoc = new Doc();
@@ -629,11 +643,11 @@ public class DocController extends BaseController{
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(Integer uploadType, Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName,	//
+	public void uploadDoc(Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName,	//
 			MultipartFile uploadFile, Long size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc uploadType:" + uploadType + " docName:" + docName + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId
+		System.out.println("uploadDoc  docName:" + docName + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -655,7 +669,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//检查用户是否有权限新增文件
+		//检查用户权限
+		int uploadType = getUploadType(repos, parentPath, docName);
 		if(uploadType == 0)	//0: add  1: update
 		{
 			if(checkUserAddRight(repos,login_user.getId(),parentId, parentPath, "" ,rt) == false)
