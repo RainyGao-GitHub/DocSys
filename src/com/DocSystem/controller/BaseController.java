@@ -3429,7 +3429,7 @@ public class BaseController  extends BaseFunction{
 		String [] paths = parentPath.split("/");
 
 		String path = "";		
-		for(int i=0; i< paths.length+1; i++)
+		for(int i=0; i< paths.length; i++)
 		{
 			String name = paths[i];
 			if(name.isEmpty())
