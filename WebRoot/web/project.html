@@ -835,14 +835,15 @@
 	//获取用户的权限
 	function checkUserUploadRight(files,parentNode,callback)
 	{
-		//get Pid
-	  	//get the parentNode
+		console.log("checkUserUploadRight() parentNode:",parentNode);
+		
+		//get the parentInfo
 	  	var parentPath = "";
 	  	var parentId = 0;
 	  	var level = 0;
 		if(parentNode && parentNode != null)
 		{
-			parentPath = parentNode.path;
+			parentPath = parentNode.path + parentNode.name+"/";
 			parentId=parentNode.id;
 			level = parentNode.level;
 		}
@@ -852,7 +853,7 @@
 		}
 		
 		var vid = gReposId;
-		var remoteDir = parentPath;	//only for display
+		var remoteDir = "/" + parentPath;	//only for display
 		
 		$.ajax({
 			url : "/DocSystem/Repos/getUserDocAuth.do",
@@ -928,13 +929,13 @@
 	  		uploadDispInfo = uploadDispInfo + " 等" + files.length + "个文件";
 	  	}
 	  	
-	  	//get the parentNode
+		//get the parentInfo
 	  	var parentPath = "";
 	  	var parentId = 0;
 	  	var level = 0;
 		if(parentNode && parentNode != null)
 		{
-			parentPath = parentNode.path;
+			parentPath = parentNode.path + parentNode.name+"/";
 			parentId=parentNode.id;
 			level = parentNode.level;
 		}
@@ -945,7 +946,7 @@
 		
 		var vid = gReposId;
 
-		var remoteDir = parentPath;	//only for display
+		var remoteDir = "/" + parentPath;	//only for display
 		
 	    qiao.bs.dialog({
 	        id: "dialog-uploadDialog",
@@ -976,11 +977,15 @@
 	{	
 		console.log("uploadWithoutConfirm()");		
 		
-	  	//get the parentNode
+		//get the parentInfo
+	  	var parentPath = "";
 	  	var parentId = 0;
-		if(parentNode)
+	  	var level = 0;
+		if(parentNode && parentNode != null)
 		{
-			parentId=parentNode.id;	
+			parentPath = parentNode.path + parentNode.name+"/";
+			parentId=parentNode.id;
+			level = parentNode.level;
 		}
 		else
 		{
@@ -990,7 +995,7 @@
 		var vid = gReposId;
 		
 		//开始上传
-		DocUpload.uploadDocs(files,parentNode,parentId,vid);
+		DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid);
 	    return true;   
 	}
 
@@ -5618,26 +5623,17 @@ function CompareObj(objA, objB, flag) {
 	//获取Node的路径
 	function getNodePath(treeNode)
 	{
-		var remoteDir = "/";
+		var path = "";
 		if(treeNode)
 		{
 			var nodes = treeNode.getPath();	//获取当前节点的所有父节
 			console.log("getNodePath() nodes ",nodes);	
 			for( var i = 0 ; i < nodes.length-1; i++ )
 			{
-				remoteDir += nodes[i].name + "/"; 
-			}
-			
-			if(true == treeNode.isParent)
-			{
-				remoteDir += treeNode.name + "/";
-			}
-			else
-			{
-				remoteDir += treeNode.name;				
+				path = path + nodes[i].name + "/"; 
 			}
 		}
-		return remoteDir;
+		return path;
 	}
 
     //该接口是为了避免新增Node时触发的异步加载导致出现多个Node
