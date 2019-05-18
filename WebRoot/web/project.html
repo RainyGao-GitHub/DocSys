@@ -937,7 +937,7 @@
 		{
 			parentPath = parentNode.path + parentNode.name+"/";
 			parentId=parentNode.id;
-			level = parentNode.level;
+			level = parentNode.level+1;
 		}
 		else
 		{
@@ -1285,7 +1285,7 @@
     	   		   	SubContext.name = file.name;
 			    	
     	   		   	//get the realParentPath
-    	   		   	getRealParentInfo(file, SubContext);
+    	   		   	getRealParentInfo(SubContext);
 			    	
 			    	//Status Info
 		    		SubContext.index = i;
@@ -1337,7 +1337,7 @@
     		{
     			relativePath = file.fullPath;
     		}
-    		console.log("checkAndCorrectParentPath() relativePath:" + filePath);
+    		console.log("getRealParentInfo() relativePath:" + relativePath);
       		
     		if(!relativePath || relativePath == "")
     		{
@@ -1362,6 +1362,8 @@
 	 			realLevel++;				
 				realParentPath = realParentPath + nodeName +"/";
 			}
+    		console.log("getRealParentInfo() realParentPath:" + realParentPath);
+
 			SubContext.realParentPath = realParentPath;
 			SubContext.realLevel = realParentPath;
 			SubContext.realParentId = undefined;
@@ -2680,7 +2682,7 @@
 				form.append("parentPath", SubContext.realParentPath);
 				form.append("level", SubContext.realLevel);
 				form.append("docId", SubContext.docId);
-				form.append("name", SubContext.name);
+				form.append("docName", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
@@ -2694,7 +2696,7 @@
 				form.append("parentPath", SubContext.realParentPath);
 				form.append("level", SubContext.realLevel);
 				form.append("docId", SubContext.docId);
-				form.append("name", SubContext.name);
+				form.append("docName", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
