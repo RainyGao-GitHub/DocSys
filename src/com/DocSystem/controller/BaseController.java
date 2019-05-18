@@ -1793,9 +1793,9 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		Long docId = buildDocIdByName(level, parentPath);
-		System.out.println("addDoc() docId:" + docId + " type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
-		
+		System.out.println("addDoc() type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+	
+		Long docId = buildDocIdByName(level, docName);
 		switch(repos.getType())
 		{
 		case 1:
@@ -1816,6 +1816,8 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
+		System.out.println("addDoc_FS() docId:" + docId + " type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+
 		String reposRPath = getReposRealPath(repos);
 		String localParentPath =  reposRPath + parentPath;
 		String localDocPath = localParentPath + docName;
