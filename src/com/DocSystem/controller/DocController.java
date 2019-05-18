@@ -642,6 +642,8 @@ public class DocController extends BaseController{
 	}
 
 	/****************   Upload a Document ******************/
+	/*docId = -1: means it is add, else it is update
+	 * parentId = -1: means we do not know the parentId maybe it still not exists*/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long parentId, Integer level, String parentPath, String docName,	//
 			MultipartFile uploadFile, Long size, String checkSum,
@@ -669,6 +671,32 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(parentId < 0)
+		{
+			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+			String localParentPath = getReposRealPath(repos) + parentPath;
+			File localParentDir = new File(localParentPath);
+			if(false == localParentDir.exists())
+			{
+				localParentDir.mkdirs();
+			}
+			
+			//caculate parentId
+			String [] paths = parentPath.split("/");
+			String pName = "";
+			int pLevel = 0;
+			for(int i=0; i< paths.length; i++)
+			{
+				if(paths[i].isEmpty())
+				{
+					continue;
+				}
+				pName = paths[i];
+				pLevel++;
+			}
+			parentId = buildDocIdByName(pLevel-1,pName);
+		}
+
 		//检查用户权限
 		int uploadType = getUploadType(repos, parentPath, docName);
 		if(uploadType == 0)	//0: add  1: update

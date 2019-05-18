@@ -1351,7 +1351,7 @@
     		var realParentPath = SubContext.parentPath;
     		var realLevel = SubContext.level;
     		var pathArray = new Array(); //定义一数组 
-			pathArray = filePath.split("/"); //字符分割 
+			pathArray = relativePath.split("/"); //字符分割 
 			for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
 			{
 				var nodeName = pathArray[i];
@@ -1365,7 +1365,7 @@
     		console.log("getRealParentInfo() realParentPath:" + realParentPath);
 
 			SubContext.realParentPath = realParentPath;
-			SubContext.realLevel = realParentPath;
+			SubContext.realLevel = realLevel;
 			SubContext.realParentId = undefined;
 			return true;
  		}
