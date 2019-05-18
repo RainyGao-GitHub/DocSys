@@ -70,7 +70,7 @@ public class BaseController  extends BaseFunction{
 		User AutoSync = new User();
 		AutoSync.setId(0);
 		AutoSync.setName("AutoSync");
-		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, AutoSync);
+		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, AutoSync, false);
 		
 		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, isDocLocked, docAuth, docAuthHashMap, rt, actionList);
 	
@@ -81,21 +81,40 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 	
-	private boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user) {
+	private boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user, boolean subDocCheckFlag) 
+	{
+		Doc doc = new Doc();
+		doc.setVid(reposId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
 		
-		DocLock qDocLock = new DocLock();
-		qDocLock.setVid(reposId);
-		qDocLock.setPath(parentPath);
-		qDocLock.setName(docName);
-		
-		List<DocLock> list = reposService.getDocLockList(qDocLock);
-		if(list == null || list.size() == 0)
+		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
+		DocLock docLock = getDocLock(doc);
+		ReturnAjax rt = new ReturnAjax();
+		if(docLock != null && isDocLocked(docLock,login_user,rt ))
 		{
-			return false;
+			System.out.println("lockDoc() Doc " + doc.getName() +" was locked");
+			return true;
 		}
 		
-		DocLock docLock = list.get(0);
-		return isDocLocked(docLock, login_user, null);
+		//检查其父节点是否强制锁定
+		if(isParentDocLocked(doc,login_user,rt))
+		{
+			System.out.println("lockDoc() Parent Doc of " + doc.getName() +" was locked！");				
+			return true;
+		}
+		
+		//Check If SubDoc was locked
+		if(subDocCheckFlag)
+		{
+			if(isSubDocLocked(doc,login_user, rt) == true)
+			{
+				System.out.println("lockDoc() subDoc of " + doc.getName() +" was locked！");
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
@@ -3358,10 +3377,7 @@ public class BaseController  extends BaseFunction{
 			{	
 				String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.getLockTime());
 
-				if(rt != null)
-				{
-					rt.setError(docLock.getName() +" was locked by [" + docLock.getLockBy() + "] " +docLock.getLocker() + " till " + lockTime);
-				}
+				rt.setError(docLock.getName() +" was locked by [" + docLock.getLockBy() + "] " +docLock.getLocker() + " till " + lockTime);
 				
 				System.out.println("Doc [" + docLock.getName() +"] was locked by " + docLock.getLocker() + " lockState:"+ docLock.getState());
 				return true;						
