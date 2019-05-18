@@ -2189,7 +2189,7 @@
 		            reposId : SubContext.vid,
 		            docId: SubContext.docId,
 		            parentId : SubContext.realParentId,
-		            parentPath: SubContext.path,
+		            parentPath: SubContext.realParentPath,
 	             	docName : name,
 					type: 1,
 					size: SubContext.size,
@@ -2254,12 +2254,14 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	             	name : name,
-					type: 1,
-					size: SubContext.size,
-	             	checkSum: SubContext.checkSum,
-	             	reposId : SubContext.vid, 
-	                parentId : SubContext.realParentId,
+			            reposId : SubContext.vid,
+			            docId: SubContext.docId,
+			            parentId : SubContext.realParentId,
+			            parentPath: SubContext.realParentPath,
+		             	docName : name,
+						type: 1,
+						size: SubContext.size,
+		             	checkSum: SubContext.checkSum,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -2267,8 +2269,10 @@
 	             		console.log("addDoc() ret",ret);
 		                if(SubContext.docId == -1) //文件新建成功
 			            {	
-			            	addTreeNode(ret.data,SubContext.realParentNode);
-			             	//set the docId so that We can open it 
+		                	//Remove the dependecy on treeNode
+			            	//addTreeNode(ret.data,SubContext.realParentNode);
+
+		                	//set the docId so that We can open it on uploadList 
 		             		SubContext.docId = ret.data.docId;	                
 			            }
 	             			
