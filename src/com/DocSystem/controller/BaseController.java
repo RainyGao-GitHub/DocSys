@@ -2038,18 +2038,23 @@ public class BaseController  extends BaseFunction{
 		//Insert index add action for RDoc
 		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 4, 1, 1, null);
 		
-		if(doc.getContent() != null)
+		String content = doc.getContent();
+		if(content == null || content.isEmpty())
 		{
-			List<CommonAction> subActionList = new ArrayList<CommonAction>();
-			insertAddAction(subActionList, repos, doc, commitMsg, commitUser, 4, 1, 2, null);	//Add Index For VDoc
-			if(repos.getVerCtrl1() > 0)
-			{
-				insertAddAction(subActionList, repos, doc, commitMsg, commitUser, 2, 1, 2, null); //verRepos commit
-			}
-			
-			//Insert add actions for VDoc
-			insertAddAction(actionList, repos, doc, commitMsg, commitUser, 1, 1, 2, subActionList);			
+			return;
 		}
+		
+		//Insert add action for VDoc
+		//Build subActionList
+		List<CommonAction> subActionList = new ArrayList<CommonAction>();
+		if(repos.getVerCtrl1() > 0)
+		{
+			insertAddAction(subActionList, repos, doc, commitMsg, commitUser, 2, 1, 2, null); //verRepos commit
+		}
+		insertAddAction(subActionList, repos, doc, commitMsg, commitUser, 4, 1, 2, null);	//Add Index For VDoc
+		
+		//Insert add action for VDoc
+		insertAddAction(actionList, repos, doc, commitMsg, commitUser, 1, 1, 2, subActionList);			
 	}
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
