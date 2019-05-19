@@ -2592,16 +2592,18 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean executeIndexActionForDocName(CommonAction action, ReturnAjax rt) 
 	{
+		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
+		
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return addIndexForDocName(doc, rt);
+			return addIndexForDocName(repos, doc, rt);
 		case 2: //Delete Doc
-			return deleteIndexForDocName(doc, rt);
+			return deleteIndexForDocName(repos, doc, rt);
 		case 3: //Update Doc
 			Doc newDoc = action.getNewDoc();
-			return updateIndexForDocName(doc, newDoc, rt);			
+			return updateIndexForDocName(repos, doc, newDoc, rt);			
 		}
 		return false;
 	}
@@ -5576,98 +5578,80 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Add Index For DocName
-	public boolean addIndexForDocName(Doc doc, ReturnAjax rt)
+	public boolean addIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
 	{
-		String indexLib = getIndexLibName(doc.getVid(),0);
-		
-		System.out.println("addIndexForDocName() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " indexLib:" + indexLib);
+		System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		String indexLib = getIndexLibName(repos.getId(),0);
 
-		return LuceneUtil2.addIndex(doc.getId() + "", doc, getDocPath(doc), indexLib);
+		return LuceneUtil2.addIndex(doc, getDocPath(doc), indexLib);
 	}
 
 	//Delete Indexs For DocName
-	public static boolean deleteIndexForDocName(Doc doc, ReturnAjax rt)
+	public static boolean deleteIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
 	{
-		Integer reposId = doc.getVid();
-		Integer docId = doc.getId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
-
-		String indexLib = getIndexLibName(reposId,0);
+		System.out.println("deleteIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		System.out.println("deleteIndexForDocName() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
-		return LuceneUtil2.deleteIndex(docId+"", indexLib);
+		String indexLib = getIndexLibName(repos.getId(),0);
+
+		return LuceneUtil2.deleteIndex(doc, indexLib);
 	}
 		
 	//Update Index For DocName
-	public static boolean updateIndexForDocName(Doc doc, Doc newDoc, ReturnAjax rt)
+	public static boolean updateIndexForDocName(Repos repos, Doc doc, Doc newDoc, ReturnAjax rt)
 	{
-		Integer reposId = doc.getVid();
-		Integer docId = doc.getId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
-		String newParentPath = newDoc.getPath();
-		String newName = newDoc.getName();
-	
-		String indexLib = getIndexLibName(reposId,0);
-		System.out.println("updateIndexForDocName() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " newParentPath:" + newParentPath + " newName:" + newName + " indexLib:" + indexLib);
+		System.out.println("updateIndexForDocName() docId:" +  doc.getDocId() + " parentPath:" +  doc.getPath()  + " name:" + doc.getName()  + " newParentPath:" + newDoc.getPath() + " newName:" + newDoc.getName() + " repos:" + repos.getName());
 
+		String indexLib = getIndexLibName(repos.getId(),0);
+
+		String name = doc.getName();
+		String newName = newDoc.getName();
+		String parentPath = doc.getPath();
+		String newParentPath = newDoc.getPath();
 		if(name.equals(newName) && parentPath.equals(newParentPath))
 		{
-			System.out.println("updateIndexForDocName() Doc not Changed docId:" + docId + " parentPath:" + parentPath + " name:" + name + " newParentPath:" + newParentPath + " newName:" + newName);			
+			System.out.println("updateIndexForDocName() Doc not Changed docId:" + doc.getDocId() + " parentPath:" + parentPath + " name:" + name + " newParentPath:" + newParentPath + " newName:" + newName);			
 			return true;
 		}
 		
-		LuceneUtil2.deleteIndex(docId+"", indexLib);
+		LuceneUtil2.deleteIndex(doc, indexLib);
 
 		String content = newParentPath + newName;
-		return LuceneUtil2.addIndex(doc.getId() +"", newDoc, content.trim(), indexLib);
+		return LuceneUtil2.addIndex(newDoc, content.trim(), indexLib);
 	}
 
 	//Add Index For VDoc
 	public boolean addIndexForVDoc(Repos repos, Doc doc)
 	{
-		Integer reposId = doc.getVid();
-		Integer docId = doc.getId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
+		System.out.println("addIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+
 		String content = doc.getContent();
 		if(content == null)
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String VDocName = getVDocName(parentPath, name);
+			String VDocName = getVDocName(doc.getPath(), doc.getName());
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}
 		
-		String indexLib = getIndexLibName(reposId,2);
+		String indexLib = getIndexLibName(repos.getId(),2);
 		
-		System.out.println("addIndexForVDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
-		
-		return LuceneUtil2.addIndex(doc.getId()+"", doc, content.toString().trim(), indexLib);
+		return LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
 	}
 	
 	//Delete Indexs For VDoc
 	public static boolean deleteIndexForVDoc(Repos repos, Doc doc)
 	{
-		Integer reposId = doc.getVid();
-		Integer docId = doc.getId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
+		System.out.println("deleteIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String indexLib = getIndexLibName(reposId,2);
-		String hashId = getHashId(parentPath + name);
+		String indexLib = getIndexLibName(repos.getId(),2);
 		
-		System.out.println("deleteIndexForVDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
-		
-		return LuceneUtil2.deleteIndex(hashId, indexLib);
+		return LuceneUtil2.deleteIndex(doc, indexLib);
 	}
 	
 	//Update Index For VDoc
 	public boolean updateIndexForVDoc(Repos repos, Doc doc)
 	{
-		System.out.println("updateIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName());
+		System.out.println("updateIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		Integer reposId = doc.getVid();
 		String content = doc.getContent();
 		if(content == null)
 		{
@@ -5676,15 +5660,14 @@ public class BaseController  extends BaseFunction{
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}		
 		
-		String indexLib = getIndexLibName(reposId,2);
+		String indexLib = getIndexLibName(repos.getId(),2);
 		
-		return LuceneUtil2.updateIndex(doc.getId()+"", doc, content.toString().trim(), indexLib);
+		return LuceneUtil2.updateIndex(doc, content.toString().trim(), indexLib);
 	}
 		
 	//Add Index For RDoc
 	public static boolean addIndexForRDoc(Repos repos, Doc doc)
 	{		
-
 		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibName(repos.getId(), 1);
@@ -5746,27 +5729,14 @@ public class BaseController  extends BaseFunction{
 		System.out.println("deleteIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibName(repos.getId(), 1);
-		
-		String hashId = getHashId(doc.getPath()+doc.getName());
-		
-		boolean ret = true;
-		List<String> documentIdList = LuceneUtil2.getDocumentIdListByHashId(hashId, indexLib);
-		if(documentIdList != null)
-		{
-			for(int i=0;i < documentIdList.size(); i++)
-			{
-				if(LuceneUtil2.deleteIndex(documentIdList.get(i),indexLib) == false)
-				{
-					ret = false;
-				}
-			}
-		}
-		return ret;
+			
+		return LuceneUtil2.deleteIndex(doc,indexLib);
 	}
 	
 	//Update Index For RDoc
 	public static boolean updateIndexForRDoc(Repos repos, Doc doc)
 	{
+		System.out.println("updateIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());		
 		deleteIndexForRDoc(repos, doc);
 		return addIndexForRDoc(repos, doc);
 	}
