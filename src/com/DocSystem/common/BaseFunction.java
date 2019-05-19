@@ -367,7 +367,7 @@ public class BaseFunction{
 	}
 	
 	//获取仓库的虚拟文件的本地存储根路径
-	protected String getReposVirtualPath(Repos repos)
+	protected static String getReposVirtualPath(Repos repos)
 	{
 		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
 		//System.out.println("getReposVirtualPath() " + reposVPath);

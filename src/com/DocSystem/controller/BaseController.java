@@ -4440,7 +4440,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String reposVPath = getReposVirutalPath(repos);
+		String reposVPath = getReposVirtualPath(repos);
 		
 		String parentPath = "";
 		if(doc.getPath() != null)
