@@ -2325,7 +2325,6 @@ public class BaseController  extends BaseFunction{
 				{
 					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
 					
-					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbUpdateDoc失败，将会触发再次Commit操作，因此现在暂不处理
 					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
 					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
 					if(successDocList != null)
@@ -2352,7 +2351,6 @@ public class BaseController  extends BaseFunction{
 				{
 					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 					
-					//TODO: 这里是CheckOut是有风险的，如果CheckOut成功，但dbAddDoc失败，将会触发再次Commit操作，因此现在暂不处理
 					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
 					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
 					if(successDocList != null)
@@ -2611,18 +2609,16 @@ public class BaseController  extends BaseFunction{
 	private boolean executeIndexActionForRDoc(CommonAction action, ReturnAjax rt) 
 	{
 		Doc doc = action.getDoc();
-		
 		Repos repos = action.getRepos();
-		String localRootPath = getReposRealPath(repos);
 		
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return addIndexForRDoc(doc, localRootPath);
+			return addIndexForRDoc(repos, doc);
 		case 2: //Delete Doc
-			return deleteIndexForRDoc(doc, localRootPath);
+			return deleteIndexForRDoc(repos, doc);
 		case 3: //Update Doc
-			return updateIndexForRDoc(doc, localRootPath);		
+			return updateIndexForRDoc(repos, doc);		
 		}
 		return false;
 	}
@@ -2704,11 +2700,6 @@ public class BaseController  extends BaseFunction{
 			return copyVirtualDoc(repos, doc, newDoc, rt);
 		}
 		return false;
-	}
-
-	private String getReposVirutalPath(Repos repos) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	private String executeVerReposAction(CommonAction action, ReturnAjax rt) 
@@ -5691,21 +5682,18 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	//Add Index For RDoc
-	public static boolean addIndexForRDoc(Doc doc, String localRootPath)
+	public static boolean addIndexForRDoc(Repos repos, Doc doc)
 	{		
-		Integer reposId = doc.getVid();
-		Integer docId = doc.getId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
 
-		String indexLib = getIndexLibName(reposId, 1);
+		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String localParentPath = localRootPath + parentPath;
-		String filePath = localParentPath + name;
-		
-		System.out.println("addIndexForRDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
+		String indexLib = getIndexLibName(repos.getId(), 1);
+
+		String localRootPath = getReposRealPath(repos);
+		String localParentPath = localRootPath + doc.getPath();
+		String filePath = localParentPath + doc.getName();
 				
-		File file =new File(localParentPath,name);
+		File file =new File(filePath);
 		if(!file.exists())
 		{
 			System.out.println("addIndexForRDoc() " + filePath + " 不存在");
@@ -5725,7 +5713,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
-		String fileSuffix = getFileSuffix(name);
+		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix != null)
 		{
 			switch(fileSuffix)
@@ -5753,16 +5741,13 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	public static boolean deleteIndexForRDoc(Doc doc, String localRootPath)
+	public static boolean deleteIndexForRDoc(Repos repos, Doc doc)
 	{
-		Integer reposId = doc.getVid();
-		Integer docId = doc.getId();
-		String parentPath = doc.getPath();
-		String name = doc.getName();
+		System.out.println("deleteIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String indexLib = getIndexLibName(reposId, 1);
-		String hashId = getHashId(parentPath+name);
-		System.out.println("deleteIndexForRDoc() docId:" + docId + " parentPath:" + parentPath + " name:" + name + " indexLib:" + indexLib);
+		String indexLib = getIndexLibName(repos.getId(), 1);
+		
+		String hashId = getHashId(doc.getPath()+doc.getName());
 		
 		boolean ret = true;
 		List<String> documentIdList = LuceneUtil2.getDocumentIdListByHashId(hashId, indexLib);
@@ -5780,10 +5765,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Update Index For RDoc
-	public static boolean updateIndexForRDoc(Doc doc, String localRootPath)
+	public static boolean updateIndexForRDoc(Repos repos, Doc doc)
 	{
-		deleteIndexForRDoc(doc, localRootPath);
-		return addIndexForRDoc(doc, localRootPath);
+		deleteIndexForRDoc(repos, doc);
+		return addIndexForRDoc(repos, doc);
 	}
 	
 	/****************************DocSys其他接口 *********************************/
