@@ -315,7 +315,7 @@ public class LuceneUtil2   extends BaseFunction
      */
 	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
-		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight);
 		try {
     		File file = new File(INDEX_DIR + "/" +indexLib);
     		if(!file.exists())
