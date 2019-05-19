@@ -22,6 +22,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
@@ -170,8 +171,9 @@ public class LuceneUtil2   extends BaseFunction
 	private static Document buildDocument(String id, Doc doc, String content) {
 		Document document = new Document();
         document.add(new TextField("id", id, Store.YES));
-        document.add(new IntField("reposId", doc.getId(), Store.YES));
-        document.add(new IntField("docId", doc.getId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+        document.add(new IntField("vid", doc.getVid(), Store.YES));
+        document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+        document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
         document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
         document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
         document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理

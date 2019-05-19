@@ -2069,13 +2069,13 @@ public class BaseController  extends BaseFunction{
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index delete action for RDoc
-		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 1, null);
+		insertUpdateAction(actionList, repos, doc, null, null, 4, 3, 1, null);
 	}
 	
 	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user) 
 	{
 		//Insert index delete action for VDoc
-		insertDeleteAction(actionList, repos, doc, null, null, 4, 3, 2, null);
+		insertUpdateAction(actionList, repos, doc, null, null, 4, 3, 2, null);
 	}
 
 	protected int getLevelByParentPath(String path) 
@@ -2578,7 +2578,7 @@ public class BaseController  extends BaseFunction{
 	private boolean executeIndexAction(CommonAction action, ReturnAjax rt) 
 	{
 		printObject("executeIndexAction() action:",action);
-		switch(action.getType())
+		switch(action.getDocType())
 		{
 		case 0:	//DocName
     		return executeIndexActionForDocName(action, rt);
