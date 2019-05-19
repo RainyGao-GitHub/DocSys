@@ -136,10 +136,9 @@ public class LuceneUtil2   extends BaseFunction
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    public static boolean addIndex(String id, Doc doc, String content, String indexLib)
+    public static boolean addIndex(Doc doc, String content, String indexLib)
     {	
-    	System.out.println("addIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
-    	
+    	System.out.println("addIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
 		try {
 	    	Date date1 = new Date();
 	    	Analyzer analyzer = new IKAnalyzer();
@@ -148,7 +147,7 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	
-	        Document document = buildDocument(id, doc, content);
+	        Document document = buildDocument(doc, content);
 	        indexWriter.addDocument(document);
 	        
 	        indexWriter.commit();
@@ -157,7 +156,7 @@ public class LuceneUtil2   extends BaseFunction
 	        directory.close();
 	        analyzer.close();
 	        
-	        System.out.println("addIndex() Success id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
+	        System.out.println("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 			Date date2 = new Date();
 	        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
@@ -168,9 +167,9 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
 
-	private static Document buildDocument(String id, Doc doc, String content) {
+	private static Document buildDocument(Doc doc, String content) {
 		Document document = new Document();
-        document.add(new TextField("id", id, Store.YES));
+        document.add(new IntField("id", doc.getId(), Store.YES));
         document.add(new IntField("vid", doc.getVid(), Store.YES));
         document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
         document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
@@ -195,9 +194,9 @@ public class LuceneUtil2   extends BaseFunction
      * @param indexLib: 索引库名字（不同仓库将使用不同的索引库，便于整个仓库重建索引或删除时操作方便）
 	 * @return 
      */
-    public static boolean updateIndex(String id, Doc doc, String content, String indexLib)
+    public static boolean updateIndex(Doc doc, String content, String indexLib)
     {
-    	System.out.println("updateIndex() id:" + id + " docId:"+ doc.getId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
+    	System.out.println("updateIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
     	//System.out.println("updateIndex() content:" + content);
     
 		try {
@@ -208,10 +207,10 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	         
-	        Document document = buildDocument(id, doc, content);
+	        Document document = buildDocument(doc, content);
 	        indexWriter.addDocument(document); 
 	        
-	        indexWriter.updateDocument(new Term("id",id), document);
+	        indexWriter.updateDocument(new Term("docId",doc.getDocId()+""), document);
 	        indexWriter.commit();
 	        
 	        indexWriter.close();
@@ -235,9 +234,9 @@ public class LuceneUtil2   extends BaseFunction
      * @return 
      * @throws Exception
      */
-    public static boolean deleteIndex(String docId,String indexLib)
+    public static boolean deleteIndex(Doc doc, String indexLib)
     {
-    	System.out.println("deleteIndex() docId:" + docId + " indexLib:"+indexLib);
+    	System.out.println("deleteIndex() docId:" + doc.getDocId() + " indexLib:"+indexLib);
 		try {
 			Date date1 = new Date();
 			Directory directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
@@ -245,7 +244,7 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
 	        IndexWriter indexWriter = new IndexWriter(directory, config);
 	        
-	        indexWriter.deleteDocuments(new Term("docId", docId));// 没问题
+	        indexWriter.deleteDocuments(new Term("docId", doc.getDocId()+""));
 	        indexWriter.commit();
 	        indexWriter.close();
 	        
@@ -443,7 +442,7 @@ public class LuceneUtil2   extends BaseFunction
     	doc.setId(docId);
     	doc.setPath(docParentPath);
     	doc.setName(docName);
-    	doc.setSize((int) hitFile.length());
+    	doc.setSize(hitFile.length());
     	doc.setLatestEditTime(hitFile.lastModified());
 
     	//Set Doc Path
@@ -530,7 +529,7 @@ public class LuceneUtil2   extends BaseFunction
     		doc1.close();
     	    fis.close();
     		
-    	    addIndex(buildDocumentId(doc.getId(),0), doc, content.toString().trim(), indexLib);
+    	    addIndex(doc, content.toString().trim(), indexLib);
 		} catch (Exception e) {
     		e.printStackTrace();
     		return false;
@@ -556,7 +555,7 @@ public class LuceneUtil2   extends BaseFunction
         	xdoc.close();
         	fis.close();
         	
-        	addIndex(buildDocumentId(doc.getId(),0), doc,str.toString().trim(), indexLib);
+        	addIndex(doc,str.toString().trim(), indexLib);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -582,7 +581,7 @@ public class LuceneUtil2   extends BaseFunction
             wb.close();
             is.close();
               
-            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
+            addIndex(doc, text.toString().trim(), indexLib);
         } catch(Exception e)
         {
             e.printStackTrace();
@@ -606,7 +605,7 @@ public class LuceneUtil2   extends BaseFunction
             workBook.close();
             is.close();
             
-            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
+            addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
         	e.printStackTrace();  
         	return false;
@@ -626,7 +625,7 @@ public class LuceneUtil2   extends BaseFunction
             extractor.close();
             is.close();            
             
-            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
+            addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -646,7 +645,7 @@ public class LuceneUtil2   extends BaseFunction
             extractor.close();  
             is.close();
             
-            addIndex(buildDocumentId(doc.getId(),0), doc, text.toString().trim(), indexLib);
+            addIndex(doc, text.toString().trim(), indexLib);
         } catch (Exception e) {  
             e.printStackTrace(); 
             return false;
@@ -672,7 +671,7 @@ public class LuceneUtil2   extends BaseFunction
 			document.close();
 			//System.out.println(content);     
 			
-            addIndex(buildDocumentId(doc.getId(),0), doc, content.toString().trim(), indexLib);
+            addIndex(doc, content.toString().trim(), indexLib);
 	   }
 	   catch(Exception e)
 	   {
@@ -717,7 +716,7 @@ public class LuceneUtil2   extends BaseFunction
 				totalSize += bufSize;
 				if(bufSize >= 10485760)	//10MByte
 				{
-					addIndex(buildDocumentId(doc.getId(),chunkIndex), doc, buffer.toString().trim(), indexLib);
+					addIndex(doc, buffer.toString().trim(), indexLib);
 					
 					chunkIndex ++;
 					System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
@@ -729,7 +728,7 @@ public class LuceneUtil2   extends BaseFunction
 		    }
 			if(bufSize > 0)
 			{
-				addIndex(buildDocumentId(doc.getId(),chunkIndex), doc, buffer.toString().trim(), indexLib);
+				addIndex(doc, buffer.toString().trim(), indexLib);
 				chunkIndex ++;
 				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 			}
