@@ -1642,6 +1642,8 @@ public class DocController extends BaseController{
 		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
+      	    
+      	    //TODO: 获取doc的真正信息
       	    String filePath = reposRPath + doc.getName();
       	    if(doc.getPath() != null)
       	    {

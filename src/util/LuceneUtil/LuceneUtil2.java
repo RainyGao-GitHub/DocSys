@@ -139,6 +139,8 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean addIndex(Doc doc, String content, String indexLib)
     {	
     	System.out.println("addIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
+    	System.out.println("updateIndex() content:" + content);
+    	
     	Analyzer analyzer = null;
 		Directory directory = null;
 		IndexWriter indexWriter = null;
@@ -228,7 +230,7 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean updateIndex(Doc doc, String content, String indexLib)
     {
     	System.out.println("updateIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);
-    	//System.out.println("updateIndex() content:" + content);
+    	System.out.println("updateIndex() content:" + content);
     
     	Analyzer analyzer = null;
     	Directory directory = null;
@@ -315,7 +317,7 @@ public class LuceneUtil2   extends BaseFunction
      */
 	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
-		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight);
+		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
 		try {
     		File file = new File(INDEX_DIR + "/" +indexLib);
     		if(!file.exists())
@@ -419,50 +421,17 @@ public class LuceneUtil2   extends BaseFunction
     	switch(repos.getType())
     	{
     	case 1:
-    		return BuildHitDocFromDocument_DB(repos, pathFilter, hitDocument);
     	case 2:
-    		return BuildHitDocFromDocument_FS(repos, pathFilter, hitDocument);
     	case 3:
-    		return BuildHitDocFromDocument_SVN(repos, pathFilter, hitDocument);
     	case 4:
-    		return BuildHitDocFromDocument_GIT(repos, pathFilter, hitDocument);
+    		return BuildHitDocFromDocument_FS(repos, pathFilter, hitDocument);
     	}
 		return null;
  	}
 
-	private static HitDoc BuildHitDocFromDocument_GIT(Repos repos, String pathFilter, Document hitDocument) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static HitDoc BuildHitDocFromDocument_SVN(Repos repos, String pathFilter, Document hitDocument) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static HitDoc BuildHitDocFromDocument_DB(Repos repos, String pathFilter, Document hitDocument) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, String pathFilter, Document hitDocument) {
-        String reposRPath = getReposRealPath(repos);
         String docParentPath = hitDocument.get("path");
-    	String docName =  hitDocument.get("name");	
-    	String filePath = reposRPath + docParentPath + docName;
-    	if(docParentPath == null)
-    	{
-    		filePath = reposRPath + docName;
-    	}
-    	
-        File hitFile = new File(filePath);
-        if(!hitFile.exists())
-        {
-        	System.out.print("BuildHitDocFromDocument_FS() " + filePath + " 不存在");
-        	//TODO: if file type not matched
-        	//Do delete all index for hitDoc
-        	return null;
-        }
+    	String docName =  hitDocument.get("name");
         
 	    if(pathFilter != null && !pathFilter.isEmpty())
         {
@@ -479,29 +448,20 @@ public class LuceneUtil2   extends BaseFunction
         }
         
     	//Set Doc 
-    	Integer docId = null;
-    	String str = hitDocument.get("docId");
-    	if(str != null)
-    	{
-    		docId = Integer.parseInt(str);
-    	}
+    	String strDocId = hitDocument.get("docId");
+    	String strPid = hitDocument.get("pid");
+    	Long docId = Long.parseLong(strDocId);
+    	Long pid = Long.parseLong(strPid);
+    	
     	Doc doc = new Doc();
-    	doc.setId(docId);
+    	doc.setVid(repos.getId());
+    	doc.setPid(pid);   	
+    	doc.setDocId(docId);
     	doc.setPath(docParentPath);
     	doc.setName(docName);
-    	doc.setSize(hitFile.length());
-    	doc.setLatestEditTime(hitFile.lastModified());
 
     	//Set Doc Path
-    	String docPath = null;
-    	if(docParentPath == null)
-    	{
-    		docPath = docName;
-    	}
-    	else
-    	{
-    		docPath = docParentPath + docName;
-    	}
+    	String docPath =  docParentPath + docName;
     	
     	//Set HitDoc
     	HitDoc hitDoc = new HitDoc();
