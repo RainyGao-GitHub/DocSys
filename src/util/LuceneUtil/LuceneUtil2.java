@@ -169,7 +169,6 @@ public class LuceneUtil2   extends BaseFunction
 
 	private static Document buildDocument(Doc doc, String content) {
 		Document document = new Document();
-        document.add(new IntField("id", doc.getId(), Store.YES));
         document.add(new IntField("vid", doc.getVid(), Store.YES));
         document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
         document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
