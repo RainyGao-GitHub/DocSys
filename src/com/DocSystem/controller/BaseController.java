@@ -2776,9 +2776,6 @@ public class BaseController  extends BaseFunction{
 		//get RealDoc Full ParentPath
 		String reposRPath =  getReposRealPath(repos);		
 
-		//Build action list for index and preview filse
-		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
-		
 		//保存文件信息
 		if(updateRealDoc(repos, doc, uploadFile,chunkNum,chunkSize,chunkParentPath,rt) == false)
 		{
@@ -2789,6 +2786,11 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		doc.setLatestEditor(login_user.getId());
+		doc.setLatestEditorName(login_user.getName());
+		Doc fsDoc = fsGetDoc(repos, parentPath, docName);
+		doc.setLatestEditTime(fsDoc.getLatestEditTime());
+
 		//需要将文件Commit到版本仓库上去
 		String revision = verReposRealDocCommit(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt);
 		if(revision == null)
@@ -2805,6 +2807,9 @@ public class BaseController  extends BaseFunction{
 				rt.setWarningMsg("updateDoc() updateDocInfo Failed");
 			}
 		}
+		
+		//Build DocUpdate action
+		BuildMultiActionListForDocUpdate(actionList, repos, doc, reposRPath);
 		
 		unlockDoc(doc,login_user,docLock);
 		
