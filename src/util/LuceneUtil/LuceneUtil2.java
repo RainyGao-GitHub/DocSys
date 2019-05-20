@@ -320,6 +320,11 @@ public class LuceneUtil2   extends BaseFunction
 	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
 		try {
     		File file = new File(INDEX_DIR + "/" +indexLib);
     		if(!file.exists())
@@ -328,9 +333,9 @@ public class LuceneUtil2   extends BaseFunction
     			return false;
     		}
     		
-	        Directory directory = FSDirectory.open(file);
-	        DirectoryReader ireader = DirectoryReader.open(directory);
-	        IndexSearcher isearcher = new IndexSearcher(ireader);
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
 	
 	        Query query = null;
 	        switch(searchType)
@@ -369,25 +374,49 @@ public class LuceneUtil2   extends BaseFunction
 	        }
 	        
 	        ireader.close();
+	        ireader = null;
 	        directory.close();
-	        
+	        directory=null;        
 			return true;
 		} catch (Exception e) {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
 			System.out.println("search() 异常");
 			e.printStackTrace();
 			return false;
 		}
     }
-    
+
 	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
-		//利用Index的切词器将查询条件切词后进行精确查找
 
+		//利用Index的切词器将查询条件切词后进行精确查找
+		Analyzer analyzer = null;
+		TokenStream stream = null;
+		
 		List <String> list = new ArrayList<String>();
 		try {
-			Analyzer analyzer = new IKAnalyzer();;
-			TokenStream stream = analyzer.tokenStream("field", new StringReader(str));
+			analyzer = new IKAnalyzer();;
+			stream = analyzer.tokenStream("field", new StringReader(str));
 		
 			//保存分词后的结果词汇
 			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
@@ -402,10 +431,25 @@ public class LuceneUtil2   extends BaseFunction
 			stream.end(); //这句很重要
 	
 			stream.close();
+			stream = null;
 			analyzer.close();
+			analyzer=null;
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			if(stream != null)
+			{
+				try {
+					stream.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			if(analyzer != null)
+			{
+				analyzer.close();
+			}
+			
 			e.printStackTrace();
 		}
 		
@@ -491,6 +535,10 @@ public class LuceneUtil2   extends BaseFunction
     public static List<String> getDocumentIdListByHashId(String hashId,String indexLib)
     {
     	System.out.println("getDocumentIdListByHashId() hashId:" + hashId + " indexLib:" + indexLib);
+		
+		Directory directory = null;
+    	DirectoryReader ireader = null;
+    	
     	try {
     		File file = new File(INDEX_DIR + File.separator +indexLib);
     		if(!file.exists())
@@ -498,9 +546,9 @@ public class LuceneUtil2   extends BaseFunction
     			return null;
     		}
     		
-    		Directory directory = FSDirectory.open(file);
+    		directory = FSDirectory.open(file);
 
-	    	DirectoryReader ireader = DirectoryReader.open(directory);
+	    	ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
 	        TermQuery query = new TermQuery(new Term("hashId", hashId));	//精确查找
@@ -512,10 +560,33 @@ public class LuceneUtil2   extends BaseFunction
 	            res.add(hitDoc.get("id"));
 	            System.out.println("getDocumentIdListByHashId() searchResult: id:" + hitDoc.get("id") + " docId:"+ hitDoc.get("docId"));
 	        }
+	        
 	        ireader.close();
+	        ireader = null;
 	        directory.close();
+	        directory = null;
 	        return res;
 		} catch (IOException e) {
+	        if(ireader != null)
+	        {
+				try {
+					ireader.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	        }
+	        
+	        if(directory != null)
+	        {
+		        try {
+					directory.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	        }
+	        
 			System.out.println("getDocumentIdListByHashId() 异常");
 			e.printStackTrace();
 			return null;
@@ -525,15 +596,15 @@ public class LuceneUtil2   extends BaseFunction
 	public static String buildDocumentId(Integer integer, int index) {
 		return integer + "-" + index;
 	}
-	
-
 
 	public static boolean addIndexForWord(String filePath, Doc doc, String indexLib)
 	{
+    	HWPFDocument doc1 = null;
+    	FileInputStream fis = null;
+    	
 		try {
 			StringBuffer content = new StringBuffer("");// 文档内容
-	    	HWPFDocument doc1;
-	    	FileInputStream fis = new FileInputStream(filePath);
+	    	fis = new FileInputStream(filePath);
     	
     		doc1 = new HWPFDocument(fis);
 
@@ -545,10 +616,32 @@ public class LuceneUtil2   extends BaseFunction
     	    }
     	    
     		doc1.close();
+    		doc1 = null;
     	    fis.close();
+    	    fis = null;
     		
     	    addIndex(doc, content.toString().trim(), indexLib);
 		} catch (Exception e) {
+			if(doc1 != null)
+			{
+				try {
+					doc1.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(fis != null)
+			{
+				try {
+					fis.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
     		e.printStackTrace();
     		return false;
     	}
@@ -557,24 +650,59 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean addIndexForWord2007(String filePath, Doc doc, String indexLib)
 	{
+    	FileInputStream fis = null;
+    	XWPFDocument xdoc = null;
+    	XWPFWordExtractor extractor = null;
+    	
 		try {
 	    	
 			File file = new File(filePath);
 	    	String str = "";
-	    	FileInputStream fis = new FileInputStream(file);
-	    	XWPFDocument xdoc;
-    	
-    		xdoc = new XWPFDocument(fis);
-    		
-        	XWPFWordExtractor extractor = new XWPFWordExtractor(xdoc);
-        	str = extractor.getText();
+	    	fis = new FileInputStream(file);
+	    	xdoc = new XWPFDocument(fis);
+    		extractor = new XWPFWordExtractor(xdoc);
+        	
+    		str = extractor.getText();
         	
         	extractor.close();
+        	extractor = null;
         	xdoc.close();
+        	xdoc = null;
         	fis.close();
+        	fis = null;
         	
         	addIndex(doc,str.toString().trim(), indexLib);
-		} catch (Exception e) {
+		} catch (Exception e) {			
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(xdoc != null)
+			{
+				try {
+					xdoc.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(fis != null)
+			{
+				try {
+					fis.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
 			e.printStackTrace();
 			return false;
 		}
@@ -583,25 +711,59 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean addIndexForExcel(String filePath, Doc doc, String indexLib)
 	{
+		InputStream is = null;  
+        HSSFWorkbook workBook = null;  
+        ExcelExtractor extractor = null; 
+        
         try {  
 	
-			InputStream is = new FileInputStream(filePath);  
-	        String text="";  
-	        HSSFWorkbook wb = null;  
-            wb = new HSSFWorkbook(new POIFSFileSystem(is));  
+			is = new FileInputStream(filePath);  
+			workBook = new HSSFWorkbook(new POIFSFileSystem(is));  
 
-            ExcelExtractor extractor=new ExcelExtractor(wb);  
+            extractor=new ExcelExtractor(workBook);  
             extractor.setFormulasNotResults(false);  
             extractor.setIncludeSheetNames(true);  
-            text=extractor.getText();  
+            String text = extractor.getText();  
             
             extractor.close();
-            wb.close();
+            extractor = null;
+            workBook.close();
+            workBook = null;
             is.close();
+            is = null;
               
             addIndex(doc, text.toString().trim(), indexLib);
-        } catch(Exception e)
-        {
+        } catch(Exception e) {
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(workBook != null)
+			{
+				try {
+					workBook.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+        	
             e.printStackTrace();
             return false;
         }
@@ -611,20 +773,55 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean addIndexForExcel2007(String filePath, Doc doc, String indexLib)
 	{
+        InputStream is = null;
+        XSSFWorkbook workBook = null;  
+        XSSFExcelExtractor extractor = null;
+        
 		try {  
-	        InputStream is = new FileInputStream(filePath);
-	        XSSFWorkbook workBook = null;  
-	        String text="";  
+	        is = new FileInputStream(filePath);
         	workBook = new XSSFWorkbook(is);  
-            XSSFExcelExtractor extractor=new XSSFExcelExtractor(workBook);  
-            text=extractor.getText();  
+            extractor = new XSSFExcelExtractor(workBook);  
+            String text = extractor.getText();  
 
             extractor.close();
+            extractor = null;
             workBook.close();
+            workBook = null;
             is.close();
+            is = null;
             
             addIndex(doc, text.toString().trim(), indexLib);
-		} catch (Exception e) {  
+		} catch (Exception e) { 
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(workBook != null)
+			{
+				try {
+					workBook.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
         	e.printStackTrace();  
         	return false;
         }       
@@ -633,18 +830,40 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean addIndexForPPT(String filePath, Doc doc, String indexLib)
 	{
+		InputStream is = null;
+        PowerPointExtractor extractor = null;  
+        
 		try {
-			InputStream is = new FileInputStream(filePath);
-	        PowerPointExtractor extractor = null;  
-	        String text="";  
+			is = new FileInputStream(filePath);
             extractor = new PowerPointExtractor(is);  
-            text=extractor.getText();  
+            String text=extractor.getText();  
             
             extractor.close();
-            is.close();            
+            extractor = null;
+            is.close();      
+            is = null;
             
             addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
             e.printStackTrace(); 
             return false;
         }          
@@ -653,19 +872,55 @@ public class LuceneUtil2   extends BaseFunction
 
 	public static boolean addIndexForPPT2007(String filePath, Doc doc, String indexLib)
 	{
+		InputStream is = null; 
+        XMLSlideShow slide = null;
+        XSLFPowerPointExtractor extractor = null;  
+        
         try {  
-			InputStream is = new FileInputStream(filePath); 
-	        String text="";  
-	        XMLSlideShow slide = new XMLSlideShow(is);
-            XSLFPowerPointExtractor extractor=new XSLFPowerPointExtractor(slide);  
-            text=extractor.getText();  
+			is = new FileInputStream(filePath); 
+	        slide = new XMLSlideShow(is);
+            extractor=new XSLFPowerPointExtractor(slide);  
+            String text=extractor.getText();  
             
-            extractor.close();  
+            extractor.close();
+            extractor = null;
+            slide.close();
+            slide = null;
             is.close();
+            is = null;
             
             addIndex(doc, text.toString().trim(), indexLib);
         } catch (Exception e) {  
-            e.printStackTrace(); 
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(slide != null)
+			{
+				try {
+					slide.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+        	e.printStackTrace(); 
             return false;
         }
         return true;
@@ -673,11 +928,12 @@ public class LuceneUtil2   extends BaseFunction
 	
 	public static boolean addIndexForPdf(String filePath, Doc doc, String indexLib)
 	{
-		File pdfFile=new File(filePath);
-		String content = "";
+		PDDocument document = null;
+				
 		try
 		{
-			PDDocument document=PDDocument.load(pdfFile);
+			File pdfFile=new File(filePath);			
+			document=PDDocument.load(pdfFile);
 			int pages = document.getNumberOfPages();
 			// 读文本内容
 			PDFTextStripper stripper=new PDFTextStripper();
@@ -685,22 +941,35 @@ public class LuceneUtil2   extends BaseFunction
 			stripper.setSortByPosition(true);
 			stripper.setStartPage(1);
 			stripper.setEndPage(pages);
-			content = stripper.getText(document);
+			String content = stripper.getText(document);
+			
 			document.close();
-			//System.out.println(content);     
+			document = null;
 			
             addIndex(doc, content.toString().trim(), indexLib);
 	   }
 	   catch(Exception e)
 	   {
-	       e.printStackTrace();
-	       return false;
+			if(document != null)
+			{
+				try {
+					document.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}			
+			e.printStackTrace();
+			return false;
 	   }
 	   return true;
 	}
 
 	public static boolean addIndexForFile(String filePath, Doc doc, String indexLib)
 	{
+		InputStream is = null;
+		BufferedReader reader = null;
+		
 		try {
 			int lineCount = 0;
 			int totalLine = 0;
@@ -718,9 +987,9 @@ public class LuceneUtil2   extends BaseFunction
 				return true;
 			}
 			
-			InputStream is = new FileInputStream(filePath);
+			is = new FileInputStream(filePath);
 			String line; // 用来保存每行读取的内容
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is, code));
+			reader = new BufferedReader(new InputStreamReader(is, code));
 			line = reader.readLine(); // 读取第一行
 			while (line != null) { // 如果 line 为空说明读完了
 				buffer.append(line); // 将读到的内容添加到 buffer 中
@@ -752,11 +1021,32 @@ public class LuceneUtil2   extends BaseFunction
 			}
 			
 		    reader.close();
+		    reader = null;
 		    is.close();
-			System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
+		    is = null;
+
+		    System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
 		} catch(Exception e){
-		       e.printStackTrace();
-		       return false;
+			if(reader != null)
+			{
+				try {
+					reader.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		    e.printStackTrace();
+		    return false;
 		}
 		return true;
 	}
