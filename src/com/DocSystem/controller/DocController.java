@@ -1623,7 +1623,6 @@ public class DocController extends BaseController{
 	{	
 		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 		
-		//使用Lucene进行全文搜索，结果存入param以便后续进行数据库查询
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
 			luceneSearch(repos, searchWord, parentPath, searchResult , 6);	//Search RDoc and VDoc only
@@ -1638,30 +1637,10 @@ public class DocController extends BaseController{
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		
-		String reposRPath = getReposRealPath(repos);
 		for(HitDoc hitDoc: searchResult.values())
         {
       	    Doc doc = hitDoc.getDoc();
-      	    
-      	    //TODO: 获取doc的真正信息
-      	    String filePath = reposRPath + doc.getName();
-      	    if(doc.getPath() != null)
-      	    {
-      	    	filePath = reposRPath +  doc.getPath() + doc.getName();
-      	    }
-		    File file = new File(filePath);
-      	    if(file.exists())
-      	    {
-      	    	docList.add(doc);
-      	    }
-      	    else
-      	    {
-      	    	System.out.println("convertSearchResultToDocList() " + filePath + " 不存在，清除index、VDoc和previewFiels");
-      	    	List<CommonAction> actionList = new ArrayList<CommonAction>();
-				BuildMultiActionListForDocDelete(actionList , repos, doc, "AutoDelete", "System");
-				ReturnAjax rt = new ReturnAjax();
-				executeCommonActionList(actionList, rt );
-      	    }
+      	    docList.add(doc);
 		}
 	
 		Collections.sort(docList);
