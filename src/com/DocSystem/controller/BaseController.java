@@ -2069,8 +2069,12 @@ public class BaseController  extends BaseFunction{
 		//Insert index delete action for RDoc
 		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 4, 2, 1, null);
 
-		//Insert index delete action for VDoc
+		//Insert delete action for VDoc
 		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 1, 2, 2, null);
+		//Insert delete action for VDoc Index
+		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 4, 2, 2, null);
+		//Insert delete action for VDoc verRepos 
+		insertDeleteAction(actionList, repos, doc, commitMsg, commitUser, 2, 2, 2, null);
 	}
 	
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
