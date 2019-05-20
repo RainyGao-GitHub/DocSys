@@ -209,6 +209,8 @@ public class LuceneUtil2   extends BaseFunction
         document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
         document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
         document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
+        document.add(new LongField("size", doc.getSize(), Store.YES));
+        document.add(new LongField("lastestEditTime", doc.getLatestEditTime(), Store.YES));
         document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
         
 		return document;
@@ -450,8 +452,14 @@ public class LuceneUtil2   extends BaseFunction
     	//Set Doc 
     	String strDocId = hitDocument.get("docId");
     	String strPid = hitDocument.get("pid");
+    	String strType = hitDocument.get("type");
+    	String strSize = hitDocument.get("size");
+    	String strLatestEditTime = hitDocument.get("latestEditTime");
     	Long docId = Long.parseLong(strDocId);
     	Long pid = Long.parseLong(strPid);
+    	Integer type = Integer.parseInt(strType);
+    	Long size = Long.parseLong(strSize);
+    	Long latestEditTime = Long.parseLong(strLatestEditTime);
     	
     	Doc doc = new Doc();
     	doc.setVid(repos.getId());
@@ -459,6 +467,9 @@ public class LuceneUtil2   extends BaseFunction
     	doc.setDocId(docId);
     	doc.setPath(docParentPath);
     	doc.setName(docName);
+    	doc.setType(type);
+    	doc.setSize(size);
+    	doc.setLatestEditTime(latestEditTime);
 
     	//Set Doc Path
     	String docPath =  docParentPath + docName;
