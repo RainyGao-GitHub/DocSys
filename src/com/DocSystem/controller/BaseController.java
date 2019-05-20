@@ -1837,10 +1837,12 @@ public class BaseController  extends BaseFunction{
 		doc.setContent(content);
 		
 		//set createTime
-		long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-		doc.setCreateTime(nowTimeStamp);
+		//long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
+		//doc.setCreateTime(nowTimeStamp);
 		doc.setCreator(login_user.getId());
+		doc.setCreatorName(login_user.getName());
 		doc.setLatestEditor(login_user.getId());
+		doc.setLatestEditorName(login_user.getName());
 		
 		DocLock docLock = null;
 		synchronized(syncLock)
@@ -1889,6 +1891,11 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 		}
+		
+		//Update the latestEditTime
+		Doc fsDoc = fsGetDoc(repos, parentPath, docName);
+		doc.setCreateTime(fsDoc.getLatestEditTime());
+		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
 		//commit to history db
 		String revision = verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt);
