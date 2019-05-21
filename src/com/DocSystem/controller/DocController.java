@@ -80,6 +80,11 @@ public class DocController extends BaseController{
 		System.out.println("addDoc reposId:" + reposId + " type: " + type + " level: " + level +" parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
 		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -122,6 +127,11 @@ public class DocController extends BaseController{
 	public void feeback(String name, String path, String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("feeback name: " + name + " content: " + content);
 
+		if(path == null)
+		{
+			path = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		String commitUser = "游客";
 		User login_user = (User) session.getAttribute("login_user");
@@ -185,7 +195,7 @@ public class DocController extends BaseController{
 	    	return (long) 0;
 	    }
 
-	    return (long) (Integer.parseInt(tempStr));
+	    return Long.parseLong(tempStr);
  	}
 
 	/****************   delete a Document ******************/
@@ -240,6 +250,11 @@ public class DocController extends BaseController{
 							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstDocName:" + dstDocName);
 		
+		if(srcParentPath == null)
+		{
+			srcParentPath = "";
+		}
+
 		ReturnAjax rt = new ReturnAjax();
 		
 		if(dstDocName == null || "".equals(dstDocName))
@@ -295,6 +310,15 @@ public class DocController extends BaseController{
 			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
 		
+		if(srcParentPath == null)
+		{
+			srcParentPath = "";
+		}
+		if(dstParentPath == null)
+		{
+			dstParentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -346,6 +370,15 @@ public class DocController extends BaseController{
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
 		
+		if(srcParentPath == null)
+		{
+			srcParentPath = "";
+		}
+		if(dstParentPath == null)
+		{
+			dstParentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -394,6 +427,12 @@ public class DocController extends BaseController{
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("checkChunkUploaded docName: " + docName + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " parentId: " + parentId + " parentPath: " + parentPath);
+
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -494,6 +533,13 @@ public class DocController extends BaseController{
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Integer type, Long parentId, String parentPath, String docName,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkDocInfo docName: " + docName + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " parentId: " + parentId);
+
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+
+		
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -656,6 +702,11 @@ public class DocController extends BaseController{
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("uploadDoc  docName:" + docName + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " parentId:" + parentId + " parentPath:" + parentPath  + " docId:" + docId
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
+
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 
 		ReturnAjax rt = new ReturnAjax();
 
@@ -868,6 +919,11 @@ public class DocController extends BaseController{
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		System.out.println("content:[" + content + "]");
 		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -920,6 +976,11 @@ public class DocController extends BaseController{
 	public void tmpSaveVirtualDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("tmpSaveVirtualDocContent() reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -953,6 +1014,11 @@ public class DocController extends BaseController{
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(Integer reposId,Integer docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " name:" + name);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
@@ -1029,6 +1095,11 @@ public class DocController extends BaseController{
 	public void doGetTmp(Integer reposId,String parentPath, String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("doGetTmpFile reposId: " + reposId);
 
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1063,6 +1134,11 @@ public class DocController extends BaseController{
 	@RequestMapping("/getHistoryDoc.do")
 	public void getHistoryDoc(String commitId,Integer reposId, String parentPath, String docName, Integer historyType, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("getHistoryDoc commitId: " + commitId + " reposId:" + reposId + " historyType:" + historyType +" parentPath:" + parentPath + " docName:" + docName);
+
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1145,7 +1221,13 @@ public class DocController extends BaseController{
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer reposId, Long docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{		
+	{	
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+
 		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -1321,13 +1403,29 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
-	public void getDocContent(Integer id,HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		System.out.println("getDocContent id: " + id);
+	public void getDocContent(Integer reposId, Long docId, Long pid, String parentPath, String docName, HttpServletRequest request,HttpServletResponse response,HttpSession session){
+		System.out.println("getDocContent reposId: " + reposId + " docId:" + docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		Doc doc = reposService.getDoc(id);
-		rt.setData(doc.getContent());
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			System.out.println("getDoc 仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String vDocName = getVDocName(parentPath, docName);
+		String reposVPath = getReposVirtualPath(repos);
+		String content = readVirtualDocContent(reposVPath, vDocName);		
+		rt.setData(content);
 		//System.out.println(rt.getData());
 
 		writeJson(rt, response);
@@ -1338,6 +1436,12 @@ public class DocController extends BaseController{
 	public void getDoc(Integer reposId, Long docId, String parentPath, String docName,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " parentPath:" + parentPath + " docName:" + docName);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = (User) session.getAttribute("login_user");
@@ -1396,8 +1500,13 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer reposId, Long docId, String parentPath, String docName, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void lockDoc(Integer reposId, Long docId, Long pid, String parentPath, String docName, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1455,8 +1564,13 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Long docId, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void getDocHistory(Integer reposId, Long docId, Long pid, String parentPath, String docName, Integer historyType,Integer maxLogNum, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1514,8 +1628,13 @@ public class DocController extends BaseController{
 	
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
-	public void revertDocHistory(String commitId,Integer reposId, Long docId, String parentPath, String docName, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void revertDocHistory(String commitId,Integer reposId, Long docId, Long pid, String parentPath, String docName, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("revertDocHistory commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + parentPath+docName +" historyType:" + historyType);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1575,6 +1694,11 @@ public class DocController extends BaseController{
 	@RequestMapping("/searchDoc.do")
 	public void searchDoc(Integer reposId,Integer pDocId, String parentPath, String searchWord,String sort,HttpServletResponse response,HttpSession session){
 		System.out.println("searchDoc searchWord: " + searchWord + " pDocId:" + pDocId + " parentPath:" + parentPath);
+		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
