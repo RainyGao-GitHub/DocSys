@@ -5669,7 +5669,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For VDoc
 	public boolean addIndexForVDoc(Repos repos, Doc doc)
 	{
-		System.out.println("addIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("addIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 
 		String content = doc.getContent();
 		if(content == null)
@@ -5687,7 +5687,7 @@ public class BaseController  extends BaseFunction{
 	//Delete Indexs For VDoc
 	public static boolean deleteIndexForVDoc(Repos repos, Doc doc)
 	{
-		System.out.println("deleteIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("deleteIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibName(repos.getId(),2);
 		
@@ -5697,7 +5697,7 @@ public class BaseController  extends BaseFunction{
 	//Update Index For VDoc
 	public boolean updateIndexForVDoc(Repos repos, Doc doc)
 	{
-		System.out.println("updateIndexForVDoc() docId:" + doc.getId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("updateIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String content = doc.getContent();
 		if(content == null)
