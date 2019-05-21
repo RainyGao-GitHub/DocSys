@@ -193,6 +193,11 @@ public class DocController extends BaseController{
 	public void deleteDoc(Integer reposId, Long docId, Long parentId, String parentPath, String docName, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("deleteDoc reposId:" + reposId + " docId:" + docId + " parentId:" + parentId  + " parentPath: " + parentPath + " docName: " + docName );
 		
+		if(parentPath == null)
+		{
+			parentPath = "";
+		}
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)

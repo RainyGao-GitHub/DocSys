@@ -5814,15 +5814,17 @@ function CompareObj(objA, objB, flag) {
      	    {
      	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
      	           var docId = data[i].docId;
+     	           var pid = data[i].pid;
      	           var docType = data[i].type;
+     	           var path = data[i].path;
      	           var docName = data[i].name;
      	           if(data[i].state && data[i].state != 0)
      	           {
-     	        		str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+     	        		str+='<li dataId='+ docId + ' dataPid='+ pid +' dataType='+docType + +' dataPath='+ path + ' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
      	           }
      	           else
      	           {
-     	           	   str+='<li dataId='+docId+' dataType='+docType +' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+     	           	    str+='<li dataId='+ docId + ' dataPid='+ pid +' dataType='+docType + +' dataPath='+ path + ' dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
      	           }	 
      	    }
            	$("#secondList").html(str);
@@ -5998,7 +6000,11 @@ function CompareObj(objA, objB, flag) {
 		var node = zTree.getNodeByParam("id",id);
 		if(node == null)
 		{
-			alert("请选择需要删除的文件或文件夹！");
+			//alert("请选择需要删除的文件或文件夹！");
+			var pid = $(obj).parents('li').attr('dataPid');
+			var path = $(obj).parents('li').attr('dataPath');
+			var name = $(obj).parents('li').attr('dataName');
+			deleteDoc(id, pid, path, name);
 		}
 		else
 		{
@@ -6008,6 +6014,45 @@ function CompareObj(objA, objB, flag) {
 		}
 		event.stopPropagation();
  	}
+ 	
+	//deleteDoc接口
+	function deleteDoc(docId, pid, path, name)
+	{
+		console.log("deleteDoc path:" + path + " name:" + name);
+		
+		$.ajax({
+            url : "/DocSystem/Doc/deleteDoc.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: gReposId,
+                docId : docId,
+                parentId: pid,
+                parentPath: path,
+                docName: name,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ) //后台删除成功
+                {
+                	console.log(ret.data);
+			     	//Delete docList Node
+			     	DocList.deleteNode(docId);
+			     	return;
+                }
+                else
+                {
+                	console.log("Error:" + ret.msgInfo);
+                	deleteErrorConfirm(name,ret.msgInfo);
+            		return;
+                }
+            },
+            error : function () {
+             	console.log("服务器异常：delete failed");
+             	deleteErrorConfirm(name,"服务器异常");
+            	return;
+            }
+    	});
+	}
  	
  	function showContextMenu(obj,event){
  		event.stopPropagation();
