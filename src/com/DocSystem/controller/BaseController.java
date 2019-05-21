@@ -2005,11 +2005,7 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		System.out.println("deleteDoc_FS() " + docId + " " + doc.getName() + " Lock OK");
-			
-		
-		//Build ActionList for Index/VDoc/Preview Delete
-		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser);
-	
+				
 		//get RealDoc Full ParentPath
 		if(deleteRealDoc(repos,doc,rt) == false)
 		{
@@ -2029,8 +2025,8 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			//Delete DataBase Record
-			if(dbDeleteDoc(doc, true) == false)
+			//Delete DataBase Record and Build AsynActions For delete 
+			if(dbDeleteDocEx(actionList, repos, doc, true, commitMsg, commitUser) == false)
 			{	
 				rt.setWarningMsg("不可恢复系统错误：dbDeleteDoc Failed");
 			}
@@ -2041,7 +2037,7 @@ public class BaseController  extends BaseFunction{
 		rt.setData(doc);
 		return revision;
 	}
-
+	
 	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
 		//Insert index add action for RDoc
@@ -2570,6 +2566,39 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}		
+		return true;
+	}
+	
+	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, boolean deleteSubDocs, String commitMsg, String commitUser) {
+
+		if(deleteSubDocs)
+		{
+			Doc qSubDoc = new Doc();
+			qSubDoc.setVid(doc.getVid());
+			qSubDoc.setPath(doc.getPath() + doc.getName() + "/");
+			List<Doc> subDocList = reposService.getDocList(qSubDoc);
+			if(subDocList != null)
+			{
+				for(int i=0; i<subDocList.size(); i++)
+				{
+					Doc subDoc = subDocList.get(i);
+					dbDeleteDocEx(actionList, repos, subDoc, true, commitMsg, commitUser);
+				}
+			}
+		}
+		
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setName(doc.getName());
+		qDoc.setPath(doc.getPath());
+		if(reposService.deleteDoc(qDoc) == 0)
+		{
+			return false;
+		}
+		
+		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
+		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser);
+
 		return true;
 	}
 
