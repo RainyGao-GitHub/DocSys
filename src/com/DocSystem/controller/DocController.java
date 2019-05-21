@@ -1501,7 +1501,7 @@ public class DocController extends BaseController{
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String parentPath, String docName, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("lockDoc docId: " + docId + " reposId: " + reposId + " lockType: " + lockType);
+		System.out.println("lockDoc reposId: " + reposId + " docId: " + docId + " parentPath:" + parentPath + " docName:" + docName + " lockType: " + lockType);
 		
 		if(parentPath == null)
 		{
@@ -1513,6 +1513,13 @@ public class DocController extends BaseController{
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(docId == null)
+		{
+			rt.setError("docId is null");
 			writeJson(rt, response);			
 			return;
 		}

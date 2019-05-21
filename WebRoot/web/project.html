@@ -4964,6 +4964,23 @@
 		var vid = gReposId;
 		var docId = gDocId;
 
+		if(!docId)
+		{
+			showErrorMessage("文件不存在");
+			return;
+		}
+		
+		var node = getNodeById(docId);
+		if(!node || node == null)
+		{
+			showErrorMessage("文件不存在");
+			return;
+		}
+		
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
+
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
@@ -4972,6 +4989,9 @@
 				lockType : 3, //LockType: VDoc Online Edit
 				reposId : vid, 
 				docId : docId,
+				pid: pid,
+				parentPath: path;
+				docName: name;
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
