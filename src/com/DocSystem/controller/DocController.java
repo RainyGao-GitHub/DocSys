@@ -973,7 +973,7 @@ public class DocController extends BaseController{
 
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
-	public void tmpSaveVirtualDocContent(Integer reposId, Integer docId, String parentPath, String docName, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String parentPath, String docName, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("tmpSaveVirtualDocContent() reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		if(parentPath == null)
