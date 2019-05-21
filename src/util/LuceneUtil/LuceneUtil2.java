@@ -291,7 +291,8 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
 	        indexWriter = new IndexWriter(directory, config);
 	        
-	        indexWriter.deleteDocuments(new Term("docId", doc.getDocId()+""));
+	        Query query = new TermQuery(new Term("docId",""+doc.getDocId()));
+	        indexWriter.deleteDocuments(query);
 	        indexWriter.commit();
 
 	        indexWriter.close();
