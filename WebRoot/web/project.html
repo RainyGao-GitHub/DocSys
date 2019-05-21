@@ -4903,6 +4903,24 @@
 	function unlockAndExitEditWiki(curDocId,newDocId)
 	{
 		console.log("unlockAndExitEditWiki()  curDocId:" + curDocId + " newDocId:" + newDocId);
+		if(!curDocId)
+		{
+			showErrorMessage("文件不存在");
+			exitEditWiki(curDocId,newDocId);
+			return;
+		}
+		
+		var node = getNodeById(curDocId);
+		if(!node || node == null)
+		{
+			showErrorMessage("文件不存在");
+			exitEditWiki(curDocId,newDocId);
+			return;
+		}
+		
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
@@ -4911,6 +4929,9 @@
 				lockType : 0, //unlock the doc
 				reposId : gReposId, 
 				docId : curDocId,
+				pid: pid,
+				parentPath: path,
+				docName: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -4990,8 +5011,8 @@
 				reposId : vid, 
 				docId : docId,
 				pid: pid,
-				parentPath: path;
-				docName: name;
+				parentPath: path,
+				docName: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -5017,6 +5038,24 @@
 	function unlockDoc(docId)
 	{
 		console.log("unlockDoc()  docId:" + docId);
+		
+		if(!docId)
+		{
+			showErrorMessage("文件不存在");
+			return;
+		}
+		
+		var node = getNodeById(docId);
+		if(!node || node == null)
+		{
+			showErrorMessage("文件不存在");
+			return;
+		}
+		
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
+		
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
@@ -5025,6 +5064,9 @@
 				lockType : 0, //unlock the doc
 				reposId : gReposId, 
 				docId : docId,
+				pid: pid,
+				parentPath: path,
+				docName: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -6552,6 +6594,22 @@ function CompareObj(objA, objB, flag) {
 		console.log("checkOut()" + docId);
 		var vid = gReposId;
 		
+		if(!docId)
+		{
+			showErrorMessage("文件不存在");
+			return;
+		}
+		
+		var node = getNodeById(docId);
+		if(!node || node == null)
+		{
+			showErrorMessage("文件不存在");
+			return;
+		}
+		
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
@@ -6560,6 +6618,9 @@ function CompareObj(objA, objB, flag) {
 				lockType : 1, //lockType: CheckOut
 				reposId : vid, 
 				docId : docId,
+				pid: pid,
+				parentPath: path,
+				docName: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
