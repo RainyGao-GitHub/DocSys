@@ -1699,18 +1699,19 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		docName = getVDocName(parentPath, docName);
-		parentPath = "";
+		String vDocName = getVDocName(parentPath, docName);
+		String vParentPath = "";
 		
 		//Checkout to localParentPath
-		String localParentPath = getReposVirtualPath(repos);
+		String localRootPath = getReposVirtualPath(repos);
+		String localParentPath = localRootPath;
 		
 		//Do checkout the entry to 
-		if(verReposCheckOut(repos, false, "", docName, localParentPath, docName, commitId) == null)
+		if(verReposCheckOut(repos, false, vParentPath, vDocName, localParentPath, vDocName, commitId) == null)
 		{
 			unlockDoc(doc,login_user,docLock);
 			System.out.println("revertVirtualDocHistory() verReposCheckOut Failed!");
-			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
+			rt.setError("verReposCheckOut Failed vParentPath:" + vParentPath + " vDocName:" + vDocName + " localVirtualRootPath:" + localParentPath + " targetName:" + vDocName);
 			return null;
 		}
 		
@@ -1720,7 +1721,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, false, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null);
+		String revision = verReposAutoCommit(repos, false, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
 		unlockDoc(doc,login_user,docLock);
 		
 		if(revision == null)
@@ -1758,7 +1759,8 @@ public class BaseController  extends BaseFunction{
 		
 	
 		//Checkout to localParentPath
-		String localParentPath = getReposRealPath(repos) + parentPath;
+		String localRootPath = getReposRealPath(repos);
+		String localParentPath = localRootPath + parentPath;
 		
 		//Do checkout the entry to 
 		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == null)
@@ -1775,7 +1777,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, true, parentPath, docName, localParentPath, docName, commitMsg,commitUser,true,null);
+		String revision = verReposAutoCommit(repos, true, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
 		unlockDoc(doc,login_user,docLock);
 		if(revision == null)
 		{			
@@ -2723,12 +2725,12 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case 1:	//RDoc autoCommit
-			String localParentPath = getReposRealPath(repos) + doc.getPath();
-			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localParentPath, doc.getName(), action.getCommitMsg(), action.getCommitUser(), true, null);
+			String localRealRootPath = getReposRealPath(repos);
+			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localRealRootPath, action.getCommitMsg(), action.getCommitUser(), true, null);
 		case 2: //VDoc autoCommit
-			String localVParentPath = getReposVirtualPath(repos) + doc.getPath();
+			String localVirtualRootPath = getReposVirtualPath(repos);
 			String vDocName = getVDocName(doc.getPath(),doc.getName());			
-			return verReposAutoCommit(repos, false, doc.getPath(), doc.getName(), localVParentPath, vDocName, action.getCommitMsg(), action.getCommitUser(), true, null);
+			return verReposAutoCommit(repos, false, "", vDocName, localVirtualRootPath, action.getCommitMsg(), action.getCommitUser(), true, null);
 		}
 		return null;
 	}
@@ -5515,10 +5517,10 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 	
-	protected String verReposAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath) 
+	protected String verReposAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localRootPath, 
+			String commitMsg, String commitUser,boolean modifyEnable,String localRefRootPath) 
 	{
-		System.out.println("verReposAutoCommit() isRealDoc:" + isRealDoc + " parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " localEntryName:" + localEntryName);
+		System.out.println("verReposAutoCommit() isRealDoc:" + isRealDoc + " parentPath:" + parentPath + " entryName:" + entryName + " localRootPath:" + localRootPath);
 		Integer verCtrl = null;
 		if(isRealDoc)
 		{
@@ -5533,18 +5535,18 @@ public class BaseController  extends BaseFunction{
 			
 		if(verCtrl == 1)
 		{
-			return svnAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);
+			return svnAutoCommit(repos,isRealDoc,parentPath, entryName, localRootPath, commitMsg,commitUser,modifyEnable,localRefRootPath);
 		}
 		else if(verCtrl == 2)
 		{
 			
-			return gitAutoCommit(repos,isRealDoc,parentPath, entryName, localParentPath, localEntryName, commitMsg,commitUser,modifyEnable,localRefPath);			
+			return gitAutoCommit(repos,isRealDoc,parentPath, entryName, localRootPath, commitMsg,commitUser,modifyEnable,localRefRootPath);			
 		}
 		return null;
 	}
 	
-	protected String gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) 
+	protected String gitAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localRootPath, 
+			String commitMsg, String commitUser, boolean modifyEnable, String localRefRootPath) 
 	{
 		System.out.println("gitAutoCommit() reposId:" + repos.getId() + " isRealDoc:" + isRealDoc + " parentPath:" + parentPath + " entryName:" + entryName);
 		
@@ -5556,12 +5558,12 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return gitUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);
+		return gitUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath);
 	}
 
 	//Commit the localPath to svnPath
-	protected String svnAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localParentPath, String localEntryName, 
-			String commitMsg, String commitUser,boolean modifyEnable,String localRefPath)
+	protected String svnAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localRootPath, 
+			String commitMsg, String commitUser,boolean modifyEnable,String localRefRootPath)
 	{			
 		SVNUtil svnUtil = new SVNUtil();
 		//svn初始化
@@ -5571,7 +5573,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,localParentPath+localEntryName,commitMsg,commitUser,modifyEnable,localRefPath);		
+		return svnUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath);
 	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/
