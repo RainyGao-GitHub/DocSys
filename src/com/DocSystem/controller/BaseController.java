@@ -354,8 +354,7 @@ public class BaseController  extends BaseFunction{
     		subEntry.setVid(repos.getId());
     		subEntry.setPid(pid);
     		subEntry.setPath(path);
-
-    		subEntry.setDocId(buildDocIdByName(level,name));
+    		subEntry.setDocId(buildDocIdByName(level, path, name));
     		subEntry.setName(name);
     		subEntry.setType(type);    		
     		subEntry.setSize(file.length());
@@ -586,7 +585,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Long docId = buildDocIdByName(level,name);
+			Long docId = buildDocIdByName(level, path, name);
 			System.out.println("docId:" + docId);
 			DocAuth docAuth = getDocAuthFromHashMap(docId, pDocAuth, docAuthHashMap);
 			
@@ -1797,7 +1796,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("addDoc() type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
 	
-		Long docId = buildDocIdByName(level, docName);
+		Long docId = buildDocIdByName(level, parentPath, docName);
 		switch(repos.getType())
 		{
 		case 1:
@@ -3034,7 +3033,7 @@ public class BaseController  extends BaseFunction{
 		Doc dstDoc = new Doc();
 		int dstLevel = getLevelByParentPath(dstParentPath);
 		dstDoc.setVid(reposId);
-		dstDoc.setDocId(buildDocIdByName(dstLevel,dstName));
+		dstDoc.setDocId(buildDocIdByName(dstLevel, dstParentPath, dstName));
 		dstDoc.setPid(dstPid);
 		dstDoc.setType(type);
 		dstDoc.setPath(dstParentPath);
@@ -3141,7 +3140,7 @@ public class BaseController  extends BaseFunction{
 		Doc dstDoc = new Doc();
 		int dstLevel = getLevelByParentPath(dstParentPath);
 		dstDoc.setVid(reposId);
-		dstDoc.setDocId(buildDocIdByName(dstLevel,dstName));
+		dstDoc.setDocId(buildDocIdByName(dstLevel, dstParentPath, dstName));
 		dstDoc.setPid(dstPid);
 		dstDoc.setType(type);
 		dstDoc.setPath(dstParentPath);
@@ -4062,7 +4061,7 @@ public class BaseController  extends BaseFunction{
 	{
 		if(parentId == null || parentId == 0)
 		{
-			docIdList.add((long) 0);
+			docIdList.add(0L);
 			return docIdList;
 		}
 		
@@ -4070,12 +4069,23 @@ public class BaseController  extends BaseFunction{
 		String [] paths = docPath.split("/");
 		int docPathDeepth = paths.length;
 
-		docIdList.add((long) 0);	
+		//RootDocId
+		docIdList.add(0L);
+		
+		String tmpPath = "";
+		String tmpName = "";
 		for(int i=0; i<docPathDeepth; i++)
 		{
-			docName = paths[i];
-			parentId = buildDocIdByName(i, docName);
-			docIdList.add(parentId);
+			tmpName = paths[i];
+			if(tmpName.isEmpty())
+			{
+				continue;
+			}
+			
+			Long tempDocId = buildDocIdByName(i, tmpPath, tmpName);
+			docIdList.add(tempDocId);
+			
+			tmpPath = tmpPath + tmpName + "/";
 		}
 		
 		return docIdList;

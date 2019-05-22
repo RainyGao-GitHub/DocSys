@@ -579,15 +579,15 @@ public class DocController extends BaseController{
 			}
 		}
 				
-		if(repos.getType() != 1 || checkSum.isEmpty())
+		if(checkSum.isEmpty())
 		{
 			//CheckSum is empty, mean no need to check any more 
 			writeJson(rt, response);
 			return;
 		}
 		
-		//判断目录下是否有同名节点 
-		Doc doc = getDocByName(name,pid,reposId);
+		//检查文件是否已存在 
+		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
 		if(doc != null)
 		{
 			rt.setData(doc);
@@ -610,7 +610,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(size > 10*1024*1024)	//Only For 10M File to balance the Upload and SameDocSearch 
+			if(size > 50*1024*1024)	//Only For 50M File to balance the Upload and SameDocSearch 
 			{
 				//Try to find the same Doc in the repos
 				Doc sameDoc = getSameDoc(size,checkSum,reposId);
@@ -623,16 +623,9 @@ public class DocController extends BaseController{
 					boolean ret = copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), pid, sameDoc.getType(), srcPath, sameDoc.getName(), path, name, commitMsg,login_user.getName(),login_user,rt,actionList);
 					if(ret == true)
 					{
-						getDocByName(name,pid,reposId);
-						
 						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
-						int level = getLevelByParentPath(path);
-						sameDoc.setDocId(buildDocIdByName(level, name));
-						sameDoc.setVid(repos.getId());
-						sameDoc.setPid(pid);
-						sameDoc.setPath(path);
-						sameDoc.setName(name);
-						rt.setData(sameDoc);
+						doc = dbGetDoc(repos, docId, pid, path, name, true);
+						rt.setData(doc);
 						rt.setMsgData("1");
 						rt.setDebugLog("SameDoc " + sameDoc.getName() +" found and do copy OK！");
 						writeJson(rt, response);
@@ -716,6 +709,8 @@ public class DocController extends BaseController{
 		
 		if(pid < 0)
 		{
+			pid = buildPidByPath(level-1, path);
+			
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 			String localParentPath = getReposRealPath(repos) + path;
 			File localParentDir = new File(localParentPath);
@@ -723,23 +718,8 @@ public class DocController extends BaseController{
 			{
 				localParentDir.mkdirs();
 			}
-			
-			//caculate pid
-			String [] paths = path.split("/");
-			String pName = "";
-			int pLevel = 0;
-			for(int i=0; i< paths.length; i++)
-			{
-				if(paths[i].isEmpty())
-				{
-					continue;
-				}
-				pName = paths[i];
-				pLevel++;
-			}
-			pid = buildDocIdByName(pLevel-1,pName);
 		}
-
+		
 		//检查用户权限
 		int uploadType = getUploadType(repos, path, name);
 		if(uploadType == 0)	//0: add  1: update
@@ -823,7 +803,7 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-
+	
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{

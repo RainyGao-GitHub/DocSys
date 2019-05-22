@@ -523,10 +523,28 @@ public class BaseFunction{
 	}
 	
 	//Build DocId by DocName
-	protected Long buildDocIdByName(Integer level, String docName) 
+	protected Long buildDocIdByName(Integer level, String parentPath, String docName) 
 	{
-		Long docId = level*100000000000L + docName.hashCode() + 102147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
+		String docPath = parentPath + docName;
+		Long docId = level*100000000000L + docPath.hashCode() + 102147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
 		return docId;
+	}
+	
+	protected Long buildPidByPath(int level, String path) 
+	{
+		if(path == null || path.isEmpty())
+		{
+			return 0L;
+		}
+		
+		char lastChar = path.charAt(path.length()-1);
+		if(lastChar == '/')
+		{
+			path = path.substring(0,path.length()-1);
+		}
+		
+		Long pid = buildDocIdByName(level-1, path, "");
+		return pid;
 	}
 	
 	protected String getDocPath(Doc doc) 
