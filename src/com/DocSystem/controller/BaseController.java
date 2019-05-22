@@ -1804,7 +1804,7 @@ public class BaseController  extends BaseFunction{
 		case 2:
 		case 3:
 		case 4:
-			return addDoc_FS(repos, docId, type, level, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_FS(repos, type, docId, parentId, parentPath, docName, content,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
@@ -1813,12 +1813,12 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected Long addDoc_FS(Repos repos, Long docId, Integer type, Integer level, Long parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected Long addDoc_FS(Repos repos, Integer type, Long docId, Long parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		System.out.println("addDoc_FS() docId:" + docId + " type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("addDoc_FS()  type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
 
 		String reposRPath = getReposRealPath(repos);
 		String localParentPath =  reposRPath + parentPath;
@@ -1895,7 +1895,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Update the latestEditTime
-		Doc fsDoc = fsGetDoc(repos, parentPath, docName);
+		Doc fsDoc = fsGetDoc(repos, docId, parentId, parentPath, docName);
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
@@ -2081,10 +2081,14 @@ public class BaseController  extends BaseFunction{
 		insertUpdateAction(actionList, repos, doc, null, null, 4, 3, 1, null);
 	}
 	
-	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user) 
+	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user,  String commitMsg, String commitUser) 
 	{
-		//Insert index delete action for VDoc
-		insertUpdateAction(actionList, repos, doc, null, null, 4, 3, 2, null);
+		//Insert index update action for VDoc
+		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 1, 3, 2, null);
+		//Insert update action for VDoc Index
+		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 4, 3, 2, null);
+		//Insert update action for VDoc verRepos 
+		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 2, 3, 2, null);
 	}
 
 	protected int getLevelByParentPath(String path) 
@@ -2207,13 +2211,13 @@ public class BaseController  extends BaseFunction{
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
-		Doc dbDoc = dbGetDoc(doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
 		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 		
-		Doc localEntry = fsGetDoc(repos, doc.getPath(), doc.getName());
+		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
 		printObject("syncupForDocChanged() localEntry: ", localEntry);
 			
-		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPath(), doc.getName(), null);
+		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
 
 		if(repos.getType() == 3 || repos.getType() == 4)
@@ -2396,7 +2400,116 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	protected Doc fsGetDoc(Repos repos, String parentPath, String name) 
+	//获取实际的Doc
+	protected Doc docSysGetDoc(Repos repos, Long docId, Long pid, String parentPath, String docName, User login_user) {		
+		System.out.println("docSysGetDoc() parentPath:" + parentPath + " docName:" + docName);
+				
+		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, login_user, false);
+		
+		Doc doc = new Doc();
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		
+		Doc dbDoc = null;
+		if(isDocLocked)
+		{
+			dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			return dbDoc;
+		}
+		
+		dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
+		
+		Doc localEntry = fsGetDoc(repos, docId, pid, parentPath, docName);
+		printObject("syncupForDocChanged() localEntry: ", localEntry);
+			
+		Doc remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
+		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
+
+		if(repos.getType() == 3 || repos.getType() == 4)
+		{
+			if(dbDoc == null)
+			{
+				if(remoteEntry != null)	//Remote Added
+				{
+					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					return remoteEntry;
+				}
+				return null;
+			}
+			
+			if(remoteEntry == null)
+			{
+				System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
+				return null;
+			}
+			
+			if(isDocRemoteChanged(dbDoc, remoteEntry))
+			{
+				System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+				dbDoc.setRevision(remoteEntry.getRevision());
+				return dbDoc;
+			}
+			return dbDoc;
+		}
+		else
+		{
+			if(localEntry != null)
+			{
+				if(dbDoc == null)	//localAdded
+				{
+					System.out.println("syncupForDocChanged() local Added: " + doc.getPath()+doc.getName());
+					return localEntry;
+				}
+				
+				if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
+				{
+					System.out.println("syncupForDocChanged() local Changed: " + doc.getPath()+doc.getName());
+					return localEntry;
+				}
+				
+				if(remoteEntry == null)
+				{
+					System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+					return null;
+				}
+				
+				if(dbDoc.getType() != remoteEntry.getType())
+				{
+					System.out.println("syncupForDocChanged() remoteEntry Type Changed: " + doc.getPath()+doc.getName());
+					return remoteEntry;						
+				}
+				
+				if(isDocRemoteChanged(dbDoc, remoteEntry))
+				{
+					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());					
+					return remoteEntry;
+				}
+				return dbDoc;
+			}
+			
+			if(dbDoc == null)
+			{
+				if(remoteEntry != null)	//Remote Added
+				{
+					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					return remoteEntry;
+				}
+			}
+			
+			//localDeleted and remoteDeleted so just delete dbDoc
+			if(remoteEntry == null)
+			{
+				System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+				return null;				
+			}
+			
+			System.out.println("syncupForDocChanged() local deleted: " + doc.getPath()+doc.getName());
+			return null;
+		}
+	}
+
+	protected Doc fsGetDoc(Repos repos, Long docId, Long pid, String parentPath, String name) 
 	{
 		String localParentPath = getReposRealPath(repos) + parentPath;
 		File localEntry = new File(localParentPath,name);
@@ -2407,8 +2520,8 @@ public class BaseController  extends BaseFunction{
 		
 		Doc doc = new Doc();
 		doc.setVid(repos.getId());
-		int level = getLevelByParentPath(parentPath);
-		doc.setDocId(buildDocIdByName(level,name));
+		doc.setDocId(docId);
+		doc.setPid(pid);
 		doc.setPath(parentPath);
 		doc.setName(name);
 		doc.setSize(localEntry.length());
@@ -2418,20 +2531,20 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 	
-	private Doc verReposGetDoc(Repos repos, Long docId, String parentPath, String name, String revision)
+	private Doc verReposGetDoc(Repos repos, Long docId, Long pid, String parentPath, String name, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
 		{
-			return svnGetDoc(repos, docId, parentPath,name, revision);			
+			return svnGetDoc(repos, docId, pid, parentPath,name, revision);			
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitGetDoc(repos, docId, parentPath,name, revision);	
+			return gitGetDoc(repos, docId, pid, parentPath,name, revision);	
 		}
 		return null;
 	}
 
-	private Doc svnGetDoc(Repos repos, Long docId, String parentPath, String entryName, String strRevision) {
+	private Doc svnGetDoc(Repos repos, Long docId, Long pid, String parentPath, String entryName, String strRevision) {
 		System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(parentPath == null)
 		{
@@ -2464,14 +2577,17 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
+		//Set doc BasicInfo
 		doc.setVid(repos.getId());
 		doc.setDocId(docId);
+		doc.setPid(pid);
 		doc.setPath(parentPath);
 		doc.setName(entryName);
+		doc.setSize(0L);
 		return doc;
 	}
 
-	private Doc gitGetDoc(Repos repos, Long docId, String parentPath, String entryName, String revision) {
+	private Doc gitGetDoc(Repos repos, Long docId, Long pid, String parentPath, String entryName, String revision) {
 		//System.out.println("gitGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
 		{
@@ -2495,17 +2611,19 @@ public class BaseController  extends BaseFunction{
 		
 		doc.setVid(repos.getId());
 		doc.setDocId(docId);
+		doc.setPid(pid);
 		doc.setPath(parentPath);
 		doc.setName(entryName);
+		doc.setSize(0L);
 		return doc;
 	}
 
-	protected Doc dbGetDoc(Doc doc, boolean dupCheck) 
+	protected Doc dbGetDoc(Repos repos, Long docId, Long pid, String parentPath, String docName, boolean dupCheck) 
 	{	
 		Doc qDoc = new Doc();
-		qDoc.setVid(doc.getVid());
-		qDoc.setPath(doc.getPath());
-		qDoc.setName(doc.getName());
+		qDoc.setVid(repos.getId());
+		qDoc.setPath(parentPath);
+		qDoc.setName(docName);
 		
 		List<Doc> list = reposService.getDocList(qDoc);
 		//printObject("dbGetDoc() list:", list);
@@ -2528,7 +2646,13 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 	
-		return list.get(0);
+		Doc doc = list.get(0);
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPid(pid);
+		doc.setPath(parentPath);
+		doc.setName(docName);		
+		return doc;
 	}
 	
 	private boolean dbDeleteDoc(Doc doc, boolean deleteSubDocs) {
@@ -2830,7 +2954,9 @@ public class BaseController  extends BaseFunction{
 		
 		doc.setLatestEditor(login_user.getId());
 		doc.setLatestEditorName(login_user.getName());
-		Doc fsDoc = fsGetDoc(repos, parentPath, docName);
+		
+		//Get latestEditTime
+		Doc fsDoc = fsGetDoc(repos, docId, parentId, parentPath, docName);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
@@ -3108,19 +3234,14 @@ public class BaseController  extends BaseFunction{
 		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 5, 2, null);
 	}
 
-	protected boolean updateDocContent(Repos repos, Long docId, String parentPath, String docName, String content, 
+	protected boolean updateDocContent(Repos repos, Doc doc, 
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
-	{
-		Doc doc = new Doc();
-		doc.setDocId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		doc.setContent(content);
-		
+	{		
+		DocLock docLock = null;
 		synchronized(syncLock)
 		{
 			//Try to lock Doc
-			DocLock docLock = lockDoc(doc,1, 3600000, login_user,rt,false);
+			docLock = lockDoc(doc,2, 1*60*60*1000, login_user,rt,false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -3131,25 +3252,21 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		updateDocContent_FS(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt, actionList);
+		updateDocContent_FS(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+		
+		//revert the lockStatus
+		unlockDoc(doc, login_user, docLock);
 				
 		return true;
 	}
 
-	private boolean updateDocContent_FS(Repos repos, Long docId, String parentPath, String docName, String content,
+	private boolean updateDocContent_FS(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getVDocName(parentPath, docName);
+		String docVName = getVDocName(doc.getPath(), doc.getName());
 		String localVDocPath = reposVPath + docVName;
-		
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		doc.setContent(content);
 		
 		System.out.println("updateDocContent_FS() localVDocPath: " + localVDocPath);
 		if(isFileExist(localVDocPath) == true)
@@ -3169,7 +3286,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
-		BuildCommonActionListForDocContentUpdate(actionList, repos, doc, login_user);
+		BuildCommonActionListForDocContentUpdate(actionList, repos, doc, login_user, commitMsg, commitUser);
 		
 		return true;
 	}
@@ -5697,7 +5814,9 @@ public class BaseController  extends BaseFunction{
 	//Update Index For VDoc
 	public boolean updateIndexForVDoc(Repos repos, Doc doc)
 	{
-		System.out.println("updateIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("updateIndexForVDoc() docId:" +  doc.getDocId() + " parentPath:" +  doc.getPath()  + " name:" + doc.getName() + " repos:" + repos.getName());
+
+		String indexLib = getIndexLibName(repos.getId(),2);
 		
 		String content = doc.getContent();
 		if(content == null)
@@ -5707,9 +5826,9 @@ public class BaseController  extends BaseFunction{
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}		
 		
-		String indexLib = getIndexLibName(repos.getId(),2);
-		
-		return LuceneUtil2.updateIndex(doc, content.toString().trim(), indexLib);
+		LuceneUtil2.deleteIndex(doc, indexLib);
+
+		return LuceneUtil2.addIndex(doc, content.trim(), indexLib);
 	}
 		
 	//Add Index For RDoc

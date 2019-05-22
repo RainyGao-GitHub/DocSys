@@ -489,7 +489,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					Doc doc = getDocInfo(repos, parentPath, docName);
+					Doc doc = dbGetDoc(repos, docId, parentId, parentPath, docName, true);
 					boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 							null, size,checkSum,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
@@ -518,15 +518,6 @@ public class DocController extends BaseController{
 			return 1;
 		}
 		return 0;
-	}
-
-	private Doc getDocInfo(Repos repos, String path, String name) 
-	{
-		Doc qDoc = new Doc();
-		qDoc.setVid(repos.getId());
-		qDoc.setPath(path);
-		qDoc.setName(name);
-		return dbGetDoc(qDoc, true);
 	}
 
 	/****************   Check a Document ******************/
@@ -815,7 +806,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				Doc doc = getDocInfo(repos, parentPath, docName);
+				Doc doc = dbGetDoc(repos, docId, parentId, parentPath, docName, true);
 				boolean ret = updateDoc(repos, docId, parentId, parentPath, docName, 
 						uploadFile, size,checkSum,   
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
@@ -860,7 +851,6 @@ public class DocController extends BaseController{
 		curDoc.setPath((String)session.getAttribute("currentParentPath"));
 		curDoc.setName((String)session.getAttribute("currentDocName"));
 				
-		//MayBe We need to save current Edit docId in session, So that I can put the pic to dedicated VDoc Directory
 		if(file == null) 
 		{
 			res.put("success", 0);
@@ -871,7 +861,6 @@ public class DocController extends BaseController{
 		
 		//Save the file
 		String fileName =  file.getOriginalFilename();
-
 		
 		//get localParentPath for Markdown Img
 		//String localParentPath = getWebTmpPath() + "markdownImg/";
@@ -915,7 +904,7 @@ public class DocController extends BaseController{
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer reposId, Long docId, String parentPath, String docName, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void updateDocContent(Integer reposId, Long docId, Long pid, String parentPath, String docName, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		System.out.println("content:[" + content + "]");
 		
@@ -942,6 +931,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = docSysGetDoc(repos, docId, pid, parentPath, docName, login_user);
+		if(doc == null)
+		{
+			rt.setError("文件 " + parentPath + docName + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//检查用户是否有权限编辑文件
 		if(checkUserEditRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 		{
@@ -950,7 +947,7 @@ public class DocController extends BaseController{
 		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = updateDocContent(repos, docId, parentPath, docName, content, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = updateDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -1220,7 +1217,7 @@ public class DocController extends BaseController{
 
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Integer reposId, Long docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF(Integer reposId, Long docId, Long pid, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
 		
 		if(parentPath == null)
@@ -1241,32 +1238,16 @@ public class DocController extends BaseController{
 		{
 		case 1:
 		case 2:
-			DocToPDF_FS(repos, docId, parentPath, name, response, request, session);
-			break;
 		case 3:
-			DocToPDF_SVN(repos, docId, parentPath, name, response, request, session);
-			break;
 		case 4:
-			DocToPDF_GIT(repos, docId, parentPath, name, response, request, session);
+			DocToPDF_FS(repos, docId, pid, parentPath, name, response, request, session);
 			break;
 		}
-		
-	}	
-	private void DocToPDF_GIT(Repos repos, Long docId, String parentPath, String name, HttpServletResponse response,
-			HttpServletRequest request, HttpSession session) {
-		// TODO Auto-generated method stub
-		
 	}
 
-	private void DocToPDF_SVN(Repos repos, Long docId, String parentPath, String name, HttpServletResponse response,
-			HttpServletRequest request, HttpSession session) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void DocToPDF_FS(Repos repos, Long docId, String parentPath, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF_FS(Repos repos, Long docId, Long pid, String parentPath, String docName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("DocToPDF docId: " + docId);
+		System.out.println("DocToPDF_FS docId: " + docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1277,21 +1258,23 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String fileSuffix = getFileSuffix(docName);
+		if(fileSuffix == null)
+		{
+			rt.setError("未知文件类型");
+			writeJson(rt, response);
+			return;
+		}
+		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), docId, parentPath, name, rt) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), docId, parentPath, docName, rt) == false)
 		{
 			System.out.println("DocToPDF() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
 			return;
 		}
-		
-				
-		String reposRPath = getReposRealPath(repos);
-		String localParentPath = reposRPath + parentPath;
-		String localEntryPath = localParentPath + name;
-		System.out.println("DocToPDF() srcPath:" + localEntryPath);
-	
-		Doc localEntry = fsGetDoc(repos, parentPath, name);
+			
+		Doc localEntry = fsGetDoc(repos, docId, pid, parentPath, docName);
 		if(localEntry == null)
 		{
 			rt.setError("文件不存在！");
@@ -1306,78 +1289,70 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		
-		String docCheckSum = "";
-		Doc doc = dbGetDoc(localEntry, true);
-		if(isDocLocalChanged(doc,localEntry))
-		{
-			File file = new File(localEntryPath);
-			docCheckSum = getCheckSum(file, 2097152);	//2M chunk
-		}
-		else
-		{
-			docCheckSum = doc.getCheckSum();
-		}
-		
+
 		String webTmpPath = getWebTmpPath();
-		String dstName = localEntry.getSize() + "_" + docCheckSum + ".pdf";
+		String dstName = repos.getId() + "_" + docId + ".pdf";
 		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
-		File file = new File(dstPath);
-		if(!file.exists())
-		{
-			String fileSuffix = getFileSuffix(name);
-			if(fileSuffix == null)
-			{
-				rt.setError("未知文件类型");
-				rt.setDebugLog("localEntryPath:"+localEntryPath);
-				writeJson(rt, response);
-				return;
-			}
-			
-			switch(fileSuffix)
-			{
-			case "pdf":
-				if(copyFile(localEntryPath, dstPath,true) == false)
-				{
-					rt.setError("预览失败");
-					rt.setDebugLog("Failed to copy " + localEntryPath + " to " + dstPath);
-					writeJson(rt, response);
-					return;					
-				}
-				break;
-			case "doc":
-			case "docx":
-			case "xls":
-			case "xlsx":
-			case "ppt":
-			case "pptx":
-			case "txt":
-			case "log":	
-			case "md":
-			case "html":	
-			case "jpg":
-			case "jpeg":
-			case "png":
-			case "gif":
-			case "bmp":
-				if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath) == false)
-				{
-					rt.setError("预览失败");
-					rt.setDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath);
-					writeJson(rt, response);
-					return;
-				}
-				break;
-			default:
-				rt.setError("该文件类型不支持预览");
-				rt.setDebugLog("srcPath:"+localEntryPath);
-				writeJson(rt, response);
-				return;
-			}
-		}
-		//Save the pdf to web
+
 		String fileLink = "/DocSystem/tmp/preview/" + dstName;
+		
+		File file = new File(dstPath);
+		if(file.exists())
+		{
+			Doc doc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			if(false == isDocLocalChanged(doc,localEntry))
+			{
+				rt.setData(fileLink);
+				writeJson(rt, response);
+				return;
+			}			
+		}	
+		
+		//Do convert
+		String localEntryPath = getReposRealPath(repos) + parentPath + docName;
+		switch(fileSuffix)
+		{
+		case "pdf":
+			if(copyFile(localEntryPath, dstPath,true) == false)
+			{
+				rt.setError("预览失败");
+				rt.setDebugLog("Failed to copy " + localEntryPath + " to " + dstPath);
+				writeJson(rt, response);
+				return;					
+			}
+			break;
+		case "doc":
+		case "docx":
+		case "xls":
+		case "xlsx":
+		case "ppt":
+		case "pptx":
+		case "txt":
+		case "log":	
+		case "md":
+		case "html":	
+		case "jpg":
+		case "jpeg":
+		case "png":
+		case "gif":
+		case "bmp":
+		case "py":
+			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath) == false)
+			{
+				rt.setError("预览失败");
+				rt.setDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath);
+				writeJson(rt, response);
+				return;
+			}
+			break;
+		default:
+			rt.setError("该文件类型不支持预览");
+			rt.setDebugLog("srcPath:"+localEntryPath);
+			writeJson(rt, response);
+			return;
+		}
+	
 		rt.setData(fileLink);
 		writeJson(rt, response);
 	}
