@@ -565,7 +565,7 @@
             data : {
             	reposId: gReposId,
                 docId : docId,
-                parentPath: parentPath,
+                path: parentPath,
                 name: docName,
                 newName: newName,
             },
@@ -2190,9 +2190,9 @@
 	             data : {
 		            reposId : SubContext.vid,
 		            docId: SubContext.docId,
-		            parentId : SubContext.realParentId,
-		            parentPath: SubContext.realParentPath,
-	             	docName : name,
+		            pid : SubContext.realParentId,
+		            path: SubContext.realParentPath,
+	             	name : name,
 					type: 1,
 					size: SubContext.size,
 	             	checkSum: SubContext.checkSum,	             	
@@ -2258,9 +2258,9 @@
 	             data : {
 			            reposId : SubContext.vid,
 			            docId: SubContext.docId,
-			            parentId : SubContext.realParentId,
-			            parentPath: SubContext.realParentPath,
-		             	docName : name,
+			            pid : SubContext.realParentId,
+			            path: SubContext.realParentPath,
+		             	name : name,
 						type: 1,
 						size: SubContext.size,
 		             	checkSum: SubContext.checkSum,
@@ -2577,7 +2577,7 @@
 	             	chunkSize: chunk.chunkSize,
 	             	chunkHash: chunk.checkSum,
 	             	reposId : SubContext.vid, 
-	                parentId : SubContext.realParentId,
+	                pid : SubContext.realParentId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -2678,11 +2678,11 @@
 			if(false == SubContext.chunked)
 			{
 				form.append("reposId", SubContext.vid);
-				form.append("parentId", SubContext.realParentId);
-				form.append("parentPath", SubContext.realParentPath);
+				form.append("pid", SubContext.realParentId);
+				form.append("path", SubContext.realParentPath);
 				form.append("level", SubContext.realLevel);
 				form.append("docId", SubContext.docId);
-				form.append("docName", SubContext.name);
+				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
@@ -2692,11 +2692,11 @@
 			{
 				//根据chunkIndex上传
 				form.append("reposId", SubContext.vid);
-				form.append("parentId", SubContext.realParentId);
-				form.append("parentPath", SubContext.realParentPath);
+				form.append("pid", SubContext.realParentId);
+				form.append("path", SubContext.realParentPath);
 				form.append("level", SubContext.realLevel);
 				form.append("docId", SubContext.docId);
-				form.append("docName", SubContext.name);
+				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
@@ -3433,8 +3433,8 @@
 		    data : {
 		        reposId : gReposId,  
 		    	docId:  docId,
-		    	parentPath: parentPath,
-		    	docName: docName,
+		    	path: parentPath,
+		    	name: docName,
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
@@ -3474,8 +3474,8 @@
             data : {
                 reposId: gReposId,
             	docId : curDocId,
-                parentPath: curNode.path,
-                docName: curNode.name,
+                path: curNode.path,
+                name: curNode.name,
             	content : content
             },
             success : function (ret) {
@@ -3527,8 +3527,8 @@
             data : {
             	reposId: gReposId,
                 docId : docId,
-                parentPath: node.path,
-                docName: node.name,
+                path: node.path,
+                name: node.name,
                 content : content,
             },
             success : function (ret) {
@@ -3626,8 +3626,8 @@
             data : {
             	reposId: gReposId,
                 docId : node.id,
-                parentPath: node.path,
-                docName: node.name,
+                path: node.path,
+                name: node.name,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -3752,9 +3752,9 @@
                 reposId : vid, 
 				level: level, 
 				type : type, //文件类型
-	            parentId : parentId,
-                parentPath: parentPath,
-                docName : name,
+	            pid : parentId,
+                path: parentPath,
+                name : name,
              	content: content,
              },
              success : function (ret) {
@@ -3917,9 +3917,9 @@
                 data : {
                 	reposId: gReposId,
                     docId : treeNode.id,
-                    parentId: treeNode.pid,
-                    parentPath: treeNode.path,
-                    docName: treeNode.name,
+                    pid: treeNode.pid,
+                    path: treeNode.path,
+                    name: treeNode.name,
                 },
 	            success : function (ret) {
 	                if( "ok" == ret.status ) //后台删除成功
@@ -4263,9 +4263,10 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                id : treeNode.id,	//待复制的docid
+	                docId : treeNode.id,	//待复制的docid
 	                dstPid: parentId,	//目标doc parentId
-	                dstDocName: dstDocName, //目标docName
+	                dstPath: treeNode
+	                dstName: dstDocName, //目标docName
 	                vid: vid,			//仓库id
 	            },
 	            success : function (ret) {
@@ -4930,8 +4931,8 @@
 				reposId : gReposId, 
 				docId : curDocId,
 				pid: pid,
-				parentPath: path,
-				docName: name,
+				path: path,
+				name: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -5011,8 +5012,8 @@
 				reposId : vid, 
 				docId : docId,
 				pid: pid,
-				parentPath: path,
-				docName: name,
+				path: path,
+				name: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -5065,8 +5066,8 @@
 				reposId : gReposId, 
 				docId : docId,
 				pid: pid,
-				parentPath: path,
-				docName: name,
+				path: path,
+				name: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -6089,9 +6090,9 @@ function CompareObj(objA, objB, flag) {
             data : {
             	reposId: gReposId,
                 docId : docId,
-                parentId: pid,
-                parentPath: path,
-                docName: name,
+                pid: pid,
+                path: path,
+                name: name,
             },
             success : function (ret) {
                 if( "ok" == ret.status ) //后台删除成功
@@ -6304,7 +6305,7 @@ function CompareObj(objA, objB, flag) {
                    sort:sort,
                    reposId: gReposId,
                    pDocId: pDocId,
-         		   parentPath: parentPath,
+         		   path: parentPath,
                },
                success : function (ret) {
             		console.log("searchDoc ret:", ret)
@@ -6619,8 +6620,8 @@ function CompareObj(objA, objB, flag) {
 				reposId : vid, 
 				docId : docId,
 				pid: pid,
-				parentPath: path,
-				docName: name,
+				path: path,
+				name: name,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
