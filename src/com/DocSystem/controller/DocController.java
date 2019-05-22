@@ -838,8 +838,7 @@ public class DocController extends BaseController{
 		}
 		
 		String reposVPath = getReposVirtualPath(repos);
-		String path = curDoc.getPath();
-		String docVName = getVDocName(path, curDoc.getName());
+		String docVName = getVDocName(curDoc);
 		String localVDocPath = reposVPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
 		
@@ -916,15 +915,16 @@ public class DocController extends BaseController{
 		
 		if(ret)
 		{
-			deleteTmpVirtualDocContent(repos, path, name, login_user);
+			deleteTmpVirtualDocContent(repos, doc, login_user);
 			
 			executeCommonActionList(actionList, rt);
 		}
 	}
 
-	private void deleteTmpVirtualDocContent(Repos repos, String path, String name, User login_user) {
-		String docVName = getVDocName(path,name);
-		//Save the content to virtual file
+	private void deleteTmpVirtualDocContent(Repos repos, Doc doc, User login_user) {
+		
+		String docVName = getVDocName(doc);
+		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
 		String vDocPath = userTmpDir + docVName + "/";
@@ -1119,6 +1119,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = new Doc();
+		int level = getLevelByParentPath(path);
+		Long docId = buildDocIdByName(level, path, name);
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPath(path);
+		doc.setName(name);
+		
 		//URL was encode by EncodeURI, so just decode it here
 		name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
 		path = new String(path.getBytes("ISO8859-1"),"UTF-8");  
@@ -1160,7 +1168,7 @@ public class DocController extends BaseController{
 				targetName = name + "_Node_" + commitId;
 			}
 			
-			entryName = getVDocName(path, name);
+			entryName = getVDocName(doc);
 			path = "";
 		}
 		
@@ -1361,7 +1369,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String vDocName = getVDocName(path, name);
+		Doc doc = new Doc();
+		doc.setVid(repos.getId());
+		doc.setDocId(docId);
+		doc.setPath(path);
+		doc.setName(name);
+		
+		String vDocName = getVDocName(doc);
 		String reposVPath = getReposVirtualPath(repos);
 		String content = readVirtualDocContent(reposVPath, vDocName);		
 		rt.setData(content);
@@ -1372,7 +1386,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
-	public void getDoc(Integer reposId, Long docId, String path, String name,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " path:" + path + " name:" + name);
 		
@@ -1414,12 +1428,16 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		Doc doc = new Doc();
-		doc.setDocId(docId);
-		doc.setName(name);
-		doc.setPath(path);
+		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+		if(doc == null)
+		{
+			System.out.println("getDoc 文件 " + path+name + " 不存在！");
+			rt.setError("文件 " + path+name + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
 
-		String vDocName = getVDocName(path, name);
+		String vDocName = getVDocName(doc);
 		String reposVPath = getReposVirtualPath(repos);
 		String content = readVirtualDocContent(reposVPath, vDocName);
         if( null !=content)
@@ -1481,6 +1499,7 @@ public class DocController extends BaseController{
 		Doc doc = new Doc();
 		doc.setVid(reposId);
 		doc.setDocId(docId);
+		doc.setPid(pid);
 		doc.setPath(path);
 		doc.setName(name);
 		synchronized(syncLock)
@@ -1542,6 +1561,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = new Doc();
+		doc.setVid(reposId);
+		doc.setDocId(docId);
+		doc.setPid(pid);
+		doc.setPath(path);
+		doc.setName(name);
+		
 		int num = 100;
 		if(maxLogNum != null)
 		{
@@ -1563,7 +1589,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				entryPath = getVDocName(path, name);
+				entryPath = getVDocName(doc);
 			}
 		}
 		

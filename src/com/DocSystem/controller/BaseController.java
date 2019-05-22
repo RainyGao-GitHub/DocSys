@@ -1698,7 +1698,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		String vDocName = getVDocName(parentPath, docName);
+		String vDocName = getVDocName(doc);
 		String vParentPath = "";
 		
 		//Checkout to localParentPath
@@ -2880,7 +2880,7 @@ public class BaseController  extends BaseFunction{
 			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localRealRootPath, action.getCommitMsg(), action.getCommitUser(), true, null);
 		case 2: //VDoc autoCommit
 			String localVirtualRootPath = getReposVirtualPath(repos);
-			String vDocName = getVDocName(doc.getPath(),doc.getName());			
+			String vDocName = getVDocName(doc);			
 			return verReposAutoCommit(repos, false, "", vDocName, localVirtualRootPath, action.getCommitMsg(), action.getCommitUser(), true, null);
 		}
 		return null;
@@ -3263,7 +3263,7 @@ public class BaseController  extends BaseFunction{
 	{
 		//Save the content to virtual file
 		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getVDocName(doc.getPath(), doc.getName());
+		String docVName = getVDocName(doc);
 		String localVDocPath = reposVPath + docVName;
 		
 		System.out.println("updateDocContent_FS() localVDocPath: " + localVDocPath);
@@ -4622,7 +4622,7 @@ public class BaseController  extends BaseFunction{
 		{
 			parentPath = doc.getPath();
 		}
-		String docVName = getVDocName(parentPath, doc.getName());
+		String docVName = getVDocName(doc);
 		
 		String vDocPath = reposVPath + docVName;
 		System.out.println("vDocPath: " + vDocPath);
@@ -4670,7 +4670,7 @@ public class BaseController  extends BaseFunction{
 		{
 			parentPath = doc.getPath();
 		}
-		String docVName = getVDocName(parentPath, doc.getName());
+		String docVName = getVDocName(doc);
 		
 		String vDocPath = localParentPath + docVName + "/";
 		File folder = new File(vDocPath);
@@ -4743,13 +4743,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean deleteVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) {
 		String reposVPath = getReposVirtualPath(repos);
-
-		String parentPath = "";
-		if(doc.getPath() != null)
-		{
-			parentPath = doc.getPath();
-		}
-		String docVName = getVDocName(parentPath, doc.getName());
+		String docVName = getVDocName(doc);
 		
 		String localDocVPath = reposVPath + docVName;
 		if(delDir(localDocVPath) == false)
@@ -4764,21 +4758,10 @@ public class BaseController  extends BaseFunction{
 	{
 		String reposVPath = getReposVirtualPath(repos);
 		
-		String parentPath = "";
-		if(doc.getPath() != null)
-		{
-			parentPath = doc.getPath();
-		}
-		String vDocName = getVDocName(parentPath, doc.getName());
+		String vDocName = getVDocName(doc);
 		
-		String newParentPath = "";
-		if(newDoc.getPath() != null)
-		{
-			newParentPath = newDoc.getPath();
-		}
-		String newVDocName = getVDocName(newParentPath, newDoc.getName());
-		
-		
+		String newVDocName = getVDocName(newDoc);
+				
 		if(moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, false) == false)
 		{
 			rt.setDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed");
@@ -4791,19 +4774,9 @@ public class BaseController  extends BaseFunction{
 	{
 		String reposVPath = getReposVirtualPath(repos);
 		
-		String parentPath = "";
-		if(doc.getPath() != null)
-		{
-			parentPath = doc.getPath();
-		}
-		String vDocName = getVDocName(parentPath, doc.getName());
+		String vDocName = getVDocName(doc);
 		
-		String newParentPath = "";
-		if(newDoc.getPath() != null)
-		{
-			newParentPath = newDoc.getPath();
-		}
-		String newVDocName = getVDocName(newParentPath, newDoc.getName());
+		String newVDocName = getVDocName(newDoc);
 		
 		String srcDocFullVPath = reposVPath + vDocName;
 		String dstDocFullVPath = reposVPath + newVDocName;
@@ -5683,8 +5656,6 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			verCtrl = repos.getVerCtrl1();
-			entryName = getVDocName(parentPath, entryName);
-			parentPath = "";
 		}
 			
 		if(verCtrl == 1)
@@ -5800,7 +5771,7 @@ public class BaseController  extends BaseFunction{
 		if(content == null)
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String VDocName = getVDocName(doc.getPath(), doc.getName());
+			String VDocName = getVDocName(doc);
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}
 		
@@ -5830,7 +5801,7 @@ public class BaseController  extends BaseFunction{
 		if(content == null)
 		{
 			String reposVPath = getReposVirtualPath(repos);
-			String VDocName = getVDocName(doc.getPath(), doc.getName());
+			String VDocName = getVDocName(doc);
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}		
 		

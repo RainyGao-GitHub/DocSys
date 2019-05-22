@@ -374,15 +374,9 @@ public class BaseFunction{
 		return reposVPath;
 	}
 	
-	protected String getVDocName(String parentPath, String docName) 
+	protected String getVDocName(Doc doc) 
 	{
-		if(parentPath  == null)
-		{
-			parentPath = "";
-		}
-		String VPath = MD5.md5(parentPath) + "_" + docName;
-		System.out.println("getVDocName() " + VPath + " for " + parentPath + docName);
-		return VPath;
+		return doc.getVid() + "_" + doc.getDocId() + "_" + doc.getName();
 	}
 	
 	protected static String getHashId(String path) 
