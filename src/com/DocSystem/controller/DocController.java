@@ -242,18 +242,18 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Long docId, Long srcPid, Integer type, String srcParentPath, String srcDocName, String dstDocName, 
+	public void renameDoc(Integer reposId, Long docId, Long srcPid, Integer type, String srcPath, String srcName, String dstName, 
 							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstDocName:" + dstDocName);
+		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcPath:" + srcPath + " srcName:" + srcName + " dstName:" + dstName);
 		
-		if(srcParentPath == null)
+		if(srcPath == null)
 		{
-			srcParentPath = "";
+			srcPath = "";
 		}
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		if(dstDocName == null || "".equals(dstDocName))
+		if(dstName == null || "".equals(dstName))
 		{
 			rt.setError("目标文件名不能为空！");
 			writeJson(rt, response);			
@@ -277,13 +277,13 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
-		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -291,7 +291,7 @@ public class DocController extends BaseController{
 		
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = renameDoc(repos, docId, srcPid, type, srcParentPath,srcDocName, dstDocName, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = renameDoc(repos, docId, srcPid, type, srcPath,srcName, dstName, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -302,17 +302,17 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+	public void moveDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcPath, String srcName,String dstPath, String dstName, 
 			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
+		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcPath:" + srcPath + " srcName:" + srcName + " dstPath:" + dstPath+ " dstName:" + dstName);
 		
-		if(srcParentPath == null)
+		if(srcPath == null)
 		{
-			srcParentPath = "";
+			srcPath = "";
 		}
-		if(dstParentPath == null)
+		if(dstPath == null)
 		{
-			dstParentPath = "";
+			dstPath = "";
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -333,25 +333,25 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
-		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcParentPath, "", rt) == false)
+		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		if(dstDocName == null || "".equals(dstDocName))
+		if(dstName == null || "".equals(dstName))
 		{
-			dstDocName = srcDocName;
+			dstName = srcName;
 		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcPath,srcName,dstPath,dstName, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -362,17 +362,17 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath, String srcDocName,String dstParentPath, String dstDocName, 
+	public void copyDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcPath, String srcName,String dstPath, String dstName, 
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcParentPath:" + srcParentPath + " srcDocName:" + srcDocName + " dstParentPath:" + dstParentPath+ " dstDocName:" + dstDocName);
+		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcPath:" + srcPath + " srcName:" + srcName + " dstPath:" + dstPath+ " dstName:" + dstName);
 		
-		if(srcParentPath == null)
+		if(srcPath == null)
 		{
-			srcParentPath = "";
+			srcPath = "";
 		}
-		if(dstParentPath == null)
+		if(dstPath == null)
 		{
-			dstParentPath = "";
+			dstPath = "";
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -394,19 +394,19 @@ public class DocController extends BaseController{
 		}
 				
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstParentPath, "", rt) == false)
+		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstPath, "", rt) == false)
 		{
 			writeJson(rt, response);
 			return;
 		}
 		
-		if(dstDocName == null || "".equals(dstDocName))
+		if(dstName == null || "".equals(dstName))
 		{
-			dstDocName = srcDocName;
+			dstName = srcName;
 		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcParentPath,srcDocName,dstParentPath,dstDocName, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcPath,srcName,dstPath,dstName, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -618,9 +618,9 @@ public class DocController extends BaseController{
 				{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
-					String srcParentPath = sameDoc.getPath();
+					String srcPath = sameDoc.getPath();
 					List<CommonAction> actionList = new ArrayList<CommonAction>();
-					boolean ret = copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), pid, sameDoc.getType(), srcParentPath, sameDoc.getName(), path, name, commitMsg,login_user.getName(),login_user,rt,actionList);
+					boolean ret = copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), pid, sameDoc.getType(), srcPath, sameDoc.getName(), path, name, commitMsg,login_user.getName(),login_user,rt,actionList);
 					if(ret == true)
 					{
 						getDocByName(name,pid,reposId);
