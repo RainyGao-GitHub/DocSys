@@ -556,7 +556,7 @@
 		return true;
 	}
 		
-	function doRenameDoc(docId, parentPath, docName, newName)
+	function doRenameDoc(docId, pid, parentPath, docName, newName)
 	{
 		$.ajax({
             url : "/DocSystem/Doc/renameDoc.do",
@@ -565,6 +565,7 @@
             data : {
             	reposId: gReposId,
                 docId : docId,
+                pid	: pid,
                 path: parentPath,
                 name: docName,
                 newName: newName,
@@ -2567,17 +2568,18 @@
 	             type : "post",
 	             dataType : "json",
 	             data : {
-	             	name : name,
+	             	reposId : SubContext.vid, 
 	             	docId: SubContext.docId,
-	             	size: SubContext.size,
+	                pid : SubContext.realParentId,
+					path: SubContext.realParentPath,
+	                name : SubContext.name,
+	                size: SubContext.size,
 	             	checkSum: SubContext.checkSum,
 	             	chunkIndex: SubContext.chunkIndex,
 	             	chunkNum: SubContext.chunkNum,
 	             	cutSize: SubContext.cutSize,
 	             	chunkSize: chunk.chunkSize,
 	             	chunkHash: chunk.checkSum,
-	             	reposId : SubContext.vid, 
-	                pid : SubContext.realParentId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -3474,6 +3476,7 @@
             data : {
                 reposId: gReposId,
             	docId : curDocId,
+            	pid: curNode.pid,
                 path: curNode.path,
                 name: curNode.name,
             	content : content
@@ -3527,6 +3530,7 @@
             data : {
             	reposId: gReposId,
                 docId : docId,
+                pid: node.pid,
                 path: node.path,
                 name: node.name,
                 content : content,
@@ -3626,6 +3630,7 @@
             data : {
             	reposId: gReposId,
                 docId : node.id,
+                pid: node.pid,
                 path: node.path,
                 name: node.name,
             },
@@ -4264,8 +4269,11 @@
 	            dataType : "json",
 	            data : {
 	                docId : treeNode.id,	//待复制的docid
+	                srcPid: treeNode.pid,
 	                dstPid: parentId,	//目标doc parentId
-	                dstPath: treeNode
+	                srcPath: treeNode.path,
+	                srcName: treeNode.name,
+	                dstPath: parentNode.path + parentNode.name + "/",
 	                dstName: dstDocName, //目标docName
 	                vid: vid,			//仓库id
 	            },
@@ -4603,8 +4611,13 @@
                 type : "post",
                 dataType : "json",
                 data : {
-                    id : treeNode.id,
+                    docId : treeNode.id,
+                    srcPid: treeNode.pid,
                     dstPid: parentId,
+                    srcPath: treeNode.path,
+                    srcName: treeNode.name,
+                    dstPath: parentNode.path + parentNode.name + "/",
+                    dstName: treeNode.name,
                     vid: vid,
                 },
                 success : function (ret) {
@@ -6204,7 +6217,7 @@ function CompareObj(objA, objB, flag) {
             dataType : "json",
             data : {
                 vid: gReposId,
-                id: pid,
+                docId: pid,
                 level: level,
                 path: path,
                 name: name,
@@ -6304,7 +6317,7 @@ function CompareObj(objA, objB, flag) {
                    searchWord:searchWord,
                    sort:sort,
                    reposId: gReposId,
-                   pDocId: pDocId,
+                   pid: pDocId,
          		   path: parentPath,
                },
                success : function (ret) {

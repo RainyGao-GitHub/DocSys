@@ -526,9 +526,9 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Long id, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSubDocList(Integer vid, Long docId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getSubDocList reposId: " + vid + " id: " + id  + " path:" + path + " name:"+ name );
+		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " path:" + path + " name:"+ name );
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -559,7 +559,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//get the rootDocAuth
-		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), id, path, name);
+		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), docId, path, name);
 		
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
@@ -573,7 +573,7 @@ public class ReposController extends BaseController{
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		List <Doc> docList = getAccessableSubDocList(repos, id, path, name, docAuth, docAuthHashMap, rt, actionList);
+		List <Doc> docList = getAccessableSubDocList(repos, docId, path, name, docAuth, docAuthHashMap, rt, actionList);
 
 		if(docList == null)
 		{
