@@ -106,11 +106,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Long docId = buildDocIdByName(level, path, name);
+		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Long ret = addDoc(repos, type,  level, pid, path, name, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		boolean ret = addDoc(repos, type,  docId, pid, path, name, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
-		if(ret == null || ret <= 0 )
+		if(ret == false)
 		{
 			System.out.println("add() add Doc Failed");
 			return;
@@ -142,7 +144,7 @@ public class DocController extends BaseController{
 			login_user.setId(0);
 		}
 		Integer reposId = getReposIdForFeeback();		
-		Long pid = getParentIdForFeeback();
+		Long pid = 0L;
 		
 		String commitMsg = "User Feeback by " + name;
 		Repos repos = reposService.getRepos(reposId);
@@ -153,8 +155,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Long docId = buildDocIdByName(0,"",name);
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Long ret = addDoc(repos, 1, 0, pid, path, name, content, null, 0L, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
+		boolean ret = addDoc(repos, 1, docId, pid, path, name, content, null, 0L, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -163,7 +166,7 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 		
-		if(ret == null || ret <= 0)
+		if(ret == false)
 		{
 			System.out.println("feeback() addDoc failed");
 			return;
@@ -182,17 +185,6 @@ public class DocController extends BaseController{
 	    
 	    return(Integer.parseInt(tempStr));
 	}
-
-	private Long getParentIdForFeeback() {
-		String tempStr = null;
-		tempStr = ReadProperties.read("docSysConfig.properties", "feebackParentId");
-	    if(tempStr == null || "".equals(tempStr))
-	    {
-	    	return (long) 0;
-	    }
-
-	    return Long.parseLong(tempStr);
- 	}
 
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
@@ -469,15 +461,27 @@ public class DocController extends BaseController{
 			{
 				String commitUser = login_user.getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
-				int uploadType = getUploadType(repos, path, name);
-				if(uploadType == 0)
+				
+				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+				String localParentPath = getReposRealPath(repos) + path;
+				File localParentDir = new File(localParentPath);
+				if(false == localParentDir.exists())
 				{
-					Long newDocId = addDoc(repos, 1, level, pid, path, name, 
+					localParentDir.mkdirs();
+					pid = buildPidByPath(level-1, path);
+				}
+				
+				docId = buildDocIdByName(level, path, name);
+				Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+				
+				if(doc == null)
+				{
+					boolean ret = addDoc(repos, 1, docId, pid, path, name, 
 								null, 
 								null,size, checkSum, 
 								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 					writeJson(rt, response);
-					if(newDocId > 0)
+					if(ret == true)
 					{
 						executeCommonActionList(actionList, rt);
 						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
@@ -485,7 +489,6 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					Doc doc = dbGetDoc(repos, docId, pid, path, name, true);
 					boolean ret = updateDoc(repos, docId, pid, path, name, 
 							null, size,checkSum,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
@@ -503,19 +506,6 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
-	private int getUploadType(Repos repos, String path, String name) {
-		
-		String reposRPath = getReposRealPath(repos);
-		
-		File localEntry = new File(reposRPath+path, name);
-		if(localEntry.exists())
-		{
-			return 1;
-		}
-		return 0;
-	}
-
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Integer type, Long pid, String path, String name,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -707,22 +697,21 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(pid < 0)
-		{
-			pid = buildPidByPath(level-1, path);
 			
-			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-			String localParentPath = getReposRealPath(repos) + path;
-			File localParentDir = new File(localParentPath);
-			if(false == localParentDir.exists())
-			{
-				localParentDir.mkdirs();
-			}
+		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+		String localParentPath = getReposRealPath(repos) + path;
+		File localParentDir = new File(localParentPath);
+		if(false == localParentDir.exists())
+		{
+			localParentDir.mkdirs();
+			pid = buildPidByPath(level-1, path);
 		}
 		
-		//检查用户权限
-		int uploadType = getUploadType(repos, path, name);
-		if(uploadType == 0)	//0: add  1: update
+		docId = buildDocIdByName(level, path, name);
+		
+		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+		
+		if(doc == null)	//0: add  1: update
 		{
 			if(checkUserAddRight(repos,login_user.getId(),pid, path, "" ,rt) == false)
 			{
@@ -766,15 +755,15 @@ public class DocController extends BaseController{
 		{
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
-			if(uploadType == 0)
+			if(doc == null)
 			{
-				Long newDocId = addDoc(repos, 1, level, pid, path, name, 
+				boolean ret = addDoc(repos, 1, docId, pid, path, name, 
 						null, 
 						uploadFile,size, checkSum, 
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 				writeJson(rt, response);
 
-				if(newDocId != null)
+				if(ret == true)
 				{
 					executeCommonActionList(actionList, rt);
 					deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
@@ -782,7 +771,6 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				Doc doc = dbGetDoc(repos, docId, pid, path, name, true);
 				boolean ret = updateDoc(repos, docId, pid, path, name, 
 						uploadFile, size,checkSum,   
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					

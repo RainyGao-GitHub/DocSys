@@ -1788,15 +1788,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//底层addDoc接口
-	protected Long addDoc(Repos repos, Integer type,  Integer level, Long parentId, String parentPath, String docName, 
+	protected boolean addDoc(Repos repos, Integer type,  Long docId, Long parentId, String parentPath, String docName, 
 			String content,	//VDoc Content
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		System.out.println("addDoc() type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("addDoc() docId:" + docId + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
 	
-		Long docId = buildDocIdByName(level, parentPath, docName);
 		switch(repos.getType())
 		{
 		case 1:
@@ -1809,10 +1808,10 @@ public class BaseController  extends BaseFunction{
 					commitMsg, commitUser, login_user, rt, actionList);
 			
 		}
-		return null;
+		return false;
 	}
 
-	protected Long addDoc_FS(Repos repos, Integer type, Long docId, Long parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected boolean addDoc_FS(Repos repos, Integer type, Long docId, Long parentId, String parentPath, String docName, String content,	//Add a empty file
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -1854,7 +1853,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 				System.out.println("addDoc() lockDoc " + docName + " Failed!");
-				return null;
+				return false;
 			}
 		}
 		
@@ -1864,7 +1863,7 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(doc, login_user, docLock);
 			System.out.println("addDoc() " +localDocPath + "　已存在！");
 			rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
-			return null;
+			return false;
 		}
 		
 		if(uploadFile == null)
@@ -1877,7 +1876,7 @@ public class BaseController  extends BaseFunction{
 				String MsgInfo = "createRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
-				return null;
+				return false;
 			}
 		}
 		else
@@ -1889,7 +1888,7 @@ public class BaseController  extends BaseFunction{
 				String MsgInfo = "updateRealDoc " + docName +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
-				return null;
+				return false;
 			}
 		}
 		
@@ -1925,7 +1924,7 @@ public class BaseController  extends BaseFunction{
 		rt.setMsgData("isNewNode");
 		rt.setDebugLog("新增成功"); 
 		
-		return doc.getDocId();
+		return true;
 	}
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) {
@@ -4824,8 +4823,7 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		String checkSum = doc.getCheckSum();
-		String dstName = doc.getSize() + "_" + checkSum + ".pdf";
+		String dstName = doc.getVid() + "_" + doc.getDocId() + ".pdf";
 		String dstPath = getWebTmpPath() + "preview/" + dstName;
 		delFileOrDir(dstPath);
 	}
