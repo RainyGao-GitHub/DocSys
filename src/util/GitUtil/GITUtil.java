@@ -321,7 +321,7 @@ public class GITUtil  extends BaseController{
                 		subEntry.setPid(pid);
                 		subEntry.setPath(parentPath);
                 		
-                		subEntry.setDocId(buildDocIdByName(level,name));
+                		subEntry.setDocId(buildDocIdByName(level,parentPath,name));
                 		subEntry.setName(treeWalk.getNameString());
                    		subEntry.setType(type);
                 		//subEntry.setSize();
