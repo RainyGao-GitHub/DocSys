@@ -1664,7 +1664,7 @@
                     	isParent = false;                    	
                     }
                     //Add zTreeNode
-             		addTreeNode(ret.data,parentNode);
+             		addTreeNode(ret.data);
                     
              		// 普通消息提示条
 					bootstrapQ.msg({
@@ -2542,7 +2542,6 @@ function CompareObj(objA, objB, flag) {
 			return;
 		}
 		
-		
 		var parentNode = undefined;		
 		if(pid != 0)
 		{
@@ -2571,8 +2570,8 @@ function CompareObj(objA, objB, flag) {
 		{
 			console.log("addTreeNode() parentNode is open");
 			
-			var pId = parentDocId;
-			if(parentDocId == 0)
+			var pId = pid;
+			if(pid == 0)
 			{
 				pId = "root"; //zTree root id is root -__-!
 			}
