@@ -2535,14 +2535,8 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("addTreeNode() node:",node);
 		
-		var pid = node.pid;
-		if(!pid || pid == "")
-		{
-			console.log("addTreeNode() invalid node: pid is empty");
-			return;
-		}
-		
 		var parentNode = undefined;		
+		var pid = node.pid;
 		if(pid != 0)
 		{
 			parentNode = getNodeById(pid);
