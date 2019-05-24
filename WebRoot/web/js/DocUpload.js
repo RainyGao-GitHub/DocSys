@@ -481,7 +481,6 @@
      			fileCoverConfirmSet = 1;
      		}
       		
-      		//检查当前目录下是否有同名文件或目录
   	 		var confirm = getFileCoverConfirmSetting();
 	  	 	if(confirm == 1)
 	  	 	{

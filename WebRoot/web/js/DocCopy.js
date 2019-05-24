@@ -23,7 +23,7 @@
         var vid = 0;
  		
         //状态机变量，用于实现异步对话框的实现
-        var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
+        var copyConflictConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接更改目标文件名，2：文件已存在跳过
         var copyErrorConfirmSet = 0; //0:复制错误时弹出确认是否继续复制窗口，1：复制错误时继续复制后续文件， 2：复制错误时停止整个复制		
         var copyWarningConfirmSet =0; //0: 复制警告时弹出确认是否继续复制窗口，1：复制警告时继续复制后续文件 2：复制警告时停止整个复制
       	
@@ -243,9 +243,9 @@
     		}
     		
 			//判断是否取消复制
-    		if(stopUploadFlag == true)
+    		if(stopCopyFlag == true)
     		{
-    			console.log("uploadDoc(): 结束复制");
+    			console.log("copyDoc(): 结束复制");
     			copyEndHandler();
     			return;
     		}
@@ -399,8 +399,7 @@
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-    	    	busy = 0;
-    	        clearContext(); //清空上下文
+    	    	isCopping = false;
     	        syncUpMenu();	//刷新菜单
     	    	return true;
       		});
