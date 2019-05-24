@@ -6267,7 +6267,18 @@ function CompareObj(objA, objB, flag) {
 			{
 				zTree.cancelSelectedNode(node);
 				gDocId = undefined;
-				showDocList(null);
+				
+				var searchWord = $("#searchWord").val();
+				console.log("backToParentDoc searchWord:" + searchWord);
+				if(!searchWord || searchWord == "")
+				{
+					//如果searchBox is empty
+					showDocList(null);
+				}
+				else
+				{
+					searchDoc();
+				}
 			}
 		}
 		
