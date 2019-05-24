@@ -1,155 +1,68 @@
 	//DocCopy类
     var DocCopy = (function () {
-    	
-    	//copyDoc conditions
-        var index = 0;        //当前操作的索引
-        var treeNodes = null;
-        var totalNum = 0;
-        var parentNode = null;
-        var parentId = 0;
-        var vid = 0; 
-
-        //Context Cache
-        var indexCache = [];
-        var treeNodesCache =[];
-        var totalNumCache = [];
-        var parentNodeCache = [];
-        var parentIdCache = [];
-        var vidCache = [];
+        /*全局变量*/
+        var isCopping = false;	//文件复制中标记
+        var stopCopyFlag = false;	//结束复制
+        var copiedNum = 0; //已复制个数
+        var successNum = 0;	//成功复制个数
+		var failNum = 0; //复制失败个数
+		
+        /*copyContent 用于保存文件复制的初始信息*/
+        var copyContent = {};
+        copyContent.copyBatchList = [];
+        copyContent.batchNum = 0;	//totalBatchNum
+        copyContent.batchIndex = 0;	//curBatchIndex
+        copyContent.state = 0;	//0: all copyBatch not inited 1: copyBatch Init is on going 2: copyBatch Init completed
+        copyContent.initedFileNum = 0;
+        copyContent.totalFileNum = 0; 
         
-        //标准Java成员操作接口
-		function getIndex()
-		{
-            return index;
-		}
-		
-		function setIndex(i)
-		{
-			index = i;
-		}
-		
-		function getTreeNodes()
-		{
-            return treeNodes;
-		}
-		
-		function setTreeNodes(nodes)
-		{
-			treeNodes = nodes;
-		}
-		
-		function getTotalNum()
-		{
-            return totalNum;
-		}
-		
-		function setTotalNum(num)
-		{
-			totalNum = num;
-		}
-		
-		function getParentNode()
-		{
-            return parentNode;
-		}
-		
-		function setParentNode(node)
-		{
-			parentNode = node;
-		}
-		
-		function getParentId()
-		{
-            return parentId;
-		}
-		
-		function setParentId(id)
-		{
-			parentId = id;
-		}
-		
-		function getVid()
-		{
-            return vid;
-		}
-		
-		function setVid(id)
-		{
-			vid = id;
-		}
-		
-		
-		//上下文操作接口
-		function pushContext()
-		{
-			indexCache.push(index);
-			treeNodesCache.push(treeNodes);
-			totalNumCache.push(totalNum);
-			parentNodeCache.push(parentNode);
-			parentIdCache.push(parentId);
-			vidCache.push(vid);			
-		}
-		function popContext()
-		{
-			index = indexCache.pop();
-			treeNodes = treeNodesCache.pop();
-			totalNum = totalNumCache.pop();
-			parentNode = parentNodeCache.pop();
-			parentId = parentIdCache.pop();
-			vid = vidCache.pop();
-		}
-		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
-		{
-			indexCache = [];
-	        treeNodesCache =[];
-	        totalNumCache = [];
-	        parentNodeCache = [];
-	        parentIdCache = [];
-	        vidCache = [];
-		}
-		function ContextSize()
-		{
-			return indexCache.length;
-		}
+        /*copyDoc conditions 用于指示当前的复制文件及复制状态*/
+        var index = 0; //当前操作的索引
+        var totalNum = 0; 
+ 		var SubContextList = []; //文件复制上下文List，用于记录单个文件的复制情况，在开始复制的时候初始化
+        var vid = 0;
+ 		
+        //状态机变量，用于实现异步对话框的实现
+        var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
+        var copyErrorConfirmSet = 0; //0:复制错误时弹出确认是否继续复制窗口，1：复制错误时继续复制后续文件， 2：复制错误时停止整个复制		
+        var copyWarningConfirmSet =0; //0: 复制警告时弹出确认是否继续复制窗口，1：复制警告时继续复制后续文件 2：复制警告时停止整个复制
       	
 		//提供给外部的多文件copy接口
 		function copyDocs(treeNodes,parentNode,vid)	//多文件移动函数
 		{
-			console.log("copyDocs");
-			if(ContextSize() > 0)
-			{
-				bootstrapQ.alert("系统正忙，请稍候重试！");
-				return;
-			}
-			
-			DocCopyInit(treeNodes,parentNode,vid);	//设置DocCopy Parameters
-				
-			//启动复制操作      		
-			copyDoc();	//start copy
-			
-			
-		}
-		
-		//多文件Copy接口
-		function copyDocs(treeNodes,parentNode,vid)	//多文件复制函数
-		{
-			console.log("copyDocs()");
-			//console.log(files);
+			console.log("copyDocs treeNodes:", treeNodes);
 			if(treeNodes.length <= 0)
 			{
-				showErrorMessage("没有需要复制的文件!");
+				showErrorMessage("请选择需要复制的文件!");
 				return;
 			}
-				
-			if(isCopping == true)
+			
+			//get the parentInfo
+		  	var parentPath = "";
+		  	var parentId = 0;
+		  	var level = 0;
+			if(parentNode && parentNode != null)
 			{
-				DocCopyAppend(treeNodes,parentNode,vid);
+				parentPath = parentNode.path + parentNode.name+"/";
+				parentId=parentNode.id;
+				level = parentNode.level+1;
 			}
 			else
 			{
-				DocCopyInit(treeNodes,parentNode,vid);
-				copyDoc();
+				parentNode=null;
 			}
+
+			console.log("copyDocs parentNode:", parentNode);
+
+			if(isCopping == true)
+			{
+				DocCopyAppend(treeNodes, parentNode, parentPath, parentId, level, vid);
+			}
+			else
+			{
+				DocCopyInit(treeNodes, parentNode, parentPath, parentId, level, vid);
+				copyDoc();
+			}			
 		}
 		
       	//初始化DocCopy
@@ -173,7 +86,7 @@
 			
 			//add to copyContent
 			copyContent.copyBatchList = [];
-			copyContent.copyBatchList.push(uploadBatch);			
+			copyContent.copyBatchList.push(copyBatch);			
 			copyContent.batchNum = 1;
 	        copyContent.totalFileNum = fileNum;
 			totalNum = copyContent.totalFileNum;
@@ -182,7 +95,7 @@
 			copyContent.initedFileNum = 0;
 			copyContent.batchIndex = 0;
 			copyContent.state = 1;
-			console.log("DocUploadInit copyContent:", copyContent);
+			console.log("DocCopyInit copyContent:", copyContent);
 	        
 			
 			isCopping = true;
@@ -199,7 +112,7 @@
 			console.log("文件总的个数为："+totalNum);
       	}
       	
-      	//增加上传文件
+      	//增加复制文件
       	function DocCopyAppend(treeNodes, parentNode, parentPath, parentId, level, vid)	//多文件移动函数
 		{
 			console.log("DocCopyAppend()");
@@ -232,44 +145,127 @@
 			
 			console.log("DocCopyAppend() Content:", Content);
 			
-			if(copyContent.state == 2)	//uploadBatch already initiated, need to restart it
+			if(copyContent.state == 2)	//copyBatch already initiated, need to restart it
 			{
 				copyContent.batchIndex++;
 				copyContent.state = 1;
 				buildSubContextList(copyContent, SubContextList, 1000);
 			}
 			
-			console.log("文件总的个数为："+uploadContent.totalFileNum);
+			console.log("文件总的个数为："+copyContent.totalFileNum);
 		}
-      		
-		//copyDoc接口，该接口是个递归调用
-		function copyDoc(dstName)
+      	
+      	//并将需要复制的文件加入到SubContextList中
+		function buildSubContextList(copyContent, SubContextList, maxInitNum)
 		{
-			var treeNode = treeNodes[index];
-			console.log("copyDoc index:" + index + " name:" + treeNode.name + " parentId:" + parentId + " vid:" + vid + " totalNum:" + totalNum);
-			
-			//
-			if(treeNode.id == parentId)
+			if(copyContent.state == 2)
 			{
-				console.log("treeNode is same to parentNode","treeNode",treeNode.id,"parentId",parentId);
-				copyErrorConfirm(treeNode.name);
+				return;
+			}
+			
+      		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
+			
+      		var curBatchIndex = copyContent.batchIndex;
+      		var copyBatch = copyContent.copyBatchList[curBatchIndex];
+      		console.log("buildSubContextList() copyContent curBatchIndex:" + curBatchIndex + " num:" + copyContent.batchNum );
+    		
+      		var treeNodes = copyBatch.treeNodes;
+      		var parentPath = copyBatch.parentPath;
+      		var level = copyBatch.level;
+      		var parentId = copyBatch.parentId;
+      		var vid = copyBatch.vid;
+      		var index = copyBatch.index;
+      		var fileNum =  copyBatch.num;
+      		console.log("buildSubContextList() copyBatch index:" + index + " fileNum:" + fileNum );
+      		
+      		var count = 0;
+			console.log("buildSubContextList fileNum:" + fileNum);
+    		for( var i = index ; i < fileNum ; i++ )
+    		{
+ 				count++;
+ 				if(count > maxInitNum)
+ 				{
+ 					//buildSubContext 每次最多1000个
+ 					return;
+ 				}
+ 				
+ 				copyBatch.index++;
+ 				copyContent.initedFileNum++;
+ 				
+    			var treeNode = treeNodes[i];
+    	   		if(treeNode && treeNode != null)
+    	   		{
+    	   		   	var SubContext ={};
+    	   		   	//Doc Info
+    	   		   	SubContext.treeNode = treeNode;
+        			SubContext.vid = vid;
+    	   		   	SubContext.docId = treeNode.id;  
+    	   		   	SubContext.parentId = treeNode.pid;
+		    		SubContext.parentPath = treeNode.path;
+		    		SubContext.name = treeNode.name;
+    	   		   	SubContext.level = treeNode.level;		
+    	   		   	SubContext.type = treeNode.isParent == true? 2: 1;	
+		    	   	SubContext.size = treeNode.size;
+    	   		   	SubContext.lastestEditTime = treeNode.latestEditTime;
+			    	
+    	   		   	//dst ParentNode Info
+    	   		   	SubContext.dstParentNode = parentNode;
+    	   		   	SubContext.dstParentPath = parentPath;
+    	   		   	SubContext.dstParentId = parentId;
+    	   		   	SubContext.dstLevel = level;
+
+			    	//Status Info
+		    		SubContext.index = i;
+		    	   	SubContext.state = 0;	//未开始复制
+		    	   	SubContext.status = "待复制";	//未开始复制
+		    	   			      								    	   	
+		    	   	//Push the SubContext
+		    	   	SubContextList.push(SubContext);
+    	   		}
+	    	}
+    		
+    		copyBatch.state = 2;
+    		copyContent.batchIndex++;
+    		if(copyContent.batchIndex == copyContent.batchNum)
+    		{
+    			copyContent.state = 2;
+    			console.log("buildSubContextList() all copyBatch Inited");
+    		}
+	   	}
+		
+		//copyDoc接口，该接口是个递归调用
+		function copyDoc()
+		{
+    		//copy files 没有全部加入到SubContextList
+    		if(copyContent.state != 2)
+    		{
+				buildSubContextList(copyContent,SubContextList,1000);
+    		}
+    		
+			//判断是否取消复制
+    		if(stopUploadFlag == true)
+    		{
+    			console.log("uploadDoc(): 结束复制");
+    			copyEndHandler();
+    			return;
+    		}
+    		
+			
+    		console.log("copyDoc() index:" + index + " totalNum:" + totalNum);
+    		var SubContext = SubContextList[index];
+
+			if(SubContext.docId == parentId)
+			{
+				console.log("treeNode is same to parentNode","treeNode",SubContext.docId,"parentId",parentId);
+				copyErrorConfirm(SubContext.name);
 				return;
 			}			
 			
-			var dstDocName = treeNode.name;
-			//如果copyDoc未指定dstName,需要检查parentNode下是否存在同名Node
-			if(dstName != undefined)
+			if(isNodeExist(SubContext.name, SubContex.parentNode) == true)
 			{
-				dstDocName = dstName;	
-			}
-			else
-			{
-				if(isNodeExist(treeNode.name,parentNode) == true)
-			  	{
-			  		//Node Name conflict confirm
-					CopyConflictConfirm(treeNode.name);
-			  		return;
-			  	}
+			  	//Node Name conflict confirm
+				CopyConflictConfirm(SubContext.name);
+			  	return;
 			}
 			
 			$.ajax({
@@ -277,14 +273,14 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                docId : treeNode.id,	//待复制的docid
-	                srcPid: treeNode.pid,
-	                dstPid: parentId,	//目标doc parentId
-	                srcPath: treeNode.path,
-	                srcName: treeNode.name,
-	                dstPath: parentNode.path + parentNode.name + "/",
-	                dstName: dstDocName, //目标docName
-	                vid: vid,			//仓库id
+	                docId : SubContext.docId,	//待复制的docid
+	                srcPid: SubContext.pid,
+	                srcPath: SubContext.path,
+	                srcName: SubContext.name,
+	                dstPid: SubContext.dstParentId,	//目标doc parentId
+	                dstPath: SubContext.dstParentPath,
+	                dstName: SubContext.dstName, //目标docName
+	                vid: SubContext.vid,			//仓库id
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -299,40 +295,16 @@
 	                else
 	                {
 	                	console.log("Error:" + ret.msgInfo);
-	                	copyErrorConfirm(treeNode.name,ret.msgInfo);
+	                	copyErrorConfirm(SubContext.name,ret.msgInfo);
 	                	return;
 	                }
 	            },
 	            error : function () {
 	            	console.log("服务器异常：copy failed");
-                	copyErrorConfirm(treeNode.name,"服务器异常");
+                	copyErrorConfirm(SubContext.name,"服务器异常");
                 	return;
 	            }
 	    	});
-		}
-		
-		function doCopySubDocs(treeNode)
-		{
-  			if(treeNode.isParent)	//如果是parentNode,则获取其子目录
-            {
-            	console.log("treeNodes[" + index + "] isParent");
-            	var subTreeNodes = treeObj.getNodesByParam("pId", treeNode.id, treeNode);
-            	if(subTreeNodes && subTreeNodes.length)
-	      		{
-	      			console.log("subTreeNodes num:" + subTreeNodes.length + " newTreeNode:" + newTreeNode.name);
-	      			//保存上下文
-	      			index++;
-	      			pushContext();
-	      			//设置新的copyDoc条件
-	      			DocCopySet(subTreeNodes,newTreeNode,vid);
-	      			return true;
-	      		}
-	      		else
-	      		{
-	      			console.log("subTreeNodes is null");
-	      		}
-            }
-  			return false;
 		}
 		
 		//启动复制下一个Doc,如果没有了的话则结束复制
@@ -340,47 +312,50 @@
 		{
            	//确定是否还有需要复制的文件
            	index++;
-           	if(index < totalNum)	//callback没传入，表示单个上传
+           	if(index < totalNum)	//callback没传入，表示单个复制
            	{
    				//Start to copy next Doc
 	      		copyDoc();	//do copy Next Doc	                   	
 	      	}
            	else	//更新显示数据
            	{	
-           		if(ContextSize() > 0)	//上下文非空
-          		{
-          			popContext();	//pop out the Context
-           			if(index < totalNum)
-           			{
-           				//Start to copy next Doc
-           				copyDoc();
-					}
-					else
-					{
-	        	    	busy = 0;
-	    	            clearContext(); //清空上下文
-			            
-						bootstrapQ.msg({
-							msg : '复制完成！',
-							type : 'success',
-							time : 2000,
-						});
-					}
-          		}
-          		else
-          		{
-        	    	busy = 0;
-    	            clearContext(); //清空上下文
-
-    	            bootstrapQ.msg({
+           		copyEndHandler();
+        	    bootstrapQ.msg({
 						msg : '复制完成！',
 						type : 'success',
 						time : 2000,
-					});
-            	}
+    	        });
             }
 		}
 		
+      	//uploadEndHandler
+      	function copyEndHandler()
+      	{
+      		console.log("uploadEndHandler() 复制结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			
+  			//清除标记
+            isCopping = false;
+            
+      		//显示上传完成 
+      		showCopyEndInfo();      		
+      	}
+		
+  		function showCopyEndInfo()
+  		{
+  			var copyEndInfo = "上传完成(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			copyEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      		}
+
+            // 普通消息提示条
+			bootstrapQ.msg({
+					msg : copyEndInfo,
+					type : 'success',
+					time : 2000,
+				    }); 
+        }
+      	
 		function CopyConflictConfirm(copiedNodeName)
 		{
 		    qiao.bs.dialog({

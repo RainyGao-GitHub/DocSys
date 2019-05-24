@@ -940,14 +940,10 @@
       		
             // 普通消息提示条
 			bootstrapQ.msg({
-					msg : '上传结束！',
+					msg : uploadEndInfo,
 					type : 'success',
 					time : 2000,
 				    }); 
-            
-  			//清除标记
-  			isUploading = false;
-  			reuploadFlag = false;
   		}
 
       	//uploadEndHandler
@@ -963,8 +959,9 @@
   			$("#uploadDir").val("");
       		$("#checkInFile").val("");
             
-  			//清除上传中标志
-            isUploading = false;
+  			//清除标记
+  			isUploading = false;
+  			reuploadFlag = false;
       	}
       	
       	//uploadNextDoc，如果后续有未上传文件则上传下一个文件 
