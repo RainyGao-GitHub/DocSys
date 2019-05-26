@@ -235,6 +235,9 @@
 	        downloadHistory: function(index){
 	        	downloadHistory(index);
 	        },
-	        
+	        revertHistory: function(index)
+			{
+	        	revertHistory(index);
+			}
 	    };
 	})();
