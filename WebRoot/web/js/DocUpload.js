@@ -1195,8 +1195,9 @@
 		            docId: SubContext.docId,
 		            pid : SubContext.realParentId,
 		            path: SubContext.realParentPath,
-	             	name : name,
-					type: 1,
+	             	name : SubContext.name,
+	             	level: SubContext.level,
+					type: SubContext.type,
 					size: SubContext.size,
 	             	checkSum: SubContext.checkSum,	             	
 	             },
@@ -1206,7 +1207,7 @@
 	             		console.log("checkDocInfo() ret",ret);
 	             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 	             		{
-	             			SubContext.docId = ret.data.id;
+	             			SubContext.docId = ret.data.docId;
 	             			fileCoverConfirm(name,"文件" + name + " 已存在");
 	             			return;
 	             		}
@@ -1214,9 +1215,9 @@
 	             		{
 		                	if(SubContext.docId == -1) //文件新建成功
 			                {	
+		                		//set the docId so that We can open it 
+		             			SubContext.docId = ret.data.docId;	            
 			             		addTreeNode(ret.data,SubContext.realParentNode);
-			             		//set the docId so that We can open it 
-		             			SubContext.docId = ret.data.id;	                
 			                }
 	             			
 	             			$('.file'+index).removeClass('is-uploading');
@@ -1675,7 +1676,7 @@
 		
     	function startUpload(SubContext)
     	{
-			console.log("startUpload() docId:" + SubContext.docId,SubContext);
+			console.log("startUpload() SubContext:" , SubContext);
 
 			//新建文件上传表单
 			var form = new FormData();

@@ -508,7 +508,7 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(Integer reposId, Long docId, Integer type, Long pid, String path, String name,Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkDocInfo name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " pid: " + pid);
 
 		if(path == null)
@@ -577,6 +577,10 @@ public class DocController extends BaseController{
 		}
 		
 		//检查文件是否已存在 
+		if(docId < 0)
+		{
+			docId = buildDocIdByName(level, path, name);
+		}
 		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
 		if(doc != null)
 		{
@@ -666,11 +670,11 @@ public class DocController extends BaseController{
 	/*docId = -1: means it is add, else it is update
 	 * pid = -1: means we do not know the pid maybe it still not exists*/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(Integer reposId, Long docId, Long pid, Integer level, String path, String name,	//
+	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level,	//
 			MultipartFile uploadFile, Long size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("uploadDoc  name:" + name + " size:" +size+ " checkSum:" + checkSum + " reposId:" + reposId + " pid:" + pid + " path:" + path  + " docId:" + docId
+		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
 		if(path == null)
