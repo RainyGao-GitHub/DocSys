@@ -19,7 +19,6 @@
         var index = 0; //当前操作的索引
         var totalNum = 0; 
  		var SubContextList = []; //文件删除上下文List，用于记录单个文件的删除情况，在开始删除的时候初始化
-        var vid = 0;
  		
 		//多文件Delete接口
         function deleteDocs(treeNodes, vid)
@@ -96,7 +95,7 @@
       	//增加删除文件
       	function DocDeleteAppend(treeNodes, vid)	//多文件移动函数
 		{
-			console.log("DocDeleteAppend()");
+			console.log("DocDeleteAppend()", treeNodes);
 			if(!treeNodes)
 			{
 				console.log("DocDeleteAppend() treeNodes is null");
@@ -243,7 +242,7 @@
 	                    }
 	                    
 				     	//Delete docList Node
-				     	DocList.DeleteNode(docId);
+				     	DocList.deleteNode(docId);
 				     	
 				     	//start to Delete nextDoc
 				     	DeleteNextDoc();
@@ -301,10 +300,7 @@
            	else	//更新显示数据
            	{	
            		isDeleteing = false;
-    	        
-           		//调用回调函数
-    	        successCallBack && successCallBack();
-    	            
+    	            	            
     	        bootstrapQ.msg({
 						msg : '删除完成！',
 						type : 'success',
@@ -316,11 +312,7 @@
 		
 		//开放给外部的调用接口
         return {
-        	deleteDocs: function(treeNodes, vid, callback){
-        		if(callback)
-        		{
-        			successCallBack = callback;
-        		}
+        	deleteDocs: function(treeNodes, vid){
         		deleteDocs(treeNodes,vid);
             },
         };

@@ -508,7 +508,7 @@
 	}
 	
 	//callback is for success delete
-	function DoDelete(treeNodes,callback)
+	function DoDelete(treeNodes)
 	{
 		if(treeNodes == null || treeNodes.length < 1)
 		{
@@ -536,7 +536,7 @@
 				msg : msg,
 				},function () {
 			    	//alert("点击了确定");
-					DocDelete.deleteDocs(treeNodes,callback);
+					DocDelete.deleteDocs(treeNodes, gReposId);
 			    	return true;   
 			 	});
 		}
