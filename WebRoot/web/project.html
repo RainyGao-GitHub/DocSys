@@ -3203,13 +3203,24 @@ function CompareObj(objA, objB, flag) {
 		console.log("doPreviewDoc docId:" + docId);
 		if(docId)
 		{
+			var node = getNodeByNodeId(docId);
+			if(!node || node == null)
+			{
+				showErrorMessage("文件不存在！"); 
+				return;	
+			}
+			
 			//Convert doc to PDF and return the link, then show the pdf 
 		    $.ajax({
 		        url : "/DocSystem/Doc/DocToPDF.do",
 		        type : "post",
 		        dataType : "json",
 		        data : {
+		        	reposId: gReposId,
 		            docId : docId,
+		            pid: node.pid,
+		            path: node.path,
+		            name: node.name,
 		        },
 		        success : function (ret) {
 		            if( "ok" == ret.status ){
@@ -4023,8 +4034,7 @@ function CompareObj(objA, objB, flag) {
 			{text: '预览', action: function(e){
 						e.preventDefault();
 						var docId = curRightClickedDocListNode.docId;
-						var node = getNodeByNodeId(docId);
-						doPreviewDoc(node);
+						doPreviewDoc(docId);
 					}
 			},
 			{text: '下载', action: function(e){
