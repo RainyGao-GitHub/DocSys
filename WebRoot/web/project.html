@@ -763,7 +763,7 @@
 		var pid = node.pid;
 	   	var path = Base64.encode(node.path);
 	   	var name = Base64.encode(node.name);
-		window.location.href = "/DocSystem/Doc/downloadDoc.do?id="+docId;
+		window.location.href = "/DocSystem/Doc/downloadDoc.do?docId="+docId;
 	}
 	
     /*文件上传实现*/
@@ -3837,20 +3837,11 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 					e.preventDefault();
-					if(curRightClickedTreeNode !== null)
-					{
-						var docId = curRightClickedTreeNode.id;
-						doPreviewDoc(docId);
-					}
+					doPreviewDoc(curRightClickedTreeNode);
 				}
 			},
 			{text: '下载', action: function(e){
 						e.preventDefault();
-						if(curRightClickedTreeNode == null)
-						{
-							bootstrapQ.alert("请选择需要下载的文件或目录");
-							return false;
-						}
 						downloadDoc(curRightClickedTreeNode,true);
 					}
 			},
@@ -3998,8 +3989,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 						e.preventDefault();
-						var docId = curRightClickedDocListNode.docId;
-						doPreviewDoc(docId);
+						doPreviewDoc(curRightClickedDocListNode);
 					}
 			},
 			{text: '下载', action: function(e){
