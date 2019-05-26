@@ -973,8 +973,8 @@ public class DocController extends BaseController{
 	
 	/**************** download Doc  ******************/
 	@RequestMapping("/downloadDoc.do")
-	public void downloadDoc(Integer reposId,Integer docId, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
+	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 		
 		if(path == null)
 		{
@@ -994,32 +994,17 @@ public class DocController extends BaseController{
 		{
 		case 1:
 		case 2:
-			downloadDoc_FS(repos, docId, path, name, response, request, session);
-			break;
 		case 3:
-			downloadDoc_SVN(repos, docId, path, name, response, request, session);
-			break;
 		case 4:
-			downloadDoc_GIT(repos, docId, path, name, response, request, session);
+			downloadDoc_FS(repos, docId, pid, path, name, response, request, session);
 			break;
 		}
 		
 	}
-	private void downloadDoc_GIT(Repos repos, Integer docId, String path, String name,
-			HttpServletResponse response, HttpServletRequest request, HttpSession session) {
-		// TODO Auto-generated method stub
-		
-	}
 
-	private void downloadDoc_SVN(Repos repos, Integer docId, String path, String name,
-			HttpServletResponse response, HttpServletRequest request, HttpSession session) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void downloadDoc_FS(Repos repos,Integer docId, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void downloadDoc_FS(Repos repos,Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc_FS reposId: " + repos.getId() + " docId:" + docId + " path:" + path + " name:" + name);
+		System.out.println("downloadDoc_FS reposId: " + repos.getId() + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1030,7 +1015,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = reposService.getDoc(docId);
+		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
 		if(doc==null){
 			System.out.println("downloadDoc_FS() Doc " + docId + " 不存在");
 			rt.setError("doc " + docId + "不存在！");

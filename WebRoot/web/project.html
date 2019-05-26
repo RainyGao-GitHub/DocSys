@@ -746,25 +746,28 @@
 	//文件下载接口
  	function downloadDoc(node,needConfirm)
 	{
-		if(node == undefined || node == null)
+		console.log("downloadDoc node:", node);
+		if(!node || node == null)
 		{
 			showErrorMessage("文件不存在！");
 			return;
-		}
-		
-		if(needConfirm)
-		{
-			if(confirm("是否下载文件：" + node.name) == false)
-			{
-				return;
-			}
 		}
 		
 		var docId = node.id;
 		var pid = node.pid;
 	   	var path = Base64.encode(node.path);
 	   	var name = Base64.encode(node.name);
-	   	window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + reposId + "&docId=" + docId + "&path=" + path + "&name="+ name;	
+	   	
+		if(needConfirm)
+		{
+			if(confirm("是否下载文件：" + name) == false)
+			{
+				return;
+			}
+		}
+		
+
+	   	window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + reposId + "&docId=" + docId + "&pid=" + pid + "&path=" + path + "&name="+ name;	
 
 	}
 	
@@ -3208,7 +3211,7 @@ function CompareObj(objA, objB, flag) {
 	
 	function doPreviewDoc(node)
 	{
-		if(node == undefined || node == null)
+		if(!node || node == null)
 		{
 			showErrorMessage("请选择文件!");
 			return;
@@ -3387,7 +3390,7 @@ function CompareObj(objA, objB, flag) {
 	//显示文件详情
 	function showDocDetail(node)
 	{
-		if(node == undefined || node == null)
+		if(!node || node == null)
 		{
 			showErrorMessage("请选择文件！");
 			return;
