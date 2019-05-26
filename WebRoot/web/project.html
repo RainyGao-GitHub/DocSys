@@ -2541,9 +2541,33 @@ function CompareObj(objA, objB, flag) {
 	function addTreeNode(node)
 	{
 		console.log("addTreeNode() node:",node);
+
+		if(!node || node == null)
+		{
+			console.log("addTreeNode() node is null");
+			return;
+		}
 		
-		var parentNode = undefined;		
+		var docId = node.docId;
 		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
+		var type = node.type;
+		var latestEditTime = node.latestEditTime;
+		
+		var isParent = false;
+		if(type == 2)
+		{
+			isParent = true;
+		}
+
+		var pId = pid;
+		if(pid == 0)
+		{
+			pId = "root"; //zTree root id is root -__-!
+		}
+		
+		var parentNode = undefined;	
 		if(pid != 0)
 		{
 			parentNode = getNodeById(pid);
@@ -2557,32 +2581,20 @@ function CompareObj(objA, objB, flag) {
 		{
 			parentNode = null;	//parentNode is rootNode
 		}
+
 		
-		var isParent = false;
-		if(node.type == 2)
-		{
-			isParent = true;
-		}	
-		var nodeName = node.name;
-				
 		//Add zTree Node
 		//parentNode处于展开状态时，需要手动addTreeNode以保证与后台同步，否则只要触发异步加载即可
 		if(parentNode == null || parentNode.open == true)
 		{
 			console.log("addTreeNode() parentNode is open");
 			
-			var pId = pid;
-			if(pid == 0)
-			{
-				pId = "root"; //zTree root id is root -__-!
-			}
-			console.log("addTreeNode() pId = " + pId);
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
-			var treeNode = getNodeByNodeId(node.docId);
+			var treeNode = getNodeByNodeId(docId);
 			if(treeNode == null)
 			{
-	      		var newNode = {name: nodeName, id : node.docId, isParent: isParent, pId: pId, path: node.path, type: node.type};
+	      		var newNode = {id : docId, pid: pid, path: path, name: name, type: type,  isParent: isParent, pId: pId};
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
 		}
@@ -2599,9 +2611,9 @@ function CompareObj(objA, objB, flag) {
 		console.log("addTreeNode pid:" + pid + " DocListParentDocId:" + DocListParentDocId );
 		if(pid == DocListParentDocId)
 		{
-			if(DocList.isNodeExists(node.id) == false)
+			if(DocList.isNodeExists(docId) == false)
 			{
-				DocList.addNode(node.id, node.pid, node.type, node.path, node.name, node.latestEditTime);
+				DocList.addNode(docId, pid, type, path, name, latestEditTime);
 			}
 		}
 	}
