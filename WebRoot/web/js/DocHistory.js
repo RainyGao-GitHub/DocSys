@@ -30,7 +30,7 @@
 	
 		   	var encParentPath = encodeURI(parentPath);
 		   	var encDocName = encodeURI(docName);
-		   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&parentPath=" + encParentPath + "&docName="+encDocName + "&historyType=" + historyType;	
+		   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
 		}
 		
 		function revertHistory(index)
