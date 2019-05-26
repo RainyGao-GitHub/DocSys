@@ -753,10 +753,11 @@
 			return;
 		}
 		
+		var reposId = node.vid;
 		var docId = node.id;
 		var pid = node.pid;
-	   	var path = Base64.encode(node.path);
-	   	var name = Base64.encode(node.name);
+	   	var path = node.path;
+	   	var name = node.name;
 	   	
 		if(needConfirm)
 		{
@@ -766,8 +767,10 @@
 			}
 		}
 		
+	   	var encPath = encodeURI(path);
+	   	var encName = encodeURI(name);
 
-	   	window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + reposId + "&docId=" + docId + "&pid=" + pid + "&path=" + path + "&name="+ name;	
+	   	window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + reposId + "&docId=" + docId + "&pid=" + pid + "&path=" + encPath + "&name="+ encName;	
 
 	}
 	
@@ -2849,6 +2852,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = $(obj).attr('latestEditTime');
 	 	
    	 	var node = {};
+   	 	node.vid = gReposId;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -2869,6 +2873,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = $(obj).attr('latestEditTime');
 	 	
    	 	var node = {};
+   	 	node.vid = gReposId;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -2947,6 +2952,7 @@ function CompareObj(objA, objB, flag) {
    	 	var type = $(obj).attr('dataType');
 	 	
    	 	var node = {};
+   	 	node.vid = gReposId;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -2965,6 +2971,7 @@ function CompareObj(objA, objB, flag) {
    	 	var type = $(obj).attr('dataType');
 	 	
    	 	var node = {};
+   	 	node.vid = gReposId;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
