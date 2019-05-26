@@ -1,77 +1,53 @@
 	//DocDelete类
     var DocDelete = (function () {
-    	var busy = 0;
-    	
-        //deleteDoc current conditions
-        var treeNodes = null; //doc nodes which need to be delete
-        var index = 0;  //current delete node index in treeNodes
-        var totalNum = 0; //total nums of treeNodes
-        var status = 0;  //deleteDoc使用状态机实现，子目录的递归复制，0表示当秦index指向的treeNode是第一次进来，1表示第二次进来，第二次进来的话，不需要再检查其子目录
+        /*全局变量*/
+        var isDeleteing = false;	//文件删除中标记
+        var stopDeleteFlag = false;	//结束删除
+        var DeleteedNum = 0; //已删除个数
+        var successNum = 0;	//成功删除个数
+		var failNum = 0; //删除失败个数
         
-        //Context Cache: 用于deleteDoc的子目录复制操作的递归实现（利用上下文堆栈实现copyDoc的异步递归实现）
-        var indexCache = [];
-        var treeNodesCache =[];
-        var totalNumCache = [];
-        var statusCache =[];
-        var successCallBack;
+        /*DeleteContent 用于保存文件删除的初始信息*/
+        var DeleteContent = {};
+        DeleteContent.DeleteBatchList = [];
+        DeleteContent.batchNum = 0;	//totalBatchNum
+        DeleteContent.batchIndex = 0;	//curBatchIndex
+        DeleteContent.state = 0;	//0: all DeleteBatch not inited 1: DeleteBatch Init is on going 2: deleteBatch Init completed
+        DeleteContent.initedFileNum = 0;
+        DeleteContent.totalFileNum = 0; 
+        
+        /*DeleteDoc conditions 用于指示当前的删除文件及删除状态*/
+        var index = 0; //当前操作的索引
+        var totalNum = 0; 
+ 		var SubContextList = []; //文件删除上下文List，用于记录单个文件的删除情况，在开始删除的时候初始化
+        var vid = 0;
+ 		
+        //状态机变量，用于实现异步对话框的实现
+        var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
+        var DeleteErrorConfirmSet = 0; //0:删除错误时弹出确认是否继续删除窗口，1：删除错误时继续删除后续文件， 2：删除错误时停止整个删除		
+        var DeleteWarningConfirmSet =0; //0: 删除警告时弹出确认是否继续删除窗口，1：删除警告时继续删除后续文件 2：删除警告时停止整个删除
+        
+        //vars for reDelete
+        var reDeleteFlag = false; //false: 正常删除  true: 重传
+        var reDeleteCount = 0; 
+        var reDeleteTotalNum = 0;
+        var reDeleteFailNum = 0;
+        var reDeleteSuccessNum = 0;
+        var reDeleteedNum = 0;
+        var reDeleteList = []; //重传列表，保存的是SubContext的index
+        var reDeleteIndex = 0;	//This is for reDelete, the index should be reDeleteList[reDeleteIndex]
         
         //标准Java成员操作接口
-		function getIndex()
-		{
-            return index;
-		}
-		
-		function setIndex(i)
-		{
-			index = i;
-		}
-		
-		function getTreeNodes()
-		{
-            return treeNodes;
-		}
-		
-		function setTreeNodes(nodes)
-		{
-			treeNodes = nodes;
-		}
-		
-		function getTotalNum()
-		{
-            return totalNum;
-		}
-		
-		function setTotalNum(num)
-		{
-			totalNum = num;
-		}
-		
-		//上下文操作接口
-		function pushContext()
-		{
-			indexCache.push(index);
-			treeNodesCache.push(treeNodes);
-			totalNumCache.push(totalNum);
-			statusCache.push(status);
-		}
-		function popContext()
-		{
-			index = indexCache.pop();
-			treeNodes = treeNodesCache.pop();
-			totalNum = totalNumCache.pop();
-			status = statusCache.pop();
-		}
-		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
-		{
-			indexCache = [];
-	        treeNodesCache =[];
-	        totalNumCache = [];
-	        statusCache = [];
-	    }
-		function ContextSize()
-		{
-			return indexCache.length;
-		}
+        function getDeleteStatus()
+        {
+        	var DeleteStatus = "idle";
+        	if(isDeleteing == true)
+        	{
+        		DeleteStatus = "busy";
+        	}
+        	console.log("DeleteStatus: " + DeleteStatus);
+        	return DeleteStatus;
+        }
 		
 		//多文件Delete接口
 		function deleteDocs(treeNodes,parentNode,vid)	//多文件移动函数
@@ -224,7 +200,7 @@
       	{
            	//确定是否还有需要删除的文件
            	index++;
-           	if(index < totalNum)	//callback没传入，表示单个上传
+           	if(index < totalNum)	//callback没传入，表示单个删除
            	{
            		status = 0;
            		deleteDoc();	//do delete Next Doc	                   	

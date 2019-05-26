@@ -21,7 +21,7 @@
         uploadContent.uploadBatchList = [];
         uploadContent.batchNum = 0;	//totalBatchNum
         uploadContent.batchIndex = 0;	//curBatchIndex
-        uploadContent.state = 0;	//0: all UploadBatch not inited 1: uploadBatch Init is on going 2: uplBatch Init completed
+        uploadContent.state = 0;	//0: all UploadBatch not inited 1: uploadBatch Init is on going 2: uploadBatch Init completed
         uploadContent.initedFileNum = 0;
         uploadContent.totalFileNum = 0; 
         uploadContent.totalFileSize = 0;
