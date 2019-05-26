@@ -1536,6 +1536,10 @@ public class DocController extends BaseController{
 		{
 			path = "";
 		}
+		if(name == null)
+		{
+			name = "";
+		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
