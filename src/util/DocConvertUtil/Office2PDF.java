@@ -10,6 +10,7 @@ import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
 
 import util.ReadProperties;
+import util.ReturnAjax;
 
 /**
  * 这是一个工具类，主要是为了使Office2003-2007全部格式的文档(.doc|.docx|.xls|.xlsx|.ppt|.pptx)
@@ -26,10 +27,11 @@ public class Office2PDF {
      * 
      * @param inputFilePath
      *            源文件路径，如："e:/test.docx"
+     * @param rt 
      * @return
      */
-    public static boolean openOfficeToPDF(String inputFilePath,String outputFilePath) {    	 
-    	 return office2pdf(inputFilePath,outputFilePath);
+    public static boolean openOfficeToPDF(String inputFilePath,String outputFilePath, ReturnAjax rt) {    	 
+    	 return office2pdf(inputFilePath,outputFilePath,rt);
     }
 
     /**
@@ -133,39 +135,53 @@ public class Office2PDF {
      * @param outputFilePath 
      * @param outputFilePath
      *            目标文件路径，如："e:/test_docx.pdf"
+     * @param rt 
      * @return
      */
-    public static boolean office2pdf(String inputFilePath, String outputFilePath) {
-        OfficeManager officeManager = null;
-        try {
-            if (inputFilePath == null || "".equals(inputFilePath)) {
-                System.out.println("office2pdf() 输入文件地址为空，转换终止!");
-                return false;
-            }
-
-            File inputFile = new File(inputFilePath);
-
-            if (!inputFile.exists()) {
-                System.out.println("office2pdf() 输入文件不存在，转换终止!");
-                return false;
-            }
-
-            // 获取OpenOffice的安装路劲
-            officeManager = getOfficeManager();
-            // 连接OpenOffice
-            OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);
-
-            return converterFile(inputFile, outputFilePath, inputFilePath, converter);
-        } catch (Exception e) {
-            System.out.println("office2pdf() 转换终止异常!");
-            e.printStackTrace();
-        } finally {
-            // 停止openOffice
-            if (officeManager != null) {
-                officeManager.stop();
-            }
+    public static boolean office2pdf(String inputFilePath, String outputFilePath, ReturnAjax rt) {
+        if (inputFilePath == null || "".equals(inputFilePath)) {
+            System.out.println("office2pdf() 输入文件地址为空，转换终止!");
+            rt.setError("文件未指定！");
+            return false;
         }
-        return false;
+
+        File inputFile = new File(inputFilePath);
+
+        if (!inputFile.exists()) {
+            System.out.println("office2pdf() 输入文件不存在，转换终止!");
+            rt.setError("文件 " + inputFilePath + " 不存在！");
+            return false;
+        }
+
+    	
+    	OfficeManager officeManager = null;
+    	try {
+	    	// 获取OpenOffice的安装路劲
+	        officeManager = getOfficeManager();
+    	} catch (Exception e) {
+            rt.setError("请检查是否已安装Open Office!");
+			System.out.println("office2pdf() getOfficeManager Exception");
+			e.printStackTrace();
+			return false;
+    	}
+    	
+    	try {
+    		// 连接OpenOffice
+        	OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);
+        	boolean ret = converterFile(inputFile, outputFilePath, inputFilePath, converter);
+        	officeManager.stop();
+        	officeManager = null;
+        	return ret;
+    	} catch (Exception e) {
+    		rt.setError("文件转换异常!");
+    		if(officeManager != null)
+    		{
+	        	officeManager.stop();
+    		}
+    		System.out.println("office2pdf() getOfficeManager Exception");
+			e.printStackTrace();
+			return false;
+    	}
     }
 
     /**

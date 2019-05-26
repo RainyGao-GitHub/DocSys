@@ -1314,9 +1314,8 @@ public class DocController extends BaseController{
 		case "gif":
 		case "bmp":
 		case "py":
-			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath) == false)
+			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath,rt) == false)
 			{
-				rt.setError("预览失败");
 				rt.setDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath);
 				writeJson(rt, response);
 				return;
