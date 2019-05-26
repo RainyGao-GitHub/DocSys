@@ -1592,6 +1592,33 @@
 		}
 		console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 		
+		var title = "文件 " + docName + " 历史版本";
+		if(historyType == 0)
+		{
+			if(docId == 0)
+			{
+				var title = "仓库 " + gReposName + " 历史版本";
+			}
+			else
+			{
+				if(docType == 2)
+				{
+					var title = "目录 " + docName + " 历史版本";				
+				}
+			}
+		}
+		else
+		{
+			if(docId == 0)
+			{
+				var title = "仓库 " + gReposName + " 备注历史版本";
+			}
+			else
+			{
+				var title = "文件 " + docName + " 备注历史版本";				
+			}
+		}
+		
 		//show HistoryLogs page
 		bootstrapQ.dialog({
 			title: "文件历史",
@@ -1603,37 +1630,6 @@
 				DocHistory.historyLogsPageInit(gReposId, docId, pid, parentPath, docName, historyType);
 			},
 		});
-	}
-	
-	function getTreeNodeFullPath(treeNode)
-	{
-		console.log("getTreeNodeFullPath treeNode",treeNode);
-		
-		var parentPath = "";
-		
-		var nodes = treeNode.getPath();
-		console.log("getTreeNodeFullPath nodes",nodes);
-		for(var i=0;i<nodes.length-1;i++)
-		{
-			parentPath = parentPath + nodes[i].name + "/";
-		}
-		return parentPath + treeNode.name;
-	}
-	
-	
-	function getTreeNodeParentPath(treeNode)
-	{
-		console.log("getTreeNodeParentPath treeNode",treeNode);
-		
-		var parentPath = "";
-		
-		var nodes = treeNode.getPath();
-		console.log("getTreeNodeParentPath nodes",nodes);
-		for(var i=0;i<nodes.length-1;i++)
-		{
-			parentPath = parentPath + nodes[i].name + "/";
-		}
-		return parentPath;
 	}
 	
    	//addDoc接口	
