@@ -1581,7 +1581,8 @@
 		var docName = "";
 		var docId = 0;
 		var pid = 0;
-		
+		var docType = 2;
+			
 		var treeNode = node;
 		if(treeNode != null)
 		{
@@ -1589,6 +1590,7 @@
 			pid = treeNode.pid;
 			parentPath = treeNode.path;
 			docName = treeNode.name;
+			docType = treeNode.type;
 		}
 		console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 		
@@ -1621,7 +1623,7 @@
 		
 		//show HistoryLogs page
 		bootstrapQ.dialog({
-			title: "文件历史",
+			title: title,
 			url: 'historyLogs.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
