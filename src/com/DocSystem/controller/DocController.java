@@ -1194,7 +1194,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
-		
+		System.out.println("DocToPDF reposId: " + reposId + " docId:" + docId + " pid:" + pid +" path:" + path + " name:" + name);
+
 		if(path == null)
 		{
 			path = "";
