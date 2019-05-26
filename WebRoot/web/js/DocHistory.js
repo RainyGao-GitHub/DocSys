@@ -25,9 +25,11 @@
 	
 		function downloadHistory(index)
 		{
+			//TODO: 如果当前是目录的话，需要提示是否只下载修改过的文件，否则下载该版本的整个目录
+		   	
 			var commitId = $("#commitId" + index).text();
 		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
-	
+		   	
 		   	var encParentPath = encodeURI(parentPath);
 		   	var encDocName = encodeURI(docName);
 		   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
@@ -35,6 +37,8 @@
 		
 		function revertHistory(index)
 		{
+			//TODO: 如果当前是目录的话，需要提示是否只还原修改过的文件，否则将把目录下所有的文件都还原到该版本
+		   	
 			var commitId = $("#commitId" + index).text();
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 	
