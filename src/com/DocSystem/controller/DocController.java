@@ -1019,7 +1019,7 @@ public class DocController extends BaseController{
 
 	public void downloadDoc_FS(Repos repos,Integer docId, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc_DB reposId: " + repos.getId() + " docId:" + docId + " path:" + path + " name:" + name);
+		System.out.println("downloadDoc_FS reposId: " + repos.getId() + " docId:" + docId + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1032,7 +1032,7 @@ public class DocController extends BaseController{
 		
 		Doc doc = reposService.getDoc(docId);
 		if(doc==null){
-			System.out.println("doGet() Doc " + docId + " 不存在");
+			System.out.println("downloadDoc_FS() Doc " + docId + " 不存在");
 			rt.setError("doc " + docId + "不存在！");
 			writeJson(rt, response);
 			return;
@@ -1043,7 +1043,7 @@ public class DocController extends BaseController{
 
 		//文件的localParentPath
 		String localParentPath = reposRPath + path;
-		System.out.println("doGet() localParentPath:" + localParentPath);
+		System.out.println("downloadDoc_FS() localParentPath:" + localParentPath);
 		
 		//get userTmpDir
 		String userTmpDir = getReposUserTmpPath(repos,login_user);

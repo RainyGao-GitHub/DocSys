@@ -744,15 +744,26 @@
 	}
 	
 	//文件下载接口
- 	function downloadDoc(docId,docName,needConfirm){		
+ 	function downloadDoc(node,needConfirm)
+	{
+		if(node == undefined || node == null)
+		{
+			showErrorMessage("文件不存在！");
+			return;
+		}
+		
 		if(needConfirm)
 		{
-			if(confirm("是否下载文件：" + docName) == false)
+			if(confirm("是否下载文件：" + node.name) == false)
 			{
 				return;
 			}
 		}
-		window.location.href = "/DocSystem/Doc/doGet.do?id="+docId;
+		
+		var pid = node.pid;
+	   	var path = Base64.encode(node.path);
+	   	var name = Base64.encode(node.name);
+		window.location.href = "/DocSystem/Doc/downloadDoc.do?id="+docId;
 	}
 	
     /*文件上传实现*/
@@ -2822,16 +2833,21 @@ function CompareObj(objA, objB, flag) {
         };
     })();		
       		
-	var curRightClickedDocListNode = [];
+	var curRightClickedDocListNode = {};
     function docListOnMouseDown(obj,ev)
     {
    	 	var docId = $(obj).attr('dataId');
-   	 	var docType = $(obj).attr('dataType');
+   	 	var pid = $(obj).attr('dataPid');
+   	 	var path = $(obj).attr('dataPath');
    	 	var docName = $(obj).attr('dataName');
-   	 	curRightClickedDocListNode.docId = docId;
-   	 	curRightClickedDocListNode.type = docType;
-   	 	curRightClickedDocListNode.docName = docName;
-   	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
+   	 	var type = $(obj).attr('dataType');
+	 	
+   	 	curRightClickedDocListNode.id = docId;
+   	 	curRightClickedDocListNode.pid = pid;
+   	 	curRightClickedDocListNode.path = path;
+	 	curRightClickedDocListNode.name = name;
+	 	curRightClickedDocListNode.type = type;
+	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
     }
 	
  	function secondGetDoc(obj){
@@ -2901,74 +2917,42 @@ function CompareObj(objA, objB, flag) {
  	}
  	
  	function xz(obj,event){
- 		var id = $(obj).parents('li').attr('dataId');
- 		var name = $(obj).parents('li').attr('dataName');
-
- 		downloadDoc(id,name,true);
+   	 	var docId = $(obj).attr('dataId');
+   	 	var pid = $(obj).attr('dataPid');
+   	 	var path = $(obj).attr('dataPath');
+   	 	var docName = $(obj).attr('dataName');
+   	 	var type = $(obj).attr('dataType');
+	 	
+   	 	var node = {};
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
+   		
+ 		downloadDoc(node,true);
  		event.stopPropagation();
  	}
  	
  	function sc(obj,event){
- 		var id = $(obj).parents('li').attr('dataId');
- 		//alert('删除'+id);
+   	 	var docId = $(obj).attr('dataId');
+   	 	var pid = $(obj).attr('dataPid');
+   	 	var path = $(obj).attr('dataPath');
+   	 	var docName = $(obj).attr('dataName');
+   	 	var type = $(obj).attr('dataType');
+	 	
+   	 	var node = {};
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
  		
- 		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",id);
-		if(node == null)
-		{
-			//alert("请选择需要删除的文件或文件夹！");
-			var pid = $(obj).parents('li').attr('dataPid');
-			var path = $(obj).parents('li').attr('dataPath');
-			var name = $(obj).parents('li').attr('dataName');
-			deleteDoc(id, pid, path, name);
-		}
-		else
-		{
-			var deleteNodes = [];
-			deleteNodes.push(node);
-			DoDelete(deleteNodes);
-		}
+		var deleteNodes = [];
+		deleteNodes.push(node);
+		DoDelete(deleteNodes);
 		event.stopPropagation();
  	}
- 	
-	//deleteDoc接口
-	function deleteDoc(docId, pid, path, name)
-	{
-		console.log("deleteDoc path:" + path + " name:" + name);
-		
-		$.ajax({
-            url : "/DocSystem/Doc/deleteDoc.do",
-            type : "post",
-            dataType : "json",
-            data : {
-            	reposId: gReposId,
-                docId : docId,
-                pid: pid,
-                path: path,
-                name: name,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ) //后台删除成功
-                {
-                	console.log(ret.data);
-			     	//Delete docList Node
-			     	DocList.deleteNode(docId);
-			     	return;
-                }
-                else
-                {
-                	console.log("Error:" + ret.msgInfo);
-                	deleteErrorConfirm(name,ret.msgInfo);
-            		return;
-                }
-            },
-            error : function () {
-             	console.log("服务器异常：delete failed");
-             	deleteErrorConfirm(name,"服务器异常");
-            	return;
-            }
-    	});
-	}
  	
  	function showContextMenu(obj,event){
  		event.stopPropagation();
@@ -3195,54 +3179,54 @@ function CompareObj(objA, objB, flag) {
 	function previewDoc()
 	{
 		console.log("previewDoc gDocId:" + gDocId);
-		doPreviewDoc(gDocId);
-	}
-	
-	function doPreviewDoc(docId)
-	{
-		console.log("doPreviewDoc docId:" + docId);
-		if(docId)
+		if(gDocId)
 		{
 			var node = getNodeByNodeId(docId);
-			if(!node || node == null)
-			{
-				showErrorMessage("文件不存在！"); 
-				return;	
-			}
-			
-			//Convert doc to PDF and return the link, then show the pdf 
-		    $.ajax({
-		        url : "/DocSystem/Doc/DocToPDF.do",
-		        type : "post",
-		        dataType : "json",
-		        data : {
-		        	reposId: gReposId,
-		            docId : docId,
-		            pid: node.pid,
-		            path: node.path,
-		            name: node.name,
-		        },
-		        success : function (ret) {
-		            if( "ok" == ret.status ){
-		                var fileLink = ret.data;
-		                console.log("fileLink" + fileLink);
-		    			//在新的页面打开
-		    			window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink); 
-		            }
-		            else
-		            {
-		            	showErrorMessage("文件预览失败：" + ret.msgInfo);              	
-		            }
-		        },
-		        error : function () {
-		            showErrorMessage("文件预览失败：服务器异常");
-		        }
-		    });
-	   	}
-		else
-		{
-			showErrorMessage("请选择需要预览的文件"); 
+			doPreviewDoc(node);
 		}
+	}
+	
+	function doPreviewDoc(node)
+	{
+		if(node == undefined || node == null)
+		{
+			showErrorMessage("请选择文件!");
+			return;
+		}
+		
+		var docId = node.id;
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
+		
+		//Convert doc to PDF and return the link, then show the pdf 
+	    $.ajax({
+	        url : "/DocSystem/Doc/DocToPDF.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: gReposId,
+	            docId : docId,
+	            pid: pid,
+	            path: path,
+	            name: name,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+	                var fileLink = ret.data;
+	                console.log("fileLink" + fileLink);
+	    			//在新的页面打开
+	    			window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink); 
+	            }
+	            else
+	            {
+	            	showErrorMessage("文件预览失败：" + ret.msgInfo);              	
+	            }
+	        },
+	        error : function () {
+	            showErrorMessage("文件预览失败：服务器异常");
+	        }
+	    });
 	}
 	
 	function WikiEditBtnCtrl(edit)
@@ -3465,24 +3449,16 @@ function CompareObj(objA, objB, flag) {
     }
     
 	//LockDoc and Download it
-	function checkOut(docId,docName)
+	function checkOut(node)
 	{
-		console.log("checkOut()" + docId);
-		var vid = gReposId;
-		
-		if(!docId)
-		{
-			showErrorMessage("文件不存在");
-			return;
-		}
-		
-		var node = getNodeById(docId);
+		console.log("checkOut()", node);
 		if(!node || node == null)
 		{
-			showErrorMessage("文件不存在");
+			showErrorMessage("请选择文件！");
 			return;
 		}
 		
+		var docId = node.id;
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
@@ -3502,7 +3478,7 @@ function CompareObj(objA, objB, flag) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
 					$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
-				    downloadDoc(docId,docName,false);
+				    downloadDoc(node,false);
 				    return;
  				}
 				else
@@ -3875,9 +3851,7 @@ function CompareObj(objA, objB, flag) {
 							bootstrapQ.alert("请选择需要下载的文件或目录");
 							return false;
 						}
-						var id = curRightClickedTreeNode.id;
-						var name = curRightClickedTreeNode.name;
-						downloadDoc(id,name,true);
+						downloadDoc(curRightClickedTreeNode,true);
 					}
 			},
 			{text: '详细信息', action: function(e){
@@ -4016,18 +3990,9 @@ function CompareObj(objA, objB, flag) {
 			{text: '删除', action: function(e){
 						e.preventDefault();
 						console.log(e);
-						var docId = curRightClickedDocListNode.docId;
-						var node = getNodeByNodeId(docId);
-						if(node == null)
-						{
-							alert("请选择需要删除的文件或文件夹！");
-						}
-						else
-						{
-							var deleteNodes = [];
-							deleteNodes.push(node);
-							DoDelete(deleteNodes);
-						}
+						var deleteNodes = [];
+						deleteNodes.push(curRightClickedDocListNode);
+						DoDelete(deleteNodes);
 					}
 			},
 			{divider: true},
@@ -4039,9 +4004,7 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '下载', action: function(e){
 					e.preventDefault();
-					var docId = curRightClickedDocListNode.docId;
-					var node = getNodeByNodeId(docId);
-					downloadDoc(node,true);
+					downloadDoc(curRightClickedDocListNode,true);
 				}
 			},
 			{text: '详细信息', action: function(e){
