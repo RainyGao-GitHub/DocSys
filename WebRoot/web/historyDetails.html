@@ -1,0 +1,32 @@
+<div>
+        <div class="manual-right width:80%" >
+            <div class="manual-article">
+               <div class="article-body editor-content"  id="history" style="min-height: 650px">
+               		<div class="panel-body eventset-list" >	
+	               		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell commitId w10">修改类型</i>
+							<i class="cell commitMsg w30">文件路径</i>
+							<i class="cell commitUser w13">文件类型</i>
+							<i class="cell commitTime w10">提交时间</i>
+							<i class="cell operation w10">操作</i>						
+						</li>
+					</div>
+               		<div class="panel-body eventset-list" id="historyLogs">
+			 			<!-- 列表区域-->
+					</div>
+			 </div>
+			</div>
+		</div>
+</div>
+
+<script type="text/javascript">
+	function downloadHistory(index)
+	{
+		DocHistory.downloadHistory(index);
+	}
+	
+	function revertHistory(index)
+	{
+		DocHistory.revertHistory(index);		
+	}
+</script>
