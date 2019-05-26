@@ -2865,12 +2865,14 @@ function CompareObj(objA, objB, flag) {
     }
 	
  	function secondGetDoc(obj){
-   	 	var docId = $(obj).attr('dataId');
-   	 	var pid = $(obj).attr('dataPid');
-   	 	var path = $(obj).attr('dataPath');
-   	 	var name = $(obj).attr('dataName');
-   	 	var type = $(obj).attr('dataType');
-   	 	var latestEditTime = $(obj).attr('latestEditTime');
+ 		var docListNode = $(obj).parents('li');
+
+ 		var docId = docListNode.attr('dataId');
+   	 	var pid = docListNode.attr('dataPid');
+   	 	var path = docListNode.attr('dataPath');
+   	 	var name = docListNode.attr('dataName');
+   	 	var type = docListNode.attr('dataType');
+   	 	var latestEditTime = docListNode.attr('latestEditTime');
 	 	
    	 	var node = {};
    	 	node.vid = gReposId;
@@ -2921,20 +2923,38 @@ function CompareObj(objA, objB, flag) {
   	}
  	
  	function fx(obj,event){
- 		var id = $(obj).parents('li').attr('dataId');
- 		//alert('分享'+id);
+ 		var docListNode = $(obj).parents('li');
+
+ 		var docId = docListNode.attr('dataId');
+   	 	var pid = docListNode.attr('dataPid');
+   	 	var path = docListNode.attr('dataPath');
+   	 	var name = docListNode.attr('dataName');
+   	 	var type = docListNode.attr('dataType');
+   	 	var latestEditTime = docListNode.attr('latestEditTime');
+   	 	
+   	 	var node = {};
+   	 	node.vid = gReposId;
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
+   		node.latestEditTime = latestEditTime;
  		
- 		var vid = gReposId;
- 		var href = "/DocSystem/web/project.html?vid="+vid+"&doc="+id;
+ 		var href = "/DocSystem/web/project.html?vid="+ reposId + "&doc=" + docId;
+ 		
  		console.log(href);
+ 		
  		var host = window.location.host;	//域名带端口
  		var url = host+href;
  		console.log(url);
+ 		
  		var obj=document.getElementById("copiedText");
  		obj.value=url;	//修改其中的值
  		obj.select(); // 选择对象
  		document.execCommand("Copy"); // 执行浏览器复制命令
- 	    // 普通消息提示条
+ 	    
+ 		// 普通消息提示条
  		bootstrapQ.msg({
  			msg : '链接已复制！',
  			type : 'success',
@@ -2945,12 +2965,15 @@ function CompareObj(objA, objB, flag) {
  	}
  	
  	function xz(obj,event){
-   	 	var docId = $(obj).attr('dataId');
-   	 	var pid = $(obj).attr('dataPid');
-   	 	var path = $(obj).attr('dataPath');
-   	 	var name = $(obj).attr('dataName');
-   	 	var type = $(obj).attr('dataType');
-	 	
+ 		var docListNode = $(obj).parents('li');
+
+ 		var docId = docListNode.attr('dataId');
+   	 	var pid = docListNode.attr('dataPid');
+   	 	var path = docListNode.attr('dataPath');
+   	 	var name = docListNode.attr('dataName');
+   	 	var type = docListNode.attr('dataType');
+   	 	var latestEditTime = docListNode.attr('latestEditTime');
+   	 	
    	 	var node = {};
    	 	node.vid = gReposId;
    	 	node.id = docId;
@@ -2958,18 +2981,22 @@ function CompareObj(objA, objB, flag) {
    		node.path = path;
    		node.name = name;
    		node.type = type;
+   		node.latestEditTime = latestEditTime;
    		
  		downloadDoc(node,true);
  		event.stopPropagation();
  	}
  	
  	function sc(obj,event){
-   	 	var docId = $(obj).attr('dataId');
-   	 	var pid = $(obj).attr('dataPid');
-   	 	var path = $(obj).attr('dataPath');
-   	 	var name = $(obj).attr('dataName');
-   	 	var type = $(obj).attr('dataType');
-	 	
+ 		var docListNode = $(obj).parents('li');
+
+ 		var docId = docListNode.attr('dataId');
+   	 	var pid = docListNode.attr('dataPid');
+   	 	var path = docListNode.attr('dataPath');
+   	 	var name = docListNode.attr('dataName');
+   	 	var type = docListNode.attr('dataType');
+   	 	var latestEditTime = docListNode.attr('latestEditTime');
+   	 	
    	 	var node = {};
    	 	node.vid = gReposId;
    	 	node.id = docId;
@@ -2977,6 +3004,7 @@ function CompareObj(objA, objB, flag) {
    		node.path = path;
    		node.name = name;
    		node.type = type;
+   		node.latestEditTime = latestEditTime;
  		
 		var deleteNodes = [];
 		deleteNodes.push(node);
