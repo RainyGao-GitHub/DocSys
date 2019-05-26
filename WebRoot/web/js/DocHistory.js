@@ -9,15 +9,16 @@
 		var docPath = "";
 		var historyType = 0;
 		
-		function historyLogsPageInit(vid, docId, pid, path, name, type)
+		function historyLogsPageInit(Input_vid, Input_docId, Input_pid, Input_path, Input_name, Input_historyType)
 		{
-			console.log("historyLogsPageInit vid:" + vid + " docId:" + docId + " path:" + path + " name:" + name + " historyType:" + historyType);
-			reposId = vid;
-			docId = docId;
-			parentPath = path;	
-			docName = name;
-			docPath = path + name;
-			historyType = type;
+			console.log("historyLogsPageInit vid:" + Input_vid + " docId:" + Input_docId + " pid:" + Input_pid + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
+			reposId = Input_vid;
+			docId = Input_docId;
+			pid = Input_pid;
+			parentPath = Input_path;	
+			docName = Input_name;
+			docPath = Input_path + Input_name;
+			historyType = Input_historyType;
 			
 			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);	
 		}
@@ -46,10 +47,11 @@
 	             dataType : "json",
 	             data : {
 	            	 commitId: commitId,
-	                 reposId : reposId, 
+	                 reposId : reposId,
+	                 pid: pid,
 	                 docId: docId,
-	            	 parentPath : encParentPath,
-	             	 docName: encDocName,
+	            	 path : encParentPath,
+	             	 name: encDocName,
 	             	 historyType: historyType,
 	             },
 	             success : function (ret) {
@@ -83,9 +85,10 @@
 	             data : {
 	            	 commitId: commitId,
 	                 reposId : reposId, 
+	                 pid: pid,
 	                 docId: docId,
-	            	 parentPath : encParentPath,
-	             	 docName: encDocName,
+	            	 path : encParentPath,
+	             	 name: encDocName,
 	             	 historyType: historyType,
 	             },
 	             success : function (ret) {

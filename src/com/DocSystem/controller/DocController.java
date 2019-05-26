@@ -1100,6 +1100,10 @@ public class DocController extends BaseController{
 		{
 			path = "";
 		}
+		if(name == null)
+		{
+			name = "";
+		}
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1118,14 +1122,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
-		Doc doc = new Doc();
-		int level = getLevelByParentPath(path);
-		Long docId = buildDocIdByName(level, path, name);
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPath(path);
-		doc.setName(name);
 		
 		//URL was encode by EncodeURI, so just decode it here
 		name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
@@ -1168,6 +1164,13 @@ public class DocController extends BaseController{
 				targetName = name + "_Node_" + commitId;
 			}
 			
+			Doc doc = new Doc();
+			int level = getLevelByParentPath(path);
+			Long docId = buildDocIdByName(level, path, name);
+			doc.setVid(repos.getId());
+			doc.setDocId(docId);
+			doc.setPath(path);
+			doc.setName(name);
 			entryName = getVDocName(doc);
 			path = "";
 		}
