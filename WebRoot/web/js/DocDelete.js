@@ -13,7 +13,6 @@
         DeleteContent.batchNum = 0;	//totalBatchNum
         DeleteContent.batchIndex = 0;	//curBatchIndex
         DeleteContent.state = 0;	//0: all DeleteBatch not inited 1: DeleteBatch Init is on going 2: deleteBatch Init completed
-        DeleteContent.initedFileNum = 0;
         DeleteContent.totalFileNum = 0; 
         
         /*DeleteDoc conditions 用于指示当前的删除文件及删除状态*/
@@ -22,100 +21,211 @@
  		var SubContextList = []; //文件删除上下文List，用于记录单个文件的删除情况，在开始删除的时候初始化
         var vid = 0;
  		
-        //状态机变量，用于实现异步对话框的实现
-        var fileCoverConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接覆盖，2：文件已存在跳过
-        var DeleteErrorConfirmSet = 0; //0:删除错误时弹出确认是否继续删除窗口，1：删除错误时继续删除后续文件， 2：删除错误时停止整个删除		
-        var DeleteWarningConfirmSet =0; //0: 删除警告时弹出确认是否继续删除窗口，1：删除警告时继续删除后续文件 2：删除警告时停止整个删除
-        
-        //vars for reDelete
-        var reDeleteFlag = false; //false: 正常删除  true: 重传
-        var reDeleteCount = 0; 
-        var reDeleteTotalNum = 0;
-        var reDeleteFailNum = 0;
-        var reDeleteSuccessNum = 0;
-        var reDeleteedNum = 0;
-        var reDeleteList = []; //重传列表，保存的是SubContext的index
-        var reDeleteIndex = 0;	//This is for reDelete, the index should be reDeleteList[reDeleteIndex]
-        
-        //标准Java成员操作接口
-        function getDeleteStatus()
-        {
-        	var DeleteStatus = "idle";
-        	if(isDeleteing == true)
-        	{
-        		DeleteStatus = "busy";
-        	}
-        	console.log("DeleteStatus: " + DeleteStatus);
-        	return DeleteStatus;
-        }
-		
 		//多文件Delete接口
-		function deleteDocs(treeNodes,parentNode,vid)	//多文件移动函数
+        function deleteDocs(treeNodes, vid)
 		{
-			console.log("deleteDocs");
-			if(busy ==  1)
+			console.log("deleteDocs() treeNodes:", treeNodes);
+				
+			if(isDeleteing == true)
 			{
-				bootstrapQ.alert("系统正忙，请稍候重试！");
+				DocDeleteAppend(treeNodes, vid);
+			}
+			else
+			{
+				//初始化文件删除参数
+				DocDeleteInit(treeNodes, vid);
+	
+				//启动第一个Doc的Delete操作      		
+				deleteDoc();	//start delete
+			}
+		}
+        
+      	//初始化DocDelete
+      	function DocDeleteInit(treeNodes,vid)	//多文件移动函数
+		{
+			console.log("DocCopyInit()");
+			var fileNum = treeNodes.length;
+			console.log("DocCopyInit() fileNum:" + fileNum);				
+
+			//Build CopyBatch
+			var deleteBatch = {};
+			deleteBatch.treeNodes = treeNodes;
+			deleteBatch.vid = vid;
+			deleteBatch.num = fileNum;
+			deleteBatch.index = 0;
+			deleteBatch.state = 0;
+			
+			//add to deleteContent
+			deleteContent.deleteBatchList = [];
+			deleteContent.deleteBatchList.push(deleteBatch);			
+			deleteContent.batchNum = 1;
+	        deleteContent.totalFileNum = fileNum;
+			totalNum = deleteContent.totalFileNum;
+			
+			//Init deleteContent state
+			deleteContent.initedFileNum = 0;
+			deleteContent.batchIndex = 0;
+			deleteContent.state = 1;
+			console.log("DocCopyInit deleteContent:", deleteContent);
+	        
+			
+			isDeleteing = true;
+			
+			//清空上下文列表
+			SubContextList = [];
+			
+			//Set the Index
+			index = 0;
+			
+			//Build SubContextList(totalFileNum will also be caculated)
+			buildSubContextList(deleteContent, SubContextList, 10000);
+      	}
+        
+      	//增加删除文件
+      	function DocDeleteAppend(treeNodes, vid)	//多文件移动函数
+		{
+			console.log("DocDeleteAppend()");
+			if(!treeNodes)
+			{
+				console.log("DocDeleteAppend() treeNodes is null");
+				return;
+			}
+
+			var fileNum = treeNodes.length;
+			console.log("DocDeleteAppend() fileNum:" + fileNum);
+
+			//Build deleteBatch
+			var deleteBatch = {};
+			deleteBatch.treeNodes = treeNodes;
+			deleteBatch.vid = vid;
+			deleteBatch.num = fileNum;
+			deleteBatch.index = 0;
+			deleteBatch.state = 0;
+			
+			//Append to deleteContent.deleteBatchList
+			deleteContent.deleteBatchList.push(deleteBatch);
+			deleteContent.batchNum++;
+			deleteContent.totalFileNum += fileNum;
+			totalNum = deleteContent.totalFileNum;
+			
+			console.log("DocDeleteAppend deleteContent:", deleteContent);
+			
+			if(deleteContent.state == 2)	//deleteBatch already initiated, need to restart it
+			{
+				deleteContent.batchIndex++;
+				deleteContent.state = 1;
+				buildSubContextList(deleteContent,SubContextList,10000);
+			}
+      	}
+      	
+      	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
+		function buildSubContextList(deleteContent,SubContextList,maxInitNum)
+		{
+			if(deleteContent.state == 2)
+			{
 				return;
 			}
 			
-			busy = 1;
-			clearContext();	//清空Context缓存
+      		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
 			
-			DocDeleteSet(treeNodes,parentNode,vid);	//设置DocCopy Parameters
-				
-			//启动删除操作      		
-			deleteDoc();	//start delete
-		}
-		
-      	//初始化deleteDoc conditions
-      	function DocDeleteSet(treeNodes)	//多文件移动函数
-		{
-			console.log("DocDeleteSet");
-
-			setIndex(0);
-			setTreeNodes(treeNodes);
-			var totalNum = 0;
-			if(treeNodes && treeNodes.length)
-			{
-				totalNum = treeNodes.length;
-			}
-			setTotalNum(totalNum);
-			status = 0;
-		}
+      		var curBatchIndex = deleteContent.batchIndex;
+      		var deleteBatch = deleteContent.deleteBatchList[curBatchIndex];
+      		console.log("buildSubContextList() deleteContent curBatchIndex:" + curBatchIndex + " num:" + deleteContent.batchNum );
+    		
+      		var treeNodes = deleteBatch.treeNodes;
+      		var vid = deleteBatch.vid;
+      		var index = deleteBatch.index;
+      		var fileNum =  deleteBatch.num;
+      		console.log("buildSubContextList() deleteBatch index:" + index + " fileNum:" + fileNum );
       		
+      		var count = 0;
+			console.log("buildSubContextList fileNum:" + fileNum);
+    		for( var i = index ; i < fileNum ; i++ )
+    		{
+ 				count++;
+ 				if(count > maxInitNum)
+ 				{
+ 					//buildSubContext 每次最多1000个
+ 					return;
+ 				}
+ 				
+ 				deleteBatch.index++;
+ 				deleteContent.initedFileNum++;
+ 				
+    			var treeNode = treeNodes[i];
+    	   		if(treeNode && treeNode != null)
+    	   		{
+    	   		   	var SubContext ={};
+    	   		   	//Basic Info
+    	   		   	SubContext.treeNode = treeNode;
+    	   		   	SubContext.docId = treeNode.id; 
+    	   		   	SubContext.parentId = treeNode.pid;
+    	   		   	SubContext.parentPath = treeNode.path;
+    	   		 	SubContext.name = treeNode.name;
+			    	SubContext.level = treeNode.level;
+        			SubContext.vid = vid;
+			    	
+			    	//Status Info
+		    		SubContext.index = i;
+		    	   	SubContext.state = 0;	//未开始删除
+		    	   	SubContext.status = "待删除";	//未开始删除
+		    	   			      								    	   	
+		    	   	//Push the SubContext
+		    	   	SubContextList.push(SubContext);
+		    	}
+	    	}
+    		
+    		deleteBatch.state = 2;
+    		deleteContent.batchIndex++;
+    		if(deleteContent.batchIndex == deleteContent.batchNum)
+    		{
+    			deleteContent.state = 2;
+    			console.log("buildSubContextList() all deleteBatch Inited");
+    		}
+	   	}
+        		      		
 		//deleteDoc接口，该接口是个递归调用
 		function deleteDoc()
 		{
-			var treeNode = treeNodes[index];
-			console.log("deleteDoc index:" + index + " name:" + treeNode.name + " totalNum:" + totalNum);
-			
-			//后台会自动删除子目录，因此前台不需要遍历删除其子目录
-			//if(doDeleteSubDocs() == true)
-			//{
-			//	return;
-			//}
-			
+    		//delete files 没有全部加入到SubContextList
+    		if(deleteContent.state != 2)
+    		{
+				buildSubContextList(deleteContent,SubContextList,10000);
+    		}
+    		
+    		console.log("deleteDoc() index:" + index + " totalNum:" + totalNum);
+    		var SubContext = SubContextList[index];
+			var vid = SubContext.vid;
+    		var docId = SubContext.docId;
+    		var pid = SubContext.pid;
+    		var path = SubContext.path;
+    		var name = SubContext.name;				
+    		
 			$.ajax({
                 url : "/DocSystem/Doc/deleteDoc.do",
                 type : "post",
                 dataType : "json",
                 data : {
-                	reposId: gReposId,
-                    docId : treeNode.id,
-                    pid: treeNode.pid,
-                    path: treeNode.path,
-                    name: treeNode.name,
+                	reposId: vid,
+                    docId : docId,
+                    pid: pid,
+                    path: path,
+                    name: name,
                 },
 	            success : function (ret) {
 	                if( "ok" == ret.status ) //后台删除成功
 	                {
 	                	console.log(ret.data);
 	                 	//Delete zTree Node
-	                    var treeObj = $.fn.zTree.getZTreeObj("doctree");
-				     	treeObj.removeNode(treeNode);
+	                    var treeNode = getNodeByNodeId(docId);
+	                    if(treeNode != null)
+	                    {
+	                    	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	                    	treeObj.removeNode(treeNode);
+	                    }
+	                    
 				     	//Delete docList Node
-				     	DocList.deleteNode(treeNode.id);
+				     	DocList.deleteNode(docId);
 				     	
 				     	//start to delete nextDoc
 				     	deleteNextDoc();
@@ -124,13 +234,13 @@
 	                else
 	                {
 	                	console.log("Error:" + ret.msgInfo);
-	                	deleteErrorConfirm(treeNode.name,ret.msgInfo);
+	                	deleteErrorConfirm(name,ret.msgInfo);
 	            		return;
 	                }
 	            },
 	            error : function () {
 	             	console.log("服务器异常：delete failed");
-	             	deleteErrorConfirm(treeNode.name,"服务器异常");
+	             	deleteErrorConfirm(name,"服务器异常");
 	            	return;
 	            }
 	    	});
@@ -138,11 +248,12 @@
 		
       	function deleteErrorConfirm(FileName,errMsg)
       	{
-      		var msg = FileName + "删除失败,是否删除复制其他文件？";
-      		if(errMsg != undefined)
+      		var msg = FileName + "删除失败,是否继续删除其他文件？";
+      		if(errMsg)
       		{
       			msg = FileName + "删除失败(" + errMsg + "),是否继续删除其他文件？";
       		}
+      		
       		//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: "deleteErrorConfirm",
@@ -155,10 +266,8 @@
     	    	deleteNextDoc();
     	    	return true;
 			},function(){
-    	    	//alert("点击了取消");
-    	    	busy = 0;
-	            clearContext(); //清空上下文
-	            //syncUpMenu();	//将新增的失败的节点刷掉
+				//
+				deleteEndHandler();
     	    	return true;
       		});
       	}
