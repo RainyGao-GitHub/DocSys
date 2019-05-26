@@ -5027,27 +5027,13 @@ public class BaseController  extends BaseFunction{
 			long revision = -1;
 			if(commitId != null)
 			{
-				Long.parseLong(commitId);
+				revision = Long.parseLong(commitId);
 			}
 			return svnCheckOut(repos, isRealDoc, doc, localParentPath, targetName, revision);		
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
 			return gitCheckOut(repos, isRealDoc, doc, localParentPath, targetName, commitId);
-		}
-		return null;
-	}
-	
-	protected List<Doc> verReposRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
-	{
-		//TODO: Revert 应该是CheckOut后再Commit
-		if(repos.getVerCtrl() == 1)
-		{
-			return svnRevertRealDoc(repos, parentPath, entryName, type, rt);			
-		}
-		else if(repos.getVerCtrl() == 2)
-		{
-			return gitRevertRealDoc(repos, parentPath, entryName, type, rt);
 		}
 		return null;
 	}
@@ -5147,18 +5133,6 @@ public class BaseController  extends BaseFunction{
 		else if(repos.getVerCtrl() == 2)
 		{
 			return gitVirtualDocCopy(repos, srcDocVName, dstDocVName, commitMsg, commitUser, rt);
-		}
-		return null;
-	}
-
-	protected List<Doc> verReposRevertVirtualDoc(Repos repos, String docVName) {
-		if(repos.getVerCtrl() == 1)
-		{
-			return svnRevertVirtualDoc(repos, docVName);		
-		}
-		else if(repos.getVerCtrl() == 2)
-		{
-			return gitRevertVirtualDoc(repos, docVName);
 		}
 		return null;
 	}
@@ -5459,55 +5433,7 @@ public class BaseController  extends BaseFunction{
 
 		return svnUtil.getEntry(doc, localParentPath, targetName, revision);
 	}
-
-	protected List<Doc> svnRevertRealDoc(Repos repos, String parentPath,String entryName, Integer type, ReturnAjax rt) 
-	{
-		System.out.println("svnRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
-		String localParentPath = getReposRealPath(repos) + parentPath;
-
-		//revert from svn server
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setPath(parentPath);
-		doc.setName(entryName);
-		return svnCheckOut(repos, true, doc, localParentPath, entryName,-1);
-	}
 	
-	protected List<Doc> gitRevertRealDoc(Repos repos, String parentPath, String entryName, Integer type, ReturnAjax rt) 
-	{
-		System.out.println("gitRevertRealDoc() parentPath:" + parentPath + " entryName:" + entryName);
-		String localParentPath = getReposRealPath(repos) + parentPath;
-
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setPath(parentPath);
-		doc.setName(entryName);
-		return gitCheckOut(repos, true, doc, localParentPath, entryName,null);
-	}
-	
-	protected List<Doc> svnRevertVirtualDoc(Repos repos, String docVName) {
-		System.out.println("svnRevertVirtualDoc() docVName:" + docVName);
-		
-		String localDocVParentPath = getReposVirtualPath(repos);
-
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setPath("");
-		doc.setName(docVName);
-		return svnCheckOut(repos, false, doc, localDocVParentPath, docVName,-1);
-	}
-	
-	protected List<Doc> gitRevertVirtualDoc(Repos repos, String docVName) 
-	{
-		System.out.println("gitRevertVirtualDoc() docVName:" + docVName);
-		String localParentPath = getReposVirtualPath(repos);
-
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setPath("");
-		doc.setName(docVName);
-		return gitCheckOut(repos, false, doc, localParentPath, docVName,null);
-	}
 
 	protected String svnVirtualDocAdd(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
 		
