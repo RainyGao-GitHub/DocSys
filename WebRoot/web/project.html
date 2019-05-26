@@ -447,14 +447,20 @@
 <script  type="text/javascript" src="static/scripts/jquery.form.js"></script>
 <!-- context.js -->
 <script type="text/javascript" src="static/ContextJS/js/context.js"></script>
-<!-- DocSys class -->
+
+<!-- DocSys Utils class -->
 <script type="text/javascript" src="js/fileReader.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
+
+<!-- DocSys class -->
 <script type="text/javascript" src="js/DocUpload.js"></script>
+<script type="text/javascript" src="js/DocDelete.js"></script>
 <script type="text/javascript" src="js/DocCopy.js"></script>
 <script type="text/javascript" src="js/DocMove.js"></script>
 <script type="text/javascript" src="js/DocEdit.js"></script>
-<script type="text/javascript" src="js/base64.js"></script>
-<script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
+<script type="text/javascript" src="js/DocHistory.js"></script>
+
 <script type="text/javascript">
 	//初始化全局变量 //Repos Info
 	var gReposId;
@@ -1567,18 +1573,21 @@
         });
     }
 	
-	function showDocHistory(node,historyType)
+	function showDocHistory(node, historyType)
 	{
 		console.log("showDocHistory()");
 
 		var parentPath ="";
 		var docName = "";
 		var docId = 0;
+		var pid = 0;
+		
 		var treeNode = node;
 		if(treeNode != null)
 		{
 			docId = treeNode.id;
-			parentPath = getTreeNodeParentPath(treeNode);
+			pid = treeNode.pid;
+			parentPath = treeNode.path;
 			docName = treeNode.name;
 		}
 		console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
@@ -1591,7 +1600,7 @@
 			foot: false,
 			big: true,
 			callback: function(){
-				historyLogsPageInit(gReposId,docId,parentPath,docName,historyType);
+				DocHistory.historyLogsPageInit(gReposId, docId, pid, parentPath, docName, historyType);
 			},
 		});
 	}
