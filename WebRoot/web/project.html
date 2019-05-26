@@ -2582,7 +2582,7 @@ function CompareObj(objA, objB, flag) {
 			var treeNode = getNodeByNodeId(node.docId);
 			if(treeNode == null)
 			{
-	      		var newNode = {name: nodeName, id : node.docId, isParent: isParent, pId: pId, path: node.path};
+	      		var newNode = {name: nodeName, id : node.docId, isParent: isParent, pId: pId, path: node.path, type: node.type};
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
 		}
