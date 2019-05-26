@@ -760,10 +760,12 @@
 			}
 		}
 		
+		var docId = node.id;
 		var pid = node.pid;
 	   	var path = Base64.encode(node.path);
 	   	var name = Base64.encode(node.name);
-		window.location.href = "/DocSystem/Doc/downloadDoc.do?docId="+docId;
+	   	window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + reposId + "&docId=" + docId + "&path=" + path + "&name="+ name;	
+
 	}
 	
     /*文件上传实现*/
@@ -2833,27 +2835,45 @@ function CompareObj(objA, objB, flag) {
         };
     })();		
       		
-	var curRightClickedDocListNode = {};
+	var curRightClickedDocListNode = null;
     function docListOnMouseDown(obj,ev)
     {
    	 	var docId = $(obj).attr('dataId');
    	 	var pid = $(obj).attr('dataPid');
    	 	var path = $(obj).attr('dataPath');
-   	 	var docName = $(obj).attr('dataName');
+   	 	var name = $(obj).attr('dataName');
    	 	var type = $(obj).attr('dataType');
+   	 	var latestEditTime = $(obj).attr('latestEditTime');
 	 	
-   	 	curRightClickedDocListNode.id = docId;
-   	 	curRightClickedDocListNode.pid = pid;
-   	 	curRightClickedDocListNode.path = path;
-	 	curRightClickedDocListNode.name = name;
-	 	curRightClickedDocListNode.type = type;
+   	 	var node = {};
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
+   		node.latestEditTime = latestEditTime;
+   		
+   		curRightClickedDocListNode = node;
 	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
     }
 	
  	function secondGetDoc(obj){
- 		var docId = $(obj).parents('li').attr('dataId');
- 		var type = $(obj).parents('li').attr('dataType');
- 		console.log("type:" + type);
+   	 	var docId = $(obj).attr('dataId');
+   	 	var pid = $(obj).attr('dataPid');
+   	 	var path = $(obj).attr('dataPath');
+   	 	var name = $(obj).attr('dataName');
+   	 	var type = $(obj).attr('dataType');
+   	 	var latestEditTime = $(obj).attr('latestEditTime');
+	 	
+   	 	var node = {};
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
+   		node.latestEditTime = latestEditTime;
+ 		
+ 		console.log("secondGetDoc node:", node);
  		
  		if(gDocId != docId)
  		{
@@ -2861,8 +2881,8 @@ function CompareObj(objA, objB, flag) {
 		 	gDocId = docId;
  		}
 		
- 		var node = getNodeByNodeId(docId);
-		if(node == null)
+ 		var treeNode = getNodeByNodeId(docId);
+		if(treeNode == null)
 		{
 			console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
 			syncUpMenu();
@@ -2872,7 +2892,7 @@ function CompareObj(objA, objB, flag) {
 		{
 			var zTree = $.fn.zTree.getZTreeObj("doctree");
 			//select this node in zTree
-		 	zTree.selectNode(node);
+		 	zTree.selectNode(treeNode);
 				
 			if(type == 1)	//For File, show RightDiv
 		 	{
@@ -2881,14 +2901,14 @@ function CompareObj(objA, objB, flag) {
 		 	else
 		 	{
 		 		//Open the dir in zTree
-				zTree.reAsyncChildNodes(node, "refresh",true);
+				zTree.reAsyncChildNodes(treeNode, "refresh",true);
 		      		
 		 		//show DocList under this dir
-		 		showDocList(node);
+		 		showDocList(treeNode);
 		 	}
 		
 			//显示预览或备注
-			showVirtualDoc(node,false);
+			showVirtualDoc(treeNode,false);
 		}		
   	}
  	
@@ -2920,7 +2940,7 @@ function CompareObj(objA, objB, flag) {
    	 	var docId = $(obj).attr('dataId');
    	 	var pid = $(obj).attr('dataPid');
    	 	var path = $(obj).attr('dataPath');
-   	 	var docName = $(obj).attr('dataName');
+   	 	var name = $(obj).attr('dataName');
    	 	var type = $(obj).attr('dataType');
 	 	
    	 	var node = {};
@@ -2938,7 +2958,7 @@ function CompareObj(objA, objB, flag) {
    	 	var docId = $(obj).attr('dataId');
    	 	var pid = $(obj).attr('dataPid');
    	 	var path = $(obj).attr('dataPath');
-   	 	var docName = $(obj).attr('dataName');
+   	 	var name = $(obj).attr('dataName');
    	 	var type = $(obj).attr('dataType');
 	 	
    	 	var node = {};
@@ -3365,32 +3385,63 @@ function CompareObj(objA, objB, flag) {
    	}
 	
 	//显示文件详情
-	function showDocDetail(node){         
-        //对话框 title
-        var title = "详细信息";
-        
-        var parentNode = node.getParentNode();
-        var parentPath = getNodePath(parentNode);
-          
-        var createTime = formatTime(node.createTime);  
-        var lastEditTime = formatTime(node.latestEditTime);  
-        
-        //显示新建对话框
-        qiao.bs.dialog({
-              id: "dialog-doc-detail",
-              url: '#doc-detail',
-              title: title,
-              okbtn: "确定",
-              callback: function () {
-                      $("#dialog-doc-detail input[name='name']").val(node.name);
-                      $("#dialog-doc-detail input[name='size']").val(node.size);               
-                      $("#dialog-doc-detail input[name='position']").val(parentPath);                
-                      $("#dialog-doc-detail input[name='createTime']").val(createTime);                
-                      $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);                
-              }
-        },function(){
-        	return true;
-          });		
+	function showDocDetail(node)
+	{
+		if(node == undefined || node == null)
+		{
+			showErrorMessage("请选择文件！");
+			return;
+		}
+		
+        //To get DocInfo
+    	$.ajax({
+            url : "/DocSystem/Doc/getDoc.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: gReposId,
+                docId : node.id,
+                pid: node.pid,
+                path: node.path,
+                name: node.name,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	var doc = ret.data;
+                	
+                    //对话框 title
+                    var title = "详细信息";
+                              
+                    var createTime = formatTime(doc.createTime);  
+                    var lastEditTime = formatTime(doc.latestEditTime);  
+                    
+                    //显示新建对话框
+                    qiao.bs.dialog({
+                          id: "dialog-doc-detail",
+                          url: '#doc-detail',
+                          title: title,
+                          okbtn: "确定",
+                          callback: function () {
+                                  $("#dialog-doc-detail input[name='name']").val(doc.name);
+                                  $("#dialog-doc-detail input[name='size']").val(doc.size);               
+                                  $("#dialog-doc-detail input[name='position']").val(doc.path);                
+                                  $("#dialog-doc-detail input[name='createTime']").val(createTime);                
+                                  $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);                
+                          }
+                    },function(){
+                    	return true;
+                    });		                    
+                }
+                else
+                {
+                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
+                }
+            },
+            error : function () {
+                showErrorMessage("获取文件信息失败：服务器异常");
+                $btn.button('reset');
+            }
+        });
 	}	
     
     //ShowCenter: hide left and right
@@ -3999,17 +4050,13 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '详细信息', action: function(e){
 					e.preventDefault();
-					var docId = curRightClickedDocListNode.docId;
-					var node = getNodeByNodeId(docId);
-					showDocDetail(node);
+					showDocDetail(curRightClickedDocListNode);
 				}
 			},
 			{divider: true},
 			{text: '备注', action: function(e){
 					e.preventDefault();
-					var docId = curRightClickedDocListNode.docId;
-					var node = getNodeByNodeId(docId);
-		 			showVirtualDoc(node,false);
+		 			showVirtualDoc(curRightClickedDocListNode,false);
 		 			showRightDiv();
 				}
 			},
