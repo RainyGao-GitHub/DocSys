@@ -1,6 +1,7 @@
 	//DocCopy类
     var DocCopy = (function () {
         /*全局变量*/
+        var reposId;
         var isCopping = false;	//文件复制中标记
         var stopCopyFlag = false;	//结束复制
         var copiedNum = 0; //已复制个数
@@ -20,15 +21,14 @@
         var index = 0; //当前操作的索引
         var totalNum = 0; 
  		var SubContextList = []; //文件复制上下文List，用于记录单个文件的复制情况，在开始复制的时候初始化
-        var vid = 0;
  		
         //状态机变量，用于实现异步对话框的实现
         var copyConflictConfirmSet = 0; //0：文件已存在时弹出确认窗口，1：文件已存在直接更改目标文件名，2：文件已存在跳过
         var copyErrorConfirmSet = 0; //0:复制错误时弹出确认是否继续复制窗口，1：复制错误时继续复制后续文件， 2：复制错误时停止整个复制		
         var copyWarningConfirmSet =0; //0: 复制警告时弹出确认是否继续复制窗口，1：复制警告时继续复制后续文件 2：复制警告时停止整个复制
       	
-		//提供给外部的多文件copy接口
-		function copyDocs(treeNodes,parentNode,vid)	//多文件移动函数
+		//提供给外部的多文件move接口
+		function copyDocs(treeNodes, dstParentNode, vid)	//多文件复制函数
 		{
 			console.log("copyDocs treeNodes:", treeNodes);
 			if(treeNodes.length <= 0)
@@ -38,35 +38,35 @@
 			}
 			
 			//get the parentInfo
-		  	var parentPath = "";
-		  	var parentId = 0;
-		  	var level = 0;
-			if(parentNode && parentNode != null)
+		  	var dstPath = "";
+		  	var dstPid = 0;
+		  	var dstLevel = 0;
+			if(dstParentNode && dstParentNode != null)
 			{
-				parentPath = parentNode.path + parentNode.name+"/";
-				parentId=parentNode.id;
-				level = parentNode.level+1;
+				dstPath = dstParentNode.path + dstParentNode.name+"/";
+				dstPid = dstParentNode.id;
+				dstLevel = dstParentNode.level+1;
 			}
 			else
 			{
-				parentNode=null;
+				dstParentNode = null;
 			}
 
-			console.log("copyDocs parentNode:", parentNode);
+			console.log("copyDocs dstParentNode:", dstParentNode);
 
 			if(isCopping == true)
 			{
-				DocCopyAppend(treeNodes, parentNode, parentPath, parentId, level, vid);
+				DocCopyAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid);
 			}
 			else
 			{
-				DocCopyInit(treeNodes, parentNode, parentPath, parentId, level, vid);
+				DocCopyInit(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid);
 				copyDoc();
 			}			
 		}
 		
       	//初始化DocCopy
-      	function DocCopyInit(treeNodes,parentNode,parentPath,parentId,level,vid)	//多文件移动函数
+      	function DocCopyInit(treeNodes,dstParentNode,dstPath,dstPid,level,vid)	//多文件复制函数
 		{
 			console.log("DocCopyInit()");
 			var fileNum = treeNodes.length;
@@ -75,9 +75,9 @@
 			//Build CopyBatch
 			var copyBatch = {};
 			copyBatch.treeNodes = treeNodes;
-			copyBatch.parentNode = parentNode;
-			copyBatch.parentPath = parentNode.path;
-			copyBatch.parentId = parentId;
+			copyBatch.dstParentNode = dstParentNode;
+			copyBatch.dstPath = dstParentNode.path;
+			copyBatch.dstPid = dstPid;
 			copyBatch.level = level;
 			copyBatch.vid = vid;
 			copyBatch.num = fileNum;
@@ -113,7 +113,7 @@
       	}
       	
       	//增加复制文件
-      	function DocCopyAppend(treeNodes, parentNode, parentPath, parentId, level, vid)	//多文件移动函数
+      	function DocCopyAppend(treeNodes, dstParentNode, dstPath, dstPid, level, vid)	//多文件复制函数
 		{
 			console.log("DocCopyAppend()");
 			if(!treeNodes)
@@ -128,9 +128,9 @@
 			//Build CopyBatch
 			var copyBatch = {};
 			copyBatch.treeNodes = treeNodes;
-			copyBatch.parentNode = parentNode;
-			copyBatch.parentPath = parentNode.path;
-			copyBatch.parentId = parentId;
+			copyBatch.dstParentNode = dstParentNode;
+			copyBatch.dstPath = dstParentNode.path;
+			copyBatch.dstPid = dstPid;
 			copyBatch.level = level;
 			copyBatch.vid = vid;
 			copyBatch.num = fileNum;
@@ -170,9 +170,9 @@
       		console.log("buildSubContextList() copyContent curBatchIndex:" + curBatchIndex + " num:" + copyContent.batchNum );
     		
       		var treeNodes = copyBatch.treeNodes;
-      		var parentPath = copyBatch.parentPath;
-      		var level = copyBatch.level;
-      		var parentId = copyBatch.parentId;
+      		var dstPath = copyBatch.dstPath;
+      		var dstLevel = copyBatch.dstLevel;
+      		var dstPid = copyBatch.dstPid;
       		var vid = copyBatch.vid;
       		var index = copyBatch.index;
       		var fileNum =  copyBatch.num;
@@ -200,8 +200,8 @@
     	   		   	SubContext.treeNode = treeNode;
         			SubContext.vid = vid;
     	   		   	SubContext.docId = treeNode.id;  
-    	   		   	SubContext.parentId = treeNode.pid;
-		    		SubContext.parentPath = treeNode.path;
+    	   		   	SubContext.pid = treeNode.pid;
+		    		SubContext.path = treeNode.path;
 		    		SubContext.name = treeNode.name;
     	   		   	SubContext.level = treeNode.level;		
     	   		   	SubContext.type = treeNode.isParent == true? 2: 1;	
@@ -209,10 +209,10 @@
     	   		   	SubContext.lastestEditTime = treeNode.latestEditTime;
 			    	
     	   		   	//dst ParentNode Info
-    	   		   	SubContext.dstParentNode = parentNode;
-    	   		   	SubContext.dstParentPath = parentPath;
-    	   		   	SubContext.dstParentId = parentId;
-    	   		   	SubContext.dstLevel = level;
+    	   		   	SubContext.dstParentNode = dstParentNode;
+    	   		   	SubContext.dstPath = dstPath;
+    	   		   	SubContext.dstPid = dstPid;
+    	   		   	SubContext.dstLevel = dstLevel;
 
 			    	//Status Info
 		    		SubContext.index = i;
@@ -254,14 +254,14 @@
     		console.log("copyDoc() index:" + index + " totalNum:" + totalNum);
     		var SubContext = SubContextList[index];
 
-			if(SubContext.docId == parentId)
+			if(SubContext.docId == dstPid)
 			{
-				console.log("treeNode is same to parentNode","treeNode",SubContext.docId,"parentId",parentId);
+				console.log("treeNode is same to dstParentNode","treeNode",SubContext.docId,"dstPid",dstPid);
 				copyErrorConfirm(SubContext.name);
 				return;
 			}			
 			
-			if(isNodeExist(SubContext.name, SubContex.parentNode) == true)
+			if(isNodeExist(SubContext.name, SubContex.dstParentNode) == true)
 			{
 			  	//Node Name conflict confirm
 				CopyConflictConfirm(SubContext.name);
@@ -277,7 +277,7 @@
 	                srcPid: SubContext.pid,
 	                srcPath: SubContext.path,
 	                srcName: SubContext.name,
-	                dstPid: SubContext.dstParentId,	//目标doc parentId
+	                dstPid: SubContext.dstParentId,	//目标doc dstPid
 	                dstPath: SubContext.dstParentPath,
 	                dstName: SubContext.dstName, //目标docName
 	                vid: SubContext.vid,			//仓库id
@@ -287,7 +287,7 @@
 	                	console.log("copyDoc() ok:",ret.data);
 	                 	
 	                	//后台复制成功，根据后台返回的docid,新建一个treeNode
-	                	addTreeNode(ret.data,parentNode);	          			
+	                	addTreeNode(ret.data,dstParentNode);	          			
 	          			
 	          			//复制下一个Doc
 	                    copyNextDoc();
@@ -407,8 +407,8 @@
 		
 		//开放给外部的调用接口
         return {
-			copyDocs: function(treeNodes,parentNode,vid){
-            	copyDocs(treeNodes,parentNode,vid);
+			copyDocs: function(treeNodes,dstParentNode,vid){
+            	copyDocs(treeNodes,dstParentNode,vid);
             },
         };
     })();

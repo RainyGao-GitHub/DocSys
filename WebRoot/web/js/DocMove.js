@@ -1,173 +1,255 @@
 	//DocMove类	
     var DocMove = (function () {
-    	var busy = 0;
-    	
-        //moveDoc conditions
-    	var index = 0; //当前操作的索引
-        var treeNodes = null;
-        var totalNum = 0;
-        var parentNode = null;
-        var parentId = 0;
-        var vid = 0; 
-
-        //Context Cache
-        var indexCache = [];
-        var treeNodesCache =[];
-        var totalNumCache = [];
-        var parentNodeCache = [];
-        var parentIdCache = [];
-        var vidCache = [];
+        /*全局变量*/
+        var reposId;
+        var isMoving = false;	//文件移动中标记
+        var stopFlag = false;	//结束移动
+        var movedNum = 0; //已移动个数
+        var successNum = 0;	//成功移动个数
+		var failNum = 0; //移动失败个数
+		
+        /*Content 用于保存文件移动的初始信息*/
+        var Content = {};
+        Content.BatchList = [];
+        Content.batchNum = 0;	//totalBatchNum
+        Content.batchIndex = 0;	//curBatchIndex
+        Content.state = 0;	//0: all Batch not inited 1: Batch Init is on going 2: Batch Init completed
+        Content.initedFileNum = 0;
+        Content.totalFileNum = 0; 
         
-        //标准Java成员操作接口
-		function getIndex()
+        /*moveDoc conditions 用于指示当前的移动文件及移动状态*/
+        var index = 0; //当前操作的索引
+        var totalNum = 0; 
+ 		var SubContextList = []; //文件移动上下文List，用于记录单个文件的移动情况，在开始移动的时候初始化
+ 		
+		//提供给外部的多文件move接口
+		function moveDocs(treeNodes, dstParentNode, vid)	//多文件移动函数
 		{
-            return index;
-		}
-		
-		function setIndex(i)
-		{
-			index = i;
-		}
-		
-		function getTreeNodes()
-		{
-            return treeNodes;
-		}
-		
-		function setTreeNodes(nodes)
-		{
-			treeNodes = nodes;
-		}
-		
-		function getTotalNum()
-		{
-            return totalNum;
-		}
-		
-		function setTotalNum(num)
-		{
-			totalNum = num;
-		}
-		
-		function getParentNode()
-		{
-            return parentNode;
-		}
-		
-		function setParentNode(node)
-		{
-			parentNode = node;
-		}
-		
-		function getParentId()
-		{
-            return parentId;
-		}
-		
-		function setParentId(id)
-		{
-			parentId = id;
-		}
-		
-		function getVid()
-		{
-            return vid;
-		}
-		
-		function setVid(id)
-		{
-			vid = id;
-		}
-		
-		
-		//上下文操作接口
-		function pushContext()
-		{
-			indexCache.push(index);
-			treeNodesCache.push(treeNodes);
-			totalNumCache.push(totalNum);
-			parentNodeCache.push(parentNode);
-			parentIdCache.push(parentId);
-			vidCache.push(vid);			
-		}
-		function popContext()
-		{
-			index = indexCache.pop();
-			treeNodes = treeNodesCache.pop();
-			totalNum = totalNumCache.pop();
-			parentNode = parentNodeCache.pop();
-			parentId = parentIdCache.pop();
-			vid = vidCache.pop();
-		}
-		function clearContext()	//清空上下文，出错时需要清空，避免下次进来是被pop out来执行
-		{
-			indexCache = [];
-	        treeNodesCache =[];
-	        totalNumCache = [];
-	        parentNodeCache = [];
-	        parentIdCache = [];
-	        vidCache = [];
-		}
-		function ContextSize()
-		{
-			return indexCache.length;
-		}
-      	
-		//多文件move接口
-		function moveDocs(treeNodes,parentNode,vid)	//多文件移动函数
-		{
-			console.log("moveDocs");
-
-			if(busy == 1)
+			console.log("moveDocs treeNodes:", treeNodes);
+			if(treeNodes.length <= 0)
 			{
-				bootstrapQ("系统正忙，请稍候重试!");
+				showErrorMessage("请选择需要移动的文件!");
 				return;
 			}
-			busy = 1;
-			clearContext();	//清空Context缓存
 			
-			DocMoveSet(treeNodes,parentNode,vid);	//设置DocMove Parameters
-				
-			//启动复制操作      		
-			moveDoc();	//start move
+			//get the parentInfo
+		  	var dstPath = "";
+		  	var dstPid = 0;
+		  	var dstLevel = 0;
+			if(dstParentNode && dstParentNode != null)
+			{
+				dstPath = dstParentNode.path + dstParentNode.name+"/";
+				dstPid = dstParentNode.id;
+				dstLevel = dstParentNode.level+1;
+			}
+			else
+			{
+				dstParentNode = null;
+			}
+
+			console.log("moveDocs dstParentNode:", dstParentNode);
+
+			if(isMoving == true)
+			{
+				DocMoveAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid);
+			}
+			else
+			{
+				DocMoveInit(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid);
+				moveDoc();
+			}			
 		}
 		
-      	//初始化DocMove设置
-      	function DocMoveSet(treeNodes,parentNode,vid)	//多文件移动函数
+      	//初始化DocMove
+      	function DocMoveInit(treeNodes,dstParentNode,dstPath,dstPid,dstLevel,vid)	//多文件移动函数
 		{
-			console.log("DocMoveSet");
+			console.log("DocMoveInit()");
+			var fileNum = treeNodes.length;
+			console.log("DocMoveInit() fileNum:" + fileNum);				
 
-			setIndex(0);
-
-			setTreeNodes(treeNodes);
-			var totalNum = 0;
-			if(treeNodes && treeNodes.length)
-			{
-				totalNum = treeNodes.length;
-			}
-			setTotalNum(totalNum);
-
-			setParentNode(parentNode);
-			var parentId = 0;
-			if(parentNode && parentNode.id)
-			{
- 				parentId = parentNode.id;
-			}
-			setParentId(parentId);
+			//Build Batch
+			var Batch = {};
+			Batch.treeNodes = treeNodes;
+			Batch.dstParentNode = dstParentNode;
+			Batch.dstPath = dstParentNode.path;
+			Batch.dstPid = dstPid;
+			Batch.dstLevel = dstLevel;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
 			
-			setVid(vid);			
+			//add to Content
+			Content.BatchList = [];
+			Content.BatchList.push(Batch);			
+			Content.batchNum = 1;
+	        Content.totalFileNum = fileNum;
+			totalNum = Content.totalFileNum;
+			
+			//Init Content state
+			Content.initedFileNum = 0;
+			Content.batchIndex = 0;
+			Content.state = 1;
+			console.log("DocMoveInit Content:", Content);
+	        
+			
+			isCopping = true;
+			
+			//清空上下文列表
+			SubContextList = [];
+			FailList = [];
+			
+			//Set the Index
+			index = 0;
+			
+			//Build SubContextList(totalFileNum will also be caculated)
+			buildSubContextList(Content, SubContextList, 1000);
+			console.log("文件总的个数为："+totalNum);
       	}
+      	
+      	//增加移动文件
+      	function DocMoveAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid)	//多文件移动函数
+		{
+			console.log("DocMoveAppend()");
+			if(!treeNodes)
+			{
+				console.log("DocMoveAppend() treeNodes is null");
+				return;
+			}
+
+			var fileNum = treeNodes.length;
+			console.log("DocMoveAppend() fileNum:" + fileNum);
+
+			//Build Batch
+			var Batch = {};
+			Batch.treeNodes = treeNodes;
+			Batch.dstParentNode = dstParentNode;
+			Batch.dstPath = dstParentNode.path;
+			Batch.dstPid = dstPid;
+			Batch.dstLevel = dstLevel;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
+
+			//Append to Content
+			Content.batchList.push(Batch);
+			Content.batchNum++;
+			Content.totalFileNum += fileNum;
+			totalNum = Content.totalFileNum;
+			
+			console.log("DocMoveAppend() Content:", Content);
+			
+			if(Content.state == 2)	//Batch already initiated, need to restart it
+			{
+				Content.batchIndex++;
+				Content.state = 1;
+				buildSubContextList(Content, SubContextList, 1000);
+			}
+			
+			console.log("文件总的个数为："+Content.totalFileNum);
+		}
+      	
+      	//并将需要移动的文件加入到SubContextList中
+		function buildSubContextList(Content, SubContextList, maxInitNum)
+		{
+			if(Content.state == 2)
+			{
+				return;
+			}
+			
+      		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
+			
+      		var curBatchIndex = Content.batchIndex;
+      		var Batch = Content.BatchList[curBatchIndex];
+      		console.log("buildSubContextList() Content curBatchIndex:" + curBatchIndex + " num:" + Content.batchNum );
+    		
+      		var treeNodes = Batch.treeNodes;
+      		var dstPath = Batch.dstPath;
+      		var dstLevel = Batch.dstLevel;
+      		var dstPid = Batch.dstPid;
+      		var vid = Batch.vid;
+      		var index = Batch.index;
+      		var fileNum =  Batch.num;
+      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum );
       		
+      		var count = 0;
+			console.log("buildSubContextList fileNum:" + fileNum);
+    		for( var i = index ; i < fileNum ; i++ )
+    		{
+ 				count++;
+ 				if(count > maxInitNum)
+ 				{
+ 					//buildSubContext 每次最多1000个
+ 					return;
+ 				}
+ 				
+ 				Batch.index++;
+ 				Content.initedFileNum++;
+ 				
+    			var treeNode = treeNodes[i];
+    	   		if(treeNode && treeNode != null)
+    	   		{
+    	   		   	var SubContext ={};
+    	   		   	//Doc Info
+    	   		   	SubContext.treeNode = treeNode;
+        			SubContext.vid = vid;
+    	   		   	SubContext.docId = treeNode.id;  
+    	   		   	SubContext.pid = treeNode.pid;
+		    		SubContext.path = treeNode.path;
+		    		SubContext.name = treeNode.name;
+    	   		   	SubContext.level = treeNode.level;		
+    	   		   	SubContext.type = treeNode.isParent == true? 2: 1;	
+		    	   	SubContext.size = treeNode.size;
+    	   		   	SubContext.lastestEditTime = treeNode.latestEditTime;
+			    	
+    	   		   	//dst ParentNode Info
+    	   		   	SubContext.dstParentNode = dstParentNode;
+    	   		   	SubContext.dstPath = dstPath;
+    	   		   	SubContext.dstPid = dstPid;
+    	   		   	SubContext.dstLevel = dstLevel;
+
+			    	//Status Info
+		    		SubContext.index = i;
+		    	   	SubContext.state = 0;	//未开始移动
+		    	   	SubContext.status = "待移动";	//未开始移动
+		    	   			      								    	   	
+		    	   	//Push the SubContext
+		    	   	SubContextList.push(SubContext);
+    	   		}
+	    	}
+    		
+    		Batch.state = 2;
+    		Content.batchIndex++;
+    		if(Content.batchIndex == Content.batchNum)
+    		{
+    			Content.state = 2;
+    			console.log("buildSubContextList() all Batch Inited");
+    		}
+	   	}
+      	
 		//moveDoc接口，该接口是个递归调用
     	function moveDoc()
-    	{
-    		console.log("moveDoc index:" + index + " totalNum:" + totalNum + " parentId:" + parentId + " vid:" + vid);
-    		var treeNode = treeNodes[index];
+    	{    		
+    		//files 没有全部加入到SubContextList
+    		if(Content.state != 2)
+    		{
+				buildSubContextList(Content,SubContextList,1000);
+    		}
     		
-  	    	if(treeNode.pid == parentId)
+			//判断是否取消移动
+    		if(stopFlag == true)
+    		{
+    			console.log("moveDoc(): 结束移动");
+    			moveEndHandler();
+    			return;
+    		}
+    		
+    		console.log("moveDoc() index:" + index + " totalNum:" + totalNum);
+    		var SubContext = SubContextList[index];
+    		
+  	    	if(SubContext.pid == SubContext.dstPid)
   			{
-  	    		console.log("treeNode is already under parentNode","treeNode",treeNode,"parentNode",parentNode);
-  	    		//moveErrorConfirm(treeNode.name);
   	    		moveNextDoc();
   	    		return; 
   			}
@@ -178,29 +260,28 @@
                 type : "post",
                 dataType : "json",
                 data : {
-                    docId : treeNode.id,
-                    srcPid: treeNode.pid,
-                    dstPid: parentId,
-                    srcPath: treeNode.path,
-                    srcName: treeNode.name,
-                    dstPath: parentNode.path + parentNode.name + "/",
-                    dstName: treeNode.name,
-                    vid: vid,
+                    reposId: SubContext.vid,
+                	docId : SubContext.docId,
+                    srcPid: SubContext.pid,
+                    dstPid: SubContext.dstPid,
+                    srcPath: SubContext.path,
+                    srcName: SubContext.name,
+                    dstPath: SubContext.dstPath,
+                    dstName: SubContext.name,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
                    {
                 	    var doc = ret.data;
+                	    
+                	    //Add or Delete from zTree
+                  	    addTreeNode(doc);
+                	    deleteTreeNode(SubContext.docId);
+                	    
                 	   	//Add or Delete from DocList
-               			if(parentId == DocListParentDocId)	//dstParentId
-            			{
-							DocList.addNode(doc.id, doc.pid, doc.type, doc.path, doc.name, doc.latestEditTime);
-            			}
-               			else if(treeNode.pid == DocListParentDocId) //srcParentId
-               			{
-               				DocList.deleteNode(docId);
-               			}
-                   		
+                	    DocList.addNode(doc);
+                	    DocList.deleteNode(SubContext.docId);
+                	    
                 	   	//moveNextDoc
                 	   	moveNextDoc();
                 	   	return;
@@ -208,13 +289,13 @@
                    else	//后台报错，结束移动
                    {
                 	   console.log("moveDoc Error:" + ret.msgInfo);
-                       moveErrorConfirm(treeNode.name,ret.msgInfo);
+                       moveErrorConfirm(SubContext.name,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
  	               console.log("服务器异常：文件[" + index + "]移动异常！");
-            	   moveErrorConfirm(treeNode.name,"服务器异常");
+            	   moveErrorConfirm(SubContext.name,"服务器异常");
             	   return;
                 }
         	});
@@ -223,12 +304,12 @@
 		function moveNextDoc()
 		{
 	        index++;	//move成功，则调用回调函
-	        if(index < totalNum) //上传没结束，且回调函数存在则回调，否则表示结束
+	        if(index < totalNum) //移动没结束，且回调函数存在则回调，否则表示结束
 	        {
 	        	console.log("moveDoc Next");
 	        	moveDoc();
 	        }
-	        else	//上传结束，保存目录结构到后台
+	        else	//移动结束，保存目录结构到后台
 	        {
     	    	busy = 0;
 	            clearContext(); //清空上下文
@@ -271,8 +352,8 @@
 		
 		//开放给外部的调用接口
         return {
-            moveDocs: function(treeNodes,parentNode,vid){
-            	moveDocs(treeNodes,parentNode,vid);
+            moveDocs: function(treeNodes,dstParentNode,vid){
+            	moveDocs(treeNodes,dstParentNode,vid);
             },
         };
     })();

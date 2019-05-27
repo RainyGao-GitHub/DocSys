@@ -2447,21 +2447,13 @@ function CompareObj(objA, objB, flag) {
       		}
       		else
       		{
-      			showErrorMessage("targetNode is null,理论上不该出现");
+      			showErrorMessage("目标节点不存在！");
       			return;
       		}
 			
 			var vid = gReposId;
  	 		
- 	 		//确定是copy还是move,如果是move调用后台move操作，否则调用后台copy操作
-	      	if(isCopy == true) //copy: 复制文件，并新建doc记录
-	      	{
-				DocCopy.copyDocs(treeNodes,parentNode,vid);
-	      	}
-	      	else	//move: 移动文件，并修改doc的parenID和path
-	      	{
-	      		DocMove.moveDocs(treeNodes,parentNode,vid); 
-	      	}
+	      	DocMove.moveDocs(treeNodes,parentNode,vid); 
       }
       //Drag and Drop Implementation End
       
