@@ -1625,7 +1625,9 @@ public class SVNUtil  extends BaseController{
 		return entries;
 	}
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean enableDelete) {
+	
+	
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 
@@ -1655,7 +1657,7 @@ public class SVNUtil  extends BaseController{
 			}
 			
 			//否则表示已经被删除，如果checkOut使能了Delete则删除本地文件或目录
-			if(enableDelete)
+			if(force)
 			{
 				if(delFileOrDir(localParentPath+targetName) == true)
 				{	
@@ -1671,23 +1673,16 @@ public class SVNUtil  extends BaseController{
 		{
         	//Get the subEntries and call svnGetEntry
 			String localEntryPath = localParentPath + targetName + "/";
-        	if(!targetName.isEmpty())
+        	if(false == targetName.isEmpty())	//not root entry
 			{
-				File dir = new File(localParentPath,targetName);
-				if(dir.mkdir())
-				{
-					doc.setType(2);
-					doc.setRevision(remoteDoc.getRevision());
-					successDocList.add(doc);
-				}
-				else
-				{
-					return null;
-				}
-			}
-			else
-			{
-				localEntryPath = localParentPath;
+        		if(getRemoteDir(localParentPath, targetName, force) == false)
+        		{
+        			return null;
+        		}
+        		
+				doc.setType(2);
+				doc.setRevision(remoteDoc.getRevision());
+				successDocList.add(doc);
 			}
         	
 			List <SVNDirEntry> subEntries = getSubEntryList(remoteEntryPath,revision);
@@ -1700,7 +1695,7 @@ public class SVNUtil  extends BaseController{
 				subDoc.setVid(doc.getVid());
 				subDoc.setPath(remoteEntryPath+"/");
 				subDoc.setName(subEntryName);				
-				List<Doc> subSuccessList = getEntry(subDoc,localEntryPath,subEntryName,subEntryRevision, enableDelete);
+				List<Doc> subSuccessList = getEntry(subDoc,localEntryPath,subEntryName,subEntryRevision, force);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1710,45 +1705,89 @@ public class SVNUtil  extends BaseController{
         }
         
 		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
+		if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
+		{
+			doc.setType(1);
+	        doc.setRevision(remoteDoc.getRevision());
+	        successDocList.add(doc);
+			return successDocList;
+		}
+		
+		return null;
+	}
+	
+    private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, Long revision, boolean force) {
 		File localEntry = new File(localParentPath + targetName);
 		if(localEntry.exists() && localEntry.isDirectory())
 		{
-			if(enableDelete == false)
+			if(force)
 			{
-				if(delFileOrDir(localParentPath+targetName) == false)
-				{	
-					return null;
-				}
+				return delFileOrDir(localParentPath+targetName);
 			}
+		
+			return false;
 		}
 	
         FileOutputStream out = null;
 		try {
 			out = new FileOutputStream(localParentPath + targetName);
 		} catch (Exception e) {
-			System.out.println("svnGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
+			System.out.println("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
 			e.printStackTrace();
-			return null;
+			return false;
 		}
 		
         SVNProperties fileProperties = new SVNProperties();
         try {
 			repository.getFile(remoteEntryPath, revision, fileProperties, out);
-            out.close();
+			out.close();
+            out = null;
         } catch (Exception e) {
-			// TODO Auto-generated catch block
-			System.out.println("svnGetEntry() getFile Exception");
+			System.out.println("getRemoteFile() getFile Exception");
 			e.printStackTrace();
-			return null;
+			if(out != null)
+			{
+				try {
+					out.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+			return false;
 		}
         
-		doc.setType(2);
-        doc.setRevision(remoteDoc.getRevision());
-        successDocList.add(doc);
-        return successDocList;
+        return true;
 	}
-	
-    /*
+
+	private boolean getRemoteDir(String localParentPath, String targetName, boolean force) {
+		// TODO Auto-generated method stub
+		File localEntry = new File(localParentPath + targetName);
+		if(localEntry.exists())
+		{
+			if(localEntry.isFile())
+			{
+				if(force)
+				{
+					if(delFileOrDir(localParentPath+targetName) == false)
+					{
+						return false;
+					}
+					
+	        		return localEntry.mkdir();
+				}
+				else
+				{
+					return false;
+				}
+			}
+			
+			return true;
+		}
+
+		return localEntry.mkdir();
+	}
+
+	/*
      * Displays error information and exits. 
      */
     public static void error(String message, Exception e){
