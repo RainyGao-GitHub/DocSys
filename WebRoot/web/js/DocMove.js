@@ -25,7 +25,7 @@
 		//提供给外部的多文件move接口
 		function moveDocs(treeNodes, dstParentNode, vid)	//多文件移动函数
 		{
-			console.log("moveDocs treeNodes:", treeNodes);
+			console.log("moveDocs reposId:" + vid + " treeNodes:", treeNodes);
 			if(treeNodes.length <= 0)
 			{
 				showErrorMessage("请选择需要移动的文件!");
