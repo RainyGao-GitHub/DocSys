@@ -3,19 +3,19 @@
         /*全局变量*/
         var reposId;
         var isCopping = false;	//文件复制中标记
-        var stopCopyFlag = false;	//结束复制
+        var stopFlag = false;	//结束复制
         var copiedNum = 0; //已复制个数
         var successNum = 0;	//成功复制个数
 		var failNum = 0; //复制失败个数
 		
-        /*copyContent 用于保存文件复制的初始信息*/
-        var copyContent = {};
-        copyContent.copyBatchList = [];
-        copyContent.batchNum = 0;	//totalBatchNum
-        copyContent.batchIndex = 0;	//curBatchIndex
-        copyContent.state = 0;	//0: all copyBatch not inited 1: copyBatch Init is on going 2: copyBatch Init completed
-        copyContent.initedFileNum = 0;
-        copyContent.totalFileNum = 0; 
+        /*Content 用于保存文件复制的初始信息*/
+        var Content = {};
+        Content.BatchList = [];
+        Content.batchNum = 0;	//totalBatchNum
+        Content.batchIndex = 0;	//curBatchIndex
+        Content.state = 0;	//0: all Batch not inited 1: Batch Init is on going 2: Batch Init completed
+        Content.initedFileNum = 0;
+        Content.totalFileNum = 0; 
         
         /*copyDoc conditions 用于指示当前的复制文件及复制状态*/
         var index = 0; //当前操作的索引
@@ -73,42 +73,41 @@
 			console.log("DocCopyInit() fileNum:" + fileNum);				
 
 			//Build CopyBatch
-			var copyBatch = {};
-			copyBatch.treeNodes = treeNodes;
-			copyBatch.dstParentNode = dstParentNode;
-			copyBatch.dstPath = dstParentNode.path;
-			copyBatch.dstPid = dstPid;
-			copyBatch.level = level;
-			copyBatch.vid = vid;
-			copyBatch.num = fileNum;
-			copyBatch.index = 0;
-			copyBatch.state = 0;
+			var Batch = {};
+			Batch.treeNodes = treeNodes;
+			Batch.dstParentNode = dstParentNode;
+			Batch.dstPath = dstParentNode.path;
+			Batch.dstPid = dstPid;
+			Batch.level = level;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
 			
-			//add to copyContent
-			copyContent.copyBatchList = [];
-			copyContent.copyBatchList.push(copyBatch);			
-			copyContent.batchNum = 1;
-	        copyContent.totalFileNum = fileNum;
-			totalNum = copyContent.totalFileNum;
+			//add to Content
+			Content.BatchList = [];
+			Content.BatchList.push(Batch);			
+			Content.batchNum = 1;
+	        Content.totalFileNum = fileNum;
+			totalNum = Content.totalFileNum;
 			
-			//Init copyContent state
-			copyContent.initedFileNum = 0;
-			copyContent.batchIndex = 0;
-			copyContent.state = 1;
-			console.log("DocCopyInit copyContent:", copyContent);
+			//Init Content state
+			Content.initedFileNum = 0;
+			Content.batchIndex = 0;
+			Content.state = 1;
+			console.log("DocCopyInit Content:", Content);
 	        
 			
 			isCopping = true;
 			
 			//清空上下文列表
 			SubContextList = [];
-			FailList = [];
 			
 			//Set the Index
 			index = 0;
 			
 			//Build SubContextList(totalFileNum will also be caculated)
-			buildSubContextList(copyContent, SubContextList, 1000);
+			buildSubContextList(Content, SubContextList, 1000);
 			console.log("文件总的个数为："+totalNum);
       	}
       	
@@ -126,57 +125,57 @@
 			console.log("DocCopyAppend() fileNum:" + fileNum);
 
 			//Build CopyBatch
-			var copyBatch = {};
-			copyBatch.treeNodes = treeNodes;
-			copyBatch.dstParentNode = dstParentNode;
-			copyBatch.dstPath = dstParentNode.path;
-			copyBatch.dstPid = dstPid;
-			copyBatch.level = level;
-			copyBatch.vid = vid;
-			copyBatch.num = fileNum;
-			copyBatch.index = 0;
-			copyBatch.state = 0;
+			var Batch = {};
+			Batch.treeNodes = treeNodes;
+			Batch.dstParentNode = dstParentNode;
+			Batch.dstPath = dstParentNode.path;
+			Batch.dstPid = dstPid;
+			Batch.level = level;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
 
-			//Append to copyContent
-			copyContent.batchList.push(copyBatch);
-			copyContent.batchNum++;
-			copyContent.totalFileNum += fileNum;
-			totalNum = copyContent.totalFileNum;
+			//Append to Content
+			Content.batchList.push(Batch);
+			Content.batchNum++;
+			Content.totalFileNum += fileNum;
+			totalNum = Content.totalFileNum;
 			
 			console.log("DocCopyAppend() Content:", Content);
 			
-			if(copyContent.state == 2)	//copyBatch already initiated, need to restart it
+			if(Content.state == 2)	//Batch already initiated, need to restart it
 			{
-				copyContent.batchIndex++;
-				copyContent.state = 1;
-				buildSubContextList(copyContent, SubContextList, 1000);
+				Content.batchIndex++;
+				Content.state = 1;
+				buildSubContextList(Content, SubContextList, 1000);
 			}
 			
-			console.log("文件总的个数为："+copyContent.totalFileNum);
+			console.log("文件总的个数为："+Content.totalFileNum);
 		}
       	
       	//并将需要复制的文件加入到SubContextList中
-		function buildSubContextList(copyContent, SubContextList, maxInitNum)
+		function buildSubContextList(Content, SubContextList, maxInitNum)
 		{
-			if(copyContent.state == 2)
+			if(Content.state == 2)
 			{
 				return;
 			}
 			
       		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
 			
-      		var curBatchIndex = copyContent.batchIndex;
-      		var copyBatch = copyContent.copyBatchList[curBatchIndex];
-      		console.log("buildSubContextList() copyContent curBatchIndex:" + curBatchIndex + " num:" + copyContent.batchNum );
+      		var curBatchIndex = Content.batchIndex;
+      		var Batch = Content.BatchList[curBatchIndex];
+      		console.log("buildSubContextList() Content curBatchIndex:" + curBatchIndex + " num:" + Content.batchNum );
     		
-      		var treeNodes = copyBatch.treeNodes;
-      		var dstPath = copyBatch.dstPath;
-      		var dstLevel = copyBatch.dstLevel;
-      		var dstPid = copyBatch.dstPid;
-      		var vid = copyBatch.vid;
-      		var index = copyBatch.index;
-      		var fileNum =  copyBatch.num;
-      		console.log("buildSubContextList() copyBatch index:" + index + " fileNum:" + fileNum );
+      		var treeNodes = Batch.treeNodes;
+      		var dstPath = Batch.dstPath;
+      		var dstLevel = Batch.dstLevel;
+      		var dstPid = Batch.dstPid;
+      		var vid = Batch.vid;
+      		var index = Batch.index;
+      		var fileNum =  Batch.num;
+      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum );
       		
       		var count = 0;
 			console.log("buildSubContextList fileNum:" + fileNum);
@@ -189,8 +188,8 @@
  					return;
  				}
  				
- 				copyBatch.index++;
- 				copyContent.initedFileNum++;
+ 				Batch.index++;
+ 				Content.initedFileNum++;
  				
     			var treeNode = treeNodes[i];
     	   		if(treeNode && treeNode != null)
@@ -224,12 +223,12 @@
     	   		}
 	    	}
     		
-    		copyBatch.state = 2;
-    		copyContent.batchIndex++;
-    		if(copyContent.batchIndex == copyContent.batchNum)
+    		Batch.state = 2;
+    		Content.batchIndex++;
+    		if(Content.batchIndex == Content.batchNum)
     		{
-    			copyContent.state = 2;
-    			console.log("buildSubContextList() all copyBatch Inited");
+    			Content.state = 2;
+    			console.log("buildSubContextList() all Batch Inited");
     		}
 	   	}
 		
@@ -237,13 +236,13 @@
 		function copyDoc()
 		{
     		//copy files 没有全部加入到SubContextList
-    		if(copyContent.state != 2)
+    		if(Content.state != 2)
     		{
-				buildSubContextList(copyContent,SubContextList,1000);
+				buildSubContextList(Content,SubContextList,1000);
     		}
     		
 			//判断是否取消复制
-    		if(stopCopyFlag == true)
+    		if(stopFlag == true)
     		{
     			console.log("copyDoc(): 结束复制");
     			copyEndHandler();
