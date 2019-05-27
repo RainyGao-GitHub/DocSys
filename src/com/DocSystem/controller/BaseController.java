@@ -133,8 +133,8 @@ public class BaseController  extends BaseFunction{
 		    	for(int i=0;i<dbDocList.size();i++)
 		    	{
 		    		Doc dbDoc = dbDocList.get(i);
-		    		    		
-					DocAuth docAuth = getDocAuthFromHashMap(dbDoc.getDocId(), pDocAuth,docAuthHashMap);
+		    		
+		    		DocAuth docAuth = getDocAuthFromHashMap(dbDoc.getDocId(), pDocAuth,docAuthHashMap);
 					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 					{
 			    		//Add to docList
@@ -4305,6 +4305,11 @@ public class BaseController  extends BaseFunction{
 	{
 		//System.out.println("getDocAuthFromHashMap() docId:" + docId);
 		if(docAuthHashMap == null)
+		{
+			return null;
+		}
+		
+		if(docId == null)
 		{
 			return null;
 		}
