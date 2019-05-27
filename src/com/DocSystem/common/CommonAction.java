@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.User;
 
 public class CommonAction {
     private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
@@ -19,6 +20,8 @@ public class CommonAction {
     //For commitAction
     private String commitMsg = null;
     private String commitUser = null;    
+    
+    private User user = null;    
     
     //For localAction
 	MultipartFile uploadFile = null;
@@ -97,6 +100,15 @@ public class CommonAction {
 		return commitMsg;
 	}
 	
+	public void setUser(User user) {
+		this.user = user;	
+	}
+	
+	public User getUser()
+	{
+		return user;
+	}
+	
 	public void setCommitUser(String commitUser) {
 		this.commitUser = commitUser;	
 	}
@@ -105,6 +117,7 @@ public class CommonAction {
 	{
 		return commitUser;
 	}
+	
 	
 	//For LocalAction
 	public MultipartFile getUploadFile() {

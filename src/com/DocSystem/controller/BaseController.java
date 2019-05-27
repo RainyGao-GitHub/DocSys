@@ -1785,6 +1785,8 @@ public class BaseController  extends BaseFunction{
 		{
 			Doc successDoc = successDocList.get(i);
 			successDoc.setRevision(revision);
+			successDoc.setCreator(login_user.getId());
+			successDoc.setLatestEditor(login_user.getId());
 			dbUpdateDoc(repos, successDoc, true);
 		}		
 		
@@ -1952,6 +1954,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		doc.setSize(localEntry.length());
+		doc.setCreateTime(localEntry.lastModified());
 		doc.setLatestEditTime(localEntry.lastModified());
 		if(reposService.addDoc(doc) == 0)
 		{
@@ -1968,6 +1971,8 @@ public class BaseController  extends BaseFunction{
 				for(int i=0; i<subDocList.size(); i++)
 				{
 					Doc subDoc = subDocList.get(i);
+					subDoc.setCreator(doc.getCreator());
+					subDoc.setLatestEditor(doc.getLatestEditor());
 					subDoc.setRevision(doc.getRevision());
 					dbAddDoc(repos, subDoc, true);
 				}
