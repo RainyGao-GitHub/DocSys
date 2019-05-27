@@ -1165,7 +1165,7 @@ public class DocController extends BaseController{
 		}
 		
 		//checkout the entry to local
-		if(verReposCheckOut(repos, isRealDoc, path, entryName, userTmpDir, targetName, commitId) == null)
+		if(verReposCheckOut(repos, isRealDoc, path, entryName, userTmpDir, targetName, commitId, true) == null)
 		{
 			System.out.println("getHistoryDoc() verReposCheckOut Failed!");
 			rt.setError("verReposCheckOut Failed path:" + path + " entryName:" + entryName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
