@@ -1733,10 +1733,10 @@ public class SVNUtil  extends BaseController{
 		if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
 		{
 			File localEntry = new File(localParentPath, targetName);
-			if(localEntry.exists())
+			if(!localEntry.exists())
 			{
 				System.out.println("getEntry() Checkout Ok, but localEntry not exists"); 
-				return successDocList;
+				return null;
 			}
 			
 			doc.setSize(localEntry.length());
@@ -1755,12 +1755,15 @@ public class SVNUtil  extends BaseController{
 		File localEntry = new File(localParentPath + targetName);
 		if(localEntry.exists() && localEntry.isDirectory())
 		{
-			if(force)
+			if(force == false)
 			{
-				return delFileOrDir(localParentPath+targetName);
+				return false;
+			}	
+			
+			if(delFileOrDir(localParentPath+targetName) == false)
+			{
+				return false;
 			}
-		
-			return false;
 		}
 	
         FileOutputStream out = null;
