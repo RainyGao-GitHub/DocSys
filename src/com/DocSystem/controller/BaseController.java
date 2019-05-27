@@ -5431,7 +5431,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return svnUtil.getEntry(doc, localParentPath, targetName, revision);
+		return svnUtil.getEntry(doc, localParentPath, targetName, revision, false);
 	}
 	
 

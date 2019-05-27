@@ -1625,7 +1625,7 @@ public class SVNUtil  extends BaseController{
 		return entries;
 	}
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean enableDelete) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 
@@ -1648,9 +1648,25 @@ public class SVNUtil  extends BaseController{
 		Doc remoteDoc = getDoc(remoteEntryPath, revision);
 		if(remoteDoc == null)
 		{
+			//entryName是空，表示当前访问的远程的根目录，必须存在
+			if(entryName.isEmpty())
+			{
+				return null;
+			}
+			
+			//否则表示已经被删除，如果checkOut使能了Delete则删除本地文件或目录
+			if(enableDelete)
+			{
+				if(delFileOrDir(localParentPath+targetName) == true)
+				{	
+					doc.setRevision("");
+					successDocList.add(doc);
+				}
+			}	
 			return null;
 		}
 		
+		//远程节点存在，如果是目录的话（且不是根目录），则先新建本地目录，然后在CheckOut子目录，如果是根目录则直接CheckOut子目录，因为本地根目录必须存在
 		if(remoteDoc.getType() == 2) 
 		{
         	//Get the subEntries and call svnGetEntry
@@ -1684,7 +1700,7 @@ public class SVNUtil  extends BaseController{
 				subDoc.setVid(doc.getVid());
 				subDoc.setPath(remoteEntryPath+"/");
 				subDoc.setName(subEntryName);				
-				List<Doc> subSuccessList = getEntry(subDoc,localEntryPath,subEntryName,subEntryRevision);
+				List<Doc> subSuccessList = getEntry(subDoc,localEntryPath,subEntryName,subEntryRevision, enableDelete);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1692,33 +1708,44 @@ public class SVNUtil  extends BaseController{
 			}
         	return successDocList;
         }
-        else
-        {	
-            FileOutputStream out = null;
-			try {
-				out = new FileOutputStream(localParentPath + targetName);
-			} catch (Exception e) {
-				System.out.println("svnGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
-				e.printStackTrace();
-				return null;
+        
+		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
+		File localEntry = new File(localParentPath + targetName);
+		if(localEntry.exists() && localEntry.isDirectory())
+		{
+			if(enableDelete == false)
+			{
+				if(delFileOrDir(localParentPath+targetName) == false)
+				{	
+					return null;
+				}
 			}
-			
-	        SVNProperties fileProperties = new SVNProperties();
-            try {
-				repository.getFile(remoteEntryPath, revision, fileProperties, out);
-	            out.close();
-            } catch (Exception e) {
-				// TODO Auto-generated catch block
-				System.out.println("svnGetEntry() getFile Exception");
-				e.printStackTrace();
-				return null;
-			}
-            
-			doc.setType(2);
-            doc.setRevision(remoteDoc.getRevision());
-            successDocList.add(doc);
-            return successDocList;
-        }
+		}
+	
+        FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(localParentPath + targetName);
+		} catch (Exception e) {
+			System.out.println("svnGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
+			e.printStackTrace();
+			return null;
+		}
+		
+        SVNProperties fileProperties = new SVNProperties();
+        try {
+			repository.getFile(remoteEntryPath, revision, fileProperties, out);
+            out.close();
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("svnGetEntry() getFile Exception");
+			e.printStackTrace();
+			return null;
+		}
+        
+		doc.setType(2);
+        doc.setRevision(remoteDoc.getRevision());
+        successDocList.add(doc);
+        return successDocList;
 	}
 	
     /*
