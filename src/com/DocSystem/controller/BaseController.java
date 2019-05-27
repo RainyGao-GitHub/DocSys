@@ -1706,7 +1706,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath;
 		
 		//Do checkout the entry to 
-		if(verReposCheckOut(repos, false, vParentPath, vDocName, localParentPath, vDocName, commitId) == null)
+		if(verReposCheckOut(repos, false, vParentPath, vDocName, localParentPath, vDocName, commitId, true) == null)
 		{
 			unlockDoc(doc,login_user,docLock);
 			System.out.println("revertVirtualDocHistory() verReposCheckOut Failed!");
@@ -1762,7 +1762,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + parentPath;
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId); 
+		List<Doc> successDocList = verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId, true); 
 		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
@@ -2332,7 +2332,7 @@ public class BaseController  extends BaseFunction{
 					}
 					
 					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 					if(successDocList != null)
 					{
 						dbAddDoc(repos, remoteEntry, true);
@@ -2348,7 +2348,7 @@ public class BaseController  extends BaseFunction{
 					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
 					
 					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 					if(successDocList != null)
 					{
 						//SuccessDocList中的doc包括了revision信息
@@ -2374,7 +2374,7 @@ public class BaseController  extends BaseFunction{
 					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 					
 					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null);
+					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 					if(successDocList != null)
 					{
 						dbAddDoc(repos, remoteEntry, true);
@@ -5079,7 +5079,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected List<Doc> verReposCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId) {
+	protected List<Doc> verReposCheckOut(Repos repos, boolean isRealDoc, String parentPath, String entryName, String localParentPath, String targetName, String commitId, boolean force) {
 		Doc doc = new Doc();
 		doc.setVid(repos.getId());
 		doc.setPath(parentPath);
@@ -5091,7 +5091,7 @@ public class BaseController  extends BaseFunction{
 			{
 				revision = Long.parseLong(commitId);
 			}
-			return svnCheckOut(repos, isRealDoc, doc, localParentPath, targetName, revision);		
+			return svnCheckOut(repos, isRealDoc, doc, localParentPath, targetName, revision, force);		
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
@@ -5482,7 +5482,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 
-	protected List<Doc> svnCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath,String targetName,long revision) 
+	protected List<Doc> svnCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath,String targetName,long revision, boolean force) 
 	{
 		System.out.println("svnCheckOut() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " revision:" + revision);
 		
@@ -5493,7 +5493,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return svnUtil.getEntry(doc, localParentPath, targetName, revision, false);
+		int level = getLevelByParentPath(doc.getPath());
+		return svnUtil.getEntry(doc, level, localParentPath, targetName, revision, force);
 	}
 	
 

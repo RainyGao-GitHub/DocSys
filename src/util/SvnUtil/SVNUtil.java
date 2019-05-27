@@ -1627,10 +1627,10 @@ public class SVNUtil  extends BaseController{
 	
 	
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force) {
+	public List<Doc> getEntry(Doc doc, int level, String localParentPath, String targetName,Long revision, boolean force) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
-
+		
 		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		List<Doc> successDocList = new ArrayList<Doc>();
@@ -1639,6 +1639,8 @@ public class SVNUtil  extends BaseController{
     		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
     		return null;
     	}	
+		
+    	Long docId = buildDocIdByName(level, parentPath, entryName);
 		
 		//check targetName and set
 		if(targetName == null)
@@ -1662,6 +1664,7 @@ public class SVNUtil  extends BaseController{
 			{
 				if(delFileOrDir(localParentPath+targetName) == true)
 				{	
+					doc.setDocId(docId);
 					doc.setRevision("");
 					successDocList.add(doc);
 					return successDocList;
@@ -1685,6 +1688,7 @@ public class SVNUtil  extends BaseController{
         			return null;
         		}
         		
+        		doc.setDocId(docId);
 				doc.setType(2);
 				doc.setRevision(remoteDoc.getRevision());
 				successDocList.add(doc);
@@ -1718,9 +1722,10 @@ public class SVNUtil  extends BaseController{
 				Long subEntryRevision = subEntry.getRevision();
 				Doc subDoc = new Doc();
 				subDoc.setVid(doc.getVid());
+				subDoc.setPid(docId);
 				subDoc.setPath(subEntryParentPath);
 				subDoc.setName(subEntryName);				
-				List<Doc> subSuccessList = getEntry(subDoc,subEntryLocalParentPath,subEntryName,subEntryRevision, force);
+				List<Doc> subSuccessList = getEntry(subDoc, level+1, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1739,6 +1744,7 @@ public class SVNUtil  extends BaseController{
 				return null;
 			}
 			
+			doc.setDocId(docId);
 			doc.setSize(localEntry.length());
 			doc.setLatestEditTime(localEntry.lastModified());
 			doc.setCheckSum("");
