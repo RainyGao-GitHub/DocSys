@@ -514,12 +514,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(doc.getRevision() == null || doc.getRevision().equals(remoteEntry.getRevision()))
+		if(doc.getRevision() != null && doc.getRevision().equals(remoteEntry.getRevision()))
 		{
 			return false;
 		}
 		
-		System.out.println("isDocRemoteChanged() remote changed: dbDoc.lastEditTime:" + doc.getLatestEditTime() + " remoteEntry.lastEditTime:" + remoteEntry.getLatestEditTime()); 
+		System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + doc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
 		//printObject("isDocRemoteChanged() doc:",doc);
 		//printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 		return true;
