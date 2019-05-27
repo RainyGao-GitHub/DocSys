@@ -1761,8 +1761,9 @@ public class BaseController  extends BaseFunction{
 		String localRootPath = getReposRealPath(repos);
 		String localParentPath = localRootPath + parentPath;
 		
-		//Do checkout the entry to 
-		if(verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId) == null)
+		//Do checkout the entry to
+		List<Doc> successDocList = verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId); 
+		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
 			System.out.println("revertRealDocHistory() verReposCheckOut Failed!");
@@ -1777,6 +1778,14 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String revision = verReposAutoCommit(repos, true, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
+		
+		//Force update docInfo
+		for(int i=0; i< successDocList.size(); i++)
+		{
+			Doc successDoc = successDocList.get(i);
+			dbUpdateDoc(repos, successDoc, true);
+		}		
+		
 		unlockDoc(doc,login_user,docLock);
 		if(revision == null)
 		{			
@@ -2243,7 +2252,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
 				dbDoc.setRevision(remoteEntry.getRevision());
-				dbUpdateDoc(dbDoc);
+				dbUpdateDoc(repos, dbDoc, true);
 				unlockDoc(doc, login_user, docLock);
 				return true;
 			}
@@ -2285,7 +2294,7 @@ public class BaseController  extends BaseFunction{
 						dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
 						dbDoc.setRevision(revision);
 						dbDoc.setLatestEditorName(login_user.getName());
-						dbUpdateDoc(dbDoc);
+						dbUpdateDoc(repos, dbDoc, true);
 						unlockDoc(doc, login_user, docLock);
 						return true;
 					}
@@ -2343,7 +2352,7 @@ public class BaseController  extends BaseFunction{
 						//SuccessDocList中的doc包括了revision信息
 						for(int i=0; i<successDocList.size(); i++)
 						{
-							dbUpdateDoc(successDocList.get(i));
+							dbUpdateDoc(repos, successDocList.get(i), true);
 						}
 						unlockDoc(doc, login_user, docLock);
 						return true;
@@ -2682,8 +2691,59 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean dbUpdateDoc(Doc doc) 
+	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean force) 
 	{
+		if(force == false)
+		{
+			if(reposService.updateDoc(doc) == 0)
+			{
+				return false;
+			}		
+			return true;
+		}	
+		
+		//强制更新
+		Doc qDoc = new Doc();
+		qDoc.setVid(repos.getId());
+		qDoc.setPath(doc.getPath());
+		qDoc.setName(doc.getName());
+				
+		List<Doc> list = reposService.getDocList(qDoc);
+				
+		//dbDoc not exists, do add it
+		if(list == null || list.size() == 0)
+		{
+			System.out.println("dbUpdateDoc() dbDoc not exists,do add it"); 
+			return dbAddDoc(repos, doc, true);
+		}
+		
+		//there is duplicated nodes, do delete it and add it
+		if(list.size() > 1)
+		{
+			System.out.println("dbUpdateDoc() there is duplicated nodes, do delete it and add it"); 
+			for(int i=0; i <list.size(); i++)
+			{
+				if(dbDeleteDoc(list.get(i), true) == false)
+				{
+					return false;
+				}
+			}
+					
+			return  dbAddDoc(repos, doc, true);	
+		}	
+		
+		//type not matched, do delete it and add it
+		Doc dbDoc = list.get(0);
+		if(dbDoc.getType() != doc.getType())
+		{
+			System.out.println("dbUpdateDoc() docType not matched, do delete and add it"); 
+			if(dbDeleteDoc(dbDoc, true) == false)
+			{
+				return false;
+			}
+			return  dbAddDoc(repos, doc, true);	
+		}	
+		
 		if(reposService.updateDoc(doc) == 0)
 		{
 			return false;
@@ -2734,7 +2794,7 @@ public class BaseController  extends BaseFunction{
 		case 2: //Delete Doc
 			return dbDeleteDoc(action.getDoc(), true);
 		case 3: //Update Doc
-			return dbUpdateDoc(action.getDoc());
+			return dbUpdateDoc(action.getRepos(), action.getDoc(), true);
 		}
 		return false;
 	}
@@ -2968,7 +3028,7 @@ public class BaseController  extends BaseFunction{
 		{
 			//updateDoc Info
 			doc.setRevision(revision);
-			if(dbUpdateDoc(doc) == false)
+			if(dbUpdateDoc(repos, doc, true) == false)
 			{
 				rt.setWarningMsg("updateDoc() updateDocInfo Failed");
 			}
