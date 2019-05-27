@@ -1783,6 +1783,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< successDocList.size(); i++)
 		{
 			Doc successDoc = successDocList.get(i);
+			successDoc.setRevision(revision);
 			dbUpdateDoc(repos, successDoc, true);
 		}		
 		
