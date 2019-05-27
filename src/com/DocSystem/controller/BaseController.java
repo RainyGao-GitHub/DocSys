@@ -1780,6 +1780,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposAutoCommit(repos, true, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
 		
 		//Force update docInfo
+		printObject("revertRealDocHistory() successDocList:", successDocList);
 		for(int i=0; i< successDocList.size(); i++)
 		{
 			Doc successDoc = successDocList.get(i);
