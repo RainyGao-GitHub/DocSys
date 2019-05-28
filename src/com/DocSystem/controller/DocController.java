@@ -2,6 +2,7 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1072,14 +1073,15 @@ public class DocController extends BaseController{
 
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc")
-	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
-		
+
 		if(path == null)
 		{
 			path = "";
 		}
-		
+
 		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -1088,6 +1090,15 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		//URL was encode by EncodeURI, so just decode it here
+		try {
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");  
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return;
+		}  
 		
 		switch(repos.getType())
 		{
