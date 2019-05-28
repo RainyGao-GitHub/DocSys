@@ -281,7 +281,7 @@
 	                dstPid: SubContext.dstParentId,	//目标doc dstPid
 	                dstPath: SubContext.dstParentPath,
 	                dstName: SubContext.dstName, //目标docName
-	                vid: SubContext.vid,			//仓库id
+	                reposId: SubContext.vid,			//仓库id
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
