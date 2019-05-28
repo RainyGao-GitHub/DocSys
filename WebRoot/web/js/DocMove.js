@@ -71,7 +71,7 @@
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
 			Batch.dstParentNode = dstParentNode;
-			Batch.dstPath = dstParentNode.path;
+			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
 			Batch.dstLevel = dstLevel;
 			Batch.vid = vid;
@@ -123,7 +123,7 @@
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
 			Batch.dstParentNode = dstParentNode;
-			Batch.dstPath = dstParentNode.path;
+			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
 			Batch.dstLevel = dstLevel;
 			Batch.vid = vid;
