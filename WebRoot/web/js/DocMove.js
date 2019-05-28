@@ -93,11 +93,10 @@
 			console.log("DocMoveInit Content:", Content);
 	        
 			
-			isCopping = true;
+			isMoving = true;
 			
 			//清空上下文列表
 			SubContextList = [];
-			FailList = [];
 			
 			//Set the Index
 			index = 0;
@@ -312,15 +311,7 @@
 	        }
 	        else	//移动结束，保存目录结构到后台
 	        {
-    	    	busy = 0;
-	            clearContext(); //清空上下文
-	            
-	         	console.log("moveDoc End");
-				bootstrapQ.msg({
-					msg : '移动完成！',
-					type : 'success',
-					time : 2000,
-				});
+	        	moveEndHandler();
 	        }
 		}
 		
@@ -339,16 +330,83 @@
     	        okbtn: "继续",
     	        qubtn: "结束",
     	    },function () {
-    	    	//alert("点击了确定");
-    	    	moveNextDoc();
+    	    	moveErrorHandler(FileName, errMsg);
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-        	    isMoving = false;
-    	        syncUpMenu();	//刷新菜单
+				moveErrorAbortHandler(FileName, errMsg);
     	    	return true;
       		});
       	}
+      	
+      	//moveErrorHandler
+      	function moveErrorHandler(FileName,errMsg)
+      	{
+      		console.log("moveErrorHandler() "+ FileName + " " + errMsg);
+      		
+      		failNum++;
+      		
+      		//设置移动状态
+			SubContextList[index].state = 3;	//移动结束
+      		SubContextList[index].status = "fail";
+			SubContextList[index].msgInfo = errMsg;
+			moveNextDoc();		 	
+      	}
+      	
+      	//moveErrorAbortHandler
+      	function moveErrorAbortHandler(FileName,errMsg)
+      	{
+      		console.log("moveErrorAbortHandler() "+ FileName + " " + errMsg);
+      	
+      		failNum++;
+      		
+    		//设置移动状态
+			SubContextList[index].state = 3;	//移动结束
+      		SubContextList[index].status = "fail";
+      		SubContextList[index].msgInfo = errMsg;
+      		uploadEndHandler();
+      	}
+      	
+      	//moveSuccessHandler
+      	function moveSuccessHandler(name,msgInfo)
+      	{	
+      		console.log("moveSuccessHandler() "+ name + " " + msgInfo);
+      		
+      		successNum++;
+	      	
+	      	SubContextList[index].state = 2;	//移动结束
+      		SubContextList[index].status = "success";
+      		SubContextList[index].msgInfo = msgInfo;
+			moveNextDoc();
+      	}
+      	
+      	//moveEndHandler
+      	function moveEndHandler()
+      	{
+      		console.log("moveEndHandler() 移动结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			
+      		//清除标记
+  			isMoving = false;
+  			
+      		//显示移动完成 
+      		showMoveEndInfo();
+      	}
+      	
+  		function showMoveEndInfo()
+  		{
+  			var uploadEndInfo = "移动完成(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			uploadEndInfo = "移动完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      		}
+
+            // 普通消息提示条
+			bootstrapQ.msg({
+					msg : uploadEndInfo,
+					type : 'success',
+					time : 2000,
+				    }); 
+  		}
 		
 		//开放给外部的调用接口
         return {
