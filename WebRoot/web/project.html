@@ -1084,19 +1084,29 @@
 		return;
     }
 	
+	function deleteTreeNodeById(docId)
+    {
+		console.log("deleteTreeNode docId:" + docId);
+    	if(docId && docId != null)
+    	{
+			var zTree = $.fn.zTree.getZTreeObj("doctree");
+			var node = zTree.getNodeByParam("id",docId);
+    		if(node!=null)
+			{
+				treeObj.removeNode(Node);
+			}
+    	}
+    }
+	
 	function deleteTreeNode(name,parentNode)
     {
 		console.log("deleteTreeNode",name,parentNode);
-		var NodeIndex = -1;
 		var treeObj = $.fn.zTree.getZTreeObj("doctree");
 		var Node = treeObj.getNodeByParam("name", name, parentNode); //找到新的目录下，id与被复制的节点相同id的Node(这是zTree自动产生的，我要删掉他)
 		if(Node!=null)
 		{
-			NodeIndex = treeObj.getNodeIndex(Node);
 			treeObj.removeNode(Node);
 		}
-		console.log(NodeIndex);
-		return NodeIndex;
     }
 </script>
 
@@ -2216,6 +2226,7 @@ function CompareObj(objA, objB, flag) {
 	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
 	var curRightClickedTreeNode = null;
 	var gCopiedNodes = null;	//右键复制操作选中的节点
+	var gIsCopy = true;
 	var gParentNodeForUpload = null; //用于保存右键选择上传的父节点
 	
 	//zTree's setting

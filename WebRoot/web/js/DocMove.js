@@ -277,14 +277,13 @@
                 	    
                 	    //Add or Delete from zTree
                   	    addTreeNode(doc);
-                	    deleteTreeNode(SubContext.docId);
+                  	    deleteTreeNodeById(SubContext.docId);
                 	    
                 	   	//Add or Delete from DocList
                 	    DocList.addNode(doc);
                 	    DocList.deleteNode(SubContext.docId);
                 	    
-                	   	//moveNextDoc
-                	   	moveNextDoc();
+                	    moveSuccessHandler(SubContext.name, ret.msgInfo);
                 	   	return;
                    }
                    else	//后台报错，结束移动

@@ -288,7 +288,8 @@
 	                	console.log("copyDoc() ok:",ret.data);
 	                 	
 	                	//后台复制成功，根据后台返回的docid,新建一个treeNode
-	                	addTreeNode(ret.data,dstParentNode);	          			
+	                	deleteTreeNode(SubContext.name, dstParentNode); //zTree会在新的目录下新建一个id相同的Node需要删除
+	                	addTreeNode(ret.data,dstParentNode);
 	          			
 	          			//复制下一个Doc
 	                    copyNextDoc();
