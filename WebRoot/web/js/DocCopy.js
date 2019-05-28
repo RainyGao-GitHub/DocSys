@@ -169,6 +169,7 @@
       		console.log("buildSubContextList() Content curBatchIndex:" + curBatchIndex + " num:" + Content.batchNum );
     		
       		var treeNodes = Batch.treeNodes;
+      		var dstParentNode = Batch.dstParentNode;
       		var dstPath = Batch.dstPath;
       		var dstLevel = Batch.dstLevel;
       		var dstPid = Batch.dstPid;
@@ -212,6 +213,7 @@
     	   		   	SubContext.dstPath = dstPath;
     	   		   	SubContext.dstPid = dstPid;
     	   		   	SubContext.dstLevel = dstLevel;
+    	   		   	SubContext.dstName = treeNode.name;
 
 			    	//Status Info
 		    		SubContext.index = i;
@@ -253,17 +255,17 @@
     		console.log("copyDoc() index:" + index + " totalNum:" + totalNum);
     		var SubContext = SubContextList[index];
 
-			if(SubContext.docId == dstPid)
+			if(SubContext.docId == SubContext.dstPid)
 			{
-				console.log("treeNode is same to dstParentNode","treeNode",SubContext.docId,"dstPid",dstPid);
+				console.log("treeNode is same to dstParentNode","treeNode",SubContext.docId,"dstPid",SubContext.dstPid);
 				copyErrorConfirm(SubContext.name);
 				return;
 			}			
 			
-			if(isNodeExist(SubContext.name, SubContex.dstParentNode) == true)
+			if(isNodeExist(SubContext.name, SubContext.dstParentNode) == true)
 			{
 			  	//Node Name conflict confirm
-				CopyConflictConfirm(SubContext.name);
+				CopyConflictConfirm(SubContext);
 			  	return;
 			}
 			
@@ -355,8 +357,9 @@
 				    }); 
         }
       	
-		function CopyConflictConfirm(copiedNodeName)
+		function CopyConflictConfirm(SubContext)
 		{
+			var copiedNodeName = SubContext.dstName;
 		    qiao.bs.dialog({
 		        id: "dialog-copyConflictDialog",
 		        url: '#copyConflictConfirmDialog',

@@ -208,6 +208,7 @@
     	   		   	SubContext.dstPath = dstPath;
     	   		   	SubContext.dstPid = dstPid;
     	   		   	SubContext.dstLevel = dstLevel;
+    	   		   	SubContext.dstName = treeNode.name;
 
 			    	//Status Info
 		    		SubContext.index = i;
