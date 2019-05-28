@@ -246,14 +246,8 @@
     			return;
     		}
     		
-    		console.log("downloadDoc() index:" + index + " totalNum:" + totalNum);
     		var SubContext = SubContextList[index];
-    		
-  	    	if(SubContext.pid == SubContext.dstPid)
-  			{
-  	    		downloadNextDoc();
-  	    		return; 
-  			}
+    		console.log("downloadDoc() index:" + index + " totalNum:" + totalNum, SubContext);
   	    	
 			//执行后台downloadDoc操作
     		$.ajax({
@@ -263,18 +257,16 @@
                 data : {
                     reposId: SubContext.vid,
                 	docId : SubContext.docId,
-                    srcPid: SubContext.pid,
-                    dstPid: SubContext.dstPid,
-                    srcPath: SubContext.path,
-                    srcName: SubContext.name,
-                    dstPath: SubContext.dstPath,
-                    dstName: SubContext.name,
+                    pid: SubContext.pid,
+                    path: SubContext.path,
+                    name: SubContext.name,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
-                   {            		
-            	   		var encPath = encodeURI(path);
-            	   		var encName = encodeURI(name);
+                   {          
+                	    console.log("downloadDocPrepare Ok:",ret);
+            	   		var encPath = encodeURI(SubContext.path);
+            	   		var encName = encodeURI(SubContext.name);
             	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + SubContext.vid + "&docId=" + SubContext.docId + "&pid=" + SubContext.pid + "&path=" + encPath + "&name="+ encName;	
 
                 	   	downloadSuccessHandler();
@@ -282,13 +274,13 @@
                    }
                    else	//后台报错，结束下载
                    {
-                	   console.log("downloadDoc Error:" + ret.msgInfo);
+                	   console.log("downloadDocPrepare Error:" + ret.msgInfo);
                        downloadErrorConfirm(SubContext.name,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
- 	               console.log("服务器异常：文件[" + index + "]下载异常！");
+ 	               console.log("downloadDocPrepare 服务器异常：文件[" + index + "]下载异常！");
             	   downloadErrorConfirm(SubContext.name,"服务器异常");
             	   return;
                 }

@@ -2435,13 +2435,13 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
-		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
+		printObject("docSysGetDoc() dbDoc: ", dbDoc);
 		
 		Doc localEntry = fsGetDoc(repos, docId, pid, parentPath, docName);
-		printObject("syncupForDocChanged() localEntry: ", localEntry);
+		printObject("docSysGetDoc() localEntry: ", localEntry);
 			
 		Doc remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
-		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
+		printObject("docSysGetDoc() remoteEntry: ", remoteEntry);
 
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
@@ -2449,7 +2449,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteEntry != null)	//Remote Added
 				{
-					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					System.out.println("docSysGetDoc() remote Added: " + doc.getPath()+doc.getName());
 					return remoteEntry;
 				}
 				return null;
@@ -2457,13 +2457,13 @@ public class BaseController  extends BaseFunction{
 			
 			if(remoteEntry == null)
 			{
-				System.out.println("syncupForDocChanged() remote deleted: " + doc.getPath()+doc.getName());
+				System.out.println("docSysGetDoc() remote deleted: " + doc.getPath()+doc.getName());
 				return null;
 			}
 			
 			if(isDocRemoteChanged(dbDoc, remoteEntry))
 			{
-				System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+				System.out.println("docSysGetDoc() remote Changed: " + doc.getPath()+doc.getName());
 				dbDoc.setRevision(remoteEntry.getRevision());
 				return dbDoc;
 			}
@@ -2475,31 +2475,31 @@ public class BaseController  extends BaseFunction{
 			{
 				if(dbDoc == null)	//localAdded
 				{
-					System.out.println("syncupForDocChanged() local Added: " + doc.getPath()+doc.getName());
+					System.out.println("docSysGetDoc() local Added: " + doc.getPath()+doc.getName());
 					return localEntry;
 				}
 				
 				if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
 				{
-					System.out.println("syncupForDocChanged() local Changed: " + doc.getPath()+doc.getName());
+					System.out.println("docSysGetDoc() local Changed: " + doc.getPath()+doc.getName());
 					return localEntry;
 				}
 				
 				if(remoteEntry == null)
 				{
-					System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+					System.out.println("docSysGetDoc() remote Deleted" + doc.getPath()+doc.getName());
 					return null;
 				}
 				
 				if(dbDoc.getType() != remoteEntry.getType())
 				{
-					System.out.println("syncupForDocChanged() remoteEntry Type Changed: " + doc.getPath()+doc.getName());
+					System.out.println("docSysGetDoc() remoteEntry Type Changed: " + doc.getPath()+doc.getName());
 					return remoteEntry;						
 				}
 				
 				if(isDocRemoteChanged(dbDoc, remoteEntry))
 				{
-					System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());					
+					System.out.println("docSysGetDoc() remote Changed: " + doc.getPath()+doc.getName());					
 					return remoteEntry;
 				}
 				return dbDoc;
@@ -2509,7 +2509,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(remoteEntry != null)	//Remote Added
 				{
-					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
+					System.out.println("docSysGetDoc() remote Added: " + doc.getPath()+doc.getName());
 					return remoteEntry;
 				}
 			}
@@ -2517,11 +2517,11 @@ public class BaseController  extends BaseFunction{
 			//localDeleted and remoteDeleted so just delete dbDoc
 			if(remoteEntry == null)
 			{
-				System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+				System.out.println("docSysGetDoc() local and remote deleted: " + doc.getPath()+doc.getName());
 				return null;				
 			}
 			
-			System.out.println("syncupForDocChanged() local deleted: " + doc.getPath()+doc.getName());
+			System.out.println("docSysGetDoc() local deleted: " + doc.getPath()+doc.getName());
 			return null;
 		}
 	}
