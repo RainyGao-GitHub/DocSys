@@ -48,7 +48,7 @@ public class BaseFunction{
 	protected String curPage;// 当前第几页
 
 	/******************************** Basic Interface for docSys *************************************/
-	private void docSysDebugLog(String logStr, ReturnAjax rt) {
+	protected void docSysDebugLog(String logStr, ReturnAjax rt) {
 		System.out.println(logStr);
 		if(rt != null)
 		{

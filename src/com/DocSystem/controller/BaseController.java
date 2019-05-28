@@ -592,8 +592,7 @@ public class BaseController  extends BaseFunction{
 			List<Doc> subDocList = getAccessableSubDocList(repos, docId, path, name, docAuth, docAuthHashMap, rt, actionList);
 			if(subDocList == null || subDocList.size() == 0)
 			{
-				System.out.println("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + path+name);
-				rt.setDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + path+name);
+				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + path+name, rt);
 				break;
 			}
 			resultList.addAll(subDocList);
@@ -1015,7 +1014,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("addRepos() addReposAuth return:" + ret);
 		if(ret == 0)
 		{
-			rt.setDebugLog("addRepos() addReposAuth return:" + ret);
+			docSysDebugLog("addRepos() addReposAuth return:" + ret, rt);
 			System.out.println("新增用户仓库权限失败");
 		}
 				
@@ -1036,7 +1035,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("addRepos() addDocAuth return:" + ret);
 		if(ret == 0)
 		{
-			rt.setDebugLog("addRepos() addReposAuth return:" + ret);
+			docSysDebugLog("addRepos() addReposAuth return:" + ret, rt);
 			System.out.println("新增用户仓库根目录权限失败");
 		}		
 	}
@@ -1347,8 +1346,7 @@ public class BaseController  extends BaseFunction{
 		File dir = new File(localVerRepos);
 		if(dir.exists())
 		{
-			System.out.println("GIT仓库:"+localVerRepos + "已存在，请直接设置！");	
-			rt.setDebugLog("GIT仓库:"+localVerRepos + "已存在，已直接设置！");
+			docSysDebugLog("GIT仓库:"+localVerRepos + "已存在，已直接设置！", rt);
 			return localVerRepos;
 		}
 		
@@ -1384,8 +1382,7 @@ public class BaseController  extends BaseFunction{
 		File dir = new File(localPath,reposName);
 		if(dir.exists())
 		{
-			System.out.println("SVN仓库:"+localPath+reposName + "已存在，请直接设置！");	
-			rt.setDebugLog("SVN仓库:"+localPath+reposName + "已存在，已直接设置！");
+			docSysDebugLog("SVN仓库:"+localPath+reposName + "已存在，已直接设置！", rt);
 			return "file:///" + localPath + reposName;
 		}
 		
@@ -1624,8 +1621,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(createDir(dstParentPath) == false)
 			{
-				System.out.println("doCompressDir() Failed to create:" + dstParentPath);	
-				rt.setDebugLog("创建目录 " + dstParentPath + " 失败");
+				docSysDebugLog("doCompressDir() Failed to create:" + dstParentPath, rt);
 				return false;
 			}
 		}
@@ -1637,7 +1633,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			System.out.println("doCompressDir()  压缩失败！");
-			rt.setDebugLog("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败");
+			docSysDebugLog("压缩  " + srcParentPath + dirName + "to" + dstParentPath + zipFileName  +" 失败", rt);
 			return false;
 		}
 		
@@ -1725,8 +1721,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(revision == null)
 		{			
-			System.out.println("verReposAutoCommit 失败");
-			rt.setDebugLog("verReposAutoCommit 失败");
+			docSysDebugLog("verReposAutoCommit 失败", rt);
 		}
 		return revision;
 	}
@@ -1793,8 +1788,7 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(doc,login_user,docLock);
 		if(revision == null)
 		{			
-			System.out.println("verReposAutoCommit 失败");
-			rt.setDebugLog("verReposAutoCommit 失败");
+			docSysDebugLog("verReposAutoCommit 失败", rt);
 		}
 		
 		return revision;
@@ -1874,8 +1868,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry.exists())
 		{	
 			unlockDoc(doc, login_user, docLock);
-			System.out.println("addDoc() " +localDocPath + "　已存在！");
-			rt.setDebugLog("addDoc() " +localDocPath + "　已存在！");
+			docSysDebugLog("addDoc() " +localDocPath + "　已存在！", rt);
 			return false;
 		}
 		
@@ -1935,7 +1928,7 @@ public class BaseController  extends BaseFunction{
 		
 		rt.setData(doc);
 		rt.setMsgData("isNewNode");
-		rt.setDebugLog("新增成功"); 
+		docSysDebugLog("新增成功", rt); 
 		
 		return true;
 	}
@@ -4445,8 +4438,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(false == createDir(localDocPath))
 			{
-				System.out.println("createRealDoc() 目录 " +localDocPath + " 创建失败！");
-				rt.setDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！");
+				docSysDebugLog("createRealDoc() 目录 " +localDocPath + " 创建失败！", rt);
 				return false;
 			}				
 		}
@@ -4454,8 +4446,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(false == createFile(localParentPath,name))
 			{
-				System.out.println("createRealDoc() 文件 " + localDocPath + "创建失败！");
-				rt.setDebugLog("createRealDoc() createFile 文件 " + localDocPath + "创建失败！");
+				docSysDebugLog("createRealDoc() createFile 文件 " + localDocPath + "创建失败！", rt);
 				return false;					
 			}
 		}
@@ -4471,8 +4462,7 @@ public class BaseController  extends BaseFunction{
 
 		if(delFileOrDir(localDocPath) == false)
 		{
-			System.out.println("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
-			rt.setDebugLog("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！");
+			docSysDebugLog("deleteRealDoc() delFileOrDir " + localDocPath + "删除失败！", rt);
 			return false;
 		}
 		
@@ -4508,8 +4498,7 @@ public class BaseController  extends BaseFunction{
 			
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() saveFile " + name +" 异常！");
-			e.printStackTrace();
-			rt.setDebugLog(e.toString());
+			docSysDebugLog(e.toString(), rt);
 			return false;
 		}
 		
@@ -4621,22 +4610,19 @@ public class BaseController  extends BaseFunction{
 
 		if(isFileExist(srcDocPath) == false)
 		{
-			System.out.println("moveRealDoc() 文件: " + srcDocPath + " 不存在");
-			rt.setDebugLog("文件: " + srcDocPath + " 不存在");
+			docSysDebugLog("moveRealDoc() 文件: " + srcDocPath + " 不存在", rt);
 			return false;
 		}
 		
 		if(isFileExist(dstDocPath) == true)
 		{
-			System.out.println("moveRealDoc() 文件: " + dstDocPath + " 已存在");
-			rt.setDebugLog("文件: " + dstDocPath + " 已存在");
+			docSysDebugLog("moveRealDoc() 文件: " + dstDocPath + " 已存在", rt);
 			return false;
 		}
 		
 		if(moveFileOrDir(reposRPath + srcParentPath,srcName,reposRPath + dstParentPath,dstName,true) == false)	//强制覆盖
 		{
-			System.out.println("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed");
-			rt.setDebugLog("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed");
+			docSysDebugLog("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed", rt);
 			return false;
 		}
 		return true;
@@ -4655,23 +4641,20 @@ public class BaseController  extends BaseFunction{
 
 		if(isFileExist(srcDocPath) == false)
 		{
-			System.out.println("copyRealDoc() 文件: " + srcDocPath + " 不存在");
-			rt.setDebugLog("文件: " + srcDocPath + " 不存在");
+			docSysDebugLog("copyRealDoc() 文件: " + srcDocPath + " 不存在", rt);
 			return false;
 		}
 		
 		if(isFileExist(dstDocPath) == true)
 		{
-			System.out.println("copyRealDoc() 文件: " + dstDocPath + " 已存在");
-			rt.setDebugLog("文件: " + dstDocPath + " 已存在");
+			docSysDebugLog("copyRealDoc() 文件: " + dstDocPath + " 已存在", rt);
 			return false;
 		}
 		
 
 		if(false == copyFileOrDir(srcDocPath, dstDocPath, true))
 		{
-			System.out.println("copyRealDoc() copy " + srcDocPath + " to " + dstDocPath + " Failed");
-			rt.setDebugLog("copyRealDoc copy " + srcDocPath + " to " + dstDocPath + " 失败");
+			docSysDebugLog("copyRealDoc copy " + srcDocPath + " to " + dstDocPath + " 失败", rt);
 			return false;
 		}
 		return true;
@@ -4689,11 +4672,6 @@ public class BaseController  extends BaseFunction{
 		
 		String reposVPath = getReposVirtualPath(repos);
 		
-		String parentPath = "";
-		if(doc.getPath() != null)
-		{
-			parentPath = doc.getPath();
-		}
 		String docVName = getVDocName(doc);
 		
 		String vDocPath = reposVPath + docVName;
@@ -4701,26 +4679,23 @@ public class BaseController  extends BaseFunction{
 		if(isFileExist(vDocPath) == true)
 		{
 			System.out.println("目录 " +vDocPath + "　已存在！");
-			rt.setDebugLog("目录 " +vDocPath + "　已存在！");
+			docSysDebugLog("目录 " +vDocPath + "　已存在！", rt);
 			return false;
 		}
 			
 		if(false == createDir(vDocPath))
 		{
-			System.out.println("目录 " + vDocPath + " 创建失败！");
-			rt.setDebugLog("目录 " + vDocPath + " 创建失败！");
+			docSysDebugLog("目录 " + vDocPath + " 创建失败！", rt);
 			return false;
 		}
 		if(createDir(vDocPath + "/res") == false)
 		{
-			System.out.println("目录 " + vDocPath + "/res" + " 创建失败！");
-			rt.setDebugLog("目录 " + vDocPath + "/res" + " 创建失败！");
+			docSysDebugLog("目录 " + vDocPath + "/res" + " 创建失败！", rt);
 			return false;
 		}
 		if(createFile(vDocPath,"content.md") == false)
 		{
-			System.out.println("目录 " + vDocPath + "/content.md" + " 创建失败！");
-			rt.setDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！");
+			docSysDebugLog("目录 " + vDocPath + "/content.md" + " 创建失败！", rt);
 			return false;			
 		}
 		
@@ -4737,11 +4712,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 
-		String parentPath = "";
-		if(doc.getPath() != null)
-		{
-			parentPath = doc.getPath();
-		}
 		String docVName = getVDocName(doc);
 		
 		String vDocPath = localParentPath + docVName + "/";
@@ -4751,8 +4721,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
 			if(folder.mkdir() == false)
 			{
-				System.out.println("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
-				rt.setDebugLog("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!");
+				docSysDebugLog("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!", rt);
 				return false;
 			}
 		}
@@ -4765,8 +4734,7 @@ public class BaseController  extends BaseFunction{
 			out = new FileOutputStream(mdFilePath);
 		} catch (FileNotFoundException e) {
 			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
-			e.printStackTrace();
-			rt.setDebugLog(e.toString());
+			docSysDebugLog(e.toString(), rt);
 			return false;
 		}
 		try {
@@ -4775,8 +4743,7 @@ public class BaseController  extends BaseFunction{
 			out.close();
 		} catch (IOException e) {
 			System.out.println("saveVirtualDocContent() out.write exception");
-			e.printStackTrace();
-			rt.setDebugLog(e.toString());
+			docSysDebugLog(e.toString(), rt);
 			return false;
 		}
 		return true;
@@ -4820,7 +4787,7 @@ public class BaseController  extends BaseFunction{
 		String localDocVPath = reposVPath + docVName;
 		if(delDir(localDocVPath) == false)
 		{
-			rt.setDebugLog("deleteVirtualDoc() delDir失败 " + localDocVPath);
+			docSysDebugLog("deleteVirtualDoc() delDir失败 " + localDocVPath, rt);
 			return false;
 		}
 		return true;
@@ -4836,7 +4803,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, false) == false)
 		{
-			rt.setDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed");
+			docSysDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed", rt);
 			return false;
 		}
 		return true;
@@ -4854,7 +4821,7 @@ public class BaseController  extends BaseFunction{
 		String dstDocFullVPath = reposVPath + newVDocName;
 		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
 		{
-			rt.setDebugLog("copyVirtualDoc() copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed");
+			docSysDebugLog("copyVirtualDoc() copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed", rt);
 			return false;
 		}
 		return true;
@@ -5472,8 +5439,7 @@ public class BaseController  extends BaseFunction{
 		String revision = svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, isMove);
 		if(revision == null)
 		{
-			System.out.println("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
-			rt.setDebugLog("svnCopy() svnUtil.svnCopy " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			docSysDebugLog("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName, rt);
 		}
 		return revision;
 	}
@@ -5514,8 +5480,7 @@ public class BaseController  extends BaseFunction{
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, false, commitUser) == false)
 		{
-			System.out.println("svnVirtualDocAdd() svnUtil Init Failed!");
-			rt.setDebugLog("svnVirtualDocAdd() svnUtil Init Failed!");
+			docSysDebugLog("svnVirtualDocAdd() svnUtil Init Failed!", rt);
 			return null;
 		}
 		
@@ -5525,8 +5490,7 @@ public class BaseController  extends BaseFunction{
 		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null);
 		if(revision == null)
 		{
-			System.out.println(docVName + " doAutoCommit失败！");
-			rt.setDebugLog("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
+			docSysDebugLog("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath, rt);
 		}
 		return revision;
 	}
@@ -5536,8 +5500,7 @@ public class BaseController  extends BaseFunction{
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, false, commitUser))
 		{
-			System.out.println("svnVirtualDocDelete()  svnUtil.Init 失败！");
-			rt.setDebugLog("svnVirtualDocDelete()  svnUtil.Init 失败！");
+			docSysDebugLog("svnVirtualDocDelete()  svnUtil.Init 失败！", rt);
 			return null;
 		}
 		
@@ -5546,8 +5509,7 @@ public class BaseController  extends BaseFunction{
 			String revision = svnUtil.svnDelete("",docVName,commitMsg,commitUser);
 			if(revision == null)
 			{
-				System.out.println("svnVirtualDocDelete() " + docVName + " remoteDeleteEntry失败！");
-				rt.setDebugLog("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ");
+				docSysDebugLog("svnVirtualDocDelete() svnUtil.svnDelete "  + docVName +" 失败 ", rt);
 			}
 			return revision;
 		}
@@ -5561,8 +5523,7 @@ public class BaseController  extends BaseFunction{
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, false, commitUser))
 		{
-			System.out.println("svnVirtualDocCommit() svnUtil.Init 失败！");
-			rt.setDebugLog("svnVirtualDocCommit()  svnUtil.Init 失败！");
+			docSysDebugLog("svnVirtualDocCommit()  svnUtil.Init 失败！", rt);
 			return null;
 		}
 		
@@ -5570,7 +5531,7 @@ public class BaseController  extends BaseFunction{
 		if(revision == null)
 		{
 			System.out.println("svnVirtualDocCommit() " + docVName + " doCommit失败！");
-			rt.setDebugLog(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath);
+			docSysDebugLog(" doCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath, rt);
 			return null;
 		}
 		
@@ -5583,8 +5544,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(revision == null)
 		{
-			System.out.println("svnMove Failed！");
-			rt.setDebugLog("svnVirtualDocMove() svnMove Failed！");
+			docSysDebugLog("svnVirtualDocMove() svnMove Failed！", rt);
 		}
 		return revision;
 	}
