@@ -627,7 +627,7 @@
 	}
 	
 
-	function getCopiedNodes()
+	function getSelectedNodes()
 	{
 		var treeNodes = [];
 		
@@ -649,17 +649,32 @@
 		return treeNodes;
 	}
 
-	function DoPaste(treeNodes,dstParentNode)
+	function DoPaste(treeNodes,dstParentNode, isCopy)
 	{
 		console.log("DoPaste()",treeNodes,dstParentNode);
 		if(treeNodes == null || treeNodes.length < 1)
 		{
-			console.log("DoPaste nothing was copied");
+			if(isCopy)
+			{
+				showErrorMessage("请选需要复制的文件！");
+			}
+			else
+			{
+				showErrorMessage("请选需要移动的文件！");
+			}
 			return;	
 		}
 		
-		console.log("StartCopy");
-		DocCopy.copyDocs(treeNodes,dstParentNode,gReposId);
+		if(isCopy)
+		{
+			console.log("StartCopy");
+			DocCopy.copyDocs(treeNodes,dstParentNode,gReposId);
+		}
+		else
+		{
+			console.log("StartMove");
+			DocMove.moveDocs(treeNodes,dstParentNode,gReposId);			
+		}
 	}
 
 	function copyDocName(node){
@@ -2974,7 +2989,9 @@ function CompareObj(objA, objB, flag) {
    		node.type = type;
    		node.latestEditTime = latestEditTime;
    		
- 		downloadDoc(node,true);
+   		var treeNodes = [];
+   		treeNodes.push(node);
+ 		downloadDoc(treeNodes,true);
  		event.stopPropagation();
  	}
  	
@@ -3558,7 +3575,9 @@ function CompareObj(objA, objB, flag) {
 				if( "ok" == ret.status){
 					console.log(ret.data);
 					$("[dataId='"+ docId +"']").children("div:first-child").css("color","red");
-				    downloadDoc(node,false);
+				    var treeNodes = [];
+				    treeNodes.push(node);
+					downloadDoc(treeNodes,false);
 				    return;
  				}
 				else
@@ -3885,14 +3904,22 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
-						gCopiedNodes = getCopiedNodes();
+						gCopiedNodes = getSelectedNodes();
+						gIsCopy = true;
 						console.log("gCopiedNodes",gCopiedNodes);
 					}
+			},
+			{text: '剪切', action: function(e){
+					e.preventDefault();
+					gCopiedNodes = getSelectedNodes();
+					gIsCopy = false;
+					console.log("gCopiedNodes",gCopiedNodes);
+				}
 			},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeByNode(curRightClickedTreeNode);
-						DoPaste(gCopiedNodes,parentNode);
+						DoPaste(gCopiedNodes,parentNode, gIsCopy);
 					}
 			},
 			{divider: true},
@@ -3922,7 +3949,9 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '下载', action: function(e){
 						e.preventDefault();
-						downloadDoc(curRightClickedTreeNode,true);
+						if(cur)
+						var treeNodes = getSelectedNodes();
+						downloadDoc(treeNodes,true);
 					}
 			},
 			{text: '详细信息', action: function(e){
@@ -4031,20 +4060,30 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
-						var docId = curRightClickedDocListNode.docId;
-						var node = getNodeByNodeId(docId);
 						gCopiedNodes = [];
-						if(node != null)
+						gIsCopy = true;
+						if(curRightClickedDocListNode != null)
 						{
-							gCopiedNodes.push(node);
+							gCopiedNodes.push(curRightClickedDocListNode);
 						}
 						console.log("gCopiedNodes",gCopiedNodes);
 					}
 			},
+			{text: '剪切', action: function(e){
+					e.preventDefault();
+					gCopiedNodes = [];
+					gIsCopy = false;
+					if(curRightClickedDocListNode != null)
+					{
+						gCopiedNodes.push(curRightClickedDocListNode);
+					}
+					console.log("gCopiedNodes",gCopiedNodes);
+				}
+			},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						var node = getNodeByNodeId(gDocId);
-						DoPaste(gCopiedNodes,node);
+						var parentNode = getNodeByNodeId(gDocId);
+						DoPaste(gCopiedNodes, parentNode, gIsCopy);
 					}
 			},
 			{divider: true},
@@ -4074,7 +4113,9 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '下载', action: function(e){
 					e.preventDefault();
-					downloadDoc(curRightClickedDocListNode,true);
+					var treeNodes = [];
+					treeNodes.push(curRightClickedDocListNode);
+					downloadDoc(treeNodes,true);
 				}
 			},
 			{text: '详细信息', action: function(e){
