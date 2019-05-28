@@ -3128,7 +3128,7 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc, login_user, srcDocLock);
 			unlockDoc(dstDoc, login_user, dstDocLock);
 
-			docSysDebugLog("moveDoc_FS() moveRealDoc" + srcName + " to " + dstName + " 失败", rt);
+			docSysDebugLog("moveDoc_FS() moveRealDoc " + srcName + " to " + dstName + " 失败", rt);
 			return false;
 		}
 		
