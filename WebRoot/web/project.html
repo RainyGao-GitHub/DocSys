@@ -1192,7 +1192,7 @@
       		console.log("buildSubContextList() uploadContent curBatchIndex:" + curBatchIndex + " num:" + uploadContent.batchNum );
     			
       		var files = uploadBatch.files;
-      		var parentNode = uploadBatch.uploadBatch;
+      		var parentNode = uploadBatch.parentNode;
       		var parentId = uploadBatch.parentId;
       		var vid = uploadBatch.vid;
       		var index = uploadBatch.index;
@@ -1224,6 +1224,9 @@
     	   		   	SubContext.vid = vid;
     	   		   	
 		    		SubContext.docId = -1; //-1: 新增  
+		    		
+    	   		   	SubContext.realParentNode = parentNode;
+    	   		   	SubContext.realParentId = parentId;
 		    		
     	   		   	//advanced Info
     	   		   	SubContext.type = 1;	
@@ -1740,21 +1743,20 @@
       	//检查当前上传文件的父节点是否存在，不存在则通知后台新建，直到全部新建完成
  		function checkAddParentNode(SubContext)
  		{
-      		var vid = SubContext.vid;
-			//parentNode maybe is not the real parent for the doc
-			var tempParentNode = SubContext.parentNode;
-    		//get filePath form file
+      		//get filePath form file
     		var filePath = SubContext.relativePath;
     		//console.log("checkAddParentNode() relativePath:" + filePath);
 
     		if(!filePath || filePath == "")
     		{
-    			//文件没有相对路径，realParentNod = parentNode
- 				SubContext.realParentNode = tempParentNode;
- 				SubContext.realParentId = tempParentNode?tempParentNode.id:0;
+    			//文件没有相对路径，realParentNode = parentNode
     			return true;
     		}
 			
+    		var vid = SubContext.vid;
+			//parentNode maybe is not the real parent for the doc
+			var tempParentNode = SubContext.parentNode;
+    		
     		//文件父目录检查部分
 			var pathArray = new Array(); //定义一数组 
 			pathArray = filePath.split("/"); //字符分割 
@@ -1819,6 +1821,7 @@
 				}
 			}
 			SubContext.realParentNode = tempParentNode;
+
 			SubContext.realParentId = tempParentNode?tempParentNode.id:0;
 			return true;
  		}
