@@ -86,7 +86,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -95,7 +95,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -150,7 +150,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -200,7 +200,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -209,7 +209,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -247,7 +247,7 @@ public class DocController extends BaseController{
 		
 		if(dstName == null || "".equals(dstName))
 		{
-			rt.setError("目标文件名不能为空！");
+			docSysErrorLog("目标文件名不能为空！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -255,7 +255,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -264,7 +264,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -311,7 +311,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -320,7 +320,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -371,7 +371,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -380,7 +380,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -435,7 +435,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -449,12 +449,12 @@ public class DocController extends BaseController{
 		if(false == isChunkMatched(chunkFilePath,chunkHash))
 		{
 			rt.setMsgData("0");
-			rt.setDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！");
+			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
 		}
 		else
 		{
 			rt.setMsgData("1");
-			rt.setDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！");
+			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
 			
 			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
@@ -522,7 +522,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -530,7 +530,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -539,7 +539,7 @@ public class DocController extends BaseController{
 		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), pid, path, "");
 		if(UserDocAuth == null)
 		{
-			rt.setError("您无权在该目录上传文件!");
+			docSysErrorLog("您无权在该目录上传文件!", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -551,7 +551,7 @@ public class DocController extends BaseController{
 			{
 				if(size > MaxFileSize.longValue()*1024*1024)
 				{
-					rt.setError("上传文件超过 "+ MaxFileSize + "M");
+					docSysErrorLog("上传文件超过 "+ MaxFileSize + "M", rt);
 					writeJson(rt, response);
 					return;
 				}
@@ -562,7 +562,7 @@ public class DocController extends BaseController{
 			{
 				if(size > 30*1024*1024)
 				{
-					rt.setError("非仓库授权用户最大上传文件不超过30M!");
+					docSysErrorLog("非仓库授权用户最大上传文件不超过30M!", rt);
 					writeJson(rt, response);
 					return;
 				}
@@ -586,8 +586,7 @@ public class DocController extends BaseController{
 		{
 			rt.setData(doc);
 			rt.setMsgData("0");
-			rt.setDebugLog("Node: " + name +" 已存在！");
-			System.out.println("checkDocInfo() " + name + " 已存在");
+			docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
 	
 			//检查checkSum是否相同
 			if(type == 1)
@@ -595,8 +594,7 @@ public class DocController extends BaseController{
 				if(true == isDocCheckSumMatched(doc,size,checkSum))
 				{
 					rt.setMsgData("1");
-					rt.setDebugLog("Node: " + name +" 已存在，且checkSum相同！");
-					System.out.println("checkDocInfo() " + name + " 已存在，且checkSum相同！");
+					docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
 				}
 			}
 			writeJson(rt, response);
@@ -617,11 +615,10 @@ public class DocController extends BaseController{
 					boolean ret = copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), pid, sameDoc.getType(), srcPath, sameDoc.getName(), path, name, commitMsg,login_user.getName(),login_user,rt,actionList);
 					if(ret == true)
 					{
-						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied ok！");
 						doc = dbGetDoc(repos, docId, pid, path, name, true);
 						rt.setData(doc);
 						rt.setMsgData("1");
-						rt.setDebugLog("SameDoc " + sameDoc.getName() +" found and do copy OK！");
+						docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
 						writeJson(rt, response);
 						
 						executeCommonActionList(actionList, rt);
@@ -629,10 +626,9 @@ public class DocController extends BaseController{
 					}
 					else
 					{
-						System.out.println("checkDocInfo() " + sameDoc.getName() + " was copied failed！");
 						rt.setStatus("ok");
 						rt.setMsgData("3");
-						rt.setDebugLog("SameDoc " + sameDoc.getName() +" found but do copy Failed！");
+						docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
 						writeJson(rt, response);
 						return;
 					}
@@ -687,7 +683,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -696,7 +692,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -740,7 +736,7 @@ public class DocController extends BaseController{
 			String userTmpDir = getReposUserTmpPath(repos,login_user);
 			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
-				rt.setError("分片文件 " + fileChunkName +  " 暂存失败!");
+				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -791,7 +787,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			rt.setError("文件上传失败！");
+			docSysErrorLog("文件上传失败！", rt);
 		}
 		writeJson(rt, response);
 	}
@@ -884,7 +880,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -893,7 +889,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -901,7 +897,7 @@ public class DocController extends BaseController{
 		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
 		if(doc == null)
 		{
-			rt.setError("文件 " + path + name + " 不存在！");
+			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -950,7 +946,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -958,7 +954,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -970,7 +966,7 @@ public class DocController extends BaseController{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		if(saveVirtualDocContent(userTmpDir, doc, rt) == false)
 		{
-			rt.setError("saveVirtualDocContent Error!");
+			docSysErrorLog("saveVirtualDocContent Error!", rt);
 		}
 		writeJson(rt, response);
 	}
@@ -989,7 +985,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1014,7 +1010,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1022,7 +1018,7 @@ public class DocController extends BaseController{
 		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
 		if(doc==null){
 			System.out.println("downloadDoc_FS() Doc " + docId + " 不存在");
-			rt.setError("doc " + docId + "不存在！");
+			docSysErrorLog("doc " + docId + "不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1054,7 +1050,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1063,7 +1059,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1098,7 +1094,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1107,7 +1103,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1167,8 +1163,8 @@ public class DocController extends BaseController{
 		//checkout the entry to local
 		if(verReposCheckOut(repos, isRealDoc, path, entryName, userTmpDir, targetName, commitId, true) == null)
 		{
-			System.out.println("getHistoryDoc() verReposCheckOut Failed!");
-			rt.setError("verReposCheckOut Failed path:" + path + " entryName:" + entryName + " userTmpDir:" + userTmpDir + " targetName:" + targetName);
+			docSysErrorLog("verReposCheckOut Failed!", rt);
+			docSysDebugLog("verReposCheckOut Failed path:" + path + " entryName:" + entryName + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -1194,7 +1190,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1218,7 +1214,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1226,7 +1222,7 @@ public class DocController extends BaseController{
 		String fileSuffix = getFileSuffix(name);
 		if(fileSuffix == null)
 		{
-			rt.setError("未知文件类型");
+			docSysErrorLog("未知文件类型", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1242,14 +1238,14 @@ public class DocController extends BaseController{
 		Doc localEntry = fsGetDoc(repos, docId, pid, path, name);
 		if(localEntry == null)
 		{
-			rt.setError("文件不存在！");
+			docSysErrorLog("文件不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(localEntry.getType() == 2)
 		{
-			rt.setError("目录无法预览");
+			docSysErrorLog("目录无法预览", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1281,8 +1277,8 @@ public class DocController extends BaseController{
 		case "pdf":
 			if(copyFile(localEntryPath, dstPath,true) == false)
 			{
-				rt.setError("预览失败");
-				rt.setDebugLog("Failed to copy " + localEntryPath + " to " + dstPath);
+				docSysErrorLog("预览失败", rt);
+				docSysDebugLog("Failed to copy " + localEntryPath + " to " + dstPath, rt);
 				writeJson(rt, response);
 				return;					
 			}
@@ -1305,14 +1301,14 @@ public class DocController extends BaseController{
 		case "py":
 			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath,rt) == false)
 			{
-				rt.setDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath);
+				docSysDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath, rt);
 				writeJson(rt, response);
 				return;
 			}
 			break;
 		default:
-			rt.setError("该文件类型不支持预览");
-			rt.setDebugLog("srcPath:"+localEntryPath);
+			docSysErrorLog("该文件类型不支持预览", rt);
+			docSysDebugLog("srcPath:"+localEntryPath, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1355,8 +1351,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			System.out.println("getDoc 仓库 " + reposId + " 不存在！");
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1392,7 +1387,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1400,8 +1395,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			System.out.println("getDoc 仓库 " + reposId + " 不存在！");
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1423,8 +1417,7 @@ public class DocController extends BaseController{
 		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
 		if(doc == null)
 		{
-			System.out.println("getDoc 文件 " + path+name + " 不存在！");
-			rt.setError("文件 " + path+name + " 不存在！");
+			docSysErrorLog("文件 " + path+name + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1461,14 +1454,14 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(docId == null)
 		{
-			rt.setError("docId is null");
+			docSysErrorLog("docId is null", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1476,7 +1469,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1537,14 +1530,14 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(reposId == null)
 		{
-			rt.setError("reposId is null");
+			docSysErrorLog("reposId is null", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1552,7 +1545,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1612,14 +1605,14 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(reposId == null)
 		{
-			rt.setError("reposId is null");
+			docSysErrorLog("reposId is null", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1628,7 +1621,7 @@ public class DocController extends BaseController{
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1676,7 +1669,7 @@ public class DocController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}

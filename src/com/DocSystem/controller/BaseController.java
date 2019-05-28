@@ -1907,15 +1907,13 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt);
 		if(revision == null)
 		{
-			System.out.println("verReposRealDocAdd Failed");
-			rt.setWarningMsg("verReposRealDocAdd Failed");
+			docSysWarningLog("verReposRealDocAdd Failed", rt);
 		}
 		
 		doc.setRevision(revision);
 		if(dbAddDoc(repos, doc, false) == false)
 		{	
-			rt.setWarningMsg("Add Node: " + docName +" Failed！");
-			System.out.println("addDoc() addDoc to db failed");
+			docSysWarningLog("Add Node: " + docName +" Failed！", rt);
 		}
 		
 		//BuildMultiActionListForDocAdd();
@@ -1923,7 +1921,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(unlockDoc(doc,login_user,null) == false)
 		{
-			rt.setWarningMsg("unlockDoc Failed");
+			docSysWarningLog("unlockDoc Failed", rt);
 		}
 		
 		rt.setData(doc);
@@ -2027,15 +2025,15 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt);
 		if(revision == null)
 		{
-			System.out.println("deleteDoc_FS() verReposRealDocDelete Failed");
-			rt.setWarningMsg("verReposRealDocDelete Failed");
+			docSysDebugLog("deleteDoc_FS() verReposRealDocDelete Failed", rt);
+			docSysWarningLog("verReposRealDocDelete Failed", rt);
 		}
 		else
 		{
 			//Delete DataBase Record and Build AsynActions For delete 
 			if(dbDeleteDocEx(actionList, repos, doc, true, commitMsg, commitUser) == false)
 			{	
-				rt.setWarningMsg("不可恢复系统错误：dbDeleteDoc Failed");
+				docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
 			}
 		}
 		
@@ -3021,8 +3019,8 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposRealDocCommit(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt);
 		if(revision == null)
 		{
-			System.out.println("updateDoc() verReposRealDocCommit Failed:" + parentPath + docName);
-			rt.setWarningMsg("verReposRealDocCommit Failed");	
+			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + parentPath + docName, rt);
+			docSysWarningLog("verReposRealDocCommit Failed", rt);	
 		}
 		else
 		{
@@ -3030,7 +3028,7 @@ public class BaseController  extends BaseFunction{
 			doc.setRevision(revision);
 			if(dbUpdateDoc(repos, doc, true) == false)
 			{
-				rt.setWarningMsg("updateDoc() updateDocInfo Failed");
+				docSysWarningLog("updateDoc() updateDocInfo Failed", rt);
 			}
 		}
 		
@@ -3108,7 +3106,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 		
-				System.out.println("moveDoc_FS() lock srcDoc " + srcDoc.getName() + " Failed");
+				docSysDebugLog("moveDoc_FS() lock srcDoc " + srcDoc.getName() + " Failed", rt);
 				return false;
 			}
 			
@@ -3116,7 +3114,7 @@ public class BaseController  extends BaseFunction{
 			if(dstDocLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("moveDoc_FS() lock dstDoc " + dstDoc.getName() + " Failed");
+				docSysDebugLog("moveDoc_FS() lock dstDoc " + dstDoc.getName() + " Failed", rt);
 
 				unlockDoc(srcDoc, login_user, srcDocLock);
 				return false;
@@ -3130,25 +3128,21 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc, login_user, srcDocLock);
 			unlockDoc(dstDoc, login_user, dstDocLock);
 
-			System.out.println("moveDoc_FS() moveRealDoc" + srcName + " to " + dstName + " 失败");
-			rt.setError("moveDoc_FS() moveRealDoc " + srcName + " to " + dstName + "Failed");
+			docSysDebugLog("moveDoc_FS() moveRealDoc" + srcName + " to " + dstName + " 失败", rt);
 			return false;
 		}
 		
 		String revision = verReposRealDocMove(repos, srcParentPath,srcName, dstParentPath, dstName,type,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
-			System.out.println("moveDoc_FS() verReposRealDocMove Failed");
-			rt.setWarningMsg("moveDoc_FS() verReposRealDocMove Failed");
+			docSysWarningLog("moveDoc_FS() verReposRealDocMove Failed", rt);
 		}
 		else
 		{
 			dstDoc.setRevision(revision);
 			if(dbMoveDoc(srcDoc, dstDoc, login_user, rt) == false)
 			{
-				System.out.println("moveDoc_FS() dbMoveDoc failed");
-				
-				rt.setWarningMsg("moveDoc_FS() dbMoveDoc failed");			
+				docSysWarningLog("moveDoc_FS() dbMoveDoc failed", rt);			
 			}
 		}
 		
@@ -3248,18 +3242,14 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposRealDocCopy(repos,srcParentPath,srcName,dstParentPath,dstName,type,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
-			System.out.println("copyDoc() verReposRealDocCopy failed");
-						
-			rt.setWarningMsg("copyDoc() verReposRealDocCopy failed");
+			docSysWarningLog("copyDoc() verReposRealDocCopy failed", rt);
 		}
 		else
 		{
 			dstDoc.setRevision(revision);
 			if(dbCopyDoc(srcDoc, dstDoc, login_user, rt) == false)
 			{
-				System.out.println("copyDoc() dbCopyDoc failed");
-				
-				rt.setWarningMsg("copyDoc() dbCopyDoc failed");			
+				docSysWarningLog("copyDoc() dbCopyDoc failed", rt);			
 			}
 		}
 		
