@@ -76,7 +76,7 @@
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
 			Batch.dstParentNode = dstParentNode;
-			Batch.dstPath = dstParentNode.path;
+			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
 			Batch.level = level;
 			Batch.vid = vid;
@@ -128,7 +128,7 @@
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
 			Batch.dstParentNode = dstParentNode;
-			Batch.dstPath = dstParentNode.path;
+			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
 			Batch.level = level;
 			Batch.vid = vid;
@@ -137,7 +137,7 @@
 			Batch.state = 0;
 
 			//Append to Content
-			Content.batchList.push(Batch);
+			Content.BatchList.push(Batch);
 			Content.batchNum++;
 			Content.totalFileNum += fileNum;
 			totalNum = Content.totalFileNum;
