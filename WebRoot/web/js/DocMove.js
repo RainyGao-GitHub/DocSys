@@ -398,14 +398,20 @@
       		if(successNum != totalNum)
       		{
       			uploadEndInfo = "移动完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-      		}
-
-            // 普通消息提示条
-			bootstrapQ.msg({
+      		    bootstrapQ.msg({
 					msg : uploadEndInfo,
-					type : 'success',
+					type : 'warning',
 					time : 2000,
 				    }); 
+      		}
+      		else
+      		{
+	            bootstrapQ.msg({
+						msg : uploadEndInfo,
+						type : 'success',
+						time : 2000,
+					    }); 
+      		}
   		}
 		
 		//开放给外部的调用接口

@@ -930,19 +930,26 @@
       		if(successNum != totalNum)
       		{
       			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : uploadEndInfo,
+    					type : 'warning',
+    					time : 2000,
+    				    }); 
       		}
       		else
       		{
       			$(".reuploadAllBtn").hide();
+                // 普通消息提示条
+    			bootstrapQ.msg({
+    					msg : uploadEndInfo,
+    					type : 'success',
+    					time : 2000,
+    				    }); 
       		}
       		$(".upload-list-title").text(uploadEndInfo);
       		
-            // 普通消息提示条
-			bootstrapQ.msg({
-					msg : uploadEndInfo,
-					type : 'success',
-					time : 2000,
-				    }); 
+
   		}
 
       	//uploadEndHandler
