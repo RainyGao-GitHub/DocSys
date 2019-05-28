@@ -744,34 +744,33 @@
 	}
 	
 	//文件下载接口
- 	function downloadDoc(node,needConfirm)
+ 	function downloadDoc(treeNodes,needConfirm)
 	{
-		console.log("downloadDoc node:", node);
-		if(!node || node == null)
+		console.log("downloadDoc treeNodes:", treeNodes);
+		if(!treeNodes || treeNodes == null)
 		{
-			showErrorMessage("文件不存在！");
+			showErrorMessage("请选择需要下载的文件！");
 			return;
 		}
+
+		var fileName = treeNodes[0].name;
+	    console.log("firstFile:"+fileName);
+	  	
+	  	var downloadDispInfo = fileName;
+	  	if(treeNodes.length > 1)
+	  	{
+	  		downloadDispInfo = downloadDispInfo + " 等" + treeNodes.length + "个文件";
+	  	}	
 		
-		var reposId = node.vid;
-		var docId = node.id;
-		var pid = node.pid;
-	   	var path = node.path;
-	   	var name = node.name;
-	   	
 		if(needConfirm)
 		{
-			if(confirm("是否下载文件：" + name) == false)
+			if(confirm("是否下载文件：" + downloadDispInfo) == false)
 			{
 				return;
 			}
 		}
 		
-	   	var encPath = encodeURI(path);
-	   	var encName = encodeURI(name);
-
-	   	window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + reposId + "&docId=" + docId + "&pid=" + pid + "&path=" + encPath + "&name="+ encName;	
-
+		DocDownload.downloadDocs(treeNodes, null, gReposId);
 	}
 	
     /*文件上传实现*/

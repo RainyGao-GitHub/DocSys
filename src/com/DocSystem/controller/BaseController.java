@@ -1505,7 +1505,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	private int getLocalEntryType(String localParentPath, String entryName) {
+	protected int getLocalEntryType(String localParentPath, String entryName) {
 		
 		File entry = new File(localParentPath,entryName);
 		if(!entry.exists())
@@ -1527,12 +1527,18 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
-	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request) throws Exception {
-		
-		int entryType = getLocalEntryType(localParentPath,targetName);
+	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request, boolean deleteEnable) throws Exception 
+	{
+		File localEntry = new File(localParentPath,targetName);
+		if(false == localEntry.exists())
+		{
+			rt.setError("文件 " + localParentPath + targetName + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
 
 		//For dir 
-		if(entryType == 2) //目录
+		if(localEntry.isDirectory()) //目录
 		{
 			//doCompressDir and save the zip File under userTmpDir
 			String zipFileName = targetName + ".zip";
@@ -1552,6 +1558,12 @@ public class BaseController  extends BaseFunction{
 		{
 			//Send the file to webPage
 			sendFileToWebPage(localParentPath,targetName,rt, response, request); 			
+		}
+		
+		if(deleteEnable)
+		{
+			//Delete target file or dir
+			delFileOrDir(localParentPath+targetName);
 		}
 	}
 	
@@ -1613,7 +1625,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	private boolean doCompressDir(String srcParentPath, String dirName, String dstParentPath, String zipFileName,ReturnAjax rt) {
+	protected boolean doCompressDir(String srcParentPath, String dirName, String dstParentPath, String zipFileName,ReturnAjax rt) {
 		
 		//if dstDir not exists create it
 		File dstDir = new File(dstParentPath);

@@ -971,8 +971,102 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	/**************** download Doc  ******************/
-	@RequestMapping("/downloadDoc.do")
+	/**************** downloadDocPrepare ******************/
+	@RequestMapping("/downloadDocPrepare.do")
+	public void downloadDocCheck(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("downloadDocPrepare reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
+		
+		if(path == null)
+		{
+			path = "";
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		switch(repos.getType())
+		{
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			downloadDocPrepare_FS(repos, docId, pid, path, name, response, request, session);
+			break;
+		}
+	}
+
+	public void downloadDocPrepare_FS(Repos repos,Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("downloadDocPrepare_FS reposId: " + repos.getId() + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+		if(doc==null){
+			System.out.println("downloadDocPrepare_FS() Doc " + path+name + " 不存在");
+			docSysErrorLog("文件 " + path+name + "不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//准备下载文件：为了保证下载的统一，现在都是先把文件复制到用户临时目录
+		//get reposRPath
+		String reposRPath = getReposRealPath(repos);
+		//文件的localParentPath
+		String localParentPath = reposRPath + path;
+		
+		//get userTmpDir
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		
+		int entryType = getLocalEntryType(localParentPath,name);
+		if(entryType < 0)
+		{
+			docSysDebugLog("downloadDocPrepare_FS() Doc " + path+name + " 文件类型未知", rt);
+			docSysErrorLog("未知文件类型", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//For dir 
+		if(entryType == 2) //目录
+		{
+			//doCompressDir and save the zip File under userTmpDir
+			String zipFileName = name + ".zip";
+			if(doCompressDir(localParentPath, name, userTmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩目录失败！");
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else	//for File
+		{
+			if(copyFile(localParentPath+name, userTmpDir+name, true) == false)
+			{
+				rt.setError("准备下载文件失败！");
+				writeJson(rt, response);
+				return;				
+			}
+		}
+		
+		writeJson(rt, response);
+	}
+
+	/**************** download Doc ******************/
+	@RequestMapping("/downloadDoc")
 	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 		
@@ -999,10 +1093,9 @@ public class DocController extends BaseController{
 			downloadDoc_FS(repos, docId, pid, path, name, response, request, session);
 			break;
 		}
-		
 	}
-
-	public void downloadDoc_FS(Repos repos,Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	
+	public void downloadDoc_FS(Repos repos,Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		System.out.println("downloadDoc_FS reposId: " + repos.getId() + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 
@@ -1023,17 +1116,20 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//get reposRPath
-		String reposRPath = getReposRealPath(repos);
-
-		//文件的localParentPath
-		String localParentPath = reposRPath + path;
-		System.out.println("downloadDoc_FS() localParentPath:" + localParentPath);
-		
 		//get userTmpDir
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
-		sendTargetToWebPage(localParentPath,name, userTmpDir, rt, response, request);
+		String targetName = name;
+		if(doc.getType() == 1)
+		{
+			targetName = name + ".zip";
+		}
+		
+		try {
+			sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**************** get Tmp File ******************/
@@ -1169,7 +1265,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request);
+		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request,false);
 		
 		//delete the history file or dir
 		delFileOrDir(userTmpDir+targetName);

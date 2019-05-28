@@ -257,7 +257,7 @@
   	    	
 			//执行后台downloadDoc操作
     		$.ajax({
-                url : "/DocSystem/Doc/downloadDoc.do",
+                url : "/DocSystem/Doc/downloadDocPrepare.do",
                 type : "post",
                 dataType : "json",
                 data : {
@@ -272,19 +272,12 @@
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
-                   {
-                	    var doc = ret.data;
-                	    
-                	    //Add or Delete from zTree
-                  	    addTreeNode(doc);
-                	    deleteTreeNode(SubContext.docId);
-                	    
-                	   	//Add or Delete from DocList
-                	    DocList.addNode(doc);
-                	    DocList.deleteNode(SubContext.docId);
-                	    
-                	   	//downloadNextDoc
-                	   	downloadNextDoc();
+                   {            		
+            	   		var encPath = encodeURI(path);
+            	   		var encName = encodeURI(name);
+            	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + SubContext.vid + "&docId=" + SubContext.docId + "&pid=" + SubContext.pid + "&path=" + encPath + "&name="+ encName;	
+
+                	   	downloadSuccessHandler();
                 	   	return;
                    }
                    else	//后台报错，结束下载
