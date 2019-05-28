@@ -27,7 +27,7 @@
         var copyErrorConfirmSet = 0; //0:复制错误时弹出确认是否继续复制窗口，1：复制错误时继续复制后续文件， 2：复制错误时停止整个复制		
         var copyWarningConfirmSet =0; //0: 复制警告时弹出确认是否继续复制窗口，1：复制警告时继续复制后续文件 2：复制警告时停止整个复制
       	
-		//提供给外部的多文件move接口
+		//提供给外部的多文件copy接口
 		function copyDocs(treeNodes, dstParentNode, vid)	//多文件复制函数
 		{
 			console.log("copyDocs treeNodes:", treeNodes);
@@ -327,24 +327,24 @@
             }
 		}
 		
-      	//uploadEndHandler
+      	//copyEndHandler
       	function copyEndHandler()
       	{
-      		console.log("uploadEndHandler() 复制结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      		console.log("copyEndHandler() 复制结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
   			//清除标记
             isCopping = false;
             
-      		//显示上传完成 
+      		//显示复制完成 
       		showCopyEndInfo();      		
       	}
 		
   		function showCopyEndInfo()
   		{
-  			var copyEndInfo = "上传完成(共" + totalNum +"个)";
+  			var copyEndInfo = "复制完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
-      			copyEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			copyEndInfo = "复制完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
       		}
 
             // 普通消息提示条
@@ -373,7 +373,8 @@
 		    	//确定按键
 		    	var dstName =  $("#dialog-copyConflictDialog input[name='newDocName']").val();
 		    	console.log("copyConflictConfirm newName:",dstName);
-				copyDoc(dstName);
+		    	SubContext.dstName = dstName;
+				copyDoc();
 		    	return true;   
 		    });
 		}
@@ -394,14 +395,55 @@
     	        qubtn: "结束",
     	    },function () {
     	    	//alert("点击了确定");
-    	    	copyNextDoc();
+    	    	copyErrorHandler(FileName, errMsg);
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-    	    	isCopping = false;
-    	        syncUpMenu();	//刷新菜单
+				copyErrorAbortHandler(FileName, errMsg);
+    	        //syncUpMenu();	//刷新菜单
     	    	return true;
       		});
+      	}
+      	
+      	//copyErrorHandler
+      	function copyErrorHandler(FileName,errMsg)
+      	{
+      		console.log("copyErrorHandler() "+ FileName + " " + errMsg);
+      		
+      		failNum++;
+      		
+      		//设置复制状态
+			SubContextList[index].state = 3;	//复制结束
+      		SubContextList[index].status = "fail";
+			SubContextList[index].msgInfo = errMsg;
+			copyNextDoc();		 	
+      	}
+      	
+      	//copyErrorAbortHandler
+      	function copyErrorAbortHandler(FileName,errMsg)
+      	{
+      		console.log("copyErrorAbortHandler() "+ FileName + " " + errMsg);
+      	
+      		failNum++;
+      		
+    		//设置复制状态
+			SubContextList[index].state = 3;	//复制结束
+      		SubContextList[index].status = "fail";
+      		SubContextList[index].msgInfo = errMsg;
+      		copyEndHandler();
+      	}
+      	
+      	//copySuccessHandler
+      	function copySuccessHandler(name,msgInfo)
+      	{	
+      		console.log("copySuccessHandler() "+ name + " " + msgInfo);
+      		
+      		successNum++;
+	      	
+	      	SubContextList[index].state = 2;	//复制结束
+      		SubContextList[index].status = "success";
+      		SubContextList[index].msgInfo = msgInfo;
+			copyNextDoc();
       	}
 		
 		//开放给外部的调用接口

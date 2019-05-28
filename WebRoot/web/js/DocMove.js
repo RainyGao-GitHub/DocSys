@@ -364,7 +364,7 @@
 			SubContextList[index].state = 3;	//移动结束
       		SubContextList[index].status = "fail";
       		SubContextList[index].msgInfo = errMsg;
-      		uploadEndHandler();
+      		moveEndHandler();
       	}
       	
       	//moveSuccessHandler
@@ -394,12 +394,12 @@
       	
   		function showMoveEndInfo()
   		{
-  			var uploadEndInfo = "移动完成(共" + totalNum +"个)";
+  			var moveEndInfo = "移动完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
-      			uploadEndInfo = "移动完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			moveEndInfo = "移动完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
       		    bootstrapQ.msg({
-					msg : uploadEndInfo,
+					msg : moveEndInfo,
 					type : 'warning',
 					time : 2000,
 				    }); 
@@ -407,7 +407,7 @@
       		else
       		{
 	            bootstrapQ.msg({
-						msg : uploadEndInfo,
+						msg : moveEndInfo,
 						type : 'success',
 						time : 2000,
 					    }); 
