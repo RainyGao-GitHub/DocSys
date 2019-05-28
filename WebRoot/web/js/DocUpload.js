@@ -16,15 +16,15 @@
         var uploadStartTime = 0;//上传开始时间，用于计算已用时间
         var uploadSpeed = 1000;	//1k/s
         
-        /*uploadContent 用于保存文件上传的初始信息*/
-        var uploadContent = {};
-        uploadContent.uploadBatchList = [];
-        uploadContent.batchNum = 0;	//totalBatchNum
-        uploadContent.batchIndex = 0;	//curBatchIndex
-        uploadContent.state = 0;	//0: all UploadBatch not inited 1: uploadBatch Init is on going 2: uploadBatch Init completed
-        uploadContent.initedFileNum = 0;
-        uploadContent.totalFileNum = 0; 
-        uploadContent.totalFileSize = 0;
+        /*Content 用于保存文件上传的初始信息*/
+        var Content = {};
+        Content.BatchList = [];
+        Content.batchNum = 0;	//totalBatchNum
+        Content.batchIndex = 0;	//curBatchIndex
+        Content.state = 0;	//0: all UploadBatch not inited 1: Batch Init is on going 2: Batch Init completed
+        Content.initedFileNum = 0;
+        Content.totalFileNum = 0; 
+        Content.totalFileSize = 0;
         
         /*uploadDoc conditions 用于指示当前的上传文件及上传状态*/
         var index = 0; //当前操作的索引
@@ -128,32 +128,32 @@
 			var fileNum = files.length;
 			console.log("DocUploadInit() fileNum:" + fileNum);				
 
-			//Add uploadBatchInfo to uploadContent
-			var uploadBatch = {};
-			uploadBatch.files = files;
-			uploadBatch.parentNode = parentNode;
-			uploadBatch.parentPath = parentPath;
-			uploadBatch.parentId = parentId;
-			uploadBatch.level = level;
-			uploadBatch.vid = vid;
-			uploadBatch.num = fileNum;
-			uploadBatch.index = 0;
-			uploadBatch.state = 0;
+			//Add BatchInfo to Content
+			var Batch = {};
+			Batch.files = files;
+			Batch.parentNode = parentNode;
+			Batch.parentPath = parentPath;
+			Batch.parentId = parentId;
+			Batch.level = level;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
 			
-			//Init uploadContent.uploadBatchList
-			uploadContent.uploadBatchList = [];
-			uploadContent.uploadBatchList.push(uploadBatch);
-			uploadContent.batchNum = 1;
-			uploadContent.totalFileNum = fileNum;
-			totalNum = uploadContent.totalFileNum;
+			//Init Content.BatchList
+			Content.BatchList = [];
+			Content.BatchList.push(Batch);
+			Content.batchNum = 1;
+			Content.totalFileNum = fileNum;
+			totalNum = Content.totalFileNum;
 			
-	        //Set uploadContent Index and State
-	        uploadContent.initedFileNum = 0;
-	        uploadContent.totalFileSize = 0;
-			uploadContent.batchIndex = 0;
-			uploadContent.state = 1;
+	        //Set Content Index and State
+	        Content.initedFileNum = 0;
+	        Content.totalFileSize = 0;
+			Content.batchIndex = 0;
+			Content.state = 1;
 	        
-	        console.log("DocUploadInit uploadContent:", uploadContent);
+	        console.log("DocUploadInit Content:", Content);
 	        
 			showUploadingInfo();
 			
@@ -179,8 +179,8 @@
 			index = 0;
 			
 			//Build SubContextList(totalFileNum and totalSize will also be caculated)
-			buildSubContextList(uploadContent,SubContextList,10);
-			totalSize = uploadContent.totalFileSize;
+			buildSubContextList(Content,SubContextList,10);
+			totalSize = Content.totalFileSize;
 			console.log("文件总的个数为："+totalNum + " 文件总的大小为："+totalSize);
 			
 			//Draw UploadItems by Go through the SubContextList
@@ -210,62 +210,62 @@
 			var fileNum = files.length;
 			console.log("DocUploadAppend() fileNum:" + fileNum);
 
-			//Build uploadBatch
-			var uploadBatch = {};
-			uploadBatch.files = files;
-			uploadBatch.parentNode = parentNode;
-			uploadBatch.parentPath = parentPath;
-			uploadBatch.parentId = parentId;
-			uploadBatch.level = level;
-			uploadBatch.vid = vid;
-			uploadBatch.num = fileNum;
-			uploadBatch.index = 0;
-			uploadBatch.state = 0;
+			//Build Batch
+			var Batch = {};
+			Batch.files = files;
+			Batch.parentNode = parentNode;
+			Batch.parentPath = parentPath;
+			Batch.parentId = parentId;
+			Batch.level = level;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
 			
-			//Append to uploadContent.uploadBatchList
-			uploadContent.uploadBatchList.push(uploadBatch);
-			uploadContent.batchNum++;
-			uploadContent.totalFileNum += fileNum;
-			totalNum = uploadContent.totalFileNum;
+			//Append to Content.BatchList
+			Content.BatchList.push(Batch);
+			Content.batchNum++;
+			Content.totalFileNum += fileNum;
+			totalNum = Content.totalFileNum;
 			
 			showUploadingInfo();
 			
-			console.log("DocUploadAppend uploadContent:", uploadContent);
+			console.log("DocUploadAppend Content:", Content);
 			
-			if(uploadContent.state == 2)	//uploadBatch already initiated, need to restart it
+			if(Content.state == 2)	//Batch already initiated, need to restart it
 			{
-				uploadContent.batchIndex++;
-				uploadContent.state = 1;
-				buildSubContextList(uploadContent,SubContextList,10);
-				totalSize = uploadContent.totalFileSize;
+				Content.batchIndex++;
+				Content.state = 1;
+				buildSubContextList(Content,SubContextList,10);
+				totalSize = Content.totalFileSize;
 			}
 			
-			console.log("文件总的个数为："+uploadContent.totalFileNum + " 文件总的大小为："+totalSize);
+			console.log("文件总的个数为："+Content.totalFileNum + " 文件总的大小为："+totalSize);
 			checkAndDrawUploadItems(SubContextList);
       	}
       	
       	//这是一个递归调用函数，递归遍历所有目录，并将文件加入到SubContextList中
-		function buildSubContextList(uploadContent,SubContextList,maxInitNum)
+		function buildSubContextList(Content,SubContextList,maxInitNum)
 		{
-			if(uploadContent.state == 2)
+			if(Content.state == 2)
 			{
 				return;
 			}
 			
       		console.log("buildSubContextList() maxInitNum:" + maxInitNum);
 			
-      		var curBatchIndex = uploadContent.batchIndex;
-      		var uploadBatch = uploadContent.uploadBatchList[curBatchIndex];
-      		console.log("buildSubContextList() uploadContent curBatchIndex:" + curBatchIndex + " num:" + uploadContent.batchNum );
+      		var curBatchIndex = Content.batchIndex;
+      		var Batch = Content.BatchList[curBatchIndex];
+      		console.log("buildSubContextList() Content curBatchIndex:" + curBatchIndex + " num:" + Content.batchNum );
     		
-      		var files = uploadBatch.files;
-      		var parentPath = uploadBatch.parentPath;
-      		var level = uploadBatch.level;
-      		var parentId = uploadBatch.parentId;
-      		var vid = uploadBatch.vid;
-      		var index = uploadBatch.index;
-      		var fileNum =  uploadBatch.num;
-      		console.log("buildSubContextList() uploadBatch index:" + index + " fileNum:" + fileNum );
+      		var files = Batch.files;
+      		var parentPath = Batch.parentPath;
+      		var level = Batch.level;
+      		var parentId = Batch.parentId;
+      		var vid = Batch.vid;
+      		var index = Batch.index;
+      		var fileNum =  Batch.num;
+      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum );
       		
       		var count = 0;
 			console.log("buildSubContextList fileNum:" + fileNum);
@@ -278,8 +278,8 @@
  					return;
  				}
  				
- 				uploadBatch.index++;
- 				uploadContent.initedFileNum++;
+ 				Batch.index++;
+ 				Content.initedFileNum++;
  				
     			var file = files[i];
     	   		if(typeof file == 'object')
@@ -326,19 +326,19 @@
 		      								    	   	
 		    	   	//Push the SubContext
 		    	   	SubContextList.push(SubContext);
-		    	   	uploadContent.totalFileSize += file.size;
+		    	   	Content.totalFileSize += file.size;
     	   		}
 	    	}
     		
     		//console.log(SubContextList);
-	    	console.log("buildSubContextList() totSize:" + uploadContent.totalFileSize);
+	    	console.log("buildSubContextList() totSize:" + Content.totalFileSize);
 
-    		uploadBatch.state = 2;
-    		uploadContent.batchIndex++;
-    		if(uploadContent.batchIndex == uploadContent.batchNum)
+    		Batch.state = 2;
+    		Content.batchIndex++;
+    		if(Content.batchIndex == Content.batchNum)
     		{
-    			uploadContent.state = 2;
-    			console.log("buildSubContextList() all uploadBatch Inited");
+    			Content.state = 2;
+    			console.log("buildSubContextList() all Batch Inited");
     		}
 	   	}
 
@@ -412,7 +412,7 @@
       	//初始化上传文件的SubContext,并绘制对应的进度条
       	function checkAndDrawUploadItems(SubContextList)
       	{
-      			var totalNum = uploadContent.initedFileNum;
+      			var totalNum = Content.initedFileNum;
       			//Check if all items drawed
       			if(drawedNum >= totalNum)
       			{
@@ -462,24 +462,25 @@
       	}
 		//文件覆盖确认不能像文件错误确认一样封装成函数的原因在于，文件复制会存在两种种情况：继续、异步等待用户确认，文件错误确认只有一种情况：异步等待用户确认
       	//获取当上传的文件覆盖设置
-      	function getFileCoverConfirmSetting()
+      	function getFileCoverConfirmSetting(SubContext)
       	{
 	 		if(fileCoverConfirmSet == 0) //全局设置为直接覆盖
   	 		{
-  	 			if(SubContextList[index].fileCoverConfirmSet == 0)
+  	 			if(SubContext.fileCoverConfirmSet == 0)
   	 			{
   	 				return 0;
   	 			}
   	 		
-  	 			return SubContextList[index].fileCoverConfirmSet;	 			
+  	 			return SubContext.fileCoverConfirmSet;	 			
   	 		}
   	 		
 	 		return fileCoverConfirmSet;
       	}
       	
       	//文件覆盖处理接口
-      	function fileCoverConfirm(docName,msgInfo)
+      	function fileCoverConfirm(SubContext, msgInfo)
       	{
+			var docName = SubContext.name;
       		console.log("fileCoverConfirm");
       		//It is checkIn behavior do cover
      		if(curCheckInDoc.id && curCheckInDoc.id > -1)
@@ -487,7 +488,7 @@
      			fileCoverConfirmSet = 1;
      		}
       		
-  	 		var confirm = getFileCoverConfirmSetting();
+  	 		var confirm = getFileCoverConfirmSetting(SubContext);
 	  	 	if(confirm == 1)
 	  	 	{
 	  	 		//用户已确认直接覆盖
@@ -496,14 +497,14 @@
 	  	 	}
 	  	 	else if(confirm == 2)
 	  	 	{
-	  	 		uploadErrorHandler(docName,"文件" + docName + " 已存在，自动跳过");
+	  	 		uploadErrorHandler(SubContext, "文件" + docName + " 已存在，自动跳过");
 	  	 		return;
 	  	 	}
 	  	 	else
 	  	 	{
 		        var fileCoverTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
 		            	console.log("fileCoverConfirm() 是否覆盖 " + docName + ",用户确认超时,采用覆盖且后续自动覆盖");
-		            	SubContextList[index].fileCoverConfirmSet = 1; //覆盖
+		            	SubContext.fileCoverConfirmSet = 1; //覆盖
 		            	fileCoverConfirmSet = 1;
 		            	closeBootstrapDialog("fileCoverConfirm");
 		            	uploadDoc(); //reEnter uploadDoc
@@ -518,7 +519,7 @@
 	    	    },function () {
 	               	console.log("fileCoverConfirm() 用户选择覆盖 " + docName);
 	       		 	clearTimeout(fileCoverTimer);
-	 	 			SubContextList[index].fileCoverConfirmSet = 1; //覆盖
+	 	 			SubContext.fileCoverConfirmSet = 1; //覆盖
 	  	 			if(index < (totalNum-1)) //后续还有才提示
 	  	 			{
 		  	 			var fileCoverTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
@@ -556,14 +557,14 @@
 	    	    	console.log("fileCoverConfirm() 用户选择跳过上传 " + docName);
 	    	    	clearTimeout(fileCoverTimer);
 	
-	  	 			SubContextList[index].fileCoverConfirmSet = 2; //不覆盖
+	  	 			SubContext.fileCoverConfirmSet = 2; //不覆盖
 	  	 			if(index < (totalNum-1)) //后续还有才提示 
 	  	 			{
 		  	 			var fileCoverTimer2 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
 		 	            	console.log("fileCoverConfirm() 后续已存在文件是否自动跳过，用户确认超时，后续自动跳过！");
 		 	            	fileCoverConfirmSet = 2;
 		 	            	closeBootstrapDialog("takeSameActionConfirm2");	 	            	
-		 	            	uploadErrorHandler(docName,"后续已存在文件是否自动跳过，用户确认超时，跳过且后续自动跳过！");
+		 	            	uploadErrorHandler(SubContext, "后续已存在文件是否自动跳过，用户确认超时，跳过且后续自动跳过！");
 		 	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
 	  	 				
 	  	 	    	    qiao.bs.confirm({
@@ -576,12 +577,12 @@
 	  	 	    	    	console.log("fileCoverConfirm() 后续已存在文件自动跳过！");
 	  	 	    	    	clearTimeout(fileCoverTimer2);
 	  	 					fileCoverConfirmSet = 2;	//全局覆盖
-	  	 					uploadErrorHandler(docName,"文件已存在，跳过且后续自动跳过");
+	  	 					uploadErrorHandler(SubContext, "文件已存在，跳过且后续自动跳过");
 	  	  	 				return true;
 	  	 				},function(){
 	  	 					console.log("fileCoverConfirm() 后续已存在文件不自动跳过！");
 	  	 	    	    	clearTimeout(fileCoverTimer2);
-	  						uploadErrorHandler(docName,"文件已存在，跳过但后续不自动跳过");
+	  						uploadErrorHandler(SubContext, "文件已存在，跳过但后续不自动跳过");
 	  	  	 				return true;
 	  	 				});			
 	  	 			}
@@ -595,30 +596,30 @@
       	}
       	
       	//获取当上传的文件覆盖设置
-      	function getUploadErrorConfirmSetting()
+      	function getUploadErrorConfirmSetting(SubContext)
       	{
 	 		if(uploadErrorConfirmSet == 0) //全局设置为直接覆盖
   	 		{
-  	 			if(SubContextList[index].uploadErrorConfirmSet == 0)
+  	 			if(SubContext.uploadErrorConfirmSet == 0)
   	 			{
   	 				return 0;
   	 			}
   	 		
-  	 			return SubContextList[index].uploadErrorConfirmSet;	 			
+  	 			return SubContext.uploadErrorConfirmSet;	 			
   	 		}
   	 		
 	 		return uploadErrorConfirmSet;
       	}
       	
       	//upload Error Confirm
-      	function uploadErrorConfirm(FileName,errMsg)
+      	function uploadErrorConfirm(SubContext,errMsg)
       	{
       		var uploadErrorTimer = setTimeout(function () {	//超时用户没有动作，则直接覆盖
             	console.log("用户确认超时,继续上传后续文件");
-            	SubContextList[index].uploadErrorConfirmSet = 1; //继续上传
+            	SubContext.uploadErrorConfirmSet = 1; //继续上传
             	uploadErrorConfirmSet = 1; //全局继续上传
             	closeBootstrapDialog("uploadErrorConfirm");
-            	uploadErrorHandler(FileName,errMsg);
+            	uploadErrorHandler(SubContext, errMsg);
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
 			//弹出用户确认窗口
@@ -631,14 +632,14 @@
     	    },function () {
     	    	//alert("点击了确定");
 				clearTimeout(uploadErrorTimer);			
-      			SubContextList[index].uploadErrorConfirmSet = 1; //继续上传
+      			SubContext.uploadErrorConfirmSet = 1; //继续上传
     	 		if(index < (totalNum-1))	//后续还有文件
                 {
     	      		var uploadErrorTimer1 = setTimeout(function () {	//超时用户没有动作，则直接覆盖
     	            	console.log("用户确认超时,后续错误都继续上传");
     	            	uploadErrorConfirmSet = 1; //全局继续上传
     	            	closeBootstrapDialog("takeSameActionConfirm3");
-    	            	uploadErrorHandler(FileName,errMsg);
+    	            	uploadErrorHandler(SubContext,errMsg);
     	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
     	 			
   	 	    	    qiao.bs.confirm({
@@ -651,26 +652,26 @@
   	 	    	    	//后续错误将不再弹出窗口
   	 	    	    	clearTimeout(uploadErrorTimer1);
   	 	    	    	uploadErrorConfirmSet = 1;	//全局覆盖
-  	 	    	    	uploadErrorHandler(FileName,errMsg); //reEnter uploadDoc
+  	 	    	    	uploadErrorHandler(SubContext,errMsg); //reEnter uploadDoc
   	  	 				return true;
   	 				},function(){
   	 					//后续错误将继续弹出错误确认窗口
   	 					clearTimeout(uploadErrorTimer1);
-  	 	    	    	uploadErrorHandler(FileName,errMsg);
+  	 	    	    	uploadErrorHandler(SubContext,errMsg);
   	  	 				return true;
   	 				});	
                 }
     	 		else
     	 		{
-             		uploadErrorConfirmHandler(FileName,errMsg);
+             		uploadErrorConfirmHandler(SubContext, errMsg);
              		return;
     	 		}
     		},function(){
     	    	//alert("点击了取消");
     	    	clearTimeout(uploadErrorTimer);
-      			SubContextList[index].uploadErrorConfirmSet = 2; //结束所有上传
+      			SubContext.uploadErrorConfirmSet = 2; //结束所有上传
           		uploadErrorConfirmSet = 2; //全局取消上传    	 		
-		 		uploadErrorAbortHandler(FileName,errMsg);
+		 		uploadErrorAbortHandler(SubContext,errMsg);
       		});
       	}
       	
@@ -679,26 +680,26 @@
       	{
 	 		if(uploadWarningConfirmSet == 0) //全局设置为继续
   	 		{
-  	 			if(SubContextList[index].uploadWarningConfirmSet == 0)
+  	 			if(SubContext.uploadWarningConfirmSet == 0)
   	 			{
   	 				return 0;
   	 			}
   	 		
-  	 			return SubContextList[index].uploadWarningConfirmSet;	 			
+  	 			return SubContext.uploadWarningConfirmSet;	 			
   	 		}
   	 		
 	 		return uploadWarningConfirmSet;
       	}
       	
       	//upload Warning Confirm
-      	function uploadWarningConfirm(FileName,msgInfo)
+      	function uploadWarningConfirm(SubContext,msgInfo)
       	{
       		var uploadWarningTimer = setTimeout(function () {	//超时用户没有动作，则直接继续
             	console.log("用户确认超时,继续上传后续文件");
-            	SubContextList[index].uploadWarningConfirmSet = 1; //继续上传
+            	SubContext.uploadWarningConfirmSet = 1; //继续上传
             	uploadWarningConfirmSet = 1; //全局继续上传
             	closeBootstrapDialog("uploadWarningConfirm");
-            	uploadErrorHandler(FileName,msgInfo);
+            	uploadErrorHandler(SubContext,msgInfo);
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
 			//弹出用户确认窗口
@@ -711,14 +712,14 @@
     	    },function () {
     	    	//alert("点击了确定");
 				clearTimeout(uploadWarningTimer);			
-      			SubContextList[index].uploadWarningConfirmSet = 1; //继续上传
+      			SubContext.uploadWarningConfirmSet = 1; //继续上传
     	 		if(index < (totalNum-1))	//后续还有文件
                 {
     	      		var uploadWarningTimer1 = setTimeout(function () {	//超时用户没有动作，则直接继续
     	            	console.log("用户确认超时,后续错误都继续上传");
     	            	uploadWarningConfirmSet = 1; //全局继续上传
     	            	closeBootstrapDialog("takeSameActionConfirm4");
-    	            	uploadWarningHandler(FileName,msgInfo);
+    	            	uploadWarningHandler(SubContext,msgInfo);
     	            },5*60*1000);	//5分鐘用戶不確認則關閉對話框
     	 			
   	 	    	    qiao.bs.confirm({
@@ -731,51 +732,52 @@
   	 	    	    	//后续错误将不再弹出窗口
   	 	    	    	clearTimeout(uploadWarningTimer1);
   	 	    	    	uploadWarningConfirmSet = 1;	//全局覆盖
-  	 	    	    	uploadWarningHandler(FileName,msgInfo); //reEnter uploadDoc
+  	 	    	    	uploadWarningHandler(SubContext,msgInfo); //reEnter uploadDoc
   	  	 				return true;
   	 				},function(){
   	 					//后续错误将继续弹出错误确认窗口
   	 					clearTimeout(uploadWarningTimer1);
-  	 	    	    	uploadWarningHandler(FileName,msgInfo);
+  	 	    	    	uploadWarningHandler(SubContext,msgInfo);
   	  	 				return true;
   	 				});	
                 }
     	 		else
     	 		{
-             		uploadWarningConfirmHandler(FileName,msgInfo);
+             		uploadWarningConfirmHandler(SubContext,msgInfo);
              		return;
     	 		}
     		},function(){
     	    	//alert("点击了取消");
     	    	clearTimeout(uploadWarningTimer);
-      			SubContextList[index].uploadWarningConfirmSet = 2; //结束所有上传
+      			SubContext.uploadWarningConfirmSet = 2; //结束所有上传
           		uploadWarningConfirmSet = 2; //全局取消上传    	 		
-		 		uploadWarningAbortHandler(FileName,msgInfo);
+		 		uploadWarningAbortHandler(SubContext,msgInfo);
       		});
       	}
       	
       	//uploadWarnignConfirmHandler
-      	function uploadWarningConfirmHandler(FileName,msgInfo)
+      	function uploadWarningConfirmHandler(SubContext,msgInfo)
       	{
 			console.log("警告：" + msgInfo);
 			var confirm = getUploadWarningConfirmSetting();
 			if(confirm == 1)
 			{
-				uploadWarningHandler(name, msgInfo);
+				uploadWarningHandler(SubContext, msgInfo);
 			}
 			else if(confirm == 2)	//结束上传
 			{
-				uploadWarningAbortHandler(name, msgInfo);
+				uploadWarningAbortHandler(SubContext, msgInfo);
 			}
 			else
 			{
-				uploadWarningConfirm(name, msgInfo);
+				uploadWarningConfirm(SubContext, msgInfo);
 			}
       	}
       	
       	//uploadWarningHandler
-      	function uploadWarningHandler(FileName,msgInfo)
+      	function uploadWarningHandler(SubContext,msgInfo)
       	{
+      		var FileName = SubContext.name;
       		console.log("uploadWarningHandler() "+ FileName + " " + msgInfo);
       	  	
       		//If curCheckInDoc was set, means the upload is for CheckIn
@@ -793,17 +795,18 @@
     	      	console.log("uploadWarningHandler() 重传成功");
     	      	reuploadSuccessNum++;
     	    }
-    	    SubContextList[index].state = 2;	//上传结束
-          	SubContextList[index].status = "success";
-          	SubContextList[index].msgInfo = msgInfo;
+    	    SubContext.state = 2;	//上传结束
+          	SubContext.status = "success";
+          	SubContext.msgInfo = msgInfo;
     		//hide the reupload btn
     		$(".reupload"+index).hide();
     		uploadNextDoc();
         }
       	
       	//uploadWarningAbortHandler
-      	function uploadErrorAbortHandler(FileName,errMsg)
+      	function uploadErrorAbortHandler(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name;
       		console.log("uploadWarningAbortHandler() "+ FileName + " " + errMsg);
       		
       		//If curCheckInDoc was set, means the upload is for CheckIn
@@ -821,36 +824,38 @@
     	      	console.log("uploadWarningHandler() 重传成功");
     	      	reuploadSuccessNum++;
     	    }
-    	    SubContextList[index].state = 2;	//上传结束
-          	SubContextList[index].status = "success";
-          	SubContextList[index].msgInfo = msgInfo;
+    	    SubContext.state = 2;	//上传结束
+          	SubContext.status = "success";
+          	SubContext.msgInfo = msgInfo;
     		//hide the reupload btn
     		$(".reupload"+index).hide();
       		uploadEndHandler();
       	}
       	
       	//uploadErrorConfirmHandler
-      	function uploadErrorConfirmHandler(FileName,errMsg)
+      	function uploadErrorConfirmHandler(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name;
 			console.log("上传失败：" + errMsg);
 			var confirm = getUploadErrorConfirmSetting();
 			if(confirm == 1)
 			{
-				uploadErrorHandler(name, errMsg);
+				uploadErrorHandler(SubContext, errMsg);
 			}
 			else if(confirm == 2)	//结束上传
 			{
-				uploadErrorAbortHandler(name, errMsg);
+				uploadErrorAbortHandler(SubContext, errMsg);
 			}
 			else
 			{
-				uploadErrorConfirm(name, errMsg);
+				uploadErrorConfirm(SubContext, errMsg);
 			}
       	}
       	
       	//uploadErrorHandler
-      	function uploadErrorHandler(FileName,errMsg)
+      	function uploadErrorHandler(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name;
       		console.log("uploadErrorHandler() "+ FileName + " " + errMsg);
       		
       		//CheckIn Failed
@@ -870,15 +875,16 @@
       			reuploadFailNum++;
       		}
       		//设置上传状态
-			SubContextList[index].state = 3;	//上传结束
-      		SubContextList[index].status = "fail";
-			SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//上传结束
+      		SubContext.status = "fail";
+			SubContext.msgInfo = errMsg;
 			uploadNextDoc();		 	
       	}
       	
       	//uploadErrorAbortHandler
-      	function uploadErrorAbortHandler(FileName,errMsg)
+      	function uploadErrorAbortHandler(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name;      		
       		console.log("uploadErrorAbortHandler() "+ FileName + " " + errMsg);
       		//CheckIn Failed
       		if(curCheckInDoc.id && curCheckInDoc.id > -1)
@@ -897,16 +903,17 @@
       			reuploadFailNum++;
       		}
     		//设置上传状态
-			SubContextList[index].state = 3;	//上传结束
-      		SubContextList[index].status = "fail";
-      		SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//上传结束
+      		SubContext.status = "fail";
+      		SubContext.msgInfo = errMsg;
       		uploadEndHandler();
       	}
       	
       	//uploadSuccessHandler
-      	function uploadSuccessHandler(name,msgInfo)
+      	function uploadSuccessHandler(SubContext,msgInfo)
       	{	
-      		console.log("uploadSuccessHandler() "+ name + " " + msgInfo);
+      		var FileName = SubContext.name;
+      		console.log("uploadSuccessHandler() "+ FileName + " " + msgInfo);
       		//If curCheckInDoc was set, means the upload is for CheckIn
       		if(curCheckInDoc.id && curCheckInDoc.id > -1)
       		{
@@ -922,9 +929,9 @@
 	      		console.log("uploadSuccessHandler() 重传成功");
 	      		reuploadSuccessNum++;
 	      	}
-	      	SubContextList[index].state = 2;	//上传结束
-      		SubContextList[index].status = "success";
-      		SubContextList[index].msgInfo = msgInfo;
+	      	SubContext.state = 2;	//上传结束
+      		SubContext.status = "success";
+      		SubContext.msgInfo = msgInfo;
 			//hide the reupload btn
 			$(".reupload"+index).hide();
 			uploadNextDoc();
@@ -954,8 +961,6 @@
     				    }); 
       		}
       		$(".upload-list-title").text(uploadEndInfo);
-      		
-
   		}
 
       	//uploadEndHandler
@@ -1221,7 +1226,7 @@
 	             		if(ret.msgData == "0")	//文件存在但checkSume不同，等待用户确认是否覆盖
 	             		{
 	             			SubContext.docId = ret.data.docId;
-	             			fileCoverConfirm(name,"文件" + name + " 已存在");
+	             			fileCoverConfirm(SubContext,"文件" + name + " 已存在");
 	             			return;
 	             		}
 	             		else if(ret.msgData == "1")	//文件存在且checkSum相同，直接标记成功
@@ -1235,7 +1240,7 @@
 	             			
 	             			$('.file'+index).removeClass('is-uploading');
 		    				$('.file'+index).addClass('is-success');
-		                    uploadSuccessHandler(name,ret.msgInfo);
+		                    uploadSuccessHandler(SubContext, ret.msgInfo);
 							return;
 	             		}
 	             		else
@@ -1247,12 +1252,12 @@
 	                }
 	                else
 	                {
-					 	uploadErrorConfirmHandler(name,ret.msgInfo);
+					 	uploadErrorConfirmHandler(SubContext, ret.msgInfo);
 			            return;
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(name,"doCheck "+nodeName+ " 异常");
+				 	uploadErrorConfirmHandler(SubContext, "doCheck "+nodeName+ " 异常");
 		            return;
 	            }
 	        });
@@ -1297,17 +1302,17 @@
 	             			
 	             		$('.file'+index).removeClass('is-uploading');
 		    			$('.file'+index).addClass('is-success');
-		                uploadSuccessHandler(name,ret.msgInfo);
+		                uploadSuccessHandler(SubContext,ret.msgInfo);
 						return;
 	             	}
 	             	else
 	                {
-					 	uploadErrorConfirmHandler(name,ret.msgInfo);
+					 	uploadErrorConfirmHandler(SubContext, ret.msgInfo);
 			            return;
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(name,"doCheck "+nodeName+ " 异常");
+				 	uploadErrorConfirmHandler(SubContext, "doCheck "+nodeName+ " 异常");
 		            return;
 	            }
 	        });
@@ -1396,7 +1401,7 @@
 		
 		function setSubContextForReupload(id)
 		{
-			SubContext = SubContextList[id];
+			var SubContext = SubContextList[id];
 			
 			//console.log("setSubContextForReupload()",SubContext);
 			//已成功地不能重传
@@ -1635,7 +1640,7 @@
 		    					//update the uploadStatus
 		    					$('.file'+index).removeClass('is-uploading');
 		    					$('.file'+index).addClass('is-success');
-		    					uploadSuccessHandler(name,ret.msgInfo);
+		    					uploadSuccessHandler(SubContext,ret.msgInfo);
 	    					}
 	    					else
 	    					{
@@ -1648,12 +1653,12 @@
 	                }
 	                else
 	                {
-					 	uploadErrorConfirmHandler(name,ret.msgInfo);
+					 	uploadErrorConfirmHandler(SubContext, ret.msgInfo);
 			            return;
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(name,"checkChunkUploade "+name+ " 异常");
+				 	uploadErrorConfirmHandler(SubContext, "checkChunkUploade "+name+ " 异常");
 		            return;
 	            }
 	        });
@@ -1771,7 +1776,7 @@
 						//update the uploadStatus
 						$('.file'+index).removeClass('is-uploading');
 						$('.file'+index).addClass('is-success');
-						uploadSuccessHandler(name,ret.msgInfo);
+						uploadSuccessHandler(SubContext,ret.msgInfo);
 					 }
 					 else	//上传失败
 					 {
@@ -1781,7 +1786,7 @@
 						//update the uploadStatus
 						$('.file'+index).removeClass('is-uploading');
 						$('.file'+index).addClass('is-fail');
-						uploadErrorConfirmHandler(name, ret.msgInfo);
+						uploadErrorConfirmHandler(SubContext, ret.msgInfo);
 						return;
 		             }
 				}else{
@@ -1794,7 +1799,7 @@
 					console.log("系统异常: " + name + " 上传异常！");
 					$('.file'+index).removeClass('is-uploading');
 					$('.file'+index).addClass('is-fail');
-					uploadErrorConfirmHandler(name, name + " 上传异常！");
+					uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
 					return;
 				}
 			};
@@ -1802,14 +1807,15 @@
 			//设置异步上传进度回调处理函数
 			xhr.upload.onprogress = function(evt) {
 				//由于xhr.abort不能立即结束上传，因此会导致uploadErrorHandler多次被调用而导致状态机混乱，因此目前处理方式只对未开始上传的文件有效
-				if(stopUploadFlag == true || SubContextList[index].stopUploadFlag == true)
+				var SubContext = SubContextList[index];
+				if(stopUploadFlag == true || SubContext.stopUploadFlag == true)
 				{
-					console.log("stopUploadFlag: " + stopUploadFlag + " SubContextList[index].stopUploadFlag:" + SubContextList[index].stopUploadFlag);	
-					if(true == SubContextList[index].stopUploadFlag)	//we need to promise there is only one abort for one doc upload
+					console.log("stopUploadFlag: " + stopUploadFlag + " SubContext.stopUploadFlag:" + SubContext.stopUploadFlag);	
+					if(true == SubContext.stopUploadFlag)	//we need to promise there is only one abort for one doc upload
 					{
-						SubContextList[index].stopUploadFlag = false;
+						SubContext.stopUploadFlag = false;
 						xhr.abort(); //结束当前上传	 
-						uploadErrorHandler(name, name + " 取消上传！");
+						uploadErrorHandler(SubContext, name + " 取消上传！");
 					}
 					return;
 				}
@@ -1823,7 +1829,7 @@
 					//update the uploadStatus
 					$('.file'+index).removeClass('is-uploading');
 					$('.file'+index).addClass('is-fail');
-					uploadErrorConfirmHandler(name, "文件读取失败！");
+					uploadErrorConfirmHandler(SubContext, "文件读取失败！");
 					return;
 				}
 				
@@ -1904,10 +1910,10 @@
     	function uploadDoc()
     	{
     		//upload files 没有全部加入到SubContextList
-    		if(uploadContent.state != 2)
+    		if(Content.state != 2)
     		{
-				buildSubContextList(uploadContent,SubContextList,1000);
-				totalSize = uploadContent.totalFileSize;	
+				buildSubContextList(Content,SubContextList,1000);
+				totalSize = Content.totalFileSize;	
     		}
     		
     		//每次上传前检查是否需要绘制，小于200个上传项目时绘制
@@ -1968,7 +1974,7 @@
    			if(3 == SubContext.checkSumState)
    			{
 				//uploadErrorHandler(SubContext.name,"文件校验码计算错误");
-				uploadErrorConfirmHandler(SubContext.name,"文件校验码计算错误")
+				uploadErrorConfirmHandler(SubContext, "文件校验码计算错误")
 				return;
    			}
    			
@@ -2003,8 +2009,8 @@
 		
 		function stopUpload(index)
 		{
-			console.log("stopUpload() index:" + index ,SubContextList[index]);
-			SubContextList[index].stopUploadFlag = true;
+			console.log("stopUpload() index:" + index ,SubContext);
+			SubContext.stopUploadFlag = true;
 		}
 		
 		function stopAllUpload()
