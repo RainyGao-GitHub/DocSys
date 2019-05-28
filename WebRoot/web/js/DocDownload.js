@@ -269,19 +269,19 @@
             	   		var encName = encodeURI(SubContext.name);
             	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + SubContext.vid + "&docId=" + SubContext.docId + "&pid=" + SubContext.pid + "&path=" + encPath + "&name="+ encName;	
 
-                	   	downloadSuccessHandler();
+                	   	downloadSuccessHandler(SubContext, ret.msgInfo);
                 	   	return;
                    }
                    else	//后台报错，结束下载
                    {
                 	   console.log("downloadDocPrepare Error:" + ret.msgInfo);
-                       downloadErrorConfirm(SubContext.name,ret.msgInfo);
+                       downloadErrorConfirm(SubContext,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
- 	               console.log("downloadDocPrepare 服务器异常：文件[" + index + "]下载异常！");
-            	   downloadErrorConfirm(SubContext.name,"服务器异常");
+ 	               console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
+            	   downloadErrorConfirm(SubContext,"服务器异常");
             	   return;
                 }
         	});
@@ -326,43 +326,43 @@
       	}
       	
       	//downloadErrorHandler
-      	function downloadErrorHandler(FileName,errMsg)
+      	function downloadErrorHandler(SubContext,errMsg)
       	{
-      		console.log("downloadErrorHandler() "+ FileName + " " + errMsg);
+      		console.log("downloadErrorHandler() "+ SubContex.name + " " + errMsg);
       		
       		failNum++;
       		
       		//设置下载状态
-			SubContextList[index].state = 3;	//下载结束
-      		SubContextList[index].status = "fail";
-			SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//下载结束
+      		SubContext.status = "fail";
+			SubContext.msgInfo = errMsg;
 			downloadNextDoc();		 	
       	}
       	
       	//downloadErrorAbortHandler
-      	function downloadErrorAbortHandler(FileName,errMsg)
+      	function downloadErrorAbortHandler(SubContext,errMsg)
       	{
-      		console.log("downloadErrorAbortHandler() "+ FileName + " " + errMsg);
+      		console.log("downloadErrorAbortHandler() "+ SubContext.name + " " + errMsg);
       	
       		failNum++;
       		
     		//设置下载状态
-			SubContextList[index].state = 3;	//下载结束
-      		SubContextList[index].status = "fail";
-      		SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//下载结束
+      		SubContext.status = "fail";
+      		SubContext.msgInfo = errMsg;
       		downloadEndHandler();
       	}
       	
       	//downloadSuccessHandler
-      	function downloadSuccessHandler(name,msgInfo)
+      	function downloadSuccessHandler(SubContext, msgInfo)
       	{	
-      		console.log("downloadSuccessHandler() "+ name + " " + msgInfo);
+      		console.log("downloadSuccessHandler() "+ SubContext.name + " " + msgInfo);
       		
       		successNum++;
 	      	
-	      	SubContextList[index].state = 2;	//下载结束
-      		SubContextList[index].status = "success";
-      		SubContextList[index].msgInfo = msgInfo;
+	      	SubContext.state = 2;	//下载结束
+      		SubContext.status = "success";
+      		SubContext.msgInfo = msgInfo;
 			downloadNextDoc();
       	}
       	
@@ -370,12 +370,14 @@
       	function downloadEndHandler()
       	{
       		console.log("downloadEndHandler() 下载结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
-			
+      		console.log("downloadEndHandler() SubContextList:", SubContextList);
       		//清除标记
   			isDownloading = false;
   			
       		//显示下载完成 
       		showDownloadEndInfo();
+      		
+      		
       	}
       	
   		function showDownloadEndInfo()

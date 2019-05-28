@@ -291,19 +291,19 @@
 	                	deleteTreeNode(SubContext.name, dstParentNode); //zTree会在新的目录下新建一个id相同的Node需要删除
 	                	addTreeNode(ret.data,dstParentNode);
 	          			
-	          			//复制下一个Doc
-	                    copyNextDoc();
+	                	copySuccessHandler(SubContext, ret.msgInfo);
+	                	return;
 	                }
 	                else
 	                {
 	                	console.log("Error:" + ret.msgInfo);
-	                	copyErrorConfirm(SubContext.name,ret.msgInfo);
+	                	copyErrorConfirm(SubContext,ret.msgInfo);
 	                	return;
 	                }
 	            },
 	            error : function () {
 	            	console.log("服务器异常：copy failed");
-                	copyErrorConfirm(SubContext.name,"服务器异常");
+                	copyErrorConfirm(SubContext,"服务器异常");
                 	return;
 	            }
 	    	});
@@ -383,8 +383,9 @@
 		    });
 		}
 		
-      	function copyErrorConfirm(FileName,errMsg)
+      	function copyErrorConfirm(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name;
       		var msg = FileName + "复制失败,是否继续复制其他文件？";
       		if(errMsg != undefined)
       		{
@@ -399,54 +400,54 @@
     	        qubtn: "结束",
     	    },function () {
     	    	//alert("点击了确定");
-    	    	copyErrorHandler(FileName, errMsg);
+    	    	copyErrorHandler(SubContext, errMsg);
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-				copyErrorAbortHandler(FileName, errMsg);
+				copyErrorAbortHandler(SubContext, errMsg);
     	        //syncUpMenu();	//刷新菜单
     	    	return true;
       		});
       	}
       	
       	//copyErrorHandler
-      	function copyErrorHandler(FileName,errMsg)
+      	function copyErrorHandler(SubContext,errMsg)
       	{
-      		console.log("copyErrorHandler() "+ FileName + " " + errMsg);
+      		console.log("copyErrorHandler() "+ SubContext.name + " " + errMsg);
       		
       		failNum++;
       		
       		//设置复制状态
-			SubContextList[index].state = 3;	//复制结束
-      		SubContextList[index].status = "fail";
-			SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//复制结束
+      		SubContext.status = "fail";
+			SubContext.msgInfo = errMsg;
 			copyNextDoc();		 	
       	}
       	
       	//copyErrorAbortHandler
-      	function copyErrorAbortHandler(FileName,errMsg)
+      	function copyErrorAbortHandler(SubContext,errMsg)
       	{
-      		console.log("copyErrorAbortHandler() "+ FileName + " " + errMsg);
+      		console.log("copyErrorAbortHandler() "+ SubContext.name + " " + errMsg);
       	
       		failNum++;
       		
     		//设置复制状态
-			SubContextList[index].state = 3;	//复制结束
-      		SubContextList[index].status = "fail";
-      		SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//复制结束
+      		SubContext.status = "fail";
+      		SubContext.msgInfo = errMsg;
       		copyEndHandler();
       	}
       	
       	//copySuccessHandler
-      	function copySuccessHandler(name,msgInfo)
+      	function copySuccessHandler(SubContext,msgInfo)
       	{	
-      		console.log("copySuccessHandler() "+ name + " " + msgInfo);
+      		console.log("copySuccessHandler() "+ SubContext.name + " " + msgInfo);
       		
       		successNum++;
 	      	
-	      	SubContextList[index].state = 2;	//复制结束
-      		SubContextList[index].status = "success";
-      		SubContextList[index].msgInfo = msgInfo;
+	      	SubContext.state = 2;	//复制结束
+      		SubContex.status = "success";
+      		SubContext.msgInfo = msgInfo;
 			copyNextDoc();
       	}
 		

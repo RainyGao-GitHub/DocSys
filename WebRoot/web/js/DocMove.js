@@ -283,19 +283,19 @@
                 	    DocList.addNode(doc);
                 	    DocList.deleteNode(SubContext.docId);
                 	    
-                	    moveSuccessHandler(SubContext.name, ret.msgInfo);
+                	    moveSuccessHandler(SubContext, ret.msgInfo);
                 	   	return;
                    }
                    else	//后台报错，结束移动
                    {
                 	   console.log("moveDoc Error:" + ret.msgInfo);
-                       moveErrorConfirm(SubContext.name,ret.msgInfo);
+                       moveErrorConfirm(SubContext,ret.msgInfo);
                        return;
                    }
                 },
                 error : function () {	//后台异常
  	               console.log("服务器异常：文件[" + index + "]移动异常！");
-            	   moveErrorConfirm(SubContext.name,"服务器异常");
+            	   moveErrorConfirm(SubContext,"服务器异常");
             	   return;
                 }
         	});
@@ -315,8 +315,9 @@
 	        }
 		}
 		
-      	function moveErrorConfirm(FileName,errMsg)
+      	function moveErrorConfirm(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name;
       		var msg = FileName + "移动失败,是否继续移动其他文件？";
       		if(errMsg != undefined)
       		{
@@ -330,53 +331,53 @@
     	        okbtn: "继续",
     	        qubtn: "结束",
     	    },function () {
-    	    	moveErrorHandler(FileName, errMsg);
+    	    	moveErrorHandler(SubContext, errMsg);
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-				moveErrorAbortHandler(FileName, errMsg);
+				moveErrorAbortHandler(SubContext, errMsg);
     	    	return true;
       		});
       	}
       	
       	//moveErrorHandler
-      	function moveErrorHandler(FileName,errMsg)
+      	function moveErrorHandler(SubContext,errMsg)
       	{
-      		console.log("moveErrorHandler() "+ FileName + " " + errMsg);
+      		console.log("moveErrorHandler() "+ SubContext.name + " " + errMsg);
       		
       		failNum++;
       		
       		//设置移动状态
-			SubContextList[index].state = 3;	//移动结束
-      		SubContextList[index].status = "fail";
-			SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//移动结束
+      		SubContext.status = "fail";
+			SubContext.msgInfo = errMsg;
 			moveNextDoc();		 	
       	}
       	
       	//moveErrorAbortHandler
-      	function moveErrorAbortHandler(FileName,errMsg)
+      	function moveErrorAbortHandler(SubContext,errMsg)
       	{
-      		console.log("moveErrorAbortHandler() "+ FileName + " " + errMsg);
+      		console.log("moveErrorAbortHandler() "+ SubContext.name + " " + errMsg);
       	
       		failNum++;
       		
     		//设置移动状态
-			SubContextList[index].state = 3;	//移动结束
-      		SubContextList[index].status = "fail";
-      		SubContextList[index].msgInfo = errMsg;
+			SubContext.state = 3;	//移动结束
+      		SubContext.status = "fail";
+      		SubContext.msgInfo = errMsg;
       		moveEndHandler();
       	}
       	
       	//moveSuccessHandler
-      	function moveSuccessHandler(name,msgInfo)
+      	function moveSuccessHandler(SubContext,msgInfo)
       	{	
-      		console.log("moveSuccessHandler() "+ name + " " + msgInfo);
+      		console.log("moveSuccessHandler() "+ SubContext.name + " " + msgInfo);
       		
       		successNum++;
 	      	
-	      	SubContextList[index].state = 2;	//移动结束
-      		SubContextList[index].status = "success";
-      		SubContextList[index].msgInfo = msgInfo;
+	      	SubContext.state = 2;	//移动结束
+      		SubContext.status = "success";
+      		SubContext.msgInfo = msgInfo;
 			moveNextDoc();
       	}
       	
