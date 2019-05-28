@@ -26,7 +26,7 @@
 		function moveDocs(treeNodes, dstParentNode, vid)	//多文件移动函数
 		{
 			console.log("moveDocs reposId:" + vid + " treeNodes:", treeNodes);
-			if(treeNodes.length <= 0)
+			if(!treeNodes || treeNodes.length <= 0)
 			{
 				showErrorMessage("请选择需要移动的文件!");
 				return;

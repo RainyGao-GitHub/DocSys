@@ -31,7 +31,7 @@
 		function copyDocs(treeNodes, dstParentNode, vid)	//多文件复制函数
 		{
 			console.log("copyDocs treeNodes:", treeNodes);
-			if(treeNodes.length <= 0)
+			if(!treeNodes || treeNodes.length <= 0)
 			{
 				showErrorMessage("请选择需要复制的文件!");
 				return;

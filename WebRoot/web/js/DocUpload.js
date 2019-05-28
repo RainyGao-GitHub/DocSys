@@ -84,7 +84,13 @@
 		function uploadDocs(files,parentNode,parentPath,parentId,level,vid)	//多文件上传函数
 		{
 			console.log("uploadDocs()");
-				
+			
+			if(!files || files.length <= 0)
+			{
+				showErrorMessage("请选择需要上传的文件!");
+				return;
+			}
+			
 			if(isUploading == true)
 			{
 				DocUploadAppend(files,parentNode,parentPath,parentId,level,vid);
