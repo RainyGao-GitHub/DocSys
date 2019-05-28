@@ -165,6 +165,7 @@
       		console.log("buildSubContextList() Content curBatchIndex:" + curBatchIndex + " num:" + Content.batchNum );
     		
       		var treeNodes = Batch.treeNodes;
+      		var dstParentNode = Batch.dstParentNode;
       		var dstPath = Batch.dstPath;
       		var dstLevel = Batch.dstLevel;
       		var dstPid = Batch.dstPid;
@@ -343,8 +344,7 @@
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-        	    busy = 0;
-    	        clearContext(); //清空上下文
+        	    isMoving = false;
     	        syncUpMenu();	//刷新菜单
     	    	return true;
       		});

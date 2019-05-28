@@ -236,7 +236,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/renameDoc.do")
 	public void renameDoc(Integer reposId, Long docId, Long srcPid, Integer type, String srcPath, String srcName, String dstName, 
 							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcPath:" + srcPath + " srcName:" + srcName + " dstName:" + dstName);
+		System.out.println("renameDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcPath:" + srcPath + " srcName:" + srcName + " dstName:" + dstName);
 		
 		if(srcPath == null)
 		{

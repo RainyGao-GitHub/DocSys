@@ -47,6 +47,31 @@ public class BaseFunction{
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 
+	/******************************** Basic Interface for docSys *************************************/
+	private void docSysDebugLog(String logStr, ReturnAjax rt) {
+		System.out.println(logStr);
+		if(rt != null)
+		{
+			rt.setDebugLog(logStr);
+		}
+	}
+
+	private void docSysWarningLog(String logStr, ReturnAjax rt) {
+		System.out.println(logStr);
+		if(rt != null)
+		{
+			rt.setWarningMsg(logStr);
+		}
+	}
+
+	private void docSysErrorLog(String logStr, ReturnAjax rt) {
+		System.out.println(logStr);
+		if(rt != null)
+		{
+			rt.setError(logStr);
+		}
+	}
+	
 	/******************************** Basic Interface for CommonAction *************************************/
 	//CommonAction 主要用于异步行为
 	protected void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
