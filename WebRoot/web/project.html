@@ -454,6 +454,7 @@
 <script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 
 <!-- DocSys class -->
+<script type="text/javascript" src="js/DocDownload.js"></script>
 <script type="text/javascript" src="js/DocUpload.js"></script>
 <script type="text/javascript" src="js/DocDelete.js"></script>
 <script type="text/javascript" src="js/DocCopy.js"></script>
@@ -3949,7 +3950,6 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '下载', action: function(e){
 						e.preventDefault();
-						if(cur)
 						var treeNodes = getSelectedNodes();
 						downloadDoc(treeNodes,true);
 					}
