@@ -1051,17 +1051,22 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			
+			rt.setMsgData(1);	//告诉前台，直接通过原始Doc进行下载
+			docSysDebugLog("目录已压缩", rt);
 		}
-		else	//for File
+		else
 		{
-			if(copyFile(localParentPath+name, userTmpDir+name, true) == false)
-			{
-				rt.setError("准备下载文件失败！");
-				writeJson(rt, response);
-				return;				
-			}
+			rt.setMsgData(0);	//告诉前台，直接通过原始Doc进行下载	
+			docSysDebugLog("文件可直接下载", rt);
+			//if(copyFile(localParentPath+name, userTmpDir+name, true) == false)
+			//{
+			//	rt.setError("准备下载文件失败！");
+			//	writeJson(rt, response);
+			//	return;				
+			//}
 		}
-		
+
 		writeJson(rt, response);
 	}
 
@@ -1104,7 +1109,7 @@ public class DocController extends BaseController{
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
+			//writeJson(rt, response);			
 			return;
 		}
 		
@@ -1112,21 +1117,27 @@ public class DocController extends BaseController{
 		if(doc==null){
 			System.out.println("downloadDoc_FS() Doc " + docId + " 不存在");
 			docSysErrorLog("doc " + docId + "不存在！", rt);
-			writeJson(rt, response);
+			//writeJson(rt, response);
 			return;
 		}
 		
-		//get userTmpDir
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		
-		String targetName = name;
-		if(doc.getType() == 1)
-		{
-			targetName = name + ".zip";
-		}
 		
 		try {
-			sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request, true);
+			if(doc.getType() == 1)
+			{
+				//get reposRPath
+				String reposRPath = getReposRealPath(repos);
+				//文件的localParentPath
+				String localParentPath = reposRPath + path;
+				sendFileToWebPage(localParentPath, name, rt, response, request);
+			}
+			else
+			{
+				//get userTmpDir
+				String userTmpDir = getReposUserTmpPath(repos,login_user);
+				String targetName = name + ".zip";			
+				sendFileToWebPage(userTmpDir, targetName, rt, response, request);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
