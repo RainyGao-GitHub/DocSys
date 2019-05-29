@@ -30,6 +30,7 @@ import org.tmatesoft.svn.core.SVNNodeKind;
 import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -160,181 +161,6 @@ public class BaseController  extends BaseFunction{
 	    	}
     	}
 		return docList;
-	}
-	
-	protected List<Doc> doSyncUp(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
-	{	
-		List<Doc> docList = new ArrayList<Doc>();
-		
-    	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
-    	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
-		
-    	List<Doc> localEntryList = null;
-    	HashMap<String,Doc> localHashMap = null;
-    	
-    	//Scan for local
-    	if(repos.getType() == 1 || repos.getType() == 2)
-    	{
-    		localEntryList = getLocalEntryList(repos, pid, path, level);
-    		printObject("getAuthedSubDocList() localEntryList:", localEntryList);
-    		localHashMap = new HashMap<String,Doc>();
-	    	if(localEntryList != null)
-	    	{
-		    	for(int i=0;i<localEntryList.size();i++)
-		    	{
-		    		Doc localEntry = localEntryList.get(i);
-		    		//Put localEntry to localHashMap
-		    		localHashMap.put(localEntry.getName(), localEntry);
-
-		    		Doc doc = indexHashMap.get(localEntry.getName());
-		    		if(doc == null)	//Doc was local added
-		    		{	    			
-		    			printObject("getAuthedSubDocList() local Added:", localEntry.getName());
-		    			
-			    		doc = localEntry;
-		    			
-		    			//Add to actionList for AutoSyncUp
-		    			insertSyncUpAction(actionList,repos,localEntry,5,1,1, null);
-		    		}
-		    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
-		    		{
-		    			printObject("getAuthedSubDocList() local Changed:", localEntry.getName());
-		
-		    			doc = localEntry;
-		    			
-			    		//Add to actionList for AutoSyncUp
-			    		insertSyncUpAction(actionList,repos,localEntry,5,3,1, null);
-		    		}
-		    		
-					DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-					{
-			    		//Add to docList
-						doc.setPid(pid);
-			    		docList.add(doc);
-					}
-		    	}
-	    	}
-    	}
-    	
-    		
-    	List<Doc> remoteEntryList = null;
-    	remoteEntryList = getRemoteEntryList(repos, pid, path, level);
-    	printObject("getAuthedSubDocList() remoteEntryList:", remoteEntryList);
-    	
-		if(repos.getType() == 3 || repos.getType() == 4)
-		{
-	    	if(remoteEntryList != null)
-	    	{	
-	    		for(int i=0;i<remoteEntryList.size();i++)
-		    	{
-		    		Doc remoteEntry = remoteEntryList.get(i);
-		    		Doc doc = indexHashMap.get(remoteEntry.getName());
-	    			
-		    		if(doc == null)	//Doc was remote added
-		    		{    		    		
-		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry.getName());
-			    			
-				    	//Add to actionList for AutoSyncUp
-				    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
-		
-			    		doc = remoteEntry;
-		    		}
-		    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
-		    		{
-		    			printObject("getAuthedSubDocList() remote Changed:", remoteEntry.getName());
-		    			
-		    			//Add to actionList for AutoSyncUp
-		    			insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
-		    			
-		    			doc = remoteEntry;
-		    		}
-				    
-		    		DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-					{
-					    //Add to docList
-					    docList.add(doc);
-					}
-		    	}
-	    	}
-		}
-		else
-		{	
-			if(remoteEntryList != null)
-    		{
-	    		for(int i=0;i<remoteEntryList.size();i++)
-		    	{
-		    		Doc remoteEntry = remoteEntryList.get(i);
-		    		Doc doc = indexHashMap.get(remoteEntry.getName());
-	    			Doc localDoc = localHashMap.get(remoteEntry.getName());
-	    			
-		    		if(doc == null)	//Doc was remote added
-		    		{
-		    			if(localDoc != null)
-		    			{
-		    				//doc was already added when localEntryList scan
-		    				continue;
-		    			}
-			    		
-		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry.getName());
-			    			
-				    	//Add to actionList for AutoSyncUp
-				    	insertSyncUpAction(actionList,repos,remoteEntry,5,1,2, null);
-		
-			    		doc = remoteEntry;
-		    		}
-		    		else
-		    		{
-		    			if(localDoc == null)
-		    			{
-		    				printObject("getAuthedSubDocList() local Deleted:", doc.getName());
-		    				insertSyncUpAction(actionList,repos,doc,5,2,1, null);
-		    				
-		    				//To avoid the db node be deleted as useless node before delete syncup action
-		    				indexHashMap.remove(doc.getName());
-		    				
-		    				//doc was deleted so should not be added to docList
-		    				doc = null;
-		    			}
-		    			else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
-		    			{
-		    				printObject("getAuthedSubDocList() remote Changed:", remoteEntry.getName());
-		    			
-		    				//Add to actionList for AutoSyncUp
-		    				insertSyncUpAction(actionList,repos,doc,5,3,2, null);	
-		    			}
-	
-		    			//doc was already added when localEntryList scan
-		    			doc = null;
-		    		}
-		    		
-	    			if(doc != null)
-	    			{
-				    	DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth,docAuthHashMap);
-						if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-						{
-					    	//Add to docList
-					    	docList.add(doc);
-						}
-					}
-	    		}
-	    	}
-	    	printObject("getAuthedSubDocList() docList:", docList);
-    	}
-    	
-    	//All dbDocs which not in docList should be deleted
-    	for(int i=0; i< docList.size(); i++)
-    	{
-    		indexHashMap.remove(docList.get(i).getName());
-    	}
-    	for (Entry<String, Doc> entry : indexHashMap.entrySet()) {
-    		Doc deleteDoc = entry.getValue();
-    		printObject("getAuthedSubDocList() insertDBDeleteAction for ", deleteDoc.getName());
-    		insertDeleteAction(actionList, repos, deleteDoc, null, null, 3, 2, 1, null);
-    	}
-    	
-    	return docList;
 	}
 
 	private List<Doc> getDBEntryList(Repos repos, Long pid, String path, int level) {
@@ -2196,28 +2022,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
 		printObject("executeSyncUpAction() action:",action);
-		switch(action.getDocType())
-		{
-		case 1:	//local Doc Changed
-			return syncupForLocalDocChanged(action,rt);
-		case 2: //remote Doc Changed
-			return syncupForRemoteDocChanged(action,rt);
-		}
-		return false;
-	}
-
-	private boolean syncupForRemoteDocChanged(CommonAction action, ReturnAjax rt) {
-		printObject("syncupForRemoteDocChanged() action:",action);
 		return syncupForDocChanged(action, rt);
 	}
 
-	private boolean syncupForLocalDocChanged(CommonAction action, ReturnAjax rt) {
-		printObject("syncupForLocalDocChanged() action:",action);
-		return syncupForDocChanged(action, rt);
-	}
-
+	//这个接口要保证只有一次Commit操作，也就是说需要用commitActionList来实现commit操作
+	//最后根据commitSuccessList更新对应的dbDoc
 	private boolean syncupForDocChanged(CommonAction action, ReturnAjax rt) {		
 		Doc doc = action.getDoc();
 		if(doc == null)
@@ -2293,6 +2105,11 @@ public class BaseController  extends BaseFunction{
 		{
 			String commitMsg = "自动同步" +  doc.getPath()+doc.getName();
 			String commitUser = "AutoSync";
+			
+			if(doc.getName().isEmpty())
+			{
+				syncUpSubDocs(repos, doc.getDocId(), doc.getPath(), 0, rt);
+			}
 			
 			if(localEntry != null)
 			{
@@ -2435,6 +2252,151 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(doc, login_user, docLock);
 			return false;
 		}
+	}
+	
+	protected List<Doc> syncUpSubDocs(Repos repos, Long pid, String path, int level, ReturnAjax rt, List<CommitAction> actionList)
+	{	
+		List<Doc> docList = new ArrayList<Doc>();
+		
+    	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
+    	printObject("syncUpSubDocs() indexHashMap:", indexHashMap);
+		
+    	List<Doc> localEntryList = null;
+    	HashMap<String,Doc> localHashMap = null;
+    	
+    	//Scan for local
+    	if(repos.getType() == 1 || repos.getType() == 2)
+    	{
+    		localEntryList = getLocalEntryList(repos, pid, path, level);
+    		printObject("syncUpSubDocs() localEntryList:", localEntryList);
+    		localHashMap = new HashMap<String,Doc>();
+	    	if(localEntryList != null)
+	    	{
+		    	for(int i=0;i<localEntryList.size();i++)
+		    	{
+		    		Doc localEntry = localEntryList.get(i);
+		    		//Put localEntry to localHashMap
+		    		localHashMap.put(localEntry.getName(), localEntry);
+
+		    		Doc doc = indexHashMap.get(localEntry.getName());
+		    		if(doc == null)	//Doc was local added
+		    		{	    			
+		    			printObject("syncUpSubDocs() local Added:", localEntry.getName());
+		    			
+			    		doc = localEntry;
+		    			
+			    		//根据remoteEntry的情况决定commitAction是add modify or deleteAndAdd
+		    		}
+		    		else if(isDocLocalChanged(doc, localEntry) == true)	//Doc was local changed
+		    		{
+		    			printObject("syncUpSubDocs() local Changed:", localEntry.getName());
+		
+		    			doc = localEntry;
+			    		//根据remoteEntry的情况决定commitAction是add modify or deleteAndAdd		    			
+		    		}
+		    	}
+	    	}
+    	}
+    	
+    		
+    	List<Doc> remoteEntryList = null;
+    	remoteEntryList = getRemoteEntryList(repos, pid, path, level);
+    	printObject("syncUpSubDocs() remoteEntryList:", remoteEntryList);
+    	
+		if(repos.getType() == 3 || repos.getType() == 4)
+		{
+	    	if(remoteEntryList != null)
+	    	{	
+	    		for(int i=0;i<remoteEntryList.size();i++)
+		    	{
+		    		Doc remoteEntry = remoteEntryList.get(i);
+		    		Doc doc = indexHashMap.get(remoteEntry.getName());
+	    			
+		    		if(doc == null)	//Doc was remote added
+		    		{    		    		
+		    			printObject("syncUpSubDocs() remote Added:", remoteEntry.getName());
+			    			
+			    		doc = remoteEntry;
+		    			//Checkout remoteEnry and Update dbDoc			    		
+		    		}
+		    		else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
+		    		{
+		    			printObject("syncUpSubDocs() remote Changed:", remoteEntry.getName());
+		    			
+		    			doc = remoteEntry;
+		    			//Checkout remoteEnry and Update dbDoc		    			
+		    		}				    
+		    	}
+	    	}
+		}
+		else
+		{	
+			if(remoteEntryList != null)
+    		{
+	    		for(int i=0;i<remoteEntryList.size();i++)
+		    	{
+		    		Doc remoteEntry = remoteEntryList.get(i);
+		    		Doc doc = indexHashMap.get(remoteEntry.getName());
+	    			Doc localDoc = localHashMap.get(remoteEntry.getName());
+	    			
+		    		if(doc == null)	//Doc was remote added
+		    		{
+		    			if(localDoc != null)
+		    			{
+		    				//doc was already added when localEntryList scan
+		    				continue;
+		    			}
+			    		
+		    			printObject("getAuthedSubDocList() remote Added:", remoteEntry.getName());
+			    					
+			    		doc = remoteEntry;
+		    			//Checkout remoteEnry and Update dbDoc
+
+		    		}
+		    		else
+		    		{
+		    			if(localDoc == null)
+		    			{
+		    				printObject("getAuthedSubDocList() local Deleted:", doc.getName());
+		    				
+		    				//To avoid the db node be deleted as useless node before delete syncup action
+		    				indexHashMap.remove(doc.getName());
+		    				
+		    				//doc was deleted so should not be added to docList
+		    				doc = null;
+		    				
+			    			//insert remoteDelete
+		    			}
+		    			else if(isDocRemoteChanged(doc, remoteEntry) == true)	//Doc was remote changed
+		    			{
+		    				printObject("getAuthedSubDocList() remote Changed:", remoteEntry.getName());
+		    			
+		    				//checkout remoteDoc and update dbDoc
+		    			}
+	
+		    		}
+	    		}
+	    	}
+	    	printObject("getAuthedSubDocList() docList:", docList);
+    	}
+    	
+    	//All dbDocs which not in docList should be deleted
+    	for(int i=0; i< docList.size(); i++)
+    	{
+    		indexHashMap.remove(docList.get(i).getName());
+    	}
+    	for (Entry<String, Doc> entry : indexHashMap.entrySet()) {
+    		Doc deleteDoc = entry.getValue();
+    		printObject("getAuthedSubDocList() insertDBDeleteAction for ", deleteDoc.getName());
+    		
+    		//Delete Invalid dbDocs
+    	}
+    	
+    	//Do commit
+    	
+    	//遍历加入commitList的doc，更新其revision信息
+    	
+    	return docList;
 	}
 
 	//获取实际的Doc
