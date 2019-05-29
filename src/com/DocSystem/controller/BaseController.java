@@ -66,21 +66,41 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		int level = getLevelByParentPath(dirPath);
-		
-		User AutoSync = new User();
-		AutoSync.setId(0);
-		AutoSync.setName("AutoSync");
-		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, AutoSync, false);
-		
-		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, isDocLocked, docAuth, docAuthHashMap, rt, actionList);
+				
+		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, docAuth, docAuthHashMap, rt, actionList);
 	
 		if(docList != null)
 		{
 			Collections.sort(docList);
 		}
+		
+		if(isNeedSyncUp(repos, docId, parentPath, docName))
+		{
+			//Add AutoSyncUp task for rootDoc
+			Doc doc = new Doc();
+			doc.setDocId(docId);
+			doc.setPath(parentPath);
+			doc.setName(docName);			
+			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+		}
 		return docList;
 	}
 	
+	private boolean isNeedSyncUp(Repos repos, Long docId, String parentPath, String docName) {
+		User AutoSync = new User();
+		AutoSync.setId(0);
+		AutoSync.setName("AutoSync");
+		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, AutoSync, false);
+		if(isDocLocked)
+		{
+			return false;
+		}
+		
+		//Do check if syncUp is needed
+
+		return false;
+	}
+
 	private boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user, boolean subDocCheckFlag) 
 	{
 		Doc doc = new Doc();
@@ -118,34 +138,34 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, boolean isPDocLocked, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
-		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path + " isPDocLocked:" + isPDocLocked);
+		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path);
 
 		List<Doc> docList = new ArrayList<Doc>();
-
-		//When parent doc was locked, AutoSync should not be done
-		if(isPDocLocked) 
-		{
-			List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
-			if(dbDocList != null)
+		List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
+		if(dbDocList != null)
+    	{
+	    	for(int i=0;i<dbDocList.size();i++)
 	    	{
-		    	for(int i=0;i<dbDocList.size();i++)
-		    	{
-		    		Doc dbDoc = dbDocList.get(i);
-		    		
-		    		DocAuth docAuth = getDocAuthFromHashMap(dbDoc.getDocId(), pDocAuth,docAuthHashMap);
-					if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
-					{
-			    		//Add to docList
-						dbDoc.setPid(pid);
-			    		docList.add(dbDoc);
-					}
-		    	}
+	    		Doc dbDoc = dbDocList.get(i);
+	    		
+	    		DocAuth docAuth = getDocAuthFromHashMap(dbDoc.getDocId(), pDocAuth,docAuthHashMap);
+				if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
+				{
+		    		//Add to docList
+					dbDoc.setPid(pid);
+		    		docList.add(dbDoc);
+				}
 	    	}
-			return docList;
-		}
-
+    	}
+		return docList;
+	}
+	
+	protected List<Doc> doSyncUp(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	{	
+		List<Doc> docList = new ArrayList<Doc>();
+		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
     	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
 		
