@@ -88,15 +88,6 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean isNeedSyncUp(Repos repos, Long docId, String parentPath, String docName) {
-		User AutoSync = new User();
-		AutoSync.setId(0);
-		AutoSync.setName("AutoSync");
-		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, AutoSync, false);
-		if(isDocLocked)
-		{
-			return false;
-		}
-		
 		//Do check if syncUp is needed
 
 		return false;
@@ -1815,7 +1806,16 @@ public class BaseController  extends BaseFunction{
 		if(addSubDocs)
 		{
 			int level = getLevelByParentPath(doc.getPath());
-			List<Doc> subDocList = getLocalEntryList(repos, doc.getDocId(), doc.getPath() + doc.getName()+"/", level+1);
+			List<Doc> subDocList = null;
+			if(repos.getType() == 3 || repos.getType() == 4)
+			{
+				subDocList = getLocalEntryList(repos, doc.getDocId(), doc.getPath() + doc.getName()+"/", level+1);	
+			}
+			else
+			{
+				subDocList = getRemoteEntryList(repos, doc.getDocId(), doc.getPath() + doc.getName()+"/", level+1);	
+			}
+			
 			if(subDocList != null)
 			{
 				for(int i=0; i<subDocList.size(); i++)
@@ -1824,7 +1824,7 @@ public class BaseController  extends BaseFunction{
 					subDoc.setCreator(doc.getCreator());
 					subDoc.setLatestEditor(doc.getLatestEditor());
 					subDoc.setRevision(doc.getRevision());
-					dbAddDoc(repos, subDoc, true);
+					dbAddDoc(repos, subDoc, addSubDocs);
 				}
 			}
 		}
@@ -2052,7 +2052,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("syncupForDocChanged() Failed to lock Doc: " + doc.getName());
+				docSysDebugLog("syncupForDocChanged() Failed to lock Doc: " + doc.getName(), rt);
 				return false;
 			}
 			unlock(); //线程锁
@@ -2061,27 +2061,28 @@ public class BaseController  extends BaseFunction{
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
-		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
-		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
+		Doc localEntry = null;
+		Doc remoteEntry = null;
+		Doc dbDoc = null;
 		
-		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
-		printObject("syncupForDocChanged() localEntry: ", localEntry);
-			
-		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
-		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
-
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
+			remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 			if(remoteEntry == null)
 			{
-				System.out.println("syncupForDocChanged() remoteEntry is null for " + doc.getPath()+doc.getName() + " quit syncup");
+				docSysDebugLog("syncupForDocChanged() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
 				unlockDoc(doc, login_user, docLock);
 				return false;
 			}
+			
+			printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
+			
+			dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
+			printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 
 			if(dbDoc == null)
 			{
-				if(remoteEntry != null && remoteEntry.getType() != 0)	//Remote Added
+				if(remoteEntry.getType() != 0)	//Remote Added
 				{
 					System.out.println("syncupForDocChanged() remote Added: " + doc.getPath()+doc.getName());
 					dbAddDoc(repos, remoteEntry, false);
@@ -2103,12 +2104,27 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			String commitMsg = "自动同步" +  doc.getPath()+doc.getName();
+			localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
+			remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
+			printObject("syncupForDocChanged() localEntry: ", localEntry);
+			if(localEntry == null && remoteEntry == null)
+			{
+				docSysDebugLog("syncupForDocChanged() localEntry and remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
+				unlockDoc(doc, login_user, docLock);
+				return false;
+			}
+			printObject("syncupForDocChanged() localEntry: ", localEntry);
+			printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
+
+			dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
+			printObject("syncupForDocChanged() dbDoc: ", dbDoc);
+			
+			String commitMsg = "同步 " +  doc.getPath()+doc.getName();
 			String commitUser = "AutoSync";
 			
 			if(doc.getName().isEmpty())
 			{
-				syncUpSubDocs(repos, doc.getDocId(), doc.getPath(), 0, rt);
+				syncUpSubDocs(repos, doc.getDocId(), doc.getPath(), 0, rt,);
 			}
 			
 			if(localEntry != null)
