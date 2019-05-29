@@ -5,7 +5,7 @@ public class Doc  implements Comparable<Doc>{
         		
     private String name;
 
-    private Integer type;
+    private Integer type;	//0:不存在  1:文件  2:目录
 
     private Long size;
 
