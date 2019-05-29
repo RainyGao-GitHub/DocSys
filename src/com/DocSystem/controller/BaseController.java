@@ -75,24 +75,16 @@ public class BaseController  extends BaseFunction{
 			Collections.sort(docList);
 		}
 		
-		if(isNeedSyncUp(repos, docId, parentPath, docName))
-		{
-			//Add AutoSyncUp task for rootDoc
-			Doc doc = new Doc();
-			doc.setDocId(docId);
-			doc.setPath(parentPath);
-			doc.setName(docName);			
-			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-		}
+		//Add doc for SyncUp
+		Doc doc = new Doc();
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);			
+		insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+		
 		return docList;
 	}
 	
-	private boolean isNeedSyncUp(Repos repos, Long docId, String parentPath, String docName) {
-		//Do check if syncUp is needed
-
-		return false;
-	}
-
 	private boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user, boolean subDocCheckFlag) 
 	{
 		Doc doc = new Doc();
@@ -157,7 +149,8 @@ public class BaseController  extends BaseFunction{
 	private List<Doc> getDBEntryList(Repos repos, Long pid, String path, int level) {
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
-		qDoc.setPath(path);
+		//qDoc.setPath(path);
+		qDoc.setPid(pid);
 		return reposService.getDocList(qDoc);
 	}
 
@@ -2105,7 +2098,6 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
-			remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 			printObject("syncupForDocChanged() localEntry: ", localEntry);
 			if(localEntry == null)
 			{
@@ -2114,6 +2106,8 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			printObject("syncupForDocChanged() localEntry: ", localEntry);
+			
+			remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 			printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
 
 			dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
@@ -2192,7 +2186,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean syncupForDirChange(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt) {
+	private boolean syncupForDirChange(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt, boolean enableSubDocSync) {
 		String commitMsg = "同步目录 " +  doc.getPath()+doc.getName();
 		String commitUser = "AutoSync";
 		
@@ -2273,23 +2267,10 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		//远程有改动（与本地目录版本不一致）
-		if(isDocRemoteChanged(dbDoc, remoteEntry))
+		//都是目录则检查子目录下是否有改动（否则把远程的直接CheckOut过来是很危险的）
+		if(enableSubDocSync)
 		{
-			System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
-			
-			String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
-			if(successDocList != null)
-			{
-				//SuccessDocList中的doc包括了revision信息
-				for(int i=0; i<successDocList.size(); i++)
-				{
-					dbUpdateDoc(repos, successDocList.get(i), true);
-				}
-				return true;
-			}
-			return false;
+			SyncUpSubDocs();
 		}
 		
 		//目录已同步
