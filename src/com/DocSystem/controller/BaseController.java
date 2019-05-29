@@ -2399,7 +2399,7 @@ public class BaseController  extends BaseFunction{
     	return docList;
 	}
 
-	//获取实际的Doc
+	//获取真实的DocInfo，返回null表示获取异常（表示localEntry和remoteEntry都无法获取）
 	protected Doc docSysGetDoc(Repos repos, Long docId, Long pid, String parentPath, String docName, User login_user) {		
 		System.out.println("docSysGetDoc() parentPath:" + parentPath + " docName:" + docName);
 				
