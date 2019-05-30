@@ -2101,13 +2101,66 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean syncupForRemoteChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
+		if(dbDoc == null)
+		{
+			//已同步
+			return true;
+		}
+				
+		//Remote Deleted
+		System.out.println("syncupForDocChanged() remote Deleted: " + doc.getPath()+doc.getName());
+		return dbDeleteDoc(doc, true);
 	}
 
 	private boolean syncupForDirChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt, boolean enableSubDocSync) {
-		// TODO Auto-generated method stub
-		return false;
+		//远程新增目录
+		if(dbDoc == null)	//remoteAdded
+		{
+			System.out.println("syncupForDocChanged() remoteAdded Added: " + doc.getPath()+doc.getName());
+			return dbAddDoc(repos, remoteEntry, true);
+		}
+		
+		//远程有改动（文件变更为目录）
+		if(dbDoc.getType() == null || dbDoc.getType() == 1)
+		{
+			System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
+			dbDoc.setType(2);
+			return dbUpdateDoc(repos, dbDoc, true);
+		}
+		
+		//远程目录被删除
+		if(remoteEntry.getType() == 0)
+		{
+			System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+			return dbDeleteDoc(doc,true);
+		}
+		
+		//远程有改动（目录变更为文件）
+		if(remoteEntry.getType() != 2)
+		{
+			System.out.println("syncupForDocChanged() remoteEntry Changed: " + doc.getPath()+doc.getName());
+			dbDeleteDoc(doc,true);
+			return dbAddDoc(repos, remoteEntry, true);
+		}
+		
+		//都是目录则检查子目录下是否有改动
+		if(enableSubDocSync)
+		{
+			String path = null;
+			if(doc.getName().isEmpty())
+			{
+				path = doc.getPath();
+			}
+			else
+			{
+				path = doc.getPath() + doc.getName() + "/";
+			}
+			int level = getLevelByParentPath(path);
+			SyncUpSubDocs_NoFS(repos, doc.getDocId(), path, level, rt, login_user);
+		}
+		
+		//目录已同步
+		return true;
 	}
 
 	private boolean syncupForFileChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt) {
@@ -2131,8 +2184,6 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	
-
 	private boolean SyncUpSubDocs_NoFS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user) 
 	{
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
@@ -2803,23 +2854,22 @@ public class BaseController  extends BaseFunction{
 
 	protected Doc fsGetDoc(Repos repos, Long docId, Long pid, String parentPath, String name) 
 	{
-		String localParentPath = getReposRealPath(repos) + parentPath;
-		File localEntry = new File(localParentPath,name);
-		if(localEntry.exists() == false)
-		{
-			return null;
-		}
-		
 		Doc doc = new Doc();
 		doc.setVid(repos.getId());
 		doc.setDocId(docId);
 		doc.setPid(pid);
 		doc.setPath(parentPath);
 		doc.setName(name);
-		doc.setSize(localEntry.length());
-		doc.setLatestEditTime(localEntry.lastModified());
-		doc.setType(localEntry.isDirectory()? 2: 1);
-		
+		doc.setType(0);	//不存在
+	
+		String localParentPath = getReposRealPath(repos) + parentPath;
+		File localEntry = new File(localParentPath,name);
+		if(localEntry.exists())
+		{
+			doc.setSize(localEntry.length());
+			doc.setLatestEditTime(localEntry.lastModified());
+			doc.setType(localEntry.isDirectory()? 2: 1);
+		}
 		return doc;
 	}
 	
@@ -2866,7 +2916,15 @@ public class BaseController  extends BaseFunction{
 		Doc doc = svnUtil.getDoc(parentPath+entryName, revision);
 		if(doc == null)
 		{
-			return null;
+			doc = new Doc();
+			//Set doc BasicInfo
+			doc.setVid(repos.getId());
+			doc.setDocId(docId);
+			doc.setPid(pid);
+			doc.setPath(parentPath);
+			doc.setName(entryName);
+			doc.setType(0);
+			return doc;
 		}
 		
 		//Set doc BasicInfo
