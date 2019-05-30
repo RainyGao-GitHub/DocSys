@@ -2382,7 +2382,7 @@ public class BaseController  extends BaseFunction{
 				Doc remoteEntry = verReposGetDoc(repos, localEntry.getDocId(), localEntry.getPid(), localEntry.getPath(), localEntry.getName(), null);
 				if(localEntry.getType() == 1) 
 				{
-					syncupForFileChange(repos, localEntry, dbDoc, localEntry, remoteEntry, login_user, rt);
+					syncupForFileChange_FS(repos, localEntry, dbDoc, localEntry, remoteEntry, login_user, rt);
 				}
 				else if(localEntry.getType() == 2) 
 				{
