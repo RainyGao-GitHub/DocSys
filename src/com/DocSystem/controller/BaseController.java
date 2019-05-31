@@ -2141,7 +2141,7 @@ public class BaseController  extends BaseFunction{
 		//远程目录被删除
 		if(remoteEntry.getType() == 0)
 		{
-			System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+			System.out.println("syncupForDocChanged() remote Deleted:" + doc.getPath()+doc.getName());
 			return dbDeleteDoc(doc,true);
 		}
 		
@@ -2382,7 +2382,7 @@ public class BaseController  extends BaseFunction{
 		//远程目录被删除
 		if(remoteEntry.getType() == 0)
 		{
-			System.out.println("syncupForDocChanged() remote Deleted" + doc.getPath()+doc.getName());
+			System.out.println("syncupForDocChanged() remote Deleted:" + doc.getPath()+doc.getName());
 			if(deleteRealDoc(repos, doc, rt) == true)
 			{
 				dbDeleteDoc(doc,true);
