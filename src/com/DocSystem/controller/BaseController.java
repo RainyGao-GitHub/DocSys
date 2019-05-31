@@ -1842,6 +1842,13 @@ public class BaseController  extends BaseFunction{
 	protected String deleteDoc_FS(Repos repos, Long docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
+		if(docId == 0)
+		{
+			docSysDebugLog("deleteDoc_FS() docId = 0", rt);
+			docSysErrorLog("根目录无法删除！", rt);
+			return null;
+		}
+		
 		Doc doc = new Doc();								
 		doc.setVid(repos.getId());
 		doc.setDocId(docId);
@@ -1856,7 +1863,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("deleteDoc_FS() Failed to lock Doc: " + docId);
+				docSysDebugLog("deleteDoc_FS() Failed to lock Doc: " + docId, rt);
 				return null;			
 			}
 			unlock(); //线程锁
@@ -1868,8 +1875,8 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc,login_user,docLock);
 			
-			System.out.println("deleteDoc_FS() deleteRealDoc Failed");
-			rt.setError(parentPath + docName + " 删除失败！");
+			docSysDebugLog("deleteDoc_FS() deleteRealDoc Failed", rt);
+			docSysErrorLog(parentPath + docName + " 删除失败！", rt);
 			return null;
 		}
 		
@@ -2223,7 +2230,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean syncupForDocChanged_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
-	{
+	{	
 		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
 		printObject("syncupForDocChanged() localEntry: ", localEntry);
 
@@ -2233,6 +2240,20 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		printObject("syncupForDocChanged() localEntry: ", localEntry);
+	
+		//根目录
+		if(doc.getDocId() == 0)
+		{
+			if(localEntry.getType() != 2)
+			{
+				docSysErrorLog("syncupForDocChanged() 本地根节点不是目录 " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
+				return false;
+			}
+			
+			//否则直接同步子目录
+			boolean ret = syncupForDirChange_FS(repos, doc, doc, doc, doc, login_user, rt, true);
+			return ret;
+		}
 		
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
