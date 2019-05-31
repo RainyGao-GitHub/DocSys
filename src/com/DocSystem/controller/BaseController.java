@@ -1842,18 +1842,19 @@ public class BaseController  extends BaseFunction{
 	protected String deleteDoc_FS(Repos repos, Long docId, String parentPath, String docName, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		if(docId == 0)
-		{
-			docSysDebugLog("deleteDoc_FS() docId = 0", rt);
-			docSysErrorLog("根目录无法删除！", rt);
-			return null;
-		}
-		
 		Doc doc = new Doc();								
 		doc.setVid(repos.getId());
 		doc.setDocId(docId);
 		doc.setPath(parentPath);
 		doc.setName(docName);
+		
+		if(docId == 0)
+		{
+			//由于前台是根据docId和pid来组织目录结构的，所以前台可以删除docId=0的节点，表示数据库中存在一个docId=0的非法节点，直接删除掉
+			docSysDebugLog("deleteDoc_FS() 这是一个非法节点docId = 0", rt);
+			dbDeleteDoc(doc, false);
+			return null;
+		}
 		
 		DocLock docLock = null;
 		synchronized(syncLock)

@@ -22,6 +22,14 @@ import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.controller.BaseController;
 
+/*
+Something you need to know
+1、目录结构前台展示
+（1）docSys的前台目录结构是根据docId和pid进行前台展示的
+（2）后台返回的docList中的doc能找到对应的pid的parentDoc，则会加载到对应的parentDoc上，找不到则挂在rootDoc下（因此那些拥有非法pid的doc会出现在根目录下面）
+（3）因此后台需要正确维护docId和pid之间的关系，否则将会出现混乱
+ */
+
 @Controller
 @RequestMapping("/Repos")
 public class ReposController extends BaseController{
