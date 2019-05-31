@@ -545,7 +545,7 @@ public class ReposController extends BaseController{
 			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
 			return;
-		}		
+		}
 		
 		//Get Repos
 		Repos repos = reposService.getRepos(vid);
@@ -556,6 +556,12 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//Format docId
+		if(docId == null)
+		{
+			docId = 0L;
+		}
+				
 		//Format path and name
 		if(path == null)
 		{

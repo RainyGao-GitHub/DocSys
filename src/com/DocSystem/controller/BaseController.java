@@ -73,6 +73,8 @@ public class BaseController  extends BaseFunction{
 		if(docList != null)
 		{
 			Collections.sort(docList);
+		
+			printObject("getAccessableSubDocList() docList:", docList);
 		}
 		
 		//Add doc for SyncUp
