@@ -2437,6 +2437,8 @@ public class BaseController  extends BaseFunction{
 	
 	private void SyncUpSubDocs_FS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user) 
 	{
+    	HashMap<Long, Doc> commitHashMap = null;
+		
     	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
     	printObject("getAuthedSubDocList() indexHashMap:", indexHashMap);
 		
@@ -2455,13 +2457,15 @@ public class BaseController  extends BaseFunction{
 	    		
 	    		Doc dbDoc = indexHashMap.get(localEntry.getName());
 				Doc remoteEntry = verReposGetDoc(repos, localEntry.getDocId(), localEntry.getPid(), localEntry.getPath(), localEntry.getName(), null);
-				if(localEntry.getType() == 1) 
+	
+				if(isDocLocalChanged(dbDoc, localEntry))	//check if localChanged, type is diff or content is diff
 				{
-					syncupForFileChange_FS(repos, localEntry, dbDoc, localEntry, remoteEntry, login_user, rt);
+					commitHashMap.put(localEntry.getDocId(), localEntry);
 				}
-				else if(localEntry.getType() == 2) 
+				else if(isDocRemoteChanged(dbDoc, remoteEntry)) 
 				{
-					syncupForDirChange_FS(repos, localEntry, dbDoc, localEntry, remoteEntry, login_user, rt, false);
+					//Doc checkOut and Update DB Docs
+					//update IndexHashMap
 				}
 	    	}
     	}
@@ -2482,7 +2486,16 @@ public class BaseController  extends BaseFunction{
 	    			continue;	
 	    		}
 	    		
-	    		syncupForRemoteChange_FS(repos, remoteEntry, dbDoc, localDoc, remoteEntry, login_user, rt);
+	    		//localDeleted
+	    		if(isDocRemoteChanged(dbDoc, remoteEntry) == false)
+	    		{
+	    			commitHashMap.put(remoteEntry.getDocId(),remoteEntry);
+	    		}
+	    		else
+	    		{
+	    			//
+		    		syncupForRemoteChange_FS(repos, remoteEntry, dbDoc, localDoc, remoteEntry, login_user, rt);	    			
+	    		}
 		    }
     	}
     }
