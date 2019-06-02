@@ -2428,14 +2428,29 @@ public class BaseController  extends BaseFunction{
 				path = doc.getPath() + doc.getName() + "/";
 			}
 			int level = getLevelByParentPath(path);
-			SyncUpSubDocs_FS(repos, doc.getDocId(), path, level, rt, login_user);
+			HashMap<Long, Doc> commitHashMap = SyncUpSubDocs_FS(repos, doc.getDocId(), path, level, rt, login_user);
+			if(commitHashMap != null)
+			{
+				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+				if(revision != null)
+				{
+					dbDoc.setSize(localEntry.getSize());
+					dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
+					dbDoc.setRevision(revision);
+					dbDoc.setLatestEditorName(login_user.getName());
+					dbUpdateDoc(repos, dbDoc, true);
+					
+					//Update the doc in commitHashMap
+					return true;
+				}
+			}
 		}
 		
 		//目录已同步
 		return true;
 	}
 	
-	private void SyncUpSubDocs_FS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user) 
+	private HashMap<Long, Doc> SyncUpSubDocs_FS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user) 
 	{
     	HashMap<Long, Doc> commitHashMap = null;
 		
@@ -2498,6 +2513,8 @@ public class BaseController  extends BaseFunction{
 	    		}
 		    }
     	}
+    	
+    	return commitHashMap;
     }
 	
 	private boolean syncupForFileChange_FS(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user,  ReturnAjax rt) {
