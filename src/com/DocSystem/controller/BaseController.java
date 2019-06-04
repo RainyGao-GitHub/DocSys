@@ -2003,20 +2003,24 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			boolean ret = syncupForDocChanged_FS(repos, doc, login_user, rt);
-			System.out.println("syncupForDirChange_FS() local Changed: " + doc.getPath()+doc.getName());
-			commitMsg = "更新 " +  doc.getPath()+doc.getName();
-			String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
-			if(revision != null)
+			boolean ret = syncupForDocChanged_FS(repos, doc, login_user, rt, commitHashMap);
+			
+			if(commitHashMap.size() > 0)
 			{
-				dbDoc.setSize(localEntry.getSize());
-				dbDoc.setLatestEditTime(localEntry.getLatestEditTime());
-				dbDoc.setRevision(revision);
-				dbDoc.setLatestEditorName(login_user.getName());
-				dbUpdateDoc(repos, dbDoc, true);
-				return true;
+				System.out.println("syncupForDirChange_FS() local Changed: " + doc.getPath()+doc.getName());
+				String commitMsg = "自动同步 " +  doc.getPath()+doc.getName();
+				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+				if(revision != null)
+				{
+					doc.setSize(doc.getSize());
+					doc.setLatestEditTime(doc.getLatestEditTime());
+					doc.setRevision(revision);
+					doc.setLatestEditorName(login_user.getName());
+					dbUpdateDoc(repos, doc, true);
+					return true;
+				}
+				return false;
 			}
-			return false;
 			
 			unlockDoc(doc, login_user, docLock);
 			return ret;
@@ -2037,144 +2041,86 @@ public class BaseController  extends BaseFunction{
 		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
 		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 
-		if(remoteEntry.getType() == 1) 
+		
+		int remoteChangeType = getRemoteChangeType();
+		if(remoteChangeType != 0)
 		{
-			boolean ret = syncupForFileChange_NoFS(repos, doc, dbDoc, remoteEntry, login_user, rt);
-
-			return ret;
+			return syncUpForRemoteChange_NoFS(remoteChangeType);
 		}
-		else if(remoteEntry.getType() == 2) 
-		{
-			boolean ret = syncupForDirChange_NoFS(repos, doc, dbDoc,remoteEntry, login_user, rt, true);
-			return ret;
-		}
-		else
-		{
-			boolean ret = syncupForRemoteChange_NoFS(repos, doc, dbDoc, remoteEntry, login_user, rt);
-			return ret;
-		}
+		
+		return SyncUpSubDocs_NoFS(repos, doc.getDocId(), path, level, rt, login_user);
 	}
 	
-	private boolean syncupForRemoteChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt) {
-		if(dbDoc == null)
+	private boolean syncupForRemoteChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt) 
+	{
+		switch(remoteChangeType)
 		{
-			//已同步
-			return true;
-		}
-				
-		//Remote Deleted
-		System.out.println("syncupForDocChanged() remote Deleted: " + doc.getPath()+doc.getName());
-		return dbDeleteDoc(doc, true);
-	}
-
-	private boolean syncupForDirChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt, boolean enableSubDocSync) {
-		//远程新增目录
-		if(dbDoc == null)	//remoteAdded
-		{
-			System.out.println("syncupForDocChanged() remoteAdded Added: " + doc.getPath()+doc.getName());
-			return dbAddDoc(repos, remoteEntry, true);
-		}
-		
-		//远程有改动（文件变更为目录）
-		if(dbDoc.getType() == null || dbDoc.getType() == 1)
-		{
-			System.out.println("syncupForDocChanged() remote Changed: " + doc.getPath()+doc.getName());
-			dbDoc.setType(2);
-			return dbUpdateDoc(repos, dbDoc, true);
-		}
-		
-		//远程目录被删除
-		if(remoteEntry.getType() == 0)
-		{
-			System.out.println("syncupForDocChanged() remote Deleted:" + doc.getPath()+doc.getName());
-			return dbDeleteDoc(doc,true);
-		}
-		
-		//远程有改动（目录变更为文件）
-		if(remoteEntry.getType() != 2)
-		{
+		case 1:
+			System.out.println("syncupForFileChange_NoFS() remote Added: " + doc.getPath()+doc.getName());
+			return dbAddDoc(repos, remoteEntry, false);
+		case 2:
 			System.out.println("syncupForDocChanged() remoteEntry Changed: " + doc.getPath()+doc.getName());
 			dbDeleteDoc(doc,true);
 			return dbAddDoc(repos, remoteEntry, true);
-		}
-		
-		//都是目录则检查子目录下是否有改动
-		if(enableSubDocSync)
-		{
-			String path = null;
-			if(doc.getName().isEmpty())
-			{
-				path = doc.getPath();
-			}
-			else
-			{
-				path = doc.getPath() + doc.getName() + "/";
-			}
-			int level = getLevelByParentPath(path);
-			SyncUpSubDocs_NoFS(repos, doc.getDocId(), path, level, rt, login_user);
-		}
-		
-		//目录已同步
-		return true;
-	}
-
-	private boolean syncupForFileChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt) {
-		if(dbDoc == null)
-		{
-			if(remoteEntry.getType() != 0)	//Remote Added
-			{
-				System.out.println("syncupForFileChange_NoFS() remote Added: " + doc.getPath()+doc.getName());
-				dbAddDoc(repos, remoteEntry, false);
-			}
-			return true;
-		}
-		
-		if(dbDoc.getType() == null || dbDoc.getType() != 1 || isDocRemoteChanged(dbDoc, remoteEntry))
-		{
+		case 3:
 			System.out.println("syncupForFileChange_NoFS() remote Changed: " + doc.getPath()+doc.getName());
 			dbDoc.setRevision(remoteEntry.getRevision());
-			dbUpdateDoc(repos, dbDoc, true);
-			return true;
+			return dbUpdateDoc(repos, dbDoc, true);
+		case 4:
+			//Remote Deleted
+			System.out.println("syncupForDocChanged() remote Deleted: " + doc.getPath()+doc.getName());
+			return dbDeleteDoc(doc, true);
 		}
-		return false;
 	}
 	
 	private boolean SyncUpSubDocs_NoFS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user) 
 	{
-    	HashMap<String, Doc> indexHashMap = getIndexHashMap(repos, pid, path);
-    	printObject("SyncUpSubDocs_NoFS() indexHashMap:", indexHashMap);
-    	
-	    List<Doc> remoteEntryList = null;
-	    remoteEntryList = getRemoteEntryList(repos, pid, path, level);
-	    printObject("SyncUpSubDocs_NoFS() remoteEntryList:", remoteEntryList);
-	    
-		if(repos.getType() == 3 || repos.getType() == 4)
+		//子目录不递归
+		if(subDocSyncFlag == 0)
 		{
-	    	if(remoteEntryList != null)
-	    	{	
-	    		for(int i=0; i<remoteEntryList.size(); i++)
-		    	{
-		    		Doc remoteEntry = remoteEntryList.get(i);
-		    		Doc dbDoc = indexHashMap.get(remoteEntry.getName());
-	    			
-		    		if(dbDoc == null)
-		    		{
-		    			if(remoteEntry.getType() != 0)	//Remote Added
-		    			{
-		    				System.out.println("syncupForDocChanged() remote Added: " + path);
-		    				dbAddDoc(repos, remoteEntry, false);
-		    			}
-		    		}
-		    		else if(isDocRemoteChanged(dbDoc, remoteEntry))
-		    		{
-		    			System.out.println("syncupForDocChanged() remote Changed: " + path);
-		    			dbDoc.setRevision(remoteEntry.getRevision());
-		    			dbUpdateDoc(repos, dbDoc, true);
-		    		}
-		    	}
-	    	}
+			return true;
 		}
-		return true;
+		
+		//子目录递归不继承
+		if(subDocSyncFlag == 1)
+		{
+			subDocSyncFlag = 0;
+		}
+		
+		HashMap<String, Doc> docHashMap = null;	//the doc already syncUped
+	
+		Doc subDoc = null;
+		
+		List<Doc> dbDocList = getDBEntryList();
+	   	if(dbDocList != null)
+    	{
+	    	for(int i=0;i<dbDocList.size();i++)
+	    	{
+	    		subDoc = dbDocList.get(i);
+	    		docHashMap.put(subDoc.getName(), subDoc);
+	    		syncupForDocChanged_NoFS(subDocSyncFlag);
+	    	}
+    	}
+	    
+	    List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
+	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
+	    if(remoteEntryList != null)
+    	{
+	    	for(int i=0;i<remoteEntryList.size();i++)
+		    {
+	    		subDoc = remoteEntryList.get(i);
+	    		if(docHashMap.get(subDoc).getName() != null)
+	    		{
+	    			//already syncuped
+	    			continue;	
+	    		}
+
+	    		docHashMap.put(subDoc.getName(), subDoc);
+	    		syncupForDocChanged_NoFS(subDocSyncFlag);
+		    }
+    	}
+	    
+	    return true;
 	}
 	
 	private boolean syncupForDocChanged_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
@@ -2317,6 +2263,12 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
 	    		subDoc = localEntryList.get(i);
+	    		if(docHashMap.get(subDoc).getName() != null)
+	    		{
+	    			//already syncuped
+	    			continue;	
+	    		}
+	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
 	    		syncupForDocChanged_FS(subDocSyncFlag);
 	    	}
@@ -2329,6 +2281,12 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 		    {
 	    		subDoc = remoteEntryList.get(i);
+	    		if(docHashMap.get(subDoc).getName() != null)
+	    		{
+	    			//already syncuped
+	    			continue;	
+	    		}
+	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
 	    		syncupForDocChanged_FS(subDocSyncFlag);
 		    }
@@ -2394,95 +2352,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return false;
-	}
-	
-	private boolean syncupForDirChange_FS(Repos repos, Doc doc, Doc localEntry, User login_user, ReturnAjax rt, boolean enableSubDocSync) {
-		String commitMsg = "同步目录 " +  doc.getPath()+doc.getName();
-		String commitUser = "AutoSync";
-		
-		//根目录
-		if(doc.getDocId() == 0)
-		{
-			if(localEntry.getType() != 2)
-			{
-				docSysErrorLog("syncupForDirChange_FS() 本地根节点不是目录 " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
-				return false;
-			}
-		}
-		else
-		{
-			Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
-			printObject("syncupForDirChange_FS() dbDoc: ", dbDoc);
-			
-			//本地新增目录
-			if(dbDoc == null)	//localAdded
-			{
-				System.out.println("syncupForDirChange_FS() local Added: " + doc.getPath()+doc.getName());
-				commitMsg = "增加 " +  doc.getPath()+doc.getName();
-				String revision = verReposRealDocAdd(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
-				if(revision != null)
-				{
-					localEntry.setRevision(revision);
-					localEntry.setLatestEditorName(login_user.getName());
-					dbAddDoc(repos, localEntry, true);
-					return true;
-				}
-				return false;	
-			}
-			
-			//本地有改动（文件变更为目录）
-			if(dbDoc.getType() == null || dbDoc.getType().equals(localEntry.getType()))
-			{
-
-			}
-	
-			//本地目录没有改动
-			Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
-			printObject("syncupForDirChange_FS() remoteEntry: ", remoteEntry);
-			if(remoteEntry == null)
-			{
-				docSysDebugLog("syncupForDirChange_FS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法远程同步！", rt);
-				return true;
-			}
-			
-			//远程目录被删除
-			if(remoteEntry.getType() == 0)
-			{
-				System.out.println("syncupForDirChange_FS() remote Deleted:" + doc.getPath()+doc.getName());
-				if(deleteRealDoc(repos, doc, rt) == true)
-				{
-					dbDeleteDoc(doc,true);
-					return false;
-				}
-				return false;
-			}
-			
-			//远程有改动（目录变更为文件）
-			if(remoteEntry.getType() != 2)
-			{
-				System.out.println("syncupForDirChange_FS() remoteEntry Changed: " + doc.getPath()+doc.getName());
-				if(deleteRealDoc(repos, doc, rt) == true)
-				{
-					dbDeleteDoc(doc,true);
-					
-					//checkOut
-					String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-					List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
-					if(successDocList != null)
-					{
-						dbAddDoc(repos, remoteEntry, true);
-						return true;						
-					}
-					return false;						
-				}
-				else
-				{
-					return false;
-				}
-			}
-		}
-		//目录已同步
-		return true;
 	}
 	
 	//获取真实的DocInfo，返回null表示获取异常（表示localEntry和remoteEntry都无法获取）
