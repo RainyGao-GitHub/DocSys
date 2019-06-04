@@ -1963,8 +1963,7 @@ public class BaseController  extends BaseFunction{
 		return syncupForDocChanged(action, rt);
 	}
 
-	//这个接口要保证只有一次Commit操作，也就是说需要用commitActionList来实现commit操作
-	//最后根据commitSuccessList更新对应的dbDoc
+	//这个接口要保证只有一次Commit操作
 	private boolean syncupForDocChanged(CommonAction action, ReturnAjax rt) {		
 		Doc doc = action.getDoc();
 		if(doc == null)
@@ -2123,7 +2122,7 @@ public class BaseController  extends BaseFunction{
 	    return true;
 	}
 	
-	private boolean syncupForDocChanged_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
+	private boolean syncupForDocChanged_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
 	{	
 		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
 		printObject("syncupForDocChanged() localEntry: ", localEntry);
@@ -2137,97 +2136,110 @@ public class BaseController  extends BaseFunction{
 		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
 		printObject("syncupForDirChange_FS() dbDoc: ", dbDoc);
 
-		Doc remoteEntry = null;
-		switch(localEntry.getType())
+		int localChangeType = getLocalChangeType(dbDoc, localEntry);
+		switch(localChangeType)
 		{
-		case 0: //not exists
-			remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
-			printObject("syncupForDirChange_FS() remoteEntry: ", remoteEntry);
-
-			if(remoteEntry == null)
-			{
-				//connect to verRepos failed or not verCtrl
-				return false;
-			}
-
-			if(dbDoc == null)
-			{				
-				if(remoteEntry.getType() == 0)
-				{
-					return true;
-				}
-				else	//remote Added
-				{
-					return syncUpRemoteChange_FS(dbDoc, remoteEntry);
-				}
-			}
-			else
-			{
-				int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
-				if(remoteChangeType != 0)	//remote Changed
-				{
-					return syncUpRemoteChange_FS(dbDoc, remoteEntry);					
-				}
-				else	//localDeleted
-				{
-					commitHashMap.put(dbDoc.getDocId(), dbDoc);
-					return true;
-				}				
-			}
-			break;
-		case 1:	//File
-			if(dbDoc == null)	//localAdded
-			{				
-				commitHashMap.put(localEntry.getDocId(), localEntry);
-			}
-			else
-			{
-				int localChangeType = getLocalChangeType(dbDoc, localEntry);
-				if(localChangeType != 0)	//local Changed
-				{
-					commitHashMap.put(localEntry.getDocId(), localEntry);					
-				}
-				else
-				{
-					int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
-					if(remoteChangeType != 0)	//remote Changed
-					{
-						return syncUpRemoteChange_FS(dbDoc, remoteEntry);					
-					}
-					return true;
-				}				
-			}
-			break;
-		case 2: //Dir
-			if(dbDoc == null)	//localAdded
-			{				
-				commitHashMap.put(localEntry.getDocId(), localEntry);
-			}
-			else
-			{
-				int localChangeType = getLocalChangeType(dbDoc, localEntry);
-				if(localChangeType != 0)	//local Changed
-				{
-					commitHashMap.put(localEntry.getDocId(), localEntry);					
-				}
-				else
-				{
-					int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
-					if(remoteChangeType != 0)	//remote Changed
-					{
-						return syncUpRemoteChange_FS(dbDoc, remoteEntry);					
-					}
-					
-					return SyncUpSubDocs_FS(subDocSyncFlag);
-				}				
-			}
-			break;
+		case 1:
+		case 2:
+		case 3:
+			commitHashMap.put(localEntry.getDocId(), localEntry);
+			return true;
 		}
-		return false;
+		
+		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
+		printObject("syncupForDirChange_FS() remoteEntry: ", remoteEntry);
+
+		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
+		if(remoteChangeType == 0)
+		{
+			if(localChangeType == 4)	//local Delete
+			{
+				commitHashMap.put(dbDoc.getDocId(), dbDoc);
+				return true;
+			}
+			
+			return SyncUpSubDocs_FS(repos, dbDoc, login_user, rt, commitHashMap, subDocSyncFlag);
+		}
+		
+		return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
 	}
 	
 	
-	private boolean SyncUpSubDocs_FS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
+	private int getLocalChangeType(Doc dbDoc, Doc localEntry) 
+	{
+		if(dbDoc == null)
+		{
+			if(localEntry.getType() == 0)
+			{
+				return 0;	//no change
+			}
+			return 1; //local Added
+		}
+		
+		switch(localEntry.getType())
+		{
+		case 1:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			
+			if(isDocLocalChanged(dbDoc, localEntry))
+			{
+				return 3;
+			}
+			return 0;
+		case 2:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			return 0;
+		case 0:
+			return 4;
+		}
+		
+		return 0;
+	}
+
+	private int getRemoteChangeType(Doc dbDoc, Doc remoteEntry) 
+	{
+		if(dbDoc == null)
+		{
+			if(remoteEntry.getType() == 0)
+			{
+				return 0;	//no change
+			}
+			return 1; //remote Added
+		}
+		
+		switch(remoteEntry.getType())
+		{
+		case 1:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			
+			if(isDocRemoteChanged(dbDoc, remoteEntry))
+			{
+				return 3;
+			}
+			return 0;
+		case 2:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			return 0;
+		case 0:
+			return 4;
+		}
+		
+		return 0;
+	}
+
+	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
 	{
 		//子目录不递归
 		if(subDocSyncFlag == 0)
@@ -2241,18 +2253,25 @@ public class BaseController  extends BaseFunction{
 			subDocSyncFlag = 0;
 		}
 		
-		HashMap<String, Doc> docHashMap = null;	//the doc already syncUped
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped
 	
-		Doc subDoc = null;
+		Long pid = doc.getDocId();
+		String path = doc.getPath();
+		if(doc.getName() != null && doc.getName().isEmpty())
+		{
+			path = path + doc.getName() + "/";
+		}
+		int level = getLevelByParentPath(path);
 		
-		List<Doc> dbDocList = getDBEntryList();
+		Doc subDoc = null;
+		List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
 	   	if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
 	    	{
 	    		subDoc = dbDocList.get(i);
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_FS(subDocSyncFlag);
+	    		syncupForDocChanged_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
 	    	}
     	}
 
@@ -2263,14 +2282,14 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
 	    		subDoc = localEntryList.get(i);
-	    		if(docHashMap.get(subDoc).getName() != null)
+	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
 	    			continue;	
 	    		}
 	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_FS(subDocSyncFlag);
+	    		syncupForDocChanged_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
 	    	}
     	}
 	    
@@ -2281,14 +2300,14 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 		    {
 	    		subDoc = remoteEntryList.get(i);
-	    		if(docHashMap.get(subDoc).getName() != null)
+	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
 	    			continue;	
 	    		}
 	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_FS(subDocSyncFlag);
+	    		syncupForDocChanged_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
 		    }
     	}
 	    
@@ -2296,14 +2315,18 @@ public class BaseController  extends BaseFunction{
     }
 
 	//localEntry and dbDoc was same
-	private boolean syncupForRemoteChange_FS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
+	private boolean syncUpRemoteChange_FS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
 	{	
+		
+		String localParentPath = null;
+		List<Doc> successDocList = null;
+		
 		switch(remoteChangeType)
 		{
 		case 1:		//Remote Added
 			System.out.println("syncupForRemoteChange_FS() remote Added: " + doc.getPath()+doc.getName());	
-			String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
+			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
 			{
 				dbAddDoc(repos, remoteEntry, true);
@@ -2317,8 +2340,8 @@ public class BaseController  extends BaseFunction{
 				dbDeleteDoc(doc,true);
 				
 				//checkOut
-				String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-				List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
+				localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+				successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 				if(successDocList != null)
 				{
 					dbAddDoc(repos, remoteEntry, true);
@@ -2333,8 +2356,8 @@ public class BaseController  extends BaseFunction{
 		case 3: //Remote File Changed
 			System.out.println("syncupForFileChange_FS() remote Changed: " + doc.getPath()+doc.getName());
 			
-			String localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			List<Doc> successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
+			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
+			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
 			{
 				//SuccessDocList中的doc包括了revision信息
@@ -2347,7 +2370,10 @@ public class BaseController  extends BaseFunction{
 			return false;
 		case 4: //Remote Deleted
 			System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
-			dbDeleteDoc(doc, true);
+			if(deleteRealDoc(repos, doc, rt) == true)
+			{
+				dbDeleteDoc(doc,true);
+			}	
 			return true;
 		}
 		
