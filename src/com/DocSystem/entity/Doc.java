@@ -38,6 +38,8 @@ public class Doc  implements Comparable<Doc>{
     private String creatorName;
 
     private String latestEditorName;
+    
+    private int level;
 
     public Integer getId() {
         return id;
@@ -165,6 +167,14 @@ public class Doc  implements Comparable<Doc>{
 
     public void setContent(String content) {
         this.content = content == null ? null : content.trim();
+    }
+    
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
     }
 
 	public void setSortIndex(int sortIndex) {

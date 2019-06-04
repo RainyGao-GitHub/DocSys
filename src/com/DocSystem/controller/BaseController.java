@@ -2769,8 +2769,26 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			return  dbAddDoc(repos, doc, true);	
-		}	
+		}
 		
+		//If localDoc not exists, do delete
+		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
+		
+		int localChangeType = getLocalChangeType(dbDoc, localEntry);
+		switch(localChangeType)
+		{
+		case 1:	//localAdded
+			return dbAddDoc(repos, doc, true);
+		case 2: //local Type Changed
+			dbDeleteDoc(dbDoc, true);
+			return  dbAddDoc(repos, doc, true);
+		case 4:
+			return dbDeleteDoc(doc, true);
+		}
+		
+		//0 / 3
+		doc.setSize(localEntry.getSize());
+		doc.setLatestEditTime(localEntry.getLatestEditTime());
 		if(reposService.updateDoc(doc) == 0)
 		{
 			return false;
