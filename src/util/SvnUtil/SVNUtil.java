@@ -432,13 +432,13 @@ public class SVNUtil  extends BaseController{
 		if(localRefRootPath != null)
 		{
 			localRefParentPath = localRefRootPath + parentPath;
-		}			
+		}
+		
 		try {
 	
 			//If remote parentPath not exists, need to set the autoCommit entry to parentPath
 			if(SVNNodeKind.NONE == repository.checkPath(parentPath, -1))
 			{
-				
 				return doAutoCommitParent(parentPath, localRootPath, commitMsg, commitUser, modifyEnable, localRefRootPath);
 			}	
 			

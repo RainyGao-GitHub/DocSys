@@ -2015,6 +2015,7 @@ public class BaseController  extends BaseFunction{
 				{
 					for(Doc commitDoc: commitHashMap.values())
 			        {
+						System.out.println("syncupForDocChange() dbUpdateDoc: " + commitDoc.getPath()+commitDoc.getName());						
 						//需要根据commitAction的行为来决定相应的操作
 						commitDoc.setRevision(revision);
 						commitDoc.setLatestEditorName(login_user.getName());
