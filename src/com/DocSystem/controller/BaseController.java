@@ -1961,17 +1961,17 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
 		printObject("executeSyncUpAction() action:",action);
-		return syncupForDocChanged(action, rt);
+		return syncupForDocChange(action, rt);
 	}
 
 	//这个接口要保证只有一次Commit操作
-	private boolean syncupForDocChanged(CommonAction action, ReturnAjax rt) {		
+	private boolean syncupForDocChange(CommonAction action, ReturnAjax rt) {		
 		Doc doc = action.getDoc();
 		if(doc == null)
 		{
 			return false;
 		}
-		printObject("syncupForDocChanged() doc:",doc);
+		printObject("syncupForDocChange() doc:",doc);
 		
 		User login_user = new User();
 		login_user.setId(0); //系统自动同步用户 AutoSync
@@ -1986,7 +1986,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				docSysDebugLog("syncupForDocChanged() Failed to lock Doc: " + doc.getName(), rt);
+				docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
 				return false;
 			}
 			unlock(); //线程锁
@@ -1997,18 +1997,18 @@ public class BaseController  extends BaseFunction{
 		
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
-			boolean ret = syncupForDocChanged_NoFS(repos, doc, login_user, rt, 1);	//子目录非继承递归
+			boolean ret = syncupForDocChange_NoFS(repos, doc, login_user, rt, 1);	//子目录非继承递归
 			unlockDoc(doc, login_user, docLock);
 			return ret;
 		}
 		else
 		{
 			HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
-			syncupForDocChanged_FS(repos, doc, login_user, rt, commitHashMap, 1);	//子目录非继承递归
+			syncupForDocChange_FS(repos, doc, login_user, rt, commitHashMap, 1);	//子目录非继承递归
 			
 			if(commitHashMap.size() > 0)
 			{
-				System.out.println("syncupForDirChange_FS() local Changed: " + doc.getPath()+doc.getName());
+				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 " +  doc.getPath()+doc.getName();
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, login_user.getName(), rt, commitHashMap);
 				if(revision != null)
@@ -2033,19 +2033,19 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean syncupForDocChanged_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
+	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 		if(remoteEntry == null)
 		{
-			docSysDebugLog("syncupForDocChanged() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
+			docSysDebugLog("syncupForDocChange_NoFS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
 			return true;
 		}
 		
-		printObject("syncupForDocChanged() remoteEntry: ", remoteEntry);
+		printObject("syncupForDocChange_NoFS() remoteEntry: ", remoteEntry);
 		
 		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
-		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
+		printObject("syncupForDocChange_NoFS() dbDoc: ", dbDoc);
 
 		
 		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
@@ -2090,7 +2090,7 @@ public class BaseController  extends BaseFunction{
 	    	{
 	    		subDoc = dbDocList.get(i);
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_NoFS(repos, subDoc, login_user, rt, subDocSyncFlag);
+	    		syncupForDocChange_NoFS(repos, subDoc, login_user, rt, subDocSyncFlag);
 	    	}
     	}
 	    
@@ -2108,7 +2108,7 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_NoFS(repos, subDoc, login_user, rt, subDocSyncFlag);
+	    		syncupForDocChange_NoFS(repos, subDoc, login_user, rt, subDocSyncFlag);
 		    }
     	}
 	    
@@ -2139,19 +2139,19 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean syncupForDocChanged_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
+	private boolean syncupForDocChange_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
 	{	
 		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
-		printObject("syncupForDocChanged() localEntry: ", localEntry);
+		printObject("syncupForDocChange_FS() localEntry: ", localEntry);
 
 		if(localEntry == null)
 		{
-			docSysDebugLog("syncupForDocChanged() localEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
+			docSysDebugLog("syncupForDocChange_FS() localEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
 			return false;
 		}
 		
 		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
-		printObject("syncupForDirChange_FS() dbDoc: ", dbDoc);
+		printObject("syncupForDocChange_FS() dbDoc: ", dbDoc);
 
 		int localChangeType = getLocalChangeType(dbDoc, localEntry);
 		switch(localChangeType)
@@ -2164,7 +2164,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
-		printObject("syncupForDirChange_FS() remoteEntry: ", remoteEntry);
+		printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
 
 		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
 		if(remoteChangeType == 0)
@@ -2213,7 +2213,7 @@ public class BaseController  extends BaseFunction{
 	    	{
 	    		subDoc = dbDocList.get(i);
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
+	    		syncupForDocChange_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
 	    	}
     	}
 
@@ -2231,7 +2231,7 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
+	    		syncupForDocChange_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
 	    	}
     	}
 	    
@@ -2249,7 +2249,7 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
+	    		syncupForDocChange_FS(repos, subDoc, login_user, rt, commitHashMap, subDocSyncFlag);
 		    }
     	}
 	    
@@ -2266,7 +2266,7 @@ public class BaseController  extends BaseFunction{
 		switch(remoteChangeType)
 		{
 		case 1:		//Remote Added
-			System.out.println("syncupForRemoteChange_FS() remote Added: " + doc.getPath()+doc.getName());	
+			System.out.println("syncUpRemoteChange_FS() remote Added: " + doc.getPath()+doc.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
 			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
@@ -2276,7 +2276,7 @@ public class BaseController  extends BaseFunction{
 			}
 			return false;
 		case 2: //Remote Type Changed
-			System.out.println("syncupForDirChange_FS() remote Type Changed: " + doc.getPath()+doc.getName());
+			System.out.println("syncUpRemoteChange_FS() remote Type Changed: " + doc.getPath()+doc.getName());
 			if(deleteRealDoc(repos, doc, rt) == true)
 			{
 				dbDeleteDoc(doc,true);
@@ -2296,7 +2296,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 		case 3: //Remote File Changed
-			System.out.println("syncupForFileChange_FS() remote Changed: " + doc.getPath()+doc.getName());
+			System.out.println("syncUpRemoteChange_FS() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
 			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
@@ -2311,7 +2311,7 @@ public class BaseController  extends BaseFunction{
 			}
 			return false;
 		case 4: //Remote Deleted
-			System.out.println("syncupForDocChanged() local and remote deleted: " + doc.getPath()+doc.getName());
+			System.out.println("syncUpRemoteChange_FS() local and remote deleted: " + doc.getPath()+doc.getName());
 			if(deleteRealDoc(repos, doc, rt) == true)
 			{
 				dbDeleteDoc(doc,true);
