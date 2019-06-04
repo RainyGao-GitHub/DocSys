@@ -32,6 +32,7 @@ import util.ReturnAjax;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
+import com.DocSystem.common.HitDoc;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
@@ -1996,37 +1997,43 @@ public class BaseController  extends BaseFunction{
 		
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
-			boolean ret = syncupForDocChanged_NoFS(repos, doc, login_user, rt);
+			boolean ret = syncupForDocChanged_NoFS(repos, doc, login_user, rt, 1);	//子目录非继承递归
 			unlockDoc(doc, login_user, docLock);
 			return ret;
 		}
 		else
 		{
-			boolean ret = syncupForDocChanged_FS(repos, doc, login_user, rt, commitHashMap);
+			HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
+			syncupForDocChanged_FS(repos, doc, login_user, rt, commitHashMap, 1);	//子目录非继承递归
 			
 			if(commitHashMap.size() > 0)
 			{
 				System.out.println("syncupForDirChange_FS() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 " +  doc.getPath()+doc.getName();
-				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, commitUser, rt);
+				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, login_user.getName(), rt);
 				if(revision != null)
 				{
-					doc.setSize(doc.getSize());
-					doc.setLatestEditTime(doc.getLatestEditTime());
-					doc.setRevision(revision);
-					doc.setLatestEditorName(login_user.getName());
-					dbUpdateDoc(repos, doc, true);
+					for(Doc commitDoc: commitHashMap.values())
+			        {
+						//需要根据commitAction的行为来决定相应的操作
+						commitDoc.setRevision(revision);
+						commitDoc.setLatestEditorName(login_user.getName());
+						dbUpdateDoc(repos, commitDoc, true);
+					}
+				
+					unlockDoc(doc, login_user, docLock);
 					return true;
+					
 				}
+				unlockDoc(doc, login_user, docLock);
 				return false;
 			}
-			
-			unlockDoc(doc, login_user, docLock);
-			return ret;
 		}
+		unlockDoc(doc, login_user, docLock);
+		return true;
 	}
 	
-	private boolean syncupForDocChanged_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
+	private boolean syncupForDocChanged_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
 		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
 		if(remoteEntry == null)
@@ -2041,38 +2048,17 @@ public class BaseController  extends BaseFunction{
 		printObject("syncupForDocChanged() dbDoc: ", dbDoc);
 
 		
-		int remoteChangeType = getRemoteChangeType();
+		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
 		if(remoteChangeType != 0)
 		{
-			return syncUpForRemoteChange_NoFS(remoteChangeType);
+			return syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
 		}
 		
-		return SyncUpSubDocs_NoFS(repos, doc.getDocId(), path, level, rt, login_user);
+		return SyncUpSubDocs_NoFS(repos, doc, login_user, rt, subDocSyncFlag);
 	}
 	
-	private boolean syncupForRemoteChange_NoFS(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry, User login_user, ReturnAjax rt) 
-	{
-		switch(remoteChangeType)
-		{
-		case 1:
-			System.out.println("syncupForFileChange_NoFS() remote Added: " + doc.getPath()+doc.getName());
-			return dbAddDoc(repos, remoteEntry, false);
-		case 2:
-			System.out.println("syncupForDocChanged() remoteEntry Changed: " + doc.getPath()+doc.getName());
-			dbDeleteDoc(doc,true);
-			return dbAddDoc(repos, remoteEntry, true);
-		case 3:
-			System.out.println("syncupForFileChange_NoFS() remote Changed: " + doc.getPath()+doc.getName());
-			dbDoc.setRevision(remoteEntry.getRevision());
-			return dbUpdateDoc(repos, dbDoc, true);
-		case 4:
-			//Remote Deleted
-			System.out.println("syncupForDocChanged() remote Deleted: " + doc.getPath()+doc.getName());
-			return dbDeleteDoc(doc, true);
-		}
-	}
 	
-	private boolean SyncUpSubDocs_NoFS(Repos repos, Long pid, String path, int level, ReturnAjax rt, User login_user) 
+	private boolean SyncUpSubDocs_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
 		//子目录不递归
 		if(subDocSyncFlag == 0)
@@ -2085,19 +2071,26 @@ public class BaseController  extends BaseFunction{
 		{
 			subDocSyncFlag = 0;
 		}
+
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped
 		
-		HashMap<String, Doc> docHashMap = null;	//the doc already syncUped
-	
+		Long pid = doc.getDocId();
+		String path = doc.getPath();
+		if(doc.getName() != null && doc.getName().isEmpty())
+		{
+			path = path + doc.getName() + "/";
+		}
+		int level = getLevelByParentPath(path);
+		
 		Doc subDoc = null;
-		
-		List<Doc> dbDocList = getDBEntryList();
+		List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
 	   	if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
 	    	{
 	    		subDoc = dbDocList.get(i);
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_NoFS(subDocSyncFlag);
+	    		syncupForDocChanged_NoFS(repos, subDoc, login_user, rt, subDocSyncFlag);
 	    	}
     	}
 	    
@@ -2108,18 +2101,42 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 		    {
 	    		subDoc = remoteEntryList.get(i);
-	    		if(docHashMap.get(subDoc).getName() != null)
+	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
 	    			continue;	
 	    		}
-
+	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChanged_NoFS(subDocSyncFlag);
+	    		syncupForDocChanged_NoFS(repos, subDoc, login_user, rt, subDocSyncFlag);
 		    }
     	}
 	    
 	    return true;
+	}
+	
+	private boolean syncUpForRemoteChange_NoFS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
+	{
+		switch(remoteChangeType)
+		{
+		case 1:
+			System.out.println("syncUpForRemoteChange_NoFS() remote Added: " + doc.getPath()+doc.getName());
+			return dbAddDoc(repos, remoteEntry, false);
+		case 2:
+			System.out.println("syncUpForRemoteChange_NoFS() remote Type Changed: " + doc.getPath()+doc.getName());
+			dbDeleteDoc(doc,true);
+			return dbAddDoc(repos, remoteEntry, true);
+		case 3:
+			System.out.println("syncUpForRemoteChange_NoFS() remote File Changed: " + doc.getPath()+doc.getName());
+			doc.setRevision(remoteEntry.getRevision());
+			return dbUpdateDoc(repos, doc, true);
+		case 4:
+			//Remote Deleted
+			System.out.println("syncUpForRemoteChange_NoFS() remote Deleted: " + doc.getPath()+doc.getName());
+			return dbDeleteDoc(doc, true);
+		}
+		
+		return true;
 	}
 	
 	private boolean syncupForDocChanged_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
@@ -2162,81 +2179,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
-	}
-	
-	
-	private int getLocalChangeType(Doc dbDoc, Doc localEntry) 
-	{
-		if(dbDoc == null)
-		{
-			if(localEntry.getType() == 0)
-			{
-				return 0;	//no change
-			}
-			return 1; //local Added
-		}
-		
-		switch(localEntry.getType())
-		{
-		case 1:
-			if(dbDoc.getType() == null || dbDoc.getType() != 1)
-			{
-				return 2; //local Type Changed
-			}
-			
-			if(isDocLocalChanged(dbDoc, localEntry))
-			{
-				return 3;
-			}
-			return 0;
-		case 2:
-			if(dbDoc.getType() == null || dbDoc.getType() != 1)
-			{
-				return 2; //local Type Changed
-			}
-			return 0;
-		case 0:
-			return 4;
-		}
-		
-		return 0;
-	}
-
-	private int getRemoteChangeType(Doc dbDoc, Doc remoteEntry) 
-	{
-		if(dbDoc == null)
-		{
-			if(remoteEntry.getType() == 0)
-			{
-				return 0;	//no change
-			}
-			return 1; //remote Added
-		}
-		
-		switch(remoteEntry.getType())
-		{
-		case 1:
-			if(dbDoc.getType() == null || dbDoc.getType() != 1)
-			{
-				return 2; //local Type Changed
-			}
-			
-			if(isDocRemoteChanged(dbDoc, remoteEntry))
-			{
-				return 3;
-			}
-			return 0;
-		case 2:
-			if(dbDoc.getType() == null || dbDoc.getType() != 1)
-			{
-				return 2; //local Type Changed
-			}
-			return 0;
-		case 0:
-			return 4;
-		}
-		
-		return 0;
 	}
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
@@ -2378,6 +2320,80 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return false;
+	}
+	
+	private int getLocalChangeType(Doc dbDoc, Doc localEntry) 
+	{
+		if(dbDoc == null)
+		{
+			if(localEntry.getType() == 0)
+			{
+				return 0;	//no change
+			}
+			return 1; //local Added
+		}
+		
+		switch(localEntry.getType())
+		{
+		case 1:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			
+			if(isDocLocalChanged(dbDoc, localEntry))
+			{
+				return 3;
+			}
+			return 0;
+		case 2:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			return 0;
+		case 0:
+			return 4;
+		}
+		
+		return 0;
+	}
+
+	private int getRemoteChangeType(Doc dbDoc, Doc remoteEntry) 
+	{
+		if(dbDoc == null)
+		{
+			if(remoteEntry.getType() == 0)
+			{
+				return 0;	//no change
+			}
+			return 1; //remote Added
+		}
+		
+		switch(remoteEntry.getType())
+		{
+		case 1:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			
+			if(isDocRemoteChanged(dbDoc, remoteEntry))
+			{
+				return 3;
+			}
+			return 0;
+		case 2:
+			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			{
+				return 2; //local Type Changed
+			}
+			return 0;
+		case 0:
+			return 4;
+		}
+		
+		return 0;
 	}
 	
 	//获取真实的DocInfo，返回null表示获取异常（表示localEntry和remoteEntry都无法获取）
