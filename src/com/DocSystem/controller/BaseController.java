@@ -2010,7 +2010,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDirChange_FS() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 " +  doc.getPath()+doc.getName();
-				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, login_user.getName(), rt);
+				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, login_user.getName(), rt, commitHashMap);
 				if(revision != null)
 				{
 					for(Doc commitDoc: commitHashMap.values())
@@ -3045,7 +3045,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposRealDocCommit(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt);
+		String revision = verReposRealDocCommit(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt, null);
 		if(revision == null)
 		{
 			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + parentPath + docName, rt);
@@ -4904,7 +4904,7 @@ public class BaseController  extends BaseFunction{
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnRealDocCommit(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
+			return svnRealDocCommit(repos,parentPath,entryName,type,commitMsg,commitUser,rt, null);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
@@ -4913,7 +4913,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected String svnRealDocCommit(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String svnRealDocCommit(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{
 		String remotePath = parentPath + entryName;
 		String reposRPath = getReposRealPath(repos);
@@ -4925,7 +4925,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath+parentPath,commitMsg,commitUser,true, null);
+		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath+parentPath,commitMsg,commitUser,true, null, commitHashMap);
 	}
 	
 	protected String gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -5012,9 +5012,8 @@ public class BaseController  extends BaseFunction{
 		return "";
 	}
 
-	protected String verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type,
-			String commitMsg, String commitUser, ReturnAjax rt) {
-		
+	protected String verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	{	
 		if(commitMsg == null)
 		{
 			//commitMsg = "Commit " + parentPath + entryName;
@@ -5024,11 +5023,11 @@ public class BaseController  extends BaseFunction{
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+			return svnRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt, commitHashMap);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+			return gitRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt, commitHashMap);
 		}
 		return null;
 	}
@@ -5223,7 +5222,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.Commit(parentPath, entryName,commitMsg, commitUser);
 	}
 	
-	protected String gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{
 		System.out.println("gitRealDocCommit() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		if(entryName == null || entryName.isEmpty())
@@ -5506,7 +5505,7 @@ public class BaseController  extends BaseFunction{
 		String reposVPath =  getReposVirtualPath(repos);
 		
 		//modifyEnable set to false
-		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null);
+		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null,null);
 		if(revision == null)
 		{
 			docSysDebugLog("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath, rt);
@@ -5546,7 +5545,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,null);
+		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,null,null);
 		if(revision == null)
 		{
 			System.out.println("svnVirtualDocCommit() " + docVName + " doCommit失败！");
@@ -5676,7 +5675,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath);
+		return svnUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath, null);
 	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/

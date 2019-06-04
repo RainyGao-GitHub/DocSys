@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -405,7 +406,7 @@ public class SVNUtil  extends BaseController{
 	//localRootPath是需要本地的根目录
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
-	public String doAutoCommit(String parentPath, String entryName,String localRootPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefRootPath){
+	public String doAutoCommit(String parentPath, String entryName,String localRootPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefRootPath, HashMap<Long, Doc> commitHashMap){
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);	
     	if(parentPath == null || entryName == null)
     	{
@@ -486,13 +487,13 @@ public class SVNUtil  extends BaseController{
 	        {
 	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " not exists, do scan for add and modify");
 	        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
+		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, null);
 	        } 
 	        else if (nodeKind == SVNNodeKind.FILE) 
 	        {
 	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " is File, delete it and scan for add");
 				insertDeleteAction(commitActionList,parentPath, entryName);
-	        	scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
+	        	scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, null);
 	        }
 	        else
 	        {
@@ -500,7 +501,7 @@ public class SVNUtil  extends BaseController{
 	        	System.out.println("doAutoCommit() scheduleForDelete Start");
 	        	scheduleForDelete(commitActionList,localParentPath,parentPath,entryName);
 		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false);
+			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, commitHashMap);
 	        }
 	                
 	        if(commitActionList == null || commitActionList.size() ==0)
@@ -559,7 +560,7 @@ public class SVNUtil  extends BaseController{
 	    		}	    		
 	    		if(SVNNodeKind.NONE == repository.checkPath(path + name, -1))
 	    		{
-	    			return doAutoCommit(path, name, localRootPath, commitMsg, commitUser, modifyEnable, localRefRootPath);
+	    			return doAutoCommit(path, name, localRootPath, commitMsg, commitUser, modifyEnable, localRefRootPath, null);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
@@ -813,7 +814,7 @@ public class SVNUtil  extends BaseController{
 		return true;
 	}
 
-	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction) throws SVNException {
+	public void scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName,String localPath, String localRefPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap) throws SVNException {
     	//System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
     	if(entryName.isEmpty())	//Go through the sub files for add and modify
@@ -823,7 +824,7 @@ public class SVNUtil  extends BaseController{
     		for(int i=0;i<tmp.length;i++)
     		{
     			String subEntryName = tmp[i].getName();
-    			scheduleForAddAndModify(actionList,parentPath, subEntryName, localPath, localRefPath,modifyEnable, false);
+    			scheduleForAddAndModify(actionList,parentPath, subEntryName, localPath, localRefPath,modifyEnable, false, commitHashMap);
             }
     		return;
     	}
@@ -864,7 +865,7 @@ public class SVNUtil  extends BaseController{
 			        	for(int i=0;i<tmp.length;i++)
 			        	{
 			        		String subEntryName = tmp[i].getName();
-			        		scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true);
+			        		scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true, null);
 			            }
 			        	
 			        	//Insert the DirAdd Action
@@ -878,7 +879,7 @@ public class SVNUtil  extends BaseController{
 	        			for(int i=0;i<tmp.length;i++)
 	        			{
 	        				String subEntryName = tmp[i].getName();
-		        			scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false);        				
+		        			scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false, commitHashMap);        				
 		        		}
 	        			return;
 		            }
@@ -891,13 +892,27 @@ public class SVNUtil  extends BaseController{
     	            	return;
     	            }
             		
-		            if(modifyEnable)
-		            {
-	            		//版本仓库文件已存在也暂时不处理，除非能够判断出两者不一致
-	            		System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
-	            		insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
-	            		return;
-	            	}	
+            		if(commitHashMap == null)
+            		{
+			            if(modifyEnable)
+			            {
+		            		System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
+		            		insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
+		            		return;
+		            	}
+            		}
+            		else
+            		{
+            			int level = getLevelByParentPath(parentPath);
+            			Long docId = buildDocIdByName(level, parentPath, entryName);
+            			Doc doc = commitHashMap.get(docId);
+            			if(doc != null)
+            			{
+	            			System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
+		            		insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
+		            		return;
+            			}
+            		}
             	}
 	       }
     	}
