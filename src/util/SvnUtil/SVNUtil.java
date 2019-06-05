@@ -156,14 +156,14 @@ public class SVNUtil  extends BaseController{
 	}
     public Doc getDoc(String filePath, Long revision) 
 	{
-    	System.out.println("getDoc() filePath:" + filePath);
+    	//System.out.println("getDoc() filePath:" + filePath);
     	if(filePath == null)
     	{
         	System.out.println("getDoc() 非法参数：filePath is null");
         	return null;
     	}
     	
-    	long startRevision = 0;
+    	//long startRevision = 0;
     	long endRevision = revision;
     	
         try {
