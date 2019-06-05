@@ -2336,6 +2336,7 @@ public class BaseController  extends BaseFunction{
 			{
 				return 0;	//no change
 			}
+			System.out.println("getLocalChangeType() 本地文件新增:"+localEntry.getName());
 			return 1; //local Added
 		}
 		
@@ -2344,21 +2345,25 @@ public class BaseController  extends BaseFunction{
 		case 1:
 			if(dbDoc.getType() == null || dbDoc.getType() != 1)
 			{
+				System.out.println("getLocalChangeType() 本地文件类型改变:"+localEntry.getName());
 				return 2; //local Type Changed
 			}
 			
 			if(isDocLocalChanged(dbDoc, localEntry))
 			{
+				System.out.println("getLocalChangeType() 本地文件内容修改:"+localEntry.getName());
 				return 3;
 			}
 			return 0;
 		case 2:
-			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			if(dbDoc.getType() == null || dbDoc.getType() != 2)
 			{
+				System.out.println("getLocalChangeType() 本地文件类型改变:"+localEntry.getName());
 				return 2; //local Type Changed
 			}
 			return 0;
 		case 0:
+			System.out.println("getLocalChangeType() 本地文件删除:"+dbDoc.getName());
 			return 4;
 		}
 		
@@ -2373,6 +2378,7 @@ public class BaseController  extends BaseFunction{
 			{
 				return 0;	//no change
 			}
+			System.out.println("getLocalChangeType() 远程文件新增:"+remoteEntry.getName());
 			return 1; //remote Added
 		}
 		
@@ -2381,21 +2387,25 @@ public class BaseController  extends BaseFunction{
 		case 1:
 			if(dbDoc.getType() == null || dbDoc.getType() != 1)
 			{
+				System.out.println("getLocalChangeType() 远程文件类型改变:"+remoteEntry.getName());
 				return 2; //local Type Changed
 			}
 			
 			if(isDocRemoteChanged(dbDoc, remoteEntry))
 			{
+				System.out.println("getLocalChangeType() 远程文件内容修改:"+remoteEntry.getName());
 				return 3;
 			}
 			return 0;
 		case 2:
-			if(dbDoc.getType() == null || dbDoc.getType() != 1)
+			if(dbDoc.getType() == null || dbDoc.getType() != 2)
 			{
+				System.out.println("getLocalChangeType() 远程文件类型改变:"+remoteEntry.getName());
 				return 2; //local Type Changed
 			}
 			return 0;
 		case 0:
+			System.out.println("getLocalChangeType() 远程文件删除:"+dbDoc.getName());
 			return 4;
 		}
 		
