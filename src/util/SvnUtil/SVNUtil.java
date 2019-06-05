@@ -166,20 +166,22 @@ public class SVNUtil  extends BaseController{
     	long startRevision = 0;
     	long endRevision = revision;
     	
-        try {	    	
-	    	if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.NONE) 
+        try {
+        	SVNNodeKind entryType = repository.checkPath(filePath, endRevision);
+	    	if(entryType ==  SVNNodeKind.NONE) 
 			{
 	    		System.out.println("getDoc() " + filePath + " not exist for revision:" + revision); 
 	        	return null;
 			}
-	    	else if(repository.checkPath(filePath, endRevision) ==  SVNNodeKind.DIR) 
+	    	else if(entryType ==  SVNNodeKind.DIR) 
 			{
 	    		String strRevision = revision +"";
 	            if(revision == -1)
 	            {
 	            	strRevision = repository.getLatestRevision() + "";
 	            }
-	            
+	    		System.out.println("getDoc() " + filePath + " revision:" + strRevision);
+	    		
 	    		Doc doc = new Doc();
 	            doc.setType(2);
 	            doc.setRevision(strRevision);
@@ -189,7 +191,7 @@ public class SVNUtil  extends BaseController{
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
  
-			logEntries = repository.log(targetPaths, null,startRevision, endRevision, true, true);
+			logEntries = repository.log(targetPaths, null,endRevision, endRevision, true, true);
 
 	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
 	        {
