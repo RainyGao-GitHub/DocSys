@@ -2204,10 +2204,10 @@ public class BaseController  extends BaseFunction{
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped
 	
 		Long pid = doc.getDocId();
-		String path = doc.getPath();
-		if(doc.getName() != null && doc.getName().isEmpty())
+		String path = doc.getPath() + doc.getName() + "/";
+		if(doc.getName() == null || doc.getName().isEmpty())
 		{
-			path = path + doc.getName() + "/";
+			path = doc.getPath();
 		}
 		int level = getLevelByParentPath(path);
 		
