@@ -2419,126 +2419,69 @@ public class BaseController  extends BaseFunction{
 			return dbDoc;
 		}
 		
-		dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
-		printObject("docSysGetDoc() dbDoc: ", dbDoc);
-		
-		Doc localEntry = fsGetDoc(repos, docId, pid, parentPath, docName);
-		printObject("docSysGetDoc() localEntry: ", localEntry);
-			
-		Doc remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
-		printObject("docSysGetDoc() remoteEntry: ", remoteEntry);
+		Doc localEntry = null;
+		Doc remoteEntry = null;
 
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
-			if(dbDoc == null)
-			{
-				if(remoteEntry != null)	//Remote Added
-				{
-					System.out.println("docSysGetDoc() remote Added: " + doc.getPath()+doc.getName());
-					return remoteEntry;
-				}
-				return null;
-			}
-			
+			remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
+			printObject("docSysGetDoc() remoteEntry: ", remoteEntry);
 			if(remoteEntry == null)
 			{
-				System.out.println("docSysGetDoc() remote deleted: " + doc.getPath()+doc.getName());
-				return null;
-			}
-			
-			if(isDocRemoteChanged(dbDoc, remoteEntry))
-			{
-				System.out.println("docSysGetDoc() remote Changed: " + doc.getPath()+doc.getName());
-				dbDoc.setRevision(remoteEntry.getRevision());
 				return dbDoc;
 			}
-			return dbDoc;
+
+			dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			printObject("docSysGetDoc() dbDoc: ", dbDoc);
+
+			int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
+			if(remoteChangeType == 0)
+			{
+				return dbDoc;
+			}
+			return remoteEntry;
 		}
 		else
 		{
+			localEntry = fsGetDoc(repos, docId, pid, parentPath, docName);
+			printObject("docSysGetDoc() localEntry: ", localEntry);
+
+			dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			printObject("docSysGetDoc() dbDoc: ", dbDoc);
 			if(localEntry == null)
 			{
-				//get localEntry 异常
-				System.out.println("docSysGetDoc() get localEntry 异常: " + doc.getPath()+doc.getName());
-				return null;
-			}
-			
-			if(localEntry.getType() != 0)
-			{
-				if(dbDoc == null)	//localAdded
-				{
-					System.out.println("docSysGetDoc() local Added: " + doc.getPath()+doc.getName());
-					return localEntry;
-				}
-				
-				if(isDocLocalChanged(dbDoc,localEntry))	//localChanged (force commit)
-				{
-					System.out.println("docSysGetDoc() local Changed: " + doc.getPath()+doc.getName());
-					return localEntry;
-				}
-	
-				if(remoteEntry == null)
-				{
-					System.out.println("docSysGetDoc() get remoteEntry 异常:" + doc.getPath()+doc.getName() + " regard doc not changed");
-					return dbDoc;
-				}
-	
-				if(remoteEntry.getType() != 0)
-				{
-					System.out.println("docSysGetDoc() remote Deleted" + doc.getPath()+doc.getName());
-					return remoteEntry;
-				}
-				
-				if(dbDoc.getType() != remoteEntry.getType())
-				{
-					System.out.println("docSysGetDoc() remoteEntry Type Changed: " + doc.getPath()+doc.getName());
-					return remoteEntry;						
-				}
-				
-				if(isDocRemoteChanged(dbDoc, remoteEntry))
-				{
-					System.out.println("docSysGetDoc() remote Changed: " + doc.getPath()+doc.getName());					
-					return remoteEntry;
-				}
 				return dbDoc;
 			}
 			
-			if(dbDoc == null)
+			
+			int localChangeType = getLocalChangeType(dbDoc, localEntry);
+			switch(localChangeType)
 			{
-				if(remoteEntry == null)
-				{
-					System.out.println("docSysGetDoc() get remoteEntry 异常:" + doc.getPath()+doc.getName() + " regard doc not changed");
-					return dbDoc;
-				}
-
-				if(remoteEntry.getType() == 0)	//Remote Deleted
-				{
-					System.out.println("docSysGetDoc() remote Deleted: " + doc.getPath()+doc.getName());
-					return remoteEntry;
-				}
-
-				if(remoteEntry.getType() != 0)	//Remote Added
-				{
-					System.out.println("docSysGetDoc() remote Added: " + doc.getPath()+doc.getName());
-					return remoteEntry;
-				}				
+			case 1:	//Add
+			case 2:	//Type Change
+			case 3:	//File Change
+				return localEntry;
 			}
 			
+			//0/4 
+			remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
+			printObject("docSysGetDoc() remoteEntry: ", remoteEntry);
 			if(remoteEntry == null)
 			{
-				System.out.println("docSysGetDoc() get remoteEntry 异常:" + doc.getPath()+doc.getName() + " regard doc not changed");
 				return dbDoc;
 			}
 			
-			//localDeleted and remoteDeleted so just delete dbDoc
-			if(remoteEntry.getType() == 0)
+			int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
+			if(remoteChangeType == 0)
 			{
-				System.out.println("docSysGetDoc() local and remote deleted: " + doc.getPath()+doc.getName());
-				return remoteEntry;				
+				if(localChangeType == 4)	//local Delete
+				{
+					return null;
+				}
+				return dbDoc;
 			}
 			
-			System.out.println("docSysGetDoc() local deleted: " + doc.getPath()+doc.getName());
-			return localEntry;
+			return remoteEntry;
 		}
 	}
 
