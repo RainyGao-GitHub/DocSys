@@ -1,6 +1,7 @@
-	//DocHistory类
-	var DocHistory = (function () {
+	//DocHistoryDetail类
+	var DocHistoryDetail = (function () {
 		//These value is for commit
+		var commitId;
 		var reposId;
 		var docId;
 		var pid;
@@ -9,9 +10,10 @@
 		var docPath = "";
 		var historyType = 0;
 		
-		function historyLogsPageInit(Input_vid, Input_docId, Input_pid, Input_path, Input_name, Input_historyType)
+		function historyDetailsPageInit(Input_commitId, Input_vid, Input_docId, Input_pid, Input_path, Input_name, Input_historyType)
 		{
-			console.log("historyLogsPageInit vid:" + Input_vid + " docId:" + Input_docId + " pid:" + Input_pid + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
+			console.log("historyDetailsPageInit commitId:" + Input_commitId + " vid:" + Input_vid + " docId:" + Input_docId + " pid:" + Input_pid + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
+			commitId = Input_commitId;
 			reposId = Input_vid;
 			docId = Input_docId;
 			pid = Input_pid;
@@ -20,30 +22,9 @@
 			docPath = Input_path + Input_name;
 			historyType = Input_historyType;
 			
-			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);	
+			showHistoryDetailList(commitId, reposId, docId, pid, parentPath, docName, historyType);	
 		}
-		
-		function showHistoryDetail(index)
-		{
-			var commitId = $("#commitId" + index).text();
-		   	console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
-
-			var title = "历史详情";
-
-		   	//show historyDetails page
-			bootstrapQ.dialog({
-				id: "historyDetailPage",
-				title: title,
-				url: 'historyDetails.html',
-				msg: '页面正在加载，请稍等...',
-				foot: false,
-				big: true,
-				callback: function(){
-					DocHistoryDetail.historyDetailsPageInit(gReposId, docId, pid, parentPath, docName, historyType);
-				},
-			});		
-		}
-	
+			
 		function downloadHistory(index)
 		{
 			//TODO: 如果当前是目录的话，需要提示是否只下载修改过的文件，否则下载该版本的整个目录
@@ -94,22 +75,27 @@
 	            }
 	        });
 		}
-	
-		function showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType)
+		
+		function showHistoryDetail(index)
 		{
-	   		console.log("showHistoryLogList  reposId:" + reposId + " docId:"+ docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
-	    	$.ajax({
-	             url : "/DocSystem/Doc/getDocHistory.do",
+			var commitId = $("#commitId" + index).text();
+		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+	
+		   	var encParentPath = encodeURI(parentPath);
+		   	var encDocName = encodeURI(docName);
+		   	
+	   		$.ajax({
+	             url : "/DocSystem/Doc/getHistoryDetail.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
+	            	 commitId: commitId,
 	                 reposId : reposId, 
-	                 docId: docId,
 	                 pid: pid,
-	            	 path : parentPath,
-	             	 name: docName,
+	                 docId: docId,
+	            	 path : encParentPath,
+	             	 name: encDocName,
 	             	 historyType: historyType,
-	             	 maxLogNum: 100,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -118,70 +104,93 @@
 	                }
 	                else
 	                {
-	                	showErrorMessage("获取历史信息失败:" + ret.msgInfo);
+	                	showErrorMessage("获取历史版本详情失败:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage("获取历史信息失败:服务器异常");
+	                showErrorMessage("获取历史版本详情失败:服务器异常");
+	            }
+	        });
+	   		
+			//根据获取到的列表数据，绘制列表
+			function showList(data){
+				
+			}
+		}
+	
+		function showHistoryDetailList(reposId, docId, pid, parentPath, docName, historyType)
+		{
+	   		console.log("showHistoryDetailList  reposId:" + reposId + " docId:"+ docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+	   		$.ajax({
+	             url : "/DocSystem/Doc/getHistoryDetail.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	            	 commitId: commitId,
+	                 reposId : reposId, 
+	                 pid: pid,
+	                 docId: docId,
+	            	 path : parentPath,
+	             	 name: docName,
+	             	 historyType: historyType,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status){
+	        		  	console.log(ret.data);
+	        		  	showList(ret.data);
+	                }
+	                else
+	                {
+	                	showErrorMessage("获取历史详情失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("获取历史详情失败:服务器异常");
 	            }
 	        });
 	
 			//根据获取到的列表数据，绘制列表
 			function showList(data){
 				console.log(data);
-				var c = $("#historyLogs").children();
+				var c = $("#historyDetails").children();
 				$(c).remove();
 				if(data.length==0){
-					$("#historyLogs").append("<p>暂无数据</p>");
+					$("#historyDetails").append("<p>暂无数据</p>");
 				}
 				
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					var commitId = d.commitId;
-					var commitUser = d.commitUser;
-					var commitMsg = d.commitMsg;
-					var commitTime = formatTime(d.commitTime);
+					var changeType = d.changeType;
+					var docPath = d.path;
 					
-					var opBtn = "		<a href='javascript:void(0)' onclick='showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='revertHistory("+i+ ")' class='mybtn-primary'>还原</a>";
-					var se = "<li>"
-						+"	<i class='cell commitId w10'>"
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var se = "<li>" 
+						+"	<i class='cell changeType w10'>"
 						+"		<span class='name  breakAll'>"
-						+"			<a id='commitId"+i+"' href='javascript:void(0)'>"+commitId+"</a>"
+						+"			<a id='changeType"+i+"' href='javascript:void(0)'>"+changeType+"</a>"
 						+"		</span>"
 						+"	</i>"
-						+"	<i class='cell commitMsg w30'>"
+						+"	<i class='cell docPath w30'>"
 						+"		<span class='name breakAll'>"
-						+"			<a id='commitMsg"+i+"' href='javascript:void(0)'>"+commitMsg+"</a>"
-						+"		</span>"
-						+"	</i>"
-						+"	<i class='cell commitUser w13'>"
-						+"		<span class='name'>"
-						+"			<a id='commitUser"+i+"' href='javascript:void(0)'>"+commitUser+"</a>"
-						+"		</span>"
-						+"	</i>"
-						+"	<i class='cell commitTime w10'>"
-						+"		<span class='name'>"
-						+"			<a id='commitTime"+i+"' href='javascript:void(0)'>"+commitTime+"</a>"
+						+"			<a id='docPath"+i+"' href='javascript:void(0)'>"+docPath+"</a>"
 						+"		</span>"
 						+"	</i>"
 						+"	<i class='cell operation w10'>"
-						+		opBtn
 						+ 		opBtn1 
 						+ 		opBtn2 
 						+"	</i>"
 						+"</li>";
 					
-					$("#historyLogs").append(se);
+					$("#historyDetails").append(se);
 				}
 			}
 		}
 		
 		//开放给外部的调用接口
 	    return {
-	    	historyLogsPageInit: function(vid, docId, pid, path, name, type){
-	    		historyLogsPageInit(vid, docId, pid, path, name, type);
+	    	historyDetailsPageInit: function(vid, docId, pid, path, name, type){
+	    		historyDetailsPageInit(vid, docId, pid, path, name, type);
 	        },
 
 	        showHistoryDetail: function(index){

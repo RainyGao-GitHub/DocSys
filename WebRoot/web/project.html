@@ -461,6 +461,7 @@
 <script type="text/javascript" src="js/DocMove.js"></script>
 <script type="text/javascript" src="js/DocEdit.js"></script>
 <script type="text/javascript" src="js/DocHistory.js"></script>
+<script type="text/javascript" src="js/DocHistoryDetail.js"></script>
 
 <script type="text/javascript">
 	//初始化全局变量 //Repos Info
@@ -1667,6 +1668,7 @@
 		
 		//show HistoryLogs page
 		bootstrapQ.dialog({
+			id: "historyPage",
 			title: title,
 			url: 'historyLogs.html',
 			msg: '页面正在加载，请稍等...',
