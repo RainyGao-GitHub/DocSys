@@ -204,8 +204,43 @@ public class BaseFunction{
 		
 	}
     
-	protected void insertAddDirAction(List<CommitAction> actionList,
-			String parentPath, String entryName, boolean isSubAction, List<CommitAction> subActionList) {
+	protected void insertAddDirAction(List<CommitAction> actionList, String parentPath, String entryName, String localParentPath, boolean isSubAction) {
+		
+		File dir = new File(localParentPath, entryName);
+		File[] tmp = dir.listFiles();
+		
+		//there is not subNodes under dir
+		if(tmp == null || tmp.length == 0)
+		{
+	    	CommitAction action = new CommitAction();
+	    	action.setAction(1);
+	    	action.setEntryType(2);
+	    	action.setParentPath(parentPath);
+	    	action.setEntryName(entryName);
+	    	action.isSubAction = isSubAction;
+	    	action.setSubActionList(null);
+	    	actionList.add(action);
+	    	return;
+		}
+		
+		//Build subActionList
+		List<CommitAction> subActionList = new ArrayList<CommitAction>();
+	    for(int i=0;i<tmp.length;i++)
+	    {
+	    	File localEntry = tmp[i];
+	    	String subParentPath = parentPath + entryName + "/";
+	    	String subLocalParentPath = localParentPath + entryName + "/";
+	    	String subEntryName = localEntry.getName();
+	    	if(localEntry.isDirectory())
+	    	{	
+	    		insertAddDirAction(subActionList,subParentPath,subEntryName,subLocalParentPath,true);
+	    	}
+	    	else
+	    	{
+	    		insertAddFileAction(subActionList,subParentPath,subEntryName,subLocalParentPath,true);
+	    	}
+	 	}
+		
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setEntryType(2);
