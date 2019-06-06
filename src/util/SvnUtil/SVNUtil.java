@@ -408,7 +408,7 @@ public class SVNUtil  extends BaseController{
 	//localRootPath是需要本地的根目录
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
-	public String doAutoCommit(String parentPath, String entryName,String localRootPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefRootPath, HashMap<Long, Doc> commitHashMap){
+	public String doAutoCommit(String parentPath, String entryName,String localRootPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefRootPath, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag){
 		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);	
     	if(parentPath == null || entryName == null)
     	{
@@ -484,133 +484,8 @@ public class SVNUtil  extends BaseController{
 			//LocalEntry is Directory
 			System.out.println("doAutoCommit() localEntry " + localParentPath + entryName + " is Directory");
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
-	        if (nodeKind == SVNNodeKind.NONE) 
-	        {
-	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " not exists, do scan for add and modify");
-	        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, null);
-	        } 
-	        else if (nodeKind == SVNNodeKind.FILE) 
-	        {
-	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " is File, delete it and scan for add");
-				insertDeleteAction(commitActionList,parentPath, entryName);
-	        	scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, null);
-	        }
-	        else
-	        {
-				System.out.println("doAutoCommit() remoteEntry " + entryPath + " is Directory");
-	        	System.out.println("doAutoCommit() scheduleForDelete Start");
-	        	scheduleForDelete(commitActionList,localParentPath,parentPath,entryName);
-		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, commitHashMap);
-	        }
-	                
-	        if(commitActionList == null || commitActionList.size() ==0)
-	        {
-	        	System.out.println("doAutoCommmit() There is nothing to commit");
-	        	return repository.getLatestRevision() + "";
-	        }
-	        ISVNEditor editor = getCommitEditor(commitMsg);
-	        if(editor == null)
-	        {
-	        	System.out.println("doAutoCommit() getCommitEditor Failed");
-	        	return null;
-	        }
-	        
-	        if(executeCommitActionList(editor,commitActionList,true) == false)
-	        {
-	        	System.out.println("doAutoCommit() executeCommitActionList Failed");
-	        	editor.abortEdit();	
-	        	return null;
-	        }
-	        
-	        SVNCommitInfo commitInfo = commit(editor);
-	        if(commitInfo == null)
-	        {
-	        	System.out.println("doAutoCommit() commit failed: " + commitInfo);
-	        	return null;
-	        }
-	        System.out.println("doAutoCommit() commit success: " + commitInfo);
-	        return commitInfo.getNewRevision()+"";
-		} catch (Exception e) {
-			System.out.println("doAutoCommit() Exception");
-			e.printStackTrace();
-			return null;
-		}
-	}
-    
-	public boolean scanForCommit(String parentPath, String entryName,String localRootPath,String commitMsg,String commitUser, boolean modifyEnable,String localRefRootPath, HashMap<Long, Doc> commitHashMap){
-		
-		try {
-	
-			String entryPath = parentPath + entryName;
-			
-			File localEntry = new File(localParentPath + entryName);
-			
-			//local Delete
-			if(!localEntry.exists())	//Delete Commit
-			{
-				System.out.println("doAutoCommit() 删除:" + parentPath + entryName);
-				SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
-		        if (nodeKind == SVNNodeKind.NONE) 
-		        {
-					System.out.println("doAutoCommit() remoteEnry 已删除" + entryPath);
-		        	return true;
-		        }
-		        
-		        insertDeleteAction(commitActionList,parentPath, entryName);
-		        return true;
-			}
-
-			//LocalEntry is File
-			if(localEntry.isFile())
-			{
-				System.out.println("doAutoCommit() localEntry " + parentPath + entryName + " is File");
-				
-		        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
-		        if (nodeKind == SVNNodeKind.NONE) 
-		        {
-		        	insertAddAction(commitActionList,parentPath, entryName);
-		        }
-		        else if(nodeKind != SVNNodeKind.FILE)
-		        {
-		        	insertDeleteAction(commitActionList,parentPath, entryName);
-		        	insertAddAction(commitActionList,parentPath, entryName);
-		        	return true;
-		        }
-		        else
-		        {
-		        	
-		        	
-		        }
-			}
-
-			//LocalEntry is Directory
-			System.out.println("doAutoCommit() localEntry " + localParentPath + entryName + " is Directory");
-			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-	        SVNNodeKind nodeKind = repository.checkPath(entryPath, -1);
-	        if (nodeKind == SVNNodeKind.NONE) 
-	        {
-	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " not exists, do scan for add and modify");
-	        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-		        scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, null);
-	        } 
-	        else if (nodeKind == SVNNodeKind.FILE) 
-	        {
-	        	System.out.println("doAutoCommit() remoteEntry " + entryPath + " is File, delete it and scan for add");
-				insertDeleteAction(commitActionList,parentPath, entryName);
-	        	scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, null);
-	        }
-	        else
-	        {
-				System.out.println("doAutoCommit() remoteEntry " + entryPath + " is Directory");
-	        	System.out.println("doAutoCommit() scheduleForDelete Start");
-	        	scheduleForDelete(commitActionList,localParentPath,parentPath,entryName);
-		        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-			    scheduleForAddAndModify(commitActionList,parentPath,entryName,localParentPath,localRefParentPath,modifyEnable,false, commitHashMap);
-	        }
-	                
+			scheduleForCommit(commitActionList, parentPath, entryName, localParentPath, localRefParentPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
+				                
 	        if(commitActionList == null || commitActionList.size() ==0)
 	        {
 	        	System.out.println("doAutoCommmit() There is nothing to commit");
@@ -667,7 +542,7 @@ public class SVNUtil  extends BaseController{
 	    		}	    		
 	    		if(SVNNodeKind.NONE == repository.checkPath(path + name, -1))
 	    		{
-	    			return doAutoCommit(path, name, localRootPath, commitMsg, commitUser, modifyEnable, localRefRootPath, null);
+	    			return doAutoCommit(path, name, localRootPath, commitMsg, commitUser, modifyEnable, localRefRootPath, null, 2);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
@@ -856,8 +731,8 @@ public class SVNUtil  extends BaseController{
     	}
 	}
 
-	public void scheduleForCommit(List<CommitAction> actionList, String parentPath, String entryName,String localParentPath, String localRefParentPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) throws SVNException {
-    	
+	public void scheduleForCommit(List<CommitAction> actionList, String parentPath, String entryName,String localParentPath, String localRefParentPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
+	{	
 		System.out.println("scheduleForCommit()  parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " localRefParentPath:" + localRefParentPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
     	if(entryName.isEmpty())
@@ -869,7 +744,14 @@ public class SVNUtil  extends BaseController{
     	String remoteEntryPath = parentPath + entryName;
     	String localEntryPath = localParentPath + entryName;    	
     	File localEntry = new File(localEntryPath);
-    	SVNNodeKind nodeKind = repository.checkPath(remoteEntryPath, -1);
+    	SVNNodeKind nodeKind;
+		try {
+			nodeKind = repository.checkPath(remoteEntryPath, -1);
+		} catch (SVNException e) {
+			System.out.println("scheduleForCommit() checkPath 异常!");
+			e.printStackTrace();
+			return;
+		}
     	
     	//本地删除
     	if(!localEntry.exists())
@@ -971,10 +853,18 @@ public class SVNUtil  extends BaseController{
 		HashMap<String, SVNDirEntry> docHashMap = new HashMap<String, SVNDirEntry>();
 		
 		//遍历仓库所有子目录
-		Collection entries = repository.getDir(parentPath, -1, null,(Collection) null);
+		Collection<SVNDirEntry> entries;
+		try {
+			entries = repository.getDir(parentPath, -1, null,(Collection) null);
+		} catch (SVNException e) {
+			System.out.println("scanForSubDocCommit() getDir 异常!");
+			e.printStackTrace();
+			return;
+		}
+		
         if(entries != null)
         {
-			Iterator iterator = entries.iterator();
+			Iterator<SVNDirEntry> iterator = entries.iterator();
 	        while (iterator.hasNext()) 
 	        {
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
@@ -1006,42 +896,6 @@ public class SVNUtil  extends BaseController{
         }
 	}
 	
-	
-	public boolean scanForSubDocCommit(List<CommitAction> actionList, String localPath,String parentPath, String entryName)
-	{
-		
-		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
-		Doc subDoc = null;
-		//遍历仓库所有子目录
-		Collection entries = repository.getDir(parentPath + entryName, -1, null,(Collection) null);
-        if(entries != null)
-        {
-			Iterator iterator = entries.iterator();
-	        while (iterator.hasNext()) 
-	        {
-	            SVNDirEntry entry = (SVNDirEntry) iterator.next();
-	            String subEntryName = entry.getName();
-	            subDoc = new Doc();
-	            subDoc.setName(entry.getName());
-	            subDoc.setPath(path);
-	            
-	            scheduleForCommit(actionList,localEntryPath+"/", remoteEntryPath+"/",subEntryName);
-	        }
-        }
-        
-      //Go Through localSubDocs
-      File localEntry = new File(localPath);
-      File[] tmp=localEntry.listFiles();
-      for(int i=0;i<tmp.length;i++)
-      {
-      	String subEntryName = tmp[i].getName();
-      	scheduleForCommit(actionList,parentPath, subEntryName, localPath, localRefParentPath,modifyEnable, false, commitHashMap, subDocCommitFlag);
-      }
-      		
-        
-		return true;
-	}
-
 	private InputStream getFileInputStream(String filePath) {
 		//检查文件路径
 		if(filePath == null || "".equals(filePath))
@@ -1173,9 +1027,9 @@ public class SVNUtil  extends BaseController{
 	
 	
 	//增加目录（如果parentPath不存在则也会增加）
-	public boolean svnAddDirEx(String parentPath,String entryName,String localPath,String commitMsg, String commitUser, boolean deleteOld)
+	public boolean svnAddDirEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser, boolean deleteOld)
 	{
-		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath);	
+		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath);	
 		try {
 			//Build commitAction
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -1183,11 +1037,11 @@ public class SVNUtil  extends BaseController{
 			if(deleteOld)		
 			{
 				insertDeleteAction(commitActionList,parentPath, entryName);
-				insertAddDirAction(commitActionList,parentPath, entryName, false, null);
+				insertAddDirAction(commitActionList,parentPath, entryName, localParentPath, false);
 			}
 			else
 			{
-				insertAddDirAction(commitActionList,parentPath, entryName, false, null);
+				insertAddDirAction(commitActionList,parentPath, entryName, localParentPath, false);
 			}
 			
 		    if(commitActionList == null || commitActionList.size() ==0)
