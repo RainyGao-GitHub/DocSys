@@ -4902,7 +4902,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath+parentPath,commitMsg,commitUser,true, null, commitHashMap);
+		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath+parentPath,commitMsg,commitUser,true, null, commitHashMap, 2);
 	}
 	
 	protected String gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -5482,7 +5482,7 @@ public class BaseController  extends BaseFunction{
 		String reposVPath =  getReposVirtualPath(repos);
 		
 		//modifyEnable set to false
-		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null,null);
+		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,false,null,null,2);
 		if(revision == null)
 		{
 			docSysDebugLog("doAutoCommit失败！" + " docVName:" + docVName + " reposVPath:" + reposVPath, rt);
@@ -5522,7 +5522,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,null,null);
+		String revision = svnUtil.doAutoCommit("",docVName,reposVPath,commitMsg,commitUser,true,null,null,2);
 		if(revision == null)
 		{
 			System.out.println("svnVirtualDocCommit() " + docVName + " doCommit失败！");
@@ -5652,7 +5652,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath, null);
+		return svnUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath, null,2);
 	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/
