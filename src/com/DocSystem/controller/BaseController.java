@@ -152,8 +152,8 @@ public class BaseController  extends BaseFunction{
 	private List<Doc> getDBEntryList(Repos repos, Long pid, String path, int level) {
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
-		//qDoc.setPath(path);
-		qDoc.setPid(pid);
+		qDoc.setPath(path);
+		//qDoc.setPid(pid);
 		return reposService.getDocList(qDoc);
 	}
 
