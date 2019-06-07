@@ -1639,18 +1639,18 @@
 		}
 		console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 		
-		var title = "文件 " + docName + " 历史版本";
+		var title = "文件历史版本:" + docName;
 		if(historyType == 0)
 		{
 			if(docId == 0)
 			{
-				var title = "仓库 " + gReposName + " 历史版本";
+				var title = "仓库历史版本: " + gReposName;
 			}
 			else
 			{
 				if(docType == 2)
 				{
-					var title = "目录 " + docName + " 历史版本";				
+					var title = "目录历史版本:" + docName + "/";				
 				}
 			}
 		}
@@ -1658,11 +1658,11 @@
 		{
 			if(docId == 0)
 			{
-				var title = "仓库 " + gReposName + " 备注历史版本";
+				var title = "仓库备注历史:" + gReposName;
 			}
 			else
 			{
-				var title = "文件 " + docName + " 备注历史版本";				
+				var title = "文件备注历史:" + docName;				
 			}
 		}
 		

@@ -141,10 +141,12 @@
 	                }
 	                else
 	                {
+		                closeBootstrapDialog("historyDetailPage");
 	                	showErrorMessage("获取历史详情失败:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
+	                closeBootstrapDialog("historyDetailPage");
 	                showErrorMessage("获取历史详情失败:服务器异常");
 	            }
 	        });
