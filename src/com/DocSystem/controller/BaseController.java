@@ -2009,7 +2009,7 @@ public class BaseController  extends BaseFunction{
 			if(commitHashMap.size() > 0)
 			{
 				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
-				String commitMsg = "自动同步 " +  doc.getPath()+doc.getName();
+				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
 				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, login_user.getName(), rt, commitHashMap);
 				if(revision != null)
 				{
