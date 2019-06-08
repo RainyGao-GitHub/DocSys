@@ -191,7 +191,7 @@ public class SVNUtil  extends BaseController{
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
  
-			logEntries = repository.log(targetPaths, null,endRevision, endRevision, true, true);
+			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
 
 	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
 	        {
@@ -216,10 +216,10 @@ public class SVNUtil  extends BaseController{
 	}
     
     //getHistory filePath: remote File Path under repositoryURL
-	public List<LogEntry> getHistoryLogs(String filePath,long startRevision, long endRevision, int maxLogNum) 
+	public List<LogEntry> getHistoryLogs(String entryPath,long startRevision, long endRevision, int maxLogNum) 
     {
-    	System.out.println("getHistoryLogs filePath:" + filePath);	
-    	if(filePath == null)
+    	System.out.println("getHistoryLogs filePath:" + entryPath);	
+    	if(entryPath == null)
     	{
         	System.out.println("getHistoryLogs() 非法参数：filePath is null");
         	return null;
@@ -243,7 +243,7 @@ public class SVNUtil  extends BaseController{
         /*
          * Get History Info
          */
-        String[] targetPaths = new String[]{filePath};
+        String[] targetPaths = new String[]{entryPath};
         Collection<SVNLogEntry> logEntries = null;
         try {
         	if(maxLogNum > 0)
@@ -253,7 +253,7 @@ public class SVNUtil  extends BaseController{
         			startRevision = endRevision - maxLogNum;
         		}
         	}
-            logEntries = repository.log(targetPaths, null,startRevision, endRevision, true, true);
+            logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, true);
         } catch (SVNException svne) {
             System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
             return null;
@@ -284,44 +284,125 @@ public class SVNUtil  extends BaseController{
             log.setCommitMsg(commitMessage);
             log.setCommitTime(commitTime);
             
-            //displaying all paths that were changed in that revision; changed path information is represented by SVNLogEntryPath.
-            if(logEntry.getChangedPaths().size() > 0) 
-            {
-            	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
-                
-            	//System.out.println();
-                //System.out.println("changed Entries:");
-                //keys are changed paths
-                Set<String> changedPathsSet = logEntry.getChangedPaths().keySet();
-                for (Iterator<String> changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
-                {
-                	//obtains a next SVNLogEntryPath
-                    SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
-                    String nodePath = entryPath.getPath();
-                    String nodeKind = entryPath.getKind().toString();
-                    String changeType = "" + entryPath.getType();
-                    String copyPath = entryPath.getCopyPath();
-                    long copyRevision = entryPath.getCopyRevision();
-                    
-                    //System.out.println(" " + changeType + "	" + nodePath + ((copyPath != null) ? " (from " + copyPath + " revision " + copyRevision + ")" : ""));                 
-
-                    //Add to changedItemList
-                    ChangedItem changedItem = new ChangedItem();
-                    changedItem.setChangeType(changeType);	
-                    changedItem.setPath(nodePath);
-                    changedItem.setKind(nodeKind);
-                    changedItem.setCopyPath(copyPath);
-                    changedItem.setCopyRevision(copyRevision);
-                    changedItemList.add(changedItem);
-                }
-                log.setChangedItems(changedItemList);
-            }
             logList.add(0,log);	//add to the top
         }
         return logList;
     }
+	
+	public List<ChangedItem> getHistoryDetail(String entryPath, String commitId) 
+	{
+    	System.out.println("getHistoryDetail entryPath:" + entryPath);	
+    	if(entryPath == null)
+    	{
+        	System.out.println("getHistoryDetail() 非法参数：entryPath is null");
+        	return null;
+    	}
+
+		
+		long revision = -1;
+		if(commitId != null)
+		{
+			revision = Long.parseLong(commitId);
+		}
+    	
+    	/*
+         * Get History Info
+         */
+        String[] targetPaths = new String[]{entryPath};
+        Collection<SVNLogEntry> logEntries = null;
+        try {
+            logEntries = repository.log(targetPaths, null,revision, revision, true, true);
+        } catch (SVNException svne) {
+            System.out.println("getHistoryDetail() 获取日志异常：" + svne.getMessage());
+            return null;
+        }
+        
+        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
+            /*
+             * gets a next SVNLogEntry
+             */
+            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+            
+            if(logEntry.getChangedPaths().size() > 0) 
+            {
+            	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
+                
+            	System.out.println("changed Entries:");
+                Set<String> changedPathsSet = logEntry.getChangedPaths().keySet();
+                for (Iterator<String> changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
+                {
+                	//obtains a next SVNLogEntryPath
+                    SVNLogEntryPath svnLogEntryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
+                    String nodePath = svnLogEntryPath.getPath();
+                    Integer entryType = convertKindToEntryType(svnLogEntryPath.getKind());
+                    Integer changeType = getChangeType(svnLogEntryPath);
+                    String copyPath = svnLogEntryPath.getCopyPath();
+                    String copyRevision = "" + svnLogEntryPath.getCopyRevision();
+                    
+                    if(copyPath == null)
+                    {
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath);                                     	
+                    }
+                    else
+                    {
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath + " from " + copyPath + " at revision " + copyRevision);                
+                    }
+                    
+                    //Add to changedItemList
+                    ChangedItem changedItem = new ChangedItem();
+                    changedItem.setChangeType(changeType);	
+                    changedItem.setEntryType(entryType);
+                    changedItem.setPath(nodePath);
+                    changedItem.setCopyPath(copyPath);
+                    changedItem.setCopyRevision(copyRevision);
+                    changedItemList.add(changedItem);
+                }
+                return changedItemList;
+            }
+        }
+		return null;
+	}	
     
-    //FSFS格式SVN仓库创建接口
+    private Integer getChangeType(SVNLogEntryPath svnLogEntryPath) {
+
+    	switch(svnLogEntryPath.getType())
+    	{
+    	case 'A':
+    		return 1;
+    	case 'D':
+    		return 2;
+    	case 'M':
+    		return 3;
+    	case 'R':
+    		return 5;
+    	}
+    	
+    	return null;
+	}
+
+	private Integer convertKindToEntryType(SVNNodeKind nodeKind) 
+    {
+		if(nodeKind == null)
+		{
+			return -1;
+		}
+    	
+    	if(nodeKind == SVNNodeKind.NONE) 
+		{
+			return 0;
+		}
+		else if(nodeKind == SVNNodeKind.FILE)
+		{
+			return 1;
+		}
+		else if(nodeKind == SVNNodeKind.DIR)
+		{
+			return 2;
+		}
+		return -1;
+	}
+
+	//FSFS格式SVN仓库创建接口
 	public static String CreateRepos(String name,String path){
 		System.out.println("CreateRepos reposName:" + name + "under Path:" + path);
     	if(path == null || name == null)
@@ -2146,5 +2227,5 @@ public class SVNUtil  extends BaseController{
                 }
             }
         }
-    }	
+    }
 }

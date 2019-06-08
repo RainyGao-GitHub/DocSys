@@ -22,6 +22,7 @@ import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
 import util.LuceneUtil.LuceneUtil2;
 
+import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
@@ -1702,6 +1703,70 @@ public class DocController extends BaseController{
 		
 		List<LogEntry> logList = verReposGetHistory(repos, isRealDoc, entryPath, num);
 		rt.setData(logList);
+		writeJson(rt, response);
+	}
+	
+	/****************   revert Document History ******************/
+	@RequestMapping("/getHistoryDetail.do")
+	public void getHistoryDetail(String commitId,Integer reposId, Long docId, Long pid, String path, String name, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+		System.out.println("getHistoryDetail commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
+		
+		if(path == null)
+		{
+			path = "";
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(reposId == null)
+		{
+			docSysErrorLog("reposId is null", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		boolean isRealDoc = true;
+		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		{
+			isRealDoc = false;
+		}
+
+		List<ChangedItem> changedItemList = null;
+		if(isRealDoc)
+		{
+			changedItemList = verReposGetHistoryDetail(repos, isRealDoc, path+name, commitId);
+		}
+		else
+		{
+			changedItemList = verReposGetHistoryDetail(repos, isRealDoc, path+name, commitId);
+		}
+		
+		if(changedItemList == null)
+		{
+			System.out.println("revertDocHistory Failed");
+		}
+		rt.setData(changedItemList);
+		
 		writeJson(rt, response);
 	}
 	

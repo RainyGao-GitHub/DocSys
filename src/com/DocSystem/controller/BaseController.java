@@ -33,6 +33,7 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
@@ -1446,6 +1447,75 @@ public class BaseController  extends BaseFunction{
 		
 		return true;
 	}
+	
+	protected String getRealDocHistory(Repos repos, Long docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
+		
+		Integer reposId = repos.getId();
+		
+		//Build doc
+		Doc doc = new Doc();								
+		doc.setVid(reposId);
+		doc.setDocId(docId);
+		doc.setPath(parentPath);
+		doc.setName(docName);
+		
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//LockDoc
+			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				System.out.println("addDoc() lockDoc " + docName + " Failed!");
+				return null;
+			}
+		}
+		
+	
+		//Checkout to localParentPath
+		String localRootPath = getReposRealPath(repos);
+		String localParentPath = localRootPath + parentPath;
+		
+		//Do checkout the entry to
+		List<Doc> successDocList = verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId, true); 
+		if(successDocList == null)
+		{
+			unlockDoc(doc,login_user,docLock);
+			System.out.println("revertRealDocHistory() verReposCheckOut Failed!");
+			rt.setError("verReposCheckOut Failed parentPath:" + parentPath + " entryName:" + docName + " localParentPath:" + localParentPath + " targetName:" + docName);
+			return null;
+		}
+		
+		//Do commit to verRepos
+		if(commitMsg == null)
+		{
+			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
+		}
+		
+		String revision = verReposAutoCommit(repos, true, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
+		
+		//Force update docInfo
+		printObject("revertRealDocHistory() successDocList:", successDocList);
+		for(int i=0; i< successDocList.size(); i++)
+		{
+			Doc successDoc = successDocList.get(i);
+			successDoc.setRevision(revision);
+			successDoc.setCreator(login_user.getId());
+			successDoc.setLatestEditor(login_user.getId());
+			dbUpdateDoc(repos, successDoc, true);
+		}		
+		
+		unlockDoc(doc,login_user,docLock);
+		if(revision == null)
+		{			
+			docSysDebugLog("verReposAutoCommit 失败", rt);
+		}
+		
+		return revision;
+	}
+	
 	/********************************** Functions For Application Layer ****************************************/
 	protected String revertVirtualDocHistory(Repos repos, Long docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{	
@@ -4849,6 +4919,17 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	protected List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
+
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, isRealDoc, null))
+		{
+			System.out.println("svnGetHistory() svnUtil.Init Failed");
+			return null;
+		}
+		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
+	}
+	
 	protected List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
 		GITUtil gitUtil = new GITUtil();
 		if(false == gitUtil.Init(repos, isRealDoc, null))
@@ -4859,7 +4940,25 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryLogs(docPath, null, null, maxLogNum);
 	}
 	
-	protected List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
+	//Get History Detail
+	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, String entryPath, String commitId) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnGetHistoryDetail(repos, isRealDoc, entryPath, commitId);
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitGetHistoryDetail(repos, isRealDoc, entryPath, commitId);
+		}
+		return null;
+	}
+	
+	private List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, String entryPath, String commitId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, String docPath, String commitId) {
 
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, isRealDoc, null))
@@ -4867,7 +4966,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("svnGetHistory() svnUtil.Init Failed");
 			return null;
 		}
-		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
+		return svnUtil.getHistoryDetail(docPath, commitId);
 	}
 	
 	protected String verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 

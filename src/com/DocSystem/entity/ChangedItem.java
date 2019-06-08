@@ -1,13 +1,12 @@
 package com.DocSystem.entity;
 
-public class ChangedItem {
-
+public class ChangedItem 
+{
+	private Integer changeType;
+    private Integer entryType;
 	private String path;
-    private String kind;
-	private String changeType;
     private String copyPath;
-    private long copyRevision;
-    
+    private String copyRevision;
     
     public String getPath() {
         return path;
@@ -17,20 +16,20 @@ public class ChangedItem {
         this.path = path == null ? null : path.trim();
     }
     
-    public String getKind() {
-        return kind;
+    public Integer getEntryType() {
+        return entryType;
     }
 
-    public void setKind(String kind) {
-        this.kind = kind == null ? null : kind.trim();
+    public void setEntryType(Integer entryType) {
+        this.entryType = entryType;
     }
     
-    public String getChangeType() {
+    public Integer getChangeType() {
         return changeType;
     }
 
-    public void setChangeType(String changeType) {
-        this.changeType = changeType == null ? null : changeType.trim();
+    public void setChangeType(Integer changeType) {
+        this.changeType = changeType;
     }
     
     public String getCoypPath() {
@@ -41,11 +40,11 @@ public class ChangedItem {
         this.copyPath = copyPath == null ? null : copyPath.trim();
     }
     
-    public long getCopyRevison() {
+    public String getCopyRevison() {
         return copyRevision;
     }
 
-    public void setCopyRevision(long copyRevision) {
+    public void setCopyRevision(String copyRevision) {
         this.copyRevision = copyRevision;
     }
 }
