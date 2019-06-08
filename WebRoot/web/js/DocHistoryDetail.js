@@ -4,25 +4,23 @@
 		var commitId;
 		var reposId;
 		var docId;
-		var pid;
 		var parentPath = "";
 		var docName = "";
 		var docPath = "";
 		var historyType = 0;
 		
-		function historyDetailsPageInit(Input_commitId, Input_vid, Input_docId, Input_pid, Input_path, Input_name, Input_historyType)
+		function historyDetailsPageInit(Input_commitId, Input_vid, Input_docId, Input_path, Input_name, Input_historyType)
 		{
-			console.log("historyDetailsPageInit commitId:" + Input_commitId + " vid:" + Input_vid + " docId:" + Input_docId + " pid:" + Input_pid + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
+			console.log("historyDetailsPageInit commitId:" + Input_commitId + " reposId:" + Input_vid + " docId:" + Input_docId + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
 			commitId = Input_commitId;
 			reposId = Input_vid;
 			docId = Input_docId;
-			pid = Input_pid;
 			parentPath = Input_path;	
 			docName = Input_name;
 			docPath = Input_path + Input_name;
 			historyType = Input_historyType;
 			
-			showHistoryDetailList(commitId, reposId, docId, pid, parentPath, docName, historyType);	
+			showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType);	
 		}
 			
 		function downloadHistory(index)
@@ -118,17 +116,16 @@
 			}
 		}
 	
-		function showHistoryDetailList(reposId, docId, pid, parentPath, docName, historyType)
+		function showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType)
 		{
-	   		console.log("showHistoryDetailList  reposId:" + reposId + " docId:"+ docId + " pid:" + pid + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+	   		console.log("showHistoryDetailList  commitId:"  + commitId + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 	   		$.ajax({
 	             url : "/DocSystem/Doc/getHistoryDetail.do",
 	             type : "post",
 	             dataType : "json",
 	             data : {
 	            	 commitId: commitId,
-	                 reposId : reposId, 
-	                 pid: pid,
+	                 reposId : reposId,
 	                 docId: docId,
 	            	 path : parentPath,
 	             	 name: docName,

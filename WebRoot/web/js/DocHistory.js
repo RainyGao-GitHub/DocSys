@@ -39,7 +39,7 @@
 				foot: false,
 				big: true,
 				callback: function(){
-					DocHistoryDetail.historyDetailsPageInit(gReposId, docId, pid, parentPath, docName, historyType);
+					DocHistoryDetail.historyDetailsPageInit(commitId, gReposId, docId, parentPath, docName, historyType);
 				},
 			});		
 		}
