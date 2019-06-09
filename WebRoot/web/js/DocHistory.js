@@ -113,7 +113,7 @@
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
-	        		  	console.log(ret.data);
+	        		  	//console.log(ret.data);
 	        		  	showList(ret.data);
 	                }
 	                else
@@ -128,7 +128,7 @@
 	
 			//根据获取到的列表数据，绘制列表
 			function showList(data){
-				console.log(data);
+				//console.log(data);
 				var c = $("#historyLogs").children();
 				$(c).remove();
 				if(data.length==0){
