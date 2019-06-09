@@ -171,13 +171,13 @@
 					changeItems.push(d);
 					
 					var changeType = getChangeType(d);
-					var docPath = d.path;
-					var copyPath = d.copyPath;
+					var entryPath = d.entryPath;
+					var srcEntryPath = d.srcEntryPath;
 
-					var changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+docPath+"</a>";
+					var changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+entryPath+"</a>";
 					if(d.changeType == 4 || d.changeType == 5)
 					{
-						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+docPath+ " from " + copyPath + "</a>";
+						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+entryPath+ " from " + srcEntryPath + "</a>";
 					}
 
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
@@ -191,7 +191,7 @@
 						+"	</i>"
 						+"	<i class='cell changeContent w30'>"
 						+"		<span class='name breakAll'>"
-						+"			<a id='changeContent"+i+"' href='javascript:void(0)'>"+changeContent+"</a>"
+						+ 			changeContent
 						+"		</span>"
 						+"	</i>"
 						+"	<i class='cell operation w10'>"
