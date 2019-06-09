@@ -334,14 +334,10 @@ public class SVNUtil  extends BaseController{
                 	//obtains a next SVNLogEntryPath
                     SVNLogEntryPath svnLogEntryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
                     String nodePath = svnLogEntryPath.getPath();
-                    String parentPath = getParentPathFromEntryPath(nodePath);
-                    String docName = getDocNameFromEntryPath(nodePath);
                     
                     Integer entryType = convertKindToEntryType(svnLogEntryPath.getKind());
                     Integer changeType = getChangeType(svnLogEntryPath);
                     String srcEntryPath = svnLogEntryPath.getCopyPath();
-                    String srcParentPath = null;
-                    String srcDocName = null;
                     
                     if(srcEntryPath == null)
                     {
@@ -350,8 +346,6 @@ public class SVNUtil  extends BaseController{
                     else
                     {
                     	System.out.println(" " + svnLogEntryPath.getType() + "	" + entryPath + " from " + srcEntryPath + " at revision " + commitId);                
-                    	srcParentPath = getParentPathFromEntryPath(srcEntryPath);
-                        srcDocName = getDocNameFromEntryPath(srcEntryPath);
                     }
                     
                     //Add to changedItemList
@@ -359,12 +353,8 @@ public class SVNUtil  extends BaseController{
                     changedItem.setChangeType(changeType);	
                     changedItem.setEntryType(entryType);
                     changedItem.setEntryPath(nodePath);
-                    changedItem.setPath(parentPath);
-                    changedItem.setName(docName);
                     
                     changedItem.setSrcEntryPath(srcEntryPath);
-                    changedItem.setPath(srcParentPath);
-                    changedItem.setName(srcDocName);
                     
                     changedItem.setCommitId(commitId);
                     
