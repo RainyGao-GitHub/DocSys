@@ -9,6 +9,8 @@
 		var docPath = "";
 		var historyType = 0;
 		
+		var changeItems = [];
+		
 		function historyDetailsPageInit(Input_commitId, Input_vid, Input_docId, Input_path, Input_name, Input_historyType)
 		{
 			console.log("historyDetailsPageInit commitId:" + Input_commitId + " reposId:" + Input_vid + " docId:" + Input_docId + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
@@ -24,10 +26,14 @@
 		}
 			
 		function downloadHistory(index)
-		{
-			//TODO: 如果当前是目录的话，需要提示是否只下载修改过的文件，否则下载该版本的整个目录
-		   	
-			var commitId = $("#commitId" + index).text();
+		{			
+			var changeItem = changeItems[index];
+			
+			var docId = changeItem.docId;
+			var pid = changeItem.pid;
+			var parentPath = changeItem.path;
+			var docName = changeItem.name;
+
 		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 		   	
 		   	var encParentPath = encodeURI(parentPath);
@@ -37,9 +43,13 @@
 		
 		function revertHistory(index)
 		{
-			//TODO: 如果当前是目录的话，需要提示是否只还原修改过的文件，否则将把目录下所有的文件都还原到该版本
-		   	
-			var commitId = $("#commitId" + index).text();
+			var changeItem = changeItems[index];
+			
+			var docId = changeItem.docId;
+			var pid = changeItem.pid;
+			var parentPath = changeItem.path;
+			var docName = changeItem.name;
+			
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 	
 		   	var encParentPath = encodeURI(parentPath);
@@ -150,7 +160,7 @@
 	
 			//根据获取到的列表数据，绘制列表
 			function showList(data){
-				console.log(data);
+				//console.log(data);
 				var c = $("#historyDetails").children();
 				$(c).remove();
 				if(data.length==0){
@@ -159,20 +169,30 @@
 				
 				for(var i=0;i<data.length;i++){
 					var d = data[i];
-					var changeType = d.changeType;
-					var docPath = d.path;
+					changeItems.push(d);
 					
+					var changeType = getChangeType(d);
+					var docPath = d.path;
+					var copyPath = d.copyPath;
+
+					var changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+docPath+"</a>";
+					if(d.changeType == 4 || d.changeType == 5)
+					{
+						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+docPath+ " from " + copyPath + "</a>";
+					}
+
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
 					var opBtn2 = "		<a href='javascript:void(0)' onclick='revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
+					
 					var se = "<li>" 
 						+"	<i class='cell changeType w10'>"
 						+"		<span class='name  breakAll'>"
 						+"			<a id='changeType"+i+"' href='javascript:void(0)'>"+changeType+"</a>"
 						+"		</span>"
 						+"	</i>"
-						+"	<i class='cell docPath w30'>"
+						+"	<i class='cell changeContent w30'>"
 						+"		<span class='name breakAll'>"
-						+"			<a id='docPath"+i+"' href='javascript:void(0)'>"+docPath+"</a>"
+						+"			<a id='changeContent"+i+"' href='javascript:void(0)'>"+changeContent+"</a>"
 						+"		</span>"
 						+"	</i>"
 						+"	<i class='cell operation w10'>"
@@ -183,6 +203,24 @@
 					
 					$("#historyDetails").append(se);
 				}
+			}
+			
+			function getChangeType(changeItem)
+			{
+				switch(changeItem.changeType)
+				{
+				case 1:
+					return "增加";
+				case 2:
+					return "删除";
+				case 3:
+					return "修改";
+				case 4:
+					return "移动";
+				case 5:
+					return "复制";
+				}
+				return "未知操作";
 			}
 		}
 		

@@ -334,27 +334,40 @@ public class SVNUtil  extends BaseController{
                 	//obtains a next SVNLogEntryPath
                     SVNLogEntryPath svnLogEntryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
                     String nodePath = svnLogEntryPath.getPath();
+                    String parentPath = getParentPathFromEntryPath(nodePath);
+                    String docName = getDocNameFromEntryPath(nodePath);
+                    
                     Integer entryType = convertKindToEntryType(svnLogEntryPath.getKind());
                     Integer changeType = getChangeType(svnLogEntryPath);
-                    String copyPath = svnLogEntryPath.getCopyPath();
-                    String copyRevision = "" + svnLogEntryPath.getCopyRevision();
+                    String srcEntryPath = svnLogEntryPath.getCopyPath();
+                    String srcParentPath = null;
+                    String srcDocName = null;
                     
-                    if(copyPath == null)
+                    if(srcEntryPath == null)
                     {
-                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath);                                     	
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + entryPath);                                     	
                     }
                     else
                     {
-                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath + " from " + copyPath + " at revision " + copyRevision);                
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + entryPath + " from " + srcEntryPath + " at revision " + commitId);                
+                    	srcParentPath = getParentPathFromEntryPath(srcEntryPath);
+                        srcDocName = getDocNameFromEntryPath(srcEntryPath);
                     }
                     
                     //Add to changedItemList
                     ChangedItem changedItem = new ChangedItem();
                     changedItem.setChangeType(changeType);	
                     changedItem.setEntryType(entryType);
-                    changedItem.setPath(nodePath);
-                    changedItem.setCopyPath(copyPath);
-                    changedItem.setCopyRevision(copyRevision);
+                    changedItem.setEntryPath(nodePath);
+                    changedItem.setPath(parentPath);
+                    changedItem.setName(docName);
+                    
+                    changedItem.setSrcEntryPath(srcEntryPath);
+                    changedItem.setPath(srcParentPath);
+                    changedItem.setName(srcDocName);
+                    
+                    changedItem.setCommitId(commitId);
+                    
                     changedItemList.add(changedItem);
                 }
                 return changedItemList;

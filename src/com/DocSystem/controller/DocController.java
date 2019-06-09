@@ -1242,11 +1242,12 @@ public class DocController extends BaseController{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		
 		//Set targetName
+		String entryPath = path + name;
 		String entryName = name;
 		String targetName = null;
 		if(isRealDoc)
 		{	
-			if(name.isEmpty())
+			if(entryPath.isEmpty())
 			{
 				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
 				targetName = repos.getName() + "_" + commitId;	
@@ -1258,14 +1259,14 @@ public class DocController extends BaseController{
 		}
 		else
 		{	
-			if(name.isEmpty())
+			if(entryPath.isEmpty())
 			{
 				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
 				targetName = repos.getName() + "_AllNotes_" + commitId;	
 			}
 			else
 			{
-				targetName = name + "_Node_" + commitId;
+				targetName = name + "_Note_" + commitId;
 			}
 			
 			Doc doc = new Doc();
