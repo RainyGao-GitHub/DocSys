@@ -260,23 +260,30 @@ public class SVNUtil  extends BaseController{
             return null;
         }
         
+        long oldestRevision = 0;
+        
         for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
             /*
              * gets a next SVNLogEntry
              */
             SVNLogEntry logEntry = (SVNLogEntry) entries.next();
             long revision = logEntry.getRevision();
+            if(oldestRevision == 0)
+            {
+            	oldestRevision = 0;
+            }
+            
             String commitId = "" + revision;
             String commitUser = logEntry.getAuthor(); //提交者
             String commitMessage= logEntry.getMessage();
             long commitTime = logEntry.getDate().getTime();            
             
-            //System.out.println("revision:"+revision);
-            //System.out.println("commitId:"+commitId);
-            //System.out.println("commitUser:"+commitUser);
-            //System.out.println("commitMessage:"+commitMessage);
-            //System.out.println("commitName:"+commitUser);
-            //System.out.println("commitTime:"+commitTime);
+            System.out.println("revision:"+revision);
+            System.out.println("commitId:"+commitId);
+            System.out.println("commitUser:"+commitUser);
+            System.out.println("commitMessage:"+commitMessage);
+            System.out.println("commitName:"+commitUser);
+            System.out.println("commitTime:"+commitTime);
             
             LogEntry log = new LogEntry();
             log.setRevision(revision);
@@ -287,6 +294,47 @@ public class SVNUtil  extends BaseController{
             
             logList.add(0,log);	//add to the top
         }
+        
+        //Try to get logEntry for deleted 
+        if(oldestRevision > 0)
+        {
+        	try {
+				logEntries = repository.log(targetPaths, null,0, oldestRevision-1, false, false);
+			} catch (SVNException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	
+            for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
+                /*
+                 * gets a next SVNLogEntry
+                 */
+                SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+                long revision = logEntry.getRevision();
+                
+                String commitId = "" + revision;
+                String commitUser = logEntry.getAuthor(); //提交者
+                String commitMessage= logEntry.getMessage();
+                long commitTime = logEntry.getDate().getTime();            
+                
+                System.out.println("revision:"+revision);
+                System.out.println("commitId:"+commitId);
+                System.out.println("commitUser:"+commitUser);
+                System.out.println("commitMessage:"+commitMessage);
+                System.out.println("commitName:"+commitUser);
+                System.out.println("commitTime:"+commitTime);
+                
+                LogEntry log = new LogEntry();
+                log.setRevision(revision);
+                log.setCommitId(commitId);
+                log.setCommitUser(commitUser);
+                log.setCommitMsg(commitMessage);
+                log.setCommitTime(commitTime);
+                
+                logList.add(log);	//add to the tail
+            }
+        }
+        
         return logList;
     }
 	
