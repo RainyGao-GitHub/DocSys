@@ -29,15 +29,15 @@
 		{			
 			var changeItem = changeItems[index];
 			
-			var docId = changeItem.docId;
-			var pid = changeItem.pid;
-			var parentPath = changeItem.path;
-			var docName = changeItem.name;
-
-		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+			var docId = "";
+			var pid = "";
+			var entryPath = changeItem.entryPath;
+			
+		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
 		   	
-		   	var encParentPath = encodeURI(parentPath);
-		   	var encDocName = encodeURI(docName);
+		   	var encParentPath = encodeURI(entryPath);
+		   	var encDocName = "";
+		  
 		   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
 		}
 		
@@ -45,15 +45,16 @@
 		{
 			var changeItem = changeItems[index];
 			
-			var docId = changeItem.docId;
-			var pid = changeItem.pid;
-			var parentPath = changeItem.path;
-			var docName = changeItem.name;
+			var changeItem = changeItems[index];
 			
-		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+			var docId = "";
+			var pid = "";
+			var entryPath = changeItem.entryPath;
+			
+		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " entryPath:"+ entryPath + " historyType:" + historyType);
 	
 		   	var encParentPath = encodeURI(parentPath);
-		   	var encDocName = encodeURI(docName);
+		   	var encDocName = "";
 		   	
 	   		$.ajax({
 	             url : "/DocSystem/Doc/revertDocHistory.do",

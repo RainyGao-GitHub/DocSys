@@ -1208,6 +1208,18 @@ public class DocController extends BaseController{
 		{
 			name = "";
 		}
+		
+		//To support user call the interface by entryPath
+		if(name.isEmpty())
+		{
+			if(!path.isEmpty())
+			{
+				String[] temp = new String[2]; 
+				seperatePathAndName(path, temp);
+				path = temp[0];
+				name = temp[1];			
+			}
+		}
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1293,6 +1305,44 @@ public class DocController extends BaseController{
 		
 		//delete the history file or dir
 		delFileOrDir(userTmpDir+targetName);
+	}
+
+	private void seperatePathAndName(String entryPath, String [] result) {
+		String [] paths = entryPath.split("/");
+		
+		int deepth = paths.length;
+		System.out.println("seperatePathAndName() deepth:" + deepth); 
+		
+		String  path = "";
+		String name = "";
+		
+		//Get Name and pathEndPos
+		int pathEndPos = 0;
+		for(int i=deepth-1; i>=0; i--)
+		{
+			name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			pathEndPos = i;
+			break;
+		}
+		
+		//Get Path
+		for(int i=0; i<pathEndPos; i++)
+		{
+			String tempName = paths[i];
+			if(tempName.isEmpty())
+			{
+				continue;
+			}	
+			
+			path = path + tempName + "/";
+		}
+		
+		result[0] = path;
+		result[1] = name;
 	}
 
 	/**************** convert Doc To PDF ******************/
@@ -1707,7 +1757,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	/****************   revert Document History ******************/
+	/****************   get Document History Detail ******************/
 	@RequestMapping("/getHistoryDetail.do")
 	public void getHistoryDetail(String commitId,Integer reposId, Long docId, Long pid, String path, String name, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getHistoryDetail commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
@@ -1752,15 +1802,7 @@ public class DocController extends BaseController{
 			isRealDoc = false;
 		}
 
-		List<ChangedItem> changedItemList = null;
-		if(isRealDoc)
-		{
-			changedItemList = verReposGetHistoryDetail(repos, isRealDoc, path+name, commitId);
-		}
-		else
-		{
-			changedItemList = verReposGetHistoryDetail(repos, isRealDoc, path+name, commitId);
-		}
+		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, path+name, commitId);
 		
 		if(changedItemList == null)
 		{
@@ -1783,6 +1825,18 @@ public class DocController extends BaseController{
 		if(name == null)
 		{
 			name = "";
+		}
+		
+		//To support user call the interface by entryPath
+		if(name.isEmpty())
+		{
+			if(!path.isEmpty())
+			{
+				String[] temp = new String[2]; 
+				seperatePathAndName(path, temp);
+				path = temp[0];
+				name = temp[1];			
+			}
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1810,20 +1864,25 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		boolean isRealDoc = true;
-		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		if(historyType == null)
 		{
-			isRealDoc = false;
+			historyType = 0;	//0: For RealDoc 1/2: For VirtualDoc 
 		}
 
 		String ret = null;
-		if(isRealDoc)
+		switch(historyType)
 		{
-			ret = revertRealDocHistory(repos,docId,path,name,commitId,null, login_user.getName(), login_user, rt);
-		}
-		else
-		{
-			ret = revertVirtualDocHistory(repos,docId,path,name,commitId,null, login_user.getName(), login_user, rt);
+		case 0:	//RealDoc
+			ret = revertDocHistory(repos, true, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
+			break;
+		case 1: // vDocPath not converted
+			path = "";
+			name = getVDocName();
+			ret = revertDocHistory(repos, false, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
+			break;
+		case 2:	// vDocPath already converted 
+			ret = revertDocHistory(repos, false, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
+			break;
 		}
 		
 		if(ret == null)

@@ -1573,7 +1573,7 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 
-	protected String revertRealDocHistory(Repos repos, Long docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
+	protected String revertDocHistory(Repos repos, boolean isRealDoc, Long docId, String parentPath, String docName, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) {
 		System.out.println("revertRealDocHistory commitId:" + commitId + " reposId:" + repos.getId() + " docId:" + docId + " docPath:" + parentPath+docName);
 		
 		Integer reposId = repos.getId();
@@ -1604,7 +1604,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + parentPath;
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, true, parentPath, docName, localParentPath, docName, commitId, true); 
+		List<Doc> successDocList = verReposCheckOut(repos, isRealDoc, parentPath, docName, localParentPath, docName, commitId, true); 
 		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
@@ -1619,18 +1619,21 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "Revert " + parentPath+docName + " to revision:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, true, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
+		String revision = verReposAutoCommit(repos, isRealDoc, parentPath, docName, localRootPath, commitMsg,commitUser,true,null);
 		
-		//Force update docInfo
-		printObject("revertRealDocHistory() successDocList:", successDocList);
-		for(int i=0; i< successDocList.size(); i++)
+		if(isRealDoc)
 		{
-			Doc successDoc = successDocList.get(i);
-			successDoc.setRevision(revision);
-			successDoc.setCreator(login_user.getId());
-			successDoc.setLatestEditor(login_user.getId());
-			dbUpdateDoc(repos, successDoc, true);
-		}		
+			//Force update docInfo
+			printObject("revertRealDocHistory() successDocList:", successDocList);
+			for(int i=0; i< successDocList.size(); i++)
+			{
+				Doc successDoc = successDocList.get(i);
+				successDoc.setRevision(revision);
+				successDoc.setCreator(login_user.getId());
+				successDoc.setLatestEditor(login_user.getId());
+				dbUpdateDoc(repos, successDoc, true);
+			}		
+		}
 		
 		unlockDoc(doc,login_user,docLock);
 		if(revision == null)
@@ -4939,6 +4942,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return gitUtil.getHistoryLogs(docPath, null, null, maxLogNum);
 	}
+
 	
 	//Get History Detail
 	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, String entryPath, String commitId) {
@@ -4953,11 +4957,6 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, String entryPath, String commitId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, String docPath, String commitId) {
 
 		SVNUtil svnUtil = new SVNUtil();
@@ -4967,6 +4966,16 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		return svnUtil.getHistoryDetail(docPath, commitId);
+	}
+	
+	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, String docPath, String commitId) {
+		GITUtil gitUtil = new GITUtil();
+		if(false == gitUtil.Init(repos, isRealDoc, null))
+		{
+			System.out.println("gitGetHistory() gitUtil.Init Failed");
+			return null;
+		}
+		return gitUtil.getHistoryDetail(docPath, commitId);
 	}
 	
 	protected String verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
