@@ -38,13 +38,11 @@
 		   	var encParentPath = encodeURI(entryPath);
 		   	var encDocName = "";
 		  
-		   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
+		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
 		}
 		
 		function revertHistory(index)
 		{
-			var changeItem = changeItems[index];
-			
 			var changeItem = changeItems[index];
 			
 			var docId = "";

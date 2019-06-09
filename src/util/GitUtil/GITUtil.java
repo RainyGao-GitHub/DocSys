@@ -28,6 +28,7 @@ import org.tmatesoft.svn.core.SVNException;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
+import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
@@ -121,12 +122,6 @@ public class GITUtil  extends BaseController{
         
         return wcDir;
 	}
-	
-	//getHistoryDetail filePath: remote File Path under repositoryURL
-    public LogEntry getHistoryDetail(String filePath, String revision) 
-    {
-    	return null;
-    }
     
     public String getLatestRevision() 
 	{
@@ -1242,5 +1237,10 @@ public class GITUtil  extends BaseController{
         		delFileOrDir(wcDir + action.getParentPath() + action.getEntryName());
     		}
     	}
+	}
+
+	public List<ChangedItem> getHistoryDetail(String docPath, String commitId) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

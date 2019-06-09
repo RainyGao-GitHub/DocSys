@@ -1196,9 +1196,9 @@ public class DocController extends BaseController{
 	}
 
 	/**************** download History Doc  ******************/
-	@RequestMapping("/getHistoryDoc.do")
-	public void getHistoryDoc(String commitId,Integer reposId, String path, String name, Integer historyType, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
-		System.out.println("getHistoryDoc commitId: " + commitId + " reposId:" + reposId + " historyType:" + historyType +" path:" + path + " name:" + name);
+	@RequestMapping("/downloadHistoryDoc.do")
+	public void downloadHistoryDoc(String commitId,Integer reposId, String path, String name, Integer historyType, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+		System.out.println("downloadHistoryDoc commitId: " + commitId + " reposId:" + reposId + " historyType:" + historyType +" path:" + path + " name:" + name);
 
 		if(path == null)
 		{
@@ -1207,18 +1207,6 @@ public class DocController extends BaseController{
 		if(name == null)
 		{
 			name = "";
-		}
-		
-		//To support user call the interface by entryPath
-		if(name.isEmpty())
-		{
-			if(!path.isEmpty())
-			{
-				String[] temp = new String[2]; 
-				seperatePathAndName(path, temp);
-				path = temp[0];
-				name = temp[1];			
-			}
 		}
 
 		ReturnAjax rt = new ReturnAjax();
@@ -1242,12 +1230,23 @@ public class DocController extends BaseController{
 		//URL was encode by EncodeURI, so just decode it here
 		name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
 		path = new String(path.getBytes("ISO8859-1"),"UTF-8");  
-		System.out.println("getHistoryDoc() name:" + name + " path:" + path);
+		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
 		
-		boolean isRealDoc = true;
-		if(historyType != null && historyType == 1)
+		//To support user call the interface by entryPath
+		if(name.isEmpty())
 		{
-			isRealDoc = false;
+			if(!path.isEmpty())
+			{
+				String[] temp = new String[2]; 
+				seperatePathAndName(path, temp);
+				path = temp[0];
+				name = temp[1];			
+			}
+		}
+		
+		if(historyType == null)
+		{
+			historyType = 0;
 		}
 		
 		//userTmpDir will be used to tmp store the history doc 
@@ -1255,10 +1254,13 @@ public class DocController extends BaseController{
 		
 		//Set targetName
 		String entryPath = path + name;
-		String entryName = name;
 		String targetName = null;
-		if(isRealDoc)
-		{	
+		
+		boolean isRealDoc = true;
+		switch(historyType)
+		{
+		case 0:
+			isRealDoc = true;
 			if(entryPath.isEmpty())
 			{
 				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
@@ -1268,12 +1270,11 @@ public class DocController extends BaseController{
 			{
 				targetName = name + "_" + commitId;
 			}
-		}
-		else
-		{	
+			break;
+		case 1:
+			isRealDoc = false;
 			if(entryPath.isEmpty())
 			{
-				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
 				targetName = repos.getName() + "_AllNotes_" + commitId;	
 			}
 			else
@@ -1288,15 +1289,17 @@ public class DocController extends BaseController{
 			doc.setDocId(docId);
 			doc.setPath(path);
 			doc.setName(name);
-			entryName = getVDocName(doc);
+			
+			name = getVDocName(doc);
 			path = "";
+			break;
 		}
 		
 		//checkout the entry to local
-		if(verReposCheckOut(repos, isRealDoc, path, entryName, userTmpDir, targetName, commitId, true) == null)
+		if(verReposCheckOut(repos, isRealDoc, path, name, userTmpDir, targetName, commitId, true) == null)
 		{
 			docSysErrorLog("verReposCheckOut Failed!", rt);
-			docSysDebugLog("verReposCheckOut Failed path:" + path + " entryName:" + entryName + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+			docSysDebugLog("verReposCheckOut Failed path:" + path + " name:" + name + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 			writeJson(rt, response);	
 			return;
 		}
@@ -1876,12 +1879,12 @@ public class DocController extends BaseController{
 			ret = revertDocHistory(repos, true, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
 			break;
 		case 1: // vDocPath not converted
-			path = "";
-			name = getVDocName();
-			ret = revertDocHistory(repos, false, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
-			break;
-		case 2:	// vDocPath already converted 
-			ret = revertDocHistory(repos, false, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
+			Doc doc = new Doc();
+			doc.setVid(reposId);
+			doc.setDocId(docId);
+			doc.setName(name);
+			String vDocName = getVDocName(doc);
+			ret = revertDocHistory(repos, false, docId,"",vDocName,commitId,null, login_user.getName(), login_user, rt);			
 			break;
 		}
 		
