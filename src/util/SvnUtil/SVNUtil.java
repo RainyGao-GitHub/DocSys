@@ -191,6 +191,7 @@ public class SVNUtil  extends BaseController{
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
  
+	        //不获取changeItems，不获取copy之前的历史
 			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
 
 	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
@@ -253,7 +254,7 @@ public class SVNUtil  extends BaseController{
         			startRevision = endRevision - maxLogNum;
         		}
         	}
-            logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, true);
+            logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, false);
         } catch (SVNException svne) {
             System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
             return null;
@@ -311,7 +312,7 @@ public class SVNUtil  extends BaseController{
         String[] targetPaths = new String[]{entryPath};
         Collection<SVNLogEntry> logEntries = null;
         try {
-            logEntries = repository.log(targetPaths, null,revision, revision, true, true);
+            logEntries = repository.log(targetPaths, null,revision, revision, true, false);
         } catch (SVNException svne) {
             System.out.println("getHistoryDetail() 获取日志异常：" + svne.getMessage());
             return null;
