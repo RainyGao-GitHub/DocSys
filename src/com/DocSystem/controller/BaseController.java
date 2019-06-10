@@ -2413,6 +2413,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(localEntry.getType() == 0)
 			{
+				System.out.println("getLocalChangeType() 本地文件不存在:"+localEntry.getName());				
 				return 0;	//no change
 			}
 			System.out.println("getLocalChangeType() 本地文件新增:"+localEntry.getName());
@@ -2446,6 +2447,7 @@ public class BaseController  extends BaseFunction{
 			return 4;
 		}
 		
+		System.out.println("getLocalChangeType() 本地文件文件类型异常:"+localEntry.getName());		
 		return 0;
 	}
 
