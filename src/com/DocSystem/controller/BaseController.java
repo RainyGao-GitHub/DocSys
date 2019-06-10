@@ -80,11 +80,17 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Add doc for SyncUp
-		Doc doc = new Doc();
-		doc.setDocId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);			
-		insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+		User autoSync = new User();
+		autoSync.setId(0);
+		autoSync.setName("AutoSync");
+		if(false == checkDocLocked(repos.getId(), parentPath, docName, autoSync, false))
+		{
+			Doc doc = new Doc();
+			doc.setDocId(docId);
+			doc.setPath(parentPath);
+			doc.setName(docName);
+			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+		}
 		
 		return docList;
 	}
