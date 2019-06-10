@@ -117,7 +117,7 @@ public class SVNUtil {
         String[] targetPaths = new String[]{filePath};
         Collection logEntries = null;
         try {
-            logEntries = repository.log(targetPaths, null,startRevision, endRevision, true, true);
+            logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, false);
 
         } catch (SVNException svne) {
             System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
@@ -149,39 +149,39 @@ public class SVNUtil {
             //System.out.println("log message: " + logEntry.getMessage());
             log.setCommitMsg(logEntry.getMessage());
             
-            //displaying all paths that were changed in that revision; changed path information is represented by SVNLogEntryPath.
-            if(logEntry.getChangedPaths().size() > 0) 
-            {
-            	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
-                
-            	//System.out.println();
-                //System.out.println("changed Entries:");
-                //keys are changed paths
-                Set changedPathsSet = logEntry.getChangedPaths().keySet();
-                for (Iterator changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
-                {
-                    
-                	//obtains a next SVNLogEntryPath
-                    SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
-                    String nodePath = entryPath.getPath();
-                    String nodeKind = entryPath.getKind().toString();
-                    String changeType = "" + entryPath.getType();
-                    String copyPath = entryPath.getCopyPath();
-                    long copyRevision = entryPath.getCopyRevision();
-                    
-                    //System.out.println(" " + changeType + "	" + nodePath + ((copyPath != null) ? " (from " + copyPath + " revision " + copyRevision + ")" : ""));                 
-
-                    //Add to changedItemList
-                    ChangedItem changedItem = new ChangedItem();
-                    changedItem.setChangeType(changeType);	
-                    changedItem.setPath(nodePath);
-                    changedItem.setKind(nodeKind);
-                    changedItem.setCopyPath(copyPath);
-                    changedItem.setCopyRevision(copyRevision);
-                    changedItemList.add(changedItem);
-                }
-                log.setChangedItems(changedItemList);
-            }
+//            //displaying all paths that were changed in that revision; changed path information is represented by SVNLogEntryPath.
+//            if(logEntry.getChangedPaths().size() > 0) 
+//            {
+//            	List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
+//                
+//            	//System.out.println();
+//                //System.out.println("changed Entries:");
+//                //keys are changed paths
+//                Set changedPathsSet = logEntry.getChangedPaths().keySet();
+//                for (Iterator changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) 
+//                {
+//                    
+//                	//obtains a next SVNLogEntryPath
+//                    SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
+//                    String nodePath = entryPath.getPath();
+//                    String nodeKind = entryPath.getKind().toString();
+//                    String changeType = "" + entryPath.getType();
+//                    String copyPath = entryPath.getCopyPath();
+//                    long copyRevision = entryPath.getCopyRevision();
+//                    
+//                    //System.out.println(" " + changeType + "	" + nodePath + ((copyPath != null) ? " (from " + copyPath + " revision " + copyRevision + ")" : ""));                 
+//
+//                    //Add to changedItemList
+//                    ChangedItem changedItem = new ChangedItem();
+//                    changedItem.setChangeType(changeType);	
+//                    changedItem.setPath(nodePath);
+//                    changedItem.setKind(nodeKind);
+//                    changedItem.setCopyPath(copyPath);
+//                    changedItem.setCopyRevision(copyRevision);
+//                    changedItemList.add(changedItem);
+//                }
+//                log.setChangedItems(changedItemList);
+//            }
             logList.add(0,log);	//add to the top
         }
         return logList;
