@@ -1587,7 +1587,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+		Doc doc = dbGetDoc(repos, docId, pid, path, name, true);
 		if(doc == null)
 		{
 			docSysErrorLog("文件 " + path+name + " 不存在！", rt);
