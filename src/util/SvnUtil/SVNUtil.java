@@ -251,8 +251,8 @@ public class SVNUtil  extends BaseController{
     }
 	
 	private List<LogEntry> getLogEntryList(String entryPath, long startRevision, long endRevision, int maxLogNum) {
-		
-		List<LogEntry> logList = new ArrayList<LogEntry>();
+		System.out.println("getLogEntryList() entryPath:" + entryPath + " startRevision:" + startRevision + " endRevision:" + endRevision + " maxLogNum:" + maxLogNum);
+        List<LogEntry> logList = new ArrayList<LogEntry>();
         
 		String[] targetPaths = new String[]{entryPath};
 		
