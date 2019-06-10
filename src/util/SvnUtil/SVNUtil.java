@@ -194,20 +194,22 @@ public class SVNUtil  extends BaseController{
             doc.setType(1);
             doc.setRevision(strRevision);
 	    	
-            //Get commitUser and commitTime
-	        String[] targetPaths = new String[]{filePath};
-	        Collection<SVNLogEntry> logEntries = null;
- 			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
-	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
-	        {
-	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-	            String commitUser = logEntry.getAuthor(); //提交者
-	            long commitTime = logEntry.getDate().getTime();
-	            
-	            doc.setLatestEditorName(commitUser);
-	            doc.setLatestEditTime(commitTime);
-	            break;
-	        }
+            //获取commitUser和commitTime的实际意义值得怀疑
+            //如用于显示，显然不需要那么实时
+//            //Get commitUser and commitTime
+//	        String[] targetPaths = new String[]{filePath};
+//	        Collection<SVNLogEntry> logEntries = null;
+// 			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
+//	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
+//	        {
+//	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+//	            String commitUser = logEntry.getAuthor(); //提交者
+//	            long commitTime = logEntry.getDate().getTime();
+//	            
+//	            doc.setLatestEditorName(commitUser);
+//	            doc.setLatestEditTime(commitTime);
+//	            break;
+//	        }
 	        return doc;       
 		} catch (SVNException e) {
 			// TODO Auto-generated catch block

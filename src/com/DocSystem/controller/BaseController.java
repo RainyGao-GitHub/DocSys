@@ -2345,7 +2345,7 @@ public class BaseController  extends BaseFunction{
 		switch(remoteChangeType)
 		{
 		case 1:		//Remote Added
-			System.out.println("syncUpRemoteChange_FS() remote Added: " + doc.getPath()+doc.getName());	
+			System.out.println("syncUpRemoteChange_FS() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
 			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
