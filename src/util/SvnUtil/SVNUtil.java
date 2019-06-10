@@ -226,12 +226,8 @@ public class SVNUtil  extends BaseController{
         	return null;
     	}
     	
-    	List<LogEntry> logList = new ArrayList<LogEntry>();
-        
-    	/*
-         * Gets the latest revision number of the repository
-         */
-        if(endRevision < 0)
+    	//获取startRevision and endRevision
+    	if(endRevision < 0)
     	{
         	try {
 	    	    endRevision = repository.getLatestRevision();
@@ -240,23 +236,31 @@ public class SVNUtil  extends BaseController{
 	            return null;
 	        }
     	}
+        
+    	if(maxLogNum > 0)
+    	{
+    		if((endRevision - startRevision) > maxLogNum)
+    		{
+    			startRevision = endRevision - maxLogNum;
+    		}
+    	}
 
-        /*
-         * Get History Info
-         */
-        String[] targetPaths = new String[]{entryPath};
+    	//Get logList
+    	List<LogEntry> logList = getLogEntryList(entryPath, startRevision, endRevision, maxLogNum);
+        return logList;
+    }
+	
+	private List<LogEntry> getLogEntryList(String entryPath, long startRevision, long endRevision, int maxLogNum) {
+		
+		List<LogEntry> logList = new ArrayList<LogEntry>();
+        
+		String[] targetPaths = new String[]{entryPath};
+		
         Collection<SVNLogEntry> logEntries = null;
         try {
-        	if(maxLogNum > 0)
-        	{
-        		if((endRevision - startRevision) > maxLogNum)
-        		{
-        			startRevision = endRevision - maxLogNum;
-        		}
-        	}
             logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, false);
         } catch (SVNException svne) {
-            System.out.println("error while collecting log information for '" + repositoryURL + "': " + svne.getMessage());
+            System.out.println("getLogEntryList() repository.log() 异常: " + svne.getMessage());
             return null;
         }
         
@@ -295,49 +299,22 @@ public class SVNUtil  extends BaseController{
             logList.add(0,log);	//add to the top
         }
         
+        int nextMaxLogNum = maxLogNum - logList.size();
+        if(nextMaxLogNum <= 0)
+        {
+        	return logList;
+        }
+        
         //Try to get logEntry for deleted 
         if(oldestRevision > 0)
         {
-        	try {
-				logEntries = repository.log(targetPaths, null,0, oldestRevision-1, false, false);
-			} catch (SVNException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        	
-            for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
-                /*
-                 * gets a next SVNLogEntry
-                 */
-                SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-                long revision = logEntry.getRevision();
-                
-                String commitId = "" + revision;
-                String commitUser = logEntry.getAuthor(); //提交者
-                String commitMessage= logEntry.getMessage();
-                long commitTime = logEntry.getDate().getTime();            
-                
-                System.out.println("revision:"+revision);
-                System.out.println("commitId:"+commitId);
-                System.out.println("commitUser:"+commitUser);
-                System.out.println("commitMessage:"+commitMessage);
-                System.out.println("commitName:"+commitUser);
-                System.out.println("commitTime:"+commitTime);
-                
-                LogEntry log = new LogEntry();
-                log.setRevision(revision);
-                log.setCommitId(commitId);
-                log.setCommitUser(commitUser);
-                log.setCommitMsg(commitMessage);
-                log.setCommitTime(commitTime);
-                
-                logList.add(log);	//add to the tail
-            }
+        	long nextEndRevision = oldestRevision - 1;
+        	List<LogEntry> nextLogList = getLogEntryList(entryPath, startRevision, nextEndRevision, nextMaxLogNum);        	
+        	logList.addAll(nextLogList);
         }
-        
         return logList;
-    }
-	
+	}
+
 	public List<ChangedItem> getHistoryDetail(String entryPath, String commitId) 
 	{
     	System.out.println("getHistoryDetail entryPath:" + entryPath);	
