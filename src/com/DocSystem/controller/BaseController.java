@@ -2750,9 +2750,10 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean force) 
+	//autoDetect: 自动检测是新增还是更新
+	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean autoDetect) 
 	{
-		if(force == false)
+		if(autoDetect == false)
 		{
 			if(reposService.updateDoc(doc) == 0)
 			{
@@ -2761,7 +2762,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}	
 		
-		//强制更新
+		//自动检测
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
 		qDoc.setPath(doc.getPath());
@@ -2809,23 +2810,27 @@ public class BaseController  extends BaseFunction{
 		int localChangeType = getLocalChangeType(dbDoc, localEntry);
 		switch(localChangeType)
 		{
+		case 0:	//no change
+			return true;
 		case 1:	//localAdded
 			return dbAddDoc(repos, doc, true);
 		case 2: //local Type Changed
 			dbDeleteDoc(dbDoc, true);
 			return  dbAddDoc(repos, doc, true);
+		case 3:	//local modified
+			doc.setId(dbDoc.getId());
+			doc.setSize(localEntry.getSize());
+			doc.setLatestEditTime(localEntry.getLatestEditTime());
+			if(reposService.updateDoc(doc) == 0)
+			{
+				return false;
+			}		
+			return true;
 		case 4:
 			return dbDeleteDoc(doc, true);
 		}
 		
-		//0 / 3
-		doc.setSize(localEntry.getSize());
-		doc.setLatestEditTime(localEntry.getLatestEditTime());
-		if(reposService.updateDoc(doc) == 0)
-		{
-			return false;
-		}		
-		return true;
+		return false;
 	}
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, boolean deleteSubDocs, String commitMsg, String commitUser) {
