@@ -187,28 +187,28 @@ public class SVNUtil  extends BaseController{
 	            doc.setRevision(strRevision);
 	            return doc;
 			}
-	    		    	
+
+	    	//Doc is file
+	    	String strRevision = revision +"";
+            Doc doc = new Doc();
+            doc.setType(1);
+            doc.setRevision(strRevision);
+	    	
+            //Get commitUser and commitTime
 	        String[] targetPaths = new String[]{filePath};
 	        Collection<SVNLogEntry> logEntries = null;
- 
-	        //不获取changeItems，不获取copy之前的历史
-			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
-
+ 			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
 	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
 	        {
 	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-	            String strRevision = logEntry.getRevision() + "";
 	            String commitUser = logEntry.getAuthor(); //提交者
 	            long commitTime = logEntry.getDate().getTime();
 	            
-	            Doc doc = new Doc();
-	            doc.setType(1);
-	            doc.setRevision(strRevision);
 	            doc.setLatestEditorName(commitUser);
 	            doc.setLatestEditTime(commitTime);
-	            return doc;
+	            break;
 	        }
-	        return null;       
+	        return doc;       
 		} catch (SVNException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
