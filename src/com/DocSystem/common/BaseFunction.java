@@ -191,22 +191,19 @@ public class BaseFunction{
 	
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
-	protected void insertAddFileAction(List<CommitAction> actionList,
-			String parentPath, String entryName, String localPath, boolean isSubAction) {
+	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, String localRootPath, boolean isSubAction) {
     	CommitAction action = new CommitAction();
     	action.setAction(1);
-    	action.setEntryType(1);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setLocalRootPath(localPath);
+    	action.setDoc(doc);
+    	action.setLocalRootPath(localRootPath);
     	action.isSubAction = isSubAction;
     	actionList.add(action);
-		
 	}
     
-	protected void insertAddDirAction(List<CommitAction> actionList, String parentPath, String entryName, String localParentPath, boolean isSubAction) {
-		
-		File dir = new File(localParentPath, entryName);
+	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, String localRootPath, boolean isSubAction) 
+	{
+		String localParentPath = localRootPath + doc.getPath();
+		File dir = new File(localParentPath, doc.getName());
 		File[] tmp = dir.listFiles();
 		
 		//there is not subNodes under dir
@@ -214,9 +211,8 @@ public class BaseFunction{
 		{
 	    	CommitAction action = new CommitAction();
 	    	action.setAction(1);
-	    	action.setEntryType(2);
-	    	action.setParentPath(parentPath);
-	    	action.setEntryName(entryName);
+	    	action.setDoc(doc);
+	    	action.setLocalRootPath(localRootPath);
 	    	action.isSubAction = isSubAction;
 	    	action.setSubActionList(null);
 	    	actionList.add(action);
@@ -224,54 +220,57 @@ public class BaseFunction{
 		}
 		
 		//Build subActionList
+    	String subParentPath = doc.getPath() + doc.getName() + "/";
+    	if(doc.getDocId() == 0)
+    	{
+    		subParentPath = doc.getPath();
+    	}
+    	int subDocLevel = doc.getLevel() + 1;
+    	
 		List<CommitAction> subActionList = new ArrayList<CommitAction>();
 	    for(int i=0;i<tmp.length;i++)
 	    {
 	    	File localEntry = tmp[i];
-	    	String subParentPath = parentPath + entryName + "/";
-	    	String subLocalParentPath = localParentPath + entryName + "/";
-	    	String subEntryName = localEntry.getName();
+	    	int subDocType = localEntry.isFile()? 1: 2;
+	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType);
 	    	if(localEntry.isDirectory())
 	    	{	
-	    		insertAddDirAction(subActionList,subParentPath,subEntryName,subLocalParentPath,true);
+	    		insertAddDirAction(subActionList,subDoc,localRootPath,true);
 	    	}
 	    	else
 	    	{
-	    		insertAddFileAction(subActionList,subParentPath,subEntryName,subLocalParentPath,true);
+	    		insertAddFileAction(subActionList,subDoc,localRootPath,true);
 	    	}
 	 	}
 		
     	CommitAction action = new CommitAction();
     	action.setAction(1);
-    	action.setEntryType(2);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
+    	action.setDoc(doc);
+    	action.setLocalRootPath(localRootPath);
     	action.isSubAction = isSubAction;
     	action.setSubActionList(subActionList);
     	actionList.add(action);
     	
 	}
 	
-	protected void insertDeleteAction(List<CommitAction> actionList,String parentPath, String entryName) {
+	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
     	CommitAction action = new CommitAction();
     	action.setAction(2);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
+    	action.setDoc(doc);
     	actionList.add(action);
 	}
     
-	protected void insertModifyFile(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath) {
+	protected void insertModifyFile(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath) {
     	CommitAction action = new CommitAction();
     	action.setAction(3);
-    	action.setParentPath(parentPath);
-    	action.setEntryName(entryName);
-    	action.setLocalRootPath(localPath);
-    	action.setLocalRefRootPath(localRefPath);
+    	action.setDoc(doc);
+    	action.setLocalRootPath(localRootPath);
+    	action.setLocalRefRootPath(localRefRootPath);
     	actionList.add(action);	
 	}
 	
 	/******************************* 路径相关接口  *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level) {
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type) {
 		//Format path and name
 		if(path == null)
 		{
@@ -330,6 +329,7 @@ public class BaseFunction{
 		doc.setPath(path);
 		doc.setName(name);
 		doc.setLevel(level);
+		doc.setType(type);
 		return doc;
 	}
 	

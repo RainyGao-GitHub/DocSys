@@ -58,11 +58,11 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Long pid, String path, int level, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
 	{	
 		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path + " level:" + level);
 						
-		List<Doc> docList = getAuthedSubDocList(repos, pid, path, level, docAuth, docAuthHashMap, rt, actionList);
+		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
 	
 		if(docList != null)
 		{
@@ -74,13 +74,8 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 	
-	protected boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user, boolean subDocCheckFlag) 
-	{
-		Doc doc = new Doc();
-		doc.setVid(reposId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		
+	protected boolean checkDocLocked(Integer reposId, Doc doc, User login_user, boolean subDocCheckFlag) 
+	{	
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		DocLock docLock = getDocLock(doc);
 		ReturnAjax rt = new ReturnAjax();
@@ -111,12 +106,12 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Long pid, String path, int level, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
-		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path);
+		System.out.println("getAuthedSubDocList()  reposId:" + repos.getId() + " pid:" + doc.getPid() + " path:" + doc.getPath());
 
 		List<Doc> docList = new ArrayList<Doc>();
-		List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
+		List<Doc> dbDocList = getDBEntryList(repos, doc);
 		if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
@@ -127,7 +122,6 @@ public class BaseController  extends BaseFunction{
 				if(docAuth != null && docAuth.getAccess()!=null && docAuth.getAccess() == 1)
 				{
 		    		//Add to docList
-					dbDoc.setPid(pid);
 		    		docList.add(dbDoc);
 				}
 	    	}
@@ -135,16 +129,16 @@ public class BaseController  extends BaseFunction{
 		return docList;
 	}
 
-	private List<Doc> getDBEntryList(Repos repos, Long pid, String path, int level) {
+	private List<Doc> getDBEntryList(Repos repos, Doc doc) {
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
-		qDoc.setPath(path);
-		//qDoc.setPid(pid);
+		qDoc.setPid(doc.getPid());
 		return reposService.getDocList(qDoc);
 	}
 
-	private List<Doc> getLocalEntryList(Repos repos, Long pid, String path, int level) {
-		String localParentPath = getReposRealPath(repos) + path;
+	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
+	{
+		String localParentPath = getReposRealPath(repos) + doc.getPath();
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
     	{
@@ -154,10 +148,17 @@ public class BaseController  extends BaseFunction{
     	
     	if(dir.isFile())
     	{
-    		//System.out.println("getLocalEntryList() " + localParentPath + " 不是目录！");
+    		System.out.println("getLocalEntryList() " + localParentPath + " 不是目录！");
     		return null;
     	}
 
+		String subDocParentPath = doc.getPath() + doc.getName() + "/";
+		if(doc.getDocId() == 0)
+		{
+			subDocParentPath = "";
+		}
+		int subDocLevel = doc.getLevel() + 1;
+    	
         //Go through the subEntries
     	List <Doc> subEntryList =  new ArrayList<Doc>();
     	
@@ -169,23 +170,24 @@ public class BaseController  extends BaseFunction{
     		int type = file.isDirectory()? 2:1;
 
     		String name = file.getName();
-    		Doc subEntry = new Doc();
-    		subEntry.setVid(repos.getId());
-    		subEntry.setPid(pid);
-    		subEntry.setPath(path);
-    		subEntry.setDocId(buildDocIdByName(level, path, name));
-    		subEntry.setName(name);
-    		subEntry.setType(type);    		
-    		subEntry.setSize(file.length());
-    		subEntry.setCreateTime(file.lastModified());
-    		subEntry.setLatestEditTime(file.lastModified());
-    		subEntryList.add(subEntry);
+    		Doc subDoc = new Doc();
+    		subDoc.setVid(repos.getId());
+    		subDoc.setDocId(buildDocIdByName(subDocLevel, subDocParentPath, name));
+    		subDoc.setPid(doc.getDocId());
+    		subDoc.setPath(subDocParentPath);
+    		subDoc.setName(name);
+    		subDoc.setLevel(subDocLevel);
+    		subDoc.setType(type);    		
+    		subDoc.setSize(file.length());
+    		subDoc.setLatestEditTime(file.lastModified());
+    		subDoc.setCreateTime(file.lastModified());
+    		subEntryList.add(subDoc);
     	}
     	return subEntryList;
 	}
     	
 
-	private List<Doc> getRemoteEntryList(Repos repos, Long pid, String path, int level) {
+	private List<Doc> getRemoteEntryList(Repos repos, Doc doc) {
 		switch(repos.getVerCtrl())
 		{
 		case 1:	//SVN
@@ -199,7 +201,7 @@ public class BaseController  extends BaseFunction{
 			long svnRevision = -1;
 			
 			//Get list from verRepos
-			return svnUtil.getDocList(repos, pid, path, level, svnRevision); 
+			return svnUtil.getDocList(repos, doc, svnRevision); 
 		case 2:	//GIT
 			
 			GITUtil gitUtil = new GITUtil();
@@ -212,7 +214,7 @@ public class BaseController  extends BaseFunction{
 			String gitRevision = null;
 			
 			//Get list from verRepos
-			return gitUtil.getDocList(repos, pid, path, level, gitRevision); 
+			return gitUtil.getDocList(repos, doc, gitRevision); 
 		}
 		return null;
 	}
@@ -1768,12 +1770,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) {
-		if(doc.getPath() == null)
-		{
-			doc.setPath("");
-		}
-		
+	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) 
+	{		
 		String reposRPath = getReposRealPath(repos);
 		String docPath = reposRPath + doc.getPath() + doc.getName();
 		File localEntry = new File(docPath);
@@ -1792,15 +1790,14 @@ public class BaseController  extends BaseFunction{
 		
 		if(addSubDocs)
 		{
-			int level = getLevelByParentPath(doc.getPath());
 			List<Doc> subDocList = null;
 			if(repos.getType() == 3 || repos.getType() == 4)
 			{
-				subDocList = getLocalEntryList(repos, doc.getDocId(), doc.getPath() + doc.getName()+"/", level+1);	
+				subDocList = getLocalEntryList(repos, doc);	
 			}
 			else
 			{
-				subDocList = getRemoteEntryList(repos, doc.getDocId(), doc.getPath() + doc.getName()+"/", level+1);	
+				subDocList = getRemoteEntryList(repos, doc);	
 			}
 			
 			if(subDocList != null)
@@ -1819,8 +1816,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层deleteDoc接口
-	protected String deleteDoc(Repos repos, Long docId, String parentPath, String docName, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		switch(repos.getType())
 		{
@@ -1828,20 +1824,14 @@ public class BaseController  extends BaseFunction{
 		case 2:
 		case 3:
 		case 4:
-			return deleteDoc_FS(repos, docId, parentPath, docName, commitMsg, commitUser, login_user,  rt, actionList);			
+			return deleteDoc_FS(repos, doc, commitMsg, commitUser, login_user,  rt, actionList);			
 		}
 		return null;
 	}
 
-	protected String deleteDoc_FS(Repos repos, Long docId, String parentPath, String docName, 
-			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	protected String deleteDoc_FS(Repos repos, Doc doc,	String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		Doc doc = new Doc();								
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		
+		Long docId = doc.getDocId();
 		if(docId == 0)
 		{
 			//由于前台是根据docId和pid来组织目录结构的，所以前台可以删除docId=0的节点，表示数据库中存在一个docId=0的非法节点，直接删除掉
@@ -1871,12 +1861,12 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(doc,login_user,docLock);
 			
 			docSysDebugLog("deleteDoc_FS() deleteRealDoc Failed", rt);
-			docSysErrorLog(parentPath + docName + " 删除失败！", rt);
+			docSysErrorLog(doc.getName() + " 删除失败！", rt);
 			return null;
 		}
 		
 
-		String revision = verReposRealDocDelete(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt);
+		String revision = verReposRealDocDelete(repos, doc, commitMsg,commitUser,rt);
 		if(revision == null)
 		{
 			docSysDebugLog("deleteDoc_FS() verReposRealDocDelete Failed", rt);
@@ -2135,16 +2125,8 @@ public class BaseController  extends BaseFunction{
 
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped
 		
-		Long pid = doc.getDocId();
-		String path = doc.getPath();
-		if(doc.getName() != null && doc.getName().isEmpty())
-		{
-			path = path + doc.getName() + "/";
-		}
-		int level = getLevelByParentPath(path);
-		
 		Doc subDoc = null;
-		List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
+		List<Doc> dbDocList = getDBEntryList(repos, doc);
 	   	if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
@@ -2155,7 +2137,7 @@ public class BaseController  extends BaseFunction{
 	    	}
     	}
 	    
-	    List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
+	    List<Doc> remoteEntryList = getRemoteEntryList(repos, doc);
 	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
 	    if(remoteEntryList != null)
     	{
@@ -4105,17 +4087,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//获取用户的用于显示的docAuth
-	public DocAuth getUserDispDocAuth(Repos repos, Integer UserID,Long DocID,String parentPath, String docName)
+	public DocAuth getUserDispDocAuth(Repos repos, Integer UserID, Doc doc)
 	{
 		System.out.println("getUserDispDocAuth() UserID:"+UserID);
-		//For rootDoc
-		if(DocID == null || DocID == 0)
-		{
-			parentPath = "";
-			docName = "";
-		}
 		
-		DocAuth docAuth = getUserDocAuth(repos, UserID, DocID, parentPath, docName);	//获取用户真实的权限
+		DocAuth docAuth = getUserDocAuth(repos, UserID, doc);	//获取用户真实的权限
 		printObject("getUserDispDocAuth() docAuth:",docAuth);
 		
 		//Get UserName
@@ -4127,9 +4103,9 @@ public class BaseController  extends BaseFunction{
 			docAuth = new DocAuth();
 			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
-			docAuth.setDocId(DocID);
-			docAuth.setDocName(docName);
-			docAuth.setDocPath(parentPath);
+			docAuth.setDocId(doc.getDocId());
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
 			docAuth.setReposId(repos.getId());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
@@ -4143,9 +4119,9 @@ public class BaseController  extends BaseFunction{
 			
 			docAuth.setUserId(UserID);
 			docAuth.setUserName(UserName);
-			docAuth.setDocId(DocID);
-			docAuth.setDocName(docName);
-			docAuth.setDocPath(parentPath);
+			docAuth.setDocId(doc.getDocId());
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
 			docAuth.setReposId(repos.getId());
 		}
 		return docAuth;
@@ -4156,19 +4132,19 @@ public class BaseController  extends BaseFunction{
 		return getRealDocAuth(repos, null, groupId, docId, parentPath, docName);
 	}
 	
-	protected DocAuth getUserDocAuth(Repos repos, Integer userId,Long parentId, String parentPath, String docName) 
+	protected DocAuth getUserDocAuth(Repos repos, Integer userId, Doc doc) 
 	{
-		return getRealDocAuth(repos, userId, null, parentId,  parentPath, docName);
+		return getRealDocAuth(repos, userId, null, doc);
 	}
 	
 	//Function:getUserDocAuth
-	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId,Long parentId, String parentPath, String docName) 
+	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId, Doc doc) 
 	{
 		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Long> docIdList = new ArrayList<Long>();
-		docIdList = getDocIdList(repos, parentId,parentPath, docName, docIdList);
+		docIdList = getDocIdList(repos, doc, docIdList);
 		if(docIdList == null || docIdList.size() == 0)
 		{
 			return null;
@@ -4200,15 +4176,15 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 
-	protected List<Long> getDocIdList(Repos repos, Long parentId, String parentPath, String docName, List<Long> docIdList) 
+	protected List<Long> getDocIdList(Repos repos, Doc doc, List<Long> docIdList) 
 	{
-		if(parentId == null || parentId == 0)
+		if(doc.getDocId() == 0)
 		{
 			docIdList.add(0L);
 			return docIdList;
 		}
 		
-		String docPath = parentPath + docName;
+		String docPath = doc.getPath() + doc.getName();
 		String [] paths = docPath.split("/");
 		int docPathDeepth = paths.length;
 
@@ -5071,31 +5047,30 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.gitAdd(parentPath, entryName,commitMsg, commitUser);
 	}
 	
-	protected String verReposRealDocDelete(Repos repos, String parentPath, String entryName,Integer type,
-			String commitMsg, String commitUser, ReturnAjax rt) {	
+	protected String verReposRealDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) {	
 		if(commitMsg == null)
 		{
 			//commitMsg = "Delete " + parentPath + entryName;
-			commitMsg = "删除 " + parentPath + entryName;
+			commitMsg = "删除 " + doc.getName();
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnRealDocDelete(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+			return svnRealDocDelete(repos, doc, commitMsg, commitUser, rt);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitRealDocDelete(repos, parentPath, entryName, type, commitMsg, commitUser, rt);
+			return gitRealDocDelete(repos, doc, commitMsg, commitUser, rt);
 		}
 		return null;
 	}
 
-	private String svnRealDocDelete(Repos repos, String parentPath, String name,Integer type,
-			String commitMsg, String commitUser, ReturnAjax rt) {
-		System.out.println("svnRealDocDelete() parentPath:" + parentPath + " name:" + name);
+	private String svnRealDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) {
+		System.out.println("svnRealDocDelete() parentPath:" + doc.getPath() + " name:" + doc.getName());
 
-		String docRPath = parentPath + name;
+		String docRPath = doc.getPath() + doc.getName();
+		
 		SVNUtil svnUtil = new SVNUtil();
 		
 		if(false == svnUtil.Init(repos, true, commitUser))
@@ -5106,7 +5081,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(svnUtil.doCheckPath(docRPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
 		{
-			return svnUtil.svnDelete(parentPath,name,commitMsg,commitUser);
+			return svnUtil.svnDelete(doc,commitMsg,commitUser);
 		}
 		
 		return "";
@@ -5295,15 +5270,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Git realDoc Delete
-	protected String gitRealDocDelete(Repos repos, String parentPath, String entryName, Integer type, String commitMsg,String commitUser, ReturnAjax rt) 
+	protected String gitRealDocDelete(Repos repos, Doc doc, String commitMsg,String commitUser, ReturnAjax rt) 
 	{
-		System.out.println("gitRealDocDelete() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
-		if(entryName == null || entryName.isEmpty())
-		{
-			System.out.println("gitRealDocDelete() entryName can not be empty");
-			return null;
-		}
-
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, true, commitUser) == false)
 		{
@@ -5312,14 +5280,14 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Add to Doc to WorkingDirectory
-		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
+		String wcDocPath = getLocalVerReposPath(repos, true) + doc.getPath() + doc.getName();
 		if(delFileOrDir(wcDocPath) == false)
 		{
 			System.out.println("gitRealDocDelete() delete working copy failed");
 			return null;
 		}
 			
-		return gitUtil.Commit(parentPath, entryName,commitMsg, commitUser);
+		return gitUtil.Commit(doc,commitMsg, commitUser);
 	}
 	
 	protected String gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 

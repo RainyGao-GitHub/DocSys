@@ -264,7 +264,7 @@ public class GITUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Long pid, String parentPath, int level, String revision)
+	public List<Doc> getDocList(Repos repos, Doc doc, String revision)
 	{
     	System.out.println("getSubEntryList() revision:" + revision);
     	if(revision == null || revision.isEmpty())
@@ -300,10 +300,17 @@ public class GITUtil  extends BaseController{
             System.out.println("revTree name:" + revTree.getName());
             System.out.println("revTree id:" + revTree.getId());
             
-            TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, parentPath);
+            TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, doc.getPath() + doc.getName());
             List <Doc> subEntryList =  null;
             if(treeWalk != null) 
             {
+        		String subDocParentPath = doc.getPath() + doc.getName() + "/";
+        		if(doc.getDocId() == 0)
+        		{
+        			subDocParentPath = "";
+        		}
+        		int subDocLevel = doc.getLevel() + 1;
+            	
             	subEntryList =  new ArrayList<Doc>();
             	while(treeWalk.next())
             	{
@@ -311,82 +318,19 @@ public class GITUtil  extends BaseController{
             		if(type > 0)
             		{
             			String name = treeWalk.getNameString();			
-                		Doc subEntry = new Doc();
-                		subEntry.setVid(repos.getId());
-                		subEntry.setPid(pid);
-                		subEntry.setPath(parentPath);
-                		
-                		subEntry.setDocId(buildDocIdByName(level,parentPath,name));
-                		subEntry.setName(treeWalk.getNameString());
-                   		subEntry.setType(type);
+                		Doc subDoc = new Doc();
+                		subDoc.setVid(repos.getId());
+                		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
+                		subDoc.setPid(doc.getDocId());
+                		subDoc.setPath(subDocParentPath);
+                		subDoc.setName(name);
+                		subDoc.setLevel(subDocLevel);
+                		subDoc.setType(type);
                 		//subEntry.setSize();
                 		//subEntry.setCreateTime();
-                		subEntry.setLatestEditTime(commitTime);
-                   		subEntry.setRevision(commitId);
-                		subEntryList.add(subEntry);
-            		}
-            	}
-            }
-            repository.close();
-            
-            return subEntryList;
-        } catch (Exception e) {
-           System.out.println("ReposTreeWalk() Exception"); 
-           e.printStackTrace();
-           return null;
-        }
-	}
-    
-	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<GitEntry> getSubEntryList(String parentPath, String revision)
-	{
-    	System.out.println("getSubEntryList() revision:" + revision);
-    	if(revision == null || revision.isEmpty())
-        {
-        	revision = "HEAD";
-        }
-    	
-    	Repository repository = null;
-        try {
-            //gitDir表示git库目录
-        	Git git = Git.open(new File(gitDir));
-            repository = git.getRepository();
-            
-            //New RevWalk
-            RevWalk walk = new RevWalk(repository);
-
-            //Get objId for revision
-            ObjectId objId = repository.resolve(revision);
-            if(objId == null)
-            {
-            	System.out.println("There is no any commit history for:" + revision);
-            	return null;
-            }
-            
-            RevCommit revCommit = walk.parseCommit(objId);
-            System.out.println("revCommit name:" + revCommit.getName());
-            System.out.println("revCommit type:" + revCommit.getType());
-            System.out.println("revCommit commitMsg:" + revCommit.getShortMessage());
-    		
-            RevTree revTree = revCommit.getTree();
-            System.out.println("revTree name:" + revTree.getName());
-            System.out.println("revTree id:" + revTree.getId());
-            
-            TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, parentPath);
-            List <GitEntry> subEntryList =  null;
-            if(treeWalk != null) 
-            {
-            	subEntryList =  new ArrayList<GitEntry>();
-            	while(treeWalk.next())
-            	{
-            		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
-            		if(type > 0)
-            		{
-                		GitEntry subEntry = new GitEntry();
-                		subEntry.setType(type);
-                		subEntry.setPath(treeWalk.getPathString());
-                		subEntry.setName(treeWalk.getNameString());
-                		subEntryList.add(subEntry);
+                		subDoc.setLatestEditTime(commitTime);
+                		subDoc.setRevision(commitId);
+                		subEntryList.add(subDoc);
             		}
             	}
             }
@@ -674,8 +618,8 @@ public class GITUtil  extends BaseController{
 
  	
 	//Commit will commit change to Git Repos and Push to remote
-	public String Commit(String parentPath, String entryName, String commitMsg, String commitUser) {
-		System.out.println("Commit() " + parentPath + entryName);	
+	public String Commit(Doc doc, String commitMsg, String commitUser) {
+		System.out.println("Commit() " + doc.getPath() + doc.getName());	
 
         Git git = null;
 		try {
@@ -686,7 +630,7 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 		
-		String entryPath = parentPath+entryName;
+		String entryPath = doc.getPath() + doc.getName();
 		try {	
 			if(entryPath.isEmpty())
 			{
@@ -694,7 +638,7 @@ public class GITUtil  extends BaseController{
 			}
 			else
 			{
-				git.add().addFilepattern(parentPath+entryName).call();
+				git.add().addFilepattern(entryPath).call();
 			}
 		} catch (Exception e) {
 			System.out.println("Commit() Commit add Index Error");	

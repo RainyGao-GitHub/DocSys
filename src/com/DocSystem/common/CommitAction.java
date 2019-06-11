@@ -2,15 +2,13 @@ package com.DocSystem.common;
 
 import java.util.List;
 
+import com.DocSystem.entity.Doc;
+
 public class CommitAction{
     private Integer action; //1:add 2:delete 3:modify 4:move 5:copy
     
-    private Integer entryType;
-    
-    private String parentPath;
-    private String entryName;
-    private String newParentPath;
-    private String newEntryName;
+    private Doc doc;
+    private Doc newDoc;
 
     private String localRootPath;
     private String localRefRootPath;
@@ -30,50 +28,22 @@ public class CommitAction{
 		return action;
 	}
 	
-	public void setEntryType(Integer entryType) {
-		this.entryType = entryType;
+	public void setDoc(Doc doc) {
+		this.doc = doc;
 	}
 	
-	public Integer getEntryType()
+	public Doc getDoc()
 	{
-		return entryType;
+		return doc;
 	}
 
-
-	public void setParentPath(String parentPath) {
-		this.parentPath = parentPath;
+	public void setNewDoc(Doc newDoc) {
+		this.newDoc = newDoc;
 	}
 	
-	public String getParentPath()
+	public Doc getNewDoc()
 	{
-		return parentPath;
-	}
-
-	public void setEntryName(String entryName) {
-		this.entryName = entryName;
-	}
-	
-	public String getEntryName()
-	{
-		return entryName;
-	}
-
-	public void setNewParentPath(String newParentPath) {
-		this.newParentPath = newParentPath;
-	}
-	
-	public String getNewParentPath()
-	{
-		return newParentPath;
-	}
-
-	public void setNewEntryName(String newEntryName) {
-		this.newEntryName = newEntryName;
-	}
-	
-	public String getNewEntryName()
-	{
-		return newEntryName;
+		return newDoc;
 	}
 
 	public void setLocalRefRootPath(String localRefRootPath) {
