@@ -458,6 +458,28 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name);
 		
+		//Format path and name
+		if(path == null)
+		{
+			path = "";
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		
+		//To support user call the interface by entryPath
+		if(name.isEmpty())
+		{
+			if(!path.isEmpty())
+			{
+				String[] temp = new String[2]; 
+				seperatePathAndName(path, temp);
+				path = temp[0];
+				name = temp[1];			
+			}
+		}
+	
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -494,20 +516,13 @@ public class ReposController extends BaseController{
 		if(docId == null || docId == 0)
 		{
 			docId = 0L;
-			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getAccessableSubDocList(repos, (long) 0, "", 0, rootDocAuth, docAuthHashMap, rt, actionList);
+
+			//Add doc for SyncUp
+			addDocToSyncUpList(actionList, repos, docId, path, name);
 		}
 		else
 		{
-			//Format path and name
-			if(path == null)
-			{
-				path = "";
-			}
-			if(name == null)
-			{
-				name = "";
-			}
-			
 			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, path, name, rt, actionList);
 		}
@@ -527,6 +542,20 @@ public class ReposController extends BaseController{
 		return;		
 	}
 	
+	private void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Long docId, String path, String name) {
+		User autoSync = new User();
+		autoSync.setId(0);
+		autoSync.setName("AutoSync");
+		if(false == checkDocLocked(repos.getId(), path, name, autoSync, false))
+		{
+			Doc doc = new Doc();
+			doc.setDocId(docId);
+			doc.setPath(path);
+			doc.setName(name);
+			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+		}
+	}
+
 	/* 
 	 * get subDocList under path
 	 * 

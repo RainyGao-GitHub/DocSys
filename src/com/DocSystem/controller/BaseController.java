@@ -58,19 +58,11 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Long docId, String parentPath, String docName, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Long pid, String path, int level, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
 	{	
-		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
-				
-		String dirPath = parentPath+docName+"/";
-		if(docName.isEmpty())
-		{
-			dirPath = parentPath;
-		}
-		
-		int level = getLevelByParentPath(dirPath);
-				
-		List<Doc> docList = getAuthedSubDocList(repos, docId, dirPath, level, docAuth, docAuthHashMap, rt, actionList);
+		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path + " level:" + level);
+						
+		List<Doc> docList = getAuthedSubDocList(repos, pid, path, level, docAuth, docAuthHashMap, rt, actionList);
 	
 		if(docList != null)
 		{
@@ -79,23 +71,10 @@ public class BaseController  extends BaseFunction{
 			printObject("getAccessableSubDocList() docList:", docList);
 		}
 		
-		//Add doc for SyncUp
-		User autoSync = new User();
-		autoSync.setId(0);
-		autoSync.setName("AutoSync");
-		if(false == checkDocLocked(repos.getId(), parentPath, docName, autoSync, false))
-		{
-			Doc doc = new Doc();
-			doc.setDocId(docId);
-			doc.setPath(parentPath);
-			doc.setName(docName);
-			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-		}
-		
 		return docList;
 	}
 	
-	private boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user, boolean subDocCheckFlag) 
+	protected boolean checkDocLocked(Integer reposId, String parentPath, String docName, User login_user, boolean subDocCheckFlag) 
 	{
 		Doc doc = new Doc();
 		doc.setVid(reposId);
@@ -2721,7 +2700,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(list.size() > 1)
 			{
-				System.out.println("dbGetDoc() 数据库存在多个DOC记录，自动清理"); 
+				System.out.println("dbGetDoc() 数据库存在多个DOC记录(" + docName + ")，自动清理"); 
 				for(int i=0; i <list.size(); i++)
 				{
 					dbDeleteDoc(list.get(i), true);

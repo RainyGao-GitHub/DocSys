@@ -271,6 +271,44 @@ public class BaseFunction{
 	}
 	
 	/******************************* 路径相关接口  *******************************/
+	private void seperatePathAndName(String entryPath, String [] result) {
+		String [] paths = entryPath.split("/");
+		
+		int deepth = paths.length;
+		System.out.println("seperatePathAndName() deepth:" + deepth); 
+		
+		String  path = "";
+		String name = "";
+		
+		//Get Name and pathEndPos
+		int pathEndPos = 0;
+		for(int i=deepth-1; i>=0; i--)
+		{
+			name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			pathEndPos = i;
+			break;
+		}
+		
+		//Get Path
+		for(int i=0; i<pathEndPos; i++)
+		{
+			String tempName = paths[i];
+			if(tempName.isEmpty())
+			{
+				continue;
+			}	
+			
+			path = path + tempName + "/";
+		}
+		
+		result[0] = path;
+		result[1] = name;
+	}
+	
 	//获取默认的仓库根路径
 	protected String getDefaultReposRootPath() {
 		String path = null;

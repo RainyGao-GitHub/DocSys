@@ -1314,44 +1314,6 @@ public class DocController extends BaseController{
 		delFileOrDir(userTmpDir+targetName);
 	}
 
-	private void seperatePathAndName(String entryPath, String [] result) {
-		String [] paths = entryPath.split("/");
-		
-		int deepth = paths.length;
-		System.out.println("seperatePathAndName() deepth:" + deepth); 
-		
-		String  path = "";
-		String name = "";
-		
-		//Get Name and pathEndPos
-		int pathEndPos = 0;
-		for(int i=deepth-1; i>=0; i--)
-		{
-			name = paths[i];
-			if(name.isEmpty())
-			{
-				continue;
-			}
-			pathEndPos = i;
-			break;
-		}
-		
-		//Get Path
-		for(int i=0; i<pathEndPos; i++)
-		{
-			String tempName = paths[i];
-			if(tempName.isEmpty())
-			{
-				continue;
-			}	
-			
-			path = path + tempName + "/";
-		}
-		
-		result[0] = path;
-		result[1] = name;
-	}
-
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
