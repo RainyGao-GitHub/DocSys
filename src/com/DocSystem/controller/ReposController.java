@@ -477,7 +477,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//Add doc for SyncUp
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, null,2);
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), doc);
@@ -498,13 +498,11 @@ public class ReposController extends BaseController{
 		{
 			docId = 0L;
 			docList = getAccessableSubDocList(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
-
-			addDocToSyncUpList(actionList, repos, doc);
 		}
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, path, name, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 
 		if(docList == null)
@@ -520,16 +518,6 @@ public class ReposController extends BaseController{
 		
 		executeCommonActionList(actionList, rt);
 		return;		
-	}
-
-	private void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc) {
-		User autoSync = new User();
-		autoSync.setId(0);
-		autoSync.setName("AutoSync");
-		if(false == checkDocLocked(repos.getId(), doc, autoSync, false))
-		{
-			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-		}
 	}
 
 	/* 
@@ -561,7 +549,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null);
+		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2);
 		
 		//get the rootDocAuth
 		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), doc);
@@ -610,13 +598,15 @@ public class ReposController extends BaseController{
 		//获取整个仓库的目录结构，包括仓库本身（作为ID=0的存在）
 		//获取仓库信息，并转换成rootDoc
 		Repos repos = reposService.getRepos(vid);
+		
+		//Build rootDoc
 		Doc rootDoc = buildBasicDoc(vid, 0L, -1L, "", "", 0, 2);
 		
 		//获取用户可访问文件列表(From Root to docId)
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = null;
-		rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), (long) 0, "", "");
+		rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), rootDoc);
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
 			if(login_user.getType() == 2)	//超级管理员可以访问所有目录
@@ -643,7 +633,7 @@ public class ReposController extends BaseController{
 		if(docId == null || docId == 0)
 		{
 			docId = 0;
-			docList = getAccessableSubDocList(repos, (long) 0, "", "", rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 		else
 		{
@@ -658,7 +648,7 @@ public class ReposController extends BaseController{
 			}
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, (long) 0, rootDocAuth, docAuthHashMap, path, name, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, rootDoc, rootDocAuth, docAuthHashMap, path, name, rt, actionList);
 		}
 		
 		//合并列表

@@ -60,7 +60,7 @@ public class BaseController  extends BaseFunction{
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
 	{	
-		System.out.println("getAccessableSubDocList()  reposId:" + repos.getId() + " pid:" + pid + " path:" + path + " level:" + level);
+		System.out.println("getAccessableSubDocList()");
 						
 		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
 	
@@ -70,6 +70,8 @@ public class BaseController  extends BaseFunction{
 		
 			printObject("getAccessableSubDocList() docList:", docList);
 		}
+		
+		addDocToSyncUpList(actionList, repos, doc);
 		
 		return docList;
 	}
@@ -308,20 +310,21 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Long rootDocId, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, String parentPath, String docName, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
-		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
+		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 		
-		Doc rootDoc = buildBasicDoc(repos.getId(), 0, null, "", "");
+		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2);
+		
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
-		addDocToSyncUpList(actionList, rootDoc);
+		addDocToSyncUpList(actionList, repos, rootDoc);
 		if(resultList == null || resultList.size() == 0)
 		{
 			System.out.println("getDocListFromRootToDoc() docList under root is empty");			
 			return null;
 		}
 		
-		String [] paths = parentPath.split("/");
+		String [] paths = doc.getPath().split("/");
 		int deepth = paths.length;
 		System.out.println("getDocListFromRootToDoc() deepth:" + deepth); 
 		if(deepth < 1)
@@ -329,9 +332,11 @@ public class BaseController  extends BaseFunction{
 			return resultList;
 		}
 		
+		Integer reposId = repos.getId();
+		Long pid = 0L;
 		String  path = "";
-		DocAuth pDocAuth = rootDocAuth;
 		int level = 0;
+		DocAuth pDocAuth = rootDocAuth;
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
@@ -340,11 +345,11 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Long docId = buildDocIdByName(level, path, name);
-			System.out.println("docId:" + docId);
-			DocAuth docAuth = getDocAuthFromHashMap(docId, pDocAuth, docAuthHashMap);
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2);
+			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
-			List<Doc> subDocList = getAccessableSubDocList(repos, docId, path, name, docAuth, docAuthHashMap, rt, actionList);
+			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt, actionList);
+			addDocToSyncUpList(actionList, repos, tempDoc);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + path+name, rt);
@@ -353,11 +358,22 @@ public class BaseController  extends BaseFunction{
 			resultList.addAll(subDocList);
 			
 			path = path + name + "/";
+			pid = tempDoc.getPid();
 			pDocAuth = docAuth;
 			level++;
 		}
 		
 		return resultList;
+	}
+	
+	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc) {
+		User autoSync = new User();
+		autoSync.setId(0);
+		autoSync.setName("AutoSync");
+		if(false == checkDocLocked(repos.getId(), doc, autoSync, false))
+		{
+			insertSyncUpAction(actionList,repos,doc,5,3,2, null);
+		}
 	}
 	
 	protected List<Repos> getAccessableReposList(Integer userId) {
@@ -2095,7 +2111,7 @@ public class BaseController  extends BaseFunction{
 		
 		printObject("syncupForDocChange_NoFS() remoteEntry: ", remoteEntry);
 		
-		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		printObject("syncupForDocChange_NoFS() dbDoc: ", dbDoc);
 
 		
@@ -2198,7 +2214,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		Doc dbDoc = dbGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), true);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		printObject("syncupForDocChange_FS() dbDoc: ", dbDoc);
 
 		int localChangeType = getLocalChangeType(dbDoc, localEntry);
@@ -2244,17 +2260,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped
-	
-		Long pid = doc.getDocId();
-		String path = doc.getPath() + doc.getName() + "/";
-		if(doc.getName() == null || doc.getName().isEmpty())
-		{
-			path = doc.getPath();
-		}
-		int level = getLevelByParentPath(path);
 		
 		Doc subDoc = null;
-		List<Doc> dbDocList = getDBEntryList(repos, pid, path, level);
+		List<Doc> dbDocList = getDBEntryList(repos, doc);
 	   	if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
@@ -2265,7 +2273,7 @@ public class BaseController  extends BaseFunction{
 	    	}
     	}
 
-    	List<Doc> localEntryList = getLocalEntryList(repos, pid, path, level);
+    	List<Doc> localEntryList = getLocalEntryList(repos, doc);
 		printObject("SyncUpSubDocs_FS() localEntryList:", localEntryList);
 		if(localEntryList != null)
     	{
@@ -2283,7 +2291,7 @@ public class BaseController  extends BaseFunction{
 	    	}
     	}
 	    
-	    List<Doc> remoteEntryList = getRemoteEntryList(repos, pid, path, level);
+	    List<Doc> remoteEntryList = getRemoteEntryList(repos, doc);
 	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
 	    if(remoteEntryList != null)
     	{
@@ -2467,19 +2475,15 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//获取真实的DocInfo，返回null表示获取异常（表示localEntry和remoteEntry都无法获取）
-	protected Doc docSysGetDoc(Repos repos, Long docId, Long pid, String parentPath, String docName, User login_user) {		
-		System.out.println("docSysGetDoc() parentPath:" + parentPath + " docName:" + docName);
+	protected Doc docSysGetDoc(Repos repos, Doc doc, User login_user) {		
+		System.out.println("docSysGetDoc()");
 				
-		boolean isDocLocked = checkDocLocked(repos.getId(), parentPath, docName, login_user, false);
-		
-		Doc doc = new Doc();
-		doc.setPath(parentPath);
-		doc.setName(docName);
+		boolean isDocLocked = checkDocLocked(repos.getId(), doc, login_user, false);
 		
 		Doc dbDoc = null;
 		if(isDocLocked)
 		{
-			dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			dbDoc = dbGetDoc(repos, doc, true);
 			return dbDoc;
 		}
 		
@@ -2488,7 +2492,7 @@ public class BaseController  extends BaseFunction{
 
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
-			remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
+			remoteEntry = verReposGetDoc(repos, doc, null);
 			printObject("docSysGetDoc() remoteEntry: ", remoteEntry);
 			if(remoteEntry == null)
 			{
@@ -2570,32 +2574,21 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 	
-	private Doc verReposGetDoc(Repos repos, Long docId, Long pid, String parentPath, String name, String revision)
+	private Doc verReposGetDoc(Repos repos, Doc doc, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
 		{
-			return svnGetDoc(repos, docId, pid, parentPath,name, revision);			
+			return svnGetDoc(repos, doc, revision);			
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitGetDoc(repos, docId, pid, parentPath,name, revision);	
+			return gitGetDoc(repos, doc, revision);	
 		}
 		return null;
 	}
 
-	private Doc svnGetDoc(Repos repos, Long docId, Long pid, String parentPath, String entryName, String strRevision) {
+	private Doc svnGetDoc(Repos repos, Doc doc, String strRevision) {
 		//System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
-		if(parentPath == null)
-		{
-			System.out.println("svnGetDoc() parentPath is null");
-			return null;			
-		}
-		
-		if(entryName == null || entryName.isEmpty())
-		{
-			System.out.println("svnGetDoc() entryName can not be empty");
-			return null;
-		}
 		
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, true, "") == false)
@@ -2610,28 +2603,14 @@ public class BaseController  extends BaseFunction{
 			revision = Long.parseLong(strRevision);
 		}
 
-		Doc doc = svnUtil.getDoc(parentPath+entryName, revision);
-		if(doc == null)
+		Doc remoteEntry = svnUtil.getDoc(doc, revision);
+		if(remoteEntry == null)
 		{
-			doc = new Doc();
-			//Set doc BasicInfo
-			doc.setVid(repos.getId());
-			doc.setDocId(docId);
-			doc.setPid(pid);
-			doc.setPath(parentPath);
-			doc.setName(entryName);
-			doc.setType(0);
-			return doc;
+			remoteEntry = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0);
+			return remoteEntry;
 		}
 		
-		//Set doc BasicInfo
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPid(pid);
-		doc.setPath(parentPath);
-		doc.setName(entryName);
-		doc.setSize(0L);
-		return doc;
+		return remoteEntry;
 	}
 
 	private Doc gitGetDoc(Repos repos, Long docId, Long pid, String parentPath, String entryName, String revision) {
@@ -2665,12 +2644,12 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 
-	protected Doc dbGetDoc(Repos repos, Long docId, Long pid, String parentPath, String docName, boolean dupCheck) 
+	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
 	{	
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
-		qDoc.setPath(parentPath);
-		qDoc.setName(docName);
+		qDoc.setPath(doc.getPath());
+		qDoc.setName(doc.getName());
 		
 		List<Doc> list = reposService.getDocList(qDoc);
 		//printObject("dbGetDoc() list:", list);
@@ -2684,7 +2663,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(list.size() > 1)
 			{
-				System.out.println("dbGetDoc() 数据库存在多个DOC记录(" + docName + ")，自动清理"); 
+				System.out.println("dbGetDoc() 数据库存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
 				for(int i=0; i <list.size(); i++)
 				{
 					dbDeleteDoc(list.get(i), true);
@@ -2693,20 +2672,20 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 	
-		Doc doc = list.get(0);
+		Doc dbDoc = list.get(0);
 		
 		//Do check doc info
-		if(doc.getDocId() == null || doc.getDocId() < 0 || !doc.getDocId().equals(docId))
+		if(dbDoc.getDocId() == null || dbDoc.getDocId() < 0 || !dbDoc.getDocId().equals(doc.getDocId()))
 		{
-			System.out.println("dbGetDoc() 非法  docId (" + docId +":" + doc.getDocId() + "),自动清理"); 
-			dbDeleteDoc(doc, true);
+			System.out.println("dbGetDoc() 非法  docId (" + doc.getDocId() +":" + dbDoc.getDocId() + "),自动清理"); 
+			dbDeleteDoc(dbDoc, true);
 			return null;
 		}
 		
-		if(doc.getPid() == null || doc.getPid() < 0 || !doc.getPid().equals(pid))
+		if(dbDoc.getPid() == null || dbDoc.getPid() < 0 || !dbDoc.getPid().equals(doc.getPid()))
 		{
-			System.out.println("dbGetDoc() 非法  pid (" + pid +":" + doc.getPid() + "),自动清理"); 
-			dbDeleteDoc(doc, true);
+			System.out.println("dbGetDoc() 非法  pid (" + doc.getPid() +":" + dbDoc.getPid() + "),自动清理"); 
+			dbDeleteDoc(dbDoc, true);
 			return null;
 		}
 		
@@ -2717,9 +2696,14 @@ public class BaseController  extends BaseFunction{
 
 		if(deleteSubDocs)
 		{
+			String subDocParentPath = doc.getPath() + doc.getName() + "/";
+			if(doc.getName().isEmpty())
+			{
+				subDocParentPath = doc.getPath();
+			}
 			Doc qSubDoc = new Doc();
 			qSubDoc.setVid(doc.getVid());
-			qSubDoc.setPath(doc.getPath() + doc.getName() + "/");
+			qSubDoc.setPath(subDocParentPath);
 			List<Doc> subDocList = reposService.getDocList(qSubDoc);
 			if(subDocList != null)
 			{
@@ -2730,6 +2714,8 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		}
+		
+		
 		
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());

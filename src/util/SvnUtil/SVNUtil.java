@@ -154,23 +154,15 @@ public class SVNUtil  extends BaseController{
 			return null;
 		}
 	}
-    public Doc getDoc(String filePath, Long revision) 
-	{
-    	//System.out.println("getDoc() filePath:" + filePath);
-    	if(filePath == null)
-    	{
-        	System.out.println("getDoc() 非法参数：filePath is null");
-        	return null;
-    	}
-    	
-    	//long startRevision = 0;
-    	long endRevision = revision;
-    	
+    public Doc getDoc(Doc doc, Long revision) 
+	{    	
+    	String entryPath = doc.getPath() + doc.getName();
+    	    	
         try {
-        	SVNNodeKind entryType = repository.checkPath(filePath, endRevision);
+        	SVNNodeKind entryType = repository.checkPath(entryPath, revision);
 	    	if(entryType ==  SVNNodeKind.NONE) 
 			{
-	    		System.out.println("getDoc() " + filePath + " not exist for revision:" + revision); 
+	    		System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
 	        	return null;
 			}
 	    	else if(entryType ==  SVNNodeKind.DIR) 
@@ -180,19 +172,17 @@ public class SVNUtil  extends BaseController{
 	            {
 	            	strRevision = repository.getLatestRevision() + "";
 	            }
-	    		System.out.println("getDoc() " + filePath + " revision:" + strRevision);
+	    		System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
 	    		
-	    		Doc doc = new Doc();
-	            doc.setType(2);
-	            doc.setRevision(strRevision);
+	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2);
+	    		remoteEntry.setRevision(strRevision);
 	            return doc;
 			}
 
 	    	//Doc is file
 	    	String strRevision = revision +"";
-            Doc doc = new Doc();
-            doc.setType(1);
-            doc.setRevision(strRevision);
+    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1);
+    		remoteEntry.setRevision(strRevision);
 	    	
             //获取commitUser和commitTime的实际意义值得怀疑
             //如用于显示，显然不需要那么实时
@@ -210,7 +200,7 @@ public class SVNUtil  extends BaseController{
 //	            doc.setLatestEditTime(commitTime);
 //	            break;
 //	        }
-	        return doc;       
+	        return remoteEntry;       
 		} catch (SVNException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
