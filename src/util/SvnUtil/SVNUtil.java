@@ -698,27 +698,29 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeModifyAction(ISVNEditor editor, CommitAction action) {
-		String parentPath = action.getParentPath();
-		String entryName = action.getEntryName();
+		Doc doc = action.getDoc();
+		
+		String entryPath = doc.getPath() + doc.getName();
 		String localPath = action.getLocalRootPath();
 		String localRefPath = action.getLocalRefRootPath();
-		System.out.println("executeModifyAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		
 		
 		InputStream oldData = null;
 		if(localRefPath != null)
 		{
-			oldData = getFileInputStream(localRefPath + entryName);
+			oldData = getFileInputStream(localRefPath + entryPath);
 		}
-		InputStream newData = getFileInputStream(localPath + entryName);
+		InputStream newData = getFileInputStream(localPath + entryPath);
     	boolean ret = false;
 		if(action.isSubAction)
 		{
 			//subAction no need to openRoot and Parent
-			ret = modifyFile(editor,parentPath, entryName, oldData, newData,false,false);
+			ret = modifyFile(editor,doc.getPath(), doc.getName(), oldData, newData,false,false);
 		}
 		else
 		{
-   			ret = modifyFile(editor,parentPath, entryName, oldData, newData,false,true);       			
+   			ret = modifyFile(editor, doc.getPath(), doc.getName(), oldData, newData,false,true);       			
 		}
 		if(oldData != null)
 		{
@@ -729,29 +731,28 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeDeleteAction(ISVNEditor editor, CommitAction action) {
-		String parentPath = action.getParentPath();
-		String entryName = action.getEntryName();
-		String localPath = action.getLocalRootPath();
-		String localRefPath = action.getLocalRefRootPath();
-		System.out.println("executeDeleteAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		Doc doc = action.getDoc();
+
+		System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
 		return deleteEntry(editor, doc, false);
 	}
 
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
-		Integer entryType = action.getEntryType();
-		String parentPath = action.getParentPath();
-		String entryName = action.getEntryName();
+		Doc doc = action.getDoc();
+
 		String localPath = action.getLocalRootPath();
 		String localRefPath = action.getLocalRefRootPath();
-		System.out.println("executeAddAction() parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		
+		String parentPath = doc.getPath();
+		String entryName = doc.getName();
+		String entryPath = doc.getPath() + doc.getName();
+		
+		System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
 
-		if(entryType == 1)	//File
-    	{
-    		String localEntryPath = localPath + entryName;
-    		if(parentPath == null)
-    		{
-    			localEntryPath = entryName;
-    		}
+		switch(doc.getType())
+		{
+		case 1:
+			String localEntryPath = localPath + entryPath;
     		
     		InputStream fileData = getFileInputStream(localEntryPath);
     		boolean ret = false;
@@ -832,22 +833,22 @@ public class SVNUtil  extends BaseController{
     	}
 	}
 
-	public void scheduleForCommit(List<CommitAction> actionList, String parentPath, String entryName,String localParentPath, String localRefParentPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
+	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
 	{	
-		System.out.println("scheduleForCommit()  parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " localRefParentPath:" + localRefParentPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		System.out.println("scheduleForCommit()  parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
-    	if(entryName.isEmpty())
+    	if(doc.getName().isEmpty())
     	{
-    		scanForSubDocCommit(actionList, parentPath, localParentPath, localRefParentPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, doc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
     		return;
     	}
  	
-    	String remoteEntryPath = parentPath + entryName;
-    	String localEntryPath = localParentPath + entryName;    	
+    	String entryPath = doc.getPath() + doc.getName();
+    	String localEntryPath = localRootPath + entryPath;    	
     	File localEntry = new File(localEntryPath);
     	SVNNodeKind nodeKind;
 		try {
-			nodeKind = repository.checkPath(remoteEntryPath, -1);
+			nodeKind = repository.checkPath(entryPath, -1);
 		} catch (SVNException e) {
 			System.out.println("scheduleForCommit() checkPath 异常!");
 			e.printStackTrace();
@@ -862,7 +863,7 @@ public class SVNUtil  extends BaseController{
     			//已同步
     			return;
     		}
-    		insertDeleteAction(actionList,parentPath,entryName);
+    		insertDeleteAction(actionList,doc);
     		return;
     	}
     	
@@ -873,14 +874,14 @@ public class SVNUtil  extends BaseController{
     	case 1:	//文件
     		if(nodeKind == SVNNodeKind.NONE) 	//新增文件
 	    	{
-    			insertAddFileAction(actionList,parentPath, entryName,localParentPath,isSubAction);
+    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
 	            return;
     		}
     		
     		if(nodeKind != SVNNodeKind.FILE)	//文件类型改变
     		{
-    			insertDeleteAction(actionList,parentPath,entryName);
-    			insertAddFileAction(actionList,parentPath, entryName,localParentPath,isSubAction);
+    			insertDeleteAction(actionList,doc);
+    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
 	            return;
     		}
     		
@@ -889,20 +890,18 @@ public class SVNUtil  extends BaseController{
     		{
 	            if(modifyEnable)
 	            {
-            		System.out.println("scheduleForCommit() insert " + remoteEntryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,parentPath, entryName, localParentPath, localRefParentPath);
+            		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
             		return;
             	}
     		}
     		else
     		{
-    			int level = getLevelByParentPath(parentPath);
-    			Long docId = buildDocIdByName(level, parentPath, entryName);
-    			Doc doc = commitHashMap.get(docId);
-    			if(doc != null)
+    			Doc tempDoc = commitHashMap.get(doc.getDocId());
+    			if(tempDoc != null)
     			{
-        			System.out.println("scheduleForCommit() insert " + remoteEntryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,parentPath, entryName, localParentPath, localRefParentPath);
+        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
             		return;
     			}
     		}
@@ -911,36 +910,28 @@ public class SVNUtil  extends BaseController{
     		if(nodeKind == SVNNodeKind.NONE) 	//新增目录
 	    	{
     			//Add Dir
-    			insertAddDirAction(actionList,parentPath, entryName,localParentPath,isSubAction);
+    			insertAddDirAction(actionList,doc,localRootPath,isSubAction);
 	            return;
     		}
     		
     		if(nodeKind != SVNNodeKind.DIR)	//文件类型改变
     		{
-    			insertDeleteAction(actionList,parentPath,entryName);
-	        	insertAddDirAction(actionList,parentPath,entryName, localParentPath, isSubAction);
+    			insertDeleteAction(actionList,doc);
+	        	insertAddDirAction(actionList,doc, localRootPath, isSubAction);
 	            return;
     		}
     		
-    		String subDocParentPath = parentPath + entryName + "/";
-    		String subDocLocalParentPath = localParentPath  + entryName + "/";
-    		String subDocLocalRefParentPath = null;
-    		if(localRefParentPath != null)
-    		{
-    			subDocLocalRefParentPath = localRefParentPath + entryName + "/";
-    		}
-    		
-    		scanForSubDocCommit(actionList, subDocParentPath, subDocLocalParentPath, subDocLocalRefParentPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, doc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
     		break;
     	}
     	return;   	
 	}
 
-	private void scanForSubDocCommit(List<CommitAction> actionList, String parentPath,
-			String localParentPath, String localRefParentPath, boolean modifyEnable, boolean isSubAction,
+	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc,
+			String localRootPath, String localRefRootPath, boolean modifyEnable, boolean isSubAction,
 			HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) {
 
-		System.out.println("scanForSubDocCommit()  parentPath:" + parentPath + " localParentPath:" + localParentPath + " localRefParentPath:" + localRefParentPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		System.out.println("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefParentPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -951,47 +942,56 @@ public class SVNUtil  extends BaseController{
 			subDocCommitFlag = 0;
 		}
 		
-		HashMap<String, SVNDirEntry> docHashMap = new HashMap<String, SVNDirEntry>();
+		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
 		
 		//遍历仓库所有子目录
 		Collection<SVNDirEntry> entries;
 		try {
-			entries = repository.getDir(parentPath, -1, null,(Collection) null);
+			entries = repository.getDir(doc.getPath() + doc.getName(), -1, null,(Collection) null);
 		} catch (SVNException e) {
 			System.out.println("scanForSubDocCommit() getDir 异常!");
 			e.printStackTrace();
 			return;
 		}
 		
+		String subDocParentPath = doc.getPath() + doc.getName() + "/";
+		if(doc.getDocId() == 0)
+		{
+			 subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+
         if(entries != null)
         {
 			Iterator<SVNDirEntry> iterator = entries.iterator();
 	        while (iterator.hasNext()) 
 	        {
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
-	            String subEntryName = remoteSubEntry.getName();	           
-	            docHashMap.put(subEntryName, remoteSubEntry);
-	            scheduleForCommit(actionList, parentPath, subEntryName, localParentPath, localRefParentPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+	            int subDocType = remoteSubEntry.getKind() == SVNK? 1:2;
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType);
+	            docHashMap.put(subDoc.getDocId(), subDoc);
+	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
         }
         
-        //便利localEntry
         //Go Through localSubDocs
-        File dir = new File(localParentPath);
+        File dir = new File(localRootPath);
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
         {
         	File localSubEntry = tmp[i];
-        	String subEntryName = localSubEntry.getName();
-        	if(docHashMap.get(subEntryName) == null)
+        	int subDocType = localSubEntry.isFile()? 1: 2;
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType);
+            
+        	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, parentPath, subEntryName, localParentPath, isSubAction);
+        			insertAddDirAction(actionList, subDoc, localRootPath, isSubAction);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, parentPath, subEntryName, localParentPath, isSubAction);
+        			insertAddFileAction(actionList, subDoc, localRootPath, isSubAction);
         		}
         	}
         }
@@ -1128,9 +1128,9 @@ public class SVNUtil  extends BaseController{
 	
 	
 	//增加目录（如果parentPath不存在则也会增加）
-	public boolean svnAddDirEx(String parentPath,String entryName,String localParentPath,String commitMsg, String commitUser, boolean deleteOld)
+	public boolean svnAddDirEx(Doc doc,String localRootPath,String commitMsg, String commitUser, boolean deleteOld)
 	{
-		System.out.println("svnAddFileEx()" + " parentPath:" + parentPath +" entryName:" + entryName +" localParentPath:" + localParentPath);	
+		System.out.println("svnAddFileEx()" + " parentPath:" + doc.getPath() +" entryName:" + entryName +" localParentPath:" + localParentPath);	
 		try {
 			//Build commitAction
 			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
