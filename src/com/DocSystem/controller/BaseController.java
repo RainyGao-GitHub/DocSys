@@ -2723,6 +2723,13 @@ public class BaseController  extends BaseFunction{
 		Doc doc = list.get(0);
 		
 		//Do check doc info
+		if(doc.getDocId() == null || doc.getDocId() < 0 || doc.getDocId().equals(docId))
+		{
+			System.out.println("dbGetDoc() 非法  docId (" + docId +":" + doc.getDocId() + ",自动清理"); 
+			dbDeleteDoc(doc, true);
+			return null;
+		}
+		
 		if(doc.getPid() == null || doc.getPid() < 0 || doc.getPid().equals(pid))
 		{
 			System.out.println("dbGetDoc() 非法  pid (" + pid +":" + doc.getPid() + ",自动清理"); 
