@@ -458,28 +458,6 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name);
 		
-		//Format path and name
-		if(path == null)
-		{
-			path = "";
-		}
-		if(name == null)
-		{
-			name = "";
-		}
-		
-		//To support user call the interface by entryPath
-		if(name.isEmpty())
-		{
-			if(!path.isEmpty())
-			{
-				String[] temp = new String[2]; 
-				seperatePathAndName(path, temp);
-				path = temp[0];
-				name = temp[1];			
-			}
-		}
-	
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -510,7 +488,11 @@ public class ReposController extends BaseController{
 		
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
-		
+
+
+		//Add doc for SyncUp
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name);
+
 		List <Doc> docList = null;
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		if(docId == null || docId == 0)
@@ -518,8 +500,8 @@ public class ReposController extends BaseController{
 			docId = 0L;
 			docList = getAccessableSubDocList(repos, (long) 0, "", 0, rootDocAuth, docAuthHashMap, rt, actionList);
 
-			//Add doc for SyncUp
-			addDocToSyncUpList(actionList, repos, docId, path, name);
+			doc.setDocId(docId);
+			addDocToSyncUpList(actionList, doc);
 		}
 		else
 		{
@@ -541,7 +523,7 @@ public class ReposController extends BaseController{
 		executeCommonActionList(actionList, rt);
 		return;		
 	}
-	
+
 	private void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Long docId, String path, String name) {
 		User autoSync = new User();
 		autoSync.setId(0);

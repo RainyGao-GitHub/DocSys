@@ -271,7 +271,39 @@ public class BaseFunction{
 	}
 	
 	/******************************* 路径相关接口  *******************************/
-	private void seperatePathAndName(String entryPath, String [] result) {
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name) {
+		//Format path and name
+		if(path == null)
+		{
+			path = "";
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		
+		//To support user call the interface by entryPath
+		if(name.isEmpty())
+		{
+			if(!path.isEmpty())
+			{
+				String[] temp = new String[2]; 
+				seperatePathAndName(path, temp);
+				path = temp[0];
+				name = temp[1];			
+			}
+		}
+		
+		Doc doc = new Doc();
+		doc.setVid(reposId);
+		doc.setDocId(docId);
+		doc.setPid(pid);
+		doc.setPath(path);
+		doc.setName(name);
+		return doc;
+	}
+	
+	protected void seperatePathAndName(String entryPath, String [] result) {
 		String [] paths = entryPath.split("/");
 		
 		int deepth = paths.length;

@@ -310,7 +310,9 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " rootDocId:" + rootDocId + " parentPath:" + parentPath +" docName:" + docName);
 		
-		List<Doc> resultList = getAccessableSubDocList(repos, rootDocId, "", "", rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
+		Doc rootDoc = buildBasicDoc(repos.getId(), 0, null, "", "");
+		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
+		addDocToSyncUpList(actionList, rootDoc);
 		if(resultList == null || resultList.size() == 0)
 		{
 			System.out.println("getDocListFromRootToDoc() docList under root is empty");			
