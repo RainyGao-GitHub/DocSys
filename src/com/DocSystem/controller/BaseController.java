@@ -2721,11 +2721,15 @@ public class BaseController  extends BaseFunction{
 		}
 	
 		Doc doc = list.get(0);
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPid(pid);
-		doc.setPath(parentPath);
-		doc.setName(docName);		
+		
+		//Do check doc info
+		if(doc.getPid() == null || doc.getPid() < 0 || doc.getPid().equals(pid))
+		{
+			System.out.println("dbGetDoc() 非法  pid (" + pid +":" + doc.getPid() + ",自动清理"); 
+			dbDeleteDoc(doc, true);
+			return null;
+		}
+		
 		return doc;
 	}
 	
