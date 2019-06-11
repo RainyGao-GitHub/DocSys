@@ -2413,7 +2413,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(localEntry.getType() == 0)
 			{
-				System.out.println("getLocalChangeType() 本地文件不存在:"+localEntry.getName());				
+				System.out.println("getLocalChangeType() 本地文件未变更(文件不存在):"+localEntry.getName());				
 				return 0;	//no change
 			}
 			System.out.println("getLocalChangeType() 本地文件新增:"+localEntry.getName());
@@ -2434,6 +2434,8 @@ public class BaseController  extends BaseFunction{
 				System.out.println("getLocalChangeType() 本地文件内容修改:"+localEntry.getName());
 				return 3;
 			}
+			
+			System.out.println("getLocalChangeType() 本地文件未变更:"+localEntry.getName());				
 			return 0;
 		case 2:
 			if(dbDoc.getType() == null || dbDoc.getType() != 2)
@@ -2441,14 +2443,16 @@ public class BaseController  extends BaseFunction{
 				System.out.println("getLocalChangeType() 本地文件类型改变:"+localEntry.getName());
 				return 2; //local Type Changed
 			}
+
+			System.out.println("getLocalChangeType() 本地目录未变更:"+localEntry.getName());				
 			return 0;
 		case 0:
 			System.out.println("getLocalChangeType() 本地文件删除:"+dbDoc.getName());
 			return 4;
 		}
 		
-		System.out.println("getLocalChangeType() 本地文件文件类型异常:"+localEntry.getName());		
-		return 0;
+		System.out.println("getLocalChangeType() 本地文件文件类型未知:"+localEntry.getName());		
+		return -1;
 	}
 
 	private int getRemoteChangeType(Doc dbDoc, Doc remoteEntry) 
@@ -2457,9 +2461,10 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteEntry.getType() == 0)
 			{
+				System.out.println("getRemoteChangeType() 远程文件未变更：远程已删除:"+remoteEntry.getName());
 				return 0;	//no change
 			}
-			System.out.println("getLocalChangeType() 远程文件新增:"+remoteEntry.getName());
+			System.out.println("getRemoteChangeType() 远程文件新增:"+remoteEntry.getName());
 			return 1; //remote Added
 		}
 		
@@ -2468,29 +2473,34 @@ public class BaseController  extends BaseFunction{
 		case 1:
 			if(dbDoc.getType() == null || dbDoc.getType() != 1)
 			{
-				System.out.println("getLocalChangeType() 远程文件类型改变:"+remoteEntry.getName());
+				System.out.println("getRemoteChangeType() 远程文件类型改变:"+remoteEntry.getName());
 				return 2; //local Type Changed
 			}
 			
 			if(isDocRemoteChanged(dbDoc, remoteEntry))
 			{
-				System.out.println("getLocalChangeType() 远程文件内容修改:"+remoteEntry.getName());
+				System.out.println("getRemoteChangeType() 远程文件内容修改:"+remoteEntry.getName());
 				return 3;
 			}
+			
+			System.out.println("getRemoteChangeType() 远程文件未变更:"+remoteEntry.getName());
 			return 0;
 		case 2:
 			if(dbDoc.getType() == null || dbDoc.getType() != 2)
 			{
-				System.out.println("getLocalChangeType() 远程文件类型改变:"+remoteEntry.getName());
+				System.out.println("getRemoteChangeType() 远程文件类型改变:"+remoteEntry.getName());
 				return 2; //local Type Changed
 			}
+
+			System.out.println("getRemoteChangeType() 远程目录未变更:"+remoteEntry.getName());
 			return 0;
 		case 0:
-			System.out.println("getLocalChangeType() 远程文件删除:"+dbDoc.getName());
+			System.out.println("getRemoteChangeType() 远程文件删除:"+dbDoc.getName());
 			return 4;
 		}
 		
-		return 0;
+		System.out.println("getRemoteChangeType() 远程文件类型未知:"+dbDoc.getName());
+		return -1;
 	}
 	
 	//获取真实的DocInfo，返回null表示获取异常（表示localEntry和remoteEntry都无法获取）
