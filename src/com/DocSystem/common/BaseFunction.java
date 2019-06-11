@@ -271,7 +271,7 @@ public class BaseFunction{
 	}
 	
 	/******************************* 路径相关接口  *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name) {
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level) {
 		//Format path and name
 		if(path == null)
 		{
@@ -294,15 +294,50 @@ public class BaseFunction{
 			}
 		}
 		
+		
+		if(name.isEmpty())	//rootDoc
+		{
+			level = 0;
+			docId = 0L;
+			pid = null;
+		}
+		else
+		{
+			if(path.isEmpty())
+			{
+				level = 1;
+			}
+			else
+			{
+				level = getLevelByParentPath(path) + 1;
+			}
+			
+			if(docId == null)
+			{
+				docId = buildDocIdByName(level, path, name);
+			}
+		
+			if(pid == null || pid == -1)
+			{
+				pid = buildDocIdByName(level-1, path, "");
+			}
+		}
+		
 		Doc doc = new Doc();
 		doc.setVid(reposId);
 		doc.setDocId(docId);
 		doc.setPid(pid);
 		doc.setPath(path);
 		doc.setName(name);
+		doc.setLevel(level);
 		return doc;
 	}
 	
+	private Integer getLevelByParentPath(String path) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	protected void seperatePathAndName(String entryPath, String [] result) {
 		String [] paths = entryPath.split("/");
 		
