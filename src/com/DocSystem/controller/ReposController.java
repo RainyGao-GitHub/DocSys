@@ -583,7 +583,7 @@ public class ReposController extends BaseController{
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
-	public void getReposManagerMenu(Integer vid,Integer docId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void getReposManagerMenu(Integer vid,Long docId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -632,23 +632,14 @@ public class ReposController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		if(docId == null || docId == 0)
 		{
-			docId = 0;
 			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 		else
 		{
-			//Format path and name
-			if(path == null)
-			{
-				path = "";
-			}
-			if(name == null)
-			{
-				name = "";
-			}
+			Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null, null);
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, rootDoc, rootDocAuth, docAuthHashMap, path, name, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 		
 		//合并列表
@@ -753,8 +744,10 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null, null);
+		
 		//检查当前用户的权限
-		if(isAdminOfDoc(repos, login_user, docId, path, name) == false)
+		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
 			System.out.println("getDocAuthList() isAdminOfDoc return false");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
@@ -780,11 +773,11 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = null;
 			if(userId!= null)	//It is user
 			{
-				docAuth = getUserDispDocAuth(repos, userId, docId, path, name);
+				docAuth = getUserDispDocAuth(repos, userId, doc);
 			}
 			else if(groupId != null)
 			{
-				docAuth = getGroupDispDocAuth(repos, groupId, docId, path, name);
+				docAuth = getGroupDispDocAuth(repos, groupId, doc);
 			}
 			printObject("docAuth:", docAuth);
 			

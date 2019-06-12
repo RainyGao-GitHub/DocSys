@@ -1754,7 +1754,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Update the latestEditTime
-		Doc fsDoc = fsGetDoc(repos, docId, parentId, parentPath, docName);
+		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
@@ -2102,7 +2102,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
-		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
+		Doc remoteEntry = verReposGetDoc(repos, doc, null);
 		if(remoteEntry == null)
 		{
 			docSysDebugLog("syncupForDocChange_NoFS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
@@ -2205,7 +2205,7 @@ public class BaseController  extends BaseFunction{
 			return SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, subDocSyncFlag);
 		}	
 			
-		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
+		Doc localEntry = fsGetDoc(repos, doc);
 		printObject("syncupForDocChange_FS() localEntry: ", localEntry);
 
 		if(localEntry == null)
@@ -2227,7 +2227,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		Doc remoteEntry = verReposGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), null);
+		Doc remoteEntry = verReposGetDoc(repos, doc, null);
 		printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
 
 		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
@@ -2499,7 +2499,7 @@ public class BaseController  extends BaseFunction{
 				return dbDoc;
 			}
 
-			dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			dbDoc = dbGetDoc(repos, doc, true);
 			printObject("docSysGetDoc() dbDoc: ", dbDoc);
 
 			int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
@@ -2511,10 +2511,10 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			localEntry = fsGetDoc(repos, docId, pid, parentPath, docName);
+			localEntry = fsGetDoc(repos, doc);
 			printObject("docSysGetDoc() localEntry: ", localEntry);
 
-			dbDoc = dbGetDoc(repos, docId, pid, parentPath, docName, true);
+			dbDoc = dbGetDoc(repos, doc, true);
 			printObject("docSysGetDoc() dbDoc: ", dbDoc);
 			if(localEntry == null)
 			{
@@ -2532,7 +2532,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//0/4 
-			remoteEntry = verReposGetDoc(repos, docId, pid, parentPath, docName, null);
+			remoteEntry = verReposGetDoc(repos, doc, null);
 			printObject("docSysGetDoc() remoteEntry: ", remoteEntry);
 			if(remoteEntry == null)
 			{
@@ -2553,25 +2553,25 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 
-	protected Doc fsGetDoc(Repos repos, Long docId, Long pid, String parentPath, String name) 
+	protected Doc fsGetDoc(Repos repos, Doc doc) 
 	{
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPid(pid);
-		doc.setPath(parentPath);
-		doc.setName(name);
-		doc.setType(0);	//不存在
+		Doc localDoc = new Doc();
+		localDoc.setVid(repos.getId());
+		localDoc.setDocId(doc.getDocId());
+		localDoc.setPid(doc.getPid());
+		localDoc.setPath(doc.getPath());
+		localDoc.setName(doc.getName());
+		localDoc.setType(0);	//不存在
 	
-		String localParentPath = getReposRealPath(repos) + parentPath;
-		File localEntry = new File(localParentPath,name);
+		String localParentPath = getReposRealPath(repos) + doc.getPath();
+		File localEntry = new File(localParentPath,doc.getName());
 		if(localEntry.exists())
 		{
-			doc.setSize(localEntry.length());
-			doc.setLatestEditTime(localEntry.lastModified());
-			doc.setType(localEntry.isDirectory()? 2 : 1);
+			localDoc.setSize(localEntry.length());
+			localDoc.setLatestEditTime(localEntry.lastModified());
+			localDoc.setType(localEntry.isDirectory()? 2 : 1);
 		}
-		return doc;
+		return localDoc;
 	}
 	
 	private Doc verReposGetDoc(Repos repos, Doc doc, String revision)
@@ -2783,7 +2783,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//If localDoc not exists, do delete
-		Doc localEntry = fsGetDoc(repos, doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName());
+		Doc localEntry = fsGetDoc(repos, doc);
 		
 		int localChangeType = getLocalChangeType(dbDoc, localEntry);
 		switch(localChangeType)
@@ -3074,7 +3074,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditorName(login_user.getName());
 		
 		//Get latestEditTime
-		Doc fsDoc = fsGetDoc(repos, docId, parentId, parentPath, docName);
+		Doc fsDoc = fsGetDoc(repos, doc);
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
@@ -3797,9 +3797,9 @@ public class BaseController  extends BaseFunction{
 	}	
 	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
-	protected boolean checkUserAddRight(Repos repos, Integer userId, Long parentId, String parentPath, String docName, ReturnAjax rt) 
+	protected boolean checkUserAddRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt) 
 	{		
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, parentId, parentPath, docName);
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, doc);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3821,9 +3821,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Long docId, String parentPath, String docName, ReturnAjax rt)
+	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt)
 	{	
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, doc);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3845,9 +3845,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUserEditRight(Repos repos, Integer userId, Long docId, String parentPath, String docName, ReturnAjax rt)
+	protected boolean checkUserEditRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt)
 	{
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
+		DocAuth docUserAuth = getUserDocAuth(repos, userId, doc);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3869,9 +3869,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUseAccessRight(Repos repos, Integer userId, Long docId, String parentPath, String docName, ReturnAjax rt)
+	protected boolean checkUseAccessRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt)
 	{
-		DocAuth docAuth = getUserDocAuth(repos, userId, docId, parentPath, docName);
+		DocAuth docAuth = getUserDocAuth(repos, userId, doc);
 		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -3939,7 +3939,7 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 	
-	protected boolean isAdminOfDoc(Repos repos, User login_user, Long docId, String parentPath, String docName) 
+	protected boolean isAdminOfDoc(Repos repos, User login_user, Doc doc) 
 	{
 		if(login_user.getType() == 2)	//超级管理员可以访问所有目录
 		{
@@ -3947,7 +3947,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		DocAuth userDocAuth = getUserDocAuth(repos, login_user.getId(), docId, parentPath, docName);
+		DocAuth userDocAuth = getUserDocAuth(repos, login_user.getId(), doc);
 		if(userDocAuth != null && userDocAuth.getIsAdmin() != null && userDocAuth.getIsAdmin() == 1)
 		{
 			return true;
@@ -4029,17 +4029,11 @@ public class BaseController  extends BaseFunction{
 	
 	
 	//应该考虑将获取Group、User的合并到一起
-	protected DocAuth getGroupDispDocAuth(Repos repos, Integer groupId,Long docId, String parentPath, String docName) 
+	protected DocAuth getGroupDispDocAuth(Repos repos, Integer groupId, Doc doc) 
 	{
 		System.out.println("getGroupDispDocAuth() groupId:"+groupId);
-		//For rootDoc
-		if(docId == null || docId == 0)
-		{
-			parentPath = "";
-			docName = "";
-		}
 		
-		DocAuth docAuth = getGroupDocAuth(repos, groupId, docId, parentPath, docName);	//获取用户真实的权限
+		DocAuth docAuth = getGroupDocAuth(repos, groupId, doc);	//获取用户真实的权限
 		
 		 String groupName = getGroupName(groupId);
 		 
@@ -4049,14 +4043,14 @@ public class BaseController  extends BaseFunction{
 			docAuth = new DocAuth();
 			docAuth.setGroupId(groupId);
 			docAuth.setGroupName(groupName);
-			docAuth.setDocId(docId);
-			docAuth.setDocName(docName);
-			docAuth.setDocPath(parentPath);
+			docAuth.setDocId(doc.getDocId());
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
 			docAuth.setReposId(repos.getId());
 		}
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
-			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(docId))
+			if(docAuth.getUserId() != null || !docAuth.getGroupId().equals(groupId) || !docAuth.getDocId().equals(doc.getDocId()))
 			{
 				System.out.println("getGroupDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置groupId、groupName");
 				docAuth.setId(null);	//clear reposAuthID, so that we know this setting was not on user directly
@@ -4064,9 +4058,9 @@ public class BaseController  extends BaseFunction{
 			//修改信息
 			docAuth.setGroupId(groupId);
 			docAuth.setGroupName(groupName);
-			docAuth.setDocId(docId);
-			docAuth.setDocName(docName);
-			docAuth.setDocPath(parentPath);
+			docAuth.setDocId(doc.getDocId());
+			docAuth.setDocName(doc.getName());
+			docAuth.setDocPath(doc.getPath());
 			docAuth.setReposId(repos.getId());
 		}
 		return docAuth;
@@ -4097,7 +4091,7 @@ public class BaseController  extends BaseFunction{
 		else	//如果docAuth非空，需要判断是否是直接权限，如果不是需要对docAuth进行修改
 		{
 			printObject("getUserDispDocAuth() docAuth:",docAuth);
-			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(DocID))
+			if(docAuth.getUserId() == null || !docAuth.getUserId().equals(UserID) || !docAuth.getDocId().equals(doc.getDocId()))
 			{
 				System.out.println("getUserDispDocAuth() docAuth为继承的权限,需要删除reposAuthId并设置userID、UserName");
 				docAuth.setId(null);	//clear docAuthID, so that we know this setting was not on user directly
@@ -4113,9 +4107,9 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 
-	protected DocAuth getGroupDocAuth(Repos repos, Integer groupId,Long docId, String parentPath, String docName)
+	protected DocAuth getGroupDocAuth(Repos repos, Integer groupId, Doc doc)
 	{
-		return getRealDocAuth(repos, null, groupId, docId, parentPath, docName);
+		return getRealDocAuth(repos, null, groupId, doc);
 	}
 	
 	protected DocAuth getUserDocAuth(Repos repos, Integer userId, Doc doc) 
@@ -4126,7 +4120,7 @@ public class BaseController  extends BaseFunction{
 	//Function:getUserDocAuth
 	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId, Doc doc) 
 	{
-		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Long> docIdList = new ArrayList<Long>();
@@ -4955,45 +4949,44 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryDetail(docPath, commitId);
 	}
 	
-	protected String verReposRealDocAdd(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposRealDocAdd(Repos repos, Doc doc,String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		if(commitMsg == null)
 		{
 			//commitMsg = "Add " + parentPath +  entryName;
-			commitMsg = "新增 " + parentPath +  entryName;
+			commitMsg = "新增 " + doc.getPath() +  doc.getName();
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnRealDocCommit(repos,parentPath,entryName,type,commitMsg,commitUser,rt, null);
+			return svnRealDocCommit(repos,doc,commitMsg,commitUser,rt, null);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitRealDocAdd(repos,parentPath,entryName,type,commitMsg,commitUser,rt);
+			return gitRealDocAdd(repos,doc,commitMsg,commitUser,rt);
 		}
 		return null;
 	}
 
-	protected String svnRealDocCommit(Repos repos, String parentPath,String entryName,Integer type,String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	protected String svnRealDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{
-		String remotePath = parentPath + entryName;
 		String reposRPath = getReposRealPath(repos);
 		
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, true, commitUser) == false)
 		{
-			System.out.println("svnRealDocCommit() " + remotePath + " svnUtil.Init失败！");	
+			System.out.println("svnRealDocCommit() " + doc.getPath() + doc.getName() + " svnUtil.Init失败！");	
 			return null;
 		}
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,reposRPath+parentPath,commitMsg,commitUser,true, null, commitHashMap, 2);
+		return svnUtil.doAutoCommit(doc,reposRPath, null, commitMsg,commitUser,true, commitHashMap, 2);
 	}
 	
-	protected String gitRealDocAdd(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String gitRealDocAdd(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
-		System.out.println("gitRealDocAdd() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
-		if(entryName == null || entryName.isEmpty())
+		System.out.println("gitRealDocAdd() reposId:" + repos.getId() + " parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		if(doc.getName().isEmpty())
 		{
 			System.out.println("gitRealDocAdd() entryName can not be empty");
 			return null;
@@ -5008,9 +5001,10 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//Add to Doc to WorkingDirectory
-		String docPath = getReposRealPath(repos) + parentPath + entryName;
-		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
-		if(type == 1)
+		String entryPath = doc.getPath() + doc.getName();
+		String docPath = getReposRealPath(repos) + entryPath;
+		String wcDocPath = getLocalVerReposPath(repos, true) + entryPath;
+		if(doc.getType() == 1)
 		{
 			if(copyFile(docPath, wcDocPath, false) == false)
 			{
@@ -5030,7 +5024,7 @@ public class BaseController  extends BaseFunction{
 		}			
 		
 		//Commit will roll back WC if there is error
-		return gitUtil.gitAdd(parentPath, entryName,commitMsg, commitUser);
+		return gitUtil.gitAdd(doc,commitMsg, commitUser);
 	}
 	
 	protected String verReposRealDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) {	
@@ -5073,7 +5067,7 @@ public class BaseController  extends BaseFunction{
 		return "";
 	}
 
-	protected String verReposRealDocCommit(Repos repos, String parentPath, String entryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	protected String verReposRealDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{	
 		if(commitMsg == null)
 		{
