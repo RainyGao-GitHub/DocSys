@@ -297,7 +297,7 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
-	public void moveDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcPath, String srcName,String dstPath, String dstName, 
+	public void moveDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type, 
 			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("moveDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcPath:" + srcPath + " srcName:" + srcName + " dstPath:" + dstPath+ " dstName:" + dstName);
 		
@@ -328,13 +328,15 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
+		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", srcLevel-1, 2);
+		if(checkUserDeleteRight(repos, login_user.getId(), srcParentDoc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
-	
-		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
+
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2);
+		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -345,8 +347,11 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type);
+
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = moveDoc(repos, docId, srcPid, dstPid, type, srcPath,srcName,dstPath,dstName, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -357,18 +362,9 @@ public class DocController extends BaseController{
 
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
-	public void copyDoc(Integer reposId, Long docId, Long srcPid, Long dstPid, Integer type, String srcPath, String srcName,String dstPath, String dstName, 
+	public void copyDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type,
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcPath:" + srcPath + " srcName:" + srcName + " dstPath:" + dstPath+ " dstName:" + dstName);
-		
-		if(srcPath == null)
-		{
-			srcPath = "";
-		}
-		if(dstPath == null)
-		{
-			dstPath = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -389,7 +385,8 @@ public class DocController extends BaseController{
 		}
 				
 		//检查用户是否有目标目录权限新增文件
-		if(checkUserAddRight(repos, login_user.getId(), dstPid, dstPath, "", rt) == false)
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2);
+		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
 		{
 			writeJson(rt, response);
 			return;
@@ -400,8 +397,11 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type);
+		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, docId, srcPid, dstPid, type, srcPath,srcName,dstPath,dstName, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -418,11 +418,6 @@ public class DocController extends BaseController{
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " pid: " + pid + " path: " + path);
-
-		if(path == null)
-		{
-			path = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -471,16 +466,14 @@ public class DocController extends BaseController{
 				if(false == localParentDir.exists())
 				{
 					localParentDir.mkdirs();
-					pid = buildPidByPath(level-1, path);
 				}
 				
-				docId = buildDocIdByName(level, path, name);
-				Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+				Doc doc = buildBasicDoc(reposId, null, null, path, name, level, 1);
+				Doc dbDoc = docSysGetDoc(repos, doc, login_user);
 				
-				if(doc == null)
+				if(dbDoc == null)
 				{
-					boolean ret = addDoc(repos, 1, docId, pid, path, name, 
-								null, 
+					boolean ret = addDoc(repos, doc,
 								null,size, checkSum, 
 								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 					writeJson(rt, response);
@@ -492,7 +485,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					boolean ret = updateDoc(repos, docId, pid, path, name, 
+					boolean ret = updateDoc(repos, doc, 
 							null, size,checkSum,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
 				
@@ -514,12 +507,6 @@ public class DocController extends BaseController{
 	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("checkDocInfo name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " pid: " + pid);
 
-		if(path == null)
-		{
-			path = "";
-		}
-
-		
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -539,7 +526,8 @@ public class DocController extends BaseController{
 		}
 		
 		//检查登录用户的权限
-		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), pid, path, "");
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2);
+		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
 			docSysErrorLog("您无权在该目录上传文件!", rt);
@@ -580,21 +568,18 @@ public class DocController extends BaseController{
 		}
 		
 		//检查文件是否已存在 
-		if(docId < 0)
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
+		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		if(dbDoc != null)
 		{
-			docId = buildDocIdByName(level, path, name);
-		}
-		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
-		if(doc != null)
-		{
-			rt.setData(doc);
+			rt.setData(dbDoc);
 			rt.setMsgData("0");
 			docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
 	
 			//检查checkSum是否相同
 			if(type == 1)
 			{
-				if(true == isDocCheckSumMatched(doc,size,checkSum))
+				if(true == isDocCheckSumMatched(dbDoc,size,checkSum))
 				{
 					rt.setMsgData("1");
 					docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
@@ -615,11 +600,11 @@ public class DocController extends BaseController{
 					//Do copy the Doc
 					String srcPath = sameDoc.getPath();
 					List<CommonAction> actionList = new ArrayList<CommonAction>();
-					boolean ret = copyDoc(repos, sameDoc.getDocId(), sameDoc.getPid(), pid, sameDoc.getType(), srcPath, sameDoc.getName(), path, name, commitMsg,login_user.getName(),login_user,rt,actionList);
+					boolean ret = copyDoc(repos, sameDoc, doc, commitMsg,login_user.getName(),login_user,rt,actionList);
 					if(ret == true)
 					{
-						doc = dbGetDoc(repos, docId, pid, path, name, true);
-						rt.setData(doc);
+						dbDoc = dbGetDoc(repos, doc, true);
+						rt.setData(dbDoc);
 						rt.setMsgData("1");
 						docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
 						writeJson(rt, response);

@@ -1006,7 +1006,7 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 
-	private boolean scheduleForDelete(List<CommitAction> actionList, String localPath, String parentPath, String entryName) {
+	private boolean scheduleForDelete(List<CommitAction> actionList, Doc doc, String localRootPath) {
 		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath);
 	    if(entryName.isEmpty())	//If the entryName is empty, means we need to go through the subNodes directly
         {
@@ -1036,7 +1036,7 @@ public class GITUtil  extends BaseController{
 	                    System.out.println("scheduleForDelete() delete " + remoteEntryPath + " failed");
                     	return false;
                     }
-                    insertDeleteAction(actionList,parentPath,entryName);
+                    insertDeleteAction(actionList, doc);
                 }
             }
             else if(remoteEntry.isDirectory()) 
