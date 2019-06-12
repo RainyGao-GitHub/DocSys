@@ -541,7 +541,8 @@ public class BaseFunction{
 	
 	protected String getVDocName(Doc doc) 
 	{
-		return doc.getVid() + "_" + doc.getDocId() + "_" + doc.getName();
+		//return doc.getVid() + "_" + doc.getDocId() + "_" + doc.getName();
+		return doc.getDocId() + "";
 	}
 	
 	protected static String getHashId(String path) 

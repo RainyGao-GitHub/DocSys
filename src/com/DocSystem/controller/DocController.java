@@ -79,15 +79,6 @@ public class DocController extends BaseController{
 		System.out.println("addDoc reposId:" + reposId + " type: " + type + " level: " + level +" pid:" + pid  + " path: " + path + " name: " + name + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
 		
-		if(path == null)
-		{
-			path = "";
-		}
-		if(name == null)
-		{
-			name = "";
-		}
-		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -106,16 +97,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(checkUserAddRight(repos, login_user.getId(), pid, path, "", rt) == false)
+		Doc doc = buildBasicDoc(reposId, null, pid, path, name, level, type);
+		doc.setContent(content);
+		
+		if(checkUserAddRight(repos, login_user.getId(), doc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 		
-		Long docId = buildDocIdByName(level, path, name);
-		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, type,  docId, pid, path, name, content, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		boolean ret = addDoc(repos, doc, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret == false)

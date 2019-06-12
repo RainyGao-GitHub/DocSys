@@ -1650,13 +1650,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//底层addDoc接口
-	protected boolean addDoc(Repos repos, Integer type,  Long docId, Long parentId, String parentPath, String docName, 
-			String content,	//VDoc Content
+	protected boolean addDoc(Repos repos, Doc doc, 
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		System.out.println("addDoc() docId:" + docId + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 	
 		switch(repos.getType())
 		{
@@ -1664,7 +1663,7 @@ public class BaseController  extends BaseFunction{
 		case 2:
 		case 3:
 		case 4:
-			return addDoc_FS(repos, type, docId, parentId, parentPath, docName, content,	//Add a empty file
+			return addDoc_FS(repos, doc,	//Add a empty file
 					uploadFile, fileSize, checkSum, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
@@ -1673,31 +1672,21 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected boolean addDoc_FS(Repos repos, Integer type, Long docId, Long parentId, String parentPath, String docName, String content,	//Add a empty file
+	protected boolean addDoc_FS(Repos repos, Doc doc,	//Add a empty file
 			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		System.out.println("addDoc_FS()  type:" + type + " pid:" + parentId + " parentPath:" + parentPath + " docName:" + docName);
+		System.out.println("addDoc_FS()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 
 		String reposRPath = getReposRealPath(repos);
-		String localParentPath =  reposRPath + parentPath;
-		String localDocPath = localParentPath + docName;
-		
-		Integer reposId = repos.getId();
+		String localParentPath =  reposRPath + doc.getPath();
+		String localDocPath = localParentPath + doc.getName();
 		
 		//Build doc
-		Doc doc = new Doc();								
-		doc.setVid(reposId);
-		doc.setPid(parentId);
-		doc.setDocId(docId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		doc.setType(type);
 		doc.setSize(fileSize);
 		doc.setCheckSum(checkSum);
-		doc.setContent(content);
-		
+
 		//set createTime
 		//long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
 		//doc.setCreateTime(nowTimeStamp);
@@ -1714,7 +1703,7 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				System.out.println("addDoc() lockDoc " + docName + " Failed!");
+				System.out.println("addDoc() lockDoc " + doc.getName() + " Failed!");
 				return false;
 			}
 		}
@@ -1734,7 +1723,7 @@ public class BaseController  extends BaseFunction{
 			{	
 				unlockDoc(doc, login_user, docLock);
 				
-				String MsgInfo = "createRealDoc " + docName +" Failed";
+				String MsgInfo = "createRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("createRealDoc Failed");
 				return false;
@@ -1746,7 +1735,7 @@ public class BaseController  extends BaseFunction{
 			{	
 				unlockDoc(doc, login_user, null);
 				
-				String MsgInfo = "updateRealDoc " + docName +" Failed";
+				String MsgInfo = "updateRealDoc " + doc.getName() +" Failed";
 				rt.setError(MsgInfo);
 				System.out.println("updateRealDoc Failed");
 				return false;
@@ -1768,7 +1757,7 @@ public class BaseController  extends BaseFunction{
 		doc.setRevision(revision);
 		if(dbAddDoc(repos, doc, false) == false)
 		{	
-			docSysWarningLog("Add Node: " + docName +" Failed！", rt);
+			docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 		}
 		
 		//BuildMultiActionListForDocAdd();
@@ -5288,9 +5277,10 @@ public class BaseController  extends BaseFunction{
 		}
 	
 		//Copy to Doc to WorkingDirectory
-		String docPath = getReposRealPath(repos) + parentPath + entryName;
-		String wcDocPath = getLocalVerReposPath(repos, true) + parentPath + entryName;
-		if(type == 1)
+		String entryPath = doc.getPath() + doc.getName();
+		String docPath = getReposRealPath(repos) + entryPath;
+		String wcDocPath = getLocalVerReposPath(repos, true) + entryPath;
+		if(doc.getType() == 1)
 		{
 			if(copyFile(docPath, wcDocPath, true) == false)
 			{
@@ -5305,7 +5295,7 @@ public class BaseController  extends BaseFunction{
 		}			
 				
 		//Commit will roll back WC if there is error
-		return gitUtil.Commit(parentPath, entryName,commitMsg, commitUser);
+		return gitUtil.Commit(doc,commitMsg, commitUser);
 	}
 	
 	protected String gitRealDocCopy(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
@@ -5712,7 +5702,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Commit the localPath to svnPath
-	protected String svnAutoCommit(Repos repos,boolean isRealDoc,String parentPath, String entryName, String localRootPath, 
+	protected String svnAutoCommit(Repos repos,boolean isRealDoc, Doc doc, String localRootPath, 
 			String commitMsg, String commitUser,boolean modifyEnable,String localRefRootPath)
 	{			
 		SVNUtil svnUtil = new SVNUtil();
@@ -5722,8 +5712,12 @@ public class BaseController  extends BaseFunction{
 			System.out.println("do Init Failed");
 			return null;
 		}
+
+		String vDocName = getVDocName(doc);
+		doc.setPath("");
+		doc.setName(vDocName);
 		
-		return svnUtil.doAutoCommit(parentPath,entryName,localRootPath,commitMsg,commitUser,modifyEnable,localRefRootPath, null,2);
+		return svnUtil.doAutoCommit(doc,localRootPath, localRefRootPath, commitMsg,commitUser,modifyEnable, null,2);
 	}
 
     /************************* DocSys全文搜索操作接口 ***********************************/

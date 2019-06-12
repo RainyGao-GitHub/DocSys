@@ -933,8 +933,10 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(reposId, docId, null, path, name, null, null);
+		
 		//检查当前用户的权限
-		if(isAdminOfDoc(repos, login_user, docId, path, name) == false)
+		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
 			System.out.println("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
@@ -943,7 +945,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//login_user不得设置超过自己的权限：超过了则无效
-		if(isUserAuthExpanded(repos, login_user, docId, path, name, isAdmin,access,editEn,addEn,deleteEn,heritable,rt) == true)
+		if(isUserAuthExpanded(repos, login_user, doc, isAdmin,access,editEn,addEn,deleteEn,heritable,rt) == true)
 		{
 			System.out.println("超过设置者的权限 ！");
 			writeJson(rt, response);			
@@ -1098,8 +1100,10 @@ public class ReposController extends BaseController{
 			return;
 		}
 
+		Doc doc = buildBasicDoc(reposId, docId, null, path, name, null, null);
+		
 		//检查当前用户的权限
-		if(isAdminOfDoc(repos, login_user, docId, path, name) == false)
+		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
 			rt.setError("您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
@@ -1116,7 +1120,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);			
 	}
 
-	private boolean isUserAuthExpanded(Repos repos, User login_user, Long docId, String path, String name, 
+	private boolean isUserAuthExpanded(Repos repos, User login_user, Doc doc, 
 			Integer isAdmin, Integer access, Integer editEn, Integer addEn, Integer deleteEn, Integer heritable,
 			ReturnAjax rt) 
 	{
@@ -1127,7 +1131,7 @@ public class ReposController extends BaseController{
 			return false;
 		}
 		
-		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), docId, path, name); 
+		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), doc); 
 		if(docAuth == null)
 		{
 			rt.setError("您没有该目录/文件的权限");
@@ -1192,8 +1196,10 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(reposId, docId, null, path, name, null, null);
+		
 		//检查该用户是否设置了目录权限
-		DocAuth docAuth = getUserDispDocAuth(repos, login_user.getId(), docId, path, name); 
+		DocAuth docAuth = getUserDispDocAuth(repos, login_user.getId(), doc); 
 		if(docAuth == null)
 		{
 			rt.setError("您没有该目录/文件的权限");
