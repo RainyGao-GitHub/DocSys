@@ -153,9 +153,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Long docId = buildDocIdByName(0,"",name);
+		Doc doc = buildBasicDoc(reposId, null, pid, path, name, 0, 1);
+		doc.setContent(content);
+		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, 1, docId, pid, path, name, content, null, 0L, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
+		boolean ret = addDoc(repos, doc, null, 0L, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -189,11 +191,6 @@ public class DocController extends BaseController{
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("deleteDoc reposId:" + reposId + " docId:" + docId + " pid:" + pid  + " path: " + path + " name: " + name );
 		
-		if(path == null)
-		{
-			path = "";
-		}
-		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -202,7 +199,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
 		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -212,14 +208,17 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(checkUserDeleteRight(repos, login_user.getId(), pid, path, "", rt) == false)
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, null, null);
+		
+		if(checkUserDeleteRight(repos, login_user.getId(), doc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
-		
+
+		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		String ret = deleteDoc(repos, docId, path, name, commitMsg, commitUser, login_user, rt, actionList);
+		String ret = deleteDoc(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		
 		writeJson(rt, response);
 		
@@ -232,16 +231,18 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Long docId, Long srcPid, Integer type, String srcPath, String srcName, String dstName, 
-							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("renameDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid  + " srcPath:" + srcPath + " srcName:" + srcName + " dstName:" + dstName);
-		
-		if(srcPath == null)
-		{
-			srcPath = "";
-		}
-
+	public void renameDoc(Integer reposId, Long docId, String path, String name, Long pid, Integer level, Integer type, String dstName, 
+							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("renameDoc reposId: " + reposId  + " docId: " + docId + " pid: " + pid  + " path:" + path + " name:" + name + " dstName:" + dstName);
 		ReturnAjax rt = new ReturnAjax();
+		
+		if(name == null || "".equals(name))
+		{
+			docSysErrorLog("文件名不能为空！", rt);
+			writeJson(rt, response);			
+			return;
+		}
 		
 		if(dstName == null || "".equals(dstName))
 		{
@@ -266,22 +267,26 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-	
-		if(checkUserDeleteRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
-		{
-			writeJson(rt, response);	
-			return;
-		}
-	
-		if(checkUserAddRight(repos, login_user.getId(), srcPid, srcPath, "", rt) == false)
-		{
-			writeJson(rt, response);	
-			return;
-		}
 		
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2);
+		
+		if(checkUserDeleteRight(repos, login_user.getId(), parentDoc, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+	
+		if(checkUserAddRight(repos, login_user.getId(), parentDoc, rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = renameDoc(repos, docId, srcPid, type, srcPath,srcName, dstName, commitMsg, commitUser, login_user, rt, actionList);
+		
+		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
+		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type);		
+		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)

@@ -1821,7 +1821,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层deleteDoc接口
-	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	protected String deleteDoc(Repos repos, Doc doc, String commitMsg,String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		switch(repos.getType())
 		{
@@ -3091,62 +3091,34 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean renameDoc(Repos repos, Long docId, Long srcPid, Integer type, String srcParentPath,
-			String srcName, String dstName, String commitMsg, String commitUser, User login_user, ReturnAjax rt,
-			List<CommonAction> actionList) {
+	protected boolean renameDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
 		case 3:
 		case 4:
-			return 	moveDoc_FS(repos, docId, srcPid, srcPid, type, srcParentPath, srcName, srcParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
+			return 	moveDoc_FS(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		}
 		return false;
 	}
 	
 
-	protected boolean moveDoc(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
-			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser,
-			User login_user, ReturnAjax rt, List<CommonAction> actionList) {
+	protected boolean moveDoc(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) {
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
 		case 3:
 		case 4:
-			return 	moveDoc_FS(repos, docId, srcPid, dstPid, type, srcParentPath, srcName, dstParentPath, dstName,
-					commitMsg, commitUser, login_user, rt, actionList);
+			return 	moveDoc_FS(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		}
 		return false;
 	}
 
-	private boolean moveDoc_FS(Repos repos, Long docId, Long srcPid, Long dstPid, Integer type, String srcParentPath,
-			String srcName, String dstParentPath, String dstName, String commitMsg, String commitUser, User login_user,
-			ReturnAjax rt, List<CommonAction> actionList) {
-
-		System.out.println("moveDoc_FS() move " +docId+ " " + srcParentPath+srcName + " to " + dstParentPath+dstName);			
-		
-		Integer reposId = repos.getId();
-
-		Doc srcDoc = new Doc();
-		srcDoc.setVid(reposId);
-		srcDoc.setDocId(docId);
-		srcDoc.setPid(srcPid);
-		srcDoc.setType(type);
-		srcDoc.setPath(srcParentPath);
-		srcDoc.setName(srcName);
-		
-		Doc dstDoc = new Doc();
-		int dstLevel = getLevelByParentPath(dstParentPath);
-		dstDoc.setVid(reposId);
-		dstDoc.setDocId(buildDocIdByName(dstLevel, dstParentPath, dstName));
-		dstDoc.setPid(dstPid);
-		dstDoc.setType(type);
-		dstDoc.setPath(dstParentPath);
-		dstDoc.setName(dstName);
-		
+	private boolean moveDoc_FS(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, User login_user,
+			ReturnAjax rt, List<CommonAction> actionList) 
+	{
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		synchronized(syncLock)
@@ -3179,11 +3151,11 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc, login_user, srcDocLock);
 			unlockDoc(dstDoc, login_user, dstDocLock);
 
-			docSysDebugLog("moveDoc_FS() moveRealDoc " + srcName + " to " + dstName + " 失败", rt);
+			docSysDebugLog("moveDoc_FS() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
 			return false;
 		}
 		
-		String revision = verReposRealDocMove(repos, srcParentPath,srcName, dstParentPath, dstName,type,commitMsg, commitUser,rt);
+		String revision = verReposRealDocMove(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
 			docSysWarningLog("moveDoc_FS() verReposRealDocMove Failed", rt);
@@ -5076,23 +5048,22 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected String verReposRealDocMove(Repos repos, String srcParentPath,String srcEntryName,
-			String dstParentPath, String dstEntryName,Integer type, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposRealDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		if(commitMsg == null)
 		{
 			//commitMsg = "Move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName;
-			commitMsg = "移动 " + srcParentPath + srcEntryName + " 到 " + dstParentPath + dstEntryName;
+			commitMsg = "移动 " + srcDoc.getPath() + srcDoc.getName() + " 到 " + dstDoc.getPath() + dstDoc.getName();
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt, true);			
+			return svnRealDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, true);			
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitRealDocCopy(repos, srcParentPath, srcEntryName, dstParentPath, dstEntryName, type, commitMsg, commitUser, rt, true);
+			return gitRealDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, true);
 		}
 		return null;
 	}
@@ -5500,16 +5471,13 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 
-	protected String svnRealDocCopy(Repos repos, String srcParentPath, String srcEntryName,
-			String dstParentPath, String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) {
-		
-		System.out.println("svnRealDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
-			
-		String revision = svnCopy(repos, true, srcParentPath,srcEntryName,dstParentPath,dstEntryName,commitMsg,commitUser,rt, isMove);
+	protected String svnRealDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) 
+	{
+		String revision = svnCopy(repos, true, srcDoc, dstDoc, commitMsg,commitUser,rt, isMove);
 		
 		if(revision == null)
 		{
-			System.out.println("文件: " + srcEntryName + " svnCopy失败");
+			System.out.println("文件: " + srcDoc.getName() + " svnCopy失败");
 		}
 		return revision;
 	}
