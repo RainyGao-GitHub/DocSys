@@ -1759,7 +1759,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
 		//commit to history db
-		String revision = verReposRealDocAdd(repos,parentPath,docName,type,commitMsg,commitUser,rt);
+		String revision = verReposRealDocAdd(repos,doc,commitMsg,commitUser,rt);
 		if(revision == null)
 		{
 			docSysWarningLog("verReposRealDocAdd Failed", rt);
@@ -2076,7 +2076,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-				String revision = verReposRealDocCommit(repos, doc.getPath(), doc.getName(), doc.getType(), commitMsg, login_user.getName(), rt, commitHashMap);
+				String revision = verReposRealDocCommit(repos, doc, commitMsg, login_user.getName(), rt, commitHashMap);
 				if(revision != null)
 				{
 					for(Doc commitDoc: commitHashMap.values())
@@ -3078,7 +3078,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposRealDocCommit(repos,parentPath,docName,doc.getType(),commitMsg,commitUser,rt, null);
+		String revision = verReposRealDocCommit(repos, doc, commitMsg,commitUser,rt, null);
 		if(revision == null)
 		{
 			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + parentPath + docName, rt);
@@ -5072,17 +5072,17 @@ public class BaseController  extends BaseFunction{
 		if(commitMsg == null)
 		{
 			//commitMsg = "Commit " + parentPath + entryName;
-			commitMsg = "更新 " + parentPath + entryName;
+			commitMsg = "更新 " + doc.getPath() + doc.getName();
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt, commitHashMap);
+			return svnRealDocCommit(repos, doc, commitMsg, commitUser, rt, commitHashMap);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitRealDocCommit(repos, parentPath, entryName, type, commitMsg, commitUser, rt, commitHashMap);
+			return gitRealDocCommit(repos, doc, commitMsg, commitUser, rt, commitHashMap);
 		}
 		return null;
 	}
@@ -5270,10 +5270,10 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.Commit(doc,commitMsg, commitUser);
 	}
 	
-	protected String gitRealDocCommit(Repos repos, String parentPath, String entryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	protected String gitRealDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{
-		System.out.println("gitRealDocCommit() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
-		if(entryName == null || entryName.isEmpty())
+		System.out.println("gitRealDocCommit() reposId:" + repos.getId() + " parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		if(doc.getName().isEmpty())
 		{
 			System.out.println("gitRealDocCommit() entryName can not be empty");
 			return null;
