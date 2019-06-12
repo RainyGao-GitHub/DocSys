@@ -685,6 +685,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		
 			
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 		String localParentPath = getReposRealPath(repos) + path;
@@ -692,16 +693,15 @@ public class DocController extends BaseController{
 		if(false == localParentDir.exists())
 		{
 			localParentDir.mkdirs();
-			pid = buildPidByPath(level-1, path);
 		}
 		
-		docId = buildDocIdByName(level, path, name);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1);
 		
-		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
-		
-		if(doc == null)	//0: add  1: update
+		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		if(dbDoc == null)	//0: add  1: update
 		{
-			if(checkUserAddRight(repos,login_user.getId(),pid, path, "" ,rt) == false)
+			Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2);
+			if(checkUserAddRight(repos,login_user.getId(), parentDoc, rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -709,7 +709,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(checkUserEditRight(repos, login_user.getId(), docId, path, name, rt) == false)
+			if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -745,8 +745,7 @@ public class DocController extends BaseController{
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(doc == null)
 			{
-				boolean ret = addDoc(repos, 1, docId, pid, path, name, 
-						null, 
+				boolean ret = addDoc(repos, doc, 
 						uploadFile,size, checkSum, 
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 				writeJson(rt, response);
@@ -759,7 +758,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				boolean ret = updateDoc(repos, docId, pid, path, name, 
+				boolean ret = updateDoc(repos, doc, 
 						uploadFile, size,checkSum,   
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
 			
@@ -855,14 +854,10 @@ public class DocController extends BaseController{
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name, String content,String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String content,
+			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		System.out.println("content:[" + content + "]");
-		
-		if(path == null)
-		{
-			path = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -882,8 +877,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
-		if(doc == null)
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
+		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		if(dbDoc == null)
 		{
 			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
 			writeJson(rt, response);			
@@ -891,11 +887,13 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), docId, path, name, rt) == false)
+		if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
+		
+		doc.setContent(content);
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = updateDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
@@ -922,14 +920,10 @@ public class DocController extends BaseController{
 
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
-	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name, String content,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String content,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("tmpSaveVirtualDocContent() reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
-		if(path == null)
-		{
-			path = "";
-		}
-
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -947,10 +941,9 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = new Doc();
-		doc.setPath(path);
-		doc.setName(name);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		doc.setContent(content);
+		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		if(saveVirtualDocContent(userTmpDir, doc, rt) == false)
 		{
@@ -989,10 +982,8 @@ public class DocController extends BaseController{
 		}
 	}
 
-	public void downloadDocPrepare_FS(Repos repos,Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void downloadDocPrepare_FS(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDocPrepare_FS reposId: " + repos.getId() + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
-
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1002,10 +993,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
-		if(doc==null){
-			System.out.println("downloadDocPrepare_FS() Doc " + path+name + " 不存在");
-			docSysErrorLog("文件 " + path+name + "不存在！", rt);
+		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		if(dbDoc == null)
+		{
+			System.out.println("downloadDocPrepare_FS() Doc " +doc.getPath() + doc.getName() + " 不存在");
+			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1014,26 +1006,17 @@ public class DocController extends BaseController{
 		//get reposRPath
 		String reposRPath = getReposRealPath(repos);
 		//文件的localParentPath
-		String localParentPath = reposRPath + path;
+		String localParentPath = reposRPath + doc.getPath();
 		
 		//get userTmpDir
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		
-		int entryType = getLocalEntryType(localParentPath,name);
-		if(entryType < 0)
-		{
-			docSysDebugLog("downloadDocPrepare_FS() Doc " + path+name + " 文件类型未知", rt);
-			docSysErrorLog("未知文件类型", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
+				
 		//For dir 
-		if(entryType == 2) //目录
+		if(dbDoc.getType() == 2) //目录
 		{
 			//doCompressDir and save the zip File under userTmpDir
-			String zipFileName = name + ".zip";
-			if(doCompressDir(localParentPath, name, userTmpDir, zipFileName, rt) == false)
+			String zipFileName = dbDoc.getName() + ".zip";
+			if(doCompressDir(localParentPath, dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
 			{
 				rt.setError("压缩目录失败！");
 				writeJson(rt, response);
@@ -1098,10 +1081,8 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	public void downloadDoc_FS(Repos repos,Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	public void downloadDoc_FS(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		System.out.println("downloadDoc_FS reposId: " + repos.getId() + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
-
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1111,10 +1092,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = docSysGetDoc(repos, docId, pid, path, name, login_user);
+		doc = docSysGetDoc(repos, doc, login_user);
 		if(doc==null){
-			System.out.println("downloadDoc_FS() Doc " + docId + " 不存在");
-			docSysErrorLog("doc " + docId + "不存在！", rt);
+			System.out.println("downloadDoc_FS() Doc " + doc.getName() + " 不存在");
+			docSysErrorLog("doc " + doc.getName() + "不存在！", rt);
 			//writeJson(rt, response);
 			return;
 		}
@@ -1126,14 +1107,14 @@ public class DocController extends BaseController{
 				//get reposRPath
 				String reposRPath = getReposRealPath(repos);
 				//文件的localParentPath
-				String localParentPath = reposRPath + path;
-				sendFileToWebPage(localParentPath, name, rt, response, request);
+				String localParentPath = reposRPath + doc.getPath();
+				sendFileToWebPage(localParentPath, doc.getName(), rt, response, request);
 			}
 			else
 			{
 				//get userTmpDir
 				String userTmpDir = getReposUserTmpPath(repos,login_user);
-				String targetName = name + ".zip";			
+				String targetName = doc.getName() + ".zip";			
 				sendFileToWebPage(userTmpDir, targetName, rt, response, request);
 			}
 		} catch (Exception e) {
@@ -1327,10 +1308,8 @@ public class DocController extends BaseController{
 		}
 	}
 
-	public void DocToPDF_FS(Repos repos, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF_FS(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("DocToPDF_FS docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name);
-
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1340,7 +1319,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String fileSuffix = getFileSuffix(name);
+		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix == null)
 		{
 			docSysErrorLog("未知文件类型", rt);
@@ -1349,14 +1328,14 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), docId, path, name, rt) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
 		{
-			System.out.println("DocToPDF() you have no access right on doc:" + docId);
+			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
 			writeJson(rt, response);	
 			return;
 		}
 			
-		Doc localEntry = fsGetDoc(repos, docId, pid, path, name);
+		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
 			docSysErrorLog("文件不存在！", rt);
@@ -1373,7 +1352,7 @@ public class DocController extends BaseController{
 		
 
 		String webTmpPath = getWebTmpPath();
-		String dstName = repos.getId() + "_" + docId + ".pdf";
+		String dstName = repos.getId() + "_" + doc.getDocId() + ".pdf";
 		String dstPath = webTmpPath + "preview/" + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 
@@ -1382,7 +1361,7 @@ public class DocController extends BaseController{
 		File file = new File(dstPath);
 		if(file.exists())
 		{
-			Doc doc = dbGetDoc(repos, docId, pid, path, name, true);
+			Doc dbDoc = dbGetDoc(repos, doc, true);
 			if(false == isDocLocalChanged(doc,localEntry))
 			{
 				rt.setData(fileLink);
@@ -1392,7 +1371,7 @@ public class DocController extends BaseController{
 		}	
 		
 		//Do convert
-		String localEntryPath = getReposRealPath(repos) + path + name;
+		String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
 		switch(fileSuffix)
 		{
 		case "pdf":
@@ -1494,14 +1473,9 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
-	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " path:" + path + " name:" + name);
-		
-		if(path == null)
-		{
-			path = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -1521,6 +1495,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
+		
 		//Set currentDocId to session which will be used MarkDown ImgUpload
 		session.setAttribute("currentReposId", reposId);
 		session.setAttribute("currentDocId", docId);
@@ -1528,15 +1504,15 @@ public class DocController extends BaseController{
 		session.setAttribute("currentDocName", name);
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), docId, path, name, rt) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
 		{
 			System.out.println("getDoc() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
 			return;
 		}
 
-		Doc doc = dbGetDoc(repos, docId, pid, path, name, true);
-		if(doc == null)
+		Doc dbDoc = dbGetDoc(repos, doc, true);
+		if(dbDoc == null)
 		{
 			docSysErrorLog("文件 " + path+name + " 不存在！", rt);
 			writeJson(rt, response);			
@@ -1563,13 +1539,10 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("lockDoc reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name + " lockType: " + lockType);
-		
-		if(path == null)
-		{
-			path = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1594,20 +1567,16 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+	
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), docId, path, name, rt) == false)
+		if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 
-		Doc doc = new Doc();
-		doc.setVid(reposId);
-		doc.setDocId(docId);
-		doc.setPid(pid);
-		doc.setPath(path);
-		doc.setName(name);
 		synchronized(syncLock)
 		{
 			boolean subDocCheckFlag = false;
