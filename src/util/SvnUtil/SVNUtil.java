@@ -158,32 +158,37 @@ public class SVNUtil  extends BaseController{
     public Doc getDoc(Doc doc, Long revision) 
 	{    	
     	String entryPath = doc.getPath() + doc.getName();
-    	    	
-        try {
-        	SVNNodeKind entryType = repository.checkPath(entryPath, revision);
-	    	if(entryType ==  SVNNodeKind.NONE) 
-			{
-	    		System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	        	return null;
-			}
-	    	else if(entryType ==  SVNNodeKind.DIR) 
-			{
-	    		String strRevision = revision +"";
-	            if(revision == -1)
-	            {
-	            	strRevision = repository.getLatestRevision() + "";
-	            }
-	    		System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
-	    		
-	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2);
-	    		remoteEntry.setRevision(strRevision);
-	            return doc;
-			}
-
-	    	//Doc is file
+    	
+    	Integer type = checkPath(entryPath, revision);
+    	if(type == null)
+    	{
+    		return null;
+    	}
+    	
+        if(type ==  0) 
+		{
+	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
+	        return null;
+		}
+        else if(type ==  2) 
+		{
 	    	String strRevision = revision +"";
-    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1);
-    		remoteEntry.setRevision(strRevision);
+	        if(revision == null || revision == -1)
+	        {
+	        	strRevision = getLatestRevision();
+	        }
+	    	
+	        System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
+	    		
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2);
+	    	remoteEntry.setRevision(strRevision);
+	        return doc;
+		}
+
+	    //Doc is file
+	    String strRevision = revision +"";
+    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1);
+    	remoteEntry.setRevision(strRevision);
 	    	
             //获取commitUser和commitTime的实际意义值得怀疑
             //如用于显示，显然不需要那么实时
@@ -201,12 +206,7 @@ public class SVNUtil  extends BaseController{
 //	            doc.setLatestEditTime(commitTime);
 //	            break;
 //	        }
-	        return remoteEntry;       
-		} catch (SVNException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+    	return remoteEntry;
 	}
     
     //getHistory filePath: remote File Path under repositoryURL
@@ -624,8 +624,15 @@ public class SVNUtil  extends BaseController{
 	    		if(name.isEmpty())
 	    		{
 	    			continue;
-	    		}	    		
-	    		if(SVNNodeKind.NONE == repository.checkPath(path + name, -1))
+	    		}
+	    		
+	    		Integer type = checkPath(path + name, null);
+	    		if(type == null)
+	    		{
+	    			return null;
+	    		}
+	    		
+	    		if(type == 0)
 	    		{
 	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2);
 	    			return doAutoCommit(tempDoc, localRootPath,  localRefRootPath, commitMsg, commitUser, modifyEnable,null, 2);
@@ -831,19 +838,18 @@ public class SVNUtil  extends BaseController{
     	String entryPath = doc.getPath() + doc.getName();
     	String localEntryPath = localRootPath + entryPath;    	
     	File localEntry = new File(localEntryPath);
-    	SVNNodeKind nodeKind;
-		try {
-			nodeKind = repository.checkPath(entryPath, -1);
-		} catch (SVNException e) {
-			System.out.println("scheduleForCommit() checkPath 异常!");
-			e.printStackTrace();
+
+		Integer type = checkPath(entryPath, null);
+    	if(type == null)
+    	{
+    		System.out.println("scheduleForCommit() checkPath 异常!");
 			return;
 		}
     	
     	//本地删除
     	if(!localEntry.exists())
     	{
-    		if(nodeKind == SVNNodeKind.NONE)
+    		if(type == 0)
     		{
     			//已同步
     			return;
@@ -857,13 +863,13 @@ public class SVNUtil  extends BaseController{
     	switch(localEntryType)
     	{
     	case 1:	//文件
-    		if(nodeKind == SVNNodeKind.NONE) 	//新增文件
+    		if(type == 0) 	//新增文件
 	    	{
     			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
 	            return;
     		}
     		
-    		if(nodeKind != SVNNodeKind.FILE)	//文件类型改变
+    		if(type != 1)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
     			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
@@ -892,14 +898,14 @@ public class SVNUtil  extends BaseController{
     		}
     		break;
     	case 2:
-    		if(nodeKind == SVNNodeKind.NONE) 	//新增目录
+    		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
     			insertAddDirAction(actionList,doc,localRootPath,isSubAction);
 	            return;
     		}
     		
-    		if(nodeKind != SVNNodeKind.DIR)	//文件类型改变
+    		if(type != 2)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
 	        	insertAddDirAction(actionList,doc, localRootPath, isSubAction);
@@ -1275,37 +1281,31 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	//复制文件
-	public String svnCopy(String srcParentPath,String srcEntryName, String dstParentPath,String dstEntryName,String commitMsg,String commitUser,boolean isMove)
-	{
-    	if(srcParentPath == null || srcEntryName == null || dstParentPath == null || dstEntryName == null)
-    	{
-    		System.out.println("svnCopy() 非法参数：srcParentPath srcEntryName dstParentPath or dstEntryName is null!");
-    		return null;
-    	}
-    	
-		long latestRevision = -1;
-		SVNNodeKind nodeKind;
-		try {
-			nodeKind = repository.checkPath(srcParentPath + srcEntryName,-1);
-			if (nodeKind == SVNNodeKind.NONE) {
-		    	System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
-		        return null;
-		    }
-			latestRevision = repository.getLatestRevision();
-		} catch (SVNException e) {
+	public String svnCopy(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
+	{    	
+		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
+		Integer type = checkPath(srcEntryPath,null);
+		if(type == null)
+		{
 			System.out.println("remoteCopyEntry() Exception");
-			e.printStackTrace();
 			return null;
 		}
-	        
+		
+		if (type == 0) 
+		{
+		    System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
+		    return null;
+		}
+
+		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
 	    //Do copy File Or Dir
 	    if(isMove)
 	    {
-	       System.out.println("svnCopy() move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);
+	       System.out.println("svnCopy() move " + srcEntryPath + " to " + dstEntryPath);
 	    }
         else
         {
- 	       System.out.println("svnCopy() copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);
+ 	       System.out.println("svnCopy() copy " + srcEntryPath + " to " + dstEntryPath);
         }
 	    
         ISVNEditor editor = getCommitEditor(commitMsg);
@@ -1314,8 +1314,7 @@ public class SVNUtil  extends BaseController{
         	return null;
         }
         
-        if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName,true,latestRevision,isMove) == false)
-        //if(copyEntry(editor, srcParentPath,srcEntryName,dstParentPath, dstEntryName,isDir,latestRevision,isMove) == false)
+        if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), true, -1, isMove) == false)
         {
         	return null;
         }
@@ -1605,18 +1604,16 @@ public class SVNUtil  extends BaseController{
 		
 		List <Doc> subEntryList =  new ArrayList<Doc>();
 		
-		Collection<SVNDirEntry> entries = null;
-		try {
-			SVNNodeKind nodeKind = repository.checkPath(entryPath, revision);
-	    	if(nodeKind == SVNNodeKind.NONE || nodeKind == SVNNodeKind.FILE)
-	    	{
-	    		return null;
-	    	}
-	    	
-			entries = repository.getDir(entryPath, revision, null,(Collection) null);
-		} catch (SVNException e) {
-			System.out.println("getDocList() getDir Failed:" + entryPath);
-			e.printStackTrace();
+		Integer type = checkPath(entryPath, revision);
+		if(type == null || type == 0 || type == 1)
+		{
+			return null;
+		}
+		
+		
+		Collection<SVNDirEntry> entries = getSubEntries(entryPath, revision);
+		if(entries == null)
+		{
 			return null;
 		}
 		
@@ -1630,27 +1627,20 @@ public class SVNUtil  extends BaseController{
 	    Iterator<SVNDirEntry> iterator = entries.iterator();
 	    while (iterator.hasNext()) 
 	    {
-	    	SVNDirEntry entry = iterator.next();
-	    	int type = convertSVNNodeKindToEntryType(entry.getKind());
+	    	SVNDirEntry subEntry = iterator.next();
+	    	int subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
 	    	if(type <= 0)
 	    	{
 	    		continue;
 	    	}
 			
-	    	String name = entry.getName();
-	    	Long lastChangeTime = entry.getDate().getTime();
-	    	Doc subDoc = new Doc();
-	    	subDoc.setVid(repos.getId());
-	    	subDoc.setDocId(buildDocIdByName(subDocLevel, subDocParentPath, name));
-	    	subDoc.setPid(doc.getDocId());
-	    	subDoc.setPath(subDocParentPath);
-	    	subDoc.setName(name);
-	    	subDoc.setLevel(subDocLevel);
-	    	subDoc.setType(type);
-	    	subDoc.setSize(entry.getSize());
+	    	String subEntryName = subEntry.getName();
+	    	Long lastChangeTime = subEntry.getDate().getTime();
+	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType);
+	    	subDoc.setSize(subEntry.getSize());
 	    	subDoc.setCreateTime(lastChangeTime);
 	    	subDoc.setLatestEditTime(lastChangeTime);
-	    	subDoc.setRevision(entry.getRevision()+"");
+	    	subDoc.setRevision(subEntry.getRevision()+"");
 	        subEntryList.add(doc);
 	    }
 	    return subEntryList;
@@ -1685,14 +1675,13 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
-	{
-    	if(remoteEntryPath == null)
-    	{
-    		System.out.println("getSubEntries() 非法参数：remoteEntryPath is null!");
-    		return null;
-    	}
-    	
+	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, Long revision) 
+	{    	
+		if(revision == null)
+		{
+			revision = -1L;
+		}
+		
 		Collection<SVNDirEntry> entries = null;
 		try {
 			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
