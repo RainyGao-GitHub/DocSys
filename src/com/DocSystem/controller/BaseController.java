@@ -2602,14 +2602,8 @@ public class BaseController  extends BaseFunction{
 		return remoteEntry;
 	}
 
-	private Doc gitGetDoc(Repos repos, Long docId, Long pid, String parentPath, String entryName, String revision) {
-		//System.out.println("gitGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
-		if(entryName == null || entryName.isEmpty())
-		{
-			System.out.println("gitGetDoc() entryName can not be empty");
-			return null;
-		}
-
+	private Doc gitGetDoc(Repos repos, Doc doc, String revision) 
+	{
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, true, "") == false)
@@ -2618,18 +2612,13 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		Doc doc = gitUtil.getDoc(parentPath+entryName, revision);
-		if(doc == null)
+		String entryPath = doc.getPath() + doc.getName();
+		Doc remoteDoc = gitUtil.getDoc(entryPath, revision);
+		if(remoteDoc == null)
 		{
 			return null;
 		}
 		
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPid(pid);
-		doc.setPath(parentPath);
-		doc.setName(entryName);
-		doc.setSize(0L);
 		return doc;
 	}
 
@@ -5350,13 +5339,12 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getEntry(doc, localParentPath, targetName, revision);
 	}
 		
-	protected String gitVirtualDocAdd(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 
-	{
-		if(docVName == null || docVName.isEmpty())
-		{
-			System.out.println("gitVirtualDocAdd() entryName can not be empty");
-			return null;
-		}
+	protected String gitVirtualDocAdd(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) 
+	{	
+		String vDocName = getVDocName(doc);
+		Doc vDoc = new Doc();
+		vDoc.setPath("");
+		vDoc.setName(vDocName);
 		
 		//Do Commit
 		GITUtil gitUtil = new GITUtil();
@@ -5368,7 +5356,7 @@ public class BaseController  extends BaseFunction{
 
 		//Commit will roll back WC if there is error
 		String localPath = getReposVirtualPath(repos);		
-		return gitUtil.doAutoCommit("", docVName, localPath,commitMsg, commitUser, true, null);
+		return gitUtil.doAutoCommit(vDoc, localPath, null, commitMsg, commitUser, true);
 	}
 	
 	protected String gitVirtualDocDelete(Repos repos, String docVName, String commitMsg, String commitUser, ReturnAjax rt) 

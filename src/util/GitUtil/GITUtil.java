@@ -25,6 +25,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNNodeKind;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -157,22 +158,22 @@ public class GITUtil  extends BaseController{
 	}
 	
 	//getHistory filePath: remote File Path under repositoryURL
-    public Doc getDoc(String filePath, String revision) 
+    public Doc getDoc(Doc doc, String revision) 
     {
-    	//System.out.println("getDoc filePath:" + filePath);	
-
+    	String entryPath = doc.getPath() + doc.getName();
+    	
     	Git git = null;
 		try {
 	    	git = Git.open(new File(wcDir));
 	    	
 		    Iterable<RevCommit> iterable = null;
-		    if(filePath == null || filePath.isEmpty())
+		    if(entryPath == null || entryPath.isEmpty())
 		    {
 		    	iterable = git.log().setMaxCount(1).call();
 		    }
 		    else
 		    {
-		    	iterable = git.log().addPath(filePath).setMaxCount(1).call();
+		    	iterable = git.log().addPath(entryPath).setMaxCount(1).call();
 		    }
 		    
 		    Iterator<RevCommit> iter=iterable.iterator();
@@ -185,12 +186,12 @@ public class GITUtil  extends BaseController{
 	            long commitTime=commit.getCommitTime();
 	            
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-	            Doc doc = new Doc();
-	            doc.setRevision(commitId);
-	            doc.setCreatorName(author);
-	            doc.setLatestEditorName(commitUser);
-	            doc.setLatestEditTime(commitTime);
-	            return doc;
+	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0);
+	            remoteDoc.setRevision(commitId);
+	            remoteDoc.setCreatorName(author);
+	            remoteDoc.setLatestEditorName(commitUser);
+	            remoteDoc.setLatestEditTime(commitTime);
+	            return remoteDoc;
 	        }
 	        
 	        return null;
@@ -923,46 +924,93 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 
-	public String doAutoCommit(String parentPath, String entryName, String localPath, String commitMsg, String commitUser, boolean modifyEnable, String localRefPath) {
-		System.out.println("doAutoCommit()" + " parentPath:" + parentPath +" entryName:" + entryName +" localPath:" + localPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefPath:" + localRefPath);	
-		
+	public String doAutoCommit(Doc doc, String localRootPath, String localRefRootPath, String commitMsg, String commitUser, boolean modifyEnable) 
+	{		
 		Git git = null;
 		try {
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
-			System.out.println("gitMove() Failed to open wcDir:" + wcDir);
+			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
 			return null;
 		}
 		
-		File localEntry = new File(localPath);
-		if(!localEntry.exists())
+		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
+    	
+    	File localParentDir = new File(localRootPath+doc.getPath());
+		if(!localParentDir.exists())
 		{
-			System.out.println("doAutoCommit() localPath " + localPath + " not exists");
+			System.out.println("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
 			return null;
 		}
-	
+		if(!localParentDir.isDirectory())
+		{
+			System.out.println("doAutoCommit() localParentPath " + localRootPath+doc.getPath()  + " is not directory");
+			return null;
+		}
+		
+		//If remote parentPath not exists, need to set the autoCommit entry to parentPath
+		Integer type = checkPath(doc.getPath(), -1);
+		if(type == null)
+		{
+			return null;
+		}
+		
+		if(type == 0)
+		{
+			return doAutoCommitParent(doc, localRootPath, localRefRootPath, commitMsg, commitUser, modifyEnable);
+		}	
+			
+		String entryPath = doc.getPath() + doc.getName();			
+		File localEntry = new File(localRootPath + entryPath);
+		//LocalEntry does not exist
+		if(!localEntry.exists())	//Delete Commit
+		{
+			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			type = checkPath(entryPath, -1);
+		    if(type == null)
+		    {
+		    	return null;
+		    }
+		    
+		    if(type == 0)
+		    {
+				System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
+		        return getLatestRevision();
+		    }
+		    
+		    //Do delete remote Entry
+		    return delete(doc, commitMsg, commitUser);
+		}
+
+		//LocalEntry is File
+		if(localEntry.isFile())
+		{
+			System.out.println("doAutoCommit() localEntry " + localRootPath + entryName + " is File");
+				
+		    type = checkPath(entryPath, -1);
+		    if(type == null)
+		    {
+		    	return null;
+		    }
+		    if(type == 0)
+		    {
+		    	return addFileEx(doc, localRootPath, commitMsg, commitUser, false);
+		    }
+		    else if(type != 1)
+		    {
+		    	return addFileEx(doc, localRootPath, commitMsg, commitUser, true);
+		    }
+		    else
+		    {
+		       return modifyFile(doc, localRootPath, localRefRootPath, commitMsg, commitUser);
+		    }
+		}
+
+		//LocalEntry is Directory
+		System.out.println("doAutoCommit() localEntry " + localRootPath + entryName + " is Directory");
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-		String entryPath = parentPath + entryName;
-		File remoteEntry = new File(wcDir + entryPath);
-		if(!remoteEntry.exists())
-        {
-        	System.out.println("doAutoCommit() remoteEntry:" + entryPath + " not exists, so just scan for added and modified entries");
-        	System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-	        scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
-        } 
-        else if (remoteEntry.isFile()) 
-        {
-        	System.out.println(entryPath + " 是文件");
-            return null;
-        }
-        else
-        {
-        	System.out.println("doAutoCommit() scheduleForDelete Start");
-        	scheduleForDelete(commitActionList,localPath,parentPath,entryName);
-	        System.out.println("doAutoCommit() scheduleForAddAndModify Start");
-		    scheduleForAddAndModify(commitActionList,parentPath,entryName,localPath,localRefPath,modifyEnable,false);
-        }
+		scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
         
         if(commitActionList == null || commitActionList.size() ==0)
         {
@@ -1007,7 +1055,7 @@ public class GITUtil  extends BaseController{
 	}
 
 	private boolean scheduleForDelete(List<CommitAction> actionList, Doc doc, String localRootPath) {
-		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath);
+		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localRootPath);
 	    if(entryName.isEmpty())	//If the entryName is empty, means we need to go through the subNodes directly
         {
         	File file = new File(wcDir + parentPath + entryName);
@@ -1015,13 +1063,13 @@ public class GITUtil  extends BaseController{
     		for(int i=0;i<tmp.length;i++)
     		{
     			String subEntryName = tmp[i].getName();
-   	    	    scheduleForDelete(actionList,localPath, parentPath,subEntryName);
+   	    	    scheduleForDelete(actionList,localRootPath, parentPath,subEntryName);
             }
         }
         else
         {
             String remoteEntryPath = parentPath + entryName;            
-            String localEntryPath = localPath + entryName;
+            String localEntryPath = localRootPath + entryName;
 
             File localEntry = new File(localEntryPath);
             
@@ -1058,7 +1106,7 @@ public class GITUtil  extends BaseController{
     	    		for(int i=0;i<tmp.length;i++)
     	    		{
     	    			String subEntryName = tmp[i].getName();
-           	    	    if(false == scheduleForDelete(actionList,localPath, parentPath,subEntryName))
+           	    	    if(false == scheduleForDelete(actionList,localRootPath, parentPath,subEntryName))
            	    	    {
            	    	    	return false;
            	    	    }
