@@ -449,8 +449,13 @@ public class SVNUtil  extends BaseController{
 		return "file:///"+path+name; 
 	}
 	
-	public Integer checkPath(String entryPath, long revision)
+	public Integer checkPath(String entryPath, Long revision)
 	{
+		if(revision == null)
+		{
+			revision = -1L;
+		}
+		
 		SVNNodeKind nodeKind = null;
 		try {
 			nodeKind = repository.checkPath(entryPath, revision);
@@ -498,7 +503,7 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		//If remote parentPath not exists, need to set the autoCommit entry to parentPath
-		Integer type = checkPath(doc.getPath(), -1);
+		Integer type = checkPath(doc.getPath(), null);
 		if(type == null)
 		{
 			return null;
@@ -515,7 +520,7 @@ public class SVNUtil  extends BaseController{
 		if(!localEntry.exists())	//Delete Commit
 		{
 			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
-			type = checkPath(entryPath, -1);
+			type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
 		    	return null;
@@ -536,7 +541,7 @@ public class SVNUtil  extends BaseController{
 		{
 			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
 				
-		    type = checkPath(entryPath, -1);
+		    type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
 		    	return null;

@@ -950,7 +950,7 @@ public class GITUtil  extends BaseController{
 		}
 		
 		//If remote parentPath not exists, need to set the autoCommit entry to parentPath
-		Integer type = checkPath(doc.getPath(), -1);
+		Integer type = checkPath(doc.getPath(), "");
 		if(type == null)
 		{
 			return null;
