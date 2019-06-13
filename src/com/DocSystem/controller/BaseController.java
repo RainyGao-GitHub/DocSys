@@ -2612,14 +2612,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String entryPath = doc.getPath() + doc.getName();
-		Doc remoteDoc = gitUtil.getDoc(entryPath, revision);
-		if(remoteDoc == null)
-		{
-			return null;
-		}
-		
-		return doc;
+		Doc remoteDoc = gitUtil.getDoc(doc, revision);
+		return remoteDoc;
 	}
 
 	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
@@ -2985,7 +2979,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//底层updateDoc接口
-	protected boolean updateDoc(Repos repos, Long docId, Long parentId, String parentPath, String docName,
+	protected boolean updateDoc(Repos repos, Doc doc,
 								MultipartFile uploadFile,Long fileSize,String checkSum, 
 								Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
@@ -2996,7 +2990,7 @@ public class BaseController  extends BaseFunction{
 		case 2:
 		case 3:
 		case 4:
-			return updateDoc_FS(repos, docId, parentId, parentPath, docName,
+			return updateDoc_FS(repos, doc,
 					uploadFile, fileSize, checkSum, 
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt, actionList);
@@ -3004,22 +2998,12 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected boolean updateDoc_FS(Repos repos, Long docId, Long parentId, String parentPath, String docName,
+	protected boolean updateDoc_FS(Repos repos, Doc doc,
 				MultipartFile uploadFile,Long fileSize,String checkSum, 
 				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
 				List<CommonAction> actionList) 
 	{	
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPid(parentId);
-		doc.setPath(parentPath);
-		doc.setName(docName);
-		doc.setType(1);
-		doc.setSize(fileSize);
-		doc.setCheckSum(checkSum);
-		
 		DocLock docLock = null;
 		synchronized(syncLock)
 		{
@@ -3029,7 +3013,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 	
-				System.out.println("updateDoc() lockDoc " + docName +" Failed！");
+				System.out.println("updateDoc() lockDoc " + doc.getName() +" Failed！");
 				return false;
 			}
 			unlock(); //线程锁
@@ -3043,11 +3027,14 @@ public class BaseController  extends BaseFunction{
 		{
 			unlockDoc(doc,login_user,docLock);
 
-			System.out.println("updateDoc() saveFile " + docId +" Failed, unlockDoc Ok");
-			rt.setError("Failed to updateRealDoc " + docName);
+			System.out.println("updateDoc() saveFile " + doc.getName() +" Failed, unlockDoc Ok");
+			rt.setError("Failed to updateRealDoc " + doc.getName());
 			return false;
 		}
 		
+		doc.setType(1);
+		doc.setSize(fileSize);
+		doc.setCheckSum(checkSum);
 		doc.setLatestEditor(login_user.getId());
 		doc.setLatestEditorName(login_user.getName());
 		
@@ -3059,7 +3046,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposRealDocCommit(repos, doc, commitMsg,commitUser,rt, null);
 		if(revision == null)
 		{
-			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + parentPath + docName, rt);
+			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
 			docSysWarningLog("verReposRealDocCommit Failed", rt);	
 		}
 		else
