@@ -4832,19 +4832,19 @@ public class BaseController  extends BaseFunction{
 
 	
 	//Get History Detail
-	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, String entryPath, String commitId) {
+	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) {
 		if(repos.getVerCtrl() == 1)
 		{
-			return svnGetHistoryDetail(repos, isRealDoc, entryPath, commitId);
+			return svnGetHistoryDetail(repos, isRealDoc, doc, commitId);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitGetHistoryDetail(repos, isRealDoc, entryPath, commitId);
+			return gitGetHistoryDetail(repos, isRealDoc, doc, commitId);
 		}
 		return null;
 	}
 	
-	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, String docPath, String commitId) {
+	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) {
 
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, isRealDoc, null))
@@ -4852,17 +4852,37 @@ public class BaseController  extends BaseFunction{
 			System.out.println("svnGetHistory() svnUtil.Init Failed");
 			return null;
 		}
-		return svnUtil.getHistoryDetail(docPath, commitId);
+		
+		if(isRealDoc)
+		{
+			return svnUtil.getHistoryDetail(doc, commitId); 
+		}
+		
+		String vDocName = getVDocName(doc);
+		Doc vDoc = new Doc();
+		vDoc.setPath("");
+		vDoc.setName(vDocName);
+		return svnUtil.getHistoryDetail(vDoc, commitId);
 	}
 	
-	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, String docPath, String commitId) {
+	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, Doc doc, String commitId) {
 		GITUtil gitUtil = new GITUtil();
 		if(false == gitUtil.Init(repos, isRealDoc, null))
 		{
 			System.out.println("gitGetHistory() gitUtil.Init Failed");
 			return null;
 		}
-		return gitUtil.getHistoryDetail(docPath, commitId);
+		
+		if(isRealDoc)
+		{
+			return gitUtil.getHistoryDetail(doc, commitId); 
+		}
+		
+		String vDocName = getVDocName(doc);
+		Doc vDoc = new Doc();
+		vDoc.setPath("");
+		vDoc.setName(vDocName);
+		return gitUtil.getHistoryDetail(vDoc, commitId);
 	}
 	
 	protected String verReposRealDocAdd(Repos repos, Doc doc,String commitMsg, String commitUser, ReturnAjax rt) 

@@ -954,13 +954,9 @@ public class DocController extends BaseController{
 	
 	/**************** downloadDocPrepare ******************/
 	@RequestMapping("/downloadDocPrepare.do")
-	public void downloadDocCheck(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+	public void downloadDocCheck(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("downloadDocPrepare reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
-		
-		if(path == null)
-		{
-			path = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		Repos repos = reposService.getRepos(reposId);
@@ -971,13 +967,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
 		case 3:
 		case 4:
-			downloadDocPrepare_FS(repos, docId, pid, path, name, response, request, session);
+			downloadDocPrepare_FS(repos, doc, response, request, session);
 			break;
 		}
 	}
@@ -1043,7 +1040,8 @@ public class DocController extends BaseController{
 
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc")
-	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 
@@ -1070,13 +1068,14 @@ public class DocController extends BaseController{
 			return;
 		}  
 		
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
 		case 3:
 		case 4:
-			downloadDoc_FS(repos, docId, pid, path, name, response, request, session);
+			downloadDoc_FS(repos, doc, response, request, session);
 			break;
 		}
 	}
@@ -1092,8 +1091,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		doc = docSysGetDoc(repos, doc, login_user);
-		if(doc==null){
+		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		if(dbDoc == null){
 			System.out.println("downloadDoc_FS() Doc " + doc.getName() + " 不存在");
 			docSysErrorLog("doc " + doc.getName() + "不存在！", rt);
 			//writeJson(rt, response);
@@ -1279,7 +1278,8 @@ public class DocController extends BaseController{
 
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
 		System.out.println("DocToPDF reposId: " + reposId + " docId:" + docId + " pid:" + pid +" path:" + path + " name:" + name);
 
@@ -1297,13 +1297,14 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
 		case 3:
 		case 4:
-			DocToPDF_FS(repos, docId, pid, path, name, response, request, session);
+			DocToPDF_FS(repos, doc, response, request, session);
 			break;
 		}
 	}
@@ -1438,7 +1439,8 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
-	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name, HttpServletRequest request,HttpServletResponse response,HttpSession session){
+	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		System.out.println("getDocContent reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 		
 		if(path == null)
@@ -1456,11 +1458,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = new Doc();
-		doc.setVid(repos.getId());
-		doc.setDocId(docId);
-		doc.setPath(path);
-		doc.setName(name);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
 		String vDocName = getVDocName(doc);
 		String reposVPath = getReposVirtualPath(repos);
@@ -1604,7 +1602,8 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, Integer historyType,Integer maxLogNum, 
+	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			Integer historyType,Integer maxLogNum, 
 			HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
 		
@@ -1666,17 +1665,9 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History Detail ******************/
 	@RequestMapping("/getHistoryDetail.do")
-	public void getHistoryDetail(String commitId,Integer reposId, Long docId, Long pid, String path, String name, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void getHistoryDetail(String commitId,Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getHistoryDetail commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
-		
-		if(path == null)
-		{
-			path = "";
-		}
-		if(name == null)
-		{
-			name = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1703,13 +1694,15 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
+		
 		boolean isRealDoc = true;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
 		{
 			isRealDoc = false;
 		}
 
-		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, path+name, commitId);
+		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, doc, commitId);
 		
 		if(changedItemList == null)
 		{

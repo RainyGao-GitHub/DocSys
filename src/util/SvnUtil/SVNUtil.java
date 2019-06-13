@@ -308,15 +308,10 @@ public class SVNUtil  extends BaseController{
         return logList;
 	}
 
-	public List<ChangedItem> getHistoryDetail(String entryPath, String commitId) 
+	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) 
 	{
+		String entryPath = doc.getPath() + doc.getName();
     	System.out.println("getHistoryDetail entryPath:" + entryPath);	
-    	if(entryPath == null)
-    	{
-        	System.out.println("getHistoryDetail() 非法参数：entryPath is null");
-        	return null;
-    	}
-
 		
 		long revision = -1;
 		if(commitId != null)

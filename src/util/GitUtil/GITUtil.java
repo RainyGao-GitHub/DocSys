@@ -1231,7 +1231,7 @@ public class GITUtil  extends BaseController{
     	}
 	}
 
-	public List<ChangedItem> getHistoryDetail(String docPath, String commitId) {
+	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
