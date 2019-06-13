@@ -1604,17 +1604,9 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name, Integer historyType,Integer maxLogNum, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, Integer historyType,Integer maxLogNum, 
+			HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
-		
-		if(path == null)
-		{
-			path = "";
-		}
-		if(name == null)
-		{
-			name = "";
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1640,12 +1632,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = new Doc();
-		doc.setVid(reposId);
-		doc.setDocId(docId);
-		doc.setPid(pid);
-		doc.setPath(path);
-		doc.setName(name);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
 		int num = 100;
 		if(maxLogNum != null)
