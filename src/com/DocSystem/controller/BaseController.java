@@ -4995,12 +4995,18 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		if(svnUtil.doCheckPath(docRPath,-1) == true)	//如果仓库中该文件已经不存在，则不需要进行svnDeleteCommit
+		Integer type = svnUtil.checkPath(docRPath, null);
+		if(type == null)
 		{
-			return svnUtil.svnDelete(doc,commitMsg,commitUser);
+			return null
 		}
 		
-		return "";
+		if(type == 0)
+		{
+			return "";
+		}
+		
+		return svnUtil.deleteDoc(doc,commitMsg,commitUser);
 	}
 
 	protected String verReposRealDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 

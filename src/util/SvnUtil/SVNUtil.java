@@ -1324,7 +1324,7 @@ public class SVNUtil  extends BaseController{
 	}
 	
     //删除文件或目录
-  	public String delete(Doc doc, String commitMsg, String commitUser)
+  	public String deleteDoc(Doc doc, String commitMsg, String commitUser)
   	{
         ISVNEditor editor = getCommitEditor(commitMsg);
         if(editor == null)
