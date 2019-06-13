@@ -5249,15 +5249,14 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.Commit(doc,commitMsg, commitUser);
 	}
 	
-	protected String gitRealDocCopy(Repos repos, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, Integer type, String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) {
+	protected String gitRealDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) {
 		
 		if(isMove)
 		{
-			return gitDocMove(repos, true, srcParentPath, srcEntryName, dstParentPath, dstEntryName,  commitMsg, commitUser, rt);
+			return gitDocMove(repos, true, srcDoc, dstDoc,  commitMsg, commitUser, rt);
 		}
 		
-		return  gitDocCopy(repos, true, srcParentPath, srcEntryName, dstParentPath, dstEntryName,  commitMsg, commitUser, rt);
+		return  gitDocCopy(repos, true, srcDoc, dstDoc,  commitMsg, commitUser, rt);
 	}
 	
 	protected String gitDocMove(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
