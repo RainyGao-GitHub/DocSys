@@ -4934,33 +4934,10 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("gitRealDocAdd() GITUtil Init failed");
 			return null;
-		}
-
-		//Add to Doc to WorkingDirectory
-		String entryPath = doc.getPath() + doc.getName();
-		String docPath = getReposRealPath(repos) + entryPath;
-		String wcDocPath = getLocalVerReposPath(repos, true) + entryPath;
-		if(doc.getType() == 1)
-		{
-			if(copyFile(docPath, wcDocPath, false) == false)
-			{
-				System.out.println("gitRealDocAdd() add File to WD error");					
-				return null;
-			}
-		}
-		else
-		{
-			//Add Dir
-			File dir = new File(wcDocPath);
-			if(dir.mkdir() == false)
-			{
-				System.out.println("gitRealDocAdd() add Dir to WD error");										
-				return null;
-			}
-		}			
+		}		
 		
 		//Commit will roll back WC if there is error
-		return gitUtil.gitAdd(doc,commitMsg, commitUser);
+		return gitUtil.addDoc(doc,commitMsg, commitUser);
 	}
 	
 	protected String verReposRealDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) {	

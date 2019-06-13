@@ -1235,4 +1235,32 @@ public class GITUtil  extends BaseController{
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public String addDoc(Doc doc, String localRootPath, String commitMsg, String commitUser) 
+	{
+		//Add to Doc to WorkingDirectory
+		String entryPath = doc.getPath() + doc.getName();
+		String docPath = localRootPath + entryPath;
+		String wcDocPath = wcDir + entryPath;
+		if(doc.getType() == 1)
+		{
+			if(copyFile(docPath, wcDocPath, false) == false)
+			{
+				System.out.println("gitRealDocAdd() add File to WD error");					
+				return null;
+			}
+		}
+		else
+		{
+			//Add Dir
+			File dir = new File(wcDocPath);
+			if(dir.mkdir() == false)
+			{
+				System.out.println("gitRealDocAdd() add Dir to WD error");										
+				return null;
+			}
+		}
+		
+		return gitAdd(wcDocPath, wcDocPath, wcDocPath, wcDocPath);
+	}
 }
