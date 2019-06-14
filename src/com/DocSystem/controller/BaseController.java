@@ -2284,7 +2284,7 @@ public class BaseController  extends BaseFunction{
 		case 1:		//Remote Added
 			System.out.println("syncUpRemoteChange_FS() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
+			successDocList = verReposCheckOut(repos, true,remoteEntry, localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
 			{
 				dbAddDoc(repos, remoteEntry, true);
@@ -2299,7 +2299,7 @@ public class BaseController  extends BaseFunction{
 				
 				//checkOut
 				localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-				successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
+				successDocList = verReposCheckOut(repos, true, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
 				if(successDocList != null)
 				{
 					dbAddDoc(repos, remoteEntry, true);
@@ -2315,7 +2315,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncUpRemoteChange_FS() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, true,remoteEntry.getPath(), remoteEntry.getName(), localParentPath, remoteEntry.getName(), null, true);
+			successDocList = verReposCheckOut(repos, true, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
 			{
 				//SuccessDocList中的doc包括了revision信息
@@ -2940,12 +2940,21 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:	//RDoc autoCommit
 			String localRealRootPath = getReposRealPath(repos);
-			return verReposAutoCommit(repos, true, doc.getPath(), doc.getName(), localRealRootPath, action.getCommitMsg(), action.getCommitUser(), true, null);
+			return verReposAutoCommit(repos, true, doc, localRealRootPath, null, action.getCommitMsg(), action.getCommitUser(), true);
 		case 2: //VDoc autoCommit
 			String localVirtualRootPath = getReposVirtualPath(repos);
-			String vDocName = getVDocName(doc);			
-			return verReposAutoCommit(repos, false, "", vDocName, localVirtualRootPath, action.getCommitMsg(), action.getCommitUser(), true, null);
+			Doc vDoc = buildVDoc(doc);
+			return verReposAutoCommit(repos, false, vDoc, localVirtualRootPath, null, action.getCommitMsg(), action.getCommitUser(), true);
 		}
+		return null;
+	}
+
+	private Doc buildVDoc(Doc doc) 
+	{
+		String vDocName = getVDocName(doc);
+		Doc vDoc = new Doc();
+		vDoc.setPath("");
+		vDoc.setName(vDocName);
 		return null;
 	}
 
