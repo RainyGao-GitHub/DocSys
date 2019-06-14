@@ -482,7 +482,11 @@ public class SVNUtil  extends BaseController{
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	//subDocCommitFalg: 0:不Commit 1:Commit但不继承 2:Commit所有文件
-	public String doAutoCommit(Doc doc,String localRootPath, String localRefRootPath, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag){
+	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag){
+		
+		String localRootPath = doc.getLocalRootPath();
+		String localRefRootPath = doc.getLocalRefRootPath();
+		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
     	File localParentDir = new File(localRootPath+doc.getPath());
@@ -506,7 +510,7 @@ public class SVNUtil  extends BaseController{
 		
 		if(type == 0)
 		{
-			return doAutoCommitParent(doc, localRootPath, localRefRootPath, commitMsg, commitUser, modifyEnable);
+			return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
 		}	
 			
 		String entryPath = doc.getPath() + doc.getName();			
@@ -528,7 +532,12 @@ public class SVNUtil  extends BaseController{
 		    }
 		    
 		    //Do delete remote Entry
-		    return delete(doc, commitMsg, commitUser);
+		    if(commitMsg == null)
+		    {
+		    	commitMsg = "删除 " + doc.getPath() + doc.getName();
+		    }
+			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
+		    return deleteDoc(doc, commitMsg, commitUser);
 		}
 
 		//LocalEntry is File
@@ -543,15 +552,15 @@ public class SVNUtil  extends BaseController{
 		    }
 		    if(type == 0)
 		    {
-		    	return addFileEx(doc, localRootPath, commitMsg, commitUser, false);
+		    	return addFileEx(doc, commitMsg, commitUser, false);
 		    }
 		    else if(type != 1)
 		    {
-		    	return addFileEx(doc, localRootPath, commitMsg, commitUser, true);
+		    	return addFileEx(doc, commitMsg, commitUser, true);
 		    }
 		    else
 		    {
-		       return modifyFile(doc, localRootPath, localRefRootPath, commitMsg, commitUser);
+		       return modifyFile(doc, localRefRootPath, commitMsg, commitUser);
 		    }
 		}
 
@@ -1169,8 +1178,9 @@ public class SVNUtil  extends BaseController{
 	}
 
 	//增加文件（如果parentPath不存在则也会增加）
-	public String addFileEx(Doc doc, String localRootPath,String commitMsg, String commitUser, boolean deleteOld)
+	public String addFileEx(Doc doc, String commitMsg, String commitUser, boolean deleteOld)
 	{
+		String localRootPath = doc.getLocalRootPath();
 		System.out.println("addFileEx()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath);	
 		try {
 			//Build commitAction

@@ -88,7 +88,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
 
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -107,6 +106,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "新增 " + path + name;
+		}
+		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
@@ -151,19 +155,7 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		String commitUser = "游客";
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user != null)
-		{
-			commitUser = login_user.getName();
-		}
-		else
-		{
-			login_user = new User();
-			login_user.setId(0);
-		}
-		
-		String commitMsg = "User Feeback by " + name;
+
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -175,6 +167,18 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		doc.setContent(content);
 		
+		String commitMsg = "用户反馈 " + path + name;
+		String commitUser = "游客";
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user != null)
+		{
+			commitUser = login_user.getName();
+		}
+		else
+		{
+			login_user = new User();
+			login_user.setId(0);
+		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null, 0L, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
@@ -237,6 +241,10 @@ public class DocController extends BaseController{
 			return;
 		}
 
+		if(commitMsg == null)
+		{
+			commitMsg = "删除 " + path + name;
+		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		String ret = deleteDoc(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
@@ -279,7 +287,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
 	
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -303,8 +310,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "重命名 " + path + name + " 为 " + dstName;
+		}
+		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type);		
 		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
@@ -339,8 +350,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
-	
+
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -368,6 +378,11 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
+		}
+		String commitUser = login_user.getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type);
 
@@ -397,7 +412,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
 	
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -420,6 +434,11 @@ public class DocController extends BaseController{
 			dstName = srcName;
 		}
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
+		}
+		String commitUser = login_user.getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type);
 		
@@ -481,6 +500,10 @@ public class DocController extends BaseController{
 			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
 			if(chunkIndex == chunkNum -1)	//It is the last chunk
 			{
+				if(commitMsg == null)
+				{
+					commitMsg = "上传 " + path + name;
+				}
 				String commitUser = login_user.getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				
@@ -625,9 +648,14 @@ public class DocController extends BaseController{
 				if(null != sameDoc)
 				{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
-					//Do copy the Doc
+					
+					if(commitMsg == null)
+					{
+						commitMsg = "上传 " + path + name;
+					}
+					String commitUser = login_user.getName();
 					List<CommonAction> actionList = new ArrayList<CommonAction>();
-					boolean ret = copyDoc(repos, sameDoc, doc, commitMsg,login_user.getName(),login_user,rt,actionList);
+					boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, login_user,rt,actionList);
 					if(ret == true)
 					{
 						dbDoc = dbGetDoc(repos, doc, true);
@@ -685,15 +713,10 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile, Long size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
 		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
-
-		if(path == null)
-		{
-			path = "";
-		}
-
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -703,7 +726,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
 		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -713,8 +735,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		
-			
 		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
 		String localParentPath = getReposRealPath(repos) + path;
 		File localParentDir = new File(localParentPath);
@@ -769,6 +789,11 @@ public class DocController extends BaseController{
 		//非分片上传或LastChunk Received
 		if(uploadFile != null) 
 		{
+			if(commitMsg == null)
+			{
+				commitMsg = "上传 " + path + name;
+			}
+			String commitUser = login_user.getName();
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(doc == null)
@@ -896,7 +921,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		String commitUser = login_user.getName();
 		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
@@ -924,6 +948,11 @@ public class DocController extends BaseController{
 		
 		doc.setContent(content);
 		
+		if(commitMsg == null)
+		{
+			commitMsg = "更新 " + path + name + " 备注";
+		}
+		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = updateDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
@@ -1769,29 +1798,9 @@ public class DocController extends BaseController{
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
-			Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+			Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("revertDocHistory commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
-		
-		if(path == null)
-		{
-			path = "";
-		}
-		if(name == null)
-		{
-			name = "";
-		}
-		
-		//To support user call the interface by entryPath
-		if(name.isEmpty())
-		{
-			if(!path.isEmpty())
-			{
-				String[] temp = new String[2]; 
-				seperatePathAndName(path, temp);
-				path = temp[0];
-				name = temp[1];			
-			}
-		}
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1818,30 +1827,19 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(historyType == null)
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
+
+		String commitMsg = "回退 " + path + name + " 至版本:" + commitId;
+		String commitUser = login_user.getName();
+		if(historyType != null && historyType == 2)
 		{
-			historyType = 0;	//0: For RealDoc 1/2: For VirtualDoc 
+			doc.setIsRealDoc(false);
+			commitMsg = "回退 " + path + name + " 备注至版本:" + commitId;
 		}
 
-		String ret = null;
-		switch(historyType)
+		if(revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt) == null)	
 		{
-		case 0:	//RealDoc
-			ret = revertDocHistory(repos, true, docId,path,name,commitId,null, login_user.getName(), login_user, rt);			
-			break;
-		case 1: // vDocPath not converted
-			Doc doc = new Doc();
-			doc.setVid(reposId);
-			doc.setDocId(docId);
-			doc.setName(name);
-			String vDocName = getVDocName(doc);
-			ret = revertDocHistory(repos, false, docId,"",vDocName,commitId,null, login_user.getName(), login_user, rt);			
-			break;
-		}
-		
-		if(ret == null)
-		{
-			System.out.println("revertDocHistory Failed");
+			docSysErrorLog("恢复失败",rt);
 		}
 		
 		writeJson(rt, response);
