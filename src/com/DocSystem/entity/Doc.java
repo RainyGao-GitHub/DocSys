@@ -40,6 +40,12 @@ public class Doc  implements Comparable<Doc>{
     private String latestEditorName;
     
     private int level;
+    
+    private String localRootPath;
+    
+    private String localRefRootPath;
+    
+    private boolean isRealDoc;
 
     public Integer getId() {
         return id;
@@ -176,6 +182,33 @@ public class Doc  implements Comparable<Doc>{
     public void setLevel(int level) {
         this.level = level;
     }
+    
+    public String getLocalRootPath() {
+        return localRootPath;
+    }
+
+    public void setLocalRootPath(String localRefRootPath) 
+    {
+        this.localRootPath = localRootPath == null ? null : localRootPath.trim();
+    }
+    
+    public String getLocalRefRootPath() {
+        return localRefRootPath;
+    }
+
+    public void setLocalRefRootPath(String localRefRootPath) 
+    {
+        this.localRefRootPath = localRefRootPath == null ? null : localRefRootPath.trim();
+    }
+    
+    public boolean getIsRealDoc() {
+        return isRealDoc;
+    }
+
+    public void setIsRealDoc(boolean isRealDoc) 
+    {
+        this.isRealDoc = isRealDoc;
+    }    
 
 	public void setSortIndex(int sortIndex) {
 		this.sortIndex = sortIndex;

@@ -1455,8 +1455,6 @@ public class BaseController  extends BaseFunction{
 	
 	protected String getRealDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{
-		Integer reposId = repos.getId();
-		
 		DocLock docLock = null;
 		synchronized(syncLock)
 		{
@@ -1471,11 +1469,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Checkout to localParentPath
-		String localRootPath = getReposRealPath(repos);
+		String localRootPath = doc.getLocalRootPath();
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, true, doc, localParentPath, doc.getName(), commitId, true); 
+		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true); 
 		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
@@ -1489,7 +1487,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, true, doc, localRootPath, null, commitMsg,commitUser,true);
+		String revision = verReposAutoCommit(repos, doc, commitMsg,commitUser,true);
 		
 		//Force update docInfo
 		printObject("revertRealDocHistory() successDocList:", successDocList);
@@ -1514,8 +1512,6 @@ public class BaseController  extends BaseFunction{
 	/********************************** Functions For Application Layer ****************************************/
 	protected String revertVirtualDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{	
-		Integer reposId = repos.getId();
-		
 		DocLock docLock = null;
 		synchronized(syncLock)
 		{
@@ -1529,20 +1525,15 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 
-		String vDocName = getVDocName(doc);
-		Doc vDoc = new Doc();
-		vDoc.setPath("");
-		vDoc.setName(vDocName);
+		Doc vDoc = buildVDoc(repos, doc);
 		
-		//Checkout to localParentPath
-		String localRootPath = getReposVirtualPath(repos);
-		String localParentPath = localRootPath;
+		String localParentPath = vDoc.getLocalRootPath();
 		
 		//Do checkout the entry to 
-		if(verReposCheckOut(repos, false, vDoc, localParentPath, vDocName, commitId, true) == null)
+		if(verReposCheckOut(repos, vDoc, localParentPath, vDoc.getName(), commitId, true) == null)
 		{
 			unlockDoc(doc,login_user,docLock);
-			docSysDebugLog("revertVirtualDocHistory() verReposCheckOut Failed vDocName:" + vDocName + " localVirtualRootPath:" + localParentPath + " targetName:" + vDocName, rt);
+			docSysDebugLog("revertVirtualDocHistory() verReposCheckOut Failed vDocName:" + vDoc.getName() + " localVirtualRootPath:" + localParentPath + " targetName:" + vDoc.getName(), rt);
 			return null;
 		}
 		
@@ -1552,7 +1543,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, false, doc, localRootPath, null, commitMsg,commitUser,true);
+		String revision = verReposAutoCommit(repos, doc, commitMsg,commitUser,true);
 		unlockDoc(doc,login_user,docLock);
 		
 		if(revision == null)
@@ -1564,8 +1555,6 @@ public class BaseController  extends BaseFunction{
 
 	protected String revertRealDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{
-		Integer reposId = repos.getId();
-			
 		DocLock docLock = null;
 		synchronized(syncLock)
 		{
@@ -1584,7 +1573,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, true, doc, localParentPath, doc.getName(), commitId, true); 
+		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true); 
 		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
@@ -1598,7 +1587,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, true, doc, localRootPath, null, commitMsg,commitUser,true);
+		String revision = verReposAutoCommit(repos, doc, commitMsg,commitUser,true);
 		
 		//Force update docInfo
 		printObject("revertRealDocHistory() successDocList:", successDocList);
@@ -2284,7 +2273,7 @@ public class BaseController  extends BaseFunction{
 		case 1:		//Remote Added
 			System.out.println("syncUpRemoteChange_FS() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, true,remoteEntry, localParentPath, remoteEntry.getName(), null, true);
+			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
 			{
 				dbAddDoc(repos, remoteEntry, true);
@@ -2299,7 +2288,7 @@ public class BaseController  extends BaseFunction{
 				
 				//checkOut
 				localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-				successDocList = verReposCheckOut(repos, true, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
+				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
 				if(successDocList != null)
 				{
 					dbAddDoc(repos, remoteEntry, true);
@@ -2315,7 +2304,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncUpRemoteChange_FS() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, true, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
+			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
 			if(successDocList != null)
 			{
 				//SuccessDocList中的doc包括了revision信息
@@ -2939,22 +2928,22 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case 1:	//RDoc autoCommit
-			String localRealRootPath = getReposRealPath(repos);
-			return verReposAutoCommit(repos, true, doc, localRealRootPath, null, action.getCommitMsg(), action.getCommitUser(), true);
+			return verReposAutoCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), true);
 		case 2: //VDoc autoCommit
-			String localVirtualRootPath = getReposVirtualPath(repos);
-			Doc vDoc = buildVDoc(doc);
-			return verReposAutoCommit(repos, false, vDoc, localVirtualRootPath, null, action.getCommitMsg(), action.getCommitUser(), true);
+			Doc vDoc = buildVDoc(repos, doc);
+			return verReposAutoCommit(repos, vDoc, action.getCommitMsg(), action.getCommitUser(), true);
 		}
 		return null;
 	}
 
-	private Doc buildVDoc(Doc doc) 
+	private Doc buildVDoc(Repos repos, Doc doc) 
 	{
+		String reposVPath = getReposVirtualPath(repos);
 		String vDocName = getVDocName(doc);
 		Doc vDoc = new Doc();
 		vDoc.setPath("");
 		vDoc.setName(vDocName);
+		vDoc.setLocalRootPath(reposVPath);
 		return null;
 	}
 
@@ -3270,16 +3259,13 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		//Save the content to virtual file
-		String reposVPath = getReposVirtualPath(repos);
-		String docVName = getVDocName(doc);
-		String localVDocPath = reposVPath + docVName;
+		Doc vDoc = buildVDoc(repos, doc);
 		
-		System.out.println("updateDocContent_FS() localVDocPath: " + localVDocPath);
-		if(isFileExist(localVDocPath) == true)
+		if(isFileExist(vDoc.getLocalRootPath() + vDoc.getPath() + vDoc.getName()) == true)
 		{
-			if(saveVirtualDocContent(reposVPath, doc, rt) == true)
+			if(saveVirtualDocContent(vDoc.getLocalRootPath(), vDoc, rt) == true)
 			{
-				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+				verReposVirtualDocCommit(repos, vDoc, commitMsg, commitUser,rt);
 			}
 		}
 		else
@@ -3287,7 +3273,7 @@ public class BaseController  extends BaseFunction{
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
-				verReposVirtualDocCommit(repos, docVName, commitMsg, commitUser,rt);
+				verReposVirtualDocCommit(repos, vDoc, commitMsg, commitUser,rt);
 			}
 		}
 		
@@ -5026,7 +5012,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected List<Doc> verReposCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath, String targetName, String commitId, boolean force) {
+	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) {
 		if(repos.getVerCtrl() == 1)
 		{
 			long revision = -1;
@@ -5034,11 +5020,11 @@ public class BaseController  extends BaseFunction{
 			{
 				revision = Long.parseLong(commitId);
 			}
-			return svnCheckOut(repos, isRealDoc, doc, localParentPath, targetName, revision, force);		
+			return svnCheckOut(repos, doc, localParentPath, targetName, revision, force);		
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitCheckOut(repos, isRealDoc, doc, localParentPath, targetName, commitId);
+			return gitCheckOut(repos, doc, localParentPath, targetName, commitId);
 		}
 		return null;
 	}
@@ -5083,21 +5069,21 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected String verReposVirtualDocCommit(Repos repos, String docVName,String commitMsg, String commitUser, ReturnAjax rt) {
+	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) {
 		if(commitMsg == null)
 		{
 			//commitMsg = "Commit " + docVName;
-			commitMsg = "更新 " + docVName;
+			commitMsg = "更新 " + doc.getPath() + doc.getName() + " 备注";
 		}
 		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, false, commitMsg, commitUser);
-			return svnVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);			
+			return svnDocCommit(repos, doc, commitMsg, commitUser, rt);			
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitVirtualDocCommit(repos, docVName, commitMsg, commitUser, rt);
+			return gitDocCommit(repos, doc, commitMsg, commitUser, rt);
 		}
 		return null;
 	}
@@ -5418,7 +5404,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("svnCheckOut() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " revision:" + revision);
 		
 		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(repos, isRealDoc, null) == false)
+		if(svnUtil.Init(repos, doc.getIsRealDoc(), null) == false)
 		{
 			System.out.println("svnCheckOut() svnUtil Init Failed");
 			return null;
@@ -5571,11 +5557,11 @@ public class BaseController  extends BaseFunction{
 		return hashMap;
 	}
 	
-	protected String verReposAutoCommit(Repos repos,boolean isRealDoc, Doc doc, String localRootPath,String localRefRootPath,
+	protected String verReposAutoCommit(Repos repos, Doc doc,
 			String commitMsg, String commitUser,boolean modifyEnable) 
 	{
 		Integer verCtrl = null;
-		if(isRealDoc)
+		if(doc.getIsRealDoc())
 		{
 			verCtrl = repos.getVerCtrl();
 		}	
@@ -5586,28 +5572,28 @@ public class BaseController  extends BaseFunction{
 			
 		if(verCtrl == 1)
 		{
-			return svnAutoCommit(repos,isRealDoc, doc, localRootPath, commitMsg,commitUser,modifyEnable,localRefRootPath);
+			return svnAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable);
 		}
 		else if(verCtrl == 2)
 		{
 			
-			return gitAutoCommit(repos,isRealDoc, doc, localRootPath, localRefRootPath, commitMsg,commitUser,modifyEnable);			
+			return gitAutoCommit(repos, doc, commitMsg,commitUser,modifyEnable);			
 		}
 		return null;
 	}
 	
-	protected String gitAutoCommit(Repos repos,boolean isRealDoc, Doc doc, String localRootPath, String localRefRootPath, 
+	protected String gitAutoCommit(Repos repos, Doc doc, 
 			String commitMsg, String commitUser, boolean modifyEnable) 
 	{
 		GITUtil gitUtil = new GITUtil();
 		//svn初始化
-		if(gitUtil.Init(repos, isRealDoc, commitUser) == false)
+		if(gitUtil.Init(repos, doc.getIsRealDoc(), commitUser) == false)
 		{
 			System.out.println("gitAutoCommit() do Init Failed");
 			return null;
 		}
 		
-		return gitUtil.doAutoCommit(doc,localRootPath, localRefRootPath, commitMsg,commitUser,modifyEnable);
+		return gitUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable);
 	}
 
 	//Commit the localPath to svnPath

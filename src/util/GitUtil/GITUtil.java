@@ -924,7 +924,7 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 
-	public String doAutoCommit(Doc doc, String localRootPath, String localRefRootPath, String commitMsg, String commitUser, boolean modifyEnable) 
+	public String doAutoCommit(Doc doc, String commitMsg, String commitUser, boolean modifyEnable) 
 	{		
 		Git git = null;
 		try {
@@ -935,9 +935,11 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 		
+		String localRootPath = doc.getLocalRootPath();
+		String localRefRootPath = doc.getLocalRefRootPath();
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
-    	File localParentDir = new File(localRootPath+doc.getPath());
+    	File localParentDir = new File(localRootPath + doc.getPath());
 		if(!localParentDir.exists())
 		{
 			System.out.println("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
@@ -950,7 +952,7 @@ public class GITUtil  extends BaseController{
 		}
 		
 		//If remote parentPath not exists, need to set the autoCommit entry to parentPath
-		Integer type = checkPath(doc.getPath(), "");
+		Integer type = checkPath(doc.getPath(), null);
 		if(type == null)
 		{
 			return null;
@@ -958,7 +960,7 @@ public class GITUtil  extends BaseController{
 		
 		if(type == 0)
 		{
-			return doAutoCommitParent(doc, localRootPath, localRefRootPath, commitMsg, commitUser, modifyEnable);
+			return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
 		}	
 			
 		String entryPath = doc.getPath() + doc.getName();			
@@ -967,7 +969,7 @@ public class GITUtil  extends BaseController{
 		if(!localEntry.exists())	//Delete Commit
 		{
 			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
-			type = checkPath(entryPath, -1);
+			type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
 		    	return null;
