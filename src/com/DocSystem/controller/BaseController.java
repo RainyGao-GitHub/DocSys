@@ -1487,7 +1487,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
 		}
 		
-		String revision = verReposAutoCommit(repos, doc, commitMsg,commitUser,true);
+		String revision = verReposDocCommit(repos, doc, commitMsg,commitUser,true);
 		
 		//Force update docInfo
 		printObject("revertRealDocHistory() successDocList:", successDocList);
@@ -1539,7 +1539,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Do commit to verRepos		
-		String revision = revertDocHistory(repos, doc, commitMsg, commitUser, true);
+		String revision = verReposDocCommit(repos, doc, commitMsg, commitUser, true);
 		
 		if(doc.getIsRealDoc())
 		{
@@ -1780,7 +1780,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 
-		String revision = verReposRealDocDelete(repos, doc, commitMsg,commitUser,rt);
+		String revision = verReposDocDelete(repos, doc, commitMsg,commitUser,rt);
 		if(revision == null)
 		{
 			docSysDebugLog("deleteDoc_FS() verReposRealDocDelete Failed", rt);
@@ -2877,10 +2877,10 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case 1:	//RDoc autoCommit
-			return verReposAutoCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), true);
+			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), true);
 		case 2: //VDoc autoCommit
-			Doc vDoc = buildVDoc(repos, doc);
-			return verReposAutoCommit(repos, vDoc, action.getCommitMsg(), action.getCommitUser(), true);
+			doc.setIsRealDoc(false);
+			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), true);
 		}
 		return null;
 	}
@@ -3049,7 +3049,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = verReposRealDocMove(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
+		String revision = verReposDocMove(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
 			docSysWarningLog("moveDoc_FS() verReposRealDocMove Failed", rt);
@@ -3135,7 +3135,7 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		//需要将文件Commit到VerRepos上去
-		String revision = verReposRealDocCopy(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
+		String revision = verReposDocCopy(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
 			docSysWarningLog("copyDoc() verReposRealDocCopy failed", rt);
@@ -3214,7 +3214,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(saveVirtualDocContent(vDoc.getLocalRootPath(), vDoc, rt) == true)
 			{
-				verReposVirtualDocCommit(repos, vDoc, commitMsg, commitUser,rt);
+				verReposDocCommit(repos, doc, commitMsg, commitUser,rt);
 			}
 		}
 		else
@@ -3222,7 +3222,7 @@ public class BaseController  extends BaseFunction{
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
-				verReposVirtualDocCommit(repos, vDoc, commitMsg, commitUser,rt);
+				verReposDocCommit(repos, doc, commitMsg, commitUser,rt);
 			}
 		}
 		
@@ -4863,7 +4863,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.Commit(doc,commitMsg, commitUser);
 	}
 
-	protected String verReposRealDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{	
 		if(repos.getVerCtrl() == 1)
 		{
@@ -4877,7 +4877,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected String gitRealDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	protected String gitDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
 	{
 		System.out.println("gitRealDocCommit() reposId:" + repos.getId() + " parentPath:" + doc.getPath() + " entryName:" + doc.getName());
 		if(doc.getName().isEmpty())
