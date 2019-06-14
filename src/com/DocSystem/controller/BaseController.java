@@ -4816,19 +4816,22 @@ public class BaseController  extends BaseFunction{
 
 	private String svnDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
-		System.out.println("svnRealDocDelete() parentPath:" + doc.getPath() + " name:" + doc.getName());
-
-		String docRPath = doc.getPath() + doc.getName();
+		boolean isRealDoc = doc.getIsRealDoc();
 		
-		SVNUtil svnUtil = new SVNUtil();
-		
-		if(false == svnUtil.Init(repos, true, commitUser))
+		SVNUtil verReposUtil = new SVNUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 		{
 			System.out.println("svnRealDocDelete() svnUtil.Init 失败！");
 			return null;
 		}
+
+		if(!isRealDoc)
+		{
+			doc = buildVDoc(repos, doc);
+		}
 		
-		Integer type = svnUtil.checkPath(docRPath, null);
+		String entryPath = doc.getPath() + doc.getName();
+		Integer type = verReposUtil.checkPath(entryPath, null);
 		if(type == null)
 		{
 			return null;
@@ -4839,28 +4842,37 @@ public class BaseController  extends BaseFunction{
 			return "";
 		}
 		
-		return svnUtil.deleteDoc(doc,commitMsg,commitUser);
+		return verReposUtil.deleteDoc(doc,commitMsg,commitUser);
 	}
 	
-	//Git realDoc Delete
 	protected String gitDocDelete(Repos repos, Doc doc, String commitMsg,String commitUser, ReturnAjax rt) 
 	{
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
+		boolean isRealDoc = doc.getIsRealDoc();
+		GITUtil verReposUtil = new GITUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 		{
-			System.out.println("gitRealDocDelete() GITUtil Init failed");
+			System.out.println("svnRealDocDelete() svnUtil.Init 失败！");
+			return null;
+		}
+
+		if(!isRealDoc)
+		{
+			doc = buildVDoc(repos, doc);
+		}
+		
+		String entryPath = doc.getPath() + doc.getName();
+		Integer type = verReposUtil.checkPath(entryPath, null);
+		if(type == null)
+		{
 			return null;
 		}
 		
-		//Add to Doc to WorkingDirectory
-		String wcDocPath = getLocalVerReposPath(repos, true) + doc.getPath() + doc.getName();
-		if(delFileOrDir(wcDocPath) == false)
+		if(type == 0)
 		{
-			System.out.println("gitRealDocDelete() delete working copy failed");
-			return null;
+			return "";
 		}
-			
-		return gitUtil.Commit(doc,commitMsg, commitUser);
+		
+		return verReposUtil.deleteDoc(doc,commitMsg,commitUser);
 	}
 	
 	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
@@ -4879,34 +4891,36 @@ public class BaseController  extends BaseFunction{
 	
 	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
 	{			
-		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(repos, doc.getIsRealDoc(), commitUser) == false)
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		SVNUtil verReposUtil = new SVNUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 		{
-			System.out.println("do Init Failed");
 			return null;
 		}
 
-		if(doc.getIsRealDoc())
+		if(!isRealDoc)
 		{
 			doc = buildVDoc(repos, doc);
 		}
-		return svnUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
+		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 	
 	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, doc.getIsRealDoc(), commitUser) == false)
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		GITUtil verReposUtil = new GITUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
 		{
-			System.out.println("gitAutoCommit() do Init Failed");
 			return null;
 		}
-		
-		if(doc.getIsRealDoc())
+
+		if(!isRealDoc)
 		{
 			doc = buildVDoc(repos, doc);
 		}
-		return gitUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable);
+		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable);
 	}
 
 	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) {
@@ -4924,6 +4938,42 @@ public class BaseController  extends BaseFunction{
 			return gitCheckOut(repos, doc, localParentPath, targetName, commitId);
 		}
 		return null;
+	}
+	
+	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,long revision, boolean force) 
+	{
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		SVNUtil verReposUtil = new SVNUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
+		{
+			return null;
+		}
+
+		if(!isRealDoc)
+		{
+			doc = buildVDoc(repos, doc);
+		}
+
+		int level = getLevelByParentPath(doc.getPath());
+		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
+	}
+	
+	protected List<Doc> gitCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath, String targetName, String revision) 
+	{
+		String parentPath = doc.getPath();
+		String entryName = doc.getName();
+		
+		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, null) == false)
+		{
+			System.out.println("gitCheckOut() GITUtil Init failed");
+			return null;
+		}
+		
+		return gitUtil.getEntry(doc, localParentPath, targetName, revision);
 	}
 
 	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -5028,23 +5078,6 @@ public class BaseController  extends BaseFunction{
 		//Commit will roll back WC if there is error
 		return gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
 	}
-
-	protected List<Doc> gitCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath, String targetName, String revision) 
-	{
-		String parentPath = doc.getPath();
-		String entryName = doc.getName();
-		
-		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
-		//GitUtil Init
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, null) == false)
-		{
-			System.out.println("gitCheckOut() GITUtil Init failed");
-			return null;
-		}
-		
-		return gitUtil.getEntry(doc, localParentPath, targetName, revision);
-	}
 	
 	protected String svnDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
 			String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) 
@@ -5062,21 +5095,6 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName, rt);
 		}
 		return revision;
-	}
-
-	protected List<Doc> svnCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath,String targetName,long revision, boolean force) 
-	{
-		System.out.println("svnCheckOut() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " revision:" + revision);
-		
-		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(repos, doc.getIsRealDoc(), null) == false)
-		{
-			System.out.println("svnCheckOut() svnUtil Init Failed");
-			return null;
-		}
-
-		int level = getLevelByParentPath(doc.getPath());
-		return svnUtil.getEntry(doc, level, localParentPath, targetName, revision, force);
 	}
 	
 	protected String commitMsgFormat(Repos repos, boolean isRealDoc, String commitMsg, String commitUser) 

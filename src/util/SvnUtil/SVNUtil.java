@@ -180,14 +180,14 @@ public class SVNUtil  extends BaseController{
 	    	
 	        System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
 	    		
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2);
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2, true);
 	    	remoteEntry.setRevision(strRevision);
 	        return doc;
 		}
 
 	    //Doc is file
 	    String strRevision = revision +"";
-    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1);
+    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true);
     	remoteEntry.setRevision(strRevision);
 	    	
             //获取commitUser和commitTime的实际意义值得怀疑
@@ -1694,7 +1694,7 @@ public class SVNUtil  extends BaseController{
 	
 	
 	
-	public List<Doc> getEntry(Doc doc, int level, String localParentPath, String targetName,Long revision, boolean force) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
@@ -1706,8 +1706,6 @@ public class SVNUtil  extends BaseController{
     		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
     		return null;
     	}	
-		
-    	Long docId = buildDocIdByName(level, parentPath, entryName);
 		
 		//check targetName and set
 		if(targetName == null)
@@ -1731,7 +1729,6 @@ public class SVNUtil  extends BaseController{
 			{
 				if(delFileOrDir(localParentPath+targetName) == true)
 				{	
-					doc.setDocId(docId);
 					doc.setRevision("");
 					successDocList.add(doc);
 					return successDocList;
@@ -1755,17 +1752,23 @@ public class SVNUtil  extends BaseController{
         			return null;
         		}
         		
-        		doc.setDocId(docId);
-				doc.setType(2);
+        		doc.setType(2);
 				doc.setRevision(remoteDoc.getRevision());
 				successDocList.add(doc);
 			}
         	
+			int subDocLevel = doc.getLevel() + 1;
+			String subDocParentPath = doc.getPath() + doc.getName() + "/";
+			if(doc.getName().isEmpty())
+			{
+				subDocParentPath = doc.getPath();
+			}
 			List <SVNDirEntry> subEntries = getSubEntryList(remoteEntryPath,revision);
 			for(int i=0;i<subEntries.size();i++)
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
+				Integer subEntryType = getEntryType(subEntry.getKind());
 				String subEntryParentPath = null;
 				if(entryName.isEmpty())
 				{
@@ -1787,12 +1790,8 @@ public class SVNUtil  extends BaseController{
 				}
 				
 				Long subEntryRevision = subEntry.getRevision();
-				Doc subDoc = new Doc();
-				subDoc.setVid(doc.getVid());
-				subDoc.setPid(docId);
-				subDoc.setPath(subEntryParentPath);
-				subDoc.setName(subEntryName);				
-				List<Doc> subSuccessList = getEntry(subDoc, level+1, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
+				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc());
+				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1811,7 +1810,6 @@ public class SVNUtil  extends BaseController{
 				return null;
 			}
 			
-			doc.setDocId(docId);
 			doc.setSize(localEntry.length());
 			doc.setLatestEditTime(localEntry.lastModified());
 			doc.setCheckSum("");
@@ -1823,8 +1821,8 @@ public class SVNUtil  extends BaseController{
 		
 		return null;
 	}
-	
-    private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, Long revision, boolean force) {
+
+	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, Long revision, boolean force) {
 		File localEntry = new File(localParentPath + targetName);
 		if(localEntry.exists() && localEntry.isDirectory())
 		{

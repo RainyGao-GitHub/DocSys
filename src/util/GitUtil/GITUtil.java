@@ -1265,4 +1265,14 @@ public class GITUtil  extends BaseController{
 		
 		return gitAdd(wcDocPath, wcDocPath, wcDocPath, wcDocPath);
 	}
+
+	public Integer checkPath(String entryPath, Object object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String deleteDoc(Doc doc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

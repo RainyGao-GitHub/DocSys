@@ -269,8 +269,24 @@ public class BaseFunction{
     	actionList.add(action);	
 	}
 	
-	/******************************* 路径相关接口  *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type) {
+	/******************************* 路径相关接口  
+	 * @param isRealDoc *******************************/
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc) 
+	{
+		Doc doc = new Doc();
+		
+		//Build vDoc
+		if(isRealDoc == false)
+		{
+			doc.setVid(reposId);
+			doc.setPath(path);
+			doc.setName(name);
+			doc.setLevel(level);
+			doc.setType(type);
+			doc.setIsRealDoc(false);
+			return doc;
+		}
+		
 		//Format path and name
 		if(path == null)
 		{
@@ -321,8 +337,7 @@ public class BaseFunction{
 				pid = buildDocIdByName(level-1, path, "");
 			}
 		}
-		
-		Doc doc = new Doc();
+
 		doc.setVid(reposId);
 		doc.setDocId(docId);
 		doc.setPid(pid);
