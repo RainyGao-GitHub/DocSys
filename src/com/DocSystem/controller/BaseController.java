@@ -1510,50 +1510,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/********************************** Functions For Application Layer ****************************************/
-	protected String revertVirtualDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
-	{	
-		DocLock docLock = null;
-		synchronized(syncLock)
-		{
-			//LockDoc
-			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
-			if(docLock == null)
-			{
-				unlock(); //线程锁
-				System.out.println("addDoc() lockDoc " + doc.getName() + " Failed!");
-				return null;
-			}
-		}
-
-		Doc vDoc = buildVDoc(repos, doc);
-		
-		String localParentPath = vDoc.getLocalRootPath();
-		
-		//Do checkout the entry to 
-		if(verReposCheckOut(repos, vDoc, localParentPath, vDoc.getName(), commitId, true) == null)
-		{
-			unlockDoc(doc,login_user,docLock);
-			docSysDebugLog("revertVirtualDocHistory() verReposCheckOut Failed vDocName:" + vDoc.getName() + " localVirtualRootPath:" + localParentPath + " targetName:" + vDoc.getName(), rt);
-			return null;
-		}
-		
-		//Do commit to verRepos
-		if(commitMsg == null)
-		{
-			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
-		}
-		
-		String revision = verReposAutoCommit(repos, doc, commitMsg,commitUser,true);
-		unlockDoc(doc,login_user,docLock);
-		
-		if(revision == null)
-		{			
-			docSysDebugLog("verReposAutoCommit 失败", rt);
-		}
-		return revision;
-	}
-
-	protected String revertRealDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
+	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{
 		DocLock docLock = null;
 		synchronized(syncLock)
@@ -1563,13 +1520,13 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				docSysDebugLog("revertRealDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
+				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
 				return null;
 			}
 		}
 		
 		//Checkout to localParentPath
-		String localRootPath = getReposRealPath(repos);
+		String localRootPath = doc.getLocalRootPath();
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
@@ -1577,33 +1534,31 @@ public class BaseController  extends BaseFunction{
 		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
-			docSysDebugLog("revertRealDocHistory Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
+			docSysDebugLog("revertDocHistory Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
 			return null;
 		}
 		
-		//Do commit to verRepos
-		if(commitMsg == null)
-		{
-			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
-		}
+		//Do commit to verRepos		
+		String revision = revertDocHistory(repos, doc, commitMsg, commitUser, true);
 		
-		String revision = verReposAutoCommit(repos, doc, commitMsg,commitUser,true);
-		
-		//Force update docInfo
-		printObject("revertRealDocHistory() successDocList:", successDocList);
-		for(int i=0; i< successDocList.size(); i++)
+		if(doc.getIsRealDoc())
 		{
-			Doc successDoc = successDocList.get(i);
-			successDoc.setRevision(revision);
-			successDoc.setCreator(login_user.getId());
-			successDoc.setLatestEditor(login_user.getId());
-			dbUpdateDoc(repos, successDoc, true);
+			//Force update docInfo
+			printObject("revertDocHistory() successDocList:", successDocList);
+			for(int i=0; i< successDocList.size(); i++)
+			{
+				Doc successDoc = successDocList.get(i);
+				successDoc.setRevision(revision);
+				successDoc.setCreator(login_user.getId());
+				successDoc.setLatestEditor(login_user.getId());
+				dbUpdateDoc(repos, successDoc, true);
+			}
 		}
 		
 		unlockDoc(doc,login_user,docLock);
 		if(revision == null)
 		{			
-			docSysDebugLog("revertRealDocHistory()  verReposAutoCommit 失败", rt);
+			docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
 		}
 		
 		return revision;
@@ -1638,18 +1593,10 @@ public class BaseController  extends BaseFunction{
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		System.out.println("addDoc_FS()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
-
-		String reposRPath = getReposRealPath(repos);
-		String localParentPath =  reposRPath + doc.getPath();
-		String localDocPath = localParentPath + doc.getName();
 		
-		//Build doc
+		//add doc detail info
 		doc.setSize(fileSize);
 		doc.setCheckSum(checkSum);
-
-		//set createTime
-		//long nowTimeStamp = new Date().getTime();//获取当前系统时间戳
-		//doc.setCreateTime(nowTimeStamp);
 		doc.setCreator(login_user.getId());
 		doc.setCreatorName(login_user.getName());
 		doc.setLatestEditor(login_user.getId());
@@ -1668,6 +1615,8 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
+		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
+		String localDocPath = localParentPath + doc.getName();
 		File localEntry = new File(localDocPath);
 		if(localEntry.exists())
 		{	
@@ -1711,7 +1660,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCommit(repos,doc,commitMsg,commitUser,rt);
 		if(revision == null)
 		{
-			docSysWarningLog("verReposRealDocAdd Failed", rt);
+			docSysWarningLog("verReposDocCommit Failed", rt);
 		}
 		
 		doc.setRevision(revision);

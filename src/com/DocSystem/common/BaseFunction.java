@@ -330,6 +330,7 @@ public class BaseFunction{
 		doc.setName(name);
 		doc.setLevel(level);
 		doc.setType(type);
+		doc.setIsRealDoc(true);
 		return doc;
 	}
 	

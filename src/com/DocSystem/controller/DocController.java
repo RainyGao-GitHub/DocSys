@@ -97,7 +97,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, null, pid, path, name, level, type);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		doc.setContent(content);
 		
 		if(checkUserAddRight(repos, login_user.getId(), doc, rt) == false)
@@ -146,8 +146,8 @@ public class DocController extends BaseController{
 		}
 		if(level == null)
 		{
-			//TODO: level 是指parent的level，前台是否应该提前处理好？
-			level = 0;
+			//TODO: level 是指doc的level，前台是否应该提前处理好？
+			level = 1;
 		}
 		if(type == null)
 		{
@@ -233,7 +233,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
 		if(checkUserDeleteRight(repos, login_user.getId(), doc, rt) == false)
 		{
@@ -515,7 +515,7 @@ public class DocController extends BaseController{
 					localParentDir.mkdirs();
 				}
 				
-				Doc doc = buildBasicDoc(reposId, null, null, path, name, level, 1);
+				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 				Doc dbDoc = docSysGetDoc(repos, doc, login_user);
 				
 				if(dbDoc == null)
@@ -743,7 +743,7 @@ public class DocController extends BaseController{
 			localParentDir.mkdirs();
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
 		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
 		if(dbDoc == null)	//0: add  1: update
@@ -1266,59 +1266,13 @@ public class DocController extends BaseController{
 		
 		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
 		
-		//To support user call the interface by entryPath
-		if(name.isEmpty())
-		{
-			if(!path.isEmpty())
-			{
-				String[] temp = new String[2]; 
-				seperatePathAndName(path, temp);
-				path = temp[0];
-				name = temp[1];			
-			}
-		}
-		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
-		if(historyType == null)
-		{
-			historyType = 0;
-		}
-		
-		//userTmpDir will be used to tmp store the history doc 
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		
-		//Set targetName
+		String targetName = name + "_" + commitId;
 		String entryPath = path + name;
-		String targetName = null;
-		
-		boolean isRealDoc = true;
-		switch(historyType)
+		if(historyType != null && historyType == 2)
 		{
-		case 0:
-			isRealDoc = true;
-			if(entryPath.isEmpty())
-			{
-				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
-				targetName = repos.getName() + "_" + commitId;	
-			}
-			else
-			{
-				targetName = name + "_" + commitId;
-			}
-			
-			//checkout the entry to local
-			if(verReposCheckOut(repos, isRealDoc, doc, userTmpDir, targetName, commitId, true) == null)
-			{
-				docSysErrorLog("verReposCheckOut Failed!", rt);
-				docSysDebugLog("verReposCheckOut Failed path:" + path + " name:" + name + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
-				writeJson(rt, response);	
-				return;
-			}
-
-			break;
-		case 1:
-			isRealDoc = false;
+			doc.setIsRealDoc(false);	
 			if(entryPath.isEmpty())
 			{
 				targetName = repos.getName() + "_AllNotes_" + commitId;	
@@ -1327,23 +1281,27 @@ public class DocController extends BaseController{
 			{
 				targetName = name + "_Note_" + commitId;
 			}
-			
-			String vDocName = getVDocName(doc);
-			Doc vDoc = new Doc();
-			vDoc.setPath("");
-			vDoc.setName(vDocName);
-			
-			//checkout the entry to local
-			if(verReposCheckOut(repos, isRealDoc, vDoc, userTmpDir, targetName, commitId, true) == null)
+		}
+		else
+		{
+			if(entryPath.isEmpty())
 			{
-				docSysErrorLog("verReposCheckOut Failed!", rt);
-				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
-				writeJson(rt, response);	
-				return;
-			}
-			break;
+				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
+				targetName = repos.getName() + "_" + commitId;	
+			}	
 		}
 		
+		//userTmpDir will be used to tmp store the history doc 
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+
+		//checkout the entry to local
+		if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true) == null)
+		{
+			docSysErrorLog("下载历史版本失败", rt);
+			docSysDebugLog("verReposCheckOut Failed path:" + path + " name:" + name + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+			writeJson(rt, response);	
+			return;
+		}
 		
 		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request,false);
 		
