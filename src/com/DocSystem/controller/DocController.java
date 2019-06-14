@@ -74,7 +74,8 @@ public class DocController extends BaseController{
 	/*******************************  Ajax Interfaces For Document Controller ************************/ 
 	/****************   add a Document ******************/
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
-	public void addDoc(Integer reposId,Integer type,  Integer level, Long pid, String path, String name, String content,
+	public void addDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String content,
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("addDoc reposId:" + reposId + " type: " + type + " level: " + level +" pid:" + pid  + " path: " + path + " name: " + name + " content: " + content);
 		//System.out.println(Charset.defaultCharset());
@@ -121,12 +122,32 @@ public class DocController extends BaseController{
 
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")
-	public void feeback(String name, String path, String content, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void feeback(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String content, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("feeback name: " + name + " content: " + content);
 
+		if(reposId == null)
+		{
+			reposId = getReposIdForFeeback();		
+		}
+		if(pid == null)
+		{
+			pid = 0L;
+		}
 		if(path == null)
 		{
 			path = "";
+		}
+		if(level == null)
+		{
+			//TODO: level 是指parent的level，前台是否应该提前处理好？
+			level = 0;
+		}
+		if(type == null)
+		{
+			type = 1;
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -141,8 +162,6 @@ public class DocController extends BaseController{
 			login_user = new User();
 			login_user.setId(0);
 		}
-		Integer reposId = getReposIdForFeeback();		
-		Long pid = 0L;
 		
 		String commitMsg = "User Feeback by " + name;
 		Repos repos = reposService.getRepos(reposId);
@@ -153,7 +172,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, null, pid, path, name, 0, 1);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		doc.setContent(content);
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
@@ -188,7 +207,9 @@ public class DocController extends BaseController{
 
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
-	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("deleteDoc reposId:" + reposId + " docId:" + docId + " pid:" + pid  + " path: " + path + " name: " + name );
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -231,7 +252,7 @@ public class DocController extends BaseController{
 
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
-	public void renameDoc(Integer reposId, Long docId, String path, String name, Long pid, Integer level, Integer type, String dstName, 
+	public void renameDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String dstName, 
 							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("renameDoc reposId: " + reposId  + " docId: " + docId + " pid: " + pid  + " path:" + path + " name:" + name + " dstName:" + dstName);
@@ -363,7 +384,9 @@ public class DocController extends BaseController{
 	/****************   move a Document ******************/
 	@RequestMapping("/copyDoc.do")
 	public void copyDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type,
-			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("copyDoc reposId: " + reposId  + " docId: " + docId + " srcPid: " + srcPid + " dstPid: " + dstPid + " srcPath:" + srcPath + " srcName:" + srcName + " dstPath:" + dstPath+ " dstName:" + dstName);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -412,10 +435,11 @@ public class DocController extends BaseController{
 	
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, Integer level, String path, String name, 
+	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
-			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " pid: " + pid + " path: " + path);
 		
@@ -504,7 +528,11 @@ public class DocController extends BaseController{
 	}
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, Long size,String checkSum, String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			Long size,String checkSum, 
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("checkDocInfo name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " pid: " + pid);
 
 		ReturnAjax rt = new ReturnAjax();
@@ -598,7 +626,6 @@ public class DocController extends BaseController{
 				{
 					System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
 					//Do copy the Doc
-					String srcPath = sameDoc.getPath();
 					List<CommonAction> actionList = new ArrayList<CommonAction>();
 					boolean ret = copyDoc(repos, sameDoc, doc, commitMsg,login_user.getName(),login_user,rt,actionList);
 					if(ret == true)
@@ -654,10 +681,11 @@ public class DocController extends BaseController{
 	/*docId = -1: means it is add, else it is update
 	 * pid = -1: means we do not know the pid maybe it still not exists*/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level,	//
+	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			MultipartFile uploadFile, Long size, String checkSum,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
-			String commitMsg,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+			String commitMsg,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 
@@ -781,8 +809,8 @@ public class DocController extends BaseController{
 	
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
-	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{
-		//TODO: 取文件的地方有问题
+	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
+			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{
 		System.out.println("uploadMarkdownPic ");
 		
 		JSONObject res = new JSONObject();
@@ -854,7 +882,8 @@ public class DocController extends BaseController{
 
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
-	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String content,
+	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+			String content,
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		System.out.println("content:[" + content + "]");
@@ -920,7 +949,8 @@ public class DocController extends BaseController{
 
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
-	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String content,
+	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String content,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("tmpSaveVirtualDocContent() reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
@@ -954,7 +984,7 @@ public class DocController extends BaseController{
 	
 	/**************** downloadDocPrepare ******************/
 	@RequestMapping("/downloadDocPrepare.do")
-	public void downloadDocCheck(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+	public void downloadDocCheck(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
 		System.out.println("downloadDocPrepare reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 		
@@ -1040,7 +1070,7 @@ public class DocController extends BaseController{
 
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc")
-	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
@@ -1163,18 +1193,12 @@ public class DocController extends BaseController{
 
 	/**************** download History Doc  ******************/
 	@RequestMapping("/downloadHistoryDoc.do")
-	public void downloadHistoryDoc(String commitId,Integer reposId, String path, String name, Integer historyType, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception{
+	public void downloadHistoryDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitId,
+			Integer historyType, 
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
 		System.out.println("downloadHistoryDoc commitId: " + commitId + " reposId:" + reposId + " historyType:" + historyType +" path:" + path + " name:" + name);
-
-		if(path == null)
-		{
-			path = "";
-		}
-		if(name == null)
-		{
-			name = "";
-		}
-
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1193,9 +1217,24 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//URL was encode by EncodeURI, so just decode it here
-		name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
-		path = new String(path.getBytes("ISO8859-1"),"UTF-8");  
+		if(path == null)
+		{
+			path = "";
+		}
+		else
+		{
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");			
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		else
+		{
+			//URL was encode by EncodeURI, so just decode it here
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
+		}	
+		
 		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
 		
 		//To support user call the interface by entryPath
@@ -1209,6 +1248,8 @@ public class DocController extends BaseController{
 				name = temp[1];			
 			}
 		}
+		
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type);
 		
 		if(historyType == null)
 		{
@@ -1236,6 +1277,16 @@ public class DocController extends BaseController{
 			{
 				targetName = name + "_" + commitId;
 			}
+			
+			//checkout the entry to local
+			if(verReposCheckOut(repos, isRealDoc, doc, userTmpDir, targetName, commitId, true) == null)
+			{
+				docSysErrorLog("verReposCheckOut Failed!", rt);
+				docSysDebugLog("verReposCheckOut Failed path:" + path + " name:" + name + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+				writeJson(rt, response);	
+				return;
+			}
+
 			break;
 		case 1:
 			isRealDoc = false;
@@ -1248,27 +1299,22 @@ public class DocController extends BaseController{
 				targetName = name + "_Note_" + commitId;
 			}
 			
-			Doc doc = new Doc();
-			int level = getLevelByParentPath(path);
-			Long docId = buildDocIdByName(level, path, name);
-			doc.setVid(repos.getId());
-			doc.setDocId(docId);
-			doc.setPath(path);
-			doc.setName(name);
+			String vDocName = getVDocName(doc);
+			Doc vDoc = new Doc();
+			vDoc.setPath("");
+			vDoc.setName(vDocName);
 			
-			name = getVDocName(doc);
-			path = "";
+			//checkout the entry to local
+			if(verReposCheckOut(repos, isRealDoc, vDoc, userTmpDir, targetName, commitId, true) == null)
+			{
+				docSysErrorLog("verReposCheckOut Failed!", rt);
+				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+				writeJson(rt, response);	
+				return;
+			}
 			break;
 		}
 		
-		//checkout the entry to local
-		if(verReposCheckOut(repos, isRealDoc, path, name, userTmpDir, targetName, commitId, true) == null)
-		{
-			docSysErrorLog("verReposCheckOut Failed!", rt);
-			docSysDebugLog("verReposCheckOut Failed path:" + path + " name:" + name + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
-			writeJson(rt, response);	
-			return;
-		}
 		
 		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request,false);
 		
@@ -1278,7 +1324,7 @@ public class DocController extends BaseController{
 
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
 		System.out.println("DocToPDF reposId: " + reposId + " docId:" + docId + " pid:" + pid +" path:" + path + " name:" + name);
@@ -1360,10 +1406,11 @@ public class DocController extends BaseController{
 		String fileLink = "/DocSystem/tmp/preview/" + dstName;
 		
 		File file = new File(dstPath);
+		//预览文件已存在
 		if(file.exists())
 		{
 			Doc dbDoc = dbGetDoc(repos, doc, true);
-			if(false == isDocLocalChanged(doc,localEntry))
+			if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
 			{
 				rt.setData(fileLink);
 				writeJson(rt, response);
@@ -1439,7 +1486,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
-	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		System.out.println("getDocContent reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 		
@@ -1471,7 +1518,8 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
-	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " path:" + path + " name:" + name);
 		
@@ -1537,8 +1585,9 @@ public class DocController extends BaseController{
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
-	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, 
-			Integer lockType, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+			Integer lockType, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("lockDoc reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name + " lockType: " + lockType);
 		
@@ -1602,7 +1651,7 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, 
+	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer historyType,Integer maxLogNum, 
 			HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocHistory reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
@@ -1665,8 +1714,11 @@ public class DocController extends BaseController{
 	
 	/****************   get Document History Detail ******************/
 	@RequestMapping("/getHistoryDetail.do")
-	public void getHistoryDetail(String commitId,Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
-			Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void getHistoryDetail(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitId,
+			Integer historyType, 
+			HttpSession session, HttpServletRequest request,HttpServletResponse response)
+	{
 		System.out.println("getHistoryDetail commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1715,7 +1767,9 @@ public class DocController extends BaseController{
 	
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
-	public void revertDocHistory(String commitId,Integer reposId, Long docId, Long pid, String path, String name, Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
+	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitId,
+			Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response){
 		System.out.println("revertDocHistory commitId:" + commitId + " reposId:" + reposId + " docId:" + docId + " docPath:" + path+name +" historyType:" + historyType);
 		
 		if(path == null)
@@ -1800,8 +1854,11 @@ public class DocController extends BaseController{
 	 * searchWord: 支持文件名、文件内容和备注搜索，关键字可以支持空格分开 
 	*/
 	@RequestMapping("/searchDoc.do")
-	public void searchDoc(Integer reposId,Integer pDocId, String path, String searchWord,String sort,HttpServletResponse response,HttpSession session){
-		System.out.println("searchDoc searchWord: " + searchWord + " pDocId:" + pDocId + " path:" + path);
+	public void searchDoc(Integer reposId,Integer pid, String path, 
+			String searchWord,String sort,
+			HttpServletResponse response,HttpSession session)
+	{
+		System.out.println("searchDoc searchWord: " + searchWord + " pid:" + pid + " path:" + path);
 		
 		if(path == null)
 		{
@@ -1822,7 +1879,7 @@ public class DocController extends BaseController{
 		{
 			//Do search all AccessableRepos
 			reposList = getAccessableReposList(login_user.getId());
-			pDocId = 0;
+			pid = 0;
 			path = "";
 		}
 		else
@@ -1845,7 +1902,7 @@ public class DocController extends BaseController{
 		for(int i=0; i< reposList.size(); i++)
 		{
 			Repos queryRepos = reposList.get(i);
-			List<Doc> result =  searchInRepos(queryRepos, pDocId, path, searchWord, sort);
+			List<Doc> result =  searchInRepos(queryRepos, pid, path, searchWord, sort);
 			if(result != null && result.size() > 0)
 			{
 				searchResult.addAll(result);
