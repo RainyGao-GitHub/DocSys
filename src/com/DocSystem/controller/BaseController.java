@@ -1974,7 +1974,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-				String revision = verReposRealDocCommit(repos, doc, commitMsg, login_user.getName(), rt, commitHashMap);
+				String revision = verReposDocCommit(repos, doc, commitMsg, login_user.getName(), rt, commitHashMap);
 				if(revision != null)
 				{
 					for(Doc commitDoc: commitHashMap.values())
@@ -4862,60 +4862,53 @@ public class BaseController  extends BaseFunction{
 			
 		return gitUtil.Commit(doc,commitMsg, commitUser);
 	}
-
-	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
+	
+	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{	
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
-			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, commitHashMap);
+			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, commitHashMap);
+			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
 		}
 		return null;
 	}
 	
-	protected String gitDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, HashMap<Long, Doc> commitHashMap) 
-	{
-		System.out.println("gitRealDocCommit() reposId:" + repos.getId() + " parentPath:" + doc.getPath() + " entryName:" + doc.getName());
-		if(doc.getName().isEmpty())
+	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
+	{			
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, doc.getIsRealDoc(), commitUser) == false)
 		{
-			System.out.println("gitRealDocCommit() entryName can not be empty");
+			System.out.println("do Init Failed");
 			return null;
 		}
 
-		//GitUtil Init
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
+		if(doc.getIsRealDoc())
 		{
-			System.out.println("gitRealDocCommit() GITUtil Init failed");
-			return null;
+			doc = buildVDoc(repos, doc);
 		}
-	
-		//Copy to Doc to WorkingDirectory
-		String entryPath = doc.getPath() + doc.getName();
-		String docPath = getReposRealPath(repos) + entryPath;
-		String wcDocPath = getLocalVerReposPath(repos, true) + entryPath;
-		if(doc.getType() == 1)
-		{
-			if(copyFile(docPath, wcDocPath, true) == false)
-			{
-				System.out.println("gitRealDocCommit() copy File to working directory failed");					
-				return null;
-			}
-		}
-		else
-		{
-			System.out.println("gitRealDocCommit() dir can not modify");
-			return null;
-		}			
-				
-		//Commit will roll back WC if there is error
-		return gitUtil.Commit(doc,commitMsg, commitUser);
+		return svnUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 	
+	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
+	{
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, doc.getIsRealDoc(), commitUser) == false)
+		{
+			System.out.println("gitAutoCommit() do Init Failed");
+			return null;
+		}
+		
+		if(doc.getIsRealDoc())
+		{
+			doc = buildVDoc(repos, doc);
+		}
+		return gitUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable);
+	}
+
 	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) {
 		if(repos.getVerCtrl() == 1)
 		{

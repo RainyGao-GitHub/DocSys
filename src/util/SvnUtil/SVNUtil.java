@@ -482,7 +482,7 @@ public class SVNUtil  extends BaseController{
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	//subDocCommitFalg: 0:不Commit 1:Commit但不继承 2:Commit所有文件
-	public String doAutoCommit(Repos repos, Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag){
+	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag){
 		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -531,12 +531,6 @@ public class SVNUtil  extends BaseController{
 		        return getLatestRevision();
 		    }
 		    
-		    //Do delete remote Entry
-		    if(commitMsg == null)
-		    {
-		    	commitMsg = "删除 " + doc.getPath() + doc.getName();
-		    }
-			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 		    return deleteDoc(doc, commitMsg, commitUser);
 		}
 
@@ -560,7 +554,7 @@ public class SVNUtil  extends BaseController{
 		    }
 		    else
 		    {
-		       return modifyFile(doc, localRefRootPath, commitMsg, commitUser);
+		       return modifyFile(doc, commitMsg, commitUser);
 		    }
 		}
 
@@ -608,7 +602,7 @@ public class SVNUtil  extends BaseController{
 		}	
 	}
 
-	private String doAutoCommitParent(Doc doc,String localRootPath, String localRefRootPath, String commitMsg,String commitUser, boolean modifyEnable)
+	private String doAutoCommitParent(Doc doc, String commitMsg,String commitUser, boolean modifyEnable)
     {
     	String parentPath = doc.getPath();
         System.out.println("doAutoCommitParent() parentPath:" + parentPath);
@@ -639,7 +633,7 @@ public class SVNUtil  extends BaseController{
 	    		if(type == 0)
 	    		{
 	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2);
-	    			return doAutoCommit(tempDoc, localRootPath,  localRefRootPath, commitMsg, commitUser, modifyEnable,null, 2);
+	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
