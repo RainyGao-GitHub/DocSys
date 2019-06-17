@@ -34,6 +34,8 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
+import util.ReturnAjax;
+
 public class GITUtil  extends BaseController{
     //For Low Level APIs
 	private String repositoryURL = null;
@@ -408,7 +410,7 @@ public class GITUtil  extends BaseController{
     	return null;
 	}
 
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName(); 
 		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
@@ -783,10 +785,17 @@ public class GITUtil  extends BaseController{
         return ret.getName();
 	}
 
-	public String gitMove(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
-			String commitMsg, String commitUser) {
-		System.out.println("gitMove() move " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
+	public String gitMove(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
 		
+		String wcSrcDocParentPath = srcDoc.getLocalRootPath() + srcDoc.getPath();
+		String wcDstDocParentPath = dstDoc.getLocalRootPath() + dstDoc.getPath();
+
+		if(moveFileOrDir(wcSrcDocParentPath, srcDoc.getName() ,wcDstDocParentPath, dstDoc.getName(),false) == false)
+		{
+			System.out.println("gitDocMove() moveFileOrDir Failed");					
+			return null;
+		}
+				
 		Git git = null;
 		try {
 			git = Git.open(new File(wcDir));
@@ -796,8 +805,8 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 
-		String srcEntryPath = srcParentPath + srcEntryName;
-		String dstEntryPath = dstParentPath + dstEntryName;
+		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
+		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
 
 		//Add Index for delete srcEntry
 		try {	
@@ -1274,5 +1283,53 @@ public class GITUtil  extends BaseController{
 	public String deleteDoc(Doc doc, String commitMsg, String commitUser) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public String moveDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+	protected String gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
+			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		System.out.println("gitDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+		
+		if(srcEntryName == null || srcEntryName.isEmpty())
+		{
+			System.out.println("gitDocCopy() srcEntryName can not be empty");
+			return null;
+		}
+
+		if(dstEntryName == null || dstEntryName.isEmpty())
+		{
+			System.out.println("gitDocCopy() dstEntryName can not be empty");
+			return null;
+		}
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, commitUser) == false)
+		{
+			System.out.println("gitDocCopy() GITUtil Init failed");
+			return null;
+		}
+	
+		//Do move at Working Directory
+		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
+		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
+		if(copyFileOrDir(wcSrcDocParentPath+srcEntryName,wcDstParentDocPath+dstEntryName,false) == false)
+		{
+			System.out.println("gitDocCopy() moveFileOrDir Failed");					
+			return null;
+		}
+				
+		//Commit will roll back WC if there is error
+		return gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
 	}
 }

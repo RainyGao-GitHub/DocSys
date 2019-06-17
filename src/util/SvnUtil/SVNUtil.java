@@ -40,6 +40,8 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
+import util.ReturnAjax;
+
 public class SVNUtil  extends BaseController{
 	
 	//For Low Level APIs
@@ -2219,4 +2221,32 @@ public class SVNUtil  extends BaseController{
             }
         }
     }
+
+	public String moveDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	protected String svnDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
+			String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) 
+	{
+		SVNUtil svnUtil = new SVNUtil();
+		if(false == svnUtil.Init(repos, isRealDoc, commitUser))
+		{
+			System.out.println("svnCopy() svnUtil.Init Failed: srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
+			return null;
+		}
+		
+		String revision = svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, isMove);
+		if(revision == null)
+		{
+			docSysDebugLog("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName, rt);
+		}
+		return revision;
+	}
 }

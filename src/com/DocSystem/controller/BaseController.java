@@ -314,7 +314,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 		
-		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2);
+		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, false);
 		
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
 		addDocToSyncUpList(actionList, repos, rootDoc);
@@ -345,7 +345,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2);
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, false);
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt, actionList);
@@ -2504,7 +2504,7 @@ public class BaseController  extends BaseFunction{
 		Doc remoteEntry = svnUtil.getDoc(doc, revision);
 		if(remoteEntry == null)
 		{
-			remoteEntry = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0);
+			remoteEntry = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc());
 			return remoteEntry;
 		}
 		
@@ -4935,7 +4935,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else if(repos.getVerCtrl() == 2)
 		{
-			return gitCheckOut(repos, doc, localParentPath, targetName, commitId);
+			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force);
 		}
 		return null;
 	}
@@ -4955,25 +4955,25 @@ public class BaseController  extends BaseFunction{
 			doc = buildVDoc(repos, doc);
 		}
 
-		int level = getLevelByParentPath(doc.getPath());
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
 	}
 	
-	protected List<Doc> gitCheckOut(Repos repos, boolean isRealDoc, Doc doc, String localParentPath, String targetName, String revision) 
+	protected List<Doc> gitCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String revision, boolean force) 
 	{
-		String parentPath = doc.getPath();
-		String entryName = doc.getName();
+		boolean isRealDoc = doc.getIsRealDoc();
 		
-		System.out.println("gitCheckOut() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " revision:" + revision);
-		//GitUtil Init
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, null) == false)
+		GITUtil verReposUtil = new GITUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
 		{
-			System.out.println("gitCheckOut() GITUtil Init failed");
 			return null;
 		}
+
+		if(!isRealDoc)
+		{
+			doc = buildVDoc(repos, doc);
+		}
 		
-		return gitUtil.getEntry(doc, localParentPath, targetName, revision);
+		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
 	}
 
 	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -4989,7 +4989,44 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
+	
+	private String svnDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) {
+		boolean isRealDoc = srcDoc.getIsRealDoc();
+		
+		SVNUtil verReposUtil = new SVNUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
+		{
+			return null;
+		}
 
+		if(!isRealDoc)
+		{
+			srcDoc = buildVDoc(repos, srcDoc);
+			dstDoc = buildVDoc(repos, dstDoc);
+		}
+
+		return verReposUtil.moveDoc(srcDoc, dstDoc, commitMsg, commitUser);
+	}
+
+	protected String gitDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	{
+		boolean isRealDoc = srcDoc.getIsRealDoc();
+		
+		GITUtil verReposUtil = new GITUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
+		{
+			return null;
+		}
+
+		if(!isRealDoc)
+		{
+			srcDoc = buildVDoc(repos, srcDoc);
+			dstDoc = buildVDoc(repos, dstDoc);
+		}
+
+		return verReposUtil.moveDoc(srcDoc, dstDoc, commitMsg, commitUser);
+	}
+	
 	protected String verReposDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		if(repos.getVerCtrl() == 1)
@@ -5004,97 +5041,42 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected String gitDocMove(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
-	{
-		System.out.println("gitDocMove() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
-		
-		if(srcEntryName == null || srcEntryName.isEmpty())
-		{
-			System.out.println("gitDocMove() srcEntryName can not be empty");
-			return null;
-		}
-		
-		if(dstEntryName == null || dstEntryName.isEmpty())
-		{
-			System.out.println("gitDocMove() dstEntryName can not be empty");
-			return null;
-		}
-		
-		//GitUtil Init
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
-		{
-			System.out.println("gitDocMove() GITUtil Init failed");
-			return null;
-		}
 	
-		//Do move at Working Directory
-		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
-		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
-		if(moveFileOrDir(wcSrcDocParentPath, srcEntryName,wcDstParentDocPath, dstEntryName,false) == false)
-		{
-			System.out.println("gitDocMove() moveFileOrDir Failed");					
-			return null;
-		}
-				
-		//Commit will roll back WC if there is error
-		return gitUtil.gitMove(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
-	}
-	
-	protected String gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
-	{
-		System.out.println("gitDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
+	private String svnDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) {
+		boolean isRealDoc = srcDoc.getIsRealDoc();
 		
-		if(srcEntryName == null || srcEntryName.isEmpty())
+		SVNUtil verReposUtil = new SVNUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
 		{
-			System.out.println("gitDocCopy() srcEntryName can not be empty");
 			return null;
 		}
 
-		if(dstEntryName == null || dstEntryName.isEmpty())
+		if(!isRealDoc)
 		{
-			System.out.println("gitDocCopy() dstEntryName can not be empty");
-			return null;
+			srcDoc = buildVDoc(repos, srcDoc);
+			dstDoc = buildVDoc(repos, dstDoc);
 		}
-		//GitUtil Init
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
-		{
-			System.out.println("gitDocCopy() GITUtil Init failed");
-			return null;
-		}
-	
-		//Do move at Working Directory
-		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
-		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
-		if(copyFileOrDir(wcSrcDocParentPath+srcEntryName,wcDstParentDocPath+dstEntryName,false) == false)
-		{
-			System.out.println("gitDocCopy() moveFileOrDir Failed");					
-			return null;
-		}
-				
-		//Commit will roll back WC if there is error
-		return gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
+
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser);
 	}
-	
-	protected String svnDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
-			String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) 
+
+	protected String gitDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
-		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, isRealDoc, commitUser))
+		boolean isRealDoc = srcDoc.getIsRealDoc();
+		
+		GITUtil verReposUtil = new GITUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
 		{
-			System.out.println("svnCopy() svnUtil.Init Failed: srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
 			return null;
 		}
-		
-		String revision = svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, isMove);
-		if(revision == null)
+
+		if(!isRealDoc)
 		{
-			docSysDebugLog("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName, rt);
+			srcDoc = buildVDoc(repos, srcDoc);
+			dstDoc = buildVDoc(repos, dstDoc);
 		}
-		return revision;
+
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser);
 	}
 	
 	protected String commitMsgFormat(Repos repos, boolean isRealDoc, String commitMsg, String commitUser) 
