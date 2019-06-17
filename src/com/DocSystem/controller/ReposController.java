@@ -454,7 +454,8 @@ public class ReposController extends BaseController{
 	
 	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposInitMenu.do")
-	public void getReposInitMenu(Integer reposId,Long docId, Long pid, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getReposInitMenu(Integer reposId,Long docId, Long pid, String path, String name, Integer level, Integer type,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name);
 		
@@ -477,7 +478,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//Add doc for SyncUp
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, null,2);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true);
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), doc);
@@ -549,7 +550,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2);
+		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true);
 		
 		//get the rootDocAuth
 		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), doc);
@@ -583,7 +584,8 @@ public class ReposController extends BaseController{
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
 	@RequestMapping("/getReposManagerMenu.do")
-	public void getReposManagerMenu(Integer vid,Long docId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void getReposManagerMenu(Integer vid,Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -600,7 +602,7 @@ public class ReposController extends BaseController{
 		Repos repos = reposService.getRepos(vid);
 		
 		//Build rootDoc
-		Doc rootDoc = buildBasicDoc(vid, 0L, -1L, "", "", 0, 2);
+		Doc rootDoc = buildBasicDoc(vid, 0L, -1L, "", "", 0, 2, true);
 		
 		//获取用户可访问文件列表(From Root to docId)
 		
@@ -636,7 +638,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null, null);
+			Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, false);
 			
 			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
@@ -722,7 +724,8 @@ public class ReposController extends BaseController{
 	
 	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
-	public void getDocAuthList(Integer reposId, Long docId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getDocAuthList(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
@@ -744,7 +747,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null, null);
+		Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, true);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -909,7 +912,7 @@ public class ReposController extends BaseController{
 	
 	/****************  Config User or Group or anyUser DocAuth ******************/
 	@RequestMapping("/configDocAuth.do")
-	public void configUserAuth( Integer reposId, Integer userId, Integer groupId, Long docId, String path, String name,
+	public void configUserAuth( Integer reposId, Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -933,7 +936,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, null, path, name, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -953,19 +956,19 @@ public class ReposController extends BaseController{
 		}
 		
 		
-		Integer type = getAuthType(userId,groupId);
-		if(type == null)
+		Integer authType = getAuthType(userId,groupId);
+		if(authType == null)
 		{
 			System.out.println("getAuthType failed");
 			rt.setError("getAuthType Failed");
 			writeJson(rt, response);			
 			return;
 		}
-		Integer priority = getPriorityByAuthType(type);
+		Integer priority = getPriorityByAuthType(authType);
 		
 		//获取用户的权限设置，如果不存在则增加，否则修改
 		DocAuth qDocAuth = new DocAuth();
-		if(type == 2)
+		if(authType == 2)
 		{
 			qDocAuth.setGroupId(groupId);	
 		}
@@ -978,7 +981,7 @@ public class ReposController extends BaseController{
 		DocAuth docAuth = reposService.getDocAuth(qDocAuth);
 		if(docAuth == null)
 		{
-			qDocAuth.setType(type);
+			qDocAuth.setType(authType);
 			qDocAuth.setPriority(priority);
 			qDocAuth.setIsAdmin(isAdmin);
 			qDocAuth.setAccess(access);
@@ -990,7 +993,7 @@ public class ReposController extends BaseController{
 			qDocAuth.setDocName(name);
 			if(reposService.addDocAuth(qDocAuth) == 0)
 			{
-				if(type == 2)
+				if(authType == 2)
 				{
 					rt.setError("用户组文件权限增加失败");					
 				}
@@ -1012,7 +1015,7 @@ public class ReposController extends BaseController{
 			docAuth.setHeritable(heritable);
 			if(reposService.updateDocAuth(docAuth) == 0)
 			{
-				if(type == 2)
+				if(authType == 2)
 				{
 					rt.setError("用户组文件权限更新失败");					
 				}
@@ -1079,7 +1082,7 @@ public class ReposController extends BaseController{
 		
 	/****************   delete User or Group or anyUser  DocAuth ******************/
 	@RequestMapping("/deleteDocAuth.do")
-	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, String path, String name,
+	public void deleteUserDocAuth(Integer reposId, Integer docAuthId,Integer userId, Integer groupId, Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
@@ -1100,7 +1103,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Doc doc = buildBasicDoc(reposId, docId, null, path, name, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -1174,7 +1177,7 @@ public class ReposController extends BaseController{
 	
 	/********************* get UserDocAuth ******************************/
 	@RequestMapping("/getUserDocAuth.do")
-	public void getUserDocAuth(Integer reposId, Long docId, String path, String name,   
+	public void getUserDocAuth(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,  
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " path:" + path + " name:" + name);
@@ -1196,7 +1199,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, null, path, name, null, null);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true);
 		
 		//检查该用户是否设置了目录权限
 		DocAuth docAuth = getUserDispDocAuth(repos, login_user.getId(), doc); 
