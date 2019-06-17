@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -24,6 +26,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
 
@@ -111,8 +114,8 @@ public class GITUtil  extends BaseController{
 		}
 		
 		File dir = new File(gitDir);
-		File wcdir = new File(wcDir);
-        cloneCommand.setGitDir(dir);	//Set the repository dir
+		cloneCommand.setGitDir(dir);	//Set the repository dir
+		//File wcdir = new File(wcDir);
         //cloneCommand.setDirectory(wcdir);	//set the working copy dir
 		
 		try {
@@ -188,7 +191,7 @@ public class GITUtil  extends BaseController{
 	            long commitTime=commit.getCommitTime();
 	            
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0);
+	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, true);
 	            remoteDoc.setRevision(commitId);
 	            remoteDoc.setCreatorName(author);
 	            remoteDoc.setLatestEditorName(commitUser);
@@ -933,22 +936,14 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 
-	public String doAutoCommit(Doc doc, String commitMsg, String commitUser, boolean modifyEnable) 
+	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{		
-		Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-		} catch (Exception e) {
-			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
-			e.printStackTrace();
-			return null;
-		}
-		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
+		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
-    	File localParentDir = new File(localRootPath + doc.getPath());
+    	File localParentDir = new File(localRootPath+doc.getPath());
 		if(!localParentDir.exists())
 		{
 			System.out.println("doAutoCommit() localParentPath " + localRootPath+doc.getPath() + " not exists");
@@ -990,45 +985,53 @@ public class GITUtil  extends BaseController{
 		        return getLatestRevision();
 		    }
 		    
-		    //Do delete remote Entry
-		    return delete(doc, commitMsg, commitUser);
+		    return deleteDoc(doc, commitMsg, commitUser);
 		}
 
 		//LocalEntry is File
 		if(localEntry.isFile())
 		{
-			System.out.println("doAutoCommit() localEntry " + localRootPath + entryName + " is File");
+			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
 				
-		    type = checkPath(entryPath, -1);
+		    type = checkPath(entryPath, null);
 		    if(type == null)
 		    {
 		    	return null;
 		    }
 		    if(type == 0)
 		    {
-		    	return addFileEx(doc, localRootPath, commitMsg, commitUser, false);
+		    	return addFileEx(doc, commitMsg, commitUser, false);
 		    }
 		    else if(type != 1)
 		    {
-		    	return addFileEx(doc, localRootPath, commitMsg, commitUser, true);
+		    	return addFileEx(doc, commitMsg, commitUser, true);
 		    }
 		    else
 		    {
-		       return modifyFile(doc, localRootPath, localRefRootPath, commitMsg, commitUser);
+		       return modifyFile(doc, commitMsg, commitUser);
 		    }
 		}
 
 		//LocalEntry is Directory
-		System.out.println("doAutoCommit() localEntry " + localRootPath + entryName + " is Directory");
+		System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 		scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
+				                
+	    if(commitActionList == null || commitActionList.size() ==0)
+	    {
+	    	System.out.println("doAutoCommmit() There is nothing to commit");
+	        return getLatestRevision();
+	    }
         
-        if(commitActionList == null || commitActionList.size() ==0)
-        {
-        	System.out.println("doAutoCommmit() There is nothing to commit");
-        	return null;
-        }
-        
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return null;
+		}
+		
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1065,179 +1068,184 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 
-	private boolean scheduleForDelete(List<CommitAction> actionList, Doc doc, String localRootPath) {
-		System.out.println("scheduleForDelete()" + " parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localRootPath);
-	    if(entryName.isEmpty())	//If the entryName is empty, means we need to go through the subNodes directly
-        {
-        	File file = new File(wcDir + parentPath + entryName);
-    		File[] tmp=file.listFiles();
-    		for(int i=0;i<tmp.length;i++)
-    		{
-    			String subEntryName = tmp[i].getName();
-   	    	    scheduleForDelete(actionList,localRootPath, parentPath,subEntryName);
-            }
-        }
-        else
-        {
-            String remoteEntryPath = parentPath + entryName;            
-            String localEntryPath = localRootPath + entryName;
-
-            File localEntry = new File(localEntryPath);
-            
-            File remoteEntry = new File(remoteEntryPath);
-            if(remoteEntry.isFile())
-            {
-            	if(!localEntry.exists() || localEntry.isDirectory())	//本地文件不存在或者类型不符，则删除该文件
-                {
-                    System.out.println("scheduleForDelete() insert " + remoteEntryPath + " to actionList for Delete");
-                    if(false == remoteEntry.delete())
-                    {
-	                    System.out.println("scheduleForDelete() delete " + remoteEntryPath + " failed");
-                    	return false;
-                    }
-                    insertDeleteAction(actionList, doc);
-                }
-            }
-            else if(remoteEntry.isDirectory()) 
-            {
-            	if(!localEntry.exists() || localEntry.isFile())	//本地目录不存在或者类型不符，则删除该目录
-                {
-                    System.out.println("scheduleForDelete() insert " + remoteEntryPath + " to actionList for Delete");
-                    if(false == remoteEntry.delete())
-                    {
-	                    System.out.println("scheduleForDelete() delete " + remoteEntryPath + " failed");
-                    	return false;
-                    }
-                    insertDeleteAction(actionList,parentPath,entryName);
-                }
-           	    else	//If it is dir, go through the subNodes for delete
-           	    {
-    	        	File file = new File(wcDir + remoteEntryPath);
-    	    		File[] tmp=file.listFiles();
-    	    		for(int i=0;i<tmp.length;i++)
-    	    		{
-    	    			String subEntryName = tmp[i].getName();
-           	    	    if(false == scheduleForDelete(actionList,localRootPath, parentPath,subEntryName))
-           	    	    {
-           	    	    	return false;
-           	    	    }
-    	            }
-           	    }
-            }
-        }
-		return true;
-	}
-
-	private boolean scheduleForAddAndModify(List<CommitAction> actionList, String parentPath, String entryName, String localPath, String localRefPath, boolean modifyEnable, boolean isSubAction) {
-    	System.out.println("scheduleForAddAndModify()  parentPath:" + parentPath + " entryName:" + entryName + " localPath:" + localPath + " localRefPath:" + localRefPath);
-
-    	if(entryName.isEmpty())	//Go through the sub files for add and modify
+	private void scheduleForCommit(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) {
+		System.out.println("scheduleForCommit()  parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		
+    	if(doc.getName().isEmpty())
     	{
-    		File file = new File(localPath);
-    		File[] tmp=file.listFiles();
-    		for(int i=0;i<tmp.length;i++)
-    		{
-    			String subEntryName = tmp[i].getName();
-    			if(false == scheduleForAddAndModify(actionList,parentPath, subEntryName, localPath, localRefPath,modifyEnable, false))
-    			{
-    				return false;
-    			}
-            }
-    		return true;
+    		scanForSubDocCommit(actionList, doc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		return;
     	}
-
-    	//entryName is not empty
-    	String remoteEntryPath = parentPath + entryName;
-    	String localEntryPath = localPath + entryName;
-    	String localRefEntryPath = localRefPath + entryName;
-    	
+ 	
+    	String entryPath = doc.getPath() + doc.getName();
+    	String localEntryPath = localRootPath + entryPath;    	
     	File localEntry = new File(localEntryPath);
-    	if(localEntry.exists())
-        {
-    		File remoteEntry = new File(wcDir + remoteEntryPath);	
-        	if(localEntry.isDirectory())	//IF the entry is dir and need to add, we need to get the subActionList Firstly
-        	{
-        		String subParentPath = remoteEntryPath + "/";
-	    		String subLocalPath = localEntryPath + "/";
-	    		String subLocalRefPath = localRefEntryPath + "/";
-	    		
-    	        //If Remote path not exist
-        		if (!remoteEntry.exists()) 
-        		{
-	            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
-	            	if(false == remoteEntry.mkdir())
-	            	{
-	            		System.out.println("scheduleForAddAndModify() add dir " + remoteEntryPath + " failed" );
-		            	return false;
-	            	}      	
-	            	
-	            	//Go through the sub files to Get the subActionList
-		    		File[] tmp=localEntry.listFiles();
-		    		List<CommitAction> subActionList = new ArrayList<CommitAction>();
-		        	for(int i=0;i<tmp.length;i++)
-		        	{
-		        		String subEntryName = tmp[i].getName();
-		        		if(false == scheduleForAddAndModify(subActionList,subParentPath, subEntryName,subLocalPath, subLocalRefPath,modifyEnable, true))
-		        		{
-		        			return false;
-		        		}
-		            }
-		        	
-		        	//Insert the DirAdd Action
-		        	insertAddDirAction(actionList,parentPath,entryName,isSubAction,subActionList);
-		        	return true;
-	            }
-        		
-    			//Go through the sub Files For Add and Modify
-    			File[] tmp=localEntry.listFiles();
-    			for(int i=0;i<tmp.length;i++)
-    			{
-    				String subEntryName = tmp[i].getName();
-        			if(false == scheduleForAddAndModify(actionList,subParentPath, subEntryName, subLocalPath, subLocalRefPath,modifyEnable, false))
-        			{
-        				return false;
-        			}
-        		}
-	            return true;
-        	}
-        	else	//If the entry is file, do insert
-        	{
-        		if (!remoteEntry.exists()) {
-	            	System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Add" );
-	            	if(false == copyFile(localEntryPath,wcDir + remoteEntryPath, false))
-	            	{
-    	            	System.out.println("scheduleForAddAndModify() copy " + localEntryPath + " to "+ remoteEntryPath + " Failed" );
-	            		return false;
-	            	}
-	            	insertAddFileAction(actionList,parentPath, entryName,localPath,isSubAction);
-	            	return true;
-	            }
-        		
+
+		Integer type = checkPath(entryPath, null);
+    	if(type == null)
+    	{
+    		System.out.println("scheduleForCommit() checkPath 异常!");
+			return;
+		}
+    	
+    	//本地删除
+    	if(!localEntry.exists())
+    	{
+    		if(type == 0)
+    		{
+    			//已同步
+    			return;
+    		}
+    		insertDeleteAction(actionList,doc);
+    		return;
+    	}
+    	
+    	//本地存在
+    	int localEntryType = localEntry.isDirectory()? 2:1;
+    	switch(localEntryType)
+    	{
+    	case 1:	//文件
+    		if(type == 0) 	//新增文件
+	    	{
+    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
+	            return;
+    		}
+    		
+    		if(type != 1)	//文件类型改变
+    		{
+    			insertDeleteAction(actionList,doc);
+    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
+	            return;
+    		}
+    		
+    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
+    		if(commitHashMap == null) //文件内容改变	
+    		{
 	            if(modifyEnable)
 	            {
-            		//版本仓库文件已存在也暂时不处理，除非能够判断出两者不一致
-            		System.out.println("scheduleForAddAndModify() insert " + remoteEntryPath + " to actionList for Modify" );
-	            	if(false == copyFile(localEntryPath,wcDir + remoteEntryPath, true))
-	            	{
-    	            	System.out.println("scheduleForAddAndModify() copy " + localEntryPath + " to "+ remoteEntryPath + " Failed" );
-	            		return false;
-	            	}
-            		insertModifyFile(actionList,parentPath, entryName, localPath, localRefPath);
-            		return true;
+            		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
+            		return;
             	}
-	            return true;
+    		}
+    		else
+    		{
+    			Doc tempDoc = commitHashMap.get(doc.getDocId());
+    			if(tempDoc != null)
+    			{
+        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
+            		return;
+    			}
+    		}
+    		break;
+    	case 2:
+    		if(type == 0) 	//新增目录
+	    	{
+    			//Add Dir
+    			insertAddDirAction(actionList,doc,localRootPath,isSubAction);
+	            return;
+    		}
+    		
+    		if(type != 2)	//文件类型改变
+    		{
+    			insertDeleteAction(actionList,doc);
+	        	insertAddDirAction(actionList,doc, localRootPath, isSubAction);
+	            return;
+    		}
+    		
+    		scanForSubDocCommit(actionList, doc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		break;
+    	}
+    	return; 
+	}
+
+	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc, String localRootPath,
+			String localRefRootPath, boolean modifyEnable, boolean isSubAction, HashMap<Long, Doc> commitHashMap,
+			int subDocCommitFlag) {
+
+		System.out.println("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefParentPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		
+		if(subDocCommitFlag == 0) //不递归
+		{
+			return;
+		}		
+		if(subDocCommitFlag == 1)	//不可继承递归
+		{
+			subDocCommitFlag = 0;
+		}
+		
+		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
+		
+		//遍历仓库所有子目录
+    	File remoteEntry = new File(wcDir + doc.getPath() + doc.getName());
+    	File[] entries = remoteEntry.listFiles();
+				
+		String subDocParentPath = doc.getPath() + doc.getName() + "/";
+		if(doc.getDocId() == 0)
+		{
+			 subDocParentPath = doc.getPath();
+		}
+		int subDocLevel = doc.getLevel() + 1;
+
+        if(entries != null)
+        {
+    		for(int i=0;i<entries.length;i++)
+    		{
+	            File remoteSubEntry = entries[i];
+	            int subDocType = remoteSubEntry.isFile()? 1:2;
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
+	            docHashMap.put(subDoc.getDocId(), subDoc);
+	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+	        }
+        }
+        
+        //Go Through localSubDocs
+        File dir = new File(localRootPath);
+        File[] tmp=dir.listFiles();
+        for(int i=0;i<tmp.length;i++)
+        {
+        	File localSubEntry = tmp[i];
+        	int subDocType = localSubEntry.isFile()? 1: 2;
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
+            
+        	if(docHashMap.get(subDoc.getDocId()) == null)
+        	{
+        		if(localSubEntry.isDirectory())
+        		{
+        			insertAddDirAction(actionList, subDoc, localRootPath, isSubAction);
+        		}
+        		else
+        		{
+        			insertAddFileAction(actionList, subDoc, localRootPath, isSubAction);
+        		}
         	}
         }
-    	return true;
- 	}
+	}
+
+	private String modifyFile(Doc doc, String localRootPath, String localRefRootPath) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private String addFileEx(Doc doc, String localRootPath, String commitMsg, boolean b) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private String doAutoCommitParent(Doc doc, String commitMsg, String commitUser, boolean modifyEnable) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	private void rollBackWcDir(List<CommitAction> commitActionList) {
     	for(int i=0;i<commitActionList.size();i++)
     	{
     		CommitAction action = commitActionList.get(i);
+    		Doc doc = action.getDoc();
     		if(1 == action.getAction()) //add
     		{
-        		delFileOrDir(wcDir + action.getParentPath() + action.getEntryName());
+        		delFileOrDir(wcDir + doc.getPath() + doc.getName());
     		}
     	}
 	}

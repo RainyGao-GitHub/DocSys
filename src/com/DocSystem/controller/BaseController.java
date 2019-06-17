@@ -4919,7 +4919,7 @@ public class BaseController  extends BaseFunction{
 		{
 			doc = buildVDoc(repos, doc);
 		}
-		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable);
+		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 
 	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) {
