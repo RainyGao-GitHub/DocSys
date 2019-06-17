@@ -351,7 +351,7 @@ public class SVNUtil  extends BaseController{
                     SVNLogEntryPath svnLogEntryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
                     String nodePath = svnLogEntryPath.getPath();
                     
-                    Integer entryType = convertKindToEntryType(svnLogEntryPath.getKind());
+                    Integer entryType = getEntryType(svnLogEntryPath.getKind());
                     Integer changeType = getChangeType(svnLogEntryPath);
                     String srcEntryPath = svnLogEntryPath.getCopyPath();
                     
@@ -399,7 +399,7 @@ public class SVNUtil  extends BaseController{
     	return null;
 	}
 
-	private Integer convertKindToEntryType(SVNNodeKind nodeKind) 
+	private Integer getEntryType(SVNNodeKind nodeKind) 
     {
 		if(nodeKind == null)
 		{
@@ -634,7 +634,7 @@ public class SVNUtil  extends BaseController{
 	    		
 	    		if(type == 0)
 	    		{
-	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2);
+	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc());
 	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2);
 	    		}
 	    		path = path + name + "/";  		
@@ -959,7 +959,7 @@ public class SVNUtil  extends BaseController{
 	        {
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType);
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
 	            docHashMap.put(subDoc.getDocId(), subDoc);
 	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
@@ -972,7 +972,7 @@ public class SVNUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType);
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
             
         	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
@@ -1229,18 +1229,25 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	//修改文件
-	public String modifyFile(Doc doc, String oldFilePath,String newFilePath,String commitMsg, String commitUser)
+	public String modifyFile(Doc doc, String commitMsg, String commitUser)
 	{
-		String parentPath = doc.getPath();
-		String entryName = doc.getName();
+		String localRootPath = doc.getLocalRootPath();
+		String localRefRootPath = doc.getLocalRefRootPath();
+		String entryPath = doc.getPath() + doc.getName();
 		
-		System.out.println("modifyFile() parentPath:"+parentPath + " entryName:" + entryName);
         ISVNEditor editor = getCommitEditor(commitMsg);
 		if(editor == null)
 		{
 			return null;
 		}	
 	    
+		String newFilePath = localRootPath + entryPath;
+		String oldFilePath = localRefRootPath + entryPath;
+		if(localRefRootPath == null)
+		{
+			oldFilePath = null;
+		}
+		
 		boolean ret = false;
 		InputStream newFile = getFileInputStream(newFilePath);
 		
@@ -1251,17 +1258,17 @@ public class SVNUtil  extends BaseController{
 			if(true == file.exists())
 			{
 				oldFile = getFileInputStream(oldFilePath);	
-				ret = modifyFile(editor, parentPath,entryName, oldFile, newFile,true,true);
+				ret = modifyFile(editor, doc.getPath(), doc.getName(), oldFile, newFile,true,true);
 				closeFileInputStream(oldFile);
 			}
 			else
 			{
-				ret = modifyFile(editor, parentPath,entryName, null, newFile,true,true);
+				ret = modifyFile(editor, doc.getPath(), doc.getName(), null, newFile,true,true);
 			}
 		}
 		else
 		{
-			ret = modifyFile(editor, parentPath,entryName, null, newFile,true,true);			
+			ret = modifyFile(editor, doc.getPath(), doc.getName(), null, newFile,true,true);			
 		}
 		closeFileInputStream(newFile);
 		
@@ -1281,8 +1288,8 @@ public class SVNUtil  extends BaseController{
 		return commitInfo.getNewRevision()+"";
 	}
 	
-	//复制文件
-	public String svnCopy(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
+	//move or copy Doc
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
 	{    	
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
 		Integer type = checkPath(srcEntryPath,null);
@@ -1637,7 +1644,7 @@ public class SVNUtil  extends BaseController{
 			
 	    	String subEntryName = subEntry.getName();
 	    	Long lastChangeTime = subEntry.getDate().getTime();
-	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType);
+	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc());
 	    	subDoc.setSize(subEntry.getSize());
 	    	subDoc.setCreateTime(lastChangeTime);
 	    	subDoc.setLatestEditTime(lastChangeTime);
@@ -2221,32 +2228,4 @@ public class SVNUtil  extends BaseController{
             }
         }
     }
-
-	public String moveDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	protected String svnDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,String dstEntryName, 
-			String commitMsg, String commitUser, ReturnAjax rt, boolean isMove) 
-	{
-		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, isRealDoc, commitUser))
-		{
-			System.out.println("svnCopy() svnUtil.Init Failed: srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName);
-			return null;
-		}
-		
-		String revision = svnUtil.svnCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser, isMove);
-		if(revision == null)
-		{
-			docSysDebugLog("svnCopy() svnUtil.svnCopy Failed: " + " srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath+ " dstEntryName:" + dstEntryName, rt);
-		}
-		return revision;
-	}
 }

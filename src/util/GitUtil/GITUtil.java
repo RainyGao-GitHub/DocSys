@@ -1332,4 +1332,9 @@ public class GITUtil  extends BaseController{
 		//Commit will roll back WC if there is error
 		return gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
 	}
+
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean b) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

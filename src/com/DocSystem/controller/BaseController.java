@@ -5004,7 +5004,7 @@ public class BaseController  extends BaseFunction{
 			dstDoc = buildVDoc(repos, dstDoc);
 		}
 
-		return verReposUtil.moveDoc(srcDoc, dstDoc, commitMsg, commitUser);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, true);
 	}
 
 	protected String gitDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -5023,7 +5023,7 @@ public class BaseController  extends BaseFunction{
 			dstDoc = buildVDoc(repos, dstDoc);
 		}
 
-		return verReposUtil.moveDoc(srcDoc, dstDoc, commitMsg, commitUser);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,false);
 	}
 	
 	protected String verReposDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -5056,7 +5056,7 @@ public class BaseController  extends BaseFunction{
 			dstDoc = buildVDoc(repos, dstDoc);
 		}
 
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false);
 	}
 
 	protected String gitDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
@@ -5075,7 +5075,7 @@ public class BaseController  extends BaseFunction{
 			dstDoc = buildVDoc(repos, dstDoc);
 		}
 
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false);
 	}
 	
 	protected String commitMsgFormat(Repos repos, boolean isRealDoc, String commitMsg, String commitUser) 
