@@ -1487,7 +1487,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
 		}
 		
-		String revision = verReposDocCommit(repos, doc, commitMsg,commitUser,true);
+		String revision = verReposDocCommit(repos, doc, commitMsg,commitUser,rt, true, null, 2);
 		
 		//Force update docInfo
 		printObject("revertRealDocHistory() successDocList:", successDocList);
@@ -1539,7 +1539,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Do commit to verRepos		
-		String revision = verReposDocCommit(repos, doc, commitMsg, commitUser, true);
+		String revision = verReposDocCommit(repos, doc, commitMsg, commitUser, rt, true, null, 2);
 		
 		if(doc.getIsRealDoc())
 		{
@@ -1656,8 +1656,7 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		//commit to history db
-		String revision = verReposDocCommit(repos,doc,commitMsg,commitUser,rt);
+		String revision = verReposDocCommit(repos,doc,commitMsg,commitUser,rt, false, null, 2);
 		if(revision == null)
 		{
 			docSysWarningLog("verReposDocCommit Failed", rt);
@@ -1974,7 +1973,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-				String revision = verReposDocCommit(repos, doc, commitMsg, login_user.getName(), rt, commitHashMap);
+				String revision = verReposDocCommit(repos, doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
 				if(revision != null)
 				{
 					for(Doc commitDoc: commitHashMap.values())
@@ -2877,10 +2876,10 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case 1:	//RDoc autoCommit
-			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), true);
+			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 		case 2: //VDoc autoCommit
 			doc.setIsRealDoc(false);
-			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), true);
+			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 		}
 		return null;
 	}
@@ -2961,7 +2960,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposRealDocCommit(repos, doc, commitMsg,commitUser,rt, null);
+		String revision = verReposDocCommit(repos, doc, commitMsg,commitUser,rt, true, null, 2);
 		if(revision == null)
 		{
 			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -3214,7 +3213,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(saveVirtualDocContent(vDoc.getLocalRootPath(), vDoc, rt) == true)
 			{
-				verReposDocCommit(repos, doc, commitMsg, commitUser,rt);
+				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
 		}
 		else
@@ -3222,7 +3221,7 @@ public class BaseController  extends BaseFunction{
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
-				verReposDocCommit(repos, doc, commitMsg, commitUser,rt);
+				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
 		}
 		

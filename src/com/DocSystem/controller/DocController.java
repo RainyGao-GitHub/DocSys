@@ -146,7 +146,6 @@ public class DocController extends BaseController{
 		}
 		if(level == null)
 		{
-			//TODO: level 是指doc的level，前台是否应该提前处理好？
 			level = 1;
 		}
 		if(type == null)
