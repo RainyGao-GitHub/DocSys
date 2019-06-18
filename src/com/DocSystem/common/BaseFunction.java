@@ -256,12 +256,10 @@ public class BaseFunction{
     	actionList.add(action);
 	}
     
-	protected void insertModifyFile(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath) {
+	protected void insertModifyFile(List<CommitAction> actionList, Doc doc) {
     	CommitAction action = new CommitAction();
     	action.setAction(3);
     	action.setDoc(doc);
-    	action.setLocalRootPath(localRootPath);
-    	action.setLocalRefRootPath(localRefRootPath);
     	actionList.add(action);	
 	}
 	

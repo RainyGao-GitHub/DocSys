@@ -182,14 +182,14 @@ public class SVNUtil  extends BaseController{
 	    	
 	        System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
 	    		
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2, true);
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2, true, doc.getLocalRootPath());
 	    	remoteEntry.setRevision(strRevision);
 	        return doc;
 		}
 
 	    //Doc is file
 	    String strRevision = revision +"";
-    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true);
+    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true, doc.getLocalRootPath());
     	remoteEntry.setRevision(strRevision);
 	    	
             //获取commitUser和commitTime的实际意义值得怀疑
@@ -634,7 +634,7 @@ public class SVNUtil  extends BaseController{
 	    		
 	    		if(type == 0)
 	    		{
-	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc());
+	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath());
 	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2);
 	    		}
 	    		path = path + name + "/";  		
@@ -865,14 +865,14 @@ public class SVNUtil  extends BaseController{
     	case 1:	//文件
     		if(type == 0) 	//新增文件
 	    	{
-    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(type != 1)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
-    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
@@ -882,7 +882,7 @@ public class SVNUtil  extends BaseController{
 	            if(modifyEnable)
 	            {
             		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
+            		insertModifyFile(actionList,doc);
             		return;
             	}
     		}
@@ -892,7 +892,7 @@ public class SVNUtil  extends BaseController{
     			if(tempDoc != null)
     			{
         			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
+            		insertModifyFile(actionList,doc);
             		return;
     			}
     		}
@@ -901,14 +901,14 @@ public class SVNUtil  extends BaseController{
     		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
-    			insertAddDirAction(actionList,doc,localRootPath,isSubAction);
+    			insertAddDirAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(type != 2)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
-	        	insertAddDirAction(actionList,doc, localRootPath, isSubAction);
+	        	insertAddDirAction(actionList,doc, isSubAction);
 	            return;
     		}
     		
@@ -959,7 +959,7 @@ public class SVNUtil  extends BaseController{
 	        {
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
 	            docHashMap.put(subDoc.getDocId(), subDoc);
 	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
@@ -972,17 +972,17 @@ public class SVNUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
             
         	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, subDoc, localRootPath, isSubAction);
+        			insertAddDirAction(actionList, subDoc, isSubAction);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, subDoc, localRootPath, isSubAction);
+        			insertAddFileAction(actionList, subDoc, isSubAction);
         		}
         	}
         }
@@ -1129,11 +1129,11 @@ public class SVNUtil  extends BaseController{
 			if(deleteOld)		
 			{
 				insertDeleteAction(commitActionList,doc);
-				insertAddDirAction(commitActionList,doc, localRootPath, false);
+				insertAddDirAction(commitActionList,doc, false);
 			}
 			else
 			{
-				insertAddDirAction(commitActionList,doc, localRootPath, false);
+				insertAddDirAction(commitActionList,doc, false);
 			}
 			
 		    if(commitActionList == null || commitActionList.size() ==0)
@@ -1185,11 +1185,11 @@ public class SVNUtil  extends BaseController{
 			if(deleteOld)		
 			{
 				insertDeleteAction(commitActionList,doc);
-				insertAddFileAction(commitActionList,doc,localRootPath,false);
+				insertAddFileAction(commitActionList,doc,false);
 			}
 			else
 			{
-				insertAddFileAction(commitActionList,doc,localRootPath,false);
+				insertAddFileAction(commitActionList,doc,false);
 			}
 			
 		    if(commitActionList == null || commitActionList.size() ==0)
@@ -1644,7 +1644,7 @@ public class SVNUtil  extends BaseController{
 			
 	    	String subEntryName = subEntry.getName();
 	    	Long lastChangeTime = subEntry.getDate().getTime();
-	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc());
+	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath());
 	    	subDoc.setSize(subEntry.getSize());
 	    	subDoc.setCreateTime(lastChangeTime);
 	    	subDoc.setLatestEditTime(lastChangeTime);
@@ -1772,34 +1772,26 @@ public class SVNUtil  extends BaseController{
 			{
 				subDocParentPath = doc.getPath();
 			}
+			
+			String subEntryLocalParentPath = null;
+			if(targetName.isEmpty())
+			{
+				subEntryLocalParentPath = localParentPath;
+			}
+			else
+			{
+				subEntryLocalParentPath = localParentPath + targetName + "/";
+			}
+			
 			List <SVNDirEntry> subEntries = getSubEntryList(remoteEntryPath,revision);
 			for(int i=0;i<subEntries.size();i++)
 			{
 				SVNDirEntry subEntry =subEntries.get(i);
 				String subEntryName = subEntry.getName();
 				Integer subEntryType = getEntryType(subEntry.getKind());
-				String subEntryParentPath = null;
-				if(entryName.isEmpty())
-				{
-					subEntryParentPath = parentPath;
-				}
-				else
-				{
-					subEntryParentPath = parentPath + entryName + "/";					
-				
-				}
-				String subEntryLocalParentPath = null;
-				if(targetName.isEmpty())
-				{
-					subEntryLocalParentPath = localParentPath;
-				}
-				else
-				{
-					subEntryLocalParentPath = localParentPath + targetName + "/";
-				}
 				
 				Long subEntryRevision = subEntry.getRevision();
-				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc());
+				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath());
 				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{

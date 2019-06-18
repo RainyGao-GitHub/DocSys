@@ -191,7 +191,7 @@ public class GITUtil  extends BaseController{
 	            long commitTime=commit.getCommitTime();
 	            
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, true);
+	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, true, doc.getLocalRootPath());
 	            remoteDoc.setRevision(commitId);
 	            remoteDoc.setCreatorName(author);
 	            remoteDoc.setLatestEditorName(commitUser);
@@ -1107,14 +1107,14 @@ public class GITUtil  extends BaseController{
     	case 1:	//文件
     		if(type == 0) 	//新增文件
 	    	{
-    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(type != 1)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
-    			insertAddFileAction(actionList,doc,localRootPath,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
@@ -1124,7 +1124,7 @@ public class GITUtil  extends BaseController{
 	            if(modifyEnable)
 	            {
             		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
+            		insertModifyFile(actionList,doc);
             		return;
             	}
     		}
@@ -1134,7 +1134,7 @@ public class GITUtil  extends BaseController{
     			if(tempDoc != null)
     			{
         			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,doc, localRootPath, localRefRootPath);
+            		insertModifyFile(actionList,doc);
             		return;
     			}
     		}
@@ -1143,14 +1143,14 @@ public class GITUtil  extends BaseController{
     		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
-    			insertAddDirAction(actionList,doc,localRootPath,isSubAction);
+    			insertAddDirAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(type != 2)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
-	        	insertAddDirAction(actionList,doc, localRootPath, isSubAction);
+	        	insertAddDirAction(actionList,doc, isSubAction);
 	            return;
     		}
     		
@@ -1194,7 +1194,7 @@ public class GITUtil  extends BaseController{
     		{
 	            File remoteSubEntry = entries[i];
 	            int subDocType = remoteSubEntry.isFile()? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
 	            docHashMap.put(subDoc.getDocId(), subDoc);
 	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
@@ -1207,17 +1207,17 @@ public class GITUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc());
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
             
         	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, subDoc, localRootPath, isSubAction);
+        			insertAddDirAction(actionList, subDoc, isSubAction);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, subDoc, localRootPath, isSubAction);
+        			insertAddFileAction(actionList, subDoc, isSubAction);
         		}
         	}
         }

@@ -312,7 +312,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 		
-		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, false);
+		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, false, doc.getLocalRootPath());
 		
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
 		addDocToSyncUpList(actionList, repos, rootDoc);
@@ -343,7 +343,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, false);
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, false, doc.getLocalRootPath());
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt, actionList);
@@ -2501,7 +2501,7 @@ public class BaseController  extends BaseFunction{
 		Doc remoteEntry = svnUtil.getDoc(doc, revision);
 		if(remoteEntry == null)
 		{
-			remoteEntry = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc());
+			remoteEntry = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath());
 			return remoteEntry;
 		}
 		
