@@ -342,6 +342,7 @@ public class BaseFunction{
 		doc.setType(type);
 		doc.setIsRealDoc(true);
 		doc.setLocalRootPath(localRootPath);
+		printObject("buildBasicDoc() doc:", doc);
 		return doc;
 	}
 	
@@ -534,11 +535,11 @@ public class BaseFunction{
 	//获取仓库的实文件的本地存储根路径
 	protected static String getReposRealPath(Repos repos)
 	{
-		if(repos.getType() == 2)
+		String reposRPath =  repos.getRealDocPath();
+		if(reposRPath == null || reposRPath.isEmpty())
 		{
-			return repos.getRealDocPath();
+			reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
 		}
-		String reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
 		//System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;
 	}
