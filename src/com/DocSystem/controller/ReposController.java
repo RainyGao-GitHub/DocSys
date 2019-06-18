@@ -947,7 +947,8 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, null);
+		String localRootPath = getReposRealPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -1114,7 +1115,8 @@ public class ReposController extends BaseController{
 			return;
 		}
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, null);
+		String localRootPath = getReposRealPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath);
 		
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
@@ -1210,7 +1212,8 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, null);
+		String localRootPath = getReposRealPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath);
 		
 		//检查该用户是否设置了目录权限
 		DocAuth docAuth = getUserDispDocAuth(repos, login_user.getId(), doc); 
