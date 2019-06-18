@@ -467,6 +467,7 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		printObject("getReposInitMenu login_user:", login_user);
 		
 		//Get Repos
 		Repos repos = reposService.getRepos(reposId);
@@ -476,9 +477,11 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		printObject("getReposInitMenu repos:", repos);
 		
 		//Add doc for SyncUp
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true);
+		printObject("getReposInitMenu doc:", doc);
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDispDocAuth(repos, login_user.getId(), doc);
@@ -489,9 +492,11 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		printObject("getReposInitMenu rootDocAuth:", rootDocAuth);
 		
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
+		printObject("getReposInitMenu docAuthHashMap:", docAuthHashMap);
 
 		List <Doc> docList = null;
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
@@ -505,6 +510,7 @@ public class ReposController extends BaseController{
 			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
+		printObject("getReposInitMenu docList:", docList);
 
 		if(docList == null)
 		{
@@ -516,7 +522,7 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);
 		
-		
+		printObject("getReposInitMenu actionList:", actionList);
 		executeCommonActionList(actionList, rt);
 		return;		
 	}
