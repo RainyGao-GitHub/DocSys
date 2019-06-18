@@ -2094,7 +2094,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean syncupForDocChange_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
-	{	
+	{
 		if(doc.getDocId() == 0)	//For root dir, got syncUpSubDocs
 		{
 			return SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, subDocSyncFlag);

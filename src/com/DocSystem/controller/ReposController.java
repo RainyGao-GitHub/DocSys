@@ -480,7 +480,11 @@ public class ReposController extends BaseController{
 		printObject("getReposInitMenu() repos:", repos);
 		
 		//Add doc for SyncUp
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true);
+		String localRootPath = getReposRealPath(repos);
+		doc.setLocalRootPath(localRootPath);
+
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath);
+		
 		printObject("getReposInitMenu() doc:", doc);
 		
 		//get the rootDocAuth
