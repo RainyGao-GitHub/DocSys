@@ -187,7 +187,7 @@ public class Doc  implements Comparable<Doc>{
         return localRootPath;
     }
 
-    public void setLocalRootPath(String localRefRootPath) 
+    public void setLocalRootPath(String localRootPath) 
     {
         this.localRootPath = localRootPath == null ? null : localRootPath.trim();
     }
