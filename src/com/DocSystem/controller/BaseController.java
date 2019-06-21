@@ -1947,14 +1947,14 @@ public class BaseController  extends BaseFunction{
 		
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
-			boolean ret = syncupForDocChange_NoFS(repos, doc, login_user, rt, 1);	//子目录非继承递归
+			boolean ret = SyncUpSubDocs_NoFS(repos, doc, login_user, rt, 1); //子目录非继承递归
 			unlockDoc(doc, login_user, docLock);
 			return ret;
 		}
 		else
 		{
 			HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
-			syncupForDocChange_FS(repos, doc, login_user, rt, commitHashMap, 1);	//子目录非继承递归
+			SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, 1);
 			
 			if(commitHashMap.size() > 0)
 			{
