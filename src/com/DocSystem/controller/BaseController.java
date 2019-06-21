@@ -1702,7 +1702,7 @@ public class BaseController  extends BaseFunction{
 		if(addSubDocs)
 		{
 			List<Doc> subDocList = null;
-			if(repos.getType() == 3 || repos.getType() == 4)
+			if(repos.getType() == 1 || repos.getType() == 2)
 			{
 				subDocList = getLocalEntryList(repos, doc);	
 			}
@@ -2641,12 +2641,34 @@ public class BaseController  extends BaseFunction{
 			}
 			return  dbAddDoc(repos, doc, true);	
 		}
-
-		if(reposService.updateDoc(doc) == 0)
+		
+		//If localDoc not exists, do delete
+		Doc localEntry = fsGetDoc(repos, doc);
+		
+		int localChangeType = getLocalChangeType(dbDoc, localEntry);
+		switch(localChangeType)
 		{
-			return false;
+		case 0:	//no change
+			return true;
+		case 1:	//localAdded
+			return dbAddDoc(repos, doc, true);
+		case 2: //local Type Changed
+			dbDeleteDoc(dbDoc, true);
+			return  dbAddDoc(repos, doc, true);
+		case 3:	//local modified
+			doc.setId(dbDoc.getId());
+			doc.setSize(localEntry.getSize());
+			doc.setLatestEditTime(localEntry.getLatestEditTime());
+			if(reposService.updateDoc(doc) == 0)
+			{
+				return false;
+			}		
+			return true;
+		case 4:
+			return dbDeleteDoc(doc, true);
 		}
-		return true;
+		
+		return false;
 	}
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, boolean deleteSubDocs, String commitMsg, String commitUser) {
