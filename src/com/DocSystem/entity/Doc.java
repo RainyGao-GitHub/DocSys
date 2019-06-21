@@ -45,7 +45,7 @@ public class Doc  implements Comparable<Doc>{
     
     private String localRefRootPath;
     
-    private boolean isRealDoc;
+    private boolean isRealDoc = true;
 
     public Integer getId() {
         return id;
