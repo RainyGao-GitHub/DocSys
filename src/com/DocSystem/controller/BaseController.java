@@ -1976,7 +1976,7 @@ public class BaseController  extends BaseFunction{
 				{
 					for(Doc commitDoc: commitHashMap.values())
 			        {
-						System.out.println("syncupForDocChange() dbUpdateDoc: " + commitDoc.getPath()+commitDoc.getName());						
+						printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
 						//需要根据commitAction的行为来决定相应的操作
 						commitDoc.setRevision(revision);
 						commitDoc.setLatestEditorName(login_user.getName());
@@ -2095,8 +2095,11 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncupForDocChange_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
 	{
-		if(doc.getDocId() == 0)	//For root dir, got syncUpSubDocs
+		printObject("syncupForDocChange_FS() doc: ", doc);
+
+		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
+			System.out.println("syncupForDocChange_FS() it is root doc");			
 			return SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, subDocSyncFlag);
 		}	
 			
@@ -2142,6 +2145,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
 	{
+		System.out.println("SyncUpSubDocs_FS() ************ subDocSyncFlag:" + subDocSyncFlag);
 		//子目录不递归
 		if(subDocSyncFlag == 0)
 		{
@@ -2526,8 +2530,9 @@ public class BaseController  extends BaseFunction{
 	{	
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
-		qDoc.setPath(doc.getPath());
-		qDoc.setName(doc.getName());
+		qDoc.setDocId(doc.getDocId());
+		//qDoc.setPath(doc.getPath());
+		//qDoc.setName(doc.getName());
 		
 		List<Doc> list = reposService.getDocList(qDoc);
 		//printObject("dbGetDoc() list:", list);
@@ -2617,39 +2622,16 @@ public class BaseController  extends BaseFunction{
 			}		
 			return true;
 		}	
-		
-		//自动检测
-		Doc qDoc = new Doc();
-		qDoc.setVid(repos.getId());
-		qDoc.setPath(doc.getPath());
-		qDoc.setName(doc.getName());
-				
-		List<Doc> list = reposService.getDocList(qDoc);
 				
 		//dbDoc not exists, do add it
-		if(list == null || list.size() == 0)
+		Doc dbDoc = dbGetDoc(repos, doc, true);
+		if(dbDoc == null)
 		{
 			System.out.println("dbUpdateDoc() dbDoc not exists,do add it"); 
 			return dbAddDoc(repos, doc, true);
 		}
 		
-		//there is duplicated nodes, do delete it and add it
-		if(list.size() > 1)
-		{
-			System.out.println("dbUpdateDoc() there is duplicated nodes, do delete it and add it"); 
-			for(int i=0; i <list.size(); i++)
-			{
-				if(dbDeleteDoc(list.get(i), true) == false)
-				{
-					return false;
-				}
-			}
-					
-			return  dbAddDoc(repos, doc, true);	
-		}	
-		
 		//type not matched, do delete it and add it
-		Doc dbDoc = list.get(0);
 		if(dbDoc.getType() != doc.getType())
 		{
 			System.out.println("dbUpdateDoc() docType not matched, do delete and add it"); 
@@ -2659,34 +2641,12 @@ public class BaseController  extends BaseFunction{
 			}
 			return  dbAddDoc(repos, doc, true);	
 		}
-		
-		//If localDoc not exists, do delete
-		Doc localEntry = fsGetDoc(repos, doc);
-		
-		int localChangeType = getLocalChangeType(dbDoc, localEntry);
-		switch(localChangeType)
+
+		if(reposService.updateDoc(doc) == 0)
 		{
-		case 0:	//no change
-			return true;
-		case 1:	//localAdded
-			return dbAddDoc(repos, doc, true);
-		case 2: //local Type Changed
-			dbDeleteDoc(dbDoc, true);
-			return  dbAddDoc(repos, doc, true);
-		case 3:	//local modified
-			doc.setId(dbDoc.getId());
-			doc.setSize(localEntry.getSize());
-			doc.setLatestEditTime(localEntry.getLatestEditTime());
-			if(reposService.updateDoc(doc) == 0)
-			{
-				return false;
-			}		
-			return true;
-		case 4:
-			return dbDeleteDoc(doc, true);
+			return false;
 		}
-		
-		return false;
+		return true;
 	}
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, boolean deleteSubDocs, String commitMsg, String commitUser) {
