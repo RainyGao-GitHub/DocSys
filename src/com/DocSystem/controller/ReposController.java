@@ -457,7 +457,7 @@ public class ReposController extends BaseController{
 	public void getReposInitMenu(Integer reposId,Long docId, Long pid, String path, String name, Integer level, Integer type,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getReposInitMenu() reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name);
+		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -536,9 +536,10 @@ public class ReposController extends BaseController{
 	 *   
 	 */
 	@RequestMapping("/getSubDocList.do")
-	public void getSubDocList(Integer vid, Long docId, String path, String name, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSubDocList(Integer vid, Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " path:" + path + " name:"+ name );
+		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
