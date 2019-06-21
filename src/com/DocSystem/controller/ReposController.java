@@ -649,7 +649,7 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, false, localRootPath);
+			Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, true, localRootPath);
 			
 			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
