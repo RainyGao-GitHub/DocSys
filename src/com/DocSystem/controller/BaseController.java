@@ -2145,13 +2145,14 @@ public class BaseController  extends BaseFunction{
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
 	{
-		System.out.println("SyncUpSubDocs_FS() ************ subDocSyncFlag:" + subDocSyncFlag);
 		//子目录不递归
 		if(subDocSyncFlag == 0)
 		{
 			return true;
 		}
-		
+
+		System.out.println("SyncUpSubDocs_FS() ************ subDocSyncFlag:" + subDocSyncFlag);
+
 		//子目录递归不继承
 		if(subDocSyncFlag == 1)
 		{
@@ -2162,6 +2163,7 @@ public class BaseController  extends BaseFunction{
 		
 		Doc subDoc = null;
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
+		printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
 	   	if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
@@ -5077,22 +5079,6 @@ public class BaseController  extends BaseFunction{
 		
 		commitMsg = commitMsg + " [" + commitUser + "] ";
 		return commitMsg;
-	}
-	
-	protected Integer convertSVNNodeKindToEntryType(SVNNodeKind nodeKind) {
-		if(nodeKind == SVNNodeKind.NONE) 
-		{
-			return 0;
-		}
-		else if(nodeKind == SVNNodeKind.FILE)
-		{
-			return 1;
-		}
-		else if(nodeKind == SVNNodeKind.DIR)
-		{
-			return 2;
-		}
-		return -1;
 	}
 
 	protected HashMap<String,Doc> BuildHashMapByDocList(List<Doc> docList) {

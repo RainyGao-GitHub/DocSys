@@ -1626,9 +1626,9 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		String subDocParentPath = doc.getPath() + doc.getName() + "/";
-		if(doc.getDocId() == 0)
+		if(doc.getName().isEmpty())
 		{
-			subDocParentPath = "";
+			subDocParentPath = doc.getPath();
 		}
 		int subDocLevel = doc.getLevel() + 1;
 		
@@ -1636,8 +1636,8 @@ public class SVNUtil  extends BaseController{
 	    while (iterator.hasNext()) 
 	    {
 	    	SVNDirEntry subEntry = iterator.next();
-	    	int subEntryType = convertSVNNodeKindToEntryType(subEntry.getKind());
-	    	if(type <= 0)
+	    	int subEntryType = getEntryType(subEntry.getKind());
+	    	if(type == 0)
 	    	{
 	    		continue;
 	    	}
