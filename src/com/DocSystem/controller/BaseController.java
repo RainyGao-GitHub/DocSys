@@ -1850,17 +1850,6 @@ public class BaseController  extends BaseFunction{
 		//Insert update action for VDoc verRepos 
 		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 2, 3, 2, null);
 	}
-
-	protected int getLevelByParentPath(String path) 
-	{
-		if(path == null || path.isEmpty())
-		{
-			return 0;
-		}
-		
-		String [] paths = path.split("/");
-		return paths.length;
-	}
 	
 	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{

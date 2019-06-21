@@ -286,6 +286,7 @@ public class BaseFunction{
 		if(path == null)
 		{
 			path = "";
+			level = 0;
 		}
 		if(name == null)
 		{
@@ -304,33 +305,26 @@ public class BaseFunction{
 			}
 		}
 		
-		
 		if(name.isEmpty())	//rootDoc
 		{
-			level = 0;
+			level = -1;
 			docId = 0L;
-			pid = null;
+			pid = -1L;
 		}
-		else
-		{
-			if(path.isEmpty())
-			{
-				level = 1;
-			}
-			else
-			{
-				level = getLevelByParentPath(path) + 1;
-			}
-			
-			if(docId == null)
-			{
-				docId = buildDocIdByName(level, path, name);
-			}
 		
-			if(pid == null || pid == -1)
-			{
-				pid = buildDocIdByName(level-1, path, "");
-			}
+		if(level == null)
+		{
+			level = getLevelByParentPath(path);
+		}
+		
+		if(docId == null)
+		{
+			docId = buildDocIdByName(level, path, name);
+		}
+		
+		if(pid == null)
+		{
+			pid = buildDocIdByName(level-1, path, "");
 		}
 
 		doc.setVid(reposId);
@@ -346,9 +340,15 @@ public class BaseFunction{
 		return doc;
 	}
 	
-	private Integer getLevelByParentPath(String path) {
-		// TODO Auto-generated method stub
-		return null;
+	protected int getLevelByParentPath(String path) 
+	{
+		if(path == null || path.isEmpty())
+		{
+			return 0;
+		}
+		
+		String [] paths = path.split("/");
+		return paths.length;
 	}
 
 	protected void seperatePathAndName(String entryPath, String [] result) {
