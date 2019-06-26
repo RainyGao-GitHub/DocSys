@@ -224,35 +224,6 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected boolean isDocLocalChanged(Doc doc, File localEntry) 
-	{
-		if(doc == null)
-		{
-			if(!localEntry.exists())
-			{
-				return false;
-			}
-			
-			System.out.println("isDocLocalChanged() doc is null"); 
-			return true;
-		}
-		
-		if(!localEntry.exists())
-		{
-			System.out.println("isDocLocalChanged() localEntry not exist"); 
-			return true;
-		}
-		
-		if(doc.getLatestEditTime().equals(localEntry.lastModified()) && doc.getSize().equals(localEntry.length()))
-		{
-			return false;
-		}
-		
-		System.out.println("isDocLocalChanged() lastEditTime and size not matched");
-		printObject("isDocLocalChanged() doc:",doc);
-		printObject("isDocLocalChanged() localEntry:",localEntry);
-		return true;
-	}
 
 	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) 
 	{
@@ -2296,11 +2267,11 @@ public class BaseController  extends BaseFunction{
 				return 2; //local Type Changed
 			}
 			
-			if(isDocLocalChanged(dbDoc, localEntry))
+			if(dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()) && dbDoc.getSize().equals(localEntry.getSize()))
 			{
 				System.out.println("getLocalChangeType() 本地文件内容修改:"+localEntry.getName());
 				return 3;
-			}
+			}	
 			
 			System.out.println("getLocalChangeType() 本地文件未变更:"+localEntry.getName());				
 			return 0;
@@ -2310,11 +2281,17 @@ public class BaseController  extends BaseFunction{
 				System.out.println("getLocalChangeType() 本地文件类型改变:"+localEntry.getName());
 				return 2; //local Type Changed
 			}
-
+			
+			if(dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
+			{
+				System.out.println("getLocalChangeType() 本地目录内容修改:"+localEntry.getName());
+				return 3;
+			}	
+			
 			System.out.println("getLocalChangeType() 本地目录未变更:"+localEntry.getName());				
 			return 0;
 		case 0:
-			System.out.println("getLocalChangeType() 本地文件删除:"+dbDoc.getName());
+			System.out.println("getLocalChangeType() 本地文件或目录删除:"+dbDoc.getName());
 			return 4;
 		}
 		
