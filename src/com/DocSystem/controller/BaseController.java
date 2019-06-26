@@ -138,6 +138,8 @@ public class BaseController  extends BaseFunction{
 
 	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
+		System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
+    	
 		String localParentPath = getReposRealPath(repos) + doc.getPath();
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
@@ -189,6 +191,8 @@ public class BaseController  extends BaseFunction{
     	
 
 	private List<Doc> getRemoteEntryList(Repos repos, Doc doc) {
+		System.out.println("getRemoteEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
+
 		switch(repos.getVerCtrl())
 		{
 		case 1:	//SVN
