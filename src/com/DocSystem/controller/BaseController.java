@@ -60,7 +60,7 @@ public class BaseController  extends BaseFunction{
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
 	{	
-		System.out.println("getAccessableSubDocList()");
+		System.out.println("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );
 						
 		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
 	
@@ -153,10 +153,11 @@ public class BaseController  extends BaseFunction{
     	}
 
 		String subDocParentPath = doc.getPath() + doc.getName() + "/";
-		if(doc.getDocId() == 0)
+		if(doc.getName().isEmpty())
 		{
-			subDocParentPath = "";
+			subDocParentPath = doc.getPath();
 		}
+		
 		int subDocLevel = doc.getLevel() + 1;
     	
         //Go through the subEntries
@@ -2084,7 +2085,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncupForDocChange_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
 	{
-		printObject("syncupForDocChange_FS() doc: ", doc);
+		printObject("syncupForDocChange_FS() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
@@ -2134,13 +2135,13 @@ public class BaseController  extends BaseFunction{
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
 	{
+		System.out.println("************************ SyncUpSubDocs_FS()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
+
 		//子目录不递归
 		if(subDocSyncFlag == 0)
 		{
 			return true;
 		}
-
-		System.out.println("SyncUpSubDocs_FS() ************ subDocSyncFlag:" + subDocSyncFlag);
 
 		//子目录递归不继承
 		if(subDocSyncFlag == 1)
@@ -2170,6 +2171,7 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
 	    		subDoc = localEntryList.get(i);
+	    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getPath() + subDoc.getName());
 	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
