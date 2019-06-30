@@ -2066,9 +2066,13 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("syncupForDocChange_FS() it is root doc");			
 			return SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, subDocSyncFlag);
-		}	
+		}
+		
+		Doc dbDoc = null;
+		Doc localEntry = null;
+		Doc remoteEntry = null;
 			
-		Doc localEntry = fsGetDoc(repos, doc);
+		localEntry = fsGetDoc(repos, doc);
 		printObject("syncupForDocChange_FS() localEntry: ", localEntry);
 
 		if(localEntry == null)
@@ -2077,35 +2081,149 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		dbDoc = dbGetDoc(repos, doc, true);
 		printObject("syncupForDocChange_FS() dbDoc: ", dbDoc);
 
-		int localChangeType = getLocalChangeType(dbDoc, localEntry);
-		switch(localChangeType)
+		//dbDoc不存在，localDoc存在
+		if(dbDoc == null)
 		{
-		case 1:
-		case 2:
-		case 3:
-			commitHashMap.put(localEntry.getDocId(), localEntry);
+			if(localEntry.getType() != 0)
+			{
+				//本地新增文件/目录
+				commitHashMap.put(localEntry.getDocId(), localEntry);
+				return true;
+			}
+			
+			remoteEntry = verReposGetDoc(repos, doc, null);
+			if(remoteEntry == null)
+			{
+				return false;
+			}
+
+			if(remoteEntry.getType() != 0)
+			{
+				//远程文件/目录新增
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 1);
+			}
+			
+			//No Change
 			return true;
 		}
 		
-		Doc remoteEntry = verReposGetDoc(repos, doc, null);
-		printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
-
-		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
-		if(remoteChangeType == 0)
+		//dbDoc存在，localDoc不存在
+		if(localEntry.getType() == 0)
 		{
-			if(localChangeType == 4)	//local Delete
+			remoteEntry = verReposGetDoc(repos, doc, null);
+			if(remoteEntry == null)
 			{
+				return false;
+			}
+
+			int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
+			if(remoteChangeType == 0)
+			{
+				//本地文件/目录删除
 				commitHashMap.put(dbDoc.getDocId(), dbDoc);
 				return true;
 			}
 			
-			return SyncUpSubDocs_FS(repos, dbDoc, login_user, rt, commitHashMap, subDocSyncFlag);
+			//远程文件/目录 类型变化、内容修改、删除
+			return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);				
 		}
 		
-		return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
+		//dbDoc存在，localDoc存在且是文件
+		if(localEntry.getType() == 1)
+		{
+			if(dbDoc.getType() == 2)
+			{
+				//本地目录 类型变化 （目录删除后新增同名文件）
+				commitHashMap.put(dbDoc.getDocId(), dbDoc);
+				return true;
+			}
+			
+			if(isDocLocalChanged(dbDoc, localEntry))
+			{
+				//本地文件 内容修改
+				commitHashMap.put(dbDoc.getDocId(), dbDoc);
+				return true;
+			}
+			
+			remoteEntry = verReposGetDoc(repos, doc, null);
+			if(remoteEntry == null)
+			{
+				return false;
+			}
+			
+			if(remoteEntry.getType() == 0)
+			{
+				//远程删除
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 4);
+			}
+			
+			if(remoteEntry.getType() == 2)
+			{
+				//远程文件 类型变化（文件被删除并增加了同名目录）
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 2);
+			}
+			
+			if(isDocRemoteChanged(dbDoc, remoteEntry))
+			{
+				//远程文件 内容修改
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 3);
+			}
+			
+			//No Change
+			return true;			
+		}
+		
+		//dbDoc存在，localDoc存在且是目录
+		if(localEntry.getType() == 2)
+		{
+			if(dbDoc.getType() == 1)
+			{
+				//本地文件 类型变化 （文件删除后新增同名文件）
+				commitHashMap.put(dbDoc.getDocId(), dbDoc);
+				return true;
+			}
+			
+			//文件系统似乎不支持检测子目录的变化
+//			if(isDocLocalChanged(dbDoc, localEntry))
+//			{
+//				//本地目录 内容修改（子目录有变动）
+//				commitHashMap.put(dbDoc.getDocId(), dbDoc);
+//				return true;
+//			}
+			
+			remoteEntry = verReposGetDoc(repos, doc, null);
+			if(remoteEntry == null)
+			{
+				return false;
+			}
+			
+			if(remoteEntry.getType() == 0)
+			{
+				//远程删除？？？无法确认本地目录下面是否有修改
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 4);
+			}
+			
+			if(remoteEntry.getType() == 1)
+			{
+				//远程目录 类型变化（目录被删除并增加了同名文件）？？？无法确认本地目录下面是否有修改
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 2);
+			}
+			
+			if(isDocRemoteChanged(dbDoc, remoteEntry))
+			{
+				//远程文件 内容修改？？？无法确认本地目录下面是否有修改
+				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 3);
+			}
+			
+			//No Change
+			return true;
+		}
+		
+		//未知文件类型(localDoc.type !=0/1/2)
+		return false;
 	}
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
@@ -2301,17 +2419,6 @@ public class BaseController  extends BaseFunction{
 
 	private int getRemoteChangeType(Doc dbDoc, Doc remoteEntry) 
 	{
-		if(dbDoc == null)
-		{
-			if(remoteEntry.getType() == 0)
-			{
-				System.out.println("getRemoteChangeType() 远程文件未变更：远程已删除:"+remoteEntry.getName());
-				return 0;	//no change
-			}
-			System.out.println("getRemoteChangeType() 远程文件新增:"+remoteEntry.getName());
-			return 1; //remote Added
-		}
-		
 		switch(remoteEntry.getType())
 		{
 		case 1:
