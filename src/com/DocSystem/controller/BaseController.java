@@ -224,6 +224,72 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
+	protected boolean isDirLocalChanged(Repos repos, Doc doc) 
+	{
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already scanned
+		
+		Doc subDoc = null;
+		List<Doc> dbDocList = getDBEntryList(repos, doc);
+		printObject("isDirLocalChanged() dbEntryList:", dbDocList);
+	   	if(dbDocList != null)
+    	{
+	    	for(int i=0;i<dbDocList.size();i++)
+	    	{
+	    		subDoc = dbDocList.get(i);
+	    		docHashMap.put(subDoc.getName(), subDoc);
+	    		
+	    		Doc subLocalEntry = fsGetDoc(repos, doc);
+	    		printObject("isDirLocalChanged() localEntry: ", subLocalEntry);
+	    		if(subLocalEntry.getType() == 0)
+	    		{
+	    			System.out.println("isDirLocalChanged() local Doc Deleted: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			return true;
+	    		}
+	    		
+	    		if(!subLocalEntry.getType().equals(subDoc.getType()))
+	    		{
+	    			System.out.println("isDirLocalChanged() local Doc Type Changed: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			return true;
+	    		}
+	    		
+	    		if(subDoc.getType() == 2)
+	    		{
+	    			if(isDirLocalChanged(repos, subDoc))
+	    			{
+	    				return true;
+	    			}
+	    			continue;
+	    		}
+	    		
+	    		if(isDocLocalChanged(subDoc, subLocalEntry))
+	    		{
+	    			System.out.println("isDirLocalChanged() local Doc Content Changed: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			return true;
+	    		}
+	    	}
+    	}
+
+    	List<Doc> localEntryList = getLocalEntryList(repos, doc);
+		printObject("SyncUpSubDocs_FS() localEntryList:", localEntryList);
+		if(localEntryList != null)
+    	{
+	    	for(int i=0;i<localEntryList.size();i++)
+	    	{
+	    		subDoc = localEntryList.get(i);
+	    		if(docHashMap.get(subDoc.getName()) != null)
+	    		{
+	    			//already scanned
+	    			continue;	
+	    		}
+	    		
+	    		//local Added
+    			System.out.println("isDirLocalChanged() local Doc Added: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    		return true;
+	    	}
+    	}
+		
+		return false;
+	}
 
 	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) 
 	{
@@ -2186,14 +2252,6 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			
-			//文件系统似乎不支持检测子目录的变化
-//			if(isDocLocalChanged(dbDoc, localEntry))
-//			{
-//				//本地目录 内容修改（子目录有变动）
-//				commitHashMap.put(dbDoc.getDocId(), dbDoc);
-//				return true;
-//			}
-			
 			remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
@@ -2202,19 +2260,40 @@ public class BaseController  extends BaseFunction{
 			
 			if(remoteEntry.getType() == 0)
 			{
-				//远程删除？？？无法确认本地目录下面是否有修改
+				if(isDirLocalChanged(repos, dbDoc))
+				{
+					//远程删除，但同时本地目录有修改
+					commitHashMap.put(dbDoc.getDocId(), dbDoc);
+					return true;
+				}
+				
+				//远程删除
 				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 4);
 			}
 			
 			if(remoteEntry.getType() == 1)
 			{
-				//远程目录 类型变化（目录被删除并增加了同名文件）？？？无法确认本地目录下面是否有修改
+				if(isDirLocalChanged(repos, dbDoc))
+				{
+					//远程目录 类型变化（目录被删除并增加了同名文件），但同时本地目录有修改
+					commitHashMap.put(dbDoc.getDocId(), dbDoc);
+					return true;
+				}
+				
+				//远程目录 类型变化（目录被删除并增加了同名文件）
 				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 2);
 			}
 			
 			if(isDocRemoteChanged(dbDoc, remoteEntry))
 			{
-				//远程文件 内容修改？？？无法确认本地目录下面是否有修改
+				if(isDirLocalChanged(repos, dbDoc))
+				{
+					////远程文件 内容修改，但同时本地目录有修改
+					commitHashMap.put(dbDoc.getDocId(), dbDoc);
+					return true;
+				}
+				
+				//远程文件 内容修改
 				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 3);
 			}
 			
