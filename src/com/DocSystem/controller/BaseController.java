@@ -2179,7 +2179,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//No Change
-			System.out.println("syncupForDocChange_FS() No Change:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			System.out.println("syncupForDocChange_FS() No Change(dbDoc不存在/localDoc不存在/remoteDoc不存在):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return true;
 		}
 		
@@ -2255,7 +2255,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//No Change
-			System.out.println("syncupForDocChange_FS() No Change:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			System.out.println("syncupForDocChange_FS() No Change(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return true;			
 		}
 		
@@ -2308,7 +2308,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//No Change
-			System.out.println("syncupForDocChange_FS() No Change:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			System.out.println("syncupForDocChange_FS() No Change(dbDoc存在/localDoc是目录/remoteDoc是目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return true;
 		}
 		
