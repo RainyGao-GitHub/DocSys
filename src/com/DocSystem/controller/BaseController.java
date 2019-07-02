@@ -2355,7 +2355,7 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<localEntryList.size();i++)
 	    	{
 	    		subDoc = localEntryList.get(i);
-	    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getPath() + subDoc.getName());
+	    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
@@ -2374,6 +2374,7 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 		    {
 	    		subDoc = remoteEntryList.get(i);
+	    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
