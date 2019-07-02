@@ -693,8 +693,8 @@ public class SVNUtil  extends BaseController{
 		Doc doc = action.getDoc();
 		
 		String entryPath = doc.getPath() + doc.getName();
-		String localPath = action.getLocalRootPath();
-		String localRefPath = action.getLocalRefRootPath();
+		String localPath = doc.getLocalRootPath();
+		String localRefPath = doc.getLocalRefRootPath();
 		System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		
 		
@@ -732,8 +732,8 @@ public class SVNUtil  extends BaseController{
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
 
-		String localPath = action.getLocalRootPath();
-		String localRefPath = action.getLocalRefRootPath();
+		String localPath = doc.getLocalRootPath();
+		String localRefPath = doc.getLocalRefRootPath();
 		
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
