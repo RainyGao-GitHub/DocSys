@@ -170,16 +170,18 @@ public class SVNUtil  extends BaseController{
         if(type ==  0) 
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	        return null;
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath());
+			return remoteEntry;
 		}
-        else if(type ==  2) 
+        
+    	String strRevision = revision +"";
+        if(revision == null || revision == -1)
+        {
+        	strRevision = getLatestRevision();
+        }
+        
+        if(type ==  2) 
 		{
-	    	String strRevision = revision +"";
-	        if(revision == null || revision == -1)
-	        {
-	        	strRevision = getLatestRevision();
-	        }
-	    	
 	        System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
 	    		
 	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2, true, doc.getLocalRootPath());
@@ -188,7 +190,6 @@ public class SVNUtil  extends BaseController{
 		}
 
 	    //Doc is file
-	    String strRevision = revision +"";
     	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true, doc.getLocalRootPath());
     	remoteEntry.setRevision(strRevision);
 	    	
