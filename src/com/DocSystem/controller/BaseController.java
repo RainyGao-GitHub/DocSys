@@ -3023,7 +3023,7 @@ public class BaseController  extends BaseFunction{
 		vDoc.setPath("");
 		vDoc.setName(vDocName);
 		vDoc.setLocalRootPath(reposVPath);
-		return null;
+		return vDoc;
 	}
 
 	//底层updateDoc接口
