@@ -140,7 +140,8 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	
-		String localParentPath = getReposRealPath(repos) + doc.getPath();
+		String localRootPath = getReposRealPath(repos);
+		String localParentPath = localRootPath + doc.getPath();
 		File dir = new File(localParentPath);
     	if(false == dir.exists())
     	{
@@ -171,16 +172,10 @@ public class BaseController  extends BaseFunction{
     		File file = localFileList[i];
     		
     		int type = file.isDirectory()? 2:1;
-
     		String name = file.getName();
-    		Doc subDoc = new Doc();
-    		subDoc.setVid(repos.getId());
-    		subDoc.setDocId(buildDocIdByName(subDocLevel, subDocParentPath, name));
-    		subDoc.setPid(doc.getDocId());
-    		subDoc.setPath(subDocParentPath);
-    		subDoc.setName(name);
-    		subDoc.setLevel(subDocLevel);
-    		subDoc.setType(type);    		
+    		System.out.println("getLocalEntryList subFile:" + name);
+
+    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath);
     		subDoc.setSize(file.length());
     		subDoc.setLatestEditTime(file.lastModified());
     		subDoc.setCreateTime(file.lastModified());
