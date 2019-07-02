@@ -141,17 +141,16 @@ public class BaseController  extends BaseFunction{
 		System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	
 		String localRootPath = getReposRealPath(repos);
-		String localParentPath = localRootPath + doc.getPath();
-		File dir = new File(localParentPath);
+		File dir = new File(localRootPath + doc.getPath() + doc.getName());
     	if(false == dir.exists())
     	{
-    		System.out.println("getLocalEntryList() " + localParentPath + " 不存在！");
+    		System.out.println("getLocalEntryList() " + doc.getPath() + doc.getName() + " 不存在！");
     		return null;
     	}
     	
     	if(dir.isFile())
     	{
-    		System.out.println("getLocalEntryList() " + localParentPath + " 不是目录！");
+    		System.out.println("getLocalEntryList() " + doc.getPath() + doc.getName() + " 不是目录！");
     		return null;
     	}
 
