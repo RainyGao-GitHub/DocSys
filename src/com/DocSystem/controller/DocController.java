@@ -245,7 +245,7 @@ public class DocController extends BaseController{
 
 		if(commitMsg == null)
 		{
-			commitMsg = "删除 " + path + name;
+			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
