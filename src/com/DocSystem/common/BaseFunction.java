@@ -272,7 +272,6 @@ public class BaseFunction{
 		if(path == null)
 		{
 			path = "";
-			level = 0;
 		}
 		if(name == null)
 		{
