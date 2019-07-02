@@ -268,6 +268,17 @@ public class BaseFunction{
 	 * @param localRootPath *******************************/
 	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath) 
 	{
+		//Format path and name
+		if(path == null)
+		{
+			path = "";
+			level = 0;
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		
 		Doc doc = new Doc();
 		
 		//Build vDoc
@@ -280,17 +291,6 @@ public class BaseFunction{
 			doc.setType(type);
 			doc.setIsRealDoc(false);
 			return doc;
-		}
-		
-		//Format path and name
-		if(path == null)
-		{
-			path = "";
-			level = 0;
-		}
-		if(name == null)
-		{
-			name = "";
 		}
 		
 		//To support user call the interface by entryPath
