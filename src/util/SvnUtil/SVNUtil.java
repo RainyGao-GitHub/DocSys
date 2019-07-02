@@ -1637,7 +1637,7 @@ public class SVNUtil  extends BaseController{
 	    {
 	    	SVNDirEntry subEntry = iterator.next();
 	    	int subEntryType = getEntryType(subEntry.getKind());
-	    	if(type == 0)
+	    	if(type <= 0)
 	    	{
 	    		continue;
 	    	}
