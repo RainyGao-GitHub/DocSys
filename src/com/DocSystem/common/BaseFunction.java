@@ -219,7 +219,7 @@ public class BaseFunction{
 		
 		//Build subActionList
     	String subParentPath = doc.getPath() + doc.getName() + "/";
-    	if(doc.getDocId() == 0)
+    	if(doc.getName().isEmpty())
     	{
     		subParentPath = doc.getPath();
     	}
@@ -230,7 +230,7 @@ public class BaseFunction{
 	    {
 	    	File localEntry = tmp[i];
 	    	int subDocType = localEntry.isFile()? 1: 2;
-	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, true, doc.getLocalRootPath());
+	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
 	    	if(localEntry.isDirectory())
 	    	{	
 	    		insertAddDirAction(subActionList,subDoc,true);
