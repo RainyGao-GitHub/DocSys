@@ -4677,12 +4677,6 @@ public class BaseController  extends BaseFunction{
 		
 		String vDocPath = reposVPath + docVName;
 		System.out.println("vDocPath: " + vDocPath);
-		if(isFileExist(vDocPath) == true)
-		{
-			System.out.println("目录 " +vDocPath + "　已存在！");
-			docSysDebugLog("目录 " +vDocPath + "　已存在！", rt);
-			return false;
-		}
 			
 		if(false == createDir(vDocPath))
 		{
