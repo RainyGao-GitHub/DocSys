@@ -5371,7 +5371,7 @@ public class BaseController  extends BaseFunction{
 		if(file.length() == 0)
 		{
 			System.out.println("addIndexForRDoc() fileSize is 0");
-			return false; //LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
+			return true; //LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
 		}
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
