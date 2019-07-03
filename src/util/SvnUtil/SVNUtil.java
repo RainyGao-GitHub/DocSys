@@ -741,10 +741,10 @@ public class SVNUtil  extends BaseController{
 		String entryPath = doc.getPath() + doc.getName();
 		
 		System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
-
-		switch(doc.getType())
+		
+		//entry is file
+		if(doc.getType() == 1)
 		{
-		case 1:
 			String localEntryPath = localPath + entryPath;
     		
     		InputStream fileData = getFileInputStream(localEntryPath);
@@ -840,8 +840,8 @@ public class SVNUtil  extends BaseController{
     	String localEntryPath = localRootPath + entryPath;    	
     	File localEntry = new File(localEntryPath);
 
-		Integer type = checkPath(entryPath, null);
-    	if(type == null)
+		Integer remoteEntryType = checkPath(entryPath, null);
+    	if(remoteEntryType == null)
     	{
     		System.out.println("scheduleForCommit() checkPath 异常!");
 			return;
@@ -850,7 +850,7 @@ public class SVNUtil  extends BaseController{
     	//本地删除
     	if(!localEntry.exists())
     	{
-    		if(type == 0)
+    		if(remoteEntryType == 0)
     		{
     			//已同步
     			return;
@@ -861,16 +861,17 @@ public class SVNUtil  extends BaseController{
     	
     	//本地存在
     	int localEntryType = localEntry.isDirectory()? 2:1;
+    	doc.setType(localEntryType);
     	switch(localEntryType)
     	{
     	case 1:	//文件
-    		if(type == 0) 	//新增文件
+    		if(remoteEntryType == 0) 	//新增文件
 	    	{
     			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
-    		if(type != 1)	//文件类型改变
+    		if(remoteEntryType != 1)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
     			insertAddFileAction(actionList,doc,isSubAction);
@@ -899,14 +900,14 @@ public class SVNUtil  extends BaseController{
     		}
     		break;
     	case 2:
-    		if(type == 0) 	//新增目录
+    		if(remoteEntryType == 0) 	//新增目录
 	    	{
     			//Add Dir
     			insertAddDirAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
-    		if(type != 2)	//文件类型改变
+    		if(remoteEntryType != 2)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
 	        	insertAddDirAction(actionList,doc, isSubAction);
