@@ -11,7 +11,7 @@ import com.DocSystem.entity.User;
 public class CommonAction {
     private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 	private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy
-    private Integer docType = null; //0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+    private Integer docType = null; //0:DocName 1:RealDoc 2:VirtualDoc
 
     private Repos repos = null;
     private Doc doc = null;
