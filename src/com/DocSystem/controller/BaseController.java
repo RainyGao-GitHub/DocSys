@@ -4424,16 +4424,15 @@ public class BaseController  extends BaseFunction{
 	/*************************** DocSys文件操作接口 ***********************************/
 	//create Real Doc
 	protected boolean createRealDoc(Repos repos, Doc doc, ReturnAjax rt) {
+		System.out.println("createRealDoc() localRootPath:" + doc.getLocalRootPath() + " path:" + doc.getPath() + " name:" + doc.getName());
+		
 		String name = doc.getName();
 		int type = doc.getType();
 		
-		String reposRPath = getReposRealPath(repos);
 		//获取 doc parentPath
-		String localParentPath =  reposRPath + doc.getPath();
+		String localParentPath =  doc.getLocalRootPath() + doc.getPath();
 
 		String localDocPath = localParentPath + name;
-
-		System.out.println("createRealDoc() localParentPath:" + localParentPath);
 		
 		if(type == 2) //目录
 		{
