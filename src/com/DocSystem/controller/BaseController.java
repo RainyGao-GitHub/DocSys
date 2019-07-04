@@ -2161,8 +2161,8 @@ public class BaseController  extends BaseFunction{
 				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 1);
 			}
 			
-			//No Change
-			System.out.println("syncupForDocChange_FS() No Change(dbDoc不存在/localDoc不存在/remoteDoc不存在):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//未变更
+			System.out.println("syncupForDocChange_FS() 未变更(dbDoc不存在/localDoc不存在/remoteDoc不存在):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return true;
 		}
 		
@@ -2223,8 +2223,8 @@ public class BaseController  extends BaseFunction{
 				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 3);
 			}
 			
-			//No Change
-			System.out.println("syncupForDocChange_FS() No Change(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//未变更
+			System.out.println("syncupForDocChange_FS() 未变更(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return true;			
 		}
 		
@@ -2269,8 +2269,8 @@ public class BaseController  extends BaseFunction{
 				return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, 2);
 			}
 			
-			//No Change
-			System.out.println("syncupForDocChange_FS() No Change(dbDoc存在/localDoc是目录/remoteDoc是目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//未变更
+			System.out.println("syncupForDocChange_FS() 未变更(dbDoc存在/localDoc是目录/remoteDoc是目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return true;
 		}
 		
@@ -2443,7 +2443,7 @@ public class BaseController  extends BaseFunction{
 			if(localEntry.getType() == 0)
 			{
 				System.out.println("getLocalChangeType() 本地文件未变更(文件不存在):"+localEntry.getName());				
-				return 0;	//no change
+				return 0;	//未变更
 			}
 			System.out.println("getLocalChangeType() 本地文件新增:"+localEntry.getName());
 			return 1; //local Added
