@@ -2773,53 +2773,55 @@ public class BaseController  extends BaseFunction{
 			}		
 			return true;
 		}	
-				
+		
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
+		{
+			System.out.println("dbUpdateDoc() get localEntry 异常 for " + doc.getDocId()  + " " + doc.getPath() + doc.getName());
+			return false;
+		}				
+		
 		//dbDoc not exists, do add it
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)
 		{
-			System.out.println("dbUpdateDoc() dbDoc not exists,do add it"); 
-			return dbAddDoc(repos, doc, true);
+			if(localEntry.getType() != 0)
+			{
+				System.out.println("dbUpdateDoc() 本地新增文件/目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+				return dbAddDoc(repos, doc, true);
+			}
+			return true;
 		}
 		
 		//type not matched, do delete it and add it
-		if(dbDoc.getType() != doc.getType())
+		if(dbDoc.getType() != localEntry.getType())
 		{
-			System.out.println("dbUpdateDoc() docType not matched, do delete and add it"); 
+			System.out.println("dbUpdateDoc() 本地文件/目录类型改变:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 			if(dbDeleteDoc(dbDoc, true) == false)
 			{
+				System.out.println("dbUpdateDoc() 删除dbDoc失败:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 				return false;
 			}
 			return  dbAddDoc(repos, doc, true);	
 		}
 		
-		//If localDoc not exists, do delete
-		Doc localEntry = fsGetDoc(repos, doc);
-		
-		int localChangeType = getLocalChangeType(dbDoc, localEntry);
-		switch(localChangeType)
+		if(localEntry.getType() == 0)
 		{
-		case 0:	//no change
-			return true;
-		case 1:	//localAdded
-			return dbAddDoc(repos, doc, true);
-		case 2: //local Type Changed
-			dbDeleteDoc(dbDoc, true);
-			return  dbAddDoc(repos, doc, true);
-		case 3:	//local modified
-			doc.setId(dbDoc.getId());
-			doc.setSize(localEntry.getSize());
-			doc.setLatestEditTime(localEntry.getLatestEditTime());
-			if(reposService.updateDoc(doc) == 0)
-			{
-				return false;
-			}		
-			return true;
-		case 4:
+			//这次commit是一个删除操作
+			System.out.println("dbUpdateDoc() 本地文件/目录删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 			return dbDeleteDoc(doc, true);
 		}
 		
-		return false;
+		System.out.println("dbUpdateDoc() 本地文件/目录内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+		//Update the size/lastEditTime/revision for doc
+		doc.setId(dbDoc.getId());
+		doc.setSize(localEntry.getSize());
+		doc.setLatestEditTime(localEntry.getLatestEditTime());
+		if(reposService.updateDoc(doc) == 0)
+		{
+			return false;
+		}		
+		return true;
 	}
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, boolean deleteSubDocs, String commitMsg, String commitUser) {
