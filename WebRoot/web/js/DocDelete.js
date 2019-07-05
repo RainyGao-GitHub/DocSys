@@ -176,10 +176,10 @@
     	   		   	//Basic Info
     	   		   	SubContext.treeNode = treeNode;
     	   		   	SubContext.docId = treeNode.id; 
-    	   		   	SubContext.parentId = treeNode.pid;
-    	   		   	SubContext.parentPath = treeNode.path;
+    	   		   	SubContext.pid = treeNode.pid;
+    	   		   	SubContext.path = treeNode.path;
     	   		 	SubContext.name = treeNode.name;
-			    	SubContext.level = treeNode.level;
+    	   		 	SubContext.level = treeNode.level;
         			SubContext.vid = vid;
 			    	
 			    	//Status Info
