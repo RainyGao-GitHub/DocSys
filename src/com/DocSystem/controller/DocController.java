@@ -1069,18 +1069,30 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//准备下载文件：为了保证下载的统一，现在都是先把文件复制到用户临时目录
-		//get reposRPath
-		String reposRPath = getReposRealPath(repos);
-		//文件的localParentPath
-		String localParentPath = reposRPath + doc.getPath();
-		
-		//get userTmpDir
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-				
-		//For dir 
-		if(dbDoc.getType() == 2) //目录
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
 		{
+			System.out.println("downloadDocPrepare_FS() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
+			docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		switch(localEntry.getType())
+		{
+		case 1:
+			rt.setMsgData(0);	//告诉前台，直接通过原始Doc进行下载	
+			docSysDebugLog("文件可直接下载", rt);
+			break;
+		case 2:
+			//get reposRPath
+			String reposRPath = getReposRealPath(repos);
+			//文件的localParentPath
+			String localParentPath = reposRPath + doc.getPath();
+			
+			//get userTmpDir
+			String userTmpDir = getReposUserTmpPath(repos,login_user);
+
 			//doCompressDir and save the zip File under userTmpDir
 			String zipFileName = dbDoc.getName() + ".zip";
 			if(doCompressDir(localParentPath, dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
@@ -1092,20 +1104,29 @@ public class DocController extends BaseController{
 			
 			rt.setMsgData(1);	//告诉前台，直接通过原始Doc进行下载
 			docSysDebugLog("目录已压缩", rt);
+			break;			
+		case 0:	//local不存在，尝试远程下载
+			Doc remoteEntry = verReposGetDoc(repos, doc, null);
+			if(remoteEntry == null)
+			{
+				System.out.println("downloadDocPrepare_FS() remoteDoc " +doc.getPath() + doc.getName() + " 获取异常");
+				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
+			if(remoteEntry.getType() == 0)
+			{
+				System.out.println("downloadDocPrepare_FS() Doc " +doc.getPath() + doc.getName() + " 不存在");
+				docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+				writeJson(rt, response);
+				return;	
+			}
+			
+			//Do checkout to local
+			
+			break;
 		}
-		else
-		{
-			rt.setMsgData(0);	//告诉前台，直接通过原始Doc进行下载	
-			docSysDebugLog("文件可直接下载", rt);
-			//if(copyFile(localParentPath+name, userTmpDir+name, true) == false)
-			//{
-			//	rt.setError("准备下载文件失败！");
-			//	writeJson(rt, response);
-			//	return;				
-			//}
-		}
-
-		writeJson(rt, response);
 	}
 
 	/**************** download Doc ******************/

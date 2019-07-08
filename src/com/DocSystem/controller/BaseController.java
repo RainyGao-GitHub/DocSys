@@ -2531,7 +2531,7 @@ public class BaseController  extends BaseFunction{
 		return localDoc;
 	}
 	
-	private Doc verReposGetDoc(Repos repos, Doc doc, String revision)
+	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
 		{
