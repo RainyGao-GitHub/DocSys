@@ -1131,8 +1131,8 @@ public class DocController extends BaseController{
 
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc")
-	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer downloadType,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 
@@ -1167,12 +1167,12 @@ public class DocController extends BaseController{
 		case 2:
 		case 3:
 		case 4:
-			downloadDoc_FS(repos, doc, response, request, session);
+			downloadDoc_FS(repos, doc, downloadType, response, request, session);
 			break;
 		}
 	}
 	
-	public void downloadDoc_FS(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	public void downloadDoc_FS(Repos repos, Doc doc,  Integer downloadType, HttpServletResponse response,HttpServletRequest request,HttpSession session)  throws Exception
 	{
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1183,39 +1183,32 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc dbDoc = dbGetDoc(repos, doc, true);
-		if(dbDoc == null){
-			docSysErrorLog("downloadDoc_FS() dbDoc " + doc.getName() + " 不存在", rt);
-			//writeJson(rt, response);
-			return;
-		}
-		
-		Doc localEntry = fsGetDoc(repos, doc);
-		if(localEntry == null)
+		if(downloadType == null || downloadType == 0)
 		{
-			docSysErrorLog("downloadDoc_FS() localDoc " + doc.getName() + " 获取异常", rt);
-			//writeJson(rt, response);
-			return;	
+			//直接下载
+			//get reposRPath
+			String reposRPath = getReposRealPath(repos);
+			//文件的localParentPath
+			String localParentPath = reposRPath + doc.getPath();
+			sendFileToWebPage(localParentPath, doc.getName(), rt, response, request);
 		}
 		
-		try {
-			if(doc.getType() == 1)
-			{
-				//get reposRPath
-				String reposRPath = getReposRealPath(repos);
-				//文件的localParentPath
-				String localParentPath = reposRPath + doc.getPath();
-				sendFileToWebPage(localParentPath, doc.getName(), rt, response, request);
-			}
-			else
-			{
-				//get userTmpDir
-				String userTmpDir = getReposUserTmpPath(repos,login_user);
-				String targetName = doc.getName() + ".zip";			
-				sendFileToWebPage(userTmpDir, targetName, rt, response, request);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		//在userTmpDir下不压缩
+		if(downloadType == 1)
+		{
+			//get userTmpDir
+			String userTmpDir = getReposUserTmpPath(repos,login_user);
+			String targetName = doc.getName();			
+			sendFileToWebPage(userTmpDir, targetName, rt, response, request);
+		}
+		
+		//在userTmpDir下已压缩
+		if(downloadType == 2)
+		{
+			//get userTmpDir
+			String userTmpDir = getReposUserTmpPath(repos,login_user);
+			String targetName = doc.getName() + ".zip";			
+			sendFileToWebPage(userTmpDir, targetName, rt, response, request);
 		}
 	}
 	
