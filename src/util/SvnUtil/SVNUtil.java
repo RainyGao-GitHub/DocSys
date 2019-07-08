@@ -174,42 +174,28 @@ public class SVNUtil  extends BaseController{
 			return remoteEntry;
 		}
         
-    	String strRevision = revision +"";
-        if(revision == null || revision == -1)
-        {
-        	strRevision = getLatestRevision();
-        }
-        
-        if(type ==  2) 
+		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath() + doc.getName(), revision);
+		if(entries == null)
 		{
-	        System.out.println("getDoc() " + entryPath + " revision:" + strRevision);
-	    		
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 2, true, doc.getLocalRootPath());
-	    	remoteEntry.setRevision(strRevision);
-	        return doc;
+			return null;
 		}
-
-	    //Doc is file
-    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 1, true, doc.getLocalRootPath());
-    	remoteEntry.setRevision(strRevision);
-	    	
-            //获取commitUser和commitTime的实际意义值得怀疑
-            //如用于显示，显然不需要那么实时
-//            //Get commitUser and commitTime
-//	        String[] targetPaths = new String[]{filePath};
-//	        Collection<SVNLogEntry> logEntries = null;
-// 			logEntries = repository.log(targetPaths, null,endRevision, endRevision, false, true);
-//	        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) 
-//	        {
-//	            SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-//	            String commitUser = logEntry.getAuthor(); //提交者
-//	            long commitTime = logEntry.getDate().getTime();
-//	            
-//	            doc.setLatestEditorName(commitUser);
-//	            doc.setLatestEditTime(commitTime);
-//	            break;
-//	        }
-    	return remoteEntry;
+		
+	    Iterator<SVNDirEntry> iterator = entries.iterator();
+	    while (iterator.hasNext()) 
+	    {
+	    	SVNDirEntry subEntry = iterator.next();
+	    	String subEntryName = subEntry.getName();
+	    	int subEntryType = getEntryType(subEntry.getKind());
+	    	if(subEntryName.equals(doc.getName()))
+	    	{	
+	    		doc.setType(subEntryType);
+	    		doc.setSize(subEntry.getSize());
+	    		doc.setRevision(subEntry.getRevision()+"");
+	    		return doc;
+	    	}
+	    }
+	    
+	    return null;
 	}
     
     //getHistory filePath: remote File Path under repositoryURL
