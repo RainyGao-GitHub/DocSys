@@ -1028,6 +1028,14 @@ public class DocController extends BaseController{
 		System.out.println("downloadDocPrepare reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
+		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			return;
+		}
+		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1044,22 +1052,14 @@ public class DocController extends BaseController{
 		case 2:
 		case 3:
 		case 4:
-			downloadDocPrepare_FS(repos, doc, response, request, session);
+			downloadDocPrepare_FS(repos, doc, login_user, rt);
 			break;
 		}
 		writeJson(rt, response);
 	}
 
-	public void downloadDocPrepare_FS(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			return;
-		}
-		
+	public void downloadDocPrepare_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
+	{	
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)
 		{
