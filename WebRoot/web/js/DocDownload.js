@@ -267,7 +267,7 @@
                 	    console.log("downloadDocPrepare Ok:",ret);
             	   		var encPath = encodeURI(SubContext.path);
             	   		var encName = encodeURI(SubContext.name);
-            	   		var downloadType = ret.data.msgData;
+            	   		var downloadType = ret.msgData;
             	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + SubContext.vid + "&docId=" + SubContext.docId + "&pid=" + SubContext.pid + "&path=" + encPath + "&name="+ encName  + "&downloadType="+ downloadType;	
 
                 	   	downloadSuccessHandler(SubContext, ret.msgInfo);
