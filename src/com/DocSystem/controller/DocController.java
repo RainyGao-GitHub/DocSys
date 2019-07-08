@@ -1047,6 +1047,7 @@ public class DocController extends BaseController{
 			downloadDocPrepare_FS(repos, doc, response, request, session);
 			break;
 		}
+		writeJson(rt, response);
 	}
 
 	public void downloadDocPrepare_FS(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
@@ -1056,7 +1057,6 @@ public class DocController extends BaseController{
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
 			return;
 		}
 		
@@ -1065,7 +1065,6 @@ public class DocController extends BaseController{
 		{
 			System.out.println("downloadDocPrepare_FS() Doc " +doc.getPath() + doc.getName() + " 不存在");
 			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-			writeJson(rt, response);
 			return;
 		}
 		
@@ -1074,67 +1073,89 @@ public class DocController extends BaseController{
 		{
 			System.out.println("downloadDocPrepare_FS() locaDoc " +doc.getPath() + doc.getName() + " 获取异常");
 			docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
-			writeJson(rt, response);
 			return;
 		}
 		
-		switch(localEntry.getType())
+		if(localEntry.getType() == 1)
 		{
-		case 1:
-			rt.setMsgData(0);	//告诉前台，直接通过原始Doc进行下载	
-			docSysDebugLog("文件可直接下载", rt);
-			break;
-		case 2:
-			//get reposRPath
-			String reposRPath = getReposRealPath(repos);
-			//文件的localParentPath
-			String localParentPath = reposRPath + doc.getPath();
-			
-			//get userTmpDir
-			String userTmpDir = getReposUserTmpPath(repos,login_user);
+			rt.setMsgData(0);	//文件：原始路径下载	
+			docSysDebugLog("本地文件: 原始路径下载", rt);
+			return;
+		}
 
+		String userTmpDir = getReposUserTmpPath(repos,login_user);;
+		String zipFileName = dbDoc.getName() + ".zip";		
+		if(localEntry.getType() == 2)
+		{
 			//doCompressDir and save the zip File under userTmpDir
-			String zipFileName = dbDoc.getName() + ".zip";
-			if(doCompressDir(localParentPath, dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
+			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
 			{
-				rt.setError("压缩目录失败！");
-				writeJson(rt, response);
+				docSysErrorLog("压缩本地目录失败！", rt);
 				return;
 			}
 			
-			rt.setMsgData(1);	//告诉前台，直接通过原始Doc进行下载
-			docSysDebugLog("目录已压缩", rt);
-			break;			
-		case 0:	//local不存在，尝试远程下载
+			rt.setMsgData(2);	//目录：已压缩并存储在用户临时目录
+			docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
+			return;						
+		}
+
+		if(localEntry.getType() == 0)
+		{
+			
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
-				System.out.println("downloadDocPrepare_FS() remoteDoc " +doc.getPath() + doc.getName() + " 获取异常");
+				docSysDebugLog("downloadDocPrepare_FS() remoteDoc " +doc.getPath() + doc.getName() + " 获取异常", rt);
 				docSysErrorLog("远程文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
-				writeJson(rt, response);
 				return;
 			}
-			
+				
 			if(remoteEntry.getType() == 0)
 			{
 				System.out.println("downloadDocPrepare_FS() Doc " +doc.getPath() + doc.getName() + " 不存在");
 				docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-				writeJson(rt, response);
 				return;	
 			}
-			
+				
 			//Do checkout to local
-			
-			break;
+			if(verReposCheckOut(repos, doc, userTmpDir, doc.getName(), null, true) == null)
+			{
+				docSysErrorLog("远程下载失败", rt);
+				docSysDebugLog("downloadDocPrepare_FS() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + doc.getName(), rt);
+				return;
+			}
+				
+			if(remoteEntry.getType() == 1)
+			{
+				rt.setMsgData(1);
+				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
+				return;
+			}
+				
+			//doCompressDir and save the zip File under userTmpDir
+			if(doCompressDir(userTmpDir, dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩远程目录失败！");
+				return;
+			}
+				
+			rt.setMsgData(2);	//告诉前台，直接通过原始Doc进行下载
+			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
+			return;
 		}
+		
+		docSysErrorLog("本地未知文件类型:" + localEntry.getType(), rt);
+		return;		
 	}
+	
+	
 
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc")
 	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer downloadType,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name);
+		System.out.println("downloadDoc reposId: " + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name + " downloadType:" + downloadType);
 
 		if(path == null)
 		{
