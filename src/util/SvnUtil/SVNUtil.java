@@ -748,6 +748,11 @@ public class SVNUtil  extends BaseController{
 			String localEntryPath = localPath + entryPath;
     		
     		InputStream fileData = getFileInputStream(localEntryPath);
+    		if(fileData == null)
+    		{
+    			return false;
+    		}
+    		
     		boolean ret = false;
     		if(action.isSubAction)
     		{
