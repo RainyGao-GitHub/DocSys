@@ -2159,7 +2159,6 @@ public class BaseController  extends BaseFunction{
 		case 23:	//localFileChanged
 		case 24:	//remoteTypeChanged(From File To Dir)
 		case 25:	//remoteTypeChanged(From Dir To File)
-		case 26:	//remoteChanged(maybe 22-25)
 			return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, docChangeType); 
 		case 0:		//no change
 			break;
