@@ -174,7 +174,7 @@ public class SVNUtil  extends BaseController{
 			return remoteEntry;
 		}
         
-		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath() + doc.getName(), revision);
+		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath(), revision);
 		if(entries == null)
 		{
 			return null;
@@ -187,11 +187,11 @@ public class SVNUtil  extends BaseController{
 	    	String subEntryName = subEntry.getName();
 	    	int subEntryType = getEntryType(subEntry.getKind());
 	    	if(subEntryName.equals(doc.getName()))
-	    	{	
-	    		doc.setType(subEntryType);
-	    		doc.setSize(subEntry.getSize());
-	    		doc.setRevision(subEntry.getRevision()+"");
-	    		return doc;
+	    	{
+	    		Doc subDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), subEntryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath());
+	    		subDoc.setSize(subEntry.getSize());
+	    		subDoc.setRevision(subEntry.getRevision()+"");
+	    		return subDoc;
 	    	}
 	    }
 	    
