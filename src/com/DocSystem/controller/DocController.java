@@ -522,7 +522,7 @@ public class DocController extends BaseController{
 				}
 				
 				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
-				Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+				Doc dbDoc = dbGetDoc(repos, doc, true);
 				
 				if(dbDoc == null)
 				{
@@ -627,7 +627,7 @@ public class DocController extends BaseController{
 		
 		//检查文件是否已存在 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
-		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc != null)
 		{
 			rt.setData(dbDoc);
@@ -753,7 +753,7 @@ public class DocController extends BaseController{
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath);
@@ -940,7 +940,7 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
-		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)
 		{
 			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
@@ -1060,7 +1060,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)
 		{
 			System.out.println("downloadDocPrepare_FS() Doc " +doc.getPath() + doc.getName() + " 不存在");
@@ -1162,14 +1162,20 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc dbDoc = docSysGetDoc(repos, doc, login_user);
+		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null){
-			System.out.println("downloadDoc_FS() Doc " + doc.getName() + " 不存在");
-			docSysErrorLog("doc " + doc.getName() + "不存在！", rt);
+			docSysErrorLog("downloadDoc_FS() dbDoc " + doc.getName() + " 不存在", rt);
 			//writeJson(rt, response);
 			return;
 		}
 		
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
+		{
+			docSysErrorLog("downloadDoc_FS() localDoc " + doc.getName() + " 获取异常", rt);
+			//writeJson(rt, response);
+			return;	
+		}
 		
 		try {
 			if(doc.getType() == 1)
