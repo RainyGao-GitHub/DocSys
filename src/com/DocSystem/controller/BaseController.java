@@ -2142,6 +2142,8 @@ public class BaseController  extends BaseFunction{
 		printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
 		
 		int docChangeType = getDocChangeType_FS(repos, doc, dbDoc, localEntry, remoteEntry);
+		System.out.println("syncupForDocChange_FS() docChangeType: " + docChangeType);
+
 		switch(docChangeType)
 		{
 		case 11:	//localAdd

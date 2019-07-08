@@ -1186,10 +1186,8 @@ public class DocController extends BaseController{
 		if(downloadType == null || downloadType == 0)
 		{
 			//直接下载
-			//get reposRPath
-			String reposRPath = getReposRealPath(repos);
 			//文件的localParentPath
-			String localParentPath = reposRPath + doc.getPath();
+			String localParentPath = doc.getLocalRootPath() + doc.getPath();
 			sendFileToWebPage(localParentPath, doc.getName(), rt, response, request);
 		}
 		
