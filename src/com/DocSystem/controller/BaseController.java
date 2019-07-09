@@ -3094,7 +3094,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			dstDoc.setRevision(revision);
-			if(dbMoveDoc(srcDoc, dstDoc, login_user, rt) == false)
+			if(dbMoveDoc(repos, srcDoc, dstDoc) == false)
 			{
 				docSysWarningLog("moveDoc_FS() dbMoveDoc failed", rt);			
 			}
@@ -3108,9 +3108,10 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	private boolean dbMoveDoc(Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
+	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
+	{
+		dbDeleteDoc(srcDoc,true);
+		return dbAddDoc(repos, dstDoc, true);
 	}
 
 	//底层copyDoc接口
