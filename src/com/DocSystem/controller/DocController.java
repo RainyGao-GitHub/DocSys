@@ -1147,7 +1147,13 @@ public class DocController extends BaseController{
 				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
 				return;
 			}
-				
+
+			if(isEmptyDir(userTmpDir + dbDoc.getName()))
+			{
+				docSysErrorLog("空目录无法下载！", rt);
+				return;				
+			}
+			
 			//doCompressDir and save the zip File under userTmpDir
 			if(doCompressDir(userTmpDir, dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
 			{
