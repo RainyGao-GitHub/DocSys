@@ -1570,7 +1570,7 @@ public class SVNUtil  extends BaseController{
 	    	//Copy the file
 		    String dstEntryPath = dstParentPath + dstEntryName;
 	    	String srcEntryPath = srcParentPath + srcEntryName;
-	    	//addFileSmartly(dstEntryPath, srcEntryPath);
+	    	//目前svnkit无法针对文件进行copy
 	    	if(isDir)
 			{
 				editor.addDir(dstEntryPath, srcEntryPath, revision);
