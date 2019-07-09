@@ -67,6 +67,10 @@
 			var fileNum = treeNodes.length;
 			console.log("DocDownloadInit() fileNum:" + fileNum);				
 
+	        downloadedNum = 0; //已下载个数
+	        successNum = 0;	//成功下载个数
+			failNum = 0; //下载失败个数
+			
 			//Build Batch
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
@@ -302,8 +306,9 @@
 	        }
 		}
 		
-      	function downloadErrorConfirm(FileName,errMsg)
+      	function downloadErrorConfirm(SubContext,errMsg)
       	{
+      		var FileName = SubContext.name; 
       		var msg = FileName + "下载失败,是否继续下载其他文件？";
       		if(errMsg != undefined)
       		{
@@ -329,7 +334,7 @@
       	//downloadErrorHandler
       	function downloadErrorHandler(SubContext,errMsg)
       	{
-      		console.log("downloadErrorHandler() "+ SubContex.name + " " + errMsg);
+      		console.log("downloadErrorHandler() "+ SubContext.name + " " + errMsg);
       		
       		failNum++;
       		

@@ -1097,6 +1097,12 @@ public class DocController extends BaseController{
 		String zipFileName = dbDoc.getName() + ".zip";		
 		if(localEntry.getType() == 2)
 		{
+			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()))
+			{
+				docSysErrorLog("空目录无法下载！", rt);
+				return;				
+			}
+			
 			//doCompressDir and save the zip File under userTmpDir
 			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
 			{
@@ -1158,8 +1164,6 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	
-
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc")
 	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer downloadType,

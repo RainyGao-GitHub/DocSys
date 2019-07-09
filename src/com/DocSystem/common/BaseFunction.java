@@ -1091,6 +1091,29 @@ public class BaseFunction{
     	return true;
     }
     
+	public boolean isEmptyDir(String dirPath) 
+	{
+		File dir = new File(dirPath);
+    	if(false == dir.exists())
+    	{
+    		return true;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		return true;
+    	}
+
+    	File[] fileList = dir.listFiles();
+    	
+    	if(fileList.length > 0)
+    	{
+    		return false;
+    	}
+    	
+		return true;
+	}
+
     public boolean copyDir(String srcPath, String dstPath, boolean cover) 
     {
 	    try {
