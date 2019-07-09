@@ -322,11 +322,11 @@
     	        okbtn: "继续",
     	        qubtn: "结束",
     	    },function () {
-    	    	downloadErrorHandler(FileName, errMsg);
+    	    	downloadErrorHandler(SubContext, errMsg);
     	    	return true;
 			},function(){
     	    	//alert("点击了取消");
-				downloadErrorAbortHandler(FileName, errMsg);
+				downloadErrorAbortHandler(SubContext, errMsg);
     	    	return true;
       		});
       	}
