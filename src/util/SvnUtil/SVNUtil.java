@@ -846,6 +846,7 @@ public class SVNUtil  extends BaseController{
     			//已同步
     			return;
     		}
+    		System.out.println("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     		insertDeleteAction(actionList,doc);
     		return;
     	}
@@ -858,12 +859,14 @@ public class SVNUtil  extends BaseController{
     	case 1:	//文件
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
+        		System.out.println("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(remoteEntryType != 1)	//文件类型改变
     		{
+        		System.out.println("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertDeleteAction(actionList,doc);
     			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
@@ -874,7 +877,7 @@ public class SVNUtil  extends BaseController{
     		{
 	            if(modifyEnable)
 	            {
-            		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            		System.out.println("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
             		insertModifyFile(actionList,doc);
             		return;
             	}
@@ -884,7 +887,7 @@ public class SVNUtil  extends BaseController{
     			Doc tempDoc = commitHashMap.get(doc.getDocId());
     			if(tempDoc != null)
     			{
-        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+            		System.out.println("scheduleForCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
             		insertModifyFile(actionList,doc);
             		return;
     			}
@@ -893,6 +896,7 @@ public class SVNUtil  extends BaseController{
     	case 2:
     		if(remoteEntryType == 0) 	//新增目录
 	    	{
+        		System.out.println("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
     			insertAddDirAction(actionList,doc,isSubAction);
 	            return;
@@ -900,6 +904,7 @@ public class SVNUtil  extends BaseController{
     		
     		if(remoteEntryType != 2)	//文件类型改变
     		{
+    			System.out.println("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertDeleteAction(actionList,doc);
 	        	insertAddDirAction(actionList,doc, isSubAction);
 	            return;
