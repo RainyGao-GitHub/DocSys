@@ -547,8 +547,10 @@
 	function showRenameDialog(node)
 	{
 		var docId = node.id;
+		var pid = node.pid;
 		var parentPath = node.path;
 		var docName = node.name;
+		var level = node.level;
 		console.log("showRenameDialog docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
 		//Show dialog
@@ -564,13 +566,13 @@
 	        }
 	    },function () {
 			var newName = $("#dialog-renameDialog input[name='docName']").val();
-			doRenameDoc(docId,parentPath, docName,newName);
+			doRenameDoc(docId, pid, level, parentPath, docName,newName);
 	    	return true;   
 	    });
 		return true;
 	}
 		
-	function doRenameDoc(docId, pid, parentPath, docName, newName)
+	function doRenameDoc(docId, pid, level, parentPath, docName, newName)
 	{
 		$.ajax({
             url : "/DocSystem/Doc/renameDoc.do",
@@ -580,9 +582,10 @@
             	reposId: gReposId,
                 docId : docId,
                 pid	: pid,
+                level: level,
                 path: parentPath,
                 name: docName,
-                newName: newName,
+                dstName: newName,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){

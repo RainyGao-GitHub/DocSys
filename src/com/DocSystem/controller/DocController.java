@@ -265,7 +265,7 @@ public class DocController extends BaseController{
 	public void renameDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String dstName, 
 							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("renameDoc reposId: " + reposId  + " docId: " + docId + " pid: " + pid  + " path:" + path + " name:" + name + " dstName:" + dstName);
+		System.out.println("renameDoc reposId: " + reposId  + " level: " + level + " docId: " + docId + " pid: " + pid  + " path:" + path + " name:" + name + " dstName:" + dstName);
 		ReturnAjax rt = new ReturnAjax();
 		
 		if(name == null || "".equals(name))
@@ -1803,7 +1803,7 @@ public class DocController extends BaseController{
 		
 		if(changedItemList == null)
 		{
-			System.out.println("revertDocHistory Failed");
+			System.out.println("getHistoryDetail Failed");
 		}
 		rt.setData(changedItemList);
 		
