@@ -627,7 +627,7 @@
 		}
 		zTree.updateNode(node);
 		
-		if(node.isParent == true && parentNode.open == true) //刷新目录
+		if(node.isParent == true && node.open == true) //刷新目录
 		{
 			//强制异步刷新子目录，以保证子目录的信息正确
 			zTree.reAsyncChildNodes(node, "refresh",true);	
