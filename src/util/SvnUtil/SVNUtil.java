@@ -1315,7 +1315,13 @@ public class SVNUtil  extends BaseController{
         	return null;
         }
         
-        if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), true, -1, isMove) == false)
+        boolean isDir = false;
+        if(srcDoc.getType() == 2)
+        {
+        	isDir = true;
+        }
+        
+        if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), isDir, -1, isMove) == false)
         {
         	return null;
         }
