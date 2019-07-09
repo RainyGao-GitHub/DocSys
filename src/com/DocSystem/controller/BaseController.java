@@ -5034,6 +5034,11 @@ public class BaseController  extends BaseFunction{
 			srcDoc = buildVDoc(repos, srcDoc);
 			dstDoc = buildVDoc(repos, dstDoc);
 		}
+		
+		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
+		{
+			srcDoc.setRevision(verReposUtil.getLatestRevision());
+		}
 
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, true);
 	}

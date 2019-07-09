@@ -320,7 +320,17 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath);
-		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath);		
+		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath);
+		
+		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
+		if(srcDbDoc == null)
+		{
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		srcDoc.setRevision(srcDbDoc.getRevision());
+		
 		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
 		

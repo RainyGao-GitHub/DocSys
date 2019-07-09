@@ -1315,13 +1315,16 @@ public class SVNUtil  extends BaseController{
         	return null;
         }
         
-        boolean isDir = false;
-        if(srcDoc.getType() == 2)
-        {
-        	isDir = true;
-        }
+        boolean isDir = true;
+        //Due to svnkit issue, copy always use isDir
+        //if(srcDoc.getType() == 1)
+        //{
+        //	isDir = false;
+        //}
         
-        if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), isDir, -1, isMove) == false)
+    	Long revision = Long.parseLong(srcDoc.getRevision());
+        
+        if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), isDir, revision, isMove) == false)
         {
         	return null;
         }
