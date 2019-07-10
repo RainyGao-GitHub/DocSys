@@ -3873,7 +3873,7 @@ function CompareObj(objA, objB, flag) {
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
 						curRightClickedTreeNode = null; 
-						DoPaste(gCopiedNodes,null);
+						DoPaste(gCopiedNodes,null,gIsCopy);
 					}
 			},
 			{divider: true},
@@ -4106,7 +4106,7 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						var parentNode = getNodeByNodeId(gDocId);
+						var parentNode = getParentNodeByNodeId(gDocId);
 						DoPaste(gCopiedNodes, parentNode, gIsCopy);
 					}
 			},

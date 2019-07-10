@@ -31,6 +31,8 @@
 		function copyDocs(treeNodes, dstParentNode, vid)	//多文件复制函数
 		{
 			console.log("copyDocs treeNodes:", treeNodes);
+			console.log("copyDocs dstParentNode:", dstParentNode);
+
 			if(!treeNodes || treeNodes.length <= 0)
 			{
 				showErrorMessage("请选择需要复制的文件!");
@@ -66,7 +68,7 @@
 		}
 		
       	//初始化DocCopy
-      	function DocCopyInit(treeNodes,dstParentNode,dstPath,dstPid,dstlevel,vid)	//多文件复制函数
+      	function DocCopyInit(treeNodes,dstParentNode,dstPath,dstPid,dstLevel,vid)	//多文件复制函数
 		{
 			console.log("DocCopyInit()");
 			var fileNum = treeNodes.length;
@@ -282,10 +284,10 @@
 	            	docId : SubContext.docId,	//待复制的docid
 	                type: SubContext.type,
 	                srcLevel: SubContext.level,
-	                dstLevel: SubContext,dstLevel,
 	                srcPid: SubContext.pid,
 	                srcPath: SubContext.path,
 	                srcName: SubContext.name,
+	                dstLevel: SubContext.dstLevel,
 	                dstPid: SubContext.dstPid,	//目标doc dstPid
 	                dstPath: SubContext.dstPath,
 	                dstName: SubContext.dstName, //目标docName
