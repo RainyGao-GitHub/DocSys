@@ -227,10 +227,13 @@ public class Doc  implements Comparable<Doc>{
         }
         
         //Sort by docType
-        ret = doc.type - this.type;
-        if(ret != 0)
+        if(doc.type != null && this.type != null)
         {
-        	return ret;
+	        ret = doc.type - this.type;
+	        if(ret != 0)
+	        {
+	        	return ret;
+	        }
         }
         
         //Sort by doName
