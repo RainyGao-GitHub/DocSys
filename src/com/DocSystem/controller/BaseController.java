@@ -3181,7 +3181,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			dstDoc.setRevision(revision);
-			if(dbCopyDoc(srcDoc, dstDoc, login_user, rt) == false)
+			if(dbCopyDoc(repos, srcDoc, dstDoc, login_user, rt) == false)
 			{
 				docSysWarningLog("copyDoc() dbCopyDoc failed", rt);			
 			}
@@ -3198,9 +3198,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean dbCopyDoc(Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
-		// TODO Auto-generated method stub
-		return false;
+	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
+		return dbAddDoc(repos, dstDoc, true);
 	}
 
 	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
