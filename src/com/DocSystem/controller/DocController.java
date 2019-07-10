@@ -777,7 +777,7 @@ public class DocController extends BaseController{
 			localParentDir.mkdirs();
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1, true,localRootPath);
 		
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)	//0: add  1: update
