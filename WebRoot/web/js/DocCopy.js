@@ -455,7 +455,7 @@
       		successNum++;
 	      	
 	      	SubContext.state = 2;	//复制结束
-      		SubContex.status = "success";
+	      	SubContext.status = "success";
       		SubContext.msgInfo = msgInfo;
 			copyNextDoc();
       	}
