@@ -782,7 +782,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)	//0: add  1: update
 		{
-			Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath);
+			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", level-1, 2, true, localRootPath);
 			if(checkUserAddRight(repos,login_user.getId(), parentDoc, rt) == false)
 			{
 				writeJson(rt, response);	

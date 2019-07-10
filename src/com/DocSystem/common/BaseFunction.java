@@ -335,7 +335,7 @@ public class BaseFunction{
 		doc.setType(type);
 		doc.setIsRealDoc(true);
 		doc.setLocalRootPath(localRootPath);
-		//printObject("buildBasicDoc() doc:", doc);
+		printObject("buildBasicDoc() doc:", doc);
 		return doc;
 	}
 	
