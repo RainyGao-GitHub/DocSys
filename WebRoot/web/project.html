@@ -3084,7 +3084,12 @@ function CompareObj(objA, objB, flag) {
 				 zTree.selectNode(node);
 			
 				//showDocList
-				var parentNode = node.getParentNode();
+				var parentNode = node;
+				if(node.isParent == false)
+				{
+					parentNode = node.getParentNode();
+				}
+				
 				showDocList(parentNode);
 			 
 				//获取DocContent并显示
