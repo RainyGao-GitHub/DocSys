@@ -323,7 +323,14 @@ public class BaseFunction{
 		
 		if(pid == null)
 		{
-			pid = buildDocIdByName(level-1, path, "");
+			if(path.isEmpty())
+			{
+				pid = 0L;
+			}
+			else
+			{
+				pid = buildDocIdByName(level-1, path, "");
+			}
 		}
 
 		doc.setVid(reposId);
