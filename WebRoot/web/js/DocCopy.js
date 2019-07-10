@@ -296,10 +296,10 @@
 	                if( "ok" == ret.status ){
 	                	console.log("copyDoc() ok:",ret.data);
 	                 	
-	                	//后台复制成功，根据后台返回的docid,新建一个treeNode
-	                	deleteTreeNode(SubContext.name, dstParentNode); //zTree会在新的目录下新建一个id相同的Node需要删除
-	                	addTreeNode(ret.data,dstParentNode);
-	          			
+                	    var doc = ret.data;
+                	    
+                  	    addTreeNode(doc);
+                  	    	          			
 	                	copySuccessHandler(SubContext, ret.msgInfo);
 	                	return;
 	                }
