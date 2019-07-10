@@ -399,7 +399,16 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath);
-
+		
+		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
+		if(srcDbDoc == null)
+		{
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		srcDoc.setRevision(srcDbDoc.getRevision());
+		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
 		writeJson(rt, response);
@@ -456,6 +465,15 @@ public class DocController extends BaseController{
 		String commitUser = login_user.getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath);
+		
+		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
+		if(srcDbDoc == null)
+		{
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
