@@ -40,7 +40,7 @@
 			//get the parentInfo
 		  	var dstPath = "";
 		  	var dstPid = 0;
-		  	var dstLevel = 0;
+		  	var dstLevel = -1;
 			if(dstParentNode && dstParentNode != null)
 			{
 				dstPath = dstParentNode.path + dstParentNode.name+"/";
@@ -66,7 +66,7 @@
 		}
 		
       	//初始化DocCopy
-      	function DocCopyInit(treeNodes,dstParentNode,dstPath,dstPid,level,vid)	//多文件复制函数
+      	function DocCopyInit(treeNodes,dstParentNode,dstPath,dstPid,dstlevel,vid)	//多文件复制函数
 		{
 			console.log("DocCopyInit()");
 			var fileNum = treeNodes.length;
@@ -82,7 +82,7 @@
 			Batch.dstParentNode = dstParentNode;
 			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
-			Batch.level = level;
+			Batch.dstLevel = dstLevel;
 			Batch.vid = vid;
 			Batch.num = fileNum;
 			Batch.index = 0;
@@ -116,7 +116,7 @@
       	}
       	
       	//增加复制文件
-      	function DocCopyAppend(treeNodes, dstParentNode, dstPath, dstPid, level, vid)	//多文件复制函数
+      	function DocCopyAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid)	//多文件复制函数
 		{
 			console.log("DocCopyAppend()");
 			if(!treeNodes)
@@ -134,7 +134,7 @@
 			Batch.dstParentNode = dstParentNode;
 			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
-			Batch.level = level;
+			Batch.level = dstLevel;
 			Batch.vid = vid;
 			Batch.num = fileNum;
 			Batch.index = 0;
@@ -266,7 +266,7 @@
 				return;
 			}			
 			
-			if(isNodeExist(SubContext.name, SubContext.dstParentNode) == true)
+			if(isNodeExist(SubContext.dstName, SubContext.dstParentNode) == true)
 			{
 			  	//Node Name conflict confirm
 				CopyConflictConfirm(SubContext);
@@ -278,14 +278,17 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                docId : SubContext.docId,	//待复制的docid
+	                reposId: SubContext.vid,			//仓库id
+	            	docId : SubContext.docId,	//待复制的docid
+	                type: SubContext.type,
+	                srcLevel: SubContext.level,
+	                dstLevel: SubContext,dstLevel,
 	                srcPid: SubContext.pid,
 	                srcPath: SubContext.path,
 	                srcName: SubContext.name,
-	                dstPid: SubContext.dstParentId,	//目标doc dstPid
-	                dstPath: SubContext.dstParentPath,
+	                dstPid: SubContext.dstPid,	//目标doc dstPid
+	                dstPath: SubContext.dstPath,
 	                dstName: SubContext.dstName, //目标docName
-	                reposId: SubContext.vid,			//仓库id
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){

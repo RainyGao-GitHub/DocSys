@@ -35,7 +35,7 @@
 			//get the parentInfo
 		  	var dstPath = "";
 		  	var dstPid = 0;
-		  	var dstLevel = 0;
+		  	var dstLevel = -1;
 			if(dstParentNode && dstParentNode != null)
 			{
 				dstPath = dstParentNode.path + dstParentNode.name+"/";
