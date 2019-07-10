@@ -72,6 +72,10 @@
 			var fileNum = treeNodes.length;
 			console.log("DocCopyInit() fileNum:" + fileNum);				
 
+	        copiedNum = 0; //已复制个数
+	        successNum = 0;	//成功复制个数
+			failNum = 0; //复制失败个数
+
 			//Build CopyBatch
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
