@@ -830,7 +830,7 @@ public class DocController extends BaseController{
 			String commitUser = login_user.getName();
 			String chunkParentPath = getReposUserTmpPath(repos,login_user);
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
-			if(doc == null)
+			if(dbDoc == null)
 			{
 				boolean ret = addDoc(repos, doc, 
 						uploadFile,size, checkSum, 
