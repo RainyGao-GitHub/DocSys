@@ -741,8 +741,6 @@ public class DocController extends BaseController{
 	}
 
 	/****************   Upload a Document ******************/
-	/*docId = -1: means it is add, else it is update
-	 * pid = -1: means we do not know the pid maybe it still not exists*/
 	@RequestMapping("/uploadDoc.do")
 	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			MultipartFile uploadFile, Long size, String checkSum,

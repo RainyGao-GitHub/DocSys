@@ -1701,10 +1701,10 @@
 			if(false == SubContext.chunked)
 			{
 				form.append("reposId", SubContext.vid);
-				form.append("pid", SubContext.realParentId);
+				//form.append("docId", SubContext.docId);
+				//form.append("pid", SubContext.realParentId);
 				form.append("path", SubContext.realParentPath);
 				form.append("level", SubContext.realLevel);
-				form.append("docId", SubContext.docId);
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
@@ -1715,10 +1715,10 @@
 			{
 				//根据chunkIndex上传
 				form.append("reposId", SubContext.vid);
-				form.append("pid", SubContext.realParentId);
+				//form.append("docId", SubContext.docId);
+				//form.append("pid", SubContext.realParentId);
 				form.append("path", SubContext.realParentPath);
 				form.append("level", SubContext.realLevel);
-				form.append("docId", SubContext.docId);
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);

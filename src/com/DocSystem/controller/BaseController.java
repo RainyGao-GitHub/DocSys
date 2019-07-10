@@ -4406,6 +4406,7 @@ public class BaseController  extends BaseFunction{
 		} catch (Exception e) {
 			System.out.println("updateRealDoc() saveFile " + name +" 异常！");
 			docSysDebugLog(e.toString(), rt);
+			e.printStackTrace();
 			return false;
 		}
 		
