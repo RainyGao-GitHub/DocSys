@@ -263,6 +263,7 @@
                 data : {
                     reposId: SubContext.vid,
                 	docId : SubContext.docId,
+                	type: SubContext.type,
                 	srcLevel: SubContext.level,
                 	dstLevel: SubContext.dstLevel,
                     srcPid: SubContext.pid,
