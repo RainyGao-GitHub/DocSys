@@ -67,6 +67,10 @@
 			var fileNum = treeNodes.length;
 			console.log("DocMoveInit() fileNum:" + fileNum);				
 
+	        movedNum = 0; //已移动个数
+	        successNum = 0;	//成功移动个数
+			failNum = 0; //移动失败个数
+			
 			//Build Batch
 			var Batch = {};
 			Batch.treeNodes = treeNodes;
