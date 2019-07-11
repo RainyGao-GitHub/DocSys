@@ -342,6 +342,8 @@ public class BaseFunction{
 		doc.setType(type);
 		doc.setIsRealDoc(true);
 		doc.setLocalRootPath(localRootPath);
+		doc.setSize(0L);
+		doc.setCheckSum("");
 		printObject("buildBasicDoc() doc:", doc);
 		return doc;
 	}

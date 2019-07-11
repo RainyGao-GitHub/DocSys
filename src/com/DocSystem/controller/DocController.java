@@ -113,7 +113,7 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null,(long) 0,"", null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret == false)
@@ -165,7 +165,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath );
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
 		doc.setContent(content);
 		
 		String commitMsg = "用户反馈 " + path + name;
@@ -778,6 +778,8 @@ public class DocController extends BaseController{
 		}
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1, true,localRootPath);
+		doc.setSize(size);
+		doc.setCheckSum(checkSum);
 		
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)	//0: add  1: update
@@ -833,7 +835,7 @@ public class DocController extends BaseController{
 			if(dbDoc == null)
 			{
 				boolean ret = addDoc(repos, doc, 
-						uploadFile,size, checkSum, 
+						uploadFile,
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 				writeJson(rt, response);
 
@@ -846,7 +848,7 @@ public class DocController extends BaseController{
 			else
 			{
 				boolean ret = updateDoc(repos, doc, 
-						uploadFile, size,checkSum,   
+						uploadFile,  
 						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
 			
 				writeJson(rt, response);	

@@ -1603,7 +1603,7 @@ public class BaseController  extends BaseFunction{
 	
 	//底层addDoc接口
 	protected boolean addDoc(Repos repos, Doc doc, 
-			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
+			MultipartFile uploadFile, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
@@ -1616,7 +1616,7 @@ public class BaseController  extends BaseFunction{
 		case 3:
 		case 4:
 			return addDoc_FS(repos, doc,	//Add a empty file
-					uploadFile, fileSize, checkSum, //For upload
+					uploadFile, //For upload
 					chunkNum, chunkSize, chunkParentPath, //For chunked upload combination
 					commitMsg, commitUser, login_user, rt, actionList);
 			
@@ -1625,15 +1625,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean addDoc_FS(Repos repos, Doc doc,	//Add a empty file
-			MultipartFile uploadFile, Long fileSize, String checkSum, //For upload
+			MultipartFile uploadFile, //For upload
 			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		System.out.println("addDoc_FS()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
 		
 		//add doc detail info
-		doc.setSize(fileSize);
-		doc.setCheckSum(checkSum);
 		doc.setCreator(login_user.getId());
 		doc.setCreatorName(login_user.getName());
 		doc.setLatestEditor(login_user.getId());
@@ -2948,7 +2946,7 @@ public class BaseController  extends BaseFunction{
 
 	//底层updateDoc接口
 	protected boolean updateDoc(Repos repos, Doc doc,
-								MultipartFile uploadFile,Long fileSize,String checkSum, 
+								MultipartFile uploadFile,
 								Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
@@ -2959,7 +2957,7 @@ public class BaseController  extends BaseFunction{
 		case 3:
 		case 4:
 			return updateDoc_FS(repos, doc,
-					uploadFile, fileSize, checkSum, 
+					uploadFile,
 					chunkNum, chunkSize, chunkParentPath, 
 					commitMsg, commitUser, login_user, rt, actionList);
 		}
@@ -2967,7 +2965,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean updateDoc_FS(Repos repos, Doc doc,
-				MultipartFile uploadFile,Long fileSize,String checkSum, 
+				MultipartFile uploadFile,
 				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
 				List<CommonAction> actionList) 
@@ -3000,9 +2998,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		doc.setType(1);
-		doc.setSize(fileSize);
-		doc.setCheckSum(checkSum);
 		doc.setLatestEditor(login_user.getId());
 		doc.setLatestEditorName(login_user.getName());
 		

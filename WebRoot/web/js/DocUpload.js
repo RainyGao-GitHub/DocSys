@@ -622,6 +622,8 @@
             	uploadErrorHandler(SubContext, errMsg);
             },5*60*1000);	//5分鐘用戶不確認則關閉對話框
       		
+      		var FileName = SubContext.name;
+      		
 			//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: 'uploadErrorConfirm',
@@ -837,7 +839,7 @@
       	{
       		var FileName = SubContext.name;
 			console.log("上传失败：" + errMsg);
-			var confirm = getUploadErrorConfirmSetting();
+			var confirm = getUploadErrorConfirmSetting(SubContext);
 			if(confirm == 1)
 			{
 				uploadErrorHandler(SubContext, errMsg);
@@ -1210,7 +1212,7 @@
 	             dataType : "json",
 	             data : {
 		            reposId : SubContext.vid,
-		            //docId: SubContext.docId,
+		            //docId: SubContext.docId,	//For upload we still do not know the docId and Pid
 		            //pid : SubContext.realParentId,
 		            path: SubContext.realParentPath,
 	             	name : SubContext.name,
