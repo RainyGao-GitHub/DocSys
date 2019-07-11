@@ -181,7 +181,7 @@ public class DocController extends BaseController{
 			login_user.setId(0);
 		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, 0L, "", null,null,null,commitMsg,commitUser,login_user,rt, actionList);
+		boolean ret = addDoc(repos, doc, null, null,null,null,commitMsg,commitUser,login_user,rt, actionList);
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
@@ -706,12 +706,15 @@ public class DocController extends BaseController{
 				}
 				
 				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+				doc.setSize(size);
+				doc.setCheckSum(checkSum);
+				
 				Doc dbDoc = dbGetDoc(repos, doc, true);
 				
 				if(dbDoc == null)
 				{
 					boolean ret = addDoc(repos, doc,
-								null,size, checkSum, 
+								null,
 								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
 					writeJson(rt, response);
 					if(ret == true)
@@ -723,7 +726,7 @@ public class DocController extends BaseController{
 				else
 				{
 					boolean ret = updateDoc(repos, doc, 
-							null, size,checkSum,   
+							null,   
 							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
 				
 					writeJson(rt, response);	
