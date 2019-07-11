@@ -289,6 +289,7 @@ public class BaseFunction{
 			doc.setLevel(level);
 			doc.setType(type);
 			doc.setIsRealDoc(false);
+			printObject("buildBasicDoc() 虚文件:", doc);
 			return doc;
 		}
 		
@@ -344,7 +345,7 @@ public class BaseFunction{
 		doc.setLocalRootPath(localRootPath);
 		doc.setSize(0L);
 		doc.setCheckSum("");
-		printObject("buildBasicDoc() doc:", doc);
+		printObject("buildBasicDoc() 实文件:", doc);
 		return doc;
 	}
 	
