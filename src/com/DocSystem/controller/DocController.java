@@ -486,112 +486,13 @@ public class DocController extends BaseController{
 	}
 	
 	/****************   Check a Document ******************/
-	@RequestMapping("/checkChunkUploaded.do")
-	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
-			Long size, String checkSum,
-			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
-			String commitMsg,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("checkChunkUploaded name: " + name + " size: " + size + " checkSum: " + checkSum + " chunkIndex: " + chunkIndex + " chunkNum: " + chunkNum + " cutSize: " + cutSize+ " chunkSize: " + chunkSize+ " chunkHash: " + chunkHash+ " reposId: " + reposId + " pid: " + pid + " path: " + path);
-		
-		ReturnAjax rt = new ReturnAjax();
-
-		User login_user = (User) session.getAttribute("login_user");
-		
-		if("".equals(checkSum))
-		{
-			//CheckSum is empty, mean no need 
-			writeJson(rt, response);
-			return;
-		}
-
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
-		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		
-		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
-		String fileChunkName = name + "_" + chunkIndex;
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String chunkParentPath = userTmpDir;
-		String chunkFilePath = chunkParentPath + fileChunkName;
-		if(false == isChunkMatched(chunkFilePath,chunkHash))
-		{
-			rt.setMsgData("0");
-			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
-		}
-		else
-		{
-			rt.setMsgData("1");
-			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
-			
-			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
-			if(chunkIndex == chunkNum -1)	//It is the last chunk
-			{
-				if(commitMsg == null)
-				{
-					commitMsg = "上传 " + path + name;
-				}
-				String commitUser = login_user.getName();
-				List<CommonAction> actionList = new ArrayList<CommonAction>();
-				
-				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-				String localRootPath = getReposRealPath(repos);
-				String localParentPath = localRootPath + path;
-				File localParentDir = new File(localParentPath);
-				if(false == localParentDir.exists())
-				{
-					localParentDir.mkdirs();
-				}
-				
-				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
-				Doc dbDoc = dbGetDoc(repos, doc, true);
-				
-				if(dbDoc == null)
-				{
-					boolean ret = addDoc(repos, doc,
-								null,size, checkSum, 
-								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
-					writeJson(rt, response);
-					if(ret == true)
-					{
-						executeCommonActionList(actionList, rt);
-						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-					}					
-				}
-				else
-				{
-					boolean ret = updateDoc(repos, doc, 
-							null, size,checkSum,   
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
-				
-					writeJson(rt, response);	
-					if(ret == true)
-					{
-						executeCommonActionList(actionList, rt);
-						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
-						deletePreviewFile(doc);
-					}
-				}
-				return;
-			}
-		}
-		writeJson(rt, response);
-	}
-	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
-	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			Long size,String checkSum, 
+	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
 			String commitMsg,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("checkDocInfo name: " + name + " type: " + type + " size: " + size + " checkSum: " + checkSum+ " reposId: " + reposId + " pid: " + pid);
-
+		System.out.println("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum);
+		
 		ReturnAjax rt = new ReturnAjax();
 
 		User login_user = (User) session.getAttribute("login_user");
@@ -739,16 +640,115 @@ public class DocController extends BaseController{
 		}
 		return false;
 	}
+	
+	//check if chunk uploaded 
+	@RequestMapping("/checkChunkUploaded.do")
+	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{		
+		System.out.println("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
+				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
+			
+		ReturnAjax rt = new ReturnAjax();
+
+		User login_user = (User) session.getAttribute("login_user");
+		
+		if("".equals(checkSum))
+		{
+			//CheckSum is empty, mean no need 
+			writeJson(rt, response);
+			return;
+		}
+
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		
+		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
+		String fileChunkName = name + "_" + chunkIndex;
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String chunkParentPath = userTmpDir;
+		String chunkFilePath = chunkParentPath + fileChunkName;
+		if(false == isChunkMatched(chunkFilePath,chunkHash))
+		{
+			rt.setMsgData("0");
+			docSysDebugLog("chunk: " + fileChunkName +" 不存在，或checkSum不同！", rt);
+		}
+		else
+		{
+			rt.setMsgData("1");
+			docSysDebugLog("chunk: " + fileChunkName +" 已存在，且checkSum相同！", rt);
+			
+			System.out.println("checkChunkUploaded() " + fileChunkName + " 已存在，且checkSum相同！");
+			if(chunkIndex == chunkNum -1)	//It is the last chunk
+			{
+				if(commitMsg == null)
+				{
+					commitMsg = "上传 " + path + name;
+				}
+				String commitUser = login_user.getName();
+				List<CommonAction> actionList = new ArrayList<CommonAction>();
+				
+				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+				String localRootPath = getReposRealPath(repos);
+				String localParentPath = localRootPath + path;
+				File localParentDir = new File(localParentPath);
+				if(false == localParentDir.exists())
+				{
+					localParentDir.mkdirs();
+				}
+				
+				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+				Doc dbDoc = dbGetDoc(repos, doc, true);
+				
+				if(dbDoc == null)
+				{
+					boolean ret = addDoc(repos, doc,
+								null,size, checkSum, 
+								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
+					writeJson(rt, response);
+					if(ret == true)
+					{
+						executeCommonActionList(actionList, rt);
+						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+					}					
+				}
+				else
+				{
+					boolean ret = updateDoc(repos, doc, 
+							null, size,checkSum,   
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
+				
+					writeJson(rt, response);	
+					if(ret == true)
+					{
+						executeCommonActionList(actionList, rt);
+						deleteChunks(name,chunkIndex, chunkNum,chunkParentPath);
+						deletePreviewFile(doc);
+					}
+				}
+				return;
+			}
+		}
+		writeJson(rt, response);
+	}
 
 	/****************   Upload a Document ******************/
 	@RequestMapping("/uploadDoc.do")
-	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			MultipartFile uploadFile, Long size, String checkSum,
+	public void uploadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
+			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " size:" + size + " checkSum:" + checkSum
+		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 		ReturnAjax rt = new ReturnAjax();
 
