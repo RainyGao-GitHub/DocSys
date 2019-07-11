@@ -100,10 +100,20 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, 0L, "");
 		doc.setContent(content);
-		
+				
 		if(checkUserAddRight(repos, login_user.getId(), doc, rt) == false)
 		{
 			writeJson(rt, response);	
+			return;
+		}
+		
+		Doc dbDoc = dbGetDoc(repos, doc, true);
+		if(dbDoc != null)
+		{
+			docSysErrorLog(doc.getName() + " 已存在", rt);
+			rt.setMsgData(1);
+			rt.setData(dbDoc);
+			writeJson(rt, response);
 			return;
 		}
 		
