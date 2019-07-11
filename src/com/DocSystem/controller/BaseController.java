@@ -2626,7 +2626,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return doc;
+		return dbDoc;
 	}
 	
 	private boolean dbDeleteDoc(Doc doc, boolean deleteSubDocs) {
