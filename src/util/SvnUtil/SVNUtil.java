@@ -170,7 +170,7 @@ public class SVNUtil  extends BaseController{
         if(type ==  0) 
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath());
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath(), null, null);
 			return remoteEntry;
 		}
         
@@ -188,7 +188,7 @@ public class SVNUtil  extends BaseController{
 	    	int subEntryType = getEntryType(subEntry.getKind());
 	    	if(subEntryName.equals(doc.getName()))
 	    	{
-	    		Doc subDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), subEntryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath());
+	    		Doc subDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), subEntryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), subEntry.getSize(), "");
 	    		subDoc.setSize(subEntry.getSize());
 	    		subDoc.setRevision(subEntry.getRevision()+"");
 	    		return subDoc;
@@ -621,7 +621,7 @@ public class SVNUtil  extends BaseController{
 	    		
 	    		if(type == 0)
 	    		{
-	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath());
+	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), null, null);
 	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2);
 	    		}
 	    		path = path + name + "/";  		
@@ -957,7 +957,7 @@ public class SVNUtil  extends BaseController{
 	        {
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), remoteSubEntry.getSize(), "");
 	            docHashMap.put(subDoc.getDocId(), subDoc);
 	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
@@ -970,7 +970,7 @@ public class SVNUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), localSubEntry.length(), "");
             
         	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
@@ -1651,7 +1651,7 @@ public class SVNUtil  extends BaseController{
 			
 	    	String subEntryName = subEntry.getName();
 	    	Long lastChangeTime = subEntry.getDate().getTime();
-	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath());
+	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), subEntry.getSize(), "");
 	    	subDoc.setSize(subEntry.getSize());
 	    	subDoc.setCreateTime(lastChangeTime);
 	    	subDoc.setLatestEditTime(lastChangeTime);
@@ -1798,7 +1798,7 @@ public class SVNUtil  extends BaseController{
 				Integer subEntryType = getEntryType(subEntry.getKind());
 				
 				Long subEntryRevision = subEntry.getRevision();
-				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath());
+				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), subEntry.getSize(), "");
 				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
