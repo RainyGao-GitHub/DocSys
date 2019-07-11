@@ -230,7 +230,7 @@ public class BaseFunction{
 	    {
 	    	File localEntry = tmp[i];
 	    	int subDocType = localEntry.isFile()? 1: 2;
-	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
+	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), localEntry.length(), "");
 	    	if(localEntry.isDirectory())
 	    	{	
 	    		insertAddDirAction(subActionList,subDoc,true);
@@ -266,7 +266,7 @@ public class BaseFunction{
 	/******************************* 路径相关接口  
 	 * @param isRealDoc 
 	 * @param localRootPath *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath) 
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, Long size, String checkSum) 
 	{
 		//Format path and name
 		if(path == null)
@@ -343,8 +343,8 @@ public class BaseFunction{
 		doc.setType(type);
 		doc.setIsRealDoc(true);
 		doc.setLocalRootPath(localRootPath);
-		doc.setSize(0L);
-		doc.setCheckSum("");
+		doc.setSize(size);
+		doc.setCheckSum(checkSum);
 		printObject("buildBasicDoc() 实文件:", doc);
 		return doc;
 	}

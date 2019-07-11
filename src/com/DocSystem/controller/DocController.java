@@ -98,7 +98,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, 0L, "");
 		doc.setContent(content);
 		
 		if(checkUserAddRight(repos, login_user.getId(), doc, rt) == false)
@@ -165,7 +165,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, 0L, "");
 		doc.setContent(content);
 		
 		String commitMsg = "用户反馈 " + path + name;
@@ -235,7 +235,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		if(checkUserDeleteRight(repos, login_user.getId(), doc, rt) == false)
 		{
@@ -299,7 +299,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath);
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath, null, null);
 		
 		if(checkUserDeleteRight(repos, login_user.getId(), parentDoc, rt) == false)
 		{
@@ -319,8 +319,8 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath);
-		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath);
+		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath, null, null);
 		
 		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
 		if(srcDbDoc == null)
@@ -373,14 +373,14 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", srcLevel-1, 2, true, localRootPath);
+		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", srcLevel-1, 2, true, localRootPath, null, null);
 		if(checkUserDeleteRight(repos, login_user.getId(), srcParentDoc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 
-		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2, true, localRootPath);
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2, true, localRootPath, null, null);
 		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
 		{
 			writeJson(rt, response);	
@@ -397,8 +397,8 @@ public class DocController extends BaseController{
 			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
 		}
 		String commitUser = login_user.getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath);
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, null, null);
 		
 		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
 		if(srcDbDoc == null)
@@ -446,7 +446,7 @@ public class DocController extends BaseController{
 				
 		//检查用户是否有目标目录权限新增文件
 		String localRootPath = getReposRealPath(repos);
-		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2, true, localRootPath);
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2, true, localRootPath, null, null);
 		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
 		{
 			writeJson(rt, response);
@@ -463,8 +463,8 @@ public class DocController extends BaseController{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
 		String commitUser = login_user.getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath);
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, null, null);
 		
 		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
 		if(srcDbDoc == null)
@@ -513,7 +513,7 @@ public class DocController extends BaseController{
 		
 		//检查登录用户的权限
 		String localRootPath = getReposRealPath(repos);
-		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath);
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath, null, null);
 		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
@@ -555,7 +555,8 @@ public class DocController extends BaseController{
 		}
 		
 		//检查文件是否已存在 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, size, checkSum);
+
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc != null)
 		{
@@ -705,9 +706,7 @@ public class DocController extends BaseController{
 					localParentDir.mkdirs();
 				}
 				
-				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
-				doc.setSize(size);
-				doc.setCheckSum(checkSum);
+				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, size, checkSum);
 				
 				Doc dbDoc = dbGetDoc(repos, doc, true);
 				
@@ -780,14 +779,12 @@ public class DocController extends BaseController{
 			localParentDir.mkdirs();
 		}
 		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1, true,localRootPath);
-		doc.setSize(size);
-		doc.setCheckSum(checkSum);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1, true,localRootPath, size, checkSum);
 		
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)	//0: add  1: update
 		{
-			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", level-1, 2, true, localRootPath);
+			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", level-1, 2, true, localRootPath, null, null);
 			if(checkUserAddRight(repos,login_user.getId(), parentDoc, rt) == false)
 			{
 				writeJson(rt, response);	
@@ -970,7 +967,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)
 		{
@@ -1041,7 +1038,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		doc.setContent(content);
 		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
@@ -1076,7 +1073,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		switch(repos.getType())
 		{
 		case 1:
@@ -1222,7 +1219,7 @@ public class DocController extends BaseController{
 		}  
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		switch(repos.getType())
 		{
 		case 1:
@@ -1359,7 +1356,7 @@ public class DocController extends BaseController{
 		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		String targetName = name + "_" + commitId;
 		String entryPath = path + name;
@@ -1424,7 +1421,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		switch(repos.getType())
 		{
 		case 1:
@@ -1587,7 +1584,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		String vDocName = getVDocName(doc);
 		String reposVPath = getReposVirtualPath(repos);
@@ -1624,7 +1621,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		//Set currentDocId to session which will be used MarkDown ImgUpload
 		session.setAttribute("currentReposId", reposId);
@@ -1699,7 +1696,7 @@ public class DocController extends BaseController{
 		}
 	
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		//检查用户是否有权限编辑文件
 		if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
@@ -1765,7 +1762,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		int num = 100;
 		if(maxLogNum != null)
@@ -1832,7 +1829,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 		
 		boolean isRealDoc = true;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
@@ -1885,7 +1882,7 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
 
 		String commitMsg = "回退 " + path + name + " 至版本:" + commitId;
 		String commitUser = login_user.getName();
