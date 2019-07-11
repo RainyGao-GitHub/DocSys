@@ -2765,14 +2765,18 @@ public class BaseController  extends BaseFunction{
 	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
 	{
 		printObject("executeDBAction() action:",action);
+		Repos repos = action.getRepos();
+		Doc doc = action.getDoc();
+		System.out.println("executeDBAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return dbAddDoc(action.getRepos(), action.getDoc(), false);
+			return dbAddDoc(repos, doc, false);
 		case 2: //Delete Doc
-			return dbDeleteDoc(action.getDoc(), true);
+			return dbDeleteDoc(doc, true);
 		case 3: //Update Doc
-			return dbUpdateDoc(action.getRepos(), action.getDoc(), true);
+			return dbUpdateDoc(repos, doc, true);
 		}
 		return false;
 	}
@@ -2780,13 +2784,17 @@ public class BaseController  extends BaseFunction{
 	private boolean executeIndexAction(CommonAction action, ReturnAjax rt) 
 	{
 		printObject("executeIndexAction() action:",action);
+		Doc doc = action.getDoc();
 		switch(action.getDocType())
 		{
 		case 0:	//DocName
+			System.out.println("executeIndexAction() 文件名:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     		return executeIndexActionForDocName(action, rt);
     	case 1: //RDoc
-			return executeIndexActionForRDoc(action, rt);
+			System.out.println("executeIndexAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+    		return executeIndexActionForRDoc(action, rt);
 		case 2: //VDoc
+			System.out.println("executeIndexAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return executeIndexActionForVDoc(action, rt);
 		}
 		return false;
@@ -2846,11 +2854,14 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean executeFSAction(CommonAction action, ReturnAjax rt) {
 		printObject("executeFSAction() action:",action);
+		Doc doc = action.getDoc();
 		switch(action.getDocType())
 		{
 		case 1:	//RDoc
+			System.out.println("executeFSAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return executeLocalActionForRDoc(action, rt);
 		case 2: //VDoc
+			System.out.println("executeFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return executeLocalActionForVDoc(action, rt); 
 		}
 		return false;
@@ -2914,8 +2925,10 @@ public class BaseController  extends BaseFunction{
 		switch(action.getDocType())
 		{
 		case 1:	//RDoc autoCommit
+			System.out.println("executeVerReposAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 		case 2: //VDoc autoCommit
+			System.out.println("executeVerReposAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			doc.setIsRealDoc(false);
 			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 		}
