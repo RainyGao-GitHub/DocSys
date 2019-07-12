@@ -1735,6 +1735,8 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
+		System.out.println("checkAddParentDoc pid:" + doc.getPid());
+		
 		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), null, null);
 		parentDoc.setRevision(doc.getRevision());
 
@@ -1745,7 +1747,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbAddDoc(repos, parentDoc, false) == true)
 			{
-				System.out.println("checkAddParentDoc 新增目录: " + doc.getPid() + " " +doc.getPath());
+				System.out.println("checkAddParentDoc 新增目录: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());
 
 				parentDocList.add(0,parentDoc);	//always add to the top
 				checkAddParentDoc(repos, parentDoc, parentDocList);

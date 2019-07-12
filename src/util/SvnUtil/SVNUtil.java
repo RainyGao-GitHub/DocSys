@@ -944,7 +944,7 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		String subDocParentPath = doc.getPath() + doc.getName() + "/";
-		if(doc.getDocId() == 0)
+		if(doc.getName().isEmpty())
 		{
 			 subDocParentPath = doc.getPath();
 		}
