@@ -1743,9 +1743,13 @@ public class BaseController  extends BaseFunction{
 		Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
 		if(dbParentDoc == null)
 		{
-			dbAddDoc(repos, parentDoc, false);
-			parentDocList.add(0,parentDoc);	//always add to the top
-			checkAddParentDoc(repos, parentDoc, parentDocList);
+			if(dbAddDoc(repos, parentDoc, false) == true)
+			{
+				System.out.println("checkAddParentDoc 新增目录: " + doc.getPid() + " " +doc.getPath());
+
+				parentDocList.add(0,parentDoc);	//always add to the top
+				checkAddParentDoc(repos, parentDoc, parentDocList);
+			}
 		}
 	}
 
