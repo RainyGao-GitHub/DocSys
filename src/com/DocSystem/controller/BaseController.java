@@ -1728,13 +1728,16 @@ public class BaseController  extends BaseFunction{
 
 	private void checkAddParentDoc(Repos repos, Doc doc, List<Doc> parentDocList) 
 	{
+		System.out.println("checkAddParentDoc " + doc.getPid() + doc.getPath());
+		
 		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), null, null);
-				
-		Doc dbParentDoc = dbGetDoc(repos, parentDoc, false);
+		parentDoc.setRevision(doc.getRevision());
+		
+		Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
 		if(dbParentDoc == null)
 		{
 			dbAddDoc(repos, parentDoc, false);
-			parentDocList.add(parentDoc);
+			parentDocList.add(0,parentDoc);	//always add to the top
 			checkAddParentDoc(repos, parentDoc, parentDocList);
 		}
 	}
