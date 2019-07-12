@@ -1708,7 +1708,7 @@ public class BaseController  extends BaseFunction{
 		checkAddParentDoc(repos, doc, addedParentDocList);
 		if(addedParentDocList.size() > 0)
 		{
-			rt.setMsgData(addedParentDocList);
+			rt.setDataEx(addedParentDocList);
 		}
 		
 		//BuildMultiActionListForDocAdd();

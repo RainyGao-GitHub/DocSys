@@ -461,100 +461,6 @@
 				}
 				$('#uploadedFileList').append(str);		
       	}
-      	
-      	//检查当前上传文件的父节点是否存在，不存在则通知后台新建，直到全部新建完成
- 		function checkAddParentNode(SubContext)
- 		{
- 			//console.log("checkAddParentNode SubContext:", SubContext);
-      		var vid = SubContext.vid;
-			//parentNode maybe is not the real parent for the doc
-			var tempParentNode = SubContext.parentNode;
-    		//get filePath form file
-    		var relativePath = SubContext.relativePath;
-    		console.log("checkAddParentNode() relativePath:" + relativePath);
-
-    		if(!relativePath || relativePath == "")
-    		{
-    			//文件没有相对路径，realParentNod = parentNode
-    			return true;
-    		}
-			
-    		//文件父目录检查部分
-			var pathArray = new Array(); //定义一数组 
-			pathArray = relativePath.split("/"); //字符分割 
-
-			//检查其其父节点是否存在，如果不存在则需要先新建父节点目录
-			for(var i=0; i<pathArray.length-1; i++)	//最后一个是文件本身因此不需要检查
-			{
-				var nodeName = pathArray[i];
-				var treeNode = getNodeByName(nodeName,tempParentNode);	//获取parentNode下名为name的子节点
-				if(treeNode)	//节点已存在
-				{
-					if(treeNode.isParent == true)
-					{
-						//节点存在且是目录，检查下一级parentNode
-						tempParentNode = treeNode;
-					}
-					else	//同名节点不是目录，此文件则上传失败
-					{
-						uploadErrorConfirmHandler(name,nodeName + " 不是目录");
-			            return false;
-					}
-				}
-				else	//节点不存在，则新建该节点
-				{
-					//由于后台新增节点是异步调用，所以成功后回调uploadDoc来触发下一级目录的检查
-			    	var tempParentId = 0;
-			    	if(tempParentNode)
-			    	{
-			    		tempParentId = tempParentNode.id;
-			    	}
-			   		console.log("checkAddParentNode() addDoc name:" + nodeName + " type:" +  2 + " tempParentId:" +  tempParentId + " vid:" +  vid);
-			    	$.ajax({
-			             url : "/DocSystem/Doc/addDoc.do",
-			             type : "post",
-			             dataType : "json",
-			             data : {
-				             reposId : vid, 
-				             pid : tempParentId,
-				             path: tempParentNode.path,
-			            	 name : nodeName,
-			                 type : 2, //文件类型
-			             },
-			             success : function (ret) {
-			            	 if( "ok" == ret.status && ret.data.id){
-			  					addTreeNode(ret.data,tempParentNode);
-			             		
-			             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
-			        		  	uploadDoc();
-			        		  	return;
-				            }
-			                else
-			                {
-			                	if(ret.msgData && ret.msgData == 1)	//目录已存在
-			                	{
-			                		addTreeNode(ret.data,tempParentNode);
-				             		
-				             		console.log("checkAddParentNode() call uploadDoc to reenter the code");
-				        		  	uploadDoc();
-				        		  	return;
-			                	}
-							 	uploadErrorConfirmHandler(name,ret.msgInfo);
-					            return;
-			                }
-			            },
-			            error : function () {
-						 	uploadErrorConfirmHandler(name,"新增目录 "+nodeName+ " 异常");
-				            return;
-			            }
-			        });
-					return false;
-				}
-			}
-			SubContext.realParentNode = tempParentNode;
-			SubContext.realParentId = tempParentNode?tempParentNode.id:0;
-			return true;
- 		}
  		
 		//文件覆盖确认不能像文件错误确认一样封装成函数的原因在于，文件复制会存在两种种情况：继续、异步等待用户确认，文件错误确认只有一种情况：异步等待用户确认
       	//获取当上传的文件覆盖设置
@@ -1333,7 +1239,7 @@
 			                {	
 		                		//set the docId so that We can open it 
 		             			SubContext.docId = ret.data.docId;	            
-			             		addTreeNode(ret.data,SubContext.realParentNode);
+			             		addTreeNode(ret.data);
 			                }
 	             			
 	             			$('.file'+index).removeClass('is-uploading');
@@ -1391,8 +1297,7 @@
 	             		console.log("addDoc() ret",ret);
 		                if(SubContext.docId == -1) //文件新建成功
 			            {	
-		                	//Remove the dependecy on treeNode
-			            	addTreeNode(ret.data,SubContext.realParentNode);
+			            	addTreeNode(ret.data);
 
 		                	//set the docId so that We can open it on uploadList 
 		             		SubContext.docId = ret.data.docId;	                
@@ -1730,7 +1635,13 @@
 		    					//All Chunk Uploaded, means file upload ok, 这里的逻辑是有问题的，因为没有ret
 		    		        	if(SubContext.docId == -1) //文件新建成功
 		    		            {	
-		    		         		addTreeNode(ret.data,SubContext.realParentNode);
+		    		         		var addedParentDocList = ret.dataEx;
+		    		         		if(addedParentDocList)
+		    		         		{
+		    		         			addParentNodes(addedParentDocList);
+		    		         		}
+		    		        		
+		    		        		addTreeNode(ret.data);
 		    		         		//set the docId so that We can open it 
 		    		         		SubContext.docId = ret.data.id;
 		    						
@@ -1763,6 +1674,23 @@
    			return false;
       	}
 		
+      	function addParentNodes(data) {
+    		console.log("addParentNodes");
+
+    		var list = data;
+    		
+    		//遍历jason_arry
+          	for(var i=0; i<list.length; i++)
+          	{
+               var jsonObj = list[i];
+               jsonObj.id = jsonObj.docId;
+               jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+               jsonObj.isParent = jsonObj.type == 1? false: true;
+           
+               addTreeNode(jsonObj);
+          	}          	
+    	}
+      	
 		function startChunkUpload(SubContext)
 		{ 
 			if(SubContext.chunkIndex <  SubContext.chunkNum)
@@ -1865,7 +1793,13 @@
 						
 	                	if(SubContext.docId == -1) //文件新建成功
 		                {	
-		             		addTreeNode(ret.data,SubContext.realParentNode);
+    		         		var addedParentDocList = ret.dataEx;
+    		         		if(addedParentDocList)
+    		         		{
+    		         			addParentNodes(addedParentDocList);
+    		         		}
+	                		
+		             		addTreeNode(ret.data);
 		             		//set the docId so that We can open it 
 		             		SubContext.docId = ret.data.id;
 							
@@ -2035,15 +1969,6 @@
     			uploadErrorHandler(name,"用户取消了上传！");
 				return;
 			}
-			
-			//文件父目录检查部分，uploadDoc每次进来都需要检查，return false表示内部有异步调用
-    		if(false == checkAddParentNode(SubContext))
-    		{
-    			console.log("uploadDoc() checkAddParentNode return false, addDoc have been called, callback will re-enter uploadDoc");
-    			return;
-    		}
-   			//console.log("uploadDoc() checkAddParentNode completed");
-    		
     		
     		//设置上传状态
     		if(0 == SubContext.state)

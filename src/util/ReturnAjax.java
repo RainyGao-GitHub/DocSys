@@ -15,6 +15,7 @@ public class ReturnAjax {
 	private String warningMsg = null;
 	private Object msgData;	//用于存储额外的状态或数据
 	private Object data;	//用于存储返回结果
+	private Object dataEx;	//用于存储返回结果
 	private String debugLog = null; //用于向前台传递更详细调试
 		
 	/**
@@ -95,6 +96,14 @@ public class ReturnAjax {
 
 	public void setData(Object data) {
 		this.data = data;
+	}
+	
+	public Object getDataEx() {
+		return dataEx;
+	}
+
+	public void setDataEx(Object dataEx) {
+		this.dataEx = dataEx;
 	}
 
 	public String getStatus() {
