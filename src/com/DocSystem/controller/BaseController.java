@@ -1728,7 +1728,7 @@ public class BaseController  extends BaseFunction{
 
 	private void checkAddParentDoc(Repos repos, Doc doc, List<Doc> parentDocList) 
 	{
-		System.out.println("checkAddParentDoc " + doc.getPid() + doc.getPath());
+		System.out.println("checkAddParentDoc " + doc.getPid() + " " +doc.getPath());
 		
 		if(doc.getPid() == 0)
 		{
