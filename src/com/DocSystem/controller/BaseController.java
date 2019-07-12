@@ -1732,6 +1732,8 @@ public class BaseController  extends BaseFunction{
 		
 		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), null, null);
 		parentDoc.setRevision(doc.getRevision());
+
+		printObject("checkAddParentDoc parentDoc:", parentDoc);
 		
 		Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
 		if(dbParentDoc == null)
@@ -2607,10 +2609,8 @@ public class BaseController  extends BaseFunction{
 	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
 	{	
 		Doc qDoc = new Doc();
-		qDoc.setVid(repos.getId());
+		qDoc.setVid(doc.getVid());
 		qDoc.setDocId(doc.getDocId());
-		//qDoc.setPath(doc.getPath());
-		//qDoc.setName(doc.getName());
 		
 		List<Doc> list = reposService.getDocList(qDoc);
 		//printObject("dbGetDoc() list:", list);
