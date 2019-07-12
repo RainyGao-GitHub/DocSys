@@ -1609,7 +1609,7 @@
 	             	if( "ok" == ret.status)
 	             	{		
 	             		console.log("checkChunkUploade() ret",ret);
-	             		if(ret.msgData == "0")	//分片文件不存在 
+	             		if(ret.msgData && ret.msgData == "0")	//分片文件不存在 
 	             		{
 	             			chunk.uploadedState = 1;
 	             			uploadDoc();
