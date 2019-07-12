@@ -1703,6 +1703,14 @@ public class BaseController  extends BaseFunction{
 			docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 		}
 		
+		//检查dbParentDoc是否已添加
+		List <Doc> addedParentDocList = new ArrayList<Doc>(); 
+		checkAddParentDoc(repos, doc, addedParentDocList);
+		if(addedParentDocList.size() > 0)
+		{
+			rt.setMsgData(addedParentDocList);
+		}
+		
 		//BuildMultiActionListForDocAdd();
 		BuildMultiActionListForDocAdd(actionList, repos, doc, commitMsg, commitUser);
 		
@@ -1716,6 +1724,19 @@ public class BaseController  extends BaseFunction{
 		docSysDebugLog("新增成功", rt); 
 		
 		return true;
+	}
+
+	private void checkAddParentDoc(Repos repos, Doc doc, List<Doc> parentDocList) 
+	{
+		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), null, null);
+				
+		Doc dbParentDoc = dbGetDoc(repos, parentDoc, false);
+		if(dbParentDoc == null)
+		{
+			dbAddDoc(repos, parentDoc, false);
+			parentDocList.add(parentDoc);
+			checkAddParentDoc(repos, parentDoc, parentDocList);
+		}
 	}
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) 
