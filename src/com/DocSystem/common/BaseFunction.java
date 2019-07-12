@@ -708,9 +708,19 @@ public class BaseFunction{
 	protected Long buildDocIdByName(Integer level, String parentPath, String docName) 
 	{
 		String docPath = parentPath + docName;
+		if(docName.isEmpty())
+		{
+			if(parentPath.isEmpty())
+			{
+				return 0L;
+			}
+			
+			docPath = parentPath.substring(0, parentPath.length()-1);	//remove the last char '/'
+		}
+		
 		Long docId = level*100000000000L + docPath.hashCode() + 102147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
 		return docId;
-	}
+	}		
 	
 	protected Long buildPidByPath(int level, String path) 
 	{
