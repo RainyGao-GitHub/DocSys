@@ -1730,6 +1730,11 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("checkAddParentDoc " + doc.getPid() + doc.getPath());
 		
+		if(doc.getPid() == 0)
+		{
+			return;
+		}
+		
 		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), null, null);
 		parentDoc.setRevision(doc.getRevision());
 
