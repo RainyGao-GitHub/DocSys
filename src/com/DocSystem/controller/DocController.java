@@ -958,7 +958,8 @@ public class DocController extends BaseController{
 			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("updateDocContent reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		System.out.println("content:[" + content + "]");
-		
+		//System.out.println("content size: " + content.length());
+			
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1658,10 +1659,10 @@ public class DocController extends BaseController{
 		String vDocName = getVDocName(doc);
 		String reposVPath = getReposVirtualPath(repos);
 		String content = readVirtualDocContent(reposVPath, vDocName);
-        if( null !=content)
-        {
-        	content = content.replaceAll("\t","");
-        }
+        //if( null !=content)
+        //{
+        //	content = content.replaceAll("\t","");
+        //}
 		doc.setContent(JSONObject.toJSONString(content));
 		rt.setData(doc);
 		

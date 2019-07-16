@@ -172,7 +172,7 @@ public class Doc  implements Comparable<Doc>{
     }
 
     public void setContent(String content) {
-        this.content = content == null ? null : content.trim();
+        this.content = content;
     }
     
     public int getLevel() {

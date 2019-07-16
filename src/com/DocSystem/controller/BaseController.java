@@ -3292,7 +3292,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFileExist(vDoc.getLocalRootPath() + vDoc.getPath() + vDoc.getName()) == true)
 		{
-			if(saveVirtualDocContent(vDoc.getLocalRootPath(), vDoc, rt) == true)
+			if(saveVirtualDocContent(vDoc.getLocalRootPath(), doc, rt) == true)
 			{
 				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
@@ -4670,7 +4670,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 		}
-				
+						
 		//set the md file Path
 		String mdFilePath = vDocPath + "content.md";
 		//创建文件输入流
@@ -4683,14 +4683,15 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		try {
-			out.write(content.getBytes(), 0, content.length());
+			byte[] buff = content.getBytes();
+			out.write(buff, 0, buff.length);
 			//关闭输出流
 			out.close();
 		} catch (IOException e) {
 			System.out.println("saveVirtualDocContent() out.write exception");
 			docSysDebugLog(e.toString(), rt);
 			return false;
-		}
+		}		
 		return true;
 	}
 	
@@ -4709,15 +4710,17 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			int fileSize = (int) file.length();
+			System.out.println("fileSize:[" + fileSize + "]");
+
 			byte buffer[] = new byte[fileSize];
 	
 			FileInputStream in;
-				in = new FileInputStream(mdFilePath);
-				in.read(buffer, 0, fileSize);
-				in.close();
-	
-			
+			in = new FileInputStream(mdFilePath);
+			in.read(buffer, 0, fileSize);
+			in.close();	
+							
 			String content = new String(buffer);
+			System.out.println("content:[" + content + "]");
 			return content;
 		} catch (Exception e) {
 			e.printStackTrace();
