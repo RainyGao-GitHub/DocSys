@@ -144,6 +144,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	
 		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
 		File dir = new File(localRootPath + doc.getPath() + doc.getName());
     	if(false == dir.exists())
     	{
@@ -177,7 +178,7 @@ public class BaseController  extends BaseFunction{
     		String name = file.getName();
     		System.out.println("getLocalEntryList subFile:" + name);
 
-    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, file.length(), "");
+    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, file.length(), "");
     		subDoc.setSize(file.length());
     		subDoc.setLatestEditTime(file.lastModified());
     		subDoc.setCreateTime(file.lastModified());
@@ -351,7 +352,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 		
-		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, doc.getLocalRootPath(), null, null);
+		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 		
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
 		addDocToSyncUpList(actionList, repos, rootDoc);
@@ -382,7 +383,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}	
 			
-			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, true, doc.getLocalRootPath(), null, null);
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt, actionList);
@@ -1737,7 +1738,7 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("checkAddParentDoc pid:" + doc.getPid());
 		
-		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), null, null);
+		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 		parentDoc.setRevision(doc.getRevision());
 
 		printObject("checkAddParentDoc parentDoc:", parentDoc);
@@ -2941,7 +2942,7 @@ public class BaseController  extends BaseFunction{
 		case 2: //Delete Doc
 			return deleteVirtualDoc(repos, doc, rt);
 		case 3: //Update Doc
-			return saveVirtualDocContent(getReposVirtualPath(repos), doc, rt);
+			return saveVirtualDocContent(repos, doc, rt);
 		case 4: //Move Doc
 			return moveVirtualDoc(repos, doc, newDoc, rt);
 		case 5: //Copy Doc
@@ -3279,7 +3280,7 @@ public class BaseController  extends BaseFunction{
 		//Save the content to virtual file
 		if(isVDocExist(repos, doc) == true)
 		{
-			if(saveVirtualDocContent(doc.getLocalVRootPath(), doc, rt) == true)
+			if(saveVirtualDocContent(repos, doc, rt) == true)
 			{
 				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
@@ -3298,14 +3299,7 @@ public class BaseController  extends BaseFunction{
 		
 		return true;
 	}
-
-	private boolean isVDocExist(Repos repos, Doc doc) {
-		Doc vDoc = buildVDoc(repos, doc);
-		isFileExist(vDoc.getLocalRootPath() + vDoc.getPath() + vDoc.getName();
-		
-		return false;
-	}
-
+	
 	/************************ DocSys仓库与文件锁定接口 *******************************/
 	//Lock Repos
 	protected Repos lockRepos(Integer reposId,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean docLockCheckFlag) 
@@ -4605,6 +4599,12 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
+	private boolean isVDocExist(Repos repos, Doc doc) {
+		
+		String vDocName = getVDocName(doc);
+		return isFileExist(doc.getLocalVRootPath() + vDocName);
+	}
+	
 	//create Virtual Doc
 	protected boolean createVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) 
 	{
