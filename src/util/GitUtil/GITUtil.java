@@ -191,7 +191,7 @@ public class GITUtil  extends BaseController{
 	            long commitTime=commit.getCommitTime();
 	            
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, true, doc.getLocalRootPath());
+	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, true, doc.getLocalRootPath(), doc.getLocalVRootPath());
 	            remoteDoc.setRevision(commitId);
 	            remoteDoc.setCreatorName(author);
 	            remoteDoc.setLatestEditorName(commitUser);

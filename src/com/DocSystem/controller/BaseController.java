@@ -4817,6 +4817,12 @@ public class BaseController  extends BaseFunction{
 	
 	//Get History Detail
 	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) {
+		if(isRealDoc == false)
+		{
+			//Convert doc to vDoc
+			doc = buildVDoc(repos, doc);
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			return svnGetHistoryDetail(repos, isRealDoc, doc, commitId);
@@ -4829,7 +4835,12 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) {
-
+		if(isRealDoc == false)
+		{
+			//Convert doc to vDoc
+			doc = buildVDoc(repos, doc);
+		}		
+		
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, isRealDoc, null))
 		{
@@ -4837,19 +4848,11 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		if(isRealDoc)
-		{
-			return svnUtil.getHistoryDetail(doc, commitId); 
-		}
-		
-		String vDocName = getVDocName(doc);
-		Doc vDoc = new Doc();
-		vDoc.setPath("");
-		vDoc.setName(vDocName);
-		return svnUtil.getHistoryDetail(vDoc, commitId);
+		return svnUtil.getHistoryDetail(doc, commitId); 
 	}
 	
-	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, Doc doc, String commitId) {
+	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, Doc doc, String commitId) 
+	{
 		GITUtil gitUtil = new GITUtil();
 		if(false == gitUtil.Init(repos, isRealDoc, null))
 		{
@@ -4857,20 +4860,17 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		if(isRealDoc)
-		{
-			return gitUtil.getHistoryDetail(doc, commitId); 
-		}
-		
-		String vDocName = getVDocName(doc);
-		Doc vDoc = new Doc();
-		vDoc.setPath("");
-		vDoc.setName(vDocName);
-		return gitUtil.getHistoryDetail(vDoc, commitId);
+		return gitUtil.getHistoryDetail(doc, commitId);
 	}
 	
 	protected String verReposDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{		
+		if(doc.getIsRealDoc() == false)
+		{
+			//Convert doc to vDoc
+			doc = buildVDoc(repos, doc);
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
@@ -4894,11 +4894,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			doc = buildVDoc(repos, doc);
-		}
-		
 		String entryPath = doc.getPath() + doc.getName();
 		Integer type = verReposUtil.checkPath(entryPath, null);
 		if(type == null)
@@ -4924,11 +4919,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			doc = buildVDoc(repos, doc);
-		}
-		
 		String entryPath = doc.getPath() + doc.getName();
 		Integer type = verReposUtil.checkPath(entryPath, null);
 		if(type == null)
@@ -4946,6 +4936,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{	
+		if(doc.getIsRealDoc() == false)
+		{
+			//Convert doc to vDoc
+			doc = buildVDoc(repos, doc);
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
@@ -4968,10 +4964,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			doc = buildVDoc(repos, doc);
-		}
 		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 	
@@ -4985,14 +4977,17 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			doc = buildVDoc(repos, doc);
-		}
 		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 
-	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) {
+	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) 
+	{
+		if(doc.getIsRealDoc() == false)
+		{
+			//Convert doc to vDoc
+			doc = buildVDoc(repos, doc);
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			long revision = -1;
@@ -5019,11 +5014,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			doc = buildVDoc(repos, doc);
-		}
-
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
 	}
 	
@@ -5037,16 +5027,18 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			doc = buildVDoc(repos, doc);
-		}
-		
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
 	}
 
 	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
+		if(srcDoc.getIsRealDoc() == false)
+		{
+			//Convert doc to vDoc
+			srcDoc = buildVDoc(repos, srcDoc);
+			dstDoc = buildVDoc(repos, dstDoc);
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
@@ -5068,17 +5060,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			srcDoc = buildVDoc(repos, srcDoc);
-			dstDoc = buildVDoc(repos, dstDoc);
-		}
-		
-		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
-		{
-			srcDoc.setRevision(verReposUtil.getLatestRevision());
-		}
-
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, true);
 	}
 
@@ -5092,17 +5073,18 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			srcDoc = buildVDoc(repos, srcDoc);
-			dstDoc = buildVDoc(repos, dstDoc);
-		}
-
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,false);
 	}
 	
 	protected String verReposDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
+		if(srcDoc.getIsRealDoc() == false)
+		{
+			//Convert doc to vDoc
+			srcDoc = buildVDoc(repos, srcDoc);
+			dstDoc = buildVDoc(repos, dstDoc);
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
@@ -5125,17 +5107,6 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		if(!isRealDoc)
-		{
-			srcDoc = buildVDoc(repos, srcDoc);
-			dstDoc = buildVDoc(repos, dstDoc);
-		}
-		
-		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
-		{
-			srcDoc.setRevision(verReposUtil.getLatestRevision());
-		}
-
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false);
 	}
 
@@ -5148,13 +5119,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return null;
 		}
-
-		if(!isRealDoc)
-		{
-			srcDoc = buildVDoc(repos, srcDoc);
-			dstDoc = buildVDoc(repos, dstDoc);
-		}
-
+		
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false);
 	}
 	
