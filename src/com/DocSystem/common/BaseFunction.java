@@ -230,7 +230,7 @@ public class BaseFunction{
 	    {
 	    	File localEntry = tmp[i];
 	    	int subDocType = localEntry.isFile()? 1: 2;
-	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), localEntry.length(), "");
+	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
 	    	if(localEntry.isDirectory())
 	    	{	
 	    		insertAddDirAction(subActionList,subDoc,true);
@@ -266,7 +266,7 @@ public class BaseFunction{
 	/******************************* 路径相关接口  
 	 * @param isRealDoc 
 	 * @param localRootPath *******************************/
-	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, Long size, String checkSum) 
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
 	{
 		//Format path and name
 		if(path == null)
@@ -343,6 +343,7 @@ public class BaseFunction{
 		doc.setType(type);
 		doc.setIsRealDoc(true);
 		doc.setLocalRootPath(localRootPath);
+		doc.setLocalVRootPath(localVRootPath);
 		doc.setSize(size);
 		doc.setCheckSum(checkSum);
 		printObject("buildBasicDoc() 实文件:", doc);

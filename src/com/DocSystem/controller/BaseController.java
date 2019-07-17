@@ -2967,18 +2967,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
-
-	private Doc buildVDoc(Repos repos, Doc doc) 
-	{
-		String reposVPath = getReposVirtualPath(repos);
-		String vDocName = getVDocName(doc);
-		Doc vDoc = new Doc();
-		vDoc.setPath("");
-		vDoc.setName(vDocName);
-		vDoc.setLocalRootPath(reposVPath);
-		return vDoc;
-	}
-
+	
 	//底层updateDoc接口
 	protected boolean updateDoc(Repos repos, Doc doc,
 								MultipartFile uploadFile,
@@ -3288,11 +3277,9 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		//Save the content to virtual file
-		Doc vDoc = buildVDoc(repos, doc);
-		
-		if(isFileExist(vDoc.getLocalRootPath() + vDoc.getPath() + vDoc.getName()) == true)
+		if(isVDocExist(repos, doc) == true)
 		{
-			if(saveVirtualDocContent(vDoc.getLocalRootPath(), doc, rt) == true)
+			if(saveVirtualDocContent(doc.getLocalVRootPath(), doc, rt) == true)
 			{
 				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
@@ -3310,6 +3297,13 @@ public class BaseController  extends BaseFunction{
 		BuildCommonActionListForDocContentUpdate(actionList, repos, doc, login_user, commitMsg, commitUser);
 		
 		return true;
+	}
+
+	private boolean isVDocExist(Repos repos, Doc doc) {
+		Doc vDoc = buildVDoc(repos, doc);
+		isFileExist(vDoc.getLocalRootPath() + vDoc.getPath() + vDoc.getName();
+		
+		return false;
 	}
 
 	/************************ DocSys仓库与文件锁定接口 *******************************/

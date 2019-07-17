@@ -44,6 +44,8 @@ public class Doc  implements Comparable<Doc>{
     private String localRootPath;
     
     private String localRefRootPath;
+
+    private String localVRootPath;
     
     private boolean isRealDoc = true;
 
@@ -199,6 +201,15 @@ public class Doc  implements Comparable<Doc>{
     public void setLocalRefRootPath(String localRefRootPath) 
     {
         this.localRefRootPath = localRefRootPath == null ? null : localRefRootPath.trim();
+    }
+
+    public String getLocalVRootPath() {
+        return localVRootPath;
+    }
+
+    public void setLocalVRootPath(String localVRootPath) 
+    {
+        this.localVRootPath = localVRootPath == null ? null : localVRootPath.trim();
     }
     
     public boolean getIsRealDoc() {
