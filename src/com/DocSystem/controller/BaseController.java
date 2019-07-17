@@ -1915,13 +1915,7 @@ public class BaseController  extends BaseFunction{
 		//Insert index update action for RDoc
 		insertUpdateAction(actionList, repos, doc, null, null, 4, 3, 1, null);
 	}
-	
-	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user,  String commitMsg, String commitUser) 
-	{
-		//Insert index update action for VDoc
-		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 4, 3, 2, null);
-	}
-	
+		
 	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		if(actionList == null || actionList.size() == 0)
@@ -3272,12 +3266,16 @@ public class BaseController  extends BaseFunction{
 	private boolean updateDocContent_FS(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
+		
 		//Save the content to virtual file
 		if(isVDocExist(repos, doc) == true)
 		{
 			if(saveVirtualDocContent(repos, doc, rt) == true)
 			{
 				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
+
+				//Insert index add action for VDoc
+				insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 4, 3, 2, null);
 			}
 		}
 		else
@@ -3286,12 +3284,12 @@ public class BaseController  extends BaseFunction{
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
 				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
+
+				//Insert index update action for VDoc
+				insertAddAction(actionList, repos, doc, commitMsg, commitUser, 4, 1, 2, null);
 			}
 		}
-		
-		//updateIndexForVDoc(repos.getId(), docId, parentPath, docName, content);
-		BuildCommonActionListForDocContentUpdate(actionList, repos, doc, login_user, commitMsg, commitUser);
-		
+				
 		return true;
 	}
 	
