@@ -1912,18 +1912,14 @@ public class BaseController  extends BaseFunction{
 	
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
-		//Insert index delete action for RDoc
+		//Insert index update action for RDoc
 		insertUpdateAction(actionList, repos, doc, null, null, 4, 3, 1, null);
 	}
 	
 	private void BuildCommonActionListForDocContentUpdate(List<CommonAction> actionList,Repos repos, Doc doc, User login_user,  String commitMsg, String commitUser) 
 	{
 		//Insert index update action for VDoc
-		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 1, 3, 2, null);
-		//Insert update action for VDoc Index
 		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 4, 3, 2, null);
-		//Insert update action for VDoc verRepos 
-		insertUpdateAction(actionList, repos, doc, commitMsg, commitUser, 2, 3, 2, null);
 	}
 	
 	protected boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
