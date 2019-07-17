@@ -4614,12 +4614,10 @@ public class BaseController  extends BaseFunction{
 			System.out.println("createVirtualDoc() content is empty");
 			return false;
 		}
-		
-		String reposVPath = getReposVirtualPath(repos);
-		
+				
 		String docVName = getVDocName(doc);
 		
-		String vDocPath = reposVPath + docVName;
+		String vDocPath = doc.getLocalVRootPath() + docVName;
 		System.out.println("vDocPath: " + vDocPath);
 			
 		if(false == createDir(vDocPath))
@@ -4638,11 +4636,11 @@ public class BaseController  extends BaseFunction{
 			return false;			
 		}
 		
-		saveVirtualDocContent(reposVPath, doc, rt);
+		saveVirtualDocContent(repos, doc, rt);
 		return true;
 	}
 	
-	protected boolean saveVirtualDocContent(String localParentPath, Doc doc, ReturnAjax rt) 
+	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		String content = doc.getContent();
 		if(content == null)
@@ -4653,7 +4651,7 @@ public class BaseController  extends BaseFunction{
 
 		String docVName = getVDocName(doc);
 		
-		String vDocPath = localParentPath + docVName + "/";
+		String vDocPath = doc.getLocalVRootPath() + docVName + "/";
 		File folder = new File(vDocPath);
 		if(!folder.exists())
 		{

@@ -1049,11 +1049,11 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, null, null);
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, userTmpDir, null, null);
 		doc.setContent(content);
 		
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		if(saveVirtualDocContent(userTmpDir, doc, rt) == false)
+		if(saveVirtualDocContent(repos, doc, rt) == false)
 		{
 			docSysErrorLog("saveVirtualDocContent Error!", rt);
 		}
