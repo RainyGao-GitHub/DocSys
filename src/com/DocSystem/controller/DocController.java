@@ -1002,6 +1002,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//updateVDocIndex need these fields
+		doc.setSize(dbDoc.getSize());
+		doc.setLatestEditTime(dbDoc.getLatestEditTime());
+		
 		//检查用户是否有权限编辑文件
 		if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
 		{

@@ -209,9 +209,17 @@ public class LuceneUtil2   extends BaseFunction
         document.add(new TextField("type", doc.getType()+"", Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
         document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
         document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
-        document.add(new LongField("size", doc.getSize(), Store.YES));
-        document.add(new LongField("latestEditTime", doc.getLatestEditTime(), Store.YES));
         document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
+
+        //以下为非强制字段
+        if(doc.getSize() != null)
+        {
+        	document.add(new LongField("size", doc.getSize(), Store.YES));
+        }
+        if(doc.getLatestEditTime() != null)
+        {
+        	document.add(new LongField("latestEditTime", doc.getLatestEditTime(), Store.YES));
+        }
         
 		return document;
 	}
