@@ -1525,7 +1525,7 @@ public class BaseController  extends BaseFunction{
 			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
 		}
 		
-		String revision = verReposDocCommit(repos, doc, commitMsg,commitUser,rt, true, null, 2);
+		String revision = verReposDocCommit(repos, true, doc, commitMsg,commitUser,rt, true, null, 2);
 		
 		//Force update docInfo
 		printObject("revertRealDocHistory() successDocList:", successDocList);
@@ -1577,7 +1577,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Do commit to verRepos		
-		String revision = verReposDocCommit(repos, doc, commitMsg, commitUser, rt, true, null, 2);
+		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, commitUser, rt, true, null, 2);
 		
 		if(doc.getIsRealDoc())
 		{
@@ -1692,7 +1692,7 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = verReposDocCommit(repos,doc,commitMsg,commitUser,rt, false, null, 2);
+		String revision = verReposDocCommit(repos, true, doc,commitMsg,commitUser,rt, false, null, 2);
 		if(revision == null)
 		{
 			docSysWarningLog("verReposDocCommit Failed", rt);
@@ -2035,7 +2035,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
 				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-				String revision = verReposDocCommit(repos, doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
+				String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
 				if(revision != null)
 				{
 					for(Doc commitDoc: commitHashMap.values())
@@ -2960,11 +2960,10 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:	//RDoc autoCommit
 			System.out.println("executeVerReposAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			return verReposDocCommit(repos, true, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 		case 2: //VDoc autoCommit
 			System.out.println("executeVerReposAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			doc.setIsRealDoc(false);
-			return verReposDocCommit(repos, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			return verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 		}
 		return null;
 	}
@@ -3031,7 +3030,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposDocCommit(repos, doc, commitMsg,commitUser,rt, true, null, 2);
+		String revision = verReposDocCommit(repos, true, doc, commitMsg,commitUser,rt, true, null, 2);
 		if(revision == null)
 		{
 			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -3282,7 +3281,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(saveVirtualDocContent(repos, doc, rt) == true)
 			{
-				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
+				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
 		}
 		else
@@ -3290,7 +3289,7 @@ public class BaseController  extends BaseFunction{
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
-				verReposDocCommit(repos, doc, commitMsg, commitUser,rt, true, null, 2);
+				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
 			}
 		}
 		
@@ -4934,9 +4933,9 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.deleteDoc(doc,commitMsg,commitUser);
 	}
 	
-	protected String verReposDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
+	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{	
-		if(doc.getIsRealDoc() == false)
+		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
 			doc = buildVDoc(repos, doc);
