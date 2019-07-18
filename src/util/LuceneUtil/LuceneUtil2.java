@@ -139,7 +139,7 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean addIndex(Doc doc, String content, String indexLib)
     {	
     	System.out.println("addIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
-    	System.out.println("updateIndex() content:" + content);
+    	System.out.println("addIndex() content:" + content);
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
