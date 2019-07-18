@@ -477,7 +477,9 @@ public class LuceneUtil2   extends BaseFunction
  	}
 
 	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, String pathFilter, Document hitDocument) {
-        try {
+    	System.out.println("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " lastEditTime:" + hitDocument.get("lastEditTime"));
+
+		try {
 			String docParentPath = hitDocument.get("path");
 	    	String docName =  hitDocument.get("name");
 	        
@@ -599,10 +601,6 @@ public class LuceneUtil2   extends BaseFunction
 			return null;
 		}
     }
-
-	public static String buildDocumentId(Integer integer, int index) {
-		return integer + "-" + index;
-	}
 
 	public static boolean addIndexForWord(String filePath, Doc doc, String indexLib)
 	{
