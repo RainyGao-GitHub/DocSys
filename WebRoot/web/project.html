@@ -2566,7 +2566,7 @@ function CompareObj(objA, objB, flag) {
 		return null;
 	}
 	
-	//获取Node的路径
+	//获取Node的path
 	function getNodePath(treeNode)
 	{
 		var path = "";
@@ -3401,14 +3401,18 @@ function CompareObj(objA, objB, flag) {
 	}
 	
 	//add a new Doc: type 1: 文件  2:目录
-    function newDoc(type,parentNode) {         
+    function newDoc(type,parentNode) {
+		console.log("type:" + type, parentNode);
 		//计算 parentId remoteDir
 		var parentId = 0;
+		var parentPath = "";
 		if(parentNode && parentNode.id)
 		{
 			parentId = parentNode.id;
+			parentPath = getNodePath(parentNode) + parentNode.name+ "/";
 		}
-		var remoteDir = gReposName+ "::" + getNodePath(parentNode); //only for display
+		
+		var remoteDir = gReposName+ "::" + parentPath; //only for display
         
         //对话框 title
         var title = "新建文件";
