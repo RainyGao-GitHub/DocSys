@@ -1003,6 +1003,7 @@ public class DocController extends BaseController{
 		}
 		
 		//updateVDocIndex need these fields
+		doc.setType(dbDoc.getType());
 		doc.setSize(dbDoc.getSize());
 		doc.setLatestEditTime(dbDoc.getLatestEditTime());
 		
