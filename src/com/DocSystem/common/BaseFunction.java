@@ -415,24 +415,14 @@ public class BaseFunction{
 	//获取默认的仓库根路径
 	protected String getDefaultReposRootPath() {
 		String path = null;
-		
-		path = ReadProperties.read("docSysConfig.properties", "defaultReposRootPath");
-	    if(path == null || "".equals(path))
-	    {
-			if(isWinOS())
-			{  
-				path = "C:/DocSysReposes/";
-			}
-			else
-			{
-				path = "/DocSysReposes/";
-			}
-	    }
-	    else
-	    {
-	    	path = localDirPathFormat(path);
-	    }
-	    
+		if(isWinOS())
+		{  
+			path = "C:/DocSysReposes/";
+		}
+		else
+		{
+			path = "/DocSysReposes/";
+		}	    
 		return path;
 	}
 	

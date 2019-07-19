@@ -1056,16 +1056,16 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(repos.getType() == 2)
+		String reposRealDocDir = repos.getRealDocPath();
+		if(reposRealDocDir != null && !reposRealDocDir.isEmpty())
 		{
-			String reposRealDocDir = repos.getRealDocPath();
 			if(createDir(reposRealDocDir) == false)
 			{
 				rt.setError("创建文件存储目录失败："+reposRealDocDir);
 				return false;
 			}
-			return true;
 		}
+		
 		return true;
 	}
 
