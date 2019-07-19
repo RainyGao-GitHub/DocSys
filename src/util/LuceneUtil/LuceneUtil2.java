@@ -89,38 +89,10 @@ import util.FileUtil.FileUtils2;
  * （2）文件名需要支持部分匹配，通过查找Lucene Document的name字段来实现
  */
 public class LuceneUtil2   extends BaseFunction
-{	
-    private static String INDEX_DIR = getLucenePath();
-
-    private static String getLucenePath() {
-		String path = ReadProperties.read("docSysConfig.properties", "lucenePath");
-	    if(path == null || "".equals(path))
-	    {
-	    	if(isWinOS())
-	    	{
-	    		path = "C:/DocSysLucene/";
-			}
-			else
-			{
-				path = "/data/DocSysLucene/";	//Linux系统放在  /data	
-			}
-	    }
-	    
-		File dir = new File(path);
-		if(dir.exists() == false)
-		{
-			System.out.println("getLucenePath() path:" + path + " not exists, do create it!");
-			if(dir.mkdirs() == false)
-			{
-				System.out.println("getLucenePath() Failed to create dir:" + path);
-			}
-		}	 
-		return path;
-	}
-    
+{    
     public static boolean deleteIndexLib(String indexLib)
     {
-    	return delFileOrDir(INDEX_DIR + File.separator+ indexLib);
+    	return delFileOrDir(indexLib);
     }
     
     /**
@@ -148,7 +120,7 @@ public class LuceneUtil2   extends BaseFunction
 		try {
 	    	Date date1 = new Date();
 	    	analyzer = new IKAnalyzer();
-	    	directory = FSDirectory.open(new File(INDEX_DIR + File.separator+ indexLib));
+	    	directory = FSDirectory.open(new File(indexLib));
 
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
@@ -241,7 +213,7 @@ public class LuceneUtil2   extends BaseFunction
 		try {
 	    	Date date1 = new Date();
 	        analyzer = new IKAnalyzer();
-    		File file = new File(INDEX_DIR + File.separator +indexLib);
+    		File file = new File(indexLib);
 	        directory = FSDirectory.open(file);
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 	        indexWriter = new IndexWriter(directory, config);
@@ -286,7 +258,7 @@ public class LuceneUtil2   extends BaseFunction
     	
 		try {
 			Date date1 = new Date();
-			directory = FSDirectory.open(new File(INDEX_DIR + File.separator + indexLib));
+			directory = FSDirectory.open(new File(indexLib));
 		
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
 	        indexWriter = new IndexWriter(directory, config);
@@ -328,7 +300,7 @@ public class LuceneUtil2   extends BaseFunction
         IndexSearcher isearcher = null;
 
 		try {
-    		File file = new File(INDEX_DIR + "/" +indexLib);
+    		File file = new File(indexLib);
     		if(!file.exists())
     		{
     			System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
@@ -550,7 +522,7 @@ public class LuceneUtil2   extends BaseFunction
     	DirectoryReader ireader = null;
     	
     	try {
-    		File file = new File(INDEX_DIR + File.separator +indexLib);
+    		File file = new File(indexLib);
     		if(!file.exists())
     		{
     			return null;

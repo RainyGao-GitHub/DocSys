@@ -1081,9 +1081,9 @@ public class BaseController  extends BaseFunction{
 		deleteLocalVerRepos(repos,false);
 
 		//Delete IndexLib
-    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),0));
-		LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),1));
-    	LuceneUtil2.deleteIndexLib(getIndexLibName(repos.getId(),2));
+    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,0));
+		LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,1));
+    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
 		
 		return true;
 	}
@@ -5149,29 +5149,32 @@ public class BaseController  extends BaseFunction{
 	}
 	
     /************************* DocSys全文搜索操作接口 ***********************************/
-	protected static String getIndexLibName(Integer reposId, int indexLibType) 
+	protected static String getIndexLibPath(Repos repos, int indexLibType) 
 	{
+		String lucenePath = repos.getPath() + "DocSysLucene/";
+		
 		String indexLib = null;
 		switch(indexLibType)
 		{
 		case 0:
-			indexLib = "repos_" + reposId + "_DocName";
+			indexLib = "repos_" + repos.getId() + "_DocName";
 			break;
 		case 1:
-			indexLib = "repos_" + reposId + "_RDoc";
+			indexLib = "repos_" + repos.getId() + "_RDoc";
 			break;
 		case 2:
-			indexLib = "repos_" + reposId + "_VDoc";
+			indexLib = "repos_" + repos.getId() + "_VDoc";
 			break;
 		}
-		return indexLib;
+		
+		return lucenePath + indexLib;
 	}
 	
 	//Add Index For DocName
 	public boolean addIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
 	{
 		System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
-		String indexLib = getIndexLibName(repos.getId(),0);
+		String indexLib = getIndexLibPath(repos,0);
 
 		return LuceneUtil2.addIndex(doc, getDocPath(doc), indexLib);
 	}
@@ -5181,7 +5184,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("deleteIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String indexLib = getIndexLibName(repos.getId(),0);
+		String indexLib = getIndexLibPath(repos,0);
 
 		return LuceneUtil2.deleteIndex(doc, indexLib);
 	}
@@ -5191,7 +5194,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("updateIndexForDocName() docId:" +  doc.getDocId() + " parentPath:" +  doc.getPath()  + " name:" + doc.getName()  + " newParentPath:" + newDoc.getPath() + " newName:" + newDoc.getName() + " repos:" + repos.getName());
 
-		String indexLib = getIndexLibName(repos.getId(),0);
+		String indexLib = getIndexLibPath(repos,0);
 
 		String name = doc.getName();
 		String newName = newDoc.getName();
@@ -5222,7 +5225,7 @@ public class BaseController  extends BaseFunction{
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}
 		
-		String indexLib = getIndexLibName(repos.getId(),2);
+		String indexLib = getIndexLibPath(repos,2);
 		
 		return LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
 	}
@@ -5232,7 +5235,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("deleteIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String indexLib = getIndexLibName(repos.getId(),2);
+		String indexLib = getIndexLibPath(repos,2);
 		
 		return LuceneUtil2.deleteIndex(doc, indexLib);
 	}
@@ -5242,7 +5245,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("updateIndexForVDoc() docId:" +  doc.getDocId() + " parentPath:" +  doc.getPath()  + " name:" + doc.getName() + " repos:" + repos.getName());
 
-		String indexLib = getIndexLibName(repos.getId(),2);
+		String indexLib = getIndexLibPath(repos,2);
 		
 		String content = doc.getContent();
 		if(content == null)
@@ -5262,7 +5265,7 @@ public class BaseController  extends BaseFunction{
 	{		
 		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String indexLib = getIndexLibName(repos.getId(), 1);
+		String indexLib = getIndexLibPath(repos, 1);
 
 		String localRootPath = getReposRealPath(repos);
 		String localParentPath = localRootPath + doc.getPath();
@@ -5320,7 +5323,7 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("deleteIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
-		String indexLib = getIndexLibName(repos.getId(), 1);
+		String indexLib = getIndexLibPath(repos, 1);
 			
 		return LuceneUtil2.deleteIndex(doc,indexLib);
 	}
