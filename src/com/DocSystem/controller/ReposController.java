@@ -226,20 +226,6 @@ public class ReposController extends BaseController{
 		Integer reposId = repos.getId();
 		System.out.println("new ReposId" + reposId);
 		
-		//创建仓库存储目录
-	    File reposStoreDir = new File(path);
-		if(reposStoreDir.exists() == false)
-		{
-			System.out.println("addRepos() reposStorePath:" + path + " not exists, do create it!");
-			if(reposStoreDir.mkdirs() == false)
-			{
-				docSysDebugLog("addRepos() Failed to create dir:" + path, rt);
-				rt.setError("创建仓库存储目录失败，请检查该目录的访问权限！");
-				writeJson(rt, response);		
-				return;
-			}
-		}	 
-
 		if(createReposLocalDir(repos,rt) == false)
 		{
 			deleteRepos(repos);			
