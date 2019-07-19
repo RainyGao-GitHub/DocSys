@@ -65,7 +65,7 @@ public class BaseFunction{
 	}
 
 	protected void docSysErrorLog(String logStr, ReturnAjax rt) {
-		System.out.println(logStr);
+		System.err.println(logStr);
 		if(rt != null)
 		{
 			rt.setError(logStr);
