@@ -474,7 +474,7 @@
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
-		        		//console.log(ret);
+		        		console.log(ret);
 		                callback && callback(ret.data);
 		            }
 		            else
@@ -649,7 +649,7 @@
 	    		enable : true,//设置 zTree 是否开启异步加载模式  
 	            url : "/DocSystem/Repos/getSubDocList.do",
 	            type : "post",
-	    		autoParam : ["id","level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
+	    		autoParam : ["id","Level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
 	    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
 	    		dataFilter: asyncDataFilter, 
 			},
@@ -683,8 +683,9 @@
       	for(var i=0; i<docList.length; i++)
       	{
            var jsonObj = docList[i];
-           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.Level = jsonObj.level;
        }
        console.log(docList);
 	   return docList;
@@ -810,8 +811,9 @@
       	for(var i=0; i<menu.length; i++)
       	{
            var jsonObj = menu[i];
-           jsonObj.pId = jsonObj.id != 0? jsonObj.pid : "root",	//id = 0是rootDoc
+           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",	//id = 0是rootDoc
            jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.Level = jsonObj.level;
        }
 	   console.log(menu);
 	   zTreeInit(menu);
