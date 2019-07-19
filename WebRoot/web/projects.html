@@ -203,10 +203,13 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript">
 	//页面初始化
+	var gDocSysConfig = null;
 	var login_user = "";
     function pageInit()
     {
     	console.log("pageInit");
+    	getDocSysConfig();
+    	 	
     	//确定当前登录用户是否已登录
     	$.ajax({
             url : "/DocSystem/getLoginUser.do",
@@ -247,8 +250,35 @@
         $("#error-message>span").text($msg).parent('div').show();
     }
     
+	function getDocSysConfig()
+    {
+    	console.log("getDocSysConfig");
+        $.ajax({
+            url : "/DocSystem/Repos/getDocSysConfig.do",
+            type :"post",
+            dataType :"json",
+            data : null,
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+                	gDocSysConfig = ret.data;
+                	console.log("getDocSysConfig config:", gDocSysConfig);
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            }
+            },
+            error : function () {
+            	console.log('服务器异常:获取DocSysConfig失败');
+            }
+        });
+    }
+
+    
     function getReposList()
     {
+    	console.log("getReposList");
         $.ajax({
             url : "/DocSystem/Repos/getReposList.do",
             type :"post",
@@ -483,18 +513,25 @@
             callback: function () {
                 setTimeout(function () {
                     $("#dialog-new-repos input[name='name']").focus();
+
                     //alert(login_user.type);
+                    var defaultReposStorePath =  gDocSysConfig.defaultReposStorePath;
+                    var defaultLocalVerReposStorePath =  defaultReposStorePath + "DocSysVerReposes/";
+
+                    $("#dialog-new-repos input[name='path']").val(gDocSysConfig.defaultReposStorePath);
                     if(login_user.type == 2) //超级管理员，可以设置仓库路径
                     {
                     	$("#dialog-new-repos input[name='path']").attr("disabled",false);
                     }
                     
                     doSelectFS(); 
-                    $("#dialog-new-repos input[name='localSvnPath']").val("");	//local VersionRepos Path
+                    
+                    
+                    $("#dialog-new-repos input[name='localSvnPath']").val(defaultLocalVerReposStorePath);	//local VersionRepos Path
                     $("#dialog-new-repos input[name='svnPath']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser']").val("");
             		$("#dialog-new-repos input[name='svnPwd']").val("");
-                    $("#dialog-new-repos input[name='localSvnPath1']").val("");	//local VersionRepos Path
+                    $("#dialog-new-repos input[name='localSvnPath1']").val(defaultLocalVerReposStorePath);	//local VersionRepos Path
                     $("#dialog-new-repos input[name='svnPath1']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser1']").val("");
             		$("#dialog-new-repos input[name='svnPwd1']").val("");

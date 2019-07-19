@@ -1,5 +1,6 @@
 package com.DocSystem.controller;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.CommonAction;
+import com.DocSystem.common.DocSysConfig;
 import com.DocSystem.controller.BaseController;
 
 /*
@@ -35,6 +37,26 @@ Something you need to know
 public class ReposController extends BaseController{
 	
 	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
+	/****************** get Repository List **************/
+	@RequestMapping("/getDocSysConfig.do")
+	public void getDocSysConfig(HttpSession session,HttpServletResponse response){
+		System.out.println("getDocSysConfig");
+		ReturnAjax rt = new ReturnAjax();
+				
+		DocSysConfig docSysConfig = getDocSysConfig();
+		printObject("getDocSysConfig() docSysConfig",docSysConfig);
+		rt.setData(docSysConfig);
+		writeJson(rt, response);
+	}
+	
+	private DocSysConfig getDocSysConfig() {
+		DocSysConfig config = new DocSysConfig();
+		
+		config.setDefaultReposStorePath(getDefaultReposRootPath());
+		
+		return config;
+	}
+
 	/****************** get Repository List **************/
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletResponse response){
@@ -127,12 +149,12 @@ public class ReposController extends BaseController{
 		//格式化参数
 		if((path == null) || path.equals(""))
 		{
-			path = getDefaultReposRootPath();
+			docSysErrorLog("仓库存储路径不能为空！", rt);
+			writeJson(rt, response);			
+			return;
 		}
-		else
-		{
-			path = localDirPathFormat(path);
-		}
+		path = localDirPathFormat(path);
+		
 		if(realDocPath != null && !realDocPath.isEmpty())
 		{
 			realDocPath = localDirPathFormat(realDocPath);
@@ -204,6 +226,20 @@ public class ReposController extends BaseController{
 		Integer reposId = repos.getId();
 		System.out.println("new ReposId" + reposId);
 		
+		//创建仓库存储目录
+	    File reposStoreDir = new File(path);
+		if(reposStoreDir.exists() == false)
+		{
+			System.out.println("addRepos() reposStorePath:" + path + " not exists, do create it!");
+			if(reposStoreDir.mkdirs() == false)
+			{
+				docSysDebugLog("addRepos() Failed to create dir:" + path, rt);
+				rt.setError("创建仓库存储目录失败，请检查该目录的访问权限！");
+				writeJson(rt, response);		
+				return;
+			}
+		}	 
+
 		if(createReposLocalDir(repos,rt) == false)
 		{
 			deleteRepos(repos);			

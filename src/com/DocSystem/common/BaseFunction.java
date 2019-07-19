@@ -433,16 +433,6 @@ public class BaseFunction{
 	    	path = localDirPathFormat(path);
 	    }
 	    
-	    File dir = new File(path);
-		if(dir.exists() == false)
-		{
-			System.out.println("getDefaultReposRootPath() defaultReposRootPath:" + path + " not exists, do create it!");
-			if(dir.mkdirs() == false)
-			{
-				System.out.println("getDefaultReposRootPath() Failed to create dir:" + path);
-			}
-		}	 
-	    
 		return path;
 	}
 	
