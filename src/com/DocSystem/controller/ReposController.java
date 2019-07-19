@@ -641,7 +641,7 @@ public class ReposController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc rootDoc = buildBasicDoc(vid, 0L, -1L, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(vid, 0L, -1L, "", repos.getName(), 0, 2, true, localRootPath, localVRootPath, null, null);
 		
 		//获取用户可访问文件列表(From Root to docId)
 		
