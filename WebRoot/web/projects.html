@@ -111,7 +111,7 @@
             <label>简介<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="info" style="width: 100%"/>
             <label>仓库位置<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
+            <input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
             <label>类型<span style="color:#F00">*</span></label>
             <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
             	<option value="1" selected="selected">文件管理系统</option>   
@@ -561,8 +561,23 @@
             var createTime = new Date().getTime();	//获取时间戳
             
             //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
-            if( name && info){
-                $.ajax({
+        	if(!name)
+        	{
+            	alert("仓库名不能为空！");
+            	return false;
+        	}
+        	if(!info)
+        	{
+            	alert("仓库简介不能为空！");
+            	return false;
+        	}
+        	if(!path)
+        	{
+            	alert("仓库存储路径不能为空！");
+            	return false;
+        	}
+        	  	
+            $.ajax({
                     url : "/DocSystem/Repos/addRepos.do",
                     type : "post",
                     dataType : "json",
@@ -602,12 +617,7 @@
                     }
                 });
                 return true;
-            }else{
-                alert("仓库信息不全，请重试！");
-                return false;
-            }
-        });
-
+        	});
     }
     
 	function showFeebackPanel()
