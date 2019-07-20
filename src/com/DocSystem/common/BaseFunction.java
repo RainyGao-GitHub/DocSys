@@ -57,7 +57,7 @@ public class BaseFunction{
 	}
 
 	protected void docSysWarningLog(String logStr, ReturnAjax rt) {
-		System.out.println(logStr);
+		System.err.println(logStr);
 		if(rt != null)
 		{
 			rt.setWarningMsg(logStr);
