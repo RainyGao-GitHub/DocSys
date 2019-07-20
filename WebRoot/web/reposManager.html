@@ -683,6 +683,7 @@
       	for(var i=0; i<docList.length; i++)
       	{
            var jsonObj = docList[i];
+           jsonObj.id = jsonObj.docId,
            jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",
            jsonObj.isParent = jsonObj.type == 1? false: true;
            jsonObj.Level = jsonObj.level;
@@ -802,7 +803,7 @@
 	
 	//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
 	function drawMenu(data) {
-		console.log("drawMenu");
+		console.log("drawMenu", data);
 		window.menu = data;
 	    //data = JSON.parse('"' + data + '"'); //We need to use JSON parse one more time here  
 	    //var menu = JSON.parse(data);
@@ -811,11 +812,12 @@
       	for(var i=0; i<menu.length; i++)
       	{
            var jsonObj = menu[i];
+           jsonObj.id = jsonObj.docId,
            jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",	//id = 0是rootDoc
            jsonObj.isParent = jsonObj.type == 1? false: true;
            jsonObj.Level = jsonObj.level;
        }
-	   console.log(menu);
+	   console.log("menu",menu);
 	   zTreeInit(menu);
 	}
 
