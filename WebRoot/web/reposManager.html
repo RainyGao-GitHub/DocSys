@@ -1334,16 +1334,16 @@ function showReposSettingPanel(){
 				    data : {
 				         userId : docAuth.userId,
 				         groupId : docAuth.groupId,
-				         docId : docAuth.docId,
 				         reposId : vid,
+				         docId : docAuth.docId,
+				         path: node.path,
+				         name: node.name,
 				         isAdmin: docAuth.isAdmin, 
 				         access: docAuth.access,
 				         editEn: docAuth.editEn, 
 				         addEn: docAuth.addEn, 
 				         deleteEn: docAuth.deleteEn, 
 				         heritable: docAuth.heritable,
-				         parentPath: node.path,
-				         docName: node.name,
 				     },
 				     success : function (ret) {
 				         if( "ok" == ret.status){
