@@ -472,6 +472,42 @@ public class GITUtil  extends BaseController{
         }
 	}
 
+	public TreeWalk getTreeWalkByPath(String entryPath, String revision) throws Exception
+	{
+		Git git = Git.open(new File(gitDir));
+		Repository repository = git.getRepository();
+        
+        //New RevWalk
+        RevWalk walk = new RevWalk(repository);
+
+        //Get objId for revision
+        ObjectId objId = repository.resolve(revision);
+        
+        RevCommit revCommit = walk.parseCommit(objId);
+        RevTree revTree = revCommit.getTree();
+                
+        //child表示相对git库的文件路径
+        TreeWalk treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
+        
+        walk.close();
+        return treeWalk;
+	}
+	
+	
+	public Integer checkPath(String entryPath, String revision) 
+	{
+		try {
+	        TreeWalk treeWalk = getTreeWalkByPath(entryPath, revision);
+	
+	        int type = getTypeFromFileMode(treeWalk.getFileMode());
+        	return type;
+		} catch (Exception e) {
+			System.err.println("checkPath() 异常");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	private int getTypeFromFileMode(FileMode fileMode)
 	{
 		int bits = fileMode.getBits();
@@ -485,21 +521,6 @@ public class GITUtil  extends BaseController{
 			return 0;
 		}
 		return -1;
-	}
-	
-	private boolean isFile(FileMode fileMode)
-	{
-		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_FILE? true: false;
-	}
-	
-	private boolean isDir(FileMode fileMode)
-	{
-		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_TREE? true: false;
-	}
-	
-	private boolean isMissing(FileMode fileMode)
-	{
-		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
 	}
 	
 	private List<Doc> recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, Doc doc, String localParentPath, String targetName) {
@@ -959,6 +980,7 @@ public class GITUtil  extends BaseController{
 		Integer type = checkPath(doc.getPath(), null);
 		if(type == null)
 		{
+			System.err.println("doAutoCommit() checkPath for " + doc.getPath() + " 异常");
 			return null;
 		}
 		
@@ -1281,11 +1303,6 @@ public class GITUtil  extends BaseController{
 		}
 		
 		return gitAdd(wcDocPath, wcDocPath, wcDocPath, wcDocPath);
-	}
-
-	public Integer checkPath(String entryPath, Object object) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public String deleteDoc(Doc doc, String commitMsg, String commitUser) {
