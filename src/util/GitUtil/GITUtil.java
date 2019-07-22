@@ -511,6 +511,11 @@ public class GITUtil  extends BaseController{
 	
 	public Integer checkPath(String entryPath, String revision) 
 	{
+		if(revision == null)
+		{
+			revision = "HEAD";
+		}
+		
 		try {
 	        TreeWalk treeWalk = getTreeWalkByPath(entryPath, revision);
 	
