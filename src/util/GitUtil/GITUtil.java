@@ -167,6 +167,19 @@ public class GITUtil  extends BaseController{
     {
     	String entryPath = doc.getPath() + doc.getName();
     	
+    	Integer type = checkPath(entryPath, revision);
+    	if(type == null)
+    	{
+    		return null;
+    	}
+    	
+        if(type ==  0) 
+		{
+	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			return remoteEntry;
+		}
+    	
     	Git git = null;
 		try {
 	    	git = Git.open(new File(wcDir));
@@ -191,8 +204,8 @@ public class GITUtil  extends BaseController{
 	            long commitTime=commit.getCommitTime();
 	            
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, true, doc.getLocalRootPath(), doc.getLocalVRootPath());
-	            remoteDoc.setRevision(commitId);
+	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+				remoteDoc.setRevision(commitId);
 	            remoteDoc.setCreatorName(author);
 	            remoteDoc.setLatestEditorName(commitUser);
 	            remoteDoc.setLatestEditTime(commitTime);
@@ -292,6 +305,8 @@ public class GITUtil  extends BaseController{
             if(objId == null)
             {
             	System.out.println("There is no any commit history for:" + revision);
+            	walk.close();
+            	repository.close();
             	return null;
             }
             
@@ -340,6 +355,7 @@ public class GITUtil  extends BaseController{
             		}
             	}
             }
+            walk.close();
             repository.close();
             
             return subEntryList;
@@ -428,9 +444,7 @@ public class GITUtil  extends BaseController{
         {
         	revision = "HEAD";
         }
-		
-		String remoteEntryPath = parentPath + entryName;
-		
+				
 		Repository repository = null;
         try {
             //gitDir表示git库目录
@@ -463,6 +477,7 @@ public class GITUtil  extends BaseController{
                 treeWalk.setRecursive(false);
             }
             List<Doc> ret = recurGetEntry(git, repository, treeWalk, doc, localParentPath, targetName);
+            walk.close();
             repository.close();
             return ret;
         } catch (Exception e) {
@@ -521,6 +536,21 @@ public class GITUtil  extends BaseController{
 			return 0;
 		}
 		return -1;
+	}
+	
+	private boolean isFile(FileMode fileMode)
+	{
+		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_FILE? true: false;
+	}
+	
+	private boolean isDir(FileMode fileMode)
+	{
+		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_TREE? true: false;
+	}
+	
+	private boolean isMissing(FileMode fileMode)
+	{
+		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
 	}
 	
 	private List<Doc> recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, Doc doc, String localParentPath, String targetName) {
@@ -631,18 +661,15 @@ public class GITUtil  extends BaseController{
             ObjectId blobId = treeWalk.getObjectId(0);
             ObjectLoader loader = repository.open(blobId);
             loader.copyTo(out);
+            walk.close();
+            repository.close();
+            return true;
         } catch (Exception e) {
-           System.out.println("getFile() IOException"); 
+           System.err.println("getFile() 异常"); 
            e.printStackTrace();
            return false;
-        } finally {
-            if (repository != null)
-                repository.close();
-        }
-        
-        return true;
+        }        
  	}
-
  	
 	//Commit will commit change to Git Repos and Push to remote
 	public String Commit(Doc doc, String commitMsg, String commitUser) {
@@ -719,6 +746,7 @@ public class GITUtil  extends BaseController{
 			RevCommit revCommit = walk.parseCommit(objId);  
 	        String preVision = revCommit.getParent(0).getName();  
 	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
+	        walk.close();
 	        repository.close(); 
 		} catch (Exception e) {
 			System.out.println("rollBackCommit() Exception");
@@ -1216,7 +1244,7 @@ public class GITUtil  extends BaseController{
     		{
 	            File remoteSubEntry = entries[i];
 	            int subDocType = remoteSubEntry.isFile()? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
+	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.length(), "");
 	            docHashMap.put(subDoc.getDocId(), subDoc);
 	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
@@ -1229,7 +1257,7 @@ public class GITUtil  extends BaseController{
         {
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
-        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath());
+        	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
             
         	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
