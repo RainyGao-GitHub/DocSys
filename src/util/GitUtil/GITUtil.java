@@ -497,6 +497,13 @@ public class GITUtil  extends BaseController{
 
         //Get objId for revision
         ObjectId objId = repository.resolve(revision);
+        if(objId == null)
+        {
+        	System.err.println("getTreeWalkByPath() there is no any history");
+        	walk.close();
+        	repository.close();
+        	return null;
+        }
         
         RevCommit revCommit = walk.parseCommit(objId);
         RevTree revTree = revCommit.getTree();
@@ -505,6 +512,7 @@ public class GITUtil  extends BaseController{
         TreeWalk treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
         
         walk.close();
+        repository.close();
         return treeWalk;
 	}
 	
@@ -518,7 +526,11 @@ public class GITUtil  extends BaseController{
 		
 		try {
 	        TreeWalk treeWalk = getTreeWalkByPath(entryPath, revision);
-	
+	        if(treeWalk == null)
+	        {
+	        	return 0;
+	        }
+	        
 	        int type = getTypeFromFileMode(treeWalk.getFileMode());
         	return type;
 		} catch (Exception e) {
