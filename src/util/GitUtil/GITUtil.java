@@ -499,7 +499,7 @@ public class GITUtil  extends BaseController{
         ObjectId objId = repository.resolve(revision);
         if(objId == null)
         {
-        	System.err.println("getTreeWalkByPath() there is no any history");
+        	System.err.println("getTreeWalkByPath() there is no any history for:" + entryPath);
         	walk.close();
         	repository.close();
         	return null;
@@ -522,6 +522,13 @@ public class GITUtil  extends BaseController{
 		if(revision == null)
 		{
 			revision = "HEAD";
+		}
+		
+		//It is root dir
+		if(entryPath.isEmpty())
+		{
+			System.err.println("checkPath() " + entryPath +" is root");
+			return 2;
 		}
 		
 		try {
@@ -1031,6 +1038,7 @@ public class GITUtil  extends BaseController{
 		
 		if(type == 0)
 		{
+			System.err.println("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
 			return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
 		}	
 			
@@ -1119,7 +1127,7 @@ public class GITUtil  extends BaseController{
 			try {
 				git.push().call();
 			} catch (Exception e) {
-				System.out.println("gitCopy() Push Error");	
+				System.out.println("doAutoCommmit() Push Error");	
 				e.printStackTrace();
 				//Do roll back commit and Index 
 				if(rollBackCommit(git, null) == false)
