@@ -1448,16 +1448,6 @@ public class GITUtil  extends BaseController{
         }
 	}
 
-	private String modifyFile(Doc doc, String localRootPath, String localRefRootPath) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private String addFileEx(Doc doc, String localRootPath, String commitMsg, boolean b) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	private String doAutoCommitParent(Doc doc, String commitMsg, String commitUser, boolean modifyEnable) {
 		// TODO Auto-generated method stub
 		return null;
