@@ -1151,30 +1151,6 @@ public class SVNUtil  extends BaseController{
     	System.out.println("remoteCopyEntry(): " + commitInfo);
 	    return commitInfo.getNewRevision() + "";
 	}
-	
-    //删除文件或目录
-  	public String deleteDoc(Doc doc, String commitMsg, String commitUser)
-  	{
-        ISVNEditor editor = getCommitEditor(commitMsg);
-        if(editor == null)
-        {
-        	return null;
-        }
-        
-        if(deleteEntry(editor, doc, true) == false)
-        {
-        	return null;
-        }
-    	
-	    SVNCommitInfo commitInfo  = commit(editor);
-    	if(commitInfo == null)
-    	{
-    		return null;
-    	}
-    	System.out.println("delete(): " + commitInfo);
-    	
-        return commitInfo.getNewRevision() + "";
-  	}
   	
 	//getCommitEditor
 	private ISVNEditor getCommitEditor(String commitMsg)

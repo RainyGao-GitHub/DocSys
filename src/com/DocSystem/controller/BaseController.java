@@ -1852,7 +1852,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 
-		String revision = verReposDocDelete(repos, doc, commitMsg,commitUser,rt);
+		String revision = verReposDocCommit(repos, true, doc, commitMsg,commitUser,rt, true, null, 2);
 		if(revision == null)
 		{
 			docSysDebugLog("deleteDoc_FS() verReposRealDocDelete Failed", rt);
@@ -4854,77 +4854,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return gitUtil.getHistoryDetail(doc, commitId);
-	}
-	
-	protected String verReposDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) 
-	{		
-		if(doc.getIsRealDoc() == false)
-		{
-			//Convert doc to vDoc
-			doc = buildVDoc(repos, doc);
-		}
-		
-		if(repos.getVerCtrl() == 1)
-		{
-			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocDelete(repos, doc, commitMsg, commitUser, rt);			
-		}
-		else if(repos.getVerCtrl() == 2)
-		{
-			return gitDocDelete(repos, doc, commitMsg, commitUser, rt);
-		}
-		return null;
-	}
-
-	private String svnDocDelete(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt) 
-	{
-		boolean isRealDoc = doc.getIsRealDoc();
-		
-		SVNUtil verReposUtil = new SVNUtil();
-		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
-		{
-			System.out.println("svnRealDocDelete() svnUtil.Init 失败！");
-			return null;
-		}
-
-		String entryPath = doc.getPath() + doc.getName();
-		Integer type = verReposUtil.checkPath(entryPath, null);
-		if(type == null)
-		{
-			return null;
-		}
-		
-		if(type == 0)
-		{
-			return "";
-		}
-		
-		return verReposUtil.deleteDoc(doc,commitMsg,commitUser);
-	}
-	
-	protected String gitDocDelete(Repos repos, Doc doc, String commitMsg,String commitUser, ReturnAjax rt) 
-	{
-		boolean isRealDoc = doc.getIsRealDoc();
-		GITUtil verReposUtil = new GITUtil();
-		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
-		{
-			System.out.println("svnRealDocDelete() svnUtil.Init 失败！");
-			return null;
-		}
-
-		String entryPath = doc.getPath() + doc.getName();
-		Integer type = verReposUtil.checkPath(entryPath, null);
-		if(type == null)
-		{
-			return null;
-		}
-		
-		if(type == 0)
-		{
-			return "";
-		}
-		
-		return verReposUtil.deleteDoc(doc,commitMsg,commitUser);
 	}
 	
 	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
