@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +30,8 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
+import org.tmatesoft.svn.core.io.ISVNEditor;
+import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -338,7 +341,12 @@ public class GITUtil  extends BaseController{
             		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
             		if(type > 0)
             		{
-            			String name = treeWalk.getNameString();			
+            			String name = treeWalk.getNameString();
+            			ObjectId objId1 = treeWalk.getObjectId(0);
+            			RevCommit revCommit1 = walk.parseCommit(objId1);
+            			String revision1 = revCommit1.getName();
+            			System.err.println("commitId:" + commitId + "revision1:" + revision1);
+            			
                 		Doc subDoc = new Doc();
                 		subDoc.setVid(repos.getId());
                 		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
@@ -798,69 +806,6 @@ public class GITUtil  extends BaseController{
         return true;
 	}
 
-	public String gitAdd(String parentPath, String entryName, String commitMsg, String commitUser) {
-		System.out.println("gitAdd() " + parentPath + entryName);	
-		
-		Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-		} catch (Exception e) {
-			System.out.println("gitAdd() Failed to open wcDir:" + wcDir);
-			e.printStackTrace();
-			return null;
-		}
-
-		String entryPath = parentPath + entryName;
-		try {	
-			git.add().addFilepattern(entryPath).call();
-		} catch (Exception e) {
-			System.out.println("gitAdd() add Index Error");	
-			e.printStackTrace();
-			//Do roll back WorkingCopy
-			delFileOrDir(entryPath);
-			return null;
-		}
-		
-		RevCommit ret = null;
-        try {
-        	CommitCommand commitCmd = git.commit();
-			commitCmd.setCommitter(commitUser, "").setMessage(commitMsg);
-			
-			ret = commitCmd.call();
-			System.out.println("gitAdd() commitId:" + ret.getName());
-		} catch (Exception e) {
-			System.out.println("gitAdd() commit error");
-			e.printStackTrace();
-			//Do roll back Index
-			if(rollBackIndex(git, entryPath, null))
-			{
-				delFileOrDir(entryPath);
-			}
-			return null;
-		}
-		
-		if(isRemote)
-		{
-			try {
-				git.push().call();
-			} catch (Exception e) {
-				System.out.println("gitAdd() Push Error");	
-				e.printStackTrace();
-				//Do roll back commit and Index 
-				if(rollBackCommit(git, null))
-				{
-					if(rollBackIndex(git, entryPath, null))
-					{
-						delFileOrDir(entryPath);
-					}
-				}
-				return null;
-			}
-		}
-		
-        return ret.getName();
-	}
-
 	public String gitMove(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
 		
 		String wcSrcDocParentPath = srcDoc.getLocalRootPath() + srcDoc.getPath();
@@ -1097,7 +1042,7 @@ public class GITUtil  extends BaseController{
 	    	System.out.println("doAutoCommmit() There is nothing to commit");
 	        return getLatestRevision();
 	    }
-        
+	    
 		Git git = null;
 		try {
 			git = Git.open(new File(wcDir));
@@ -1107,6 +1052,13 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 		
+	    if(executeCommitActionList(git,commitActionList,true) == false)
+	    {
+	    	System.out.println("doAutoCommit() executeCommitActionList Failed");
+	    	git.close();
+	        return null;
+	    }
+	    
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1142,6 +1094,178 @@ public class GITUtil  extends BaseController{
 		}
 		return ret.getName();
 	}
+
+	private boolean executeCommitActionList(Git git, List<CommitAction> commitActionList,boolean openRoot) {
+    	System.out.println("executeCommitActionList() szie: " + commitActionList.size());
+		try {
+	    	for(int i=0;i<commitActionList.size();i++)
+	    	{
+	    		CommitAction action = commitActionList.get(i);
+	    		boolean ret = false;
+	    		switch(action.getAction())
+	    		{
+	    		case 1:	//add
+	        		ret = executeAddAction(git,action);
+	    			break;
+	    		case 2: //delete
+	    			ret = executeDeleteAction(git,action);
+	    			break;
+	    		case 3: //modify
+	    			ret = executeModifyAction(git,action);
+	        		break;
+	    		}
+	    		if(ret == false)
+	    		{
+	    			System.out.println("executeCommitActionList() failed");	
+	    			return false;
+	    		} 
+	    	}
+	    	
+	    	return true;
+		} catch (Exception e) {
+			System.out.println("executeCommitActionList() 异常");	
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private boolean executeModifyAction(Git git, CommitAction action) {
+		Doc doc = action.getDoc();
+		
+		System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
+		
+		
+		boolean ret = modifyFile(git, doc);
+		return ret;
+	}
+
+	private boolean executeDeleteAction(Git git, CommitAction action) {
+		Doc doc = action.getDoc();
+
+		System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		return deleteEntry(git, doc);
+	}
+	
+	private boolean executeAddAction(Git git, CommitAction action) {
+		Doc doc = action.getDoc();
+		
+		System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		
+		//entry is file
+		if(doc.getType() == 1)
+		{
+			return addEntry(git, doc);
+		}
+		
+    	if(action.getSubActionList() == null)	
+    	{
+    		return addEntry(git, doc);
+    	}
+    	else //Keep the added Dir open until the subActionLis was executed
+    	{	
+    		if(addEntry(git, doc) == false)
+    		{
+    			return false;
+    		}
+    			
+    		if(executeCommitActionList(git, action.getSubActionList(),false) == false)
+    		{
+    			return false;
+    		}
+    		return true;
+    	}
+  	}
+
+    //doModifyFile
+    private boolean modifyFile(Git git, Doc doc)
+    {
+    	//Add to Doc to WorkingDirectory
+    	String entryPath = doc.getPath() + doc.getName();
+    	String docPath = doc.getLocalRootPath() + entryPath;
+		String wcDocPath = wcDir + entryPath;
+    	
+    	if(copyFile(docPath, wcDocPath, false) == false)
+		{
+			System.err.println("modifyFile() copy File to WD error");					
+			return false;
+		}
+    	
+    	try {	
+			git.add().addFilepattern(entryPath).call();
+		} catch (Exception e) {
+			System.err.println("addEntry() add Index Error");	
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+    }
+    
+	private boolean deleteEntry(Git git, Doc doc) 
+	{
+		//Add to Doc to WorkingDirectory
+		String entryPath = doc.getPath() + doc.getName();
+		String wcDocPath = wcDir + entryPath;
+		if(delFileOrDir(wcDocPath) == false)
+		{
+			System.err.println("deleteEntry() delete WD Error");	
+			return false;
+		}
+		
+		try {	
+			git.add().addFilepattern(entryPath).call();
+		} catch (Exception e) {
+			System.err.println("addEntry() add Index Error");	
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	public boolean addEntry(Git git, Doc doc) 
+	{
+		//Add to Doc to WorkingDirectory
+		String entryPath = doc.getPath() + doc.getName();
+		String docPath = doc.getLocalRootPath() + entryPath;
+		String wcDocPath = wcDir + entryPath;
+		if(doc.getType() == 1)
+		{
+			if(copyFile(docPath, wcDocPath, false) == false)
+			{
+				System.err.println("addEntry() add File to WD error");					
+				return false;
+			}
+		}
+		else
+		{
+			//Add Dir
+			File dir = new File(wcDocPath);
+			if(dir.mkdir() == false)
+			{
+				System.err.println("addEntry() add Dir to WD error");										
+				return false;
+			}
+		}
+		
+		try {	
+			git.add().addFilepattern(entryPath).call();
+		} catch (Exception e) {
+			System.err.println("addEntry() add Index Error");	
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	public String moveDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 	private void scheduleForCommit(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) {
 		System.out.println("scheduleForCommit()  parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
@@ -1328,51 +1452,7 @@ public class GITUtil  extends BaseController{
 	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	public String addDoc(Doc doc, String localRootPath, String commitMsg, String commitUser) 
-	{
-		//Add to Doc to WorkingDirectory
-		String entryPath = doc.getPath() + doc.getName();
-		String docPath = localRootPath + entryPath;
-		String wcDocPath = wcDir + entryPath;
-		if(doc.getType() == 1)
-		{
-			if(copyFile(docPath, wcDocPath, false) == false)
-			{
-				System.out.println("gitRealDocAdd() add File to WD error");					
-				return null;
-			}
-		}
-		else
-		{
-			//Add Dir
-			File dir = new File(wcDocPath);
-			if(dir.mkdir() == false)
-			{
-				System.out.println("gitRealDocAdd() add Dir to WD error");										
-				return null;
-			}
-		}
-		
-		return gitAdd(wcDocPath, wcDocPath, wcDocPath, wcDocPath);
-	}
-
-	public String deleteDoc(Doc doc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public String moveDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
+	}	
 	
 	protected String gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
 			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
