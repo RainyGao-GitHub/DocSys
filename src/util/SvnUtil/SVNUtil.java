@@ -501,7 +501,9 @@ public class SVNUtil  extends BaseController{
 		{
 			return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
 		}	
-			
+		
+		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		
 		String entryPath = doc.getPath() + doc.getName();			
 		File localEntry = new File(localRootPath + entryPath);
 		//LocalEntry does not exist
@@ -520,38 +522,62 @@ public class SVNUtil  extends BaseController{
 		        return getLatestRevision();
 		    }
 		    
-		    return deleteDoc(doc, commitMsg, commitUser);
+		    System.out.println("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			insertDeleteAction(commitActionList,doc);
 		}
-
-		//LocalEntry is File
-		if(localEntry.isFile())
+		else
 		{
-			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
-				
-		    type = checkPath(entryPath, null);
-		    if(type == null)
-		    {
-		    	return null;
-		    }
-		    if(type == 0)
-		    {
-		    	return addFileEx(doc, commitMsg, commitUser, false);
-		    }
-		    else if(type != 1)
-		    {
-		    	return addFileEx(doc, commitMsg, commitUser, true);
-		    }
-		    else
-		    {
-		       return modifyFile(doc, commitMsg, commitUser);
-		    }
+			//LocalEntry is File
+			if(localEntry.isFile())
+			{
+				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+					
+			    type = checkPath(entryPath, null);
+			    if(type == null)
+			    {
+			    	return null;
+			    }
+			    if(type == 0)
+			    {
+					System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					insertAddFileAction(commitActionList,doc,false);
+			    }
+			    else if(type != 1)
+			    {
+					System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			    	insertDeleteAction(commitActionList,doc);
+					insertAddFileAction(commitActionList,doc,false);
+			    }
+			    else
+			    {
+		    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
+		    		if(commitHashMap == null) //文件内容改变	
+		    		{
+			            if(modifyEnable)
+			            {
+		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		            		insertModifyFile(commitActionList,doc);
+		            	}
+		    		}
+		    		else
+		    		{
+		    			Doc tempDoc = commitHashMap.get(doc.getDocId());
+		    			if(tempDoc != null)
+		    			{
+		            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		            		insertModifyFile(commitActionList,doc);
+		    			}
+		    		}
+			    }
+			}
+			else
+			{
+				//LocalEntry is Directory
+				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
+			}
 		}
-
-		//LocalEntry is Directory
-		System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
-		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-		scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
-				                
+		
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
 	    	System.out.println("doAutoCommmit() There is nothing to commit");
@@ -675,7 +701,7 @@ public class SVNUtil  extends BaseController{
 			return false;
 		}
 	}
-
+	
 	private boolean executeModifyAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
 		
@@ -1063,229 +1089,7 @@ public class SVNUtil  extends BaseController{
 	        }
 	        return baos.toByteArray();
 	}	
-	
-    //增加目录
-	public boolean svnAddDir(String parentPath,String entryName,String commitMsg, String commitUser)
-	{
-        ISVNEditor editor = getCommitEditor(commitMsg);
-		if(editor == null)
-		{
-			return false;
-		}
-		
-		if(addDir(editor, parentPath, entryName) == false)
-		{
-			return false;
-		}
-		
-		SVNCommitInfo commitInfo = commit(editor);
-		if(commitInfo == null)
-		{
-			return false;
-		}
-		
-		System.out.println("svnAddDir() The directory was added: " + commitInfo);
-		return true;
-	}
-	
-	//增加文件
-	public boolean svnAddFile(String parentPath,String entryName,String localFilePath,String commitMsg, String commitUser)
-	{
-        ISVNEditor editor = getCommitEditor(commitMsg);
-		if(editor == null)
-		{
-			return false;
-		}	
-	    
-		InputStream localFile = getFileInputStream(localFilePath);
-		boolean ret = addFile(editor, parentPath,entryName, localFile);
-		closeFileInputStream(localFile);
-		if(ret == false)
-		{
-			return false;
-		}	
-		
-		SVNCommitInfo commitInfo = commit(editor);
-		if(commitInfo == null)
-		{
-			return false;
-		}
-
-		System.out.println("svnAddFile() The file was added: " + commitInfo);
-		return true;
-	}
-	
-	
-	//增加目录（如果parentPath不存在则也会增加）
-	public boolean svnAddDirEx(Doc doc,String localRootPath,String commitMsg, String commitUser, boolean deleteOld)
-	{
-		System.out.println("svnAddDirEx()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localParentPath:" + localRootPath);	
-		try {
-			//Build commitAction
-			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 			
-			if(deleteOld)		
-			{
-				insertDeleteAction(commitActionList,doc);
-				insertAddDirAction(commitActionList,doc, false);
-			}
-			else
-			{
-				insertAddDirAction(commitActionList,doc, false);
-			}
-			
-		    if(commitActionList == null || commitActionList.size() ==0)
-		    {
-		    	System.out.println("svnAddDirEx() There is nothing to commit");
-		        return true;
-		    }
-	        
-		    ISVNEditor editor = getCommitEditor(commitMsg);
-	        if(editor == null)
-	        {
-	        	System.out.println("svnAddDirEx() getCommitEditor Failed");
-	        	return false;
-	        }
-	        
-	        if(executeCommitActionList(editor,commitActionList,true) == false)
-	        {
-	        	System.out.println("svnAddDirEx() executeCommitActionList Failed");
-	        	editor.abortEdit();	
-	        	return false;
-	        }
-		        
-		    SVNCommitInfo commitInfo = commit(editor);
-		    if(commitInfo == null)
-		    {
-		    	System.out.println("svnAddDirEx() commit failed!");
-		    	return false;
-		    }
-		    
-		    System.out.println("svnAddDirEx() commit success: " + commitInfo);
-		    
-		} catch (Exception e) {
-			System.out.println("svnAddDirEx() Exception");
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-
-	//增加文件（如果parentPath不存在则也会增加）
-	public String addFileEx(Doc doc, String commitMsg, String commitUser, boolean deleteOld)
-	{
-		String localRootPath = doc.getLocalRootPath();
-		System.out.println("addFileEx()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath);	
-		try {
-			//Build commitAction
-			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
-			
-			if(deleteOld)		
-			{
-				insertDeleteAction(commitActionList,doc);
-				insertAddFileAction(commitActionList,doc,false);
-			}
-			else
-			{
-				insertAddFileAction(commitActionList,doc,false);
-			}
-			
-		    if(commitActionList == null || commitActionList.size() ==0)
-		    {
-		    	System.out.println("addFileEx() There is nothing to commit");
-		        return "";
-		    }
-	        
-		    ISVNEditor editor = getCommitEditor(commitMsg);
-	        if(editor == null)
-	        {
-	        	System.out.println("addFileEx() getCommitEditor Failed");
-	        	return null;
-	        }
-	        
-	        if(executeCommitActionList(editor,commitActionList,true) == false)
-	        {
-	        	System.out.println("addFileEx() executeCommitActionList Failed");
-	        	editor.abortEdit();	
-	        	return null;
-	        }
-		        
-		    SVNCommitInfo commitInfo = commit(editor);
-		    if(commitInfo == null)
-		    {
-		    	System.out.println("addFileEx() commit failed!");
-		    	return null;
-		    }
-		    
-		    System.out.println("addFileEx() commit success: " + commitInfo);
-			return commitInfo.getNewRevision() + "";		    
-		} catch (Exception e) {
-			System.out.println("addFileEx() Exception");
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
-	//修改文件
-	public String modifyFile(Doc doc, String commitMsg, String commitUser)
-	{
-		String localRootPath = doc.getLocalRootPath();
-		String localRefRootPath = doc.getLocalRefRootPath();
-		String entryPath = doc.getPath() + doc.getName();
-		
-        ISVNEditor editor = getCommitEditor(commitMsg);
-		if(editor == null)
-		{
-			return null;
-		}	
-	    
-		String newFilePath = localRootPath + entryPath;
-		String oldFilePath = localRefRootPath + entryPath;
-		if(localRefRootPath == null)
-		{
-			oldFilePath = null;
-		}
-		
-		boolean ret = false;
-		InputStream newFile = getFileInputStream(newFilePath);
-		
-		if(oldFilePath != null)
-		{
-			InputStream oldFile = null;
-			File file = new File(oldFilePath);
-			if(true == file.exists())
-			{
-				oldFile = getFileInputStream(oldFilePath);	
-				ret = modifyFile(editor, doc.getPath(), doc.getName(), oldFile, newFile,true,true);
-				closeFileInputStream(oldFile);
-			}
-			else
-			{
-				ret = modifyFile(editor, doc.getPath(), doc.getName(), null, newFile,true,true);
-			}
-		}
-		else
-		{
-			ret = modifyFile(editor, doc.getPath(), doc.getName(), null, newFile,true,true);			
-		}
-		closeFileInputStream(newFile);
-		
-		if(ret == false)
-		{
-			return null;
-		}
-		
-		SVNCommitInfo commitInfo = commit(editor);
-		if(commitInfo == null)
-		{
-			System.out.println("modifyFile() commit failed ");
-			return null;
-		}
-
-		System.out.println("modifyFile() The file was modified: " + commitInfo);
-		return commitInfo.getNewRevision()+"";
-	}
-	
 	//move or copy Doc
 	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
 	{   
