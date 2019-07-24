@@ -1055,16 +1055,18 @@ public class GITUtil  extends BaseController{
 		    		}
 			    }
 			}
-	
-			//LocalEntry is Directory
-			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
-			scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
-					                
-		    if(commitActionList == null || commitActionList.size() ==0)
-		    {
-		    	System.out.println("doAutoCommmit() There is nothing to commit");
-		        return getLatestRevision();
-		    }
+			else
+			{
+				//LocalEntry is Directory
+				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
+			}
+		}
+		
+		if(commitActionList == null || commitActionList.size() ==0)
+		{
+		    System.out.println("doAutoCommmit() There is nothing to commit");
+		    return getLatestRevision();
 		}
 		
 		Git git = null;
