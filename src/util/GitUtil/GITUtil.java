@@ -1,22 +1,16 @@
 package util.GitUtil;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
-import org.eclipse.jgit.lib.ConfigConstants;
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -26,13 +20,6 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.tmatesoft.svn.core.SVNCommitInfo;
-import org.tmatesoft.svn.core.SVNDirEntry;
-import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.io.ISVNEditor;
-import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -40,8 +27,6 @@ import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
-
-import util.ReturnAjax;
 
 public class GITUtil  extends BaseController{
     //For Low Level APIs
@@ -703,49 +688,6 @@ public class GITUtil  extends BaseController{
         }
 		return null;
     }
-	
-    //Get the Entry from git Repository
- 	public boolean getFile(String localFilePath, String parentPath, String entryName, String commitId) {
-
- 		System.out.println("getFile() parentPath:" + parentPath + " entryName:" + entryName + " commitId:" + commitId );
- 		String remoteFilePath = parentPath + entryName;
- 		
-
-        FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(localFilePath);
-		} catch (FileNotFoundException e) {
-			System.out.println("getFile() new FileOutputStream Failed:" + localFilePath);
-			e.printStackTrace();
-			return false;
-		}
-		
-		Repository repository = null;
-        try {
-            //gitDir表示git库目录
-        	Git git = Git.open(new File(gitDir));
-            repository = git.getRepository();
-            
-            RevWalk walk = new RevWalk(repository);
-            
-            ObjectId objId = repository.resolve(commitId);
-            RevCommit revCommit = walk.parseCommit(objId);
-            RevTree revTree = revCommit.getTree();
-
-            //child表示相对git库的文件路径
-            TreeWalk treeWalk = TreeWalk.forPath(repository, remoteFilePath, revTree);
-            ObjectId blobId = treeWalk.getObjectId(0);
-            ObjectLoader loader = repository.open(blobId);
-            loader.copyTo(out);
-            walk.close();
-            repository.close();
-            return true;
-        } catch (Exception e) {
-           System.err.println("getFile() 异常"); 
-           e.printStackTrace();
-           return false;
-        }        
- 	}
 
 	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{		
@@ -1370,9 +1312,46 @@ public class GITUtil  extends BaseController{
         }
 	}
 
-	private String doAutoCommitParent(Doc doc, String commitMsg, String commitUser, boolean modifyEnable) {
-		// TODO Auto-generated method stub
-		return null;
+	private String doAutoCommitParent(Doc doc, String commitMsg,String commitUser, boolean modifyEnable)
+    {
+    	String parentPath = doc.getPath();
+        System.out.println("doAutoCommitParent() parentPath:" + parentPath);
+    	if(parentPath.isEmpty())
+    	{
+    		return null;
+    	}
+    	
+    	String [] paths = parentPath.split("/");
+    	
+    	String path = "";
+    	String name = "";
+    	try {
+	    	for(int i=0; i< paths.length; i++)
+	    	{
+	    		name = paths[i];
+	    		if(name.isEmpty())
+	    		{
+	    			continue;
+	    		}
+	    		
+	    		Integer type = checkPath(path + name, null);
+	    		if(type == null)
+	    		{
+	    			return null;
+	    		}
+	    		
+	    		if(type == 0)
+	    		{
+	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2);
+	    		}
+	    		path = path + name + "/";  		
+	    	}
+    	} catch (Exception e) {
+    		System.out.println("doAutoCommitParent() Exception");
+    		e.printStackTrace();
+    	}
+    	return null;
 	}
 
 	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
