@@ -746,257 +746,6 @@ public class GITUtil  extends BaseController{
            return false;
         }        
  	}
- 	
-	//Commit will commit change to Git Repos and Push to remote
-	public String Commit(Doc doc, String commitMsg, String commitUser) {
-		System.out.println("Commit() " + doc.getPath() + doc.getName());	
-
-        Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-		} catch (Exception e) {
-			System.out.println("Commit() Failed to open wcDir:" + wcDir);
-			e.printStackTrace();
-			return null;
-		}
-		
-		String entryPath = doc.getPath() + doc.getName();
-		try {	
-			if(entryPath.isEmpty())
-			{
-		        git.add().addFilepattern(".").call();
-			}
-			else
-			{
-				git.add().addFilepattern(entryPath).call();
-			}
-		} catch (Exception e) {
-			System.out.println("Commit() Commit add Index Error");	
-			e.printStackTrace();
-			//Do roll back WorkingCopy
-			rollBackIndex(git, entryPath, null);	
-			return null;
-		}
-		
-		RevCommit ret = null;
-        try {
-			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
-			System.out.println("Commit() commitId:" + ret.getName());
-		} catch (Exception e) {
-			System.out.println("Commit() commit error");
-			e.printStackTrace();
-			//Do roll back Index
-			rollBackIndex(git, entryPath, null);			
-			return null;
-		}
-		
-		if(isRemote)
-		{
-			try {
-				git.push().call();
-			} catch (Exception e) {
-				System.out.println("Push Error");	
-				e.printStackTrace();
-				//Do roll back commit and Index 
-				if(rollBackCommit(git, null) == false)
-				{
-					rollBackIndex(git, entryPath, null);
-				}
-				return null;
-			}
-		}
-		
-        return ret.getName();
-	}
-	
-	private boolean rollBackCommit(Git git,String revision) {
-		if(revision == null || revision.isEmpty()) 
-		{
-			revision = "HEAD";
-		}
-
-		try {
-			Repository repository = git.getRepository();
-	        RevWalk walk = new RevWalk(repository);
-			ObjectId objId = repository.resolve(revision);
-			RevCommit revCommit = walk.parseCommit(objId);  
-	        String preVision = revCommit.getParent(0).getName();  
-	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
-	        walk.close();
-	        repository.close(); 
-		} catch (Exception e) {
-			System.out.println("rollBackCommit() Exception");
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-
-	//将工作区和暂存区恢复指定版本（revision==null表示恢复到最新版本）
-    private boolean rollBackIndex(Git git, String entryPath, String revision) {
-		//checkout操作会丢失工作区的数据，暂存区和工作区的数据会恢复到指定（revision）的版本内容
-        CheckoutCommand checkoutCmd = git.checkout();
-        checkoutCmd.addPath(entryPath);
-        //加了“^”表示指定版本的前一个版本，如果没有上一版本，在命令行中会报错，例如：error: pathspec '4.vm' did not match any file(s) known to git.
-        checkoutCmd.setStartPoint(revision);
-        
-        try {
-			checkoutCmd.call();
-		} catch (Exception e) {
-			System.out.println("rollBackIndex() Exception");
-			e.printStackTrace();
-			return false;
-		}
-        return true;
-	}
-
-	public String gitMove(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		
-		String wcSrcDocParentPath = srcDoc.getLocalRootPath() + srcDoc.getPath();
-		String wcDstDocParentPath = dstDoc.getLocalRootPath() + dstDoc.getPath();
-
-		if(moveFileOrDir(wcSrcDocParentPath, srcDoc.getName() ,wcDstDocParentPath, dstDoc.getName(),false) == false)
-		{
-			System.out.println("gitDocMove() moveFileOrDir Failed");					
-			return null;
-		}
-				
-		Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-		} catch (Exception e) {
-			System.out.println("gitMove() Failed to open wcDir:" + wcDir);
-			e.printStackTrace();
-			return null;
-		}
-
-		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
-		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
-
-		//Add Index for delete srcEntry
-		try {	
-			git.add().addFilepattern(srcEntryPath).call();
-		} catch (Exception e) {
-			System.out.println("gitMove() add Index for srcEntry delete Failed");	
-			e.printStackTrace();
-			//Do roll back WorkingCopy for srcEntry
-			rollBackIndex(git, srcEntryPath, null);
-			return null;
-		}
-		
-		//Add Index for add dstEntry
-		try {	
-			git.add().addFilepattern(dstEntryPath).call();
-		} catch (Exception e) {
-			System.out.println("gitMove() add Index for dstEntry add Failed");	
-			e.printStackTrace();
-			//Do roll back WorkingCopy for srcEntry and dstEntry
-			rollBackIndex(git, srcEntryPath, null);
-			delFileOrDir(dstEntryPath);
-			return null;
-		}
-		
-		RevCommit ret = null;
-        try {
-			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
-			System.out.println("gitMove() commitId:" + ret.getName());
-		} catch (Exception e) {
-			System.out.println("gitMove() commit error");
-			e.printStackTrace();
-			//Do roll back Index
-			rollBackIndex(git, srcEntryPath, null);
-			if(true == rollBackIndex(git, dstEntryPath, null))
-			{
-				delFileOrDir(dstEntryPath);
-			}	
-			return null;
-		}
-		
-		if(isRemote)
-		{
-			try {
-				git.push().call();
-			} catch (Exception e) {
-				System.out.println("gitAdd() Push Error");	
-				e.printStackTrace();
-				//Do roll back commit and Index 
-				if(rollBackCommit(git, null) == false)
-				{
-					rollBackIndex(git, srcEntryPath, null);
-					if(rollBackIndex(git, dstEntryPath, null))
-					{
-						delFileOrDir(dstEntryPath);
-					}
-				}
-				return null;
-			}
-		}
-		
-		return ret.getName();
-	}
-
-	public String gitCopy(String srcParentPath, String srcEntryName, String dstParentPath, String dstEntryName,
-			String commitMsg, String commitUser) {
-		System.out.println("gitCopy() copy " + srcParentPath + srcEntryName + " to " + dstParentPath + dstEntryName);	
-		
-		Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-		} catch (Exception e) {
-			System.out.println("gitCopy() Failed to open wcDir:" + wcDir);
-			e.printStackTrace();
-			return null;
-		}
-
-		String dstEntryPath = dstParentPath + dstEntryName;
-		
-		//Add Index for add dstEntry
-		try {	
-			git.add().addFilepattern(dstEntryPath).call();
-		} catch (Exception e) {
-			System.out.println("gitCopy() add Index for dstEntry add Failed");	
-			e.printStackTrace();
-			//Do roll back WorkingCopy for srcEntry and dstEntry
-			delFileOrDir(dstEntryPath);
-			return null;
-		}
-		
-		RevCommit ret = null;
-        try {
-			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
-			System.out.println("gitCopy() commitId:" + ret.getName());
-		} catch (Exception e) {
-			System.out.println("gitCopy() commit error");
-			e.printStackTrace();
-			//Do roll back Index
-			if(true == rollBackIndex(git, dstEntryPath, null))
-			{
-				delFileOrDir(dstEntryPath);
-			}	
-			return null;
-		}
-		
-		if(isRemote)
-		{
-			try {
-				git.push().call();
-			} catch (Exception e) {
-				System.out.println("gitCopy() Push Error");	
-				e.printStackTrace();
-				//Do roll back commit and Index 
-				if(rollBackCommit(git, null) == false)
-				{
-					if(rollBackIndex(git, dstEntryPath, null))
-					{
-						delFileOrDir(dstEntryPath);
-					}
-				}
-				return null;
-			}
-		}
-		
-		return ret.getName();
-	}
 
 	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{		
@@ -1129,10 +878,102 @@ public class GITUtil  extends BaseController{
 	        return null;
 	    }
 	    
-	    return doCommit(git, entryPath, commitUser, commitMsg, commitActionList);
+	    String newRevision =  doCommit(git, commitUser, commitMsg, commitActionList);
+	    
+	    if(newRevision == null)
+	    {
+	    	//Do rollBack
+			//Do roll back Index
+			rollBackIndex(git, entryPath, null);
+			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
+	    	return null;
+	    }
+	    
+	    return newRevision;
+	}
+	
+	//move or copy Doc
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
+	{   
+		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
+		{
+			srcDoc.setRevision(getLatestRevision());
+		}
+		
+		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
+		Integer type = checkPath(srcEntryPath,null);
+		if(type == null)
+		{
+			System.out.println("remoteCopyEntry() Exception");
+			return null;
+		}
+		
+		if (type == 0) 
+		{
+		    System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
+		    return null;
+		}
+
+		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
+		
+		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		
+	    //Do copy File Or Dir
+	    if(isMove)
+	    {
+	    	System.out.println("svnCopy() move " + srcEntryPath + " to " + dstEntryPath);
+   			insertDeleteAction(commitActionList,srcDoc);
+	    }
+        else
+        {
+ 	       System.out.println("svnCopy() copy " + srcEntryPath + " to " + dstEntryPath);
+ 	    }
+	    
+		if(dstDoc.getType() == 1)
+		{
+			insertAddFileAction(commitActionList, dstDoc,false);
+		}
+		else
+		{
+			insertAddDirAction(commitActionList, dstDoc,false);
+		}
+	    
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+		} catch (Exception e) {
+			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return null;
+		}
+		
+	    if(executeCommitActionList(git,commitActionList,true) == false)
+	    {
+	    	System.out.println("doAutoCommit() executeCommitActionList Failed");
+	    	git.close();
+	        return null;
+	    }
+	    
+	    String newRevision =  doCommit(git, commitUser, commitMsg, commitActionList);
+	    
+	    if(newRevision == null)
+	    {
+	    	//Do rollBack
+			//Do roll back Index
+	    	if(isMove)
+	    	{
+	    		rollBackIndex(git, srcEntryPath, null);
+	    	}
+	    	
+	    	rollBackIndex(git, dstEntryPath, null);
+			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
+	    	return null;
+	    }
+	    
+	    return newRevision;
 	}
 
-	private String doCommit(Git git, String entryPath, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
+	private String doCommit(Git git, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
 	{
         RevCommit ret = null;
         try {
@@ -1141,11 +982,6 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.out.println("doAutoCommmit() commit error");
 			e.printStackTrace();
-			//Do roll back Index
-			if(true == rollBackIndex(git, entryPath, null))
-			{
-				rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录
-			}	
 			return null;
 		}
 		
@@ -1157,18 +993,66 @@ public class GITUtil  extends BaseController{
 				System.out.println("doAutoCommmit() Push Error");	
 				e.printStackTrace();
 				//Do roll back commit and Index 
-				if(rollBackCommit(git, null) == false)
-				{
-					if(rollBackIndex(git, entryPath, null))
-					{
-						rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录
-					}
-				}
+				rollBackCommit(git, null);
 				return null;
 			}
 		}
 		return ret.getName();
 	}
+	
+	private boolean rollBackCommit(Git git,String revision) {
+		if(revision == null || revision.isEmpty()) 
+		{
+			revision = "HEAD";
+		}
+
+		try {
+			Repository repository = git.getRepository();
+	        RevWalk walk = new RevWalk(repository);
+			ObjectId objId = repository.resolve(revision);
+			RevCommit revCommit = walk.parseCommit(objId);  
+	        String preVision = revCommit.getParent(0).getName();  
+	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
+	        walk.close();
+	        repository.close(); 
+		} catch (Exception e) {
+			System.out.println("rollBackCommit() Exception");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	//将工作区和暂存区恢复指定版本（revision==null表示恢复到最新版本）
+    private boolean rollBackIndex(Git git, String entryPath, String revision) {
+		//checkout操作会丢失工作区的数据，暂存区和工作区的数据会恢复到指定（revision）的版本内容
+        CheckoutCommand checkoutCmd = git.checkout();
+        checkoutCmd.addPath(entryPath);
+        //加了“^”表示指定版本的前一个版本，如果没有上一版本，在命令行中会报错，例如：error: pathspec '4.vm' did not match any file(s) known to git.
+        checkoutCmd.setStartPoint(revision);
+        
+        try {
+			checkoutCmd.call();
+		} catch (Exception e) {
+			System.out.println("rollBackIndex() Exception");
+			e.printStackTrace();
+			return false;
+		}
+        return true;
+	}
+    
+	private void rollBackWcDir(List<CommitAction> commitActionList) {
+    	for(int i=0;i<commitActionList.size();i++)
+    	{
+    		CommitAction action = commitActionList.get(i);
+    		Doc doc = action.getDoc();
+    		if(1 == action.getAction()) //add
+    		{
+        		delFileOrDir(wcDir + doc.getPath() + doc.getName());
+    		}
+    	}
+	}
+	
 
 	private boolean executeCommitActionList(Git git, List<CommitAction> commitActionList,boolean openRoot) {
     	System.out.println("executeCommitActionList() szie: " + commitActionList.size());
@@ -1491,64 +1375,8 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 
-	private void rollBackWcDir(List<CommitAction> commitActionList) {
-    	for(int i=0;i<commitActionList.size();i++)
-    	{
-    		CommitAction action = commitActionList.get(i);
-    		Doc doc = action.getDoc();
-    		if(1 == action.getAction()) //add
-    		{
-        		delFileOrDir(wcDir + doc.getPath() + doc.getName());
-    		}
-    	}
-	}
-
 	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
 		// TODO Auto-generated method stub
-		return null;
-	}	
-	
-	protected String gitDocCopy(Repos repos, boolean isRealDoc, String srcParentPath, String srcEntryName, String dstParentPath,
-			String dstEntryName, String commitMsg, String commitUser, ReturnAjax rt) 
-	{
-		System.out.println("gitDocCopy() srcParentPath:" + srcParentPath + " srcEntryName:" + srcEntryName + " dstParentPath:" + dstParentPath + " dstEntryName:" + dstEntryName);
-		
-		if(srcEntryName == null || srcEntryName.isEmpty())
-		{
-			System.out.println("gitDocCopy() srcEntryName can not be empty");
-			return null;
-		}
-
-		if(dstEntryName == null || dstEntryName.isEmpty())
-		{
-			System.out.println("gitDocCopy() dstEntryName can not be empty");
-			return null;
-		}
-		//GitUtil Init
-		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, commitUser) == false)
-		{
-			System.out.println("gitDocCopy() GITUtil Init failed");
-			return null;
-		}
-	
-		//Do move at Working Directory
-		String wcSrcDocParentPath = getLocalVerReposPath(repos, isRealDoc) + srcParentPath;
-		String wcDstParentDocPath = getLocalVerReposPath(repos, isRealDoc) + dstParentPath;	
-		if(copyFileOrDir(wcSrcDocParentPath+srcEntryName,wcDstParentDocPath+dstEntryName,false) == false)
-		{
-			System.out.println("gitDocCopy() moveFileOrDir Failed");					
-			return null;
-		}
-				
-		//Commit will roll back WC if there is error
-		return gitUtil.gitCopy(srcParentPath, srcEntryName, dstParentPath, dstEntryName, commitMsg, commitUser);
-	}
-
-	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean b) {
-		// TODO Auto-generated method stub
-		
-		
 		return null;
 	}
 }
