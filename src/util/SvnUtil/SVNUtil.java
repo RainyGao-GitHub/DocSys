@@ -40,8 +40,6 @@ import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 
-import util.ReturnAjax;
-
 public class SVNUtil  extends BaseController{
 	
 	//For Low Level APIs
@@ -151,7 +149,7 @@ public class SVNUtil  extends BaseController{
     	try {
 			return repository.getLatestRevision() + "";
 		} catch (SVNException e) {
-			// TODO Auto-generated catch block
+			System.err.println("getLatestRevision() 异常");
 			e.printStackTrace();
 			return null;
 		}
@@ -612,7 +610,7 @@ public class SVNUtil  extends BaseController{
 		try {
 			editor.abortEdit();
 		} catch (SVNException e) {
-			// TODO Auto-generated catch block
+		    System.err.println("abortEdit() 异常");
 			e.printStackTrace();
 		}	
 	}
@@ -1247,12 +1245,7 @@ public class SVNUtil  extends BaseController{
     	return addEntry(editor,parentPath,dirName,false,null,true,true,false);
     }
     
-	//doAddFile
-    private boolean addFile(ISVNEditor editor, String parentPath,String fileName,InputStream fileData){
-    	return addEntry(editor,parentPath,fileName,true,fileData,true,true,false);
-    }
-
-    private boolean deleteEntry(ISVNEditor editor, Doc doc, boolean openRoot)
+	private boolean deleteEntry(ISVNEditor editor, Doc doc, boolean openRoot)
     {    	
         try{
 	    	if(openRoot)
@@ -1662,7 +1655,6 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean getRemoteDir(String localParentPath, String targetName, boolean force) {
-		// TODO Auto-generated method stub
 		File localEntry = new File(localParentPath + targetName);
 		if(localEntry.exists())
 		{

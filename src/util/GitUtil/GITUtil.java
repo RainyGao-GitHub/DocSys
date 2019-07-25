@@ -11,14 +11,18 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import com.DocSystem.common.CommitAction;
@@ -304,6 +308,137 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
     }
+    
+
+	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
+		String entryPath = doc.getPath() + doc.getName();
+    	System.out.println("getHistoryDetail entryPath:" + entryPath);	
+		
+		String revision = "HEAD";
+		if(commitId != null)
+		{
+			revision = commitId;
+		}
+		
+		try {
+			Git git = Git.open(new File(gitDir));
+			Repository repository = git.getRepository();
+	        
+	        //New RevWalk
+	        RevWalk walk = new RevWalk(repository);
+	
+	        //Get objId for revision
+	        ObjectId objId = repository.resolve(revision);
+	        if(objId == null)
+	        {
+	        	System.out.println("There is no any commit history for:" + revision);
+	        	walk.close();
+	        	repository.close();
+	        	return null;
+	        }
+	        
+	        RevCommit revCommit = walk.parseCommit(objId);
+	                
+	        RevCommit previsouCommit=getPrevHash(revCommit,repository);
+			ObjectId preObjId = previsouCommit.getTree().getId();
+	
+			ObjectReader reader = repository.newObjectReader();
+			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+			oldTreeIter.reset(reader, preObjId);
+	  		CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+			newTreeIter.reset(reader, objId);
+			
+			List<DiffEntry> diffs= git.diff()
+	                		.setNewTree(newTreeIter)
+	                		.setOldTree(oldTreeIter)
+	                		.call();
+			walk.close();
+			repository.close();
+			git.close();			
+			
+			if(diffs.size() > 0)
+			{
+				//Convert diffEntry to changedItem
+				List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
+		        for (DiffEntry entry : diffs) 
+		        {
+		          System.out.println("Entry: " + entry);
+		          
+		      	  String nodePath = entry.getNewPath();
+		          Integer entryType = getTypeFromFileMode(entry.getNewMode());
+		          Integer changeType = getChangeType(entry.getChangeType());
+		
+		          String srcEntryPath = entry.getOldPath();
+		          
+		          if(srcEntryPath == null || srcEntryPath.equals(nodePath))
+		          {
+		          	System.out.println(" " + entry.getChangeType() + "	" + entryPath);                                     	
+		          }
+		          else
+		          {
+		          	System.out.println(" " + entry.getChangeType() + "	" + entryPath + " from " + srcEntryPath + " at revision " + commitId);                
+		          }
+		          
+		          //Add to changedItemList
+		          ChangedItem changedItem = new ChangedItem();
+		          changedItem.setChangeType(changeType);	
+		          changedItem.setEntryType(entryType);
+		          changedItem.setEntryPath(nodePath);
+		          
+		          changedItem.setSrcEntryPath(srcEntryPath);
+		          
+		          changedItem.setCommitId(commitId);
+		          
+		          changedItemList.add(changedItem);
+		        }
+		        
+		        return changedItemList;
+			}		
+		} catch (Exception e) {
+			System.err.println("getHistoryDetail entryPath:" + entryPath + " 异常");	
+			e.printStackTrace();
+		}	
+		
+		return null;
+	}
+	
+    private Integer getChangeType(ChangeType changeType) {
+
+    	switch(changeType)
+    	{
+    	case ADD:
+    		return 1;
+    	case DELETE:
+    		return 2;
+    	case MODIFY:
+    		return 3;
+    	case COPY:
+    		return 4;
+    	case RENAME:
+    		return 5;
+    	}
+    	
+    	return null;
+	}
+	
+	public static RevCommit getPrevHash(RevCommit commit, Repository repo)  throws  IOException {
+ 
+	    try (RevWalk walk = new RevWalk(repo)) {
+	        // Starting point
+	        walk.markStart(commit);
+	        int count = 0;
+	        for (RevCommit rev : walk) {
+	            // got the previous commit.
+	            if (count == 1) {
+	                return rev;
+	            }
+	            count++;
+	        }
+	        walk.dispose();
+	    }
+	    //Reached end and no previous commits.
+	    return null;
+	}
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<Doc> getDocList(Repos repos, Doc doc, String revision)
@@ -1352,10 +1487,5 @@ public class GITUtil  extends BaseController{
     		e.printStackTrace();
     	}
     	return null;
-	}
-
-	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }
