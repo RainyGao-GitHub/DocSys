@@ -480,14 +480,15 @@ public class GITUtil  extends BaseController{
 	}
 
 	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
-		String parentPath = doc.getPath();
-		String entryName = doc.getName(); 
-		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		System.out.println("getEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		String entryName = doc.getName();
+		String entryPath = doc.getPath() + doc.getName();
 		
 		//check targetName and set
 		if(targetName == null)
 		{
-			targetName = entryName;
+			targetName = doc.getName();
 		}
 		
         if(revision == null || revision.isEmpty())
@@ -510,23 +511,7 @@ public class GITUtil  extends BaseController{
             RevCommit revCommit = walk.parseCommit(objId);
             RevTree revTree = revCommit.getTree();
     		
-            TreeWalk treeWalk = null;
-            if(entryName.isEmpty())
-            {
-            	//Get treeWalk For whole repos
-            	treeWalk = new TreeWalk( repository );
-                treeWalk.setRecursive(false);
-                treeWalk.reset(revTree);
-            }
-            else
-            {   
-            	treeWalk = new TreeWalk(repository, repository.newObjectReader());
-                PathFilter pathFileter = PathFilter.create(parentPath+entryName);
-                treeWalk.setFilter(pathFileter);
-                treeWalk.reset(revTree);
-                treeWalk.setRecursive(false);
-            }
-            List<Doc> ret = recurGetEntry(git, repository, treeWalk, doc, localParentPath, targetName);
+            List<Doc> ret = recurGetEntry(git, repository, revTree, doc, localParentPath, targetName);
             walk.close();
             repository.close();
             return ret;
@@ -627,20 +612,37 @@ public class GITUtil  extends BaseController{
 		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
 	}
 	
-	private List<Doc> recurGetEntry(Git git, Repository repository, TreeWalk treeWalk, Doc doc, String localParentPath, String targetName) {
+	private List<Doc> recurGetEntry(Git git, Repository repository, RevTree revTree, Doc doc, String localParentPath, String targetName) {
+		
+		System.out.println("recurGetEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
-		System.out.println("recurGetEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		String entryPath = doc.getPath() + doc.getName();
+        
 		
-		List<Doc> successDocList = new ArrayList<Doc>();
-    	if(parentPath == null || entryName == null)
-    	{
-    		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
-    		return null;
-    	}
-    	
+		TreeWalk treeWalk = null;
 		try {
+			if(entryPath.isEmpty())
+	        {
+	        	//Get treeWalk For whole repos
+	        	treeWalk = new TreeWalk( repository );
+	            treeWalk.setRecursive(false);
+	            treeWalk.reset(revTree);
+	        }
+	        else
+	        {   
+	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
+	        	//treeWalk = new TreeWalk(repository, repository.newObjectReader());
+	            //PathFilter pathFileter = PathFilter.create(entryPath);
+	            //treeWalk.setFilter(pathFileter);
+	            //treeWalk.reset(revTree);
+	            treeWalk.setRecursive(false);
+	        }
+			
+			List<Doc> successDocList = new ArrayList<Doc>();
+    	
+
 			FileMode fileMode = treeWalk.getFileMode();
 	        if(isFile(fileMode))
 	        {
@@ -669,7 +671,10 @@ public class GITUtil  extends BaseController{
 	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isDir:" + fileMode.getBits());
 
 	        	File dir = new File(localParentPath,targetName);
-				dir.mkdir();
+	        	if(!dir.exists())
+				{
+	        		dir.mkdir();
+				}
 				
 				while(treeWalk.next())
 				{
@@ -682,7 +687,7 @@ public class GITUtil  extends BaseController{
 					subDoc.setPath(subParentPath);
 					subDoc.setName(subEntryName);
 					subDoc.setRevision(doc.getRevision());
-					List<Doc> subSuccessList = recurGetEntry(git, repository, treeWalk, subDoc, subLocalParentPath, subEntryName);
+					List<Doc> subSuccessList = recurGetEntry(git, repository, revTree, subDoc, subLocalParentPath, subEntryName);
 					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
 						successDocList.addAll(subSuccessList);
