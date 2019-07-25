@@ -739,9 +739,9 @@ public class GITUtil  extends BaseController{
 
 	private TreeWalk getTreeWalkByPath(Repository repository, RevTree revTree, String entryPath) {
 		System.err.println("getTreeWalkByPath() entryPath:" + entryPath); 
-        try {
-			TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
-			
+
+		try {
+			TreeWalk treeWalk = null;
 			if(entryPath.isEmpty())
 	        {
 	        	//Get treeWalk For whole repos
