@@ -370,15 +370,6 @@ public class GITUtil  extends BaseController{
 		
 		          String srcEntryPath = entry.getOldPath();
 		          
-		          if(srcEntryPath == null || srcEntryPath.equals(nodePath))
-		          {
-		          	System.out.println(" " + entry.getChangeType() + "	" + entryPath);                                     	
-		          }
-		          else
-		          {
-		          	System.out.println(" " + entry.getChangeType() + "	" + entryPath + " from " + srcEntryPath + " at revision " + commitId);                
-		          }
-		          
 		          //Add to changedItemList
 		          ChangedItem changedItem = new ChangedItem();
 		          changedItem.setChangeType(changeType);	
