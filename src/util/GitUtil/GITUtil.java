@@ -482,9 +482,6 @@ public class GITUtil  extends BaseController{
 	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
 		System.out.println("getEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
-		String entryName = doc.getName();
-		String entryPath = doc.getPath() + doc.getName();
-		
 		//check targetName and set
 		if(targetName == null)
 		{
@@ -584,6 +581,11 @@ public class GITUtil  extends BaseController{
 	
 	private int getTypeFromFileMode(FileMode fileMode)
 	{
+		if(fileMode == null)
+		{
+			return -1;
+		}
+		
 		int bits = fileMode.getBits();
 		switch(bits & FileMode.TYPE_MASK)
 		{
@@ -595,21 +597,6 @@ public class GITUtil  extends BaseController{
 			return 0;
 		}
 		return -1;
-	}
-	
-	private boolean isFile(FileMode fileMode)
-	{
-		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_FILE? true: false;
-	}
-	
-	private boolean isDir(FileMode fileMode)
-	{
-		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_TREE? true: false;
-	}
-	
-	private boolean isMissing(FileMode fileMode)
-	{
-		return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
 	}
 	
 	private List<Doc> recurGetEntry(Git git, Repository repository, RevTree revTree, Doc doc, String localParentPath, String targetName) {
@@ -641,12 +628,25 @@ public class GITUtil  extends BaseController{
 	        }
 			
 			List<Doc> successDocList = new ArrayList<Doc>();
-    	
-
-			FileMode fileMode = treeWalk.getFileMode();
-	        if(isFile(fileMode))
+			
+			int type = getTypeFromFileMode(treeWalk.getFileMode());
+	        
+			if(type == -1)
+			{
+				System.err.println("recurGetEntry() unknown type");
+	        	return null;
+	        }
+			
+			if(type == 0)
+			{
+				System.err.println("recurGetEntry() " + doc.getPath() + doc.getName() + " 不存在");
+	        	return null;				
+			}
+			
+			
+	        if(type == 1)
 	        {
-	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isFile:" + fileMode.getBits());
+	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isFile");
 
 	            FileOutputStream out = null;
 	    		try {
@@ -666,9 +666,9 @@ public class GITUtil  extends BaseController{
 	            successDocList.add(doc);
 	            return successDocList;
 	        }
-	        else if(isDir(fileMode))
+	        else if(type == 2)
 	        {
-	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isDir:" + fileMode.getBits());
+	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isDirectory");
 
 	        	File dir = new File(localParentPath,targetName);
 	        	if(!dir.exists())
@@ -695,16 +695,13 @@ public class GITUtil  extends BaseController{
 				}
 				return successDocList;
 	        }
-	        else 
-	        {
-	        	System.out.println("recurGetEntry() unknown FileMode:" + fileMode.getBits());
-	        	return null;
-	        }
+
         }catch (Exception e) {
             System.out.println("recurGetEntry() Exception"); 
             e.printStackTrace();
             return null;
         }
+		return null;
     }
 	
     //Get the Entry from git Repository
@@ -1132,6 +1129,11 @@ public class GITUtil  extends BaseController{
 	        return null;
 	    }
 	    
+	    return doCommit(git, entryPath, commitUser, commitMsg, commitActionList);
+	}
+
+	private String doCommit(Git git, String entryPath, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
+	{
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1327,16 +1329,6 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 		return true;
-	}
-
-	public String moveDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) {
-		// TODO Auto-generated method stub
-		return null;
 	}
   	
 	private void scheduleForCommit(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) {
@@ -1555,6 +1547,8 @@ public class GITUtil  extends BaseController{
 
 	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean b) {
 		// TODO Auto-generated method stub
+		
+		
 		return null;
 	}
 }
