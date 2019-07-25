@@ -526,69 +526,6 @@ public class GITUtil  extends BaseController{
            return null;
         }
 	}
-	
-	private TreeWalk getTreeWalkByPath(Repository repository, RevTree revTree, String path) {
-		
-		try {
-			TreeWalk tw = new TreeWalk(repository,  repository.newObjectReader());
-    		tw.reset(revTree);
-	    	tw.setRecursive(false);
-	    	if(path == null || path.isEmpty())
-	    	{
-	    		return tw;
-	    	}
-	    	
-	    	//Find out the treeWalk for Path
-	    	tw = findTreeWalkForPath(tw, path);
-	    	return tw;
-		} catch (Exception e) {
-			System.out.println("getTreeWalkByPath() Exception!"); 
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private TreeWalk findTreeWalkForPath(TreeWalk treeWalk, String path) {
-		//Split the path by "/"
-		String [] paths = path.split("/");
-		int deepth = paths.length;
-		for(int i=0; i< deepth; i++)
-		{
-			System.out.println("paths:" + paths[i]);
-		}
-		
-		int curLevel = 0;
-    	try {
-			while (treeWalk.next()) 
-			{
-				String entryName = treeWalk.getNameString();
-				if(entryName.equals(paths[curLevel]))
-				{
-					if(curLevel < deepth-1)
-					{
-						if(treeWalk.isSubtree()) 
-						{
-							treeWalk.enterSubtree();
-							curLevel ++;
-						}
-						else
-						{
-							return null;
-						}
-					}
-					else
-					{
-						//Find the treeWalk
-						return treeWalk;
-					}
-				}
-			}
-		} catch (Exception e) {
-			System.out.println();
-			e.printStackTrace();
-		}
-    	return null;
-	}
 
 	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
 		System.out.println("getEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
@@ -721,22 +658,7 @@ public class GITUtil  extends BaseController{
 		
 		TreeWalk treeWalk = null;
 		try {
-			if(entryPath.isEmpty())
-	        {
-	        	//Get treeWalk For whole repos
-	        	treeWalk = new TreeWalk( repository );
-	            treeWalk.setRecursive(false);
-	            treeWalk.reset(revTree);
-	        }
-	        else
-	        {   
-	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
-	        	//treeWalk = new TreeWalk(repository, repository.newObjectReader());
-	            //PathFilter pathFileter = PathFilter.create(entryPath);
-	            //treeWalk.setFilter(pathFileter);
-	            //treeWalk.reset(revTree);
-	            treeWalk.setRecursive(false);
-	        }
+			treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
 			
 			List<Doc> successDocList = new ArrayList<Doc>();
 			
@@ -814,6 +736,35 @@ public class GITUtil  extends BaseController{
         }
 		return null;
     }
+
+	private TreeWalk getTreeWalkByPath(Repository repository, RevTree revTree, String entryPath) {
+		System.err.println("getTreeWalkByPath() entryPath:" + entryPath); 
+        try {
+			TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
+			
+			if(entryPath.isEmpty())
+	        {
+	        	//Get treeWalk For whole repos
+	        	treeWalk = new TreeWalk( repository );
+	            treeWalk.setRecursive(false);
+	            treeWalk.reset(revTree);
+	        }
+	        else
+	        {   
+	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
+	        	//treeWalk = new TreeWalk(repository, repository.newObjectReader());
+	            //PathFilter pathFileter = PathFilter.create(entryPath);
+	            //treeWalk.setFilter(pathFileter);
+	            //treeWalk.reset(revTree);
+	            treeWalk.setRecursive(false);
+	        }
+			return treeWalk;
+        }catch (Exception e) {
+            System.err.println("getTreeWalkByPath() Exception"); 
+            e.printStackTrace();
+        }
+		return null;
+	}
 
 	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{		
