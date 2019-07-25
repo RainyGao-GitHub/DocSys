@@ -338,15 +338,15 @@ public class GITUtil  extends BaseController{
 	        }
 	        
 	        RevCommit revCommit = walk.parseCommit(objId);
-	                
 	        RevCommit previsouCommit=getPrevHash(revCommit,repository);
-			ObjectId preObjId = previsouCommit.getTree().getId();
+	        ObjectId head=revCommit.getTree().getId();
+	        ObjectId preHead = previsouCommit.getTree().getId();
 	
 			ObjectReader reader = repository.newObjectReader();
 			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-			oldTreeIter.reset(reader, preObjId);
+			oldTreeIter.reset(reader, preHead);
 	  		CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-			newTreeIter.reset(reader, objId);
+			newTreeIter.reset(reader, head);
 			
 			List<DiffEntry> diffs= git.diff()
 	                		.setNewTree(newTreeIter)
