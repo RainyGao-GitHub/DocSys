@@ -133,6 +133,7 @@ public class GITUtil  extends BaseController{
         return wcDir;
 	}
     
+	//This is the latest revision for repos
     public String getLatestRevision() 
 	{
     	String revision = "HEAD";
@@ -161,6 +162,39 @@ public class GITUtil  extends BaseController{
 		} catch (IOException e) {
 			System.out.println("getLatestRevision() Exception");
         	
+			e.printStackTrace();
+			return null;
+		}
+	}
+    
+    public String getLatestRevision(Doc doc) 
+	{
+    	String entryPath = doc.getPath() + doc.getName();
+    
+    	Git git = null;
+		try {
+	    	git = Git.open(new File(wcDir));
+	    	
+		    Iterable<RevCommit> iterable = null;
+		    if(entryPath == null || entryPath.isEmpty())
+		    {
+		    	iterable = git.log().setMaxCount(1).call();
+		    }
+		    else
+		    {
+		    	iterable = git.log().addPath(entryPath).setMaxCount(1).call();
+		    }
+		    
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();	
+	            String commitId=commit.getName();  //revision
+	            return commitId;
+	        }
+	        
+	        return null;
+	    } catch (Exception e) {
+			System.err.println("getLatestRevision Error");	
 			e.printStackTrace();
 			return null;
 		}
@@ -323,8 +357,11 @@ public class GITUtil  extends BaseController{
             
             RevTree revTree = revCommit.getTree();
             System.out.println("revTree name:" + revTree.getName());
-            System.out.println("revTree id:" + revTree.getId());
+            System.out.println("revTree id:" + revTree.getId());            
             
+            //注意：treeWalk只是获取了这个Revision上的所有文件节点（换句话说，在这个revision上这个文件存在，但这个文件在这个revision上更新）
+            //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件真实的最新revision，SVN在遍历时能够直接取到，
+            //但GIT就目前而言需要额外去获取对应文件的最新版本
             TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, doc.getPath() + doc.getName());
             List <Doc> subEntryList =  null;
             if(treeWalk != null) 
@@ -342,12 +379,7 @@ public class GITUtil  extends BaseController{
             		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
             		if(type > 0)
             		{
-            			String name = treeWalk.getNameString();
-            			ObjectId objId1 = treeWalk.getObjectId(0);
-            			RevCommit revCommit1 = walk.parseCommit(objId1);
-            			String revision1 = revCommit1.getName();
-            			System.err.println("commitId:" + commitId + "revision1:" + revision1);
-            			
+            			String name = treeWalk.getNameString();            			
                 		Doc subDoc = new Doc();
                 		subDoc.setVid(repos.getId());
                 		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
@@ -356,8 +388,6 @@ public class GITUtil  extends BaseController{
                 		subDoc.setName(name);
                 		subDoc.setLevel(subDocLevel);
                 		subDoc.setType(type);
-                		//subEntry.setSize();
-                		//subEntry.setCreateTime();
                 		subDoc.setLatestEditTime(commitTime);
                 		subDoc.setRevision(commitId);
                 		subEntryList.add(subDoc);
@@ -366,6 +396,17 @@ public class GITUtil  extends BaseController{
             }
             walk.close();
             repository.close();
+
+            //getTheRealLatestRevision For File
+            if(subEntryList != null)
+            {
+            	for(int i=0; i< subEntryList.size(); i++)
+            	{
+            		Doc subDoc = subEntryList.get(i);
+            		String subDocRevision = getLatestRevision(subDoc);
+            		subDoc.setRevision(subDocRevision);
+            	}
+            }
             
             return subEntryList;
         } catch (Exception e) {
