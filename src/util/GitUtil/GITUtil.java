@@ -603,13 +603,6 @@ public class GITUtil  extends BaseController{
 			revision = "HEAD";
 		}
 		
-		//It is root dir
-		if(entryPath.isEmpty())
-		{
-			System.out.println("checkPath() " + entryPath +" is root");
-			return 2;
-		}
-		
 		try {
 			Git git = Git.open(new File(gitDir));
 
