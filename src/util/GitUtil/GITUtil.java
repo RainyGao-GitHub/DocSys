@@ -24,6 +24,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -588,8 +589,7 @@ public class GITUtil  extends BaseController{
         RevCommit revCommit = walk.parseCommit(objId);
         RevTree revTree = revCommit.getTree();
                 
-        //child表示相对git库的文件路径
-        TreeWalk treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
+        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
         
         walk.close();
         repository.close();
@@ -751,12 +751,12 @@ public class GITUtil  extends BaseController{
 	        }
 	        else
 	        {   
-	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
-	        	//treeWalk = new TreeWalk(repository, repository.newObjectReader());
-	            //PathFilter pathFileter = PathFilter.create(entryPath);
-	            //treeWalk.setFilter(pathFileter);
-	            //treeWalk.reset(revTree);
+	        	//treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
+	        	treeWalk = new TreeWalk(repository, repository.newObjectReader());
+	            PathFilter pathFileter = PathFilter.create(entryPath);
+	            treeWalk.setFilter(pathFileter);
 	            treeWalk.setRecursive(false);
+	        	treeWalk.reset(revTree);
 	        }
 			return treeWalk;
         }catch (Exception e) {
