@@ -766,7 +766,7 @@ public class GITUtil  extends BaseController{
     }
 
 	private TreeWalk getTreeWalkByPath(Repository repository, RevTree revTree, String entryPath) {
-		System.err.println("getTreeWalkByPath() entryPath:" + entryPath); 
+		System.out.println("getTreeWalkByPath() entryPath:" + entryPath); 
 
 		try {
 			TreeWalk treeWalk = null;
