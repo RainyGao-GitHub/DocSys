@@ -629,7 +629,15 @@ public class GITUtil  extends BaseController{
 	        int type = 0;
 	        if(treeWalk != null)
 	        {
-	        	type = getTypeFromFileMode(treeWalk.getFileMode());
+	        	if(entryPath.isEmpty())
+	        	{
+	        		//For root path, treeWalk can not getFileMode
+	        		type = 2;
+	        	}
+	        	else
+	        	{
+	        		type = getTypeFromFileMode(treeWalk.getFileMode());
+	        	}
 	        }
 	        
 	        walk.close();
