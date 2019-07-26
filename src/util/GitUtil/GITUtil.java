@@ -457,6 +457,7 @@ public class GITUtil  extends BaseController{
             	System.err.println("There is no any commit history for:" + revision);
             	walk.close();
             	repository.close();
+            	git.close();
             	return null;
             }
             
@@ -471,9 +472,6 @@ public class GITUtil  extends BaseController{
             System.out.println("revTree name:" + revTree.getName());
             System.out.println("revTree id:" + revTree.getId());            
             
-            //注意：treeWalk只是获取了这个Revision上的所有文件节点（换句话说，在这个revision上这个文件存在，但这个文件在这个revision上更新）
-            //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件真实的最新revision，SVN在遍历时能够直接取到，
-            //但GIT就目前而言需要额外去获取对应文件的最新版本
             TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, doc.getPath() + doc.getName());
             if(treeWalk == null) 
             {
@@ -529,6 +527,9 @@ public class GITUtil  extends BaseController{
             walk.close();
             repository.close();
 
+            //由于通过treeWalk只是获取了这个Revision上的村子的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
+            //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件节点真正有变更的最新revision，SVN在遍历节点时能够直接取到，
+            //但GIT就目前而言需要额外去获取对应文件的最新版本
             //getTheRealLatestRevision For File
             if(subEntryList != null)
             {
@@ -588,32 +589,39 @@ public class GITUtil  extends BaseController{
         }
 	}
 
-	public TreeWalk getTreeWalkByPath(String entryPath, String revision) throws Exception
+	public TreeWalk getTreeWalkByPath(String entryPath, String revision)
 	{
-		Git git = Git.open(new File(gitDir));
-		Repository repository = git.getRepository();
-        
-        //New RevWalk
-        RevWalk walk = new RevWalk(repository);
+		try {
+			Git git = Git.open(new File(gitDir));
 
-        //Get objId for revision
-        ObjectId objId = repository.resolve(revision);
-        if(objId == null)
-        {
-        	System.err.println("getTreeWalkByPath() there is no any history for:" + entryPath);
-        	walk.close();
-        	repository.close();
-        	return null;
-        }
-        
-        RevCommit revCommit = walk.parseCommit(objId);
-        RevTree revTree = revCommit.getTree();
-                
-        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
-        
-        walk.close();
-        repository.close();
-        return treeWalk;
+			Repository repository = git.getRepository();
+	        
+	        //New RevWalk
+	        RevWalk walk = new RevWalk(repository);
+	
+	        //Get objId for revision
+	        ObjectId objId = repository.resolve(revision);
+	        if(objId == null)
+	        {
+	        	System.err.println("getTreeWalkByPath() there is no any history for:" + entryPath);
+	        	walk.close();
+	        	repository.close();
+	        	return null;
+	        }
+	        
+	        RevCommit revCommit = walk.parseCommit(objId);
+	        RevTree revTree = revCommit.getTree();
+	                
+	        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
+	        
+	        walk.close();
+	        repository.close();
+	        return treeWalk;
+		} catch (Exception e) {
+			System.err.println("getTreeWalkByPath() 异常");
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	
@@ -772,11 +780,7 @@ public class GITUtil  extends BaseController{
 	        else
 	        {   
 	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
-	        	//treeWalk = new TreeWalk(repository, repository.newObjectReader());
-	            //PathFilter pathFileter = PathFilter.create(entryPath);
-	            //treeWalk.setFilter(pathFileter);
 	            treeWalk.setRecursive(false);
-	        	//treeWalk.reset(revTree);
 	        }
 			return treeWalk;
         }catch (Exception e) {
@@ -1031,7 +1035,7 @@ public class GITUtil  extends BaseController{
 			} catch (Exception e) {
 				System.out.println("doAutoCommmit() Push Error");	
 				e.printStackTrace();
-				//Do roll back commit and Index 
+				//Do roll back commit
 				rollBackCommit(git, null);
 				return null;
 			}
