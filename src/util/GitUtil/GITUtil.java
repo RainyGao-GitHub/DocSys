@@ -332,9 +332,10 @@ public class GITUtil  extends BaseController{
 	        ObjectId objId = repository.resolve(revision);
 	        if(objId == null)
 	        {
-	        	System.out.println("There is no any commit history for:" + revision);
+	        	System.err.println("getHistoryDetail() There is no any commit history for repository:"  + gitDir + " at revision:"+ revision);
 	        	walk.close();
 	        	repository.close();
+	        	git.close();
 	        	return null;
 	        }
 	        
@@ -363,7 +364,7 @@ public class GITUtil  extends BaseController{
 				List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
 		        for (DiffEntry entry : diffs) 
 		        {
-		          System.out.println("Entry: " + entry);
+		          System.out.println("getHistoryDetail() Entry: " + entry);
 		          
 		      	  String nodePath = entry.getNewPath();
 		          Integer entryType = getTypeFromFileMode(entry.getNewMode());
@@ -387,7 +388,7 @@ public class GITUtil  extends BaseController{
 		        return changedItemList;
 			}		
 		} catch (Exception e) {
-			System.err.println("getHistoryDetail entryPath:" + entryPath + " 异常");	
+			System.err.println("getHistoryDetail() entryPath:" + entryPath + " 异常");	
 			e.printStackTrace();
 		}	
 		
@@ -435,8 +436,8 @@ public class GITUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<Doc> getDocList(Repos repos, Doc doc, String revision)
 	{
-    	System.out.println("getSubEntryList() revision:" + revision);
-    	if(revision == null || revision.isEmpty())
+    	System.out.println("getDocList() revision:" + revision);
+    	if(revision == null)
         {
         	revision = "HEAD";
         }
@@ -453,7 +454,7 @@ public class GITUtil  extends BaseController{
             ObjectId objId = repository.resolve(revision);
             if(objId == null)
             {
-            	System.err.println("There is no any commit history for:" + revision);
+            	System.err.println("getDocList() There is no any commit history for repository:"   + gitDir + " at revision:" + revision);
             	walk.close();
             	repository.close();
             	git.close();
@@ -463,18 +464,12 @@ public class GITUtil  extends BaseController{
             RevCommit revCommit = walk.parseCommit(objId);
             String commitId = revCommit.getName();	//revision
             long commitTime = revCommit.getCommitTime();	//commitTime
-            System.out.println("revCommit revision:" + revCommit.getName());
-            System.out.println("revCommit commitTime:" + revCommit.getType());
-            System.out.println("revCommit commitMsg:" + revCommit.getShortMessage());
-            
             RevTree revTree = revCommit.getTree();
-            System.out.println("revTree name:" + revTree.getName());
-            System.out.println("revTree id:" + revTree.getId());            
             
             TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, doc.getPath() + doc.getName());
             if(treeWalk == null) 
             {
-            	System.err.println("Failed to get treeWalk for:" + doc.getPath() + doc.getName() + " at revision:" + revision);
+            	System.err.println("getDocList() Failed to get treeWalk for:" + doc.getPath() + doc.getName() + " at revision:" + revision);
             	walk.close();
             	repository.close();
             	git.close();
@@ -489,7 +484,7 @@ public class GITUtil  extends BaseController{
 	            }
 	            else
 	            {
-	            	System.err.println("treeWalk for:" + doc.getPath() + doc.getName() + " is not directory");
+	            	System.err.println("getDocList() treeWalk for:" + doc.getPath() + doc.getName() + " is not directory");
 	            	walk.close();
 	            	repository.close();
 	            	git.close();
@@ -545,7 +540,7 @@ public class GITUtil  extends BaseController{
             
             return subEntryList;
         } catch (Exception e) {
-           System.out.println("ReposTreeWalk() Exception"); 
+           System.out.println("getDocList() getTreeWalkByPath Exception"); 
            e.printStackTrace();
            return null;
         }
@@ -576,6 +571,14 @@ public class GITUtil  extends BaseController{
 
             //Get objId for revision
             ObjectId objId = repository.resolve(revision);
+            if(objId == null)
+            {
+            	System.err.println("getEntry() There is no any commit history for repository:"   + gitDir + " at revision:" + revision);
+            	walk.close();
+            	repository.close();
+            	git.close();
+            	return null;
+            }
             
             RevCommit revCommit = walk.parseCommit(objId);
             RevTree revTree = revCommit.getTree();
@@ -583,18 +586,13 @@ public class GITUtil  extends BaseController{
             List<Doc> ret = recurGetEntry(git, repository, revTree, doc, localParentPath, targetName);
             walk.close();
             repository.close();
+            git.close();
             return ret;
         } catch (Exception e) {
-           System.out.println("getEntry() Exception"); 
+           System.err.println("getEntry() 异常"); 
            e.printStackTrace();
            return null;
         }
-	}
-
-	public TreeWalk getTreeWalkByPath(String entryPath, String revision)
-	{
-
-		return null;
 	}
 	
 	
@@ -624,18 +622,18 @@ public class GITUtil  extends BaseController{
 	        ObjectId objId = repository.resolve(revision);
 	        if(objId == null)
 	        {
-	        	System.err.println("checkPath() there is no any history for:" + entryPath);
+	        	System.err.println("checkPath() there is no any history for repository:" + gitDir + " at revision:" + revision);
 	        	walk.close();
 	        	repository.close();
 	        	git.close();
-	        	return null;
+	        	return 0;
 	        }
 	        
 	        RevCommit revCommit = walk.parseCommit(objId);
 	        RevTree revTree = revCommit.getTree();
 	                
 	        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
-	        int type = -1;
+	        int type = 0;
 	        if(treeWalk != null)
 	        {
 	        	type = getTypeFromFileMode(treeWalk.getFileMode());
@@ -648,8 +646,8 @@ public class GITUtil  extends BaseController{
 		} catch (Exception e) {
 			System.err.println("checkPath() getTreeWalkByPath 异常");
 			e.printStackTrace();
-			return -1;
 		}
+		return null;
 	}
 	
 	private int getTypeFromFileMode(FileMode fileMode)
@@ -710,7 +708,7 @@ public class GITUtil  extends BaseController{
 	    		try {
 	    			out = new FileOutputStream(localParentPath + targetName);
 	    		} catch (Exception e) {
-	    			System.out.println("recurGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
+	    			System.err.println("recurGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
 	    			e.printStackTrace();
 	    			return null;
 	    		}
@@ -937,14 +935,14 @@ public class GITUtil  extends BaseController{
 	{   
 		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
 		{
-			srcDoc.setRevision(getLatestRevision());
+			srcDoc.setRevision(getLatestRevision(srcDoc));
 		}
 		
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
 		Integer type = checkPath(srcEntryPath,null);
 		if(type == null)
 		{
-			System.out.println("remoteCopyEntry() Exception");
+			System.err.println("remoteCopyEntry() Exception");
 			return null;
 		}
 		
