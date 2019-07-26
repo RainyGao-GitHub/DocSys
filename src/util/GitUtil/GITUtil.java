@@ -948,7 +948,7 @@ public class GITUtil  extends BaseController{
 		
 		if (type == 0) 
 		{
-		    System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
+		    System.err.println("remoteCopyEntry() There is no entry for " + srcEntryPath + " at revision:" + srcDoc.getRevision());
 		    return null;
 		}
 
