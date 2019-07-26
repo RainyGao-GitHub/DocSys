@@ -807,14 +807,18 @@ public class GITUtil  extends BaseController{
 		
 		if(type == 0)
 		{
-			System.err.println("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
-			return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
+			if(!doc.getPath().isEmpty())
+			{
+				System.err.println("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
+				return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
+			}
 		}	
-			
-		String entryPath = doc.getPath() + doc.getName();			
-		File localEntry = new File(localRootPath + entryPath);
+
 		
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		
+		String entryPath = doc.getPath() + doc.getName();			
+		File localEntry = new File(localRootPath + entryPath);
 		
 		//LocalEntry does not exist
 		if(!localEntry.exists())	//Delete Commit
