@@ -454,7 +454,7 @@ public class GITUtil  extends BaseController{
             ObjectId objId = repository.resolve(revision);
             if(objId == null)
             {
-            	System.out.println("There is no any commit history for:" + revision);
+            	System.err.println("There is no any commit history for:" + revision);
             	walk.close();
             	repository.close();
             	return null;
@@ -475,37 +475,57 @@ public class GITUtil  extends BaseController{
             //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件真实的最新revision，SVN在遍历时能够直接取到，
             //但GIT就目前而言需要额外去获取对应文件的最新版本
             TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, doc.getPath() + doc.getName());
-            List <Doc> subEntryList =  null;
-            if(treeWalk != null) 
+            if(treeWalk == null) 
             {
-        		String subDocParentPath = doc.getPath() + doc.getName() + "/";
-        		if(doc.getDocId() == 0)
-        		{
-        			subDocParentPath = "";
-        		}
-        		int subDocLevel = doc.getLevel() + 1;
-            	
-            	subEntryList =  new ArrayList<Doc>();
-            	while(treeWalk.next())
-            	{
-            		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
-            		if(type > 0)
-            		{
-            			String name = treeWalk.getNameString();            			
-                		Doc subDoc = new Doc();
-                		subDoc.setVid(repos.getId());
-                		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
-                		subDoc.setPid(doc.getDocId());
-                		subDoc.setPath(subDocParentPath);
-                		subDoc.setName(name);
-                		subDoc.setLevel(subDocLevel);
-                		subDoc.setType(type);
-                		subDoc.setLatestEditTime(commitTime);
-                		subDoc.setRevision(commitId);
-                		subEntryList.add(subDoc);
-            		}
-            	}
+            	System.err.println("Failed to get treeWalk for:" + doc.getPath() + doc.getName() + " at revision:" + revision);
+            	walk.close();
+            	repository.close();
+            	return null;
             }
+            
+            if(doc.getDocId() != 0)
+            {
+	            if(treeWalk.isSubtree())
+	            {
+	            	treeWalk.enterSubtree();
+	            }
+	            else
+	            {
+	            	System.err.println("treeWalk for:" + doc.getPath() + doc.getName() + " is not directory");
+	            	walk.close();
+	            	repository.close();            	
+	            	return null;
+	            }
+            }
+            
+            //To EntrySubTree
+    		String subDocParentPath = doc.getPath() + doc.getName() + "/";
+    		if(doc.getDocId() == 0)
+    		{
+    			subDocParentPath = "";
+    		}
+    		int subDocLevel = doc.getLevel() + 1;
+    		List <Doc> subEntryList =  new ArrayList<Doc>();
+            
+    		while(treeWalk.next())
+        	{
+        		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
+        		if(type > 0)
+        		{
+        			String name = treeWalk.getNameString();            			
+            		Doc subDoc = new Doc();
+            		subDoc.setVid(repos.getId());
+            		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
+            		subDoc.setPid(doc.getDocId());
+            		subDoc.setPath(subDocParentPath);
+            		subDoc.setName(name);
+            		subDoc.setLevel(subDocLevel);
+            		subDoc.setType(type);
+            		subDoc.setLatestEditTime(commitTime);
+            		subDoc.setRevision(commitId);
+            		subEntryList.add(subDoc);
+        		}
+        	}
             walk.close();
             repository.close();
 
@@ -751,12 +771,12 @@ public class GITUtil  extends BaseController{
 	        }
 	        else
 	        {   
-	        	//treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
-	        	treeWalk = new TreeWalk(repository, repository.newObjectReader());
-	            PathFilter pathFileter = PathFilter.create(entryPath);
-	            treeWalk.setFilter(pathFileter);
+	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
+	        	//treeWalk = new TreeWalk(repository, repository.newObjectReader());
+	            //PathFilter pathFileter = PathFilter.create(entryPath);
+	            //treeWalk.setFilter(pathFileter);
 	            treeWalk.setRecursive(false);
-	        	treeWalk.reset(revTree);
+	        	//treeWalk.reset(revTree);
 	        }
 			return treeWalk;
         }catch (Exception e) {

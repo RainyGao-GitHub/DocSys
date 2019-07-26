@@ -20,6 +20,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import com.DocSystem.controller.ReposController;
+import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
 import util.ReturnAjax;
@@ -57,12 +58,18 @@ class JGitTest extends ReposController{
     		return;
     	}
     	
-//    	//Auto Commit to Git Repos
-//		if(false == gitUtil.doAutoCommit("", "", repos.getRealDocPath(), "Init GitRepos", "RainyGao",true,null))
-//		{
-//    		System.out.println("gitAutoCommit Failed!");
-//    		return;
-//		}
+    	//Auto Commit to Git Repos
+    	Doc doc = new Doc();
+    	doc.setDocId(0L);
+    	doc.setLevel(0);
+    	doc.setPath("");
+    	doc.setName("");
+    	doc.setLocalRootPath(repos.getRealDocPath());
+		if(null == gitUtil.doAutoCommit(doc, "Init GitRepos", "RainyGao",true,null,2))
+		{
+    		System.out.println("gitAutoCommit Failed!");
+    		return;
+		}
 		
 		//Go Through the verRepos Tree
 		String gitDir = "C:/JGitTestDir/GitRepos/123456_GIT_RRepos/.git/";
