@@ -1411,7 +1411,37 @@ public class GITUtil  extends BaseController{
         System.out.println("doAutoCommitParent() parentPath:" + parentPath);
     	if(parentPath.isEmpty())
     	{
-    		return null;
+    		Doc rootDoc = buildBasicDoc(doc.getVid(), 0L, -1L, "", "", 0, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+    		insertAddDirAction(commitActionList, rootDoc, false);
+    		
+    		Git git = null;
+    		try {
+    			git = Git.open(new File(wcDir));
+    		} catch (Exception e) {
+    			System.out.println("doAutoCommitParent() Failed to open wcDir:" + wcDir);
+    			e.printStackTrace();
+    			return null;
+    		}
+    		
+    	    if(executeCommitActionList(git,commitActionList,true) == false)
+    	    {
+    	    	System.out.println("doAutoCommitParent() executeCommitActionList Failed");
+    	    	git.close();
+    	        return null;
+    	    }
+    	    
+    	    String newRevision =  doCommit(git, commitUser, commitMsg, commitActionList);
+    	    
+    	    if(newRevision == null)
+    	    {
+    	    	//Do rollBack
+    			//Do roll back Index
+    			rollBackIndex(git, parentPath, null);
+    			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
+    	    	return null;
+    	    }
+    	    return newRevision;
     	}
     	
     	String [] paths = parentPath.split("/");
