@@ -2279,7 +2279,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//未变更
-			System.err.println("getDocChangeType_FS() 未变更(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			System.out.println("getDocChangeType_FS() 未变更(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return 0;
 		}
 		
