@@ -441,11 +441,10 @@ public class GITUtil  extends BaseController{
         	revision = "HEAD";
         }
     	
-    	Repository repository = null;
         try {
             //gitDir表示git库目录
         	Git git = Git.open(new File(gitDir));
-            repository = git.getRepository();
+        	Repository repository = git.getRepository();
             
             //New RevWalk
             RevWalk walk = new RevWalk(repository);
@@ -478,6 +477,7 @@ public class GITUtil  extends BaseController{
             	System.err.println("Failed to get treeWalk for:" + doc.getPath() + doc.getName() + " at revision:" + revision);
             	walk.close();
             	repository.close();
+            	git.close();
             	return null;
             }
             
@@ -491,7 +491,8 @@ public class GITUtil  extends BaseController{
 	            {
 	            	System.err.println("treeWalk for:" + doc.getPath() + doc.getName() + " is not directory");
 	            	walk.close();
-	            	repository.close();            	
+	            	repository.close();
+	            	git.close();
 	            	return null;
 	            }
             }
@@ -526,6 +527,7 @@ public class GITUtil  extends BaseController{
         	}
             walk.close();
             repository.close();
+            git.close();
 
             //由于通过treeWalk只是获取了这个Revision上的村子的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
             //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件节点真正有变更的最新revision，SVN在遍历节点时能够直接取到，
@@ -591,36 +593,7 @@ public class GITUtil  extends BaseController{
 
 	public TreeWalk getTreeWalkByPath(String entryPath, String revision)
 	{
-		try {
-			Git git = Git.open(new File(gitDir));
 
-			Repository repository = git.getRepository();
-	        
-	        //New RevWalk
-	        RevWalk walk = new RevWalk(repository);
-	
-	        //Get objId for revision
-	        ObjectId objId = repository.resolve(revision);
-	        if(objId == null)
-	        {
-	        	System.err.println("getTreeWalkByPath() there is no any history for:" + entryPath);
-	        	walk.close();
-	        	repository.close();
-	        	return null;
-	        }
-	        
-	        RevCommit revCommit = walk.parseCommit(objId);
-	        RevTree revTree = revCommit.getTree();
-	                
-	        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
-	        
-	        walk.close();
-	        repository.close();
-	        return treeWalk;
-		} catch (Exception e) {
-			System.err.println("getTreeWalkByPath() 异常");
-			e.printStackTrace();
-		}
 		return null;
 	}
 	
@@ -635,23 +608,47 @@ public class GITUtil  extends BaseController{
 		//It is root dir
 		if(entryPath.isEmpty())
 		{
-			System.err.println("checkPath() " + entryPath +" is root");
+			System.out.println("checkPath() " + entryPath +" is root");
 			return 2;
 		}
 		
 		try {
-	        TreeWalk treeWalk = getTreeWalkByPath(entryPath, revision);
-	        if(treeWalk == null)
+			Git git = Git.open(new File(gitDir));
+
+			Repository repository = git.getRepository();
+	        
+	        //New RevWalk
+	        RevWalk walk = new RevWalk(repository);
+	
+	        //Get objId for revision
+	        ObjectId objId = repository.resolve(revision);
+	        if(objId == null)
 	        {
-	        	return 0;
+	        	System.err.println("checkPath() there is no any history for:" + entryPath);
+	        	walk.close();
+	        	repository.close();
+	        	git.close();
+	        	return null;
 	        }
 	        
-	        int type = getTypeFromFileMode(treeWalk.getFileMode());
-        	return type;
+	        RevCommit revCommit = walk.parseCommit(objId);
+	        RevTree revTree = revCommit.getTree();
+	                
+	        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
+	        int type = -1;
+	        if(treeWalk != null)
+	        {
+	        	type = getTypeFromFileMode(treeWalk.getFileMode());
+	        }
+	        
+	        walk.close();
+	        repository.close();
+	        git.close();
+	        return type;
 		} catch (Exception e) {
-			System.err.println("checkPath() 异常");
+			System.err.println("checkPath() getTreeWalkByPath 异常");
 			e.printStackTrace();
-			return null;
+			return -1;
 		}
 	}
 	
