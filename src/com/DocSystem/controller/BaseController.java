@@ -2302,6 +2302,13 @@ public class BaseController  extends BaseFunction{
 					return 13;
 				}
 				
+				
+				if(repos.getVerCtrl() == 2)	//For Git Repos
+				{
+					//远程删除
+					System.err.println("getDocChangeType_FS() 远程删除(因GIT无法识别空目录，对于目录的远程删除不处理):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					return 0;
+				}
 				//远程删除
 				System.err.println("getDocChangeType_FS() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 				return 22;

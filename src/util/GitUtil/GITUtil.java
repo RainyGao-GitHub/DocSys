@@ -629,6 +629,7 @@ public class GITUtil  extends BaseController{
 	        int type = 0;
 	        if(treeWalk != null)
 	        {
+	            treeWalk.setRecursive(false);
 	        	if(entryPath.isEmpty())
 	        	{
 	        		//For root path, treeWalk can not getFileMode
@@ -770,13 +771,11 @@ public class GITUtil  extends BaseController{
 	        {
 	        	//Get treeWalk For whole repos
 	        	treeWalk = new TreeWalk( repository );
-	            treeWalk.setRecursive(false);
 	            treeWalk.reset(revTree);
 	        }
 	        else
 	        {   
 	        	treeWalk = TreeWalk.forPath(repository, entryPath, revTree);
-	            treeWalk.setRecursive(false);
 	        }
 			return treeWalk;
         }catch (Exception e) {
