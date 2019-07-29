@@ -1924,7 +1924,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		int size = actionList.size();
-		System.out.println("executeActionList size:" + size);
+		System.out.println("executeCommonActionList size:" + size);
 		
 		int count = 0;
 
@@ -1966,7 +1966,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(count != size)
 		{
-			System.out.println("executeActionList() failed actions:" + (size - count));	
+			System.err.println("executeCommonActionList() failed actions:" + (size - count));	
 			return false;
 		}
 		
