@@ -1235,7 +1235,7 @@ public class GITUtil  extends BaseController{
 		{
 			if(copyFile(docPath, wcDocPath, false) == false)
 			{
-				System.err.println("addEntry() add File to WD error");					
+				System.err.println("addEntry() copyFile from " + docPath + " to " + wcDocPath + " 失败");		
 				return false;
 			}
 		}
@@ -1243,17 +1243,20 @@ public class GITUtil  extends BaseController{
 		{
 			//Add Dir
 			File dir = new File(wcDocPath);
-			if(dir.mkdir() == false)
+			if(dir.exists() == false)
 			{
-				System.err.println("addEntry() add Dir to WD error");										
-				return false;
+				if(dir.mkdir() == false)
+				{
+					System.err.println("addEntry() mkdir for " + wcDocPath + " 失败");					
+					return false;
+				}
 			}
 		}
 		
 		try {	
 			git.add().addFilepattern(entryPath).call();
 		} catch (Exception e) {
-			System.err.println("addEntry() add Index Error");	
+			System.err.println("addEntry() git.add.addFilepattern.call for " + entryPath + " 失败");	
 			e.printStackTrace();
 			return false;
 		}
