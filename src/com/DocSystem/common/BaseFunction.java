@@ -1074,13 +1074,20 @@ public class BaseFunction{
     }
     
     public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
-        File dstFile=new File(dstFilePath);
+        File srcFile=new File(srcFilePath);
+        if(srcFile.exists() == false)
+        {
+    		System.err.println("copyFile() srcFilePath:" + srcFilePath + " not exists!");
+    		return false;
+        }
+
+    	File dstFile=new File(dstFilePath);
         if(dstFile.exists())
         {
         	if(cover == false)
         	{
         		//不允许覆盖
-        		System.out.println("copyFile() " + dstFilePath + " exists!");
+        		System.err.println("copyFile() " + dstFilePath + " exists!");
         		return false;
         	}        	
         }
@@ -1098,7 +1105,7 @@ public class BaseFunction{
 		    out.close();
         }
     	catch (Exception e) { 
-    		System.out.println("copyFile() copy file Exception"); 
+    		System.err.println("copyFile() from " + srcFilePath + " to " + dstFilePath + " Exception"); 
     		e.printStackTrace(); 
     		return false;
     	}
@@ -1131,13 +1138,21 @@ public class BaseFunction{
     public boolean copyDir(String srcPath, String dstPath, boolean cover) 
     {
 	    try {
+	    	//Check the srcDir
+	    	File srcDir = new File(srcPath); 
+	    	if(srcDir.exists() == false)
+	    	{
+    			System.err.println("copyDir() srcPath not exists:"+srcPath);
+    			return false;	    				    		
+	    	}
+	    	
 	    	//Check the newPath
 	    	File dstDir = new File(dstPath);
 	    	if(dstDir.exists())
 	    	{
 	    		if(cover == false)
 	    		{
-	    			System.out.println("copyDir() dstPath exists:"+dstPath);
+	    			System.err.println("copyDir() dstPath exists:"+dstPath);
 	    			return false;	    			
 	    		}
 	    	}
@@ -1146,13 +1161,11 @@ public class BaseFunction{
 	    		//mkdirs will create the no exists parent dir, so I use the mkdir
 	    		if(dstDir.mkdir() == false)
 	    		{
-	    			System.out.println("copyDir() Failed to create dir:"+dstPath);
+	    			System.err.println("copyDir() Failed to create dir:"+dstPath);
 	    			return false;
 	    		}
 	    	}
 	    	
-	    	//Check the srcDir
-	    	File srcDir = new File(srcPath); 
 		    String[] file=srcDir.list(); 
 		    File temp=null; 
 		    for (int i = 0; i < file.length; i++) 
@@ -1183,7 +1196,7 @@ public class BaseFunction{
 	    } 
 	    catch (Exception e) 
 	    { 
-	    	System.out.println("copyDir 异常"); 
+	    	System.err.println("copyDir from " + srcPath  + " to " + dstPath + " 异常"); 
 	    	e.printStackTrace(); 
 	    	return false;
 	    }
