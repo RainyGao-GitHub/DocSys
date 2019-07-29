@@ -335,7 +335,7 @@ public class GITUtil  extends BaseController{
 	        	System.err.println("getHistoryDetail() There is no any commit history for repository:"  + gitDir + " at revision:"+ revision);
 	        	walk.close();
 	        	repository.close();
-	        	git.close();
+	        	
 	        	return null;
 	        }
 	        
@@ -356,7 +356,7 @@ public class GITUtil  extends BaseController{
 	                		.call();
 			walk.close();
 			repository.close();
-			git.close();			
+						
 			
 			if(diffs.size() > 0)
 			{
@@ -457,7 +457,7 @@ public class GITUtil  extends BaseController{
             	System.err.println("getDocList() There is no any commit history for repository:"   + gitDir + " at revision:" + revision);
             	walk.close();
             	repository.close();
-            	git.close();
+            	
             	return null;
             }
             
@@ -472,7 +472,7 @@ public class GITUtil  extends BaseController{
             	System.err.println("getDocList() Failed to get treeWalk for:" + doc.getPath() + doc.getName() + " at revision:" + revision);
             	walk.close();
             	repository.close();
-            	git.close();
+            	
             	return null;
             }
             
@@ -487,7 +487,7 @@ public class GITUtil  extends BaseController{
 	            	System.err.println("getDocList() treeWalk for:" + doc.getPath() + doc.getName() + " is not directory");
 	            	walk.close();
 	            	repository.close();
-	            	git.close();
+	            	
 	            	return null;
 	            }
             }
@@ -522,7 +522,7 @@ public class GITUtil  extends BaseController{
         	}
             walk.close();
             repository.close();
-            git.close();
+            
 
             //由于通过treeWalk只是获取了这个Revision上的村子的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
             //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件节点真正有变更的最新revision，SVN在遍历节点时能够直接取到，
@@ -576,7 +576,7 @@ public class GITUtil  extends BaseController{
             	System.err.println("getEntry() There is no any commit history for repository:"   + gitDir + " at revision:" + revision);
             	walk.close();
             	repository.close();
-            	git.close();
+            	
             	return null;
             }
             
@@ -586,7 +586,7 @@ public class GITUtil  extends BaseController{
             List<Doc> ret = recurGetEntry(git, repository, revTree, doc, localParentPath, targetName);
             walk.close();
             repository.close();
-            git.close();
+            
             return ret;
         } catch (Exception e) {
            System.err.println("getEntry() 异常"); 
@@ -618,7 +618,7 @@ public class GITUtil  extends BaseController{
 	        	System.err.println("checkPath() there is no any history for repository:" + gitDir + " at revision:" + revision);
 	        	walk.close();
 	        	repository.close();
-	        	git.close();
+	        	
 	        	return 0;
 	        }
 	        
@@ -642,7 +642,7 @@ public class GITUtil  extends BaseController{
 	        
 	        walk.close();
 	        repository.close();
-	        git.close();
+	        
 	        return type;
 		} catch (Exception e) {
 			System.err.println("checkPath() getTreeWalkByPath 异常");
@@ -1440,7 +1440,7 @@ public class GITUtil  extends BaseController{
     	    if(executeCommitActionList(git,commitActionList,true) == false)
     	    {
     	    	System.out.println("doAutoCommitParent() executeCommitActionList Failed");
-    	    	git.close();
+    	    	
     	        return null;
     	    }
     	    
