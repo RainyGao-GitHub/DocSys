@@ -1216,7 +1216,7 @@ public class GITUtil  extends BaseController{
 		}
 		
 		try {	
-			git.add().addFilepattern(entryPath).call();
+			git.rm().addFilepattern(entryPath).call();
 		} catch (Exception e) {
 			System.err.println("addEntry() add Index Error");	
 			e.printStackTrace();
