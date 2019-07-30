@@ -1007,9 +1007,11 @@ public class GITUtil  extends BaseController{
 			//Do roll back Index
 			rollBackIndex(git, entryPath, null);
 			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
-	    	return null;
+			git.close();
+			return null;
 	    }
 	    
+	    git.close();
 	    return newRevision;
 	}
 	
@@ -1088,9 +1090,11 @@ public class GITUtil  extends BaseController{
 	    	
 	    	rollBackIndex(git, dstEntryPath, null);
 			rollBackWcDir(commitActionList);	//删除actionList中新增的文件和目录	
-	    	return null;
+	    	git.close();
+			return null;
 	    }
 	    
+	    git.close();
 	    return newRevision;
 	}
 
@@ -1114,7 +1118,7 @@ public class GITUtil  extends BaseController{
 				System.out.println("doAutoCommmit() Push Error");	
 				e.printStackTrace();
 				//Do roll back commit
-				rollBackCommit(git, null);
+				rollBackCommit(git, "HEAD");
 				return null;
 			}
 		}
@@ -1122,7 +1126,7 @@ public class GITUtil  extends BaseController{
 	}
 	
 	private boolean rollBackCommit(Git git,String revision) {
-		if(revision == null || revision.isEmpty()) 
+		if(revision == null) 
 		{
 			revision = "HEAD";
 		}
