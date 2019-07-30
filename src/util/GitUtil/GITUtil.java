@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -14,11 +13,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
-import org.eclipse.jgit.errors.CorruptObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -30,8 +24,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.tmatesoft.svn.core.SVNDirEntry;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -49,6 +41,7 @@ public class GITUtil  extends BaseController{
 	private String wcDir = null;
 	private boolean isRemote = false;
 	
+	//以下三个变量只用于打开gitDir而不是wcDir
     Git git = null;
     Repository repository = null;
     RevWalk walk = null;
@@ -499,6 +492,12 @@ public class GITUtil  extends BaseController{
 	public TreeWalk getSubEntries(String remoteEntryPath, String revision) 
 	{    	
     	System.out.println("getSubEntries() revision:" + revision);
+    	if(open() == false)
+    	{
+        	System.out.println("getSubEntries() Failed to open git repository");
+    		return null;
+    	}
+    	
         try {
             
             RevTree revTree = getRevTree(revision);
@@ -507,38 +506,32 @@ public class GITUtil  extends BaseController{
             if(treeWalk == null) 
             {
             	System.err.println("getSubEntries() Failed to get treeWalk for:" + remoteEntryPath + " at revision:" + revision);
-            	walk.close();
-            	repository.close();
-            	
+            	close();
             	return null;
             }
             
             if(remoteEntryPath.isEmpty())
             {
-            	walk.close();
-            	repository.close();
-            	
+            	close();
             	return treeWalk;
             }
 	        
             if(treeWalk.isSubtree())
 	        {
             	treeWalk.enterSubtree();
-            	walk.close();
-            	repository.close();
-            	
+            	close();
             	return treeWalk;
 	        }
 	        else
 	        {
 	        	System.err.println("getSubEntries() treeWalk for:" + remoteEntryPath + " is not directory");
-	            walk.close();
-	            repository.close();
+	        	close();
 	            return null;
 	        }            
         } catch (Exception e) {
             System.out.println("getSubEntries() getTreeWalkByPath Exception"); 
             e.printStackTrace();
+            close();
             return null;
          }
 	}

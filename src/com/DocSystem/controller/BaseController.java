@@ -2023,7 +2023,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(commitHashMap.size() > 0)
 			{
-				System.out.println("syncupForDocChange() local Changed: " + doc.getPath()+doc.getName());
+				System.err.println("syncupForDocChange() local Changed: [" + doc.getPath()+doc.getName() + "], do Commit");
 				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
 				String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
 				if(revision != null)
@@ -2715,7 +2715,10 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("dbUpdateDoc() get localEntry 异常 for " + doc.getDocId()  + " " + doc.getPath() + doc.getName());
 			return false;
-		}				
+		}
+		
+		//根据localEntry来设置文件类型
+		doc.setType(localEntry.getType());
 		
 		//dbDoc not exists, do add it
 		Doc dbDoc = dbGetDoc(repos, doc, true);
