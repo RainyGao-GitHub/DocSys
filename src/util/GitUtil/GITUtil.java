@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +14,11 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.CorruptObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -25,6 +31,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.tmatesoft.svn.core.SVNDirEntry;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.controller.BaseController;
@@ -42,6 +49,56 @@ public class GITUtil  extends BaseController{
 	private String wcDir = null;
 	private boolean isRemote = false;
 	
+    Git git = null;
+    Repository repository = null;
+    RevWalk walk = null;
+	
+    private boolean open() 
+    {
+    	if(git != null)
+    	{
+    		return true;
+    	}
+    	
+        try {
+			git = Git.open(new File(gitDir));
+		} catch (IOException e) {
+			System.err.println("Open() Failed to open gitDir:" + gitDir);
+			e.printStackTrace();
+			return false;
+		}
+        
+        repository = git.getRepository();
+        walk = new RevWalk(repository);
+        return true;
+    }
+    
+    private void close() 
+    {
+    	if(walk != null)
+    	{
+    		walk.close();
+    		walk = null;
+    	}
+    	
+    	if(repository != null)
+    	{
+    		repository.close();
+    		repository = null;
+    		git = null;
+    		return;
+    	}
+    	
+    	if(git != null)
+    	{
+    		git.close();
+    		git = null;
+    	}
+    }
+    
+    
+        
+    
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
     	String localVerReposPath = getLocalVerReposPath(repos,isRealDoc);
     	System.out.println("GITUtil Init() localVerReposPath:" + localVerReposPath); 
@@ -128,44 +185,49 @@ public class GITUtil  extends BaseController{
 	{
     	String revision = "HEAD";
         
+    	if(open() == false)
+    	{
+        	System.out.println("getLatestRevision() Failed to open git repository");
+    		return null;
+    	}
+
 		try {
-    	    Git git = Git.open(new File(gitDir));
-
-            Repository repository = git.getRepository();
-            
-            RevWalk walk = new RevWalk(repository);
-
+			
             //Get objId for revision
             ObjectId objId = repository.resolve(revision);
             if(objId == null)
             {
             	System.out.println("getLatestRevision() There is no any commit history for:" + revision);
-                walk.close();
+            	close();
             	return null;
             }
             
-            RevCommit revCommit = walk.parseCommit(objId);        
+            RevCommit revCommit = walk.parseCommit(objId);
+            if(revCommit == null)
+            {
+            	System.out.println("getLatestRevision() parseCommit Failed:" + revision);
+            	close();
+            	return null;            	
+            }
             
-            walk.close();
-            return revCommit.getName();
+            revision = revCommit.getName();
+            close();
+            return revision;
             
 		} catch (IOException e) {
-			System.out.println("getLatestRevision() Exception");
-        	
+			System.out.println("getLatestRevision() Exception");        	
 			e.printStackTrace();
+			close();
 			return null;
 		}
 	}
     
-    public String getLatestRevision(Doc doc) 
+    private String getLatestRevision(Doc doc) 
 	{
     	String entryPath = doc.getPath() + doc.getName();
-    
-    	Git git = null;
+    	
 		try {
-	    	git = Git.open(new File(wcDir));
-	    	
-		    Iterable<RevCommit> iterable = null;
+	    	Iterable<RevCommit> iterable = null;
 		    if(entryPath == null || entryPath.isEmpty())
 		    {
 		    	iterable = git.log().setMaxCount(1).call();
@@ -434,116 +496,136 @@ public class GITUtil  extends BaseController{
 	}
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Doc doc, String revision)
-	{
-    	System.out.println("getDocList() revision:" + revision);
+	public TreeWalk getSubEntries(String remoteEntryPath, String revision) 
+	{    	
+    	System.out.println("getSubEntries() revision:" + revision);
     	if(revision == null)
         {
         	revision = "HEAD";
         }
     	
         try {
-            //gitDir表示git库目录
-        	Git git = Git.open(new File(gitDir));
-        	Repository repository = git.getRepository();
             
-            //New RevWalk
-            RevWalk walk = new RevWalk(repository);
-
-            //Get objId for revision
-            ObjectId objId = repository.resolve(revision);
-            if(objId == null)
-            {
-            	System.err.println("getDocList() There is no any commit history for repository:"   + gitDir + " at revision:" + revision);
-            	walk.close();
-            	repository.close();
-            	
-            	return null;
-            }
+            RevTree revTree = getRevTree(revision);
             
-            RevCommit revCommit = walk.parseCommit(objId);
-            String commitId = revCommit.getName();	//revision
-            long commitTime = revCommit.getCommitTime();	//commitTime
-            RevTree revTree = revCommit.getTree();
-            
-            TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, doc.getPath() + doc.getName());
+            TreeWalk treeWalk = getTreeWalkByPath(revTree, remoteEntryPath);
             if(treeWalk == null) 
             {
-            	System.err.println("getDocList() Failed to get treeWalk for:" + doc.getPath() + doc.getName() + " at revision:" + revision);
+            	System.err.println("getSubEntries() Failed to get treeWalk for:" + remoteEntryPath + " at revision:" + revision);
             	walk.close();
             	repository.close();
             	
             	return null;
             }
             
-            if(doc.getDocId() != 0)
+            if(remoteEntryPath.isEmpty())
             {
-	            if(treeWalk.isSubtree())
-	            {
-	            	treeWalk.enterSubtree();
-	            }
-	            else
-	            {
-	            	System.err.println("getDocList() treeWalk for:" + doc.getPath() + doc.getName() + " is not directory");
-	            	walk.close();
-	            	repository.close();
-	            	
-	            	return null;
-	            }
+            	walk.close();
+            	repository.close();
+            	
+            	return treeWalk;
             }
-            
-            //To EntrySubTree
-    		String subDocParentPath = doc.getPath() + doc.getName() + "/";
-    		if(doc.getDocId() == 0)
-    		{
-    			subDocParentPath = "";
-    		}
-    		int subDocLevel = doc.getLevel() + 1;
-    		List <Doc> subEntryList =  new ArrayList<Doc>();
-            
-    		while(treeWalk.next())
-        	{
-        		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
-        		if(type > 0)
-        		{
-        			String name = treeWalk.getNameString();            			
-            		Doc subDoc = new Doc();
-            		subDoc.setVid(repos.getId());
-            		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
-            		subDoc.setPid(doc.getDocId());
-            		subDoc.setPath(subDocParentPath);
-            		subDoc.setName(name);
-            		subDoc.setLevel(subDocLevel);
-            		subDoc.setType(type);
-            		subDoc.setLatestEditTime(commitTime);
-            		subDoc.setRevision(commitId);
-            		subEntryList.add(subDoc);
-        		}
-        	}
-            walk.close();
-            repository.close();
-            
-
-            //由于通过treeWalk只是获取了这个Revision上的村子的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
-            //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件节点真正有变更的最新revision，SVN在遍历节点时能够直接取到，
-            //但GIT就目前而言需要额外去获取对应文件的最新版本
-            //getTheRealLatestRevision For File
-            if(subEntryList != null)
-            {
-            	for(int i=0; i< subEntryList.size(); i++)
-            	{
-            		Doc subDoc = subEntryList.get(i);
-            		String subDocRevision = getLatestRevision(subDoc);
-            		subDoc.setRevision(subDocRevision);
-            	}
-            }
-            
-            return subEntryList;
+	        
+            if(treeWalk.isSubtree())
+	        {
+            	treeWalk.enterSubtree();
+            	walk.close();
+            	repository.close();
+            	
+            	return treeWalk;
+	        }
+	        else
+	        {
+	        	System.err.println("getSubEntries() treeWalk for:" + remoteEntryPath + " is not directory");
+	            walk.close();
+	            repository.close();
+	            return null;
+	        }            
         } catch (Exception e) {
-           System.out.println("getDocList() getTreeWalkByPath Exception"); 
-           e.printStackTrace();
-           return null;
+            System.out.println("getSubEntries() getTreeWalkByPath Exception"); 
+            e.printStackTrace();
+            return null;
+         }
+	}
+	
+	//get the subEntryList under remoteEntryPath,only useful for Directory
+	public List<Doc> getDocList(Repos repos, Doc doc, String revision)
+	{
+		String entryPath = doc.getPath() + doc.getName();
+		
+		if(open() == false)
+		{
+			System.err.println("getDocList() Failed to open git repository:" + gitDir);
+        	return null;
+		}
+		
+    	RevTree revTree = getRevTree(revision);
+    	if(revTree == null)
+    	{
+    		close();
+    		return null;
+    	}
+
+        TreeWalk treeWalk = getSubEntries(entryPath, revision);
+        if(treeWalk == null)
+        {
+        	close();
+        	return null;
+        }    
+
+        String subDocParentPath = doc.getPath() + doc.getName() + "/";
+		if(doc.getDocId() == 0)
+		{
+			subDocParentPath = "";
+		}
+		int subDocLevel = doc.getLevel() + 1;
+		List <Doc> subEntryList =  new ArrayList<Doc>();
+            
+		try {
+			while(treeWalk.next())
+	    	{
+	    		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
+		    	if(type <= 0)
+		    	{
+		    		continue;
+		    	}
+		    	
+	    		String name = treeWalk.getNameString();            			
+	    		Doc subDoc = new Doc();
+	    		subDoc.setVid(repos.getId());
+	    		subDoc.setDocId(buildDocIdByName(subDocLevel,subDocParentPath,name));
+	    		subDoc.setPid(doc.getDocId());
+	    		subDoc.setPath(subDocParentPath);
+	    		subDoc.setName(name);
+	    		subDoc.setLevel(subDocLevel);
+	    		subDoc.setType(type);
+	    		//subDoc.setLatestEditTime(commitTime);
+	    		//subDoc.setRevision(commitId);
+	    		subEntryList.add(subDoc);
+	    	}
+		} catch(Exception e){
+			System.out.println("getDocList() treeWalk.next() Exception"); 
+            e.printStackTrace();
+            close();
+			return null;
+		}
+
+		//由于通过treeWalk只是获取了这个Revision上的村子的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
+        //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件节点真正有变更的最新revision，SVN在遍历节点时能够直接取到，
+        //但GIT就目前而言需要额外去获取对应文件的最新版本
+        //getTheRealLatestRevision For File
+        if(subEntryList != null)
+        {
+        	for(int i=0; i< subEntryList.size(); i++)
+        	{
+        		Doc subDoc = subEntryList.get(i);
+        		String subDocRevision = getLatestRevision(subDoc);
+        		subDoc.setRevision(subDocRevision);
+        	}
         }
+        
+		close();
+        return subEntryList;
 	}
 
 	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
@@ -555,102 +637,91 @@ public class GITUtil  extends BaseController{
 			targetName = doc.getName();
 		}
 		
-        if(revision == null || revision.isEmpty())
+        if(open() == false)
         {
-        	revision = "HEAD";
+			System.err.println("getEntry() Failed to open git repository:" + gitDir);
+        	return null;
         }
-				
-		Repository repository = null;
-        try {
-            //gitDir表示git库目录
-        	Git git = Git.open(new File(gitDir));
-            repository = git.getRepository();
-            
-            //New RevWalk
-            RevWalk walk = new RevWalk(repository);
 
-            //Get objId for revision
-            ObjectId objId = repository.resolve(revision);
-            if(objId == null)
-            {
-            	System.err.println("getEntry() There is no any commit history for repository:"   + gitDir + " at revision:" + revision);
-            	walk.close();
-            	repository.close();
-            	
-            	return null;
-            }
-            
-            RevCommit revCommit = walk.parseCommit(objId);
-            RevTree revTree = revCommit.getTree();
-    		
-            List<Doc> ret = recurGetEntry(git, repository, revTree, doc, localParentPath, targetName);
-            walk.close();
-            repository.close();
-            
-            return ret;
-        } catch (Exception e) {
-           System.err.println("getEntry() 异常"); 
-           e.printStackTrace();
-           return null;
+        RevTree revTree = getRevTree(revision);
+        if(revTree == null)
+        {
+        	close();
+        	return null;
         }
+        
+        List<Doc> ret = recurGetEntry(revTree, doc, localParentPath, targetName);
+        close();
+        return ret;
 	}
 	
 	
 	public Integer checkPath(String entryPath, String revision) 
-	{
+	{	
+    	if(open() == false)
+    	{
+        	System.out.println("checkPath() Failed to open git repository");
+    		return null;
+    	}
+    	
+        RevTree revTree = getRevTree(revision);
+        if(revTree == null)
+        {
+        	close();
+        	return null;
+        }
+	   
+        TreeWalk treeWalk = getTreeWalkByPath(revTree, entryPath);
+	    if(treeWalk == null)
+	    {
+	    	close();
+	    	return 0;
+	    }
+	    
+        if(entryPath.isEmpty())
+	    {
+        	//For root path, FileMode is null
+        	close();
+	        return 2;
+	    }
+	    
+        int type = getTypeFromFileMode(treeWalk.getFileMode());
+	    close();
+        return type;
+	}
+	
+	private RevTree getRevTree(String revision) {
+	
 		if(revision == null)
 		{
 			revision = "HEAD";
 		}
-		
-		try {
-			Git git = Git.open(new File(gitDir));
-
-			Repository repository = git.getRepository();
-	        
-	        //New RevWalk
-	        RevWalk walk = new RevWalk(repository);
 	
-	        //Get objId for revision
-	        ObjectId objId = repository.resolve(revision);
-	        if(objId == null)
-	        {
-	        	System.err.println("checkPath() there is no any history for repository:" + gitDir + " at revision:" + revision);
-	        	walk.close();
-	        	repository.close();
-	        	
-	        	return 0;
-	        }
-	        
-	        RevCommit revCommit = walk.parseCommit(objId);
-	        RevTree revTree = revCommit.getTree();
-	                
-	        TreeWalk treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
-	        int type = 0;
-	        if(treeWalk != null)
-	        {
-	        	if(entryPath.isEmpty())
-	        	{
-	        		//For root path, treeWalk can not getFileMode
-	        		type = 2;
-	        	}
-	        	else
-	        	{
-	        		type = getTypeFromFileMode(treeWalk.getFileMode());
-	        	}
-	        }
-	        
-	        walk.close();
-	        repository.close();
-	        
-	        return type;
+        try {
+        	//Get objId for revision
+            ObjectId objId = repository.resolve(revision);
+            if(objId == null)
+            {
+            	System.err.println("getRevTree() there is no any history for repository:" + gitDir + " at revision:" + revision);
+            	return null;
+            }
+        
+            RevCommit revCommit = walk.parseCommit(objId);
+            if(revCommit == null)
+            {
+            	System.err.println("getRevTree() parseCommit Failed");
+            	return null;
+            }
+        
+            RevTree revTree = revCommit.getTree();
+            return revTree;
 		} catch (Exception e) {
-			System.err.println("checkPath() getTreeWalkByPath 异常");
-			e.printStackTrace();
+	    	System.err.println("getRevTree() 异常");
+	        e.printStackTrace();
 		}
-		return null;
+        return null;
 	}
-	
+
 	private int getTypeFromFileMode(FileMode fileMode)
 	{
 		if(fileMode == null)
@@ -671,7 +742,7 @@ public class GITUtil  extends BaseController{
 		return -1;
 	}
 	
-	private List<Doc> recurGetEntry(Git git, Repository repository, RevTree revTree, Doc doc, String localParentPath, String targetName) {
+	private List<Doc> recurGetEntry(RevTree revTree, Doc doc, String localParentPath, String targetName) {
 		
 		System.out.println("recurGetEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
@@ -680,9 +751,14 @@ public class GITUtil  extends BaseController{
 		String entryPath = doc.getPath() + doc.getName();
         
 		
-		TreeWalk treeWalk = null;
+		TreeWalk treeWalk = getTreeWalkByPath(revTree, entryPath);
+		if(treeWalk == null)
+		{
+			System.out.println("recurGetEntry() treeWalk is null for:" + entryPath);
+			return null;
+		}
+
 		try {
-			treeWalk = getTreeWalkByPath(repository, revTree, entryPath);
 			
 			List<Doc> successDocList = new ArrayList<Doc>();
 			
@@ -744,7 +820,7 @@ public class GITUtil  extends BaseController{
 					subDoc.setPath(subParentPath);
 					subDoc.setName(subEntryName);
 					subDoc.setRevision(doc.getRevision());
-					List<Doc> subSuccessList = recurGetEntry(git, repository, revTree, subDoc, subLocalParentPath, subEntryName);
+					List<Doc> subSuccessList = recurGetEntry(revTree, subDoc, subLocalParentPath, subEntryName);
 					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
 						successDocList.addAll(subSuccessList);
@@ -761,7 +837,7 @@ public class GITUtil  extends BaseController{
 		return null;
     }
 
-	private TreeWalk getTreeWalkByPath(Repository repository, RevTree revTree, String entryPath) {
+	private TreeWalk getTreeWalkByPath(RevTree revTree, String entryPath) {
 		System.out.println("getTreeWalkByPath() entryPath:" + entryPath); 
 
 		try {
@@ -1373,27 +1449,31 @@ public class GITUtil  extends BaseController{
 		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
 		
 		//遍历仓库所有子目录
-    	File remoteEntry = new File(wcDir + doc.getPath() + doc.getName());
-    	File[] entries = remoteEntry.listFiles();
-				
-		String subDocParentPath = doc.getPath() + doc.getName() + "/";
+		TreeWalk treeWalk = getSubEntries(doc.getPath(), "HEAD");
+		if(treeWalk == null)
+		{
+			return;
+		}
+		
+    	String subDocParentPath = doc.getPath() + doc.getName() + "/";
 		if(doc.getDocId() == 0)
 		{
 			 subDocParentPath = doc.getPath();
 		}
 		int subDocLevel = doc.getLevel() + 1;
 
-        if(entries != null)
-        {
-    		for(int i=0;i<entries.length;i++)
-    		{
-	            File remoteSubEntry = entries[i];
-	            int subDocType = remoteSubEntry.isFile()? 1:2;
-	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.length(), "");
-	            docHashMap.put(subDoc.getDocId(), subDoc);
-	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
-	        }
-        }
+        try {
+			while(treeWalk.next())
+			{
+				int subDocType = getTypeFromFileMode(treeWalk.getFileMode());
+			    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+			    docHashMap.put(subDoc.getDocId(), subDoc);
+			    scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
         //Go Through localSubDocs
         File dir = new File(localRootPath);
