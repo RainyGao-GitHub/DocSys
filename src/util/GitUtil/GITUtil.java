@@ -499,11 +499,6 @@ public class GITUtil  extends BaseController{
 	public TreeWalk getSubEntries(String remoteEntryPath, String revision) 
 	{    	
     	System.out.println("getSubEntries() revision:" + revision);
-    	if(revision == null)
-        {
-        	revision = "HEAD";
-        }
-    	
         try {
             
             RevTree revTree = getRevTree(revision);
