@@ -420,7 +420,7 @@ public class GITUtil  extends BaseController{
 		          System.out.println("getHistoryDetail() Entry: " + entry);
 		          
 		      	  String nodePath = entry.getNewPath();
-		          Integer entryType = getTypeFromFileMode(entry.getNewMode());
+		          Integer entryType = getEntryType(entry.getNewMode());
 		          Integer changeType = getChangeType(entry.getChangeType());
 		
 		          String srcEntryPath = entry.getOldPath();
@@ -570,7 +570,7 @@ public class GITUtil  extends BaseController{
 		try {
 			while(treeWalk.next())
 	    	{
-	    		int type = getTypeFromFileMode(treeWalk.getFileMode(0));
+	    		int type = getEntryType(treeWalk.getFileMode(0));
 		    	if(type <= 0)
 		    	{
 		    		continue;
@@ -613,34 +613,6 @@ public class GITUtil  extends BaseController{
 		CloseRepos();
         return subEntryList;
 	}
-
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
-		System.out.println("getEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
-		
-		//check targetName and set
-		if(targetName == null)
-		{
-			targetName = doc.getName();
-		}
-		
-        if(OpenRepos() == false)
-        {
-			System.err.println("getEntry() Failed to open git repository:" + gitDir);
-        	return null;
-        }
-
-        RevTree revTree = getRevTree(revision);
-        if(revTree == null)
-        {
-        	CloseRepos();
-        	return null;
-        }
-        
-        List<Doc> ret = recurGetEntry(revTree, doc, localParentPath, targetName);
-        CloseRepos();
-        return ret;
-	}
-	
 	
 	public Integer checkPath(String entryPath, String revision) 
 	{	
@@ -671,7 +643,7 @@ public class GITUtil  extends BaseController{
 	        return 2;
 	    }
 	    
-        int type = getTypeFromFileMode(treeWalk.getFileMode());
+        int type = getEntryType(treeWalk.getFileMode());
 	    CloseRepos();
         return type;
 	}
@@ -708,7 +680,7 @@ public class GITUtil  extends BaseController{
         return null;
 	}
 
-	private int getTypeFromFileMode(FileMode fileMode)
+	private int getEntryType(FileMode fileMode)
 	{
 		if(fileMode == null)
 		{
@@ -728,6 +700,222 @@ public class GITUtil  extends BaseController{
 		return -1;
 	}
 	
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
+		String parentPath = doc.getPath();
+		String entryName = doc.getName();
+		
+		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		
+		List<Doc> successDocList = new ArrayList<Doc>();
+		
+		//check targetName and set
+		if(targetName == null)
+		{
+			targetName = entryName;
+		}
+		
+		String remoteEntryPath = parentPath + entryName;
+		Doc remoteDoc = getDoc(doc, revision);
+		if(remoteDoc == null)
+		{
+			//entryName是空，表示当前访问的远程的根目录，必须存在
+			if(remoteEntryPath.isEmpty())
+			{
+				System.out.println("getEntry() remote root Entry not exists");
+				return null;
+			}
+			
+			//否则表示已经被删除，如果checkOut，force is true 则删除本地文件或目录
+			if(force)
+			{
+				if(delFileOrDir(localParentPath+targetName) == true)
+				{	
+					doc.setRevision("");
+					successDocList.add(doc);
+					return successDocList;
+				}
+				return null;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		
+		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
+		if(remoteDoc.getType() == 1) 
+		{
+			if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
+			{
+				File localEntry = new File(localParentPath, targetName);
+				if(!localEntry.exists())
+				{
+					System.out.println("getEntry() Checkout Ok, but localEntry not exists"); 
+					return null;
+				}
+				
+				doc.setSize(localEntry.length());
+				doc.setLatestEditTime(localEntry.lastModified());
+				doc.setCheckSum("");
+				doc.setType(1);
+		        doc.setRevision(remoteDoc.getRevision());
+		        successDocList.add(doc);
+				return successDocList;
+			}
+		}
+		
+		//远程节点存在，如果是目录的话（且不是根目录），则先新建本地目录，然后在CheckOut子目录，如果是根目录则直接CheckOut子目录，因为本地根目录必须存在
+		if(remoteDoc.getType() == 2) 
+		{
+        	//Get the subEntries and call svnGetEntry
+			if(getRemoteDir(localParentPath, targetName, force) == false)
+        	{
+				return null;
+        	}
+        	//Add to success Checkout list	
+        	doc.setType(2);
+			doc.setRevision(remoteDoc.getRevision());
+			successDocList.add(doc);
+        	
+			//To Get SubDocs
+			int subDocLevel = doc.getLevel() + 1;
+			String subDocParentPath = doc.getPath() + doc.getName() + "/";
+			if(doc.getName().isEmpty())
+			{
+				subDocParentPath = doc.getPath();
+			}
+			
+			String subEntryLocalParentPath = null;
+			if(targetName.isEmpty())
+			{
+				subEntryLocalParentPath = localParentPath;
+			}
+			else
+			{
+				subEntryLocalParentPath = localParentPath + targetName + "/";
+			}
+			
+			TreeWalk treeWalk = getSubEntries(remoteEntryPath,revision);
+			if(treeWalk == null)
+			{
+				return successDocList;
+			}
+			
+		    try {
+				while (treeWalk.next()) 
+				{
+					String subEntryName = treeWalk.getNameString();
+					Integer subEntryType = getEntryType(treeWalk.getFileMode());
+					
+					String subEntryRevision = null;	//set it to null so that getEntry to get realRevision
+					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
+					if(subSuccessList != null && subSuccessList.size() > 0)
+					{
+						successDocList.addAll(subSuccessList);
+					}					
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		  
+		    return successDocList;
+        }
+		
+		return null;
+	}
+	
+	private boolean getRemoteDir(String localParentPath, String targetName, boolean force) {
+		File localEntry = new File(localParentPath + targetName);
+		if(localEntry.exists())
+		{
+			if(localEntry.isFile())
+			{
+				if(force)
+				{
+					if(delFileOrDir(localParentPath+targetName) == false)
+					{
+						return false;
+					}
+					
+	        		return localEntry.mkdir();
+				}
+				else
+				{
+					return false;
+				}
+			}
+			
+			return true;
+		}
+
+		return localEntry.mkdir();
+	}
+
+	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, String revision, boolean force) 
+	{
+		File localEntry = new File(localParentPath + targetName);
+		if(localEntry.exists() && localEntry.isDirectory())
+		{
+			if(force == false)
+			{
+				return false;
+			}	
+			
+			if(delFileOrDir(localParentPath+targetName) == false)
+			{
+				return false;
+			}
+		}
+		
+        if(OpenRepos() == false)
+        {
+			System.err.println("getRemoteFile() Failed to open git repository:" + gitDir);
+        	return false;
+        }
+
+        RevTree revTree = getRevTree(revision);
+        if(revTree == null)
+        {
+        	CloseRepos();
+        	return false;
+        }
+
+		TreeWalk treeWalk = getTreeWalkByPath(revTree, remoteEntryPath);
+		if(treeWalk == null)
+		{
+			System.out.println("getRemoteFile() treeWalk is null for:" + remoteEntryPath);
+			CloseRepos();
+			return false;
+		}
+		
+        FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(localParentPath + targetName);
+		} catch (Exception e) {
+			System.err.println("getRemoteFile() new FileOutputStream Failed:" + localParentPath + targetName);
+			e.printStackTrace();
+	        CloseRepos();
+			return false;
+		}
+		
+		try {
+	        ObjectId blobId = treeWalk.getObjectId(0);
+	        ObjectLoader loader = repository.open(blobId);
+	        loader.copyTo(out);
+	        out.close();
+		} catch (Exception e) {
+			System.err.println("getRemoteFile() loader.copy Failed:" + localParentPath + targetName);
+			e.printStackTrace();
+			CloseRepos();
+			return false;
+		}
+        
+        CloseRepos();
+        return true;
+	}
+
 	private List<Doc> recurGetEntry(RevTree revTree, Doc doc, String localParentPath, String targetName) {
 		
 		System.out.println("recurGetEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
@@ -748,7 +936,7 @@ public class GITUtil  extends BaseController{
 			
 			List<Doc> successDocList = new ArrayList<Doc>();
 			
-			int type = getTypeFromFileMode(treeWalk.getFileMode());
+			int type = getEntryType(treeWalk.getFileMode());
 	        
 			if(type == -1)
 			{
@@ -1455,7 +1643,7 @@ public class GITUtil  extends BaseController{
         try {
 			while(treeWalk.next())
 			{
-				int subDocType = getTypeFromFileMode(treeWalk.getFileMode());
+				int subDocType = getEntryType(treeWalk.getFileMode());
 			    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 			    docHashMap.put(subDoc.getDocId(), subDoc);
 			    scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);

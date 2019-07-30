@@ -1468,14 +1468,9 @@ public class SVNUtil  extends BaseController{
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
-		System.out.println("svnGetEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
-		List<Doc> successDocList = new ArrayList<Doc>();
-    	if(parentPath == null || entryName == null)
-    	{
-    		System.out.println("getEntry() 非法参数：parentPath or entryName is null!");
-    		return null;
-    	}	
+		List<Doc> successDocList = new ArrayList<Doc>();	
 		
 		//check targetName and set
 		if(targetName == null)
@@ -1488,7 +1483,7 @@ public class SVNUtil  extends BaseController{
 		if(remoteDoc == null)
 		{
 			//entryName是空，表示当前访问的远程的根目录，必须存在
-			if(entryName.isEmpty())
+			if(remoteEntryPath.isEmpty())
 			{
 				System.out.println("getEntry() remote root Entry not exists");
 				return null;
@@ -1508,6 +1503,28 @@ public class SVNUtil  extends BaseController{
 			else
 			{
 				return null;
+			}
+		}
+		
+		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
+		if(remoteDoc.getType() == 1) 
+		{
+			if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
+			{
+				File localEntry = new File(localParentPath, targetName);
+				if(!localEntry.exists())
+				{
+					System.out.println("getEntry() Checkout Ok, but localEntry not exists"); 
+					return null;
+				}
+				
+				doc.setSize(localEntry.length());
+				doc.setLatestEditTime(localEntry.lastModified());
+				doc.setCheckSum("");
+				doc.setType(1);
+		        doc.setRevision(remoteDoc.getRevision());
+		        successDocList.add(doc);
+				return successDocList;
 			}
 		}
 		
@@ -1556,7 +1573,7 @@ public class SVNUtil  extends BaseController{
 				Integer subEntryType = getEntryType(subEntry.getKind());
 				
 				Long subEntryRevision = subEntry.getRevision();
-				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
+				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
@@ -1566,25 +1583,6 @@ public class SVNUtil  extends BaseController{
         	return successDocList;
         }
         
-		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
-		if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
-		{
-			File localEntry = new File(localParentPath, targetName);
-			if(!localEntry.exists())
-			{
-				System.out.println("getEntry() Checkout Ok, but localEntry not exists"); 
-				return null;
-			}
-			
-			doc.setSize(localEntry.length());
-			doc.setLatestEditTime(localEntry.lastModified());
-			doc.setCheckSum("");
-			doc.setType(1);
-	        doc.setRevision(remoteDoc.getRevision());
-	        successDocList.add(doc);
-			return successDocList;
-		}
-		
 		return null;
 	}
 
