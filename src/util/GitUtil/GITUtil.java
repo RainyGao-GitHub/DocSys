@@ -212,13 +212,14 @@ public class GITUtil  extends BaseController{
 		}
 	}
     
-	private RevCommit getLatestRevCommit(String entryPath) {
+	private RevCommit getLatestRevCommit(Doc doc) {
     	if(OpenRepos() == false)
     	{
         	System.out.println("getLatestRevCommit() Failed to open git repository");
     		return null;
     	}
     	
+    	String entryPath = doc.getPath() + doc.getName();
 		try {
 	        Iterable<RevCommit> iterable = null;
 		    if(entryPath == null || entryPath.isEmpty())
@@ -249,9 +250,7 @@ public class GITUtil  extends BaseController{
     
     private String getLatestRevision(Doc doc) 
     {
-    	String entryPath = doc.getPath() + doc.getName();
-    	
-    	RevCommit commit = getLatestRevCommit(entryPath);	
+    	RevCommit commit = getLatestRevCommit(doc);	
     	if(commit == null)
     	{
     		return null;
@@ -280,7 +279,7 @@ public class GITUtil  extends BaseController{
 	    	return remoteEntry;
 		}
     	
-        RevCommit commit = getLatestRevCommit(entryPath);
+        RevCommit commit = getLatestRevCommit(doc);
         if(commit == null)
         {
         	System.out.println("getLatestRevision() Failed to getLatestRevCommit");

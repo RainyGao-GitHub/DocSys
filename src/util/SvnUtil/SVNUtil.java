@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
@@ -144,7 +145,7 @@ public class SVNUtil  extends BaseController{
     }
     
     /*************** Rainy Added Interfaces Based on Low Level APIs Start **************/
-    public String getLatestRevision() 
+    public String getLatestReposRevision() 
 	{
     	try {
 			return repository.getLatestRevision() + "";
@@ -153,6 +154,45 @@ public class SVNUtil  extends BaseController{
 			e.printStackTrace();
 			return null;
 		}
+	}
+    
+	private SVNLogEntry getLatestRevCommit(Doc doc) 
+	{
+		String entryPath = doc.getPath() + doc.getName();
+		String[] targetPaths = new String[]{entryPath};
+				
+		Collection<SVNLogEntry> logEntries = null;
+        try {
+        	long startRevision = repository.getLatestRevision();
+    		long endRevision = startRevision;
+    		logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, true);	//不获取copy等历史
+            
+            for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
+                /*
+                 * gets a next SVNLogEntry
+                 */
+                SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+                return logEntry;        
+            }
+            
+        } catch (Exception e) {
+            System.out.println("getLogEntryList() repository.log() 异常");
+            e.printStackTrace();
+        }
+
+        return null;
+	}
+    
+    private String getLatestRevision(Doc doc) 
+    {
+    	SVNLogEntry commit = getLatestRevCommit(doc);	
+    	if(commit == null)
+    	{
+    		return null;
+    	}
+    	
+        String revision = commit.getRevision() + "";  //revision
+		return revision;
 	}
     
     //获取Doc在指定Revision的Type和真实Revision，该接口在同步调用时必须保证Revision的正确
@@ -175,29 +215,25 @@ public class SVNUtil  extends BaseController{
 	    	return remoteEntry;
 		}
         
-        //To Get real Revision
-		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath(), revision);
-		if(entries == null)
-		{
-			return null;
-		}
+        SVNLogEntry commit = getLatestRevCommit(doc);
+        if(commit == null)
+        {
+        	System.out.println("getDoc() Failed to getLatestRevCommit");
+        	return null;
+        }
 		
-	    Iterator<SVNDirEntry> iterator = entries.iterator();
-	    while (iterator.hasNext()) 
-	    {
-	    	SVNDirEntry subEntry = iterator.next();
-	    	String subEntryName = subEntry.getName();
-	    	int subEntryType = getEntryType(subEntry.getKind());
-	    	if(subEntryName.equals(doc.getName()))
-	    	{
-	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), subEntryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
-	    		remoteEntry.setSize(subEntry.getSize());
-	    		remoteEntry.setRevision(subEntry.getRevision()+"");
-	    		return remoteEntry;
-	    	}
-	    }
-	    
-	    return null;
+        String commitId=commit.getRevision() + "";  //revision
+	    String author=commit.getAuthor();  //作者
+	    String commitUser=author;
+	    long commitTime=commit.getDate().getTime();
+	            
+	    //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+        Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+		remoteDoc.setRevision(commitId);
+        remoteDoc.setCreatorName(author);
+        remoteDoc.setLatestEditorName(commitUser);
+        remoteDoc.setLatestEditTime(commitTime);
+        return remoteDoc;
 	}
     
     //getHistory filePath: remote File Path under repositoryURL
@@ -521,7 +557,7 @@ public class SVNUtil  extends BaseController{
 		    if(type == 0)
 		    {
 				System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
-		        return getLatestRevision();
+		        return getLatestReposRevision();
 		    }
 		    
 		    System.out.println("doAutoCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
@@ -583,7 +619,7 @@ public class SVNUtil  extends BaseController{
 	    if(commitActionList == null || commitActionList.size() ==0)
 	    {
 	    	System.out.println("doAutoCommmit() There is nothing to commit");
-	        return getLatestRevision();
+	        return getLatestReposRevision();
 	    }
 	    
 	    ISVNEditor editor = getCommitEditor(commitMsg);
@@ -1097,7 +1133,7 @@ public class SVNUtil  extends BaseController{
 	{   
 		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
 		{
-			srcDoc.setRevision(getLatestRevision());
+			srcDoc.setRevision(getLatestRevision(srcDoc));
 		}
 		
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
