@@ -1082,14 +1082,11 @@ public class BaseFunction{
         }
 
     	File dstFile=new File(dstFilePath);
-        if(dstFile.exists())
-        {
-        	if(cover == false)
-        	{
-        		//不允许覆盖
-        		System.err.println("copyFile() " + dstFilePath + " exists!");
-        		return false;
-        	}        	
+    	if(cover == false && dstFile.exists())
+    	{
+        	//不允许覆盖
+        	System.err.println("copyFile() " + dstFilePath + " exists!");
+        	return false;
         }
         
         try {
