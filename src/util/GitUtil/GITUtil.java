@@ -905,111 +905,25 @@ public class GITUtil  extends BaseController{
 	        ObjectLoader loader = repository.open(blobId);
 	        loader.copyTo(out);
 	        out.close();
+	        out = null;
 		} catch (Exception e) {
 			System.err.println("getRemoteFile() loader.copy Failed:" + localParentPath + targetName);
 			e.printStackTrace();
 			CloseRepos();
+			if(out != null)
+			{
+				try {
+					out.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
 			return false;
 		}
         
         CloseRepos();
         return true;
 	}
-
-	private List<Doc> recurGetEntry(RevTree revTree, Doc doc, String localParentPath, String targetName) {
-		
-		System.out.println("recurGetEntry() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + targetName);
-		
-		String parentPath = doc.getPath();
-		String entryName = doc.getName();
-		String entryPath = doc.getPath() + doc.getName();
-        
-		
-		TreeWalk treeWalk = getTreeWalkByPath(revTree, entryPath);
-		if(treeWalk == null)
-		{
-			System.out.println("recurGetEntry() treeWalk is null for:" + entryPath);
-			return null;
-		}
-
-		try {
-			
-			List<Doc> successDocList = new ArrayList<Doc>();
-			
-			int type = getEntryType(treeWalk.getFileMode());
-	        
-			if(type == -1)
-			{
-				System.err.println("recurGetEntry() unknown type");
-	        	return null;
-	        }
-			
-			if(type == 0)
-			{
-				System.err.println("recurGetEntry() " + doc.getPath() + doc.getName() + " 不存在");
-	        	return null;				
-			}
-			
-			
-	        if(type == 1)
-	        {
-	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isFile");
-
-	            FileOutputStream out = null;
-	    		try {
-	    			out = new FileOutputStream(localParentPath + targetName);
-	    		} catch (Exception e) {
-	    			System.err.println("recurGetEntry() new FileOutputStream Failed:" + localParentPath + targetName);
-	    			e.printStackTrace();
-	    			return null;
-	    		}
-	
-	            ObjectId blobId = treeWalk.getObjectId(0);
-	            ObjectLoader loader = repository.open(blobId);
-	            loader.copyTo(out);
-	            out.close();
-	            
-	            doc.setType(1);
-	            successDocList.add(doc);
-	            return successDocList;
-	        }
-	        else if(type == 2)
-	        {
-	        	System.out.println("recurGetEntry() " + treeWalk.getNameString() + " isDirectory");
-
-	        	File dir = new File(localParentPath,targetName);
-	        	if(!dir.exists())
-				{
-	        		dir.mkdir();
-				}
-				
-				while(treeWalk.next())
-				{
-					String subEntryName = treeWalk.getNameString();
-					String subParentPath = parentPath + entryName +"/";
-					String subLocalParentPath = localParentPath + targetName + "/";
-					
-					Doc subDoc = new Doc();
-					subDoc.setVid(doc.getVid());
-					subDoc.setPath(subParentPath);
-					subDoc.setName(subEntryName);
-					subDoc.setRevision(doc.getRevision());
-					List<Doc> subSuccessList = recurGetEntry(revTree, subDoc, subLocalParentPath, subEntryName);
-					if(subSuccessList != null && subSuccessList.size() > 0)
-					{
-						successDocList.addAll(subSuccessList);
-					}
-				}
-				return successDocList;
-	        }
-
-        }catch (Exception e) {
-            System.out.println("recurGetEntry() Exception"); 
-            e.printStackTrace();
-            return null;
-        }
-		return null;
-    }
 
 	private TreeWalk getTreeWalkByPath(RevTree revTree, String entryPath) {
 		System.out.println("getTreeWalkByPath() entryPath:" + entryPath); 
