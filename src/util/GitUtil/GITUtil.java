@@ -1233,7 +1233,7 @@ public class GITUtil  extends BaseController{
 		String wcDocPath = wcDir + entryPath;
 		if(doc.getType() == 1)
 		{
-			if(copyFile(docPath, wcDocPath, false) == false)
+			if(copyFile(docPath, wcDocPath, true) == false)
 			{
 				System.err.println("addEntry() copyFile from " + docPath + " to " + wcDocPath + " 失败");		
 				return false;
