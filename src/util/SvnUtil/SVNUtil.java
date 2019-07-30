@@ -155,7 +155,9 @@ public class SVNUtil  extends BaseController{
 		}
 	}
     
-    public Doc getDoc(Doc doc, Long revision) 
+    //获取Doc在指定Revision的Type和真实Revision，该接口在同步调用时必须保证Revision的正确
+    //但获取Revision是一个低效的操作，因此需要指定是否需要获取真实的Revision
+    public Doc getDoc(Doc doc, Long revision)
 	{    	
     	String entryPath = doc.getPath() + doc.getName();
     	
@@ -165,13 +167,15 @@ public class SVNUtil  extends BaseController{
     		return null;
     	}
     	
-        if(type ==  0) 
+        if(type ==  0 || revision != null)
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-			return remoteEntry;
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	remoteEntry.setRevision(revision+"");
+	    	return remoteEntry;
 		}
         
+        //To Get real Revision
 		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath(), revision);
 		if(entries == null)
 		{
@@ -186,10 +190,10 @@ public class SVNUtil  extends BaseController{
 	    	int subEntryType = getEntryType(subEntry.getKind());
 	    	if(subEntryName.equals(doc.getName()))
 	    	{
-	    		Doc subDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), subEntryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
-	    		subDoc.setSize(subEntry.getSize());
-	    		subDoc.setRevision(subEntry.getRevision()+"");
-	    		return subDoc;
+	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), subEntryName, doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
+	    		remoteEntry.setSize(subEntry.getSize());
+	    		remoteEntry.setRevision(subEntry.getRevision()+"");
+	    		return remoteEntry;
 	    	}
 	    }
 	    
@@ -1438,34 +1442,6 @@ public class SVNUtil  extends BaseController{
 	    }
 	    return subEntryList;
 	}
-    
-	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<SVNDirEntry> getSubEntryList(String remoteEntryPath, long revision) 
-	{
-    	if(remoteEntryPath == null)
-    	{
-    		System.out.println("getSubEntryList() 非法参数：remoteEntryPath is null!");
-    		return null;
-    	}
-		
-		List <SVNDirEntry> subEntryList =  new ArrayList<SVNDirEntry>();
-		
-		Collection<SVNDirEntry> entries = null;
-		try {
-			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
-		} catch (SVNException e) {
-			System.out.println("getSubEntries() getDir Failed:" + remoteEntryPath);
-			e.printStackTrace();
-			return null;
-		}
-	    Iterator<SVNDirEntry> iterator = entries.iterator();
-	    while (iterator.hasNext()) 
-	    {
-	    	SVNDirEntry entry = iterator.next();
-	        subEntryList.add(entry);
-	    }
-	    return subEntryList;
-	}
 	
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, Long revision) 
@@ -1539,18 +1515,16 @@ public class SVNUtil  extends BaseController{
 		if(remoteDoc.getType() == 2) 
 		{
         	//Get the subEntries and call svnGetEntry
-			if(false == targetName.isEmpty())	//not root entry
-			{	
-        		if(getRemoteDir(localParentPath, targetName, force) == false)
-        		{
-        			return null;
-        		}
-        		
-        		doc.setType(2);
-				doc.setRevision(remoteDoc.getRevision());
-				successDocList.add(doc);
-			}
+			if(getRemoteDir(localParentPath, targetName, force) == false)
+        	{
+				return null;
+        	}
+        	//Add to success Checkout list	
+        	doc.setType(2);
+			doc.setRevision(remoteDoc.getRevision());
+			successDocList.add(doc);
         	
+			//To Get SubDocs
 			int subDocLevel = doc.getLevel() + 1;
 			String subDocParentPath = doc.getPath() + doc.getName() + "/";
 			if(doc.getName().isEmpty())
@@ -1568,10 +1542,16 @@ public class SVNUtil  extends BaseController{
 				subEntryLocalParentPath = localParentPath + targetName + "/";
 			}
 			
-			List <SVNDirEntry> subEntries = getSubEntryList(remoteEntryPath,revision);
-			for(int i=0;i<subEntries.size();i++)
+			Collection<SVNDirEntry> entries = getSubEntries(remoteEntryPath,revision);
+			if(entries == null)
 			{
-				SVNDirEntry subEntry =subEntries.get(i);
+				return successDocList;
+			}
+			
+		    Iterator<SVNDirEntry> iterator = entries.iterator();
+		    while (iterator.hasNext()) 
+		    {
+		    	SVNDirEntry subEntry = iterator.next();
 				String subEntryName = subEntry.getName();
 				Integer subEntryType = getEntryType(subEntry.getKind());
 				

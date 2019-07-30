@@ -45,52 +45,6 @@ public class GITUtil  extends BaseController{
     Git git = null;
     Repository repository = null;
     RevWalk walk = null;
-	
-    private boolean open() 
-    {
-    	if(git != null)
-    	{
-    		return true;
-    	}
-    	
-        try {
-			git = Git.open(new File(gitDir));
-		} catch (IOException e) {
-			System.err.println("Open() Failed to open gitDir:" + gitDir);
-			e.printStackTrace();
-			return false;
-		}
-        
-        repository = git.getRepository();
-        walk = new RevWalk(repository);
-        return true;
-    }
-    
-    private void close() 
-    {
-    	if(walk != null)
-    	{
-    		walk.close();
-    		walk = null;
-    	}
-    	
-    	if(repository != null)
-    	{
-    		repository.close();
-    		repository = null;
-    		git = null;
-    		return;
-    	}
-    	
-    	if(git != null)
-    	{
-    		git.close();
-    		git = null;
-    	}
-    }
-    
-    
-        
     
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
     	String localVerReposPath = getLocalVerReposPath(repos,isRealDoc);
@@ -127,6 +81,50 @@ public class GITUtil  extends BaseController{
 		}
 		return true;
 	}
+	
+	//注意OpenRepos不能用于Commit，Commit目前的实现是基于WorkingCopy实现的，因此需要打开wcDir进行Commit
+    private boolean OpenRepos() 
+    {
+    	if(git != null)
+    	{
+    		return true;
+    	}
+    	
+        try {
+			git = Git.open(new File(gitDir));
+		} catch (IOException e) {
+			System.err.println("OpenRepos() Failed to open gitDir:" + gitDir);
+			e.printStackTrace();
+			return false;
+		}
+        
+        repository = git.getRepository();
+        walk = new RevWalk(repository);
+        return true;
+    }
+    
+    private void CloseRepos() 
+    {
+    	if(walk != null)
+    	{
+    		walk.close();
+    		walk = null;
+    	}
+    	
+    	if(repository != null)
+    	{
+    		repository.close();
+    		repository = null;
+    		git = null;
+    		return;
+    	}
+    	
+    	if(git != null)
+    	{
+    		git.close();
+    		git = null;
+    	}
+    }
 	
     //新建本地git仓库
 	public String CreateRepos(){
@@ -173,12 +171,11 @@ public class GITUtil  extends BaseController{
         return wcDir;
 	}
     
-	//This is the latest revision for repos
-    public String getLatestRevision() 
+    public String getLatestReposRevision() 
 	{
     	String revision = "HEAD";
         
-    	if(open() == false)
+    	if(OpenRepos() == false)
     	{
         	System.out.println("getLatestRevision() Failed to open git repository");
     		return null;
@@ -191,7 +188,7 @@ public class GITUtil  extends BaseController{
             if(objId == null)
             {
             	System.out.println("getLatestRevision() There is no any commit history for:" + revision);
-            	close();
+            	CloseRepos();
             	return null;
             }
             
@@ -199,28 +196,31 @@ public class GITUtil  extends BaseController{
             if(revCommit == null)
             {
             	System.out.println("getLatestRevision() parseCommit Failed:" + revision);
-            	close();
+            	CloseRepos();
             	return null;            	
             }
             
             revision = revCommit.getName();
-            close();
+            CloseRepos();
             return revision;
             
 		} catch (IOException e) {
 			System.out.println("getLatestRevision() Exception");        	
 			e.printStackTrace();
-			close();
+			CloseRepos();
 			return null;
 		}
 	}
     
-    private String getLatestRevision(Doc doc) 
-	{
-    	String entryPath = doc.getPath() + doc.getName();
+	private RevCommit getLatestRevCommit(String entryPath) {
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("getLatestRevCommit() Failed to open git repository");
+    		return null;
+    	}
     	
 		try {
-	    	Iterable<RevCommit> iterable = null;
+	        Iterable<RevCommit> iterable = null;
 		    if(entryPath == null || entryPath.isEmpty())
 		    {
 		    	iterable = git.log().setMaxCount(1).call();
@@ -232,21 +232,37 @@ public class GITUtil  extends BaseController{
 		    
 		    Iterator<RevCommit> iter=iterable.iterator();
 	        while (iter.hasNext()){
-	            RevCommit commit=iter.next();	
-	            String commitId=commit.getName();  //revision
-	            return commitId;
+	            RevCommit commit=iter.next();
+	            CloseRepos();
+	            return commit;
 	        }
 	        
+	        CloseRepos();
 	        return null;
 	    } catch (Exception e) {
-			System.err.println("getLatestRevision Error");	
+			System.err.println("getLatestRevCommit 异常");	
 			e.printStackTrace();
-			return null;
+			CloseRepos();
 		}
+		return null;
+	}
+    
+    private String getLatestRevision(Doc doc) 
+    {
+    	String entryPath = doc.getPath() + doc.getName();
+    	
+    	RevCommit commit = getLatestRevCommit(entryPath);	
+    	if(commit == null)
+    	{
+    		return null;
+    	}
+    	
+        String revision = commit.getName();  //revision
+		return revision;
 	}
 	
-	//getHistory filePath: remote File Path under repositoryURL
-    public Doc getDoc(Doc doc, String revision) 
+	//这个接口是用来获取
+    public Doc getDoc(Doc doc, String revision)
     {
     	String entryPath = doc.getPath() + doc.getName();
     	
@@ -256,53 +272,35 @@ public class GITUtil  extends BaseController{
     		return null;
     	}
     	
-        if(type ==  0) 
+        if(type ==  0 || revision != null) 
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-			return remoteEntry;
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	remoteEntry.setRevision(revision);
+	    	return remoteEntry;
 		}
     	
-    	Git git = null;
-		try {
-	    	git = Git.open(new File(wcDir));
-	    	
-		    Iterable<RevCommit> iterable = null;
-		    if(entryPath == null || entryPath.isEmpty())
-		    {
-		    	iterable = git.log().setMaxCount(1).call();
-		    }
-		    else
-		    {
-		    	iterable = git.log().addPath(entryPath).setMaxCount(1).call();
-		    }
-		    
-		    Iterator<RevCommit> iter=iterable.iterator();
-	        while (iter.hasNext()){
-	            RevCommit commit=iter.next();	
-
-	            String commitId=commit.getName();  //revision
-	            String author=commit.getAuthorIdent().getName();  //作者
-	            String commitUser=commit.getCommitterIdent().getName();
-	            long commitTime=commit.getCommitTime();
+        RevCommit commit = getLatestRevCommit(entryPath);
+        if(commit == null)
+        {
+        	System.out.println("getLatestRevision() Failed to getLatestRevCommit");
+        	return null;
+        }
+		
+        String commitId=commit.getName();  //revision
+	    String author=commit.getAuthorIdent().getName();  //作者
+	    String commitUser=commit.getCommitterIdent().getName();
+	    long commitTime=commit.getCommitTime();
 	            
-	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-	            Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), 0, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-				remoteDoc.setRevision(commitId);
-	            remoteDoc.setCreatorName(author);
-	            remoteDoc.setLatestEditorName(commitUser);
-	            remoteDoc.setLatestEditTime(commitTime);
-	            return remoteDoc;
-	        }
-	        
-	        return null;
-	    } catch (Exception e) {
-			System.out.println("getDoc Error");	
-			e.printStackTrace();
-			return null;
-		}
+	    //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+        Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+		remoteDoc.setRevision(commitId);
+        remoteDoc.setCreatorName(author);
+        remoteDoc.setLatestEditorName(commitUser);
+        remoteDoc.setLatestEditTime(commitTime);
+        return remoteDoc;
     }
-    
+
 	//getHistory filePath: remote File Path under repositoryURL
     public List<LogEntry> getHistoryLogs(String filePath,String startRevision, String endRevision,int maxLogNum) 
     {
@@ -492,7 +490,7 @@ public class GITUtil  extends BaseController{
 	public TreeWalk getSubEntries(String remoteEntryPath, String revision) 
 	{    	
     	System.out.println("getSubEntries() revision:" + revision);
-    	if(open() == false)
+    	if(OpenRepos() == false)
     	{
         	System.out.println("getSubEntries() Failed to open git repository");
     		return null;
@@ -506,32 +504,32 @@ public class GITUtil  extends BaseController{
             if(treeWalk == null) 
             {
             	System.err.println("getSubEntries() Failed to get treeWalk for:" + remoteEntryPath + " at revision:" + revision);
-            	close();
+            	CloseRepos();
             	return null;
             }
             
             if(remoteEntryPath.isEmpty())
             {
-            	close();
+            	CloseRepos();
             	return treeWalk;
             }
 	        
             if(treeWalk.isSubtree())
 	        {
             	treeWalk.enterSubtree();
-            	close();
+            	CloseRepos();
             	return treeWalk;
 	        }
 	        else
 	        {
 	        	System.err.println("getSubEntries() treeWalk for:" + remoteEntryPath + " is not directory");
-	        	close();
+	        	CloseRepos();
 	            return null;
 	        }            
         } catch (Exception e) {
             System.out.println("getSubEntries() getTreeWalkByPath Exception"); 
             e.printStackTrace();
-            close();
+            CloseRepos();
             return null;
          }
 	}
@@ -541,23 +539,23 @@ public class GITUtil  extends BaseController{
 	{
 		String entryPath = doc.getPath() + doc.getName();
 		
-		if(open() == false)
+		if(OpenRepos() == false)
 		{
-			System.err.println("getDocList() Failed to open git repository:" + gitDir);
+			System.err.println("getDocList() Failed to OpenRepos git repository:" + gitDir);
         	return null;
 		}
 		
     	RevTree revTree = getRevTree(revision);
     	if(revTree == null)
     	{
-    		close();
+    		CloseRepos();
     		return null;
     	}
 
         TreeWalk treeWalk = getSubEntries(entryPath, revision);
         if(treeWalk == null)
         {
-        	close();
+        	CloseRepos();
         	return null;
         }    
 
@@ -594,7 +592,7 @@ public class GITUtil  extends BaseController{
 		} catch(Exception e){
 			System.out.println("getDocList() treeWalk.next() Exception"); 
             e.printStackTrace();
-            close();
+            CloseRepos();
 			return null;
 		}
 
@@ -612,7 +610,7 @@ public class GITUtil  extends BaseController{
         	}
         }
         
-		close();
+		CloseRepos();
         return subEntryList;
 	}
 
@@ -625,7 +623,7 @@ public class GITUtil  extends BaseController{
 			targetName = doc.getName();
 		}
 		
-        if(open() == false)
+        if(OpenRepos() == false)
         {
 			System.err.println("getEntry() Failed to open git repository:" + gitDir);
         	return null;
@@ -634,19 +632,19 @@ public class GITUtil  extends BaseController{
         RevTree revTree = getRevTree(revision);
         if(revTree == null)
         {
-        	close();
+        	CloseRepos();
         	return null;
         }
         
         List<Doc> ret = recurGetEntry(revTree, doc, localParentPath, targetName);
-        close();
+        CloseRepos();
         return ret;
 	}
 	
 	
 	public Integer checkPath(String entryPath, String revision) 
 	{	
-    	if(open() == false)
+    	if(OpenRepos() == false)
     	{
         	System.out.println("checkPath() Failed to open git repository");
     		return null;
@@ -655,26 +653,26 @@ public class GITUtil  extends BaseController{
         RevTree revTree = getRevTree(revision);
         if(revTree == null)
         {
-        	close();
+        	CloseRepos();
         	return null;
         }
 	   
         TreeWalk treeWalk = getTreeWalkByPath(revTree, entryPath);
 	    if(treeWalk == null)
 	    {
-	    	close();
+	    	CloseRepos();
 	    	return 0;
 	    }
 	    
         if(entryPath.isEmpty())
 	    {
         	//For root path, FileMode is null
-        	close();
+        	CloseRepos();
 	        return 2;
 	    }
 	    
         int type = getTypeFromFileMode(treeWalk.getFileMode());
-	    close();
+	    CloseRepos();
         return type;
 	}
 	
@@ -907,7 +905,7 @@ public class GITUtil  extends BaseController{
 		    if(type == 0)
 		    {
 				System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
-		        return getLatestRevision();
+		        return getLatestRevision(doc);
 		    }
 
     		insertDeleteAction(commitActionList,doc);
@@ -968,7 +966,7 @@ public class GITUtil  extends BaseController{
 		if(commitActionList == null || commitActionList.size() ==0)
 		{
 		    System.out.println("doAutoCommmit() There is nothing to commit");
-		    return getLatestRevision();
+		    return getLatestReposRevision();
 		}
 		
 		Git git = null;
