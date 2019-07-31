@@ -2017,14 +2017,7 @@
    				return;
    			}
    			//console.log("uploadDoc() checkDocInfo completed"); 
-			
-//   			//如果文件size是0，无需上传直接调用addDoc新增文件
-//   			if(0 == SubContext.size)
-//   			{
-//   				addDoc(SubContext);
-//   				return;
-//   			}	
-//   			
+			   			
    			//该接口只对大于50M的文件进行切片，设置chunked标记，生成chunkList（chunkHash或者叫chunkCheckSum并没有完全生成，所以后续getChunkedSum可能需要等待）
    			CutFile(SubContext); 
    			
