@@ -546,11 +546,13 @@
 
 	function showRenameDialog(node)
 	{
+		console.log("showRenameDialog node:", node);
+
 		var docId = node.id;
 		var pid = node.pid;
 		var parentPath = node.path;
 		var docName = node.name;
-		var level = node.Level;
+		var level = node.level;
 		var type = node.type;
 		console.log("showRenameDialog docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
@@ -2598,6 +2600,7 @@ function CompareObj(objA, objB, flag) {
 		var path = node.path;
 		var name = node.name;
 		var type = node.type;
+		var level = node.level;
 		var latestEditTime = node.latestEditTime;
 		
 		var isParent = false;
@@ -2639,7 +2642,7 @@ function CompareObj(objA, objB, flag) {
 			var treeNode = getNodeByNodeId(docId);
 			if(treeNode == null)
 			{
-	      		var newNode = {id : docId, pid: pid, path: path, name: name, type: type,  isParent: isParent, pId: pId};
+	      		var newNode = {id : docId, pid: pid, path: path, name: name, type: type,  isParent: isParent, pId: pId, Leve: level};
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
 		}
