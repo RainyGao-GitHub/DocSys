@@ -654,6 +654,12 @@ public class DocController extends BaseController{
 
 	private boolean isDocCheckSumMatched(Doc doc,Long size, String checkSum) {
 		System.out.println("isDocCheckSumMatched() size:" + size + " checkSum:" + checkSum + " docSize:" + doc.getSize() + " docCheckSum:"+doc.getCheckSum());
+
+		if(size == 0L)	//对于size==0的情况只要比较原来的doc.getSize() == 0
+		{
+			return size.equals(doc.getSize()); 
+		}
+		
 		if(size.equals(doc.getSize()) && !"".equals(checkSum) && checkSum.equals(doc.getCheckSum()))
 		{
 			return true;
