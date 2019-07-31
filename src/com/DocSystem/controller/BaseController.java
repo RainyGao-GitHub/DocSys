@@ -3132,6 +3132,9 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
+		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
+		BuildMultiActionListForDocMove(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser);
+		
 		unlockDoc(srcDoc,login_user,srcDocLock);
 		unlockDoc(dstDoc,login_user,dstDocLock);
 		
@@ -3146,6 +3149,20 @@ public class BaseController  extends BaseFunction{
 		return dbAddDoc(repos, dstDoc, true);
 	}
 
+	private void BuildMultiActionListForDocMove(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
+	{	
+		//遍历本地目录，构建MoveAction
+	    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+		//ActionType 1:add 2:delete 3:update 4:move 5:copy
+	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+		
+		//Insert Move Action For RealDoc Index Copy (对于目录则会进行递归)
+		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 4, 1, null);
+		
+		//Copy VDoc (包括VDoc VerRepos and Index)
+		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 4, 2, null);
+	}
+	
 	//底层copyDoc接口
 	protected boolean copyDoc(Repos repos, Doc srcDoc, Doc dstDoc, 
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt,List<CommonAction> actionList) 
@@ -3236,6 +3253,8 @@ public class BaseController  extends BaseFunction{
 
 	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
 	{	
+		//遍历本地目录，构建CopyAction
+
 	    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 		//ActionType 1:add 2:delete 3:update 4:move 5:copy
 	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
