@@ -1269,60 +1269,6 @@
    			return false;
       	}
       	
-      	//addDoc(SubConext) for such file size is 0
-      	function addDoc(SubContext)
-      	{      		
-      		var name = SubContext.name;
-	  	 	console.log("addDoc() file:" + name);
-      		
-      		//检查服务器端是否存在同名文件，并确认文件内容是否相同
-   			//调用后台接口检查DocInfo，回调函数需要根据情况决定具体的操作
-  			$.ajax({
-	             url : "/DocSystem/Doc/addDoc.do",
-	             type : "post",
-	             dataType : "json",
-	             data : {
-			            reposId : SubContext.vid,
-			            docId: SubContext.docId,
-			            pid : SubContext.realParentId,
-			            path: SubContext.realParentPath,
-		             	name : name,
-						type: 1,
-						size: SubContext.size,
-		             	checkSum: SubContext.checkSum,
-	             },
-	             success : function (ret) {
-	             	if( "ok" == ret.status)
-	             	{		
-	             		console.log("addDoc() ret",ret);
-		                if(SubContext.docId == -1) //文件新建成功
-			            {	
-			            	addTreeNode(ret.data);
-
-		                	//set the docId so that We can open it on uploadList 
-		             		SubContext.docId = ret.data.docId;	                
-			            }
-	             			
-	             		$('.file'+index).removeClass('is-uploading');
-		    			$('.file'+index).addClass('is-success');
-		                uploadSuccessHandler(SubContext,ret.msgInfo);
-						return;
-	             	}
-	             	else
-	                {
-					 	uploadErrorConfirmHandler(SubContext, ret.msgInfo);
-			            return;
-	                }
-	            },
-	            error : function () {
-				 	uploadErrorConfirmHandler(SubContext, "doCheck "+nodeName+ " 异常");
-		            return;
-	            }
-	        });
-    		
-   			return false;
-      	}
-      	
       	function showUploadingInfo()
       	{
       		if(reuploadFlag == false)
