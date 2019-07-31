@@ -5255,6 +5255,8 @@ public class BaseController  extends BaseFunction{
 				return LuceneUtil2.addIndexForFile(filePath, doc, indexLib);
 			}
 		}
+
+		System.out.println("addIndexForRDoc() 未知文件类型不支持索引");
 		return false;
 	}
 
