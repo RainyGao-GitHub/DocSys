@@ -1718,7 +1718,7 @@ public class DocController extends BaseController{
 			Integer lockType, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("lockDoc reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name + " lockType: " + lockType);
+		System.out.println("lockDoc reposId: " + reposId + " docId: " + docId + " path:" + path + " name:" + name + " type:" + type +" lockType: " + lockType);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");

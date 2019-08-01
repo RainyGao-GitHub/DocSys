@@ -3728,8 +3728,8 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			
-			//If SubDocLock is for directory, need to check its subDocLocks
-			if(subDocLock.getType() == 2)
+			//If SubDocLock is for directory or unknown type, need to check its subDocLocks
+			if(subDocLock.getType() == null || subDocLock.getType() == 2)
 			{
 				Doc subDoc = new Doc();
 				subDoc.setVid(reposId);
