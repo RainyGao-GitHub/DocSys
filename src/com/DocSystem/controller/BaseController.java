@@ -5240,6 +5240,12 @@ public class BaseController  extends BaseFunction{
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}
 		
+		if(content == null)
+		{
+			System.out.println("addIndexForVDoc() content is null");	
+			return false;
+		}
+		
 		String indexLib = getIndexLibPath(repos,2);
 		
 		return LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
