@@ -5087,7 +5087,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,false);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,true);
 	}
 	
 	protected String verReposDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
