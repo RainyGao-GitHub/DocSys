@@ -3506,6 +3506,8 @@ public class BaseController  extends BaseFunction{
 	protected DocLock lockDoc(Doc doc,Integer lockType, long lockDuration, User login_user, ReturnAjax rt, boolean subDocCheckFlag) {
 		System.out.println("lockDoc() doc:" + doc.getName() + " lockType:" + lockType + " login_user:" + login_user.getName() + " subDocCheckFlag:" + subDocCheckFlag);
 
+		System.err.println("lockDoc() Doc type is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() );				
+
 		//check if the doc was locked (State!=0 && lockTime - curTime > 1 day)
 		DocLock docLock = getDocLock(doc);
 		if(docLock != null && isDocLocked(docLock,login_user,rt))
