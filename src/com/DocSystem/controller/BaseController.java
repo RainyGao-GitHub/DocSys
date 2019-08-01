@@ -3151,16 +3151,93 @@ public class BaseController  extends BaseFunction{
 
 	private void BuildMultiActionListForDocMove(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
 	{	
-		//遍历本地目录，构建MoveAction
+		if(dstDoc.getName().isEmpty())
+		{
+			System.err.println("BuildMultiActionListForDocMove() dstDoc.name is empty:" + dstDoc.getDocId() + " path:" + dstDoc.getPath() + " name:" +dstDoc.getName());
+			return;
+		}
+		
+		//ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+		//ActionType 1:add 2:delete 3:update 4:move 5:copy
+	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+		//Insert Move Action For RealDoc Index Copy (对于目录则会进行递归)
+		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 4, 1, null);
+		//Copy VDoc (包括VDoc VerRepos and Index)
+		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 4, 2, null);
+		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 2, 4, 2, null);
+		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 4, 2, null);
+		
+		//Check if dstLocalEntry exists
+		String dstLocalEntryPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName(); 
+		File dstLocalEntry = new File(dstLocalEntryPath);
+		if(dstLocalEntry.exists() && dstLocalEntry.isDirectory())
+		{			
+			//遍历并BuildMutliActionListForDocMove
+			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
+			String srcSubDocParentPath = srcDoc.getPath() + srcDoc.getName() +"/";
+			int dstSubDocLevel = dstDoc.getLevel() + 1;
+			int srcSubDocLevel = srcDoc.getLevel() + 1;
+			String localRootPath = dstDoc.getLocalRootPath();
+			String localVRootPath = dstDoc.getLocalVRootPath();
+			
+			File[] localFileList = dstLocalEntry.listFiles();
+	    	for(int i=0;i<localFileList.length;i++)
+	    	{
+	    		File file = localFileList[i];
+	    		int type = file.isDirectory()? 2:1;
+	    		long size = file.length();
+	    		String name = file.getName();
+	    		System.out.println("BuildMultiActionListForDocMove subFile:" + name);
+
+	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		BuildMultiActionListForDocMove(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser);
+	    	}
+		}		
+	}
+	
+	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
+	{	
+		//遍历本地目录，构建CopyAction
+
 	    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 		//ActionType 1:add 2:delete 3:update 4:move 5:copy
 	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
 		
-		//Insert Move Action For RealDoc Index Copy (对于目录则会进行递归)
-		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 4, 1, null);
-		
+		//Insert copy Action For RealDoc Index Copy (对于目录则会进行递归)
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 5, 1, null);
 		//Copy VDoc (包括VDoc VerRepos and Index)
-		insertMoveAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 4, 2, null);
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 5, 2, null);
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 2, 5, 2, null);
+		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 5, 2, null);
+		
+		//Check if dstLocalEntry exists
+		String dstLocalEntryPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName(); 
+		File dstLocalEntry = new File(dstLocalEntryPath);
+		if(dstLocalEntry.exists() && dstLocalEntry.isDirectory())
+		{			
+			//遍历并BuildMutliActionListForDocMove
+			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
+			String srcSubDocParentPath = srcDoc.getPath() + srcDoc.getName() +"/";
+			int dstSubDocLevel = dstDoc.getLevel() + 1;
+			int srcSubDocLevel = srcDoc.getLevel() + 1;
+			String localRootPath = dstDoc.getLocalRootPath();
+			String localVRootPath = dstDoc.getLocalVRootPath();
+			
+			File[] localFileList = dstLocalEntry.listFiles();
+	    	for(int i=0;i<localFileList.length;i++)
+	    	{
+	    		File file = localFileList[i];
+	    		int type = file.isDirectory()? 2:1;
+	    		long size = file.length();
+	    		String name = file.getName();
+	    		System.out.println("BuildMultiActionListForDocCopy subFile:" + name);
+
+	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		BuildMultiActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser);
+	    	}
+		}	
 	}
 	
 	//底层copyDoc接口
@@ -3249,21 +3326,6 @@ public class BaseController  extends BaseFunction{
 
 	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
 		return dbAddDoc(repos, dstDoc, true);
-	}
-
-	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser) 
-	{	
-		//遍历本地目录，构建CopyAction
-
-	    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
-		//ActionType 1:add 2:delete 3:update 4:move 5:copy
-	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
-		
-		//Insert copy Action For RealDoc Index Copy (对于目录则会进行递归)
-		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 5, 1, null);
-		
-		//Copy VDoc (包括VDoc VerRepos and Index)
-		insertCopyAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, 5, 2, null);
 	}
 
 	protected boolean updateDocContent(Repos repos, Doc doc, 
