@@ -2919,6 +2919,11 @@ public class BaseController  extends BaseFunction{
 			return deleteIndexForRDoc(repos, doc);
 		case 3: //Update Doc
 			return updateIndexForRDoc(repos, doc);		
+		case 4: //Move Doc
+			deleteIndexForRDoc(repos, doc);
+			return addIndexForRDoc(repos, action.getNewDoc());		
+		case 5: //Copy Doc
+			return addIndexForRDoc(repos, action.getNewDoc());
 		}
 		return false;
 	}
@@ -2935,7 +2940,12 @@ public class BaseController  extends BaseFunction{
 		case 2: //Delete Doc
 			return deleteIndexForVDoc(repos, doc);
 		case 3: //Update Doc
-			return updateIndexForVDoc(repos, doc);		
+			return updateIndexForVDoc(repos, doc);	
+		case 4: //Move Doc
+			deleteIndexForVDoc(repos, doc);
+			return addIndexForVDoc(repos, action.getNewDoc());		
+		case 5: //Copy Doc
+			return addIndexForVDoc(repos, action.getNewDoc());
 		}
 		return false;
 	}
@@ -3014,10 +3024,32 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:	//RDoc autoCommit
 			System.out.println("executeVerReposAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return verReposDocCommit(repos, true, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			switch(action.getType())
+			{
+			case 1: //add
+			case 2:	//delete
+			case 3: //update
+				return verReposDocCommit(repos, true, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			case 4:	//move
+				return verReposDocMove(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			case 5: //copy
+				return verReposDocCopy(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);				
+			}
 		case 2: //VDoc autoCommit
 			System.out.println("executeVerReposAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			switch(action.getType())
+			{
+			case 1: //add
+			case 2:	//delete
+			case 3: //update
+				return verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			case 4:	//move
+				doc.setIsRealDoc(false);
+				return verReposDocMove(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			case 5: //copy
+				doc.setIsRealDoc(false);
+				return verReposDocCopy(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);				
+			}
 		}
 		return null;
 	}
