@@ -421,9 +421,12 @@ public class GITUtil  extends BaseController{
 		      	  String nodePath = entry.getNewPath();
 		          Integer entryType = getEntryType(entry.getNewMode());
 		          Integer changeType = getChangeType(entry.getChangeType());
-		
 		          String srcEntryPath = entry.getOldPath();
-		          
+		          if(changeType == 2)	//Delete
+		          {
+		        	  nodePath = srcEntryPath;	//删除操作，newPath不存在了，所以此时nodePath应该用删除前的Path
+		          }
+				          
 		          //Add to changedItemList
 		          ChangedItem changedItem = new ChangedItem();
 		          changedItem.setChangeType(changeType);	
