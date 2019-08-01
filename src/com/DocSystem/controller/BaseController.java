@@ -5240,13 +5240,13 @@ public class BaseController  extends BaseFunction{
 			content = readVirtualDocContent(reposVPath, VDocName);
 		}
 		
-		if(content == null)
-		{
-			System.out.println("addIndexForVDoc() content is null");	
-			return false;
-		}
-		
 		String indexLib = getIndexLibPath(repos,2);
+
+		if(content == null || content.isEmpty())
+		{
+			System.out.println("addIndexForVDoc() content is null or empty, do delete Index");
+			return LuceneUtil2.deleteIndex(doc, indexLib);			
+		}
 		
 		return LuceneUtil2.addIndex(doc, content.toString().trim(), indexLib);
 	}
@@ -5307,8 +5307,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(file.length() == 0)
 		{
-			System.out.println("addIndexForRDoc() fileSize is 0");
-			return true; //LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
+			System.out.println("addIndexForRDoc() fileSize is 0, do delete index");
+			return LuceneUtil2.deleteIndex(doc,indexLib);
 		}
 		
 		//According the fileSuffix to confirm if it is Word/Execl/ppt/pdf
