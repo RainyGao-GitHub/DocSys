@@ -74,104 +74,11 @@ public class BaseFunction{
 	
 	/******************************** Basic Interface for CommonAction *************************************/
 	//CommonAction 主要用于异步行为
-	protected void insertSyncUpAction(List<CommonAction> actionList, Repos repos, Doc doc, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
-		actionId = 5; //AutoSyncUp
-
-		CommonAction action = new CommonAction();
-		action.setType(actionId); //5: AutoSyncUp
-		action.setAction(actionType); //3: localModify
-		action.setDocType(docType); //1: local Doc Changed
-		action.setRepos(repos);
-		action.setDoc(doc);
-		
-		action.setSubActionList(subActionList);
-		
-		actionList.add(action);
-	}
-	
-	protected void insertAddAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
+    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+	//ActionType 1:add 2:delete 3:update 4:move 5:copy
+    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+	protected void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
 	{
-		actionType = 1;	//Add
-		
-		CommonAction action = new CommonAction();
-		action.setType(actionId);		
-		action.setAction(actionType);
-		action.setDocType(docType);
-		
-		action.setRepos(repos);
-		action.setDoc(doc);
-		
-		action.setCommitMsg(commitMsg);
-		action.setCommitUser(commitUser);
-		
-		action.setSubActionList(subActionList);
-		
-		actionList.add(action);
-	}
-	
-	protected void insertDeleteAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
-		actionType = 2;	//Delete
-		
-		CommonAction action = new CommonAction();
-		action.setType(actionId);		
-		action.setAction(actionType);
-		action.setDocType(docType);
-		
-		action.setRepos(repos);
-		action.setDoc(doc);
-		
-		action.setCommitMsg(commitMsg);
-		action.setCommitUser(commitUser);
-		
-		action.setSubActionList(subActionList);
-
-		actionList.add(action);
-	}
-	
-	protected void insertUpdateAction(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) {
-		actionType = 3;	//Update
-		
-		CommonAction action = new CommonAction();
-		action.setType(actionId);		
-		action.setAction(actionType);
-		action.setDocType(docType);
-		
-		action.setRepos(repos);
-		action.setDoc(doc);
-		
-		action.setCommitMsg(commitMsg);
-		action.setCommitUser(commitUser);
-		
-		action.setSubActionList(subActionList);
-		
-		actionList.add(action);
-	}
-	
-	protected void insertMoveAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
-	{
-		actionType = 4; //Move
-		
-		CommonAction action = new CommonAction();
-		action.setType(actionId);		
-		action.setAction(actionType);
-		action.setDocType(docType);
-		
-		action.setRepos(repos);
-		action.setDoc(srcDoc);
-		action.setNewDoc(dstDoc);
-		
-		action.setCommitMsg(commitMsg);
-		action.setCommitUser(commitUser);
-		
-		action.setSubActionList(subActionList);
-		
-		actionList.add(action);
-	}
-
-	protected void insertCopyAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
-	{
-		actionType = 5; //Copy
-		
 		CommonAction action = new CommonAction();
 		action.setType(actionId);		
 		action.setAction(actionType);
