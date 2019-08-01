@@ -1808,6 +1808,7 @@
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
+		var type = node.type;
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
@@ -1819,6 +1820,7 @@
 				pid: pid,
 				path: path,
 				name: name,
+				type: type,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -1888,6 +1890,7 @@
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
+		var type = node.type;
 
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
@@ -1900,6 +1903,7 @@
 				pid: pid,
 				path: path,
 				name: name,
+				type: type,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -1942,6 +1946,7 @@
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
+		var type = node.type;
 		
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
@@ -1954,6 +1959,7 @@
 				pid: pid,
 				path: path,
 				name: name,
+				type: type,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -3592,6 +3598,8 @@ function CompareObj(objA, objB, flag) {
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
+		var type = node.type;
+		
 		$.ajax({
 			url : "/DocSystem/Doc/lockDoc.do",
 			type : "post",
@@ -3603,6 +3611,7 @@ function CompareObj(objA, objB, flag) {
 				pid: pid,
 				path: path,
 				name: name,
+				type: type,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
