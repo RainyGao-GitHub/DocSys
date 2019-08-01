@@ -4944,18 +4944,20 @@ public class BaseController  extends BaseFunction{
 	
 	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
 	{	
+		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
 			doc = buildVDoc(repos, doc);
+			verCtrl = repos.getVerCtrl1();
 		}
 		
-		if(repos.getVerCtrl() == 1)
+		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
 			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
 		}
-		else if(repos.getVerCtrl() == 2)
+		else if(verCtrl == 2)
 		{
 			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
 		}
@@ -4990,13 +4992,15 @@ public class BaseController  extends BaseFunction{
 
 	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) 
 	{
+		int verCtrl = repos.getVerCtrl();
 		if(doc.getIsRealDoc() == false)
 		{
 			//Convert doc to vDoc
 			doc = buildVDoc(repos, doc);
+			verCtrl = repos.getVerCtrl1();
 		}
 		
-		if(repos.getVerCtrl() == 1)
+		if(verCtrl == 1)
 		{
 			long revision = -1;
 			if(commitId != null)
@@ -5005,7 +5009,7 @@ public class BaseController  extends BaseFunction{
 			}
 			return svnCheckOut(repos, doc, localParentPath, targetName, revision, force);		
 		}
-		else if(repos.getVerCtrl() == 2)
+		else if(verCtrl == 2)
 		{
 			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force);
 		}
@@ -5040,19 +5044,21 @@ public class BaseController  extends BaseFunction{
 
 	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
+		int verCtrl = repos.getVerCtrl();
 		if(srcDoc.getIsRealDoc() == false)
 		{
 			//Convert doc to vDoc
 			srcDoc = buildVDoc(repos, srcDoc);
 			dstDoc = buildVDoc(repos, dstDoc);
+			verCtrl = repos.getVerCtrl1();
 		}
 		
-		if(repos.getVerCtrl() == 1)
+		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
 			return svnDocMove(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);			
 		}
-		else if(repos.getVerCtrl() == 2)
+		else if(verCtrl == 2)
 		{
 			return gitDocMove(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);
 		}
@@ -5086,19 +5092,21 @@ public class BaseController  extends BaseFunction{
 	
 	protected String verReposDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
+		int verCtrl = repos.getVerCtrl();
 		if(srcDoc.getIsRealDoc() == false)
 		{
 			//Convert doc to vDoc
 			srcDoc = buildVDoc(repos, srcDoc);
 			dstDoc = buildVDoc(repos, dstDoc);
+			verCtrl = repos.getVerCtrl1();
 		}
 		
-		if(repos.getVerCtrl() == 1)
+		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
 			return svnDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);		
 		}
-		else if(repos.getVerCtrl() == 2)
+		else if(verCtrl == 2)
 		{
 			return gitDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);
 		}
