@@ -3478,55 +3478,28 @@ function CompareObj(objA, objB, flag) {
 			return;
 		}
 		
-        //To get DocInfo
-    	$.ajax({
-            url : "/DocSystem/Doc/getDoc.do",
-            type : "post",
-            dataType : "json",
-            data : {
-            	reposId: gReposId,
-                docId : node.id,
-                pid: node.pid,
-                path: node.path,
-                name: node.name,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	var doc = ret.data;
-                	
-                    //对话框 title
-                    var title = "详细信息";
-                              
-                    var createTime = formatTime(doc.createTime);  
-                    var lastEditTime = formatTime(doc.latestEditTime);  
-                    
-                    //显示新建对话框
-                    qiao.bs.dialog({
-                          id: "dialog-doc-detail",
-                          url: '#doc-detail',
-                          title: title,
-                          okbtn: "确定",
-                          callback: function () {
-                                  $("#dialog-doc-detail input[name='name']").val(doc.name);
-                                  $("#dialog-doc-detail input[name='size']").val(doc.size);               
-                                  $("#dialog-doc-detail input[name='position']").val(doc.path);                
-                                  $("#dialog-doc-detail input[name='createTime']").val(createTime);                
-                                  $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);                
-                          }
-                    },function(){
-                    	return true;
-                    });		                    
-                }
-                else
-                {
-                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);              	
-                }
-            },
-            error : function () {
-                showErrorMessage("获取文件信息失败：服务器异常");
-                $btn.button('reset');
-            }
-        });
+        //显示新建对话框
+        //对话框 title
+        var title = "详细信息";
+        var path = "::/" + node.path;
+        var createTime = formatTime(node.createTime);  
+        var lastEditTime = formatTime(node.latestEditTime);  
+        qiao.bs.dialog({
+              id: "dialog-doc-detail",
+              url: '#doc-detail',
+              title: title,
+              okbtn: "确定",
+              callback: function () {
+                      $("#dialog-doc-detail input[name='name']").val(node.name);
+                      $("#dialog-doc-detail input[name='size']").val(node.size);               
+                      $("#dialog-doc-detail input[name='position']").val(path);                
+                      $("#dialog-doc-detail input[name='createTime']").val(createTime);                
+                      $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);                
+              }
+        },function(){
+        	return true;
+        });	
+
 	}	
     
     //ShowCenter: hide left and right

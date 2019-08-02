@@ -2771,6 +2771,13 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		if(localEntry.getType() == 0)
+		{
+			//这次commit是一个删除操作
+			System.out.println("dbUpdateDoc() 本地文件/目录删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+			return dbDeleteDoc(doc, true);
+		}
+		
 		//根据localEntry来设置文件类型
 		doc.setType(localEntry.getType());
 		
@@ -2796,13 +2803,6 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			return  dbAddDoc(repos, doc, true);	
-		}
-		
-		if(localEntry.getType() == 0)
-		{
-			//这次commit是一个删除操作
-			System.out.println("dbUpdateDoc() 本地文件/目录删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-			return dbDeleteDoc(doc, true);
 		}
 		
 		System.out.println("dbUpdateDoc() 本地文件/目录内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
