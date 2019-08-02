@@ -1715,6 +1715,7 @@
              	content: content,
              },
              success : function (ret) {
+            	console.log("addDoc ret:", ret);            		
              	if( "ok" == ret.status && ret.data.docId){
              		if(type == 2)
                     {
@@ -2601,41 +2602,28 @@ function CompareObj(objA, objB, flag) {
 			return;
 		}
 		
-		var docId = node.docId;
-		var pid = node.pid;
-		var path = node.path;
-		var name = node.name;
-		var type = node.type;
-		var level = node.level;
-		var latestEditTime = node.latestEditTime;
-		
 		var isParent = false;
-		if(type == 2)
+		if(node.type == 2)
 		{
 			isParent = true;
 		}
 
-		var pId = pid;
-		if(pid == 0)
+		var parentNode = undefined;	
+		var pId = node.pid;
+		if(node.pid == 0)
 		{
+			parentNode = null;	//parentNode is rootNode
 			pId = "root"; //zTree root id is root -__-!
 		}
-		
-		var parentNode = undefined;	
-		if(pid != 0)
+		else
 		{
-			parentNode = getNodeById(pid);
+			parentNode = getNodeById(pId);
 			if(parentNode == null || parentNode.open == false)
 			{
 				console.log("addTreeNode() parentNode is null or not exists");
 				return;
 			}
 		}
-		else
-		{
-			parentNode = null;	//parentNode is rootNode
-		}
-
 		
 		//Add zTree Node
 		//parentNode处于展开状态时，需要手动addTreeNode以保证与后台同步，否则只要触发异步加载即可
@@ -2645,10 +2633,22 @@ function CompareObj(objA, objB, flag) {
 			
 			//add the treeNode
 			var treeObj = $.fn.zTree.getZTreeObj("doctree");
-			var treeNode = getNodeByNodeId(docId);
+			var treeNode = getNodeByNodeId(node.docId);
 			if(treeNode == null)
 			{
-	      		var newNode = {id : docId, pid: pid, path: path, name: name, type: type,  isParent: isParent, pId: pId, Leve: level};
+	      		var newNode = {
+	      				id : node.docId, 
+	      				pid: node.pid, 
+	      				path: node.path, 
+	      				name: node.name, 
+	      				type: node.type,  
+	      				Leve: node.level, 
+	      				size: node.size, 
+	      				createTime: node.createTime,
+	      				latestEditTime: node.latestEditTime,
+	      				isParent: isParent, 
+	      				pId: pId, 
+	      				};
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
 		}
@@ -2662,12 +2662,12 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		//Add DocList Node
-		console.log("addTreeNode pid:" + pid + " DocListParentDocId:" + DocListParentDocId );
-		if(pid == DocListParentDocId)
+		console.log("addTreeNode pid:" + node.pid + " DocListParentDocId:" + DocListParentDocId );
+		if(node.pid == DocListParentDocId)
 		{
-			if(DocList.isNodeExists(docId) == false)
+			if(DocList.isNodeExists(node.docId) == false)
 			{
-				DocList.addNode(docId, pid, type, path, name, latestEditTime);
+				DocList.addNode(node.docId, node.pid, node.path, node.name, node.type, node.size, node.createTime, node.latestEditTime);
 			}
 		}
 	}
@@ -2784,18 +2784,23 @@ function CompareObj(objA, objB, flag) {
            	for(var i=0; i<data.length; i++)
      	    {
      	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-     	           var docId = data[i].docId;
-     	           var pid = data[i].pid;
-     	           var docType = data[i].type;
-     	           var path = data[i].path;
-     	           var docName = data[i].name;
+     	           var node = data[i];
+	        		str+= '<li dataId='+ node.docId 
+     				+ ' dataPid='+ node.pid 
+     				+' dataPath="'+ node.path + '"' 
+     				+' dataName="' + node.name + '"'
+     				+' dataType=' + node.type
+     				+' dataSize=' + node.size
+     				+' createTime=' + node.createTime
+     				+' latestEditTime=' + node.latestEditTime;     	        				
+
      	           if(data[i].state && data[i].state != 0)
      	           {
-     	        		str+='<li dataId='+ docId + ' dataPid='+ pid +' dataType='+docType +' dataPath="'+ path + '" dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+     	        		str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
      	           }
      	           else
      	           {
-     	           	    str+='<li dataId='+ docId + ' dataPid='+ pid +' dataType='+docType +' dataPath="'+ path + '" dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(data[i].latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+     	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
      	           }	 
      	    }
            	$("#secondList").html(str);
@@ -2812,11 +2817,19 @@ function CompareObj(objA, objB, flag) {
 		}
     	
     	//Add Node
-		function addNode(docId, pid, docType, path, docName, latestEditTime)
+		function addNode(docId, pid, path, name, type, size, createTime, latestEditTime)
 		{
-	        var iconType = docType===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-         	var nodeStr='<li dataId='+ docId + ' dataPid='+ pid +' dataType='+docType +' dataPath="'+ path + '" dataName="'+docName+'"'+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + docName+'</div><div class="filedate pull-right">'+formatDate(latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
-         	$("#secondList").append(nodeStr);
+	        var iconType = type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+         	var nodeStr='<li dataId='+ docId 
+         				+ ' dataPid='+ pid 
+         				+' dataPath="' + path +'"'
+         				+ 'dataName="' + name + '"'
+         				+' dataType=' + type 
+         				+' dataSize=' + size 
+         				+' createTime='+ createTime 
+         				+' latestEditTime=' + latestEditTime
+         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + name+'</div><div class="filedate pull-right">'+formatDate(latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+		   $("#secondList").append(nodeStr);
 		}
 
     	//Delete Node
@@ -2862,8 +2875,8 @@ function CompareObj(objA, objB, flag) {
     		{
     			return isNodeExists(docId);	
     		},
-    		addNode: function(docId, pid, docType, path, docName, latestEditTime){
-        		addNode(docId, pid, docType, path, docName, latestEditTime);
+    		addNode: function(docId, pid, path, name, type, size, createTime, latestEditTime){
+        		addNode(docId, pid, path, name, type, size, createTime, latestEditTime);
             },
             deleteNode: function(docId){
             	deleteNode(docId);
@@ -2885,6 +2898,8 @@ function CompareObj(objA, objB, flag) {
    	 	var path = $(obj).attr('dataPath');
    	 	var name = $(obj).attr('dataName');
    	 	var type = $(obj).attr('dataType');
+   	 	var size = $(obj).attr('dataSize');
+   	 	var createTime = $(obj).attr('createTime');
    	 	var latestEditTime = $(obj).attr('latestEditTime');
 	 	
    	 	var node = {};
@@ -2894,7 +2909,9 @@ function CompareObj(objA, objB, flag) {
    		node.path = path;
    		node.name = name;
    		node.type = type;
-   		node.latestEditTime = latestEditTime;
+   		node.size = size;
+   		node.createTime = parseInt(createTime);
+   		node.latestEditTime = parseInt(latestEditTime);
    		
    		curRightClickedDocListNode = node;
 	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
@@ -3472,6 +3489,8 @@ function CompareObj(objA, objB, flag) {
 	//显示文件详情
 	function showDocDetail(node)
 	{
+		console.log("showDocDetail node:",node);
+
 		if(!node || node == null)
 		{
 			showErrorMessage("请选择文件！");
