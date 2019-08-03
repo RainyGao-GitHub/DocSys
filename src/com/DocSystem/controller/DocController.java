@@ -1410,8 +1410,9 @@ public class DocController extends BaseController{
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		String targetName = name + "_" + commitId;
-		String entryPath = path + name;
+		String targetName = doc.getName() + "_" + commitId;
+		String entryPath = doc.getPath() + doc.getName();
+		
 		if(historyType != null && historyType == 2)
 		{
 			doc.setIsRealDoc(false);	
