@@ -598,8 +598,12 @@
                     var newDocId = ret.data.id;
 			     	DocList.renameNode(docId, newDocId, newName);
 		            
+            	    //Add or Delete from zTree
+              	    addTreeNode(ret.data);
+              	    deleteTreeNodeById(docId);
+
                     //Rename doc
-                    renameTreeNode(docId, newDocId, newName);
+                    //renameTreeNode(docId, newDocId, newName);
                     
 		            bootstrapQ.msg({
 							msg : "重命名完成！",
@@ -626,8 +630,14 @@
 		{
 			node.name = newName;
 			node.id = newDocId;
+			node.docId = newDocId;
 		}
 		zTree.updateNode(node);
+		
+	    //Add or Delete from zTree
+  	    addTreeNode(doc);
+  	    deleteTreeNodeById(SubContext.docId);
+
 		
 		if(node.isParent == true && node.open == true) //刷新目录
 		{
