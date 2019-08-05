@@ -1358,7 +1358,11 @@ public class DocController extends BaseController{
 		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
 	}
 
-	/**************** download History Doc  ******************/
+	/**************** download History Doc  *****************
+	 * historyType:	1: RealDoc 2: VDoc Others: RealDoc 用于确定是下载RealDoc还是VDoc
+	 * 对于下载而言只有path和name是有用的，其他属性都不重要
+	 * 
+	 * */
 	@RequestMapping("/downloadHistoryDoc.do")
 	public void downloadHistoryDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
@@ -1914,7 +1918,11 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	/****************   revert Document History ******************/
+	/****************   revert Document History *****************
+	 * historyType:	1: RealDoc 2: VDoc Others: RealDoc 用于确定是下载RealDoc还是VDoc
+	 * 对于RealDoc调用verReposUtils.getEntry之后要根据checkOutSuccess的DocList更新数据库
+	 * 
+	 * */
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
