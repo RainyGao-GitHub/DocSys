@@ -4900,31 +4900,29 @@ public class BaseController  extends BaseFunction{
 
 	
 	//Get History Detail
-	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) {
+	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) 
+	{
+		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
 			doc = buildVDoc(repos, doc);
+			verCtrl = repos.getVerCtrl1();
 		}
 		
-		if(repos.getVerCtrl() == 1)
+		if(verCtrl == 1)
 		{
 			return svnGetHistoryDetail(repos, isRealDoc, doc, commitId);
 		}
-		else if(repos.getVerCtrl() == 2)
+		else if(verCtrl == 2)
 		{
 			return gitGetHistoryDetail(repos, isRealDoc, doc, commitId);
 		}
 		return null;
 	}
 	
-	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) {
-		if(isRealDoc == false)
-		{
-			//Convert doc to vDoc
-			doc = buildVDoc(repos, doc);
-		}		
-		
+	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) 
+	{
 		SVNUtil svnUtil = new SVNUtil();
 		if(false == svnUtil.Init(repos, isRealDoc, null))
 		{
