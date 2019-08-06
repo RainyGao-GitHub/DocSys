@@ -1880,13 +1880,13 @@ public class DocController extends BaseController{
 			isRealDoc = false;			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
 			
-			if(entryPath != null)
+			if(entryPath == null)
 			{
-				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+				vDoc = buildVDoc(doc);
 			}
 			else
 			{
-				vDoc = buildVDoc(doc);
+				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
 			}
 			
 			if(vDoc.getName().isEmpty())
@@ -1900,7 +1900,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(entryPath != null)
+			if(entryPath == null)
 			{
 				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
