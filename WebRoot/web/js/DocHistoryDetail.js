@@ -35,10 +35,11 @@
 			
 		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
 		   	
-		   	var encParentPath = encodeURI(entryPath);
-		   	var encDocName = "";
+		   	var encPath = encodeURI(parentPath);
+		   	var encName = encodeURI(docName);
+		   	var encEntryPath = encodeURI(entryPath);
 		  
-		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
+		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType +"&entryPath=" + encEntryPath ;	
 		}
 		
 		function revertHistory(index)
@@ -50,9 +51,6 @@
 			var entryPath = changeItem.entryPath;
 			
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " entryPath:"+ entryPath + " historyType:" + historyType);
-	
-		   	var encParentPath = encodeURI(parentPath);
-		   	var encDocName = "";
 		   	
 	   		$.ajax({
 	             url : "/DocSystem/Doc/revertDocHistory.do",
@@ -63,9 +61,10 @@
 	                 reposId : reposId,
 	                 pid: pid,
 	                 docId: docId,
-	            	 path : encParentPath,
-	             	 name: encDocName,
+	            	 path : parentPath,
+	             	 name: docName,
 	             	 historyType: historyType,
+	             	 entryPath: entryPath,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -87,10 +86,7 @@
 		{
 			var commitId = $("#commitId" + index).text();
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
-	
-		   	var encParentPath = encodeURI(parentPath);
-		   	var encDocName = encodeURI(docName);
-		   	
+			   	
 	   		$.ajax({
 	             url : "/DocSystem/Doc/getHistoryDetail.do",
 	             type : "post",
@@ -100,8 +96,8 @@
 	                 reposId : reposId, 
 	                 pid: pid,
 	                 docId: docId,
-	            	 path : encParentPath,
-	             	 name: encDocName,
+	            	 path : parentPath,
+	             	 name: docName,
 	             	 historyType: historyType,
 	             },
 	             success : function (ret) {
