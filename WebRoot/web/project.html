@@ -4219,15 +4219,13 @@ function CompareObj(objA, objB, flag) {
 						{text: '查看历史', action: function(e){
 									e.preventDefault();
 									var docId = curRightClickedDocListNode.docId;
-									var node = getNodeByNodeId(docId);
-								    showDocHistory(node,0);
+								    showDocHistory(curRightClickedDocListNode,0);
 								}
 						},
 						{text: '查看备注历史', action: function(e){
 								e.preventDefault();
 								var docId = curRightClickedDocListNode.docId;
-								var node = getNodeByNodeId(docId);
-							    showDocHistory(node,1);
+							    showDocHistory(curRightClickedDocListNode,1);
 							}
 						},
    				]
