@@ -39,7 +39,7 @@
 		   	var encName = encodeURI(docName);
 		   	var encEntryPath = encodeURI(entryPath);
 		  
-		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType +"&entryPath=" + encEntryPath ;	
+		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encPath + "&name="+encName + "&historyType=" + historyType +"&entryPath=" + encEntryPath ;	
 		}
 		
 		function revertHistory(index)
