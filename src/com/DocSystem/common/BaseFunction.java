@@ -200,7 +200,7 @@ public class BaseFunction{
 			doc.setLevel(level);
 			doc.setType(type);
 			doc.setIsRealDoc(false);
-			doc.setLocalRootPath(localRootPath);
+			doc.setLocalRootPath(localVRootPath);
 			printObject("buildBasicDoc() 虚文件:", doc);
 			return doc;
 		}
@@ -263,11 +263,17 @@ public class BaseFunction{
 	}
 	
 	//VirtualDoc 的vid docId pid level都是和RealDoc一样的
-	protected Doc buildVDoc(Repos repos, Doc doc) 
+	protected Doc buildVDoc(Doc doc) 
 	{
-		Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), null, null, null); 
-		vDoc.setContent(doc.getContent());
-		return vDoc;
+		if(doc.getIsRealDoc())
+		{
+			Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), null, null, null); 
+			vDoc.setContent(doc.getContent());
+			return vDoc;
+		}
+		
+		System.out.println("buildVDoc() doc already is VDoc");
+		return doc;
 	}
 	
 	protected int getLevelByParentPath(String path) 

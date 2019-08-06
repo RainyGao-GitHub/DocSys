@@ -1551,19 +1551,6 @@ public class BaseController  extends BaseFunction{
 	/********************************** Functions For Application Layer ****************************************/
 	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
 	{
-		DocLock docLock = null;
-		synchronized(syncLock)
-		{
-			//LockDoc
-			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
-			if(docLock == null)
-			{
-				unlock(); //线程锁
-				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
-				return null;
-			}
-		}
-		
 		//Checkout to localParentPath
 		String localRootPath = doc.getLocalRootPath();
 		String localParentPath = localRootPath + doc.getPath();
@@ -1572,7 +1559,6 @@ public class BaseController  extends BaseFunction{
 		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true); 
 		if(successDocList == null)
 		{
-			unlockDoc(doc,login_user,docLock);
 			docSysDebugLog("revertDocHistory Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
 			return null;
 		}
@@ -1594,7 +1580,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		unlockDoc(doc,login_user,docLock);
 		if(revision == null)
 		{			
 			docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
@@ -3745,7 +3730,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Unlock Doc
-	private boolean unlockDoc(Doc doc, User login_user, DocLock preDocLock) 
+	protected boolean unlockDoc(Doc doc, User login_user, DocLock preDocLock) 
 	{
 		DocLock curDocLock = getDocLock(doc);
 		if(curDocLock == null)
@@ -4906,7 +4891,7 @@ public class BaseController  extends BaseFunction{
 		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
-			doc = buildVDoc(repos, doc);
+			doc = buildVDoc(doc);
 			verCtrl = repos.getVerCtrl1();
 		}
 		
@@ -4951,7 +4936,7 @@ public class BaseController  extends BaseFunction{
 		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
-			doc = buildVDoc(repos, doc);
+			doc = buildVDoc(doc);
 			verCtrl = repos.getVerCtrl1();
 		}
 		
@@ -4999,7 +4984,7 @@ public class BaseController  extends BaseFunction{
 		if(doc.getIsRealDoc() == false)
 		{
 			//Convert doc to vDoc
-			doc = buildVDoc(repos, doc);
+			doc = buildVDoc(doc);
 			verCtrl = repos.getVerCtrl1();
 		}
 		
@@ -5051,8 +5036,8 @@ public class BaseController  extends BaseFunction{
 		if(srcDoc.getIsRealDoc() == false)
 		{
 			//Convert doc to vDoc
-			srcDoc = buildVDoc(repos, srcDoc);
-			dstDoc = buildVDoc(repos, dstDoc);
+			srcDoc = buildVDoc(srcDoc);
+			dstDoc = buildVDoc(dstDoc);
 			verCtrl = repos.getVerCtrl1();
 		}
 		
@@ -5099,8 +5084,8 @@ public class BaseController  extends BaseFunction{
 		if(srcDoc.getIsRealDoc() == false)
 		{
 			//Convert doc to vDoc
-			srcDoc = buildVDoc(repos, srcDoc);
-			dstDoc = buildVDoc(repos, dstDoc);
+			srcDoc = buildVDoc(srcDoc);
+			dstDoc = buildVDoc(dstDoc);
 			verCtrl = repos.getVerCtrl1();
 		}
 		

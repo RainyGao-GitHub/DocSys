@@ -1358,104 +1358,6 @@ public class DocController extends BaseController{
 		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
 	}
 
-	/**************** download History Doc  *****************
-	 * historyType:	1: RealDoc 2: VDoc Others: RealDoc 用于确定是下载RealDoc还是VDoc
-	 * 对于下载而言只有path和name是有用的，其他属性都不重要
-	 * 
-	 * */
-	@RequestMapping("/downloadHistoryDoc.do")
-	public void downloadHistoryDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String commitId,
-			Integer historyType, 
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		System.out.println("downloadHistoryDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId);
-
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//get reposInfo to 
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
-		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(path == null)
-		{
-			path = "";
-		}
-		else
-		{
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");			
-		}
-		if(name == null)
-		{
-			name = "";
-		}
-		else
-		{
-			//URL was encode by EncodeURI, so just decode it here
-			name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
-		}	
-		
-		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
-		
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
-
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		
-		String targetName = doc.getName() + "_" + commitId;
-		String entryPath = doc.getPath() + doc.getName();
-		
-		if(historyType != null && historyType == 2)
-		{
-			doc.setIsRealDoc(false);	
-			if(entryPath.isEmpty())
-			{
-				targetName = repos.getName() + "_AllNotes_" + commitId;	
-			}
-			else
-			{
-				targetName = name + "_Note_" + commitId;
-			}
-		}
-		else
-		{
-			if(entryPath.isEmpty())
-			{
-				//If the name is "" means we are checking out the root dir of repos, so we take the reposName as the targetName
-				targetName = repos.getName() + "_" + commitId;	
-			}	
-		}
-		
-		//userTmpDir will be used to tmp store the history doc 
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-
-		//checkout the entry to local
-		if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true) == null)
-		{
-			docSysErrorLog("下载历史版本失败", rt);
-			docSysDebugLog("verReposCheckOut Failed path:" + path + " name:" + name + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
-			writeJson(rt, response);	
-			return;
-		}
-		
-		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request,false);
-		
-		//delete the history file or dir
-		delFileOrDir(userTmpDir+targetName);
-	}
-
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
@@ -1918,18 +1820,144 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	/****************   revert Document History *****************
-	 * historyType:	1: RealDoc 2: VDoc Others: RealDoc 用于确定是下载RealDoc还是VDoc
-	 * 对于RealDoc调用verReposUtils.getEntry之后要根据checkOutSuccess的DocList更新数据库
-	 * 
-	 * */
+	/**************** download History Doc  *****************/
+	@RequestMapping("/downloadHistoryDoc.do")
+	public void downloadHistoryDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitId,
+			Integer historyType, 
+			String entryPath,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("downloadHistoryDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId);
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//get reposInfo to 
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(path == null)
+		{
+			path = "";
+		}
+		else
+		{
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");			
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		else
+		{
+			//URL was encode by EncodeURI, so just decode it here
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
+		}	
+		
+		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		boolean isRealDoc = true;
+		Doc doc = null;
+		Doc vDoc = null;
+		String targetName = name + "_" + commitId;
+		if(historyType != null && historyType == 2)
+		{
+			isRealDoc = false;			
+			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			
+			if(entryPath != null)
+			{
+				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+			}
+			else
+			{
+				vDoc = buildVDoc(doc);
+			}
+			
+			if(vDoc.getName().isEmpty())
+			{
+				targetName = repos.getName() + "_AllNotes_" + commitId;					
+			}
+			else
+			{
+				targetName = vDoc.getName() + "_Note_" + commitId;
+			}
+		}
+		else
+		{
+			if(entryPath != null)
+			{
+				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+			}
+			else
+			{
+				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
+			}
+			
+			if(doc.getName().isEmpty())
+			{
+				targetName = repos.getName() + "_" + commitId;	
+			}	
+		}
+		
+		//userTmpDir will be used to tmp store the history doc 
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+
+		//checkout the entry to local
+		if(isRealDoc)
+		{
+			if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true) == null)
+			{
+				docSysErrorLog("下载历史版本失败", rt);
+				docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		else
+		{
+			if(verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true) == null)
+			{
+				docSysErrorLog("下载历史版本失败", rt);
+				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+				writeJson(rt, response);	
+				return;
+			}			
+		}
+		
+		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request,false);
+		
+		//delete the history file or dir
+		delFileOrDir(userTmpDir+targetName);
+	}
+
+	
+	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
-			Integer historyType, HttpSession session, HttpServletRequest request,HttpServletResponse response)
+			Integer historyType, 
+			String entryPath,
+			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId);
-		
+		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath);
+
+		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -1946,7 +1974,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1957,22 +1984,74 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-
+		
 		String commitMsg = "回退 " + path + name + " 至版本:" + commitId;
 		String commitUser = login_user.getName();
+		
+		boolean isRealDoc = true;
+		Doc doc = null;
+		Doc vDoc = null;
 		if(historyType != null && historyType == 2)
 		{
-			doc.setIsRealDoc(false);
+			isRealDoc = false;
 			commitMsg = "回退 " + path + name + " 备注至版本:" + commitId;
+			
+			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			
+			if(entryPath != null)
+			{
+				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+			}
+			else
+			{
+				vDoc = buildVDoc(doc);
+			}
 		}
-
-		if(revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt) == null)	
+		else
 		{
-			docSysErrorLog("恢复失败",rt);
+			if(entryPath != null)
+			{
+				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+			}
+			else
+			{
+				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
+			}
 		}
 		
+		//lockDoc
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//LockDoc
+			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+				docSysDebugLog("revertDocHistory() lockDoc " + doc.getName() + " Failed!", rt);
+				writeJson(rt, response);
+				return;
+			}
+		}
+
+		if(isRealDoc)
+		{
+			if(revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt) == null)	
+			{
+				docSysErrorLog("恢复失败",rt);
+			}
+		}
+		else
+		{
+			if(revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt) == null)	
+			{
+				docSysErrorLog("恢复失败",rt);
+			}			
+		}	
+		
+		//lockDoc
+		unlockDoc(doc,login_user,docLock);
+
 		writeJson(rt, response);
 	}
 
