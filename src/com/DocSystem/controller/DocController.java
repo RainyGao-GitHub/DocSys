@@ -1908,11 +1908,15 @@ public class DocController extends BaseController{
 			{
 				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
-			
+
 			if(doc.getName().isEmpty())
 			{
 				targetName = repos.getName() + "_" + commitId;	
-			}	
+			}
+			else
+			{
+				targetName = doc.getName() + "_" + commitId;							
+			}
 		}
 		
 		//userTmpDir will be used to tmp store the history doc 
