@@ -2664,11 +2664,17 @@ public class BaseController  extends BaseFunction{
 				for(int i=0; i<subDocList.size(); i++)
 				{
 					Doc subDoc = subDocList.get(i);
+					if(subDoc.getName().isEmpty())
+					{
+						System.err.println("dbDeleteDoc() 系统错误: subDoc name is empty" + subDoc.getDocId());
+						printObject("dbDeleteDoc() doc:", doc);
+						printObject("dbDeleteDoc() subDoc:", subDoc);
+						continue;
+					}
 					dbDeleteDoc(subDoc, true);
 				}
 			}
 		}
-		
 		
 		
 		Doc qDoc = new Doc();
