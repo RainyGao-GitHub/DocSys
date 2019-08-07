@@ -1198,7 +1198,7 @@ public class DocController extends BaseController{
 			}
 				
 			//Do checkout to local
-			if(verReposCheckOut(repos, doc, userTmpDir, doc.getName(), null, true, true) == null)
+			if(verReposCheckOut(repos, doc, userTmpDir, doc.getName(), null, true, true, null) == null)
 			{
 				docSysErrorLog("远程下载失败", rt);
 				docSysDebugLog("downloadDocPrepare_FS() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + doc.getName(), rt);
@@ -1826,6 +1826,7 @@ public class DocController extends BaseController{
 			String commitId,
 			Integer historyType, 
 			String entryPath,
+			Integer downloadAll,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadHistoryDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath);
@@ -1875,6 +1876,7 @@ public class DocController extends BaseController{
 		Doc doc = null;
 		Doc vDoc = null;
 		String targetName = name + "_" + commitId;
+		HashMap<String, String> downloadList = null;
 		if(historyType != null && historyType == 2)
 		{
 			isRealDoc = false;			
@@ -1897,6 +1899,12 @@ public class DocController extends BaseController{
 			{
 				targetName = vDoc.getName() + "_Note_" + commitId;
 			}
+			
+			if(downloadAll == null || downloadAll == 0)
+			{
+				downloadList = new HashMap<String,String>();
+				buildDownloadList(repos, false, vDoc, commitId, downloadList);
+			}
 		}
 		else
 		{
@@ -1917,6 +1925,12 @@ public class DocController extends BaseController{
 			{
 				targetName = doc.getName() + "_" + commitId;							
 			}
+			
+			if(downloadAll == null || downloadAll == 0)
+			{
+				downloadList = new HashMap<String,String>();
+				buildDownloadList(repos, true, doc, commitId, downloadList);
+			}
 		}
 		
 		//userTmpDir will be used to tmp store the history doc 
@@ -1925,7 +1939,7 @@ public class DocController extends BaseController{
 		//checkout the entry to local
 		if(isRealDoc)
 		{
-			if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true, true) == null)
+			if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true, true, downloadList) == null)
 			{
 				docSysErrorLog("下载历史版本失败", rt);
 				docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
@@ -1935,7 +1949,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true, true) == null)
+			if(verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true, true, downloadList) == null)
 			{
 				docSysErrorLog("下载历史版本失败", rt);
 				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
@@ -1950,12 +1964,38 @@ public class DocController extends BaseController{
 		delFileOrDir(userTmpDir+targetName);
 	}
 	
+	private void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
+	{
+		//根据commitId获取ChangeItemsList
+		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, doc, commitId);
+		
+		if(changedItemList == null)
+		{
+			System.out.println("buildDownloadList verReposGetHistoryDetail Failed");
+			return;
+		}
+		
+		String docEntryPath = doc.getPath() + doc.getName();
+		//过滤掉不在doc目录下的ChangeItems
+		for(int i=0; i< changedItemList.size(); i++)
+		{
+			ChangedItem changeItem = changedItemList.get(i);
+			String changeItemEntryPath = changeItem.getEntryPath();
+			if(changeItemEntryPath.contains(docEntryPath))
+			{
+				downloadList.put(changeItemEntryPath, changeItemEntryPath);
+				System.out.println("buildDownloadList add " +changeItemEntryPath);
+			}
+		}		
+	}
+
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
 			String entryPath,
+			Integer revertAll,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath);
@@ -1994,6 +2034,7 @@ public class DocController extends BaseController{
 		boolean isRealDoc = true;
 		Doc doc = null;
 		Doc vDoc = null;
+		HashMap<String, String> downloadList = null;
 		if(historyType != null && historyType == 2)
 		{
 			isRealDoc = false;
@@ -2009,6 +2050,12 @@ public class DocController extends BaseController{
 			{
 				vDoc = buildVDoc(doc);
 			}
+			
+			if(revertAll == null || revertAll == 0)
+			{
+				downloadList = new HashMap<String,String>();
+				buildDownloadList(repos, false, vDoc, commitId, downloadList);
+			}
 		}
 		else
 		{
@@ -2019,6 +2066,12 @@ public class DocController extends BaseController{
 			else
 			{
 				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
+			}
+			
+			if(revertAll == null || revertAll == 0)
+			{
+				downloadList = new HashMap<String,String>();
+				buildDownloadList(repos, true, vDoc, commitId, downloadList);
 			}
 		}
 		
@@ -2039,14 +2092,14 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-			if(revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt) == null)	
+			if(revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList) == null)	
 			{
 				docSysErrorLog("恢复失败",rt);
 			}
 		}
 		else
 		{
-			if(revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt) == null)	
+			if(revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, downloadList) == null)	
 			{
 				docSysErrorLog("恢复失败",rt);
 			}			

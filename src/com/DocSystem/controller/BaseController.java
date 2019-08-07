@@ -1492,71 +1492,16 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected String getRealDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
-	{
-		DocLock docLock = null;
-		synchronized(syncLock)
-		{
-			//LockDoc
-			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
-			if(docLock == null)
-			{
-				unlock(); //线程锁
-				System.out.println("addDoc() lockDoc " + doc.getName() + " Failed!");
-				return null;
-			}
-		}
-		
-		//Checkout to localParentPath
-		String localRootPath = doc.getLocalRootPath();
-		String localParentPath = localRootPath + doc.getPath();
-		
-		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true); 
-		if(successDocList == null)
-		{
-			unlockDoc(doc,login_user,docLock);
-			docSysDebugLog("verReposCheckOut Failed parentPath:" + doc.getPath() +  " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(), rt);
-			return null;
-		}
-		
-		//Do commit to verRepos
-		if(commitMsg == null)
-		{
-			commitMsg = "回退 " + doc.getPath() + doc.getName() + " 到版本:" + commitId;
-		}
-		
-		String revision = verReposDocCommit(repos, true, doc, commitMsg,commitUser,rt, true, null, 2);
-		
-		//Force update docInfo
-		printObject("revertRealDocHistory() successDocList:", successDocList);
-		for(int i=0; i< successDocList.size(); i++)
-		{
-			Doc successDoc = successDocList.get(i);
-			successDoc.setRevision(revision);
-			successDoc.setCreator(login_user.getId());
-			successDoc.setLatestEditor(login_user.getId());
-			dbUpdateDoc(repos, successDoc, true);
-		}		
-		
-		unlockDoc(doc,login_user,docLock);
-		if(revision == null)
-		{			
-			docSysDebugLog("verReposAutoCommit 失败", rt);
-		}
-		
-		return revision;
-	}
-	
-	/********************************** Functions For Application Layer ****************************************/
-	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt) 
+	/********************************** Functions For Application Layer 
+	 * @param downloadList ****************************************/
+	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
 	{
 		//Checkout to localParentPath
 		String localRootPath = doc.getLocalRootPath();
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true); 
+		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList); 
 		if(successDocList == null)
 		{
 			docSysDebugLog("revertDocHistory Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
@@ -2480,7 +2425,7 @@ public class BaseController  extends BaseFunction{
 		case 21:		//Remote Added
 			System.out.println("syncUpRemoteChange_FS() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false);
+			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 			if(successDocList != null)
 			{
 				dbAddDoc(repos, remoteEntry, true);
@@ -2498,7 +2443,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncUpRemoteChange_FS() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false);
+			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 			if(successDocList != null)
 			{
 				//SuccessDocList中的doc包括了revision信息
@@ -2518,7 +2463,7 @@ public class BaseController  extends BaseFunction{
 				
 				//checkOut
 				localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false);
+				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 				if(successDocList != null)
 				{
 					dbAddDoc(repos, remoteEntry, true);
