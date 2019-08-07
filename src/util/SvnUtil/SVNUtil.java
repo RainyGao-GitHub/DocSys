@@ -1500,7 +1500,7 @@ public class SVNUtil  extends BaseController{
 	
 	
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force, boolean auto) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
@@ -1515,8 +1515,28 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
+    	Integer type = checkPath(remoteEntryPath, revision);
+    	if(type == null)
+    	{
+    		System.out.println("getEntry() checkPath for " + remoteEntryPath + " 异常");
+    		return null;
+    	}
+    	else if(type == 0)
+    	{
+    		if(auto)
+    		{	
+	    		Long preCommitId = getPreviousCommmitId(revision);
+	    		if(preCommitId == null)
+	    		{
+	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
+	    			return null;
+	    		}
+	    		revision = preCommitId;
+    		}
+    	}
+    	
 		Doc remoteDoc = getDoc(doc, revision);
-		if(remoteDoc == null)
+		if(remoteDoc == null || remoteDoc.getType() <= 0)
 		{
 			//entryName是空，表示当前访问的远程的根目录，必须存在
 			if(remoteEntryPath.isEmpty())
@@ -1525,21 +1545,8 @@ public class SVNUtil  extends BaseController{
 				return null;
 			}
 			
-			//否则表示已经被删除，如果checkOut，force is true 则删除本地文件或目录
-			if(force)
-			{
-				if(delFileOrDir(localParentPath+targetName) == true)
-				{	
-					doc.setRevision("");
-					successDocList.add(doc);
-					return successDocList;
-				}
-				return null;
-			}
-			else
-			{
-				return null;
-			}
+			System.out.println("getEntry() remote Entry " + remoteEntryPath  +" not exists");
+			return null;
 		}
 		
 		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
@@ -1610,7 +1617,7 @@ public class SVNUtil  extends BaseController{
 				
 				Long subEntryRevision = subEntry.getRevision();
 				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
+				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1620,6 +1627,28 @@ public class SVNUtil  extends BaseController{
         }
         
 		return null;
+	}
+
+	private Long getPreviousCommmitId(Long revision) 
+	{	
+		if(revision == -1)
+		{
+			try {
+				revision = repository.getLatestRevision();
+			} catch (SVNException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+		}
+		
+		if(revision == 0)
+		{
+			System.out.println("getPreviousCommmitId() it is oldest revision:" + revision);
+			return null;
+		}
+		
+		return revision -1;
 	}
 
 	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, Long revision, boolean force) {

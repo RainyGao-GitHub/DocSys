@@ -1512,7 +1512,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true); 
+		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true); 
 		if(successDocList == null)
 		{
 			unlockDoc(doc,login_user,docLock);
@@ -1556,7 +1556,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true); 
+		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true); 
 		if(successDocList == null)
 		{
 			docSysDebugLog("revertDocHistory Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
@@ -2480,7 +2480,7 @@ public class BaseController  extends BaseFunction{
 		case 21:		//Remote Added
 			System.out.println("syncUpRemoteChange_FS() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
+			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false);
 			if(successDocList != null)
 			{
 				dbAddDoc(repos, remoteEntry, true);
@@ -2498,7 +2498,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncUpRemoteChange_FS() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
+			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false);
 			if(successDocList != null)
 			{
 				//SuccessDocList中的doc包括了revision信息
@@ -2518,7 +2518,7 @@ public class BaseController  extends BaseFunction{
 				
 				//checkOut
 				localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true);
+				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false);
 				if(successDocList != null)
 				{
 					dbAddDoc(repos, remoteEntry, true);
@@ -4978,7 +4978,13 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 
-	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force) 
+	/*
+	 * verReposCheckOut
+	 * 参数：
+	 * 	force: 如果本地target文件存在，false则跳过，否则强制替换
+	 *  auto: 如果CommitId对应的是删除操作，自动checkOut上删除前的版本（通过checkPath来确定是否是删除操作，但也有可能只是通过移动和复制的相关历史，那么往前追溯可能是有问题的） 
+	 */
+	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto) 
 	{
 		int verCtrl = repos.getVerCtrl();
 		if(doc.getIsRealDoc() == false)
@@ -4995,16 +5001,16 @@ public class BaseController  extends BaseFunction{
 			{
 				revision = Long.parseLong(commitId);
 			}
-			return svnCheckOut(repos, doc, localParentPath, targetName, revision, force);		
+			return svnCheckOut(repos, doc, localParentPath, targetName, revision, force, auto);		
 		}
 		else if(verCtrl == 2)
 		{
-			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force);
+			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto);
 		}
 		return null;
 	}
 	
-	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,long revision, boolean force) 
+	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,long revision, boolean force, boolean auto) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5014,10 +5020,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
+		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, auto);
 	}
 	
-	protected List<Doc> gitCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String revision, boolean force) 
+	protected List<Doc> gitCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String revision, boolean force, boolean auto) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5027,7 +5033,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force);
+		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, auto);
 	}
 
 	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 

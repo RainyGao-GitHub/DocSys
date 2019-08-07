@@ -1198,7 +1198,7 @@ public class DocController extends BaseController{
 			}
 				
 			//Do checkout to local
-			if(verReposCheckOut(repos, doc, userTmpDir, doc.getName(), null, true) == null)
+			if(verReposCheckOut(repos, doc, userTmpDir, doc.getName(), null, true, true) == null)
 			{
 				docSysErrorLog("远程下载失败", rt);
 				docSysDebugLog("downloadDocPrepare_FS() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + doc.getName(), rt);
@@ -1925,7 +1925,7 @@ public class DocController extends BaseController{
 		//checkout the entry to local
 		if(isRealDoc)
 		{
-			if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true) == null)
+			if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true, true) == null)
 			{
 				docSysErrorLog("下载历史版本失败", rt);
 				docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
@@ -1935,7 +1935,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true) == null)
+			if(verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true, true) == null)
 			{
 				docSysErrorLog("下载历史版本失败", rt);
 				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
@@ -1949,7 +1949,6 @@ public class DocController extends BaseController{
 		//delete the history file or dir
 		delFileOrDir(userTmpDir+targetName);
 	}
-
 	
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")

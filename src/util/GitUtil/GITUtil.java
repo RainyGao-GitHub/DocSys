@@ -702,7 +702,7 @@ public class GITUtil  extends BaseController{
 		return -1;
 	}
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force, boolean auto) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
@@ -717,6 +717,26 @@ public class GITUtil  extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
+    	Integer type = checkPath(remoteEntryPath, revision);
+    	if(type == null)
+    	{
+    		System.out.println("getEntry() checkPath for " + remoteEntryPath + " 异常");
+    		return null;
+    	}
+    	else if(type == 0)
+    	{
+    		if(auto)
+    		{
+	    		String preCommitId = getPreviousCommmitId(revision);
+	    		if(preCommitId == null)
+	    		{
+	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
+	    			return null;
+	    		}
+	    		revision = preCommitId;
+    		}
+    	}
+		
 		Doc remoteDoc = getDoc(doc, revision);
 		if(remoteDoc == null)
 		{
@@ -727,21 +747,8 @@ public class GITUtil  extends BaseController{
 				return null;
 			}
 			
-			//否则表示已经被删除，如果checkOut，force is true 则删除本地文件或目录
-			if(force)
-			{
-				if(delFileOrDir(localParentPath+targetName) == true)
-				{	
-					doc.setRevision("");
-					successDocList.add(doc);
-					return successDocList;
-				}
-				return null;
-			}
-			else
-			{
-				return null;
-			}
+			System.out.println("getEntry() remote Entry " + remoteEntryPath  +" not exists");
+			return null;
 		}
 		
 		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
@@ -811,7 +818,7 @@ public class GITUtil  extends BaseController{
 					
 					String subEntryRevision = null;	//set it to null so that getEntry to get realRevision
 					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force);
+					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto);
 					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
 						successDocList.addAll(subSuccessList);
@@ -828,6 +835,45 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 	
+	private String getPreviousCommmitId(String commitId) 
+	{
+		String revision = "HEAD";
+		if(commitId != null)
+		{
+			revision = commitId;
+		}
+		
+		try {
+			Git git = Git.open(new File(gitDir));
+			Repository repository = git.getRepository();
+	        
+	        //New RevWalk
+	        RevWalk walk = new RevWalk(repository);
+	
+	        //Get objId for revision
+	        ObjectId objId = repository.resolve(revision);
+	        if(objId == null)
+	        {
+	        	System.err.println("getPreviousCommmitId() There is no any commit history for repository:"  + gitDir + " at revision:"+ revision);
+	        	walk.close();
+	        	repository.close();
+	        	return null;
+	        }
+	        
+	        RevCommit revCommit = walk.parseCommit(objId);
+	        RevCommit previsouCommit=getPrevHash(revCommit,repository);
+			walk.close();
+			repository.close();
+			
+			return previsouCommit.getName();
+		} catch (Exception e) {
+			System.err.println("getPreviousCommmitId() for:" + revision + " 异常");	
+			e.printStackTrace();
+		}	
+		
+		return null;
+	}
+
 	private boolean getRemoteDir(String localParentPath, String targetName, boolean force) {
 		File localEntry = new File(localParentPath + targetName);
 		if(localEntry.exists())
