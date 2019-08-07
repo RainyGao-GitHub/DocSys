@@ -1602,7 +1602,7 @@ public class SVNUtil  extends BaseController{
 			//To Get SubDocs
 			if(downloadList != null && downloadList.size() == 0)
 			{
-				System.out.println("getEntry() downloadList is empty"); 
+				System.err.println("getEntry() downloadList is empty"); 
 				return successDocList;
 			}
 			
