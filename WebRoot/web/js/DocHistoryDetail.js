@@ -180,8 +180,8 @@
 					var opBtn2 = "";
 					if(historyType == 0)
 					{
-						opBtn1 = "		<a href='javascript:void(0)' onclick='downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-						opBtn2 = "		<a href='javascript:void(0)' onclick='revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
+						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
+						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
 					}
 					
 					var se = "<li>" 
