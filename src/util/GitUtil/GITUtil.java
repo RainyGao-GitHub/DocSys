@@ -838,7 +838,7 @@ public class GITUtil  extends BaseController{
 					String subEntryName = treeWalk.getNameString();
 					Integer subEntryType = getEntryType(treeWalk.getFileMode());
 					
-					String subEntryRevision = null;	//set it to null so that getEntry to get realRevision
+					String subEntryRevision = revision;	//set it to null so that getEntry to get realRevision
 					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
 					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto, downloadList);
 					if(subSuccessList != null && subSuccessList.size() > 0)
