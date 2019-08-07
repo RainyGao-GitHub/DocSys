@@ -1554,14 +1554,16 @@ public class SVNUtil  extends BaseController{
 		{
 			if(downloadList != null)
 			{
-				if(downloadList.get(remoteEntryPath) == null)
+				Object downloadItem = downloadList.get(remoteEntryPath);
+				if(downloadItem == null)
 				{
 					System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
 					return null;
 				}
 				else
 				{
-					System.out.println("getEntry() " + remoteEntryPath + " 在下载列表,需要下载！"); 										
+					System.out.println("getEntry() " + remoteEntryPath + " 在下载列表,需要下载！"); 
+					downloadList.remove(downloadItem);
 				}
 			}
 			
@@ -1598,6 +1600,12 @@ public class SVNUtil  extends BaseController{
 			successDocList.add(doc);
         	
 			//To Get SubDocs
+			if(downloadList != null && downloadList.isEmpty())
+			{
+				System.out.println("getEntry() downloadList is empty"); 
+				return successDocList;
+			}
+			
 			int subDocLevel = doc.getLevel() + 1;
 			String subDocParentPath = doc.getPath() + doc.getName() + "/";
 			if(doc.getName().isEmpty())
