@@ -2071,7 +2071,7 @@ public class DocController extends BaseController{
 			if(revertAll == null || revertAll == 0)
 			{
 				downloadList = new HashMap<String,String>();
-				buildDownloadList(repos, true, vDoc, commitId, downloadList);
+				buildDownloadList(repos, true, doc, commitId, downloadList);
 			}
 		}
 		
