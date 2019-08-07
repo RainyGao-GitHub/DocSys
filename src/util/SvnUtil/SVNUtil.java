@@ -1600,7 +1600,7 @@ public class SVNUtil  extends BaseController{
 			successDocList.add(doc);
         	
 			//To Get SubDocs
-			if(downloadList != null && downloadList.isEmpty())
+			if(downloadList != null && downloadList.size() == 0)
 			{
 				System.out.println("getEntry() downloadList is empty"); 
 				return successDocList;
