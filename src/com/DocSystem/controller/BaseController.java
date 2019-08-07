@@ -4971,7 +4971,27 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, auto, downloadList);
+		String entryPath = doc.getPath() + doc.getName();
+		Integer type = verReposUtil.checkPath(entryPath, revision);
+    	if(type == null)
+    	{
+    		System.out.println("getEntry() checkPath for " + entryPath + " 异常");
+    		return null;
+    	}
+    	else if(type == 0)
+    	{
+    		if(auto)
+    		{
+	    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    		if(preCommitId == null)
+	    		{
+	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
+	    			return null;
+	    		}
+	    		revision = preCommitId;
+    		}
+    	}
+		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 	
 	protected List<Doc> gitCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String revision, boolean force, boolean auto, HashMap<String, String> downloadList) 
@@ -4983,8 +5003,29 @@ public class BaseController  extends BaseFunction{
 		{
 			return null;
 		}
+		
+		String entryPath = doc.getPath() + doc.getName();
+		Integer type = verReposUtil.checkPath(entryPath, revision);
+    	if(type == null)
+    	{
+    		System.out.println("getEntry() checkPath for " + entryPath + " 异常");
+    		return null;
+    	}
+    	else if(type == 0)
+    	{
+    		if(auto)
+    		{
+	    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    		if(preCommitId == null)
+	    		{
+	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
+	    			return null;
+	    		}
+	    		revision = preCommitId;
+    		}
+    	}
 
-		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, auto, downloadList);
+		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 
 	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 

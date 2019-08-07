@@ -702,7 +702,7 @@ public class GITUtil  extends BaseController{
 		return -1;
 	}
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force, boolean auto, HashMap<String, String> downloadList) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force, HashMap<String, String> downloadList) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
@@ -717,26 +717,6 @@ public class GITUtil  extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
-    	Integer type = checkPath(remoteEntryPath, revision);
-    	if(type == null)
-    	{
-    		System.out.println("getEntry() checkPath for " + remoteEntryPath + " 异常");
-    		return null;
-    	}
-    	else if(type == 0)
-    	{
-    		if(auto)
-    		{
-	    		String preCommitId = getPreviousCommmitId(revision);
-	    		if(preCommitId == null)
-	    		{
-	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
-	    			return null;
-	    		}
-	    		revision = preCommitId;
-    		}
-    	}
-		
 		Doc remoteDoc = getDoc(doc, revision);
 		if(remoteDoc == null)
 		{
@@ -840,7 +820,7 @@ public class GITUtil  extends BaseController{
 					
 					String subEntryRevision = revision;	//set it to null so that getEntry to get realRevision
 					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto, downloadList);
+					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, downloadList);
 					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
 						successDocList.addAll(subSuccessList);
@@ -857,7 +837,7 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 	
-	private String getPreviousCommmitId(String commitId) 
+	public String getPreviousCommmitId(String commitId) 
 	{
 		String revision = "HEAD";
 		if(commitId != null)

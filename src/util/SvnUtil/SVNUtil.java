@@ -1500,7 +1500,7 @@ public class SVNUtil  extends BaseController{
 	
 	
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force, boolean auto, HashMap<String, String> downloadList) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force, HashMap<String, String> downloadList) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
@@ -1515,25 +1515,6 @@ public class SVNUtil  extends BaseController{
 		}
 		
 		String remoteEntryPath = parentPath + entryName;
-    	Integer type = checkPath(remoteEntryPath, revision);
-    	if(type == null)
-    	{
-    		System.out.println("getEntry() checkPath for " + remoteEntryPath + " 异常");
-    		return null;
-    	}
-    	else if(type == 0)
-    	{
-    		if(auto)
-    		{	
-	    		Long preCommitId = getPreviousCommmitId(revision);
-	    		if(preCommitId == null)
-	    		{
-	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
-	    			return null;
-	    		}
-	    		revision = preCommitId;
-    		}
-    	}
     	
 		Doc remoteDoc = getDoc(doc, revision);
 		if(remoteDoc == null || remoteDoc.getType() <= 0)
@@ -1638,7 +1619,7 @@ public class SVNUtil  extends BaseController{
 				
 				Long subEntryRevision = subEntry.getRevision();
 				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto, downloadList);
+				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, downloadList);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1650,7 +1631,7 @@ public class SVNUtil  extends BaseController{
 		return null;
 	}
 
-	private Long getPreviousCommmitId(Long revision) 
+	public Long getPreviousCommmitId(Long revision) 
 	{	
 		if(revision == -1)
 		{
