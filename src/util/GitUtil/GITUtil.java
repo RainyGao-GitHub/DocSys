@@ -702,7 +702,7 @@ public class GITUtil  extends BaseController{
 		return -1;
 	}
 	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force, boolean auto) {
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String revision, boolean force, boolean auto, HashMap<String, String> downloadList) {
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
@@ -754,6 +754,20 @@ public class GITUtil  extends BaseController{
 		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
 		if(remoteDoc.getType() == 1) 
 		{
+			
+			if(downloadList != null)
+			{
+				if(downloadList.get(remoteEntryPath) == null)
+				{
+					System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
+					return null;
+				}
+				else
+				{
+					System.out.println("getEntry() " + remoteEntryPath + " 在下载列表,需要下载！"); 										
+				}
+			}
+			
 			if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
 			{
 				File localEntry = new File(localParentPath, targetName);
@@ -818,7 +832,7 @@ public class GITUtil  extends BaseController{
 					
 					String subEntryRevision = null;	//set it to null so that getEntry to get realRevision
 					Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto);
+					List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, auto, downloadList);
 					if(subSuccessList != null && subSuccessList.size() > 0)
 					{
 						successDocList.addAll(subSuccessList);
