@@ -628,7 +628,7 @@ public class GITUtil  extends BaseController{
         if(revTree == null)
         {
         	CloseRepos();
-        	return null;
+        	return 0;
         }
 	   
         TreeWalk treeWalk = getTreeWalkByPath(revTree, entryPath);
