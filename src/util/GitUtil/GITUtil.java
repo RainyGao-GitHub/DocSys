@@ -271,14 +271,22 @@ public class GITUtil  extends BaseController{
     		return null;
     	}
     	
-        if(type ==  0 || revision != null) 
+        if(type ==  0) 
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
 	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    	remoteEntry.setRevision(revision);
 	    	return remoteEntry;
 		}
-    	
+
+        if(revision != null) 
+		{
+        	//If revision already set, no need to get revision
+	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    	remoteEntry.setRevision(revision);
+	    	return remoteEntry;
+		}
+
         RevCommit commit = getLatestRevCommit(doc);
         if(commit == null)
         {
@@ -370,7 +378,7 @@ public class GITUtil  extends BaseController{
 
 	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
 		String entryPath = doc.getPath() + doc.getName();
-    	System.out.println("getHistoryDetail entryPath:" + entryPath);	
+    	//System.out.println("getHistoryDetail entryPath:" + entryPath);	
 		
 		String revision = "HEAD";
 		if(commitId != null)
@@ -415,7 +423,7 @@ public class GITUtil  extends BaseController{
 	    		    	}
 	    		    	
 	    	    		String nodePath =  treeWalk.getPathString();;
-	    	    		System.out.println("getHistoryDetail() entry nodePath:" + nodePath); 
+	    	    		//System.out.println("getHistoryDetail() entry nodePath:" + nodePath); 
 	    	    		//Add to changedItemList
 	    	    		
 	    	    		ChangedItem changedItem = new ChangedItem();
@@ -457,7 +465,7 @@ public class GITUtil  extends BaseController{
 			{
 		        for (DiffEntry entry : diffs) 
 		        {
-		          System.out.println("getHistoryDetail() Entry: " + entry);
+		          //System.out.println("getHistoryDetail() Entry: " + entry);
 		          
 		      	  String nodePath = entry.getNewPath();
 		          Integer entryType = getEntryType(entry.getNewMode());
@@ -532,7 +540,7 @@ public class GITUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public TreeWalk getSubEntries(String remoteEntryPath, String revision) 
 	{    	
-    	System.out.println("getSubEntries() revision:" + revision);
+    	//System.out.println("getSubEntries() revision:" + revision);
     	if(OpenRepos() == false)
     	{
         	System.out.println("getSubEntries() Failed to open git repository");
@@ -759,7 +767,7 @@ public class GITUtil  extends BaseController{
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
-		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		//System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		List<Doc> successDocList = new ArrayList<Doc>();
 		
@@ -793,16 +801,17 @@ public class GITUtil  extends BaseController{
 				Object downloadItem = downloadList.get(remoteEntryPath);
 				if(downloadItem == null)
 				{
-					System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
+					//System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
 					return null;
 				}
 				else
 				{
-					System.out.println("getEntry() " + remoteEntryPath + " 在下载列表,需要下载！"); 
+					//System.out.println("getEntry() [" + remoteEntryPath + "] 在下载列表,需要下载！"); 
 					downloadList.remove(downloadItem);
 				}
 			}
-			
+
+			System.out.println("getEntry() getRemoteFile [" + remoteEntryPath + "]"); 
 			if(getRemoteFile(remoteEntryPath, localParentPath, targetName, revision, force))
 			{
 				File localEntry = new File(localParentPath, targetName);
@@ -826,6 +835,7 @@ public class GITUtil  extends BaseController{
 		if(remoteDoc.getType() == 2) 
 		{
         	//Get the subEntries and call svnGetEntry
+			System.out.println("getEntry() getRemoteDir [" + remoteEntryPath + "]"); 
 			if(getRemoteDir(localParentPath, targetName, force) == false)
         	{
 				return null;
@@ -1029,7 +1039,7 @@ public class GITUtil  extends BaseController{
 	}
 
 	private TreeWalk getTreeWalkByPath(RevTree revTree, String entryPath) {
-		System.out.println("getTreeWalkByPath() entryPath:" + entryPath); 
+		//System.out.println("getTreeWalkByPath() entryPath:" + entryPath); 
 
 		try {
 			TreeWalk treeWalk = null;

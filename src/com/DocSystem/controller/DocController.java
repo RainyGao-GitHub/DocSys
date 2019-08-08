@@ -1866,8 +1866,12 @@ public class DocController extends BaseController{
 			//URL was encode by EncodeURI, so just decode it here
 			name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
 		}	
+		if(entryPath != null)
+		{
+			entryPath = new String(entryPath.getBytes("ISO8859-1"),"UTF-8");			
+		}
 		
-		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path);
+		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path + " entryPath");
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
@@ -1984,7 +1988,7 @@ public class DocController extends BaseController{
 			if(changeItemEntryPath.contains(docEntryPath))
 			{
 				downloadList.put(changeItemEntryPath, changeItemEntryPath);
-				System.out.println("buildDownloadList add " +changeItemEntryPath);
+				System.out.println("buildDownloadList Add [" +changeItemEntryPath + "]");
 			}
 		}		
 	}

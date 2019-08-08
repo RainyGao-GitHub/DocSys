@@ -2691,6 +2691,12 @@ public class BaseController  extends BaseFunction{
 	//autoDetect: 自动检测是新增还是更新
 	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean autoDetect) 
 	{
+		if(doc.getDocId() == 0)
+		{
+			System.out.println("dbUpdateDoc() rootDoc 不需要dbDoc");
+			return true;
+		}
+		
 		if(autoDetect == false)
 		{
 			if(reposService.updateDoc(doc) == 0)
