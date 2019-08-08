@@ -305,12 +305,15 @@ public class GITUtil  extends BaseController{
     {
     	System.out.println("getHistoryLogs filePath:" + filePath);	
 
-    	Git git = null;
-		try {
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("getLatestRevCommit() Failed to open git repository");
+    		return null;
+    	}
+    	
+    	try {
 	    	List<LogEntry> logList = new ArrayList<LogEntry>();
-			
-	    	git = Git.open(new File(wcDir));
-	    	
+				
 		    Iterable<RevCommit> iterable = null;
 		    if(filePath == null || filePath.isEmpty())
 		    {
@@ -354,10 +357,12 @@ public class GITUtil  extends BaseController{
 	            logList.add(log);
 	        }
 	        
+	        CloseRepos();
 	        return logList;
 	    } catch (Exception e) {
 			System.out.println("getHistoryLogs Error");	
 			e.printStackTrace();
+			CloseRepos();
 			return null;
 		}
     }
@@ -373,21 +378,19 @@ public class GITUtil  extends BaseController{
 			revision = commitId;
 		}
 		
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("getHistoryDetail() Failed to open git repository");
+    		return null;
+    	}
+		
 		try {
-			Git git = Git.open(new File(gitDir));
-			Repository repository = git.getRepository();
-	        
-	        //New RevWalk
-	        RevWalk walk = new RevWalk(repository);
-	
 	        //Get objId for revision
 	        ObjectId objId = repository.resolve(revision);
 	        if(objId == null)
 	        {
 	        	System.err.println("getHistoryDetail() There is no any commit history for repository:"  + gitDir + " at revision:"+ revision);
-	        	walk.close();
-	        	repository.close();
-	        	
+	        	CloseRepos();	
 	        	return null;
 	        }
 	        
@@ -432,10 +435,8 @@ public class GITUtil  extends BaseController{
 	    			return null;
 	    		}
 
-				walk.close();
-				repository.close();
-				return changedItemList;
-	        	
+	        	CloseRepos();
+				return changedItemList;	        	
 	        }
 	        
 	        ObjectId head=revCommit.getTree().getId();
@@ -451,10 +452,9 @@ public class GITUtil  extends BaseController{
 	                		.setNewTree(newTreeIter)
 	                		.setOldTree(oldTreeIter)
 	                		.call();
-			walk.close();
-			repository.close();
-						
-			
+        	
+			CloseRepos();	
+
 			if(diffs.size() > 0)
 			{
 		        for (DiffEntry entry : diffs) 
@@ -489,7 +489,7 @@ public class GITUtil  extends BaseController{
 			System.err.println("getHistoryDetail() entryPath:" + entryPath + " 异常");	
 			e.printStackTrace();
 		}	
-		
+		CloseRepos();
 		return null;
 	}
 	
