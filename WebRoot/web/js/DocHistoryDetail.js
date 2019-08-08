@@ -49,7 +49,11 @@
 			var docId = "";
 			var pid = "";
 			var entryPath = changeItem.entryPath;
-			
+
+		   	var encPath = parentPath;
+		   	var encName = docName;
+		   	var encEntryPath = entryPath;
+
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " entryPath:"+ entryPath + " historyType:" + historyType);
 		   	
 	   		$.ajax({
@@ -61,10 +65,10 @@
 	                 reposId : reposId,
 	                 pid: pid,
 	                 docId: docId,
-	            	 path : parentPath,
-	             	 name: docName,
+	            	 path : encPath,
+	             	 name: encName,
 	             	 historyType: historyType,
-	             	 entryPath: entryPath,
+	             	 entryPath: encEntryPath,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -80,45 +84,6 @@
 	                showErrorMessage("历史版本恢复失败:服务器异常");
 	            }
 	        });
-		}
-		
-		function showHistoryDetail(index)
-		{
-			var commitId = $("#commitId" + index).text();
-		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
-			   	
-	   		$.ajax({
-	             url : "/DocSystem/Doc/getHistoryDetail.do",
-	             type : "post",
-	             dataType : "json",
-	             data : {
-	            	 commitId: commitId,
-	                 reposId : reposId, 
-	                 pid: pid,
-	                 docId: docId,
-	            	 path : parentPath,
-	             	 name: docName,
-	             	 historyType: historyType,
-	             },
-	             success : function (ret) {
-	             	if( "ok" == ret.status){
-	        		  	console.log(ret.data);
-	        		  	showList(ret.data);
-	                }
-	                else
-	                {
-	                	showErrorMessage("获取历史版本详情失败:" + ret.msgInfo);
-	                }
-	            },
-	            error : function () {
-	                showErrorMessage("获取历史版本详情失败:服务器异常");
-	            }
-	        });
-	   		
-			//根据获取到的列表数据，绘制列表
-			function showList(data){
-				
-			}
 		}
 	
 		function showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType)
@@ -230,9 +195,6 @@
 	    		historyDetailsPageInit(vid, docId, pid, path, name, type);
 	        },
 
-	        showHistoryDetail: function(index){
-	        	showHistoryDetail(index);
-	        },
 	        downloadHistory: function(index){
 	        	downloadHistory(index);
 	        },
