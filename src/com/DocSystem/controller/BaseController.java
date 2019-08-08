@@ -2747,15 +2747,21 @@ public class BaseController  extends BaseFunction{
 			return  dbAddDoc(repos, doc, true);	
 		}
 		
-		System.out.println("dbUpdateDoc() 本地文件/目录内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-		//Update the size/lastEditTime/revision for doc
-		doc.setId(dbDoc.getId());
-		doc.setSize(localEntry.getSize());
-		doc.setLatestEditTime(localEntry.getLatestEditTime());
-		if(reposService.updateDoc(doc) == 0)
+		if(dbDoc.getType() == 1)
 		{
-			return false;
-		}		
+			System.out.println("dbUpdateDoc() 本地文件内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+			//Update the size/lastEditTime/revision for doc
+			doc.setId(dbDoc.getId());
+			doc.setSize(localEntry.getSize());
+			doc.setLatestEditTime(localEntry.getLatestEditTime());
+			if(reposService.updateDoc(doc) == 0)
+			{
+				return false;
+			}		
+			return true;
+		}
+		
+		System.out.println("dbUpdateDoc() 本地目录内容修改（目录不需要修改数据库）:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 		return true;
 	}
 	
