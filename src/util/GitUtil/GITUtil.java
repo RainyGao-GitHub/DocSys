@@ -1644,14 +1644,7 @@ public class GITUtil  extends BaseController{
 		}
 		
 		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
-		
-		//遍历仓库所有子目录
-		TreeWalk treeWalk = getSubEntries(doc.getPath(), "HEAD");
-		if(treeWalk == null)
-		{
-			return;
-		}
-		
+
     	String subDocParentPath = doc.getPath() + doc.getName() + "/";
 		if(doc.getDocId() == 0)
 		{
@@ -1659,19 +1652,24 @@ public class GITUtil  extends BaseController{
 		}
 		int subDocLevel = doc.getLevel() + 1;
 
-        try {
-			while(treeWalk.next())
-			{
-				int subDocType = getEntryType(treeWalk.getFileMode());
-			    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-			    docHashMap.put(subDoc.getDocId(), subDoc);
-			    scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+		//遍历仓库所有子目录
+		TreeWalk treeWalk = getSubEntries(doc.getPath(), "HEAD");
+		if(treeWalk != null)
+		{
+	        try {
+				while(treeWalk.next())
+				{
+					int subDocType = getEntryType(treeWalk.getFileMode());
+				    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+				    docHashMap.put(subDoc.getDocId(), subDoc);
+				    scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-        
+		
         //Go Through localSubDocs
         File dir = new File(localRootPath);
         File[] tmp=dir.listFiles();

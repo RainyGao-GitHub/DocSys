@@ -997,16 +997,6 @@ public class SVNUtil  extends BaseController{
 		
 		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
 		
-		//遍历仓库所有子目录
-		Collection<SVNDirEntry> entries;
-		try {
-			entries = repository.getDir(doc.getPath() + doc.getName(), -1, null,(Collection) null);
-		} catch (SVNException e) {
-			System.out.println("scanForSubDocCommit() getDir 异常!");
-			e.printStackTrace();
-			return;
-		}
-		
 		String subDocParentPath = doc.getPath() + doc.getName() + "/";
 		if(doc.getName().isEmpty())
 		{
@@ -1014,6 +1004,8 @@ public class SVNUtil  extends BaseController{
 		}
 		int subDocLevel = doc.getLevel() + 1;
 
+		//遍历仓库所有子目录
+		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath() + doc.getName(), -1L);
         if(entries != null)
         {
 			Iterator<SVNDirEntry> iterator = entries.iterator();
