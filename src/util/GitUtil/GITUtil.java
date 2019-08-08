@@ -414,10 +414,8 @@ public class GITUtil  extends BaseController{
 	    		    		continue;
 	    		    	}
 	    		    	
-	    	    		String path = treeWalk.getPathString();
-	    	    		String name = treeWalk.getNameString();
-	    	    		String nodePath = path + name;
-	    	    		System.out.println("getHistoryDetail() entry path:" + path + " name:" + name); 
+	    	    		String nodePath =  treeWalk.getPathString();;
+	    	    		System.out.println("getHistoryDetail() entry nodePath:" + nodePath); 
 	    	    		//Add to changedItemList
 	    	    		
 	    	    		ChangedItem changedItem = new ChangedItem();
