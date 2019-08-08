@@ -393,6 +393,51 @@ public class GITUtil  extends BaseController{
 	        
 	        RevCommit revCommit = walk.parseCommit(objId);
 	        RevCommit previsouCommit=getPrevHash(revCommit,repository);
+			
+	        List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
+
+	        if(previsouCommit == null)	//It is first commit, so all Items was new added
+	        {
+	        	//go through all Items under revTree
+	        	RevTree revTree = revCommit.getTree();
+	            TreeWalk treeWalk = getTreeWalkByPath(revTree, "");
+	            treeWalk.setRecursive(true);
+	    		try {
+	    			while(treeWalk.next())
+	    	    	{
+	    	    		int type = getEntryType(treeWalk.getFileMode(0));
+	    		    	if(type <= 0)
+	    		    	{
+	    		    		continue;
+	    		    	}
+	    		    	
+	    	    		String path = treeWalk.getPathString();
+	    	    		String name = treeWalk.getNameString();
+	    	    		String nodePath = path + name;
+	    	    		System.out.println("getHistoryDetail() entry path:" + path + " name:" + name); 
+	    	    		//Add to changedItemList
+	    	    		
+	    	    		ChangedItem changedItem = new ChangedItem();
+	    	    		changedItem.setChangeType(1);	//Add
+	    	    		changedItem.setEntryType(type);
+	    	    		changedItem.setEntryPath(nodePath);
+	    	    		changedItem.setSrcEntryPath(null);
+	    	    		changedItem.setCommitId(commitId);
+	    	    		changedItemList.add(changedItem);				
+	    	    	}
+	    		} catch(Exception e){
+	    			System.out.println("getHistoryDetail() treeWalk.next() Exception"); 
+	                e.printStackTrace();
+	                CloseRepos();
+	    			return null;
+	    		}
+
+				walk.close();
+				repository.close();
+				return changedItemList;
+	        	
+	        }
+	        
 	        ObjectId head=revCommit.getTree().getId();
 	        ObjectId preHead = previsouCommit.getTree().getId();
 	
@@ -412,8 +457,6 @@ public class GITUtil  extends BaseController{
 			
 			if(diffs.size() > 0)
 			{
-				//Convert diffEntry to changedItem
-				List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
 		        for (DiffEntry entry : diffs) 
 		        {
 		          System.out.println("getHistoryDetail() Entry: " + entry);
