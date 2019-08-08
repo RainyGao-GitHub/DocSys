@@ -1003,6 +1003,13 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 		
+		//If parentDir not exist, do add it
+		File parentDir = new File(localParentPath);
+		if(parentDir.exists() == false)
+		{
+			parentDir.mkdirs();
+		}
+		
         FileOutputStream out = null;
 		try {
 			out = new FileOutputStream(localParentPath + targetName);
