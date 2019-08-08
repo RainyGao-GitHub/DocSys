@@ -1504,7 +1504,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList); 
 		if(successDocList == null)
 		{
-			docSysDebugLog("revertDocHistory Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
+			docSysDebugLog("revertDocHistory verReposCheckOut Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
 			return null;
 		}
 		

@@ -1999,7 +1999,7 @@ public class DocController extends BaseController{
 			String commitId,
 			Integer historyType, 
 			String entryPath,
-			Integer revertAll,
+			Integer downloadAll,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath);
@@ -2046,16 +2046,16 @@ public class DocController extends BaseController{
 			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
 			
-			if(entryPath != null)
-			{
-				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
-			}
-			else
+			if(entryPath == null)
 			{
 				vDoc = buildVDoc(doc);
 			}
+			else
+			{
+				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+			}
 			
-			if(revertAll == null || revertAll == 0)
+			if(downloadAll == null || downloadAll == 0)
 			{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, false, vDoc, commitId, downloadList);
@@ -2063,7 +2063,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(entryPath != null)
+			if(entryPath == null)
 			{
 				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
@@ -2072,7 +2072,7 @@ public class DocController extends BaseController{
 				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 			
-			if(revertAll == null || revertAll == 0)
+			if(downloadAll == null || downloadAll == 0)
 			{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, true, doc, commitId, downloadList);
