@@ -1708,8 +1708,8 @@
    		{
    			level = parentNode.Level + 1;
    			parentPath = parentNode.path + parentNode.name + "/";
-   	   		
    		}
+   		console.log("addDoc level:" + level);
 
     	$.ajax({
              url : "/DocSystem/Doc/addDoc.do",
@@ -2651,7 +2651,8 @@ function CompareObj(objA, objB, flag) {
 	      				pid: node.pid, 
 	      				path: node.path, 
 	      				name: node.name, 
-	      				type: node.type,  
+	      				type: node.type,
+	      				level: node.level,
 	      				Leve: node.level, 
 	      				size: node.size, 
 	      				createTime: node.createTime,

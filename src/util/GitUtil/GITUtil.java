@@ -590,10 +590,17 @@ public class GITUtil  extends BaseController{
         	return null;
 		}
 		
+		List <Doc> subEntryList =  new ArrayList<Doc>();
     	RevTree revTree = getRevTree(revision);
     	if(revTree == null)
     	{
+    		
     		CloseRepos();
+    		if(entryPath.isEmpty())
+    		{
+    			System.err.println("getDocList() There is no any commit for repos:" + gitDir);    			
+    			return subEntryList;
+    		}
     		return null;
     	}
 
@@ -609,9 +616,8 @@ public class GITUtil  extends BaseController{
 		{
 			subDocParentPath = "";
 		}
-		int subDocLevel = doc.getLevel() + 1;
-		List <Doc> subEntryList =  new ArrayList<Doc>();
-            
+		
+		int subDocLevel = doc.getLevel() + 1;            
 		try {
 			while(treeWalk.next())
 	    	{
