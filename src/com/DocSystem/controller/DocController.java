@@ -1253,7 +1253,7 @@ public class DocController extends BaseController{
 		else
 		{
 			//解密path
-			//path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
 			path = base64Decode(path);
 			if(path == null)
 			{
@@ -1269,7 +1269,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			//name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
 			name =  base64Decode(name);
 			if(name == null)
 			{
@@ -1302,6 +1302,20 @@ public class DocController extends BaseController{
 			downloadDoc_FS(repos, doc, downloadType, response, request, session);
 			break;
 		}
+	}
+	
+	private String base64Encode(String str) 
+	{
+		try {
+			byte[] textByte = str.getBytes("UTF-8");
+			//编码
+			String base64Str = Base64.encodeBase64String(textByte);
+			return base64Str;
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}		
 	}
 	
 	private String base64Decode(String base64Str) 
@@ -1997,7 +2011,7 @@ public class DocController extends BaseController{
 		File localEntry = new File(userTmpDir,targetName);
 		if(false == localEntry.exists())
 		{
-			rt.setError("文件 " + userTmpDir + targetName + " 不存在！");
+			docSysErrorLog("文件 " + userTmpDir + targetName + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -2009,7 +2023,7 @@ public class DocController extends BaseController{
 			String zipFileName = targetName + ".zip";
 			if(doCompressDir(userTmpDir, targetName, userTmpDir, zipFileName, rt) == false)
 			{
-				rt.setError("压缩目录失败！");
+				docSysErrorLog("压缩目录 " + userTmpDir + targetName + " 失败！", rt);
 				writeJson(rt, response);
 				return;
 			}			
@@ -2017,11 +2031,31 @@ public class DocController extends BaseController{
 			targetName = zipFileName;
 		}
 		
+		System.out.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
 		rt.setData(targetName);
 		rt.setMsgData(userTmpDir);
-		writeJson(rt, response);			
+		writeJson(rt, response);	
+		
+//		String encTargetName = base64Encode(targetName);
+//		if(encTargetName == null)
+//		{
+//			docSysErrorLog("文件名加密失败:" + targetName, rt);
+//			writeJson(rt, response);
+//			return;			
+//		}	
+//		String encTargetPath = base64Encode(userTmpDir);
+//		if(encTargetPath == null)
+//		{
+//			docSysErrorLog("文件路径加密失败:" + encTargetPath, rt);
+//			writeJson(rt, response);
+//			return;			
+//		}	
+//		
+//		rt.setData(encTargetName);
+//		rt.setMsgData(encTargetPath);
+//		writeJson(rt, response);			
 	}
-	
+
 	private void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
 	{
 		//根据commitId获取ChangeItemsList
@@ -2069,8 +2103,8 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
 		targetPath = base64Decode(targetPath);
-		targetName = base64Decode(targetName);
 		if(targetPath == null)
 		{
 			docSysErrorLog("目标路径解码失败！", rt);
@@ -2078,6 +2112,8 @@ public class DocController extends BaseController{
 			return;
 		}
 	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = base64Decode(targetName);
 		if(targetName == null)
 		{
 			docSysErrorLog("目标文件名解码失败！", rt);

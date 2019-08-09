@@ -58,10 +58,12 @@
                 	    var targetPath = ret.msgData;
 
             	   		
-                	    var encTargetName = Base64.encode(targetName);
-            		   	var encTargetPath = Base64.encode(targetPath);
+                	    targetName = encodeURI(Base64.encode(targetName));
+            		   	targetPath = encodeURI(Base64.encode(targetPath));
+            		   	
+            		   	console.log("downloadHistoryDocPrepare targetName:",targetName);            	   		            	   		
             	   		
-            	   		window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?targetPath=" + encTargetPath + "&targetName=" + encTargetName;
+            	   		window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
                 	   	return;
                    }
                    else	//后台报错，结束下载

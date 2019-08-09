@@ -51,9 +51,56 @@
 			var commitId = $("#commitId" + index).text();
 		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
 		   	
-		   	var encParentPath = encodeURI(parentPath);
-		   	var encDocName = encodeURI(docName);
-		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encParentPath + "&name="+encDocName + "&historyType=" + historyType;	
+			//执行后台downloadDoc操作
+    		$.ajax({
+                url : "/DocSystem/Doc/downloadHistoryDocPrepare.do",
+                type : "post",
+                dataType : "json",
+                data : {
+	            	 commitId: commitId,
+	                 reposId : reposId,
+	                 pid: pid,
+	                 docId: docId,
+	            	 path : parentPath,
+	             	 name: docName,
+	             	 historyType: historyType,
+                },
+                success : function (ret) {
+                   if( "ok" == ret.status )
+                   {          
+                	    console.log("downloadHistoryDocPrepare Ok:",ret);            	   		            	   		
+            	   		var targetName = ret.data;
+                	    var targetPath = ret.msgData;
+
+                	    targetName = encodeURI(Base64.encode(targetName));
+            		   	targetPath = encodeURI(Base64.encode(targetPath));
+            		   	
+            		   	console.log("downloadHistoryDocPrepare targetName:",targetName);            	   		            	   		
+            	   		
+            	   		window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+                	   	return;
+                   }
+                   else	//后台报错，结束下载
+                   {
+                	   console.log("downloadHistoryDocPrepare Error:" + ret.msgInfo);
+     	      		   bootstrapQ.msg({
+    						msg : "下载失败:" + ret.msgInfo,
+    						type : 'error',
+    						time : 2000,
+    					    }); 
+                       return;
+                   }
+                },
+                error : function () {	//后台异常
+ 	               console.log("downloadHistoryDocPrepare 下载失败：服务器异常！");
+ 	      		   bootstrapQ.msg({
+ 						msg : "下载失败:系统异常",
+ 						type : 'error',
+ 						time : 2000,
+ 					    }); 
+            	   return;
+                }
+        	});			   	
 		}
 		
 		function revertHistory(index)
