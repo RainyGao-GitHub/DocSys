@@ -1630,7 +1630,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		doc.setRevision(revision);
-		if(dbAddDoc(repos, doc, false) == false)
+		if(dbAddDoc(repos, doc, false, false) == false)
 		{	
 			docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 		}
@@ -1677,7 +1677,7 @@ public class BaseController  extends BaseFunction{
 		Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
 		if(dbParentDoc == null)
 		{
-			if(dbAddDoc(repos, parentDoc, false) == true)
+			if(dbAddDoc(repos, parentDoc, false, false) == true)
 			{
 				System.out.println("checkAddParentDoc 新增目录: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());
 
@@ -1685,51 +1685,6 @@ public class BaseController  extends BaseFunction{
 				checkAddParentDoc(repos, parentDoc, parentDocList);
 			}
 		}
-	}
-
-	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs) 
-	{		
-		String reposRPath = getReposRealPath(repos);
-		String docPath = reposRPath + doc.getPath() + doc.getName();
-		File localEntry = new File(docPath);
-		if(!localEntry.exists())
-		{
-			return false;
-		}
-		doc.setSize(localEntry.length());
-		doc.setCreateTime(localEntry.lastModified());
-		doc.setLatestEditTime(localEntry.lastModified());
-		if(reposService.addDoc(doc) == 0)
-		{
-			System.out.println("dbAddDoc() addDoc to db failed");		
-			return false;
-		}
-		
-		if(addSubDocs)
-		{
-			List<Doc> subDocList = null;
-			if(repos.getType() == 1 || repos.getType() == 2)
-			{
-				subDocList = getLocalEntryList(repos, doc);	
-			}
-			else
-			{
-				subDocList = getRemoteEntryList(repos, doc);	
-			}
-			
-			if(subDocList != null)
-			{
-				for(int i=0; i<subDocList.size(); i++)
-				{
-					Doc subDoc = subDocList.get(i);
-					subDoc.setCreator(doc.getCreator());
-					subDoc.setLatestEditor(doc.getLatestEditor());
-					subDoc.setRevision(doc.getRevision());
-					dbAddDoc(repos, subDoc, addSubDocs);
-				}
-			}
-		}
-		return true;
 	}
 
 	//底层deleteDoc接口
@@ -2113,11 +2068,11 @@ public class BaseController  extends BaseFunction{
 		{
 		case 1:
 			System.out.println("syncUpForRemoteChange_NoFS() remote Added: " + doc.getPath()+doc.getName());
-			return dbAddDoc(repos, remoteEntry, false);
+			return dbAddDoc(repos, remoteEntry, false, false);
 		case 2:
 			System.out.println("syncUpForRemoteChange_NoFS() remote Type Changed: " + doc.getPath()+doc.getName());
 			dbDeleteDoc(doc,true);
-			return dbAddDoc(repos, remoteEntry, true);
+			return dbAddDoc(repos, remoteEntry, true, false);
 		case 3:
 			System.out.println("syncUpForRemoteChange_NoFS() remote File Changed: " + doc.getPath()+doc.getName());
 			doc.setRevision(remoteEntry.getRevision());
@@ -2428,7 +2383,7 @@ public class BaseController  extends BaseFunction{
 			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 			if(successDocList != null)
 			{
-				dbAddDoc(repos, remoteEntry, true);
+				dbAddDoc(repos, remoteEntry, true, false);
 				return true;
 			}
 			return false;
@@ -2466,7 +2421,7 @@ public class BaseController  extends BaseFunction{
 				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 				if(successDocList != null)
 				{
-					dbAddDoc(repos, remoteEntry, true);
+					dbAddDoc(repos, remoteEntry, true, false);
 					return true;						
 				}
 				return false;						
@@ -2645,6 +2600,64 @@ public class BaseController  extends BaseFunction{
 		
 		return dbDoc;
 	}
+
+	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs, boolean parentDocCheck) 
+	{	
+		//如果父节点不是根目录
+		if(parentDocCheck == true && doc.getPath().isEmpty() == false)
+		{
+			//检查parentDoc是否存在，如果不存在则要addParentDoc
+			Doc parentDoc = buildBasicDoc(doc.getVid(), null, doc.getPid(), doc.getPath(), "", doc.getLevel()-1, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");	
+			printObject("checkAddParentDoc parentDoc:", parentDoc);
+			Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
+			if(dbParentDoc == null)
+			{
+				return dbAddDoc(repos, parentDoc, false, true);
+			}		
+		}
+		
+		String reposRPath = getReposRealPath(repos);
+		String docPath = reposRPath + doc.getPath() + doc.getName();
+		File localEntry = new File(docPath);
+		if(!localEntry.exists())
+		{
+			return false;
+		}
+		doc.setSize(localEntry.length());
+		doc.setCreateTime(localEntry.lastModified());
+		doc.setLatestEditTime(localEntry.lastModified());
+		if(reposService.addDoc(doc) == 0)
+		{
+			System.out.println("dbAddDoc() addDoc to db failed");		
+			return false;
+		}
+		
+		if(addSubDocs)
+		{
+			List<Doc> subDocList = null;
+			if(repos.getType() == 1 || repos.getType() == 2)
+			{
+				subDocList = getLocalEntryList(repos, doc);	
+			}
+			else
+			{
+				subDocList = getRemoteEntryList(repos, doc);	
+			}
+			
+			if(subDocList != null)
+			{
+				for(int i=0; i<subDocList.size(); i++)
+				{
+					Doc subDoc = subDocList.get(i);
+					subDoc.setCreator(doc.getCreator());
+					subDoc.setLatestEditor(doc.getLatestEditor());
+					subDoc.setRevision(doc.getRevision());
+					dbAddDoc(repos, subDoc, addSubDocs, false);
+				}
+			}
+		}
+		return true;
+	}
 	
 	private boolean dbDeleteDoc(Doc doc, boolean deleteSubDocs) {
 
@@ -2730,7 +2743,7 @@ public class BaseController  extends BaseFunction{
 			if(localEntry.getType() != 0)
 			{
 				System.out.println("dbUpdateDoc() 本地新增文件/目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-				return dbAddDoc(repos, doc, true);
+				return dbAddDoc(repos, doc, true, true);
 			}
 			return true;
 		}
@@ -2744,7 +2757,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("dbUpdateDoc() 删除dbDoc失败:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 				return false;
 			}
-			return  dbAddDoc(repos, doc, true);	
+			return  dbAddDoc(repos, doc, true, false);	
 		}
 		
 		if(dbDoc.getType() == 1)
@@ -2763,6 +2776,16 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("dbUpdateDoc() 本地目录内容修改（目录不需要修改数据库）:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 		return true;
+	}
+
+	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
+	{
+		dbDeleteDoc(srcDoc,true);
+		return dbAddDoc(repos, dstDoc, true, false);
+	}
+	
+	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
+		return dbAddDoc(repos, dstDoc, true, false);
 	}
 	
 	private boolean dbDeleteDocEx(List<CommonAction> actionList, Repos repos, Doc doc, boolean deleteSubDocs, String commitMsg, String commitUser) {
@@ -2808,7 +2831,7 @@ public class BaseController  extends BaseFunction{
 		switch(action.getAction())
 		{
 		case 1:	//Add Doc
-			return dbAddDoc(repos, doc, false);
+			return dbAddDoc(repos, doc, false, true);
 		case 2: //Delete Doc
 			return dbDeleteDoc(doc, true);
 		case 3: //Update Doc
@@ -3175,13 +3198,6 @@ public class BaseController  extends BaseFunction{
 		rt.setData(dstDoc);
 		return true;
 	}
-
-
-	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
-	{
-		dbDeleteDoc(srcDoc,true);
-		return dbAddDoc(repos, dstDoc, true);
-	}
 	
 	//底层copyDoc接口
 	protected boolean copyDoc(Repos repos, Doc srcDoc, Doc dstDoc, 
@@ -3265,10 +3281,6 @@ public class BaseController  extends BaseFunction{
 		//只返回最上层的doc记录
 		rt.setData(dstDoc);
 		return true;
-	}
-
-	private boolean dbCopyDoc(Repos repos, Doc srcDoc, Doc dstDoc, User login_user, ReturnAjax rt) {
-		return dbAddDoc(repos, dstDoc, true);
 	}
 
 	protected boolean updateDocContent(Repos repos, Doc doc, 
