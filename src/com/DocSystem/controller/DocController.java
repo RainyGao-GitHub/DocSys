@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Base64.Decoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -79,7 +78,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/addDoc.do")  //文件名、文件类型、所在仓库、父节点
 	public void addDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String content,
-			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
 		//System.out.println(Charset.defaultCharset());
@@ -229,7 +229,8 @@ public class DocController extends BaseController{
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		
@@ -280,7 +281,8 @@ public class DocController extends BaseController{
 	/****************   rename a Document ******************/
 	@RequestMapping("/renameDoc.do")
 	public void renameDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String dstName, 
-							String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+							String commitMsg, 
+							HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName);
 
@@ -362,7 +364,8 @@ public class DocController extends BaseController{
 	/****************   move a Document ******************/
 	@RequestMapping("/moveDoc.do")
 	public void moveDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type, 
-			String commitMsg, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			String commitMsg, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel);
 
@@ -980,7 +983,8 @@ public class DocController extends BaseController{
 	@RequestMapping("/updateDocContent.do")
 	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			String content,
-			String commitMsg,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		System.out.println("updateDocContent content:[" + content + "]");
@@ -2070,6 +2074,7 @@ public class DocController extends BaseController{
 			Integer historyType, 
 			String entryPath,
 			Integer downloadAll,
+			String commitMsg,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath);
@@ -2102,7 +2107,6 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		String commitMsg = "回退 " + path + name + " 至版本:" + commitId;
 		String commitUser = login_user.getName();
 		
 		boolean isRealDoc = true;
@@ -2111,9 +2115,7 @@ public class DocController extends BaseController{
 		HashMap<String, String> downloadList = null;
 		if(historyType != null && historyType == 2)
 		{
-			isRealDoc = false;
-			commitMsg = "回退 " + path + name + " 备注至版本:" + commitId;
-			
+			isRealDoc = false;			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
 			
 			if(entryPath == null)

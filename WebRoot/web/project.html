@@ -487,6 +487,7 @@
 	var gParentPath;
 	var gDocName;
 	var gDocContent;
+	var gTmpSavedContent;
 	var gEdit; 
 	
 	//通用函数接口
@@ -1611,7 +1612,7 @@
                 	console.log("showVirtualDoc ret",ret);
                 	$('#filetitle').html(ret.data.name);
                     gDocId = ret.data.docId;
-                    if(ret.data.content == "null")
+                    if(!ret.data.content || ret.data.content == "null")
                     {
                     	gDocContent = "";	//Convert it to empty String
                     }
@@ -1619,6 +1620,8 @@
                     {	
                     	gDocContent = JSON.parse(ret.data.content);
                     }
+                    
+					gTmpSavedContent = ret.msgData;                    
                     					
 					DocEdit.loadmd(gDocContent,edit);
                     
@@ -1630,11 +1633,28 @@
 					{
 						//start the autoTmpSaver
 						DocEdit.startAutoTmpSaver();
+					
+						if(gTmpSavedContent && gTmpSavedContent != "")
+						{
+							bootstrapQ.confirm({
+								id: "loadContentConfirm",
+								title: "加载确认",
+								msg : "上次有未保存的编辑内容，是否加载？",
+								},function () {
+							    	//alert("点击了确定");
+							        DocEdit.loadmd(gTmpSavedContent,edit);
+							        gTmpSavedContent = "";
+							    	return true;   
+							 	},function (){
+							        gTmpSavedContent = "";
+							        return true;
+							 	});
+						}
 					}
 					else
 					{
 						DocEdit.stopAutoTmpSaver();
-					}
+					}					
                 }
                 else
                 {
@@ -2017,6 +2037,23 @@
         //start the autoTmpSaver
         debounce.clear();
 	    DocEdit.startAutoTmpSaver();
+	    
+		if(gTmpSavedContent && gTmpSavedContent != "")
+		{
+			bootstrapQ.confirm({
+				id: "loadContentConfirm",
+				title: "加载确认",
+				msg : "上次有未保存的编辑内容，是否加载？",
+				},function () {
+			    	//alert("点击了确定");
+			        DocEdit.loadmd(gTmpSavedContent,true);
+			        gTmpSavedContent = "";
+			    	return true;   
+			 	},function (){
+			        gTmpSavedContent = "";
+			        return true;
+			 	});
+		}
     }
     
     //将编辑中的文件保存到后台

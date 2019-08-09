@@ -1494,7 +1494,12 @@ public class BaseController  extends BaseFunction{
 	/********************************** Functions For Application Layer 
 	 * @param downloadList ****************************************/
 	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
-	{
+	{		
+		if(commitMsg == null)
+		{
+			commitMsg = doc.getPath() + doc.getName() + " 回退至版本:" + commitId;
+		}
+
 		//Checkout to localParentPath
 		String localRootPath = doc.getLocalRootPath();
 		String localParentPath = localRootPath + doc.getPath();
