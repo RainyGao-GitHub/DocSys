@@ -374,11 +374,11 @@ public class SVNUtil  extends BaseController{
                 {
                 	//obtains a next SVNLogEntryPath
                     SVNLogEntryPath svnLogEntryPath = (SVNLogEntryPath) logEntry.getChangedPaths().get(changedPaths.next());
-                    String nodePath = svnLogEntryPath.getPath();
+                    String nodePath = formatEntryPath(svnLogEntryPath.getPath());
                     
                     Integer entryType = getEntryType(svnLogEntryPath.getKind());
                     Integer changeType = getChangeType(svnLogEntryPath);
-                    String srcEntryPath = svnLogEntryPath.getCopyPath();
+                    String srcEntryPath = formatEntryPath(svnLogEntryPath.getCopyPath());
                     
                     if(srcEntryPath == null)
                     {
@@ -407,7 +407,19 @@ public class SVNUtil  extends BaseController{
 		return null;
 	}	
     
-    private Integer getChangeType(SVNLogEntryPath svnLogEntryPath) {
+    private String formatEntryPath(String path) {
+    	if(path == null || path.length() == 0)
+    	{
+    		return path;
+    	}
+    	if(path.charAt(0) == '/')
+    	{
+    		return path.substring(1,path.length());
+    	}
+		return path;
+	}
+
+	private Integer getChangeType(SVNLogEntryPath svnLogEntryPath) {
 
     	switch(svnLogEntryPath.getType())
     	{
