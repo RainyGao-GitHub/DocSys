@@ -35,9 +35,9 @@
 			
 		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
 		   	
-		   	var encPath = encodeURI(parentPath);
-		   	var encName = encodeURI(docName);
-		   	var encEntryPath = encodeURI(entryPath);
+		   	var encPath = encodeURI(Base64.encode(parentPath));
+		   	var encName = encodeURI(Base64.encode(docName));
+		   	var encEntryPath = encodeURI(Base64.encode(entryPath));
 		  
 		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encPath + "&name="+encName + "&historyType=" + historyType +"&entryPath=" + encEntryPath ;	
 		}

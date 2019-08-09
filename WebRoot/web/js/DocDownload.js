@@ -269,8 +269,9 @@
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadDocPrepare Ok:",ret);
-            	   		var encPath = encodeURI(SubContext.path);
-            	   		var encName = encodeURI(SubContext.name);
+            	   		var encPath = encodeURI(Base64.encode(SubContext.path));
+            	   		var encName = encodeURI(Base64.encode(SubContext.name));
+            	   		            	   		
             	   		var downloadType = ret.msgData;
             	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + SubContext.vid + "&docId=" + SubContext.docId + "&pid=" + SubContext.pid + "&path=" + encPath + "&name="+ encName  + "&downloadType="+ downloadType;	
 

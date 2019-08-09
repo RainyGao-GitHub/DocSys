@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Base64.Decoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +35,7 @@ import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
+import com.ibm.misc.BASE64Decoder;
 
 /*
 Something you need to know
@@ -1240,13 +1243,44 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType);
-		
+
+		ReturnAjax rt = new ReturnAjax();
+
 		if(path == null)
 		{
 			path = "";
 		}
-
-		ReturnAjax rt = new ReturnAjax();
+		else
+		{
+			//解密path
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			path = base64Decode(path);
+			if(path == null)
+			{
+				docSysErrorLog("文件名解码失败", rt);
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		
+		if(name == null)
+		{
+			name = "";
+		}
+		else
+		{
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+			name =  base64Decode(name);
+			if(name == null)
+			{
+				docSysErrorLog("文件名解码失败", rt);
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		
+		System.out.println("downloadDoc path:" + path + " name:" + name);
+		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1279,6 +1313,27 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private String base64Decode(String base64Str) 
+	{
+		//misc库
+		//BASE64Decoder decoder = new BASE64Decoder();
+		//return new String(decoder.decodeBuffer(base64Str),"UTF-8");
+		
+		//apache库
+		byte [] data = Base64.decodeBase64(base64Str);
+		try {
+			String str =  new String(data,"UTF-8");
+			return str;
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			System.out.println("base64Decode new String Error");
+			e.printStackTrace();
+			return null;
+		}
+		
+		//java8自带库，据说速度最快
+	}
+
 	public void downloadDoc_FS(Repos repos, Doc doc,  Integer downloadType, HttpServletResponse response,HttpServletRequest request,HttpSession session)  throws Exception
 	{
 		ReturnAjax rt = new ReturnAjax();
@@ -1855,8 +1910,16 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");			
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");
+			path = base64Decode(path);
+			if(path == null)
+			{
+				docSysErrorLog("文件路径解码失败", rt);
+				writeJson(rt, response);			
+				return;
+			}
 		}
+		
 		if(name == null)
 		{
 			name = "";
@@ -1865,10 +1928,26 @@ public class DocController extends BaseController{
 		{
 			//URL was encode by EncodeURI, so just decode it here
 			name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
-		}	
+			name = base64Decode(name);
+			if(name == null)
+			{
+				docSysErrorLog("文件名解码失败", rt);
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		
 		if(entryPath != null)
 		{
-			entryPath = new String(entryPath.getBytes("ISO8859-1"),"UTF-8");			
+			entryPath = new String(entryPath.getBytes("ISO8859-1"),"UTF-8");	
+			entryPath = base64Decode(entryPath);
+			if(entryPath == null)
+			{
+				docSysErrorLog("entryPath解码失败", rt);
+				writeJson(rt, response);			
+				return;
+			}
+
 		}
 		
 		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path + " entryPath");
