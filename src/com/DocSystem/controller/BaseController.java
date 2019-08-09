@@ -1342,7 +1342,7 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localParentPath,targetName);
 		if(false == localEntry.exists())
 		{
-			rt.setError("文件 " + localParentPath + targetName + " 不存在！");
+			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1354,7 +1354,7 @@ public class BaseController  extends BaseFunction{
 			String zipFileName = targetName + ".zip";
 			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
 			{
-				rt.setError("压缩目录失败！");
+				docSysErrorLog("压缩目录失败：" + localParentPath + targetName, rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -1383,11 +1383,9 @@ public class BaseController  extends BaseFunction{
 
 		//检查文件是否存在
 		File file = new File(dstPath);
-		if(!file.exists()){
-			System.out.println("doGet() " + dstPath + " 不存在！");	
-			//request.setAttribute("message", "您要下载的资源已被删除！！");
-			//request.getRequestDispatcher("/message.jsp").forward(request, response);
-			rt.setError(dstPath + " 不存在！");
+		if(!file.exists())
+		{	
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
 			writeJson(rt, response);
 			return;
 		}

@@ -1867,7 +1867,7 @@ public class DocController extends BaseController{
 	}
 	
 	/**************** download History Doc  *****************/
-	@RequestMapping("/downloadHistoryDoc.do")
+	@RequestMapping("/downloadHistoryDocPrepare.do")
 	public void downloadHistoryDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
@@ -1875,7 +1875,7 @@ public class DocController extends BaseController{
 			Integer downloadAll,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadHistoryDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath);
+		System.out.println("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath);
 
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -1899,49 +1899,11 @@ public class DocController extends BaseController{
 		{
 			path = "";
 		}
-		else
-		{
-			//path = new String(path.getBytes("ISO8859-1"),"UTF-8");
-			path = base64Decode(path);
-			if(path == null)
-			{
-				docSysErrorLog("文件路径解码失败", rt);
-				writeJson(rt, response);			
-				return;
-			}
-		}
 		
 		if(name == null)
 		{
 			name = "";
 		}
-		else
-		{
-			//URL was encode by EncodeURI, so just decode it here
-			//name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
-			name = base64Decode(name);
-			if(name == null)
-			{
-				docSysErrorLog("文件名解码失败", rt);
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		
-		if(entryPath != null)
-		{
-			//entryPath = new String(entryPath.getBytes("ISO8859-1"),"UTF-8");	
-			entryPath = base64Decode(entryPath);
-			if(entryPath == null)
-			{
-				docSysErrorLog("entryPath解码失败", rt);
-				writeJson(rt, response);			
-				return;
-			}
-
-		}
-		
-		System.out.println("downloadHistoryDoc() name:" + name + " path:" + path + " entryPath");
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
@@ -2032,10 +1994,32 @@ public class DocController extends BaseController{
 			}			
 		}
 		
-		sendTargetToWebPage(userTmpDir, targetName, userTmpDir, rt, response, request,false);
+		File localEntry = new File(userTmpDir,targetName);
+		if(false == localEntry.exists())
+		{
+			rt.setError("文件 " + userTmpDir + targetName + " 不存在！");
+			writeJson(rt, response);
+			return;
+		}
+
+		//For dir 
+		if(localEntry.isDirectory()) //目录
+		{
+			//doCompressDir and save the zip File under userTmpDir
+			String zipFileName = targetName + ".zip";
+			if(doCompressDir(userTmpDir, targetName, userTmpDir, zipFileName, rt) == false)
+			{
+				rt.setError("压缩目录失败！");
+				writeJson(rt, response);
+				return;
+			}			
+			localEntry.delete();
+			targetName = zipFileName;
+		}
 		
-		//delete the history file or dir
-		delFileOrDir(userTmpDir+targetName);
+		rt.setData(targetName);
+		rt.setMsgData(userTmpDir);
+		writeJson(rt, response);			
 	}
 	
 	private void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
@@ -2061,6 +2045,52 @@ public class DocController extends BaseController{
 				System.out.println("buildDownloadList Add [" +changeItemEntryPath + "]");
 			}
 		}		
+	}
+	
+	@RequestMapping("/downloadHistoryDoc.do")
+	public void downloadHistoryDoc(String targetPath, String targetName, //目标文件的全路径
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			docSysErrorLog("目标路径不能为空！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		targetPath = base64Decode(targetPath);
+		targetName = base64Decode(targetName);
+		if(targetPath == null)
+		{
+			docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		if(targetName == null)
+		{
+			docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
+		
+		//delete the history file or dir
+		delFileOrDir(targetPath+targetName);
 	}
 
 	/****************   revert Document History ******************/

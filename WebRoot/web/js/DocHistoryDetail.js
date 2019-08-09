@@ -33,15 +33,58 @@
 			var pid = "";
 			var entryPath = changeItem.entryPath;
 			
-		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
+		   	console.log("downloadHistoryDocPrepare() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
 		   	
-		   	//var encPath = encodeURI(Base64.encode(parentPath));
-		   	//var encName = encodeURI(Base64.encode(docName));
-		   	//var encEntryPath = encodeURI(Base64.encode(entryPath));
-		   	var encPath = Base64.encode(parentPath);
-		   	var encName = Base64.encode(docName);
-		   	var encEntryPath = Base64.encode(entryPath);
-		   	window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?commitId=" + commitId + "&reposId=" + reposId + "&docId=" + docId + "&path=" + encPath + "&name="+encName + "&historyType=" + historyType +"&entryPath=" + encEntryPath ;	
+			//执行后台downloadDoc操作
+    		$.ajax({
+                url : "/DocSystem/Doc/downloadHistoryDocPrepare.do",
+                type : "post",
+                dataType : "json",
+                data : {
+	            	 commitId: commitId,
+	                 reposId : reposId,
+	                 pid: pid,
+	                 docId: docId,
+	            	 path : parentPath,
+	             	 name: docName,
+	             	 historyType: historyType,
+	             	 entryPath: entryPath,
+                },
+                success : function (ret) {
+                   if( "ok" == ret.status )
+                   {          
+                	    console.log("downloadHistoryDocPrepare Ok:",ret);            	   		            	   		
+            	   		var targetName = ret.data;
+                	    var targetPath = ret.msgData;
+
+            	   		
+                	    var encTargetName = Base64.encode(targetName);
+            		   	var encTargetPath = Base64.encode(targetPath);
+            	   		
+            	   		window.location.href = "/DocSystem/Doc/downloadHistoryDoc.do?targetPath=" + encTargetPath + "&targetName=" + encTargetName;
+                	   	return;
+                   }
+                   else	//后台报错，结束下载
+                   {
+                	   console.log("downloadHistoryDocPrepare Error:" + ret.msgInfo);
+     	      		   bootstrapQ.msg({
+    						msg : "下载失败:" + ret.msgInfo,
+    						type : 'error',
+    						time : 2000,
+    					    }); 
+                       return;
+                   }
+                },
+                error : function () {	//后台异常
+ 	               console.log("downloadHistoryDocPrepare 下载失败：服务器异常！");
+ 	      		   bootstrapQ.msg({
+ 						msg : "下载失败:系统异常",
+ 						type : 'error',
+ 						time : 2000,
+ 					    }); 
+            	   return;
+                }
+        	});		   	
 		}
 		
 		function revertHistory(index)
@@ -51,10 +94,6 @@
 			var docId = "";
 			var pid = "";
 			var entryPath = changeItem.entryPath;
-
-		   	var encPath = parentPath;
-		   	var encName = docName;
-		   	var encEntryPath = entryPath;
 
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " entryPath:"+ entryPath + " historyType:" + historyType);
 		   	
@@ -67,10 +106,10 @@
 	                 reposId : reposId,
 	                 pid: pid,
 	                 docId: docId,
-	            	 path : encPath,
-	             	 name: encName,
+	            	 path : parentPath,
+	             	 name: docName,
 	             	 historyType: historyType,
-	             	 entryPath: encEntryPath,
+	             	 entryPath: entryPath,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -125,8 +164,9 @@
 				//console.log(data);
 				var c = $("#historyDetails").children();
 				$(c).remove();
-				if(data.length==0){
+				if(!data || data.length==0){
 					$("#historyDetails").append("<p>暂无数据</p>");
+					return;
 				}
 				
 				for(var i=0;i<data.length;i++){
