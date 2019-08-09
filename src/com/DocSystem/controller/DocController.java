@@ -1967,6 +1967,13 @@ public class DocController extends BaseController{
 			}
 		}
 		
+		if(downloadList != null && downloadList.size() == 0)
+		{
+			docSysErrorLog("当前版本没有文件改动", rt);
+			writeJson(rt, response);	
+			return;
+		}
+		
 		//userTmpDir will be used to tmp store the history doc 
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 
@@ -2135,6 +2142,13 @@ public class DocController extends BaseController{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, true, doc, commitId, downloadList);
 			}
+		}
+		
+		if(downloadList != null && downloadList.size() == 0)
+		{
+			docSysErrorLog("当前版本没有文件改动", rt);
+			writeJson(rt, response);	
+			return;
 		}
 		
 		//lockDoc
