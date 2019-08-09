@@ -1938,6 +1938,12 @@ public class DocController extends BaseController{
 			{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, false, vDoc, commitId, downloadList);
+				if(downloadList != null && downloadList.size() == 0)
+				{
+					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
+					writeJson(rt, response);	
+					return;
+				}
 			}
 		}
 		else
@@ -1964,14 +1970,13 @@ public class DocController extends BaseController{
 			{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, true, doc, commitId, downloadList);
+				if(downloadList != null && downloadList.size() == 0)
+				{
+					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 未改动",rt);
+					writeJson(rt, response);	
+					return;
+				}
 			}
-		}
-		
-		if(downloadList != null && downloadList.size() == 0)
-		{
-			docSysErrorLog("当前版本没有文件改动", rt);
-			writeJson(rt, response);	
-			return;
 		}
 		
 		//userTmpDir will be used to tmp store the history doc 
@@ -1982,7 +1987,7 @@ public class DocController extends BaseController{
 		{
 			if(verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true, true, downloadList) == null)
 			{
-				docSysErrorLog("下载历史版本失败", rt);
+				docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
 				docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 				writeJson(rt, response);	
 				return;
@@ -1992,7 +1997,7 @@ public class DocController extends BaseController{
 		{
 			if(verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true, true, downloadList) == null)
 			{
-				docSysErrorLog("下载历史版本失败", rt);
+				docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
 				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 				writeJson(rt, response);	
 				return;
@@ -2124,6 +2129,12 @@ public class DocController extends BaseController{
 			{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, false, vDoc, commitId, downloadList);
+				if(downloadList != null && downloadList.size() == 0)
+				{
+					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
+					writeJson(rt, response);	
+					return;
+				}
 			}
 		}
 		else
@@ -2141,16 +2152,15 @@ public class DocController extends BaseController{
 			{
 				downloadList = new HashMap<String,String>();
 				buildDownloadList(repos, true, doc, commitId, downloadList);
+				if(downloadList != null && downloadList.size() == 0)
+				{
+					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 未改动",rt);
+					writeJson(rt, response);	
+					return;
+				}
 			}
 		}
-		
-		if(downloadList != null && downloadList.size() == 0)
-		{
-			docSysErrorLog("当前版本没有文件改动", rt);
-			writeJson(rt, response);	
-			return;
-		}
-		
+				
 		//lockDoc
 		DocLock docLock = null;
 		synchronized(syncLock)
@@ -2168,17 +2178,11 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-			if(revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList) == null)	
-			{
-				docSysErrorLog("恢复失败",rt);
-			}
+			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
 		}
 		else
 		{
-			if(revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, downloadList) == null)	
-			{
-				docSysErrorLog("恢复失败",rt);
-			}			
+			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, downloadList);			
 		}	
 		
 		//lockDoc

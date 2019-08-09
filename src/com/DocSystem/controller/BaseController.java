@@ -1502,6 +1502,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList); 
 		if(successDocList == null)
 		{
+			docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
 			docSysDebugLog("revertDocHistory verReposCheckOut Failed parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localParentPath:" + localParentPath + " targetName:" + doc.getName(),rt);
 			return null;
 		}

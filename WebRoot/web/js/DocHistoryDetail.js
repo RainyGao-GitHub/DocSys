@@ -49,6 +49,7 @@
 	             	 name: docName,
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
+	             	 downloadAll: 1,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
@@ -88,6 +89,38 @@
         	});		   	
 		}
 		
+		function showRevertConfirm(index)
+		{
+			var changeItem = changeItems[index];
+			
+			var docId = "";
+			var pid = "";
+			var entryPath = changeItem.entryPath;
+
+		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId + " entryPath:"+ entryPath + " historyType:" + historyType);
+
+			var title = "恢复确认";
+			//Show dialog
+		    qiao.bs.dialog({
+		        id: "dialog-downloadConfirmDialog",
+		        url: '#downloadConfirmDialog',
+		        title: title,
+		        okbtn: "确定",
+		        callback: function () {
+		            setTimeout(function () {
+		            	console.log("showRevertConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+		                $("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+entryPath);	                 
+		            },100);
+		        }
+		    },function () {
+				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
+				console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+				revertHistory(index);
+		    	return true;   
+		    });
+			return true;
+		}
+		
 		function revertHistory(index)
 		{
 			var changeItem = changeItems[index];
@@ -111,11 +144,12 @@
 	             	 name: docName,
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
+	             	 downloadAll: 1,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	alert("恢复成功！");
+	        		  	bootstrapQ.alert("恢复成功！");
 	                }
 	                else
 	                {
@@ -189,7 +223,7 @@
 					if(historyType == 0)
 					{
 						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
+						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
 					}
 					
 					var se = "<li>" 
@@ -241,9 +275,9 @@
 	        downloadHistory: function(index){
 	        	downloadHistory(index);
 	        },
-	        revertHistory: function(index)
+	        showRevertConfirm: function(index)
 			{
-	        	revertHistory(index);
+	        	showRevertConfirm(index);
 			}
 	    };
 	})();

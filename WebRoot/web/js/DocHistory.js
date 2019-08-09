@@ -43,13 +43,40 @@
 				},
 			});		
 		}
-	
-		function downloadHistory(index)
+		
+		function showDownloadConfirm(index)
+		{
+			var commitId = $("#commitId" + index).text();
+		   	console.log("showDownloadConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+
+			var title = "下载确认";
+			//Show dialog
+		    qiao.bs.dialog({
+		        id: "dialog-downloadConfirmDialog",
+		        url: '#downloadConfirmDialog',
+		        title: title,
+		        okbtn: "确定",
+		        callback: function () {
+		            setTimeout(function () {
+		            	console.log("showDownloadConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
+		                $("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);	                 
+		            },100);
+		        }
+		    },function () {
+				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
+				console.log("showDownloadConfirm() download commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+                downloadHistory(index, entryPath);
+		    	return true;   
+		    });
+			return true;
+		}
+			
+		function downloadHistory(index, entryPath)
 		{
 			//TODO: 如果当前是目录的话，需要提示是否只下载修改过的文件，否则下载该版本的整个目录
 		   	
 			var commitId = $("#commitId" + index).text();
-		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+		   	console.log("downloadHistory() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
 		   	
 			//执行后台downloadDoc操作
     		$.ajax({
@@ -64,6 +91,8 @@
 	            	 path : parentPath,
 	             	 name: docName,
 	             	 historyType: historyType,
+	             	 entryPath: entryPath,
+	             	 downloadAll: 1,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
@@ -103,16 +132,40 @@
         	});			   	
 		}
 		
-		function revertHistory(index)
+		function showRevertConfirm(index)
+		{
+			var commitId = $("#commitId" + index).text();
+		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+
+			var title = "恢复确认";
+			//Show dialog
+		    qiao.bs.dialog({
+		        id: "dialog-downloadConfirmDialog",
+		        url: '#downloadConfirmDialog',
+		        title: title,
+		        okbtn: "确定",
+		        callback: function () {
+		            setTimeout(function () {
+		            	console.log("showRevertConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
+		                $("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);	                 
+		            },100);
+		        }
+		    },function () {
+				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
+				console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+				revertHistory(index, entryPath);
+		    	return true;   
+		    });
+			return true;
+		}
+		
+		function revertHistory(index, entryPath)
 		{
 			//TODO: 如果当前是目录的话，需要提示是否只还原修改过的文件，否则将把目录下所有的文件都还原到该版本
 		   	
 			var commitId = $("#commitId" + index).text();
-		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
 	
-		   	var encParentPath = encodeURI(parentPath);
-		   	var encDocName = encodeURI(docName);
-		   	
 	   		$.ajax({
 	             url : "/DocSystem/Doc/revertDocHistory.do",
 	             type : "post",
@@ -122,9 +175,11 @@
 	                 reposId : reposId,
 	                 pid: pid,
 	                 docId: docId,
-	            	 path : encParentPath,
-	             	 name: encDocName,
+	            	 path : parentPath,
+	             	 name: docName,
 	             	 historyType: historyType,
+	             	 entryPath: entryPath,
+	             	 downloadAll: 1,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -190,8 +245,8 @@
 					var commitTime = formatTime(d.commitTime);
 					
 					var opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
-					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
@@ -234,12 +289,14 @@
 	        showHistoryDetail: function(index){
 	        	showHistoryDetail(index);
 	        },
-	        downloadHistory: function(index){
-	        	downloadHistory(index);
+
+	        showDownloadConfirm: function(index){
+	        	showDownloadConfirm(index);
 	        },
-	        revertHistory: function(index)
+	        
+	        showRevertConfirm: function(index)
 			{
-	        	revertHistory(index);
+	        	showRevertConfirm(index);
 			}
 	    };
 	})();
