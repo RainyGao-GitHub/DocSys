@@ -4998,7 +4998,7 @@ public class BaseController  extends BaseFunction{
 		Integer type = verReposUtil.checkPath(entryPath, revision);
     	if(type == null)
     	{
-    		System.out.println("getEntry() checkPath for " + entryPath + " 异常");
+    		System.out.println("svnCheckOut() checkPath for " + entryPath + " 异常");
     		return null;
     	}
     	else if(type == 0)
@@ -5008,12 +5008,36 @@ public class BaseController  extends BaseFunction{
 	    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
 	    		if(preCommitId == null)
 	    		{
-	        		System.out.println("getEntry() getPreviousCommmitId for revision:" + revision + " 异常");
+	        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
 	    			return null;
 	    		}
 	    		revision = preCommitId;
     		}
     	}
+    	else
+    	{
+	    	if(doc.getName().isEmpty())
+	    	{
+	    		System.out.println("svnCheckOut() it is root doc, if there is no any subEntries means all items be deleted, we need to get preCommitId");
+	    		if(verReposUtil.getSubEntries("", revision) == null)
+	    		{
+	        		if(auto == false)
+	        		{
+	        			return null;
+	        		}
+	        		else
+	        		{
+	    	    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    		if(preCommitId == null)
+	    	    		{
+	    	        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+	    	    			return null;
+	    	    		}
+	    	    		revision = preCommitId;
+	        		}
+	    		}
+	    	}
+    	}	
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 	
@@ -5046,6 +5070,30 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		revision = preCommitId;
     		}
+    	}
+    	else
+    	{
+	    	if(doc.getName().isEmpty())
+	    	{
+	    		System.out.println("svnCheckOut() it is root doc, if there is no any subEntries means all items be deleted, we need to get preCommitId");
+	    		if(verReposUtil.getSubEntries("", revision) == null)
+	    		{
+	        		if(auto == false)
+	        		{
+	        			return null;
+	        		}
+	        		else
+	        		{
+	    	    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    		if(preCommitId == null)
+	    	    		{
+	    	        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+	    	    			return null;
+	    	    		}
+	    	    		revision = preCommitId;
+	        		}
+	    		}
+	    	}
     	}
 
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
