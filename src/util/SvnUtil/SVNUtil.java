@@ -2053,4 +2053,13 @@ public class SVNUtil  extends BaseController{
             }
         }
     }
+
+	public boolean subEntriesIsEmpty(Collection<SVNDirEntry> subEntries) 
+	{
+		if(subEntries == null || subEntries.size() == 0)
+		{
+			return true;
+		}
+		return false;
+	}
 }

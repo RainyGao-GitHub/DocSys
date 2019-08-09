@@ -1779,4 +1779,28 @@ public class GITUtil  extends BaseController{
     	}
     	return null;
 	}
+
+	public boolean subEntriesIsEmpty(TreeWalk subEntries) {
+		// TODO Auto-generated method stub
+		if(subEntries == null)
+		{
+			return true;
+		}
+		
+		try {
+			while(subEntries.next())
+	    	{
+	    		int type = getEntryType(subEntries.getFileMode(0));
+		    	if(type > 0)
+		    	{
+		    		return false;
+		    	}
+	    	}
+		} catch(Exception e){
+			System.out.println("getDocList() treeWalk.next() Exception"); 
+            e.printStackTrace();
+			return true;
+		}
+		return true;
+	}
 }
