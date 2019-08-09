@@ -191,7 +191,7 @@
 					
 					var opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.revertHistory("+i+ ")' class='mybtn-primary'>还原</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.revertHistory("+i+ ")' class='mybtn-primary'>恢复</a>";
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
