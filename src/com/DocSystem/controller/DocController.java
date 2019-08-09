@@ -1271,7 +1271,7 @@ public class DocController extends BaseController{
 		Doc doc = new Doc();
 		doc.setPath(encTargetPath);
 		doc.setName(encTargetName);
-		return null;
+		return doc;
 	}
 	
 	/**************** download Doc ******************/
