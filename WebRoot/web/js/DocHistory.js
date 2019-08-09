@@ -69,8 +69,8 @@
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadHistoryDocPrepare Ok:",ret);            	   		            	   		
-            	   		var targetName = ret.data.path;
-                	    var targetPath = ret.data.name;
+            	   		var targetName = ret.data.name;
+                	    var targetPath = ret.data.path;
                 	    var deleteFlag = ret.msgData;
             	   		
                 	    //targetName = encodeURI(Base64.encode(targetName));
@@ -84,23 +84,21 @@
                    }
                    else	//后台报错，结束下载
                    {
-                	   console.log("downloadHistoryDocPrepare Error:" + ret.msgInfo);
-     	      		   bootstrapQ.msg({
-    						msg : "下载失败:" + ret.msgInfo,
-    						type : 'error',
-    						time : 2000,
-    					    }); 
-                       return;
+                	   	console.log("downloadHistoryDocPrepare Error:" + ret.msgInfo);
+	                   	bootstrapQ.alert({
+		      			    //id: "downloadHistoryDocPrepareError",
+							msg : "下载失败:" + ret.msgInfo,
+						    }); 
+	                	return;
                    }
                 },
                 error : function () {	//后台异常
- 	               console.log("downloadHistoryDocPrepare 下载失败：服务器异常！");
- 	      		   bootstrapQ.msg({
- 						msg : "下载失败:系统异常",
- 						type : 'error',
- 						time : 2000,
- 					    }); 
-            	   return;
+                	console.log("downloadHistoryDocPrepare 下载失败：服务器异常！");
+	               	bootstrapQ.alert({
+	      			    //id: "downloadHistoryDocPrepareError",
+						msg : "下载失败:服务器异常",
+					    }); 
+	            	return;
                 }
         	});			   	
 		}
@@ -131,7 +129,7 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	alert("恢复成功！");
+	        		  	bootstrapQ.alert("恢复成功！");
 	                }
 	                else
 	                {

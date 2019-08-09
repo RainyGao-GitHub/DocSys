@@ -269,8 +269,8 @@
                    if( "ok" == ret.status )
                    {          
                 	    console.log("downloadDocPrepare Ok:",ret);                	                	   		
-            	   		var targetName = ret.data.path;
-                	    var targetPath = ret.data.name;
+            	   		var targetName = ret.data.name;
+                	    var targetPath = ret.data.path;
                 	    var deleteFlag = ret.msgData;
             	   		
                 	    //targetName = encodeURI(Base64.encode(targetName));
