@@ -1253,7 +1253,7 @@ public class DocController extends BaseController{
 		else
 		{
 			//解密path
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			//path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
 			path = base64Decode(path);
 			if(path == null)
 			{
@@ -1269,7 +1269,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+			//name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
 			name =  base64Decode(name);
 			if(name == null)
 			{
@@ -1288,16 +1288,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
-		//URL was encode by EncodeURI, so just decode it here
-		try {
-			name = new String(name.getBytes("ISO8859-1"),"UTF-8");
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");  
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return;
-		}  
-		
+				
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
@@ -1910,7 +1901,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");
+			//path = new String(path.getBytes("ISO8859-1"),"UTF-8");
 			path = base64Decode(path);
 			if(path == null)
 			{
@@ -1927,7 +1918,7 @@ public class DocController extends BaseController{
 		else
 		{
 			//URL was encode by EncodeURI, so just decode it here
-			name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
+			//name = new String(name.getBytes("ISO8859-1"),"UTF-8");  
 			name = base64Decode(name);
 			if(name == null)
 			{
@@ -1939,7 +1930,7 @@ public class DocController extends BaseController{
 		
 		if(entryPath != null)
 		{
-			entryPath = new String(entryPath.getBytes("ISO8859-1"),"UTF-8");	
+			//entryPath = new String(entryPath.getBytes("ISO8859-1"),"UTF-8");	
 			entryPath = base64Decode(entryPath);
 			if(entryPath == null)
 			{
