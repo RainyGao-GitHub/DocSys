@@ -268,12 +268,16 @@
                 success : function (ret) {
                    if( "ok" == ret.status )
                    {          
-                	    console.log("downloadDocPrepare Ok:",ret);
-            	   		var encPath = encodeURI(Base64.encode(SubContext.path));
-            	   		var encName = encodeURI(Base64.encode(SubContext.name));
-                	                	   		
-            	   		var downloadType = ret.msgData;
-            	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?reposId=" + SubContext.vid + "&docId=" + SubContext.docId + "&pid=" + SubContext.pid + "&path=" + encPath + "&name="+ encName  + "&downloadType="+ downloadType;	
+                	    console.log("downloadDocPrepare Ok:",ret);                	                	   		
+            	   		var targetName = ret.data.path;
+                	    var targetPath = ret.data.name;
+                	    var deleteFlag = ret.msgData;
+            	   		
+                	    //targetName = encodeURI(Base64.encode(targetName));
+            		   	//targetPath = encodeURI(Base64.encode(targetPath));
+                	    targetName = encodeURI(targetName);
+            		   	targetPath = encodeURI(targetPath);
+            	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
 
                 	   	downloadSuccessHandler(SubContext, ret.msgInfo);
                 	   	return;

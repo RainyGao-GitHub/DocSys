@@ -1098,6 +1098,7 @@ public class DocController extends BaseController{
 	/**************** downloadDocPrepare ******************/
 	@RequestMapping("/downloadDocPrepare.do")
 	public void downloadDocCheck(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			Integer docType,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
@@ -1121,8 +1122,15 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-
+		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		Doc vDoc = null;
+		if(docType != null && docType == 2)
+		{
+			vDoc = buildVDoc(doc);
+			//TODO: download VDOC
+		}
+		
 		switch(repos.getType())
 		{
 		case 1:
@@ -1153,17 +1161,20 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String targetName = doc.getName();
+		String targetPath = doc.getLocalRootPath() + doc.getPath();
 		if(localEntry.getType() == 1)
 		{
-			rt.setMsgData(0);	//文件：原始路径下载	
+			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			rt.setData(downloadDoc);
+			rt.setMsgData(0);	//下载完成后不能删除下载的文件
 			docSysDebugLog("本地文件: 原始路径下载", rt);
 			return;
 		}
 
-		String userTmpDir = getReposUserTmpPath(repos,login_user);;
-		String zipFileName = dbDoc.getName() + ".zip";		
+		targetPath = getReposUserTmpPath(repos,login_user);
 		if(localEntry.getType() == 2)
-		{
+		{	
 			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()))
 			{
 				docSysErrorLog("空目录无法下载！", rt);
@@ -1171,20 +1182,22 @@ public class DocController extends BaseController{
 			}
 			
 			//doCompressDir and save the zip File under userTmpDir
-			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
+			targetName = doc.getName() + ".zip";		
+			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), dbDoc.getName(), targetPath, targetName, rt) == false)
 			{
 				docSysErrorLog("压缩本地目录失败！", rt);
 				return;
 			}
 			
-			rt.setMsgData(2);	//目录：已压缩并存储在用户临时目录
+			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			rt.setData(downloadDoc);
+			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
 			return;						
 		}
 
 		if(localEntry.getType() == 0)
 		{
-			
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
@@ -1201,34 +1214,39 @@ public class DocController extends BaseController{
 			}
 				
 			//Do checkout to local
-			if(verReposCheckOut(repos, doc, userTmpDir, doc.getName(), null, true, true, null) == null)
+			if(verReposCheckOut(repos, doc, targetPath, doc.getName(), null, true, true, null) == null)
 			{
 				docSysErrorLog("远程下载失败", rt);
-				docSysDebugLog("downloadDocPrepare_FS() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + doc.getName(), rt);
+				docSysDebugLog("downloadDocPrepare_FS() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
 				return;
 			}
 				
 			if(remoteEntry.getType() == 1)
 			{
-				rt.setMsgData(1);
+				Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+				rt.setData(downloadDoc);
+				rt.setMsgData(1);	//下载完成后删除已下载的文件
 				docSysDebugLog("远程文件: 已下载并存储在用户临时目录", rt);
 				return;
 			}
 
-			if(isEmptyDir(userTmpDir + dbDoc.getName()))
+			if(isEmptyDir(targetPath + doc.getName()))
 			{
 				docSysErrorLog("空目录无法下载！", rt);
 				return;				
 			}
 			
 			//doCompressDir and save the zip File under userTmpDir
-			if(doCompressDir(userTmpDir, dbDoc.getName(), userTmpDir, zipFileName, rt) == false)
+			targetName = doc.getName() + ".zip";		
+			if(doCompressDir(targetPath, doc.getName(), targetPath, targetName, rt) == false)
 			{
 				rt.setError("压缩远程目录失败！");
 				return;
 			}
 				
-			rt.setMsgData(2);	//告诉前台，直接通过原始Doc进行下载
+			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+			rt.setData(downloadDoc);
+			rt.setMsgData(1);	//下载完成后删除已下载的文件
 			docSysDebugLog("远程目录: 已压缩并存储在用户临时目录", rt);
 			return;
 		}
@@ -1237,70 +1255,74 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
+	Doc buildDownloadDocInfo(String targetPath, String targetName)
+	{
+		String encTargetName = base64Encode(targetName);
+		if(encTargetName == null)
+		{
+			return null;			
+		}	
+		String encTargetPath = base64Encode(targetPath);
+		if(encTargetPath == null)
+		{
+			return null;			
+		}	
+		
+		Doc doc = new Doc();
+		doc.setPath(encTargetPath);
+		doc.setName(encTargetName);
+		return null;
+	}
+	
 	/**************** download Doc ******************/
-	@RequestMapping("/downloadDoc")
-	public void downloadDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer downloadType,
+	@RequestMapping("/downloadDoc.do")
+	public void downloadDoc(String targetPath, String targetName, 
+			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType);
-
+		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		
 		ReturnAjax rt = new ReturnAjax();
-
-		if(path == null)
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
 		{
-			path = "";
-		}
-		else
-		{
-			//解密path
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
-			path = base64Decode(path);
-			if(path == null)
-			{
-				docSysErrorLog("文件名解码失败", rt);
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		
-		if(name == null)
-		{
-			name = "";
-		}
-		else
-		{
-			name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
-			name =  base64Decode(name);
-			if(name == null)
-			{
-				docSysErrorLog("文件名解码失败", rt);
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		
-		System.out.println("downloadDoc path:" + path + " name:" + name);
-		
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
-		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
-				
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
-
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
-		switch(repos.getType())
+		
+		if(targetPath == null || targetName == null)
 		{
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-			downloadDoc_FS(repos, doc, downloadType, response, request, session);
-			break;
+			docSysErrorLog("目标路径不能为空！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = base64Decode(targetName);
+		if(targetName == null)
+		{
+			docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
+		
+		if(deleteFlag != null && deleteFlag == 1)
+		{
+			delFileOrDir(targetPath+targetName);
 		}
 	}
 	
@@ -1309,7 +1331,7 @@ public class DocController extends BaseController{
 		try {
 			byte[] textByte = str.getBytes("UTF-8");
 			//编码
-			String base64Str = Base64.encodeBase64String(textByte);
+			String base64Str = Base64.encodeBase64URLSafeString(textByte);
 			return base64Str;
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -1337,44 +1359,6 @@ public class DocController extends BaseController{
 		}
 		
 		//java8自带库，据说速度最快
-	}
-
-	public void downloadDoc_FS(Repos repos, Doc doc,  Integer downloadType, HttpServletResponse response,HttpServletRequest request,HttpSession session)  throws Exception
-	{
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			//writeJson(rt, response);			
-			return;
-		}
-		
-		if(downloadType == null || downloadType == 0)
-		{
-			//直接下载
-			//文件的localParentPath
-			String localParentPath = doc.getLocalRootPath() + doc.getPath();
-			sendFileToWebPage(localParentPath, doc.getName(), rt, response, request);
-		}
-		
-		//在userTmpDir下不压缩
-		if(downloadType == 1)
-		{
-			//get userTmpDir
-			String userTmpDir = getReposUserTmpPath(repos,login_user);
-			String targetName = doc.getName();			
-			sendFileToWebPage(userTmpDir, targetName, rt, response, request);
-		}
-		
-		//在userTmpDir下已压缩
-		if(downloadType == 2)
-		{
-			//get userTmpDir
-			String userTmpDir = getReposUserTmpPath(repos,login_user);
-			String targetName = doc.getName() + ".zip";			
-			sendFileToWebPage(userTmpDir, targetName, rt, response, request);
-		}
 	}
 	
 	/**************** get Tmp File ******************/
@@ -2027,33 +2011,19 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}			
-			localEntry.delete();
+			
+			//删除CheckOut出来的目录
+			delFileOrDir(userTmpDir+targetName);
+			
 			targetName = zipFileName;
 		}
 		
 		System.out.println("downloadHistoryDocPrepare targetPath:" + userTmpDir + " targetName:" + targetName);
-		rt.setData(targetName);
-		rt.setMsgData(userTmpDir);
-		writeJson(rt, response);	
 		
-//		String encTargetName = base64Encode(targetName);
-//		if(encTargetName == null)
-//		{
-//			docSysErrorLog("文件名加密失败:" + targetName, rt);
-//			writeJson(rt, response);
-//			return;			
-//		}	
-//		String encTargetPath = base64Encode(userTmpDir);
-//		if(encTargetPath == null)
-//		{
-//			docSysErrorLog("文件路径加密失败:" + encTargetPath, rt);
-//			writeJson(rt, response);
-//			return;			
-//		}	
-//		
-//		rt.setData(encTargetName);
-//		rt.setMsgData(encTargetPath);
-//		writeJson(rt, response);			
+		Doc downloadDoc = buildDownloadDocInfo(userTmpDir, targetName);		
+		rt.setData(downloadDoc);
+		rt.setMsgData(1);
+		writeJson(rt, response);			
 	}
 
 	private void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
@@ -2081,54 +2051,6 @@ public class DocController extends BaseController{
 		}		
 	}
 	
-	@RequestMapping("/downloadHistoryDoc.do")
-	public void downloadHistoryDoc(String targetPath, String targetName, //目标文件的全路径
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(targetPath == null || targetName == null)
-		{
-			docSysErrorLog("目标路径不能为空！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
-		targetPath = base64Decode(targetPath);
-		if(targetPath == null)
-		{
-			docSysErrorLog("目标路径解码失败！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-	
-		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
-		targetName = base64Decode(targetName);
-		if(targetName == null)
-		{
-			docSysErrorLog("目标文件名解码失败！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-	
-		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);
-		
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
-		
-		//delete the history file or dir
-		delFileOrDir(targetPath+targetName);
-	}
-
 	/****************   revert Document History ******************/
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
