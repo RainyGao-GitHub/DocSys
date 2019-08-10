@@ -2370,18 +2370,39 @@ public class BaseController  extends BaseFunction{
     		System.out.println("SyncUpSubDocs_FS() localEntryList 获取异常:");
         	return false;
     	}
-
-		List<Doc> remoteEntryList = getRemoteEntryList(repos, doc);
-	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
-    	if(remoteEntryList == null)
-    	{
-    		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
-        	return false;
-    	}
-		
+    	
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
 		printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
 
+		Doc dbDoc = dbGetDoc(repos, doc, false);
+    	List<Doc> remoteEntryList = dbDocList;
+    	if(dbDoc == null || dbDoc.getRevision() == null)
+    	{
+    		//远程仓库有变更
+        	remoteEntryList = getRemoteEntryList(repos, doc);
+    	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
+        	if(remoteEntryList == null)
+        	{
+        		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
+            	return false;
+        	}
+    	}
+    	else
+    	{
+        	String latestRevision = verReposGetLatestRevision(repos, doc);
+        	if(latestRevision == null || dbDoc.getRevision().equals(latestRevision) == false)
+        	{
+        		//远程仓库有变更
+            	remoteEntryList = getRemoteEntryList(repos, doc);
+        	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
+            	if(remoteEntryList == null)
+            	{
+            		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
+                	return false;
+            	}
+        	}
+    	}
+		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		Doc subDoc = null;
 	    
@@ -2409,22 +2430,25 @@ public class BaseController  extends BaseFunction{
     		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
     	}
 	    
-    	for(int i=0;i<remoteEntryList.size();i++)
-	    {
-    		subDoc = remoteEntryList.get(i);
-    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
-    		if(docHashMap.get(subDoc.getName()) != null)
-    		{
-    			//already syncuped
-    			continue;	
-    		}
-    		
-    		docHashMap.put(subDoc.getName(), subDoc);
-    		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
-	    }	    
+    	if(remoteEntryList != null)
+    	{
+	    	for(int i=0;i<remoteEntryList.size();i++)
+		    {
+	    		subDoc = remoteEntryList.get(i);
+	    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    		if(docHashMap.get(subDoc.getName()) != null)
+	    		{
+	    			//already syncuped
+	    			continue;	
+	    		}
+	    		
+	    		docHashMap.put(subDoc.getName(), subDoc);
+	    		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
+		    }
+    	}
 	    return true;
     }
-
+	
 	//localEntry and dbDoc was same
 	private boolean syncUpRemoteChange_FS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
 	{	
@@ -2564,6 +2588,42 @@ public class BaseController  extends BaseFunction{
 		return localDoc;
 	}
 	
+	private String verReposGetLatestRevision(Repos repos, Doc doc) {
+		if(repos.getVerCtrl() == 1)
+		{
+			return svnGetDocLatestRevision(repos, doc);			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitGetDocLatestRevision(repos, doc);	
+		}
+		return null;
+	}
+
+	private String svnGetDocLatestRevision(Repos repos, Doc doc) {
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, true, "") == false)
+		{
+			System.out.println("svnGetDoc() svnUtil.Init失败！");	
+			return null;
+		}
+
+		return svnUtil.getLatestRevision(doc);		
+	}
+	
+	private String gitGetDocLatestRevision(Repos repos, Doc doc) {
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, "") == false)
+		{
+			System.out.println("gitRealDocCommit() GITUtil Init failed");
+			return null;
+		}
+		
+		return gitUtil.getLatestRevision(doc);		
+	}
+
+
 	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
@@ -2638,23 +2698,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 	
-		Doc dbDoc = list.get(0);
-		
-		//Do check doc info
-		if(dbDoc.getDocId() == null || dbDoc.getDocId() < 0 || !dbDoc.getDocId().equals(doc.getDocId()))
-		{
-			System.out.println("dbGetDoc() 非法  docId (" + doc.getDocId() +":" + dbDoc.getDocId() + "),自动清理"); 
-			dbDeleteDoc(dbDoc, true);
-			return null;
-		}
-		
-		if(dbDoc.getPid() == null || dbDoc.getPid() < 0 || !dbDoc.getPid().equals(doc.getPid()))
-		{
-			System.out.println("dbGetDoc() 非法  pid (" + doc.getPid() +":" + dbDoc.getPid() + "),自动清理"); 
-			dbDeleteDoc(dbDoc, true);
-			return null;
-		}
-		
+		Doc dbDoc = list.get(0);		
 		return dbDoc;
 	}
 
