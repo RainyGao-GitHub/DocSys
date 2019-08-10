@@ -4996,16 +4996,20 @@ public class BaseController  extends BaseFunction{
     	}
     	else if(type == 0)
     	{
-    		if(auto)
+    		System.out.println("svnCheckOut() " + entryPath + " not exists for revision:" + revision);
+    		if(auto == false)
     		{
-	    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
-	    		if(preCommitId == null)
-	    		{
-	        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-	    			return null;
-	    		}
-	    		revision = preCommitId;
+        		return null;
     		}
+
+    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
+    		if(preCommitId == null)
+    		{
+        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+    			return null;
+    		}
+    		revision = preCommitId;
+    		System.out.println("svnCheckOut() try to chekout " + entryPath + " at revision:" + revision);
     	}
     	else
     	{
@@ -5015,20 +5019,20 @@ public class BaseController  extends BaseFunction{
 	    		Collection<SVNDirEntry> subEntries = verReposUtil.getSubEntries("", revision);
 	    		if(verReposUtil.subEntriesIsEmpty(subEntries))
 	    		{
+	    	    	System.out.println("svnCheckOut() 根目录下没有文件 at revision:" + revision);
 	        		if(auto == false)
 	        		{
 	        			return null;
 	        		}
-	        		else
-	        		{
-	    	    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
-	    	    		if(preCommitId == null)
-	    	    		{
-	    	        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-	    	    			return null;
-	    	    		}
-	    	    		revision = preCommitId;
-	        		}
+	        		
+	    	    	Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    	if(preCommitId == null)
+	    	    	{
+	    	        	System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+	    	    		return null;
+	    	    	}
+	    	    	revision = preCommitId;
+	    	    	System.out.println("svnCheckOut() try to chekout 根目录 at revision:" + revision);
 	    		}
 	    	}
     	}	
@@ -5054,16 +5058,20 @@ public class BaseController  extends BaseFunction{
     	}
     	else if(type == 0)
     	{
-    		if(auto)
+    		System.out.println("svnCheckOut() " + entryPath + " not exists for revision:" + revision);
+    		if(auto == false)
     		{
-	    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
-	    		if(preCommitId == null)
-	    		{
-	        		System.out.println("gitCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-	    			return null;
-	    		}
-	    		revision = preCommitId;
+        		return null;
     		}
+
+    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+    		if(preCommitId == null)
+    		{
+        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+    			return null;
+    		}
+    		revision = preCommitId;
+    		System.out.println("svnCheckOut() try to chekout " + entryPath + " at revision:" + revision);
     	}
     	else
     	{
@@ -5073,20 +5081,20 @@ public class BaseController  extends BaseFunction{
 	    		TreeWalk subEntries = verReposUtil.getSubEntries("", revision);
 	    		if(verReposUtil.subEntriesIsEmpty(subEntries))
 	    		{
+	    	    	System.out.println("svnCheckOut() 根目录下没有文件 at revision:" + revision);
 	        		if(auto == false)
 	        		{
 	        			return null;
 	        		}
-	        		else
-	        		{
-	    	    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
-	    	    		if(preCommitId == null)
-	    	    		{
-	    	        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-	    	    			return null;
-	    	    		}
-	    	    		revision = preCommitId;
-	        		}
+	        		
+	    	    	String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    	if(preCommitId == null)
+	    	    	{
+	    	        	System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+	    	    		return null;
+	    	    	}
+	    	    	revision = preCommitId;
+	    	    	System.out.println("svnCheckOut() try to chekout 根目录 at revision:" + revision);
 	    		}
 	    	}
     	}
