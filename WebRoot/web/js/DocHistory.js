@@ -233,8 +233,9 @@
 				//console.log(data);
 				var c = $("#historyLogs").children();
 				$(c).remove();
-				if(data.length==0){
+				if(!data || data.length==0){
 					$("#historyLogs").append("<p>暂无数据</p>");
+					return;
 				}
 				
 				for(var i=0;i<data.length;i++){

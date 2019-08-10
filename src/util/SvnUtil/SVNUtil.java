@@ -239,10 +239,10 @@ public class SVNUtil  extends BaseController{
     //getHistory filePath: remote File Path under repositoryURL
 	public List<LogEntry> getHistoryLogs(String entryPath,long startRevision, long endRevision, int maxLogNum) 
     {
-    	System.out.println("getHistoryLogs filePath:" + entryPath);	
+    	System.out.println("getHistoryLogs entryPath:" + entryPath);	
     	if(entryPath == null)
     	{
-        	System.out.println("getHistoryLogs() 非法参数：filePath is null");
+        	System.out.println("getHistoryLogs() 非法参数：entryPath is null");
         	return null;
     	}
     	

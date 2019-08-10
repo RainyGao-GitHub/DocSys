@@ -308,10 +308,10 @@ public class GITUtil  extends BaseController{
         return remoteDoc;
     }
 
-	//getHistory filePath: remote File Path under repositoryURL
-    public List<LogEntry> getHistoryLogs(String filePath,String startRevision, String endRevision,int maxLogNum) 
+	//getHistory entryPath: remote File Path under repositoryURL
+    public List<LogEntry> getHistoryLogs(String entryPath,String startRevision, String endRevision,int maxLogNum) 
     {
-    	System.out.println("getHistoryLogs filePath:" + filePath);	
+    	System.out.println("getHistoryLogs entryPath:" + entryPath);	
 
     	if(OpenRepos() == false)
     	{
@@ -323,13 +323,13 @@ public class GITUtil  extends BaseController{
 	    	List<LogEntry> logList = new ArrayList<LogEntry>();
 				
 		    Iterable<RevCommit> iterable = null;
-		    if(filePath == null || filePath.isEmpty())
+		    if(entryPath == null || entryPath.isEmpty())
 		    {
 		    	iterable = git.log().setMaxCount(maxLogNum).call();
 		    }
 		    else
 		    {
-		    	iterable = git.log().addPath(filePath).setMaxCount(maxLogNum).call();
+		    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).call();
 		    }
 		    
 		    Iterator<RevCommit> iter=iterable.iterator();
