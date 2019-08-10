@@ -2173,7 +2173,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean syncupForDocChange_FS(Repos repos, Doc doc, List<Doc> dbDocList, List<Doc> localEntryList, List<Doc> remoteEntryList, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
 	{
-		printObject("syncupForDocChange_FS() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
+		//printObject("syncupForDocChange_FS() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
@@ -2186,16 +2186,16 @@ public class BaseController  extends BaseFunction{
 		Doc remoteEntry = null;
 		
 		dbDoc = getDocFromList(doc, dbDocList);
-		printObject("syncupForDocChange_FS() dbDoc: ", dbDoc);
+		//printObject("syncupForDocChange_FS() dbDoc: ", dbDoc);
 
 		localEntry = getDocFromList(doc, localEntryList);
-		printObject("syncupForDocChange_FS() localEntry: ", localEntry);
+		//printObject("syncupForDocChange_FS() localEntry: ", localEntry);
 		
 		remoteEntry = getDocFromList(doc, remoteEntryList);
-		printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
+		//printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
 		
 		int docChangeType = getDocChangeType_FS(repos, doc, dbDoc, localEntry, remoteEntry);
-		System.out.println("syncupForDocChange_FS() docChangeType: " + docChangeType);
+		//System.out.println("syncupForDocChange_FS() docChangeType: " + docChangeType);
 
 		switch(docChangeType)
 		{
@@ -2260,7 +2260,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//未变更
-			System.out.println("getDocChangeType_FS() 未变更(dbDoc不存在/localDoc不存在/remoteDoc不存在):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//System.out.println("getDocChangeType_FS() 未变更(dbDoc不存在/localDoc不存在/remoteDoc不存在):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return 0;
 		}
 		
@@ -2319,7 +2319,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//未变更
-			System.out.println("getDocChangeType_FS() 未变更(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//System.out.println("getDocChangeType_FS() 未变更(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return 0;
 		}
 		
@@ -2369,7 +2369,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//未变更
-			System.out.println("getDocChangeType_FS() 未变更(dbDoc存在/localDoc是目录/remoteDoc是目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//System.out.println("getDocChangeType_FS() 未变更(dbDoc存在/localDoc是目录/remoteDoc是目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return 0;
 		}
 		
