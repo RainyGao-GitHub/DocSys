@@ -969,16 +969,34 @@ public class GITUtil  extends BaseController{
 	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, String revision, boolean force) 
 	{
 		File localEntry = new File(localParentPath + targetName);
-		if(localEntry.exists() && localEntry.isDirectory())
+		if(localEntry.exists())
 		{
-			if(force == false)
+			if(localEntry.isDirectory())	//本地是目录，如果force的话强制删除
 			{
-				return false;
-			}	
-			
-			if(delFileOrDir(localParentPath+targetName) == false)
+				if(force == true)
+				{
+					if(delFileOrDir(localParentPath+targetName) == false)
+					{
+						return false;
+					}
+				}
+				else
+				{
+					System.out.println(localParentPath+targetName + " 已存在且是目录，如果需要强行CheckOut，请将force设置为true");
+					return false;
+				}
+			}
+		}
+		else
+		{
+			if(force == true)
 			{
-				return false;
+				//检查父节点是否存在，不存在则自动创建
+				File parentDir = new File(localParentPath);
+				if(parentDir.exists() == false)
+				{
+					parentDir.mkdirs();
+				}
 			}
 		}
 		
