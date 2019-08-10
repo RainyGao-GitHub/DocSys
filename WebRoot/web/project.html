@@ -1577,12 +1577,6 @@
     
 	//读取文件信息
     function showVirtualDoc(node,edit) {
-      	
-		if(gShowType == 1)
-		{
-			console.log("showVirtualDoc() showType is for file Content");
-	      	return;
-		}
 		
 		console.log("showVirtualDoc() edit:" + edit + " node:", node);
       	if(!node || node == null)	//undefine do clean the info of rightDiv
@@ -1629,39 +1623,47 @@
                     }
                     
 					gTmpSavedContent = ret.msgData;                    
-                    					
-					DocEdit.loadmd(gDocContent,edit);
                     
-                    WikiEditBtnCtrl(edit);		
-					
-                    //we need to clear debounce when a new doc was loaded
-					debounce.clear();
-					if(edit)
+					if(gShowType == 1)	//显示预览
 					{
-						//start the autoTmpSaver
-						DocEdit.startAutoTmpSaver();
-					
-						if(gTmpSavedContent && gTmpSavedContent != "")
+						console.log("showVirtualDoc() showType is for file Content");
+				      	return;
+					}
+					else	//显示备注
+					{
+						DocEdit.loadmd(gDocContent,edit);
+	                    
+	                    WikiEditBtnCtrl(edit);		
+						
+	                    //we need to clear debounce when a new doc was loaded
+						debounce.clear();
+						if(edit)
 						{
-							bootstrapQ.confirm({
-								id: "loadContentConfirm",
-								title: "加载确认",
-								msg : "上次有未保存的编辑内容，是否加载？",
-								},function () {
-							    	//alert("点击了确定");
-							        DocEdit.loadmd(gTmpSavedContent,edit);
-							        gTmpSavedContent = "";
-							    	return true;   
-							 	},function (){
-							        gTmpSavedContent = "";
-							        return true;
-							 	});
+							//start the autoTmpSaver
+							DocEdit.startAutoTmpSaver();
+						
+							if(gTmpSavedContent && gTmpSavedContent != "")
+							{
+								bootstrapQ.confirm({
+									id: "loadContentConfirm",
+									title: "加载确认",
+									msg : "上次有未保存的编辑内容，是否加载？",
+									},function () {
+								    	//alert("点击了确定");
+								        DocEdit.loadmd(gTmpSavedContent,edit);
+								        gTmpSavedContent = "";
+								    	return true;   
+								 	},function (){
+								        gTmpSavedContent = "";
+								        return true;
+								 	});
+							}
+						}
+						else
+						{
+							DocEdit.stopAutoTmpSaver();
 						}
 					}
-					else
-					{
-						DocEdit.stopAutoTmpSaver();
-					}					
                 }
                 else
                 {
@@ -3441,6 +3443,8 @@ function CompareObj(objA, objB, flag) {
 	      	$("#btnSaveWiki").hide(); 
 	      	$("#btnEditWiki").hide();
 	      	$("#btnSwitchShow").text("显示备注");
+	      	//隐藏备注内容
+	      	//显示预览内容
 	     }
 	     else
 	     {
@@ -3449,6 +3453,9 @@ function CompareObj(objA, objB, flag) {
 		     $("#btnSaveWiki").hide(); 
 		     $("#btnEditWiki").show();
 		     $("#btnSwitchShow").text("显示预览");
+		     //显示备注内容
+		     //隐藏预览内容
+		     
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
