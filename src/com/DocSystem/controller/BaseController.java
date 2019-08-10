@@ -2996,36 +2996,23 @@ public class BaseController  extends BaseFunction{
 		printObject("executeVerReposAction() action:",action);
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
-		switch(action.getDocType())
+		
+		boolean isRealDoc = true;
+		if(action.getDocType() == 2)
 		{
-		case 1:	//RDoc autoCommit
-			System.out.println("executeVerReposAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			switch(action.getType())
-			{
-			case 1: //add
-			case 2:	//delete
-			case 3: //update
-				return verReposDocCommit(repos, true, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
-			case 4:	//move
-				return verReposDocMove(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
-			case 5: //copy
-				return verReposDocCopy(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);				
-			}
-		case 2: //VDoc autoCommit
-			System.out.println("executeVerReposAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			switch(action.getType())
-			{
-			case 1: //add
-			case 2:	//delete
-			case 3: //update
-				return verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
-			case 4:	//move
-				doc.setIsRealDoc(false);
-				return verReposDocMove(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
-			case 5: //copy
-				doc.setIsRealDoc(false);
-				return verReposDocCopy(repos, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);				
-			}
+			isRealDoc = false;
+		}
+		
+		switch(action.getType())
+		{
+		case 1: //add
+		case 2:	//delete
+		case 3: //update
+			return verReposDocCommit(repos, isRealDoc, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+		case 4:	//move
+			return verReposDocMove(repos, isRealDoc, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+		case 5: //copy
+			return verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);				
 		}
 		return null;
 	}
@@ -3180,7 +3167,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = verReposDocMove(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
+		String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
 			docSysWarningLog("moveDoc_FS() verReposRealDocMove Failed", rt);
@@ -3263,7 +3250,7 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		//需要将文件Commit到VerRepos上去
-		String revision = verReposDocCopy(repos, srcDoc, dstDoc,commitMsg, commitUser,rt);
+		String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt);
 		if(revision == null)
 		{
 			docSysWarningLog("copyDoc() verReposRealDocCopy failed", rt);
@@ -5107,17 +5094,17 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 
-	protected String verReposDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposDocMove(Repos repos,  boolean isRealDoc, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		int verCtrl = repos.getVerCtrl();
-		if(srcDoc.getIsRealDoc() == false)
+		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
 			srcDoc = buildVDoc(srcDoc);
 			dstDoc = buildVDoc(dstDoc);
 			verCtrl = repos.getVerCtrl1();
 		}
-		
+				
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
@@ -5155,10 +5142,10 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,true);
 	}
 	
-	protected String verReposDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposDocCopy(Repos repos, boolean isRealDoc, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
 		int verCtrl = repos.getVerCtrl();
-		if(srcDoc.getIsRealDoc() == false)
+		if(isRealDoc == false)
 		{
 			//Convert doc to vDoc
 			srcDoc = buildVDoc(srcDoc);
