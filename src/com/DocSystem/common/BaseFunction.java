@@ -205,6 +205,7 @@ public class BaseFunction{
 			doc.setLevel(level);
 			doc.setType(type);
 			doc.setIsRealDoc(false);
+			doc.setLocalRootPath(localRootPath);
 			doc.setLocalRootPath(localVRootPath);
 			//printObject("buildBasicDoc() 虚文件:", doc);
 			return doc;
