@@ -109,6 +109,8 @@ public class BaseFunction{
     
 	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
 	{
+		printObject("insertAddDirAction:", doc);
+
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
 		File[] tmp = dir.listFiles();
@@ -149,7 +151,6 @@ public class BaseFunction{
 	    	}
 	 	}
 		
-		printObject("insertAddDirAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setDoc(doc);
