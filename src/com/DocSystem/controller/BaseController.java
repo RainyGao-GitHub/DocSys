@@ -1876,6 +1876,10 @@ public class BaseController  extends BaseFunction{
 		{
 			boolean ret = false;
 			CommonAction action = actionList.get(i);
+			Doc srcDoc = action.getDoc();
+			
+			System.out.println("executeCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+
 			switch(action.getType())
 			{
 			case 1:

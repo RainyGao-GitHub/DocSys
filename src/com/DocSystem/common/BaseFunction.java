@@ -78,11 +78,13 @@ public class BaseFunction{
 	//ActionType 1:add 2:delete 3:update 4:move 5:copy
     //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
 	protected void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
-	{
+	{	
 		CommonAction action = new CommonAction();
 		action.setType(actionId);		
 		action.setAction(actionType);
 		action.setDocType(docType);
+
+		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		
 		action.setRepos(repos);
 		action.setDoc(srcDoc);
