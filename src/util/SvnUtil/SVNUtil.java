@@ -624,7 +624,7 @@ public class SVNUtil  extends BaseController{
 			{
 				//LocalEntry is Directory
 				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
-				scheduleForCommit(commitActionList, doc, localRootPath, localRefRootPath, modifyEnable, false, commitHashMap, subDocCommitFlag);
+				scheduleForCommit(commitActionList, doc, modifyEnable, false, commitHashMap, subDocCommitFlag);
 			}
 		}
 		
@@ -893,13 +893,15 @@ public class SVNUtil  extends BaseController{
     	}
 	}
 
-	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, String localRootPath, String localRefRootPath,boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
+	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
 	{	
+		String localRootPath = doc.getLocalRootPath(); 
+		String localRefRootPath = doc.getLocalRefRootPath();
 		System.out.println("scheduleForCommit()  parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
     	if(doc.getName().isEmpty())
     	{
-    		scanForSubDocCommit(actionList, doc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
     		return;
     	}
  	
@@ -986,15 +988,18 @@ public class SVNUtil  extends BaseController{
 	            return;
     		}
     		
-    		scanForSubDocCommit(actionList, doc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
     		break;
     	}
     	return;   	
 	}
 
 	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc,
-			String localRootPath, String localRefRootPath, boolean modifyEnable, boolean isSubAction,
+			boolean modifyEnable, boolean isSubAction,
 			HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) {
+
+		String localRootPath = doc.getLocalRootPath(); 
+		String localRefRootPath = doc.getLocalRefRootPath();
 
 		System.out.println("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefParentPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
@@ -1027,7 +1032,7 @@ public class SVNUtil  extends BaseController{
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
 	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
 	            docHashMap.put(subDoc.getDocId(), subDoc);
-	            scheduleForCommit(actionList, subDoc, localRootPath, localRefRootPath, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
 	        }
         }
         
