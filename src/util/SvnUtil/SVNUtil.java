@@ -1531,10 +1531,13 @@ public class SVNUtil  extends BaseController{
 	
 	
 	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force, HashMap<String, String> downloadList) {
+		
+		System.out.println("getEntry() revision:" + revision + " 注意递归过程中，该值必须不变");
+		
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		
-		System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
+		//System.out.println("getEntry() parentPath:" + parentPath + " entryName:" + entryName + " localParentPath:" + localParentPath + " targetName:" + targetName);
 		
 		List<Doc> successDocList = new ArrayList<Doc>();	
 		
@@ -1568,7 +1571,7 @@ public class SVNUtil  extends BaseController{
 				Object downloadItem = downloadList.get(remoteEntryPath);
 				if(downloadItem == null)
 				{
-					System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
+					//System.out.println("getEntry() " + remoteEntryPath + " 不在下载列表,不下载！"); 
 					return null;
 				}
 				else
@@ -1647,9 +1650,11 @@ public class SVNUtil  extends BaseController{
 				String subEntryName = subEntry.getName();
 				Integer subEntryType = getEntryType(subEntry.getKind());
 				
-				Long subEntryRevision = subEntry.getRevision();
+				//注意: checkOut时必须使用相同的revision，successList中的可以是实际的，在获取子文件时绝对不能修改revision，那样就引起的时间切面不一致
+				//这个问题导致了，自动同步出现问题（远程同步用的就是getEntry接口），导致远程同步后的dbDoc与实际的revision不一致
+				//Long subEntryRevision = subEntry.getRevision();
 				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,subEntryRevision, force, downloadList);
+				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,revision, force, downloadList);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
