@@ -33,7 +33,7 @@ public class Doc  implements Comparable<Doc>{
 
     private String content;
 
-	private Integer sortIndex;
+	private int sortIndex;
 
     private String creatorName;
 
@@ -221,11 +221,11 @@ public class Doc  implements Comparable<Doc>{
         this.isRealDoc = isRealDoc;
     }    
 
-	public void setSortIndex(Integer sortIndex) {
+	public void setSortIndex(int sortIndex) {
 		this.sortIndex = sortIndex;
 	}
 	
-	public Integer getSortIndex() {
+	public int getSortIndex() {
 		return sortIndex;
 	}
 	
