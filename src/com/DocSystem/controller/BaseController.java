@@ -2136,6 +2136,8 @@ public class BaseController  extends BaseFunction{
     	
     	String latestRevision = verReposGetLatestRevision(repos, doc);
         System.out.println("isRemoteDocChanged() latestRevision:" + latestRevision);
+        System.out.println("isRemoteDocChanged() previoRevision:" + dbDoc.getRevision());
+        
         if(latestRevision == null || dbDoc.getRevision().equals(latestRevision) == false)
         {
         	return true;
@@ -2416,7 +2418,8 @@ public class BaseController  extends BaseFunction{
 		printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
 
 		List<Doc> remoteEntryList = dbDocList;
-    	if(isRemoteDocChanged(repos, doc))
+    	boolean isRemoteDocChanged = isRemoteDocChanged(repos, doc);
+    	if(isRemoteDocChanged)
 		{
     		remoteEntryList = getRemoteEntryList(repos, doc);
     	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
@@ -2454,7 +2457,7 @@ public class BaseController  extends BaseFunction{
     		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
     	}
 	    
-    	if(remoteEntryList != null)
+    	if(isRemoteDocChanged)
     	{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 		    {
