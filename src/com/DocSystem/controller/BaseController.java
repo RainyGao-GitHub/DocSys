@@ -1821,20 +1821,23 @@ public class BaseController  extends BaseFunction{
 			ActionType = 4;
 		}
 		
-		//ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
-		//ActionType 1:add 2:delete 3:update 4:move 5:copy
-	    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
-		//Insert Move Action For RealDoc Index Copy (对于目录则会进行递归)
-		insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, ActionType, 1, null);
-		//Copy VDoc (包括VDoc VerRepos and Index)
-		insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, ActionType, 2, null);
-		insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 2, ActionType, 2, null);
-		insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, ActionType, 2, null);
-		
 		//Check if dstLocalEntry exists
 		String dstLocalEntryPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName(); 
 		File dstLocalEntry = new File(dstLocalEntryPath);
-		if(dstLocalEntry.exists() && dstLocalEntry.isDirectory())
+		if(dstLocalEntry.exists())
+		{		
+			//ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+			//ActionType 1:add 2:delete 3:update 4:move 5:copy
+		    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+			//Insert Move Action For RealDoc Index Copy (对于目录则会进行递归)
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, ActionType, 1, null);
+			//Copy VDoc (包括VDoc VerRepos and Index)
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, ActionType, 2, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 2, ActionType, 2, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, ActionType, 2, null);
+		}
+		
+		if(dstLocalEntry.isDirectory())
 		{			
 			//遍历本地目录，构建CommonAction
 			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
@@ -1854,6 +1857,9 @@ public class BaseController  extends BaseFunction{
 	    		System.out.println("BuildMultiActionListForDocCopy subFile:" + name);
 
 	    		Doc dstSubDoc = buildBasicDoc(repos.getId(), null, dstDoc.getDocId(), dstSubDocParentPath, name, dstSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
+	    		dstSubDoc.setCreateTime(dstLocalEntry.lastModified());
+	    		dstSubDoc.setLatestEditTime(dstLocalEntry.lastModified());
+	    		
 	    		Doc srcSubDoc = buildBasicDoc(repos.getId(), null, srcDoc.getDocId(), srcSubDocParentPath, name, srcSubDocLevel, type, true, localRootPath, localVRootPath, size, "");
 	    		BuildMultiActionListForDocCopy(actionList, repos, srcSubDoc, dstSubDoc, commitMsg, commitUser, isMove);
 	    	}
