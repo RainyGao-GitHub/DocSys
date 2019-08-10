@@ -1116,90 +1116,98 @@ public class GITUtil  extends BaseController{
 			System.out.println("doAutoCommit() checkPath for " + doc.getPath() + " 异常");
 			return null;
 		}
-		
-
-		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 
 		String entryPath = doc.getPath() + doc.getName();			
 		File localEntry = new File(localRootPath + entryPath);
-		
-		if(type == 0)	//远程不存在
+
+		//注意：这里检查的是远程的parentDoc是否存在和下面的type是不一样的
+		if(type == 0)
 		{
-			if(localEntry.exists() == false)
+			if(!localEntry.exists())
 			{
-				//本地和远程都不存在，表明已经同步
-				System.out.println("doAutoCommit() localEntry and remoteEnry " + entryPath + " not exists");
-			    return getLatestRevision(doc);
+				System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
+		        return getLatestRevision(doc);		
 			}
-			
-			//本地存在，需要新增文件或目录
-			if(doc.getPath().isEmpty() == false)	//如果不是根目录则需要确定是否新增更高层的目录
+				
+			if(!doc.getPath().isEmpty())
 			{
 				System.out.println("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
 				return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
 			}
-				
+		}	
+
+		
+		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		
+		
+		//LocalEntry does not exist
+		if(!localEntry.exists())	//Delete Commit
+		{
+			System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " not exists");
+			type = checkPath(entryPath, null);
+		    if(type == null)
+		    {
+		    	return null;
+		    }
+		    
+		    if(type == 0)
+		    {
+				System.out.println("doAutoCommit() remoteEnry " + entryPath + " not exists");
+		        return getLatestRevision(doc);
+		    }
+
+    		insertDeleteAction(commitActionList,doc);
+		}
+		else
+		{
 			//LocalEntry is File
 			if(localEntry.isFile())
 			{
-	        	System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-	    		insertAddFileAction(commitActionList,doc,false);
+				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
+					
+			    type = checkPath(entryPath, null);
+			    if(type == null)
+			    {
+			    	return null;
+			    }
+			    if(type == 0)
+			    {
+	        		System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			insertAddFileAction(commitActionList,doc,false);
+			    }
+			    else if(type != 1)
+			    {
+			    	System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		    		insertDeleteAction(commitActionList,doc);
+	    			insertAddFileAction(commitActionList,doc,false);
+			    }
+			    else
+			    {
+		    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
+		    		if(commitHashMap == null) //文件内容改变	
+		    		{
+			            if(modifyEnable)
+			            {
+		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		            		insertModifyFile(commitActionList,doc);
+		            	}
+		    		}
+		    		else
+		    		{
+		    			Doc tempDoc = commitHashMap.get(doc.getDocId());
+		    			if(tempDoc != null)
+		    			{
+		            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		            		insertModifyFile(commitActionList,doc);
+		    			}
+		    		}
+			    }
 			}
 			else
 			{
 				//LocalEntry is Directory
 				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
 				scheduleForCommit(commitActionList, doc, modifyEnable, false, commitHashMap, subDocCommitFlag);
-			}
-		}
-		else	//远程存在
-		{
-			//LocalEntry does not exist
-			if(localEntry.exists() == false)	//Delete Commit
-			{
-				System.out.println("doAutoCommit() 删除文件/目录 " + doc.getDocId() + " " + doc.getPath() + doc.getName());	
-	    		insertDeleteAction(commitActionList,doc);
-			}
-			else
-			{
-				//LocalEntry is File
-				if(localEntry.isFile())
-				{
-					System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is File");
-				    if(type != 1)
-				    {
-				    	System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			    		insertDeleteAction(commitActionList,doc);
-		    			insertAddFileAction(commitActionList,doc,false);
-				    }
-				    else
-				    {
-			    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
-			    		if(commitHashMap == null) //文件内容改变	
-			    		{
-				            if(modifyEnable)
-				            {
-			            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		insertModifyFile(commitActionList,doc);
-			            	}
-			    		}
-			    		else
-			    		{
-			    			Doc tempDoc = commitHashMap.get(doc.getDocId());
-			    			if(tempDoc != null)
-			    			{
-			            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		insertModifyFile(commitActionList,doc);
-			    			}
-			    		}
-				    }
-				}
-				else
-				{
-					//LocalEntry is Directory
-					System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
-					scheduleForCommit(commitActionList, doc, modifyEnable, false, commitHashMap, subDocCommitFlag);
-				}
 			}
 		}
 		
