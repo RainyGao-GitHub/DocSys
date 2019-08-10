@@ -238,8 +238,8 @@
          		</div>
         		<div class="filetitle" id="filetitle"></div>
         		<div style="position:absolute; right:5px; top:10px">
-        				<!-- <button id="btnViewDoc" class="btn btn-default" type="button" onclick="previewDoc()" style="display:none">预览
-	                    </button> -->
+	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()" style="display:none">显示预览
+	                   	</button>
 	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="exitEdit()" style="display:none">退出编辑
 	                   	</button>
 	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="lockAndEditWiki()" style="display:none">编辑
@@ -489,7 +489,8 @@
 	var gDocContent;
 	var gTmpSavedContent;
 	var gEdit; 
-	
+	var gShowType = 2;
+
 	//通用函数接口
 	function showErrorMessage($msg) {
     	qiao.bs.alert($msg);
@@ -1577,6 +1578,12 @@
 	//读取文件信息
     function showVirtualDoc(node,edit) {
       	
+		if(gShowType == 1)
+		{
+			console.log("showVirtualDoc() showType is for file Content");
+	      	return;
+		}
+		
 		console.log("showVirtualDoc() edit:" + edit + " node:", node);
       	if(!node || node == null)	//undefine do clean the info of rightDiv
       	{
@@ -3411,17 +3418,37 @@ function CompareObj(objA, objB, flag) {
 	{
 		 if(edit)
 	   	 {
-	      	$("#btnExitEdit").show();
+		    $("#btnExitEdit").show();
 	      	$("#btnSaveWiki").show();  
 	      	$("#btnEditWiki").hide();
-	      	//$("#btnViewDoc").hide();
+			$("#btnSwitchShow").hide();
 	     }
 	     else
 	     {
 		    $("#btnExitEdit").hide();
 	      	$("#btnSaveWiki").hide(); 
 	      	$("#btnEditWiki").show();
-	      	//$("#btnViewDoc").show();
+			$("#btnSwitchShow").show();
+	     }
+	}
+	
+	function switchShowMode()
+	{
+		 if(gShowType == 2)	//Swith To 显示预览
+	   	 {
+			gShowType = 1;
+		    $("#btnExitEdit").hide();
+	      	$("#btnSaveWiki").hide(); 
+	      	$("#btnEditWiki").hide();
+	      	$("#btnSwitchShow").text("显示备注");
+	     }
+	     else
+	     {
+			 gShowType = 2;	    	 
+			 $("#btnExitEdit").hide();
+		     $("#btnSaveWiki").hide(); 
+		     $("#btnEditWiki").show();
+		     $("#btnSwitchShow").text("显示预览");
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
@@ -3763,9 +3790,15 @@ function CompareObj(objA, objB, flag) {
 		gParentPath = getQueryString("path");
 		gDocName = getQueryString("name");
 		gEdit = getQueryString("edit");
+		gShowType = getQueryString("showType");
 		if(!gEdit)
 		{
 			gEdit = false;
+		}
+		
+		if(!gShowType)
+		{
+			gShowType = 2;
 		}
 		
 		console.log("before decode gParentPath:" + gParentPath + " gDocName:" + gDocName);
