@@ -2135,7 +2135,7 @@ public class BaseController  extends BaseFunction{
     	}
     	
     	String latestRevision = verReposGetLatestRevision(repos, doc);
-        System.out.println("isRemoteDocChanged() latestRevision:" + latestRevision);
+        System.out.println("isRemoteDocChanged() latestRevision:" + latestRevision + " doc:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
         System.out.println("isRemoteDocChanged() previoRevision:" + dbDoc.getRevision());
         
         if(latestRevision == null || dbDoc.getRevision().equals(latestRevision) == false)
