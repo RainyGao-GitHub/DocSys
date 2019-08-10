@@ -33,13 +33,13 @@ public class Doc  implements Comparable<Doc>{
 
     private String content;
 
-	private int sortIndex;
+	private Integer sortIndex;
 
     private String creatorName;
 
     private String latestEditorName;
     
-    private int level;
+    private Integer level;
     
     private String localRootPath;
     
@@ -177,11 +177,11 @@ public class Doc  implements Comparable<Doc>{
         this.content = content;
     }
     
-    public int getLevel() {
+    public Integer getLevel() {
         return level;
     }
 
-    public void setLevel(int level) {
+    public void setLevel(Integer level) {
         this.level = level;
     }
     
@@ -221,11 +221,11 @@ public class Doc  implements Comparable<Doc>{
         this.isRealDoc = isRealDoc;
     }    
 
-	public void setSortIndex(int sortIndex) {
+	public void setSortIndex(Integer sortIndex) {
 		this.sortIndex = sortIndex;
 	}
 	
-	public int getSortIndex() {
+	public Integer getSortIndex() {
 		return sortIndex;
 	}
 	
