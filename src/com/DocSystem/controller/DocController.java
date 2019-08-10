@@ -1503,7 +1503,15 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}			
-		}	
+		}
+		else
+		{
+			File previewDir = new File(webTmpPath,"preview");
+			if(!previewDir.exists())
+			{
+				previewDir.mkdirs();
+			}
+		}
 		
 		//Do convert
 		String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
