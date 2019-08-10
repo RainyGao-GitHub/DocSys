@@ -2623,6 +2623,8 @@ public class BaseController  extends BaseFunction{
 		{
 			//检查parentDoc是否存在，如果不存在则要addParentDoc
 			Doc parentDoc = buildBasicDoc(doc.getVid(), null, doc.getPid(), doc.getPath(), "", doc.getLevel()-1, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");	
+			parentDoc.setRevision(doc.getRevision());
+			
 			printObject("checkAddParentDoc parentDoc:", parentDoc);
 			Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
 			if(dbParentDoc == null)
