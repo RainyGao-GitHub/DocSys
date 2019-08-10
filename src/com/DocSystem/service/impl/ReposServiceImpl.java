@@ -97,6 +97,12 @@ public class ReposServiceImpl implements ReposService {
     {
     	return docDao.updateByPrimaryKeySelective(doc);
     }
+
+    public int updateDocByPrimaryKey(Doc doc)
+    {
+    	return docDao.updateByPrimaryKey(doc);
+    }
+
     
     //delete a Document
     public int deleteDoc(Integer id)

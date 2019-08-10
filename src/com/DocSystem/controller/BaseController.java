@@ -1717,7 +1717,8 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbParentDoc.getRevision() == null || !dbParentDoc.getRevision().equals(doc.getRevision()))
 			{
-				dbUpdateDoc(repos, parentDoc, false);
+				dbParentDoc.setRevision(doc.getRevision());
+				dbUpdateDoc(repos, dbParentDoc, false);
 			}
 		}
 	}
