@@ -267,7 +267,7 @@ public class BaseFunction{
 	{
 		if(doc.getIsRealDoc())
 		{
-			Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), null, null, null); 
+			Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), doc.getLocalVRootPath(), null, null); 
 			vDoc.setContent(doc.getContent());
 			return vDoc;
 		}

@@ -4922,7 +4922,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(verCtrl == 1)
 		{
-			commitMsg = commitMsgFormat(repos, true, commitMsg, commitUser);
+			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
 			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
 		}
 		else if(verCtrl == 2)
