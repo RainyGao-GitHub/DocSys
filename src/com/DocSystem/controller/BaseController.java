@@ -1962,28 +1962,12 @@ public class BaseController  extends BaseFunction{
 		login_user.setId(0); //系统自动同步用户 AutoSync
 		login_user.setName("AutoSync");
 		
-		//LockDoc
-		DocLock docLock = null;
-		synchronized(syncLock)
-		{
-			//Try to lock the Doc
-			docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-			if(docLock == null)
-			{
-				unlock(); //线程锁
-				docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
-				return false;
-			}
-			unlock(); //线程锁
-		}
-		
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
 			boolean ret = SyncUpSubDocs_NoFS(repos, doc, login_user, rt, 1); //子目录非继承递归
-			unlockDoc(doc, login_user, docLock);
 			return ret;
 		}
 		else
@@ -1995,6 +1979,21 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("syncupForDocChange() local Changed: [" + doc.getPath()+doc.getName() + "], do Commit");
 				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
+				//LockDoc
+				DocLock docLock = null;
+				synchronized(syncLock)
+				{
+					//Try to lock the Doc
+					docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+					if(docLock == null)
+					{
+						unlock(); //线程锁
+						docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+						return false;
+					}
+					unlock(); //线程锁
+				}
+				
 				String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
 				if(revision != null)
 				{
@@ -2005,17 +2004,12 @@ public class BaseController  extends BaseFunction{
 						commitDoc.setRevision(revision);
 						commitDoc.setLatestEditorName(login_user.getName());
 						dbUpdateDoc(repos, commitDoc, true);
-					}
-				
-					unlockDoc(doc, login_user, docLock);
-					return true;
-					
+					}					
 				}
 				unlockDoc(doc, login_user, docLock);
 				return false;
 			}
 		}
-		unlockDoc(doc, login_user, docLock);
 		return true;
 	}
 	
@@ -2037,7 +2031,23 @@ public class BaseController  extends BaseFunction{
 		int remoteChangeType = getRemoteChangeType(dbDoc, remoteEntry);
 		if(remoteChangeType != 0)
 		{
-			return syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
+			//LockDoc
+			DocLock docLock = null;
+			synchronized(syncLock)
+			{
+				//Try to lock the Doc
+				docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+				if(docLock == null)
+				{
+					unlock(); //线程锁
+					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+					return false;
+				}
+				unlock(); //线程锁
+			}
+			boolean ret = syncUpForRemoteChange_NoFS(repos, dbDoc, remoteEntry, login_user, rt, remoteChangeType);
+			unlockDoc(doc, login_user, docLock);
+			return ret;
 		}
 		
 		return SyncUpSubDocs_NoFS(repos, doc, login_user, rt, subDocSyncFlag);
@@ -2158,7 +2168,23 @@ public class BaseController  extends BaseFunction{
 		case 23:	//localFileChanged
 		case 24:	//remoteTypeChanged(From File To Dir)
 		case 25:	//remoteTypeChanged(From Dir To File)
-			return syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, docChangeType); 
+			//LockDoc
+			DocLock docLock = null;
+			synchronized(syncLock)
+			{
+				//Try to lock the Doc
+				docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+				if(docLock == null)
+				{
+					unlock(); //线程锁
+					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+					return false;
+				}
+				unlock(); //线程锁
+			}
+			boolean ret = syncUpRemoteChange_FS(repos, dbDoc, remoteEntry, login_user, rt, docChangeType);
+			unlockDoc(doc, login_user, docLock);
+			return ret;
 		case 0:		//no change
 			break;
 		case -1:	//Unknown localEntryType
