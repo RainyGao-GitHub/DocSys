@@ -320,7 +320,7 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath, localVRootPath, null, null);
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		
 		if(checkUserDeleteRight(repos, login_user.getId(), parentDoc, rt) == false)
 		{
@@ -397,14 +397,14 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", srcLevel-1, 2, true, localRootPath, localVRootPath, null, null);
+		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserDeleteRight(repos, login_user.getId(), srcParentDoc, rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 
-		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2, true, localRootPath, localVRootPath, null, null);
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
 		{
 			writeJson(rt, response);	
@@ -472,7 +472,7 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", dstLevel-1, 2, true, localRootPath, localVRootPath, null, null);
+		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
 		{
 			writeJson(rt, response);
@@ -822,7 +822,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = dbGetDoc(repos, doc, true);
 		if(dbDoc == null)	//0: add  1: update
 		{
-			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", level-1, 2, true, localRootPath, localVRootPath, null, null);
+			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 			if(checkUserAddRight(repos,login_user.getId(), parentDoc, rt) == false)
 			{
 				writeJson(rt, response);	

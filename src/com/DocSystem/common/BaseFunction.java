@@ -196,7 +196,7 @@ public class BaseFunction{
 			if(!path.isEmpty())
 			{
 				String[] temp = new String[2]; 
-				seperatePathAndName(path, temp);
+				level = seperatePathAndName(path, temp);
 				path = temp[0];
 				name = temp[1];			
 			}
@@ -277,7 +277,13 @@ public class BaseFunction{
 		return paths.length;
 	}
 
-	protected void seperatePathAndName(String entryPath, String [] result) {
+	protected int seperatePathAndName(String entryPath, String [] result) {
+		if(entryPath.isEmpty())
+		{
+			//It it rootDoc
+			return -1;
+		}
+		
 		String [] paths = entryPath.split("/");
 		
 		int deepth = paths.length;
@@ -313,6 +319,9 @@ public class BaseFunction{
 		
 		result[0] = path;
 		result[1] = name;
+
+		int level = paths.length -1;
+		return level;
 	}
 	
 	//获取默认的仓库根路径
