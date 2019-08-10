@@ -2393,7 +2393,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
 	{
-		System.out.println("************************ SyncUpSubDocs_FS()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
+		//System.out.println("************************ SyncUpSubDocs_FS()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
 
 		//子目录不递归
 		if(subDocSyncFlag == 0)
@@ -2408,7 +2408,7 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		List<Doc> localEntryList = getLocalEntryList(repos, doc);
-		printObject("SyncUpSubDocs_FS() localEntryList:", localEntryList);
+		//printObject("SyncUpSubDocs_FS() localEntryList:", localEntryList);
     	if(localEntryList == null)
     	{
     		System.out.println("SyncUpSubDocs_FS() localEntryList 获取异常:");
@@ -2416,14 +2416,14 @@ public class BaseController  extends BaseFunction{
     	}
     	
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
-		printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
+		//printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
 
 		List<Doc> remoteEntryList = dbDocList;
     	boolean isRemoteDocChanged = isRemoteDocChanged(repos, doc);
     	if(isRemoteDocChanged)
 		{
     		remoteEntryList = getRemoteEntryList(repos, doc);
-    	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
+    	    //printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
         	if(remoteEntryList == null)
         	{
         		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
@@ -2447,7 +2447,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0;i<localEntryList.size();i++)
     	{
     		subDoc = localEntryList.get(i);
-    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+    		//System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
     		if(docHashMap.get(subDoc.getName()) != null)
     		{
     			//already syncuped
@@ -2463,7 +2463,7 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<remoteEntryList.size();i++)
 		    {
 	    		subDoc = remoteEntryList.get(i);
-	    		System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    		//System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    		if(docHashMap.get(subDoc.getName()) != null)
 	    		{
 	    			//already syncuped
