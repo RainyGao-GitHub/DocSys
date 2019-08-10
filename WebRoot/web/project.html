@@ -4067,21 +4067,16 @@ function CompareObj(objA, objB, flag) {
 //			},
 			{divider: true},
 			{text: '更多...', subMenu: [
-			           	{text: '复制名字', action: function(e){
+						{text: '查看历史版本', action: function(e){
 									e.preventDefault();
-				        			copyDocName(curRightClickedTreeNode);
+						      			showDocHistory(curRightClickedTreeNode,0);
 								}
 						},
-						{text: '复制路径', action: function(e){
-									e.preventDefault();
-				        			copyDocPath(curRightClickedTreeNode);
-								}
+						{text: '查看备注历史', action: function(e){
+								e.preventDefault();
+								showDocHistory(curRightClickedTreeNode,1);
+							}
 						},
-						{text: '复制链接', action: function(e){
-									e.preventDefault();
-				        			copyUrl(curRightClickedTreeNode);
-								}
-						},	
 						{divider: true},
 						{text: 'CheckOut', action: function(e){
 								e.preventDefault();
@@ -4102,16 +4097,21 @@ function CompareObj(objA, objB, flag) {
 							}
 						},
 						{divider: true},
-						{text: '查看历史', action: function(e){
+			           	{text: '复制名字', action: function(e){
+							e.preventDefault();
+		        			copyDocName(curRightClickedTreeNode);
+						}
+						},
+						{text: '复制路径', action: function(e){
 									e.preventDefault();
-				        			showDocHistory(curRightClickedTreeNode,0);
+				        			copyDocPath(curRightClickedTreeNode);
 								}
 						},
-						{text: '查看备注历史', action: function(e){
-								e.preventDefault();
-		        				showDocHistory(curRightClickedTreeNode,1);
-							}
-						},
+						{text: '复制链接', action: function(e){
+									e.preventDefault();
+				        			copyUrl(curRightClickedTreeNode);
+								}
+						},	
    				]
    			},
 		]);
@@ -4225,6 +4225,38 @@ function CompareObj(objA, objB, flag) {
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
+						{text: '查看历史版本', action: function(e){
+								e.preventDefault();
+								var docId = curRightClickedDocListNode.docId;
+								showDocHistory(curRightClickedDocListNode,0);
+							}
+						},
+						{text: '查看备注历史', action: function(e){
+								e.preventDefault();
+								var docId = curRightClickedDocListNode.docId;
+							    showDocHistory(curRightClickedDocListNode,1);
+							}
+						},
+						{divider: true},
+						{text: 'CheckOut', action: function(e){
+								e.preventDefault();
+								var docType = curRightClickedDocListNode.type;
+								if(docType == 1)
+								{							
+									var docId = curRightClickedDocListNode.docId;
+									var docName = curRightClickedDocListNode.docName;
+									checkOut(docId,docName);
+								}
+							}
+						},
+						{text: 'CheckIn', action: function(e){
+								e.preventDefault();
+								var docId = curRightClickedDocListNode.docId;
+								var docName = curRightClickedDocListNode.docName;
+					 			checkIn(docId,docName);
+							}
+						},
+						{divider: true},
 			           	{text: '复制名字', action: function(e){
 									e.preventDefault();
 									var docId = curRightClickedDocListNode.docId;
@@ -4246,38 +4278,6 @@ function CompareObj(objA, objB, flag) {
 				        			copyUrl(node);
 								}
 						},	
-						{divider: true},
-						{text: 'CheckOut', action: function(e){
-								e.preventDefault();
-								var docType = curRightClickedDocListNode.type;
-								if(docType == 1)
-								{							
-									var docId = curRightClickedDocListNode.docId;
-									var docName = curRightClickedDocListNode.docName;
-									checkOut(docId,docName);
-								}
-							}
-						},
-						{text: 'CheckIn', action: function(e){
-								e.preventDefault();
-								var docId = curRightClickedDocListNode.docId;
-								var docName = curRightClickedDocListNode.docName;
-					 			checkIn(docId,docName);
-							}
-						},
-						{divider: true},
-						{text: '查看历史', action: function(e){
-									e.preventDefault();
-									var docId = curRightClickedDocListNode.docId;
-								    showDocHistory(curRightClickedDocListNode,0);
-								}
-						},
-						{text: '查看备注历史', action: function(e){
-								e.preventDefault();
-								var docId = curRightClickedDocListNode.docId;
-							    showDocHistory(curRightClickedDocListNode,1);
-							}
-						},
    				]
    			},
 		]);
