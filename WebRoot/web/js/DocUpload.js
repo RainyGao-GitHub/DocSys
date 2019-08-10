@@ -1218,7 +1218,7 @@
 		            //pid : SubContext.realParentId,
 		            path: SubContext.realParentPath,
 	             	name : SubContext.name,
-	             	level: SubContext.realLevel,
+	             	//level: SubContext.realLevel,
 					type: SubContext.type,
 					size: SubContext.size,
 	             	checkSum: SubContext.checkSum,	             	
@@ -1261,7 +1261,7 @@
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(SubContext, "doCheck "+nodeName+ " 异常");
+				 	uploadErrorConfirmHandler(SubContext, "checkDocInfo "+ SubContext.name + " 异常");
 		            return;
 	            }
 	        });
@@ -1676,7 +1676,7 @@
 				//form.append("docId", SubContext.docId);
 				//form.append("pid", SubContext.realParentId);
 				form.append("path", SubContext.realParentPath);
-				form.append("level", SubContext.realLevel);
+				//form.append("level", SubContext.realLevel);
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
@@ -1690,7 +1690,7 @@
 				//form.append("docId", SubContext.docId);
 				//form.append("pid", SubContext.realParentId);
 				form.append("path", SubContext.realParentPath);
-				form.append("level", SubContext.realLevel);
+				//form.append("level", SubContext.realLevel);
 				form.append("name", SubContext.name);
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);

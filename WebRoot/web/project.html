@@ -2709,18 +2709,21 @@ function CompareObj(objA, objB, flag) {
 			if(treeNode == null)
 			{
 	      		var newNode = {
-	      				id : node.docId, 
+	      				//For zTree
+	      				id : node.docId,	//it is for zTree
+	      				pId: pId,
+	      				level: node.level,  //it is for zTree
+	      				isParent: isParent, 
+	      				//For Doc
+	      				docId: node.docId,
 	      				pid: node.pid, 
 	      				path: node.path, 
 	      				name: node.name, 
 	      				type: node.type,
-	      				level: node.level,
 	      				Leve: node.level, 
 	      				size: node.size, 
 	      				createTime: node.createTime,
 	      				latestEditTime: node.latestEditTime,
-	      				isParent: isParent, 
-	      				pId: pId, 
 	      				};
 	      		newNodes = treeObj.addNodes(parentNode, newNode);
 			}
