@@ -99,6 +99,7 @@ public class BaseFunction{
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
 	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
+		printObject("insertAddFileAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setDoc(doc);
@@ -148,6 +149,7 @@ public class BaseFunction{
 	    	}
 	 	}
 		
+		printObject("insertAddDirAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setDoc(doc);
@@ -157,6 +159,7 @@ public class BaseFunction{
 	}
 	
 	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
+		printObject("insertDeleteAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(2);
     	action.setDoc(doc);
@@ -164,6 +167,7 @@ public class BaseFunction{
 	}
     
 	protected void insertModifyFile(List<CommitAction> actionList, Doc doc) {
+		printObject("insertModifyFile:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(3);
     	action.setDoc(doc);

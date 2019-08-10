@@ -754,6 +754,8 @@ public class SVNUtil  extends BaseController{
 	
 	private boolean executeModifyAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
+
+		printObject("executeModifyAction:",doc);
 		
 		String entryPath = doc.getPath() + doc.getName();
 		String localPath = doc.getLocalRootPath();
@@ -788,12 +790,15 @@ public class SVNUtil  extends BaseController{
 	private boolean executeDeleteAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
 
+		printObject("executeModifyAction:",doc);
 		System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
 		return deleteEntry(editor, doc, false);
 	}
 
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
+
+		printObject("executeAddAction:",doc);
 
 		String localPath = doc.getLocalRootPath();
 		String localRefPath = doc.getLocalRefRootPath();
