@@ -190,27 +190,6 @@ public class BaseFunction{
 			name = "";
 		}
 		
-		Doc doc = new Doc();
-		
-		//Build vDoc
-		//对于VDoc而言 path\name\level\type\localRootPath都是指VDoc的信息
-		if(isRealDoc == false)
-		{
-			doc.setVid(reposId);
-			doc.setDocId(docId);
-			doc.setPid(pid);
-
-			doc.setPath(path);
-			doc.setName(name);
-			doc.setLevel(level);
-			doc.setType(type);
-			doc.setIsRealDoc(false);
-			doc.setLocalRootPath(localRootPath);
-			doc.setLocalVRootPath(localVRootPath);
-			//printObject("buildBasicDoc() 虚文件:", doc);
-			return doc;
-		}
-		
 		//To support user call the interface by entryPath
 		if(name.isEmpty())
 		{
@@ -235,36 +214,41 @@ public class BaseFunction{
 			level = getLevelByParentPath(path);
 		}
 		
-		if(docId == null)
-		{
-			docId = buildDocIdByName(level, path, name);
-		}
-		
-		if(pid == null)
-		{
-			if(path.isEmpty())
-			{
-				pid = 0L;
-			}
-			else
-			{
-				pid = buildDocIdByName(level-1, path, "");
-			}
-		}
-
+		Doc doc = new Doc();
 		doc.setVid(reposId);
-		doc.setDocId(docId);
-		doc.setPid(pid);
 		doc.setPath(path);
 		doc.setName(name);
 		doc.setLevel(level);
 		doc.setType(type);
-		doc.setIsRealDoc(true);
 		doc.setLocalRootPath(localRootPath);
 		doc.setLocalVRootPath(localVRootPath);
 		doc.setSize(size);
 		doc.setCheckSum(checkSum);
-		//printObject("buildBasicDoc() 实文件:", doc);
+		
+		doc.setIsRealDoc(isRealDoc);
+		
+		if(isRealDoc)
+		{
+			if(docId == null)
+			{
+				docId = buildDocIdByName(level, path, name);
+			}
+			
+			if(pid == null)
+			{
+				if(path.isEmpty())
+				{
+					pid = 0L;
+				}
+				else
+				{
+					pid = buildDocIdByName(level-1, path, "");
+				}
+			}
+		}
+
+		doc.setDocId(docId);
+		doc.setPid(pid);
 		return doc;
 	}
 	
