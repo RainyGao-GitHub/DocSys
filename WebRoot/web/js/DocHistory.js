@@ -161,7 +161,21 @@
 		        callback: function () {
 		            setTimeout(function () {
 		            	console.log("showRevertConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
-		                $("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);	                 
+		                if(historyType == 0)
+		                {
+		                	$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
+		                }
+		                else
+		                {
+		                	if(docId == 0)
+		                	{
+		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/");	             
+		                	}
+		                	else
+		                	{
+		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
+		                	}
+		                }
 		            },100);
 		        }
 		    },function () {

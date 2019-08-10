@@ -3996,6 +3996,18 @@ function CompareObj(objA, objB, flag) {
 				]
 			},
 			{divider: true},
+			{text: '预览', action: function(e){
+					e.preventDefault();
+					doPreviewDoc(curRightClickedTreeNode);
+				}
+			},
+			{text: '下载', action: function(e){
+						e.preventDefault();
+						var treeNodes = getSelectedNodes();
+						downloadDoc(treeNodes,true);
+					}
+			},
+			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
 						gCopiedNodes = getSelectedNodes();
@@ -4010,6 +4022,7 @@ function CompareObj(objA, objB, flag) {
 					console.log("gCopiedNodes",gCopiedNodes);
 				}
 			},
+			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeByNode(curRightClickedTreeNode);
@@ -4017,6 +4030,13 @@ function CompareObj(objA, objB, flag) {
 					}
 			},
 			{divider: true},
+			{text: '删除', action: function(e){
+						e.preventDefault();
+						var treeObj = $.fn.zTree.getZTreeObj("doctree");
+						var deleteNodes = getDeleteNodes();
+						DoDelete(deleteNodes);
+					}
+			},
 			{text: '重命名', action: function(e){
 						e.preventDefault();
 						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
@@ -4025,28 +4045,10 @@ function CompareObj(objA, objB, flag) {
 							showRenameDialog(curRightClickedTreeNode);
 							//treeObj.editName(curRightClickedTreeNode);
 							curRightClickedTreeNode = null;
-	        			}
-					}
-			},
-			{text: '删除', action: function(e){
-						e.preventDefault();
-						var treeObj = $.fn.zTree.getZTreeObj("doctree");
-						var deleteNodes = getDeleteNodes();
-						DoDelete(deleteNodes);
+		    			}
 					}
 			},
 			{divider: true},
-			{text: '预览', action: function(e){
-					e.preventDefault();
-					doPreviewDoc(curRightClickedTreeNode);
-				}
-			},
-			{text: '下载', action: function(e){
-						e.preventDefault();
-						var treeNodes = getSelectedNodes();
-						downloadDoc(treeNodes,true);
-					}
-			},
 			{text: '详细信息', action: function(e){
 					e.preventDefault();
 					if(curRightClickedTreeNode == null)
@@ -4151,6 +4153,19 @@ function CompareObj(objA, objB, flag) {
 				]
 			},
 			{divider: true},
+			{text: '预览', action: function(e){
+						e.preventDefault();
+						doPreviewDoc(curRightClickedDocListNode);
+					}
+			},
+			{text: '下载', action: function(e){
+					e.preventDefault();
+					var treeNodes = [];
+					treeNodes.push(curRightClickedDocListNode);
+					downloadDoc(treeNodes,true);
+				}
+			},
+			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
 						gCopiedNodes = [];
@@ -4173,6 +4188,7 @@ function CompareObj(objA, objB, flag) {
 					console.log("gCopiedNodes",gCopiedNodes);
 				}
 			},
+			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeByNodeId(gDocId);
@@ -4180,16 +4196,6 @@ function CompareObj(objA, objB, flag) {
 					}
 			},
 			{divider: true},
-			{text: '重命名', action: function(e){
-						e.preventDefault();
-						var docId = curRightClickedDocListNode.docId;
-						var node = getNodeByNodeId(docId);
-						if(node !== null)
-						{
-							showRenameDialog(node);
-	        			}
-					}
-			},
 			{text: '删除', action: function(e){
 						e.preventDefault();
 						console.log(e);
@@ -4198,29 +4204,20 @@ function CompareObj(objA, objB, flag) {
 						DoDelete(deleteNodes);
 					}
 			},
-			{divider: true},
-			{text: '预览', action: function(e){
+			{text: '重命名', action: function(e){
 						e.preventDefault();
-						doPreviewDoc(curRightClickedDocListNode);
+						var docId = curRightClickedDocListNode.docId;
+						var node = getNodeByNodeId(docId);
+						if(node !== null)
+						{
+							showRenameDialog(node);
+		    			}
 					}
 			},
-			{text: '下载', action: function(e){
-					e.preventDefault();
-					var treeNodes = [];
-					treeNodes.push(curRightClickedDocListNode);
-					downloadDoc(treeNodes,true);
-				}
-			},
+			{divider: true},
 			{text: '详细信息', action: function(e){
 					e.preventDefault();
 					showDocDetail(curRightClickedDocListNode);
-				}
-			},
-			{divider: true},
-			{text: '备注', action: function(e){
-					e.preventDefault();
-		 			showVirtualDoc(curRightClickedDocListNode,false);
-		 			showRightDiv();
 				}
 			},
 			{divider: true},
@@ -4235,6 +4232,13 @@ function CompareObj(objA, objB, flag) {
 								e.preventDefault();
 								var docId = curRightClickedDocListNode.docId;
 							    showDocHistory(curRightClickedDocListNode,1);
+							}
+						},
+						{divider: true},
+						{text: '备注', action: function(e){
+								e.preventDefault();
+					 			showVirtualDoc(curRightClickedDocListNode,false);
+					 			showRightDiv();
 							}
 						},
 						{divider: true},
