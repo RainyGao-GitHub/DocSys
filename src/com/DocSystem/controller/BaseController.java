@@ -2084,6 +2084,12 @@ public class BaseController  extends BaseFunction{
 		{
 			subDocSyncFlag = 0;
 		}
+		
+		if(isRemoteDocChanged(repos, doc) == false)
+		{
+			//No Change
+			return true;
+		}
 
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped
 		
@@ -2120,6 +2126,24 @@ public class BaseController  extends BaseFunction{
 	    return true;
 	}
 	
+	private boolean isRemoteDocChanged(Repos repos, Doc doc) 
+	{
+		Doc dbDoc = dbGetDoc(repos, doc, false);
+    	if(dbDoc == null || dbDoc.getRevision() == null)
+    	{
+    		return true;
+    	}
+    	
+    	String latestRevision = verReposGetLatestRevision(repos, doc);
+        System.out.println("isRemoteDocChanged() latestRevision:" + latestRevision);
+        if(latestRevision == null || dbDoc.getRevision().equals(latestRevision) == false)
+        {
+        	return true;
+        }
+    	
+    	return false;
+	}
+
 	private boolean syncUpForRemoteChange_NoFS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
 	{
 		switch(remoteChangeType)
@@ -2391,34 +2415,17 @@ public class BaseController  extends BaseFunction{
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
 		printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
 
-		Doc dbDoc = dbGetDoc(repos, doc, false);
-    	List<Doc> remoteEntryList = dbDocList;
-    	if(dbDoc == null || dbDoc.getRevision() == null)
-    	{
-    		//远程仓库有变更
-        	remoteEntryList = getRemoteEntryList(repos, doc);
+		List<Doc> remoteEntryList = dbDocList;
+    	if(isRemoteDocChanged(repos, doc))
+		{
+    		remoteEntryList = getRemoteEntryList(repos, doc);
     	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
         	if(remoteEntryList == null)
         	{
         		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
             	return false;
         	}
-    	}
-    	else
-    	{
-        	String latestRevision = verReposGetLatestRevision(repos, doc);
-        	if(latestRevision == null || dbDoc.getRevision().equals(latestRevision) == false)
-        	{
-        		//远程仓库有变更
-            	remoteEntryList = getRemoteEntryList(repos, doc);
-        	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
-            	if(remoteEntryList == null)
-            	{
-            		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
-                	return false;
-            	}
-        	}
-    	}
+		}
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		Doc subDoc = null;
