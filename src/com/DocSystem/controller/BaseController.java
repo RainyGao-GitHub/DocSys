@@ -206,7 +206,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private List<Doc> getRemoteEntryList(Repos repos, Doc doc) {
-		System.out.println("getRemoteEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		//System.out.println("getRemoteEntryList() " + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 
 		switch(repos.getVerCtrl())
 		{
