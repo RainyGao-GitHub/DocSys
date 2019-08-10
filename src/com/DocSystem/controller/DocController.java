@@ -1915,7 +1915,7 @@ public class DocController extends BaseController{
 		Doc vDoc = null;
 		String targetName = name + "_" + commitId;
 		HashMap<String, String> downloadList = null;
-		if(historyType != null && historyType == 2)
+		if(historyType != null && historyType == 1)
 		{
 			isRealDoc = false;			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
@@ -2113,7 +2113,7 @@ public class DocController extends BaseController{
 		Doc doc = null;
 		Doc vDoc = null;
 		HashMap<String, String> downloadList = null;
-		if(historyType != null && historyType == 2)
+		if(historyType != null && historyType == 1)
 		{
 			isRealDoc = false;			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
