@@ -904,6 +904,8 @@
 		console.log("checkInUploadConfirm",e,gParentNodeForUpload);
 	    var entrys = e.target.files;
 	    var fileName = entrys[0].name;
+	    console.log("checkInUploadConfirm fileName" + fileName);
+	    
 	    if(fileName != curCheckInDoc.name)
 	    {
 	    	bootstrapQ.alert("请选择文件：" + curCheckInDoc.name);
@@ -3496,7 +3498,7 @@ function CompareObj(objA, objB, flag) {
 	//Get ParentNode of NodeId(zTree)
 	function getParentNodeByNodeId(nodeId)
 	{
-		console.log("getParentNodeByNodeId" + nodeId);
+		console.log("getParentNodeByNodeId:" + nodeId);
 		var node = getNodeByNodeId(nodeId);
      	return getParentNodeByNode(node);
 	}
@@ -3731,9 +3733,9 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("checkIn()", node);
 		curCheckInDoc.id = node.docId;
-		curCheckInDoc.name = node.docName;
+		curCheckInDoc.name = node.name;
 		
-		gParentNodeForUpload = getParentNodeByNodeId(docId);
+		gParentNodeForUpload = getParentNodeByNodeId(node.docId);
 		checkInFile();
 		return;
  	}

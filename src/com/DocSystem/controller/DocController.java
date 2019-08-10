@@ -541,7 +541,7 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", level-1, 2, true, localRootPath, localVRootPath, null, null);
+		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
