@@ -165,7 +165,7 @@ public class BaseController  extends BaseFunction{
 			subDocParentPath = doc.getPath();
 		}
 		
-		int subDocLevel = doc.getLevel() + 1;
+		Integer subDocLevel = getSubDocLevel(doc);
     	
         //Go through the subEntries
     	List <Doc> subEntryList =  new ArrayList<Doc>();
@@ -188,6 +188,22 @@ public class BaseController  extends BaseFunction{
     	return subEntryList;
 	}
     	
+
+	private Integer getSubDocLevel(Doc doc) {
+		if(doc.getLevel() == null)
+		{
+			return null;
+		}
+		return doc.getLevel() + 1;
+	}
+
+	private Integer getParentDocLevel(Doc doc) {
+		if(doc.getLevel() == null)
+		{
+			return null;
+		}
+		return doc.getLevel() - 1;
+	}
 
 	private List<Doc> getRemoteEntryList(Repos repos, Doc doc) {
 		System.out.println("getRemoteEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
