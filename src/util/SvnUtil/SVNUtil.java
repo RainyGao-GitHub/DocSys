@@ -382,11 +382,11 @@ public class SVNUtil  extends BaseController{
                     
                     if(srcEntryPath == null)
                     {
-                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + entryPath);                                     	
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath);                                     	
                     }
                     else
                     {
-                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + entryPath + " from " + srcEntryPath + " at revision " + commitId);                
+                    	System.out.println(" " + svnLogEntryPath.getType() + "	" + nodePath + " from " + srcEntryPath + " at revision " + commitId);                
                     }
                     
                     //Add to changedItemList

@@ -1931,11 +1931,11 @@ public class DocController extends BaseController{
 			
 			if(vDoc.getName().isEmpty())
 			{
-				targetName = repos.getName() + "_AllNotes_" + commitId;					
+				targetName = repos.getName() + "_备注_" + commitId;					
 			}
 			else
 			{
-				targetName = vDoc.getName() + "_Note_" + commitId;
+				targetName = vDoc.getName() + "_" + commitId;
 			}
 			
 			if(downloadAll == null || downloadAll == 0)
