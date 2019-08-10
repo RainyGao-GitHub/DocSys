@@ -142,7 +142,7 @@ public class BaseController  extends BaseFunction{
 
 	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
-		System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
+		//System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
@@ -177,7 +177,7 @@ public class BaseController  extends BaseFunction{
     		
     		int type = file.isDirectory()? 2:1;
     		String name = file.getName();
-    		System.out.println("getLocalEntryList subFile:" + name);
+    		//System.out.println("getLocalEntryList subFile:" + name);
 
     		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, file.length(), "");
     		subDoc.setSize(file.length());
