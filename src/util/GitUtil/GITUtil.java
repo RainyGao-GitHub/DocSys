@@ -1147,8 +1147,9 @@ public class GITUtil  extends BaseController{
 			}
 			else
 			{
-	        	System.out.println("doAutoCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				insertAddDirAction(commitActionList,doc,false);
+				//LocalEntry is Directory
+				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
+				scheduleForCommit(commitActionList, doc, modifyEnable, false, commitHashMap, subDocCommitFlag);
 			}
 		}
 		else	//远程存在
