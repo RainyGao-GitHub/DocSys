@@ -1748,13 +1748,10 @@
    	{
    		console.log("addDoc name:" + name + " type:" +  type + " content:" +  content + " parentNode:" +  parentNode + " vid:" +  vid);
    		var parentPath = "";
-   		var level = 0;
    		if(parentNode && parentNode != null)
    		{
-   			level = parentNode.Level + 1;
    			parentPath = parentNode.path + parentNode.name + "/";
    		}
-   		console.log("addDoc level:" + level);
 
     	$.ajax({
              url : "/DocSystem/Doc/addDoc.do",
@@ -1762,7 +1759,6 @@
              dataType : "json",
              data : {
                 reposId : vid, 
-				level: level, 
 				type : type, //文件类型
 	            pid : parentId,
                 path: parentPath,
