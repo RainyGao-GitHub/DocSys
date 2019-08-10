@@ -713,16 +713,15 @@
 	}
 
 	function copyDocName(node){
-		
-		var id = 0;
 		if(node == null)
 		{
 			bootstrapQ.alert("请选择文件或目录");
 			return false;
 		}
-		id = node.id;
+		
 		var docName = node.name;
 		console.log("copiedDocName:" + docName);
+		
 		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
 		var obj=document.getElementById("copiedText");
 		obj.value=docName;	//修改其中的值
@@ -737,14 +736,13 @@
 	}
 	
 	function copyDocPath(node){
-		var id = 0;
 		if(node == null)
 		{
 			bootstrapQ.alert("请选择文件或目录");
 			return false;
 		}
-		id = node.id;
-		var docPath = getNodePath(node);
+
+		var docPath = node.path + node.name;
 		console.log("docPath:" + docPath);
 		
 		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
@@ -761,15 +759,18 @@
 	}
 	
 	function copyUrl(node){
-		var id = 0;
 		if(node == null)
 		{
 			bootstrapQ.alert("请选择文件或目录");
 			return false;
 		}
-		id = node.id;
+		
 		var vid = gReposId;
-		var href = "/DocSystem/web/project.html?vid="+vid+"&doc="+id;
+		var docId = node.docId;
+	   	var path = Base64.encode(node.path);
+	   	var name = Base64.encode(node.name);
+	   	var href = "/DocSystem/web/project.html?vid="+gReposId+"&doc="+docId+"&path="+path+"&name="+name;
+			
 		console.log(href);
 		var host = window.location.host;	//域名带端口
 		//var host2=document.domain; 			//域名不带端口
@@ -2975,6 +2976,7 @@ function CompareObj(objA, objB, flag) {
    	 	var node = {};
    	 	node.vid = gReposId;
    	 	node.id = docId;
+   	 	node.docId = docId;
    	 	node.pid = pid;
    		node.path = path;
    		node.name = name;
@@ -3681,7 +3683,7 @@ function CompareObj(objA, objB, flag) {
 			return;
 		}
 		
-		var docId = node.id;
+		var docId = node.docId;
 		var pid = node.pid;
 		var path = node.path;
 		var name = node.name;
@@ -3693,7 +3695,7 @@ function CompareObj(objA, objB, flag) {
 			dataType : "json",
 			data : {
 				lockType : 1, //lockType: CheckOut
-				reposId : vid, 
+				reposId : gReposId, 
 				docId : docId,
 				pid: pid,
 				path: path,
@@ -3725,11 +3727,11 @@ function CompareObj(objA, objB, flag) {
 	
 	//UnlockDoc and Upload doc
 	var curCheckInDoc = [];
-	function checkIn(docId,docName)
+	function checkIn(node)
 	{
-		console.log("checkIn()" + docId);
-		curCheckInDoc.id = docId;
-		curCheckInDoc.name = docName;
+		console.log("checkIn()", node);
+		curCheckInDoc.id = node.docId;
+		curCheckInDoc.name = node.docName;
 		
 		gParentNodeForUpload = getParentNodeByNodeId(docId);
 		checkInFile();
@@ -4123,20 +4125,16 @@ function CompareObj(objA, objB, flag) {
 						{divider: true},
 						{text: 'CheckOut', action: function(e){
 								e.preventDefault();
-								var docType = curRightClickedDocListNode.type;
+								var docType = curRightClickedTreeNode.type;
 								if(docType == 1)
 								{							
-									var docId = curRightClickedTreeNode.id;
-									var docName = curRightClickedTreeNode.name;
-									checkOut(docId,docName);
+									checkOut(curRightClickedTreeNode);
 								}
 							}
 						},
 						{text: 'CheckIn', action: function(e){
 								e.preventDefault();
-								var docId = curRightClickedTreeNode.id;
-								var docName = curRightClickedTreeNode.name;
-					 			checkIn(docId,docName);
+					 			checkIn(curRightClickedTreeNode);
 							}
 						},
 						{divider: true},
@@ -4288,39 +4286,29 @@ function CompareObj(objA, objB, flag) {
 								var docType = curRightClickedDocListNode.type;
 								if(docType == 1)
 								{							
-									var docId = curRightClickedDocListNode.docId;
-									var docName = curRightClickedDocListNode.docName;
-									checkOut(docId,docName);
+									checkOut(curRightClickedDocListNode);
 								}
 							}
 						},
 						{text: 'CheckIn', action: function(e){
 								e.preventDefault();
-								var docId = curRightClickedDocListNode.docId;
-								var docName = curRightClickedDocListNode.docName;
-					 			checkIn(docId,docName);
+					 			checkIn(curRightClickedDocListNode);
 							}
 						},
 						{divider: true},
 			           	{text: '复制名字', action: function(e){
 									e.preventDefault();
-									var docId = curRightClickedDocListNode.docId;
-									var node = getNodeByNodeId(docId);
-				        			copyDocName(node);
+				        			copyDocName(curRightClickedDocListNode);
 								}
 						},
 						{text: '复制路径', action: function(e){
 									e.preventDefault();
-									var docId = curRightClickedDocListNode.docId;
-									var node = getNodeByNodeId(docId);
-				        			copyDocPath(node);
+				        			copyDocPath(curRightClickedDocListNode);
 								}
 						},
 						{text: '复制链接', action: function(e){
 									e.preventDefault();
-									var docId = curRightClickedDocListNode.docId;
-									var node = getNodeByNodeId(docId);
-				        			copyUrl(node);
+				        			copyUrl(curRightClickedDocListNode);
 								}
 						},	
    				]
