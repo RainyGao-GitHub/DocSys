@@ -1543,7 +1543,7 @@ public class BaseController  extends BaseFunction{
 				successDoc.setCreator(login_user.getId());
 				successDoc.setLatestEditor(login_user.getId());
 				dbUpdateDoc(repos, successDoc, true);
-				checkAddUpdateParentDoc(repos, successDoc, null);
+				dbCheckAddUpdateParentDoc(repos, successDoc, null);
 			}
 		}
 		
@@ -1659,7 +1659,7 @@ public class BaseController  extends BaseFunction{
 		
 		//检查dbParentDoc是否已添加
 		List <Doc> addedParentDocList = new ArrayList<Doc>();
-		checkAddUpdateParentDoc(repos, doc, addedParentDocList);
+		dbCheckAddUpdateParentDoc(repos, doc, addedParentDocList);
 		if(addedParentDocList.size() > 0)
 		{
 			rt.setDataEx(addedParentDocList);
@@ -1680,8 +1680,24 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
+	
+	private void dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
+		Doc dbDoc = dbGetDoc(repos, doc, false);
+		if(dbDoc == null)
+		{
+			System.out.println("dbUpdateDocRevision dbDoc " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "] 不存在");
+			return;
+		}
+		
+		dbDoc.setRevision(revision);
+		if(dbUpdateDoc(repos, dbDoc, false) == false)
+		{
+			System.out.println("dbUpdateDocRevision 更新节点版本号失败: " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");	
+		}
+	}
+	
 	//该接口用于更新父节点的信息: 仓库有commit成功的操作时必须调用
-	private void checkAddUpdateParentDoc(Repos repos, Doc doc, List<Doc> parentDocList) 
+	private void dbCheckAddUpdateParentDoc(Repos repos, Doc doc, List<Doc> parentDocList) 
 	{
 		System.out.println("checkAddUpdateParentDoc " + doc.getDocId() + " " +doc.getPath() + doc.getName());
 		
@@ -1710,7 +1726,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("checkAddUpdateParentDoc 新增目录: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());
 
 				parentDocList.add(0,parentDoc);	//always add to the top
-				checkAddUpdateParentDoc(repos, parentDoc, parentDocList);
+				dbCheckAddUpdateParentDoc(repos, parentDoc, parentDocList);
 			}
 		}
 		else
@@ -1718,7 +1734,7 @@ public class BaseController  extends BaseFunction{
 			if(dbParentDoc.getRevision() == null || !dbParentDoc.getRevision().equals(doc.getRevision()))
 			{
 				parentDoc.setId(dbParentDoc.getId());
-				if(dbUpdateDoc(repos, dbParentDoc, false) == false)
+				if(dbUpdateDoc(repos, parentDoc, false) == false)
 				{
 					System.out.println("checkAddUpdateParentDoc 更新父节点版本号失败: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());	
 				}
@@ -1791,7 +1807,7 @@ public class BaseController  extends BaseFunction{
 				docSysWarningLog("不可恢复系统错误：dbDeleteDoc Failed", rt);
 			}
 			
-			checkAddUpdateParentDoc(repos, doc, null);
+			dbCheckAddUpdateParentDoc(repos, doc, null);
 		}
 		
 		unlockDoc(doc,login_user,null);
@@ -2024,8 +2040,10 @@ public class BaseController  extends BaseFunction{
 						commitDoc.setRevision(revision);
 						commitDoc.setLatestEditorName(login_user.getName());
 						dbUpdateDoc(repos, commitDoc, true);
-						checkAddUpdateParentDoc(repos, commitDoc, null);
+						dbCheckAddUpdateParentDoc(repos, commitDoc, null);
 					}
+					
+					dbUpdateDocRevision(repos, doc, revision);
 				}
 				unlockDoc(doc, login_user, docLock);
 				return false;
@@ -2033,7 +2051,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
-	
+
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
 		Doc remoteEntry = verReposGetDoc(repos, doc, null);
@@ -3217,7 +3235,7 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysWarningLog("updateDoc() updateDocInfo Failed", rt);
 			}
-			checkAddUpdateParentDoc(repos, doc, null);
+			dbCheckAddUpdateParentDoc(repos, doc, null);
 		}
 		
 		//Build DocUpdate action
@@ -3304,7 +3322,7 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysWarningLog("moveDoc_FS() dbMoveDoc failed", rt);			
 			}
-			checkAddUpdateParentDoc(repos, dstDoc, null);
+			dbCheckAddUpdateParentDoc(repos, dstDoc, null);
 		}
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
@@ -3388,7 +3406,7 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysWarningLog("copyDoc() dbCopyDoc failed", rt);			
 			}
-			checkAddUpdateParentDoc(repos, dstDoc, null);
+			dbCheckAddUpdateParentDoc(repos, dstDoc, null);
 		}
 		
 		//Build Async Actions For RealDocIndex\VDoc\VDocIndex Add
