@@ -1717,7 +1717,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbParentDoc.getRevision() == null || !dbParentDoc.getRevision().equals(doc.getRevision()))
 			{
-				parentDoc.setId(doc.getId());
+				parentDoc.setId(dbParentDoc.getId());
 				if(dbUpdateDoc(repos, dbParentDoc, false) == false)
 				{
 					System.out.println("checkAddUpdateParentDoc 更新父节点版本号失败: " + parentDoc.getDocId() + " " + parentDoc.getPath() + parentDoc.getName());	
