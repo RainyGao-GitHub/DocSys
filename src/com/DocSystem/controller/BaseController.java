@@ -2025,7 +2025,7 @@ public class BaseController  extends BaseFunction{
 						commitDoc.setLatestEditorName(login_user.getName());
 						dbUpdateDoc(repos, commitDoc, true);
 						checkAddUpdateParentDoc(repos, commitDoc, null);
-					}					
+					}
 				}
 				unlockDoc(doc, login_user, docLock);
 				return false;
