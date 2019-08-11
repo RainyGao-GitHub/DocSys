@@ -1715,7 +1715,7 @@ public class BaseController  extends BaseFunction{
 
 		printObject("checkAddUpdateParentDoc parentDoc:", parentDoc);
 		
-		Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
+		Doc dbParentDoc = dbGetDoc(repos, parentDoc, false);
 		if(dbParentDoc == null)
 		{
 			if(parentDocList == null)
@@ -2075,7 +2075,7 @@ public class BaseController  extends BaseFunction{
 		
 		printObject("syncupForDocChange_NoFS() remoteEntry: ", remoteEntry);
 		
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		printObject("syncupForDocChange_NoFS() dbDoc: ", dbDoc);
 
 		
@@ -2795,22 +2795,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs, boolean parentDocCheck) 
-	{	
-		//如果父节点不是根目录
-		if(parentDocCheck == true && doc.getPath().isEmpty() == false)
-		{
-			//检查parentDoc是否存在，如果不存在则要addParentDoc
-			Doc parentDoc = buildBasicDoc(doc.getVid(), null, doc.getPid(), doc.getPath(), "", doc.getLevel()-1, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");	
-			parentDoc.setRevision(doc.getRevision());
-			
-			printObject("checkAddParentDoc parentDoc:", parentDoc);
-			Doc dbParentDoc = dbGetDoc(repos, parentDoc, true);
-			if(dbParentDoc == null)
-			{
-				return dbAddDoc(repos, parentDoc, false, true);
-			}		
-		}
-		
+	{			
 		String reposRPath = getReposRealPath(repos);
 		String docPath = reposRPath + doc.getPath() + doc.getName();
 		File localEntry = new File(docPath);
@@ -2926,7 +2911,7 @@ public class BaseController  extends BaseFunction{
 		doc.setType(localEntry.getType());
 		
 		//dbDoc not exists, do add it
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
 		{
 			if(localEntry.getType() != 0)

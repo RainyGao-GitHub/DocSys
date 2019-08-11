@@ -112,7 +112,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc != null)
 		{
 			docSysErrorLog(doc.getName() + " 已存在", rt);
@@ -343,7 +343,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
+		Doc srcDbDoc = dbGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
@@ -424,7 +424,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
+		Doc srcDbDoc = dbGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
@@ -492,7 +492,7 @@ public class DocController extends BaseController{
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc srcDbDoc = dbGetDoc(repos, srcDoc, true);
+		Doc srcDbDoc = dbGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null)
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
@@ -585,7 +585,7 @@ public class DocController extends BaseController{
 		//检查文件是否已存在 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc != null)
 		{
 			rt.setData(dbDoc);
@@ -744,7 +744,7 @@ public class DocController extends BaseController{
 				
 				Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 				
-				Doc dbDoc = dbGetDoc(repos, doc, true);
+				Doc dbDoc = dbGetDoc(repos, doc, false);
 				
 				if(dbDoc == null)
 				{
@@ -819,7 +819,7 @@ public class DocController extends BaseController{
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, 1, true, localRootPath, localVRootPath, size, checkSum);
 		
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
@@ -1011,7 +1011,7 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
 		{
 			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
@@ -1149,7 +1149,7 @@ public class DocController extends BaseController{
 
 	public void downloadDocPrepare_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
 	{	
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
 		{
 			System.out.println("downloadDocPrepare_FS() Doc " +doc.getPath() + doc.getName() + " 不存在");
@@ -1496,7 +1496,7 @@ public class DocController extends BaseController{
 		//预览文件已存在
 		if(file.exists())
 		{
-			Doc dbDoc = dbGetDoc(repos, doc, true);
+			Doc dbDoc = dbGetDoc(repos, doc, false);
 			if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
 			{
 				rt.setData(fileLink);
@@ -1658,7 +1658,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		Doc dbDoc = dbGetDoc(repos, doc, true);
+		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
 		{
 			docSysErrorLog("文件 " + path+name + " 不存在！", rt);
