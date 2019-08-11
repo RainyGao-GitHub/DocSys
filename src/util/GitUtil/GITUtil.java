@@ -1073,15 +1073,6 @@ public class GITUtil  extends BaseController{
         return true;
 	}
 
-	private boolean checkAddLocalDirectory(String localParentPath) {
-		File parentDir = new File(localParentPath);
-		if(parentDir.exists() == false)
-		{
-			return parentDir.mkdirs();
-		}
-		return true;		
-	}
-
 	private TreeWalk getTreeWalkByPath(RevTree revTree, String entryPath) {
 		//System.out.println("getTreeWalkByPath() entryPath:" + entryPath); 
 

@@ -1147,6 +1147,15 @@ public class BaseFunction{
 	    return true;
 	}
     
+	protected boolean checkAddLocalDirectory(String localParentPath) {
+		File parentDir = new File(localParentPath);
+		if(parentDir.exists() == false)
+		{
+			return parentDir.mkdirs();
+		}
+		return true;		
+	}
+
     //将dstDirPath同步成srcDirPath
 	protected boolean syncUpFolder(String srcParentPath,String srcName, String dstParentPath, String dstName,boolean modifyEnable) 
 	{
