@@ -1994,7 +1994,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		printObject("syncupForDocChange() doc:",doc);
+		printObject("************** Start syncupForDocChange() doc:",doc);
 		
 		User login_user = new User();
 		login_user.setId(0); //系统自动同步用户 AutoSync
@@ -2003,54 +2003,64 @@ public class BaseController  extends BaseFunction{
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
+		//SVN/GIT前置
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
 			boolean ret = SyncUpSubDocs_NoFS(repos, doc, login_user, rt, 1); //子目录非继承递归
+			System.out.println("************** End syncupForDocChange() SyncUpSubDocs_NoFS ret:" + ret);
 			return ret;
 		}
-		else
+		
+		//文件管理系统
+		HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
+		boolean ret = SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, 1);
+		System.out.println("syncupForDocChange() SyncUpSubDocs_FS ret:" + ret);
+		if(commitHashMap.size() == 0)
 		{
-			HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
-			SyncUpSubDocs_FS(repos, doc, login_user, rt, commitHashMap, 1);
-			
-			if(commitHashMap.size() > 0)
+			System.out.println("************** End syncupForDocChange() 本地没有改动");
+			return false;
+		}
+		
+		//本地有改动需要提交
+		System.out.println("syncupForDocChange() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
+		String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
+		//LockDoc
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//Try to lock the Doc
+			docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
+			if(docLock == null)
 			{
-				System.out.println("syncupForDocChange() local Changed: [" + doc.getPath()+doc.getName() + "], do Commit");
-				String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-				//LockDoc
-				DocLock docLock = null;
-				synchronized(syncLock)
-				{
-					//Try to lock the Doc
-					docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-					if(docLock == null)
-					{
-						unlock(); //线程锁
-						docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
-						return false;
-					}
-					unlock(); //线程锁
-				}
-				
-				String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
-				if(revision != null)
-				{
-					for(Doc commitDoc: commitHashMap.values())
-			        {
-						printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
-						//需要根据commitAction的行为来决定相应的操作
-						commitDoc.setRevision(revision);
-						commitDoc.setLatestEditorName(login_user.getName());
-						dbUpdateDoc(repos, commitDoc, true);
-						dbCheckAddUpdateParentDoc(repos, commitDoc, null);
-					}
-					
-					dbUpdateDocRevision(repos, doc, revision);
-				}
-				unlockDoc(doc, login_user, docLock);
+				unlock(); //线程锁
+				docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
+				System.out.println("************** End syncupForDocChange() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 				return false;
 			}
+			unlock(); //线程锁
 		}
+		
+		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
+		if(revision == null)
+		{
+			System.out.println("************** End syncupForDocChange() 本地改动Commit失败:" + revision);
+			unlockDoc(doc, login_user, docLock);
+			return false;
+		}
+		
+		//更新数据库信息
+		for(Doc commitDoc: commitHashMap.values())
+	    {
+			printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
+			//需要根据commitAction的行为来决定相应的操作
+			commitDoc.setRevision(revision);
+			commitDoc.setLatestEditorName(login_user.getName());
+			dbUpdateDoc(repos, commitDoc, true);
+			dbCheckAddUpdateParentDoc(repos, commitDoc, null);
+		}
+		dbUpdateDocRevision(repos, doc, revision);
+		System.out.println("************** End syncupForDocChange() 本地改动已更新:" + revision);
+		unlockDoc(doc, login_user, docLock);
 		return true;
 	}
 
@@ -2130,7 +2140,7 @@ public class BaseController  extends BaseFunction{
     	}
 	    
 	    List<Doc> remoteEntryList = getRemoteEntryList(repos, doc);
-	    printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
+	    //printObject("SyncUpSubDocs_FS() remoteEntryList:", remoteEntryList);
 	    if(remoteEntryList != null)
     	{
 	    	for(int i=0;i<remoteEntryList.size();i++)
@@ -2414,7 +2424,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
 	{
-		System.out.println("************************ SyncUpSubDocs_FS()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
+		//System.out.println("************************ SyncUpSubDocs_FS()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
 
 		//子目录不递归
 		if(subDocSyncFlag == 0)
