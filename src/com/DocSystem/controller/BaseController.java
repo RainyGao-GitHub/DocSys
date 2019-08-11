@@ -1994,7 +1994,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		printObject("************** Start syncupForDocChange() doc:",doc);
+		printObject("**************************** 启动自动同步  syncupForDocChange() doc:",doc);
 		
 		User login_user = new User();
 		login_user.setId(0); //系统自动同步用户 AutoSync
@@ -2007,7 +2007,7 @@ public class BaseController  extends BaseFunction{
 		if(repos.getType() == 3 || repos.getType() == 4)
 		{
 			boolean ret = SyncUpSubDocs_NoFS(repos, doc, login_user, rt, 1); //子目录非继承递归
-			System.out.println("************** End syncupForDocChange() SyncUpSubDocs_NoFS ret:" + ret);
+			System.out.println("**************************** 结束自动同步 syncupForDocChange() SyncUpSubDocs_NoFS ret:" + ret);
 			return ret;
 		}
 		
@@ -2017,7 +2017,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("syncupForDocChange() SyncUpSubDocs_FS ret:" + ret);
 		if(commitHashMap.size() == 0)
 		{
-			System.out.println("************** End syncupForDocChange() 本地没有改动");
+			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地没有改动");
 			return false;
 		}
 		
@@ -2034,7 +2034,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 				docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
-				System.out.println("************** End syncupForDocChange() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+				System.out.println("**************************** 结束自动同步 syncupForDocChange() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 				return false;
 			}
 			unlock(); //线程锁
@@ -2043,7 +2043,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
 		if(revision == null)
 		{
-			System.out.println("************** End syncupForDocChange() 本地改动Commit失败:" + revision);
+			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动Commit失败:" + revision);
 			unlockDoc(doc, login_user, docLock);
 			return false;
 		}
@@ -2059,7 +2059,7 @@ public class BaseController  extends BaseFunction{
 			dbCheckAddUpdateParentDoc(repos, commitDoc, null);
 		}
 		dbUpdateDocRevision(repos, doc, revision);
-		System.out.println("************** End syncupForDocChange() 本地改动已更新:" + revision);
+		System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动已更新:" + revision);
 		unlockDoc(doc, login_user, docLock);
 		return true;
 	}
