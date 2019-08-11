@@ -1682,6 +1682,8 @@ public class BaseController  extends BaseFunction{
 
 	
 	private void dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
+		System.out.println("dbUpdateDocRevision " + revision + " doc " + doc.getDocId() + " [" +doc.getPath() + doc.getName());
+
 		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
 		{
@@ -2192,7 +2194,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean syncupForDocChange_FS(Repos repos, Doc doc, List<Doc> dbDocList, List<Doc> localEntryList, List<Doc> remoteEntryList, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
+	private boolean syncupForDocChange_FS(Repos repos, Doc doc, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
 	{
 		//printObject("syncupForDocChange_FS() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
@@ -2206,13 +2208,13 @@ public class BaseController  extends BaseFunction{
 		Doc localEntry = null;
 		Doc remoteEntry = null;
 		
-		dbDoc = getDocFromList(doc, dbDocList);
+		dbDoc = getDocFromList(doc, dbDocHashMap);
 		//printObject("syncupForDocChange_FS() dbDoc: ", dbDoc);
 
-		localEntry = getDocFromList(doc, localEntryList);
+		localEntry = getDocFromList(doc, localDocHashMap);
 		//printObject("syncupForDocChange_FS() localEntry: ", localEntry);
 		
-		remoteEntry = getDocFromList(doc, remoteEntryList);
+		remoteEntry = getDocFromList(doc, remoteDocHashMap);
 		//printObject("syncupForDocChange_FS() remoteEntry: ", remoteEntry);
 		
 		int docChangeType = getDocChangeType_FS(repos, doc, dbDoc, localEntry, remoteEntry);
@@ -2400,17 +2402,14 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 
-	private Doc getDocFromList(Doc doc, List<Doc> docList) 
+	private Doc getDocFromList(Doc doc, HashMap<Long, Doc> dbDocHashMap) 
 	{
-		for(int i=0; i<docList.size(); i++)
+		if(dbDocHashMap == null || dbDocHashMap.size() == 0)
 		{
-			Doc tempDoc =  docList.get(i);
-			if(doc.getDocId().equals(tempDoc.getDocId()))
-			{
-				return tempDoc;
-			}
+			return null;
 		}
-		return null;
+		
+		return dbDocHashMap.get(doc.getDocId());
 	}
 
 	private boolean SyncUpSubDocs_FS(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
@@ -2428,6 +2427,11 @@ public class BaseController  extends BaseFunction{
 		{
 			subDocSyncFlag = 0;
 		}
+		
+		HashMap<Long, Doc> dbDocHashMap = null;	
+		HashMap<Long, Doc> localDocHashMap =  null;	
+		HashMap<Long, Doc> remoteDocHashMap = null;		
+
 				
 		List<Doc> localEntryList = getLocalEntryList(repos, doc);
 		//printObject("SyncUpSubDocs_FS() localEntryList:", localEntryList);
@@ -2436,11 +2440,11 @@ public class BaseController  extends BaseFunction{
     		System.out.println("SyncUpSubDocs_FS() localEntryList 获取异常:");
         	return false;
     	}
-    	
+
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
 		//printObject("SyncUpSubDocs_FS() dbEntryList:", dbDocList);
 
-		List<Doc> remoteEntryList = dbDocList;
+		List<Doc> remoteEntryList = null;
     	boolean isRemoteDocChanged = isRemoteDocChanged(repos, doc);
     	if(isRemoteDocChanged)
 		{
@@ -2450,22 +2454,24 @@ public class BaseController  extends BaseFunction{
         	{
         		System.out.println("SyncUpSubDocs_FS() remoteEntryList 获取异常:");
             	return false;
-        	}
+        	}        	
 		}
+
+		localDocHashMap =  ConvertDocListToHashMap(localEntryList);	
+		dbDocHashMap = ConvertDocListToHashMap(dbDocList);	
+		if(isRemoteDocChanged)
+		{
+			remoteDocHashMap = ConvertDocListToHashMap(remoteEntryList);					
+		}
+		else
+		{
+			remoteDocHashMap = dbDocHashMap;
+		}
+
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		Doc subDoc = null;
 	    
-		if(dbDocList != null)
-    	{
-	    	for(int i=0;i<dbDocList.size();i++)
-	    	{
-	    		subDoc = dbDocList.get(i);
-	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
-	    	}
-    	}
-
     	for(int i=0;i<localEntryList.size();i++)
     	{
     		subDoc = localEntryList.get(i);
@@ -2477,7 +2483,17 @@ public class BaseController  extends BaseFunction{
     		}
     		
     		docHashMap.put(subDoc.getName(), subDoc);
-    		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
+    		syncupForDocChange_FS(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
+    	}
+    	
+		if(dbDocList != null)
+    	{
+	    	for(int i=0;i<dbDocList.size();i++)
+	    	{
+	    		subDoc = dbDocList.get(i);
+	    		docHashMap.put(subDoc.getName(), subDoc);
+	    		syncupForDocChange_FS(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
+	    	}
     	}
 	    
     	if(isRemoteDocChanged)
@@ -2493,12 +2509,28 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChange_FS(repos, subDoc, dbDocList, localEntryList, remoteEntryList, login_user, rt, commitHashMap, subDocSyncFlag);
+	    		syncupForDocChange_FS(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
 		    }
     	}
 	    return true;
     }
 	
+	private HashMap<Long, Doc> ConvertDocListToHashMap(List<Doc> docList) {
+		if(docList == null)
+    	{
+			return null;
+    	}
+
+		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
+
+		for(int i=0;i< docList.size(); i++)
+	    {
+	    		Doc doc = docList.get(i);
+	    		docHashMap .put(doc.getDocId(), doc);
+	    }
+		return docHashMap;
+	}
+
 	//localEntry and dbDoc was same
 	private boolean syncUpRemoteChange_FS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
 	{	
