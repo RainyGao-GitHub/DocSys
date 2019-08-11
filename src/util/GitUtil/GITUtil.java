@@ -800,10 +800,9 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 		
-		//远程节点是文件，本地节点不存在或也是文件则直接CheckOut，否则当enableDelete时删除了本地目录再 checkOut
+		//远程节点是文件，本地节点不存在则checkOut，否则只有在force==true时才会checkOut
 		if(remoteDoc.getType() == 1) 
-		{
-			
+		{	
 			if(downloadList != null)
 			{
 				Object downloadItem = downloadList.get(remoteEntryPath);
@@ -979,34 +978,35 @@ public class GITUtil  extends BaseController{
 	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, String revision, boolean force) 
 	{
 		File localEntry = new File(localParentPath + targetName);
-		if(localEntry.exists())
+		if(force == false)
 		{
-			if(localEntry.isDirectory())	//本地是目录，如果force的话强制删除
+			if(localEntry.exists())
 			{
-				if(force == true)
+				System.out.println("getRemoteFile() " + localParentPath+targetName + " 已存在");
+				return false;
+			}
+			else
+			{
+				//检查父节点是否存在，不存在则自动创建
+				checkAddLocalDirectory(localParentPath);
+			}
+		}
+		else	//强行 checkOut
+		{
+			if(localEntry.exists())
+			{
+				if(localEntry.isDirectory())	//本地是目录，如果需要先删除
 				{
 					if(delFileOrDir(localParentPath+targetName) == false)
 					{
 						return false;
 					}
 				}
-				else
-				{
-					System.out.println(localParentPath+targetName + " 已存在且是目录，如果需要强行CheckOut，请将force设置为true");
-					return false;
-				}
 			}
-		}
-		else
-		{
-			if(force == true)
+			else
 			{
 				//检查父节点是否存在，不存在则自动创建
-				File parentDir = new File(localParentPath);
-				if(parentDir.exists() == false)
-				{
-					parentDir.mkdirs();
-				}
+				checkAddLocalDirectory(localParentPath);
 			}
 		}
 		
@@ -1071,6 +1071,15 @@ public class GITUtil  extends BaseController{
         
         CloseRepos();
         return true;
+	}
+
+	private boolean checkAddLocalDirectory(String localParentPath) {
+		File parentDir = new File(localParentPath);
+		if(parentDir.exists() == false)
+		{
+			return parentDir.mkdirs();
+		}
+		return true;		
 	}
 
 	private TreeWalk getTreeWalkByPath(RevTree revTree, String entryPath) {
