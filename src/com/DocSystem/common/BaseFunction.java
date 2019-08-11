@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -96,6 +97,26 @@ public class BaseFunction{
 		action.setSubActionList(subActionList);
 		
 		actionList.add(action);
+	}
+	
+	protected static boolean uniqueCommonActionIsRunning = false;
+	protected static ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = new ConcurrentHashMap<Long, CommonAction>();
+	protected static List<CommonAction> uniqueCommonActionList = new ArrayList<CommonAction>();
+	protected boolean insertUniqueCommonAction(CommonAction action)
+	{
+		Doc doc = action.getDoc();
+		if(doc == null)
+		{
+			return false;
+		}
+		
+		if(uniqueCommonActionHashMap.get(doc.getDocId()) == null)
+		{
+			uniqueCommonActionHashMap.put(doc.getDocId(), action);
+			uniqueCommonActionList.add(action);
+			return true;
+		}
+		return false;
 	}
 	
 	/******************************** Basic Interface for CommitAction *************************************/

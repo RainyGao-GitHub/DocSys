@@ -58,7 +58,6 @@ public class BaseController  extends BaseFunction{
 	protected ReposServiceImpl reposService;
 	@Autowired
 	protected UserServiceImpl userService;
-
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
@@ -1681,21 +1680,29 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-	private void dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
+	private boolean dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
 		System.out.println("dbUpdateDocRevision " + revision + " doc " + doc.getDocId() + " [" +doc.getPath() + doc.getName());
 
 		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
 		{
 			System.out.println("dbUpdateDocRevision dbDoc " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "] 不存在");
-			return;
+			doc.setRevision(revision);
+			return dbAddDoc(repos,doc, false, false);
 		}
 		
-		dbDoc.setRevision(revision);
-		if(dbUpdateDoc(repos, dbDoc, false) == false)
+		if(dbDoc.getRevision() == null || !dbDoc.getRevision().equals(revision))
 		{
-			System.out.println("dbUpdateDocRevision 更新节点版本号失败: " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");	
+			dbDoc.setRevision(revision);
+			if(dbUpdateDoc(repos, dbDoc, false) == false)
+			{
+				System.out.println("dbUpdateDocRevision 更新节点版本号失败: " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");	
+				return false;
+			}
+			return true;
 		}
+		
+		return true;
 	}
 	
 	//该接口用于更新父节点的信息: 仓库有commit成功的操作时必须调用
@@ -1932,39 +1939,11 @@ public class BaseController  extends BaseFunction{
 		
 		int count = 0;
 
-		for(int i=0; i< actionList.size(); i++)
+		for(int i=0; i< size; i++)
 		{
-			boolean ret = false;
 			CommonAction action = actionList.get(i);
-			Doc srcDoc = action.getDoc();
-			
-			System.out.println("executeCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
-
-			switch(action.getType())
-			{
-			case 1:
-				ret = executeFSAction(action, rt);
-				break;
-			case 2:
-				String revision = executeVerReposAction(action, rt);
-				if(revision != null)
-				{
-					action.getDoc().setRevision(revision);
-					ret = true;
-				}
-				break;
-			case 3:
-				ret = executeDBAction(action, rt);
-				break;			
-			case 4:
-				ret = executeIndexAction(action, rt);
-				break;
-			case 5: //AutoSyncUp
-				ret = executeSyncUpAction(action, rt);
-				break;
-			}
-			
-			if(ret == true)
+						
+			if(executeCommonAction(action, rt) == true)
 			{
 				//Execute SubActionList
 				executeCommonActionList(action.getSubActionList(), rt);
@@ -1981,6 +1960,76 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	private boolean executeCommonAction(CommonAction action, ReturnAjax rt) {
+		
+		boolean ret = false;
+		
+		Doc srcDoc = action.getDoc();
+		
+		System.out.println("executeCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+
+		switch(action.getType())
+		{
+		case 1:
+			ret = executeFSAction(action, rt);
+			break;
+		case 2:
+			String revision = executeVerReposAction(action, rt);
+			if(revision != null)
+			{
+				action.getDoc().setRevision(revision);
+				ret = true;
+			}
+			break;
+		case 3:
+			ret = executeDBAction(action, rt);
+			break;			
+		case 4:
+			ret = executeIndexAction(action, rt);
+			break;
+		case 5: //AutoSyncUp
+			ret = executeSyncUpAction(action, rt);
+			break;
+		}
+		
+		return ret;
+	}
+
+	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
+	{
+		//Inset ActionList to uniqueCommonAction
+		for(int i=0; i<actionList.size(); i++)
+		{
+			insertUniqueCommonAction(actionList.get(i));
+		}
+		
+		if(uniqueCommonActionIsRunning)
+		{
+			System.out.println("executeUniqueCommonActionList uniqueCommonAction IsRunning");
+			return true;
+		}
+
+		uniqueCommonActionIsRunning = true;
+		while(uniqueCommonActionHashMap.size() > 0)
+		{
+			if(uniqueCommonActionList.size() > 0)
+			{
+				CommonAction action = uniqueCommonActionList.get(0);
+				long docId = action.getDoc().getDocId();
+				executeCommonAction(action, rt);
+				uniqueCommonActionList.remove(0);
+				uniqueCommonActionHashMap.remove(docId);
+			}
+			else
+			{
+				System.out.println("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 uniqueCommonActionHashMap");
+				uniqueCommonActionHashMap.clear();
+			}
+		}
+		
+		uniqueCommonActionIsRunning = false;
+		return true;
+	}	
 	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
 		printObject("executeSyncUpAction() action:",action);
@@ -2482,6 +2531,35 @@ public class BaseController  extends BaseFunction{
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
 		Doc subDoc = null;
 	    
+		//注意必须先进行远程同步，因为需要知道远程的改动是否都全部成功，如果成功了，需要dbDoc和remoteDoc的revision进行同步
+    	if(isRemoteDocChanged)
+    	{
+    		boolean remoteSyncFlag = true;
+	    	for(int i=0;i<remoteEntryList.size();i++)
+		    {
+	    		subDoc = remoteEntryList.get(i);
+	    		//System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    		if(docHashMap.get(subDoc.getName()) != null)
+	    		{
+	    			//already syncuped
+	    			continue;	
+	    		}
+	    		
+	    		docHashMap.put(subDoc.getName(), subDoc);
+	    		if(syncupForDocChange_FS(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag) == false)
+	    		{
+	    			remoteSyncFlag = false;
+	    		}
+		    }
+	    	
+	    	//当前目录无改动需要将dbDoc和remoteDoc的revision进行一次同步
+	    	if(remoteSyncFlag == true)
+	    	{
+	    		String latestDocRevision = verReposGetLatestRevision(repos, doc);
+	    		dbUpdateDocRevision(repos, doc, latestDocRevision);
+	    	}
+    	}
+		
     	for(int i=0;i<localEntryList.size();i++)
     	{
     		subDoc = localEntryList.get(i);
@@ -2505,24 +2583,8 @@ public class BaseController  extends BaseFunction{
 	    		syncupForDocChange_FS(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
 	    	}
     	}
-	    
-    	if(isRemoteDocChanged)
-    	{
-	    	for(int i=0;i<remoteEntryList.size();i++)
-		    {
-	    		subDoc = remoteEntryList.get(i);
-	    		//System.out.println("SyncUpSubDocs_FS() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
-	    		if(docHashMap.get(subDoc.getName()) != null)
-	    		{
-	    			//already syncuped
-	    			continue;	
-	    		}
-	    		
-	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChange_FS(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
-		    }
-    	}
-	    return true;
+    	
+    	return true;
     }
 	
 	private HashMap<Long, Doc> ConvertDocListToHashMap(List<Doc> docList) {

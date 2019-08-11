@@ -549,7 +549,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 		
 		printObject("getReposInitMenu() actionList:", actionList);
-		executeCommonActionList(actionList, rt);
+		executeUniqueCommonActionList(actionList, rt);
 		return;		
 	}
 
