@@ -1997,6 +1997,8 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
+		System.out.println("********** executeUniqueCommonActionList ***********");
+
 		//Inset ActionList to uniqueCommonAction
 		for(int i=0; i<actionList.size(); i++)
 		{

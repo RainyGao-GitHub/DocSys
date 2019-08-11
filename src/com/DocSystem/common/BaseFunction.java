@@ -104,15 +104,17 @@ public class BaseFunction{
 	protected static List<CommonAction> uniqueCommonActionList = new ArrayList<CommonAction>();
 	protected boolean insertUniqueCommonAction(CommonAction action)
 	{
-		Doc doc = action.getDoc();
-		if(doc == null)
+		Doc srcDoc = action.getDoc();
+		if(srcDoc == null)
 		{
 			return false;
 		}
-		
-		if(uniqueCommonActionHashMap.get(doc.getDocId()) == null)
+
+		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+
+		if(uniqueCommonActionHashMap.get(srcDoc.getDocId()) == null)
 		{
-			uniqueCommonActionHashMap.put(doc.getDocId(), action);
+			uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
 			uniqueCommonActionList.add(action);
 			return true;
 		}
