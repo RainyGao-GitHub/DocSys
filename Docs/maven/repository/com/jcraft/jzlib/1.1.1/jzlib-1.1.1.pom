@@ -1,0 +1,105 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.jcraft</groupId>
+  <artifactId>jzlib</artifactId>
+  <packaging>jar</packaging>
+  <version>1.1.1</version>
+  <name>JZlib</name>
+  <url>http://www.jcraft.com/jzlib/</url>
+  <description>JZlib is a re-implementation of zlib in pure Java</description>
+  <organization>
+    <name>JCraft,Inc.</name>
+    <url>http://www.jcraft.com/</url>
+  </organization>
+  <scm>
+    <connection>scm:git:git://github.com/ymnk/jzlib.git</connection>
+    <developerConnection>scm:git:git://github.com/ymnk/jzlib.git</developerConnection>
+    <url>git://github.com/ymnk/jzlib.git</url>
+  </scm>
+  <developers>
+    <developer>
+    <id>ymnk</id>
+    <name>Atsuhiko Yamanaka</name>
+    <email>ymnk at jcraft D0t com</email>
+    <url>http://github.com/ymnk</url>
+    <organization>JCraft,Inc.</organization>
+    <organizationUrl>http://www.jcraft.com/</organizationUrl>
+    <roles>
+      <role>architect</role>
+      <role>developer</role>
+    </roles>
+    <timezone>+9</timezone>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>Revised BSD</name>
+      <url>http://www.jcraft.com/jzlib/LICENSE.txt</url>
+    </license>
+  </licenses>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-ssh-external</artifactId>
+         <version>1.0-alpha-5</version>
+      </extension>
+    </extensions>
+  </build>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>6</version>
+  </parent>
+
+</project>

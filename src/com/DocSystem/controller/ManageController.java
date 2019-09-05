@@ -701,7 +701,7 @@ public class ManageController extends BaseController{
 			fileName = getSystemLogFileName();
 		}
 		
-		sendTargetToWebPage(localParentPath,fileName, localParentPath, rt, response, request);
+		sendTargetToWebPage(localParentPath,fileName, localParentPath, rt, response, request, false);
 		return;		
 	}
 	

@@ -1,0 +1,284 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+      <groupId>org.apache</groupId>
+      <artifactId>apache</artifactId>
+      <version>8</version>
+   </parent>
+   <groupId>org.apache.struts</groupId>
+   <artifactId>struts-master</artifactId>
+   <version>8</version>
+   <packaging>pom</packaging>
+   <name>Apache Struts</name>
+
+   <scm>
+     <connection>scm:svn:http://svn.apache.org/repos/asf/struts/maven/tags/STRUTS_MASTER_8</connection>
+     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/struts/maven/tags/STRUTS_MASTER_8</developerConnection>
+     <url>http://svn.apache.org/repos/asf/struts/maven/tags/STRUTS_MASTER_8</url>
+   </scm>
+   
+   <description>
+    The goal of the Apache Struts project is to encourage application 
+    architectures based on the "Model 2" approach, a variation of the classic 
+    Model-View-Controller (MVC) design paradigm. Under Model 2, a servlet (or 
+    equivalent) manages business logic execution, and presentation logic 
+    resides mainly in server pages.
+   </description>
+   <url>http://struts.apache.org/</url>
+   <inceptionYear>2000</inceptionYear>
+
+   <mailingLists>
+      <mailingList>
+         <name>Struts User List</name>
+         <subscribe>user-subscribe@struts.apache.org</subscribe>
+         <unsubscribe>user-unsubscribe@struts.apache.org</unsubscribe>
+         <post>user@struts.apache.org</post>
+         <archive>http://mail-archives.apache.org/mod_mbox/struts-user/</archive>
+         <otherArchives>
+            <otherArchive>http://struts.apache.org/mail.html#Archives</otherArchive>
+         </otherArchives>
+      </mailingList>
+      <mailingList>
+         <name>Struts Developer List</name>
+         <subscribe>dev-subscribe@struts.apache.org</subscribe>
+         <unsubscribe>dev-unsubscribe@struts.apache.org</unsubscribe>
+         <post>dev@struts.apache.org</post>
+         <archive>http://mail-archives.apache.org/mod_mbox/struts-dev/</archive>
+         <otherArchives>
+            <otherArchive>http://struts.apache.org/dev/dev-mail.html#Archives</otherArchive>
+         </otherArchives>
+      </mailingList>
+      <mailingList>
+         <name>Struts Commits List</name>
+         <subscribe>commits-subscribe@struts.apache.org</subscribe>
+         <unsubscribe>commits-unsubscribe@struts.apache.org</unsubscribe>
+         <archive>http://mail-archives.apache.org/mod_mbox/struts-commits/</archive>
+         <otherArchives>
+            <otherArchive>http://struts.apache.org/dev/dev-mail.html#Archives</otherArchive>
+         </otherArchives>
+      </mailingList>
+      <mailingList>
+         <name>Struts Issues List</name>
+         <subscribe>issues-subscribe@struts.apache.org</subscribe>
+         <unsubscribe>issues-unsubscribe@struts.apache.org</unsubscribe>
+         <archive>http://mail-archives.apache.org/mod_mbox/struts-issues/</archive>
+         <otherArchives>
+            <otherArchive>http://struts.apache.org/dev/dev-mail.html#Archives</otherArchive>
+         </otherArchives>
+      </mailingList>
+   </mailingLists>
+
+   <developers>
+      <developer>
+         <name>Ted Husted</name>
+         <id>husted</id>
+         <email>husted at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Cedric Dumoulin</name>
+         <id>cedric</id>
+         <email>cedric.dumoulin at lifl.fr</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Martin Cooper</name>
+         <id>martinc</id>
+         <email>martinc at apache.org</email>
+         <roles>
+            <role>PMC Chair</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>James Holmes</name>
+         <id>jholmes</id>
+         <email>jholmes at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>James Mitchell</name>
+         <id>jmitchell</id>
+         <email>jmitchell at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Don Brown</name>
+         <id>mrdon</id>
+         <email>mrdon at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Niall Pemberton</name>
+         <id>niallp</id>
+         <email>niallp at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Wendy Smoak</name>
+         <id>wsmoak</id>
+         <email>wsmoak at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Laurie Harper</name>
+         <id>laurieh</id>
+         <email>laurieh at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Alexandru Popescu</name>
+         <id>apopescu</id>
+         <email>apopescu at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Rene Gielen</name>
+         <id>rgielen</id>
+         <email>rgielen at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Rainer Hermanns</name>
+         <id>hermanns</id>
+         <email>hermanns at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Toby Jee</name>
+         <id>tmjee</id>
+         <email>tmjee at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Paul Benedict</name>
+         <id>pbenedict</id>
+         <email>pbenedict at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Michael Jouravlev</name>
+         <id>mikus</id>
+         <email>mikus at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Bob Lee</name>
+         <id>crazybob</id>
+         <email>crazybob at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>David H. DeWolf</name>
+         <id>ddewolf</id>
+         <email>ddewolf at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Wes Wannemacher</name>
+         <id>wesw</id>
+         <email>wesw at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Dave Newton</name>
+         <id>daven</id>
+         <email>davenewton at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Nils-Helge Garli Hegvik</name>
+         <id>nilsga</id>
+         <email>nilsga at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Jeromy Evans</name>
+         <id>jeromy</id>
+         <email>jeromy at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Matt Raible</name>
+         <id>mraible</id>
+         <email>mraible at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Mathias Bogaert</name>
+         <id>pathos</id>
+         <email>pathos at apache.org</email>
+         <roles>
+            <role>Committer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Lukasz Lenart</name>
+         <id>lukaszlenart</id>
+         <email>lukaszlenart at apache.org</email>
+         <roles>
+            <role>PMC Member</role>
+         </roles>
+      </developer>
+   </developers>
+   <distributionManagement>
+      <site>
+         <id>apache-site</id>
+         <name>Apache Struts Website</name>
+         <url>scp://people.apache.org/www/struts.apache.org</url>
+      </site>
+   </distributionManagement>
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-release-plugin</artifactId>
+            <version>2.0-beta-7</version>
+            <configuration>
+               <releaseProfiles>release</releaseProfiles>
+               <goals>deploy</goals>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+</project>

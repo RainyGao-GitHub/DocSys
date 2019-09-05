@@ -11,47 +11,50 @@ public class ReturnAjax {
 	
 	//以下是默认成功信息
 	private String status =	"ok";
-	private String msgInfo = "获取数据成功";
-	private Object msgData;	//用于向前台传递更详细的信息,方便调试
-	private Object data;
-
+	private String msgInfo = null;
+	private String warningMsg = null;
+	private Object msgData;	//用于存储额外的状态或数据
+	private Object data;	//用于存储返回结果
+	private Object dataEx;	//用于存储返回结果
+	private String debugLog = null; //用于向前台传递更详细调试
+		
 	/**
 	 * 设置默认错误信息
 	 */
 	public void setError(String errmsg){
 		this.status = "fail";
-		if(errmsg != null)
+		if(this.msgInfo == null)
 		{
 			this.msgInfo = errmsg;
+			return;
 		}
-		else
+		
+		if(errmsg != null)
 		{
-			this.msgInfo = "获取数据失败";			
+			this.msgInfo += "\n" + errmsg;
+		}
+	}
+
+	/**
+	 * 设置调试信息
+	 */
+	public void setDebugLog(String debugLog)
+	{
+		if(this.debugLog == null)
+		{
+			this.debugLog = debugLog;
+			return;
+		}
+		
+		if(debugLog != null)
+		{
+			this.debugLog += "\n" + debugLog;
 		}
 	}
 	
-	/**
-	 * 设置默认错误信息 with detail
-	 */
-	public void setErrorDetail(String errmsg,Object msgData){
-		this.status = "fail";
-		if(errmsg != null)
-		{
-			this.msgInfo = errmsg;
-		}
-		else
-		{
-			this.msgInfo = "获取数据失败";			
-		}
-		this.msgData = msgData;			
-	}
-	
-	/**
-	 * 设置msg和msgData,方便向前台传递更详细的信息
-	 */
-	public void setMsg(String msg,Object msgData){
-		this.msgInfo = msg;
-		this.msgData = msgData;			
+	public String getDebugLog() 
+	{
+		return debugLog;
 	}
 	//================================ getters and setters ===================================
 	public String getMsgInfo() {
@@ -61,6 +64,24 @@ public class ReturnAjax {
 	public void setMsgInfo(String msgInfo) {
 		this.msgInfo = msgInfo;
 	}
+	
+	public String getWarningMsg() {
+		return warningMsg;
+	}
+
+	public void setWarningMsg(String warningMsg) {
+		if(this.warningMsg == null)
+		{
+			this.warningMsg = warningMsg;
+			return;
+		}
+		
+		if(warningMsg != null)
+		{
+			this.warningMsg += "\n" + warningMsg;
+		}
+	}
+	
 	public Object getMsgData() {
 		return msgData;
 	}
@@ -68,12 +89,21 @@ public class ReturnAjax {
 	public void setMsgData(Object msgData) {
 		this.msgData = msgData;
 	}
+	
 	public Object getData() {
 		return data;
 	}
 
 	public void setData(Object data) {
 		this.data = data;
+	}
+	
+	public Object getDataEx() {
+		return dataEx;
+	}
+
+	public void setDataEx(Object dataEx) {
+		this.dataEx = dataEx;
 	}
 
 	public String getStatus() {

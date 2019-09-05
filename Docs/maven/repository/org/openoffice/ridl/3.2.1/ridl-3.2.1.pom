@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.openoffice</groupId>
+  <artifactId>ridl</artifactId>
+  <version>3.2.1</version>
+  <packaging>jar</packaging>
+  <name>Java Runtime Interface Definition Library</name>
+  <description>The type library and the precompiled Java interfaces of the UDK API.</description>
+  <url>http://udk.openoffice.org</url>
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License, Version 3</name>
+      <url>http://www.openoffice.org/license.html</url>
+    </license>
+  </licenses>
+  <scm>
+    <url>http://udk.openoffice.org/source/browse/api/</url>
+    <connection>
+      scm:cvs:pserver:anoncvs@anoncvs.services.openoffice.org:/cvs
+    </connection>
+  </scm>
+  <dependencies>
+    <!-- none -->
+  </dependencies>
+</project>

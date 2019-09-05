@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.regnis.q.sequence</groupId>
+  <artifactId>sequence-library</artifactId>
+  <version>1.0.3</version>
+  <name>Sequence Library</name>
+  <description>Textual Diff and Merge Library</description>
+  <url>http://svn.svnkit.com/repos/3rdparty/de.regnigs.q.sequence</url>
+  <licenses>
+    <license>
+      <name>Sequence Library License</name>
+      <url>http://www.svnkit.com/SEQUENCE-LICENSE.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>syntevo</id>
+      <name>SyntEvo GmbH</name>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:svn:http://svn.svnkit.com/repos/3rdparty/de.regnigs.q.sequence</connection>
+    <url>http://svn.svnkit.com/repos/3rdparty/de.regnigs.q.sequence</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

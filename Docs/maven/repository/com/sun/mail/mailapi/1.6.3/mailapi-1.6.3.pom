@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+    Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
+
+    This program and the accompanying materials are made available under the
+    terms of the Eclipse Public License v. 2.0, which is available at
+    http://www.eclipse.org/legal/epl-2.0.
+
+    This Source Code may also be made available under the following Secondary
+    Licenses when the conditions for such availability set forth in the
+    Eclipse Public License v. 2.0 are satisfied: GNU General Public License,
+    version 2 with the GNU Classpath Exception, which is available at
+    https://www.gnu.org/software/classpath/license.html.
+
+    SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+
+-->
+
+<!--
+    This project builds the JavaMail "mailapi.jar" file.  This jar file
+    contains a fully operational JavaMail implementation but without any
+    protocol providers.  It can be used with the separate protocol provider
+    jar files (e.g., smtp.jar, imap.jar) to provide a full JavaMail runtime
+    implementation.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+			    http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+	<groupId>com.sun.mail</groupId>
+	<artifactId>all</artifactId>
+	<version>1.6.3</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.sun.mail</groupId>
+    <artifactId>mailapi</artifactId>
+    <packaging>jar</packaging>
+    <name>JavaMail API (no providers)</name>
+
+    <properties>
+	<mail.packages.export>
+	    javax.mail.*; version=${mail.spec.version},
+	    com.sun.mail.util; version=${mail.osgiversion},
+	    com.sun.mail.auth; version=${mail.osgiversion},
+	    com.sun.mail.handlers; version=${mail.osgiversion}
+	</mail.packages.export>
+	<mail.bundle.symbolicName>
+	    jakarta.mail.api
+	</mail.bundle.symbolicName>
+    </properties>
+
+    <profiles>
+	<!--
+	    A special profile for compiling with the real JDK 1.7 compiler.
+	    Exclude MailSessionDefinition and MailSessionDefinitions since
+	    the former requires JDK 1.8 and the latter depends on the former.
+	-->
+	<profile>
+	    <id>1.7</id>
+	    <build>
+		<plugins>
+		    <plugin>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<executions>
+			    <execution>
+				<id>default-compile</id>
+				<configuration>
+				    <excludes>
+					<exclude>
+					  javax/mail/MailSessionDefinition.java
+					</exclude>
+					<exclude>
+					  javax/mail/MailSessionDefinitions.java
+					</exclude>
+					<exclude>
+					  module-info.java
+					</exclude>
+				    </excludes>
+				</configuration>
+			    </execution>
+			</executions>
+		    </plugin>
+		</plugins>
+	    </build>
+	</profile>
+
+	<!--
+	    A special profile for compiling with JDK 9.
+	-->
+	<profile>
+	    <id>9</id>
+	    <activation>
+		<jdk>9</jdk>
+	    </activation>
+	    <build>
+		<plugins>
+		    <plugin>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<executions>
+			    <execution>
+				<id>default-compile</id>
+				<configuration>
+				    <release>9</release>
+				    <source>9</source>
+				    <target>9</target>
+				    <compilerArgs>
+					<arg>-Xlint</arg>
+					<arg>-Xlint:-options</arg>
+					<arg>-Xlint:-path</arg>
+					<!--
+					    Too many finalize warnings.
+					<arg>-Werror</arg>
+					-->
+				    </compilerArgs>
+				    <!-- un-exclude module-info.java -->
+				    <excludes combine.self="override">
+				    </excludes>
+				</configuration>
+			    </execution>
+			</executions>
+		    </plugin>
+		    <!--
+			Require JDK 9.
+		    -->
+		    <plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-enforcer-plugin</artifactId>
+			<executions>
+			    <execution>
+				<id>enforce-version</id>
+				<goals>
+				    <goal>enforce</goal>
+				</goals>
+				<configuration>
+				    <rules>
+					<requireMavenVersion>
+					    <version>[3.0.3,)</version>
+					</requireMavenVersion>
+					<requireJavaVersion>
+					    <version>9</version>
+					</requireJavaVersion>
+				    </rules>
+				</configuration>
+			    </execution>
+			</executions>
+		    </plugin>
+		</plugins>
+	    </build>
+	</profile>
+    </profiles>
+
+    <build>
+	<plugins>
+	    <plugin>
+		<artifactId>maven-dependency-plugin</artifactId>
+		<executions>
+		    <execution>
+			<!-- download the binaries -->
+			<id>get-binaries</id>
+			<phase>generate-sources</phase>
+			<goals>
+			    <goal>unpack</goal>
+			</goals>
+		    </execution>
+		    <execution>
+			<!-- download the sources -->
+			<id>get-sources</id>
+			<phase>generate-sources</phase>
+			<goals>
+			    <goal>unpack</goal>
+			</goals>
+			<configuration>
+			    <artifactItems>
+				<artifactItem>
+				    <groupId>com.sun.mail</groupId>
+				    <artifactId>jakarta.mail</artifactId>
+				    <version>${mail.version}</version>
+				    <classifier>sources</classifier>
+				    <outputDirectory>
+					${project.build.directory}/sources
+				    </outputDirectory>
+				</artifactItem>
+			    </artifactItems>
+			</configuration>
+		    </execution>
+		</executions>
+		<configuration>
+		    <artifactItems>
+			<artifactItem>
+			    <groupId>com.sun.mail</groupId>
+			    <artifactId>jakarta.mail</artifactId>
+			    <version>${mail.version}</version>
+			</artifactItem>
+		    </artifactItems>
+		    <outputDirectory>
+			${project.build.outputDirectory}
+		    </outputDirectory>
+		    <includes>
+			javax/**,
+			com/sun/mail/util/**,
+			com/sun/mail/auth/**,
+			com/sun/mail/handlers/**,
+			META-INF/*
+		    </includes>
+		    <!--
+			Have to exclude package.html because it links to
+			com.sun.mail.{imap,pop3,smtp} packages and jdk 9
+			javadoc fails that during deploy.
+		    -->
+		    <excludes>
+			javax/mail/package.html,
+			com/sun/mail/util/logging/**,
+			META-INF/javamail.default.*
+		    </excludes>
+		</configuration>
+	    </plugin>
+	    <plugin>
+		<artifactId>maven-jar-plugin</artifactId>
+		<configuration>
+		    <finalName>${project.artifactId}</finalName>
+		    <archive>
+			<manifestFile>
+			  ${project.build.outputDirectory}/META-INF/MANIFEST.MF
+			</manifestFile>
+		    </archive>
+		</configuration>
+	    </plugin>
+	</plugins>
+    </build>
+</project>

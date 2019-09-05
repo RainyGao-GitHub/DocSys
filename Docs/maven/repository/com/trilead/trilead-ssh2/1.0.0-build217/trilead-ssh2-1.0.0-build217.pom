@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.trilead</groupId>
+  <artifactId>trilead-ssh2</artifactId>
+  <version>1.0.0-build217</version>
+  <name>Trilead SSH2 Library</name>
+  <description>Java SSH2 Library</description>
+  <url>http://svn.svnkit.com/repos/3rdparty/com.trilead.ssh2</url>
+  <licenses>
+    <license>
+      <name>Trilead Library License</name>
+      <url>http://www.svnkit.com/TRILEAD-LICENSE.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>trilead</id>
+      <name>Trilead AG</name>
+    </developer>
+    <developer>
+      <id>tmate</id>
+      <name>TMate Software</name>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:svn:http://svn.svnkit.com/repos/3rdparty/com.trilead.ssh2</connection>
+    <url>http://svn.svnkit.com/repos/3rdparty/com.trilead.ssh2</url>
+  </scm>
+</project>

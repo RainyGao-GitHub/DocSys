@@ -4,6 +4,7 @@ import java.util.List;
 
 public class LogEntry {
 	private long revision;
+	private String commitId;
 	private String commitUser;
 	private String commitMsg;
 	private long commitTime;
@@ -15,6 +16,14 @@ public class LogEntry {
 
     public void setRevision(long revision) {
         this.revision = revision;
+    }
+    
+    public String getCommitId() {
+        return commitId;
+    }
+
+    public void setCommitId(String commitId) {
+        this.commitId = commitId == null ? null : commitId.trim();
     }
 
     public String getCommitUser() {

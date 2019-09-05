@@ -108,39 +108,67 @@
         <div class="form-group">
             <label>名字<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="name" style="width: 100%"/>
-            <label>介绍<span style="color:#F00">*</span></label>
+            <label>简介<span style="color:#F00">*</span></label>
             <input class="form-control" type="text" name="info" style="width: 100%"/>
-            <!-- <label>仓库类型</label>
-            <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
-            	<option value="0">虚拟文件系统</option>   
-            	<option value="1" selected="selected">实文件系统</option>   
-            </select> -->
             <label>仓库位置<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="path"  placeholder="如需使用系统默认位置，请留空！"  value="" style="width: 100%" disabled="disabled"/>
-            <label>版本管理</label>
-            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
-            	<option value="0">无</option>   
-            	<option value="1">SVN</option>   
-            	<!-- <option value="2">GIT</option> -->   
+            <input class="form-control" type="text" name="path"  value="" style="width: 100%" disabled="disabled"/>
+            <label>类型<span style="color:#F00">*</span></label>
+            <select class="form-control" name="type" onchange="doSelectFS();" style="width: 100%">   
+            	<option value="1" selected="selected">文件管理系统</option>   
+            	<option value="2">文件系统前置</option>
+            	<option value="3">SVN前置</option>   
+            	<option value="4">GIT前置</option>   
             </select>
-            <label>svn路径<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="svnPath"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
-            <label>svn用户名</label>
-            <input class="form-control" type="text" name="svnUser"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
-            <label>svn密码</label>
-            <input class="form-control" type="password" name="svnPwd" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
-            <label>版本管理1</label>
-            <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
-            	<option value="0">无</option>   
-            	<option value="1">SVN</option>   
-            	<!-- <option value="2">GIT</option> -->   
-            </select>
-            <label>svn路径1<span style="color:#F00">*</span></label>
-            <input class="form-control" type="text" name="svnPath1"  placeholder="如需系统新建版本仓库，请留空！" value="" style="width: 100%"/>
-            <label>svn用户名1</label>
-            <input class="form-control" type="text" name="svnUser1"  placeholder="置空表明版本仓库可以由任意用户访问！" value="" style="width: 100%"/>
-            <label>svn密码1</label>
-            <input class="form-control" type="password" name="svnPwd1" placeholder="置空表明版本仓库访问无需密码！" value="" style="width: 100%"/>           
+            <div name="realDocPathDiv">
+		        <label>文件存储位置</label>
+				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
+			</div>
+			<div name="verCtrlDiv">
+	            <label>版本管理 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
+	            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
+	            	<option value="0">无</option>   
+	            	<option value="1">SVN</option>   
+	            	<option value="2">GIT</option>   
+	            </select>
+	            <div name="realDocVerCtrlDiv">
+		            <div name="verReposSetting">
+			            <div name="localVerRepos">
+				            <label>版本仓库所在目录</label>
+				            <input class="form-control" type="text" name="localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 100%"/>
+			            </div>
+			            <div name="remoteVerRepos">
+				            <label>版本仓库链接</label>
+				            <input class="form-control" type="text" name="svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+				            <label>用户名</label>
+				            <input class="form-control" type="text" name="svnUser"  value="" style="width: 100%"/>
+				            <label>密码</label>
+			            	<input class="form-control" type="password" name="svnPwd" value="" style="width: 100%"/>           
+			            </div>
+		            </div>
+	            </div>
+	            <div name="virtualDocVerCtrlDiv">
+		            <label>版本管理（VirutalDoc）<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
+		            <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
+		            	<option value="0">无</option>   
+		            	<option value="1">SVN</option>   
+		            	<option value="2">GIT</option>  
+		            </select>
+		            <div name="verReposSetting1">
+			            <div name="localVerRepos1">            
+				            <label>版本仓库所在目录</label>
+				            <input class="form-control" type="text" name="localSvnPath1"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 100%"/>
+		            	</div>
+		            	<div name="remoteVerRepos1">
+				            <label>版本仓库链接</label>
+				            <input class="form-control" type="text" name="svnPath1"  placeholder="请填写版本仓库链接！" value="" style="width: 100%"/>
+				            <label>用户名</label>
+				            <input class="form-control" type="text" name="svnUser1"  value="" style="width: 100%"/>
+				            <label>密码</label>
+				            <input class="form-control" type="password" name="svnPwd1" value="" style="width: 100%"/>          
+				        </div>
+				   </div>
+			    </div>
+			</div>
         </div>
     </form>
 </div>
@@ -175,10 +203,13 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript">
 	//页面初始化
+	var gDocSysConfig = null;
 	var login_user = "";
     function pageInit()
     {
     	console.log("pageInit");
+    	getDocSysConfig();
+    	 	
     	//确定当前登录用户是否已登录
     	$.ajax({
             url : "/DocSystem/getLoginUser.do",
@@ -219,8 +250,35 @@
         $("#error-message>span").text($msg).parent('div').show();
     }
     
+	function getDocSysConfig()
+    {
+    	console.log("getDocSysConfig");
+        $.ajax({
+            url : "/DocSystem/Repos/getDocSysConfig.do",
+            type :"post",
+            dataType :"json",
+            data : null,
+            success : function (ret) {
+                if(ret.status == "ok")
+                {
+                	gDocSysConfig = ret.data;
+                	console.log("getDocSysConfig config:", gDocSysConfig);
+	            }
+	            else
+	            {
+	            	console.log(ret.msgInfo);
+	            }
+            },
+            error : function () {
+            	console.log('服务器异常:获取DocSysConfig失败');
+            }
+        });
+    }
+
+    
     function getReposList()
     {
+    	console.log("getReposList");
         $.ajax({
             url : "/DocSystem/Repos/getReposList.do",
             type :"post",
@@ -320,48 +378,130 @@
     });
 
 
-	//文件系统类型改变时需要根据文件系统类型，显示或者不显示svnPath等input
+	//文件系统类型改变时需要根据文件系统类型，显示或者不显示相关信息
 	function doSelectFS()
 	{
-		//var type = $("#dialog-new-repos select[name='type']").val();   
+		var type = $("#dialog-new-repos select[name='type']").val();
+		
+		if(type == 1)
+		{
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			//RealDoc verCtrl
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
+			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',false);
+			//virtualDoc verCtrl
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").show();
+
+			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
+		}
+		if(type == 2) //Hide RealDoc and VirtualDoc VerCtrl and Set VerCtrl = 无
+		{
+			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+
+			//$("#dialog-new-repos div[name='realDocPathDiv']").show();
+		}
+		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
+		{
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			//RealDoc verCtrl
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=1;
+			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
+			//virtualDoc verCtrl
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
+
+			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
+		}
+		else if(type == 4)	//Hide VirtualDoc VerCtl and Set verCtr = GIT isRemote = 1
+		{
+			$("#dialog-new-repos div[name='verCtrlDiv']").show();
+			//RealDoc verCtrl
+			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
+			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
+			//virtualDoc verCtrl
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
+
+			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
+		}
+		doSelectVerCtrl();
+		doSelectVerCtrl1();			
 	}
 
 	//According verCtrl value to disale the svnPath or not
 	function doSelectVerCtrl()
 	{
+		console.log("doSelectVerCtrl");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
+		
 		//alert(verCtrl);
-		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		if(verCtrl != 0) 			//show verRepos info
 		{
-			$("#dialog-new-repos input[name='svnPath']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnUser']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",false);
+			if(isRemote == 0)
+			{
+				$("#dialog-new-repos div[name='localVerRepos']").show();					
+				$("#dialog-new-repos div[name='remoteVerRepos']").hide();
+			}
+			else
+			{
+				if(verCtrl == 1)
+				{
+					$("#dialog-new-repos div[name='localVerRepos']").hide();
+				}
+				else
+				{
+					$("#dialog-new-repos div[name='localVerRepos']").show();					
+				}
+				$("#dialog-new-repos div[name='remoteVerRepos']").show();				
+			}
+			$("#dialog-new-repos span[name='isRemoteSetting']").show();
+			$("#dialog-new-repos div[name='verReposSetting']").show();				
 		}
-		else	//hide svn info
+		else	//hide verRepos info
 		{
-			$("#dialog-new-repos input[name='svnPath']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnUser']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnPwd']").attr("disabled",true);				
+			$("#dialog-new-repos span[name='isRemoteSetting']").hide();
+			$("#dialog-new-repos div[name='verReposSetting']").hide();				
 		}   
 	}
 	
 	//According verCtrl1 value to disale the svnPath1 or not
 	function doSelectVerCtrl1()
 	{
+		console.log("doSelectVerCtrl1");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
-		//alert(verCtrl);
-		if((verCtrl == 1) || (verCtrl == 2)) 			//show svn info
+		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
+
+		if(verCtrl != 0) 			//show verRepos info
 		{
-			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",false);
-			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",false);
+			if(isRemote == 0)
+			{
+				$("#dialog-new-repos div[name='localVerRepos1']").show();
+				$("#dialog-new-repos div[name='remoteVerRepos1']").hide();
+			}
+			else
+			{
+				if(verCtrl == 1)
+				{
+					$("#dialog-new-repos div[name='localVerRepos1']").hide();
+				}
+				else
+				{
+					$("#dialog-new-repos div[name='localVerRepos1']").show();
+				}
+				$("#dialog-new-repos div[name='remoteVerRepos1']").show();				
+			}
+			$("#dialog-new-repos span[name='isRemoteSetting1']").show();
+			$("#dialog-new-repos div[name='verReposSetting1']").show();				
 		}
-		else	//hide svn info
+		else	//hide verRepos info
 		{
-			$("#dialog-new-repos input[name='svnPath1']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnUser1']").attr("disabled",true);
-			$("#dialog-new-repos input[name='svnPwd1']").attr("disabled",true);				
-		}   
+			$("#dialog-new-repos span[name='isRemoteSetting1']").hide();
+			$("#dialog-new-repos div[name='verReposSetting1']").hide();				
+		}     
 	}
 	
     function newRepos() {
@@ -373,19 +513,28 @@
             callback: function () {
                 setTimeout(function () {
                     $("#dialog-new-repos input[name='name']").focus();
+
                     //alert(login_user.type);
+                    var defaultReposStorePath =  gDocSysConfig.defaultReposStorePath;
+                    var defaultLocalVerReposStorePath =  defaultReposStorePath + "DocSysVerReposes/";
+
+                    $("#dialog-new-repos input[name='path']").val(gDocSysConfig.defaultReposStorePath);
                     if(login_user.type == 2) //超级管理员，可以设置仓库路径
                     {
                     	$("#dialog-new-repos input[name='path']").attr("disabled",false);
                     }
+                    
+                    doSelectFS(); 
+                    
+                    
+                    $("#dialog-new-repos input[name='localSvnPath']").val(defaultLocalVerReposStorePath);	//local VersionRepos Path
                     $("#dialog-new-repos input[name='svnPath']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser']").val("");
             		$("#dialog-new-repos input[name='svnPwd']").val("");
-                    doSelectVerCtrl(); //根据文件系统版本控制默认类型，控制显示svn信息
+                    $("#dialog-new-repos input[name='localSvnPath1']").val(defaultLocalVerReposStorePath);	//local VersionRepos Path
                     $("#dialog-new-repos input[name='svnPath1']").val("");	//置空
                     $("#dialog-new-repos input[name='svnUser1']").val("");
             		$("#dialog-new-repos input[name='svnPwd1']").val("");
-                    doSelectVerCtrl1(); //根据文件系统版本控制默认类型，控制显示svn信息
                     
                 },100);
 
@@ -393,22 +542,42 @@
         },function () {
             var name = $("#dialog-new-repos input[name='name']").val();
             var info = $("#dialog-new-repos input[name='info']").val();
-            //var type = $("#dialog-new-repos select[name='type']").val();
-            var type = 1;	//Real Doc System
-            var path = $("#dialog-new-repos input[name='path']").val();
+            var path = $("#dialog-new-repos input[name='path']").val();	//仓库位置
+            var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
+            var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
             var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
+            var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
+            var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
             var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
             var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
             //For Virtual Doc Version Control
             var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
+            var isRemote1 = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
+            var localSvnPath1 = $("#dialog-new-repos input[name='localSvnPath1']").val();
             var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
             var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
             var svnPwd1 = $("#dialog-new-repos input[name='svnPwd1']").val();
             var createTime = new Date().getTime();	//获取时间戳
+            
             //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
-            if( name && info){
-                $.ajax({
+        	if(!name)
+        	{
+            	alert("仓库名不能为空！");
+            	return false;
+        	}
+        	if(!info)
+        	{
+            	alert("仓库简介不能为空！");
+            	return false;
+        	}
+        	if(!path)
+        	{
+            	alert("仓库存储路径不能为空！");
+            	return false;
+        	}
+        	  	
+            $.ajax({
                     url : "/DocSystem/Repos/addRepos.do",
                     type : "post",
                     dataType : "json",
@@ -417,11 +586,16 @@
                         info:info,
                         type:type,
                         path:path,
+                        realDocPath: realDocPath,
                         verCtrl: verCtrl,
+                        isRemote: isRemote,
+                        localSvnPath: localSvnPath,
                         svnPath: svnPath,
                         svnUser: svnUser,
                         svnPwd: svnPwd,
                         verCtrl1: verCtrl1,
+                        isRemote1: isRemote1,
+                        localSvnPath1: localSvnPath1,
                         svnPath1: svnPath1,
                         svnUser1: svnUser1,
                         svnPwd1: svnPwd1,
@@ -443,12 +617,7 @@
                     }
                 });
                 return true;
-            }else{
-                alert("仓库信息不全，请重试！");
-                return false;
-            }
-        });
-
+        	});
     }
     
 	function showFeebackPanel()

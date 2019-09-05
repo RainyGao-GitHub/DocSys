@@ -1,0 +1,93 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.apache.xmlbeans</groupId>
+    <artifactId>xmlbeans</artifactId>
+    <version>3.0.1</version>
+
+    <name>XmlBeans</name>
+    <description>XmlBeans main jar</description>
+    <url>https://xmlbeans.apache.org/</url>
+
+    <issueManagement>
+        <system>jira</system>
+        <url>http://issues.apache.org/jira/secure/BrowseProject.jspa?id=10436</url>
+    </issueManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>POI Users List</name>
+            <subscribe>user-subscribe@poi.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@poi.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/poi-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>POI Developer List</name>
+            <subscribe>dev-subscribe@poi.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@poi.apache.org</unsubscribe>
+            <archive>http://mail-archives.apache.org/mod_mbox/poi-dev/</archive>
+        </mailingList>
+    </mailingLists>    
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:svn:https://svn.apache.org/repos/asf/xmlbeans/</connection>
+        <developerConnection>
+            scm:svn:https://${maven.username}@svn.apache.org/repos/asf/xmlbeans/
+        </developerConnection>
+        <url>https://svn.apache.org/repos/asf/xmlbeans/</url>
+    </scm>
+
+    <organization>
+        <name>XmlBeans</name>
+        <url>https://xmlbeans.apache.org/</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Cezar Andrei</name>
+            <id>cezar</id>
+            <email>cezar.andrei@no#spam#!gma|l.com</email>
+            <organization></organization>
+        </developer>
+        <developer>
+            <name>Radu Preotiuc</name>
+            <id>radup</id>
+            <email>radupr@nos#pam.gm@il.com</email>
+            <organization></organization>
+        </developer>
+        <developer>
+            <name>Radu Preotiuc</name>
+            <id>radup</id>
+            <email>radu.preotiuc-pietro@nos#pam.bea.com</email>
+            <organization></organization>
+        </developer>
+        <developer>
+            <name>Wing Yew Poon</name>
+            <id>wpoon</id>
+            <email>wing-yew.poon@nos#pam.oracle.com</email>
+            <organization></organization>
+        </developer>
+        <developer>
+            <name>Jacob Danner</name>
+            <id>jdanner</id>
+            <email>jacob.danner@nos#pam.oracle.com</email>
+            <organization></organization>
+        </developer>
+        <developer>
+            <name>POI Team</name>
+            <id>poi</id>
+            <email>user@poi.apache.org</email>
+            <organization>Apache POI</organization>
+        </developer>
+    </developers>
+
+    <dependencies/>
+
+</project>
