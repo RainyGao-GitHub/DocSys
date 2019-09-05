@@ -17,9 +17,6 @@ public interface ReposMapper {
 
     int updateByPrimaryKey(Repos record);
     
-    //获取Repos的menu字段
-    String getReposMenu(Integer id);
-    
     //get all ReposList
     List<Repos> selectAll();
 

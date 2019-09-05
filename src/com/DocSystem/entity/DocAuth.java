@@ -11,7 +11,7 @@ public class DocAuth {
 
     private Integer priority;
 
-    private Integer docId;
+    private Long docId;
 
     private Integer reposId;
 
@@ -26,6 +26,10 @@ public class DocAuth {
     private Integer deleteEn;
 
     private Integer heritable;
+
+    private String docPath;
+
+    private String docName;
 
     public Integer getId() {
         return id;
@@ -67,11 +71,11 @@ public class DocAuth {
         this.priority = priority;
     }
 
-    public Integer getDocId() {
+    public Long getDocId() {
         return docId;
     }
 
-    public void setDocId(Integer docId) {
+    public void setDocId(Long docId) {
         this.docId = docId;
     }
 
@@ -131,51 +135,48 @@ public class DocAuth {
         this.heritable = heritable;
     }
 
-    //DocAuth 闄勫姞淇℃伅: 闇�瑕侀�氳繃joint doc and user or group Table to get these info
-    private String  userName="";	//from user Table
-    private String  realName="";	//from user Table
-    private String  groupName="";	//from group Table
-    
-    private String docName="";		//from doc Table
-    private String docPath="";		//from doc Table
-    
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName == null ? null : userName.trim();
-    }
-    
-    public String getRealName() {
-        return realName;
-    }
-
-    public void setRealName(String realName) {
-        this.realName = realName == null ? null : realName.trim();
-    }
-    
-    public String getGroupName() {
-        return groupName;
-    }
-
-    public void setGroupName(String groupName) {
-        this.groupName = groupName == null ? null : groupName.trim();
-    }
-   
-    public String getDocName() {
-        return docName;
-    }
-
-    public void setDocName(String docName) {
-        this.docName = docName;
-    }
-    
     public String getDocPath() {
         return docPath;
     }
 
     public void setDocPath(String docPath) {
-        this.docPath = docPath;
-    }    
+        this.docPath = docPath == null ? null : docPath.trim();
+    }
+
+    public String getDocName() {
+        return docName;
+    }
+
+    public void setDocName(String docName) {
+        this.docName = docName == null ? null : docName.trim();
+    }
+    
+    //DocAuth 附加信息: 需要通过joint doc and user or group Table to get these info
+	private String  userName="";	//from user Table
+	private String  realName="";	//from user Table
+	private String  groupName="";	//from group Table
+	
+	public String getUserName() {
+	    return userName;
+	}
+	
+	public void setUserName(String userName) {
+	    this.userName = userName == null ? null : userName.trim();
+	}
+	
+	public String getRealName() {
+	    return realName;
+	}
+	
+	public void setRealName(String realName) {
+	    this.realName = realName == null ? null : realName.trim();
+	}
+	
+	public String getGroupName() {
+	    return groupName;
+	}
+	
+	public void setGroupName(String groupName) {
+	    this.groupName = groupName == null ? null : groupName.trim();
+	}
 }

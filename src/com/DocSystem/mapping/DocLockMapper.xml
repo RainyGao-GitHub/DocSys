@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.DocLockMapper">
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.DocLock">
+    <id column="ID" jdbcType="INTEGER" property="id" />
+    <result column="TYPE" jdbcType="INTEGER" property="type" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="PATH" jdbcType="VARCHAR" property="path" />
+    <result column="DOC_ID" jdbcType="BIGINT" property="docId" />
+    <result column="PID" jdbcType="BIGINT" property="pid" />
+    <result column="VID" jdbcType="INTEGER" property="vid" />
+    <result column="STATE" jdbcType="INTEGER" property="state" />
+    <result column="LOCKER" jdbcType="VARCHAR" property="locker" />
+    <result column="LOCK_BY" jdbcType="INTEGER" property="lockBy" />
+    <result column="LOCK_TIME" jdbcType="BIGINT" property="lockTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ID, TYPE, NAME, PATH, DOC_ID, PID, VID, STATE, LOCKER, LOCK_BY, LOCK_TIME
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_lock
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from doc_lock
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.DocLock">
+    insert into doc_lock (ID, TYPE, NAME, 
+      PATH, DOC_ID, PID, VID, 
+      STATE, LOCKER, LOCK_BY, 
+      LOCK_TIME)
+    values (#{id,jdbcType=INTEGER}, #{type,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, 
+      #{path,jdbcType=VARCHAR}, #{docId,jdbcType=BIGINT}, #{pid,jdbcType=BIGINT}, #{vid,jdbcType=INTEGER}, 
+      #{state,jdbcType=INTEGER}, #{locker,jdbcType=VARCHAR}, #{lockBy,jdbcType=INTEGER}, 
+      #{lockTime,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.DocLock">
+    insert into doc_lock
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        ID,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="path != null">
+        PATH,
+      </if>
+      <if test="docId != null">
+        DOC_ID,
+      </if>
+      <if test="pid != null">
+        PID,
+      </if>
+      <if test="vid != null">
+        VID,
+      </if>
+      <if test="state != null">
+        STATE,
+      </if>
+      <if test="locker != null">
+        LOCKER,
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY,
+      </if>
+      <if test="lockTime != null">
+        LOCK_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null">
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="docId != null">
+        #{docId,jdbcType=BIGINT},
+      </if>
+      <if test="pid != null">
+        #{pid,jdbcType=BIGINT},
+      </if>
+      <if test="vid != null">
+        #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="locker != null">
+        #{locker,jdbcType=VARCHAR},
+      </if>
+      <if test="lockBy != null">
+        #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        #{lockTime,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.DocLock">
+    update doc_lock
+    <set>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null">
+        PATH = #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="docId != null">
+        DOC_ID = #{docId,jdbcType=BIGINT},
+      </if>
+      <if test="pid != null">
+        PID = #{pid,jdbcType=BIGINT},
+      </if>
+      <if test="vid != null">
+        VID = #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        STATE = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="locker != null">
+        LOCKER = #{locker,jdbcType=VARCHAR},
+      </if>
+      <if test="lockBy != null">
+        LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      </if>
+      <if test="lockTime != null">
+        LOCK_TIME = #{lockTime,jdbcType=BIGINT},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.DocLock">
+    update doc_lock
+    set TYPE = #{type,jdbcType=INTEGER},
+      NAME = #{name,jdbcType=VARCHAR},
+      PATH = #{path,jdbcType=VARCHAR},
+      DOC_ID = #{docId,jdbcType=BIGINT},
+      PID = #{pid,jdbcType=BIGINT},
+      VID = #{vid,jdbcType=INTEGER},
+      STATE = #{state,jdbcType=INTEGER},
+      LOCKER = #{locker,jdbcType=VARCHAR},
+      LOCK_BY = #{lockBy,jdbcType=INTEGER},
+      LOCK_TIME = #{lockTime,jdbcType=BIGINT}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectSelective" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from doc_lock
+    where 1=1
+      <if test="id != null">
+    	and ID = #{id,jdbcType=INTEGER}
+      </if>
+      <if test="type != null">
+        and TYPE = #{type,jdbcType=INTEGER}
+      </if>
+      <if test="name != null">
+        and NAME = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="path != null">
+        and PATH = #{path,jdbcType=VARCHAR}
+      </if>
+      <if test="docId != null">
+        and DOC_ID = #{docId,jdbcType=BIGINT}
+      </if>
+      <if test="pid != null">
+        and PID = #{pid,jdbcType=BIGINT}
+      </if>
+      <if test="vid != null">
+        and VID = #{vid,jdbcType=INTEGER}
+      </if>
+      <if test="state != null">
+        and STATE = #{state,jdbcType=INTEGER}
+      </if>
+      <if test="lockBy != null">
+        and LOCK_BY = #{lockBy,jdbcType=INTEGER}
+      </if>
+      <if test="locker != null">
+        and LOCKER = #{locker,jdbcType=INTEGER}
+      </if>
+      <if test="lockTime != null">
+        and LOCK_TIME = #{lockTime,jdbcType=BIGINT}
+      </if>
+  </select>
+
+</mapper>

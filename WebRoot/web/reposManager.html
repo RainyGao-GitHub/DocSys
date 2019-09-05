@@ -204,7 +204,6 @@
 <script type="text/javascript" src="static/highlight/highlightjs-line-numbers.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="application/javascript" src="static/markdown/lib/raphael.min.js"></script>
-<script type="application/javascript" src="static/seajs/sea.js"></script>
 <script type="application/javascript" src="static/scripts/jsonEscape.js"></script>
 <!-- zTree -->
 <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
@@ -346,6 +345,8 @@
 			//bootstrapQ.alert("请选择仓库！");
 			return;
 		}
+		gReposId = reposId;
+		console.log("gReposId:" + gReposId);
 		
         $.ajax({
             url : "/DocSystem/Repos/getRepos.do",
@@ -473,7 +474,7 @@
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
-		        		//console.log(ret);
+		        		console.log(ret);
 		                callback && callback(ret.data);
 		            }
 		            else
@@ -492,7 +493,7 @@
 		console.log("deleteReposConfirm");
 		bootstrapQ.confirm({
 	        title: "删除仓库",
-	        msg: "是否删除仓库？",
+	        msg: "仓库删除后数据将无法恢复，是否删除？",
 	        okbtn: "删除",
 	        qubtn: "取消",
 	    },function () {
@@ -532,6 +533,20 @@
                 }
         });
 	}
+    
+</script>
+
+<script type="text/javascript">
+	//Interfaces for Tree Operation
+	
+	//Get Node by NodeId
+	function getNodeByNodeId(nodeId)
+	{
+		var zTree = $.fn.zTree.getZTreeObj("doctree");
+		var node = zTree.getNodeByParam("id",nodeId);
+		return node;
+	}
+	
 </script>
 
 <script type="text/javascript">
@@ -619,27 +634,63 @@
 
 <SCRIPT type="text/javascript" >
 	/********************** zTree设置与接口**********************************/
-    var curDoc = 0;	
-    //zTree's setting
-	var setting = {
-        //zTree数据格式
-	   	data: {
-	   			//使用简单数据模式
-	            simpleData: {
-	                enable: true,
-	            },
-	            //不允许修改leaf node and parent node的isParent属性
-	            keep: {
-	            	leaf: true,
-	            	parent: true,
-	            },
-	    },
-	    //zTree各种操作的回调函数定义
-	    callback: {
-	            onClick: zTreeOnClick,
-	            beforeRightClick: zTreeBeforeRightClick,
-	    },
-	};
+    var gReposId = null;
+	var curDoc = 0;	
+	
+	//zTree初始化接口:根据data和setting生成zTree
+	function zTreeInit(data) {
+	    console.log("zTreeInit gReposId:" + gReposId);
+	    console.log(setting);
+	    
+	    //zTree's setting
+		var setting = {
+			//异步加载的工作原理
+			async : {  
+	    		enable : true,//设置 zTree 是否开启异步加载模式  
+	            url : "/DocSystem/Repos/getSubDocList.do",
+	            type : "post",
+	    		autoParam : ["id","Level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
+	    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
+	    		dataFilter: asyncDataFilter, 
+			},
+	        //zTree数据格式
+		   	data: {
+		   			//使用简单数据模式
+		            simpleData: {
+		                enable: true,
+		            },
+		            //不允许修改leaf node and parent node的isParent属性
+		            keep: {
+		            	leaf: true,
+		            	parent: true,
+		            },
+		    },
+		    //zTree各种操作的回调函数定义
+		    callback: {
+		            onClick: zTreeOnClick,
+		            beforeRightClick: zTreeBeforeRightClick,
+		    },
+		};
+	    
+	    var doctree = zTree.init($("#doctree"), setting, data);
+	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
+	}
+	
+	function asyncDataFilter(treeId, parentNode, responseData) {
+		console.log("asyncDataFilter");
+		var docList = responseData.data;
+		//遍历jason_arry, convert the node type to isParent flag
+      	for(var i=0; i<docList.length; i++)
+      	{
+           var jsonObj = docList[i];
+           jsonObj.id = jsonObj.docId,
+           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.Level = jsonObj.level;
+       }
+       console.log(docList);
+	   return docList;
+	}
 
 	//右键点击所在的zTreeNode：用于右键菜单相关的操作:rename, remove, 新建,上传,下载
 	var curRightClickedTreeNode = null;
@@ -720,30 +771,20 @@
 		}
 		return remoteDir;
 	}
-
-	//zTree初始化接口:根据data和setting生成zTree
-	function zTreeInit(data) {
-	    console.log("zTreeInit");
-	    console.log(setting);
-	
-	    var doctree = zTree.init($("#doctree"), setting, data);
-	    //doctree.expandAll(true); //考虑只自动展开根目录下目录
-	}
 	
 	//PageInit
 	function SysInit()
 	{
 		console.log("SysInit");
-		//绘制zTree
-		syncUpMenu();	    
-	    //仓库获取成功后再获取仓库用户列表
-		showAuthList();
+		//绘制zTree并显示权限列表
+		syncUpMenu(showAuthList);	    
+
 		//初始化zTree的右键菜单 
 		zTreeContextMenuInit();
 	}
 	
 	//将后台Menu,同步回前台
-	function syncUpMenu()
+	function syncUpMenu(callback)
 	{
 		console.log("syncUpMenu");
 	    getMenu(function (data) {
@@ -754,13 +795,15 @@
 	            console.log("重新绘制菜单，因为当前菜单数据与zTree不一致");
 	            drawMenu(data);
 	        }
+		    //仓库获取成功后再获取仓库用户列表
+			showAuthList();
 	    });
 	}
 
 	
 	//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
 	function drawMenu(data) {
-		console.log("drawMenu");
+		console.log("drawMenu", data);
 		window.menu = data;
 	    //data = JSON.parse('"' + data + '"'); //We need to use JSON parse one more time here  
 	    //var menu = JSON.parse(data);
@@ -769,10 +812,12 @@
       	for(var i=0; i<menu.length; i++)
       	{
            var jsonObj = menu[i];
-           jsonObj.pId = jsonObj.id != 0? jsonObj.pid : "root",	//id = 0是rootDoc
+           jsonObj.id = jsonObj.docId,
+           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",	//id = 0是rootDoc
            jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.Level = jsonObj.level;
        }
-	   console.log(menu);
+	   console.log("menu",menu);
 	   zTreeInit(menu);
 	}
 
@@ -863,16 +908,27 @@ function showAuthList()
 function showDocAuthList(){
    	console.log("showDocAuthList()");
    	var docId = curDoc;
+   	var parentPath = "";
+   	var docName = "";
+   	var node = getNodeByNodeId(docId);
+	if(node && node != null)
+	{
+		parentPath = node.path;
+		docName = node.name;
+	}
+   	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+   	
    	var vid = getQueryString("vid");
-	console.log(docId);
-
+	
     $.ajax({
                 url : "/DocSystem/Repos/getDocAuthList.do",
                 type : "post",
                 dataType : "json",
                 data : {
-                	docId: docId,
                     reposId : vid,
+                	docId: docId,
+                	path: parentPath,
+                	name: docName,
                 },
                 success : function (ret) {
                     if( "ok" == ret.status ){
@@ -1261,6 +1317,15 @@ function showReposSettingPanel(){
 			//set docAuth
     		var docAuth = docAuthList[index];
     		console.log(docAuth);
+    		
+    		var node = getNodeByNodeId(docAuth.docId);
+    		var parentPath = "";
+    		var docName = "";
+    		if(node && node != null && node.id != 0)
+    		{
+    			parentPath = node.path;
+    			docName = node.name;
+    		}
     		   		
     		$.ajax({
 				  url : "/DocSystem/Repos/configDocAuth.do",
@@ -1269,8 +1334,10 @@ function showReposSettingPanel(){
 				    data : {
 				         userId : docAuth.userId,
 				         groupId : docAuth.groupId,
-				         docId : docAuth.docId,
 				         reposId : vid,
+				         docId : docAuth.docId,
+				         path: node.path,
+				         name: node.name,
 				         isAdmin: docAuth.isAdmin, 
 				         access: docAuth.access,
 				         editEn: docAuth.editEn, 

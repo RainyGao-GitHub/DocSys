@@ -9,7 +9,13 @@ public class Repos {
 
     private String path;
 
+    private String realDocPath;
+
     private Integer verCtrl;
+
+    private Integer isRemote;
+
+    private String localSvnPath;
 
     private String svnPath;
 
@@ -17,7 +23,13 @@ public class Repos {
 
     private String svnPwd;
 
+    private String revision;
+
     private Integer verCtrl1;
+
+    private Integer isRemote1;
+
+    private String localSvnPath1;
 
     private String svnPath1;
 
@@ -25,15 +37,21 @@ public class Repos {
 
     private String svnPwd1;
 
-    private String info;
+    private String revision1;
 
-    private String menu;
+    private String info;
 
     private String pwd;
 
     private Integer owner;
 
     private Long createTime;
+
+    private Integer state;
+
+    private Integer lockBy;
+
+    private Long lockTime;
 
     public Integer getId() {
         return id;
@@ -67,12 +85,36 @@ public class Repos {
         this.path = path == null ? null : path.trim();
     }
 
+    public String getRealDocPath() {
+        return realDocPath;
+    }
+
+    public void setRealDocPath(String realDocPath) {
+        this.realDocPath = realDocPath == null ? null : realDocPath.trim();
+    }
+
     public Integer getVerCtrl() {
         return verCtrl;
     }
 
     public void setVerCtrl(Integer verCtrl) {
         this.verCtrl = verCtrl;
+    }
+
+    public Integer getIsRemote() {
+        return isRemote;
+    }
+
+    public void setIsRemote(Integer isRemote) {
+        this.isRemote = isRemote;
+    }
+
+    public String getLocalSvnPath() {
+        return localSvnPath;
+    }
+
+    public void setLocalSvnPath(String localSvnPath) {
+        this.localSvnPath = localSvnPath == null ? null : localSvnPath.trim();
     }
 
     public String getSvnPath() {
@@ -99,12 +141,36 @@ public class Repos {
         this.svnPwd = svnPwd == null ? null : svnPwd.trim();
     }
 
+    public String getRevision() {
+        return revision;
+    }
+
+    public void setRevision(String revision) {
+        this.revision = revision == null ? null : revision.trim();
+    }
+
     public Integer getVerCtrl1() {
         return verCtrl1;
     }
 
     public void setVerCtrl1(Integer verCtrl1) {
         this.verCtrl1 = verCtrl1;
+    }
+
+    public Integer getIsRemote1() {
+        return isRemote1;
+    }
+
+    public void setIsRemote1(Integer isRemote1) {
+        this.isRemote1 = isRemote1;
+    }
+
+    public String getLocalSvnPath1() {
+        return localSvnPath1;
+    }
+
+    public void setLocalSvnPath1(String localSvnPath1) {
+        this.localSvnPath1 = localSvnPath1 == null ? null : localSvnPath1.trim();
     }
 
     public String getSvnPath1() {
@@ -131,20 +197,20 @@ public class Repos {
         this.svnPwd1 = svnPwd1 == null ? null : svnPwd1.trim();
     }
 
+    public String getRevision1() {
+        return revision1;
+    }
+
+    public void setRevision1(String revision1) {
+        this.revision1 = revision1 == null ? null : revision1.trim();
+    }
+
     public String getInfo() {
         return info;
     }
 
     public void setInfo(String info) {
         this.info = info == null ? null : info.trim();
-    }
-
-    public String getMenu() {
-        return menu;
-    }
-
-    public void setMenu(String menu) {
-        this.menu = menu == null ? null : menu.trim();
     }
 
     public String getPwd() {
@@ -169,5 +235,29 @@ public class Repos {
 
     public void setCreateTime(Long createTime) {
         this.createTime = createTime;
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
+    }
+
+    public Integer getLockBy() {
+        return lockBy;
+    }
+
+    public void setLockBy(Integer lockBy) {
+        this.lockBy = lockBy;
+    }
+
+    public Long getLockTime() {
+        return lockTime;
+    }
+
+    public void setLockTime(Long lockTime) {
+        this.lockTime = lockTime;
     }
 }

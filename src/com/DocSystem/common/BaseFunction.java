@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -47,38 +48,318 @@ public class BaseFunction{
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 
-	/******************************* 路径相关接口  *******************************/
+	/******************************** Basic Interface for docSys *************************************/
+	protected void docSysDebugLog(String logStr, ReturnAjax rt) {
+		System.out.println(logStr);
+		if(rt != null)
+		{
+			rt.setDebugLog(logStr);
+		}
+	}
+
+	protected void docSysWarningLog(String logStr, ReturnAjax rt) {
+		System.err.println(logStr);
+		if(rt != null)
+		{
+			rt.setWarningMsg(logStr);
+		}
+	}
+
+	protected void docSysErrorLog(String logStr, ReturnAjax rt) {
+		System.err.println(logStr);
+		if(rt != null)
+		{
+			rt.setError(logStr);
+		}
+	}
+	
+	/******************************** Basic Interface for CommonAction *************************************/
+	//CommonAction 主要用于异步行为
+    //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+	//ActionType 1:add 2:delete 3:update 4:move 5:copy
+    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
+	protected void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, Integer actionId, Integer actionType, Integer docType, List<CommonAction> subActionList) 
+	{	
+		CommonAction action = new CommonAction();
+		action.setType(actionId);		
+		action.setAction(actionType);
+		action.setDocType(docType);
+
+		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		
+		action.setRepos(repos);
+		action.setDoc(srcDoc);
+		action.setNewDoc(dstDoc);
+		
+		action.setCommitMsg(commitMsg);
+		action.setCommitUser(commitUser);
+		
+		action.setSubActionList(subActionList);
+		
+		actionList.add(action);
+	}
+	
+	protected static boolean uniqueCommonActionIsRunning = false;
+	protected static ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = new ConcurrentHashMap<Long, CommonAction>();
+	protected static List<CommonAction> uniqueCommonActionList = new ArrayList<CommonAction>();
+	protected boolean insertUniqueCommonAction(CommonAction action)
+	{
+		Doc srcDoc = action.getDoc();
+		if(srcDoc == null)
+		{
+			return false;
+		}
+
+		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+
+		if(uniqueCommonActionHashMap.get(srcDoc.getDocId()) == null)
+		{
+			uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
+			uniqueCommonActionList.add(action);
+			return true;
+		}
+		return false;
+	}
+	
+	/******************************** Basic Interface for CommitAction *************************************/
+	//版本仓库底层通用接口
+	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
+		printObject("insertAddFileAction:", doc);
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setDoc(doc);
+    	action.isSubAction = isSubAction;
+    	actionList.add(action);
+	}
+    
+	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
+	{
+		printObject("insertAddDirAction:", doc);
+
+		String localParentPath = doc.getLocalRootPath() + doc.getPath();
+		File dir = new File(localParentPath, doc.getName());
+		File[] tmp = dir.listFiles();
+		
+		//there is not subNodes under dir
+		if(tmp == null || tmp.length == 0)
+		{
+	    	CommitAction action = new CommitAction();
+	    	action.setAction(1);
+	    	action.setDoc(doc);
+	    	action.isSubAction = isSubAction;
+	    	action.setSubActionList(null);
+	    	actionList.add(action);
+	    	return;
+		}
+		
+		//Build subActionList
+    	String subParentPath = doc.getPath() + doc.getName() + "/";
+    	if(doc.getName().isEmpty())
+    	{
+    		subParentPath = doc.getPath();
+    	}
+    	int subDocLevel = doc.getLevel() + 1;
+    	
+		List<CommitAction> subActionList = new ArrayList<CommitAction>();
+	    for(int i=0;i<tmp.length;i++)
+	    {
+	    	File localEntry = tmp[i];
+	    	int subDocType = localEntry.isFile()? 1: 2;
+	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
+	    	if(localEntry.isDirectory())
+	    	{	
+	    		insertAddDirAction(subActionList,subDoc,true);
+	    	}
+	    	else
+	    	{
+	    		insertAddFileAction(subActionList,subDoc,true);
+	    	}
+	 	}
+		
+    	CommitAction action = new CommitAction();
+    	action.setAction(1);
+    	action.setDoc(doc);
+    	action.isSubAction = isSubAction;
+    	action.setSubActionList(subActionList);
+    	actionList.add(action);    	
+	}
+	
+	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
+		printObject("insertDeleteAction:", doc);
+    	CommitAction action = new CommitAction();
+    	action.setAction(2);
+    	action.setDoc(doc);
+    	actionList.add(action);
+	}
+    
+	protected void insertModifyFile(List<CommitAction> actionList, Doc doc) {
+		printObject("insertModifyFile:", doc);
+    	CommitAction action = new CommitAction();
+    	action.setAction(3);
+    	action.setDoc(doc);
+    	actionList.add(action);	
+	}
+	
+	/******************************* 路径相关接口  
+	 * @param isRealDoc 
+	 * @param localRootPath *******************************/
+	protected Doc buildBasicDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, boolean isRealDoc, String localRootPath, String localVRootPath, Long size, String checkSum) 
+	{
+		//Format path and name
+		if(path == null)
+		{
+			path = "";
+		}
+		if(name == null)
+		{
+			name = "";
+		}
+		
+		//To support user call the interface by entryPath
+		if(name.isEmpty())
+		{
+			if(!path.isEmpty())
+			{
+				String[] temp = new String[2]; 
+				level = seperatePathAndName(path, temp);
+				path = temp[0];
+				name = temp[1];			
+			}
+		}
+		
+		if(name.isEmpty())	//rootDoc
+		{
+			level = -1;
+			docId = 0L;
+			pid = -1L;
+		}
+		
+		if(level == null)
+		{
+			level = getLevelByParentPath(path);
+		}
+		
+		Doc doc = new Doc();
+		doc.setVid(reposId);
+		doc.setPath(path);
+		doc.setName(name);
+		doc.setLevel(level);
+		doc.setType(type);
+		doc.setLocalRootPath(localRootPath);
+		doc.setLocalVRootPath(localVRootPath);
+		doc.setSize(size);
+		doc.setCheckSum(checkSum);
+		
+		doc.setIsRealDoc(isRealDoc);
+		
+		if(isRealDoc)
+		{
+			if(docId == null)
+			{
+				docId = buildDocIdByName(level, path, name);
+			}
+			
+			if(pid == null)
+			{
+				if(path.isEmpty())
+				{
+					pid = 0L;
+				}
+				else
+				{
+					pid = buildDocIdByName(level-1, path, "");
+				}
+			}
+		}
+
+		doc.setDocId(docId);
+		doc.setPid(pid);
+		return doc;
+	}
+	
+	//VirtualDoc 的vid docId pid level都是和RealDoc一样的
+	protected Doc buildVDoc(Doc doc) 
+	{
+		if(doc.getIsRealDoc())
+		{
+			Doc vDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), "", getVDocName(doc), 0, 2, false, doc.getLocalVRootPath(), doc.getLocalVRootPath(), null, null); 
+			vDoc.setContent(doc.getContent());
+			return vDoc;
+		}
+		
+		System.out.println("buildVDoc() doc already is VDoc");
+		return doc;
+	}
+	
+	protected int getLevelByParentPath(String path) 
+	{
+		if(path == null || path.isEmpty())
+		{
+			return 0;
+		}
+		
+		String [] paths = path.split("/");
+		return paths.length;
+	}
+
+	protected int seperatePathAndName(String entryPath, String [] result) {
+		if(entryPath.isEmpty())
+		{
+			//It it rootDoc
+			return -1;
+		}
+		
+		String [] paths = entryPath.split("/");
+		
+		int deepth = paths.length;
+		System.out.println("seperatePathAndName() deepth:" + deepth); 
+		
+		String  path = "";
+		String name = "";
+		
+		//Get Name and pathEndPos
+		int pathEndPos = 0;
+		for(int i=deepth-1; i>=0; i--)
+		{
+			name = paths[i];
+			if(name.isEmpty())
+			{
+				continue;
+			}
+			pathEndPos = i;
+			break;
+		}
+		
+		//Get Path
+		for(int i=0; i<pathEndPos; i++)
+		{
+			String tempName = paths[i];
+			if(tempName.isEmpty())
+			{
+				continue;
+			}	
+			
+			path = path + tempName + "/";
+		}
+		
+		result[0] = path;
+		result[1] = name;
+
+		int level = paths.length -1;
+		return level;
+	}
+	
 	//获取默认的仓库根路径
 	protected String getDefaultReposRootPath() {
 		String path = null;
-		
-		path = ReadProperties.read("docSysConfig.properties", "defaultReposRootPath");
-	    if(path == null || "".equals(path))
-	    {
-			if(isWinOS())
-			{  
-				path = "C:/DocSysReposes/";
-			}
-			else
-			{
-				path = "/DocSysReposes/";
-			}
-	    }
-	    else
-	    {
-	    	path = localDirPathFormat(path);
-	    }
-	    
-	    File dir = new File(path);
-		if(dir.exists() == false)
+		if(isWinOS())
+		{  
+			path = "C:/DocSysReposes/";
+		}
+		else
 		{
-			System.out.println("getDefaultReposRootPath() defaultReposRootPath:" + path + " not exists, do create it!");
-			if(dir.mkdirs() == false)
-			{
-				System.out.println("getDefaultReposRootPath() Failed to create dir:" + path);
-			}
-		}	 
-	    
+			path = "/DocSysReposes/";
+		}	    
 		return path;
 	}
 	
@@ -194,28 +475,27 @@ public class BaseFunction{
 	//获取仓库的实文件的本地存储根路径
 	protected static String getReposRealPath(Repos repos)
 	{
-		String reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposRealPath() " + reposRPath);
+		String reposRPath =  repos.getRealDocPath();
+		if(reposRPath == null || reposRPath.isEmpty())
+		{
+			reposRPath = getReposPath(repos) + "data/rdata/";	//实文件系统的存储数据放在data目录下 
+		}
+		//System.out.println("getReposRealPath() " + reposRPath);
 		return reposRPath;
 	}
 	
 	//获取仓库的虚拟文件的本地存储根路径
-	protected String getReposVirtualPath(Repos repos)
+	protected static String getReposVirtualPath(Repos repos)
 	{
 		String reposVPath = getReposPath(repos) + "data/vdata/";	//实文件系统的存储数据放在data目录下 
-		System.out.println("getReposVirtualPath() " + reposVPath);
+		//System.out.println("getReposVirtualPath() " + reposVPath);
 		return reposVPath;
 	}
 	
-	protected String getVDocName(String parentPath, String docName) 
+	protected String getVDocName(Doc doc) 
 	{
-		if(parentPath  == null)
-		{
-			parentPath = "";
-		}
-		String VPath = MD5.md5(parentPath) + "_" + docName;
-		System.out.println("getVDocName() " + VPath + " for " + parentPath + docName);
-		return VPath;
+		//return doc.getVid() + "_" + doc.getDocId() + "_" + doc.getName();
+		return doc.getDocId() + "_" + doc.getName();
 	}
 	
 	protected static String getHashId(String path) 
@@ -258,11 +538,136 @@ public class BaseFunction{
 		return localSvnPath;
 	}
 	
+	protected String getLocalVerReposURI(Repos repos, boolean isRealDoc) {
+		String localVerReposURI = null;
+
+		Integer verCtrl = null;
+		String localSvnPath = null;
+
+		if(isRealDoc)
+		{
+			verCtrl = repos.getVerCtrl();
+			localSvnPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			verCtrl = repos.getVerCtrl1();
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+
+		String reposName = getVerReposName(repos,isRealDoc);
+		
+		if(verCtrl == 1)
+		{
+			localVerReposURI = "file:///" + localSvnPath + reposName;
+		}
+		else
+		{
+			localVerReposURI = null;
+			
+		}
+		return localVerReposURI;
+	}
+	
+	protected String getLocalVerReposPath(Repos repos, boolean isRealDoc) {
+		String localVerReposPath = null;
+		
+		String localSvnPath = null;
+		if(isRealDoc)
+		{
+			localSvnPath = repos.getLocalSvnPath();
+		}
+		else
+		{
+			localSvnPath = repos.getLocalSvnPath1();
+		}	
+		
+		localSvnPath = dirPathFormat(localSvnPath);
+
+		String reposName = getVerReposName(repos,isRealDoc);
+		
+		localVerReposPath = localSvnPath + reposName + "/";
+		return localVerReposPath;
+	}
+
+	protected String getVerReposName(Repos repos,boolean isRealDoc) {
+		String reposName = null;
+		
+		Integer id = repos.getId();
+		if(isRealDoc)
+		{
+			Integer verCtrl = repos.getVerCtrl();
+			if(verCtrl == 1)
+			{
+				reposName = id + "_SVN_RRepos";
+			}
+			else if(verCtrl == 2)
+			{ 
+				if(repos.getIsRemote() == 0)
+				{
+					reposName = id + "_GIT_RRepos";
+				}
+				else
+				{
+					reposName = id + "_GIT_RRepos_Remote";					
+				}
+			}
+		}
+		else
+		{
+			Integer verCtrl = repos.getVerCtrl1();			
+			if(verCtrl == 1)
+			{
+				reposName = id + "_SVN_VRepos";
+			}
+			else if(verCtrl == 2)
+			{
+				if(repos.getIsRemote1() == 0)
+				{
+					reposName = id + "_GIT_VRepos";
+				}
+				else
+				{
+					reposName = id + "_GIT_VRepos_Remote";					
+				}
+			}
+		}
+		return reposName;
+	}
+	
 	//Build DocId by DocName
-	protected Integer buildDocIdByName(Integer level, String docName) 
+	protected Long buildDocIdByName(Integer level, String parentPath, String docName) 
 	{
-		Integer docId = level*1000000 + docName.hashCode();	//为了避免文件重复使用level*10000000 + docName的hashCode
+		String docPath = parentPath + docName;
+		if(docName.isEmpty())
+		{
+			if(parentPath.isEmpty())
+			{
+				return 0L;
+			}
+			
+			docPath = parentPath.substring(0, parentPath.length()-1);	//remove the last char '/'
+		}
+		
+		Long docId = level*100000000000L + docPath.hashCode() + 102147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
 		return docId;
+	}		
+	
+	protected Long buildPidByPath(int level, String path) 
+	{
+		if(path == null || path.isEmpty())
+		{
+			return 0L;
+		}
+		
+		char lastChar = path.charAt(path.length()-1);
+		if(lastChar == '/')
+		{
+			path = path.substring(0,path.length()-1);
+		}
+		
+		Long pid = buildDocIdByName(level-1, path, "");
+		return pid;
 	}
 	
 	protected String getDocPath(Doc doc) 
@@ -291,7 +696,6 @@ public class BaseFunction{
 			HashMap<String, Integer> hitInfo = new HashMap<String, Integer>();
 			hitInfo.put(keyWord,1);
 			
-			//int sortIndex = hitDoc.getHitInfo().size()*100 + hitDoc.getHitCount();
 			int sortIndex = weight*100 + 1;
 			doc.setSortIndex(sortIndex);
 			
@@ -326,6 +730,7 @@ public class BaseFunction{
 			}
 			System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
 
+			//Java默认是引用，所以下面的操作是不需要的
 			//tempHitDoc.setHitInfo(hitInfo);
 			//tempHitDoc.setDoc(doc);
 			//searchResult.put(hitDoc.getDocPath(), tempHitDoc);	//Update searchResult
@@ -606,15 +1011,19 @@ public class BaseFunction{
     }
     
     public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
-        File dstFile=new File(dstFilePath);
-        if(dstFile.exists())
+        File srcFile=new File(srcFilePath);
+        if(srcFile.exists() == false)
         {
-        	if(cover == false)
-        	{
-        		//不允许覆盖
-        		System.out.println("copyFile() " + dstFilePath + " exists!");
-        		return false;
-        	}        	
+    		System.err.println("copyFile() srcFilePath:" + srcFilePath + " not exists!");
+    		return false;
+        }
+
+    	File dstFile=new File(dstFilePath);
+    	if(cover == false && dstFile.exists())
+    	{
+        	//不允许覆盖
+        	System.err.println("copyFile() " + dstFilePath + " exists!");
+        	return false;
         }
         
         try {
@@ -630,23 +1039,54 @@ public class BaseFunction{
 		    out.close();
         }
     	catch (Exception e) { 
-    		System.out.println("copyFile() copy file Exception"); 
+    		System.err.println("copyFile() from " + srcFilePath + " to " + dstFilePath + " Exception"); 
     		e.printStackTrace(); 
     		return false;
     	}
     	return true;
     }
     
+	public boolean isEmptyDir(String dirPath) 
+	{
+		File dir = new File(dirPath);
+    	if(false == dir.exists())
+    	{
+    		return true;
+    	}
+    	
+    	if(dir.isFile())
+    	{
+    		return true;
+    	}
+
+    	File[] fileList = dir.listFiles();
+    	
+    	if(fileList.length > 0)
+    	{
+    		return false;
+    	}
+    	
+		return true;
+	}
+
     public boolean copyDir(String srcPath, String dstPath, boolean cover) 
     {
 	    try {
+	    	//Check the srcDir
+	    	File srcDir = new File(srcPath); 
+	    	if(srcDir.exists() == false)
+	    	{
+    			System.err.println("copyDir() srcPath not exists:"+srcPath);
+    			return false;	    				    		
+	    	}
+	    	
 	    	//Check the newPath
 	    	File dstDir = new File(dstPath);
 	    	if(dstDir.exists())
 	    	{
 	    		if(cover == false)
 	    		{
-	    			System.out.println("copyDir() dstPath exists:"+dstPath);
+	    			System.err.println("copyDir() dstPath exists:"+dstPath);
 	    			return false;	    			
 	    		}
 	    	}
@@ -655,13 +1095,11 @@ public class BaseFunction{
 	    		//mkdirs will create the no exists parent dir, so I use the mkdir
 	    		if(dstDir.mkdir() == false)
 	    		{
-	    			System.out.println("copyDir() Failed to create dir:"+dstPath);
+	    			System.err.println("copyDir() Failed to create dir:"+dstPath);
 	    			return false;
 	    		}
 	    	}
 	    	
-	    	//Check the srcDir
-	    	File srcDir = new File(srcPath); 
 		    String[] file=srcDir.list(); 
 		    File temp=null; 
 		    for (int i = 0; i < file.length; i++) 
@@ -692,7 +1130,7 @@ public class BaseFunction{
 	    } 
 	    catch (Exception e) 
 	    { 
-	    	System.out.println("copyDir 异常"); 
+	    	System.err.println("copyDir from " + srcPath  + " to " + dstPath + " 异常"); 
 	    	e.printStackTrace(); 
 	    	return false;
 	    }
@@ -732,6 +1170,15 @@ public class BaseFunction{
 	    return true;
 	}
     
+	protected boolean checkAddLocalDirectory(String localParentPath) {
+		File parentDir = new File(localParentPath);
+		if(parentDir.exists() == false)
+		{
+			return parentDir.mkdirs();
+		}
+		return true;		
+	}
+
     //将dstDirPath同步成srcDirPath
 	protected boolean syncUpFolder(String srcParentPath,String srcName, String dstParentPath, String dstName,boolean modifyEnable) 
 	{

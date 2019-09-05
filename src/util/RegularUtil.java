@@ -63,7 +63,7 @@ public final class RegularUtil {
 	 * @return
 	 */
 	public static boolean IsMobliePhone(String str){
-		String regex = "^((13[0-9])|(15[^4,\\D])|(18[0,5-9]))\\d{8}$";
+		String regex = "^((13[0-9])|(15[0-9])|(18[0-9]))\\d{8}$";
 		return match(regex, str);
 	}
 

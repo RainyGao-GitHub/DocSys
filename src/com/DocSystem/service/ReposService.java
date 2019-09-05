@@ -21,9 +21,6 @@ public interface ReposService{
     //Get the ReposList
     public List<Repos> getReposList(Repos repos);
     
-    //get Repos Menu
-    public String getReposMenu(Integer id);
-    
     //update ReposVersion
     public int updateRepos(Repos repos);
     

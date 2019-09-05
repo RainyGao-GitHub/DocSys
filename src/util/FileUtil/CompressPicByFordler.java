@@ -12,8 +12,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import util.FileUtil.CompressPic;
-
 
 /**  
  * 类描述：   按文件夹递归压缩图片至新文件夹
