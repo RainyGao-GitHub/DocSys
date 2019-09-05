@@ -1,51 +1,90 @@
 package com.DocSystem.entity;
 
-public class ChangedItem {
-
-	private String path;
-    private String kind;
-	private String changeType;
-    private String copyPath;
-    private long copyRevision;
+public class ChangedItem 
+{
+	private Integer changeType;
     
+	private Integer entryType;
+
+    private String path;
+	private String name;
+	private String entryPath;
+	
+    private String srcPath;
+    private String srcName;
+    private String srcEntryPath;
+    
+    private String commitId;
     
     public String getPath() {
         return path;
     }
-
+    
     public void setPath(String path) {
         this.path = path == null ? null : path.trim();
     }
+
+    public String getName() {
+        return name;
+    }
     
-    public String getKind() {
-        return kind;
+    public void setName(String name) {
+        this.name = name == null ? null : name.trim();
+    }
+    
+    public String getEntryPath() {
+        return entryPath;
+    }
+    
+    public void setEntryPath(String entryPath) {
+        this.entryPath = entryPath == null ? null : entryPath.trim();
+    }
+    
+    public String getSrcPath() {
+        return srcPath;
+    }
+    
+    public void setSrcPath(String srcPath) {
+        this.srcPath = srcPath == null ? null : srcPath.trim();
     }
 
-    public void setKind(String kind) {
-        this.kind = kind == null ? null : kind.trim();
+    public String getSrcName() {
+        return srcName;
     }
     
-    public String getChangeType() {
+    public void setSrcName(String srcName) {
+        this.srcName = srcName == null ? null : srcName.trim();
+    }
+    
+    public String getSrcEntryPath() {
+        return srcEntryPath;
+    }
+    
+    public void setSrcEntryPath(String srcEntryPath) {
+        this.srcEntryPath = srcEntryPath == null ? null : srcEntryPath.trim();
+    }
+    
+    public Integer getEntryType() {
+        return entryType;
+    }
+
+    public void setEntryType(Integer entryType) {
+        this.entryType = entryType;
+    }
+    
+    public Integer getChangeType() {
         return changeType;
     }
 
-    public void setChangeType(String changeType) {
-        this.changeType = changeType == null ? null : changeType.trim();
+    public void setChangeType(Integer changeType) {
+        this.changeType = changeType;
     }
     
-    public String getCoypPath() {
-        return copyPath;
+    public String getCommitId() {
+        return commitId;
     }
 
-    public void setCopyPath(String copyPath) {
-        this.copyPath = copyPath == null ? null : copyPath.trim();
-    }
-    
-    public long getCopyRevison() {
-        return copyRevision;
-    }
-
-    public void setCopyRevision(long copyRevision) {
-        this.copyRevision = copyRevision;
+    public void setCommitId(String commitId) {
+        this.commitId = commitId;
     }
 }

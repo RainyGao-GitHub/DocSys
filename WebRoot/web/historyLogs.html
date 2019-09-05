@@ -1,13 +1,13 @@
-<div>
+<div style="height:550px;overflow-y:auto">
         <div class="manual-right width:80%" >
             <div class="manual-article">
                <div class="article-body editor-content"  id="history" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell revision w8">版本号</i>
+							<i class="cell commitId w10">版本号</i>
 							<i class="cell commitMsg w30">提交信息</i>
-							<i class="cell commitUser w10">提交人</i>
-							<i class="cell commitTime w15">提交时间</i>
+							<i class="cell commitUser w13">提交人</i>
+							<i class="cell commitTime w10">提交时间</i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
@@ -18,127 +18,3 @@
 			</div>
 		</div>
 </div>
-
-<script type="text/javascript">
-	//This two value need to be set
-	var parentPath = "";
-	var docName = "";
-	var docPath = "";
-	var reposId;
-	function historyLogsPageInit(vid,pPath,name)
-	{
-		console.log("historyLogsPageInit parentPath:" + parentPath + " docName:" + docName);
-		parentPath = pPath;
-		docName = name;
-		docPath = pPath + name;
-		reposId = vid;
-		showHistoryLogList(reposId,docPath);		
-	}
-
-	function downloadHistory(revision)
-	{
-	   	console.log("download() revision:" +revision  + " reposId:" + reposId + " parentPath:" + parentPath + " docName:" + docName);
-
-	   	var encParentPath = encodeURI(parentPath);
-	   	var encDocName = encodeURI(docName);
-	   	window.location.href = "/DocSystem/Doc/getHistoryDoc.do?revision=" + revision + "&reposId=" + reposId + "&parentPath=" + encParentPath + "&docName="+encDocName;
-	}
-
-	function showHistoryLogList(reposId,docPath)
-	{
-   		console.log("showHistoryLogList docPath:" + docPath + " reposId:" +  reposId);
-    	$.ajax({
-             url : "/DocSystem/Doc/getDocHistory.do",
-             type : "post",
-             dataType : "json",
-             data : {
-             	docPath : docPath,
-                reposId : reposId, 
-             },
-             success : function (ret) {
-             	if( "ok" == ret.status){
-        		  	console.log(ret.data);
-        		  	showList(ret.data);
-                }
-                else
-                {
-                	showErrorMessage("获取历史信息失败:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-                showErrorMessage("获取历史信息失败:服务器异常");
-            }
-        });
-
-		//根据获取到的目录权限用户列表数据，绘制列表
-		function showList(data){
-			console.log(data);
-			var c = $("#historyLogs").children();
-			$(c).remove();
-			if(data.length==0){
-				$("#historyLogs").append("<p>暂无数据</p>");
-			}
-			
-			for(var i=0;i<data.length;i++){
-				var d = data[i];
-				var commitTime = formatTime(d.commitTime);  
-				var opBtn = "		<a href='javascript:void(0)' onclick='downloadHistory("+d.revision+ ");' class='mybtn-primary'>下载</a>";							
-				var se = "<li id='popover" +i+"' + + value="+ i +">"
-					+"	<i class='cell revision w8'>"
-					+"		<span class='name breakAll'>"
-					+"			<a id='revision"+i+"' href='javascript:void(0)'>"+d.revision+"</a>"
-					+"		</span>"
-					+"	</i>"
-					+"	<i class='cell commitMsg w30'>"
-					+"		<span class='name breakAll'>"
-					+"			<a id='revision"+i+"' href='javascript:void(0)'>"+d.commitMsg+"</a>"
-					+"		</span>"
-					+"	</i>"
-					+"	<i class='cell commitUser w10'>"
-					+"		<span class='name'>"
-					+"			<a id='commitUser"+i+"' href='javascript:void(0)'>"+d.commitUser+"</a>"
-					+"		</span>"
-					+"	</i>"
-					+"	<i class='cell commitTime w15'>"
-					+"		<span class='name'>"
-					+"			<a id='commitTime"+i+"' href='javascript:void(0)'>"+commitTime+"</a>"
-					+"		</span>"
-					+"	</i>"
-					+"	<i class='cell operation w10'>"
-					+		opBtn
-					+"	</i>"
-					+"</li>";
-				
-				$("#historyLogs").append(se);
-			}
-			
-			//Set popover details
-			/*for(var i=0;i<data.length;i++){
-				var d = data[i];
-				
-				var changedItems = d.changedItems;
-				var changedPaths = "";
-				for(var j=0;j<changedItems.length;j++){
-					changedItem = changedItems[i];
-					changedPaths = changedPaths + changedItem.changeType + "  "+ changedItem.path + "<br>";	
-				}
-				console.log(changedPaths);
-				
-				var detail = "<p>revision:" + d.revision + "<br>" 
-				+"Message:" + d.commitMsg + "<br>"
-				+"Author:" + d.commitUser + "<br>"
-				+"Date:" + d.commitTime + "<br>"
-				+"changePaths:<br>" 
-				+ changedPaths
-				+"</p>"
-				console.log(detail);
-				
-				$("#popover" + i).bspop({
-				    title   : "详情",
-				    content : detail,
-				});	
-			}*/
-		}
-	}
-
-</script>

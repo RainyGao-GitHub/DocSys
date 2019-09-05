@@ -50,15 +50,15 @@ public class UserController extends BaseController {
 	public void login(String userName,String pwd,String rememberMe,HttpServletRequest request,HttpSession session,HttpServletResponse response){
 		System.out.println("login userName:"+userName + " pwd:" + pwd + " rememberMe:" + rememberMe);
 		
+		ReturnAjax rt = new ReturnAjax();
+		
 		List<User> uList = userService.geAllUsers();
 		if(uList == null || uList.size() == 0)
 		{
 			//Add a default user(Admin)
 			addAdminUser();
 		}
-		
-		ReturnAjax rt = new ReturnAjax();
-		
+
 		//tmp_user is used for store the query condition
 		User tmp_user = new User();
 		tmp_user.setName(userName);
@@ -85,14 +85,13 @@ public class UserController extends BaseController {
 		}
 		
 		//Feeback to page
-		rt.setMsgInfo("success#登录成功！");
+		rt.setMsgInfo("登录成功！");
 		rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
 		writeJson(rt, response);	
 		return;
 	}
 
 	private void addAdminUser() {
-		// TODO Auto-generated method stub
 		User user = new User();
 		user.setName("Admin");
 		user.setNickName("超级管理员");
@@ -105,7 +104,7 @@ public class UserController extends BaseController {
 		user.setType(2);
 		userService.addUser(user);
 	}
-
+	
 	/**
 	 * 用户数据校验
 	 * @param uLists 根据条件从数据库中查出的user列表
@@ -119,17 +118,17 @@ public class UserController extends BaseController {
 		if(uLists == null)
 		{
 			System.out.println("loginCheck() uLists is null");
-			rt.setError("fail#用户名或密码错误！");
+			rt.setError("用户名或密码错误！");
 			return false;	
 		}
 		else if(uLists.size()<1){
 			System.out.println("loginCheck() uLists size < 1");
-			rt.setError("danger#对不起，您的账号或者密码错误！");
+			rt.setError("用户名或密码错误！");
 			return false;
 		}else if(uLists.size()>1){
 			//TODO系统异常需要处理
 			System.out.println("loginCheck() uLists size > 1");
-			rt.setError("danger#登录失败！");
+			rt.setError("登录失败！");
 			return false;
 		}
 		
@@ -204,7 +203,7 @@ public class UserController extends BaseController {
 		addCookie(response, "dstoken", null, 0);
 		//清除session
 		session.removeAttribute("login_user");
-		rt.setMsgInfo("info#您已成功退出登陆。");
+		rt.setMsgInfo("您已成功退出登陆。");
 		
 		writeJson(rt, response);	
 	}
@@ -221,7 +220,7 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
-			rt.setError("danger#账号不能为空！");
+			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -230,7 +229,7 @@ public class UserController extends BaseController {
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该邮箱已注册！");
+				rt.setError("该邮箱已注册！");
 			}
 			writeJson(rt, response);
 			return;
@@ -240,14 +239,14 @@ public class UserController extends BaseController {
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该手机已注册！");
+				rt.setError("该手机已注册！");
 			}
 			writeJson(rt, response);
 			return;
 		}
 		else
 		{
-			rt.setError("danger#账号格式不正确！");
+			rt.setError("账号格式不正确！");
 			writeJson(rt, response);
 			return;
 		}
@@ -265,7 +264,7 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
-			rt.setError("danger#账号不能为空！");
+			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -274,7 +273,7 @@ public class UserController extends BaseController {
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该邮箱已注册！");
+				rt.setError("该邮箱已注册！");
 				writeJson(rt, response);
 				return;
 			}
@@ -285,7 +284,7 @@ public class UserController extends BaseController {
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该手机已注册！");
+				rt.setError("该手机已注册！");
 				writeJson(rt, response);
 				return;
 			}
@@ -294,7 +293,7 @@ public class UserController extends BaseController {
 		}
 		else
 		{
-			rt.setError("danger#账号格式不正确！");
+			rt.setError("账号格式不正确！");
 			writeJson(rt, response);
 			return;
 		}
@@ -302,7 +301,7 @@ public class UserController extends BaseController {
 		//检查验证码是否正确
 		if(checkVerifyCode(session,"docsys_vcode", userName, verifyCode,1) == false)
 		{
-			rt.setError("danger#验证码错误！");
+			rt.setError("验证码错误！");
 			writeJson(rt, response);
 			return;
 		}
@@ -310,7 +309,7 @@ public class UserController extends BaseController {
 		//检查密码是否为空
 		if(pwd==null||"".equals(pwd))
 		{
-			rt.setError("danger#密码不能为空！");
+			rt.setError("密码不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -319,7 +318,7 @@ public class UserController extends BaseController {
 		{
 			System.out.println("注册密码："+pwd);
 			System.out.println("确认注册密码："+pwd2);
-			rt.setError("danger#两次密码不一致，请重试！");
+			rt.setError("两次密码不一致，请重试！");
 			writeJson(rt, response);
 			return;
 		}
@@ -329,7 +328,7 @@ public class UserController extends BaseController {
 		//set createTime
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
 		String createTime = df.format(new Date());// new Date()为获取当前系统时间
-		user.setCreateTime(createTime);	//设置时间
+		user.setCreateTime(createTime);	//设置川剧时间
 		user.setType(0);
 		if(isFirstUser() == true)
 		{
@@ -380,14 +379,14 @@ public class UserController extends BaseController {
 		if(userName == null || "".equals(userName))	//从session中取出用户名??
 		{
 			System.out.println("userName不能为空");
-			rt.setError("error#请填写正确的邮箱或手机");
+			rt.setError("请填写正确的邮箱或手机");
 			writeJson(rt, response);
 			return;
 		}
 
 		//根据注册类型不同，验证码需要放置在不同的session里面
 		String sessionName = "";	//0 注册，1忘记密码
-		if(type == null || "".equals(type))	//默认用于注册
+		if(type == null)	//默认用于注册
 		{
 			type = 0;	//默认验证码为用户注册
 		}
@@ -419,7 +418,7 @@ public class UserController extends BaseController {
 		else
 		{
 			System.out.println("userName不是邮箱或手机");
-			rt.setError("danger#请使用正确的邮箱手机！");
+			rt.setError("请使用正确的邮箱手机！");
 			writeJson(rt, response);
 			return;
 		}		
@@ -484,7 +483,7 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
-			rt.setError("danger#账号不能为空！");
+			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -492,7 +491,7 @@ public class UserController extends BaseController {
 		//检查验证码是否正确
 		//根据注册类型不同，验证码需要放置在不同的session里面
 		String sessionName = "";	//0 注册，1忘记密码
-		if(type == null || "".equals(type))	//默认用于注册
+		if(type == null)	//默认用于注册
 		{
 			type = 0;	//默认验证码为用户注册
 		}
@@ -506,7 +505,7 @@ public class UserController extends BaseController {
 		}
 		if(checkVerifyCode(session,sessionName, userName, verifyCode,0) == false)
 		{
-			rt.setError("danger#验证码错误！");
+			rt.setError("验证码错误！");
 			writeJson(rt, response);
 			return;
 		}
@@ -528,7 +527,7 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
-			rt.setError("danger#账号不能为空！");
+			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -542,7 +541,7 @@ public class UserController extends BaseController {
 		}
 		else
 		{
-			rt.setError("danger#账号格式不正确！");
+			rt.setError("账号格式不正确！");
 			writeJson(rt, response);
 			return;
 		}
@@ -557,7 +556,7 @@ public class UserController extends BaseController {
 		//检查验证码是否正确
 		if(checkVerifyCode(session,"docsys_vcode1", userName, verifyCode,1) == false)
 		{
-			rt.setError("danger#验证码错误！");
+			rt.setError("验证码错误！");
 			writeJson(rt, response);
 			return;
 		}
@@ -565,7 +564,7 @@ public class UserController extends BaseController {
 		//检查密码是否为空
 		if(pwd==null||"".equals(pwd))
 		{
-			rt.setError("danger#密码不能为空！");
+			rt.setError("密码不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -574,7 +573,7 @@ public class UserController extends BaseController {
 		{
 			System.out.println("密码："+pwd);
 			System.out.println("确认密码："+pwd2);
-			rt.setError("danger#两次密码不一致，请重试！");
+			rt.setError("两次密码不一致，请重试！");
 			writeJson(rt, response);
 			return;
 		}
@@ -605,7 +604,7 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(userName==null||"".equals(userName))
 		{
-			rt.setError("danger#账号不能为空！");
+			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -625,7 +624,7 @@ public class UserController extends BaseController {
 		//检查密码是否为空
 		if(pwd==null||"".equals(pwd))
 		{
-			rt.setError("danger#密码不能为空！");
+			rt.setError("密码不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -634,7 +633,7 @@ public class UserController extends BaseController {
 		{
 			System.out.println("密码："+pwd);
 			System.out.println("确认密码："+pwd2);
-			rt.setError("danger#两次密码不一致，请重试！");
+			rt.setError("两次密码不一致，请重试！");
 			writeJson(rt, response);
 			return;
 		}
@@ -666,7 +665,7 @@ public class UserController extends BaseController {
 		if(userName==null||"".equals(userName))
 		{
 			System.out.println("updateUserInfo() userName is empty！");
-			rt.setError("danger#账号不能为空！");
+			rt.setError("账号不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -693,7 +692,7 @@ public class UserController extends BaseController {
 		User user = getUserByName(userName);
 		if(user == null)
 		{
-			rt.setError("danger#用户不存在！");
+			rt.setError("用户不存在！");
 			writeJson(rt, response);
 			return;			
 		}
@@ -701,14 +700,14 @@ public class UserController extends BaseController {
 		//检查用户名是否为空
 		if(realName!=null&&"".equals(realName))
 		{
-			rt.setError("danger#真实姓名不能为空！");
+			rt.setError("真实姓名不能为空！");
 			writeJson(rt, response);
 			return;
 		}
 
 		if(nickName!=null&&"".equals(nickName))
 		{
-			rt.setError("danger#昵称不能为空！");
+			rt.setError("昵称不能为空！");
 			writeJson(rt, response);
 			return;
 		}
@@ -720,7 +719,7 @@ public class UserController extends BaseController {
 		newUserInfo.setIntro(intro);	
 		if(userService.updateUserInfo(newUserInfo) == 0)
 		{
-			rt.setError("danger#用户信息更新失败！");
+			rt.setError("用户信息更新失败！");
 			writeJson(rt, response);
 			return;			
 		}
@@ -804,7 +803,7 @@ public class UserController extends BaseController {
 		rt.setData(loginUser);
 		writeJson(rt, response);
     }
-	
+
 	private String saveUserImg(MultipartFile uploadFile,User user) 
 	{
 		String fileName = uploadFile.getOriginalFilename();

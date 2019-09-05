@@ -1,19 +1,23 @@
 package com.DocSystem.entity;
 
 public class Doc  implements Comparable<Doc>{
-    private Integer id;
-
+    private Integer id;	//id in dataBase
+        		
     private String name;
 
-    private Integer type;
+    private Integer type;	//0:不存在  1:文件  2:目录
 
     private Long size;
 
     private String checkSum;
 
+    private String revision;
+
     private String path;
 
-    private Integer pid;
+    private Long docId;
+
+    private Long pid;
 
     private Integer vid;
 
@@ -27,15 +31,23 @@ public class Doc  implements Comparable<Doc>{
 
     private Long latestEditTime;
 
-    private Integer state;
-
-    private Integer lockBy;
-
-    private Long lockTime;
-
     private String content;
-    
+
 	private int sortIndex;
+
+    private String creatorName;
+
+    private String latestEditorName;
+    
+    private Integer level;
+    
+    private String localRootPath;
+    
+    private String localRefRootPath;
+
+    private String localVRootPath;
+    
+    private boolean isRealDoc = true;
 
     public Integer getId() {
         return id;
@@ -77,6 +89,14 @@ public class Doc  implements Comparable<Doc>{
         this.checkSum = checkSum == null ? null : checkSum.trim();
     }
 
+    public String getRevision() {
+        return revision;
+    }
+
+    public void setRevision(String revision) {
+        this.revision = revision == null ? null : revision.trim();
+    }
+
     public String getPath() {
         return path;
     }
@@ -85,11 +105,19 @@ public class Doc  implements Comparable<Doc>{
         this.path = path == null ? null : path.trim();
     }
 
-    public Integer getPid() {
+    public Long getDocId() {
+        return docId;
+    }
+
+    public void setDocId(Long docId) {
+        this.docId = docId;
+    }
+
+    public Long getPid() {
         return pid;
     }
 
-    public void setPid(Integer pid) {
+    public void setPid(Long pid) {
         this.pid = pid;
     }
 
@@ -141,38 +169,58 @@ public class Doc  implements Comparable<Doc>{
         this.latestEditTime = latestEditTime;
     }
 
-    public Integer getState() {
-        return state;
-    }
-
-    public void setState(Integer state) {
-        this.state = state;
-    }
-
-    public Integer getLockBy() {
-        return lockBy;
-    }
-
-    public void setLockBy(Integer lockBy) {
-        this.lockBy = lockBy;
-    }
-
-    public Long getLockTime() {
-        return lockTime;
-    }
-
-    public void setLockTime(Long lockTime) {
-        this.lockTime = lockTime;
-    }
-
     public String getContent() {
         return content;
     }
 
     public void setContent(String content) {
-        this.content = content == null ? null : content.trim();
+        this.content = content;
     }
     
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
+    
+    public String getLocalRootPath() {
+        return localRootPath;
+    }
+
+    public void setLocalRootPath(String localRootPath) 
+    {
+        this.localRootPath = localRootPath == null ? null : localRootPath.trim();
+    }
+    
+    public String getLocalRefRootPath() {
+        return localRefRootPath;
+    }
+
+    public void setLocalRefRootPath(String localRefRootPath) 
+    {
+        this.localRefRootPath = localRefRootPath == null ? null : localRefRootPath.trim();
+    }
+
+    public String getLocalVRootPath() {
+        return localVRootPath;
+    }
+
+    public void setLocalVRootPath(String localVRootPath) 
+    {
+        this.localVRootPath = localVRootPath == null ? null : localVRootPath.trim();
+    }
+    
+    public boolean getIsRealDoc() {
+        return isRealDoc;
+    }
+
+    public void setIsRealDoc(boolean isRealDoc) 
+    {
+        this.isRealDoc = isRealDoc;
+    }    
+
 	public void setSortIndex(int sortIndex) {
 		this.sortIndex = sortIndex;
 	}
@@ -182,6 +230,41 @@ public class Doc  implements Comparable<Doc>{
 	}
 	
     public int compareTo(Doc doc) {
-        return doc.sortIndex - this.sortIndex;
+    	//Sort By sortIndex
+        int ret = doc.sortIndex - this.sortIndex;
+        if(ret != 0)
+        {
+        	return ret;
+        }
+        
+        //Sort by docType
+        if(doc.type != null && this.type != null)
+        {
+	        ret = doc.type - this.type;
+	        if(ret != 0)
+	        {
+	        	return ret;
+	        }
+        }
+        
+        //Sort by doName
+        return doc.name.compareTo(this.name);   
+    }
+    
+
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName == null ? null : creatorName.trim();
+    }
+
+    public String getLatestEditorName() {
+        return latestEditorName;
+    }
+
+    public void setLatestEditorName(String latestEditorName) {
+        this.latestEditorName = latestEditorName == null ? null : latestEditorName.trim();
     }
 }
