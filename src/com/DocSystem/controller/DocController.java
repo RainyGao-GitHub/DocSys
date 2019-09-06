@@ -1179,18 +1179,25 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
-		switch(repos.getType())
+		if(downloadType != null && downloadType == 2)
 		{
-		case 1:
-			downloadDocPrepare_FSM(repos, doc, login_user, rt);
-			break;	
-		case 2:
-			downloadDocPrepare_FSP(repos, doc, login_user, rt);				
-			break;
-		case 3:
-		case 4:
-			downloadDocPrepare_VRP(repos, doc, login_user, rt);				
-			break;
+			downloadVDocPrepare_FSM(repos, doc, login_user, rt);
+		}
+		else
+		{
+			switch(repos.getType())
+			{
+			case 1:
+				downloadDocPrepare_FSM(repos, doc, login_user, rt);
+				break;	
+			case 2:
+				downloadDocPrepare_FSP(repos, doc, login_user, rt);				
+				break;
+			case 3:
+			case 4:
+				downloadDocPrepare_VRP(repos, doc, login_user, rt);				
+				break;
+			}
 		}
 		writeJson(rt, response);
 	}
