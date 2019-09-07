@@ -841,12 +841,12 @@ public class ReposController extends BaseController{
 				for(int i=0;i<allDocAuthList.size();i++)
 				{
 					DocAuth tmpDocAuth = allDocAuthList.get(i);
-					if(tmpDocAuth.getUserId() == 0)
+					if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
 					{
 						tmpDocAuth.setUserName("任意用户");
 					}
 					
-					if(tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
+					if(tmpDocAuth.getDocId() != null && tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
 					{
 						docAuthList.add(tmpDocAuth);						
 					}
