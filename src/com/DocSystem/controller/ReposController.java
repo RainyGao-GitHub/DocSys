@@ -841,6 +841,12 @@ public class ReposController extends BaseController{
 				for(int i=0;i<allDocAuthList.size();i++)
 				{
 					DocAuth tmpDocAuth = allDocAuthList.get(i);
+					if(tmpDocAuth == null)
+					{
+						System.out.println("getDocAuthList() allDocAuthList[" + i+ "] is null");
+						continue;
+					}
+					
 					if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
 					{
 						tmpDocAuth.setUserName("任意用户");
