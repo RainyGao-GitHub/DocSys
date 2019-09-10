@@ -227,6 +227,7 @@ public class BaseFunction{
 			}
 		}
 		
+		//在仓库管理界面，为了能够返回然根节点信息带有仓库名字，导致传入的Name不为空，这是一个错误的决定
 		if(name.isEmpty())	//rootDoc
 		{
 			level = -1;
@@ -275,6 +276,13 @@ public class BaseFunction{
 		doc.setDocId(docId);
 		doc.setPid(pid);
 		return doc;
+	}
+	
+	protected Doc buildRootDoc(Repos repos, String localRootPath, String localVRootPath) 
+	{
+		//String localRootPath = getReposRealPath(repos);
+		//String localVRootPath = getReposVirtualPath(repos);
+		return buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
 	}
 	
 	//VirtualDoc 的vid docId pid level都是和RealDoc一样的
