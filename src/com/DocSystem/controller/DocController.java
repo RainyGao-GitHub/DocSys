@@ -2086,7 +2086,7 @@ public class DocController extends BaseController{
 		
 		if(dbDoc.getType() == 1)
 		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			Doc downloadDoc = buildDownloadDocInfo(dbDoc.getLocalRootPath() + dbDoc.getPath(), dbDoc.getName());
 			String docLink = "/DocSystem/Doc/downloadDoc.do?targetPath="+downloadDoc.getPath()+"&targetName="+downloadDoc.getName();
 			rt.setDataEx(docLink);
 		}
