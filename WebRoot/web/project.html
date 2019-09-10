@@ -1570,8 +1570,19 @@
                     gTmpSavedContent = parseDocContent(ret.msgData);                    
                     
 					if(gShowType == 1)	//显示预览
-					{
-						console.log("getAndShowDoc() showType is for file Content");
+					{	
+						if(!ret.dataEx)	//表明不是文件，无法预览
+						{
+							console.log("getAndShowDoc() dataEx is null");
+					      	return;
+						}
+						
+						var targetName = ret.dataEx.name;
+                	    var targetPath = ret.dataEx.path;
+                	    targetName = encodeURI(targetName);
+            		   	targetPath = encodeURI(targetPath);
+            	   		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+						console.log("getAndShowDoc() docLink:" + docLink);
 				      	return;
 					}
 					else	//显示备注
