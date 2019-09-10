@@ -3051,7 +3051,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	//autoDetect: 自动检测是新增还是更新
+	//autoDetect: 自动检测是新增还是更新或者非法
 	private boolean dbUpdateDoc(Repos repos, Doc doc, boolean autoDetect) 
 	{	
 		if(repos.getType() != 1)
@@ -3067,6 +3067,15 @@ public class BaseController  extends BaseFunction{
 			}		
 			return true;
 		}	
+		
+		
+		Long docId = buildDocId(doc.getPath(), doc.getName());
+		if(!doc.getDocId().equals(docId))
+		{
+			System.out.println("dbUpdateDoc() 非法docId，删除该数据库记录:" + doc.getDocId()  + " " + doc.getPath() + doc.getName());
+			dbDeleteDoc(repos, doc, false);
+			return true;
+		}
 		
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
@@ -3125,6 +3134,12 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("dbUpdateDoc() 本地目录内容修改（目录不需要修改数据库）:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 		return true;
+	}
+
+	private Long buildDocId(String path, String name) 
+	{
+		int level = getLevelByParentPath(path);
+		return buildDocIdByName(level, path, name);
 	}
 
 	private boolean dbMoveDoc(Repos repos, Doc srcDoc, Doc dstDoc) 
