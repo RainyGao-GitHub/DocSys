@@ -2083,6 +2083,13 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
+		if(dbDoc.getType() == 1)
+		{
+			Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			String docLink = "/DocSystem/Doc/downloadDoc.do?targetPath="+downloadDoc.getPath()+"&targetName="+downloadDoc.getName();
+			rt.setDataEx(docLink);
+		}
 
 		String vDocName = getVDocName(doc);
 		String reposVPath = getReposVirtualPath(repos);
