@@ -3895,7 +3895,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			DocLock newDocLock = new DocLock();
-			docLock.setId(docLock.getId());
+			newDocLock.setId(docLock.getId());
 			newDocLock.setState(lockType);	//doc的状态为不可用
 			newDocLock.setLocker(login_user.getName());
 			newDocLock.setLockBy(login_user.getId());
