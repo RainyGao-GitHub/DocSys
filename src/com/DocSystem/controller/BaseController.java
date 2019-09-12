@@ -1743,7 +1743,7 @@ public class BaseController  extends BaseFunction{
 		
 		System.out.println("checkAddUpdateParentDoc pid:" + doc.getPid());
 		
-		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", doc.getLevel() - 1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), 0L, "");
+		Doc parentDoc = buildBasicDoc(doc.getVid(), doc.getPid(), null, doc.getPath(), "", null, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), 0L, "");
 		parentDoc.setRevision(doc.getRevision());
 
 		printObject("checkAddUpdateParentDoc parentDoc:", parentDoc);
@@ -2138,14 +2138,6 @@ public class BaseController  extends BaseFunction{
 		
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
-		
-		//SVN/GIT前置
-		if(repos.getType() == 3 || repos.getType() == 4)
-		{
-			boolean ret = SyncUpSubDocs_NoFS(repos, doc, login_user, rt, 1); //子目录非继承递归
-			System.out.println("**************************** 结束自动同步 syncupForDocChange() SyncUpSubDocs_NoFS ret:" + ret);
-			return ret;
-		}
 		
 		//文件管理系统
 		HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
