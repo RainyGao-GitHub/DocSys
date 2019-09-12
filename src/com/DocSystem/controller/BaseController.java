@@ -2936,7 +2936,8 @@ public class BaseController  extends BaseFunction{
 				System.out.println("dbGetDoc() 数据库存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
 				for(int i=0; i <list.size(); i++)
 				{
-					dbDeleteDoc(repos, list.get(i), true);
+					//delete Doc directly
+					reposService.deleteDoc(list.get(i).getId());
 				}
 				return null;
 			}
