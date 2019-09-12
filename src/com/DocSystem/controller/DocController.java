@@ -366,7 +366,7 @@ public class DocController extends BaseController{
 		switch(repos.getType())
 		{
 		case 1:
-			return dbGetDoc(repos, doc, false);
+			return dbGetDoc(repos, doc, true);
 		case 2:
 			return fsGetDoc(repos, doc);
 		case 3:
