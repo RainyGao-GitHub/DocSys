@@ -1776,7 +1776,7 @@ public class GITUtil  extends BaseController{
 		}
 		
         //Go Through localSubDocs
-        File dir = new File(localRootPath);
+        File dir = new File(localRootPath  + doc.getPath() + doc.getName());
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
         {
