@@ -614,7 +614,8 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);
 		
-		executeCommonActionList(actionList, rt);
+		executeUniqueCommonActionList(actionList, rt);
+		//executeCommonActionList(actionList, rt);
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
@@ -691,7 +692,8 @@ public class ReposController extends BaseController{
 		rt.setData(docList);
 		writeJson(rt, response);
 		
-		executeCommonActionList(actionList, rt);
+		//executeCommonActionList(actionList, rt);
+		executeUniqueCommonActionList(actionList, rt);
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
