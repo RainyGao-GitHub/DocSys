@@ -553,7 +553,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
+				
 		//检查登录用户的权限
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
@@ -566,32 +566,31 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		else 
-		{			
-			//Get File Size 
-			Integer MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
-			if(MaxFileSize != null)
+		
+		//最大上传文件大小限制检查 
+		Integer MaxFileSize = getMaxFileSize();	//获取系统最大文件限制
+		if(MaxFileSize != null)
+		{
+			if(size > MaxFileSize.longValue()*1024*1024)
 			{
-				if(size > MaxFileSize.longValue()*1024*1024)
-				{
-					docSysErrorLog("上传文件超过 "+ MaxFileSize + "M", rt);
-					writeJson(rt, response);
-					return;
-				}
-			}
-			
-			//任意用户文件不得30M
-			if((UserDocAuth.getGroupId() == null) && ((UserDocAuth.getUserId() == null) || (UserDocAuth.getUserId() == 0)))
-			{
-				if(size > 30*1024*1024)
-				{
-					docSysErrorLog("非仓库授权用户最大上传文件不超过30M!", rt);
-					writeJson(rt, response);
-					return;
-				}
+				docSysErrorLog("上传文件超过 "+ MaxFileSize + "M", rt);
+				writeJson(rt, response);
+				return;
 			}
 		}
-				
+			
+		//任意用户上传文件大小限制检查（30M）
+		if((UserDocAuth.getGroupId() == null) && ((UserDocAuth.getUserId() == null) || (UserDocAuth.getUserId() == 0)))
+		{
+			if(size > 30*1024*1024)
+			{
+				docSysErrorLog("非仓库授权用户最大上传文件不超过30M!", rt);
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
+		//文件校验码为空表示不需要进行秒传
 		if(checkSum.isEmpty())
 		{
 			//CheckSum is empty, mean no need to check any more 
@@ -599,19 +598,41 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//检查文件是否已存在 
+		//非文件管理系统类型仓库不支持秒传
+		if(repos.getType() != 1)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		//是否可以秒传检查(文件是否已存在且校验码一致或者文件不存在但系统中存在相同校验码的文件)
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 
-		Doc dbDoc = docSysGetDoc(repos, doc);
-		if(dbDoc != null && dbDoc.getType() != 0)
-		{
-			rt.setData(dbDoc);
+		Doc fsDoc = fsGetDoc(repos, doc);
+		if(fsDoc != null && fsDoc.getType() != 0)
+		{			
+			rt.setData(fsDoc);
 			rt.setMsgData("0");
 			docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
-	
+						
 			//检查checkSum是否相同
 			if(type == 1)
 			{
+				//数据库记录不存在无法检查文件是否相同
+				Doc dbDoc = dbGetDoc(repos, doc, true);
+				if(dbDoc == null)
+				{
+					writeJson(rt, response);
+					return;				
+				}
+				
+				//数据库记录与本地文件已经不一致无法检查文件是否相同
+				if(isDocLocalChanged(dbDoc, fsDoc))
+				{
+					writeJson(rt, response);
+					return;					
+				}
+				
 				if(true == isDocCheckSumMatched(dbDoc,size,checkSum))
 				{
 					rt.setMsgData("1");
@@ -621,50 +642,43 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		else
+				
+		//对于大于50M的文件尝试寻找checkSum相同的文件进行复制来避免上传
+		if(size > 50*1024*1024)	//Only For 50M File to balance the Upload and SameDocSearch 
 		{
-			//对于文件管理系统类型的仓库，对于大于50M的文件尝试寻找checkSum相同的文件进行复制来避免上传
-			if(repos.getType() == 1)
+			//Try to find the same Doc in the repos
+			Doc sameDoc = getSameDoc(size,checkSum,reposId);
+			if(null != sameDoc)
 			{
-				if(size > 50*1024*1024)	//Only For 50M File to balance the Upload and SameDocSearch 
+				System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
+				
+				if(commitMsg == null)
 				{
-					//Try to find the same Doc in the repos
-					Doc sameDoc = getSameDoc(size,checkSum,reposId);
-					if(null != sameDoc)
-					{
-						System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
-						
-						if(commitMsg == null)
-						{
-							commitMsg = "上传 " + path + name;
-						}
-						String commitUser = login_user.getName();
-						List<CommonAction> actionList = new ArrayList<CommonAction>();
-						boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, login_user,rt,actionList);
-						if(ret == true)
-						{
-							dbDoc = dbGetDoc(repos, doc, true);
-							rt.setData(dbDoc);
-							rt.setMsgData("1");
-							docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
-							writeJson(rt, response);
-							
-							executeCommonActionList(actionList, rt);
-							return;
-						}
-						else
-						{
-							rt.setStatus("ok");
-							rt.setMsgData("3");
-							docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
-							writeJson(rt, response);
-							return;
-						}
-					}
+					commitMsg = "上传 " + path + name;
+				}
+				String commitUser = login_user.getName();
+				List<CommonAction> actionList = new ArrayList<CommonAction>();
+				boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, login_user,rt,actionList);
+				if(ret == true)
+				{
+					rt.setData(fsDoc);
+					rt.setMsgData("1");
+					docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
+					writeJson(rt, response);
+					
+					executeCommonActionList(actionList, rt);
+					return;
+				}
+				else
+				{
+					rt.setStatus("ok");
+					rt.setMsgData("3");
+					docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
+					writeJson(rt, response);
+					return;
 				}
 			}
 		}
-		
 		writeJson(rt, response);
 	}
 	
