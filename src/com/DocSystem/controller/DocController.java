@@ -1324,14 +1324,6 @@ public class DocController extends BaseController{
 	
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
 	{	
-		Doc dbDoc = dbGetDoc(repos, doc, false);
-		if(dbDoc == null)
-		{
-			System.out.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-			return;
-		}
-		
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
@@ -1339,6 +1331,13 @@ public class DocController extends BaseController{
 			docSysErrorLog("本地文件 " + doc.getPath() + doc.getName() + "获取异常！", rt);
 			return;
 		}
+		
+//		if(localEntry.getType() == 0)
+//		{
+//			System.out.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
+//			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+//			return;
+//		}
 		
 		String targetName = doc.getName();
 		String targetPath = doc.getLocalRootPath() + doc.getPath();
@@ -1362,7 +1361,7 @@ public class DocController extends BaseController{
 			
 			//doCompressDir and save the zip File under userTmpDir
 			targetName = doc.getName() + ".zip";		
-			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), dbDoc.getName(), targetPath, targetName, rt) == false)
+			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), doc.getName(), targetPath, targetName, rt) == false)
 			{
 				docSysErrorLog("压缩本地目录失败！", rt);
 				return;
