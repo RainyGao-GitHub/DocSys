@@ -364,24 +364,6 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		//参数格式化
-		if(path != null && !path.isEmpty())
-		{
-			path = localDirPathFormat(path);
-		}
-		if(realDocPath != null && !realDocPath.isEmpty())
-		{
-			realDocPath = localDirPathFormat(realDocPath);
-		}
-		if(localSvnPath != null && !localSvnPath.isEmpty())
-		{
-			localSvnPath = localDirPathFormat(localSvnPath);
-		}
-		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
-		{
-			localSvnPath1 = localDirPathFormat(localSvnPath1);
-		}
-		
 		//Set new ReposInfo
 		Repos newReposInfo = new Repos();
 		newReposInfo.setId(reposId);
@@ -401,9 +383,11 @@ public class ReposController extends BaseController{
 		newReposInfo.setSvnPath1(svnPath1);
 		newReposInfo.setSvnUser1(svnUser1);
 		newReposInfo.setSvnPwd1(svnPwd1);	
+		formatReposInfo(newReposInfo);
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
 		Repos reposInfo = reposService.getRepos(reposId);
+		formatReposInfo(reposInfo);
 		
 		newReposInfo.setType(reposInfo.getType());
 		if(checkReposInfoForUpdate(newReposInfo, reposInfo, rt) == false)
@@ -473,6 +457,36 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);	
 	}
 	
+	private void formatReposInfo(Repos repos) {
+		String path = repos.getPath();
+		String realDocPath = repos.getRealDocPath();
+		String localSvnPath = repos.getLocalSvnPath();
+		String localSvnPath1 = repos.getLocalSvnPath1();
+
+		//参数格式化
+		if(path != null && !path.isEmpty())
+		{
+			path = localDirPathFormat(path);
+		}
+		if(realDocPath != null && !realDocPath.isEmpty())
+		{
+			realDocPath = localDirPathFormat(realDocPath);
+		}
+		if(localSvnPath != null && !localSvnPath.isEmpty())
+		{
+			localSvnPath = localDirPathFormat(localSvnPath);
+		}
+		if(localSvnPath1 != null && !localSvnPath1.isEmpty())
+		{
+			localSvnPath1 = localDirPathFormat(localSvnPath1);
+		}
+		
+		repos.setPath(path);
+		repos.setRealDocPath(realDocPath);
+		repos.setLocalSvnPath(localSvnPath);
+		repos.setLocalSvnPath1(localSvnPath1);
+	}
+
 	/****************   get Repository Menu so that we can touch the docId******************/
 	@RequestMapping("/getReposInitMenu.do")
 	public void getReposInitMenu(Integer reposId,Long docId, Long pid, String path, String name, Integer level, Integer type,
