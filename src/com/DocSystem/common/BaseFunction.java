@@ -1398,7 +1398,10 @@ public class BaseFunction{
         File dir = new File(path);
         if(!dir.exists())
         {
-        	return false;
+        	if(dir.mkdirs() == false)
+        	{
+        		return false;
+        	}
         }
         
     	File file=new File(path+"/"+filename);
