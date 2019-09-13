@@ -511,7 +511,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 
-		if(true == isReposPathBeUsed(repos))
+		if(true == isReposPathBeUsed(repos,rt))
 		{
 			System.out.println("仓库存储目录 " + repos.getPath() + " 已被使用！");
 			rt.setError("仓库存储目录 " + repos.getPath() + " 已被使用！");		
@@ -528,9 +528,8 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		if(true == isReposRealDocPathBeUsed(repos))
+		if(true == isReposRealDocPathBeUsed(repos, rt))
 		{
-			rt.setError("文件存储目录 " + repos.getRealDocPath() + " 已被使用！");		
 			return false;
 		}
 			
@@ -694,9 +693,8 @@ public class BaseController  extends BaseFunction{
 		{
 			realDocPath = dirPathFormat(realDocPath);
 			newReposInfo.setRealDocPath(realDocPath);
-			if(true == isReposRealDocPathBeUsed(newReposInfo))
+			if(true == isReposRealDocPathBeUsed(newReposInfo,rt))
 			{
-				rt.setError("文件存储目录 " + realDocPath + " 已被使用！");		
 				return false;
 			}
 		}
@@ -884,7 +882,7 @@ public class BaseController  extends BaseFunction{
 		}		
 	}
 	
-	private boolean isReposPathBeUsed(Repos newRepos) {
+	private boolean isReposPathBeUsed(Repos newRepos, ReturnAjax rt) {
 		Integer reposId = newRepos.getId();
 		String path = newRepos.getPath();
 		
@@ -900,8 +898,8 @@ public class BaseController  extends BaseFunction{
 					reposPath = localDirPathFormat(reposPath);
 					if(path.contains(reposPath))	//不能把仓库放到其他仓库下面
 					{					
-						System.out.println(path + " 已被使用"); 
-						System.out.println("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath); 
+						docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
+						docSysDebugLog("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath, rt); 
 						return true;
 					}
 				}
@@ -912,8 +910,8 @@ public class BaseController  extends BaseFunction{
 					realDocPath = localDirPathFormat(realDocPath);
 					if(path.contains(realDocPath))	//不能把仓库放到其他仓库的文件存储目录
 					{					
-						System.out.println(path + " 已被使用"); 
-						System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
+						docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
+						docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
 						return true;
 					}
 				}
@@ -922,9 +920,8 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean isReposRealDocPathBeUsed(Repos newRepos) {
+	private boolean isReposRealDocPathBeUsed(Repos newRepos, ReturnAjax rt) {
 		
-		Integer reposId = newRepos.getId();
 		String newRealDocPath = newRepos.getRealDocPath();
 		
 		List<Repos> reposList = reposService.getAllReposList();
@@ -932,34 +929,36 @@ public class BaseController  extends BaseFunction{
 		{
 			Repos repos = reposList.get(i);
 			
-			//检查是否与仓库的存储路径冲突（包括本仓库）
+			//文件存储路径不得使用仓库的存储路径(避免对仓库的结构造成破坏)
 			String reposPath = getReposPath(repos);
 			if(reposPath != null && !reposPath.isEmpty())
 			{
 				reposPath = localDirPathFormat(reposPath);
 				if(isPathConflict(reposPath,newRealDocPath))
 				{					
-					System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
-					System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath); 
+					docSysErrorLog("文件存储目录：" + newRealDocPath + "已被  " + repos.getName() + " 使用", rt); 
+					docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath,rt); 
 					return true;
 				}
 			}
 			
-			//检查是否与其他的仓库realDocPath冲突
-			if(reposId == null || repos.getId() != reposId)
-			{
-				String realDocPath = repos.getRealDocPath();
-				if(realDocPath != null && !realDocPath.isEmpty())
-				{
-					realDocPath = localDirPathFormat(realDocPath);
-					if(isPathConflict(realDocPath,newRealDocPath))
-					{					
-						System.out.println("文件存储目录：" + newRealDocPath + " 已被使用"); 
-						System.out.println("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath); 
-						return true;
-					}
-				}
-			}		
+			//不同仓库可以使用相同的文件存储路径(不同仓库可以对相同的目录进行不同的管理方式)
+//			//检查是否与其他的仓库realDocPath冲突
+//			Integer reposId = newRepos.getId();
+//			if(reposId == null || repos.getId() != reposId)	//用来区分是否是当前仓库
+//			{
+//				String realDocPath = repos.getRealDocPath();
+//				if(realDocPath != null && !realDocPath.isEmpty())
+//				{
+//					realDocPath = localDirPathFormat(realDocPath);
+//					if(isPathConflict(realDocPath,newRealDocPath))
+//					{					
+//						docSysErrorLog("文件存储目录：" + newRealDocPath + "已被  " + repos.getName() + " 使用", rt); 
+//						docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
+//						return true;
+//					}
+//				}
+//			}		
 		}
 		return false;
 	}
@@ -1922,7 +1921,8 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
-			return getDBEntryList(repos, doc);			
+			//return getDBEntryList(repos, doc);			
+			return getLocalEntryList(repos, doc);
 		case 2:
 			return getLocalEntryList(repos, doc);
 		case 3:
