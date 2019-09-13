@@ -1385,7 +1385,7 @@ public class BaseFunction{
         File dir=new File(path);
         if(!dir.exists())
         {
-            return dir.mkdir();
+            return dir.mkdirs();
         }
         else
         {
