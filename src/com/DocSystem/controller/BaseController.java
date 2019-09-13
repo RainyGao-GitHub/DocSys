@@ -681,7 +681,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}
 			
-			if(true == isReposPathBeUsed(newReposInfo))
+			if(true == isReposPathBeUsed(newReposInfo, rt))
 			{
 				rt.setError("仓库存储目录 " + newReposInfo.getPath() + " 已被使用！");	
 				return false;
