@@ -1668,11 +1668,14 @@ public class BaseController  extends BaseFunction{
 		{
 			docSysWarningLog("verReposDocCommit Failed", rt);
 		}
-		
-		doc.setRevision(revision);
-		if(dbAddDoc(repos, doc, false, false) == false)
-		{	
-			docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+		else
+		{
+			//only do dbAddDoc when commit success, otherwise the added doc will not be commit when do syncup (because dbDoc is same to localDoc) 
+			doc.setRevision(revision);
+			if(dbAddDoc(repos, doc, false, false) == false)
+			{	
+				docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
+			}
 		}
 		
 		//检查dbParentDoc是否已添加
