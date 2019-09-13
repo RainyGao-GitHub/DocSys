@@ -3669,12 +3669,12 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		updateDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = updateDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		
 		//revert the lockStatus
 		unlockDoc(doc, login_user, docLock);
 				
-		return true;
+		return ret;
 	}
 
 	private boolean updateDocContent_FSM(Repos repos, Doc doc,
@@ -3690,6 +3690,7 @@ public class BaseController  extends BaseFunction{
 
 				//Insert index add action for VDoc
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 3, 2, null);
+				return true;
 			}
 		}
 		else
@@ -3701,10 +3702,11 @@ public class BaseController  extends BaseFunction{
 
 				//Insert index update action for VDoc
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 1, 2, null);
+				return true;
 			}
 		}
 				
-		return true;
+		return false;
 	}
 	
 	/************************ DocSys仓库与文件锁定接口 *******************************/
@@ -5048,8 +5050,7 @@ public class BaseController  extends BaseFunction{
 			return false;			
 		}
 		
-		saveVirtualDocContent(repos, doc, rt);
-		return true;
+		return saveVirtualDocContent(repos, doc, rt);
 	}
 	
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
