@@ -90,6 +90,12 @@
     		width: 28px;
     		height: 28px;
     	}
+    	
+    	.disallowcopy{-moz-user-select: none;
+			-khtml-user-select: none;
+			-webkit-user-select: none;
+			user-select: none;
+		}
     </style>
 
     <style>
@@ -157,7 +163,7 @@
         </div>      
     </header>
     <article class="container-fluid manual-body">
-        <div class="manual-left">
+        <div class="manual-left disallowcopy">
             <div class="manual-tab">
 	            <div class="tab-navg" style="height:59px">
 	         		<div style="padding:20px 0;position: relative; cursor: pointer; margin: 0 auto; width: 100px; display: block;">
@@ -197,7 +203,7 @@
              -->
         </div>
         <div id="line" class="manual-line" ></div>
-        <div class="second-table"  id="secondDropZone">
+        <div class="second-table disallowcopy"  id="secondDropZone">
          	<div class="searchBox">
          		<div class="back" onclick="backToParentDoc();"> 
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
