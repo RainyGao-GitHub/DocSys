@@ -2,7 +2,7 @@ body{
 	margin:0;
 	padding:0;
 	color:#333;
-	background:#eee url(http://subtlepatterns.subtlepatterns.netdna-cdn.com/patterns/retina_dust.png);
+	/*background:#eee url(http://subtlepatterns.subtlepatterns.netdna-cdn.com/patterns/retina_dust.png);*/
 	text-shadow:0 1px 0 #fff;
 	/* text-align:center; */
 	font-family:arial;
@@ -11,12 +11,14 @@ body{
 a, a:visited{
 	color:#333
 	}
+/* disable the user selection
 ::selection{
 	background:transparent;
 	}
 -moz-::selection{
 	background:transparent;
 	}
+*/
 h1, h2, h4{
 	font-family: 'Rokkitt', serif;
 	font-weight:100;
