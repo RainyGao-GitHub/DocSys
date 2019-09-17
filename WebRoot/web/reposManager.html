@@ -825,6 +825,9 @@
     $(document).ready(function(){
     	console.log("Page is ready");
 
+    	//获取docSys基本配置
+    	getDocSysConfig();
+    	
 		//getReposList
 		showReposSelectList(); //获取当前用户可管理仓库列表		
     });
@@ -1104,6 +1107,33 @@ function deleteDocAuth(docAuthId)
             error : function () {
                showErrorMessage('服务器异常：删除用户的目录权限设置失败！');
             }
+    });
+}
+
+//获取系统默认配置信息
+var gDocSysConfig = null;
+function getDocSysConfig()
+{
+	console.log("getDocSysConfig");
+    $.ajax({
+        url : "/DocSystem/Repos/getDocSysConfig.do",
+        type :"post",
+        dataType :"json",
+        data : null,
+        success : function (ret) {
+            if(ret.status == "ok")
+            {
+            	gDocSysConfig = ret.data;
+            	console.log("getDocSysConfig config:", gDocSysConfig);
+            }
+            else
+            {
+            	console.log(ret.msgInfo);
+            }
+        },
+        error : function () {
+        	console.log('服务器异常:获取DocSysConfig失败');
+        }
     });
 }
 
