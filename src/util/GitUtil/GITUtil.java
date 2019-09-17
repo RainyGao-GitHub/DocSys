@@ -1156,7 +1156,7 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 
-	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
+	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) 
 	{		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -1253,11 +1253,14 @@ public class GITUtil  extends BaseController{
 		    		}
 		    		else
 		    		{
-		    			Doc tempDoc = commitHashMap.get(doc.getDocId());
-		    			if(tempDoc != null)
+		    			CommitAction commitAction = commitHashMap.get(doc.getDocId());
+		    			if(commitAction != null)
 		    			{
-		            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		            		insertModifyFile(commitActionList,doc);
+		    				if(commitAction.getAction() == 3)
+		    				{
+			            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			            		insertModifyFile(commitActionList,doc);
+		    				}
 		    			}
 		    		}
 			    }
@@ -1638,7 +1641,7 @@ public class GITUtil  extends BaseController{
 		return true;
 	}
   	
-	private void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) {
+	private void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) {
 		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -1703,12 +1706,15 @@ public class GITUtil  extends BaseController{
     		}
     		else
     		{
-    			Doc tempDoc = commitHashMap.get(doc.getDocId());
-    			if(tempDoc != null)
+    			CommitAction commitAction = commitHashMap.get(doc.getDocId());
+    			if(commitAction != null)
     			{
-        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,doc);
-            		return;
+    				if(commitAction.getAction() == 3)
+    				{
+	        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
+	            		insertModifyFile(actionList,doc);
+	            		return;
+    				}
     			}
     		}
     		break;
@@ -1733,7 +1739,7 @@ public class GITUtil  extends BaseController{
     	return; 
 	}
 
-	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable, boolean isSubAction, HashMap<Long, Doc> commitHashMap,
+	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable, boolean isSubAction, HashMap<Long, CommitAction> commitHashMap,
 			int subDocCommitFlag) {
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
