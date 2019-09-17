@@ -1409,7 +1409,15 @@ public class GITUtil  extends BaseController{
 		if(isRemote)
 		{
 			try {
-				git.push().call();
+				if(user != null && !user.isEmpty())
+				{
+					UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
+					git.push().setCredentialsProvider(cp).call();
+				}
+				else
+				{
+					git.push().call();
+				}
 			} catch (Exception e) {
 				System.out.println("doAutoCommmit() Push Error");	
 				e.printStackTrace();
