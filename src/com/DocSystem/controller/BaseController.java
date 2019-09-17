@@ -819,6 +819,13 @@ public class BaseController  extends BaseFunction{
 				//If VerRepos is Git, We need to do clone the Repository
 				if(verCtrl == 2)
 				{
+					if(deleteClonedRepos(repos, isRealDoc) == false)
+					{
+						System.out.println("删除版本仓库失败");
+						rt.setError("删除版本仓库失败");	
+						return false;						
+					}
+						
 					//Clone the Repository
 					if(cloneGitRepos(repos, isRealDoc, rt) == null)
 					{
@@ -829,6 +836,18 @@ public class BaseController  extends BaseFunction{
 				}
 				
 			}	
+		}
+		return true;
+	}
+
+	private boolean deleteClonedRepos(Repos repos, boolean isRealDoc) {
+		GITUtil gitUtil = new GITUtil();
+		
+		String clonedReposPath = gitUtil.getLocalVerReposPath(repos, isRealDoc);
+		File localRepos = new File(clonedReposPath);
+		if(localRepos.exists())
+		{
+			return delFileOrDir(clonedReposPath);
 		}
 		return true;
 	}
