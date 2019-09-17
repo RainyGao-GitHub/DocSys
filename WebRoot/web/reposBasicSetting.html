@@ -20,7 +20,7 @@
 			</div>
             <div id="RBSverCtrlDiv">
 	            <div id="RBSrealDocVerCtrlDiv">
-		            <label>版本仓库 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
+		            <label>版本管理 <span id="RBSisRemoteSetting" style="margin-left:20px"><input type="checkbox" id="RBSisRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 		            <select class="form-control" id="RBSverCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
@@ -42,7 +42,7 @@
 					</div>
 				</div>
 				<div id="RBSvirtualDocVerCtrlDiv">
-					<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
+					<label>VirtaulDoc版本仓库 <span id="RBSisRemoteSetting1" style="margin-left:20px"><input type="checkbox" id="RBSisRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
 		            <select class="form-control" id="RBSverCtrl1" onchange="doSelectVerCtrl1()" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
@@ -68,7 +68,7 @@
         <a href='javascript:void(0)' onclick="saveReposBasicSetting();" class='mybtn-primary'>保存</a>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript">	
 	function reposBasicSettingPageInit()
 	{
 	    console.log("reposBasicSettingPageInit");
@@ -92,9 +92,10 @@
 			//RealDoc verCtrl
 			//$("#RBSverCtrl").get(0).selectedIndex=0;
 			//$("#RBSverCtrl").attr('disabled',false);
+			
 			//virtualDoc verCtrl
 			//$("#RBSverCtrl1").get(0).selectedIndex=0;
-			//$("#RBSvirtualDocVerCtrlDiv").show();
+			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").hide();
 		}
@@ -102,8 +103,13 @@
 		{
 			$("#RBSverCtrlDiv").hide();
 			$("#RBSverCtrl").get(0).selectedIndex=0;
-			$("#RBSverCtrl1").get(0).selectedIndex=0;
+
+			//virtualDoc verCtrl
+			//$("#RBSverCtrl1").get(0).selectedIndex=0;
+			$("#RBSvirtualDocVerCtrlDiv").hide();
+
 			//$("#RBSrealDocPathDiv").show();
+		
 		}
 		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
 		{
@@ -111,8 +117,9 @@
 			//RealDoc verCtrl
 			$("#RBSverCtrl").get(0).selectedIndex=1;
 			$("#RBSverCtrl").attr('disabled',true);
+			
 			//virtualDoc verCtrl
-			$("#RBSverCtrl1").get(0).selectedIndex=0;
+			//$("#RBSverCtrl1").get(0).selectedIndex=0;
 			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").hide();
@@ -123,8 +130,9 @@
 			//RealDoc verCtrl
 			$("#RBSverCtrl").get(0).selectedIndex=2;
 			$("#RBSverCtrl").attr('disabled',true);
+			
 			//virtualDoc verCtrl
-			$("#RBSverCtrl1").get(0).selectedIndex=0;
+			//$("#RBSverCtrl1").get(0).selectedIndex=0;
 			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").hide();
@@ -138,13 +146,13 @@
 	{
 		console.log("doSelectVerCtrl");
 		var verCtrl = $("#RBSverCtrl").val();
-		var isRemote = $("#RBSisRemote").is(':checked')? 0: 1;
+		var isRemote = $("#RBSisRemote").is(':checked')? 1: 0;
 		
 		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
-				$("#RBSlocalVerRepos").show();
+				$("#RBSlocalVerRepos").hide();
 				$("#RBSremoteVerRepos").hide();
 			}
 			else
@@ -173,13 +181,13 @@
 	{
 		console.log("doSelectVerCtrl1");
 		var verCtrl = $("#RBSverCtrl1").val();
-		var isRemote = $("#RBSisRemote1").is(':checked')? 0: 1;
+		var isRemote = $("#RBSisRemote1").is(':checked')? 1: 0;
 		
 		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
-				$("#RBSlocalVerRepos1").show();
+				$("#RBSlocalVerRepos1").hide();
 				$("#RBSremoteVerRepos1").hide();
 			}
 			else
@@ -243,11 +251,11 @@ function getReposBasicSetting()
 	   	$("#RBSverCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
 	   	{
-		   	$("#RBSisRemote").attr("checked","checked");
+		   	$("#RBSisRemote").attr("checked",false);
 	   	}
 	   	else
 	   	{
-		   	$("#RBSisRemote").attr("checked",false);
+		   	$("#RBSisRemote").attr("checked","checked");
 	   	}
 	   	$("#RBSlocalSvnPath").val(reposInfo.localSvnPath);
 	   	$("#RBSsvnPath").val(reposInfo.svnPath);
@@ -256,11 +264,11 @@ function getReposBasicSetting()
 	   	$("#RBSverCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote1 == 0)
 	   	{
-		   	$("#RBSisRemote1").attr("checked","checked");
+		   	$("#RBSisRemote1").attr("checked",false);	   		
 	   	}
 	   	else
 	   	{
-		   	$("#RBSisRemote1").attr("checked",false);	   		
+		   	$("#RBSisRemote1").attr("checked","checked");
 	   	}
 	   	$("#RBSlocalSvnPath1").val(reposInfo.localSvnPath1);
 	   	$("#RBSsvnPath1").val(reposInfo.svnPath1);
@@ -280,21 +288,31 @@ function saveReposBasicSetting()
 	newReposSetting.path = $("#RBSpath").val();
 	newReposSetting.realDocPath = $("#RBSrealDocPath").val();
 	newReposSetting.verCtrl = $("#RBSverCtrl").val();
-	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 0: 1;
+	newReposSetting.isRemote =  $("#RBSisRemote").is(':checked')? 1: 0;
 	newReposSetting.localSvnPath = $("#RBSlocalSvnPath").val();
 	newReposSetting.svnPath = $("#RBSsvnPath").val();
 	newReposSetting.svnUser = $("#RBSsvnUser").val();
 	newReposSetting.svnPwd = $("#RBSsvnPwd").val();
 	newReposSetting.verCtrl1 = $("#RBSverCtrl1").val();
-	newReposSetting.isRemote1 =  $("#RBSisRemote1").is(':checked')? 0: 1;
+	newReposSetting.isRemote1 =  $("#RBSisRemote1").is(':checked')? 1: 0;
 	newReposSetting.localSvnPath1 = $("#RBSlocalSvnPath1").val();
 	newReposSetting.svnPath1 = $("#RBSsvnPath1").val();
 	newReposSetting.svnUser1 = $("#RBSsvnUser1").val();
 	newReposSetting.svnPwd1 = $("#RBSsvnPwd1").val();
 	console.log(newReposSetting);
 	
-	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
+	if(newReposSetting.isRemote == 0)
 	{
+		newReposSetting.localSvnPath =   gDocSysConfig.defaultReposStorePath + "DocSysVerReposes/";
+	}
+	
+	if(newReposSetting.isRemote1 == 0)
+	{
+		newReposSetting.localSvnPath1 =   gDocSysConfig.defaultReposStorePath + "DocSysVerReposes/";        		
+	}
+	
+	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
+	{	
    		$.ajax({
                 url : "/DocSystem/Repos/updateReposInfo.do",
                 type : "post",

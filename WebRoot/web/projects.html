@@ -124,7 +124,7 @@
 				<input class="form-control" type="text" name="realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 			</div>
 			<div name="verCtrlDiv">
-	            <label>版本管理 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" checked="checked" onclick="doSelectVerCtrl()">自动创建</span></label>
+	            <label>版本管理 <span name="isRemoteSetting" style="margin-left:20px"><input type="checkbox" name="isRemote" value="0" onclick="doSelectVerCtrl()">自定义</span></label>
 	            <select class="form-control" name="verCtrl" onchange="doSelectVerCtrl();" style="width: 100%">   
 	            	<option value="0">无</option>   
 	            	<option value="1">SVN</option>   
@@ -147,7 +147,7 @@
 		            </div>
 	            </div>
 	            <div name="virtualDocVerCtrlDiv">
-		            <label>版本管理（VirutalDoc）<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" checked="checked" onclick="doSelectVerCtrl1()">自动创建</span></label>
+		            <label>版本管理（VirutalDoc）<span name="isRemoteSetting1" style="margin-left:20px"><input  type="checkbox" name="isRemote1" value="0" onclick="doSelectVerCtrl1()">自定义</span></label>
 		            <select class="form-control" name="verCtrl1" onchange="doSelectVerCtrl1();" style="width: 100%">   
 		            	<option value="0">无</option>   
 		            	<option value="1">SVN</option>   
@@ -389,9 +389,10 @@
 			//RealDoc verCtrl
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',false);
+			
 			//virtualDoc verCtrl
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
-			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").show();
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
 
 			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
 		}
@@ -399,9 +400,12 @@
 		{
 			$("#dialog-new-repos div[name='verCtrlDiv']").hide();
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=0;
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+			
+			//virtualDoc verCtrl 默认总是Git
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
+			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
 
-			//$("#dialog-new-repos div[name='realDocPathDiv']").show();
+			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
 		}
 		else if(type == 3)	//Hide VirtualDoc VerCtl and Set verCtr = SVN isRemote = 1
 		{
@@ -409,8 +413,9 @@
 			//RealDoc verCtrl
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=1;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
-			//virtualDoc verCtrl
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+
+			//virtualDoc verCtrl 默认总是Git
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
 			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
 
 			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
@@ -421,8 +426,9 @@
 			//RealDoc verCtrl
 			$("#dialog-new-repos select[name='verCtrl']").get(0).selectedIndex=2;
 			$("#dialog-new-repos select[name='verCtrl']").attr('disabled',true);
-			//virtualDoc verCtrl
-			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=0;
+			
+			//virtualDoc verCtrl 默认总是Git
+			$("#dialog-new-repos select[name='verCtrl1']").get(0).selectedIndex=2;
 			$("#dialog-new-repos div[name='virtualDocVerCtrlDiv']").hide();
 
 			//$("#dialog-new-repos div[name='realDocPathDiv']").hide();
@@ -436,14 +442,14 @@
 	{
 		console.log("doSelectVerCtrl");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
-		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
+		var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
 		
 		//alert(verCtrl);
 		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)
 			{
-				$("#dialog-new-repos div[name='localVerRepos']").show();					
+				$("#dialog-new-repos div[name='localVerRepos']").hide();
 				$("#dialog-new-repos div[name='remoteVerRepos']").hide();
 			}
 			else
@@ -473,7 +479,7 @@
 	{
 		console.log("doSelectVerCtrl1");
 		var verCtrl = $("#dialog-new-repos select[name='verCtrl1']").val();
-		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
+		var isRemote = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 1: 0;
 
 		if(verCtrl != 0) 			//show verRepos info
 		{
@@ -546,14 +552,14 @@
             var type = $("#dialog-new-repos select[name='type']").val();	//1:文件管理系统 2:文件系统前置 3: SVN前置 4: Git前置
             var realDocPath = $("#dialog-new-repos input[name='realDocPath']").val();	//realDocPath
             var verCtrl = $("#dialog-new-repos select[name='verCtrl']").val();
-            var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 0: 1;
+            var isRemote = $("#dialog-new-repos input[name='isRemote']").is(':checked')? 1: 0;
             var localSvnPath = $("#dialog-new-repos input[name='localSvnPath']").val();
             var svnPath = $("#dialog-new-repos input[name='svnPath']").val();
             var svnUser = $("#dialog-new-repos input[name='svnUser']").val();
             var svnPwd = $("#dialog-new-repos input[name='svnPwd']").val();
             //For Virtual Doc Version Control
             var verCtrl1 = $("#dialog-new-repos select[name='verCtrl1']").val();
-            var isRemote1 = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 0: 1;
+            var isRemote1 = $("#dialog-new-repos input[name='isRemote1']").is(':checked')? 1: 0;
             var localSvnPath1 = $("#dialog-new-repos input[name='localSvnPath1']").val();
             var svnPath1 = $("#dialog-new-repos input[name='svnPath1']").val();
             var svnUser1 = $("#dialog-new-repos input[name='svnUser1']").val();
@@ -576,7 +582,17 @@
             	alert("仓库存储路径不能为空！");
             	return false;
         	}
-        	  	
+        	
+        	if(isRemote == 0)
+        	{
+        		localSvnPath =   gDocSysConfig.defaultReposStorePath + "DocSysVerReposes/";
+        	}
+        	
+        	if(isRemote1 == 0)
+        	{
+        		localSvnPath1 =   gDocSysConfig.defaultReposStorePath + "DocSysVerReposes/";        		
+        	}
+        	
             $.ajax({
                     url : "/DocSystem/Repos/addRepos.do",
                     type : "post",
