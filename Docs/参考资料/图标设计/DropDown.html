@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-cn"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<head>
+    <meta charset="UTF-8">
+    <title>Button1</title>
+	<style type="text/css">
+		body,ul,li{
+			margin:0; padding:0; font-size:13px;
+		}
+		ul,li{
+			list-style:none;
+		}
+		#divselect{
+			width:186px; margin:80px auto; position:relative; z-index:10000;
+		}
+		#divselect cite{
+			width:150px;
+			height:24px;
+			line-height:24px; 
+			display:block; 
+			color:#807a62; 
+			cursor:pointer;
+			font-style:normal;
+			padding-left:4px; 
+			padding-right:30px; 
+			border:1px solid #333333; 
+		}
+		
+		#divselect ul{
+			width:184px;border:1px solid #333333; background-color:#ffffff; position:absolute; z-index:20000; margin-top:-1px; display:none;
+		}
+		#divselect i {
+			width:34px;
+			height:24px;
+			display:block;  
+		}
+		.menu-trigger{
+			background:url(sprite-4ce3c9eaa2.svg) no-repeat;
+			background-position: 55.97667638483965% 27.32732732732733%;
+			width: 34px;
+			height: 24px;
+		}
+		
+		#divselect ul li a{
+			display:block; height:24px; color:#333333; text-decoration:none; padding-left:10px; padding-right:10px;
+		}
+	</style>
+   <script type="text/javascript">
+window.onload=function(){
+	var box=document.getElementById('divselect'),
+	    title=box.getElementsByTagName('cite')[0],
+	    menu=box.getElementsByTagName('ul')[0],
+	    as=box.getElementsByTagName('a'),
+        index=-1;
+   
+    // 点击三角时
+    title.onclick=function(event){
+      // 执行脚本
+      event=event||window.event;
+      stopPropagation(event);
+      if(menu.style.display!='block')
+        menu.style.display='block';
+      else
+        menu.style.display='none';
+    }  
+    document.onkeyup=function(event){
+        event=event||window.event;
+        if(menu.style.display=='block')
+          if(event.keyCode==38){
+              if(index>0){
+                  as[index].style.background='#FFF';
+                  index--;
+                  as[index].style.background='#999';
+              }
+          }
+          else if (event.keyCode==40){
+            if(index<4){
+              if(index>=0)
+                as[index].style.background='#FFF';
+              index++;
+              as[index].style.background='#999';
+            }
+          }
+    }
+     
+        
+   // 滑过滑过、离开、点击每个选项时
+      // 执行脚本
+       for(var i=0;i<5;i++)
+        as[i].onmouseover=function(){
+          this.style.background='#999';
+        }
+       for(var i=0;i<5;i++)
+        as[i].onmouseout=function(){
+          this.style.background='#FFF';
+        }
+        for(var i=0;i<5;i++)
+        as[i].onclick=function(event){
+          event=event||window.event;
+          stopPropagation(event);
+          menu.style.display='none';
+          title.innerHTML=this.innerHTML;
+        }
+   // 点击页面空白处时
+   
+       // 执行脚本
+       document.onclick=function(){
+          menu.style.display='none';
+       }
+      function stopPropagation(event){
+        event=event||window.event;
+        if(event.stopPropagation)
+          event.stopPropagation();
+        else
+          event.cancelBubble=true;
+
+      }
+ }
+   </script>
+</head>
+<body>
+	<div id="divselect">
+      <cite>PleaseSelect</cite>
+	  <i class="menu-trigger"></i>
+      <ul>
+         <li id="li"><a href="javascript:;" selectid="1">ASP</a></li>
+         <li><a href="javascript:;" selectid="2">.NET</a></li>
+         <li><a href="javascript:;" selectid="3">PHP</a></li>
+         <li><a href="javascript:;" selectid="4">Javascript</a></li>
+         <li><a href="javascript:;" selectid="5">Java</a></li>
+      </ul>
+    </div>
+</body>
+</html>
