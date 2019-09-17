@@ -1417,6 +1417,7 @@ public class GITUtil  extends BaseController{
 				rollBackCommit(git, "HEAD");
 				return null;
 			}
+			System.out.println("doAutoCommmit() Push OK");	
 		}
 		return ret.getName();
 	}
