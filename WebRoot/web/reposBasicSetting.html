@@ -303,12 +303,12 @@ function saveReposBasicSetting()
 	
 	if(newReposSetting.isRemote == 0)
 	{
-		newReposSetting.localSvnPath =   gDocSysConfig.defaultReposStorePath + "DocSysVerReposes/";
+		newReposSetting.localSvnPath = newReposSetting.path + "DocSysVerReposes/";
 	}
 	
 	if(newReposSetting.isRemote1 == 0)
 	{
-		newReposSetting.localSvnPath1 =   gDocSysConfig.defaultReposStorePath + "DocSysVerReposes/";        		
+		newReposSetting.localSvnPath1 = newReposSetting.path + "DocSysVerReposes/";        		
 	}
 	
 	if(verifyReposSetting(gReposBasicSetting,newReposSetting) == true)
