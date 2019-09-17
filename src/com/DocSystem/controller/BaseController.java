@@ -2146,7 +2146,7 @@ public class BaseController  extends BaseFunction{
 		Repos repos = action.getRepos();
 		
 		//文件管理系统
-		HashMap<Long, Doc> commitHashMap = new HashMap<Long, Doc>();
+		HashMap<Long, CommitAction> commitHashMap = new HashMap<Long, CommitAction>();
 		boolean ret = SyncUpSubDocs_FSM(repos, doc, login_user, rt, commitHashMap, 1);
 		System.out.println("syncupForDocChange() SyncUpSubDocs_FSM ret:" + ret);
 		if(commitHashMap.size() == 0)
@@ -2183,8 +2183,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//更新数据库信息
-		for(Doc commitDoc: commitHashMap.values())
+		for(CommitAction commitAction: commitHashMap.values())
 	    {
+			Doc commitDoc = commitAction.getDoc();
 			printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
 			//需要根据commitAction的行为来决定相应的操作
 			commitDoc.setRevision(revision);
@@ -2338,7 +2339,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean syncupForDocChange_FSM(Repos repos, Doc doc, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long,Doc> commitHashMap, int subDocSyncFlag) 
+	private boolean syncupForDocChange_FSM(Repos repos, Doc doc, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, CommitAction> commitHashMap, int subDocSyncFlag) 
 	{
 		//printObject("syncupForDocChange_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
@@ -2364,14 +2365,23 @@ public class BaseController  extends BaseFunction{
 		int docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 		//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
 
+		Integer commitActionType = null;
 		switch(docChangeType)
 		{
 		case 11:	//localAdd
+			commitActionType = 1;
 		case 12: 	//localDelete
+			commitActionType = 2;
 		case 13: 	//localFileChanged
+			commitActionType = 3;
 		case 14:	//localTypeChanged(From File to Dir)
+			commitActionType = 6;
 		case 15:	//localTypeChanged(From Dir to File)
-			commitHashMap.put(doc.getDocId(), doc);
+			commitActionType = 7;
+			CommitAction commitAction = new CommitAction();
+			commitAction.setDoc(doc);
+			commitAction.setAction(commitActionType);
+			commitHashMap.put(doc.getDocId(), commitAction);
 			break;
 		
 		//由于远程同步需要直接修改或删除本地文件，一旦误删无法恢复，因此只处理远程新增
@@ -2556,7 +2566,7 @@ public class BaseController  extends BaseFunction{
 		return dbDocHashMap.get(doc.getDocId());
 	}
 
-	private boolean SyncUpSubDocs_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, Doc> commitHashMap, int subDocSyncFlag) 
+	private boolean SyncUpSubDocs_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, CommitAction> commitHashMap, int subDocSyncFlag) 
 	{
 		//System.out.println("************************ SyncUpSubDocs_FSM()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
 
@@ -5280,7 +5290,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryDetail(doc, commitId);
 	}
 	
-	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
+	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) 
 	{	
 		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
@@ -5304,7 +5314,7 @@ public class BaseController  extends BaseFunction{
 		return "";
 	}
 	
-	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag)
+	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag)
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5317,7 +5327,7 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 	
-	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, Doc> commitHashMap, int subDocCommitFlag) 
+	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
