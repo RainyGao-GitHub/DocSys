@@ -1934,11 +1934,11 @@ public class BaseController  extends BaseFunction{
 		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 2, 1, null);
 
 		//Insert delete action for VDoc
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 1, 2, 2, null);
+		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 1, 2, 2, null);
 		//Insert delete action for VDoc Index
 		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 2, 2, null);
 		//Insert delete action for VDoc verRepos 
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 2, 2, 2, null);
+		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 2, 2, 2, null);
 	}
 	
 	private List<Doc> docSysGetSubDocList(Repos repos, Doc doc) 
