@@ -391,7 +391,7 @@
       		//清除标记
   			isDownloading = false;
   			
-      		//显示下载完成 
+      		//显示下载准备完成 
       		showDownloadEndInfo();
       		
       		
@@ -399,10 +399,10 @@
       	
   		function showDownloadEndInfo()
   		{
-  			var downloadEndInfo = "下载完成(共" + totalNum +"个)";
+  			var downloadEndInfo = "下载准备完成(共" + totalNum +"个)";
       		if(successNum != totalNum)
       		{
-      			downloadEndInfo = "下载完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			downloadEndInfo = "下载准备完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
       		    bootstrapQ.msg({
 					msg : downloadEndInfo,
 					type : 'warning',
