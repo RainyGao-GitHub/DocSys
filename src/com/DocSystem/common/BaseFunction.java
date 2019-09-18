@@ -503,6 +503,10 @@ public class BaseFunction{
 	protected String getVDocName(Doc doc) 
 	{
 		//return doc.getVid() + "_" + doc.getDocId() + "_" + doc.getName();
+		if(doc.getDocId() == 0L)
+		{
+			return "";
+		}
 		return doc.getDocId() + "_" + doc.getName();
 	}
 	
