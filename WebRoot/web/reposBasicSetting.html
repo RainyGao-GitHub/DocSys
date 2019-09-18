@@ -92,10 +92,6 @@
 			//RealDoc verCtrl
 			//$("#RBSverCtrl").get(0).selectedIndex=0;
 			//$("#RBSverCtrl").attr('disabled',false);
-			
-			//virtualDoc verCtrl
-			//$("#RBSverCtrl1").get(0).selectedIndex=0;
-			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").hide();
 		}
@@ -103,10 +99,6 @@
 		{
 			$("#RBSverCtrlDiv").hide();
 			$("#RBSverCtrl").get(0).selectedIndex=0;
-
-			//virtualDoc verCtrl
-			//$("#RBSverCtrl1").get(0).selectedIndex=0;
-			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").show();
 		
@@ -117,10 +109,6 @@
 			//RealDoc verCtrl
 			$("#RBSverCtrl").get(0).selectedIndex=1;
 			$("#RBSverCtrl").attr('disabled',true);
-			
-			//virtualDoc verCtrl
-			//$("#RBSverCtrl1").get(0).selectedIndex=0;
-			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").hide();
 		}
@@ -130,13 +118,14 @@
 			//RealDoc verCtrl
 			$("#RBSverCtrl").get(0).selectedIndex=2;
 			$("#RBSverCtrl").attr('disabled',true);
-			
-			//virtualDoc verCtrl
-			//$("#RBSverCtrl1").get(0).selectedIndex=0;
-			$("#RBSvirtualDocVerCtrlDiv").hide();
 
 			//$("#RBSrealDocPathDiv").hide();
 		}
+		
+		//virtualDoc verCtrl
+		$("#RBSverCtrl1").get(0).selectedIndex=2;
+		$("#RBSvirtualDocVerCtrlDiv").hide();
+		
 		doSelectVerCtrl();
 		doSelectVerCtrl1();
 	}
