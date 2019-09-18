@@ -4041,12 +4041,6 @@ function CompareObj(objA, objB, flag) {
 						downloadDoc(treeNodes,true,1);
 					}
 			},
-			{text: '下载备注', action: function(e){
-						e.preventDefault();
-						var treeNodes = getSelectedNodes();
-						downloadDoc(treeNodes,true,2);
-					}
-			},
 			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
@@ -4118,6 +4112,13 @@ function CompareObj(objA, objB, flag) {
 								e.preventDefault();
 								showDocHistory(curRightClickedTreeNode,1);
 							}
+						},
+						{divider: true},
+						{text: '下载备注', action: function(e){
+									e.preventDefault();
+									var treeNodes = getSelectedNodes();
+									downloadDoc(treeNodes,true,2);
+								}
 						},
 						{divider: true},
 						{text: 'CheckOut', action: function(e){
@@ -4201,13 +4202,6 @@ function CompareObj(objA, objB, flag) {
 					downloadDoc(treeNodes,true,1);
 				}
 			},
-			{text: '下载备注', action: function(e){
-					e.preventDefault();
-					var treeNodes = [];
-					treeNodes.push(curRightClickedDocListNode);
-					downloadDoc(treeNodes,true,2);
-				}
-			},
 			{divider: true},
 			{text: '复制', action: function(e){
 						e.preventDefault();
@@ -4278,10 +4272,17 @@ function CompareObj(objA, objB, flag) {
 							}
 						},
 						{divider: true},
-						{text: '备注', action: function(e){
+						{text: '查看备注', action: function(e){
 								e.preventDefault();
 					 			getAndShowDoc(curRightClickedDocListNode,false);
 					 			showRightDiv();
+							}
+						},
+						{text: '下载备注', action: function(e){
+								e.preventDefault();
+								var treeNodes = [];
+								treeNodes.push(curRightClickedDocListNode);
+								downloadDoc(treeNodes,true,2);
 							}
 						},
 						{divider: true},
