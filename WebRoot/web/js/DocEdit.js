@@ -68,7 +68,7 @@
        		};
        		
       		//editormd was defined in editormd.js
-       		md = editormd("doc",params);   
+       		md = editormd("vdocPreview",params);   
       	}
         
     	function editorLoadmd(content,edit) 

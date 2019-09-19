@@ -266,8 +266,13 @@
 	                   	</button>
         		</div>
          	</div>
-            <div class="manual-article">
-                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
+            <div class="manual-article" id="previewZone">
+                <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px">
+                </div>
+                <div class="article-body editor-content"  id="docPreview" style="display:none;min-height: 650px">
+                	<div align=center style="margin-top:20px" >
+                		<img id="imgPreview" name="imgPreview" src="" />
+                	</div>
                 </div>
             </div>
         </div>
@@ -448,12 +453,12 @@
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 </div>
 <div style="width:0;height:0;">
-	<textarea id="copiedText"></textarea>
+	<textarea id="copiedText" style="border-style:none;overflow:hidden;width:0;height:0"></textarea>
 </div>	
 <!-- single file upload form -->
 <div style="display:none">
 	<form id="FileUploadForm" action="/DocSystem/Doc/uploadDoc.do" method="post" enctype="multipart/form-data">  
-		<input id="uploadFile" name="uploadFile" type="file" class="fLeft" style="margin-top: 90px;" multiple="multiple"/>
+		<input id="uploadFile" name="uploadFile" type="file" class="fLeft" 		//$("#imgPreview").show(); multiple="multiple"/>
 		<input type="text" value="0" id="reposId" name="reposId" title="所在仓库"/>
 		<input type="text" value="0" id="parentId" name="parentId" title="父节点"/>	
 		<input type="text" value="-1" id="docId" name="docId" title="文件节点"/>
@@ -1586,21 +1591,12 @@
                     
                     gDocContent = parseDocContent(ret.data.content);
                     gTmpSavedContent = parseDocContent(ret.msgData);                    
-                    
+					
+                    setImgPreview(ret);
+
 					if(gShowType == 1)	//显示预览
 					{	
-						if(!ret.dataEx)	//表明不是文件，无法预览
-						{
-							console.log("getAndShowDoc() dataEx is null");
-					      	return;
-						}
-						
-						var targetName = ret.dataEx.name;
-                	    var targetPath = ret.dataEx.path;
-                	    targetName = encodeURI(targetName);
-            		   	targetPath = encodeURI(targetPath);
-            	   		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-						console.log("getAndShowDoc() docLink:" + docLink);
+						$("#docPreview").show();
 				      	return;
 					}
 					else	//显示备注
@@ -1619,6 +1615,25 @@
             }
         });
     }
+	
+	function setImgPreview(ret)
+	{
+		if(!ret.dataEx)	//表明不是文件，无法预览
+		{
+			console.log("getAndShowDoc() dataEx is null");
+	      	return;
+		}
+		
+		var targetName = ret.dataEx.name;
+	    var targetPath = ret.dataEx.path;
+	    targetName = encodeURI(targetName);
+	   	targetPath = encodeURI(targetPath);
+			var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+		console.log("getAndShowDoc() docLink:" + docLink);
+		//$("#imgPreview").attr('src', docLink + Math.random()); 
+		$("#imgPreview").attr('src', docLink); 						
+		//$("#imgPreview").show();
+	}
 	
 	function parseDocContent(content)
 	{
@@ -3472,9 +3487,9 @@ function CompareObj(objA, objB, flag) {
 	      	$("#btnEditWiki").hide();
 	      	$("#btnSwitchShow").text("显示备注");
 	      	//隐藏备注内容
-			$("#doc").hide();	      	
-	      	
+			$("#vdocPreview").hide();
 	      	//显示预览内容
+	      	$("#docPreview").show();
 	     }
 	     else
 	     {
@@ -3485,10 +3500,10 @@ function CompareObj(objA, objB, flag) {
 		     $("#btnSwitchShow").text("显示预览");
 		     //显示备注内容
 		     showVirtualDoc(false);
-		     $("#doc").show();	      	
+		     $("#vdocPreview").show();	      	
 
 		     //隐藏预览内容
-		     
+		     $("#docPreview").hide();		     
 	     }
 	}
 	/************************** contextMenu 接口***************************/	
@@ -3944,7 +3959,7 @@ function CompareObj(objA, objB, flag) {
         };
         
         //文件预览区的拖拽上传
-        var docZone =  document.getElementById("doc");  
+        var docZone =  document.getElementById("previewZone");  
         docZone.ondragenter = function(e){  
             e.preventDefault();  
         };  
