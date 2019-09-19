@@ -42,14 +42,14 @@
                 <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                     <ul class="dropdown-menu" role="menu">
-						<li>
+						<li id="mobileNewReposBtn">
 							<a href="#" title="新建仓库" onclick="newRepos()">新建</a>
 						</li>
-                        <li>
+                        <li id="mobileLoginBtn">
                             <a onclick="showLoginPanel()" title="用户登录">登录</a>
                         </li>
-                        <li>
-                            <a onclick="logout()" title="退出登录">退出</a>
+                        <li id="mobileLogoutBtn">
+                            <a onclick="userLogout()" title="退出登录">退出</a>
                         </li>
                     </ul>
                 </div>            
@@ -63,7 +63,7 @@
 							<ul class="dropdown-menu" role="menu">
 								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
 								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
-								<li><a onclick="logout()">退出登录</a></li>
+								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
 							</ul>
 					</li>
                     <li id="loginBtn">
@@ -223,13 +223,7 @@
                 	login_user = user;
                 	//显示用户信息
                 	ShowUserInfo(user);
-                	
-                	$('#newReposBtn').show();
-
-                	if(user.type > 0) //超级管理员和管理员才能新建仓库，后台也徐亚进行控制，普通用户只能建立最多10个私人仓库
-                	{
-                		$('#goManagerBtn').show();
-                	}
+                	loginBtnCtrl(user);
                 	
                 	//用戶已經登錄才能看到倉庫
                 	getReposList();                	
@@ -244,6 +238,48 @@
                 alert("服务器异常:获取用户信息失败");
             }
         });
+    }
+    
+    function userLogout()
+   	{
+    	logout();
+    	loginBtnCtrl();
+   	}
+    
+    function loginBtnCtrl(user)
+    {
+    	if(user)
+    	{
+        	$('#loginBtn').hide();
+        	$('#mobileLoginBtn').hide();
+        	
+        	$('#logoutBtn').show();
+           	$('#mobileLogoutBtn').show();            
+           	
+        	$('#newReposBtn').show();
+        	$('#mobileNewReposBtn').show();
+        	
+        	if(user.type > 0) //超级管理员和管理员才能新建仓库，后台也徐亚进行控制，普通用户只能建立最多10个私人仓库
+        	{
+        		$('#goManagerBtn').show();
+        	}
+    	}
+    	else
+    	{
+        	$('#loginBtn').show();
+        	$('#mobileLoginBtn').show();
+        	
+        	$('#logoutBtn').hide();
+           	$('#mobileLogoutBtn').hide();
+
+           	$('#newReposBtn').hide();
+        	$('#mobileNewReposBtn').hide();
+        	
+        	$('#newReposBtn').hide();
+           	$('#mobileNewReposBtn').hide();
+        	
+        	$('#goManagerBtn').hide();
+    	}
     }
 
     function showErrorMessage($msg) {

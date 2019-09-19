@@ -63,7 +63,6 @@
 		$('#userImgDiv').show();
 		$('#userInfoDiv > a >span:first-child').text(user.name);
 		$('#userInfoDiv').show();
-		$('#loginBtn').hide();
 	}
 	
 	function getUserImgUrl(imgName)
