@@ -29,10 +29,13 @@
                 <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                     <ul class="dropdown-menu" role="menu">
-						<li>
+						<li id="mobileLoginBtn">
                             <a onclick="showLoginPanel()" title="用户登录">登录</a>
                         </li>
-                        <li>
+                        <li id="mobileLogoutBtn">
+                        	<a onclick="userLogout()" title="用户登录">退出</a>
+                        </li>
+                        <li id="mobileRegisterBtn">
                             <a onclick="showRegisterPanel()" title="用户注册">注册</a>
                         </li>
                     </ul>
@@ -45,7 +48,7 @@
 							<ul class="dropdown-menu" role="menu">
 								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
 								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
-								<li><a onclick="logout()">退出登录</a></li>
+								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
 							</ul>
 				</li>
 				<li id="loginBtn">
@@ -219,17 +222,12 @@
    					
                 	//显示用户信息
                 	ShowUserInfo(user);
-                	
-                	$('#registerBtn').hide();
-                	//显示进入系统按键
-                	$('#enterSystemBtn').show();
-                	$('#loginBannerBtn').hide();
-                	
+                	loginBtnCtrl(user);                	
                 }
                 else 
                 {
                     console.log(ret.msgInfo);
-                    //showLoginPanel();
+                    loginBtnCtrl();
                 }
             },
             error : function () {
@@ -238,6 +236,51 @@
         });
     }
     
+    function userLogout()
+   	{
+    	logout();
+    	loginBtnCtrl();
+   	}
+    
+    function loginBtnCtrl(user)
+    {
+    	if(user)
+    	{
+        	//hide register Btn
+        	//$('#mobileRegisterBtn').hide();
+        	//$('#registerBtn').hide();
+        	
+        	//hide loginBtn
+        	$('#mobileLoginBtn').hide();
+        	$('#loginBtn').hide();
+        	$('#loginBannerBtn').hide();
+        	
+        	//show logoutBtn
+        	$('#logoutBtn').show();
+           	$('#mobileLogoutBtn').show();
+                           	
+        	//显示进入系统按键
+        	$('#enterSystemBtn').show();
+    	}
+    	else
+    	{
+        	//show register Btn
+        	//$('#mobileRegisterBtn').show();
+        	//$('#registerBtn').show();
+        	
+        	//hide loginBtn
+        	$('#mobileLoginBtn').show();
+        	$('#loginBtn').show();
+        	$('#loginBannerBtn').show();
+        	
+        	//show logoutBtn
+        	$('#logoutBtn').hide();
+           	$('#mobileLogoutBtn').hide();
+                           	
+        	//显示进入系统按键
+        	$('#enterSystemBtn').hide();
+    	}
+    }
 	//通用函数接口
 	function showErrorMessage($msg) {
     	qiao.bs.alert($msg);

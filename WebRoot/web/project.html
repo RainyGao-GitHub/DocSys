@@ -142,6 +142,17 @@
                 </span>
                 <a  id="projectName" class="navbar-brand" href="#">仓库名</a>
                 <span style="font-size: 12px;font-weight: 100;" class="projectVersion"></span>
+                <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block">
+                    <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li id="mobileLoginBtn">
+                            <a onclick="showLoginPanel()" title="用户登录">登录</a>
+                        </li>
+                        <li id="mobileLogoutBtn">
+                            <a onclick="userLogout()" title="退出登录">退出</a>
+                        </li>
+                    </ul>
+                </div>  
             </div>
 
             <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
@@ -152,7 +163,7 @@
 							<ul class="dropdown-menu" role="menu">
 								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
 								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
-								<li><a onclick="logout()">退出登录</a></li>
+								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
 							</ul>
 					</li>
 					<li id="loginBtn">
@@ -2763,6 +2774,7 @@ function CompareObj(objA, objB, flag) {
                 	login_user = user;
                 	//显示用户信息
                 	ShowUserInfo(user);
+                	loginBtnCtrl(user);
                 	
                 	//获取仓库信息
             		getReposInfo(InitMenu);
@@ -2784,6 +2796,32 @@ function CompareObj(objA, objB, flag) {
         });		
 	}
 	
+    function userLogout()
+   	{
+    	logout();
+    	loginBtnCtrl();
+   	}
+    
+    function loginBtnCtrl(user)
+    {
+    	if(user)
+    	{
+        	$('#loginBtn').hide();
+        	$('#mobileLoginBtn').hide();
+        	
+        	$('#logoutBtn').show();
+           	$('#mobileLogoutBtn').show();            
+    	}
+    	else
+    	{
+        	$('#loginBtn').show();
+        	$('#mobileLoginBtn').show();
+        	
+        	$('#logoutBtn').hide();
+           	$('#mobileLogoutBtn').hide();
+    	}
+    }
+    
 	//将后台Menu,同步回前台
 	function InitMenu()
 	{
