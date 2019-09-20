@@ -1096,8 +1096,18 @@
  		        function loadNext() {
  		            var start = currentChunk * chunkSize;
  		            var end = start + chunkSize >= file.size ? file.size : start + chunkSize;
- 		
- 		            fileReader.readAsBinaryString(blobSlice.call(file, start, end));
+ 		            
+ 		            if(fileReader.readAsBinaryString)
+ 		            {
+ 		            	fileReader.readAsBinaryString(blobSlice.call(file, start, end));
+ 		            }
+ 		            else
+ 		            {
+ 		            	console.log("caculateFileCheckSum() 当前浏览器不支持读取文件，无法计算CheckSum"); //fail to compute hash
+ 		            	SubContext.checkSumState = 4;
+ 		            	SubContext.checkSum = "";	
+ 		            }
+ 		            
  		        }
  		
  	      		//set the running state
@@ -1157,7 +1167,7 @@
 		{            
 			switch(SubContext.checkSumState)
 			{
-			case 0:
+			case 0:				
 				 //Start CheckSum Caculator: It will caculate for all upload or reupload Docs
 				 console.log("getFileCheckSum() checkSum not computed, start compute");
 				 if(false == reuploadFlag)
@@ -1168,6 +1178,7 @@
 			     {
 					 CheckSumCaculator.caculate(reuploadIndex);					 
 			     }
+				 //注意：CheckSumCaculator.caculate是异步调用，如果启动成功的话，则会把状态改为1，所以这里没有break
 			case 1:
 				//Start timer to wait for result
 		        console.log("getFileCheckSum() checkSum not ready, wait for result 100 ms later"); 

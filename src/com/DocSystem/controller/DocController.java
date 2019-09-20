@@ -590,98 +590,120 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		//文件校验码为空表示不需要进行秒传
-		if(checkSum.isEmpty())
-		{
-			//CheckSum is empty, mean no need to check any more 
-			writeJson(rt, response);
-			return;
-		}
-		
-		//非文件管理系统类型仓库不支持秒传
-		if(repos.getType() != 1)
-		{
-			writeJson(rt, response);
-			return;
-		}
-		
 		//是否可以秒传检查(文件是否已存在且校验码一致或者文件不存在但系统中存在相同校验码的文件)
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, size, checkSum);
 
 		Doc fsDoc = fsGetDoc(repos, doc);
 		if(fsDoc != null && fsDoc.getType() != 0)
-		{			
-			rt.setData(fsDoc);
-			rt.setMsgData("0");
-			docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
-						
-			//检查checkSum是否相同
-			if(type == 1)
+		{	
+			if(isUploadCanSkip(repos, doc, fsDoc))
 			{
-				//数据库记录不存在无法检查文件是否相同
-				Doc dbDoc = dbGetDoc(repos, doc, true);
-				if(dbDoc == null)
-				{
-					writeJson(rt, response);
-					return;				
-				}
-				
-				//数据库记录与本地文件已经不一致无法检查文件是否相同
-				if(isDocLocalChanged(dbDoc, fsDoc))
-				{
-					writeJson(rt, response);
-					return;					
-				}
-				
-				if(true == isDocCheckSumMatched(dbDoc,size,checkSum))
-				{
-					rt.setMsgData("1");
-					docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
-				}
+				rt.setData(fsDoc);
+				rt.setMsgData("1");
+				docSysDebugLog("checkDocInfo() " + name + " 已存在，且checkSum相同！", rt);
+				writeJson(rt, response);
+				return;
 			}
-			writeJson(rt, response);
-			return;
+			else
+			{
+				rt.setData(fsDoc);
+				rt.setMsgData("0");
+				docSysDebugLog("checkDocInfo() " + name + " 已存在", rt);
+				writeJson(rt, response);
+				return;
+			}
 		}
 				
 		//对于大于50M的文件尝试寻找checkSum相同的文件进行复制来避免上传
-		if(size > 50*1024*1024)	//Only For 50M File to balance the Upload and SameDocSearch 
+		if(size < 50*1024*1024)	//Only For 50M File to balance the Upload and SameDocSearch 
 		{
-			//Try to find the same Doc in the repos
-			Doc sameDoc = getSameDoc(size,checkSum,reposId);
-			if(null != sameDoc)
-			{
-				System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
-				
-				if(commitMsg == null)
-				{
-					commitMsg = "上传 " + path + name;
-				}
-				String commitUser = login_user.getName();
-				List<CommonAction> actionList = new ArrayList<CommonAction>();
-				boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, login_user,rt,actionList);
-				if(ret == true)
-				{
-					rt.setData(fsDoc);
-					rt.setMsgData("1");
-					docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
-					writeJson(rt, response);
-					
-					executeCommonActionList(actionList, rt);
-					return;
-				}
-				else
-				{
-					rt.setStatus("ok");
-					rt.setMsgData("3");
-					docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
-					writeJson(rt, response);
-					return;
-				}
-			}
+			writeJson(rt, response);
+			return;
 		}
-		writeJson(rt, response);
+		
+		if(checkSum == null || checkSum.isEmpty())
+		{
+			writeJson(rt, response);
+			return;
+		}
+			
+		//Try to find the same Doc in the repos
+		Doc sameDoc = getSameDoc(size,checkSum,reposId);
+		if(null == sameDoc)
+		{
+			writeJson(rt, response);
+			return;				
+		}
+			
+		System.out.println("checkDocInfo() " + sameDoc.getName() + " has same checkSum " + checkSum + " try to copy from it");
+		if(commitMsg == null)
+		{
+			commitMsg = "上传 " + path + name;
+		}
+		String commitUser = login_user.getName();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, login_user,rt,actionList);
+		if(ret == true)
+		{
+			rt.setData(fsDoc);
+			rt.setMsgData("1");
+			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied ok！", rt);
+			writeJson(rt, response);
+					
+			executeCommonActionList(actionList, rt);
+			return;
+		}
+		else
+		{
+			rt.setStatus("ok");
+			rt.setMsgData("3");
+			docSysDebugLog("checkDocInfo() " + sameDoc.getName() + " was copied failed！", rt);
+			writeJson(rt, response);
+			return;
+		}
 	}
 	
+	private boolean isUploadCanSkip(Repos repos, Doc doc, Doc fsDoc) {
+		//检查checkSum是否相同
+		if(doc.getType() != 1)
+		{
+			return false;
+		}
+		
+		//文件校验码为空表示不需要进行秒传
+		if(doc.getCheckSum() == null || doc.getCheckSum().isEmpty())
+		{
+			//CheckSum is empty, mean no need to check any more 
+			return false;
+		}
+			
+		//非文件管理系统类型仓库不支持秒传
+		if(repos.getType() != 1)
+		{
+			return false;
+		}
+			
+		//数据库记录不存在无法检查文件是否相同
+		Doc dbDoc = dbGetDoc(repos, doc, true);
+		if(dbDoc == null)
+		{
+			return false;				
+		}
+			
+		//数据库记录与本地文件已经不一致无法检查文件是否相同
+		if(isDocLocalChanged(dbDoc, fsDoc))
+		{
+			return false;					
+		}
+			
+		if(isDocCheckSumMatched(dbDoc,fsDoc.getSize(), doc.getCheckSum()))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
 	private Doc getSameDoc(Long size, String checkSum, Integer reposId) {
 
 		Doc qdoc = new Doc();
