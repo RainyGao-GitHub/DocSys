@@ -6,10 +6,9 @@
       	var autoSaveTimer;
       	var timerState = 0;
     
-      	function editorInit(content,edit)
+      	function editorInit(content)
       	{
       		console.log("DocEdit editorInit");
-      		gEdit = edit;
 
       		var params = {
                width: "100%",
@@ -38,32 +37,23 @@
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
                    console.log("onchange");
-                   var newContent = this.getMarkdown();
                    if(gEdit == true)
                    {
+                       var newContent = this.getMarkdown();
             	       debounce.call(newContent);
     		       }
-    		       else
-    		       {
-    		           debounce.clear();
-    		       }       
                },
                onpreviewing : function () {
                    console.log("onpreviewing");
-                   gEdit = false;
-                   WikiEditBtnCtrl(gEdit);
+                   exitEditWiki();
                },
                onpreviewed :function () {
                    console.log("onpreviewed");
+                   editWiki();
                },
                onload : function () {
-                   console.log("onload edit:" + edit);
-                   if(edit == false)
-                   {
-                   		this.previewing();               
-                   }
-                   gEdit = edit;
-                   WikiEditBtnCtrl(gEdit);
+                   console.log("onload");
+   	    		   md.previewing();
                }
        		};
        		
@@ -71,9 +61,9 @@
        		md = editormd("vdocPreview",params);   
       	}
         
-    	function editorLoadmd(content,edit) 
+    	function editorLoadmd(content) 
     	{
-    		console.log("DocEdit editorLoadmd() edit:" + edit);
+    		console.log("DocEdit editorLoadmd()");
     		if(!md)
        		{
     			showErrorMessage("please call editorInit firstly");
@@ -86,40 +76,40 @@
     		}
        		
     		md.setMarkdown(content);
-    		if(edit != gEdit)
-    		{
-    			gEdit = edit;
-    			md.previewing();
-    		}
         }
         
-        function loadmd(content,edit)
+        function loadmd(content)
         {
 			if(firstcall == true)
    			{ 
     			firstcall = false;
-         		editorInit(content,edit);	
+         		editorInit(content);	
     		}
     		else
       		{
-      			editorLoadmd(content,edit);	                    
+      			editorLoadmd(content);               
 			}
         }
 		      		
 		function editorSwitch(edit)
     	{
     		console.log("DocEdit editorSwitch() edit:"+edit);
+    		gEdit = edit;
+    		
     		if(!md)
        		{
     			showErrorMessage("please call editorInit firstly");
        			return;
        		}
        		
-    		if(edit != gEdit)
-    		{
-    		    gEdit = edit;
-    			md.previewing();
-    		}
+    		if(edit == false)
+	    	{
+	    		md.previewing();
+	    	}
+	    	else
+	    	{
+	    		md.previewed();
+	    	}
     	}
     	
     	function startAutoTmpSaver()
@@ -263,8 +253,8 @@
 
 		//开放给外部的调用接口
         return {
-            loadmd: function(content,edit){
-               loadmd(content,edit);
+            loadmd: function(content){
+               loadmd(content);
             },
             editorSwitch: function(edit){
             	editorSwitch(edit);
