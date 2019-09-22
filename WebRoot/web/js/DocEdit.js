@@ -74,7 +74,7 @@
     			content = "";
     		}
     		
-			console.log("loadmd content:", content);				
+			//console.log("loadmd content:", content);				
     		
 			if(md)
    			{
