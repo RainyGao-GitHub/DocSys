@@ -1,7 +1,6 @@
 	//DocEdit类	
     var DocEdit = (function () {
     	var md;	//mdeditor对象
-    	var firstcall = true;
       	//自动保存定时器
       	var autoSaveTimer;
       	var timerState = 0;
@@ -14,7 +13,7 @@
                width: "100%",
                height: $(document).height()-70,
                path : 'static/markdown/lib/',
-               markdown : content,
+               markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
                //toolbar  : false,             // 关闭工具栏
                codeFold : true,
                searchReplace : true,
@@ -36,7 +35,7 @@
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
-                   console.log("onchange");
+                   console.log("onchange");                   
                    if(gEdit == true)
                    {
                        var newContent = this.getMarkdown();
@@ -52,43 +51,39 @@
                    editWiki();
                },
                onload : function () {
-                   console.log("onload");
-   	    		   md.previewing();
+                   console.log("onload");	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+   	    		   this.previewing();
+   	       		   this.setMarkdown(content);
                }
        		};
        		
       		//editormd was defined in editormd.js
-       		md = editormd("vdocPreview",params);   
+       		md = editormd("vdocPreview",params);
       	}
         
     	function editorLoadmd(content) 
     	{
-    		console.log("DocEdit editorLoadmd()");
-    		if(!md)
-       		{
-    			showErrorMessage("please call editorInit firstly");
-       			return;
-       		}
-    		
-    		if(!content)
-    		{
-    			content = "";
-    		}
-       		
+    		console.log("DocEdit editorLoadmd()");       		
     		md.setMarkdown(content);
         }
         
         function loadmd(content)
         {
-			if(firstcall == true)
-   			{ 
-    			firstcall = false;
-         		editorInit(content);	
+    		if(!content)
+    		{
+    			content = "";
     		}
-    		else
-      		{
-      			editorLoadmd(content);               
-			}
+    		
+			console.log("loadmd content:", content);				
+    		
+			if(md)
+   			{
+      			editorLoadmd(content);               				
+   			}
+			else
+			{
+				editorInit(content);	
+    		}
         }
 		      		
 		function editorSwitch(edit)
