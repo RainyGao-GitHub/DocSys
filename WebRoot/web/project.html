@@ -262,7 +262,7 @@
 	                    </button>
 	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="saveWiki()" style="display:none">保存
 	                    </button>
-	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()" style="display:none">显示预览
+	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()">显示预览
 	                   	</button>
         		</div>
          	</div>
@@ -2554,24 +2554,24 @@ function CompareObj(objA, objB, flag) {
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
-          if(gDocId != treeNode.id)
+          if(!gDocId || gDocId == 0 || gDocId != treeNode.id)
           {
         	 if(gEdit == true)
              {
         		 //如果当前文件处于编辑状态，必须先退出编辑
-              	exitEdit(treeNode.id);
+              	exitEdit();
              }
-             else
-             {              
-            	 gDocId = treeNode.id;
+             
+        	 gDocId = treeNode.id;
+        	 gParentPath = treeNode.path;
+        	 gDocName = treeNode.name;
+       	     
+             //显示预览或备注
+             getAndShowDoc(treeNode);
 
-              	 //showDocList
-            	 var parentNode = getParentNodeByNode(treeNode);
-              	 showDocList(parentNode);
-           	     
-              	 //显示预览或备注
-             	 getAndShowDoc(treeNode);
-             }
+        	 //showDocList
+             var parentNode = getParentNodeByNode(treeNode);
+             showDocList(parentNode);
           }
       }
       
@@ -3021,16 +3021,55 @@ function CompareObj(objA, objB, flag) {
 		 	gDocId = docId;
 		 	gParentPath = path;
 		 	gDocName = name;
+
+		 	//显示预览或备注
+			getAndShowDoc(node);
+			
+		 	//docList显示更新
+			if(type == 1)	//For File, show RightDiv
+		 	{
+		 		showRightDiv();
+		 	}
+		 	else
+		 	{
+		 		//show DocList under this dir
+		 		showDocList(node);
+		 	}
+		 	
+		 	//在zTree上选中该doc
+		 	zTreeSelectDoc();
+ 		}		
+  	}
+ 	
+ 	//根据gDocId选中文件
+ 	function zTreeSelectDoc()
+ 	{
+		console.log("zTreeSelectDoc gDocId:" + gDocId);
+		if(!gDocId || gDocId == 0)	//表示不选中任何文件
+ 		{
+		  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+			var selectedNode = treeObj.getSelectedNodes()[0];
+			if(selectedNode && selectedNode != null)
+			{
+				zTree.cancelSelectedNode(selectedNode);
+			}
+ 			return;
  		}
-		
- 		var treeNode = getNodeByNodeId(docId);
-		if(treeNode == null)
+ 	
+		//检查当前选中的文件是否为期望选中的文件
+ 		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		var selectedNode = treeObj.getSelectedNodes()[0];
+		if(selectedNode)
 		{
-			console.log("node was not exists in current zTree, syncUpMenu" + gDocId);
-			syncUpMenu();
-	 		showDocList(null);
+			if(selectedNode.id == gDocId)
+			{
+				return;
+			}
 		}
-		else
+		
+		//期望的文件未选中但已加载
+ 		var treeNode = getNodeByNodeId(gDocId);
+		if(treeNode && treeNode != null)
 		{
 			var zTree = $.fn.zTree.getZTreeObj("doctree");
 			//select this node in zTree
@@ -3044,15 +3083,14 @@ function CompareObj(objA, objB, flag) {
 		 	{
 		 		//Open the dir in zTree
 				zTree.reAsyncChildNodes(treeNode, "refresh",true);
-		      		
-		 		//show DocList under this dir
-		 		showDocList(treeNode);
-		 	}
+		 	}		
+			return;
+		}
 		
-			//显示预览或备注
-			getAndShowDoc(treeNode);
-		}		
-  	}
+		//期望的文件未加载
+		console.log("node was not exists in current zTree, syncUpMenu" + docId);
+		syncUpMenu();
+ 	}
  	
  	function fx(obj,event){
  		var docListNode = $(obj).parents('li');
@@ -3439,14 +3477,14 @@ function CompareObj(objA, objB, flag) {
 	   	 {
 		    $("#btnExitEdit").show();
 	      	$("#btnSaveWiki").show();  
-	      	$("#btnEditWiki").hide();
+	      	//$("#btnEditWiki").hide();
 			$("#btnSwitchShow").hide();
 	     }
 	     else
 	     {
 		    $("#btnExitEdit").hide();
 	      	$("#btnSaveWiki").hide(); 
-	      	$("#btnEditWiki").show();
+	      	//$("#btnEditWiki").show();
 			$("#btnSwitchShow").show();
 	     }
 	}
@@ -3458,7 +3496,7 @@ function CompareObj(objA, objB, flag) {
 			gShowType = 1;
 		    $("#btnExitEdit").hide();
 	      	$("#btnSaveWiki").hide(); 
-	      	$("#btnEditWiki").hide();
+	      	//$("#btnEditWiki").hide();
 	      	$("#btnSwitchShow").text("显示备注");
 	      	//隐藏备注内容
 			$("#vdocPreview").hide();
@@ -3470,7 +3508,7 @@ function CompareObj(objA, objB, flag) {
 			 gShowType = 2;	    	 
 			 $("#btnExitEdit").hide();
 		     $("#btnSaveWiki").hide(); 
-		     $("#btnEditWiki").show();
+		     //$("#btnEditWiki").show();
 		     $("#btnSwitchShow").text("显示预览");
 		     //显示备注内容
 		     showVirtualDoc(false);
