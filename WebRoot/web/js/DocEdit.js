@@ -49,7 +49,7 @@
                },
                onpreviewed :function () {
                    console.log("onpreviewed gEdit:" + gEdit);
-                   editWiki();
+                   lockAndEditWiki();
                },
                onload : function () {
                    console.log("onload gEdit:" + gEdit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
