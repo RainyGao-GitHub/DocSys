@@ -1,4 +1,5 @@
-	//DocEdit类	
+	//DocEdit类
+	//TODO: Markdown编辑器不只是针对于vDoc，也可以用于realDoc，因此涉及后台接口的需要区分是VDOC还是RDOC
     var DocEdit = (function () {
     	var md;	//mdeditor对象
       	//自动保存定时器
@@ -7,7 +8,7 @@
     
       	function editorInit(content)
       	{
-      		console.log("DocEdit editorInit");
+      		console.log("DocEdit editorInit gEdit:" + gEdit);
 
       		var params = {
                width: "100%",
@@ -35,25 +36,31 @@
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
-                   console.log("onchange");                   
-                   if(gEdit == true)
+                   console.log("onchange gEdit:" + gEdit);                  
+                   if(gEdit === true)
                    {
                        var newContent = this.getMarkdown();
             	       debounce.call(newContent);
     		       }
                },
                onpreviewing : function () {
-                   console.log("onpreviewing");
+                   console.log("onpreviewing gEdit:" + gEdit);
                    exitEditWiki();
                },
                onpreviewed :function () {
-                   console.log("onpreviewed");
+                   console.log("onpreviewed gEdit:" + gEdit);
                    editWiki();
                },
                onload : function () {
-                   console.log("onload");	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
-   	    		   this.previewing();
-   	       		   this.setMarkdown(content);
+                   console.log("onload gEdit:" + gEdit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+   	    		   this.previewing(); 		  //加载成默认是预览
+   	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载
+   	    		   if(gEdit && gEdit == true)
+	    		   {
+   	    			   gEdit = false; //不设置的话会导致editWiki不动作
+   	    			   console.log("onload gEdit:" + gEdit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+   	    			   lockAndEditWiki();
+	    		  }
                }
        		};
        		
@@ -63,7 +70,7 @@
         
     	function editorLoadmd(content) 
     	{
-    		console.log("DocEdit editorLoadmd()");       		
+    		console.log("DocEdit editorLoadmd() gEdit:" + gEdit);
     		md.setMarkdown(content);
         }
         
@@ -88,12 +95,13 @@
 		      		
 		function editorSwitch(edit)
     	{
-    		console.log("DocEdit editorSwitch() edit:"+edit);
+    		console.log("DocEdit editorSwitch() edit:"+edit + " gEdit:" + gEdit);
+    		
     		gEdit = edit;
     		
     		if(!md)
        		{
-    			showErrorMessage("please call editorInit firstly");
+    			showErrorMessage("请先初始化Markdown编辑器");
        			return;
        		}
        		
