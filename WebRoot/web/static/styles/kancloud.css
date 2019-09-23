@@ -83,7 +83,7 @@ h6 {
     height: 54px;
     line-height: 54px;
     padding: 0 .8em;
-    z-index: 0;
+    z-index: 900;
     position: fixed;
     top: 0;
     left: 0;
