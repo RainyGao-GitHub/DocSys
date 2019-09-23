@@ -1657,15 +1657,6 @@
 		console.log("showVirtualDoc gDocId:" + gDocId);
 
 		DocEdit.loadmd(gDocContent);
-        
-        if(gEdit == false)
-		{
-    		exitEditWiki();
-		}
-        else
-        {
-        	editWiki();
-        }
 	}
 	
 	function showDocHistory(node, historyType)
@@ -1993,14 +1984,15 @@
 	
 	//进入文件编辑状态
     function editWiki(){
-    	console.log("exitEditWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
+    	console.log("editWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
 	    if(gEdit == true)
 	    {
 	    	return;
 	    }
 
+	    gEdit = true;
     	DocEdit.editorSwitch(true);
-        WikiEditBtnCtrl(gEdit);
+        WikiEditBtnCtrl(true);
         updateUrl();
         
         //start the autoTmpSaver
@@ -2033,8 +2025,10 @@
 	    {
 	    	return;
 	    }
+
+	    gEdit = false;
       	DocEdit.editorSwitch(false);
-	    WikiEditBtnCtrl(gEdit);
+	    WikiEditBtnCtrl(false);
 	    updateUrl();
 		    
 		//Stop autoSaver
@@ -3897,7 +3891,7 @@ function CompareObj(objA, objB, flag) {
     	console.log("ready() gReposId:" + gReposId  + " gDocId:"+gDocId + " gParentPath:" + gParentPath + " gDocName:" + gDocName + " gEdit:" + gEdit);
     	
     	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if( gEdit ){
+        if(gEdit == true){
             var edit = {};
             setting.edit = edit;
         }
