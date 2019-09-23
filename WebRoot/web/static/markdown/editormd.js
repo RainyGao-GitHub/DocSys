@@ -414,7 +414,7 @@
             }
             
             var appendElements = [
-                (!settings.readOnly) ? "<a href=\"javascript:;\" class=\"fa fa-close " + classPrefix + "preview-close-btn\"></a>" : "",
+                (!settings.readOnly) ? "<a href=\"javascript:;\" class=\"fa fa-edit " + classPrefix + "preview-close-btn\"></a>" : "",
                 ( (settings.saveHTMLToTextarea) ? "<textarea class=\"" + classNames.textarea.html + "\" name=\"" + id + "-html-code\"></textarea>" : "" ),
                 "<div class=\"" + classPrefix + "preview\"><div class=\"markdown-body " + classPrefix + "preview-container\"></div></div>",
                 "<div class=\"" + classPrefix + "container-mask\" style=\"display:block;\"></div>",
@@ -1316,7 +1316,7 @@
                 "<p style=\"margin: 10px 0 20px 0;\"><a href=\"" + editormd.homePage + "\" target=\"_blank\">" + editormd.homePage + " <i class=\"fa fa-external-link\"></i></a></p>",
                 "<p style=\"font-size: 0.85em;\">Copyright &copy; 2015 <a href=\"https://github.com/pandao\" target=\"_blank\" class=\"hover-link\">Pandao</a>, The <a href=\"https://github.com/pandao/editor.md/blob/master/LICENSE\" target=\"_blank\" class=\"hover-link\">MIT</a> License.</p>",
                 "</div>",
-                "<a href=\"javascript:;\" class=\"fa fa-close " + classPrefix + "dialog-close\"></a>",
+                "<a href=\"javascript:;\" class=\"fa fa-edit " + classPrefix + "dialog-close\"></a>",
                 "</div>"
             ].join("\n");
 
@@ -4255,7 +4255,7 @@
 
         if (options.closed)
         {
-            html += "<a href=\"javascript:;\" class=\"fa fa-close " + classPrefix + "dialog-close\"></a>";
+            html += "<a href=\"javascript:;\" class=\"fa fa-edit " + classPrefix + "dialog-close\"></a>";
         }
 
         html += "<div class=\"" + classPrefix + "dialog-container\">" + options.content;                    
