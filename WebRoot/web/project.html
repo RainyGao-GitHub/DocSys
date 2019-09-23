@@ -514,6 +514,12 @@
 	var gTmpSavedContent;
 	var gEdit; 
 	var gShowType = 2;
+	//Init Doc Info
+	var gInitDocId;
+	var gInitParentPath;
+	var gInitDocName;
+	var gInitEdit;
+	
 
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -1447,9 +1453,7 @@
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
 		        		console.log("getMenu() ret",ret);
-		                reDrawMenu(ret.data);
-		  
-		                showDoc(docId);           	
+		                reDrawMenu(ret.data);       	
 		            }
 		            else
 		           	{
@@ -1579,30 +1583,40 @@
             },
             success : function (ret) {
             	console.log("getAndShowDoc ret",ret);
-
             	if( "ok" == ret.status )
             	{
             		var doc = ret.data
-                	$('#filetitle').html(doc.name);
-                    gDocId = doc.docId;
-            		gParentPath = doc.path;
-            		gDocName = doc.name;
-            		updateUrl();
-                    
-                    gDocContent = parseDocContent(ret.data.content);
-                    gTmpSavedContent = parseDocContent(ret.msgData);                    
-					
-                    setImgPreview(ret);
-
-					if(gShowType == 1)	//显示预览
-					{	
-						$("#docPreview").show();
-				      	return;
-					}
-					else	//显示备注
-					{
-						showVirtualDoc();
-					}
+            		showDocList(doc);
+            		
+            		console.log("getAndShowDoc gDocId:" + gDocId);
+                	if(!gDocId || gDocId == 0 || gDocId != doc.docId)
+            		{
+	            		if(gDocId && gDocId != 0)
+	            		{
+	            			exitEdit();
+	            		}
+	            		
+	                	$('#filetitle').html(doc.name);
+	                    gDocId = doc.docId;
+	            		gParentPath = doc.path;
+	            		gDocName = doc.name;
+	            		updateUrl();
+	                    
+	                    gDocContent = parseDocContent(ret.data.content);
+	                    gTmpSavedContent = parseDocContent(ret.msgData);                    
+						
+	                    setImgPreview(ret);
+	
+						if(gShowType == 1)	//显示预览
+						{	
+							$("#docPreview").show();
+					      	return;
+						}
+						else	//显示备注
+						{
+							showVirtualDoc();
+						}
+            		}
                 }
                 else
                 {
@@ -2555,17 +2569,9 @@ function CompareObj(objA, objB, flag) {
         		 //如果当前文件处于编辑状态，必须先退出编辑
               	exitEdit();
              }
-             
-        	 gDocId = treeNode.id;
-        	 gParentPath = treeNode.path;
-        	 gDocName = treeNode.name;
        	     
              //显示预览或备注
              getAndShowDoc(treeNode);
-
-        	 //showDocList
-             var parentNode = getParentNodeByNode(treeNode);
-             showDocList(parentNode);
           }
       }
       
@@ -2803,7 +2809,12 @@ function CompareObj(objA, objB, flag) {
 	function InitMenu()
 	{
 		console.log("InitMenu");
-	    getInitMenu(gDocId, gParentPath, gDocName);
+		var node = {};
+		node.id = gInitDocId;
+		node.path = gInitParentPath;
+		node.name = gInitDocName;
+        getAndShowDoc(node); 
+	    getInitMenu(gInitDocId, gInitParentPath, gInitDocName);
 	}
 	
 	//将后台Menu,同步回前台
@@ -3009,30 +3020,17 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("secondGetDoc node:", node);
  		
- 		if(gDocId != docId)
- 		{
-	 		//Change curent gDocId to docId
-		 	gDocId = docId;
-		 	gParentPath = path;
-		 	gDocName = name;
-
-		 	//显示预览或备注
-			getAndShowDoc(node);
+		 //显示预览或备注
+		getAndShowDoc(node);
 			
-		 	//docList显示更新
-			if(type == 1)	//For File, show RightDiv
-		 	{
-		 		showRightDiv();
-		 	}
-		 	else
-		 	{
-		 		//show DocList under this dir
-		 		showDocList(node);
-		 	}
+		 //docList显示更新
+		if(type == 1)	//For File, show RightDiv
+		{
+		 	showRightDiv();
+		}
 		 	
-		 	//在zTree上选中该doc
-		 	zTreeSelectDoc();
- 		}		
+		 //在zTree上选中该doc
+		 zTreeSelectDoc();		
   	}
  	
  	//根据gDocId选中文件
@@ -3207,62 +3205,40 @@ function CompareObj(objA, objB, flag) {
  		
  		return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss; 
  	}
- 	
- 	//ShowDoc 需要在zTree初始化完之后才能调用
-	function showDoc(docId)
-	{
-		console.log("showDoc docId:" + docId);
-		if(docId && docId != null)
-		{
-			 //select the zTreeNode with gDocId
-			 var zTree = $.fn.zTree.getZTreeObj("doctree");
-			 var node = zTree.getNodeByParam("id",docId);
-			 if(node != null)
-			 {
-				 zTree.selectNode(node);
-			
-				//showDocList
-				var parentNode = node;
-				if(node.isParent == false)
-				{
-					parentNode = node.getParentNode();
-				}
-				
-				showDocList(parentNode);
-			 
-				//获取DocContent并显示
-				getAndShowDoc(node);
-			 }
-			 else
-			 {
-				 showDocList(null);
-			 }
-	   	}
-		else
-		{
-			 showDocList(null);
-		}
-	}
 	
-	function showDocList(parentNode)
+	function showDocList(node)
 	{
-		console.log("showDocList() parentNode:", parentNode);
-		var pid = 0;
-		var level = 0;
+		console.log("showDocList() node:", node);
+		var docId = 0;
 		var path = "";
 		var name = "";
     
-		if(parentNode &&  parentNode != null)
+		if(node &&  node != null)
 		{
-	    	pid = parentNode.id;
-	    	level = parentNode.Level;
-	    	path = parentNode.path;
-	    	name = parentNode.name;
+			if(node.type == 1)
+			{
+				//如果是文件则获取其父节点下的docList
+				docId = node.pid;
+				path = node.path;
+				name = "";
+			}
+			else
+			{
+		    	docId = node.id;
+		    	path = node.path;
+		    	name = node.name;
+			}
 	    }
 	    	
 		//Set DocListState and DocListParentDocId
 	    DocListState = 0;
-	    DocListParentDocId = pid;
+		if(DocListParentDocId == docId)
+		{
+			console.log("showDocList() DocListParentDocId same with docId:",DocListParentDocId, docId );	
+			return;
+		}
+		
+	    DocListParentDocId = docId;
 			
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
@@ -3270,8 +3246,7 @@ function CompareObj(objA, objB, flag) {
             dataType : "json",
             data : {
                 vid: gReposId,
-                docId: pid,
-                level: level,
+                docId: docId,
                 path: path,
                 name: name,
             },
@@ -3324,8 +3299,6 @@ function CompareObj(objA, objB, flag) {
 			{
 				zTree.selectNode(parentNode);
 				getAndShowDoc(parentNode);
-
-				showDocList(parentNode);
 			}
 			else
 			{
@@ -3847,51 +3820,47 @@ function CompareObj(objA, objB, flag) {
     	
     	//初始化全局变量
     	gReposId = getQueryString("vid");
-		gDocId = getQueryString("doc");
-		gParentPath = getQueryString("path");
-		gDocName = getQueryString("name");
-		gEdit = getQueryString("edit");
-		gShowType = getQueryString("showType");
-		if(!gEdit)
+		gInitDocId = getQueryString("doc");
+		gInitParentPath = getQueryString("path");
+		if(gInitParentPath && gInitParentPath != null)
 		{
-			gEdit = false;
+			gInitParentPath = Base64.decode(gInitParentPath);
 		}
-		if(!gDocId)
+		else
 		{
-			gEdit = false;
+			gInitParentPath = "";
+		}
+		
+		gInitDocName = getQueryString("name");
+		if(gInitDocName && gInitDocName != null)
+		{
+			gInitDocName = Base64.decode(gInitDocName);
+		}
+		else
+		{
+			gInitDocName = "";
+		}
+		
+		gInitEdit = getQueryString("edit");
+		gInitShowType = getQueryString("showType");
+		if(!gInitEdit)
+		{
+			gInitEdit = false;
+		}
+		if(!gInitDocId)
+		{
+			gInitEdit = false;
 		}		
 		
-		if(!gShowType)
+		if(!gInitShowType)
 		{
-			gShowType = 2;
+			gInitShowType = 2;
 		}
 		
-		console.log("before decode gParentPath:" + gParentPath + " gDocName:" + gDocName);
-		
-		if(gParentPath && gParentPath != null)
-		{
-			gParentPath = Base64.decode(gParentPath);
-		}
-		else
-		{
-			gParentPath = "";
-		}
-		if(gDocName && gDocName != null)
-		{
-			gDocName = Base64.decode(gDocName);
-		}
-		else
-		{
-			gDocName = "";
-		}
-		
-		console.log("after decode gParentPath:" + gParentPath + " gDocName:" + gDocName);
-    	
-		
-    	console.log("ready() gReposId:" + gReposId  + " gDocId:"+gDocId + " gParentPath:" + gParentPath + " gDocName:" + gDocName + " gEdit:" + gEdit);
+		console.log("ready() gReposId:" + gReposId  + " gInitDocId:"+gInitDocId + " gInitParentPath:" + gInitParentPath + " gInitDocName:" + gInitDocName + " gInitEdit:" + gInitEdit);
     	
     	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if(gEdit == true){
+        if(gInitEdit == true){
             var edit = {};
             setting.edit = edit;
         }
