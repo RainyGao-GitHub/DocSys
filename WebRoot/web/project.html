@@ -272,6 +272,8 @@
                 <div class="article-body editor-content"  id="docPreview" style="display:none;min-height: 650px">
                 	<div align=center style="margin-top:20px" >
                 		<img id="imgPreview" name="imgPreview" src="" />
+                		<!-- OFFICE 365  <iframe id="filePreview" class="filename"  src="" width='100%' height='600' frameborder='1' ></iframe>
+                		-->
                 	</div>
                 </div>
             </div>
@@ -1577,14 +1579,17 @@
             		//更新DocList
             		showDocList(doc);
             		
-            		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId);
+            		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId + " gShowType:" + gShowType);
                 	if(!gDocId || gDocId == 0 || gDocId != doc.docId)
             		{
-                		//当前有打开的文件，需要先退出编辑状态
-	            		if(gDocId && gDocId != 0)
-	            		{
-	            			DocEdit.exitEdit();
-	            		}
+						if(gShowType != 1)	//目前不支持RDoc的markdown编辑
+						{
+	                		//当前有打开的文件，需要先退出编辑状态
+		            		if(gDocId && gDocId != 0)
+		            		{
+		            			DocEdit.exitEdit();
+		            		}
+						}
 	            		
                 		//Show Doc
 	                	$('#filetitle').html(doc.name);
@@ -1636,9 +1641,11 @@
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
 		console.log("getAndShowDoc() docLink:" + docLink);
-		//$("#imgPreview").attr('src', docLink + Math.random()); 
-		$("#imgPreview").attr('src', docLink); 						
-		//$("#imgPreview").show();
+		$("#imgPreview").attr('src', docLink);
+		
+		//Office 365
+		//var fileLink = "https://view.officeapps.live.com/op/view.aspx?src="+docLink;
+		//$("#filePreview").attr('src', fileLink);
 	}
 	
 	function parseDocContent(content)
