@@ -5,6 +5,7 @@
       	//自动保存定时器
       	var autoSaveTimer;
       	var timerState = 0;
+      	var isOnLoadTriggerChange = false;
     
       	function editorInit(content, edit)
       	{
@@ -36,32 +37,39 @@
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
-                   console.log("onchange gEdit:" + gEdit);                  
-                   if(gEdit === true)
+                   console.log("DocEdit onchange gEdit:" + gEdit);                  
+               	   if(isOnLoadTriggerChange == true)
+            	   {
+            		   isOnLoadTriggerChange = false;
+            		   return;
+            	   }
+
+                   if(gEdit == true)
                    {
-                       var newContent = this.getMarkdown();
+                	   var newContent = this.getMarkdown();
             	       debounce.call(newContent);
     		       }
                },
                onpreviewing : function () {
-                   console.log("onpreviewing gEdit:" + gEdit);
+                   console.log("DocEdit onpreviewing gEdit:" + gEdit);
                    exitEditWiki();
                },
                onpreviewed :function () {
-                   console.log("onpreviewed gEdit:" + gEdit);
+                   console.log("DocEdit onpreviewed gEdit:" + gEdit);
                    lockAndEditWiki();
                },
                onload : function () {
-                   console.log("onload gEdit:" + gEdit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+                   console.log("DocEdit onload gEdit:" + gEdit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
    	    		   this.previewing(); 		  //加载成默认是预览
-   	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载
+   	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载，会触发onchange事件
+   	    		   isOnLoadTriggerChange = true;
    	    		   if(!edit || edit == false)
 	    		   {
-   	    			   console.log(" onload edit is false");
+   	    			   console.log("DocEdit onload edit is false");
 	    		   }
    	    		   else
    	    		   {
-   	    			   console.log(" onload edit is true");
+   	    			   console.log("DocEdit onload edit is true");
    	    			   lockAndEditWiki();
 	    		   }
                }
@@ -510,8 +518,44 @@
 	    	console.log("saveWikiAndExit  gDoc:" + gDocId);
 	    	if(debounce.getStatus() == 1)
 	    	{
-	    		saveDoc(gDocId, debounce.get());
+	    		saveDoc(debounce.get(), unlockAndExitEditWiki);
 	    	}
+	    }
+	    
+	    function saveDoc(content, callback)
+		{
+			console.log("saveDoc gDocId:" + gDocId);
+			$.ajax({
+	            url : "/DocSystem/Doc/updateDocContent.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	                reposId: gReposId,
+	            	docId : gDocId,
+	            	path: gParentPath,
+	                name: gDocName,
+	            	content : content
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
+	                    bootstrapQ.msg({
+									msg : "保存成功 :" + (new Date()).toLocaleDateString(),
+									type : 'success',
+									time : 1000,
+						});
+						//清除debounce
+						debounce.clear();
+						//回调
+						callback && callback();
+					}else {
+	                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                bootstrapQ.alert("保存失败:服务器异常");
+	            }
+	        });
 	    }
 
 		//开放给外部的调用接口
