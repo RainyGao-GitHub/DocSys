@@ -271,7 +271,7 @@
 	        //start the autoTmpSaver
 		    DocEdit.startAutoTmpSaver();
 		    
-			if(gTmpSavedContent && gTmpSavedContent != "")
+			if(gTmpSavedContent && gTmpSavedContent != gDocContent)
 			{
 				bootstrapQ.confirm({
 					id: "loadContentConfirm",
