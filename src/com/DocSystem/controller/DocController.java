@@ -2119,6 +2119,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		doc.setType(dbDoc.getType());
 		
 		if(dbDoc.getType() == 1)
 		{
