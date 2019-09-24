@@ -506,20 +506,20 @@
 	var gReposType = 0;	//0: Unknown Type
 	var gReposName = "";
 	var gReposCreateTime = "";
-	//Doc Info
-	var gDocId;
-	var gParentPath;
-	var gDocName;
-	var gDocContent;
-	var gTmpSavedContent;
-	var gEdit; 
-	var gShowType = 2;
-	//Init Doc Info
-	var gInitDocId;
-	var gInitParentPath;
-	var gInitDocName;
-	var gInitEdit;
-	
+	//Init Doc Info: 页面第一次加载时从URL中获取的信息
+	var gInitDocId = 0;
+	var gInitParentPath = "";
+	var gInitDocName = ""; 
+	var gInitEdit = false;
+	var gInitShowType = 2; //默认显示vDOc
+	//Doc Info: 当前页面显示的文件信息
+	var gDocId = 0;
+	var gParentPath = "";
+	var gDocName = "";
+	var gDocContent = "";
+	var gTmpSavedContent = "";
+	var gEdit = false; 
+	var gShowType = 2; //默认显示vDoc
 
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -1410,8 +1410,8 @@
                     gReposType = gReposInfo.type;
                     gReposCreateTime = gReposInfo.createTime;
                     $("#projectName").text(gReposName);
-					//回调函数	
-                    callback && callback();
+					//初始化目录树和Doc
+					InitMenuAndDoc();
                 }else {
                     $("#projectName").text("仓库名");
                     alert(ret.msgInfo);
@@ -1423,6 +1423,19 @@
         });
 
     }
+	
+	//初始化目录树显示和Doc显示
+	function InitMenuAndDoc()
+	{
+		console.log("InitMenuAndDoc()");
+		var node = {};
+		node.id = gInitDocId;
+		node.path = gInitParentPath;
+		node.name = gInitDocName;
+		gEdit = gInitEdit;
+        getAndShowDoc(node);
+	    getInitMenu(gInitDocId, gInitParentPath, gInitDocName);
+	}
 	
     function getNodeById(docId)
    	{
@@ -1586,16 +1599,21 @@
             	if( "ok" == ret.status )
             	{
             		var doc = ret.data
+
+            		//更新DocList
             		showDocList(doc);
             		
-            		console.log("getAndShowDoc gDocId:" + gDocId);
+            		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId);
                 	if(!gDocId || gDocId == 0 || gDocId != doc.docId)
             		{
+                		//当前有打开的文件，需要先退出编辑状态
 	            		if(gDocId && gDocId != 0)
 	            		{
 	            			exitEdit();
+	            			gEdit = false;
 	            		}
 	            		
+                		//Show Doc
 	                	$('#filetitle').html(doc.name);
 	                    gDocId = doc.docId;
 	            		gParentPath = doc.path;
@@ -1792,154 +1810,6 @@
 
 <script type="text/javascript">
 	/********************* 文件编辑接口 *********************************************/
-	//退出文件编辑状态
-    function exitEdit() {
-    	console.log("exitEdit gDocId:" + gDocId);    	
-    	if(debounce.getStatus() == 1)
-    	{
-    		qiao.bs.confirm({
-  	 	    		id: 'saveDocConfirm',
-  	 	    		msg: "修改未保存，是否保存？",
-  	 	    		close: false,		
-  	 	    		okbtn: "保存",
-  	 	    		qubtn: "直接退出",
-  	 	    	},function () {
-  	 	    	    saveWikiAndExit();
-  	  	 			return true;
-  	 			},function(){
-  	 				unlockAndExitEditWiki();
-  	 				return true;
-  	 		});
-  	 	}
-  	 	else
-  	 	{
-    		unlockAndExitEditWiki();
-    	}
-	}
-	
-	    //将编辑中的文件保存到后台
-    function saveWikiAndExit() {
-    	console.log("saveWikiAndExit  gDoc:" + gDocId);
-    	if(debounce.getStatus() == 1)
-    	{
-    		saveDoc(gDocId, debounce.get());
-    	}
-    }
-	
-	function unlockAndExitEditWiki()
-	{
-		console.log("unlockAndExitEditWiki()  gDocId:" + gDocId);
-		if(!gDocId)
-		{
-			showErrorMessage("文件不存在");
-			exitEditWiki();
-			return;
-		}
-		
-		var node = getNodeById(gDocId);
-		if(!node || node == null)
-		{
-			showErrorMessage("文件不存在");
-			exitEditWiki();
-			return;
-		}
-		
-		var pid = node.pid;
-		var path = node.path;
-		var name = node.name;
-		var type = node.type;
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 0, //unlock the doc
-				reposId : gReposId, 
-				docId : gDocId,
-				pid: pid,
-				path: path,
-				name: name,
-				type: type,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status){
-					console.log(ret.data);
-					$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","black");
-					exitEditWiki();
-				    return;
- 				}
-				else
-				{
-					showErrorMessage("unlockDoc Error:" + ret.msgInfo);
-					exitEditWiki();
-					return;
-				}
-			},
-			error : function () 
-			{
-				showErrorMessage("unlockDoc 异常");
-				exitEditWiki();
-				return;
-			}
-		});
-	}
-	
-	//进入编辑状态
-	function lockAndEditWiki()
-	{
-		console.log("lockAndEditWiki()");
-		if(!gDocId)
-		{
-			showErrorMessage("文件不存在");
-			return;
-		}
-		
-		var node = getNodeById(gDocId);
-		if(!node || node == null)
-		{
-			showErrorMessage("文件不存在");
-			return;
-		}
-		
-		var pid = node.pid;
-		var path = node.path;
-		var name = node.name;
-		var type = node.type;
-
-		$.ajax({
-			url : "/DocSystem/Doc/lockDoc.do",
-			type : "post",
-			dataType : "json",
-			data : {
-				lockType : 3, //LockType: VDoc Online Edit
-				reposId : gReposId, 
-				docId : gDocId,
-				pid: pid,
-				path: path,
-				name: name,
-				type: type,
-			},
-			success : function (ret) {
-				if( "ok" == ret.status){
-					console.log(ret.data);
-					$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","red");
-				    editWiki();
-				    return;
- 				}
-				else
-				{
-					showErrorMessage("lockDoc Error:" + ret.msgInfo);
-					return;
-				}
-			},
-			error : function () 
-			{
-				showErrorMessage("lockDoc 异常");
-				return;
-			}
-		});
-	}
-	
 	function unlockDoc(docId)
 	{
 		console.log("unlockDoc()  docId:" + docId);
@@ -1995,141 +1865,6 @@
 			}
 		});
 	}
-	
-	//进入文件编辑状态
-    function editWiki(){
-    	console.log("editWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
-	    if(gEdit == true)
-	    {
-	    	return;
-	    }
-
-	    gEdit = true;
-    	DocEdit.editorSwitch(true);
-        WikiEditBtnCtrl(true);
-        updateUrl();
-        
-        //start the autoTmpSaver
-        debounce.clear();
-	    DocEdit.startAutoTmpSaver();
-	    
-		if(gTmpSavedContent && gTmpSavedContent != "")
-		{
-			bootstrapQ.confirm({
-				id: "loadContentConfirm",
-				title: "加载确认",
-				msg : "上次有未保存的编辑内容，是否加载？",
-				},function () {
-			    	//alert("点击了确定");
-			        DocEdit.loadmd(gTmpSavedContent);
-			        gTmpSavedContent = "";
-			    	return true;   
-			 	},function (){
-			 		//alert("点击了取消");
-			        gTmpSavedContent = "";
-			        DocEdit.deleteTmpSavedContent(gDocId);
-			        return true;
-			 	});
-		}
-    }
-	
-    function exitEditWiki() {
-      	console.log("exitEditWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
-	    if(gEdit == false)
-	    {
-	    	return;
-	    }
-
-	    gEdit = false;
-      	DocEdit.editorSwitch(false);
-	    WikiEditBtnCtrl(false);
-	    updateUrl();
-		    
-		//Stop autoSaver
-		debounce.clear();
-		DocEdit.stopAutoTmpSaver();
-    }
-    
-    //将编辑中的文件保存到后台
-    function saveWiki() {
-    	console.log("saveWiki");
-    	if(debounce.getStatus() == 1)
-    	{
-    		saveDoc(debounce.get());
-    	}
-    }
-	
-	//debounce文件编辑缓存类
-    var debounce = (function () {
-        //var cache = [];
-        var latestcopy = "";
-        var status = 0; //For save
-        var status1 = 0; //For tmpSave
-        
-		function getLatestCopy()
-		{
-		    return latestcopy;
-		}
-		
-		function getStatus()
-		{
-			if ( status == 1 ){	
-            	return 1;
-            }
-            return 0;
-		}
-		
-		function clearStatus()
-		{
-			status = 0;
-		}
-		
-		function getStatus1()
-		{
-			if ( status1 == 1 ){	
-            	return 1;
-            }
-            return 0;
-		}
-		
-		function clearStatus1()
-		{
-			status1 = 0;
-		}
-		
-        return {
-            get: function(){
-            	return getLatestCopy();
-            },
-            getStatus: function(){
-            	return getStatus();
-            },
-            getStatus1: function(){
-            	return getStatus1();
-            },
-            clearStatus: function(){
-            	console.log("debounce clearStatus");
-            	return clearStatus();
-            },
-            clearStatus1: function(){
-	            console.log("debounce clearStatus1");
-            	return clearStatus1();
-            },
-            call : function (c) {
-            	console.log("debounce call");
-                latestcopy = c;
-                status = 1;
-                status1 = 1;
-            },
-            clear : function () {
-                console.log("debounce clear");
-                status = 0;
-                status1 = 0;
-                latestcopy = "";
-            }
-        };
-    })();
-	
 	
     function makeUrl(params) {
         var href = window.location.href;
@@ -2759,8 +2494,8 @@ function CompareObj(objA, objB, flag) {
                 	ShowUserInfo(user);
                 	loginBtnCtrl(user);
                 	
-                	//获取仓库信息
-            		getReposInfo(InitMenu);
+                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
+            		getReposInfo();
                 }
                 else 
                 {
@@ -2804,18 +2539,6 @@ function CompareObj(objA, objB, flag) {
            	$('#mobileLogoutBtn').hide();
     	}
     }
-    
-	//将后台Menu,同步回前台
-	function InitMenu()
-	{
-		console.log("InitMenu");
-		var node = {};
-		node.id = gInitDocId;
-		node.path = gInitParentPath;
-		node.name = gInitDocName;
-        getAndShowDoc(node); 
-	    getInitMenu(gInitDocId, gInitParentPath, gInitDocName);
-	}
 	
 	//将后台Menu,同步回前台
 	function syncUpMenu()
@@ -2857,7 +2580,7 @@ function CompareObj(objA, objB, flag) {
 	
 	//DocList类
 	var DocListState = 0;
-	var DocListParentDocId = 0;
+	var DocListParentDocId = -1; //无效值
 	var DocList = (function () {    	
     	//Draw DocList
     	function showList(data){
@@ -3209,6 +2932,7 @@ function CompareObj(objA, objB, flag) {
 	function showDocList(node)
 	{
 		console.log("showDocList() node:", node);
+		
 		var docId = 0;
 		var path = "";
 		var name = "";
@@ -3217,28 +2941,28 @@ function CompareObj(objA, objB, flag) {
 		{
 			if(node.type == 1)
 			{
-				//如果是文件则获取其父节点下的docList
+				//如果是文件则不需要获取subDocList
+				console.log("showDocList() node is File");
 				docId = node.pid;
 				path = node.path;
-				name = "";
-			}
+				name = "";				
+			}	
 			else
 			{
-		    	docId = node.id;
-		    	path = node.path;
-		    	name = node.name;
+				console.log("showDocList() node is Dir");
+				docId = node.docId;
+			    path = node.path;
+			    name = node.name;
 			}
 	    }
-	    	
+
+		console.log("showDocList() DocListParentDocId:" + DocListParentDocId + " docId:" + docId );	
 		//Set DocListState and DocListParentDocId
 	    DocListState = 0;
 		if(DocListParentDocId == docId)
 		{
-			console.log("showDocList() DocListParentDocId same with docId:",DocListParentDocId, docId );	
 			return;
 		}
-		
-	    DocListParentDocId = docId;
 			
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
@@ -3254,6 +2978,7 @@ function CompareObj(objA, objB, flag) {
          		console.log("showDocList ret:", ret)
          		if(ret.status == "ok")
             	{
+         		    DocListParentDocId = docId;
          			DocList.showList(ret.data);
                 }
                 else
@@ -3803,8 +3528,28 @@ function CompareObj(objA, objB, flag) {
     	  	document.onmouseup=null;
         };
     };
+    
     //页面加载完成处理函数    
-    $(document).ready(function(){
+    $(document).ready(function()
+    {
+    	//初始化全局变量
+    	globalVarInit();
+    	
+    	//zTree配置初始化
+		zTreeSettingInit();
+        
+    	//拖拽上传区域初始化
+		dragDropUploadZoneInit();
+        
+		//系统初始化
+		SysInit();
+		
+		//右键菜单初始化
+		contextMenuInit();
+    });
+    
+    function globalVarInit()
+   	{
         //Confirm if it is PC
     	if(true == isPC())
         {	
@@ -3818,9 +3563,13 @@ function CompareObj(objA, objB, flag) {
     	    showCenterDiv();
         }
     	
-    	//初始化全局变量
+    	console.log("globalVarInit() start");
     	gReposId = getQueryString("vid");
-		gInitDocId = getQueryString("doc");
+		//set the vid in upload form
+		$("#reposId").val(gReposId);
+
+		//Set Init Doc Info
+    	gInitDocId = getQueryString("doc");
 		gInitParentPath = getQueryString("path");
 		if(gInitParentPath && gInitParentPath != null)
 		{
@@ -3856,27 +3605,11 @@ function CompareObj(objA, objB, flag) {
 		{
 			gInitShowType = 2;
 		}
-		
-		console.log("ready() gReposId:" + gReposId  + " gInitDocId:"+gInitDocId + " gInitParentPath:" + gInitParentPath + " gInitDocName:" + gInitDocName + " gInitEdit:" + gInitEdit);
-    	
-    	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if(gInitEdit == true){
-            var edit = {};
-            setting.edit = edit;
-        }
-        //设置异步加载的参数
-        var async =  {  
-    		enable : true,//设置 zTree 是否开启异步加载模式  
-            url : "/DocSystem/Repos/getSubDocList.do",
-            type : "post",
-    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
-    		otherParam:{
-    			"vid":gReposId,
-    		},
-    		dataFilter: asyncDataFilter, 
-		};
-		setting.async = async;
-        
+		console.log("globalVarInit() gReposId:" + gReposId  + " gInitDocId:"+gInitDocId + " gInitParentPath:" + gInitParentPath + " gInitDocName:" + gInitDocName + " gInitEdit:" + gInitEdit);
+   	}
+    
+	function dragDropUploadZoneInit()
+	{
       	//拖拽上传:目录树区域
     	var uuz = document.getElementById("uuz");  
     	uuz.ondragenter = function(e){  
@@ -3959,13 +3692,31 @@ function CompareObj(objA, objB, flag) {
     		}
             dragUploadConfirm(e,parentNode);
         };
-
-		//set the vid in upload form
-		$("#reposId").val(gReposId);
-        
-		//系统初始化
-		SysInit();
-		
+	}
+    
+    function zTreeSettingInit()
+    {
+    	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
+        if(gInitEdit == true){
+            var edit = {};
+            setting.edit = edit;
+        }
+        //设置异步加载的参数
+        var async =  {  
+    		enable : true,//设置 zTree 是否开启异步加载模式  
+            url : "/DocSystem/Repos/getSubDocList.do",
+            type : "post",
+    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+    		otherParam:{
+    			"vid":gReposId,
+    		},
+    		dataFilter: asyncDataFilter, 
+		};
+		setting.async = async;
+    }
+    
+    function contextMenuInit()
+    {
 		//右键菜单实现：contextMenu Start
 		context.init({preventDoubleContext: true});
 		
@@ -4348,16 +4099,16 @@ function CompareObj(objA, objB, flag) {
 		context.settings({compress: true});
 		
 		$(document).on('mouseover', '.me-codesta', function(){
-		$('.finale h1:first').css({opacity:0});
-		$('.finale h1:last').css({opacity:1});
-		});
-	
+			$('.finale h1:first').css({opacity:0});
+			$('.finale h1:last').css({opacity:1});
+			});
+		
 		$(document).on('mouseout', '.me-codesta', function(){
 			$('.finale h1:last').css({opacity:0});
 			$('.finale h1:first').css({opacity:1});
 		});
 		//右键菜单实现：contextMenu End
-    });
+    }
 </SCRIPT>
 </body>
 </html>
