@@ -38,16 +38,13 @@
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
                    console.log("DocEdit onchange gEdit:" + gEdit);                  
-               	   if(isOnLoadTriggerChange == true)
-            	   {
-            		   isOnLoadTriggerChange = false;
-            		   return;
-            	   }
-
                    if(gEdit == true)
                    {
                 	   var newContent = this.getMarkdown();
-            	       debounce.call(newContent);
+                	   if(newContent != gDocContent)
+                	   {
+	            	       debounce.call(newContent);
+                	   }
     		       }
                },
                onpreviewing : function () {
@@ -274,7 +271,8 @@
 
 		    gEdit = true;
 	    	DocEdit.editorSwitch(true);
-	        WikiEditBtnCtrl(true);
+	    	DocEdit.loadmd(gDocContent);
+	    	WikiEditBtnCtrl(true);
 	        updateUrl();
 	        
 	        //start the autoTmpSaver
@@ -309,7 +307,8 @@
 		    }
 
 		    gEdit = false;
-	      	DocEdit.editorSwitch(false);
+	      	editorSwitch(false);
+	      	loadmd(gDocContent);
 		    WikiEditBtnCtrl(false);
 		    updateUrl();
 			    
@@ -442,8 +441,8 @@
 		}
 		
 		//退出文件编辑状态
-	    function exitEdit() {
-	    	console.log("exitEdit gDocId:" + gDocId);    	
+	    function exitEdit(newNode) {
+	    	console.log("exitEdit gDocId:" + gDocId, newNode);	
 	    	if(debounce.getStatus() == 1)
 	    	{
 	    		qiao.bs.confirm({
@@ -453,21 +452,21 @@
 	  	 	    		okbtn: "保存",
 	  	 	    		qubtn: "直接退出",
 	  	 	    	},function () {
-	  	 	    	    saveWikiAndExit();
+	  	 	    	    saveWikiAndExit(newNode);
 	  	  	 			return true;
 	  	 			},function(){
-	  	 				unlockAndExitEditWiki();
+	  	 				unlockAndExitEditWiki(newNode);
 	  	 				return true;
 	  	 		});
 	  	 	}
 	  	 	else
 	  	 	{
-	    		unlockAndExitEditWiki();
+	    		unlockAndExitEditWiki(newNode);
 	    	}
 		}
 	    
 		//解锁文件并退出编辑
-		function unlockAndExitEditWiki()
+		function unlockAndExitEditWiki(newNode)
 		{
 			console.log("unlockAndExitEditWiki()  gDocId:" + gDocId);
 			if(!gDocId || gDocId == 0)
@@ -494,35 +493,41 @@
 						console.log("unlockAndExitEditWiki() ret:" + ret.data);
 						$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","black");
 						exitEditWiki();
-					    return;
+						if(newNode)
+						{
+							getAndShowDoc(newNode);
+						}
+						return;
 	 				}
 					else
 					{
 						showErrorMessage("unlockAndExitEditWiki() unlockDoc Error:" + ret.msgInfo);
-						exitEditWiki();
 						return;
 					}
 				},
 				error : function () 
 				{
 					showErrorMessage("unlockAndExitEditWiki() unlockDoc 异常");
-					exitEditWiki();
 					return;
 				}
 			});
 		}
 		
 	    //将编辑中的文件保存到后台
-	    function saveWikiAndExit() 
+	    function saveWikiAndExit(newNode) 
 	    {
-	    	console.log("saveWikiAndExit  gDoc:" + gDocId);
+	    	console.log("saveWikiAndExit  gDoc:" + gDocId, newNode);
 	    	if(debounce.getStatus() == 1)
 	    	{
-	    		saveDoc(debounce.get(), unlockAndExitEditWiki);
+	    		saveDoc(debounce.get(), unlockAndExitEditWiki, newNode);
+	    	}
+	    	else
+	    	{
+	    		unlockAndExitEditWiki(newNode);
 	    	}
 	    }
 	    
-	    function saveDoc(content, callback)
+	    function saveDoc(content, callback, newNode)
 		{
 			console.log("saveDoc gDocId:" + gDocId);
 			$.ajax({
@@ -539,6 +544,8 @@
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
 	                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
+						gDocContent = content;
+
 	                    bootstrapQ.msg({
 									msg : "保存成功 :" + (new Date()).toLocaleDateString(),
 									type : 'success',
@@ -547,7 +554,7 @@
 						//清除debounce
 						debounce.clear();
 						//回调
-						callback && callback();
+						callback && callback(newNode);
 					}else {
 	                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
 	                }
@@ -566,8 +573,8 @@
             editWiki: function(){
             	editWiki();
             },
-            exitEdit: function(){
-            	exitEdit();
+            exitEdit: function(newNode){
+            	exitEdit(newNode);
             },
             saveWiki: function(){
             	saveWiki();

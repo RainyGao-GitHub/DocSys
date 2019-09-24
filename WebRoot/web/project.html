@@ -2274,12 +2274,14 @@ function CompareObj(objA, objB, flag) {
           {
         	 if(gEdit == true)
              {
-        		//如果当前文件处于编辑状态，必须先退出编辑
-              	DocEdit.exitEdit();
+        		//如果当前文件处于编辑状态，必须先退出编辑（此时如果调用）
+              	DocEdit.exitEdit(treeNode);
              }
-       	     
-             //显示预览或备注
-             getAndShowDoc(treeNode);
+        	 else
+             {
+	             //显示预览或备注
+	             getAndShowDoc(treeNode);
+             }
           }
       }
       
