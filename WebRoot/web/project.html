@@ -1466,7 +1466,15 @@
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
 		        		console.log("getMenu() ret",ret);
-		                reDrawMenu(ret.data);       	
+		                reDrawMenu(ret.data);
+		                //选中文件
+		         		var treeNode = getNodeByNodeId(docId);
+		        		if(treeNode && treeNode != null)
+		        		{
+		        			var zTree = $.fn.zTree.getZTreeObj("doctree");
+		        			//select this node in zTree
+		        		 	zTree.selectNode(treeNode);
+		        		}
 		            }
 		            else
 		           	{
@@ -2548,13 +2556,7 @@ function CompareObj(objA, objB, flag) {
 	
 	function reDrawMenu(data)
 	{
-		if( window.menu != data ){
-	        console.log("同步菜单");
-	        drawMenu(data);
-	    }else{
-	        console.log("重新绘制菜单，因为当前菜单数据与zTree不一致");
-	        drawMenu(data);
-	    }
+	   drawMenu(data);
 	}
 	
 	//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
@@ -2752,14 +2754,14 @@ function CompareObj(objA, objB, flag) {
 		}
 		 	
 		 //在zTree上选中该doc
-		 zTreeSelectDoc();		
+		 zTreeSelectDoc(docId);		
   	}
  	
  	//根据gDocId选中文件
- 	function zTreeSelectDoc()
+ 	function zTreeSelectDoc(docId)
  	{
-		console.log("zTreeSelectDoc gDocId:" + gDocId);
-		if(!gDocId || gDocId == 0)	//表示不选中任何文件
+		console.log("zTreeSelectDoc docId:" + docId);
+		if(!docId || docId == 0)	//表示不选中任何文件
  		{
 		  	var treeObj = $.fn.zTree.getZTreeObj("doctree");
 			var selectedNode = treeObj.getSelectedNodes()[0];
@@ -2775,14 +2777,14 @@ function CompareObj(objA, objB, flag) {
 		var selectedNode = treeObj.getSelectedNodes()[0];
 		if(selectedNode)
 		{
-			if(selectedNode.id == gDocId)
+			if(selectedNode.id == docId)
 			{
 				return;
 			}
 		}
 		
 		//期望的文件未选中但已加载
- 		var treeNode = getNodeByNodeId(gDocId);
+ 		var treeNode = getNodeByNodeId(docId);
 		if(treeNode && treeNode != null)
 		{
 			var zTree = $.fn.zTree.getZTreeObj("doctree");
