@@ -1488,39 +1488,6 @@
 
 	/******************************** Doc Interfaces***************************************/
 	//文件保存操作: callback是指成功后的回调函数
-    function saveDoc(content)
-	{
-		console.log("saveDoc gDocId:" + gDocId);
-		$.ajax({
-            url : "/DocSystem/Doc/updateDocContent.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                reposId: gReposId,
-            	docId : gDocId,
-            	path: gParentPath,
-                name: gDocName,
-            	content : content
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
-                    bootstrapQ.msg({
-								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
-								type : 'success',
-								time : 1000,
-					});
-					//清除debounce
-					debounce.clear();
-				}else {
-                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
-                }
-            },
-            error : function () {
-                bootstrapQ.alert("保存失败:服务器异常");
-            }
-        });
-    }
     
     function updateUrl()
     {
@@ -2307,8 +2274,8 @@ function CompareObj(objA, objB, flag) {
           {
         	 if(gEdit == true)
              {
-        		 //如果当前文件处于编辑状态，必须先退出编辑
-              	exitEdit();
+        		//如果当前文件处于编辑状态，必须先退出编辑
+              	DocEdit.exitEdit();
              }
        	     
              //显示预览或备注
