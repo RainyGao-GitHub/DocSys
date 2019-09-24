@@ -38,14 +38,6 @@
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
                    console.log("DocEdit onchange gEdit:" + gEdit);                  
-                   if(gEdit == true)
-                   {
-                	   var newContent = this.getMarkdown();
-                	   if(newContent != gDocContent)
-                	   {
-	            	       debounce.call(newContent);
-                	   }
-    		       }
                },
                onpreviewing : function () {
                    console.log("DocEdit onpreviewing gEdit:" + gEdit);
@@ -130,11 +122,11 @@
 			{
 				timerState = 1;
 				autoSaveTimer = setInterval(function () {
-		        	if(debounce.getStatus1() == 1)
+		        	var newContent = md.getMarkdown();
+					if(gDocContent != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
-		    	    	debounce.clearStatus1();
-		    			tmpSaveDoc(gDocId, debounce.get());
+		    			tmpSaveDoc(gDocId, newContent);
 		    		}
 		    	},20000);
 		    }
@@ -276,7 +268,6 @@
 	        updateUrl();
 	        
 	        //start the autoTmpSaver
-	        debounce.clear();
 		    DocEdit.startAutoTmpSaver();
 		    
 			if(gTmpSavedContent && gTmpSavedContent != "")
@@ -313,89 +304,18 @@
 		    updateUrl();
 			    
 			//Stop autoSaver
-			debounce.clear();
 			DocEdit.stopAutoTmpSaver();
 	    }
 	    
 	    //将编辑中的文件保存到后台
 	    function saveWiki() {
 	    	console.log("saveWiki");
-	    	if(debounce.getStatus() == 1)
+	    	var newContent = md.getMarkdown();
+	    	if(gDocContent != newContent)
 	    	{
-	    		saveDoc(debounce.get());
+	    		saveDoc(newContent);
 	    	}
 	    }
-		
-		//debounce文件编辑缓存类
-	    var debounce = (function () {
-	        //var cache = [];
-	        var latestcopy = "";
-	        var status = 0; //For save
-	        var status1 = 0; //For tmpSave
-	        
-			function getLatestCopy()
-			{
-			    return latestcopy;
-			}
-			
-			function getStatus()
-			{
-				if ( status == 1 ){	
-	            	return 1;
-	            }
-	            return 0;
-			}
-			
-			function clearStatus()
-			{
-				status = 0;
-			}
-			
-			function getStatus1()
-			{
-				if ( status1 == 1 ){	
-	            	return 1;
-	            }
-	            return 0;
-			}
-			
-			function clearStatus1()
-			{
-				status1 = 0;
-			}
-			
-	        return {
-	            get: function(){
-	            	return getLatestCopy();
-	            },
-	            getStatus: function(){
-	            	return getStatus();
-	            },
-	            getStatus1: function(){
-	            	return getStatus1();
-	            },
-	            clearStatus: function(){
-	            	console.log("debounce clearStatus");
-	            	return clearStatus();
-	            },
-	            clearStatus1: function(){
-		            console.log("debounce clearStatus1");
-	            	return clearStatus1();
-	            },
-	            call : function (c) {
-	            	console.log("debounce call");
-	                latestcopy = c;
-	                status = 1;
-	                status1 = 1;
-	            },
-	            clear : function () {
-	                console.log("debounce clear");
-	                status = 0;
-	                status1 = 0;
-	                latestcopy = "";
-	            }
-	        };
-	    })();
 	    
 		//锁定文件并进入编辑状态
 		function lockAndEditWiki()
@@ -443,7 +363,8 @@
 		//退出文件编辑状态
 	    function exitEdit(newNode) {
 	    	console.log("exitEdit gDocId:" + gDocId, newNode);	
-	    	if(debounce.getStatus() == 1)
+	    	var newContent = md.getMarkdown();
+	    	if(gDocContent != newContent)
 	    	{
 	    		qiao.bs.confirm({
 	  	 	    		id: 'saveDocConfirm',
@@ -517,9 +438,10 @@
 	    function saveWikiAndExit(newNode) 
 	    {
 	    	console.log("saveWikiAndExit  gDoc:" + gDocId, newNode);
-	    	if(debounce.getStatus() == 1)
+	    	var newContent = md.getMarkdown();
+	    	if(gDocContent != newContent)
 	    	{
-	    		saveDoc(debounce.get(), unlockAndExitEditWiki, newNode);
+	    		saveDoc(newContent, unlockAndExitEditWiki, newNode);
 	    	}
 	    	else
 	    	{
@@ -551,8 +473,6 @@
 									type : 'success',
 									time : 1000,
 						});
-						//清除debounce
-						debounce.clear();
 						//回调
 						callback && callback(newNode);
 					}else {
