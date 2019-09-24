@@ -1434,7 +1434,15 @@
 		node.id = gInitDocId;
 		node.path = gInitParentPath;
 		node.name = gInitDocName;
-        getAndShowDoc(node, gInitEdit);
+		
+		if(gInitDocId != 0)
+		{
+	        getAndShowDoc(node, gInitEdit);
+		}
+		else
+		{
+			showDocList(null);
+		}
 	    getInitMenu(gInitDocId, gInitParentPath, gInitDocName);
 	}
 	
@@ -1532,8 +1540,9 @@
     //清除Doc预览信息
 	function cleanDocPreview()
 	{
+    	console.log("cleanDocPreview() ");
 		//清除当前选中的信息
-		gDocId = undefined;
+		gDocId = 0;
 		gParentPath = "";
 		gDocName = "";
 		gEdit = false;
@@ -1546,13 +1555,15 @@
 	  	gDocContent = "";
 	  	gTmpSavedContent = "";
 	  	DocEdit.loadmd("");
+	  	
+	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
 
 	//读取文件信息
     function getAndShowDoc(node, edit)
 	{	
 		console.log("getAndShowDoc() node:", node);
-      	if(!node || node == null)	//undefine do clean the info of rightDiv
+      	if(!node || node == null || node.id == 0)	//undefine do clean the info of rightDiv
       	{
       		cleanDocPreview();
           	return;
@@ -1607,6 +1618,7 @@
 						}
 						else	//显示备注
 						{
+						  	$(".editormd-preview-close-btn").show();//css("display","none");
 							showVirtualDoc(edit);
 						}
             		}
@@ -2980,9 +2992,6 @@ function CompareObj(objA, objB, flag) {
 		if(node == null)
 		{
 			console.log("backToParentDoc node not exist:" + gDocId);
-			gDocId = undefined;
-			gParentPath = "";
-			gDocName = "";
 			cleanDocPreview();
 
 			//Show DocList
@@ -3543,6 +3552,11 @@ function CompareObj(objA, objB, flag) {
 
 		//Set Init Doc Info
     	gInitDocId = getQueryString("doc");
+		if(!gInitDocId)
+		{
+			gInitDocId = 0;
+		}
+		
 		gInitParentPath = getQueryString("path");
 		if(gInitParentPath && gInitParentPath != null)
 		{
