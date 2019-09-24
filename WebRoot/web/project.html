@@ -1582,14 +1582,11 @@
             		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId + " gShowType:" + gShowType);
                 	if(!gDocId || gDocId == 0 || gDocId != doc.docId)
             		{
-						if(gShowType != 1)	//目前不支持RDoc的markdown编辑
-						{
-	                		//当前有打开的文件，需要先退出编辑状态
-		            		if(gDocId && gDocId != 0)
-		            		{
-		            			DocEdit.exitEdit();
-		            		}
-						}
+						//当前有打开的文件，需要先退出编辑状态
+		            	if(gDocId && gDocId != 0)
+		            	{
+		                	DocEdit.exitEdit();
+		            	}
 	            		
                 		//Show Doc
 	                	$('#filetitle').html(doc.name);
