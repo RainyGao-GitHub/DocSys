@@ -363,6 +363,11 @@
 		//退出文件编辑状态
 	    function exitEdit(newNode) {
 	    	console.log("exitEdit gDocId:" + gDocId, newNode);	
+	    	if(gEdit == false)
+	    	{
+	    		return;
+	    	}
+	    	
 	    	var newContent = md.getMarkdown();
 	    	if(gDocContent != newContent)
 	    	{
