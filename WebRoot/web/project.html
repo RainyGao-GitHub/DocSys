@@ -1432,8 +1432,7 @@
 		node.id = gInitDocId;
 		node.path = gInitParentPath;
 		node.name = gInitDocName;
-		gEdit = gInitEdit;
-        getAndShowDoc(node);
+        getAndShowDoc(node, gInitEdit);
 	    getInitMenu(gInitDocId, gInitParentPath, gInitDocName);
 	}
 	
@@ -1581,7 +1580,7 @@
 	}
 
 	//读取文件信息
-    function getAndShowDoc(node) 
+    function getAndShowDoc(node, edit)
 	{	
 		console.log("getAndShowDoc() node:", node);
       	if(!node || node == null)	//undefine do clean the info of rightDiv
@@ -1639,7 +1638,7 @@
 						}
 						else	//显示备注
 						{
-							showVirtualDoc();
+							showVirtualDoc(edit);
 						}
             		}
                 }
@@ -1690,12 +1689,12 @@
         return docContent;
 	}
 	
-	function showVirtualDoc()
+	function showVirtualDoc(edit)
 	{
 		//console.log("showVirtualDoc gDocContent",gDocContent);
 		console.log("showVirtualDoc gDocId:" + gDocId);
 
-		DocEdit.loadmd(gDocContent);
+		DocEdit.loadmd(gDocContent, edit);
 	}
 	
 	function showDocHistory(node, historyType)
