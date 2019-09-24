@@ -55,10 +55,9 @@
                    console.log("onload gEdit:" + gEdit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
    	    		   this.previewing(); 		  //加载成默认是预览
    	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载
-   	    		   if(gEdit && gEdit == true)
+   	    		   if(gInitEdit && gInitEdit == true)
 	    		   {
-   	    			   gEdit = false; //不设置的话会导致editWiki不动作
-   	    			   console.log("onload gEdit:" + gEdit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+   	    			   gInitEdit = false;	//gInitEdit只能被用一次
    	    			   lockAndEditWiki();
 	    		  }
                }
@@ -251,7 +250,264 @@
 					});
 	            }
 	        });
+	    }
+	    
+		//进入文件编辑状态
+	    function editWiki(){
+	    	console.log("editWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
+		    if(gEdit == true)
+		    {
+		    	return;
+		    }
 
+		    gEdit = true;
+	    	DocEdit.editorSwitch(true);
+	        WikiEditBtnCtrl(true);
+	        updateUrl();
+	        
+	        //start the autoTmpSaver
+	        debounce.clear();
+		    DocEdit.startAutoTmpSaver();
+		    
+			if(gTmpSavedContent && gTmpSavedContent != "")
+			{
+				bootstrapQ.confirm({
+					id: "loadContentConfirm",
+					title: "加载确认",
+					msg : "上次有未保存的编辑内容，是否加载？",
+					},function () {
+				    	//alert("点击了确定");
+				        DocEdit.loadmd(gTmpSavedContent);
+				        gTmpSavedContent = "";
+				    	return true;   
+				 	},function (){
+				 		//alert("点击了取消");
+				        gTmpSavedContent = "";
+				        DocEdit.deleteTmpSavedContent(gDocId);
+				        return true;
+				 	});
+			}
+	    }
+		
+	    function exitEditWiki() {
+	      	console.log("exitEditWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
+		    if(gEdit == false)
+		    {
+		    	return;
+		    }
+
+		    gEdit = false;
+	      	DocEdit.editorSwitch(false);
+		    WikiEditBtnCtrl(false);
+		    updateUrl();
+			    
+			//Stop autoSaver
+			debounce.clear();
+			DocEdit.stopAutoTmpSaver();
+	    }
+	    
+	    //将编辑中的文件保存到后台
+	    function saveWiki() {
+	    	console.log("saveWiki");
+	    	if(debounce.getStatus() == 1)
+	    	{
+	    		saveDoc(debounce.get());
+	    	}
+	    }
+		
+		//debounce文件编辑缓存类
+	    var debounce = (function () {
+	        //var cache = [];
+	        var latestcopy = "";
+	        var status = 0; //For save
+	        var status1 = 0; //For tmpSave
+	        
+			function getLatestCopy()
+			{
+			    return latestcopy;
+			}
+			
+			function getStatus()
+			{
+				if ( status == 1 ){	
+	            	return 1;
+	            }
+	            return 0;
+			}
+			
+			function clearStatus()
+			{
+				status = 0;
+			}
+			
+			function getStatus1()
+			{
+				if ( status1 == 1 ){	
+	            	return 1;
+	            }
+	            return 0;
+			}
+			
+			function clearStatus1()
+			{
+				status1 = 0;
+			}
+			
+	        return {
+	            get: function(){
+	            	return getLatestCopy();
+	            },
+	            getStatus: function(){
+	            	return getStatus();
+	            },
+	            getStatus1: function(){
+	            	return getStatus1();
+	            },
+	            clearStatus: function(){
+	            	console.log("debounce clearStatus");
+	            	return clearStatus();
+	            },
+	            clearStatus1: function(){
+		            console.log("debounce clearStatus1");
+	            	return clearStatus1();
+	            },
+	            call : function (c) {
+	            	console.log("debounce call");
+	                latestcopy = c;
+	                status = 1;
+	                status1 = 1;
+	            },
+	            clear : function () {
+	                console.log("debounce clear");
+	                status = 0;
+	                status1 = 0;
+	                latestcopy = "";
+	            }
+	        };
+	    })();
+	    
+		//锁定文件并进入编辑状态
+		function lockAndEditWiki()
+		{
+			console.log("lockAndEditWiki()");
+			if(!gDocId || gDocId == 0)
+			{
+				showErrorMessage("请选择文件!");
+				return;
+			}
+
+			$.ajax({
+				url : "/DocSystem/Doc/lockDoc.do",
+				type : "post",
+				dataType : "json",
+				data : {
+					lockType : 3, //LockType: VDoc Online Edit
+					reposId : gReposId, 
+					docId : gDocId,
+					path: gParentPath,
+					name: gDocName,
+				},
+				success : function (ret) {
+					if( "ok" == ret.status)
+					{
+						console.log("lockAndEditWiki() ret.data",ret.data);
+						$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","red");
+						editWiki();
+					    return;
+	 				}
+					else
+					{
+						showErrorMessage("lockDoc Error:" + ret.msgInfo);
+						return;
+					}
+				},
+				error : function () 
+				{
+					showErrorMessage("lockDoc 异常");
+					return;
+				}
+			});
+		}
+		
+		//退出文件编辑状态
+	    function exitEdit() {
+	    	console.log("exitEdit gDocId:" + gDocId);    	
+	    	if(debounce.getStatus() == 1)
+	    	{
+	    		qiao.bs.confirm({
+	  	 	    		id: 'saveDocConfirm',
+	  	 	    		msg: "修改未保存，是否保存？",
+	  	 	    		close: false,		
+	  	 	    		okbtn: "保存",
+	  	 	    		qubtn: "直接退出",
+	  	 	    	},function () {
+	  	 	    	    saveWikiAndExit();
+	  	  	 			return true;
+	  	 			},function(){
+	  	 				unlockAndExitEditWiki();
+	  	 				return true;
+	  	 		});
+	  	 	}
+	  	 	else
+	  	 	{
+	    		unlockAndExitEditWiki();
+	    	}
+		}
+	    
+		//解锁文件并退出编辑
+		function unlockAndExitEditWiki()
+		{
+			console.log("unlockAndExitEditWiki()  gDocId:" + gDocId);
+			if(!gDocId || gDocId == 0)
+			{
+				showErrorMessage("文件不存在");
+				exitEditWiki();
+				return;
+			}
+			
+			$.ajax({
+				url : "/DocSystem/Doc/lockDoc.do",
+				type : "post",
+				dataType : "json",
+				data : {
+					lockType : 0, //unlock the doc
+					reposId : gReposId, 
+					docId : gDocId,
+					path: gParentPath,
+					name: gDocName,
+				},
+				success : function (ret) {
+					if( "ok" == ret.status)
+					{
+						console.log("unlockAndExitEditWiki() ret:" + ret.data);
+						$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","black");
+						exitEditWiki();
+					    return;
+	 				}
+					else
+					{
+						showErrorMessage("unlockAndExitEditWiki() unlockDoc Error:" + ret.msgInfo);
+						exitEditWiki();
+						return;
+					}
+				},
+				error : function () 
+				{
+					showErrorMessage("unlockAndExitEditWiki() unlockDoc 异常");
+					exitEditWiki();
+					return;
+				}
+			});
+		}
+		
+	    //将编辑中的文件保存到后台
+	    function saveWikiAndExit() 
+	    {
+	    	console.log("saveWikiAndExit  gDoc:" + gDocId);
+	    	if(debounce.getStatus() == 1)
+	    	{
+	    		saveDoc(gDocId, debounce.get());
+	    	}
 	    }
 
 		//开放给外部的调用接口
