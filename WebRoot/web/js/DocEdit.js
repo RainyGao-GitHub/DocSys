@@ -123,10 +123,11 @@
 				timerState = 1;
 				autoSaveTimer = setInterval(function () {
 		        	var newContent = md.getMarkdown();
-					if(gDocContent != newContent)
+					if(gTmpSavedContent != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
 		    			tmpSaveDoc(gDocId, newContent);
+		    			gTmpSavedContent = newContent;
 		    		}
 		    	},20000);
 		    }
@@ -279,11 +280,10 @@
 					},function () {
 				    	//alert("点击了确定");
 				        DocEdit.loadmd(gTmpSavedContent);
-				        gTmpSavedContent = "";
 				    	return true;   
 				 	},function (){
 				 		//alert("点击了取消");
-				        gTmpSavedContent = "";
+				        gTmpSavedContent = gDocContent;
 				        DocEdit.deleteTmpSavedContent(gDocId);
 				        return true;
 				 	});
