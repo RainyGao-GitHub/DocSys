@@ -6,9 +6,9 @@
       	var autoSaveTimer;
       	var timerState = 0;
     
-      	function editorInit(content)
+      	function editorInit(content, edit)
       	{
-      		console.log("DocEdit editorInit gEdit:" + gEdit);
+      		console.log("DocEdit editorInit edit:" + edit);
 
       		var params = {
                width: "100%",
@@ -52,14 +52,18 @@
                    lockAndEditWiki();
                },
                onload : function () {
-                   console.log("onload gEdit:" + gEdit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+                   console.log("onload gEdit:" + gEdit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
    	    		   this.previewing(); 		  //加载成默认是预览
    	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载
-   	    		   if(gInitEdit && gInitEdit == true)
+   	    		   if(!edit || edit == false)
 	    		   {
-   	    			   gInitEdit = false;	//gInitEdit只能被用一次
+   	    			   console.log(" onload edit is false");
+	    		   }
+   	    		   else
+   	    		   {
+   	    			   console.log(" onload edit is true");
    	    			   lockAndEditWiki();
-	    		  }
+	    		   }
                }
        		};
        		
@@ -73,7 +77,7 @@
     		md.setMarkdown(content);
         }
         
-        function loadmd(content)
+        function loadmd(content, edit)
         {
     		if(!content)
     		{
@@ -88,7 +92,7 @@
    			}
 			else
 			{
-				editorInit(content);	
+				editorInit(content, edit);	
     		}
         }
 		      		
@@ -512,8 +516,8 @@
 
 		//开放给外部的调用接口
         return {
-            loadmd: function(content){
-               loadmd(content);
+            loadmd: function(content, edit){
+               loadmd(content, edit);
             },
             editWiki: function(){
             	editWiki();
