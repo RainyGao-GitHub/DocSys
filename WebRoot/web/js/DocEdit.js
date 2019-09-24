@@ -515,6 +515,15 @@
             loadmd: function(content){
                loadmd(content);
             },
+            editWiki: function(){
+            	editWiki();
+            },
+            exitEdit: function(){
+            	exitEdit();
+            },
+            saveWiki: function(){
+            	saveWiki();
+            },
             editorSwitch: function(edit){
             	editorSwitch(edit);
             },
