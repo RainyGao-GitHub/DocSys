@@ -1608,11 +1608,10 @@
 	                    
 	                    gDocContent = parseDocContent(ret.data.content);
 	                    gTmpSavedContent = parseDocContent(ret.msgData);                    
-						
-	                    setImgPreview(ret);
-	
+							
 						if(gShowType == 1)	//显示预览
 						{	
+		                    setImgPreview(ret);
 							$("#docPreview").show();
 					      	return;
 						}

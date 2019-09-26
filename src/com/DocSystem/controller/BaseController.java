@@ -1465,11 +1465,15 @@ public class BaseController  extends BaseFunction{
 		
 		response.setHeader("content-disposition", "attachment;filename=\"" + file_name +"\"");
 
+		//读取要下载的文件，保存到文件输入流
+		FileInputStream in = null;
+		//创建输出流
+		OutputStream out = null;
 		try {
 			//读取要下载的文件，保存到文件输入流
-			FileInputStream in = new FileInputStream(dstPath);
+			in = new FileInputStream(dstPath);
 			//创建输出流
-			OutputStream out = response.getOutputStream();
+			out = response.getOutputStream();
 			//创建缓冲区
 			byte buffer[] = new byte[1024];
 			int len = 0;
@@ -1478,11 +1482,15 @@ public class BaseController  extends BaseFunction{
 				//输出缓冲区的内容到浏览器，实现文件下载
 				out.write(buffer, 0, len);
 			}
-			//关闭文件输入流
-			in.close();
-			//关闭输出流
-			out.close();
 		}catch (Exception e) {
+			if(in != null)
+			{
+				in.close();
+			}
+			if(out != null)
+			{
+				out.close();						
+			}
 			e.printStackTrace();
 			System.out.println("sendFileToWebPage() Exception");
 		}
