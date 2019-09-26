@@ -2842,11 +2842,11 @@ function CompareObj(objA, objB, flag) {
 		}
 		 	
 		 //在zTree上选中该doc
-		 zTreeSelectDoc(docId);		
+		 zTreeSelectDoc(docId, path, name);		
   	}
  	
  	//根据gDocId选中文件
- 	function zTreeSelectDoc(docId)
+ 	function zTreeSelectDoc(docId, path, name)
  	{
 		console.log("zTreeSelectDoc docId:" + docId);
 		if(!docId || docId == 0)	//表示不选中任何文件
@@ -2892,8 +2892,8 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		//期望的文件未加载
-		console.log("node was not exists in current zTree, syncUpMenu" + docId);
-		syncUpMenu();
+		console.log("node was not exists in current zTree, getInitMenu for:" + docId  + " " + path + name);
+		getInitMenu(docId, path, name);
  	}
  	
  	function fx(obj,event){
