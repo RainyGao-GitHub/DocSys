@@ -122,7 +122,7 @@
 			{
 				timerState = 1;
 				autoSaveTimer = setInterval(function () {
-		        	var newContent = md.getMarkdown();
+		        	var newContent = getMarkdown();
 					if(gTmpSavedContent != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
@@ -310,7 +310,7 @@
 	    //将编辑中的文件保存到后台
 	    function saveWiki() {
 	    	console.log("saveWiki");
-	    	var newContent = md.getMarkdown();
+	    	var newContent = getMarkdown();
 	    	if(gDocContent != newContent)
 	    	{
 	    		saveDoc(newContent);
@@ -360,6 +360,16 @@
 			});
 		}
 		
+		function getMarkdown()
+		{
+			var content = md.getMarkdown();
+	    	if(!content)
+	    	{
+	    		content = "";
+	    	}
+	    	return content;
+		}
+
 		//退出文件编辑状态
 	    function exitEdit(newNode) {
 	    	console.log("exitEdit gDocId:" + gDocId, newNode);	
@@ -368,10 +378,11 @@
 	    		return;
 	    	}
 	    	
-	    	var newContent = md.getMarkdown();
+	    	var newContent = getMarkdown();
+	    	
 	    	if(gDocContent != newContent)
 	    	{
-	    		qiao.bs.confirm({
+		    	qiao.bs.confirm({
 	  	 	    		id: 'saveDocConfirm',
 	  	 	    		msg: "修改未保存，是否保存？",
 	  	 	    		close: false,		
@@ -443,7 +454,7 @@
 	    function saveWikiAndExit(newNode) 
 	    {
 	    	console.log("saveWikiAndExit  gDoc:" + gDocId, newNode);
-	    	var newContent = md.getMarkdown();
+	    	var newContent = getMarkdown();
 	    	if(gDocContent != newContent)
 	    	{
 	    		saveDoc(newContent, unlockAndExitEditWiki, newNode);
