@@ -49,7 +49,7 @@
 .dropdown-menu .divider {
 	*width: 100%;
 	height: 1px;
-	margin: 0px 1em;
+	margin: 3px 1em;
 	*margin: -5px 0 5px;
 	overflow: hidden;
 	background-color: #e5e5e5;
