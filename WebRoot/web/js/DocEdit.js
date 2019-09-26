@@ -123,6 +123,11 @@
 				timerState = 1;
 				autoSaveTimer = setInterval(function () {
 		        	var newContent = getMarkdown();
+		        	if(!gTmpSavedContent)
+		        	{
+		        		gTmpSavedContent = "";
+		        	}
+		        	
 					if(gTmpSavedContent != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
@@ -379,10 +384,15 @@
 	    	}
 	    	
 	    	var newContent = getMarkdown();
-	    	
+	    	if(!gDocContent)
+	    	{
+	    		gDocContent = "";
+	    	}
 	    	if(gDocContent != newContent)
 	    	{
-		    	qiao.bs.confirm({
+	    		//console.log("exitEdit gDocContent:" + gDocContent);	
+	    		//console.log("exitEdit newContent:" + newContent);	
+	    		qiao.bs.confirm({
 	  	 	    		id: 'saveDocConfirm',
 	  	 	    		msg: "修改未保存，是否保存？",
 	  	 	    		close: false,		
