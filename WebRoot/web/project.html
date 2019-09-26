@@ -99,6 +99,22 @@
 			-webkit-user-select: none;
 			user-select: none;
 		}
+		
+		.color-icon {
+			width: 1.5em;
+			height: 1.5em;
+			vertical-align: -0.3em;
+			margin-right: 0.5em;
+			fill: currentColor;
+			overflow: hidden;
+		}
+		.ztree li a {
+            height: 30px !important;
+            width: 100% !important;
+        }
+        .ztree li ul {
+            padding-left: 0 !important;
+        }
     </style>
 
     <style>
@@ -119,6 +135,8 @@
     <script src="static/bootstrap/js/html5shiv.min.js"></script>
     <script src="static/bootstrap/js/respond.min.js"></script>
     <![endif]-->
+    <!-- iconfont (user defined icon) -->
+    <script src="static/scripts/iconfont.js"></script>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="static/scripts/jquery.min.js" type="text/javascript"></script>
     <script src="static/markdown/editormd.js" type="text/javascript"></script>
@@ -2075,9 +2093,88 @@ function CompareObj(objA, objB, flag) {
 	            beforeRightClick: zTreeBeforeRightClick
 	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
+        view: {
+        	showLine: false,
+            addDiyDom: addDiyDom
+        }
 	};
 
+    function addDiyDom(treeId, treeNode) {
+        var aObj = $("#" + treeNode.tId + "_a");
+        if ($("#diyBtn_"+treeNode.id).length>0) return;
+		var cs = $("#" + treeNode.tId + "_a > span")[0]
+		console.log("cs", cs)
+		cs.remove()
+		console.log( "treeNode" , treeNode)
 
+        var spaceWidth = 10;
+        var switchObj = $("#" + treeNode.tId + "_switch")
+        switchObj.remove()
+
+
+        //增加边距
+        //此处通过往a标签最前位置增加透明元素来实现层级的缩进，层级越高，缩进的距离越大。同时也需要将原本的css中控制缩进的padding删除掉
+        var spaceStr = "<span style='display: inline-block;width:" + (spaceWidth * treeNode.level+15)+ "px'></span>";
+
+        var iType = getIconByNameAndType( treeNode.name , treeNode.type)
+        var iconType = '<svg class="color-icon" aria-hidden="true">\n' +
+            '  <use xlink:href="'+ iType + '"></use>\n' +
+            '</svg>';
+
+        aObj.prepend( iconType );
+        aObj.prepend( switchObj )
+        aObj.prepend( spaceStr )
+    };
+
+	var fileTypeIconMap = {
+	        doc : "#icon-doc",
+			docx : "#icon-doc",
+			jpg : "#icon-jpg",
+	        jpeg : "#icon-jpg",
+			html : "#icon-html",
+	        htm : "#icon-html",
+			mp3 : "#icon-icon_MP-",
+			png : "#icon-png",
+			dll : "#icon-dll",
+			ppt : "#icon-ppt",
+			mp4 : "#icon-mp4",
+			pdf : "#icon-pdf",
+	    	gif : "#icon-gif",
+			exe : "#icon-exe",
+			mpg : "#icon-mpg",
+			psd : "#icon-psd",
+			mkv : "#icon-mkv",
+			xls : "#icon-xls",
+			rmvb : "#icon-rmvb",
+			txt : "#icon-txt",
+			wav : "#icon-wav",
+			swf : "#icon-swf",
+			avi : "#icon-avi",
+			zip : "#icon-zip",
+	        rar : "#icon-zip",
+	        "7z" : "#icon-zip"
+		}
+
+		function getIconByNameAndType( name, type ){
+		    if( type > 1){
+		        return "#icon-folder-"
+			}else {
+		        // 寻找最后一个点
+				var i = name.lastIndexOf(".")
+				if( i< 0 ){
+				    // 默认是文本类型
+				    return "#icon-txt"
+				}else {
+				    type = name.substring(i + 1 , name.length).toLowerCase()
+	                type = fileTypeIconMap[type]
+					if ( undefined == type ){
+					    return "#icon-othe"
+					}else {
+					    return type
+					}
+				}
+			}
+		}
 	function asyncDataFilter(treeId, parentNode, responseData) {
 		console.log("asyncDataFilter");
 		var docList = responseData.data;
@@ -2574,8 +2671,13 @@ function CompareObj(objA, objB, flag) {
      	 	var str="";
            	for(var i=0; i<data.length; i++)
      	    {
-     	           var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-     	           var node = data[i];
+ 	        	  var iType = getIconByNameAndType( data[i].name , data[i].type)
+  	              var iconType = '<svg class="color-icon" aria-hidden="true">\n' +
+                    '  <use xlink:href="'+ iType + '"></use>\n' +
+                    '</svg>';
+           		
+     	          //var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+     	          var node = data[i];
 	        		str+= '<li dataId='+ node.docId 
      				+ ' dataPid='+ node.pid 
      				+' dataPath="'+ node.path + '"' 
