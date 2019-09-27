@@ -61,6 +61,9 @@
    	    			   console.log("DocEdit onload edit is true");
    	    			   lockAndEditWiki();
 	    		   }
+               },
+               onresize: function(){
+            	   console.log("DocEdit onresize");
                }
        		};
        		
@@ -513,6 +516,13 @@
 
 		//开放给外部的调用接口
         return {
+        	resize: function(){
+        		if(!md)
+        		{
+        			return;
+        		}
+        		md.resize();
+            },
             loadmd: function(content, edit){
                loadmd(content, edit);
             },

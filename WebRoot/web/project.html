@@ -3646,7 +3646,8 @@ function CompareObj(objA, objB, flag) {
        	  $(".second-line").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width()); //第二个拖拽线的位置
           $(".manual-right").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width() + $(".second-line").width()); //第二个拖拽线的位置
           //$(".manual-right")[0].style.left = $(".manual-left").width() + $("#line").width()) + $(".second-table").width() + $(".second-table").width() + 'px';
-   	  };
+          DocEdit.resize();
+      };
       
       document.onmouseup=function(ev){
    	  	//$(".manual-left")[0].style.width=ev.clientX+'px';
@@ -3666,6 +3667,8 @@ function CompareObj(objA, objB, flag) {
            oDiv2.style.left=l+'px';	//设置Line的位置
            $('.second-table').width($(".second-line").position().left-$('.manual-left').width());
            $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
+
+           DocEdit.resize();
            return false;
    	  };
     	  document.onmouseup=function(ev){
