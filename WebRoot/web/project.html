@@ -3583,10 +3583,13 @@ function CompareObj(objA, objB, flag) {
           var l=ev.clientX-disX;	//计算Line的位置
           oDiv.style.left=l+'px';	//设置Line的位置
           
+          //左边框的偏移位置总是0，因此只需要设置with
      	  $(".manual-left")[0].style.width=ev.clientX+'px';
-       	  $(".manual-right")[0].style.left=ev.clientX+$(".second-table").width()+3+'px';
-       	  $(".second-table").css("left",$(".manual-left").width()+$("#line").width());
-       	  $(".second-line").css("left",ev.clientX+$(".second-table").width()+$("#line").width());
+          //second-table只要调整左边位置就可以了，宽度不变
+       	  $(".second-table").css("left",$(".manual-left").width() + $("#line").width());
+       	  $(".second-line").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width()); //第二个拖拽线的位置
+          $(".manual-right").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width() + $(".second-line").width()); //第二个拖拽线的位置
+          //$(".manual-right")[0].style.left = $(".manual-left").width() + $("#line").width()) + $(".second-table").width() + $(".second-table").width() + 'px';
    	  };
       
       document.onmouseup=function(ev){
@@ -3606,7 +3609,7 @@ function CompareObj(objA, objB, flag) {
        		var l=ev.clientX-disX;	//计算Line的位置
            oDiv2.style.left=l+'px';	//设置Line的位置
            $('.second-table').width($(".second-line").position().left-$('.manual-left').width());
-           $(".manual-right").css("left",$(".second-table").width()+$('.manual-left').width()+3);
+           $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
            return false;
    	  };
     	  document.onmouseup=function(ev){
