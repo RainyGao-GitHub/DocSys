@@ -1633,8 +1633,15 @@
 							
 						if(gShowType == 1)	//显示预览
 						{	
-		                    setImgPreview(ret);
-							$("#docPreview").show();
+							if(true == isPicture(doc.name))
+							{
+			                    setImgPreview(ret);
+							}
+							else
+							{
+							    setImgPreview(null);
+							}
+			                //$("#docPreview").show();
 					      	return;
 						}
 						else	//显示备注
@@ -1659,18 +1666,26 @@
 	
 	function setImgPreview(ret)
 	{
+		if(!ret || ret == null)
+		{
+			console.log("setImgPreview() hide imgPreview");
+			//$("#imgPreview").hide();
+			$("#imgPreview").attr('src', "");
+	      	return;	
+		}
+		
 		if(!ret.dataEx)	//表明不是文件，无法预览
 		{
-			console.log("getAndShowDoc() dataEx is null");
+			console.log("setImgPreview() dataEx is null");
 	      	return;
 		}
 		
 		var targetName = ret.dataEx.name;
-	    var targetPath = ret.dataEx.path;
+		var targetPath = ret.dataEx.path;
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		console.log("getAndShowDoc() docLink:" + docLink);
+		console.log("setImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);
 		
 		//Office 365
@@ -2128,55 +2143,96 @@ function CompareObj(objA, objB, flag) {
         aObj.prepend( spaceStr )
     };
 
-	var fileTypeIconMap = {
-	        doc : "#icon-doc",
-			docx : "#icon-doc",
-			jpg : "#icon-jpg",
-	        jpeg : "#icon-jpg",
-			html : "#icon-html",
-	        htm : "#icon-html",
-			mp3 : "#icon-icon_MP-",
-			png : "#icon-png",
-			dll : "#icon-dll",
-			ppt : "#icon-ppt",
-			mp4 : "#icon-mp4",
-			pdf : "#icon-pdf",
-	    	gif : "#icon-gif",
-			exe : "#icon-exe",
-			mpg : "#icon-mpg",
-			psd : "#icon-psd",
-			mkv : "#icon-mkv",
-			xls : "#icon-xls",
-			rmvb : "#icon-rmvb",
-			txt : "#icon-txt",
-			wav : "#icon-wav",
-			swf : "#icon-swf",
-			avi : "#icon-avi",
-			zip : "#icon-zip",
-	        rar : "#icon-zip",
-	        "7z" : "#icon-zip"
+	function getFileSuffix(name)
+	{
+	   var i = name.lastIndexOf(".")
+	   if( i< 0 ){
+			// 默认是文本类型
+			return "";
+	   }
+	   
+	   var suffix = name.substring(i + 1 , name.length).toLowerCase();
+	   return suffix;
+	}
+	
+	function getIconByNameAndType( name, type )
+	{
+		var fileTypeIconMap = {
+		        doc : "#icon-doc",
+				docx : "#icon-doc",
+				jpg : "#icon-jpg",
+		        jpeg : "#icon-jpg",
+				html : "#icon-html",
+		        htm : "#icon-html",
+				mp3 : "#icon-icon_MP-",
+				png : "#icon-png",
+				dll : "#icon-dll",
+				ppt : "#icon-ppt",
+				mp4 : "#icon-mp4",
+				pdf : "#icon-pdf",
+		    	gif : "#icon-gif",
+				exe : "#icon-exe",
+				mpg : "#icon-mpg",
+				psd : "#icon-psd",
+				mkv : "#icon-mkv",
+				xls : "#icon-xls",
+				rmvb : "#icon-rmvb",
+				txt : "#icon-txt",
+				wav : "#icon-wav",
+				swf : "#icon-swf",
+				avi : "#icon-avi",
+				zip : "#icon-zip",
+		        rar : "#icon-zip",
+		        "7z" : "#icon-zip"
+		};
+		
+	    if( type > 1){
+	        return "#icon-folder-"
 		}
+	    
+	    var suffix = getFileSuffix(name);
+		if(suffix == "")
+	    {
+			// 默认是文本类型
+			return "#icon-othe"
+		}
+		
+        var iconType = fileTypeIconMap[suffix];
+		if ( undefined == iconType )
+		{
+			return "#icon-othe"
+		}
+		
+		return iconType
+	}
+	
 
-		function getIconByNameAndType( name, type ){
-		    if( type > 1){
-		        return "#icon-folder-"
-			}else {
-		        // 寻找最后一个点
-				var i = name.lastIndexOf(".")
-				if( i< 0 ){
-				    // 默认是文本类型
-				    return "#icon-txt"
-				}else {
-				    type = name.substring(i + 1 , name.length).toLowerCase()
-	                type = fileTypeIconMap[type]
-					if ( undefined == type ){
-					    return "#icon-othe"
-					}else {
-					    return type
-					}
-				}
-			}
+	
+	function isPicture(fileName)
+	{
+		var fileTypeMap = {
+		        jpg : true,
+		        jpeg : true,
+				png : true,
+				gif : true,
+				mpg : true,
+		};
+		
+		var suffix = getFileSuffix(fileName);
+		if(suffix == "")
+		{
+			return false;
 		}
+		
+		var type = fileTypeMap[suffix];
+		if ( undefined == type )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
 	function asyncDataFilter(treeId, parentNode, responseData) {
 		console.log("asyncDataFilter");
 		var docList = responseData.data;
