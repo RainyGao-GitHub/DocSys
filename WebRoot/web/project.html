@@ -2093,9 +2093,10 @@ function CompareObj(objA, objB, flag) {
 	            beforeRightClick: zTreeBeforeRightClick
 	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
-        view: {
-        	showLine: false,
-            addDiyDom: addDiyDom
+	    view: {
+        	showLine: false,	//不显示文件下面的下划线
+        	//addDiyDom: addDiyDom         //设置zTree的自定义图标
+
         }
 	};
 
@@ -2671,30 +2672,28 @@ function CompareObj(objA, objB, flag) {
      	 	var str="";
            	for(var i=0; i<data.length; i++)
      	    {
- 	        	  var iType = getIconByNameAndType( data[i].name , data[i].type)
-  	              var iconType = '<svg class="color-icon" aria-hidden="true">\n' +
-                    '  <use xlink:href="'+ iType + '"></use>\n' +
-                    '</svg>';
-           		
-     	          //var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-     	          var node = data[i];
-	        		str+= '<li dataId='+ node.docId 
-     				+ ' dataPid='+ node.pid 
-     				+' dataPath="'+ node.path + '"' 
-     				+' dataName="' + node.name + '"'
-     				+' dataType=' + node.type
-     				+' dataSize=' + node.size
-     				+' createTime=' + node.createTime
-     				+' latestEditTime=' + node.latestEditTime;     	        				
-
-     	           if(data[i].state && data[i].state != 0)
-     	           {
-     	        		str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
-     	           }
-     	           else
-     	           {
-     	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
-     	           }	 
+ 	        	  
+           		//var iType = getIconByNameAndType( data[i].name , data[i].type)
+           		//var iconType = '<svg class="color-icon" aria-hidden="true"><use xlink:href="'+ iType + '"></use></svg>';
+           		var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+           		var node = data[i];
+       			str+= '<li dataId='+ node.docId 
+	   				+ ' dataPid='+ node.pid 
+	   				+' dataPath="'+ node.path + '"' 
+	   				+' dataName="' + node.name + '"'
+	   				+' dataType=' + node.type
+	   				+' dataSize=' + node.size
+	   				+' createTime=' + node.createTime
+	   				+' latestEditTime=' + node.latestEditTime;     	        				
+       			
+       			if(data[i].state && data[i].state != 0)
+       			{
+   	        		str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left" style="color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+   	        	}
+   	           	else
+   	           	{
+   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+   	           	}	 
      	    }
            	$("#secondList").html(str);
      	}
