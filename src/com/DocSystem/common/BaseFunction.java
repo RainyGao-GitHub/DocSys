@@ -99,9 +99,8 @@ public class BaseFunction{
 		actionList.add(action);
 	}
 	
-	protected static boolean uniqueCommonActionIsRunning = false;
-	protected static ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = new ConcurrentHashMap<Long, CommonAction>();
-	protected static List<CommonAction> uniqueCommonActionList = new ArrayList<CommonAction>();
+	
+	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
 	protected boolean insertUniqueCommonAction(CommonAction action)
 	{
 		Doc srcDoc = action.getDoc();
@@ -109,6 +108,19 @@ public class BaseFunction{
 		{
 			return false;
 		}
+		
+		Integer reposId = srcDoc.getVid();
+		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
+		if(uniqueAction == null)
+		{
+			UniqueAction newUniqueAction = new UniqueAction();
+			uniqueActionHashMap.put(reposId, newUniqueAction);
+			uniqueAction = newUniqueAction;
+		}
+		
+		//boolean uniqueCommonActionIsRunning = uniqueAction.getIsRunning();
+		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
+		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();		
 
 		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 
