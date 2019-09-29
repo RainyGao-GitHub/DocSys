@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +38,7 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
@@ -2117,16 +2119,49 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("********** executeUniqueCommonActionList ***********");
 
+		
 		//Inset ActionList to uniqueCommonAction
 		for(int i=0; i<actionList.size(); i++)
 		{
 			insertUniqueCommonAction(actionList.get(i));
 		}
 		
+		//注意：ActionList中的doc必须都是同一个仓库下的，否则下面的逻辑会有问题
+		Integer reposId = actionList.get(0).getDoc().getVid(); //get the reposId from the first doc in action list
+		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
+		if(uniqueAction == null)
+		{
+			System.out.println("executeUniqueCommonActionList uniqueAction for " + reposId+ " is null");
+			return false;
+		}
+		
+		boolean uniqueCommonActionIsRunning = uniqueAction.getIsRunning();
+		Long expireTime = uniqueAction.getExpireTimeStamp();
+		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
+		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();	
 		if(uniqueCommonActionIsRunning)
 		{
-			System.out.println("executeUniqueCommonActionList uniqueCommonAction IsRunning");
-			return true;
+			System.out.println("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " is Running");
+			if(expireTime == null)
+			{
+				return true;
+			}
+			
+			//检查是否运行超时
+			long curTime = new Date().getTime();
+			if(curTime < expireTime)	//
+			{
+				return true;
+			}
+			
+			System.out.println("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " Running timeout, clear uniqueAction");
+			
+			//清空uniqueAction
+			uniqueAction.setIsRunning(false);
+			uniqueAction.setExpireTimeStamp(null);
+			uniqueCommonActionList.clear();
+			uniqueCommonActionHashMap.clear();
+			return false;
 		}
 
 		uniqueCommonActionIsRunning = true;
