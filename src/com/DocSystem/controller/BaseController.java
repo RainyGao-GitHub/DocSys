@@ -2128,6 +2128,8 @@ public class BaseController  extends BaseFunction{
 		
 		//注意：ActionList中的doc必须都是同一个仓库下的，否则下面的逻辑会有问题
 		Integer reposId = actionList.get(0).getDoc().getVid(); //get the reposId from the first doc in action list
+		System.out.println("executeUniqueCommonActionList reposId:" + reposId);
+		
 		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
 		if(uniqueAction == null)
 		{
@@ -2135,10 +2137,10 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		boolean uniqueCommonActionIsRunning = uniqueAction.getIsRunning();
-		Long expireTime = uniqueAction.getExpireTimeStamp();
 		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
 		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();	
+		Long expireTime = uniqueAction.getExpireTimeStamp();
+		boolean uniqueCommonActionIsRunning = uniqueAction.getIsRunning();
 		if(uniqueCommonActionIsRunning)
 		{
 			System.out.println("executeUniqueCommonActionList uniqueCommonAction for " + reposId+ " is Running");
@@ -2164,7 +2166,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 
-		uniqueCommonActionIsRunning = true;
+		uniqueAction.setIsRunning(true);
 		while(uniqueCommonActionHashMap.size() > 0)
 		{
 			if(uniqueCommonActionList.size() > 0)
