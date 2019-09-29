@@ -113,24 +113,27 @@ public class BaseFunction{
 		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
 		if(uniqueAction == null)
 		{
+			System.out.println("insertCommonAction create uniqueAction for repos:" + reposId);
 			UniqueAction newUniqueAction = new UniqueAction();
 			uniqueActionHashMap.put(reposId, newUniqueAction);
 			uniqueAction = newUniqueAction;
 		}
 		
-		//boolean uniqueCommonActionIsRunning = uniqueAction.getIsRunning();
 		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
 		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();		
 
 		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
-
 		if(uniqueCommonActionHashMap.get(srcDoc.getDocId()) == null)
 		{
 			uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
 			uniqueCommonActionList.add(action);
 			return true;
 		}
-		return false;
+		else
+		{
+			System.out.println("insertCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
+			return false;
+		}
 	}
 	
 	/******************************** Basic Interface for CommitAction *************************************/
