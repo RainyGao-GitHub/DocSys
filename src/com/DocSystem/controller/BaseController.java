@@ -5400,7 +5400,12 @@ public class BaseController  extends BaseFunction{
 		{
 			return null;
 		}
-
+		
+		if(false == verReposUtil.doFetch())
+		{
+			return null;
+		}
+		
 		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
 	}
 
