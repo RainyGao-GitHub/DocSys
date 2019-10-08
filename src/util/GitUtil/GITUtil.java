@@ -9,18 +9,28 @@ import java.util.Iterator;
 import java.util.List;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.RefUpdate.Result;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.FetchResult;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RemoteRefUpdate.Status;
+import org.eclipse.jgit.transport.TrackingRefUpdate;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -1396,6 +1406,35 @@ public class GITUtil  extends BaseController{
 
 	private String doCommit(Git git, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
 	{
+		if(isRemote)
+		{
+			FetchCommand fetchCmd = git.fetch();
+			if(user != null && !user.isEmpty())
+			{
+				UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
+				fetchCmd.setCredentialsProvider(cp);
+			}
+			
+			try {
+				FetchResult fetchResult = fetchCmd.call();
+			    printObject("doAutoCommmit() fetchResult:", fetchResult);
+				
+				//TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
+				//Result result = refUpdate.getResult();
+		    } catch (InvalidRemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TransportException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (GitAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+		}
+		
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1404,20 +1443,24 @@ public class GITUtil  extends BaseController{
 			System.out.println("doAutoCommmit() commit error");
 			e.printStackTrace();
 			return null;
-		}
-		
+		}		
+        
 		if(isRemote)
 		{
 			try {
+				
+				PushCommand pushCmd = git.push();
 				if(user != null && !user.isEmpty())
 				{
 					UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
-					git.push().setCredentialsProvider(cp).call();
+					pushCmd.setCredentialsProvider(cp);
 				}
-				else
-				{
-					git.push().call();
-				}
+				
+		        Iterable<PushResult> pushResults = pushCmd.call();
+		        PushResult pushResult = pushResults.iterator().next();
+		        Status status = pushResult.getRemoteUpdate( "refs/heads/master" ).getStatus();
+		        printObject("doAutoCommmit() PushResult:", status);
+		        
 			} catch (Exception e) {
 				System.out.println("doAutoCommmit() Push Error");	
 				e.printStackTrace();
