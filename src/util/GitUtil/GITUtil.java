@@ -1405,36 +1405,7 @@ public class GITUtil  extends BaseController{
 	}
 
 	private String doCommit(Git git, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
-	{
-		if(isRemote)
-		{
-			FetchCommand fetchCmd = git.fetch();
-			if(user != null && !user.isEmpty())
-			{
-				UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
-				fetchCmd.setCredentialsProvider(cp);
-			}
-			
-			try {
-				FetchResult fetchResult = fetchCmd.call();
-			    printObject("doAutoCommmit() fetchResult:", fetchResult);
-				
-				//TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
-				//Result result = refUpdate.getResult();
-		    } catch (InvalidRemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TransportException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (GitAPIException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-		}
-		
+	{		
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1473,6 +1444,46 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 	
+	public boolean doFetch()
+	{
+		//For local Git Repos, no need to do fetch
+		if(isRemote == false)
+		{
+			return true;
+		}
+		
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("getLatestRevision() Failed to open git repository");
+    		return false;
+    	}
+    	
+		// TODO Auto-generated method stub
+		FetchCommand fetchCmd = git.fetch();
+		if(user != null && !user.isEmpty())
+		{
+			UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
+			fetchCmd.setCredentialsProvider(cp);
+		}
+		
+		try {
+			FetchResult fetchResult = fetchCmd.call();
+		    printObject("doAutoCommmit() fetchResult:", fetchResult);
+			
+			//TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
+			//Result result = refUpdate.getResult();
+
+		    CloseRepos();
+		    return true;
+	    } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		CloseRepos();
+		return false;
+	}
+
 	private boolean rollBackCommit(Git git,String revision) {
 		if(revision == null) 
 		{
