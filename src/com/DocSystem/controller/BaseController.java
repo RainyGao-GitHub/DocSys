@@ -996,27 +996,28 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}
 			
-			String verReposURI = repos.getSvnPath();
-			if(verReposURI != null && !verReposURI.isEmpty())
-			{
-				if(isPathConflict(verReposURI,newVerReposPath))
-				{					
-					System.out.println("该版本仓库连接已被使用:" + newVerReposPath); 
-					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath=" + verReposURI); 
-					return true;
-				}
-			}
-			
-			String verReposURI1 = repos.getSvnPath1();
-			if(verReposURI1 != null && !verReposURI1.isEmpty())
-			{
-				if(isPathConflict(verReposURI1,newVerReposPath))
-				{					
-					System.out.println("该版本仓库连接已被使用:" + newVerReposPath); 
-					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath1=" + verReposURI1); 
-					return true;
-				}
-			}
+//			//检查远程版本仓库是否已被使用
+//			String verReposURI = repos.getSvnPath();
+//			if(verReposURI != null && !verReposURI.isEmpty())
+//			{
+//				if(isPathConflict(verReposURI,newVerReposPath))
+//				{					
+//					System.out.println("该版本仓库连接已被使用:" + newVerReposPath); 
+//					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath=" + verReposURI); 
+//					return true;
+//				}
+//			}
+//			
+//			String verReposURI1 = repos.getSvnPath1();
+//			if(verReposURI1 != null && !verReposURI1.isEmpty())
+//			{
+//				if(isPathConflict(verReposURI1,newVerReposPath))
+//				{					
+//					System.out.println("该版本仓库连接已被使用:" + newVerReposPath); 
+//					System.out.println("newVerReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " verReposPath1=" + verReposURI1); 
+//					return true;
+//				}
+//			}
 			
 			//检查是否与本地仓库使用了相同的URI
 			String localVerReposURI = getLocalVerReposURI(repos,true);
