@@ -496,7 +496,7 @@ public class BaseController  extends BaseFunction{
 		
 		path1 = dirPathFormat(path1);
 		path2 = dirPathFormat(path2);
-		if(path1.contains(path2) || path2.contains(path1))
+		if(path1.indexOf(path2) == 0  || path2.indexOf(path1) == 0)
 		{
 			return true;
 		}
@@ -917,7 +917,7 @@ public class BaseController  extends BaseFunction{
 				if(reposPath != null && !reposPath.isEmpty())
 				{
 					reposPath = localDirPathFormat(reposPath);
-					if(path.contains(reposPath))	//不能把仓库放到其他仓库下面
+					if(path.indexOf(reposPath) == 0)	//不能把仓库放到其他仓库下面
 					{					
 						docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
 						docSysDebugLog("newReposPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " reposPath=" + reposPath, rt); 
@@ -929,7 +929,7 @@ public class BaseController  extends BaseFunction{
 				if(realDocPath != null && !realDocPath.isEmpty())
 				{
 					realDocPath = localDirPathFormat(realDocPath);
-					if(path.contains(realDocPath))	//不能把仓库放到其他仓库的文件存储目录
+					if(path.indexOf(realDocPath) == 0)	//不能把仓库放到其他仓库的文件存储目录
 					{					
 						docSysErrorLog(path + " 已被 " + repos.getName() + "  使用", rt); 
 						docSysDebugLog("newRealDocPath duplicated: repos id="+repos.getId() + " name="+ repos.getName() + " realDocPath=" + realDocPath, rt); 
@@ -1324,7 +1324,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else
 				{
-					if(path.contains(oldPath))
+					if(path.indexOf(oldPath) == 0)
 					{
 						System.out.println("禁止将仓库目录迁移到仓库的子目录中！");
 						rt.setError("修改仓库位置失败：禁止迁移到本仓库的子目录");	
