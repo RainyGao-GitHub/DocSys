@@ -962,8 +962,8 @@ public class BaseController  extends BaseFunction{
 		{
 			Repos repos = reposList.get(i);
 			
-			//文件存储路径不得使用仓库的存储路径(避免对仓库的结构造成破坏)
-			String reposPath = getReposPath(repos);
+			//文件存储路径不得使用仓库的存储路径(避免对仓库的存储目录或者仓库的结构造成破坏)
+			String reposPath = repos.getPath();
 			if(reposPath != null && !reposPath.isEmpty())
 			{
 				reposPath = localDirPathFormat(reposPath);
