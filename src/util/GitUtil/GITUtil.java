@@ -13,6 +13,7 @@ import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -1431,6 +1432,11 @@ public class GITUtil  extends BaseController{
 		        PushResult pushResult = pushResults.iterator().next();
 		        Status status = pushResult.getRemoteUpdate( "refs/heads/master" ).getStatus();
 		        printObject("doAutoCommmit() PushResult:", status);
+		        if(false == status.name().equals("OK"))
+		        {
+					rollBackCommit(git, "HEAD");
+					return null;		        	
+		        }
 		        
 			} catch (Exception e) {
 				System.out.println("doAutoCommmit() Push Error");	
@@ -1471,8 +1477,7 @@ public class GITUtil  extends BaseController{
 		    printObject("doAutoCommmit() fetchResult:", fetchResult);
 			
 			//TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
-			//Result result = refUpdate.getResult();
-
+			//Result result = refUpdate.getResult();		    
 		    CloseRepos();
 		    return true;
 	    } catch (Exception e) {
