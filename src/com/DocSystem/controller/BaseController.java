@@ -496,9 +496,21 @@ public class BaseController  extends BaseFunction{
 		
 		path1 = dirPathFormat(path1);
 		path2 = dirPathFormat(path2);
-		if(path1.indexOf(path2) == 0  || path2.indexOf(path1) == 0)
+		if(path1.length() >= path2.length())
 		{
-			return true;
+			if(path1.indexOf(path2) == 0)
+			{
+				System.out.print("isPathConflict() :" + path1 + " is under " + path2);
+				return true;
+			}
+		}
+		else
+		{
+			if(path2.indexOf(path1) == 0)
+			{
+				System.out.print("isPathConflict() :" + path2 + " is under " + path1);
+				return true;
+			}
 		}
 		return false;
 	}
