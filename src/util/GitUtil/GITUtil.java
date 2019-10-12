@@ -181,8 +181,8 @@ public class GITUtil  extends BaseController{
         
         return wcDir;
 	}
-    
-    public String getLatestReposRevision() 
+	
+	public String getLatestReposRevision() 
 	{
     	String revision = "HEAD";
         
@@ -367,11 +367,11 @@ public class GITUtil  extends BaseController{
 //	            System.out.println("authorEmail:"+authorEmail);
 //	            System.out.println("authorName:"+author);
 //	            System.out.println("commitEmail:"+commitUserEmail);
-//	            System.out.println("commitName:"+commitUser);
-//	            System.out.println("time:"+commitTime);
-//	            System.out.println("fullMessage:"+fullMessage);
+	            System.out.println("commitName:"+commitUser);
+	            System.out.println("time:"+commitTime);
+	            System.out.println("fullMessage:"+fullMessage);
 //	            System.out.println("shortMessage:"+shortMessage);
-//	            System.out.println("commitId:"+commitId);
+	            System.out.println("commitId:"+commitId);
 	            
 	            LogEntry log = new LogEntry();
 	            log.setCommitId(commitId);
@@ -390,6 +390,74 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
     }
+    
+    //getHistory wcDir
+    public List<LogEntry> getWCHistoryLogs(String entryPath,String startRevision, String endRevision,int maxLogNum) 
+    {
+    	System.out.println("getWCHistoryLogs entryPath:" + entryPath);	
+
+    	Git git = null;
+        try {
+			git = Git.open(new File(wcDir));
+		} catch (IOException e) {
+			System.out.println("getWCHistoryLogs() Failed to open gitDir:" + gitDir);
+			e.printStackTrace();
+			return null;
+		}
+        
+    	
+    	try {
+	    	List<LogEntry> logList = new ArrayList<LogEntry>();
+				
+		    Iterable<RevCommit> iterable = null;
+		    if(entryPath == null || entryPath.isEmpty())
+		    {
+		    	iterable = git.log().setMaxCount(maxLogNum).call();
+		    }
+		    else
+		    {
+		    	iterable = git.log().addPath(entryPath).setMaxCount(maxLogNum).call();
+		    }
+		    
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();
+	            //String authorEmail=commit.getAuthorIdent().getEmailAddress();
+	            //String author=commit.getAuthorIdent().getName();  //作者
+	
+	            String commitUser=commit.getCommitterIdent().getName();
+	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
+	
+	            long commitTime=commit.getCommitTime();
+	
+	            String fullMessage=commit.getFullMessage();
+	            //String shortMessage=commit.getShortMessage();  //返回message的firstLine
+	
+	            String commitId=commit.getName();  //这个应该就是提交的版本号
+	
+	            System.out.println("commitName:"+commitUser);
+	            System.out.println("time:"+commitTime);
+	            System.out.println("fullMessage:"+fullMessage);
+	            System.out.println("commitId:"+commitId);
+	            
+	            LogEntry log = new LogEntry();
+	            log.setCommitId(commitId);
+	            log.setCommitUser(commitUser);
+	            log.setCommitMsg(fullMessage);
+	            log.setCommitTime(commitTime);
+	            logList.add(log);
+	        }
+	        
+	        CloseRepos();
+	        return logList;
+	    } catch (Exception e) {
+			System.out.println("getHistoryLogs Error");	
+			e.printStackTrace();
+			CloseRepos();
+			return null;
+		}
+    }
+
     
 
 	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
@@ -1450,6 +1518,7 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 	
+	//这里的fetch目的是为了保证本地与远程仓库同步
 	public boolean doFetch()
 	{
 		//For local Git Repos, no need to do fetch
@@ -1479,14 +1548,36 @@ public class GITUtil  extends BaseController{
 			//TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
 			//Result result = refUpdate.getResult();		    
 		    CloseRepos();
+		    
+		    //ResetWcDir
+		    //ResetWcDir("HEAD");
+		
+		    getHistoryLogs("",null,null,100);
+		    getWCHistoryLogs("",null,null,100);
+		    
 		    return true;
 	    } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		CloseRepos();
-		return false;
+		    CloseRepos();
+			return false;
+	    }
+	}
+	
+	
+
+	private boolean ResetWcDir(String revision) {
+		// TODO Auto-generated method stub
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+	        git.reset().setMode(ResetType.HARD).setRef(revision).call();  
+	        return true;
+		} catch (Exception e) {
+			System.out.println("ResetWcDir() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			return false;
+		}			    
 	}
 
 	private boolean rollBackCommit(Git git,String revision) {
@@ -1494,7 +1585,8 @@ public class GITUtil  extends BaseController{
 		{
 			revision = "HEAD";
 		}
-
+		
+		//TODO: RollBackCommit reset到指定版本
 		try {
 			Repository repository = git.getRepository();
 	        RevWalk walk = new RevWalk(repository);
