@@ -2220,6 +2220,12 @@ public class BaseController  extends BaseFunction{
 		//Check the localDocChange behavior
 		Repos repos = action.getRepos();
 		
+		if(repos.getIsRemote() == 1)
+		{
+			//Sync Up local VerRepos with remote VerRepos
+			verReposPull(repos);
+		}
+		
 		//文件管理系统
 		HashMap<Long, CommitAction> commitHashMap = new HashMap<Long, CommitAction>();
 		boolean ret = SyncUpSubDocs_FSM(repos, doc, login_user, rt, commitHashMap, 1);
@@ -2923,6 +2929,31 @@ public class BaseController  extends BaseFunction{
 		return localDoc;
 	}
 	
+	protected boolean verReposPull(Repos repos)
+	{
+		if(repos.getVerCtrl() == 1)
+		{
+			return true;			
+		}
+		else if(repos.getVerCtrl() == 2)
+		{
+			return gitPull(repos);	
+		}
+		return false;
+	}
+	
+	private boolean gitPull(Repos repos) {
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, true, "") == false)
+		{
+			System.out.println("gitPull() GITUtil Init failed");
+			return false;
+		}
+		
+		return gitUtil.doPull();	
+	}
+
 	private String verReposGetLatestRevision(Repos repos, Doc doc) {
 		if(repos.getVerCtrl() == 1)
 		{
