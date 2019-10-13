@@ -170,8 +170,8 @@ public class GITUtil  extends BaseController{
 		
 		File dir = new File(gitDir);
 		cloneCommand.setGitDir(dir);	//Set the repository dir
-		//File wcdir = new File(wcDir);
-        //cloneCommand.setDirectory(wcdir);	//set the working copy dir
+		File wcdir = new File(wcDir);
+        cloneCommand.setDirectory(wcdir);	//set the working copy dir
 		
 		try {
 			cloneCommand.call();
@@ -1246,6 +1246,11 @@ public class GITUtil  extends BaseController{
 		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
+		if(false == doPull())
+		{
+			System.out.println("doAutoCommit() pull failed!");		
+			return null;
+		}
 		
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 		
