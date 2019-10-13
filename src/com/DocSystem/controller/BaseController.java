@@ -855,9 +855,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean deleteClonedRepos(Repos repos, boolean isRealDoc) {
-		GITUtil gitUtil = new GITUtil();
-		
-		String clonedReposPath = gitUtil.getLocalVerReposPath(repos, isRealDoc);
+		String clonedReposPath = getLocalVerReposPath(repos, isRealDoc);
 		File localRepos = new File(clonedReposPath);
 		if(localRepos.exists())
 		{
