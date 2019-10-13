@@ -495,6 +495,8 @@ public class GITUtil  extends BaseController{
 
 	        if(previsouCommit == null)	//It is first commit, so all Items was new added
 	        {
+    			System.out.println("getHistoryDetail() previsouCommit is null, so It is first Commit"); 
+
 	        	//go through all Items under revTree
 	        	RevTree revTree = revCommit.getTree();
 	            TreeWalk treeWalk = getTreeWalkByPath(revTree, "");
