@@ -11,6 +11,8 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.StatusCommand;
@@ -1529,10 +1531,10 @@ public class GITUtil  extends BaseController{
 		
     	if(OpenRepos() == false)
     	{
-        	System.out.println("getLatestRevision() Failed to open git repository");
+        	System.out.println("doFetch() Failed to open git repository");
     		return false;
     	}
-    	
+    
 		// TODO Auto-generated method stub
 		FetchCommand fetchCmd = git.fetch();
 		if(user != null && !user.isEmpty())
@@ -1543,18 +1545,19 @@ public class GITUtil  extends BaseController{
 		
 		try {
 			FetchResult fetchResult = fetchCmd.call();
-		    printObject("doAutoCommmit() fetchResult:", fetchResult);
+		    printObject("doFetch() fetchResult:", fetchResult);
 			
-			//TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
-			//Result result = refUpdate.getResult();		    
+			TrackingRefUpdate refUpdate = fetchResult.getTrackingRefUpdate( "refs/remotes/origin/master" );
+			if(refUpdate == null)
+			{
+	        	System.out.println("doFetch() Nothing was changed on remote branch: refs/remotes/origin/master");
+			}
+			else
+			{
+				Result result = refUpdate.getResult();
+			    printObject("doFetch() result:", result);
+			}
 		    CloseRepos();
-		    
-		    //ResetWcDir
-		    //ResetWcDir("HEAD");
-		
-		    getHistoryLogs("",null,null,100);
-		    getWCHistoryLogs("",null,null,100);
-		    
 		    return true;
 	    } catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -1564,7 +1567,41 @@ public class GITUtil  extends BaseController{
 	    }
 	}
 	
-	
+	//这里的fetch目的是为了保证本地与远程仓库同步
+	public boolean doPull()
+	{
+		//For local Git Repos, no need to do fetch
+		if(isRemote == false)
+		{
+			return true;
+		}
+		
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("doPull() Failed to open git repository");
+    		return false;
+    	}
+    
+		// TODO Auto-generated method stub
+		 PullCommand pullCmd = git.pull();
+		if(user != null && !user.isEmpty())
+		{
+			UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
+			pullCmd.setCredentialsProvider(cp);
+		}
+		
+		try {
+			 PullResult pullResult = pullCmd.call();
+			 printObject("doPull() pullResult:", pullResult);
+			 CloseRepos();			    
+		    return true;
+	    } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		    CloseRepos();
+			return false;
+	    }
+	}
 
 	private boolean ResetWcDir(String revision) {
 		// TODO Auto-generated method stub
