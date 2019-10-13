@@ -630,13 +630,14 @@ public class BaseFunction{
 			}
 			else if(verCtrl == 2)
 			{ 
-				if(repos.getIsRemote() == 0)
+				if(repos.getIsRemote() == 1)
 				{
-					reposName = id + "_GIT_RRepos";
+					reposName = id + "_GIT_RRepos_Remote";					
 				}
 				else
 				{
-					reposName = id + "_GIT_RRepos_Remote";					
+
+					reposName = id + "_GIT_RRepos";
 				}
 			}
 		}
@@ -649,13 +650,14 @@ public class BaseFunction{
 			}
 			else if(verCtrl == 2)
 			{
-				if(repos.getIsRemote1() == 0)
+				if(repos.getIsRemote1() == 1)
 				{
-					reposName = id + "_GIT_VRepos";
+
+					reposName = id + "_GIT_VRepos_Remote";					
 				}
 				else
 				{
-					reposName = id + "_GIT_VRepos_Remote";					
+					reposName = id + "_GIT_VRepos";
 				}
 			}
 		}
