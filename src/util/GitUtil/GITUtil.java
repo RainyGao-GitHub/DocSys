@@ -1622,9 +1622,15 @@ public class GITUtil  extends BaseController{
 		
 		try {
 			 PullResult pullResult = pullCmd.call();
-			 printObject("doPull() pullResult:", pullResult);
 			 CloseRepos();			    
-		    return true;
+			 if(pullResult == null)
+			 {
+				 System.out.println("doPull() pullResult is null");			
+				 return false; 
+			 }
+			 
+			 printObject("doPull() pullResult:", pullResult);
+			 return true;
 	    } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
