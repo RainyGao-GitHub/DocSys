@@ -284,7 +284,7 @@
 	                    </button>
 	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
 	                    </button>
-	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()">显示预览
+	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()">关闭备注
 	                   	</button>
         		</div>
          	</div>
@@ -3331,7 +3331,7 @@ function CompareObj(objA, objB, flag) {
 		    $("#btnExitEdit").hide();
 	      	$("#btnSaveWiki").hide(); 
 	      	//$("#btnEditWiki").hide();
-	      	$("#btnSwitchShow").text("显示备注");
+	      	$("#btnSwitchShow").text("备注");
 	      	//隐藏备注内容
 			$("#vdocPreview").hide();
 	      	//显示预览内容
@@ -3343,7 +3343,7 @@ function CompareObj(objA, objB, flag) {
 			 $("#btnExitEdit").hide();
 		     $("#btnSaveWiki").hide(); 
 		     //$("#btnEditWiki").show();
-		     $("#btnSwitchShow").text("显示预览");
+		     $("#btnSwitchShow").text("关闭备注");
 		     //显示备注内容
 		     showVirtualDoc(false);
 		     $("#vdocPreview").show();	      	
