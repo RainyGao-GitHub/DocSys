@@ -1496,35 +1496,59 @@ public class GITUtil  extends BaseController{
         
 		if(isRemote)
 		{
-			try {
-				
-				PushCommand pushCmd = git.push();
-				if(user != null && !user.isEmpty())
-				{
-					UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
-					pushCmd.setCredentialsProvider(cp);
-				}
-				
-		        Iterable<PushResult> pushResults = pushCmd.call();
-		        PushResult pushResult = pushResults.iterator().next();
-		        Status status = pushResult.getRemoteUpdate( "refs/heads/master" ).getStatus();
-		        printObject("doAutoCommmit() PushResult:", status);
-		        if(false == status.name().equals("OK"))
-		        {
-					rollBackCommit(git, "HEAD");
-					return null;		        	
-		        }
-		        
-			} catch (Exception e) {
-				System.out.println("doAutoCommmit() Push Error");	
-				e.printStackTrace();
-				//Do roll back commit
-				rollBackCommit(git, "HEAD");
-				return null;
+			if(doPush() == false)
+			{
+	        	System.out.println("doPush() Failed, if you want to rollBackCommit when push failed, please uncomment the following code");				
+				//rollBackCommit(git, "HEAD");
+				//return null;
 			}
-			System.out.println("doAutoCommmit() Push OK");	
 		}
 		return ret.getName();
+	}
+	
+	public boolean doPush()
+	{
+		//For local Git Repos, no need to do fetch
+		if(isRemote == false)
+		{
+			return true;
+		}
+		
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("doPush() Failed to open git repository");
+    		return false;
+    	}
+    
+		try {
+			
+			PushCommand pushCmd = git.push();
+			if(user != null && !user.isEmpty())
+			{
+				UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
+				pushCmd.setCredentialsProvider(cp);
+			}
+			
+	        Iterable<PushResult> pushResults = pushCmd.call();
+		    PushResult pushResult = pushResults.iterator().next();
+	        Status status = pushResult.getRemoteUpdate( "refs/heads/master" ).getStatus();
+
+	        CloseRepos();
+	        printObject("doPush() PushResult:", status);
+	        if(false == status.name().equals("OK"))
+	        {
+				System.out.println("doPush() Push Failed");	
+				return false;		        	
+	        }
+	        
+			System.out.println("doPush() Push OK");	    	
+	        return true;
+		} catch (Exception e) {
+			System.out.println("doPush() Push Exception");	
+			e.printStackTrace();
+		    CloseRepos();
+			return false;
+		}
 	}
 	
 	//这里的fetch目的是为了保证本地与远程仓库同步
