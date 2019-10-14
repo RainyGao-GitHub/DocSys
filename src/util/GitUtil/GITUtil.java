@@ -1249,7 +1249,6 @@ public class GITUtil  extends BaseController{
 		if(false == doPull())
 		{
 			System.out.println("doAutoCommit() pull failed!");		
-			return null;
 		}
 		
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
