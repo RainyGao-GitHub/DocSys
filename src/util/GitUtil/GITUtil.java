@@ -14,6 +14,8 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
+import org.eclipse.jgit.api.RebaseCommand;
+import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -1246,9 +1248,9 @@ public class GITUtil  extends BaseController{
 		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
-		if(false == doPull())
+		if(doFetch() == true)
 		{
-			System.out.println("doAutoCommit() pull failed!");		
+			doRebase();
 		}
 		
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
@@ -1597,6 +1599,35 @@ public class GITUtil  extends BaseController{
 	    }
 	}
 	
+	public boolean doRebase()
+	{
+		//For local Git Repos, no need to do rebase
+		if(isRemote == false)
+		{
+			return true;
+		}
+		
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("doRebase() Failed to open git repository");
+    		return false;
+    	}
+    
+		// TODO Auto-generated method stub
+		RebaseCommand cmd = git.rebase();
+		try {
+			RebaseResult result = cmd.call();
+		    printObject("doRebase() result:", result);
+		    CloseRepos();
+		    return true;
+	    } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		    CloseRepos();
+			return false;
+	    }
+	}
+	
 	//这里的fetch目的是为了保证本地与远程仓库同步
 	public boolean doPull()
 	{
@@ -1613,7 +1644,7 @@ public class GITUtil  extends BaseController{
     	}
     
 		// TODO Auto-generated method stub
-		 PullCommand pullCmd = git.pull();
+		PullCommand pullCmd = git.pull();
 		if(user != null && !user.isEmpty())
 		{
 			UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
