@@ -1529,6 +1529,24 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 	
+	
+	public void gitShowStatus() {
+		Git git = null;
+		try {
+			git = Git.open(new File(wcDir));
+			org.eclipse.jgit.api.Status status = git.status().call();
+            System.out.println("Git Change: " + status.getChanged());
+            System.out.println("Git Modified: " + status.getModified());
+            System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
+            System.out.println("Git Untracked: " + status.getUntracked());
+		} catch (Exception e) {
+			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
+			e.printStackTrace();
+			git.close();
+			return;
+		}		
+	}
+	
 	public boolean doPush()
 	{
 		//For local Git Repos, no need to do fetch
