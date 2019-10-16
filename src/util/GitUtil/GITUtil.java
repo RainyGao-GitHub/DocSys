@@ -262,14 +262,9 @@ public class GITUtil  extends BaseController{
 		}
 		return null;
 	}
-    
+        
     public String getLatestRevision(Doc doc) 
     {
-    	if(doc.getDocId() == 0)
-    	{
-    		return getLatestReposRevision();
-    	}
-    	
     	RevCommit commit = getLatestRevCommit(doc);	
     	if(commit == null)
     	{
@@ -743,8 +738,18 @@ public class GITUtil  extends BaseController{
 	    		subDoc.setName(name);
 	    		subDoc.setLevel(subDocLevel);
 	    		subDoc.setType(type);
+	    		//GIT的tree包含了在当前版本上存在的目录树信息，但并不知道这个目录树上每个节点的大小和最近一次的提交信息（因为有些节点不是在当前版本修改的）
+	    		//所以需要size是通过获取节点的blod信息来获取的，而文件的最近提交信息怎是要通过查询节点最近的一次log来获取
+	    		//为什么这么做主要是由GIT仓库的实现方式决定的 RevCommit[Tree[blob/Tree]]
+	    		if(type == 1)
+	    		{
+			        ObjectId blobId = treeWalk.getObjectId(0);	//tree的第一个元素就是blob
+			        ObjectLoader loader = repository.open(blobId);
+		    		subDoc.setSize(loader.getSize());
+	    		}
 	    		//subDoc.setLatestEditTime(commitTime);
 	    		//subDoc.setRevision(commitId);
+
 	    		subEntryList.add(subDoc);
 	    	}
 		} catch(Exception e){
@@ -763,8 +768,12 @@ public class GITUtil  extends BaseController{
         	for(int i=0; i< subEntryList.size(); i++)
         	{
         		Doc subDoc = subEntryList.get(i);
-        		String subDocRevision = getLatestRevision(subDoc);
-        		subDoc.setRevision(subDocRevision);
+        		RevCommit subDocRevisionCommit = getLatestRevCommit(subDoc);
+        		if(subDocRevisionCommit != null)
+        		{
+        			subDoc.setRevision(subDocRevisionCommit.getName());
+        			subDoc.setLatestEditTime((long) subDocRevisionCommit.getCommitTime());	
+        		}
         	}
         }
         
@@ -1192,6 +1201,7 @@ public class GITUtil  extends BaseController{
 		try {
 	        ObjectId blobId = treeWalk.getObjectId(0);
 	        ObjectLoader loader = repository.open(blobId);
+	        System.out.println("getRemoteFile() at " + revision + " " + remoteEntryPath + " size:" + loader.getSize());	//文件大小
 	        loader.copyTo(out);
 	        out.close();
 	        out = null;
@@ -1248,10 +1258,7 @@ public class GITUtil  extends BaseController{
 		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
-		if(doFetch() == true)
-		{
-			doRebase();
-		}
+		doPullEx();
 		
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 		
@@ -1552,7 +1559,6 @@ public class GITUtil  extends BaseController{
 		}
 	}
 	
-	//这里的fetch目的是为了保证本地与远程仓库同步
 	public boolean doFetch()
 	{
 		//For local Git Repos, no need to do fetch
@@ -1628,7 +1634,16 @@ public class GITUtil  extends BaseController{
 	    }
 	}
 	
-	//这里的fetch目的是为了保证本地与远程仓库同步
+	//doPullEx 保证pull一定成功
+	public boolean doPullEx()
+	{
+		if(doFetch())
+		{
+			return doRebase();
+		}
+		return false;
+	}
+	
 	public boolean doPull()
 	{
 		//For local Git Repos, no need to do fetch
@@ -1670,7 +1685,7 @@ public class GITUtil  extends BaseController{
 	    }
 	}
 
-	private boolean ResetWcDir(String revision) {
+	private boolean doReset(String revision) {
 		// TODO Auto-generated method stub
 		Git git = null;
 		try {
