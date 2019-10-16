@@ -1682,7 +1682,7 @@ public class GITUtil  extends BaseController{
 		}
 		
 		try {
-			 PullResult pullResult = pullCmd.call();
+			 PullResult pullResult = pullCmd.setRebase(true).call();	//Do Rebase
 			 CloseRepos();			    
 			 if(pullResult == null)
 			 {
