@@ -2950,7 +2950,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("gitPull() GITUtil Init failed");
 			return false;
 		}
-		
+
 		return gitUtil.doPullEx();
 	}
 
