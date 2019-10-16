@@ -3,7 +3,9 @@ package util.GitUtil;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -312,7 +314,7 @@ public class GITUtil  extends BaseController{
         String commitId=commit.getName();  //revision
 	    String author=commit.getAuthorIdent().getName();  //作者
 	    String commitUser=commit.getCommitterIdent().getName();
-	    long commitTime=commit.getCommitTime();
+	    long commitTime = convertCommitTime(commit.getCommitTime());
 	            
 	    //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
         Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
@@ -323,6 +325,16 @@ public class GITUtil  extends BaseController{
         return remoteDoc;
     }
 
+	static long convertCommitTime(int commitTime) 
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String timestampString=String.valueOf(commitTime);
+        Long timestamp = Long.parseLong(timestampString) * 1000;
+        String date = formatter.format(new Date(timestamp));
+        System.out.println("It's commit time: "+date);
+        return timestamp;
+	}
+	
 	//getHistory entryPath: remote File Path under repositoryURL
     public List<LogEntry> getHistoryLogs(String entryPath,String startRevision, String endRevision,int maxLogNum) 
     {
@@ -356,7 +368,7 @@ public class GITUtil  extends BaseController{
 	            String commitUser=commit.getCommitterIdent().getName();
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
 	
-	            long commitTime=commit.getCommitTime();
+	            long commitTime = convertCommitTime(commit.getCommitTime());
 	
 	            String fullMessage=commit.getFullMessage();
 	            //String shortMessage=commit.getShortMessage();  //返回message的firstLine
@@ -427,7 +439,7 @@ public class GITUtil  extends BaseController{
 	            String commitUser=commit.getCommitterIdent().getName();
 	            //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
 	
-	            long commitTime=commit.getCommitTime();
+	            long commitTime = convertCommitTime(commit.getCommitTime());
 	
 	            String fullMessage=commit.getFullMessage();
 	            //String shortMessage=commit.getShortMessage();  //返回message的firstLine
@@ -741,12 +753,15 @@ public class GITUtil  extends BaseController{
 	    		//GIT的tree包含了在当前版本上存在的目录树信息，但并不知道这个目录树上每个节点的大小和最近一次的提交信息（因为有些节点不是在当前版本修改的）
 	    		//所以需要size是通过获取节点的blod信息来获取的，而文件的最近提交信息怎是要通过查询节点最近的一次log来获取
 	    		//为什么这么做主要是由GIT仓库的实现方式决定的 RevCommit[Tree[blob/Tree]]
-	    		if(type == 1)
-	    		{
-			        ObjectId blobId = treeWalk.getObjectId(0);	//tree的第一个元素就是blob
-			        ObjectLoader loader = repository.open(blobId);
-		    		subDoc.setSize(loader.getSize());
-	    		}
+//	    		if(type == 1)
+//	    		{
+//			        ObjectId blobId = treeWalk.getObjectId(0);	//tree的第一个元素就是blob
+//			        if(blobId != null)
+//			        {
+//			        	ObjectLoader loader = repository.open(blobId);
+//			        	subDoc.setSize(loader.getSize());
+//			        }
+//	    		}
 	    		//subDoc.setLatestEditTime(commitTime);
 	    		//subDoc.setRevision(commitId);
 
@@ -772,7 +787,7 @@ public class GITUtil  extends BaseController{
         		if(subDocRevisionCommit != null)
         		{
         			subDoc.setRevision(subDocRevisionCommit.getName());
-        			subDoc.setLatestEditTime((long) subDocRevisionCommit.getCommitTime());	
+        			subDoc.setLatestEditTime(convertCommitTime(subDocRevisionCommit.getCommitTime()));	
         		}
         	}
         }
