@@ -2951,11 +2951,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(gitUtil.doFetch())
-		{
-			return gitUtil.doRebase();
-		}
-		return false;	
+		return gitUtil.doPullEx();
 	}
 
 	private String verReposGetLatestRevision(Repos repos, Doc doc) {
