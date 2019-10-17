@@ -2177,7 +2177,10 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 
+		long curTime = new Date().getTime();
+		uniqueAction.setExpireTimeStamp(curTime + 43200000); //12 Hours 12*60*60*1000 = 43200,000
 		uniqueAction.setIsRunning(true);
+		
 		while(uniqueCommonActionHashMap.size() > 0)
 		{
 			if(uniqueCommonActionList.size() > 0)
