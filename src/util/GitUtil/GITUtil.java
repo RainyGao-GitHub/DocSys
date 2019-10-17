@@ -1289,8 +1289,6 @@ public class GITUtil  extends BaseController{
 		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
-		doPullEx();
-		
 		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 		
 		String entryPath = doc.getPath() + doc.getName();			
