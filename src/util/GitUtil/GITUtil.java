@@ -1651,14 +1651,47 @@ public class GITUtil  extends BaseController{
         	System.out.println("doRebase() Failed to open git repository");
     		return false;
     	}
-    
-		// TODO Auto-generated method stub
+   
+    	boolean ret = false;
 		RebaseCommand cmd = git.rebase();
 		try {
 			RebaseResult result = cmd.call();
 		    printObject("doRebase() result:", result);
+		    
+		    if(isRebaseOk(result))
+		    {		    
+		    	CloseRepos();
+		    	return true;
+		    }
+		    
+		    if(isRebaseFailedWithConflict(result))
+		    {
+			    //There is conflict, do fix
+			    if(doRebaseConflictFix(git, result))
+			    {
+			    	if(doRebaseContinue(git))
+			    	{
+					    CloseRepos();
+			    		return true;
+			    	}
+			    }
+		    }
+		    
+		    //冲突无法解决则退出rebase
+		    if(doRebaseAbort(git))	//不使用skip是因为可能存在
+		    {
+		    	if(doReset(git))	//reset to FETCH_HEAD
+		    	{
+				    CloseRepos();
+		    		return true;
+		    	}
+		    }
+		    
+		    //无法退出rebase或者reset则重新clone仓库
+		    ret = doClone();	//重新clone
+		    
 		    CloseRepos();
-		    return true;
+		    return ret;
 	    } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1667,6 +1700,41 @@ public class GITUtil  extends BaseController{
 	    }
 	}
 	
+	private boolean isRebaseFailedWithConflict(RebaseResult result) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean isRebaseOk(RebaseResult result) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean doClone() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean doReset(Git git2) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean doRebaseAbort(Git git2) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean doRebaseContinue(Git git2) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean doRebaseConflictFix(Git git2, RebaseResult result) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	//doPullEx 保证pull一定成功
 	public boolean doPullEx()
 	{
