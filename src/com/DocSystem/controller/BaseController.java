@@ -2191,7 +2191,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				System.out.println("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 actionHashMap");
-				hashMap.clear();
+				break;
 			}
 		}
 		
@@ -2200,6 +2200,7 @@ public class BaseController  extends BaseFunction{
 		uniqueAction.setExpireTimeStamp(null);
 		uniqueAction.getUniqueCommonActionHashMap().clear();
 		uniqueAction.getUniqueCommonActionList().clear();	
+		System.out.println("executeUniqueCommonActionList completed for " + reposId);
 		return true;
 	}	
 	
