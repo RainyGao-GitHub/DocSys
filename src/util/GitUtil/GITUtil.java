@@ -1560,11 +1560,10 @@ public class GITUtil  extends BaseController{
             System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
             System.out.println("Git Untracked: " + status.getUntracked());
             
-            //冲突未解决
-            if(status.getUncommittedChanges() != null)
-            {
-            	git.rebase().setOperation(Operation.ABORT).call();
-            }
+//            if(status.getUncommittedChanges() != null)
+//            {
+//            	git.rebase().setOperation(Operation.ABORT).call();
+//            }
             
 		} catch (Exception e) {
 			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
