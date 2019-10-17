@@ -3,6 +3,7 @@ package util.GitUtil;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,17 +21,32 @@ import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.RebaseCommand.Operation;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidConfigurationException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.api.errors.RefNotAdvertisedException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.internal.JGitText;
+import org.eclipse.jgit.lib.AnyObjectId;
+import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.ConfigConstants;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate.Result;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryState;
+import org.eclipse.jgit.lib.BranchConfig.BranchRebaseMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -1507,6 +1523,7 @@ public class GITUtil  extends BaseController{
 
 	private String doCommit(Git git, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
 	{		
+		gitShowStatus();
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1534,11 +1551,21 @@ public class GITUtil  extends BaseController{
 		Git git = null;
 		try {
 			git = Git.open(new File(wcDir));
+			
+			printObject("Git branchList: ", git.branchList());
+            
 			org.eclipse.jgit.api.Status status = git.status().call();
             System.out.println("Git Change: " + status.getChanged());
             System.out.println("Git Modified: " + status.getModified());
             System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
             System.out.println("Git Untracked: " + status.getUntracked());
+            
+            //冲突未解决
+            if(status.getUncommittedChanges() != null)
+            {
+            	git.rebase().setOperation(Operation.ABORT).call();
+            }
+            
 		} catch (Exception e) {
 			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
@@ -1734,20 +1761,11 @@ public class GITUtil  extends BaseController{
 		// TODO Auto-generated method stub
 		return false;
 	}
-
+	
 	//doPullEx 保证pull一定成功
 	public boolean doPullEx()
 	{
-		if(doFetch())
-		{
-			return doRebase();
-		}
-		return false;
-	}
-	
-	public boolean doPull()
-	{
-		//For local Git Repos, no need to do fetch
+		//For local Git Repos, no need to do rebase
 		if(isRemote == false)
 		{
 			return true;
@@ -1755,35 +1773,135 @@ public class GITUtil  extends BaseController{
 		
     	if(OpenRepos() == false)
     	{
-        	System.out.println("doPull() Failed to open git repository");
+        	System.out.println("doPullEx() Failed to open git repository");
     		return false;
     	}
-    
-		// TODO Auto-generated method stub
-		PullCommand pullCmd = git.pull();
+    	
+    	boolean ret = doPull(git, repository);
+    	
+    	CloseRepos();
+
+    	return ret;
+	}
+	
+	private boolean doPull(Git git, Repository repo)
+	{
+		Config repoConfig = repo.getConfig();
+		
+		//Get branchName and remoteBranchName
+		String remoteBranchName = null;
+		String branchName = null;
+		try {
+			String fullBranch = repo.getFullBranch();
+			if (fullBranch != null
+					&& fullBranch.startsWith(Constants.R_HEADS)) {
+				branchName = fullBranch.substring(Constants.R_HEADS.length());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		System.out.println("doPullEx branchName:" + branchName);
+		
+		if (remoteBranchName == null && branchName != null) {
+			// get the name of the branch in the remote repository
+			// stored in configuration key branch.<branch name>.merge
+			remoteBranchName = repoConfig.getString(
+					ConfigConstants.CONFIG_BRANCH_SECTION, branchName,
+					ConfigConstants.CONFIG_KEY_MERGE);
+		}
+		if (remoteBranchName == null) {
+			remoteBranchName = branchName;
+		}
+		System.out.println("doPullEx remoteBranchName:" + remoteBranchName);			
+		if (remoteBranchName == null) {
+			return false;
+		}
+		
+		if (!repo.getRepositoryState().equals(RepositoryState.SAFE))
+		{
+			System.out.println("doPullEx repos is not safe now");						
+			return false;
+		}
+		
+		String remote = null;
+		if (remote == null && branchName != null) {
+			// get the configured remote for the currently checked out branch
+			// stored in configuration key branch.<branch name>.remote
+			remote = repoConfig.getString(
+					ConfigConstants.CONFIG_BRANCH_SECTION, branchName,
+					ConfigConstants.CONFIG_KEY_REMOTE);
+		}
+		if (remote == null) {
+			// fall back to default remote
+			remote = Constants.DEFAULT_REMOTE_NAME;
+		}
+		
+		FetchCommand fetch = git.fetch();
 		if(user != null && !user.isEmpty())
 		{
 			UsernamePasswordCredentialsProvider cp = new UsernamePasswordCredentialsProvider(user, pwd);
-			pullCmd.setCredentialsProvider(cp);
+			fetch.setCredentialsProvider(cp);
+		}
+		FetchResult fetchRes;
+		try {
+			fetchRes = fetch.call();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
 		
-		try {
-			 PullResult pullResult = pullCmd.setRebase(true).call();	//Do Rebase
-			 CloseRepos();			    
-			 if(pullResult == null)
-			 {
-				 System.out.println("doPull() pullResult is null");			
-				 return false; 
-			 }
-			 
-			 printObject("doPull() pullResult:", pullResult);
-			 return true;
-	    } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		    CloseRepos();
+		Ref r = null;
+		if (fetchRes != null) {
+			r = fetchRes.getAdvertisedRef(remoteBranchName);
+			if (r == null)
+				r = fetchRes.getAdvertisedRef(Constants.R_HEADS
+						+ remoteBranchName);
+		}
+		if (r == null) {
+			System.out.println("doPullEx success: Nothing was updated on remote");
+			return true;
+		}
+
+		AnyObjectId commitToMerge = r.getObjectId();
+		String remoteUri = repoConfig.getString(
+				ConfigConstants.CONFIG_REMOTE_SECTION, remote,
+				ConfigConstants.CONFIG_KEY_URL);
+		
+		System.out.println("doPullEx remoteUri:" + remoteUri);
+		if (remoteUri == null) {
 			return false;
-	    }
+		}
+
+		String upstreamName = MessageFormat.format(
+				JGitText.get().upstreamBranchName,
+				Repository.shortenRefName(remoteBranchName), remoteUri);
+		System.out.println("doPullEx upstreamName:" + upstreamName);
+		
+		RebaseCommand rebase = git.rebase();
+		RebaseResult rebaseRes;
+		try {
+			rebaseRes = rebase.setUpstream(commitToMerge).setUpstreamName(upstreamName).call();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		org.eclipse.jgit.api.RebaseResult.Status status = rebaseRes.getStatus();
+		printObject("doPullEx rebase status:",status);
+		if(status.isSuccessful())
+		{
+			System.out.println("doPullEx success: rebase OK");
+			return true;
+		}
+		
+		printObject("doPullEx rebase rebaseRes.getConflicts():",rebaseRes.getConflicts());
+		printObject("doPullEx rebase rebaseRes.getFailingPaths:",rebaseRes.getFailingPaths());
+		printObject("doPullEx rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
+		printObject("doPullEx rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit());
+		
+		return false;
+
 	}
 
 	private boolean doReset(String revision) {

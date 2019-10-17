@@ -696,7 +696,7 @@ public class DocController extends BaseController{
 			return false;					
 		}
 			
-		if(isDocCheckSumMatched(dbDoc,fsDoc.getSize(), doc.getCheckSum()))
+		if(isDocCheckSumMatched(dbDoc,doc.getSize(), doc.getCheckSum()))
 		{
 			return true;
 		}
