@@ -32,16 +32,30 @@ class JGitTest extends ReposController{
 		ReturnAjax rt = new ReturnAjax();
 		boolean isRealDoc = true;
 
-    	//Set ReposInfo
+    	//Origin Repos
     	Repos repos = new Repos();
-    	repos.setRealDocPath("C:/JGitTestDir/LocalDir/");
+    	repos.setRealDocPath("C:/JGitTestDir/OriginDir/");
     	repos.setVerCtrl(2);
     	repos.setIsRemote(0);
-		repos.setLocalSvnPath("C:/JGitTestDir/GitRepos/");
+		repos.setLocalSvnPath("C:/JGitTestDir/OriginGitRepos/");
     	repos.setId(123456);
+
+    	//Local Repos
+    	Repos localRepos = new Repos();
+    	localRepos.setRealDocPath("C:/JGitTestDir/LocalDir/");
+    	localRepos.setVerCtrl(2);
+    	localRepos.setIsRemote(1);
+    	localRepos.setLocalSvnPath("C:/JGitTestDir/LocalGitRepos/");
+    	localRepos.setSvnPath("C:/JGitTestDir/OriginGitRepos/123456/");
+    	localRepos.setId(234567);
     	
-    	//Create LocalDir
+    	//Create realDocPath
     	File localDir = new File(repos.getRealDocPath());
+    	if(!localDir.exists())
+    	{
+    		localDir.mkdirs();
+    	}
+    	localDir = new File(localRepos.getRealDocPath());
     	if(!localDir.exists())
     	{
     		localDir.mkdirs();
@@ -58,7 +72,12 @@ class JGitTest extends ReposController{
     		return;
     	}
     	
-    	//Auto Commit to Git Repos
+    	//Clone
+		GITUtil gitUtil1 = new GITUtil();
+		gitUtil1.Init(repos, isRealDoc, "");
+        gitUtil1.CloneRepos();
+        
+    	//Auto Commit to Origin Git Repos at root dir
     	Doc doc = new Doc();
     	doc.setDocId(0L);
     	doc.setLevel(0);
@@ -71,88 +90,14 @@ class JGitTest extends ReposController{
     		return;
 		}
 		
-		//Go Through the verRepos Tree
-		String gitDir = "C:/JGitTestDir/GitRepos/123456_GIT_RRepos/.git/";
-		//ReposTreeWalk("","",gitDir, null); // "9e0b3958c65b661b01380af021c699253941ac87");
+    	//Auto Commit to Local Git Repos at root dir
+    	doc.setLocalRootPath(localRepos.getRealDocPath());
+		if(null == gitUtil1.doAutoCommit(doc, "Init GitRepos", "RainyGao",true,null,2))
+		{
+    		System.out.println("gitAutoCommit Failed!");
+    		return;
+		}
 		
-		//GetEntry From verRepos
-		ReposTreeWalk("","UnstableCase",gitDir, null); // "9e0b3958c65b661b01380af021c699253941ac87")
-    }
-    
-    
-    
-    @SuppressWarnings("resource")
-	public static boolean ReposTreeWalk(String parentPath, String entryName, String gitDir,String revision) {
-    	System.out.println("ReposTreeWalk() revision:" + revision);
-    	
-        if(revision == null || revision.isEmpty())
-        {
-        	revision = "HEAD";
-        }
-    	
-    	Repository repository = null;
-        try {
-            //gitDir表示git库目录
-        	Git git = Git.open(new File(gitDir));
-            repository = git.getRepository();
-            
-            //Get RevWalk
-            RevWalk walk = new RevWalk(repository);
-
-            //Get objId for revision
-            ObjectId objId = repository.resolve(revision);
-            if(objId == null)
-            {
-            	System.out.println("There is no any commit history");
-            	return false;
-            }
-            
-            RevCommit revCommit = walk.parseCommit(objId);
-            System.out.println("revCommit name:" + revCommit.getName());
-            System.out.println("revCommit type:" + revCommit.getType());
-            System.out.println("revCommit commitMsg:" + revCommit.getShortMessage());
-    		
-            RevTree revTree = revCommit.getTree();
-            System.out.println("revTree name:" + revTree.getName());
-            System.out.println("revTree id:" + revTree.getId());
-            
-        	TreeWalk tw = new TreeWalk(repository,  repository.newObjectReader());
-        	//PathFilter f = PathFilter.create(entryPath);
-        	//tw.setFilter(f);
-        	tw.reset(revTree);
-        	tw.setRecursive(false);
-        	
-        	//Find out the 
-        	while (tw.next()) 
-        	{
-        		System.out.println("path:" + tw.getPathString());
-        		if (tw.isSubtree()) 
-        		{
-        			tw.enterSubtree();
-        		}
-        	}
-
-            repository.close();
-            return true;
-        } catch (Exception e) {
-           System.out.println("ReposTreeWalk() Exception"); 
-           e.printStackTrace();
-           return false;
-        }
-    }
-
-	private boolean isFile(FileMode fileMode)
-    {
-    	return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_FILE? true: false;
-    }
-
-    private boolean isDir(FileMode fileMode)
-    {
-    	return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_TREE? true: false;
-    }
-
-    private boolean isMissing(FileMode fileMode)
-    {
-    	return (fileMode.getBits() & FileMode.TYPE_MASK) == FileMode.TYPE_MISSING? true: false;
+		//Do rebase 
     }
 } 
