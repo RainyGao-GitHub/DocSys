@@ -75,6 +75,7 @@ class JGitTest extends ReposController{
     	
     	//Clone
 		GITUtil localGitUtil = new GITUtil();
+		localGitUtil.deleteClonedRepos(localRepos, isRealDoc);
 		localGitUtil.Init(localRepos, isRealDoc, "");
 		localGitUtil.CloneRepos();
         
