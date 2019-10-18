@@ -1488,16 +1488,6 @@ public class GITUtil  extends BaseController{
 			System.out.println("doAutoCommmit() commit error");
 			e.printStackTrace();
 			return null;
-		}		
-        
-		if(isRemote)
-		{
-			if(doPush() == false)
-			{
-	        	System.out.println("doPush() Failed, if you want to rollBackCommit when push failed, please uncomment the following code");				
-				//rollBackCommit(git, "HEAD");
-				//return null;
-			}
 		}
 		return ret.getName();
 	}
