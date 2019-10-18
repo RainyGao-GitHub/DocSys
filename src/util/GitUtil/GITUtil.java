@@ -14,23 +14,10 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RebaseResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
-import org.eclipse.jgit.api.StatusCommand;
-import org.eclipse.jgit.api.RebaseCommand.Operation;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidConfigurationException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.api.errors.RefNotAdvertisedException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
-import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.internal.JGitText;
@@ -46,7 +33,6 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate.Result;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryState;
-import org.eclipse.jgit.lib.BranchConfig.BranchRebaseMode;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -1129,33 +1115,6 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 
-	private boolean getRemoteDir(String localParentPath, String targetName, boolean force) {
-		File localEntry = new File(localParentPath + targetName);
-		if(localEntry.exists())
-		{
-			if(localEntry.isFile())
-			{
-				if(force)
-				{
-					if(delFileOrDir(localParentPath+targetName) == false)
-					{
-						return false;
-					}
-					
-	        		return localEntry.mkdir();
-				}
-				else
-				{
-					return false;
-				}
-			}
-			
-			return true;
-		}
-
-		return localEntry.mkdir();
-	}
-
 	private boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, String revision, boolean force) 
 	{
 		File localEntry = new File(localParentPath + targetName);
@@ -1521,7 +1480,6 @@ public class GITUtil  extends BaseController{
 
 	private String doCommit(Git git, String commitUser, String commitMsg, List<CommitAction> commitActionList) 
 	{		
-		gitShowStatus();
         RevCommit ret = null;
         try {
 			ret = git.commit().setCommitter(commitUser, "").setMessage(commitMsg).call();
@@ -1542,33 +1500,6 @@ public class GITUtil  extends BaseController{
 			}
 		}
 		return ret.getName();
-	}
-	
-	
-	public void gitShowStatus() {
-		Git git = null;
-		try {
-			git = Git.open(new File(wcDir));
-			
-			printObject("Git branchList: ", git.branchList());
-            
-			org.eclipse.jgit.api.Status status = git.status().call();
-            System.out.println("Git Change: " + status.getChanged());
-            System.out.println("Git Modified: " + status.getModified());
-            System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
-            System.out.println("Git Untracked: " + status.getUntracked());
-            
-//            if(status.getUncommittedChanges() != null)
-//            {
-//            	git.rebase().setOperation(Operation.ABORT).call();
-//            }
-            
-		} catch (Exception e) {
-			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
-			e.printStackTrace();
-			git.close();
-			return;
-		}		
 	}
 	
 	public boolean doPush()
@@ -1630,7 +1561,6 @@ public class GITUtil  extends BaseController{
     		return false;
     	}
     
-		// TODO Auto-generated method stub
 		FetchCommand fetchCmd = git.fetch();
 		if(user != null && !user.isEmpty())
 		{
@@ -1662,118 +1592,25 @@ public class GITUtil  extends BaseController{
 	    }
 	}
 	
-	public boolean doRebase()
-	{
-		//For local Git Repos, no need to do rebase
-		if(isRemote == false)
-		{
-			return true;
-		}
-		
-    	if(OpenRepos() == false)
-    	{
-        	System.out.println("doRebase() Failed to open git repository");
-    		return false;
-    	}
-   
-    	boolean ret = false;
-		RebaseCommand cmd = git.rebase();
-		try {
-			RebaseResult result = cmd.call();
-		    printObject("doRebase() result:", result);
-		    
-		    if(isRebaseOk(result))
-		    {		    
-		    	CloseRepos();
-		    	return true;
-		    }
-		    
-		    if(isRebaseFailedWithConflict(result))
-		    {
-			    //There is conflict, do fix
-			    if(doRebaseConflictFix(git, result))
-			    {
-			    	if(doRebaseContinue(git))
-			    	{
-					    CloseRepos();
-			    		return true;
-			    	}
-			    }
-		    }
-		    
-		    //冲突无法解决则退出rebase
-		    if(doRebaseAbort(git))	//不使用skip是因为可能存在
-		    {
-		    	if(doReset(git))	//reset to FETCH_HEAD
-		    	{
-				    CloseRepos();
-		    		return true;
-		    	}
-		    }
-		    
-		    //无法退出rebase或者reset则重新clone仓库
-		    ret = doClone();	//重新clone
-		    
-		    CloseRepos();
-		    return ret;
-	    } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		    CloseRepos();
-			return false;
-	    }
-	}
-	
-	private boolean isRebaseFailedWithConflict(RebaseResult result) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean isRebaseOk(RebaseResult result) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean doClone() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean doReset(Git git2) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean doRebaseAbort(Git git2) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean doRebaseContinue(Git git2) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean doRebaseConflictFix(Git git2, RebaseResult result) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
 	//doPullEx 保证pull一定成功
 	public boolean doPullEx()
 	{
-		//For local Git Repos, no need to do rebase
-		if(isRemote == false)
-		{
-			return true;
-		}
-		
     	if(OpenRepos() == false)
     	{
         	System.out.println("doPullEx() Failed to open git repository");
     		return false;
     	}
-    	
+
+		if(checkAndCleanBranch(git, repository, "master") == false)
+		{
+			return false;
+		}
+
+		//For local Git Repos, no need to do rebase
+		if(isRemote == false)
+		{
+			return true;
+		}
     	boolean ret = doPull(git, repository);
     	
     	CloseRepos();
@@ -1781,6 +1618,65 @@ public class GITUtil  extends BaseController{
     	return ret;
 	}
 	
+	
+	public boolean checkAndCleanBranch(Git git, Repository repo, String branchName) 
+	{
+		System.out.println("checkAndCleanBranch branchName:" + branchName);
+		
+		//Get curBranchName and check if curBranch is correct
+		String curBranchName = null;
+		try {
+			String fullBranch = repo.getFullBranch();
+			if (fullBranch != null
+					&& fullBranch.startsWith(Constants.R_HEADS)) {
+				curBranchName = fullBranch.substring(Constants.R_HEADS.length());
+			}
+		} catch (IOException e) {
+			System.out.println("checkAndCleanBranch get branchName Exception");
+			e.printStackTrace();
+			return false;
+		}
+		if(curBranchName == null || !curBranchName.equals(branchName))
+		{
+			System.out.println("checkAndCleanBranch curBranchName not matched:" + curBranchName);
+			Ref ret = null;
+			try {
+				ret = git.checkout().setName(branchName).call();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			} 
+			
+			if(ret == null)
+			{
+				System.out.println("checkAndCleanBranch failed to checkout branch:" + branchName);
+				return false;
+			}
+		}
+		
+		//Check and Clean Branch
+		try {
+			org.eclipse.jgit.api.Status status = git.status().call();
+            System.out.println("Git Change: " + status.getChanged());
+            System.out.println("Git Modified: " + status.getModified());
+            System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
+            System.out.println("Git Untracked: " + status.getUntracked());
+            if(status.isClean())
+            {
+            	return true;
+            }
+            return doCleanBranch(git, repo, status);            
+		} catch (Exception e) {
+			System.out.println("checkAndCleanBranch check and clean branch Exception");
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private boolean doCleanBranch(Git git2, Repository repo, org.eclipse.jgit.api.Status status) {
+		return doResetBranch(git, "HEAD");
+	}
+
 	private boolean doPull(Git git, Repository repo)
 	{
 		Config repoConfig = repo.getConfig();
@@ -1897,16 +1793,21 @@ public class GITUtil  extends BaseController{
 		printObject("doPullEx rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
 		printObject("doPullEx rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit());
 		
-		return false;
-
+		return doFixRebaseConflict(git, repo, rebaseRes);
 	}
 
-	private boolean doReset(String revision) {
+	private boolean doFixRebaseConflict(Git git, Repository repo, RebaseResult rebaseRes) {
 		// TODO Auto-generated method stub
-		Git git = null;
+		return false;
+	}
+
+	private boolean doResetBranch(Git git, String revision) {
 		try {
-			git = Git.open(new File(wcDir));
-	        git.reset().setMode(ResetType.HARD).setRef(revision).call();  
+			Ref ret = git.reset().setMode(ResetType.HARD).setRef(revision).call();
+			if(ret == null)
+			{
+				return false;
+			}
 	        return true;
 		} catch (Exception e) {
 			System.out.println("ResetWcDir() Failed to open wcDir:" + wcDir);
@@ -1915,28 +1816,24 @@ public class GITUtil  extends BaseController{
 		}			    
 	}
 
-	private boolean rollBackCommit(Git git,String revision) {
+	//Revert Commit
+	public boolean revertCommit(Git git, Repository repository, String revision) {
 		if(revision == null) 
 		{
 			revision = "HEAD";
 		}
 		
-		//TODO: RollBackCommit reset到指定版本
 		try {
-			Repository repository = git.getRepository();
-	        RevWalk walk = new RevWalk(repository);
 			ObjectId objId = repository.resolve(revision);
 			RevCommit revCommit = walk.parseCommit(objId);  
 	        String preVision = revCommit.getParent(0).getName();  
-	        git.reset().setMode(ResetType.HARD).setRef(preVision).call();  
-	        walk.close();
-	        repository.close(); 
+	        
+	        return doResetBranch(git, preVision);
 		} catch (Exception e) {
 			System.out.println("rollBackCommit() Exception");
 			e.printStackTrace();
 			return false;
 		}
-		return true;
 	}
 
 	//将工作区和暂存区恢复指定版本（revision==null表示恢复到最新版本）
