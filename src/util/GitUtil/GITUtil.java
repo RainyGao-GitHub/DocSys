@@ -164,13 +164,14 @@ public class GITUtil  extends BaseController{
 	
     //Clone仓库: clone到path + name目录下
 	public String CloneRepos(){
-		System.out.println("CloneRepos");
+		System.out.println("CloneRepos from :" + repositoryURL);
 		
 		CloneCommand cloneCommand = Git.cloneRepository();
 		cloneCommand.setURI(repositoryURL);
 		
-		if(user != null)
+		if(user != null && !user.isEmpty())
 		{
+			System.out.println("CloneRepos user:" + user);
 			cloneCommand.setCredentialsProvider( new UsernamePasswordCredentialsProvider(user, pwd));
 		}
 		
