@@ -2191,7 +2191,6 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				System.out.println("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 actionHashMap");
-				break;
 			}
 		}
 		
@@ -5441,6 +5440,15 @@ public class BaseController  extends BaseFunction{
 	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
+		boolean isRemote = false;
+		if(isRealDoc == false)
+		{
+			isRemote = repos.getIsRemote() == 1;
+		}
+		else
+		{
+			isRemote = repos.getIsRemote1() == 1;
+		}
 		
 		GITUtil verReposUtil = new GITUtil();
 		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
@@ -5448,7 +5456,21 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 				
-		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
+		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
+		if(revision == null)
+		{
+			return null;
+		}
+		
+		if(isRemote)
+		{
+			if(verReposUtil.doPush() == false)
+			{
+				System.out.println("gitDocCommit doPush() Failed");				
+			}
+		}
+		
+		return revision;
 	}
 
 	/*
