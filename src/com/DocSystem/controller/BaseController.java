@@ -854,7 +854,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean deleteClonedRepos(Repos repos, boolean isRealDoc) {
+	public boolean deleteClonedRepos(Repos repos, boolean isRealDoc) {
 		String clonedReposPath = getLocalVerReposPath(repos, isRealDoc);
 		File localRepos = new File(clonedReposPath);
 		if(localRepos.exists())
