@@ -5464,7 +5464,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isRemote)
 		{
-			if(verReposUtil.doPush() == false)
+			if(verReposUtil.doPushEx() == false)
 			{
 				System.out.println("gitDocCommit doPush() Failed");				
 			}
