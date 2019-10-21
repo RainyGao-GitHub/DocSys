@@ -2955,7 +2955,11 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 
-		return gitUtil.doPullEx();
+		if(gitUtil.doPullEx())
+		{
+			return gitUtil.doPushEx();
+		}
+		return false;
 	}
 
 	private String verReposGetLatestRevision(Repos repos, Doc doc) {
@@ -5461,15 +5465,6 @@ public class BaseController  extends BaseFunction{
 		{
 			return null;
 		}
-		
-		if(isRemote)
-		{
-			if(verReposUtil.doPushEx() == false)
-			{
-				System.out.println("gitDocCommit doPush() Failed");				
-			}
-		}
-		
 		return revision;
 	}
 
