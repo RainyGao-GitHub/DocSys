@@ -108,7 +108,7 @@ class JGitTest extends ReposController{
 		}
 		
 		//Do push
-		if(localGitUtil.doPush() == false)
+		if(localGitUtil.doPushEx() == false)
 		{
     		System.out.println("gitAutoCommit doPush Failed!");
     		return;		

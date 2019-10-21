@@ -1493,7 +1493,7 @@ public class GITUtil  extends BaseController{
 		return ret.getName();
 	}
 	
-	public boolean doPush()
+	public boolean doPushEx()
 	{
 		//For local Git Repos, no need to do fetch
 		if(isRemote == false)
@@ -1506,7 +1506,15 @@ public class GITUtil  extends BaseController{
         	System.out.println("doPush() Failed to open git repository");
     		return false;
     	}
-    
+    	
+    	boolean ret = doPush(git, repository);
+    	
+    	CloseRepos();
+    	return ret;
+	}
+	
+	private boolean doPush(Git git, Repository repo)
+	{
 		try {
 			
 			PushCommand pushCmd = git.push();
@@ -1522,18 +1530,18 @@ public class GITUtil  extends BaseController{
 
 	        CloseRepos();
 	        printObject("doPush() PushResult:", status);
-	        if(false == status.name().equals("OK"))
+	       
+	        if(status.name().equals("OK") || status.name().equals("UP_TO_DATE"))
 	        {
-				System.out.println("doPush() Push Failed");	
-				return false;		        	
+	        	System.out.println("doPush() Push OK");	    	
+		        return true;		        	
 	        }
-	        
-			System.out.println("doPush() Push OK");	    	
-	        return true;
+
+			System.out.println("doPush() Push Failed");
+			return false;
 		} catch (Exception e) {
 			System.out.println("doPush() Push Exception");	
 			e.printStackTrace();
-		    CloseRepos();
 			return false;
 		}
 	}
@@ -1778,18 +1786,33 @@ public class GITUtil  extends BaseController{
 			System.out.println("doPullEx success: rebase OK");
 			return true;
 		}
-		
+				
 		printObject("doPullEx rebase rebaseRes.getConflicts():",rebaseRes.getConflicts());
 		printObject("doPullEx rebase rebaseRes.getFailingPaths:",rebaseRes.getFailingPaths());
 		printObject("doPullEx rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
-		printObject("doPullEx rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit());
+		printObject("doPullEx rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit().getName());
 		
 		return doFixRebaseConflict(git, repo, rebaseRes);
 	}
 
 	private boolean doFixRebaseConflict(Git git, Repository repo, RebaseResult rebaseRes) {
 		// TODO Auto-generated method stub
-		return false;
+		try {
+			org.eclipse.jgit.api.Status status = git.status().call();
+            System.out.println("Git Change: " + status.getChanged());
+            System.out.println("Git Modified: " + status.getModified());
+            System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
+            System.out.println("Git Untracked: " + status.getUntracked());
+            if(status.isClean())
+            {
+            	return true;
+            }
+            return doCleanBranch(git, repo, status);            
+		} catch (Exception e) {
+			System.out.println("checkAndCleanBranch check and clean branch Exception");
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	private boolean doResetBranch(Git git, String revision) {
