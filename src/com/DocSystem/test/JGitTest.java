@@ -1,23 +1,6 @@
 package com.DocSystem.test;
 
 import java.io.File;
-import java.io.IOException;
-
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.errors.CorruptObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.lib.FileMode;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import com.DocSystem.controller.ReposController;
 import com.DocSystem.entity.Doc;
@@ -32,25 +15,32 @@ class JGitTest extends ReposController{
 		ReturnAjax rt = new ReturnAjax();
 		boolean isRealDoc = true;
 
+		System.out.println("*********** JGIT Test ****************");
+
+		System.out.println("*********** 删除测试GIT仓库 ****************");
+		//delFileOrDir("U:/JGitTestDir/OriginGitRepos/123456_GIT_RRepos");
+		delFileOrDir("U:/JGitTestDir/LocalGitRepos/234567_GIT_RRepos_Remote");
+		
     	//Origin Repos
     	Repos repos = new Repos();
-    	repos.setRealDocPath("C:/JGitTestDir/OriginDir/");
+    	repos.setRealDocPath("U:/JGitTestDir/OriginDir/");
     	repos.setVerCtrl(2);
     	repos.setIsRemote(0);
-		repos.setLocalSvnPath("C:/JGitTestDir/OriginGitRepos/");
+		repos.setLocalSvnPath("U:/JGitTestDir/OriginGitRepos/");
     	repos.setId(123456);
 
     	//Local Repos
     	Repos localRepos = new Repos();
-    	localRepos.setRealDocPath("C:/JGitTestDir/LocalDir/");
+    	localRepos.setRealDocPath("U:/JGitTestDir/LocalDir/");
     	localRepos.setVerCtrl(2);
     	localRepos.setIsRemote(1);
-    	localRepos.setLocalSvnPath("C:/JGitTestDir/LocalGitRepos/");
-    	localRepos.setSvnPath("C:/JGitTestDir/OriginGitRepos/123456_GIT_RRepos");
+    	localRepos.setLocalSvnPath("U:/JGitTestDir/LocalGitRepos/");
+    	localRepos.setSvnPath("U:/JGitTestDir/OriginGitRepos/123456_GIT_RRepos");
     	localRepos.setId(234567);
     	localRepos.setSvnUser(null);
     	
-    	//Create realDocPath
+    	System.out.println("*********** 创建仓库目录 ****************");
+		//Create realDocPath
     	File originDocRootDir = new File(repos.getRealDocPath());
     	if(!originDocRootDir.exists())
     	{
@@ -61,7 +51,8 @@ class JGitTest extends ReposController{
     	{
     		localDocRootDir.mkdirs();
     	}
-    	
+
+    	System.out.println("*********** 创建GIT仓库 ****************");
     	//Create Git Repos
     	GITUtil originGitUtil = new GITUtil();
     	originGitUtil.Init(repos, isRealDoc, "");
@@ -73,12 +64,14 @@ class JGitTest extends ReposController{
     		return;
     	}
     	
+    	System.out.println("*********** 克隆GIT仓库 ****************");
     	//Clone
 		GITUtil localGitUtil = new GITUtil();
 		localGitUtil.deleteClonedRepos(localRepos, isRealDoc);
 		localGitUtil.Init(localRepos, isRealDoc, "");
 		localGitUtil.CloneRepos();
         
+    	System.out.println("*********** 自动提交至远程GIT仓库 ****************");
     	//Auto Commit to Origin Git Repos at root dir
     	Doc doc = new Doc();
     	doc.setDocId(0L);
@@ -86,32 +79,44 @@ class JGitTest extends ReposController{
     	doc.setPath("");
     	doc.setName("");
     	doc.setLocalRootPath(repos.getRealDocPath());
-		if(null == originGitUtil.doAutoCommit(doc, "Init OriginGitRepos", "OriginRainyGao",true,null,2))
+		if(null == originGitUtil.doAutoCommit(doc, "远程仓库的修改3333333333333333", "OriginRainyGao",true,null,2))
 		{
     		System.out.println("gitAutoCommit Failed!");
     		return;
 		}
+		originGitUtil.getHistoryLogs("", null, null, 100);
 		
+
+    	System.out.println("*********** 自动提交至本地GIT仓库 ****************");
     	//Auto Commit to Local Git Repos at root dir
     	doc.setLocalRootPath(localRepos.getRealDocPath());
-		if(null == localGitUtil.doAutoCommit(doc, "Init LocalGitRepos", "LocalRainyGao",true,null,2))
+		if(null == localGitUtil.doAutoCommit(doc, "本地仓库的修改33333333333333", "LocalRainyGao",true,null,2))
 		{
     		System.out.println("gitAutoCommit Failed!");
     		return;
 		}
-		
+		localGitUtil.getHistoryLogs("", null, null, 100);
+
+    	System.out.println("*********** 本地GIT仓库Rebase到远程GIT仓库 ****************");
 		//Do rebase 
 		if(localGitUtil.doPullEx() == false)
 		{
     		System.out.println("gitAutoCommit doPullEx Failed!");
     		return;			
 		}
+		originGitUtil.getHistoryLogs("", null, null, 100);
+		localGitUtil.getHistoryLogs("", null, null, 100);
+
 		
+		System.out.println("*********** 本地GIT仓库Push到远程GIT仓库 ****************");
 		//Do push
 		if(localGitUtil.doPushEx() == false)
 		{
     		System.out.println("gitAutoCommit doPush Failed!");
     		return;		
 		}
+		originGitUtil.getHistoryLogs("", null, null, 100);		
+		localGitUtil.getHistoryLogs("", null, null, 100);
+
     }
 } 

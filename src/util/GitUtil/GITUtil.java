@@ -17,9 +17,15 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
 import org.eclipse.jgit.api.RebaseResult;
+import org.eclipse.jgit.api.RebaseCommand.Operation;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.Config;
@@ -334,7 +340,6 @@ public class GITUtil  extends BaseController{
 		String timestampString=String.valueOf(commitTime);
         Long timestamp = Long.parseLong(timestampString) * 1000;
         String date = formatter.format(new Date(timestamp));
-        System.out.println("It's commit time: "+date);
         return timestamp;
 	}
 	
@@ -1602,7 +1607,8 @@ public class GITUtil  extends BaseController{
 
 		if(checkAndCleanBranch(git, repository, "master") == false)
 		{
-			return false;
+			System.out.println("doPullEx() Failed to checkAndCleanBranch");
+    		return false;
 		}
 
 		//For local Git Repos, no need to do rebase
@@ -1610,6 +1616,7 @@ public class GITUtil  extends BaseController{
 		{
 			return true;
 		}
+		
     	boolean ret = doPull(git, repository);
     	
     	CloseRepos();
@@ -1662,8 +1669,11 @@ public class GITUtil  extends BaseController{
             System.out.println("Git Untracked: " + status.getUntracked());
             if(status.isClean())
             {
+				System.out.println("checkAndCleanBranch branch is clean");            	
             	return true;
             }
+            
+    		System.out.println("checkAndCleanBranch branch is dirty, doCleanBranch");        	
             return doCleanBranch(git, repo, status);            
 		} catch (Exception e) {
 			System.out.println("checkAndCleanBranch check and clean branch Exception");
@@ -1672,7 +1682,7 @@ public class GITUtil  extends BaseController{
 		}
 	}
 	
-	private boolean doCleanBranch(Git git2, Repository repo, org.eclipse.jgit.api.Status status) {
+	private boolean doCleanBranch(Git git, Repository repo, org.eclipse.jgit.api.Status status) {
 		return doResetBranch(git, "HEAD");
 	}
 
@@ -1743,6 +1753,8 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 		
+		printObject("doPullEx fetchRes:", fetchRes);
+		
 		Ref r = null;
 		if (fetchRes != null) {
 			r = fetchRes.getAdvertisedRef(remoteBranchName);
@@ -1786,33 +1798,138 @@ public class GITUtil  extends BaseController{
 			System.out.println("doPullEx success: rebase OK");
 			return true;
 		}
-				
-		printObject("doPullEx rebase rebaseRes.getConflicts():",rebaseRes.getConflicts());
-		printObject("doPullEx rebase rebaseRes.getFailingPaths:",rebaseRes.getFailingPaths());
-		printObject("doPullEx rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
-		printObject("doPullEx rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit().getName());
 		
-		return doFixRebaseConflict(git, repo, rebaseRes);
+		if(doFixRebaseConflict(git, repo, rebaseRes) == false)
+		{
+			return doRebaseAbort(git, repo);
+		}
+		
+		return doRebaseContinue(git, repo);
+	}
+
+	private boolean doRebaseContinue(Git git, Repository repo) {
+		RebaseCommand rebase = git.rebase();
+		try {
+			RebaseResult ret = rebase.setOperation(Operation.CONTINUE).call();
+			return ret.getStatus().isSuccessful();
+		} catch (NoHeadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RefNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WrongRepositoryStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (GitAPIException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	private boolean doRebaseAbort(Git git, Repository repo) {
+		RebaseCommand rebase = git.rebase();
+		try {
+			RebaseResult ret = rebase.setOperation(Operation.ABORT).call();
+			return ret.getStatus().isSuccessful();
+		} catch (NoHeadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RefNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WrongRepositoryStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (GitAPIException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	private boolean doFixRebaseConflict(Git git, Repository repo, RebaseResult rebaseRes) {
-		// TODO Auto-generated method stub
+		//将冲突的文件更新为当前commit
+		printObject("doFixRebaseConflict rebase rebaseRes.getConflicts():",rebaseRes.getConflicts());
+		printObject("doFixRebaseConflict rebase rebaseRes.getFailingPaths:",rebaseRes.getFailingPaths());
+		printObject("doFixRebaseConflict rebase rebaseRes.getUncommittedChanges():",rebaseRes.getUncommittedChanges());
+		
+		printObject("doFixRebaseConflict rebase rebaseRes.getCurrentCommit():",rebaseRes.getCurrentCommit().getName());
+		String revision = rebaseRes.getCurrentCommit().getName();
+		
+		RevTree revTree = rebaseRes.getCurrentCommit().getTree();
+        if(revTree == null)
+        {
+        	System.out.println("doFixRebaseConflict revTree is null for revision:" + rebaseRes.getCurrentCommit().getName());
+        	return false;
+        }
+        
+		org.eclipse.jgit.api.Status status;
 		try {
-			org.eclipse.jgit.api.Status status = git.status().call();
-            System.out.println("Git Change: " + status.getChanged());
-            System.out.println("Git Modified: " + status.getModified());
-            System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
-            System.out.println("Git Untracked: " + status.getUntracked());
-            if(status.isClean())
-            {
-            	return true;
-            }
-            return doCleanBranch(git, repo, status);            
+			status = git.status().call();
 		} catch (Exception e) {
-			System.out.println("checkAndCleanBranch check and clean branch Exception");
 			e.printStackTrace();
 			return false;
 		}
+		
+        System.out.println("Git Change: " + status.getChanged());
+        System.out.println("Git Modified: " + status.getModified());
+        System.out.println("Git UncommittedChanges: " + status.getUncommittedChanges());
+        System.out.println("Git Untracked: " + status.getUntracked());
+        if(status.isClean())
+        {
+			System.out.println("checkAndCleanBranch branch is clean");            	
+        	return true;
+        }
+        //Do revert conflict files one by one
+        Iterator<String> iter = status.getUncommittedChanges().iterator();
+        while(iter.hasNext())
+        {
+        	String entryPath = iter.next();
+        	System.out.println("doFixRebaseConflict entryPath:" + entryPath);
+        	
+        	TreeWalk treeWalk = getTreeWalkByPath(revTree, entryPath);
+        	if(treeWalk == null)
+        	{
+        		System.out.println("doFixRebaseConflict() treeWalk is null for:" + entryPath);
+        		return false;
+        	}
+
+        	String wcEntryPath = wcDir + entryPath;
+        	FileOutputStream out = null;
+			try {
+				out = new FileOutputStream(wcEntryPath);
+			} catch (Exception e) {
+				System.out.println("doFixRebaseConflict() new FileOutputStream Failed:" + wcEntryPath);
+				e.printStackTrace();
+				return false;
+			}
+			
+			try {
+		        ObjectId blobId = treeWalk.getObjectId(0);
+		        ObjectLoader loader = repository.open(blobId);
+		        System.out.println("doFixRebaseConflict() at " + revision + " " + entryPath + " size:" + loader.getSize());	//文件大小
+		        loader.copyTo(out);
+		        out.close();
+		        out = null;
+		        //Add to Index 
+				git.add().addFilepattern(entryPath).call();
+			} catch (Exception e) {
+				System.out.println("doFixRebaseConflict() loader.copy Failed:" + wcEntryPath);
+				e.printStackTrace();
+				if(out != null)
+				{
+					try {
+						out.close();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				}
+				return false;
+			}
+        }
+        return true;
 	}
 
 	private boolean doResetBranch(Git git, String revision) {
