@@ -3644,7 +3644,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlock(); //线程锁
 		
-				docSysDebugLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
+				docSysErrorLog("moveDoc_FSM() lock srcDoc " + srcDoc.getName() + " Failed", rt);
 				return false;
 			}
 			
@@ -3652,7 +3652,7 @@ public class BaseController  extends BaseFunction{
 			if(dstDocLock == null)
 			{
 				unlock(); //线程锁
-				docSysDebugLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
+				docSysErrorLog("moveDoc_FSM() lock dstDoc " + dstDoc.getName() + " Failed", rt);
 
 				unlockDoc(srcDoc, login_user, srcDocLock);
 				return false;
@@ -3666,7 +3666,7 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(srcDoc, login_user, srcDocLock);
 			unlockDoc(dstDoc, login_user, dstDocLock);
 
-			docSysDebugLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
+			docSysErrorLog("moveDoc_FSM() moveRealDoc " + srcDoc.getName() + " to " + dstDoc.getName() + " 失败", rt);
 			return false;
 		}
 		
