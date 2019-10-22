@@ -662,6 +662,7 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
+                	console.log("renameDoc ok:", ret.data)
                     //Rename at zTree
               	    addTreeNode(ret.data);
               	    deleteTreeNodeById(docId);
@@ -2763,7 +2764,7 @@ function CompareObj(objA, objB, flag) {
          				+' dataSize=' + node.size 
          				+' createTime='+ node.createTime 
          				+' latestEditTime=' + node.latestEditTime
-         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
 		   $("#secondList").append(nodeStr);
 		}
 
