@@ -761,15 +761,9 @@ public class GITUtil  extends BaseController{
 	    		//GIT的tree包含了在当前版本上存在的目录树信息，但并不知道这个目录树上每个节点的大小和最近一次的提交信息（因为有些节点不是在当前版本修改的）
 	    		//所以需要size是通过获取节点的blod信息来获取的，而文件的最近提交信息怎是要通过查询节点最近的一次log来获取
 	    		//为什么这么做主要是由GIT仓库的实现方式决定的 RevCommit[Tree[blob/Tree]]
-//	    		if(type == 1)
-//	    		{
-//			        ObjectId blobId = treeWalk.getObjectId(0);	//tree的第一个元素就是blob
-//			        if(blobId != null)
-//			        {
-//			        	ObjectLoader loader = repository.open(blobId);
-//			        	subDoc.setSize(loader.getSize());
-//			        }
-//	    		}
+//	    		ObjectId objectId = treeWalk.getObjectId(0);	//不知道为什么在这里获取到的objectId是Null
+//                ObjectLoader loader = repository.open(objectId);
+//                subDoc.setSize(loader.getSize());
 	    		//subDoc.setLatestEditTime(commitTime);
 	    		//subDoc.setRevision(commitId);
 
@@ -797,6 +791,7 @@ public class GITUtil  extends BaseController{
         			subDoc.setRevision(subDocRevisionCommit.getName());
         			subDoc.setLatestEditTime(convertCommitTime(subDocRevisionCommit.getCommitTime()));	
         		}
+                System.out.println("getDocList() subDoc:" + subDoc.getName() + " size:" + subDoc.getSize());    			
         	}
         }
         

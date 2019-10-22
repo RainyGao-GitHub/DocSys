@@ -2129,7 +2129,12 @@ public class BaseController  extends BaseFunction{
 	protected boolean executeUniqueCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		System.out.println("********** executeUniqueCommonActionList ***********");
-
+		if(actionList.size() <= 0)
+		{
+			System.out.println("********** executeUniqueCommonActionList actionList is empty ***********");			
+			return false;
+		}
+		
 		//Inset ActionList to uniqueCommonAction
 		for(int i=0; i<actionList.size(); i++)
 		{
