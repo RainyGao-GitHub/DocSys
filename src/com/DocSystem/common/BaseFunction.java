@@ -139,7 +139,7 @@ public class BaseFunction{
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
 	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
-		printObject("insertAddFileAction:", doc);
+		//printObject("insertAddFileAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(1);
     	action.setDoc(doc);
@@ -149,7 +149,7 @@ public class BaseFunction{
     
 	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
 	{
-		printObject("insertAddDirAction:", doc);
+		//printObject("insertAddDirAction:", doc);
 
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
@@ -200,7 +200,7 @@ public class BaseFunction{
 	}
 	
 	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
-		printObject("insertDeleteAction:", doc);
+		//printObject("insertDeleteAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(2);
     	action.setDoc(doc);
