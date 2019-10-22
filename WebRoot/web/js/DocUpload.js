@@ -1251,6 +1251,8 @@
 		                		//set the docId so that We can open it 
 		             			SubContext.docId = ret.data.docId;	            
 			             		addTreeNode(ret.data);
+			             		addDocListNode(ret.data);
+			             		
 			                }
 	             			
 	             			$('.file'+index).removeClass('is-uploading');
@@ -1599,6 +1601,8 @@
 		    		         		}
 		    		        		
 		    		        		addTreeNode(ret.data);
+				             		addDocListNode(ret.data);
+		    		        		
 		    		         		//set the docId so that We can open it 
 		    		         		SubContext.docId = ret.data.id;
 		    						
@@ -1756,7 +1760,10 @@
     		         			addParentNodes(addedParentDocList);
     		         		}
 	                		
+    		         		//Add Node at zTree and DocList
 		             		addTreeNode(ret.data);
+		             		addDocListNode(ret.data);
+		            		
 		             		//set the docId so that We can open it 
 		             		SubContext.docId = ret.data.id;
 							
