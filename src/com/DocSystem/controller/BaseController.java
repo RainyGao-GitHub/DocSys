@@ -1495,6 +1495,11 @@ public class BaseController  extends BaseFunction{
 				//输出缓冲区的内容到浏览器，实现文件下载
 				out.write(buffer, 0, len);
 			}
+			
+			in.close();
+			in = null;
+			out.close();
+			out = null;
 		}catch (Exception e) {
 			if(in != null)
 			{
