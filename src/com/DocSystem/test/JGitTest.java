@@ -16,6 +16,7 @@ class JGitTest extends ReposController{
 		boolean isRealDoc = true;
 
 		System.out.println("*********** JGIT Test ****************");
+		System.out.println("*********** U:/是从Linux系统影射过来的目录，可以使用git命令行进行结果确认 ****************");
 
 		System.out.println("*********** 删除测试GIT仓库 ****************");
 		//delFileOrDir("U:/JGitTestDir/OriginGitRepos/123456_GIT_RRepos");
