@@ -9,9 +9,34 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 
 public class CommonAction {
-    private Integer type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
-	private Integer action = null;	//1:add 2:delete 3:update 4:move 5:copy
-    private Integer docType = null; //0:DocName 1:RealDoc 2:VirtualDoc
+	public enum Action {
+		UNDEFINED,
+		ADD,
+		DELETE,
+		UPDATE,
+		MOVE,
+		COPY;
+	}
+	
+	public enum ActionType {
+		UNDEFINED,
+		FS,
+		VERREPOS,
+		DB,
+		INDEX,
+		AUTOSYNCUP;
+	}
+
+	public enum DocType {
+		UNEFINED,
+		REALDOC,
+		VIRTURALDOC,
+		DOCNAME;
+	}
+	
+    private ActionType type = null; 	//1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
+	private Action action = null;	//1:add 2:delete 3:update 4:move 5:copy
+    private DocType docType = null; //0:DocName 1:RealDoc 2:VirtualDoc
 
     private Repos repos = null;
     private Doc doc = null;
@@ -35,20 +60,20 @@ public class CommonAction {
     private List<CommonAction> subActionList = null;	//subActionList when action success
 	private List<CommonAction> subActionListForFail = null;	//subActionList when action failed 
     
-	public void setAction(Integer action) {
+	public void setAction(Action action) {
 		this.action = action;
 	}
 	
-	public Integer getAction()
+	public Action getAction()
 	{
 		return action;
 	}
 	
-	public void setType(Integer type) {
+	public void setType(ActionType type) {
 		this.type = type;
 	}
 	
-	public Integer getType()
+	public ActionType getType()
 	{
 		return type;
 	}
@@ -62,11 +87,11 @@ public class CommonAction {
 		return repos;
 	}
 	
-	public void setDocType(Integer docType) {
+	public void setDocType(DocType docType) {
 		this.docType = docType;
 	}
 	
-	public Integer getDocType()
+	public DocType getDocType()
 	{
 		return docType;
 	}
