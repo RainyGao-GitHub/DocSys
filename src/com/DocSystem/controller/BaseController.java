@@ -15,9 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Properties;
 
@@ -30,7 +28,6 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
-import org.tmatesoft.svn.core.SVNNodeKind;
 
 import util.ReturnAjax;
 
@@ -40,7 +37,6 @@ import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
-import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
