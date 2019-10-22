@@ -37,6 +37,9 @@ import util.ReturnAjax;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommonAction;
+import com.DocSystem.common.CommonAction.Action;
+import com.DocSystem.common.CommonAction.ActionType;
+import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
@@ -447,7 +450,7 @@ public class BaseController  extends BaseFunction{
 		if(false == checkDocLocked(repos.getId(), doc, autoSync, false))
 		{
 			//insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-			insertCommonAction(actionList,repos,doc, null, null, null, 5,3,2, null);
+			insertCommonAction(actionList,repos,doc, null, null, null, ActionType.AUTOSYNCUP, Action.UNDEFINED, DocType.UNEFINED, null);
 		}
 	}
 	
@@ -1912,10 +1915,10 @@ public class BaseController  extends BaseFunction{
 		if(repos.getType() != 1)
 		{
 			//Insert index add action for RDoc Name
-			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 1, 0, null);
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null);
 		}	
 		//Insert index add action for RDoc
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 1, 1, null);
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null);
 		
 		String content = doc.getContent();
 		if(content == null || content.isEmpty())
@@ -1928,12 +1931,12 @@ public class BaseController  extends BaseFunction{
 		List<CommonAction> subActionList = new ArrayList<CommonAction>();
 		if(repos.getVerCtrl1() > 0)
 		{
-			insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, 2, 1, 2, null); //verRepos commit
+			insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.ADD, DocType.VIRTURALDOC, null); //verRepos commit
 		}
-		insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, 4, 1, 2, null);	//Add Index For VDoc
+		insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null);	//Add Index For VDoc
 		
 		//Insert add action for VDoc
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 1, 1, 2, subActionList);			
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList);			
 	}
 
 	protected void BuildMultiActionListForDocDelete(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
@@ -1954,17 +1957,17 @@ public class BaseController  extends BaseFunction{
 		//Insert index add action for RDoc Name
 		if(repos.getType() != 1)
 		{
-			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 2, 0, null);
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.DOCNAME, null);
 		}
 		//Insert index delete action for RDoc
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 2, 1, null);
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.REALDOC, null);
 
 		//Insert delete action for VDoc
-		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 1, 2, 2, null);
+		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.DELETE, DocType.VIRTURALDOC, null);
 		//Insert delete action for VDoc Index
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 2, 2, null);
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null);
 		//Insert delete action for VDoc verRepos 
-		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 2, 2, 2, null);
+		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.DELETE, DocType.VIRTURALDOC,, null);
 	}
 	
 	private List<Doc> docSysGetSubDocList(Repos repos, Doc doc) 
@@ -1987,7 +1990,7 @@ public class BaseController  extends BaseFunction{
 	void BuildMultiActionListForDocUpdate(List<CommonAction> actionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index update action for RDoc
-		insertCommonAction(actionList, repos, doc, null, null, null, 4, 3, 1, null);
+		insertCommonAction(actionList, repos, doc, null, null, null, CommonAction.ActionType.INDEX, CommonAction.Action.UPDATE, CommonAction.DocType.REALDOC, null);
 	}
 	
 	private void BuildMultiActionListForDocCopy(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
@@ -1998,10 +2001,10 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		int ActionType = 5;
+		Action actionId = CommonAction.Action.COPY;
 		if(isMove)
 		{
-			ActionType = 4;
+			actionId = CommonAction.Action.MOVE;
 		}
 		
 		//Check if dstLocalEntry exists
@@ -2018,20 +2021,20 @@ public class BaseController  extends BaseFunction{
 			{
 				if(isMove)
 				{
-					insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, 3, 0, null);
+					insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.UPDATE, CommonAction.DocType.DOCNAME, null);
 				}
 				else	//对于copy操作则新增对该docName的索引
 				{
-					insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, 4, 1, 0, null);				
+					insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.ADD, CommonAction.DocType.DOCNAME, null);				
 				}
 			}
 			
 			//Insert IndexAction For RealDoc Copy or Move (对于目录则会进行递归)
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, ActionType, 1, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, CommonAction.DocType.REALDOC, null);
 			//Copy VDoc (包括VDoc VerRepos and Index)
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 1, ActionType, 2, null);
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 2, ActionType, 2, null);
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, 4, ActionType, 2, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.FS, actionId, DocType.VIRTURALDOC, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.VERREPOS, actionId, DocType.VIRTURALDOC, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null);
 		}
 		
 		if(dstLocalEntry.isDirectory())
@@ -2106,10 +2109,10 @@ public class BaseController  extends BaseFunction{
 
 		switch(action.getType())
 		{
-		case 1:
+		case FS:
 			ret = executeFSAction(action, rt);
 			break;
-		case 2:
+		case VERREPOS:
 			String revision = executeVerReposAction(action, rt);
 			if(revision != null)
 			{
@@ -2117,14 +2120,16 @@ public class BaseController  extends BaseFunction{
 				ret = true;
 			}
 			break;
-		case 3:
+		case DB:
 			ret = executeDBAction(action, rt);
 			break;			
-		case 4:
+		case INDEX:
 			ret = executeIndexAction(action, rt);
 			break;
-		case 5: //AutoSyncUp
+		case AUTOSYNCUP: //AutoSyncUp
 			ret = executeSyncUpAction(action, rt);
+			break;
+		default:
 			break;
 		}
 		
@@ -3342,12 +3347,14 @@ public class BaseController  extends BaseFunction{
 
 		switch(action.getAction())
 		{
-		case 1:	//Add Doc
+		case ADD:	//Add Doc
 			return dbAddDoc(repos, doc, false, true);
-		case 2: //Delete Doc
+		case DELETE: //Delete Doc
 			return dbDeleteDoc(repos, doc, true);
-		case 3: //Update Doc
+		case UPDATE: //Update Doc
 			return dbUpdateDoc(repos, doc, true);
+		default:
+			break;
 		}
 		return false;
 	}
@@ -3358,15 +3365,17 @@ public class BaseController  extends BaseFunction{
 		Doc doc = action.getDoc();
 		switch(action.getDocType())
 		{
-		case 0:	//DocName
+		case DOCNAME:	//DocName
 			System.out.println("executeIndexAction() 文件名:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     		return executeIndexActionForDocName(action, rt);
-    	case 1: //RDoc
+    	case REALDOC: //RDoc
 			System.out.println("executeIndexAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     		return executeIndexActionForRDoc(action, rt);
-		case 2: //VDoc
+		case VIRTURALDOC: //VDoc
 			System.out.println("executeIndexAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return executeIndexActionForVDoc(action, rt);
+		default:
+			break;
 		}
 		return false;
 	}
@@ -3378,13 +3387,15 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case 1:	//Add Doc Name
+		case ADD:	//Add Doc Name
 			return addIndexForDocName(repos, doc, rt);
-		case 2: //Delete Doc Name
+		case DELETE: //Delete Doc Name
 			return deleteIndexForDocName(repos, doc, rt);
-		case 3: //Update Doc
+		case UPDATE: //Update Doc
 			Doc newDoc = action.getNewDoc();
-			return updateIndexForDocName(repos, doc, newDoc, rt);			
+			return updateIndexForDocName(repos, doc, newDoc, rt);
+		default:
+			break;			
 		}
 		return false;
 	}
@@ -3396,17 +3407,19 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case 1:	//Add Doc
+		case ADD:	//Add Doc
 			return addIndexForRDoc(repos, doc);
-		case 2: //Delete Doc
+		case DELETE: //Delete Doc
 			return deleteIndexForRDoc(repos, doc);
-		case 3: //Update Doc
+		case UPDATE: //Update Doc
 			return updateIndexForRDoc(repos, doc);		
-		case 4: //Move Doc
+		case MOVE: //Move Doc
 			deleteIndexForRDoc(repos, doc);
 			return addIndexForRDoc(repos, action.getNewDoc());		
-		case 5: //Copy Doc
+		case COPY: //Copy Doc
 			return addIndexForRDoc(repos, action.getNewDoc());
+		default:
+			break;
 		}
 		return false;
 	}
@@ -3418,17 +3431,19 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case 1:	//Add Doc
+		case ADD:	//Add Doc
 			return addIndexForVDoc(repos, doc);
-		case 2: //Delete Doc
+		case DELETE: //Delete Doc
 			return deleteIndexForVDoc(repos, doc);
-		case 3: //Update Doc
+		case UPDATE: //Update Doc
 			return updateIndexForVDoc(repos, doc);	
-		case 4: //Move Doc
+		case MOVE: //Move Doc
 			deleteIndexForVDoc(repos, doc);
 			return addIndexForVDoc(repos, action.getNewDoc());		
-		case 5: //Copy Doc
+		case COPY: //Copy Doc
 			return addIndexForVDoc(repos, action.getNewDoc());
+		default:
+			break;
 		}
 		return false;
 	}
@@ -3438,12 +3453,14 @@ public class BaseController  extends BaseFunction{
 		Doc doc = action.getDoc();
 		switch(action.getDocType())
 		{
-		case 1:	//RDoc
+		case REALDOC:	//RDoc
 			System.out.println("executeFSAction() 实文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return executeLocalActionForRDoc(action, rt);
-		case 2: //VDoc
+		case VIRTURALDOC: //VDoc
 			System.out.println("executeFSAction() 虚文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return executeLocalActionForVDoc(action, rt); 
+			return executeLocalActionForVDoc(action, rt);
+		default:
+			break; 
 		}
 		return false;
 	}
@@ -3457,20 +3474,22 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case 1:	//Add Doc
+		case ADD:	//Add Doc
 			return createRealDoc(repos, doc, rt);
-		case 2: //Delete Doc
+		case DELETE: //Delete Doc
 			return deleteRealDoc(repos, doc, rt);
-		case 3: //Update Doc
+		case UPDATE: //Update Doc
 			MultipartFile uploadFile = action.getUploadFile();
 			Integer chunkNum = action.getChunkNum();
 			Integer chunkSize = action.getChunkSize();
 			String chunkParentPath = action.getChunkParentPath();
 			return updateRealDoc(repos, doc, uploadFile, chunkNum, chunkSize, chunkParentPath, rt);
-		case 4: //Move Doc
+		case MOVE: //Move Doc
 			return moveRealDoc(repos, doc, newDoc, rt);
-		case 5: //Copy Doc
+		case COPY: //Copy Doc
 			return copyRealDoc(repos, doc, newDoc, rt);
+		default:
+			break;
 		}
 		return false;
 	}
@@ -3484,16 +3503,18 @@ public class BaseController  extends BaseFunction{
 		
 		switch(action.getAction())
 		{
-		case 1:	//Add Doc
+		case ADD:	//Add Doc
 			return createVirtualDoc(repos, doc, rt);
-		case 2: //Delete Doc
+		case DELETE: //Delete Doc
 			return deleteVirtualDoc(repos, doc, rt);
-		case 3: //Update Doc
+		case UPDATE: //Update Doc
 			return saveVirtualDocContent(repos, doc, rt);
-		case 4: //Move Doc
+		case MOVE: //Move Doc
 			return moveVirtualDoc(repos, doc, newDoc, rt);
-		case 5: //Copy Doc
+		case COPY: //Copy Doc
 			return copyVirtualDoc(repos, doc, newDoc, rt);
+		default:
+			break;
 		}
 		return false;
 	}
@@ -3505,21 +3526,23 @@ public class BaseController  extends BaseFunction{
 		Doc doc = action.getDoc();
 		
 		boolean isRealDoc = true;
-		if(action.getDocType() == 2)
+		if(action.getDocType() == DocType.VIRTURALDOC)
 		{
 			isRealDoc = false;
 		}
 		
-		switch(action.getType())
+		switch(action.getAction())
 		{
-		case 1: //add
-		case 2:	//delete
-		case 3: //update
+		case ADD: //add
+		case DELETE:	//delete
+		case UPDATE: //update
 			return verReposDocCommit(repos, isRealDoc, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
-		case 4:	//move
+		case MOVE:	//move
 			return verReposDocMove(repos, isRealDoc, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
-		case 5: //copy
-			return verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);				
+		case COPY: //copy
+			return verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+		default:
+			break;				
 		}
 		return null;
 	}
@@ -3826,7 +3849,7 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
 
 				//Insert index add action for VDoc
-				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 3, 2, null);
+				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null);
 				return true;
 			}
 		}
@@ -3838,7 +3861,7 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
 
 				//Insert index update action for VDoc
-				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, 4, 1, 2, null);
+				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null);
 				return true;
 			}
 		}
