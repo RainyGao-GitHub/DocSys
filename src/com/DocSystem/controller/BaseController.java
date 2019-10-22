@@ -3691,6 +3691,9 @@ public class BaseController  extends BaseFunction{
 		unlockDoc(srcDoc,login_user,srcDocLock);
 		unlockDoc(dstDoc,login_user,dstDocLock);
 		
+		Doc fsDoc = fsGetDoc(repos, dstDoc);
+		dstDoc.setLatestEditTime(fsDoc.getLatestEditTime());
+		
 		rt.setData(dstDoc);
 		return true;
 	}

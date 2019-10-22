@@ -662,18 +662,14 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                    //Rename NodeName in docList
-                    var newDocId = ret.data.id;
-			     	DocList.renameNode(docId, newDocId, newName);
-		            
-            	    //Add or Delete from zTree
+                    //Rename at zTree
               	    addTreeNode(ret.data);
               	    deleteTreeNodeById(docId);
 
-                    //Rename doc
-                    //renameTreeNode(docId, newDocId, newName);
-                    
-		            bootstrapQ.msg({
+              		//Rename at docList
+                    DocList.renameNode(docId, ret.data);
+		            
+			     	bootstrapQ.msg({
 							msg : "重命名完成！",
 							type : 'success',
 							time : 2000,
@@ -2592,16 +2588,6 @@ function CompareObj(objA, objB, flag) {
 			//var treeObj = $.fn.zTree.getZTreeObj("doctree");
 			//treeObj.expandNode(parentNode, true, false, true);
 		}
-		
-		//Add DocList Node
-		console.log("addTreeNode pid:" + node.pid + " DocListParentDocId:" + DocListParentDocId );
-		if(node.pid == DocListParentDocId)
-		{
-			if(DocList.isNodeExists(node.docId) == false)
-			{
-				DocList.addNode(node.docId, node.pid, node.path, node.name, node.type, node.size, node.createTime, node.latestEditTime);
-			}
-		}
 	}
 	
 	//zTree初始化接口:根据data和setting生成zTree
@@ -2766,18 +2752,18 @@ function CompareObj(objA, objB, flag) {
 		}
     	
     	//Add Node
-		function addNode(docId, pid, path, name, type, size, createTime, latestEditTime)
+		function addNode(node)
 		{
-	        var iconType = type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-         	var nodeStr='<li dataId='+ docId 
-         				+ ' dataPid='+ pid 
-         				+' dataPath="' + path +'"'
-         				+ 'dataName="' + name + '"'
-         				+' dataType=' + type 
-         				+' dataSize=' + size 
-         				+' createTime='+ createTime 
-         				+' latestEditTime=' + latestEditTime
-         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + name+'</div><div class="filedate pull-right">'+formatDate(latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+	        var iconType = node.type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+         	var nodeStr='<li dataId='+ node.docId 
+         				+ ' dataPid='+ node.pid 
+         				+' dataPath="' + node.path +'"'
+         				+ 'dataName="' + node.name + '"'
+         				+' dataType=' + node.type 
+         				+' dataSize=' + node.size 
+         				+' createTime='+ node.createTime 
+         				+' latestEditTime=' + node.latestEditTime
+         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="secondGetDoc(this)" class="filename pull-left">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
 		   $("#secondList").append(nodeStr);
 		}
 
@@ -2792,17 +2778,10 @@ function CompareObj(objA, objB, flag) {
 		}
     	
     	//Rename Node
-		function renameNode(docId, newDocId, newName)
+		function renameNode(docId, node)
 		{
-    		var obj = $("[dataId='"+ docId +"']");
-    		if(obj)
-    		{
-    			obj.attr("dataId", newDocId);
-	    		obj.attr("dataName",newName);
-				var domObj = obj.children("div").get(0);
-				var firstDivObj = $(domObj);
-				firstDivObj.text(newName);
-    		}
+			deleteNode(docId);
+			addNode(node);
 		}
 		
 		//Delete Node
@@ -2824,21 +2803,33 @@ function CompareObj(objA, objB, flag) {
     		{
     			return isNodeExists(docId);	
     		},
-    		addNode: function(docId, pid, path, name, type, size, createTime, latestEditTime){
-        		addNode(docId, pid, path, name, type, size, createTime, latestEditTime);
+    		addNode: function(node){
+        		addNode(node);
             },
             deleteNode: function(docId){
             	deleteNode(docId);
             },
-            renameNode: function(docId, newDocId, newName){
-            	renameNode(docId, newDocId, newName);
+            renameNode: function(docId, newNode){
+            	renameNode(docId, newNode);
             },
             focusNode: function(docId){
             	focusNode(docId);
             },
         };
     })();		
-      		
+    
+    function addDocListNode(node)
+    {
+		console.log("addTreeNode pid:" + node.pid + " DocListParentDocId:" + DocListParentDocId );
+		if(node.pid == DocListParentDocId)
+		{
+			if(DocList.isNodeExists(node.docId) == false)
+			{
+				DocList.addNode(node);
+			}
+		}
+    }
+	
 	var curRightClickedDocListNode = null;
     function docListOnMouseDown(obj,ev)
     {
