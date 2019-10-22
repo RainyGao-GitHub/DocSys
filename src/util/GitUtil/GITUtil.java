@@ -2282,6 +2282,7 @@ public class GITUtil  extends BaseController{
 		int subDocLevel = doc.getLevel() + 1;
 
 		//遍历仓库所有子目录
+		System.out.println("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
 		TreeWalk treeWalk = getSubEntries(subDocParentPath, null);
 		if(treeWalk != null)
 		{
@@ -2300,7 +2301,8 @@ public class GITUtil  extends BaseController{
 		}
 		
         //Go Through localSubDocs
-        File dir = new File(localRootPath  + doc.getPath() + doc.getName());
+		System.out.println("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+        File dir = new File(localRootPath  + subDocParentPath);
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
         {
