@@ -1716,10 +1716,21 @@ public class GITUtil  extends BaseController{
 			return false;
 		}
 		
-		if (!repo.getRepositoryState().equals(RepositoryState.SAFE))
+		RepositoryState reposState = repo.getRepositoryState();
+		if (!reposState.equals(RepositoryState.SAFE))
 		{
-			System.out.println("doPullEx repos is not safe now");						
-			return false;
+			System.out.println("doPullEx repos is not safe now:" + 	reposState);
+			switch(reposState)
+			{
+			case REBASING_MERGE:
+				if(doRebaseAbort(git, repo) == false)
+				{
+					return false;
+				}
+				break;
+			default:
+				return false;
+			}
 		}
 		
 		String remote = null;
