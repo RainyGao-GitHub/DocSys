@@ -5,7 +5,18 @@ import java.util.List;
 import com.DocSystem.entity.Doc;
 
 public class CommitAction{
-    private Integer action; //1:add 2:delete 3:modify 4:move 5:copy
+	public enum CommitType {
+		UNDEFINED,
+		ADD,
+		DELETE,
+		MODIFY,
+		MOVE,
+		COPY,
+		FILETODIR,
+		DIRTOFILE;
+	}
+	
+    private CommitType action; //1:add 2:delete 3:modify 4:move 5:copy
     
     private Doc doc;
     private Doc newDoc;
@@ -19,11 +30,11 @@ public class CommitAction{
     //Sub Action List
     private List<CommitAction> subActionList = null;
 	
-	public void setAction(Integer action) {
-		this.action = action;
+	public void setAction(CommitType commitActionType) {
+		this.action = commitActionType;
 	}
 	
-	public Integer getAction()
+	public CommitType getAction()
 	{
 		return action;
 	}

@@ -33,6 +33,7 @@ import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
@@ -2310,8 +2311,8 @@ public class BaseController  extends BaseFunction{
 		printObject("syncupForDocChange_NoFS() dbDoc: ", dbDoc);
 
 		
-		int remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
-		if(remoteChangeType != 0)
+		DocChangeType remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
+		if(remoteChangeType != DocChangeType.NOCHANGE)
 		{
 			//LockDoc
 			DocLock docLock = null;
@@ -2411,25 +2412,28 @@ public class BaseController  extends BaseFunction{
     	return false;
 	}
 
-	private boolean syncUpForRemoteChange_NoFS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
+	private boolean syncUpForRemoteChange_NoFS(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, DocChangeType remoteChangeType) 
 	{
 		switch(remoteChangeType)
 		{
-		case 1:
+		case REMOTEADD:
 			System.out.println("syncUpForRemoteChange_NoFS() remote Added: " + doc.getPath()+doc.getName());
 			return dbAddDoc(repos, remoteEntry, false, false);
-		case 2:
+		case REMOTEFILETODIR:
+		case REMOTEDIRTOFILE:
 			System.out.println("syncUpForRemoteChange_NoFS() remote Type Changed: " + doc.getPath()+doc.getName());
 			dbDeleteDoc(repos, doc,true);
 			return dbAddDoc(repos, remoteEntry, true, false);
-		case 3:
+		case REMOTECHANGE:
 			System.out.println("syncUpForRemoteChange_NoFS() remote File Changed: " + doc.getPath()+doc.getName());
 			doc.setRevision(remoteEntry.getRevision());
 			return dbUpdateDoc(repos, doc, true);
-		case 4:
+		case REMOTEDELETE:
 			//Remote Deleted
 			System.out.println("syncUpForRemoteChange_NoFS() remote Deleted: " + doc.getPath()+doc.getName());
 			return dbDeleteDoc(repos, doc, true);
+		default:
+			break;
 		}
 		
 		return true;
@@ -2458,22 +2462,22 @@ public class BaseController  extends BaseFunction{
 		remoteEntry = getDocFromList(doc, remoteDocHashMap);
 		//printObject("syncupForDocChange_FSM() remoteEntry: ", remoteEntry);
 		
-		int docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
+		DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 		//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
 
-		Integer commitActionType = null;
+		CommitType commitActionType = null;
 		switch(docChangeType)
 		{
-		case 11:	//localAdd
-			commitActionType = 1;
-		case 12: 	//localDelete
-			commitActionType = 2;
-		case 13: 	//localFileChanged
-			commitActionType = 3;
-		case 14:	//localTypeChanged(From File to Dir)
-			commitActionType = 6;
-		case 15:	//localTypeChanged(From Dir to File)
-			commitActionType = 7;
+		case LOCALADD:	//localAdd
+			commitActionType = CommitType.ADD;
+		case LOCALDELETE: 	//localDelete
+			commitActionType = CommitType.DELETE;
+		case LOCALCHANGE: 	//localFileChanged
+			commitActionType = CommitType.MODIFY;
+		case LOCALFILETODIR:	//localTypeChanged(From File to Dir)
+			commitActionType = CommitType.FILETODIR;
+		case LOCALDIRTOFILE:	//localTypeChanged(From Dir to File)
+			commitActionType = CommitType.DIRTOFILE;
 			CommitAction commitAction = new CommitAction();
 			commitAction.setDoc(doc);
 			commitAction.setAction(commitActionType);
@@ -2481,11 +2485,11 @@ public class BaseController  extends BaseFunction{
 			break;
 		
 		//由于远程同步需要直接修改或删除本地文件，一旦误删无法恢复，因此只处理远程新增
-		case 21:	//remoteAdd
-//		case 22:	//remoteDelete
-//		case 23:	//localFileChanged
-//		case 24:	//remoteTypeChanged(From File To Dir)
-//		case 25:	//remoteTypeChanged(From Dir To File)
+		case REMOTEADD:	//remoteAdd
+//		case REMOTEDELET:	//remoteDelete
+//		case REMOTECHANE:	//remoteFileChanged
+//		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
+//		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
 			//LockDoc
 			DocLock docLock = null;
 			synchronized(syncLock)
@@ -2503,16 +2507,18 @@ public class BaseController  extends BaseFunction{
 			boolean ret = syncUpRemoteChange_FSM(repos, dbDoc, remoteEntry, login_user, rt, docChangeType);
 			unlockDoc(doc, login_user, docLock);
 			return ret;
-		case 0:		//no change
+		case NOCHANGE:		//no change
 			break;
-		case -1:	//Unknown localEntryType
+		case UNDEFINED:	//Unknown localEntryType
 			return false;
+		default:
+			break;
 		}
 		
 		return true;
 	}
 	
-	private int getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
+	private DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
 	{						
 		//dbDoc不存在，localDoc存在
 		if(dbDoc == null)
@@ -2523,30 +2529,30 @@ public class BaseController  extends BaseFunction{
 			{
 				//本地新增文件/目录
 				System.out.println("getDocChangeType_FSM() 本地新增:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 11;
+				return DocChangeType.LOCALADD;
 			}
 			
 			if(remoteEntry != null)
 			{
 				//远程文件/目录新增
 				System.out.println("getDocChangeType_FSM() 远程新增:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 21;
+				return DocChangeType.REMOTEADD;
 			}
 			
 			//未变更
 			//System.out.println("getDocChangeType_FSM() 未变更(dbDoc不存在/localDoc不存在/remoteDoc不存在):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return 0;
+			return DocChangeType.NOCHANGE;
 		}
 		
 		//dbDoc存在，localDoc不存在
 		if(localEntry == null)
 		{
-			int remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
-			if(remoteChangeType == 0)
+			DocChangeType remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
+			if(remoteChangeType == DocChangeType.NOCHANGE)
 			{
 				//本地文件/目录删除
 				System.out.println("getDocChangeType_FSM() 本地删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 12;
+				return DocChangeType.LOCALDELETE;
 			}
 			
 			//远程文件/目录 类型变化、内容修改、删除
@@ -2561,40 +2567,40 @@ public class BaseController  extends BaseFunction{
 			{
 				//本地目录 类型变化 （目录删除后新增同名文件）
 				System.out.println("getDocChangeType_FSM() 本地类型变化（目录->文件）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 14;
+				return DocChangeType.LOCALDIRTOFILE;
 			}
 			
 			if(isDocLocalChanged(dbDoc, localEntry))
 			{
 				//本地文件 内容修改
 				System.out.println("getDocChangeType_FSM() 本地内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 13;
+				return DocChangeType.LOCALCHANGE;
 			}
 			
 			if(remoteEntry == null)
 			{
 				//远程删除
 				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 22;
+				return DocChangeType.REMOTEDELETE;
 			}
 			
 			if(remoteEntry.getType() == 2)
 			{
 				//远程文件 类型变化（文件被删除并增加了同名目录）
 				System.out.println("getDocChangeType_FSM() 远程类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 25;
+				return DocChangeType.REMOTEFILETODIR;
 			}
 			
 			if(isDocRemoteChanged(repos, dbDoc, remoteEntry))
 			{
 				//远程文件 内容修改
 				System.out.println("getDocChangeType_FSM() 远程内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 23;
+				return DocChangeType.REMOTECHANGE;
 			}
 			
 			//未变更
 			//System.out.println("getDocChangeType_FSM() 未变更(dbDoc存在/localDoc是文件/remoteDoc是文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return 0;
+			return DocChangeType.NOCHANGE;
 		}
 		
 		//dbDoc存在，localDoc存在且是目录
@@ -2604,7 +2610,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//本地文件 类型变化 （文件删除后新增同名文件）
 				System.out.println("getDocChangeType_FSM() 本地类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 15;
+				return DocChangeType.LOCALFILETODIR;
 			}
 			
 			if(remoteEntry == null)
@@ -2613,7 +2619,7 @@ public class BaseController  extends BaseFunction{
 				{
 					//远程删除，但同时本地目录有修改
 					System.out.println("getDocChangeType_FSM() 远程删除，但本地目录有改动:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-					return 13;
+					return DocChangeType.LOCALCHANGE;
 				}
 				
 				
@@ -2621,11 +2627,11 @@ public class BaseController  extends BaseFunction{
 				{
 					//远程删除
 					System.out.println("getDocChangeType_FSM() 远程删除(因GIT无法识别空目录，对于目录的远程删除不处理):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-					return 0;
+					return DocChangeType.NOCHANGE;
 				}
 				//远程删除
 				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 22;
+				return DocChangeType.REMOTEDELETE;
 			}
 			
 			if(remoteEntry.getType() == 1)
@@ -2634,22 +2640,22 @@ public class BaseController  extends BaseFunction{
 				{
 					//远程目录 类型变化（目录被删除并增加了同名文件），但同时本地目录有修改
 					System.out.println("getDocChangeType_FSM() 远程类型改变（目录->文件），但本地目录有改动:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-					return 13;
+					return DocChangeType.LOCALCHANGE;
 				}
 				
 				//远程目录 类型变化（目录被删除并增加了同名文件）
 				System.out.println("getDocChangeType_FSM() 远程类型改变（目录->文件）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-				return 24;
+				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
 			//未变更
 			//System.out.println("getDocChangeType_FSM() 未变更(dbDoc存在/localDoc是目录/remoteDoc是目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return 0;
+			return DocChangeType.NOCHANGE;
 		}
 		
 		//未知文件类型(localDoc.type !=1/2)
 		System.out.println("getDocChangeType_FSM() 本地未知文件类型(" + localEntry.getType()+ "):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		return -1;
+		return DocChangeType.UNDEFINED;
 	}
 
 	private Doc getDocFromList(Doc doc, HashMap<Long, Doc> dbDocHashMap) 
@@ -2800,15 +2806,15 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//localEntry and dbDoc was same
-	private boolean syncUpRemoteChange_FSM(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, int remoteChangeType) 
+	private boolean syncUpRemoteChange_FSM(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, DocChangeType docChangeType) 
 	{	
 		
 		String localParentPath = null;
 		List<Doc> successDocList = null;
 		
-		switch(remoteChangeType)
+		switch(docChangeType)
 		{
-		case 21:		//Remote Added
+		case REMOTEADD:		//Remote Added
 			System.out.println("syncUpRemoteChange_FSM() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
 			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
@@ -2818,14 +2824,14 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			return false;
-		case 22: //Remote Deleted
+		case REMOTEDELETE: //Remote Deleted
 			System.out.println("syncUpRemoteChange_FSM() local and remote deleted: " + doc.getPath()+doc.getName());
 			if(deleteRealDoc(repos, doc, rt) == true)
 			{
 				dbDeleteDoc(repos, doc,true);
 			}	
 			return true;
-		case 23: //Remote File Changed
+		case REMOTECHANGE: //Remote File Changed
 			System.out.println("syncUpRemoteChange_FSM() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
@@ -2840,8 +2846,8 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			return false;
-		case 24: //Remote Type Changed
-		case 25:
+		case REMOTEFILETODIR: //Remote Type Changed
+		case REMOTEDIRTOFILE:
 			System.out.println("syncUpRemoteChange_FSM() remote Type Changed: " + doc.getPath()+doc.getName());
 			if(deleteRealDoc(repos, doc, rt) == true)
 			{
@@ -2861,17 +2867,19 @@ public class BaseController  extends BaseFunction{
 			{
 				return false;
 			}
+		default:
+			break;
 
 		}
 		return false;
 	}
 
-	private int getRemoteChangeType(Repos repos, Doc dbDoc, Doc remoteEntry) 
+	private DocChangeType getRemoteChangeType(Repos repos, Doc dbDoc, Doc remoteEntry) 
 	{
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			System.out.println("getRemoteChangeType() no verCtrl");
-			return 0;
+			return DocChangeType.NOCHANGE;
 		}
 		
 		if(dbDoc == null)
@@ -2879,16 +2887,16 @@ public class BaseController  extends BaseFunction{
 			if(remoteEntry != null)
 			{
 				System.out.println("getRemoteChangeType() 远程文件/目录新增:"+remoteEntry.getName());
-				return 21;				
+				return DocChangeType.REMOTEADD;				
 			}
 			System.out.println("getRemoteChangeType() 远程文件未变更");
-			return 0;
+			return DocChangeType.NOCHANGE;
 		}
 		
 		if(remoteEntry == null)
 		{
 			System.out.println("getRemoteChangeType() 远程文件删除:"+dbDoc.getName());
-			return 22;
+			return DocChangeType.REMOTEDELETE;
 		}
 		
 		switch(remoteEntry.getType())
@@ -2897,30 +2905,30 @@ public class BaseController  extends BaseFunction{
 			if(dbDoc.getType() == null || dbDoc.getType() != 1)
 			{
 				System.out.println("getRemoteChangeType() 远程文件类型改变(目录->文件):"+remoteEntry.getName());
-				return 24; //local Type Changed
+				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
 			if(isDocRemoteChanged(repos, dbDoc, remoteEntry))
 			{
 				System.out.println("getRemoteChangeType() 远程文件内容修改:"+remoteEntry.getName());
-				return 23;
+				return DocChangeType.REMOTECHANGE;
 			}
 			
 			System.out.println("getRemoteChangeType() 远程文件未变更:"+remoteEntry.getName());
-			return 0;
+			return DocChangeType.NOCHANGE;
 		case 2:
 			if(dbDoc.getType() == null || dbDoc.getType() != 2)
 			{
 				System.out.println("getRemoteChangeType() 远程文件类型改变(文件->目录):"+remoteEntry.getName());
-				return 25; //local Type Changed
+				return DocChangeType.REMOTEFILETODIR;
 			}
 
 			System.out.println("getRemoteChangeType() 远程目录未变更:"+remoteEntry.getName());
-			return 0;
+			return DocChangeType.NOCHANGE;
 		}
 		
 		System.out.println("getRemoteChangeType() 远程文件类型未知:"+dbDoc.getName());
-		return -1;
+		return DocChangeType.UNDEFINED;
 	}
 
 	protected Doc fsGetDoc(Repos repos, Doc doc) 
