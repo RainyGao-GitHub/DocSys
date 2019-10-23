@@ -2492,10 +2492,10 @@ public class BaseController  extends BaseFunction{
 		
 		//由于远程同步需要直接修改或删除本地文件，一旦误删无法恢复，因此只处理远程新增
 		case REMOTEADD:	//remoteAdd
-//		case REMOTEDELET:	//remoteDelete
-//		case REMOTECHANE:	//remoteFileChanged
-//		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
-//		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
+		case REMOTEDELETE:	//remoteDelete
+		case REMOTECHANGE:	//remoteFileChanged
+		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
+		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
 			//LockDoc
 			DocLock docLock = null;
 			synchronized(syncLock)
