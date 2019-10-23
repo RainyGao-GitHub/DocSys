@@ -51,6 +51,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -1341,7 +1342,7 @@ public class GITUtil  extends BaseController{
 		    			CommitAction commitAction = commitHashMap.get(doc.getDocId());
 		    			if(commitAction != null)
 		    			{
-		    				if(commitAction.getAction() == 3)
+		    				if(commitAction.getAction() == CommitType.MODIFY)
 		    				{
 			            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			            		insertModifyFile(commitActionList,doc);
@@ -1985,7 +1986,7 @@ public class GITUtil  extends BaseController{
     	{
     		CommitAction action = commitActionList.get(i);
     		Doc doc = action.getDoc();
-    		if(1 == action.getAction()) //add
+    		if(CommitType.ADD == action.getAction()) //add
     		{
         		delFileOrDir(wcDir + doc.getPath() + doc.getName());
     		}
@@ -2002,15 +2003,17 @@ public class GITUtil  extends BaseController{
 	    		boolean ret = false;
 	    		switch(action.getAction())
 	    		{
-	    		case 1:	//add
+	    		case ADD:	//add
 	        		ret = executeAddAction(git,action);
 	    			break;
-	    		case 2: //delete
+	    		case DELETE: //delete
 	    			ret = executeDeleteAction(git,action);
 	    			break;
-	    		case 3: //modify
+	    		case MODIFY: //modify
 	    			ret = executeModifyAction(git,action);
 	        		break;
+				default:
+					break;
 	    		}
 	    		if(ret == false)
 	    		{
@@ -2227,7 +2230,7 @@ public class GITUtil  extends BaseController{
     			CommitAction commitAction = commitHashMap.get(doc.getDocId());
     			if(commitAction != null)
     			{
-    				if(commitAction.getAction() == 3)
+    				if(commitAction.getAction() == CommitType.MODIFY)
     				{
 	        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
 	            		insertModifyFile(actionList,doc);
