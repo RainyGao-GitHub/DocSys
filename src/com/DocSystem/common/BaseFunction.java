@@ -32,6 +32,7 @@ import util.Encrypt.Base64File;
 import util.Encrypt.MD5;
 import util.FileUtil.CompressPic;
 
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -45,6 +46,21 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 
 @SuppressWarnings("rawtypes")
 public class BaseFunction{
+	public enum DocChangeType {
+		UNDEFINED,
+		LOCALADD,
+		LOCALDELETE,
+		LOCALCHANGE,
+		LOCALFILETODIR,
+		LOCALDIRTOFILE,
+		REMOTEADD,
+		REMOTEDELETE,
+		REMOTECHANGE,
+		REMOTEFILETODIR,
+		REMOTEDIRTOFILE,
+		NOCHANGE;
+	}
+	
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 
@@ -141,7 +157,7 @@ public class BaseFunction{
 	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
 		//printObject("insertAddFileAction:", doc);
     	CommitAction action = new CommitAction();
-    	action.setAction(1);
+    	action.setAction(CommitType.ADD);
     	action.setDoc(doc);
     	action.isSubAction = isSubAction;
     	actionList.add(action);
@@ -159,7 +175,7 @@ public class BaseFunction{
 		if(tmp == null || tmp.length == 0)
 		{
 	    	CommitAction action = new CommitAction();
-	    	action.setAction(1);
+	    	action.setAction(CommitType.ADD);
 	    	action.setDoc(doc);
 	    	action.isSubAction = isSubAction;
 	    	action.setSubActionList(null);
@@ -192,7 +208,7 @@ public class BaseFunction{
 	 	}
 		
     	CommitAction action = new CommitAction();
-    	action.setAction(1);
+    	action.setAction(CommitType.ADD);
     	action.setDoc(doc);
     	action.isSubAction = isSubAction;
     	action.setSubActionList(subActionList);
@@ -202,7 +218,7 @@ public class BaseFunction{
 	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
 		//printObject("insertDeleteAction:", doc);
     	CommitAction action = new CommitAction();
-    	action.setAction(2);
+    	action.setAction(CommitType.DELETE);
     	action.setDoc(doc);
     	actionList.add(action);
 	}
@@ -210,7 +226,7 @@ public class BaseFunction{
 	protected void insertModifyFile(List<CommitAction> actionList, Doc doc) {
 		printObject("insertModifyFile:", doc);
     	CommitAction action = new CommitAction();
-    	action.setAction(3);
+    	action.setAction(CommitType.MODIFY);
     	action.setDoc(doc);
     	actionList.add(action);	
 	}
