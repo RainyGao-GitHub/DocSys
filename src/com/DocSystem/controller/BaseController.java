@@ -315,36 +315,42 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected boolean isDocLocalChanged(Doc doc, Doc localEntry) 
+	protected boolean isDocLocalChanged(Doc dbDoc, Doc localEntry) 
 	{
-		//For File
-		if(doc.getLatestEditTime().equals(localEntry.getLatestEditTime()) && doc.getSize().equals(localEntry.getSize()))
+		//文件大小变化了则一定是变化了
+		if(!dbDoc.getSize().equals(localEntry.getSize()))
 		{
+			System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + dbDoc.getSize() + " localEntry.size:" + localEntry.getSize()); 
+			return true;			
+		}
+				
+		//如果日期和大小都没变表示文件没有改变
+		if(!dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
+		{
+			
+			System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
 			return false;
-		}	
-
-		System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + doc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
-		System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + doc.getSize() + " localEntry.size:" + localEntry.getSize()); 
-
+		}
+		
 		//printObject("isDocLocalChanged() doc:",doc);
 		//printObject("isDocLocalChanged() localEntry:",localEntry);
 		return true;
 	}
 	
-	private boolean isDocRemoteChanged(Repos repos, Doc doc, Doc remoteEntry) 
+	private boolean isDocRemoteChanged(Repos repos, Doc dbDoc, Doc remoteEntry) 
 	{
 		if(repos.getVerCtrl() == 0)
 		{
 			return false;
 		}
 		
-		if(doc.getRevision() != null && !doc.getRevision().isEmpty() && doc.getRevision().equals(remoteEntry.getRevision()))
+		if(dbDoc.getRevision() != null && !dbDoc.getRevision().isEmpty() && dbDoc.getRevision().equals(remoteEntry.getRevision()))
 		{
 			return false;
 		}
 		
-		System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + doc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
-		//printObject("isDocRemoteChanged() doc:",doc);
+		System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
+		//printObject("isDocRemoteChanged() doc:",dbDoc);
 		//printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 		return true;
 	}
