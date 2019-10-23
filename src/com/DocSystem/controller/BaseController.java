@@ -329,12 +329,10 @@ public class BaseController  extends BaseFunction{
 		{
 			
 			System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
-			return false;
+			return true;
 		}
 		
-		//printObject("isDocLocalChanged() doc:",doc);
-		//printObject("isDocLocalChanged() localEntry:",localEntry);
-		return true;
+		return false;
 	}
 	
 	private boolean isDocRemoteChanged(Repos repos, Doc dbDoc, Doc remoteEntry) 
