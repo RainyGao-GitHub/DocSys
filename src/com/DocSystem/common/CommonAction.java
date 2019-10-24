@@ -15,7 +15,8 @@ public class CommonAction {
 		DELETE,
 		UPDATE,
 		MOVE,
-		COPY;
+		COPY,
+		PUSH;
 	}
 	
 	public enum ActionType {

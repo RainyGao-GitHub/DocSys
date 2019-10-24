@@ -1729,6 +1729,9 @@ public class BaseController  extends BaseFunction{
 			{	
 				docSysWarningLog("Add Node: " + doc.getName() +" Failed！", rt);
 			}
+			
+			//Insert Push Action
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null);
 		}
 		
 		//检查dbParentDoc是否已添加
@@ -1904,6 +1907,8 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			dbCheckAddUpdateParentDoc(repos, doc, null);
+			//Insert Push Action
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null);
 		}
 		
 		unlockDoc(doc,login_user,null);
@@ -2244,7 +2249,7 @@ public class BaseController  extends BaseFunction{
 		if(repos.getIsRemote() == 1)
 		{
 			//Sync Up local VerRepos with remote VerRepos
-			verReposPull(repos);
+			verReposPullPush(repos, true, null);
 		}
 		
 		//文件管理系统
@@ -2972,23 +2977,26 @@ public class BaseController  extends BaseFunction{
 		return localDoc;
 	}
 	
-	protected boolean verReposPull(Repos repos)
+	protected boolean verReposPullPush(Repos repos, boolean isRealDoc, ReturnAjax rt)
 	{
-		if(repos.getVerCtrl() == 1)
+		Integer verCtrl = repos.getVerCtrl();
+		if(!isRealDoc)
 		{
-			return true;			
+			verCtrl = repos.getVerCtrl1();
 		}
-		else if(repos.getVerCtrl() == 2)
+		
+		if(verCtrl != 2)
 		{
-			return gitPull(repos);	
+			return true;
 		}
-		return false;
+		
+		return gitPullPush(repos, isRealDoc);
 	}
 	
-	private boolean gitPull(Repos repos) {
+	private boolean gitPullPush(Repos repos, boolean isRealDoc) {
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, "") == false)
+		if(gitUtil.Init(repos, isRealDoc, "") == false)
 		{
 			System.out.println("gitPull() GITUtil Init failed");
 			return false;
@@ -3565,12 +3573,15 @@ public class BaseController  extends BaseFunction{
 			return verReposDocMove(repos, isRealDoc, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
 		case COPY: //copy
 			return verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+		case PUSH: //copy
+			verReposPullPush(repos, isRealDoc, rt);
+			return "PUSHOK";
 		default:
 			break;				
 		}
 		return null;
 	}
-	
+
 	//底层updateDoc接口
 	protected boolean updateDoc(Repos repos, Doc doc,
 								MultipartFile uploadFile,
@@ -3648,6 +3659,8 @@ public class BaseController  extends BaseFunction{
 				docSysWarningLog("updateDoc() updateDocInfo Failed", rt);
 			}
 			dbCheckAddUpdateParentDoc(repos, doc, null);
+			//Insert Push Action
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null);
 		}
 		
 		//Build DocUpdate action
