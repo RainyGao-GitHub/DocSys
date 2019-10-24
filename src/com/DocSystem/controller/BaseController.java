@@ -2627,13 +2627,6 @@ public class BaseController  extends BaseFunction{
 					return DocChangeType.LOCALCHANGE;
 				}
 				
-				
-				if(repos.getVerCtrl() == 2)	//For Git Repos
-				{
-					//远程删除
-					System.out.println("getDocChangeType_FSM() 远程删除(因GIT无法识别空目录，对于目录的远程删除不处理):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-					return DocChangeType.NOCHANGE;
-				}
 				//远程删除
 				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 				return DocChangeType.REMOTEDELETE;
@@ -2831,9 +2824,19 @@ public class BaseController  extends BaseFunction{
 			return false;
 		case REMOTEDELETE: //Remote Deleted
 			System.out.println("syncUpRemoteChange_FSM() local and remote deleted: " + doc.getPath()+doc.getName());
-			if(deleteRealDoc(repos, doc, rt) == true)
+			if(repos.getVerCtrl() == 1 || doc.getType() == 1) 
 			{
-				dbDeleteDoc(repos, doc,true);
+				if(deleteRealDoc(repos, doc, rt) == true)
+				{
+					dbDeleteDoc(repos, doc,true);
+				}
+				return true;
+			}
+			
+			if(doc.getType() == 2)	//对于GIT仓库无法区分空目录，因此只删除子目录
+			{
+				System.out.println("syncUpRemoteChange_FSM() local and remote deleted: " + doc.getPath()+doc.getName());
+				deleteSubDoc(repos, doc, rt);			
 			}	
 			return true;
 		case REMOTECHANGE: //Remote File Changed
@@ -2877,6 +2880,18 @@ public class BaseController  extends BaseFunction{
 
 		}
 		return false;
+	}
+
+	private boolean deleteSubDoc(Repos repos, Doc doc, ReturnAjax rt) {
+		List<Doc> subDocList = getLocalEntryList(repos, doc);
+		for(int i=0; i< subDocList.size(); i++)
+		{
+			if(deleteRealDoc(repos, doc, rt) == true)
+			{
+				dbDeleteDoc(repos, doc,true);
+			}
+		}
+		return true;
 	}
 
 	private DocChangeType getRemoteChangeType(Repos repos, Doc dbDoc, Doc remoteEntry) 
