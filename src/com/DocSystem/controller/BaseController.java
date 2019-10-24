@@ -2581,7 +2581,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.LOCALCHANGE;
 			}
 			
-			if(remoteEntry == null)
+			if(remoteEntry == null || remoteEntry.getType() == 0)
 			{
 				//远程删除
 				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
