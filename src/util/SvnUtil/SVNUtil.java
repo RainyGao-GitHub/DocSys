@@ -35,6 +35,7 @@ import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import com.DocSystem.common.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -632,7 +633,7 @@ public class SVNUtil  extends BaseController{
 		    			CommitAction commitAction = commitHashMap.get(doc.getDocId());
 		    			if(commitAction != null)
 		    			{
-		    				if(commitAction.getAction() == 3)	//要保证commitAction也是修改才commit,因为可能是add
+		    				if(commitAction.getAction() == CommitType.MODIFY)	//要保证commitAction也是修改才commit,因为可能是add
 		    				{
 			            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			            		insertModifyFile(commitActionList,doc);
@@ -743,15 +744,17 @@ public class SVNUtil  extends BaseController{
 	    		boolean ret = false;
 	    		switch(action.getAction())
 	    		{
-	    		case 1:	//add
+	    		case ADD:	//add
 	        		ret = executeAddAction(editor,action);
 	    			break;
-	    		case 2: //delete
+	    		case DELETE: //delete
 	    			ret = executeDeleteAction(editor,action);
 	    			break;
-	    		case 3: //modify
+	    		case MODIFY: //modify
 	    			ret = executeModifyAction(editor,action);
 	        		break;
+				default:
+					break;
 	    		}
 	    		if(ret == false)
 	    		{
@@ -991,7 +994,7 @@ public class SVNUtil  extends BaseController{
     			CommitAction commitAction = commitHashMap.get(doc.getDocId());
     			if(commitAction != null)
     			{
-    				if(commitAction.getAction() == 3)
+    				if(commitAction.getAction() == CommitType.MODIFY)
     				{
 	            		System.out.println("scheduleForCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 	            		insertModifyFile(actionList,doc);
