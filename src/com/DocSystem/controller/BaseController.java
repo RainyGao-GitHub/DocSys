@@ -254,25 +254,26 @@ public class BaseController  extends BaseFunction{
 		
 		Doc subDoc = null;
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
-		printObject("isDirLocalChanged() dbEntryList:", dbDocList);
+		//printObject("isDirLocalChanged() dbEntryList:", dbDocList);
 	   	if(dbDocList != null)
     	{
 	    	for(int i=0;i<dbDocList.size();i++)
 	    	{
 	    		subDoc = dbDocList.get(i);
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		
-	    		Doc subLocalEntry = fsGetDoc(repos, doc);
+	    		printObject("isDirLocalChanged() dbDoc:", subDoc);
+	    	   	
+	    		Doc subLocalEntry = fsGetDoc(repos, subDoc);
 	    		printObject("isDirLocalChanged() localEntry: ", subLocalEntry);
 	    		if(subLocalEntry.getType() == 0)
 	    		{
-	    			System.out.println("isDirLocalChanged() local Doc Deleted: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			System.out.println("isDirLocalChanged() local Doc Deleted: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    		
 	    		if(!subLocalEntry.getType().equals(subDoc.getType()))
 	    		{
-	    			System.out.println("isDirLocalChanged() local Doc Type Changed: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			System.out.println("isDirLocalChanged() local Doc Type Changed: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    		
@@ -287,7 +288,7 @@ public class BaseController  extends BaseFunction{
 	    		
 	    		if(isDocLocalChanged(subDoc, subLocalEntry))
 	    		{
-	    			System.out.println("isDirLocalChanged() local Doc Content Changed: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+	    			System.out.println("isDirLocalChanged() local Doc Content Changed: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    	}
@@ -307,7 +308,7 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		
 	    		//local Added
-    			System.out.println("isDirLocalChanged() local Doc Added: " + subDoc.getDocId() + " " + doc.getPath() + doc.getName());
+    			System.out.println("isDirLocalChanged() local Doc Added: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    		return true;
 	    	}
     	}
