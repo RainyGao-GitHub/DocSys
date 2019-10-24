@@ -2891,9 +2891,10 @@ public class BaseController  extends BaseFunction{
 		List<Doc> subDocList = getLocalEntryList(repos, doc);
 		for(int i=0; i< subDocList.size(); i++)
 		{
-			if(deleteRealDoc(repos, doc, rt) == true)
+			Doc subDoc = subDocList.get(i);
+			if(deleteRealDoc(repos, subDoc, rt) == true)
 			{
-				dbDeleteDoc(repos, doc,true);
+				dbDeleteDoc(repos, subDoc,true);
 			}
 		}
 		return true;
