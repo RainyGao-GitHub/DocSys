@@ -2704,11 +2704,11 @@ public class BaseController  extends BaseFunction{
 		//printObject("SyncUpSubDocs_FSM() dbEntryList:", dbDocList);
 
 		List<Doc> remoteEntryList = null;
-    	boolean isRemoteDocChanged = false;
-    	if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
-    	{	
-    		isRemoteDocChanged = isRemoteDocChanged(repos, doc);
-    	}
+    	boolean isRemoteDocChanged = true;
+//    	if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+//    	{	
+//    		isRemoteDocChanged = isRemoteDocChanged(repos, doc);
+//    	}
     	
     	if(isRemoteDocChanged)
 		{
