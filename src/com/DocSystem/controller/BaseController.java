@@ -2577,7 +2577,7 @@ public class BaseController  extends BaseFunction{
 		if(localEntry == null)
 		{
 			DocChangeType remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
-			if(remoteChangeType == DocChangeType.NOCHANGE)
+			if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
 			{
 				//本地文件/目录删除
 				System.out.println("getDocChangeType_FSM() 本地删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
