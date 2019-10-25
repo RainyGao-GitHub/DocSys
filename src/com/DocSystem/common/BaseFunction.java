@@ -45,22 +45,7 @@ import info.monitorenter.cpdetector.io.ParsingDetector;
 import info.monitorenter.cpdetector.io.UnicodeDetector;
 
 @SuppressWarnings("rawtypes")
-public class BaseFunction{
-	public enum DocChangeType {
-		UNDEFINED,
-		LOCALADD,
-		LOCALDELETE,
-		LOCALCHANGE,
-		LOCALFILETODIR,
-		LOCALDIRTOFILE,
-		REMOTEADD,
-		REMOTEDELETE,
-		REMOTECHANGE,
-		REMOTEFILETODIR,
-		REMOTEDIRTOFILE,
-		NOCHANGE;
-	}
-	
+public class BaseFunction{	
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
 
