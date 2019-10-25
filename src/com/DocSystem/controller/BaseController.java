@@ -2519,6 +2519,9 @@ public class BaseController  extends BaseFunction{
 		case LOCALDIRTOFILE:	//localTypeChanged(From Dir to File)
 			DocChange localChange = new DocChange();
 			localChange.setDoc(doc);
+			localChange.setDbDoc(dbDoc);
+			localChange.setLocalEntry(localEntry);
+			localChange.setRemoteEntry(remoteEntry);
 			localChange.setType(docChangeType);
 			localChanges.put(doc.getDocId(), localChange);
 			return true;
@@ -2530,6 +2533,9 @@ public class BaseController  extends BaseFunction{
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
 			DocChange remoteChange = new DocChange();
 			remoteChange.setDoc(doc);
+			remoteChange.setDbDoc(dbDoc);
+			remoteChange.setLocalEntry(localEntry);
+			remoteChange.setRemoteEntry(remoteEntry);
 			remoteChange.setType(docChangeType);
 			remoteChanges.put(doc.getDocId(), remoteChange);
 			return true;
