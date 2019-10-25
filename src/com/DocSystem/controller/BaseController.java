@@ -335,6 +335,13 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
+		//如果日期和大小都没变表示文件没有改变
+		if(dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty())
+		{
+			System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
+			return true;
+		}
+				
 		return false;
 	}
 	
@@ -350,7 +357,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
+		//System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
 		//printObject("isDocRemoteChanged() doc:",dbDoc);
 		//printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 		return true;
