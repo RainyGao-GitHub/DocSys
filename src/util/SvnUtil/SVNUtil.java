@@ -36,6 +36,8 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
+import com.DocSystem.common.DocChange;
+import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -535,7 +537,7 @@ public class SVNUtil  extends BaseController{
 	//modifyEnable: 表示是否commit已经存在的文件
 	//localRefRootPath是存放参考文件的根目录，如果对应文件存在且modifyEnable=true的话，则增量commit
 	//subDocCommitFalg: 0:不Commit 1:Commit但不继承 2:Commit所有文件
-	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag){
+	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag){
 		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -620,7 +622,7 @@ public class SVNUtil  extends BaseController{
 			    else
 			    {
 		    		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
-		    		if(commitHashMap == null) //文件内容改变	
+		    		if(localChanges == null) //文件内容改变	
 		    		{
 			            if(modifyEnable)
 			            {
@@ -630,12 +632,12 @@ public class SVNUtil  extends BaseController{
 		    		}
 		    		else
 		    		{
-		    			CommitAction commitAction = commitHashMap.get(doc.getDocId());
-		    			if(commitAction != null)
+		    			DocChange docChange = localChanges.get(doc.getDocId());
+		    			if(docChange != null)
 		    			{
-		    				if(commitAction.getAction() == CommitType.MODIFY)	//要保证commitAction也是修改才commit,因为可能是add
+		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)	//要保证commitAction也是修改才commit,因为可能是add
 		    				{
-			            		System.out.println("doAutoCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			            		System.out.println("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			            		insertModifyFile(commitActionList,doc);
 		    				}
 		    			}
@@ -646,7 +648,7 @@ public class SVNUtil  extends BaseController{
 			{
 				//LocalEntry is Directory
 				System.out.println("doAutoCommit() localEntry " + localRootPath + entryPath + " is Directory");
-				scheduleForCommit(commitActionList, doc, modifyEnable, false, commitHashMap, subDocCommitFlag);
+				scheduleForCommit(commitActionList, doc, modifyEnable, false, localChanges, subDocCommitFlag);
 			}
 		}
 		
@@ -922,7 +924,7 @@ public class SVNUtil  extends BaseController{
     	}
 	}
 
-	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag)
+	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
 	{	
 		String localRootPath = doc.getLocalRootPath(); 
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -930,7 +932,7 @@ public class SVNUtil  extends BaseController{
 		
     	if(doc.getName().isEmpty())
     	{
-    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
     		return;
     	}
  	
@@ -980,7 +982,7 @@ public class SVNUtil  extends BaseController{
     		}
     		
     		//如果commitHashMap未定义，那么文件是否commit由modifyEnable标记决定
-    		if(commitHashMap == null) //文件内容改变	
+    		if(localChanges == null) //文件内容改变	
     		{
 	            if(modifyEnable)
 	            {
@@ -991,12 +993,12 @@ public class SVNUtil  extends BaseController{
     		}
     		else
     		{
-    			CommitAction commitAction = commitHashMap.get(doc.getDocId());
-    			if(commitAction != null)
+    			DocChange docChange = localChanges.get(doc.getDocId());
+    			if(docChange != null)
     			{
-    				if(commitAction.getAction() == CommitType.MODIFY)
+    				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
-	            		System.out.println("scheduleForCommit() 文件内容变更（commitHashMap）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+	            		System.out.println("scheduleForCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 	            		insertModifyFile(actionList,doc);
 	            		return;
     				}
@@ -1020,7 +1022,7 @@ public class SVNUtil  extends BaseController{
 	            return;
     		}
     		
-    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+    		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
     		break;
     	}
     	return;   	
@@ -1028,7 +1030,7 @@ public class SVNUtil  extends BaseController{
 
 	private void scanForSubDocCommit(List<CommitAction> actionList, Doc doc,
 			boolean modifyEnable, boolean isSubAction,
-			HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) {
+			HashMap<Long, DocChange> localChanges, int subDocCommitFlag) {
 
 		String localRootPath = doc.getLocalRootPath(); 
 		String localRefRootPath = doc.getLocalRefRootPath();
@@ -1065,7 +1067,7 @@ public class SVNUtil  extends BaseController{
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
 	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
 	            docHashMap.put(subDoc.getDocId(), subDoc);
-	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, commitHashMap, subDocCommitFlag);
+	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
 	        }
         }
         
