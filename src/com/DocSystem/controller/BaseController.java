@@ -2552,7 +2552,7 @@ public class BaseController  extends BaseFunction{
 		//dbDoc不存在，localDoc存在
 		if(dbDoc == null)
 		{
-			System.out.println("getDocChangeType_FSM() dbDoc 不存在");
+			//System.out.println("getDocChangeType_FSM() dbDoc 不存在");
 
 			if(localEntry != null)
 			{
@@ -2585,7 +2585,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//远程文件/目录 类型变化、内容修改、删除
-			System.out.println("getDocChangeType_FSM() 远程类型变化/内容修改/删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			//System.out.println("getDocChangeType_FSM() 远程类型变化/内容修改/删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			return remoteChangeType;
 		}
 		
@@ -2896,7 +2896,7 @@ public class BaseController  extends BaseFunction{
 	{
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
-			System.out.println("getRemoteChangeType() no verCtrl");
+			//System.out.println("getRemoteChangeType() no verCtrl");
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -2907,7 +2907,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("getRemoteChangeType() 远程文件/目录新增:"+remoteEntry.getName());
 				return DocChangeType.REMOTEADD;				
 			}
-			System.out.println("getRemoteChangeType() 远程文件未变更");
+			//System.out.println("getRemoteChangeType() 远程文件未变更");
 			return DocChangeType.NOCHANGE;
 		}
 		
@@ -2932,7 +2932,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.REMOTECHANGE;
 			}
 			
-			System.out.println("getRemoteChangeType() 远程文件未变更:"+remoteEntry.getName());
+			//System.out.println("getRemoteChangeType() 远程文件未变更:"+remoteEntry.getName());
 			return DocChangeType.NOCHANGE;
 		case 2:
 			if(dbDoc.getType() == null || dbDoc.getType() != 2)
@@ -2941,7 +2941,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.REMOTEFILETODIR;
 			}
 
-			System.out.println("getRemoteChangeType() 远程目录未变更:"+remoteEntry.getName());
+			//System.out.println("getRemoteChangeType() 远程目录未变更:"+remoteEntry.getName());
 			return DocChangeType.NOCHANGE;
 		}
 		
