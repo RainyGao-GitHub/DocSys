@@ -38,6 +38,8 @@ import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
+import com.DocSystem.common.DocChange;
+import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
@@ -2253,15 +2255,43 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//文件管理系统
-		HashMap<Long, CommitAction> commitHashMap = new HashMap<Long, CommitAction>();
-		boolean ret = SyncUpSubDocs_FSM(repos, doc, login_user, rt, commitHashMap, 1);
-		System.out.println("syncupForDocChange() SyncUpSubDocs_FSM ret:" + ret);
-		if(commitHashMap.size() == 0)
+		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
+		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
+		boolean ret = syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, 1);
+		System.out.println("syncupForDocChange() syncupScanForSubDocs_FSM ret:" + ret);
+		if(remoteChanges.size() == 0)
+		{
+			System.out.println("**************************** syncupForDocChange() 远程没有改动");
+		}
+		else
+		{
+			//Do Remote SyncUp
+			syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
+		}
+		
+		if(localChanges.size() == 0)
 		{
 			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地没有改动");
 			return true;
 		}
-		
+		else
+		{
+			//Do local SyncUp
+			return syncupLocalChanges_FSM(repos, doc, login_user, localChanges, rt);
+		}
+	}
+	
+
+	private boolean syncupRemoteChanges_FSM(Repos repos, User login_user, HashMap<Long, DocChange> remoteChanges, ReturnAjax rt) 
+	{
+		for(DocChange docChange: remoteChanges.values())
+	    {
+			syncUpRemoteChange_FSM(repos, docChange, login_user, rt);
+	    }
+		return true;
+	}
+
+	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, User login_user, HashMap<Long, DocChange> localChanges, ReturnAjax rt) {
 		//本地有改动需要提交
 		System.out.println("syncupForDocChange() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
 		String commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
@@ -2281,7 +2311,7 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, commitHashMap, 1);
+		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, localChanges, 1);
 		if(revision == null)
 		{
 			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动Commit失败:" + revision);
@@ -2290,9 +2320,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//更新数据库信息
-		for(CommitAction commitAction: commitHashMap.values())
+		for(DocChange docChange: localChanges.values())
 	    {
-			Doc commitDoc = commitAction.getDoc();
+			Doc commitDoc = docChange.getDoc();
 			printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
 			//需要根据commitAction的行为来决定相应的操作
 			commitDoc.setRevision(revision);
@@ -2303,7 +2333,7 @@ public class BaseController  extends BaseFunction{
 		dbUpdateDocRevision(repos, doc, revision);
 		System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动已更新:" + revision);
 		unlockDoc(doc, login_user, docLock);
-		return true;
+		return true;	
 	}
 
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
@@ -2449,14 +2479,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean syncupForDocChange_FSM(Repos repos, Doc doc, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, CommitAction> commitHashMap, int subDocSyncFlag) 
+	private boolean syncupScanForDoc_FSM(Repos repos, Doc doc, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
 	{
 		//printObject("syncupForDocChange_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
 			System.out.println("syncupForDocChange_FSM() it is root doc");			
-			return SyncUpSubDocs_FSM(repos, doc, login_user, rt, commitHashMap, subDocSyncFlag);
+			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		}
 		
 		Doc dbDoc = null;
@@ -2474,58 +2504,36 @@ public class BaseController  extends BaseFunction{
 		
 		DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 		//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
-
-		CommitType commitActionType = null;
+		
 		switch(docChangeType)
 		{
 		case LOCALADD:	//localAdd
-			commitActionType = CommitType.ADD;
 		case LOCALDELETE: 	//localDelete
-			commitActionType = CommitType.DELETE;
 		case LOCALCHANGE: 	//localFileChanged
-			commitActionType = CommitType.MODIFY;
 		case LOCALFILETODIR:	//localTypeChanged(From File to Dir)
-			commitActionType = CommitType.FILETODIR;
 		case LOCALDIRTOFILE:	//localTypeChanged(From Dir to File)
-			commitActionType = CommitType.DIRTOFILE;
-			CommitAction commitAction = new CommitAction();
-			commitAction.setDoc(doc);
-			commitAction.setAction(commitActionType);
-			commitHashMap.put(doc.getDocId(), commitAction);
-			break;
-		
+			DocChange localChange = new DocChange();
+			localChange.setDoc(doc);
+			localChange.setType(docChangeType);
+			localChanges.put(doc.getDocId(), localChange);
+			return true;
 		//由于远程同步需要直接修改或删除本地文件，一旦误删无法恢复，因此只处理远程新增
 		case REMOTEADD:	//remoteAdd
 		case REMOTEDELETE:	//remoteDelete
 		case REMOTECHANGE:	//remoteFileChanged
 		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
-			//LockDoc
-			DocLock docLock = null;
-			synchronized(syncLock)
-			{
-				//Try to lock the Doc
-				docLock = lockDoc(doc,2,1*60*60*1000,login_user,rt,true); //2 Hours 2*60*60*1000 = 86400,000
-				if(docLock == null)
-				{
-					unlock(); //线程锁
-					docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
-					return false;
-				}
-				unlock(); //线程锁
-			}
-			boolean ret = syncUpRemoteChange_FSM(repos, dbDoc, remoteEntry, login_user, rt, docChangeType);
-			unlockDoc(doc, login_user, docLock);
-			return ret;
+			DocChange remoteChange = new DocChange();
+			remoteChange.setDoc(doc);
+			remoteChange.setType(docChangeType);
+			remoteChanges.put(doc.getDocId(), remoteChange);
+			return true;
 		case NOCHANGE:		//no change
-			break;
-		case UNDEFINED:	//Unknown localEntryType
-			return false;
+			return true;
 		default:
 			break;
-		}
-		
-		return true;
+		}		
+		return false;
 	}
 	
 	private DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
@@ -2671,7 +2679,7 @@ public class BaseController  extends BaseFunction{
 		return dbDocHashMap.get(doc.getDocId());
 	}
 
-	private boolean SyncUpSubDocs_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, CommitAction> commitHashMap, int subDocSyncFlag) 
+	private boolean syncupScanForSubDocs_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
 	{
 		//System.out.println("************************ SyncUpSubDocs_FSM()  " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncFlag:" + subDocSyncFlag);
 
@@ -2703,14 +2711,15 @@ public class BaseController  extends BaseFunction{
 		List<Doc> dbDocList = getDBEntryList(repos, doc);
 		//printObject("SyncUpSubDocs_FSM() dbEntryList:", dbDocList);
 
+		//注意: 如果仓库没有版本仓库则不需要远程同步
 		List<Doc> remoteEntryList = null;
-    	boolean isRemoteDocChanged = true;
-//    	if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
-//    	{	
-//    		isRemoteDocChanged = isRemoteDocChanged(repos, doc);
-//    	}
+    	boolean isRemoteSyncUpNeed = false;
+    	if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
+    	{	
+    		isRemoteSyncUpNeed = true;
+    	}
     	
-    	if(isRemoteDocChanged)
+    	if(isRemoteSyncUpNeed)
 		{
     		remoteEntryList = getRemoteEntryList(repos, doc);
     	    //printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
@@ -2721,9 +2730,10 @@ public class BaseController  extends BaseFunction{
         	}        	
 		}
 
+    	//将dbDocList\localEntryList\remoteEntryList转成HashMap
 		localDocHashMap =  ConvertDocListToHashMap(localEntryList);	
 		dbDocHashMap = ConvertDocListToHashMap(dbDocList);	
-		if(isRemoteDocChanged)
+		if(isRemoteSyncUpNeed)	//如果不需要远程同步则直接将remoteHashMap设置成dbHashMap来避免远程同步
 		{
 			remoteDocHashMap = ConvertDocListToHashMap(remoteEntryList);					
 		}
@@ -2734,41 +2744,21 @@ public class BaseController  extends BaseFunction{
 
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
+		syncupScanForDocList_FSM(remoteEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+		syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+		syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+
+		return true;
+    }
+	
+	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag)
+	{
 		Doc subDoc = null;
-	    
-		//注意必须先进行远程同步，因为需要知道远程的改动是否都全部成功，如果成功了，需要dbDoc和remoteDoc的revision进行同步
-    	if(isRemoteDocChanged)
-    	{
-    		boolean remoteSyncFlag = true;
-	    	for(int i=0;i<remoteEntryList.size();i++)
-		    {
-	    		subDoc = remoteEntryList.get(i);
-	    		//System.out.println("SyncUpSubDocs_FSM() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
-	    		if(docHashMap.get(subDoc.getName()) != null)
-	    		{
-	    			//already syncuped
-	    			continue;	
-	    		}
-	    		
-	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		if(syncupForDocChange_FSM(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag) == false)
-	    		{
-	    			remoteSyncFlag = false;
-	    		}
-		    }
-	    	
-	    	//当前目录无改动需要将dbDoc和remoteDoc的revision进行一次同步
-	    	if(remoteSyncFlag == true)
-	    	{
-	    		String latestDocRevision = verReposGetLatestRevision(repos, doc);
-	    		dbUpdateDocRevision(repos, doc, latestDocRevision);
-	    	}
-    	}
-		
-    	for(int i=0;i<localEntryList.size();i++)
-    	{
-    		subDoc = localEntryList.get(i);
-    		//System.out.println("SyncUpSubDocs_FSM() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    for(int i=0;i<docList.size();i++)
+	    {
+    		subDoc = docList.get(i);
+    		//System.out.println("syncupDocChangeForDocList_FSM() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+    		
     		if(docHashMap.get(subDoc.getName()) != null)
     		{
     			//already syncuped
@@ -2776,21 +2766,10 @@ public class BaseController  extends BaseFunction{
     		}
     		
     		docHashMap.put(subDoc.getName(), subDoc);
-    		syncupForDocChange_FSM(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
-    	}
-    	
-		if(dbDocList != null)
-    	{
-	    	for(int i=0;i<dbDocList.size();i++)
-	    	{
-	    		subDoc = dbDocList.get(i);
-	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		syncupForDocChange_FSM(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, commitHashMap, subDocSyncFlag);
-	    	}
-    	}
-    	
-    	return true;
-    }
+    		syncupScanForDoc_FSM(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+	    }
+		return true;
+	}
 	
 	private HashMap<Long, Doc> ConvertDocListToHashMap(List<Doc> docList) {
 		if(docList == null)
@@ -2808,9 +2787,11 @@ public class BaseController  extends BaseFunction{
 		return docHashMap;
 	}
 
-	//localEntry and dbDoc was same
-	private boolean syncUpRemoteChange_FSM(Repos repos, Doc doc, Doc remoteEntry, User login_user, ReturnAjax rt, DocChangeType docChangeType) 
+	private boolean syncUpRemoteChange_FSM(Repos repos, DocChange docChange, User login_user, ReturnAjax rt) 
 	{	
+		Doc doc = docChange.getDoc();
+		Doc remoteEntry = docChange.getRemoteEntry();
+		DocChangeType docChangeType = docChange.getType();
 		
 		String localParentPath = null;
 		List<Doc> successDocList = null;
@@ -5478,7 +5459,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryDetail(doc, commitId);
 	}
 	
-	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) 
+	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
 	{	
 		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
@@ -5492,17 +5473,17 @@ public class BaseController  extends BaseFunction{
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
+			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, commitHashMap, subDocCommitFlag);
+			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag);
 		}
 		
 		return "";
 	}
 	
-	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag)
+	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5512,10 +5493,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
+		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag);
 	}
 	
-	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, CommitAction> commitHashMap, int subDocCommitFlag) 
+	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		boolean isRemote = false;
@@ -5534,7 +5515,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 				
-		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, commitHashMap, subDocCommitFlag);
+		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag);
 		if(revision == null)
 		{
 			return null;
