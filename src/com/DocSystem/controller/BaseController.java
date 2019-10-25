@@ -2979,14 +2979,18 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean verReposPullPush(Repos repos, boolean isRealDoc, ReturnAjax rt)
 	{
+		Integer isRemote = repos.getIsRemote();
 		Integer verCtrl = repos.getVerCtrl();
 		if(!isRealDoc)
 		{
 			verCtrl = repos.getVerCtrl1();
+			isRemote = repos.getIsRemote1();
 		}
+		System.out.println("verReposPullPush() verCtrl:" + verCtrl + " isRemote:" + isRemote);
 		
-		if(verCtrl != 2)
+		if(verCtrl != 2 || isRemote != 1)
 		{
+			System.out.println("verReposPullPush() 非GIT远程仓库无需PullPush");
 			return true;
 		}
 		
@@ -3580,7 +3584,7 @@ public class BaseController  extends BaseFunction{
 			ret = verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
-		case PUSH: //copy
+		case PUSH: //pull
 			if(verReposPullPush(repos, isRealDoc, rt) == false)
 			{
 				return null;
