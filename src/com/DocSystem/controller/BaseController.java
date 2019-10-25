@@ -1608,6 +1608,8 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
 			return null;
 		}
+		//推送至远程仓库
+		verReposPullPush(repos, doc.getIsRealDoc(), rt);
 		
 		if(doc.getIsRealDoc())
 		{
@@ -2318,6 +2320,8 @@ public class BaseController  extends BaseFunction{
 			unlockDoc(doc, login_user, docLock);
 			return false;
 		}
+		//推送到远程仓库
+		verReposPullPush(repos, true, rt);
 		
 		//更新数据库信息
 		for(DocChange docChange: localChanges.values())
@@ -2334,8 +2338,6 @@ public class BaseController  extends BaseFunction{
 		System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动已更新:" + revision);
 		unlockDoc(doc, login_user, docLock);
 		
-		//推送到远程仓库
-		verReposPullPush(repos, true, rt);
 		return true;	
 	}
 
@@ -3548,18 +3550,28 @@ public class BaseController  extends BaseFunction{
 			isRealDoc = false;
 		}
 		
+		String ret;
 		switch(action.getAction())
 		{
 		case ADD: //add
 		case DELETE:	//delete
 		case UPDATE: //update
-			return verReposDocCommit(repos, isRealDoc, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
-		case MOVE:	//move
-			return verReposDocMove(repos, isRealDoc, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
-		case COPY: //copy
-			return verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
-		case PUSH: //copy
+			ret = verReposDocCommit(repos, isRealDoc, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 			verReposPullPush(repos, isRealDoc, rt);
+			return ret;
+		case MOVE:	//move
+			ret = verReposDocMove(repos, isRealDoc, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			verReposPullPush(repos, isRealDoc, rt);
+			return ret;
+		case COPY: //copy
+			ret = verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			verReposPullPush(repos, isRealDoc, rt);
+			return ret;
+		case PUSH: //copy
+			if(verReposPullPush(repos, isRealDoc, rt) == false)
+			{
+				return null;
+			}
 			return "PUSHOK";
 		default:
 			break;				
@@ -3870,6 +3882,9 @@ public class BaseController  extends BaseFunction{
 			{
 				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
 
+				//Insert Push Action
+				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null);
+
 				//Insert index add action for VDoc
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.VIRTURALDOC, null);
 				return true;
@@ -3881,6 +3896,9 @@ public class BaseController  extends BaseFunction{
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
 				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
+
+				//Insert Push Action
+				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null);
 
 				//Insert index update action for VDoc
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.VIRTURALDOC, null);
