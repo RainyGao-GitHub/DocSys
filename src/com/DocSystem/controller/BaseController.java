@@ -2333,6 +2333,9 @@ public class BaseController  extends BaseFunction{
 		dbUpdateDocRevision(repos, doc, revision);
 		System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动已更新:" + revision);
 		unlockDoc(doc, login_user, docLock);
+		
+		//推送到远程仓库
+		verReposPullPush(repos, true, rt);
 		return true;	
 	}
 
@@ -5499,15 +5502,6 @@ public class BaseController  extends BaseFunction{
 	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
-		boolean isRemote = false;
-		if(isRealDoc == false)
-		{
-			isRemote = repos.getIsRemote() == 1;
-		}
-		else
-		{
-			isRemote = repos.getIsRemote1() == 1;
-		}
 		
 		GITUtil verReposUtil = new GITUtil();
 		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))

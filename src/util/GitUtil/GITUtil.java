@@ -1597,6 +1597,12 @@ public class GITUtil  extends BaseController{
 	//doPullEx 保证pull一定成功
 	public boolean doPullEx()
 	{
+		//For local Git Repos, no need to do rebase
+		if(isRemote == false)
+		{
+			return true;
+		}
+		
     	if(OpenRepos() == false)
     	{
         	System.out.println("doPullEx() Failed to open git repository");
@@ -1607,12 +1613,6 @@ public class GITUtil  extends BaseController{
 		{
 			System.out.println("doPullEx() Failed to checkAndCleanBranch");
     		return false;
-		}
-
-		//For local Git Repos, no need to do rebase
-		if(isRemote == false)
-		{
-			return true;
 		}
 		
     	boolean ret = doPull(git, repository);
