@@ -269,13 +269,13 @@ public class BaseController  extends BaseFunction{
 	    		printObject("isDirLocalChanged() localEntry: ", subLocalEntry);
 	    		if(subLocalEntry.getType() == 0)
 	    		{
-	    			System.out.println("isDirLocalChanged() local Doc Deleted: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    			System.out.println("isDirLocalChanged() 本地文件删除: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    		
 	    		if(!subLocalEntry.getType().equals(subDoc.getType()))
 	    		{
-	    			System.out.println("isDirLocalChanged() local Doc Type Changed: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    			System.out.println("isDirLocalChanged() 本地文件类型变化: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    		
@@ -290,7 +290,7 @@ public class BaseController  extends BaseFunction{
 	    		
 	    		if(isDocLocalChanged(subDoc, subLocalEntry))
 	    		{
-	    			System.out.println("isDirLocalChanged() local Doc Content Changed: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    			System.out.println("isDirLocalChanged() 本地文件内容修改: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    	}
@@ -357,7 +357,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		//System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
+		System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
 		//printObject("isDocRemoteChanged() doc:",dbDoc);
 		//printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 		return true;
@@ -2564,14 +2564,14 @@ public class BaseController  extends BaseFunction{
 			if(localEntry != null)
 			{
 				//本地新增文件/目录
-				System.out.println("getDocChangeType_FSM() 本地新增:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 本地新增:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=null localEntry!=null" );
 				return DocChangeType.LOCALADD;
 			}
 			
 			if(remoteEntry != null)
 			{
 				//远程文件/目录新增
-				System.out.println("getDocChangeType_FSM() 远程新增:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 远程新增:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=null localEntry=null remoteEntry!=null");
 				return DocChangeType.REMOTEADD;
 			}
 			
@@ -2587,7 +2587,7 @@ public class BaseController  extends BaseFunction{
 			if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
 			{
 				//本地文件/目录删除
-				System.out.println("getDocChangeType_FSM() 本地删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 本地删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc!=null localEntry=null");
 				return DocChangeType.LOCALDELETE;
 			}
 			
@@ -2602,7 +2602,7 @@ public class BaseController  extends BaseFunction{
 			if(dbDoc.getType() == 2)
 			{
 				//本地目录 类型变化 （目录删除后新增同名文件）
-				System.out.println("getDocChangeType_FSM() 本地类型变化（目录->文件）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 本地类型变化（目录->文件）:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + "dbDoc is dir, localEntry is File");
 				return DocChangeType.LOCALDIRTOFILE;
 			}
 			
@@ -2616,21 +2616,21 @@ public class BaseController  extends BaseFunction{
 			if(remoteEntry == null || remoteEntry.getType() == 0)
 			{
 				//远程删除
-				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=localEntry is File, remoteEntry=null");
 				return DocChangeType.REMOTEDELETE;
 			}
 			
 			if(remoteEntry.getType() == 2)
 			{
 				//远程文件 类型变化（文件被删除并增加了同名目录）
-				System.out.println("getDocChangeType_FSM() 远程类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 远程类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=LocalEntry is File, remoteEntry is Dir");
 				return DocChangeType.REMOTEFILETODIR;
 			}
 			
 			if(isDocRemoteChanged(repos, dbDoc, remoteEntry))
 			{
 				//远程文件 内容修改
-				System.out.println("getDocChangeType_FSM() 远程内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 远程内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=LocalEntry is File, remoteEntry!=dbDoc");
 				return DocChangeType.REMOTECHANGE;
 			}
 			
@@ -2645,7 +2645,7 @@ public class BaseController  extends BaseFunction{
 			if(dbDoc.getType() == 1)
 			{
 				//本地文件 类型变化 （文件删除后新增同名文件）
-				System.out.println("getDocChangeType_FSM() 本地类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 本地类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc is File, localEntry is Dir");
 				return DocChangeType.LOCALFILETODIR;
 			}
 			
@@ -2654,12 +2654,12 @@ public class BaseController  extends BaseFunction{
 				if(isDirLocalChanged(repos, dbDoc))
 				{
 					//远程删除，但同时本地目录有修改
-					System.out.println("getDocChangeType_FSM() 远程删除，但本地目录有改动:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					System.out.println("getDocChangeType_FSM() 远程删除，但本地目录有改动:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc!=localEntry is Dir, remoteEntry=null");
 					return DocChangeType.LOCALCHANGE;
 				}
 				
 				//远程删除
-				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=localEntry is Dir, remoteEntry=null");
 				return DocChangeType.REMOTEDELETE;
 			}
 			
@@ -2668,12 +2668,12 @@ public class BaseController  extends BaseFunction{
 				if(isDirLocalChanged(repos, dbDoc))
 				{
 					//远程目录 类型变化（目录被删除并增加了同名文件），但同时本地目录有修改
-					System.out.println("getDocChangeType_FSM() 远程类型改变（目录->文件），但本地目录有改动:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+					System.out.println("getDocChangeType_FSM() 远程类型改变（目录->文件），但本地目录有改动:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc!=localEntry is Dir, remoteEntry is File");
 					return DocChangeType.LOCALCHANGE;
 				}
 				
 				//远程目录 类型变化（目录被删除并增加了同名文件）
-				System.out.println("getDocChangeType_FSM() 远程类型改变（目录->文件）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("getDocChangeType_FSM() 远程类型改变（目录->文件）:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc=localEntry is Dir, remoteEntry is File");
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
