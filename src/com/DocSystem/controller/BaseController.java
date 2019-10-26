@@ -5576,7 +5576,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(verCtrl == 1)
 		{
-			long revision = -1;
+			Long revision = null;
 			if(commitId != null)
 			{
 				revision = Long.parseLong(commitId);
@@ -5590,7 +5590,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,long revision, boolean force, boolean auto, HashMap<String, String> downloadList)
+	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,Long revision, boolean force, boolean auto, HashMap<String, String> downloadList)
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
