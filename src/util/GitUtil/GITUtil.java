@@ -1622,6 +1622,25 @@ public class GITUtil  extends BaseController{
     	return ret;
 	}
 	
+	public boolean checkAndClearnBranch()
+	{
+    	if(OpenRepos() == false)
+    	{
+        	System.out.println("checkAndClearnBranch() Failed to open git repository");
+    		return false;
+    	}
+
+		if(checkAndCleanBranch(git, repository, "master") == false)
+		{
+	    	CloseRepos();
+			System.out.println("checkAndClearnBranch() Failed to checkAndCleanBranch");
+			return false;
+		}
+
+		CloseRepos();
+    	return true;
+	}
+	
 	
 	public boolean checkAndCleanBranch(Git git, Repository repo, String branchName) 
 	{
