@@ -5543,7 +5543,13 @@ public class BaseController  extends BaseFunction{
 		{
 			return null;
 		}
-				
+		
+		if(verReposUtil.checkAndClearnBranch() == false)
+		{
+			System.out.println("gitDocCommit() master branch is dirty and failed to clean");
+			return null;
+		}
+		
 		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag);
 		if(revision == null)
 		{
