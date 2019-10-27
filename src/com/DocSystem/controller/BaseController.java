@@ -229,7 +229,7 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			
-			long svnRevision = -1;
+			String svnRevision = null;
 			
 			//Get list from verRepos
 			return svnUtil.getDocList(repos, doc, svnRevision); 
@@ -3062,7 +3062,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private Doc svnGetDoc(Repos repos, Doc doc, String strRevision) {
+	private Doc svnGetDoc(Repos repos, Doc doc, String revision) {
 		//System.out.println("svnGetDoc() reposId:" + repos.getId() + " parentPath:" + parentPath + " entryName:" + entryName);
 		
 		SVNUtil svnUtil = new SVNUtil();
@@ -3070,12 +3070,6 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("svnGetDoc() svnUtil.Init失败！");	
 			return null;
-		}
-
-		Long revision = (long) -1;
-		if(strRevision != null)
-		{
-			revision = Long.parseLong(strRevision);
 		}
 
 		Doc remoteEntry = svnUtil.getDoc(doc, revision);		
@@ -5576,12 +5570,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(verCtrl == 1)
 		{
-			Long revision = null;
-			if(commitId != null)
-			{
-				revision = Long.parseLong(commitId);
-			}
-			return svnCheckOut(repos, doc, localParentPath, targetName, revision, force, auto, downloadList);		
+			return svnCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);		
 		}
 		else if(verCtrl == 2)
 		{
@@ -5590,7 +5579,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,Long revision, boolean force, boolean auto, HashMap<String, String> downloadList)
+	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,String revision, boolean force, boolean auto, HashMap<String, String> downloadList)
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5615,7 +5604,7 @@ public class BaseController  extends BaseFunction{
         		return null;
     		}
 
-    		Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
+    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
     		if(preCommitId == null)
     		{
         		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
@@ -5638,7 +5627,7 @@ public class BaseController  extends BaseFunction{
 	        			return null;
 	        		}
 	        		
-	    	    	Long preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    	String preCommitId = verReposUtil.getPreviousCommmitId(revision);
 	    	    	if(preCommitId == null)
 	    	    	{
 	    	        	System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
