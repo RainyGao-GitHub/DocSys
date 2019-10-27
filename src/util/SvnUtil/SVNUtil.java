@@ -165,18 +165,25 @@ public class SVNUtil  extends BaseController{
 				
         try {
     		String[] targetPaths = new String[]{entryPath};
-        	long startRevision = repository.getLatestRevision();
-    		long endRevision = startRevision;
+        	long endRevision = repository.getLatestRevision();
+    		long startRevision = 0;
     		Collection<SVNLogEntry> logEntries = null;
-    		logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, true);	//不获取copy等历史
+    		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, true);	//不获取copy等历史
+    		if(logEntries == null)
+    		{
+    			System.out.println("getLatestRevCommit() there is no history for " + entryPath);
+    			return null;
+    		}
             
-            for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
+    		Iterator<SVNLogEntry> entries = logEntries.iterator();
+    		SVNLogEntry logEntry = null;
+    		while(entries.hasNext()) {
                 /*
                  * gets a next SVNLogEntry
                  */
-                SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-                return logEntry;        
+                logEntry = (SVNLogEntry) entries.next();
             }
+            return logEntry;
             
         } catch (Exception e) {
             System.out.println("getLogEntryList() repository.log() 异常");
@@ -344,18 +351,14 @@ public class SVNUtil  extends BaseController{
             return null;
         }
         
-        long oldestRevision = 0;
-        
-        for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
+        Iterator<SVNLogEntry> entries = logEntries.iterator();    
+        long oldestRevision = 0;	//用于控制maxLogNum
+        while(entries.hasNext()) {
             /*
              * gets a next SVNLogEntry
              */
             SVNLogEntry logEntry = (SVNLogEntry) entries.next();
             long revision = logEntry.getRevision();
-            if(oldestRevision == 0)
-            {
-            	oldestRevision = 0;
-            }
             
             String commitId = "" + revision;
             String commitUser = logEntry.getAuthor(); //提交者
