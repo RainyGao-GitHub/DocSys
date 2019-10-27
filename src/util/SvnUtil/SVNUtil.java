@@ -162,12 +162,12 @@ public class SVNUtil  extends BaseController{
 	private SVNLogEntry getLatestRevCommit(Doc doc) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
-		String[] targetPaths = new String[]{entryPath};
 				
-		Collection<SVNLogEntry> logEntries = null;
         try {
+    		String[] targetPaths = new String[]{entryPath};
         	long startRevision = repository.getLatestRevision();
     		long endRevision = startRevision;
+    		Collection<SVNLogEntry> logEntries = null;
     		logEntries = repository.log(targetPaths, null,startRevision, endRevision, false, true);	//不获取copy等历史
             
             for (Iterator<SVNLogEntry> entries = logEntries.iterator(); entries.hasNext();) {
@@ -205,13 +205,16 @@ public class SVNUtil  extends BaseController{
     
     //获取Doc在指定Revision的Type和真实Revision，该接口在同步调用时必须保证Revision的正确
     //但获取Revision是一个低效的操作，因此需要指定是否需要获取真实的Revision
-    public Doc getDoc(Doc doc, Long revision)
-	{    	
+    public Doc getDoc(Doc doc, String commitId)
+	{
+    	long revision = getRevisionByCommitId(commitId);
+    	
     	String entryPath = doc.getPath() + doc.getName();
     	
     	Integer type = checkPath(entryPath, revision);
     	if(type == null)
     	{
+	    	System.out.println("getDoc() checkPath exception for " + entryPath + " at revision:" + revision); 
     		return null;
     	}
     	
@@ -219,37 +222,78 @@ public class SVNUtil  extends BaseController{
 		{
 	    	System.out.println("getDoc() " + entryPath + " not exist for revision:" + revision); 
 	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    	remoteEntry.setRevision(revision+"");
+	    	remoteEntry.setRevision(commitId);
 	    	return remoteEntry;
 		}
 
-        if(revision != null) 
+        if(commitId != null) 
 		{
         	//If revision already set, no need to get revision
 	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    	remoteEntry.setRevision(revision+"");
+	    	remoteEntry.setRevision(commitId);
 	    	return remoteEntry;
 		}
-
-        SVNLogEntry commit = getLatestRevCommit(doc);
-        if(commit == null)
+        
+        //For root doc
+        if(entryPath.isEmpty())
         {
-        	System.out.println("getDoc() Failed to getLatestRevCommit");
-        	return null;
+        	if(type != 2)
+        	{
+    	    	System.out.println("getDoc() root Doc is not directory");      		
+    	    	return null;
+        	}
+
+        	String latestRevision = getLatestReposRevision();
+        	if(latestRevision == null)
+        	{
+    	    	System.out.println("getDoc() getLatestReposRevision Failed for " + entryPath);      		
+        		return null;
+        	}
+
+        	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+        	remoteEntry.setRevision(latestRevision);
+        	return remoteEntry;
         }
+        
+        
+		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath(), revision);
+		if(entries == null)
+		{
+			System.out.println("getDoc() there is not subEntries under " + doc.getPath());      		
+    		return null;
+		}
 		
-        String commitId=commit.getRevision() + "";  //revision
-	    String author=commit.getAuthor();  //作者
-	    String commitUser=author;
-	    long commitTime=commit.getDate().getTime();
-	            
-	    //String commitUserEmail=commit.getCommitterIdent().getEmailAddress();//提交者
-        Doc remoteDoc = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-		remoteDoc.setRevision(commitId);
-        remoteDoc.setCreatorName(author);
-        remoteDoc.setLatestEditorName(commitUser);
-        remoteDoc.setLatestEditTime(commitTime);
-        return remoteDoc;
+	    Iterator<SVNDirEntry> iterator = entries.iterator();
+	    while (iterator.hasNext()) 
+	    {
+	    	SVNDirEntry subEntry = iterator.next();
+	    	int subEntryType = getEntryType(subEntry.getKind());
+	    	if(subEntryType <= 0)
+	    	{
+	    		continue;
+	    	}
+	    	
+	    	String subEntryName = subEntry.getName();
+	    	if(subEntryName.equals(doc.getName()))
+	    	{
+		    	if(subEntryType != type)
+		    	{
+					System.out.println("getDoc() type not matched subEntryType:" + subEntryType + " type:" + type);      			    		
+		    	}
+	    		
+	    		Long lastChangeTime = subEntry.getDate().getTime();
+	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+	    		remoteEntry.setSize(subEntry.getSize());
+	    		remoteEntry.setCreateTime(lastChangeTime);
+	    		remoteEntry.setLatestEditTime(lastChangeTime);
+	    		remoteEntry.setCreatorName(subEntry.getAuthor());
+	    		remoteEntry.setLatestEditorName(subEntry.getAuthor());
+	    		remoteEntry.setRevision(subEntry.getRevision()+"");
+	    		return remoteEntry;
+	    	}
+	    }
+	    
+	    return null;
 	}
     
     //getHistory filePath: remote File Path under repositoryURL
@@ -499,13 +543,14 @@ public class SVNUtil  extends BaseController{
 		return "file:///"+path+name; 
 	}
 	
-	public Integer checkPath(String entryPath, Long revision)
+	public Integer checkPath(String entryPath, String commitId)
 	{
-		if(revision == null)
-		{
-			revision = -1L;
-		}
-		
+		long revision = getRevisionByCommitId(commitId);
+		return checkPath(entryPath, revision);
+	}
+	
+	private Integer checkPath(String entryPath, long revision)
+	{	
 		SVNNodeKind nodeKind = null;
 		try {
 			nodeKind = repository.checkPath(entryPath, revision);
@@ -1476,8 +1521,10 @@ public class SVNUtil  extends BaseController{
     }
     
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public List<Doc> getDocList(Repos repos, Doc doc, long revision) 
+	public List<Doc> getDocList(Repos repos, Doc doc, String commitId) 
 	{	
+		long revision = getRevisionByCommitId(commitId);
+		
 		String docName =  doc.getName();
 		if(doc.getDocId() == 0)
 		{
@@ -1513,7 +1560,7 @@ public class SVNUtil  extends BaseController{
 	    {
 	    	SVNDirEntry subEntry = iterator.next();
 	    	int subEntryType = getEntryType(subEntry.getKind());
-	    	if(type <= 0)
+	    	if(subEntryType <= 0)
 	    	{
 	    		continue;
 	    	}
@@ -1524,20 +1571,28 @@ public class SVNUtil  extends BaseController{
 	    	subDoc.setSize(subEntry.getSize());
 	    	subDoc.setCreateTime(lastChangeTime);
 	    	subDoc.setLatestEditTime(lastChangeTime);
+	    	subDoc.setCreatorName(subEntry.getAuthor());
+	    	subDoc.setLatestEditorName(subEntry.getAuthor());
 	    	subDoc.setRevision(subEntry.getRevision()+"");
 	        subEntryList.add(subDoc);
 	    }
 	    return subEntryList;
 	}
 	
+	private long getRevisionByCommitId(String commitId) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	//get the subEntryList under remoteEntryPath,only useful for Directory
-	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, Long revision) 
+	public Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, String commitId)
+	{
+		long revision = getRevisionByCommitId(commitId);
+		return getSubEntries(remoteEntryPath, revision);
+	}
+
+	private Collection<SVNDirEntry> getSubEntries(String remoteEntryPath, long revision) 
 	{    	
-		if(revision == null)
-		{
-			revision = -1L;
-		}
-		
 		Collection<SVNDirEntry> entries = null;
 		try {
 			entries = repository.getDir(remoteEntryPath, revision, null,(Collection) null);
@@ -1548,12 +1603,12 @@ public class SVNUtil  extends BaseController{
 		}
 		return entries;
 	}
-	
-	
-	
-	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,Long revision, boolean force, HashMap<String, String> downloadList) {
 		
-		System.out.println("getEntry() revision:" + revision + " 注意递归过程中，该值必须不变");
+	public List<Doc> getEntry(Doc doc, String localParentPath, String targetName,String commitId, boolean force, HashMap<String, String> downloadList) {
+		
+		System.out.println("getEntry() revision:" + commitId + " 注意递归过程中，该值必须不变");
+		
+		long revision = getRevisionByCommitId(commitId);
 		
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
@@ -1570,7 +1625,7 @@ public class SVNUtil  extends BaseController{
 		
 		String remoteEntryPath = parentPath + entryName;
     	
-		Doc remoteDoc = getDoc(doc, revision);
+		Doc remoteDoc = getDoc(doc, commitId);
 		if(remoteDoc == null || remoteDoc.getType() <= 0)
 		{
 			//entryName是空，表示当前访问的远程的根目录，必须存在
@@ -1727,7 +1782,7 @@ public class SVNUtil  extends BaseController{
 				//这个问题导致了，自动同步出现问题（远程同步用的就是getEntry接口），导致远程同步后的dbDoc与实际的revision不一致
 				//Long subEntryRevision = subEntry.getRevision();
 				Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, subEntryName, subDocLevel,subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
-				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName,revision, force, downloadList);
+				List<Doc> subSuccessList = getEntry(subDoc, subEntryLocalParentPath,subEntryName, commitId, force, downloadList);
 				if(subSuccessList != null && subSuccessList.size() > 0)
 				{
 					successDocList.addAll(subSuccessList);
@@ -1739,7 +1794,19 @@ public class SVNUtil  extends BaseController{
 		return null;
 	}
 
-	public Long getPreviousCommmitId(Long revision) 
+	public String getPreviousCommmitId(String commitId) 
+	{
+		long revision = getRevisionByCommitId(commitId);
+		Long preRevision = getPreviousCommmitId(revision);
+		if(preRevision == null)
+		{
+			return null;
+		}
+		
+		return preRevision + "";
+	}
+
+	private Long getPreviousCommmitId(long revision) 
 	{	
 		if(revision == -1)
 		{
