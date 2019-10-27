@@ -229,10 +229,8 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			
-			String svnRevision = null;
-			
 			//Get list from verRepos
-			return svnUtil.getDocList(repos, doc, svnRevision); 
+			return svnUtil.getDocList(repos, doc, null); 
 		case 2:	//GIT
 			
 			GITUtil gitUtil = new GITUtil();
@@ -242,10 +240,8 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			
-			String gitRevision = null;
-			
 			//Get list from verRepos
-			return gitUtil.getDocList(repos, doc, gitRevision); 
+			return gitUtil.getDocList(repos, doc, null); 
 		}
 		return null;
 	}
@@ -2740,7 +2736,7 @@ public class BaseController  extends BaseFunction{
     	if(isRemoteSyncUpNeed)
 		{
     		remoteEntryList = getRemoteEntryList(repos, doc);
-    	    //printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
+    	    printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
         	if(remoteEntryList == null)
         	{
         		System.out.println("SyncUpSubDocs_FSM() remoteEntryList 获取异常:");
