@@ -2736,7 +2736,7 @@ public class BaseController  extends BaseFunction{
     	if(isRemoteSyncUpNeed)
 		{
     		remoteEntryList = getRemoteEntryList(repos, doc);
-    	    printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
+    	    //printObject("SyncUpSubDocs_FSM() remoteEntryList:", remoteEntryList);
         	if(remoteEntryList == null)
         	{
         		System.out.println("SyncUpSubDocs_FSM() remoteEntryList 获取异常:");
