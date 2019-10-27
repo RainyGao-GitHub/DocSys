@@ -1562,6 +1562,7 @@ public class SVNUtil  extends BaseController{
 	    	int subEntryType = getEntryType(subEntry.getKind());
 	    	if(subEntryType <= 0)
 	    	{
+	    		System.out.println("getDocList() invalid subEntry subEntryType:" + subEntryType);
 	    		continue;
 	    	}
 			
