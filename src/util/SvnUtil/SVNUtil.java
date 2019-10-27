@@ -1581,8 +1581,13 @@ public class SVNUtil  extends BaseController{
 	}
 	
 	private long getRevisionByCommitId(String commitId) {
-		// TODO Auto-generated method stub
-		return 0;
+		if(commitId == null)
+		{
+			return -1;
+		}
+		
+		long revision = Long.parseLong(commitId);
+		return revision;
 	}
 
 	//get the subEntryList under remoteEntryPath,only useful for Directory
