@@ -1220,12 +1220,7 @@ public class SVNUtil  extends BaseController{
 			
 	//move or copy Doc
 	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
-	{   
-		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
-		{
-			srcDoc.setRevision(getLatestRevision(srcDoc));
-		}
-		
+	{   		
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
 		Integer type = checkPath(srcEntryPath,null);
 		if(type == null)
@@ -1264,8 +1259,7 @@ public class SVNUtil  extends BaseController{
         //	isDir = false;
         //}
         
-    	Long revision = Long.parseLong(srcDoc.getRevision());
-        
+    	long revision = getRevisionByCommitId(srcDoc.getRevision());
         if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), isDir, revision, isMove) == false)
         {
         	return null;
