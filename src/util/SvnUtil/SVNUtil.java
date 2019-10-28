@@ -1528,14 +1528,8 @@ public class SVNUtil  extends BaseController{
 	public List<Doc> getDocList(Repos repos, Doc doc, String commitId) 
 	{	
 		long revision = getRevisionByCommitId(commitId);
-		
-		String docName =  doc.getName();
-		if(doc.getDocId() == 0)
-		{
-			docName = "";
-		}
-		
-		String entryPath = doc.getPath() + docName;
+				
+		String entryPath = doc.getPath() + doc.getName();
 		
 		List <Doc> subEntryList =  new ArrayList<Doc>();
 		
@@ -1552,8 +1546,8 @@ public class SVNUtil  extends BaseController{
 			return null;
 		}
 		
-		String subDocParentPath = doc.getPath() + docName + "/";
-		if(docName.isEmpty())
+		String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
 		{
 			subDocParentPath = doc.getPath();
 		}
