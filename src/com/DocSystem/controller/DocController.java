@@ -2675,7 +2675,7 @@ public class DocController extends BaseController{
 		if(isRealDoc)
 		{
 
-			if(scanForDocChange(repos, doc) == false)
+			if(scanForDocChange(repos, doc) == true)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 未同步!",rt);
 			}
@@ -2702,7 +2702,6 @@ public class DocController extends BaseController{
 			Doc dbDoc = dbGetDoc(repos, doc, false);
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
-			//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
 			if(docChangeType != DocChangeType.NOCHANGE)
 			{			
 				System.out.println("scanForDocChange() 文件有改动:" + docChangeType);
