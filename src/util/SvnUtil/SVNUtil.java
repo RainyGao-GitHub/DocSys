@@ -162,11 +162,16 @@ public class SVNUtil  extends BaseController{
 	private SVNLogEntry getLatestRevCommit(Doc doc) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
-				
+		
         try {
     		String[] targetPaths = new String[]{entryPath};
-        	long endRevision = repository.getLatestRevision();
+    		long endRevision = repository.getLatestRevision();
     		long startRevision = 0;
+    		if(entryPath.isEmpty())	//For rootDoc just to get the latest revison
+    		{
+    			startRevision = endRevision;
+    		}
+    		
     		Collection<SVNLogEntry> logEntries = null;
     		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, false);
     		if(logEntries == null)
@@ -195,11 +200,6 @@ public class SVNUtil  extends BaseController{
     
     public String getLatestRevision(Doc doc) 
     {
-    	if(doc.getDocId() == 0)
-    	{
-    		return getLatestReposRevision();
-    	}
-    	
     	SVNLogEntry commit = getLatestRevCommit(doc);	
     	if(commit == null)
     	{
@@ -1101,7 +1101,7 @@ public class SVNUtil  extends BaseController{
 		{
 			 subDocParentPath = doc.getPath();
 		}
-		int subDocLevel = doc.getLevel() + 1;
+		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
 		System.out.println("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);

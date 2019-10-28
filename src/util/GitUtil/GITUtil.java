@@ -2304,7 +2304,7 @@ public class GITUtil  extends BaseController{
 		{
 			 subDocParentPath = doc.getPath();
 		}
-		int subDocLevel = doc.getLevel() + 1;
+		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
 		System.out.println("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
