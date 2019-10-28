@@ -1228,26 +1228,38 @@ public class SVNUtil  extends BaseController{
 		Integer type = checkPath(srcEntryPath,null);
 		if(type == null)
 		{
-			System.out.println("remoteCopyEntry() Exception");
+			System.out.println("copyDoc() Exception");
 			return null;
 		}
 		
 		if (type == 0) 
 		{
-		    System.err.println("remoteCopyEntry() There is no entry at '" + repositoryURL + "'.");
+		    System.out.println("copyDoc() There is no entry for " + srcEntryPath + " at latest revision");
 		    return null;
 		}
 
 		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
+		
+		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
 	    //Do copy File Or Dir
 	    if(isMove)
 	    {
-	       System.out.println("svnCopy() move " + srcEntryPath + " to " + dstEntryPath);
+	       System.out.println("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
+  			insertDeleteAction(commitActionList,srcDoc);
 	    }
         else
         {
- 	       System.out.println("svnCopy() copy " + srcEntryPath + " to " + dstEntryPath);
+ 	       System.out.println("copyDoc() copy " + srcEntryPath + " to " + dstEntryPath);
         }
+	    
+		if(dstDoc.getType() == 1)
+		{
+			insertAddFileAction(commitActionList, dstDoc,false);
+		}
+		else
+		{
+			insertAddDirAction(commitActionList, dstDoc,false);
+		}
 	    
         ISVNEditor editor = getCommitEditor(commitMsg);
         if(editor == null)
@@ -1255,26 +1267,21 @@ public class SVNUtil  extends BaseController{
         	return null;
         }
         
-        boolean isDir = true;
-        //Due to svnkit issue, copy always use isDir
-        //if(srcDoc.getType() == 1)
-        //{
-        //	isDir = false;
-        //}
-        
-    	long revision = getRevisionByCommitId(srcDoc.getRevision());
-        if(copyEntry(editor, srcDoc.getPath(), srcDoc.getName(), dstDoc.getPath(), dstDoc.getName(), isDir, revision, isMove) == false)
-        {
-        	return null;
-        }
-        
-     	SVNCommitInfo commitInfo  = commit(editor);
-    	if(commitInfo == null)
-    	{
-    		return null;
-    	}
-    	System.out.println("remoteCopyEntry(): " + commitInfo);
-	    return commitInfo.getNewRevision() + "";
+	    if(executeCommitActionList(editor,commitActionList,true) == false)
+	    {
+	    	System.out.println("copyDoc() executeCommitActionList Failed");
+	    	abortEdit(editor);
+	        return null;
+	    }
+	        
+	    SVNCommitInfo commitInfo = commit(editor);
+	    if(commitInfo == null)
+	    {
+	    	System.out.println("copyDoc() commit failed: " + commitInfo);
+	        return null;
+	    }
+	    System.out.println("copyDoc() commit success: " + commitInfo);
+	    return commitInfo.getNewRevision()+"";
 	}
   	
 	//getCommitEditor

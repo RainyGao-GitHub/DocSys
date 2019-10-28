@@ -1402,22 +1402,17 @@ public class GITUtil  extends BaseController{
 	//move or copy Doc
 	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
 	{   
-		if(srcDoc.getRevision() == null || srcDoc.getRevision().isEmpty())
-		{
-			srcDoc.setRevision(getLatestRevision(srcDoc));
-		}
-		
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
 		Integer type = checkPath(srcEntryPath,null);
 		if(type == null)
 		{
-			System.out.println("remoteCopyEntry() Exception");
+			System.out.println("copyDoc() Exception");
 			return null;
 		}
 		
 		if (type == 0) 
 		{
-		    System.out.println("remoteCopyEntry() There is no entry for " + srcEntryPath + " at revision:" + srcDoc.getRevision());
+		    System.out.println("copyDoc() There is no entry for " + srcEntryPath + " at latest revision");
 		    return null;
 		}
 
@@ -1428,12 +1423,12 @@ public class GITUtil  extends BaseController{
 	    //Do copy File Or Dir
 	    if(isMove)
 	    {
-	    	System.out.println("svnCopy() move " + srcEntryPath + " to " + dstEntryPath);
+	    	System.out.println("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
    			insertDeleteAction(commitActionList,srcDoc);
 	    }
         else
         {
- 	       System.out.println("svnCopy() copy " + srcEntryPath + " to " + dstEntryPath);
+ 	       System.out.println("copyDoc() copy " + srcEntryPath + " to " + dstEntryPath);
  	    }
 	    
 		if(dstDoc.getType() == 1)
@@ -1449,14 +1444,14 @@ public class GITUtil  extends BaseController{
 		try {
 			git = Git.open(new File(wcDir));
 		} catch (Exception e) {
-			System.out.println("doAutoCommit() Failed to open wcDir:" + wcDir);
+			System.out.println("copyDoc() Failed to open wcDir:" + wcDir);
 			e.printStackTrace();
 			return null;
 		}
 		
 	    if(executeCommitActionList(git,commitActionList,true) == false)
 	    {
-	    	System.out.println("doAutoCommit() executeCommitActionList Failed");
+	    	System.out.println("copyDoc() executeCommitActionList Failed");
 	    	git.close();
 	        return null;
 	    }
