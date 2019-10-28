@@ -2674,18 +2674,27 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-
 			if(scanForDocChange(repos, doc) == true)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 未同步!",rt);
 			}
 			else
 			{
+				String latestCommitId = verReposGetLatestRevision(repos, doc);
+				if(latestCommitId != null && commitId.equals(latestCommitId))
+				{
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+				}
 				revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
 			}
 		}
 		else
 		{
+			String latestCommitId = verReposGetLatestRevision(repos, doc);
+			if(latestCommitId != null && commitId.equals(latestCommitId))
+			{
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+			}
 			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, downloadList);			
 		}	
 		
