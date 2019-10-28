@@ -2809,12 +2809,12 @@ public class BaseController  extends BaseFunction{
 //		}
 //		
 //		//RemoteSyncup only for the repos with remoteVerRepos
-//		if(repos.getIsRemote() == 1)
+//		if(repos.getIsRemote() != 1)
 //		{
-//			return true;
+//			return false;
 //		}	
 
-		return false;
+		return true;
 	}
 
 	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag)
