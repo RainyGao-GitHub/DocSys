@@ -31,7 +31,9 @@ import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.common.CommonAction;
+import com.DocSystem.common.DocChange;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
 import com.ibm.misc.BASE64Decoder;
@@ -2672,7 +2674,15 @@ public class DocController extends BaseController{
 
 		if(isRealDoc)
 		{
-			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
+
+			if(scanForDocChange(repos, doc) == false)
+			{
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 未同步!",rt);
+			}
+			else
+			{
+				revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
+			}
 		}
 		else
 		{
@@ -2683,6 +2693,46 @@ public class DocController extends BaseController{
 		unlockDoc(doc,login_user,docLock);
 
 		writeJson(rt, response);
+	}
+
+	private boolean scanForDocChange(Repos repos, Doc doc) {
+		if(doc.getType() == 1)
+		{
+			Doc dbDoc = dbGetDoc(repos, doc, false);
+			Doc localEntry = fsGetDoc(repos, doc);
+			Doc remoteEntry = verReposGetDoc(repos, doc, null);
+			DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
+			//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
+			if(docChangeType != DocChangeType.NOCHANGE)
+			{			
+				System.out.println("scanForDocChange() 文件有改动:" + docChangeType);
+				return true;
+			}
+			
+			return false;
+		}
+		
+		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
+		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
+		if(syncupScanForSubDocs_FSM(repos, doc, null, null, remoteChanges, localChanges, 2) == false)
+		{
+			System.out.println("scanForDocChange() 目录改动扫描失败!");			
+			return true;
+		}
+		
+		if(localChanges.size() > 0)
+		{
+			System.out.println("scanForDocChange() 本地有改动！");
+			return true;
+		}
+		
+		if(remoteChanges.size() > 0)
+		{
+			System.out.println("scanForDocChange() 远程有改动！");
+			return true;
+		}
+		return false;
+
 	}
 
 	/* 文件搜索与排序 

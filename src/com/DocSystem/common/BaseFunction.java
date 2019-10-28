@@ -140,7 +140,7 @@ public class BaseFunction{
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
 	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
-		printObject("insertAddFileAction:", doc);
+		//printObject("insertAddFileAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.ADD);
     	action.setDoc(doc);
