@@ -2698,8 +2698,8 @@ public class DocController extends BaseController{
 	private boolean scanForDocChange(Repos repos, Doc doc) {
 		if(doc.getType() == 1)
 		{
-			Doc dbDoc = dbGetDoc(repos, doc, false);
 			Doc localEntry = fsGetDoc(repos, doc);
+			Doc dbDoc = dbGetDoc(repos, doc, false);
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 			//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
