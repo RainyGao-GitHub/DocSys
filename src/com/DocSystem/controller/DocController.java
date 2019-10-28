@@ -2696,9 +2696,9 @@ public class DocController extends BaseController{
 	}
 
 	private boolean scanForDocChange(Repos repos, Doc doc) {
-		if(doc.getType() == 1)
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry.getType() == 1)
 		{
-			Doc localEntry = fsGetDoc(repos, doc);
 			Doc dbDoc = dbGetDoc(repos, doc, false);
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
@@ -2708,7 +2708,6 @@ public class DocController extends BaseController{
 				System.out.println("scanForDocChange() 文件有改动:" + docChangeType);
 				return true;
 			}
-			
 			return false;
 		}
 		
