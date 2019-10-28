@@ -200,19 +200,21 @@ public class BaseController  extends BaseFunction{
 	}
     	
 
-	private Integer getSubDocLevel(Doc doc) {
+	protected Integer getSubDocLevel(Doc doc) {
 		if(doc.getLevel() == null)
 		{
-			return null;
+			doc.setLevel(getLevelByParentPath(doc.getPath()));
 		}
+		
 		return doc.getLevel() + 1;
 	}
 
 	private Integer getParentDocLevel(Doc doc) {
 		if(doc.getLevel() == null)
 		{
-			return null;
+			doc.setLevel(getLevelByParentPath(doc.getPath()));
 		}
+		
 		return doc.getLevel() - 1;
 	}
 
