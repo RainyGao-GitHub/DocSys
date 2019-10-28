@@ -5622,7 +5622,7 @@ public class BaseController  extends BaseFunction{
         		return null;
     		}
 
-    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+    		String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
     		if(preCommitId == null)
     		{
         		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
@@ -5645,7 +5645,7 @@ public class BaseController  extends BaseFunction{
 	        			return null;
 	        		}
 	        		
-	    	    	String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    	String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
 	    	    	if(preCommitId == null)
 	    	    	{
 	    	        	System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
@@ -5684,7 +5684,7 @@ public class BaseController  extends BaseFunction{
         		return null;
     		}
 
-    		String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+    		String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
     		if(preCommitId == null)
     		{
         		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
@@ -5707,7 +5707,7 @@ public class BaseController  extends BaseFunction{
 	        			return null;
 	        		}
 	        		
-	    	    	String preCommitId = verReposUtil.getPreviousCommmitId(revision);
+	    	    	String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
 	    	    	if(preCommitId == null)
 	    	    	{
 	    	        	System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
