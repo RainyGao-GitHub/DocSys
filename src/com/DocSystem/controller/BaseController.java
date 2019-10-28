@@ -2058,8 +2058,8 @@ public class BaseController  extends BaseFunction{
 			//遍历本地目录，构建CommonAction
 			String dstSubDocParentPath = dstDoc.getPath() + dstDoc.getName() +"/";
 			String srcSubDocParentPath = srcDoc.getPath() + srcDoc.getName() +"/";
-			int dstSubDocLevel = dstDoc.getLevel() + 1;
-			int srcSubDocLevel = srcDoc.getLevel() + 1;
+			int dstSubDocLevel = getSubDocLevel(dstDoc);
+			int srcSubDocLevel = getSubDocLevel(srcDoc);
 			String localRootPath = dstDoc.getLocalRootPath();
 			String localVRootPath = dstDoc.getLocalVRootPath();
 			
