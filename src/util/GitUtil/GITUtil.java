@@ -702,18 +702,13 @@ public class GITUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public List<Doc> getDocList(Repos repos, Doc doc, String revision)
 	{
-		String docName =  doc.getName();
-		if(doc.getDocId() == 0)
-		{
-			docName = "";
-		}
-		String entryPath = doc.getPath() + docName;
-		
 		if(OpenRepos() == false)
 		{
 			System.out.println("getDocList() Failed to OpenRepos git repository:" + gitDir);
         	return null;
 		}
+		
+		String entryPath = doc.getPath() + doc.getName();
 		
 		List <Doc> subEntryList =  new ArrayList<Doc>();
     	RevTree revTree = getRevTree(revision);
@@ -736,8 +731,8 @@ public class GITUtil  extends BaseController{
         	return null;
         }    
 
-        String subDocParentPath = doc.getPath() + docName + "/";
-		if(docName.isEmpty())
+        String subDocParentPath = entryPath + "/";
+		if(doc.getName().isEmpty())
 		{
 			subDocParentPath = doc.getPath();
 		}
@@ -2305,7 +2300,7 @@ public class GITUtil  extends BaseController{
 		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
 
     	String subDocParentPath = doc.getPath() + doc.getName() + "/";
-		if(doc.getDocId() == 0)
+		if(doc.getName() == null || doc.getName().isEmpty())
 		{
 			 subDocParentPath = doc.getPath();
 		}
