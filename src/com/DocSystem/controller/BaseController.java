@@ -337,7 +337,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
 			return true;
 		}
-				
+		
 		return false;
 	}
 	
@@ -2528,12 +2528,23 @@ public class BaseController  extends BaseFunction{
 			localChange.setType(docChangeType);
 			localChanges.put(doc.getDocId(), localChange);
 			return true;
-		//由于远程同步需要直接修改或删除本地文件，一旦误删无法恢复，因此只处理远程新增
-		case REMOTEADD:	//remoteAdd
+		//由于远程同步需要直接修改或删除本地文件，一旦误操作将无法恢复，必须保证删除修改操作的文件的历史已经在版本仓库中
 		case REMOTEDELETE:	//remoteDelete
 		case REMOTECHANGE:	//remoteFileChanged
 		case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
+			if(isDocInVerRepos(repos, doc, dbDoc.getRevision()) == false)
+			{
+				DocChange localChange1 = new DocChange();
+				localChange1.setDoc(doc);
+				localChange1.setDbDoc(dbDoc);
+				localChange1.setLocalEntry(localEntry);
+				localChange1.setRemoteEntry(remoteEntry);
+				localChange1.setType(DocChangeType.LOCALADD);
+				localChanges.put(dbDoc.getDocId(), localChange1);
+				return true;
+			}
+		case REMOTEADD:	//remoteAdd
 			DocChange remoteChange = new DocChange();
 			remoteChange.setDoc(doc);
 			remoteChange.setDbDoc(dbDoc);
@@ -2550,6 +2561,22 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private boolean isDocInVerRepos(Repos repos, Doc doc, String commitId) {
+		
+		if(commitId == null || commitId.isEmpty())
+		{
+			return false;
+		}
+		
+		Integer type = verReposCheckPath(repos, doc, commitId);
+		if(type == null || type <= 0)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+
 	private DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
 	{						
 		//dbDoc不存在，localDoc存在
@@ -5572,6 +5599,53 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		return revision;
+	}
+	
+	private Integer verReposCheckPath(Repos repos, Doc doc, String commitId) 
+	{	
+		int verCtrl = repos.getVerCtrl();
+		if(doc.getIsRealDoc() == false)
+		{
+			//Convert doc to vDoc
+			doc = buildVDoc(doc);
+			verCtrl = repos.getVerCtrl1();
+		}
+		
+		if(verCtrl == 1)
+		{
+			return svnCheckPath(repos, doc, commitId);		
+		}
+		else if(verCtrl == 2)
+		{
+			return gitCheckPath(repos, doc, commitId);
+		}
+		return null;
+	}
+
+	private Integer gitCheckPath(Repos repos, Doc doc, String commitId) {
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		GITUtil verReposUtil = new GITUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
+		{
+			return null;
+		}
+		
+		String entryPath = doc.getPath() + doc.getName();
+		return verReposUtil.checkPath(entryPath, commitId);
+	}
+
+	private Integer svnCheckPath(Repos repos, Doc doc, String commitId) {
+		boolean isRealDoc = doc.getIsRealDoc();
+		
+		SVNUtil verReposUtil = new SVNUtil();
+		if(false == verReposUtil.Init(repos, isRealDoc, ""))
+		{
+			return null;
+		}
+
+		String entryPath = doc.getPath() + doc.getName();
+		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
 	/*
