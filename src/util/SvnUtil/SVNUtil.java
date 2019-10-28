@@ -168,7 +168,7 @@ public class SVNUtil  extends BaseController{
         	long endRevision = repository.getLatestRevision();
     		long startRevision = 0;
     		Collection<SVNLogEntry> logEntries = null;
-    		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, true);	//不获取copy等历史
+    		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, false);
     		if(logEntries == null)
     		{
     			System.out.println("getLatestRevCommit() there is no history for " + entryPath);
@@ -1797,10 +1797,10 @@ public class SVNUtil  extends BaseController{
 		return null;
 	}
 
-	public String getPreviousCommmitId(String commitId) 
+	public String getReposPreviousCommmitId(String commitId) 
 	{
 		long revision = getRevisionByCommitId(commitId);
-		Long preRevision = getPreviousCommmitId(revision);
+		Long preRevision = getReposPreviousCommmitId(revision);
 		if(preRevision == null)
 		{
 			return null;
@@ -1809,7 +1809,7 @@ public class SVNUtil  extends BaseController{
 		return preRevision + "";
 	}
 
-	private Long getPreviousCommmitId(long revision) 
+	private Long getReposPreviousCommmitId(long revision) 
 	{	
 		if(revision == -1)
 		{
