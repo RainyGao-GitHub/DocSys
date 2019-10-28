@@ -3065,7 +3065,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private String verReposGetLatestRevision(Repos repos, Doc doc) {
+	protected String verReposGetLatestRevision(Repos repos, Doc doc) {
 		if(repos.getVerCtrl() == 1)
 		{
 			return svnGetDocLatestRevision(repos, doc);			
@@ -3079,7 +3079,7 @@ public class BaseController  extends BaseFunction{
 
 	private String svnGetDocLatestRevision(Repos repos, Doc doc) {
 		SVNUtil svnUtil = new SVNUtil();
-		if(svnUtil.Init(repos, true, "") == false)
+		if(svnUtil.Init(repos, doc.getIsRealDoc(), "") == false)
 		{
 			System.out.println("svnGetDoc() svnUtil.Init失败！");	
 			return null;
@@ -3091,7 +3091,7 @@ public class BaseController  extends BaseFunction{
 	private String gitGetDocLatestRevision(Repos repos, Doc doc) {
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
-		if(gitUtil.Init(repos, true, "") == false)
+		if(gitUtil.Init(repos, doc.getIsRealDoc(), "") == false)
 		{
 			System.out.println("gitRealDocCommit() GITUtil Init failed");
 			return null;
