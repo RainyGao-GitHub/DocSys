@@ -1080,7 +1080,7 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 	
-	public String getPreviousCommmitId(String commitId) 
+	public String getReposPreviousCommmitId(String commitId) 
 	{
 		String revision = "HEAD";
 		if(commitId != null)
