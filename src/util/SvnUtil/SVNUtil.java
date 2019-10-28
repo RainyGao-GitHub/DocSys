@@ -365,12 +365,12 @@ public class SVNUtil  extends BaseController{
             String commitMessage= logEntry.getMessage();
             long commitTime = logEntry.getDate().getTime();            
             
-            System.out.println("revision:"+revision);
-            System.out.println("commitId:"+commitId);
-            System.out.println("commitUser:"+commitUser);
-            System.out.println("commitMessage:"+commitMessage);
-            System.out.println("commitName:"+commitUser);
-            System.out.println("commitTime:"+commitTime);
+//            System.out.println("revision:"+revision);
+//            System.out.println("commitId:"+commitId);
+//            System.out.println("commitUser:"+commitUser);
+//            System.out.println("commitMessage:"+commitMessage);
+//            System.out.println("commitName:"+commitUser);
+//            System.out.println("commitTime:"+commitTime);
             
             LogEntry log = new LogEntry();
             log.setRevision(revision);
