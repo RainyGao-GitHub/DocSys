@@ -2535,6 +2535,7 @@ public class BaseController  extends BaseFunction{
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
 			if(isDocInVerRepos(repos, doc, dbDoc.getRevision()) == false)
 			{
+				System.out.println("syncupForDocChange_FSM() " + doc.getPath()+doc.getName() + " not exists in verRepos at revision:" + dbDoc.getRevision() + " treat it as LOCALADD");
 				DocChange localChange1 = new DocChange();
 				localChange1.setDoc(doc);
 				localChange1.setDbDoc(dbDoc);
