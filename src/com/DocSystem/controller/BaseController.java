@@ -2789,10 +2789,14 @@ public class BaseController  extends BaseFunction{
 
 	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag)
 	{
-		Doc subDoc = null;
+		if(docList == null)
+		{
+			return true;
+		}
+		
 	    for(int i=0;i<docList.size();i++)
 	    {
-    		subDoc = docList.get(i);
+    		Doc subDoc = docList.get(i);
     		//System.out.println("syncupDocChangeForDocList_FSM() subDoc:" + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
     		
     		if(docHashMap.get(subDoc.getName()) != null)
