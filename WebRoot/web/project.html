@@ -668,7 +668,8 @@
               	    deleteTreeNodeById(docId);
 
               		//Rename at docList
-                    DocList.renameNode(docId, ret.data);
+              		DocList.deleteNode(docId);
+              		addDocListNode(ret.data);
 		            
 			     	bootstrapQ.msg({
 							msg : "重命名完成！",
