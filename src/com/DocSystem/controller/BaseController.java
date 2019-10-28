@@ -2727,11 +2727,7 @@ public class BaseController  extends BaseFunction{
 
 		//注意: 如果仓库没有版本仓库则不需要远程同步
 		List<Doc> remoteEntryList = null;
-    	boolean isRemoteSyncUpNeed = false;
-    	if(repos.getVerCtrl() != null && repos.getVerCtrl() != 0)
-    	{	
-    		isRemoteSyncUpNeed = true;
-    	}
+    	boolean isRemoteSyncUpNeed = isRemoteSyncupNeed(repos);
     	
     	if(isRemoteSyncUpNeed)
 		{
@@ -2765,6 +2761,32 @@ public class BaseController  extends BaseFunction{
 		return true;
     }
 	
+	private boolean isRemoteSyncupNeed(Repos repos) {
+		if(repos.getVerCtrl() == null)
+		{
+			return false;
+		}
+		
+		
+		if(repos.getVerCtrl() == 0)
+		{	
+			return false;
+		}
+		
+//		if(repos.getIsRemote() == null)
+//		{
+//			return false;
+//		}
+//		
+//		//RemoteSyncup only for the repos with remoteVerRepos
+//		if(repos.getIsRemote() == 1)
+//		{
+//			return true;
+//		}	
+
+		return false;
+	}
+
 	boolean syncupScanForDocList_FSM(List<Doc> docList, HashMap<String, Doc> docHashMap, Repos repos, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag)
 	{
 		Doc subDoc = null;
