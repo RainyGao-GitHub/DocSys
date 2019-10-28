@@ -386,14 +386,14 @@ public class GITUtil  extends BaseController{
 	
 	            String commitId=commit.getName();  //这个应该就是提交的版本号
 	
-//	            System.out.println("authorEmail:"+authorEmail);
-//	            System.out.println("authorName:"+author);
-//	            System.out.println("commitEmail:"+commitUserEmail);
-	            System.out.println("commitName:"+commitUser);
-	            System.out.println("time:"+commitTime);
-	            System.out.println("fullMessage:"+fullMessage);
-//	            System.out.println("shortMessage:"+shortMessage);
-	            System.out.println("commitId:"+commitId);
+////	            System.out.println("authorEmail:"+authorEmail);
+////	            System.out.println("authorName:"+author);
+////	            System.out.println("commitEmail:"+commitUserEmail);
+//	            System.out.println("commitName:"+commitUser);
+//	            System.out.println("time:"+commitTime);
+//	            System.out.println("fullMessage:"+fullMessage);
+////	            System.out.println("shortMessage:"+shortMessage);
+//	            System.out.println("commitId:"+commitId);
 	            
 	            LogEntry log = new LogEntry();
 	            log.setCommitId(commitId);
