@@ -1595,10 +1595,10 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, false, true, downloadList);	//不取本地已存在的 
+		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
 		if(successDocList == null || successDocList.size() == 0)
 		{
-			docSysErrorLog("未找到需要恢复的文件（只恢复当前不存在的文件）！",rt);
+			docSysErrorLog("未找到需要恢复的文件！",rt);
 			return null;
 		}
 		
