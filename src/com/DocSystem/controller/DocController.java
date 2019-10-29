@@ -2692,7 +2692,7 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			revertDocHistory(repos, false, doc, commitId, commitMsg, commitUser, login_user, rt, null);
+			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, null);
 		}	
 		else
 		{
@@ -2705,7 +2705,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;				
 			}
-			revertDocHistory(repos, false, vDoc, commitId, commitMsg, commitUser, login_user, rt, null);
+			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, null);
 		}
 		
 		unlockDoc(doc,login_user,docLock);
