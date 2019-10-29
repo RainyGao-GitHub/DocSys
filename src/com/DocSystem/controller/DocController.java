@@ -2593,17 +2593,15 @@ public class DocController extends BaseController{
 		
 		boolean isRealDoc = true;
 		Doc doc = null;
-		HashMap<String, String> downloadList = null;
+		Doc vDoc = null;
+		
 		if(historyType != null && historyType == 1)
 		{
-			//对于VDoc entryPath是无效的，无法对VDoc下的每个文件进行Revert
 			isRealDoc = false;			
-			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
-			
 		}
-		else
+		
+		if(isRealDoc)
 		{
-			isRealDoc = true;
 			if(entryPath == null)
 			{
 				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
@@ -2619,7 +2617,20 @@ public class DocController extends BaseController{
 				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 		}
-				
+		else
+		{
+			//For vDoc the doc is for lock and unlock
+			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+			if(entryPath == null)
+			{
+				vDoc = docConvert(doc, true);
+			}
+			else
+			{
+				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+			}
+		}
+						
 		//lockDoc
 		DocLock docLock = null;
 		synchronized(syncLock)
@@ -2678,21 +2689,23 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			
+			revertDocHistory(repos, false, doc, commitId, commitMsg, commitUser, login_user, rt, null);
 		}	
 		else
 		{
-			String latestCommitId = verReposGetLatestRevision(repos, true, doc);
+			String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
 			if(latestCommitId != null && latestCommitId.equals(commitId))
 			{
 				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+				docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
 				unlockDoc(doc,login_user,docLock);
 				writeJson(rt, response);
 				return;				
 			}
+			revertDocHistory(repos, false, vDoc, commitId, commitMsg, commitUser, login_user, rt, null);
 		}
 		
-		revertDocHistory(repos, false, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
 		unlockDoc(doc,login_user,docLock);
 		writeJson(rt, response);
 	}
