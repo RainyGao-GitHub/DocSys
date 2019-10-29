@@ -5677,7 +5677,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private Doc docConvert(Doc doc, boolean convert) 
+	protected Doc docConvert(Doc doc, boolean convert) 
 	{
 		if(convert)
 		{
