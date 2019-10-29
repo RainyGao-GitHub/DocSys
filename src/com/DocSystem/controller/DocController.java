@@ -2681,7 +2681,7 @@ public class DocController extends BaseController{
 		}	
 		else
 		{
-			String latestCommitId = verReposGetLatestRevision(repos, doc, true);
+			String latestCommitId = verReposGetLatestRevision(repos, true, doc);
 			if(latestCommitId != null && latestCommitId.equals(commitId))
 			{
 				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
