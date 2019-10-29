@@ -315,6 +315,7 @@ public class BaseFunction{
 		return doc;
 	}
 	
+	//path必须是标准格式
 	protected int getLevelByParentPath(String path) 
 	{
 		if(path == null || path.isEmpty())
