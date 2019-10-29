@@ -1585,8 +1585,16 @@ public class BaseController  extends BaseFunction{
 	
 	/********************************** Functions For Application Layer 
 	 * @param downloadList ****************************************/
-	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
-	{		
+	protected String revertDocHistory(Repos repos, boolean convert, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
+	{	
+		if(convert)
+		{
+			if(doc.getIsRealDoc() == false)
+			{
+				doc = buildVDoc(doc);
+			}
+		}
+		
 		if(commitMsg == null)
 		{
 			commitMsg = doc.getPath() + doc.getName() + " 回退至版本:" + commitId;
@@ -1597,7 +1605,7 @@ public class BaseController  extends BaseFunction{
 		String localParentPath = localRootPath + doc.getPath();
 		
 		//Do checkout the entry to
-		List<Doc> successDocList = verReposCheckOut(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
+		List<Doc> successDocList = verReposCheckOut(repos, false, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
 		if(successDocList == null || successDocList.size() == 0)
 		{
 			docSysErrorLog("未找到需要恢复的文件！",rt);
@@ -2870,7 +2878,7 @@ public class BaseController  extends BaseFunction{
 		case REMOTEADD:		//Remote Added
 			System.out.println("syncUpRemoteChange_FSM() remote Added: " + remoteEntry.getPath()+remoteEntry.getName());	
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
+			successDocList = verReposCheckOut(repos, false, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 			if(successDocList != null)
 			{
 				dbAddDoc(repos, remoteEntry, true, false);
@@ -2898,7 +2906,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncUpRemoteChange_FSM() remote Changed: " + doc.getPath()+doc.getName());
 			
 			localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-			successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
+			successDocList = verReposCheckOut(repos, false, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 			if(successDocList != null)
 			{
 				//SuccessDocList中的doc包括了revision信息
@@ -2918,7 +2926,7 @@ public class BaseController  extends BaseFunction{
 				
 				//checkOut
 				localParentPath = getReposRealPath(repos) + remoteEntry.getPath();
-				successDocList = verReposCheckOut(repos, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
+				successDocList = verReposCheckOut(repos, false, remoteEntry, localParentPath, remoteEntry.getName(), null, true, false, null);
 				if(successDocList != null)
 				{
 					dbAddDoc(repos, remoteEntry, true, false);
@@ -3064,21 +3072,16 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected String verReposGetLatestRevision(Repos repos, Doc doc, boolean convert) 
+	protected String verReposGetLatestRevision(Repos repos, boolean convert, Doc doc) 
 	{
-		if(convert)
-		{
-			if(doc.getIsRealDoc() == false)
-			{
-				doc = buildVDoc(doc);
-			}
-		}
+		doc = docConvert(doc, convert);
 		
-		if(repos.getVerCtrl() == 1)
+		int verCtrl = getVerCtrl(repos, doc);
+		if(verCtrl == 1)
 		{
 			return svnGetDocLatestRevision(repos, doc);			
 		}
-		else if(repos.getVerCtrl() == 2)
+		else if(verCtrl == 2)
 		{
 			return gitGetDocLatestRevision(repos, doc);	
 		}
@@ -3627,15 +3630,15 @@ public class BaseController  extends BaseFunction{
 		case ADD: //add
 		case DELETE:	//delete
 		case UPDATE: //update
-			ret = verReposDocCommit(repos, isRealDoc, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			ret = verReposDocCommit(repos, true, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case MOVE:	//move
-			ret = verReposDocMove(repos, isRealDoc, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocMove(repos, true, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case COPY: //copy
-			ret = verReposDocCopy(repos, isRealDoc, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocCopy(repos, true, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case PUSH: //pull
@@ -5465,72 +5468,65 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/*************** DocSys verRepos操作接口 *********************/
-	protected List<LogEntry> verReposGetHistory(Repos repos,boolean isRealDoc, String entryPath, int maxLogNum) {
-		int verCtrl = repos.getVerCtrl();
-		if(isRealDoc == false)
-		{
-			verCtrl = repos.getVerCtrl1();
-		}
+	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum) 
+	{
+		doc = docConvert(doc, convert);
 		
+		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
-			return svnGetHistory(repos, isRealDoc, entryPath, maxLogNum);
+			return svnGetHistory(repos, doc, maxLogNum);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetHistory(repos, isRealDoc, entryPath, maxLogNum);
+			return gitGetHistory(repos, doc, maxLogNum);
 		}
 		return null;
 	}
 	
-	protected List<LogEntry> svnGetHistory(Repos repos,boolean isRealDoc, String docPath, int maxLogNum) {
+	protected List<LogEntry> svnGetHistory(Repos repos, Doc doc, int maxLogNum) {
 
 		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, isRealDoc, null))
+		if(false == svnUtil.Init(repos, doc.getIsRealDoc(), null))
 		{
 			System.out.println("svnGetHistory() svnUtil.Init Failed");
 			return null;
 		}
-		return svnUtil.getHistoryLogs(docPath, 0, -1, maxLogNum);
+		return svnUtil.getHistoryLogs(doc.getPath() + doc.getName(), 0, -1, maxLogNum);
 	}
 	
-	protected List<LogEntry> gitGetHistory(Repos repos, boolean isRealDoc, String docPath, int maxLogNum) {
+	protected List<LogEntry> gitGetHistory(Repos repos, Doc doc, int maxLogNum) {
 		GITUtil gitUtil = new GITUtil();
-		if(false == gitUtil.Init(repos, isRealDoc, null))
+		if(false == gitUtil.Init(repos, doc.getIsRealDoc(), null))
 		{
 			System.out.println("gitGetHistory() gitUtil.Init Failed");
 			return null;
 		}
-		return gitUtil.getHistoryLogs(docPath, null, null, maxLogNum);
+		return gitUtil.getHistoryLogs(doc.getPath() + doc.getName(), null, null, maxLogNum);
 	}
 
 	
 	//Get History Detail
-	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) 
+	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean convert, Doc doc, String commitId) 
 	{
-		int verCtrl = repos.getVerCtrl();
-		if(isRealDoc == false)
-		{
-			//Convert doc to vDoc
-			doc = buildVDoc(doc);
-			verCtrl = repos.getVerCtrl1();
-		}
-		
+		doc = docConvert(doc, convert);
+
+		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
-			return svnGetHistoryDetail(repos, isRealDoc, doc, commitId);
+			return svnGetHistoryDetail(repos, doc, commitId);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetHistoryDetail(repos, isRealDoc, doc, commitId);
+			return gitGetHistoryDetail(repos, doc, commitId);
 		}
 		return null;
 	}
 	
-	protected List<ChangedItem> svnGetHistoryDetail(Repos repos,boolean isRealDoc, Doc doc, String commitId) 
+	protected List<ChangedItem> svnGetHistoryDetail(Repos repos, Doc doc, String commitId) 
 	{
 		SVNUtil svnUtil = new SVNUtil();
-		if(false == svnUtil.Init(repos, isRealDoc, null))
+		if(false == svnUtil.Init(repos, doc.getIsRealDoc(), null))
 		{
 			System.out.println("svnGetHistory() svnUtil.Init Failed");
 			return null;
@@ -5539,10 +5535,10 @@ public class BaseController  extends BaseFunction{
 		return svnUtil.getHistoryDetail(doc, commitId); 
 	}
 	
-	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, boolean isRealDoc, Doc doc, String commitId) 
+	protected List<ChangedItem> gitGetHistoryDetail(Repos repos, Doc doc, String commitId) 
 	{
 		GITUtil gitUtil = new GITUtil();
-		if(false == gitUtil.Init(repos, isRealDoc, null))
+		if(false == gitUtil.Init(repos, doc.getIsRealDoc(), null))
 		{
 			System.out.println("gitGetHistory() gitUtil.Init Failed");
 			return null;
@@ -5551,16 +5547,12 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryDetail(doc, commitId);
 	}
 	
-	protected String verReposDocCommit(Repos repos, boolean isRealDoc, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
+	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
 	{	
-		int verCtrl = repos.getVerCtrl();
-		if(isRealDoc == false)
-		{
-			//Convert doc to vDoc
-			doc = buildVDoc(doc);
-			verCtrl = repos.getVerCtrl1();
-		}
-
+		doc = docConvert(doc, convert);
+		
+		int verCtrl = getVerCtrl(repos, doc);
+		
 		System.out.println("verReposDocCommit verCtrl:"+verCtrl);
 		if(verCtrl == 1)
 		{
@@ -5575,6 +5567,15 @@ public class BaseController  extends BaseFunction{
 		return "";
 	}
 	
+	private int getVerCtrl(Repos repos, Doc doc) {
+		int verCtrl = repos.getVerCtrl();
+		if(doc.getIsRealDoc() == false)
+		{
+			verCtrl = repos.getVerCtrl1();
+		}
+		return verCtrl;
+	}
+
 	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
@@ -5612,16 +5613,11 @@ public class BaseController  extends BaseFunction{
 		return revision;
 	}
 	
-	private Integer verReposCheckPath(Repos repos, Doc doc, String commitId) 
+	private Integer verReposCheckPath(Repos repos, boolean convert, Doc doc, String commitId) 
 	{	
-		int verCtrl = repos.getVerCtrl();
-		if(doc.getIsRealDoc() == false)
-		{
-			//Convert doc to vDoc
-			doc = buildVDoc(doc);
-			verCtrl = repos.getVerCtrl1();
-		}
+		doc = docConvert(doc, convert);
 		
+		int verCtrl = getVerCtrl(repos, doc);		
 		if(verCtrl == 1)
 		{
 			return svnCheckPath(repos, doc, commitId);		
@@ -5665,16 +5661,11 @@ public class BaseController  extends BaseFunction{
 	 * 	force: 如果本地target文件存在，false则跳过，否则强制替换
 	 *  auto: 如果CommitId对应的是删除操作，自动checkOut上删除前的版本（通过checkPath来确定是否是删除操作，但也有可能只是通过移动和复制的相关历史，那么往前追溯可能是有问题的） 
 	 */
-	protected List<Doc> verReposCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
+	protected List<Doc> verReposCheckOut(Repos repos, boolean convert, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
 	{
-		int verCtrl = repos.getVerCtrl();
-		if(doc.getIsRealDoc() == false)
-		{
-			//Convert doc to vDoc
-			doc = buildVDoc(doc);
-			verCtrl = repos.getVerCtrl1();
-		}
+		doc = docConvert(doc, convert);
 		
+		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
 			return svnCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);		
@@ -5686,6 +5677,19 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	private Doc docConvert(Doc doc, boolean convert) 
+	{
+		if(convert)
+		{
+			if(doc.getIsRealDoc() == false)
+			{
+				//Convert doc to vDoc
+				doc = buildVDoc(doc);
+			}
+		}
+		return doc;
+	}
+
 	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,String revision, boolean force, boolean auto, HashMap<String, String> downloadList)
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
@@ -5811,17 +5815,12 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 
-	protected String verReposDocMove(Repos repos,  boolean isRealDoc, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposDocMove(Repos repos,  boolean convert, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
-		int verCtrl = repos.getVerCtrl();
-		if(isRealDoc == false)
-		{
-			//Convert doc to vDoc
-			srcDoc = buildVDoc(srcDoc);
-			dstDoc = buildVDoc(dstDoc);
-			verCtrl = repos.getVerCtrl1();
-		}
-				
+		srcDoc = docConvert(srcDoc, convert);
+		dstDoc = docConvert(dstDoc, convert);
+		
+		int verCtrl = getVerCtrl(repos, srcDoc);
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
@@ -5859,17 +5858,12 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,true);
 	}
 	
-	protected String verReposDocCopy(Repos repos, boolean isRealDoc, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposDocCopy(Repos repos, boolean convert, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
 	{
-		int verCtrl = repos.getVerCtrl();
-		if(isRealDoc == false)
-		{
-			//Convert doc to vDoc
-			srcDoc = buildVDoc(srcDoc);
-			dstDoc = buildVDoc(dstDoc);
-			verCtrl = repos.getVerCtrl1();
-		}
+		srcDoc = docConvert(srcDoc, convert);
+		dstDoc = docConvert(dstDoc, convert);
 		
+		int verCtrl = getVerCtrl(repos, srcDoc);
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
