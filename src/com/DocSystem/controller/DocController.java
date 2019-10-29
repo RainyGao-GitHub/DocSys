@@ -2264,23 +2264,22 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		boolean isRealDoc = true;
+		Doc inputDoc = doc;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
 		{
-			isRealDoc = false;
-		}
-		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+			inputDoc = buildVDoc(doc);
+		}		
 		
 		int num = 100;
 		if(maxLogNum != null)
 		{
 			num = maxLogNum;
 		}
-				
-		List<LogEntry> logList = verReposGetHistory(repos, true, doc, num);
+		
+		
+		List<LogEntry> logList = verReposGetHistory(repos, false, inputDoc, num);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}
@@ -2324,13 +2323,13 @@ public class DocController extends BaseController{
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		boolean isRealDoc = true;
+		Doc inputDoc = doc;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
 		{
-			isRealDoc = false;
+			inputDoc = buildVDoc(doc);
 		}
 
-		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, doc, commitId);
+		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
 		
 		if(changedItemList == null)
 		{
