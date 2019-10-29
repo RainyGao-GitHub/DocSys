@@ -3611,11 +3611,18 @@ public class BaseController  extends BaseFunction{
 		Doc doc = action.getDoc();
 		
 		Doc inputDoc = doc;
+		Doc inputDstDoc = action.getNewDoc();
+
 		boolean isRealDoc = true;
 		if(action.getDocType() == DocType.VIRTURALDOC)
 		{
 			isRealDoc = false;
 			inputDoc = buildVDoc(doc);
+			
+			if(inputDstDoc != null)
+			{
+				inputDstDoc = buildVDoc(action.getNewDoc());
+			}
 		}
 		
 		String ret;
@@ -3628,11 +3635,11 @@ public class BaseController  extends BaseFunction{
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case MOVE:	//move
-			ret = verReposDocMove(repos, false, inputDoc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocMove(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case COPY: //copy
-			ret = verReposDocCopy(repos, false, inputDoc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocCopy(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case PUSH: //pull
