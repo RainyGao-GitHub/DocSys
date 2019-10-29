@@ -1585,16 +1585,8 @@ public class BaseController  extends BaseFunction{
 	
 	/********************************** Functions For Application Layer 
 	 * @param downloadList ****************************************/
-	protected String revertDocHistory(Repos repos, boolean convert, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
-	{	
-		if(convert)
-		{
-			if(doc.getIsRealDoc() == false)
-			{
-				doc = buildVDoc(doc);
-			}
-		}
-		
+	protected String revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, HashMap<String, String> downloadList) 
+	{			
 		if(commitMsg == null)
 		{
 			commitMsg = doc.getPath() + doc.getName() + " 回退至版本:" + commitId;
@@ -1615,7 +1607,7 @@ public class BaseController  extends BaseFunction{
 		printObject("revertDocHistory checkOut successDocList:", successDocList);
 		
 		//Do commit to verRepos		
-		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, commitUser, rt, true, null, 2);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2);
 		if(revision == null)
 		{			
 			docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
@@ -1733,7 +1725,7 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = verReposDocCommit(repos, true, doc,commitMsg,commitUser,rt, false, null, 2);
+		String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2);
 		if(revision == null)
 		{
 			docSysWarningLog("verReposDocCommit Failed", rt);
@@ -1909,7 +1901,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 
-		String revision = verReposDocCommit(repos, true, doc, commitMsg,commitUser,rt, true, null, 2);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2);
 		if(revision == null)
 		{
 			docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
@@ -2326,7 +2318,7 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		String revision = verReposDocCommit(repos, doc.getIsRealDoc(), doc, commitMsg, login_user.getName(), rt, true, localChanges, 1);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, login_user.getName(), rt, true, localChanges, 1);
 		if(revision == null)
 		{
 			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动Commit失败:" + revision);
@@ -3618,10 +3610,12 @@ public class BaseController  extends BaseFunction{
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
 		
+		Doc inputDoc = doc;
 		boolean isRealDoc = true;
 		if(action.getDocType() == DocType.VIRTURALDOC)
 		{
 			isRealDoc = false;
+			inputDoc = buildVDoc(doc);
 		}
 		
 		String ret;
@@ -3630,15 +3624,15 @@ public class BaseController  extends BaseFunction{
 		case ADD: //add
 		case DELETE:	//delete
 		case UPDATE: //update
-			ret = verReposDocCommit(repos, true, doc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			ret = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case MOVE:	//move
-			ret = verReposDocMove(repos, true, doc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocMove(repos, false, inputDoc,action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case COPY: //copy
-			ret = verReposDocCopy(repos, true, doc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocCopy(repos, false, inputDoc, action.getNewDoc(), action.getCommitMsg(), action.getCommitUser(), rt);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case PUSH: //pull
@@ -3715,7 +3709,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposDocCommit(repos, true, doc, commitMsg,commitUser,rt, true, null, 2);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2);
 		if(revision == null)
 		{
 			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
