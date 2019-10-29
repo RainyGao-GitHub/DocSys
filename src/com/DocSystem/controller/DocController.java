@@ -2672,74 +2672,54 @@ public class DocController extends BaseController{
 			}
 		}
 
+		Doc remoteEntry = verReposGetDoc(repos, doc, null);		
 		if(isRealDoc)
 		{
-			if(scanForDocChange(repos, doc) == true)
+			Doc localEntry = fsGetDoc(repos, doc);
+			Doc dbDoc = dbGetDoc(repos, doc, false);
+			
+			HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
+			HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
+			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, login_user, rt, remoteChanges, localChanges, 2) == false)
 			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 未同步!",rt);
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
+				System.out.println("revertDocHistory() syncupScanForDoc_FSM!");	
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;
 			}
-			else
+			
+			if(localChanges.size() > 0)
 			{
-				String latestCommitId = verReposGetLatestRevision(repos, doc);
-				if(latestCommitId != null && commitId.equals(latestCommitId))
-				{
-					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-				}
-				revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
+				System.out.println("revertDocHistory() 本地有改动！");
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!",rt);
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;
 			}
-		}
-		else
-		{
-			String latestCommitId = verReposGetLatestRevision(repos, doc);
-			if(latestCommitId != null && commitId.equals(latestCommitId))
+			
+			if(remoteChanges.size() > 0)
 			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+				System.out.println("revertDocHistory() 远程有改动！");
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!",rt);
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;
 			}
-			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, downloadList);			
 		}	
 		
-		//lockDoc
+		if(remoteEntry != null && remoteEntry.getRevision() != null && commitId.equals(remoteEntry.getRevision()))
+		{
+			System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+			unlockDoc(doc,login_user,docLock);
+			writeJson(rt, response);
+			return;
+		}
+		
+		revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
 		unlockDoc(doc,login_user,docLock);
-
 		writeJson(rt, response);
-	}
-
-	private boolean scanForDocChange(Repos repos, Doc doc) {
-		Doc localEntry = fsGetDoc(repos, doc);
-		if(localEntry.getType() == 1)
-		{
-			Doc dbDoc = dbGetDoc(repos, doc, false);
-			Doc remoteEntry = verReposGetDoc(repos, doc, null);
-			DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
-			if(docChangeType != DocChangeType.NOCHANGE)
-			{			
-				System.out.println("scanForDocChange() 文件有改动:" + docChangeType);
-				return true;
-			}
-			return false;
-		}
-		
-		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
-		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-		if(syncupScanForSubDocs_FSM(repos, doc, null, null, remoteChanges, localChanges, 2) == false)
-		{
-			System.out.println("scanForDocChange() 目录改动扫描失败!");			
-			return true;
-		}
-		
-		if(localChanges.size() > 0)
-		{
-			System.out.println("scanForDocChange() 本地有改动！");
-			return true;
-		}
-		
-		if(remoteChanges.size() > 0)
-		{
-			System.out.println("scanForDocChange() 远程有改动！");
-			return true;
-		}
-		return false;
-
 	}
 
 	/* 文件搜索与排序 
