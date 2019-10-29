@@ -2489,7 +2489,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private boolean syncupScanForDoc_FSM(Repos repos, Doc doc, HashMap<Long, Doc> dbDocHashMap, HashMap<Long, Doc> localDocHashMap, HashMap<Long, Doc> remoteDocHashMap, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
+	protected boolean syncupScanForDoc_FSM(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
 	{
 		//printObject("syncupForDocChange_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
@@ -2498,19 +2498,6 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncupForDocChange_FSM() it is root doc");			
 			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		}
-		
-		Doc dbDoc = null;
-		Doc localEntry = null;
-		Doc remoteEntry = null;
-		
-		dbDoc = getDocFromList(doc, dbDocHashMap);
-		//printObject("syncupForDocChange_FSM() dbDoc: ", dbDoc);
-
-		localEntry = getDocFromList(doc, localDocHashMap);
-		//printObject("syncupForDocChange_FSM() localEntry: ", localEntry);
-		
-		remoteEntry = getDocFromList(doc, remoteDocHashMap);
-		//printObject("syncupForDocChange_FSM() remoteEntry: ", remoteEntry);
 		
 		DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 		//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
@@ -2557,7 +2544,7 @@ public class BaseController  extends BaseFunction{
 			remoteChanges.put(doc.getDocId(), remoteChange);
 			return true;
 		case NOCHANGE:		//no change
-			return true;
+			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		default:
 			break;
 		}		
@@ -2835,8 +2822,16 @@ public class BaseController  extends BaseFunction{
     			continue;	
     		}
     		
+    		Doc dbDoc = getDocFromList(subDoc, dbDocHashMap);
+    		//printObject("syncupForDocChange_FSM() dbDoc: ", dbDoc);
+
+    		Doc localEntry = getDocFromList(subDoc, localDocHashMap);
+    		//printObject("syncupForDocChange_FSM() localEntry: ", localEntry);
+    		
+    		Doc remoteEntry = getDocFromList(subDoc, remoteDocHashMap);
+    		//printObject("syncupForDocChange_FSM() remoteEntry: ", remoteEntry);
     		docHashMap.put(subDoc.getName(), subDoc);
-    		syncupScanForDoc_FSM(repos, subDoc, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+    		syncupScanForDoc_FSM(repos, subDoc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 	    }
 		return true;
 	}
