@@ -2265,13 +2265,6 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		
-		int num = 100;
-		if(maxLogNum != null)
-		{
-			num = maxLogNum;
-		}
 		
 		boolean isRealDoc = true;
 		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
@@ -2279,20 +2272,15 @@ public class DocController extends BaseController{
 			isRealDoc = false;
 		}
 		
-		String entryPath = path + name;
-		if(isRealDoc == false)	//get VirtualDoc Path
-		{
-			if(name == null || name.isEmpty())
-			{
-				entryPath = "";	
-			}
-			else
-			{
-				entryPath = getVDocName(doc);
-			}
-		}
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 		
-		List<LogEntry> logList = verReposGetHistory(repos, isRealDoc, entryPath, num);
+		int num = 100;
+		if(maxLogNum != null)
+		{
+			num = maxLogNum;
+		}
+				
+		List<LogEntry> logList = verReposGetHistory(repos, true, doc, num);
 		rt.setData(logList);
 		writeJson(rt, response);
 	}

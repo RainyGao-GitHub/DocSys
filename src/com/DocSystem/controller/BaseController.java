@@ -2458,7 +2458,7 @@ public class BaseController  extends BaseFunction{
     		return true;
     	}
     	
-    	String latestRevision = verReposGetLatestRevision(repos, doc, false);
+    	String latestRevision = verReposGetLatestRevision(repos, false, doc);
         System.out.println("isRemoteDocChanged() latestRevision:" + latestRevision + " doc:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
         System.out.println("isRemoteDocChanged() previoRevision:" + dbDoc.getRevision());
         
@@ -2570,7 +2570,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		Integer type = verReposCheckPath(repos, doc, commitId);
+		Integer type = verReposCheckPath(repos, false, doc, commitId);
 		if(type == null || type <= 0)
 		{
 			return false;
