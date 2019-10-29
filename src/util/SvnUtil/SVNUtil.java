@@ -1094,7 +1094,8 @@ public class SVNUtil  extends BaseController{
 			subDocCommitFlag = 0;
 		}
 		
-		HashMap<Long, Doc> docHashMap = new HashMap<Long, Doc>();
+		//注意这个docHashMap只能在本函数下使用
+		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();
 		
 		String subDocParentPath = doc.getPath() + doc.getName() + "/";
 		if(doc.getName().isEmpty())
@@ -1116,7 +1117,7 @@ public class SVNUtil  extends BaseController{
 	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
 	            System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
 	            
-	            docHashMap.put(subDoc.getDocId(), subDoc);
+	            docHashMap.put(subDoc.getName(), subDoc);
 	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
 	        }
         }
@@ -1132,7 +1133,7 @@ public class SVNUtil  extends BaseController{
         	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
         	System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
         	
-        	if(docHashMap.get(subDoc.getDocId()) == null)
+        	if(docHashMap.get(subDoc.getName()) == null)
         	{
         		if(localSubEntry.isDirectory())
         		{
