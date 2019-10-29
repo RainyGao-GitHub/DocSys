@@ -3948,13 +3948,13 @@ public class BaseController  extends BaseFunction{
 	private boolean updateDocContent_FSM(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
-		
 		//Save the content to virtual file
 		if(isVDocExist(repos, doc) == true)
 		{
 			if(saveVirtualDocContent(repos, doc, rt) == true)
 			{
-				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
+				Doc vDoc = buildVDoc(doc);
+				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2);
 
 				//Insert Push Action
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null);
@@ -3969,7 +3969,8 @@ public class BaseController  extends BaseFunction{
 			//创建虚拟文件目录：用户编辑保存时再考虑创建
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
-				verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2);
+				Doc vDoc = buildVDoc(doc);
+				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2);
 
 				//Insert Push Action
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null);
