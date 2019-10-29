@@ -2544,7 +2544,11 @@ public class BaseController  extends BaseFunction{
 			remoteChanges.put(doc.getDocId(), remoteChange);
 			return true;
 		case NOCHANGE:		//no change
-			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+			if(dbDoc.getType() == 2)
+			{
+				return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
+			}
+			return true;
 		default:
 			break;
 		}		
