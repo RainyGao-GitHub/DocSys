@@ -2450,7 +2450,7 @@ public class BaseController  extends BaseFunction{
     		return true;
     	}
     	
-    	String latestRevision = verReposGetLatestRevision(repos, doc);
+    	String latestRevision = verReposGetLatestRevision(repos, doc, false);
         System.out.println("isRemoteDocChanged() latestRevision:" + latestRevision + " doc:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
         System.out.println("isRemoteDocChanged() previoRevision:" + dbDoc.getRevision());
         
@@ -3064,7 +3064,16 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected String verReposGetLatestRevision(Repos repos, Doc doc) {
+	protected String verReposGetLatestRevision(Repos repos, Doc doc, boolean convert) 
+	{
+		if(convert)
+		{
+			if(doc.getIsRealDoc() == false)
+			{
+				doc = buildVDoc(doc);
+			}
+		}
+		
 		if(repos.getVerCtrl() == 1)
 		{
 			return svnGetDocLatestRevision(repos, doc);			

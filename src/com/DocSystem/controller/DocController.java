@@ -2603,71 +2603,33 @@ public class DocController extends BaseController{
 		
 		String commitUser = login_user.getName();
 		
-		//Remove the /
-		if(entryPath != null)
-		{
-			char startChar = entryPath.charAt(0);
-			if(startChar == '/')
-			{
-				entryPath = entryPath.substring(1);
-			}
-		}
-		
 		boolean isRealDoc = true;
 		Doc doc = null;
-		Doc vDoc = null;
 		HashMap<String, String> downloadList = null;
 		if(historyType != null && historyType == 1)
 		{
+			//对于VDoc entryPath是无效的，无法对VDoc下的每个文件进行Revert
 			isRealDoc = false;			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
-			
-			if(entryPath == null)
-			{
-				vDoc = buildVDoc(doc);
-			}
-			else
-			{
-				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
-			}
-			
-			if(downloadAll == null || downloadAll == 0)
-			{
-				downloadList = new HashMap<String,String>();
-				buildDownloadList(repos, false, vDoc, commitId, downloadList);
-				if(downloadList != null && downloadList.size() == 0)
-				{
-					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
-					writeJson(rt, response);	
-					return;
-				}
-			}
 		}
 		else
 		{
+			isRealDoc = true;
 			if(entryPath == null)
 			{
 				doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
 			else
 			{
+				//Remove the /
+				char startChar = entryPath.charAt(0);
+				if(startChar == '/')
+				{
+					entryPath = entryPath.substring(1);
+				}
 				doc = buildBasicDoc(reposId, null, null, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
 			}
-			
-			if(downloadAll == null || downloadAll == 0)
-			{
-				downloadList = new HashMap<String,String>();
-				buildDownloadList(repos, true, doc, commitId, downloadList);
-				if(downloadList != null && downloadList.size() == 0)
-				{
-					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 未改动",rt);
-					writeJson(rt, response);	
-					return;
-				}
-			}
 		}
-		
-		printObject("revertDocHistory() doc", doc);
 				
 		//lockDoc
 		DocLock docLock = null;
@@ -2730,7 +2692,7 @@ public class DocController extends BaseController{
 		}	
 		else
 		{
-			String latestCommitId = verReposGetLatestRevision(repos, doc);
+			String latestCommitId = verReposGetLatestRevision(repos, doc, true);
 			if(latestCommitId != null && latestCommitId.equals(commitId))
 			{
 				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
