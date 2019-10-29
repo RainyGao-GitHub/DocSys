@@ -3144,7 +3144,7 @@ public class BaseController  extends BaseFunction{
 		qDoc.setDocId(doc.getDocId());
 		
 		List<Doc> list = reposService.getDocList(qDoc);
-		//printObject("dbGetDoc() list:", list);
+		printObject("dbGetDoc() list:", list);
 		
 		if(list == null || list.size() == 0)
 		{
