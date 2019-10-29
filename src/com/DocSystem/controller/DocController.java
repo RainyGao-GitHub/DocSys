@@ -2603,6 +2603,16 @@ public class DocController extends BaseController{
 		
 		String commitUser = login_user.getName();
 		
+		//Remove the /
+		if(entryPath != null)
+		{
+			char startChar = entryPath.charAt(0);
+			if(startChar == '/')
+			{
+				entryPath = entryPath.substring(1);
+			}
+		}
+		
 		boolean isRealDoc = true;
 		Doc doc = null;
 		Doc vDoc = null;
@@ -2656,6 +2666,8 @@ public class DocController extends BaseController{
 				}
 			}
 		}
+		
+		printObject("revertDocHistory() doc", doc);
 				
 		//lockDoc
 		DocLock docLock = null;
@@ -2672,12 +2684,12 @@ public class DocController extends BaseController{
 			}
 		}
 
-		Doc remoteEntry = verReposGetDoc(repos, doc, null);		
 		if(isRealDoc)
 		{
 			Doc localEntry = fsGetDoc(repos, doc);
 			Doc dbDoc = dbGetDoc(repos, doc, false);
-			
+			Doc remoteEntry = verReposGetDoc(repos, doc, null);		
+	
 			HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 			HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, login_user, rt, remoteChanges, localChanges, 2) == false)
@@ -2706,15 +2718,27 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;
 			}
+			
+			if(remoteEntry != null && remoteEntry.getRevision() != null && commitId.equals(remoteEntry.getRevision()))
+			{
+				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;
+			}
 		}	
-		
-		if(remoteEntry != null && remoteEntry.getRevision() != null && commitId.equals(remoteEntry.getRevision()))
+		else
 		{
-			System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
-			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-			unlockDoc(doc,login_user,docLock);
-			writeJson(rt, response);
-			return;
+			String latestCommitId = verReposGetLatestRevision(repos, doc);
+			if(latestCommitId != null && latestCommitId.equals(commitId))
+			{
+				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;				
+			}
 		}
 		
 		revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
