@@ -1255,7 +1255,7 @@ public class DocController extends BaseController{
 		String targetPath = getReposUserTmpPath(repos,login_user);
 				
 		//Do checkout to local
-		if(verReposCheckOut(repos, doc, targetPath, doc.getName(), null, true, true, null) == null)
+		if(verReposCheckOut(repos, true, doc, targetPath, doc.getName(), null, true, true, null) == null)
 		{
 			docSysErrorLog("远程下载失败", rt);
 			docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
@@ -1416,7 +1416,7 @@ public class DocController extends BaseController{
 			}
 				
 			//Do checkout to local
-			if(verReposCheckOut(repos, doc, targetPath, doc.getName(), null, true, true, null) == null)
+			if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
 			{
 				docSysErrorLog("远程下载失败", rt);
 				docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
@@ -1727,7 +1727,7 @@ public class DocController extends BaseController{
 		}
 		
 		//Do checkout to local
-		if(verReposCheckOut(repos, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null) == null)
+		if(verReposCheckOut(repos, false, doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), null, true, true, null) == null)
 		{
 			docSysErrorLog("远程下载失败", rt);
 			docSysDebugLog("DocToPDF() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + doc.getLocalRootPath() + doc.getPath() + " targetName:" + doc.getName(), rt);
@@ -2475,7 +2475,7 @@ public class DocController extends BaseController{
 		List <Doc> successDocList = null;
 		if(isRealDoc)
 		{
-			successDocList = verReposCheckOut(repos, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
+			successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
 			if(successDocList == null)
 			{
 				docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
@@ -2486,7 +2486,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			successDocList = verReposCheckOut(repos, vDoc, userTmpDir, targetName, commitId, true, true, downloadList);
+			successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, true, downloadList);
 			if(successDocList == null)
 			{
 				docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
@@ -2611,6 +2611,7 @@ public class DocController extends BaseController{
 			//对于VDoc entryPath是无效的，无法对VDoc下的每个文件进行Revert
 			isRealDoc = false;			
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			
 		}
 		else
 		{
@@ -2703,7 +2704,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
+		revertDocHistory(repos, false, doc, commitId, commitMsg, commitUser, login_user, rt, downloadList);
 		unlockDoc(doc,login_user,docLock);
 		writeJson(rt, response);
 	}
