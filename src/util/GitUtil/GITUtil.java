@@ -2316,6 +2316,8 @@ public class GITUtil  extends BaseController{
 				{
 					int subDocType = getEntryType(treeWalk.getFileMode());
 				    Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, treeWalk.getNameString(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, "");
+		        	System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
+
 				    docHashMap.put(subDoc.getDocId(), subDoc);
 				    scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
 				}
@@ -2334,7 +2336,8 @@ public class GITUtil  extends BaseController{
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
         	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-            
+        	System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+
         	if(docHashMap.get(subDoc.getDocId()) == null)
         	{
         		if(localSubEntry.isDirectory())
