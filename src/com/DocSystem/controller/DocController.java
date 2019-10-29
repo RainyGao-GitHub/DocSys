@@ -1255,7 +1255,7 @@ public class DocController extends BaseController{
 		String targetPath = getReposUserTmpPath(repos,login_user);
 				
 		//Do checkout to local
-		if(verReposCheckOut(repos, true, doc, targetPath, doc.getName(), null, true, true, null) == null)
+		if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
 		{
 			docSysErrorLog("远程下载失败", rt);
 			docSysDebugLog("downloadDocPrepare_FSM() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + targetPath + " targetName:" + doc.getName(), rt);
@@ -2343,7 +2343,7 @@ public class DocController extends BaseController{
 	
 	/**************** download History Doc  *****************/
 	@RequestMapping("/downloadHistoryDocPrepare.do")
-	public void downloadHistoryDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void downloadHistoryDocPrepare(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
 			String entryPath,
@@ -2384,46 +2384,21 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		boolean isRealDoc = true;
+		if(historyType != null && historyType == 1)
+		{
+			isRealDoc = false;
+		}
+		
 		Doc doc = null;
 		Doc vDoc = null;
 		String targetName = name + "_" + commitId;
 		HashMap<String, String> downloadList = null;
-		if(historyType != null && historyType == 1)
-		{
-			isRealDoc = false;			
-			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
-			
-			if(entryPath == null)
-			{
-				vDoc = buildVDoc(doc);
-			}
-			else
-			{
-				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
-			}
-			
-			if(vDoc.getName().isEmpty())
-			{
-				targetName = repos.getName() + "_备注_" + commitId;					
-			}
-			else
-			{
-				targetName = vDoc.getName() + "_" + commitId;
-			}
-			
-			if(downloadAll == null || downloadAll == 0)
-			{
-				downloadList = new HashMap<String,String>();
-				buildDownloadList(repos, false, vDoc, commitId, downloadList);
-				if(downloadList != null && downloadList.size() == 0)
-				{
-					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
-					writeJson(rt, response);	
-					return;
-				}
-			}
-		}
-		else
+		List <Doc> successDocList = null;
+		
+		//userTmpDir will be used to tmp store the history doc 
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		
+		if(isRealDoc)
 		{
 			if(entryPath == null)
 			{
@@ -2454,26 +2429,53 @@ public class DocController extends BaseController{
 					return;
 				}
 			}
-		}
-		
-		//userTmpDir will be used to tmp store the history doc 
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-
-		//checkout the entry to local
-		List <Doc> successDocList = null;
-		if(isRealDoc)
-		{
-			successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
-			if(successDocList == null)
+			
+			if(isRealDoc)
 			{
-				docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
-				docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
-				writeJson(rt, response);	
-				return;
+				successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
+				if(successDocList == null)
+				{
+					docSysErrorLog("当前版本文件 " + doc.getPath() + doc.getName() + " 不存在",rt);
+					docSysDebugLog("verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
+					writeJson(rt, response);	
+					return;
+				}
 			}
 		}
 		else
 		{
+			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, isRealDoc, localVRootPath, localVRootPath, null, null);
+			
+			if(entryPath == null)
+			{
+				vDoc = docConvert(doc, true);
+			}
+			else
+			{
+				vDoc = buildBasicDoc(reposId, docId, pid, entryPath, "", null, null, isRealDoc, localVRootPath, localVRootPath, null, null);
+			}
+			
+			if(vDoc.getName().isEmpty())
+			{
+				targetName = repos.getName() + "_备注_" + commitId;					
+			}
+			else
+			{
+				targetName = vDoc.getName() + "_" + commitId;
+			}
+			
+			if(downloadAll == null || downloadAll == 0)
+			{
+				downloadList = new HashMap<String,String>();
+				buildDownloadList(repos, false, vDoc, commitId, downloadList);
+				if(downloadList != null && downloadList.size() == 0)
+				{
+					docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
+					writeJson(rt, response);	
+					return;
+				}
+			}
+			
 			successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, true, downloadList);
 			if(successDocList == null)
 			{
@@ -2481,7 +2483,7 @@ public class DocController extends BaseController{
 				docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 				writeJson(rt, response);	
 				return;
-			}			
+			}
 		}
 		
 		printObject("downloadHistoryDocPrepare checkOut successDocList:", successDocList);
