@@ -33,6 +33,9 @@ import com.DocSystem.entity.User;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.CommonAction.Action;
+import com.DocSystem.common.CommonAction.ActionType;
+import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
@@ -228,6 +231,52 @@ public class DocController extends BaseController{
 	    return(Integer.parseInt(tempStr));
 	}
 
+	/****************   refresh a Document ******************/
+	@RequestMapping("/refreshDoc.do")
+	public void refreshDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitMsg,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+
+		if(commitMsg == null)
+		{
+			commitMsg = "同步 " + doc.getPath() + doc.getName();
+		}
+		String commitUser = login_user.getName();
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		if(repos.getType() == 1 && false == checkDocLocked(repos.getId(), doc, login_user, false))
+		{
+			insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.ALLSYNC, DocType.REALDOC, null);
+		}
+		
+		writeJson(rt, response);
+		
+		//executeCommonActionList(actionList, rt);
+		executeUniqueCommonActionList(actionList, rt);
+	}
+	
 	/****************   delete a Document ******************/
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
