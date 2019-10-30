@@ -480,12 +480,7 @@ public class GITUtil  extends BaseController{
 		}
     }
 
-    
-
-	public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
-		String entryPath = doc.getPath() + doc.getName();
-    	//System.out.println("getHistoryDetail entryPath:" + entryPath);	
-		
+    public List<ChangedItem> getHistoryDetail(Doc doc, String commitId) {
 		String revision = "HEAD";
 		if(commitId != null)
 		{
@@ -497,6 +492,18 @@ public class GITUtil  extends BaseController{
         	System.out.println("getHistoryDetail() Failed to open git repository");
     		return null;
     	}
+    	
+    	List<ChangedItem> changedItemList = getHistoryDetailBasic(doc, revision);
+    	
+        CloseRepos();
+        return changedItemList;
+    }
+    
+	private List<ChangedItem> getHistoryDetailBasic(Doc doc, String revision) {
+		String entryPath = doc.getPath() + doc.getName();
+    	//System.out.println("getHistoryDetail entryPath:" + entryPath);	
+		
+		List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
 		
 		try {
 	        //Get objId for revision
@@ -505,13 +512,11 @@ public class GITUtil  extends BaseController{
 	        {
 	        	System.out.println("getHistoryDetail() There is no any commit history for repository:"  + gitDir + " at revision:"+ revision);
 	        	CloseRepos();	
-	        	return null;
+	        	return changedItemList;
 	        }
 	        
 	        RevCommit revCommit = walk.parseCommit(objId);
 	        RevCommit previsouCommit=getPrevHash(revCommit,repository);
-			
-	        List<ChangedItem> changedItemList = new ArrayList<ChangedItem>();
 
 	        if(previsouCommit == null)	//It is first commit, so all Items was new added
 	        {
@@ -539,17 +544,14 @@ public class GITUtil  extends BaseController{
 	    	    		changedItem.setEntryType(type);
 	    	    		changedItem.setEntryPath(nodePath);
 	    	    		changedItem.setSrcEntryPath(null);
-	    	    		changedItem.setCommitId(commitId);
+	    	    		changedItem.setCommitId(revision);
 	    	    		changedItemList.add(changedItem);				
 	    	    	}
 	    		} catch(Exception e){
 	    			System.out.println("getHistoryDetail() treeWalk.next() Exception"); 
 	                e.printStackTrace();
-	                CloseRepos();
 	    			return null;
 	    		}
-
-	        	CloseRepos();
 				return changedItemList;	        	
 	        }
 	        
@@ -566,8 +568,6 @@ public class GITUtil  extends BaseController{
 	                		.setNewTree(newTreeIter)
 	                		.setOldTree(oldTreeIter)
 	                		.call();
-        	
-			CloseRepos();	
 
 			if(diffs.size() > 0)
 			{
@@ -592,19 +592,17 @@ public class GITUtil  extends BaseController{
 		          
 		          changedItem.setSrcEntryPath(srcEntryPath);
 		          
-		          changedItem.setCommitId(commitId);
+		          changedItem.setCommitId(revision);
 		          
 		          changedItemList.add(changedItem);
 		        }
-		        
-		        return changedItemList;
-			}		
+			}
+	        return changedItemList;
 		} catch (Exception e) {
 			System.out.println("getHistoryDetail() entryPath:" + entryPath + " 异常");	
 			e.printStackTrace();
+			return null;
 		}	
-		CloseRepos();
-		return null;
 	}
 	
     private Integer getChangeType(ChangeType changeType) {

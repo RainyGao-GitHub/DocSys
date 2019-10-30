@@ -2333,7 +2333,7 @@ public class DocController extends BaseController{
 		
 		if(changedItemList == null)
 		{
-			System.out.println("getHistoryDetail Failed");
+			System.out.println("getHistoryDetail 该版本没有文件改动");
 		}
 		rt.setData(changedItemList);
 		
@@ -2711,7 +2711,7 @@ public class DocController extends BaseController{
 		else
 		{
 			File localVDoc = new File(doc.getLocalVRootPath() + vDoc.getPath() + vDoc.getName());
-			if(localVDoc.exists())
+			if(!vDoc.getName().isEmpty() && localVDoc.exists())
 			{
 				String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
 				if(latestCommitId != null && latestCommitId.equals(commitId))
