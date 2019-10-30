@@ -651,17 +651,17 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	console.log("refresh ok:", ret.data);
-			     	bootstrapQ.msg({
+			     	/*bootstrapQ.msg({
 							msg : "刷新成功！",
 							type : 'success',
 							time : 1000,
-					});
+					});*/
 			     	
 			     	//2秒后刷新页面
 			        setTimeout(function () 
 			        {
 				     	window.location.reload();			        	
-		            }, 1000);
+		            }, 100);
                 }
                 else
                 {
