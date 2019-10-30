@@ -2269,7 +2269,7 @@ public class BaseController  extends BaseFunction{
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 		Integer subDocSyncupFlag = 1;
-		if(action.getAction() == Action.ALLSYNC)
+		if(action.getAction() == Action.SYNC || action.getAction() == Action.FORCESYNC)
 		{
 			subDocSyncupFlag = 2;
 		}
@@ -2292,7 +2292,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(action.getAction() != Action.ALLSYNC)
+			if(action.getAction() == Action.UNDEFINED)
 			{
 				System.out.println("**************************** 结束自动同步 Action:" + action.getAction() + " 本地有改动不进行同步 ");			
 				return true;
@@ -2302,7 +2302,7 @@ public class BaseController  extends BaseFunction{
 			ret =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, rt);
 		}
 		
-		if(action.getAction() == Action.ALLSYNC)
+		if(action.getAction() == Action.FORCESYNC)
 		{
 			refreshIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
 		}
