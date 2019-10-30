@@ -178,12 +178,22 @@ public class LuceneUtil2   extends BaseFunction
         document.add(new IntField("vid", doc.getVid(), Store.YES));
         document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
         document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
-        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
         document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
         document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
         document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
-        document.add(new LongField("size", doc.getSize(), Store.YES));
-        document.add(new LongField("latestEditTime", doc.getLatestEditTime(), Store.YES));
+        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
+        Long size = doc.getSize();
+        if(size == null)
+        {
+        	size = (long) 0;
+        }
+        document.add(new LongField("size", size, Store.YES));
+        Long latestEditTime = doc.getLatestEditTime();
+        if(latestEditTime == null)
+        {
+        	latestEditTime = (long) 0;
+        }
+        document.add(new LongField("latestEditTime", latestEditTime, Store.YES));
         
 		return document;
 	}
