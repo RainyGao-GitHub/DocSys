@@ -2288,6 +2288,12 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
+			if(action.getAction() != Action.ALLSYNC)
+			{
+				System.out.println("**************************** 结束自动同步 Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+				return true;
+			}	
+			
 			//Do local SyncUp
 			return syncupLocalChanges_FSM(repos, doc, login_user, localChanges, rt);
 		}
