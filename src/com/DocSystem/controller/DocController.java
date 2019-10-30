@@ -234,10 +234,10 @@ public class DocController extends BaseController{
 	/****************   refresh a Document ******************/
 	@RequestMapping("/refreshDoc.do")
 	public void refreshDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String commitMsg,
+			String commitMsg, Integer force,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -268,7 +268,14 @@ public class DocController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		if(repos.getType() == 1 && false == checkDocLocked(repos.getId(), doc, login_user, false))
 		{
-			insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.ALLSYNC, DocType.REALDOC, null, login_user);
+			if(force != null && force == 1)
+			{
+				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.SYNC, DocType.REALDOC, null, login_user);
+			}
+			else
+			{
+				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.FORCESYNC, DocType.REALDOC, null, login_user);				
+			}
 		}
 		
 		writeJson(rt, response);
