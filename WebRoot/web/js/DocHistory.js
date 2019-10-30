@@ -216,7 +216,7 @@
 	                }
 	                else
 	                {
-	                	showErrorMessage("历史版本恢复失败:" + ret.msgInfo);
+	                	showErrorMessage(ret.msgInfo);
 	                }
 	            },
 	            error : function () {
