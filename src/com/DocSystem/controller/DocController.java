@@ -268,7 +268,7 @@ public class DocController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		if(repos.getType() == 1 && false == checkDocLocked(repos.getId(), doc, login_user, false))
 		{
-			insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.ALLSYNC, DocType.REALDOC, null);
+			insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.ALLSYNC, DocType.REALDOC, null, login_user);
 		}
 		
 		writeJson(rt, response);
