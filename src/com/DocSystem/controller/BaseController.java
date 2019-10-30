@@ -2295,10 +2295,80 @@ public class BaseController  extends BaseFunction{
 			}	
 			
 			//Do local SyncUp
-			return syncupLocalChanges_FSM(repos, doc, login_user, localChanges, rt);
+			ret =  syncupLocalChanges_FSM(repos, doc, login_user, localChanges, rt);
 		}
+		
+		if(action.getAction() == Action.ALLSYNC)
+		{
+			refreshIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
+		}
+		else
+		{
+			refreshIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag);	
+		}
+		return ret;
 	}
 	
+
+	private boolean refreshIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
+			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
+	{	
+		if(isDocInChangeList(doc, remoteChanges) || !isDocInChangeList(doc, remoteChanges))
+		{
+			//Refresh Index For DocName
+			deleteIndexForDocName(repos, doc, rt);
+			addIndexForDocName(repos, doc, rt);
+			
+			//Refresh Index For RealDoc
+			deleteIndexForRDoc(repos, doc);
+			addIndexForRDoc(repos, doc);
+			
+			//Refresh Index For VDoc
+			deleteIndexForVDoc(repos, doc);
+			addIndexForVDoc(repos, doc);
+		}
+		
+		//子目录不递归
+		if(subDocSyncupFlag == 0)
+		{
+			return true;
+		}
+
+		//子目录递归不继承
+		if(subDocSyncupFlag == 1)
+		{
+			subDocSyncupFlag = 0;
+		}
+		
+		List<Doc> localEntryList = getLocalEntryList(repos, doc);
+		//printObject("SyncUpSubDocs_FSM() localEntryList:", localEntryList);
+    	if(localEntryList == null)
+    	{
+    		System.out.println("refreshIndexForDoc() localEntryList 获取异常:");
+        	return false;
+    	}
+    	
+    	for(int i=0; i< localEntryList.size(); i++)
+    	{
+    		Doc subDoc = localEntryList.get(i);
+    		refreshIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
+    	}
+		return true;
+	}
+
+	private boolean isDocInChangeList(Doc doc, HashMap<Long, DocChange> docChanges) 
+	{
+		if(docChanges == null)
+		{
+			return true;
+		}
+		
+		if(docChanges.get(doc.getDocId()) != null)
+		{
+			return true;	
+		}
+		return false;
+	}
 
 	private boolean syncupRemoteChanges_FSM(Repos repos, User login_user, HashMap<Long, DocChange> remoteChanges, ReturnAjax rt) 
 	{

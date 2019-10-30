@@ -275,6 +275,8 @@ public class DocController extends BaseController{
 		
 		//executeCommonActionList(actionList, rt);
 		executeUniqueCommonActionList(actionList, rt);
+		
+		
 	}
 	
 	/****************   delete a Document ******************/
