@@ -612,6 +612,63 @@
 		}
 	}
 
+	function refreshDoc(node)
+	{
+		console.log("refreshDoc node:", node);
+		
+		var docId = 0;
+		var pid = -1;
+		var parentPath = "";
+		var docName = "";
+		var level = 0;
+		var type = 2;
+		
+		if(node != null)
+		{	
+			docId = node.id;
+			pid = node.pid;
+			parentPath = node.path;
+			docName = node.name;
+			level = node.level;
+			type = node.type;
+		}
+		
+   		console.log("refreshDoc docId:" + docId + " type:"+ type + " level:" + level + " pid:" + pid + " path:" + parentPath + " name:" + docName);
+		$.ajax({
+            url : "/DocSystem/Doc/refreshDoc.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: gReposId,
+                docId : docId,
+                pid	: pid,
+                type: type,
+                level: level,
+                path: parentPath,
+                name: docName,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("refresh ok:", ret.data);
+			     	bootstrapQ.msg({
+							msg : "刷新成功！",
+							type : 'success',
+							time : 1000,
+					});
+                }
+                else
+                {
+                	showErrorMessage("刷新失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+	               showErrorMessage("刷新失败:服务器异常！");
+            }
+    	});
+		
+
+	}
+	
 	function showRenameDialog(node)
 	{
 		console.log("showRenameDialog node:", node);
@@ -3910,6 +3967,12 @@ function CompareObj(objA, objB, flag) {
 					}
 			},
 			{divider: true},
+			{text: '刷新', action: function(e){
+						e.preventDefault();
+						refreshDoc(null);
+					}
+			},			
+			{divider: true},
 			{text: '更多...', subMenu: [
 						{text: '查看仓库历史', action: function(e){
 									e.preventDefault();
@@ -3996,14 +4059,12 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '删除', action: function(e){
 						e.preventDefault();
-						var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						var deleteNodes = getDeleteNodes();
 						DoDelete(deleteNodes);
 					}
 			},
 			{text: '重命名', action: function(e){
 						e.preventDefault();
-						 var treeObj = $.fn.zTree.getZTreeObj("doctree");
 						if(curRightClickedTreeNode !== null)
 						{
 							showRenameDialog(curRightClickedTreeNode);
@@ -4022,6 +4083,16 @@ function CompareObj(objA, objB, flag) {
 					}
 					showDocDetail(curRightClickedTreeNode);
 				}
+			},
+			{divider: true},
+			{text: '刷新', action: function(e){
+						e.preventDefault();
+						if(curRightClickedTreeNode !== null)
+						{
+							refreshDoc(curRightClickedTreeNode);
+							curRightClickedTreeNode = null;
+		    			}
+					}
 			},
 			{divider: true},
 			{text: '更多...', subMenu: [
@@ -4165,11 +4236,10 @@ function CompareObj(objA, objB, flag) {
 			},
 			{text: '重命名', action: function(e){
 						e.preventDefault();
-						var docId = curRightClickedDocListNode.docId;
-						var node = getNodeByNodeId(docId);
-						if(node !== null)
+						if(curRightClickedDocListNode !== null)
 						{
-							showRenameDialog(node);
+							showRenameDialog(curRightClickedDocListNode);
+							curRightClickedDocListNode = null;
 		    			}
 					}
 			},
@@ -4180,16 +4250,24 @@ function CompareObj(objA, objB, flag) {
 				}
 			},
 			{divider: true},
+			{text: '刷新', action: function(e){
+						e.preventDefault();
+						if(curRightClickedDocListNode !== null)
+						{
+							refreshDoc(curRightClickedDocListNode);
+							curRightClickedDocListNode = null;
+		    			}
+					}
+			},
+			{divider: true},
 			{text: '更多...', subMenu: [
 						{text: '查看历史版本', action: function(e){
 								e.preventDefault();
-								var docId = curRightClickedDocListNode.docId;
 								showDocHistory(curRightClickedDocListNode,0);
 							}
 						},
 						{text: '查看备注历史', action: function(e){
 								e.preventDefault();
-								var docId = curRightClickedDocListNode.docId;
 							    showDocHistory(curRightClickedDocListNode,1);
 							}
 						},
