@@ -127,15 +127,13 @@ public class BaseFunction{
 		CommonAction tempAction = uniqueCommonActionHashMap.get(srcDoc.getDocId());
 		if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
 		{
-			uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
-			uniqueCommonActionList.add(action);
-			return true;
-		}
-		else
-		{
 			System.out.println("insertCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
 			return false;
 		}
+		
+		uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
+		uniqueCommonActionList.add(action);
+		return true;
 	}
 	
 	/******************************** Basic Interface for CommitAction *************************************/
