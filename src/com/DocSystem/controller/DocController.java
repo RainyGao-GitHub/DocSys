@@ -2657,11 +2657,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;				
 			}
-			else if(localEntry.getType() == 0)
-			{
-				localEntry = null;
-			}
-			
+
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);		
 			if(remoteEntry == null)
 			{
@@ -2669,10 +2665,6 @@ public class DocController extends BaseController{
 				unlockDoc(doc,login_user,docLock);
 				writeJson(rt, response);
 				return;				
-			}
-			else if(remoteEntry.getType() == 0)
-			{
-				remoteEntry = null;
 			}
 			
 			Doc dbDoc = dbGetDoc(repos, doc, false);
@@ -2706,9 +2698,9 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(localEntry != null)
+			if(localEntry.getType() != 0)
 			{
-				if(remoteEntry != null && remoteEntry.getRevision() != null && commitId.equals(remoteEntry.getRevision()))
+				if(commitId.equals(remoteEntry.getRevision()))
 				{
 					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
