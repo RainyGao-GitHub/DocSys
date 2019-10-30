@@ -3991,15 +3991,15 @@ function CompareObj(objA, objB, flag) {
 							e.preventDefault();
 							curRightClickedTreeNode = null; 
 		        			showDocHistory(null, 1);
+		        			}
 						},
 						{divider: true},
 						{text: '强制刷新', action: function(e){
-									e.preventDefault();
-									refreshDoc(null, 1);
-								}
-						},		
-				},
-   				]
+							e.preventDefault();
+							refreshDoc(null, 1);
+							}
+						},
+				]
    			},
 			]
 		);
