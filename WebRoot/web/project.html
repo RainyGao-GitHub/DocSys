@@ -612,7 +612,7 @@
 		}
 	}
 
-	function refreshDoc(node)
+	function refreshDoc(node, force)
 	{
 		console.log("refreshDoc node:", node);
 		
@@ -646,6 +646,7 @@
                 level: level,
                 path: parentPath,
                 name: docName,
+                force: force,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -3975,7 +3976,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '刷新', action: function(e){
 						e.preventDefault();
-						refreshDoc(null);
+						refreshDoc(null, 0);
 					}
 			},			
 			{divider: true},
@@ -3991,6 +3992,12 @@ function CompareObj(objA, objB, flag) {
 							curRightClickedTreeNode = null; 
 		        			showDocHistory(null,1);
 						}
+						{divider: true},
+						{text: '强制刷新', action: function(e){
+									e.preventDefault();
+									refreshDoc(null, 1);
+								}
+						},		
 				},
    				]
    			},
@@ -4095,7 +4102,7 @@ function CompareObj(objA, objB, flag) {
 						e.preventDefault();
 						if(curRightClickedTreeNode !== null)
 						{
-							refreshDoc(curRightClickedTreeNode);
+							refreshDoc(curRightClickedTreeNode, 0);
 							curRightClickedTreeNode = null;
 		    			}
 					}
@@ -4149,7 +4156,17 @@ function CompareObj(objA, objB, flag) {
 									e.preventDefault();
 				        			copyUrl(curRightClickedTreeNode);
 								}
-						},	
+						},
+						{divider: true},
+						{text: '强制刷新', action: function(e){
+									e.preventDefault();
+									if(curRightClickedTreeNode !== null)
+									{
+										refreshDoc(curRightClickedTreeNode, 1);
+										curRightClickedTreeNode = null;
+					    			}
+								}
+						},
    				]
    			},
 		]);
@@ -4260,7 +4277,7 @@ function CompareObj(objA, objB, flag) {
 						e.preventDefault();
 						if(curRightClickedDocListNode !== null)
 						{
-							refreshDoc(curRightClickedDocListNode);
+							refreshDoc(curRightClickedDocListNode, 0);
 							curRightClickedDocListNode = null;
 		    			}
 					}
@@ -4322,6 +4339,16 @@ function CompareObj(objA, objB, flag) {
 				        			copyUrl(curRightClickedDocListNode);
 								}
 						},	
+						{divider: true},
+						{text: '强制刷新', action: function(e){
+									e.preventDefault();
+									if(curRightClickedDocListNode !== null)
+									{
+										refreshDoc(curRightClickedDocListNode, 1);
+										curRightClickedDocListNode = null;
+					    			}
+								}
+						},
    				]
    			},
 		]);

@@ -17,7 +17,8 @@ public class CommonAction {
 		MOVE,
 		COPY,
 		PUSH,
-		ALLSYNC;
+		SYNC,
+		FORCESYNC;
 	}
 	
 	public enum ActionType {
