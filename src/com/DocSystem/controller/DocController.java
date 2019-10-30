@@ -2546,11 +2546,7 @@ public class DocController extends BaseController{
 		}		
 	}
 	
-	/****************   revert Document History *****************
-	 *
-	 * 
-	 *  注意：revert只恢复不存在的文件，已存在的文件将不进行恢复
-	 */	
+	/****************   revert Document History ******************/	
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
@@ -2714,14 +2710,18 @@ public class DocController extends BaseController{
 		}	
 		else
 		{
-			String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
-			if(latestCommitId != null && latestCommitId.equals(commitId))
+			File localVDoc = new File(doc.getLocalVRootPath() + vDoc.getPath() + vDoc.getName());
+			if(localVDoc.exists())
 			{
-				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
-				docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
-				unlockDoc(doc,login_user,docLock);
-				writeJson(rt, response);
-				return;				
+				String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
+				if(latestCommitId != null && latestCommitId.equals(commitId))
+				{
+					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
+					docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
+					unlockDoc(doc,login_user,docLock);
+					writeJson(rt, response);
+					return;				
+				}
 			}
 			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, null);
 		}
