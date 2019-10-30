@@ -2895,7 +2895,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(doc.getType() == 2)	//对于GIT仓库无法区分空目录，因此只删除子目录
 			{
-				System.out.println("syncUpRemoteChange_FSM() Git仓库无法识别空目录，因此只删除: " + doc.getPath()+doc.getName());
+				System.out.println("syncUpRemoteChange_FSM() Git仓库无法识别空目录，因此只删除子目录: " + doc.getPath()+doc.getName());
 				deleteSubDoc(repos, doc, rt);			
 			}	
 			return true;
