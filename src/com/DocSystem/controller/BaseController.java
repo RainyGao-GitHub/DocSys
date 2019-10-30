@@ -5773,7 +5773,7 @@ public class BaseController  extends BaseFunction{
     	}
     	else if(type == 0)
     	{
-    		System.out.println("svnCheckOut() " + entryPath + " not exists for revision:" + revision);
+    		System.out.println("gitCheckOut() " + entryPath + " not exists for revision:" + revision);
     		if(auto == false)
     		{
         		return null;
@@ -5782,11 +5782,11 @@ public class BaseController  extends BaseFunction{
     		String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
     		if(preCommitId == null)
     		{
-        		System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+        		System.out.println("gitCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
     			return null;
     		}
     		revision = preCommitId;
-    		System.out.println("svnCheckOut() try to chekout " + entryPath + " at revision:" + revision);
+    		System.out.println("gitCheckOut() try to chekout " + entryPath + " at revision:" + revision);
     	}
     	else
     	{
@@ -5796,7 +5796,7 @@ public class BaseController  extends BaseFunction{
 	    		TreeWalk subEntries = verReposUtil.getSubEntries("", revision);
 	    		if(verReposUtil.subEntriesIsEmpty(subEntries))
 	    		{
-	    	    	System.out.println("svnCheckOut() 根目录下没有文件 at revision:" + revision);
+	    	    	System.out.println("gitCheckOut() 根目录下没有文件 at revision:" + revision);
 	        		if(auto == false)
 	        		{
 	        			return null;
@@ -5805,11 +5805,11 @@ public class BaseController  extends BaseFunction{
 	    	    	String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
 	    	    	if(preCommitId == null)
 	    	    	{
-	    	        	System.out.println("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
+	    	        	System.out.println("gitCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
 	    	    		return null;
 	    	    	}
 	    	    	revision = preCommitId;
-	    	    	System.out.println("svnCheckOut() try to chekout 根目录 at revision:" + revision);
+	    	    	System.out.println("gitCheckOut() try to chekout 根目录 at revision:" + revision);
 	    		}
 	    	}
     	}
