@@ -2570,7 +2570,8 @@ public class BaseController  extends BaseFunction{
 		
 		return true;
 	}
-
+	
+	//注意：该接口使用null来表示doc是否存在，因此对于type=0的情况需要先转成null
 	protected DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
 	{						
 		//dbDoc不存在，localDoc存在

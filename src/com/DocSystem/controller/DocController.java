@@ -2650,9 +2650,33 @@ public class DocController extends BaseController{
 		if(isRealDoc)
 		{
 			Doc localEntry = fsGetDoc(repos, doc);
-			Doc dbDoc = dbGetDoc(repos, doc, false);
+			if(localEntry == null)
+			{
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;				
+			}
+			else if(localEntry.getType() == 0)
+			{
+				localEntry = null;
+			}
+			
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);		
-	
+			if(remoteEntry == null)
+			{
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
+				unlockDoc(doc,login_user,docLock);
+				writeJson(rt, response);
+				return;				
+			}
+			else if(remoteEntry.getType() == 0)
+			{
+				remoteEntry = null;
+			}
+			
+			Doc dbDoc = dbGetDoc(repos, doc, false);
+			
 			HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 			HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
 			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, login_user, rt, remoteChanges, localChanges, 2) == false)
@@ -2682,13 +2706,16 @@ public class DocController extends BaseController{
 				return;
 			}
 			
-			if(remoteEntry != null && remoteEntry.getRevision() != null && commitId.equals(remoteEntry.getRevision()))
+			if(localEntry != null)
 			{
-				System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-				unlockDoc(doc,login_user,docLock);
-				writeJson(rt, response);
-				return;
+				if(remoteEntry != null && remoteEntry.getRevision() != null && commitId.equals(remoteEntry.getRevision()))
+				{
+					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+					unlockDoc(doc,login_user,docLock);
+					writeJson(rt, response);
+					return;
+				}
 			}
 			
 			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, null);
