@@ -2544,7 +2544,7 @@ public class BaseController  extends BaseFunction{
 			remoteChanges.put(doc.getDocId(), remoteChange);
 			return true;
 		case NOCHANGE:		//no change
-			if(dbDoc.getType() == 2)
+			if(dbDoc != null && dbDoc.getType() == 2)
 			{
 				return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 			}
@@ -2878,7 +2878,7 @@ public class BaseController  extends BaseFunction{
 			}
 			return false;
 		case REMOTEDELETE: //Remote Deleted
-			System.out.println("syncUpRemoteChange_FSM() local and remote deleted: " + doc.getPath()+doc.getName());
+			System.out.println("syncUpRemoteChange_FSM() remote deleted: " + doc.getPath()+doc.getName());
 			if(repos.getVerCtrl() == 1 || doc.getType() == 1) 
 			{
 				if(deleteRealDoc(repos, doc, rt) == true)
@@ -2890,7 +2890,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(doc.getType() == 2)	//对于GIT仓库无法区分空目录，因此只删除子目录
 			{
-				System.out.println("syncUpRemoteChange_FSM() local and remote deleted: " + doc.getPath()+doc.getName());
+				System.out.println("syncUpRemoteChange_FSM() Git仓库无法识别空目录，因此只删除: " + doc.getPath()+doc.getName());
 				deleteSubDoc(repos, doc, rt);			
 			}	
 			return true;
