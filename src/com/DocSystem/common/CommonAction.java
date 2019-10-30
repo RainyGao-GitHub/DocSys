@@ -16,7 +16,8 @@ public class CommonAction {
 		UPDATE,
 		MOVE,
 		COPY,
-		PUSH;
+		PUSH,
+		ALLSYNC;
 	}
 	
 	public enum ActionType {
@@ -29,7 +30,7 @@ public class CommonAction {
 	}
 
 	public enum DocType {
-		UNEFINED,
+		UNDEFINED,
 		REALDOC,
 		VIRTURALDOC,
 		DOCNAME;
