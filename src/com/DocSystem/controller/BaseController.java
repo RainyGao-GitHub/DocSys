@@ -459,7 +459,7 @@ public class BaseController  extends BaseFunction{
 		if(false == checkDocLocked(repos.getId(), doc, autoSync, false))
 		{
 			//insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-			insertCommonAction(actionList,repos,doc, null, null, null, ActionType.AUTOSYNCUP, Action.UNDEFINED, DocType.UNEFINED, null);
+			insertCommonAction(actionList,repos,doc, null, null, null, ActionType.AUTOSYNCUP, Action.UNDEFINED, DocType.REALDOC, null);
 		}
 	}
 	
@@ -2264,7 +2264,12 @@ public class BaseController  extends BaseFunction{
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-		boolean ret = syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, 1);
+		Integer subDocSyncupFlag = 1;
+		if(action.getAction() == Action.ALLSYNC)
+		{
+			subDocSyncupFlag = 2;
+		}
+		boolean ret = syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
 		System.out.println("syncupForDocChange() syncupScanForSubDocs_FSM ret:" + ret);
 		if(remoteChanges.size() == 0)
 		{

@@ -124,7 +124,8 @@ public class BaseFunction{
 		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();		
 
 		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
-		if(uniqueCommonActionHashMap.get(srcDoc.getDocId()) == null)
+		CommonAction tempAction = uniqueCommonActionHashMap.get(srcDoc.getDocId());
+		if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
 		{
 			uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
 			uniqueCommonActionList.add(action);
