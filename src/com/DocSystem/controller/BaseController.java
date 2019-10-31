@@ -2721,7 +2721,6 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	//注意：该接口使用null来表示doc是否存在，因此对于type=0的情况需要先转成null
 	protected DocChangeType getDocChangeType_FSM(Repos repos,Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry) 
 	{						
 		//dbDoc不存在
@@ -2826,6 +2825,14 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//远程删除
+				if(repos.getVerCtrl() == 2)
+				{
+					//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变（不存在、文件也会被认为是空目录）
+					if(isEmptyDir(dbDoc.getLocalRootPath() + dbDoc.getPath() + dbDoc.getName()))
+					{
+						return DocChangeType.NOCHANGE;
+					}
+				}
 				System.out.println("getDocChangeType_FSM() 远程删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc/localEntry是目录且一致, remoteEntry不存在");
 				return DocChangeType.REMOTEDELETE;
 			}
