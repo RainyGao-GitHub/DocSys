@@ -270,11 +270,11 @@ public class DocController extends BaseController{
 		{
 			if(force != null && force == 1)
 			{
-				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.SYNC, DocType.REALDOC, null, login_user);
+				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.FORCESYNC, DocType.REALDOC, null, login_user);
 			}
 			else
 			{
-				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.FORCESYNC, DocType.REALDOC, null, login_user);				
+				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.SYNC, DocType.REALDOC, null, login_user);				
 			}
 		}
 		
