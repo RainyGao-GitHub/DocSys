@@ -2737,7 +2737,9 @@ public class DocController extends BaseController{
 			if(localChanges.size() > 0)
 			{
 				System.out.println("revertDocHistory() 本地有改动！");
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!",rt);
+				String localChangeInfo = buildChangeInfo(localChanges);
+				
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
 				unlockDoc(doc,login_user,docLock);
 				writeJson(rt, response);
 				return;
@@ -2746,7 +2748,8 @@ public class DocController extends BaseController{
 			if(remoteChanges.size() > 0)
 			{
 				System.out.println("revertDocHistory() 远程有改动！");
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!",rt);
+				String remoteChangeInfo = buildChangeInfo(remoteChanges);				
+				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!" + "</br></br>"+ remoteChangeInfo,rt);
 				unlockDoc(doc,login_user,docLock);
 				writeJson(rt, response);
 				return;
