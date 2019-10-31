@@ -2586,6 +2586,59 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	protected String buildChangeInfo(HashMap<Long, DocChange> ChangeList) 
+	{
+		String changeInfo = "";
+		if(ChangeList == null || ChangeList.size() == 0)
+		{
+			return "";
+		}
+
+		for(DocChange docChange: ChangeList.values())
+	    {
+			Doc doc = docChange.getDoc();
+			switch(docChange.getType())
+			{
+			case LOCALADD:	//localAdd
+				changeInfo += "本地新增 " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case LOCALDELETE: 	//localDelete
+				changeInfo += "本地删除 " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case LOCALCHANGE: 	//localFileChanged
+				changeInfo += "本地修改 " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case LOCALFILETODIR:	//localTypeChanged(From File to Dir)
+				changeInfo += "本地文件类型变动(文件->目录) " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case LOCALDIRTOFILE:	//localTypeChanged(From Dir to File)
+				changeInfo += "本地文件类型变动(目录->文件) " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			//由于远程同步需要直接修改或删除本地文件，一旦误操作将无法恢复，必须保证删除修改操作的文件的历史已经在版本仓库中
+			case REMOTEDELETE:	//remoteDelete
+				changeInfo += "远程删除 " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case REMOTECHANGE:	//remoteFileChanged
+				changeInfo += "远程修改 " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case REMOTEFILETODIR:	//remoteTypeChanged(From File To Dir)
+				changeInfo += "远程文件类型变动(文件->目录) " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
+				changeInfo += "远程文件类型变动(目录->文件) " + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			case REMOTEADD:	//remoteAdd
+				changeInfo += "远程新增 " + doc.getPath() + doc.getName() + "<\br>";
+			case NOCHANGE:		//no change
+				break;
+			default:
+				changeInfo += "未知变动(" +docChange.getType() + ") "  + doc.getPath() + doc.getName() + "<\br>";
+				break;
+			}		
+		}
+		return changeInfo;
+	}
+	
 	protected boolean syncupScanForDoc_FSM(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
 	{
 		//printObject("syncupForDocChange_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
