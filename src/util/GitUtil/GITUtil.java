@@ -1238,14 +1238,17 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
 
-	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
+	public String doAutoCommit(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
 		
 		System.out.println("doAutoCommit()" + " parentPath:" + doc.getPath() +" entryName:" + doc.getName() +" localRootPath:" + localRootPath + " commitMsg:" + commitMsg +" modifyEnable:" + modifyEnable + " localRefRootPath:" + localRefRootPath);
     	
-		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
 		
 		String entryPath = doc.getPath() + doc.getName();			
 		File localEntry = new File(localRootPath + entryPath);
@@ -1296,7 +1299,7 @@ public class GITUtil  extends BaseController{
 				if(!doc.getPath().isEmpty())
 				{
 					System.out.println("doAutoCommit() parent entry " + doc.getPath() + " not exists, do commit parent");
-					return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable);
+					return doAutoCommitParent(doc, commitMsg, commitUser, modifyEnable, commitActionList);
 				}
 			}	
 	
@@ -1393,7 +1396,7 @@ public class GITUtil  extends BaseController{
 	}
 	
 	//move or copy Doc
-	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove)
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove, List<CommitAction> commitActionList)
 	{   
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
 		Integer type = checkPath(srcEntryPath,null);
@@ -1411,7 +1414,10 @@ public class GITUtil  extends BaseController{
 
 		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
 		
-		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
 		
 	    //Do copy File Or Dir
 	    if(isMove)
@@ -2351,14 +2357,18 @@ public class GITUtil  extends BaseController{
         }
 	}
 
-	private String doAutoCommitParent(Doc doc, String commitMsg,String commitUser, boolean modifyEnable)
+	private String doAutoCommitParent(Doc doc, String commitMsg,String commitUser, boolean modifyEnable, List<CommitAction> commitActionList)
     {
     	String parentPath = doc.getPath();
         System.out.println("doAutoCommitParent() parentPath:" + parentPath);
     	if(parentPath.isEmpty())
     	{
     		Doc rootDoc = buildBasicDoc(doc.getVid(), 0L, -1L, "", "", 0, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-			List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+			if(commitActionList == null)
+			{	
+				commitActionList = new ArrayList<CommitAction>();
+			}
+			
     		insertAddDirAction(commitActionList, rootDoc, false);
     		
     		Git git = null;
@@ -2412,7 +2422,7 @@ public class GITUtil  extends BaseController{
 	    		if(type == 0)
 	    		{
 	    			Doc tempDoc = buildBasicDoc(doc.getVid(), null, null, path, name, null, 2, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2);
+	    			return doAutoCommit(tempDoc, commitMsg, commitUser, modifyEnable,null, 2, commitActionList);
 	    		}
 	    		path = path + name + "/";  		
 	    	}
