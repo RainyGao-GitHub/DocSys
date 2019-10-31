@@ -1607,7 +1607,7 @@ public class BaseController  extends BaseFunction{
 		printObject("revertDocHistory checkOut successDocList:", successDocList);
 		
 		//Do commit to verRepos		
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, null, 2, null);
 		if(revision == null)
 		{			
 			docSysDebugLog("revertDocHistory()  verReposAutoCommit 失败", rt);
@@ -1725,7 +1725,7 @@ public class BaseController  extends BaseFunction{
 		doc.setCreateTime(fsDoc.getLatestEditTime());
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 		
-		String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2);
+		String revision = verReposDocCommit(repos, false, doc,commitMsg,commitUser,rt, false, null, 2, null);
 		if(revision == null)
 		{
 			docSysWarningLog("verReposDocCommit Failed", rt);
@@ -1901,7 +1901,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 
-		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 		if(revision == null)
 		{
 			docSysDebugLog("deleteDoc_FSM() verReposRealDocDelete Failed", rt);
@@ -2411,7 +2411,8 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, subDocSyncupFlag);
+		List<CommitAction> commitActionList = new ArrayList<CommitAction>();
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, subDocSyncupFlag, commitActionList);
 		if(revision == null)
 		{
 			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动Commit失败:" + revision);
@@ -2421,18 +2422,21 @@ public class BaseController  extends BaseFunction{
 		//推送到远程仓库
 		verReposPullPush(repos, true, rt);
 		
-		//更新数据库信息
-		for(DocChange docChange: localChanges.values())
-	    {
-			Doc commitDoc = docChange.getDoc();
-			printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
-			//需要根据commitAction的行为来决定相应的操作
-			commitDoc.setRevision(revision);
-			commitDoc.setLatestEditorName(login_user.getName());
-			dbUpdateDoc(repos, commitDoc, true);
-			dbCheckAddUpdateParentDoc(repos, commitDoc, null);
+		if(commitActionList != null)
+		{
+			for(int i=0; i<commitActionList.size(); i++)
+			{
+				Doc commitDoc = commitActionList.get(i).getDoc();
+				printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
+				//需要根据commitAction的行为来决定相应的操作
+				commitDoc.setRevision(revision);
+				commitDoc.setLatestEditorName(login_user.getName());
+				dbUpdateDoc(repos, commitDoc, true);
+				dbCheckAddUpdateParentDoc(repos, commitDoc, null);
+			}			
+			dbUpdateDocRevision(repos, doc, revision);
 		}
-		dbUpdateDocRevision(repos, doc, revision);
+		
 		System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动已更新:" + revision);
 		unlockDoc(doc, login_user, docLock);
 		
@@ -3724,15 +3728,15 @@ public class BaseController  extends BaseFunction{
 		case ADD: //add
 		case DELETE:	//delete
 		case UPDATE: //update
-			ret = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2);
+			ret = verReposDocCommit(repos, false, inputDoc, action.getCommitMsg(), action.getCommitUser(), rt, true, null, 2, null);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case MOVE:	//move
-			ret = verReposDocMove(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocMove(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case COPY: //copy
-			ret = verReposDocCopy(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt);
+			ret = verReposDocCopy(repos, false, inputDoc, inputDstDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
 			verReposPullPush(repos, isRealDoc, rt);
 			return ret;
 		case PUSH: //pull
@@ -3809,7 +3813,7 @@ public class BaseController  extends BaseFunction{
 		doc.setLatestEditTime(fsDoc.getLatestEditTime());
 
 		//需要将文件Commit到版本仓库上去
-		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg,commitUser,rt, true, null, 2, null);
 		if(revision == null)
 		{
 			docSysDebugLog("updateDoc() verReposRealDocCommit Failed:" + doc.getPath() + doc.getName(), rt);
@@ -3900,7 +3904,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt);
+		String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 		if(revision == null)
 		{
 			docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
@@ -3987,7 +3991,7 @@ public class BaseController  extends BaseFunction{
 		}
 			
 		//需要将文件Commit到VerRepos上去
-		String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt);
+		String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
 		if(revision == null)
 		{
 			docSysWarningLog("copyDoc() verReposRealDocCopy failed", rt);
@@ -4048,7 +4052,7 @@ public class BaseController  extends BaseFunction{
 			if(saveVirtualDocContent(repos, doc, rt) == true)
 			{
 				Doc vDoc = buildVDoc(doc);
-				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2);
+				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
 
 				//Insert Push Action
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user);
@@ -4064,7 +4068,7 @@ public class BaseController  extends BaseFunction{
 			if(createVirtualDoc(repos, doc, rt) == true)
 			{
 				Doc vDoc = buildVDoc(doc);
-				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2);
+				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, true, null, 2, null);
 
 				//Insert Push Action
 				insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.VIRTURALDOC, null, login_user);
@@ -5642,7 +5646,7 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryDetail(doc, commitId);
 	}
 	
-	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
+	protected String verReposDocCommit(Repos repos, boolean convert, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{	
 		doc = docConvert(doc, convert);
 		
@@ -5652,11 +5656,11 @@ public class BaseController  extends BaseFunction{
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, doc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag);
+			return svnDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag);
+			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		
 		return "";
@@ -5671,7 +5675,7 @@ public class BaseController  extends BaseFunction{
 		return verCtrl;
 	}
 
-	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
+	protected String svnDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList)
 	{			
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5681,10 +5685,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag);
+		return verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 	}
 	
-	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) 
+	protected String gitDocCommit(Repos repos, Doc doc,	String commitMsg, String commitUser, ReturnAjax rt, boolean modifyEnable, HashMap<Long, DocChange> localChanges, int subDocCommitFlag, List<CommitAction> commitActionList) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -5700,7 +5704,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag);
+		String revision =  verReposUtil.doAutoCommit(doc, commitMsg,commitUser,modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		if(revision == null)
 		{
 			return null;
@@ -5910,7 +5914,7 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 
-	protected String verReposDocMove(Repos repos,  boolean convert, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposDocMove(Repos repos,  boolean convert, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, List<CommitAction> commitActionList) 
 	{
 		srcDoc = docConvert(srcDoc, convert);
 		dstDoc = docConvert(dstDoc, convert);
@@ -5919,16 +5923,16 @@ public class BaseController  extends BaseFunction{
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocMove(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);			
+			return svnDocMove(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, commitActionList);			
 		}
 		else if(verCtrl == 2)
 		{
-			return gitDocMove(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);
+			return gitDocMove(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, commitActionList);
 		}
 		return null;
 	}
 	
-	private String svnDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) {
+	private String svnDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, List<CommitAction> commitActionList) {
 		boolean isRealDoc = srcDoc.getIsRealDoc();
 		
 		SVNUtil verReposUtil = new SVNUtil();
@@ -5937,10 +5941,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, true);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, true, commitActionList);
 	}
 
-	protected String gitDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String gitDocMove(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, List<CommitAction> commitActionList) 
 	{
 		boolean isRealDoc = srcDoc.getIsRealDoc();
 		
@@ -5950,10 +5954,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,true);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser,true, commitActionList);
 	}
 	
-	protected String verReposDocCopy(Repos repos, boolean convert, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String verReposDocCopy(Repos repos, boolean convert, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, List<CommitAction> commitActionList) 
 	{
 		srcDoc = docConvert(srcDoc, convert);
 		dstDoc = docConvert(dstDoc, convert);
@@ -5962,17 +5966,17 @@ public class BaseController  extends BaseFunction{
 		if(verCtrl == 1)
 		{
 			commitMsg = commitMsgFormat(repos, srcDoc.getIsRealDoc(), commitMsg, commitUser);
-			return svnDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);		
+			return svnDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, commitActionList);		
 		}
 		else if(verCtrl == 2)
 		{
-			return gitDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt);
+			return gitDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, commitActionList);
 		}
 		return null;
 	}
 	
 	
-	private String svnDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) {
+	private String svnDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, List<CommitAction> commitActionList) {
 		boolean isRealDoc = srcDoc.getIsRealDoc();
 		
 		SVNUtil verReposUtil = new SVNUtil();
@@ -5981,10 +5985,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false, commitActionList);
 	}
 
-	protected String gitDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt) 
+	protected String gitDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, ReturnAjax rt, List<CommitAction> commitActionList) 
 	{
 		boolean isRealDoc = srcDoc.getIsRealDoc();
 		
@@ -5994,7 +5998,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false);
+		return verReposUtil.copyDoc(srcDoc, dstDoc, commitMsg, commitUser, false, commitActionList);
 	}
 	
 	protected String commitMsgFormat(Repos repos, boolean isRealDoc, String commitMsg, String commitUser) 
