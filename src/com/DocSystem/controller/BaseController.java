@@ -2299,7 +2299,7 @@ public class BaseController  extends BaseFunction{
 			}	
 			
 			//Do local SyncUp
-			ret =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, rt);
+			ret =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
 		}
 		
 		if(action.getAction() == Action.FORCESYNC)
@@ -2383,7 +2383,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, ReturnAjax rt) {
+	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
 		//本地有改动需要提交
 		System.out.println("syncupForDocChange() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
 		if(commitMsg == null)
@@ -2411,7 +2411,7 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, 1);
+		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, subDocSyncupFlag);
 		if(revision == null)
 		{
 			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动Commit失败:" + revision);
