@@ -2291,7 +2291,7 @@ public class BaseController  extends BaseFunction{
 		}
 		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
 
-		System.out.println("syncupForDocChange() syncupScanForSubDocs_FSM ret:" + ret);
+		System.out.println("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
 		if(remoteChanges.size() == 0)
 		{
 			System.out.println("**************************** syncupForDocChange() 远程没有改动");
@@ -2662,7 +2662,7 @@ public class BaseController  extends BaseFunction{
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			System.out.println("syncupForDocChange_FSM() it is root doc");			
+			System.out.println("syncupForDocChange_FSM() 同步根目录");			
 			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		}
 		
@@ -2847,6 +2847,7 @@ public class BaseController  extends BaseFunction{
 					//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变（不存在、文件也会被认为是空目录）
 					if(isEmptyDir(dbDoc.getLocalRootPath() + dbDoc.getPath() + dbDoc.getName()))
 					{
+						System.out.println("getDocChangeType_FSM() 没有变化:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc/localEntry是空目录且一致, remoteEntry不存在");
 						return DocChangeType.NOCHANGE;
 					}
 				}
