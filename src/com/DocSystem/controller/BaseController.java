@@ -2338,7 +2338,7 @@ public class BaseController  extends BaseFunction{
 	private boolean refreshIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
 			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
 	{	
-		if(isDocInChangeList(doc, remoteChanges) || !isDocInChangeList(doc, remoteChanges))
+		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
 		{
 			//Refresh Index For DocName
 			deleteIndexForDocName(repos, doc, rt);
