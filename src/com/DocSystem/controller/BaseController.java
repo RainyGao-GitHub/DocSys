@@ -2050,6 +2050,7 @@ public class BaseController  extends BaseFunction{
 			//Copy VDoc (包括VDoc VerRepos and Index)
 			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.FS, CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
 			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.VERREPOS, CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
+			//Copy or Move VDoc (包括VDoc VerRepos and Index)
 			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null);
 		}
 		
@@ -5595,7 +5596,7 @@ public class BaseController  extends BaseFunction{
 		
 		String newVDocName = getVDocName(newDoc);
 				
-		if(moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, false) == false)
+		if(moveFileOrDir(reposVPath, vDocName, reposVPath, newVDocName, true) == false)
 		{
 			docSysDebugLog("moveVirtualDoc() moveFile " + reposVPath + vDocName+ " to " + reposVPath + newVDocName + " Failed", rt);
 			return false;
@@ -5613,7 +5614,7 @@ public class BaseController  extends BaseFunction{
 		
 		String srcDocFullVPath = reposVPath + vDocName;
 		String dstDocFullVPath = reposVPath + newVDocName;
-		if(copyDir(srcDocFullVPath,dstDocFullVPath,false) == false)
+		if(copyDir(srcDocFullVPath,dstDocFullVPath,true) == false)
 		{
 			docSysDebugLog("copyVirtualDoc() copyDir " + srcDocFullVPath +  " to " + dstDocFullVPath + " Failed", rt);
 			return false;
