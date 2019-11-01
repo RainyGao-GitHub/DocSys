@@ -2304,18 +2304,20 @@ public class BaseController  extends BaseFunction{
 			if(localChanges.size() == 0)
 			{
 				System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地没有改动");
-				return true;
+				realDocSyncResult = true;
 			}
 			else
 			{
 				if(action.getAction() == Action.UNDEFINED)
 				{
 					System.out.println("**************************** 结束自动同步 Action:" + action.getAction() + " 本地有改动不进行同步 ");			
-					return true;
+					realDocSyncResult = true;
 				}	
-				
-				//Do local SyncUp
-				realDocSyncResult =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+				else
+				{
+					//Do local SyncUp
+					realDocSyncResult =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+				}
 			}
 		}
 		else
@@ -2326,17 +2328,66 @@ public class BaseController  extends BaseFunction{
 		
 		if(action.getAction() == Action.FORCESYNC)
 		{
-			refreshIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
+			if(doc.getDocId() == 0)
+			{
+				//Delete All Index Lib
+				deleteDocNameIndexLib(repos);
+				deleteRDocIndexLib(repos);
+				deleteVDocIndexLib(repos);
+				//Build All Index For Doc
+				buildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
+			}
+			else
+			{
+				rebuildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
+			}
 		}
 		else
 		{
-			refreshIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag);	
+			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag);	
 		}
 		return realDocSyncResult;
 	}
 	
+	private boolean buildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
+			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
+	{	
+		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
+		{
+			addIndexForDocName(repos, doc, rt);
+			addIndexForRDoc(repos, doc);
+			addIndexForVDoc(repos, doc);
+		}
+		
+		//子目录不递归
+		if(subDocSyncupFlag == 0)
+		{
+			return true;
+		}
 
-	private boolean refreshIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
+		//子目录递归不继承
+		if(subDocSyncupFlag == 1)
+		{
+			subDocSyncupFlag = 0;
+		}
+		
+		List<Doc> localEntryList = getLocalEntryList(repos, doc);
+		//printObject("SyncUpSubDocs_FSM() localEntryList:", localEntryList);
+    	if(localEntryList == null)
+    	{
+    		System.out.println("buildIndexForDoc() localEntryList 获取异常:");
+        	return false;
+    	}
+    	
+    	for(int i=0; i< localEntryList.size(); i++)
+    	{
+    		Doc subDoc = localEntryList.get(i);
+    		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
+    	}
+		return true;
+	}
+	
+	private boolean rebuildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
 			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
 	{	
 		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
@@ -2377,7 +2428,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0; i< localEntryList.size(); i++)
     	{
     		Doc subDoc = localEntryList.get(i);
-    		refreshIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
+    		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
     	}
 		return true;
 	}
@@ -6146,6 +6197,29 @@ public class BaseController  extends BaseFunction{
 		return lucenePath + indexLib;
 	}
 	
+	protected boolean deleteIndexLib(Repos repos, int indexLibType)
+	{
+		String libPath = getIndexLibPath(repos, indexLibType);
+		System.out.println("deleteIndexLib() libPath:" + libPath);
+
+		return delFileOrDir(libPath);
+	}
+	
+	boolean deleteDocNameIndexLib(Repos repos)
+	{
+		return deleteIndexLib(repos, 0);
+	}
+	
+	boolean deleteRDocIndexLib(Repos repos)
+	{
+		return deleteIndexLib(repos, 0);
+	}
+
+	boolean deleteVDocIndexLib(Repos repos)
+	{
+		return deleteIndexLib(repos, 0);
+	}
+
 	//Add Index For DocName
 	public boolean addIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
 	{
