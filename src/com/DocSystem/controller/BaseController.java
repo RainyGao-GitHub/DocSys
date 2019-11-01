@@ -2845,7 +2845,7 @@ public class BaseController  extends BaseFunction{
 				if(repos.getVerCtrl() == 2)
 				{
 					//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变（不存在、文件也会被认为是空目录）
-					if(isEmptyDir(dbDoc.getLocalRootPath() + dbDoc.getPath() + dbDoc.getName()))
+					if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()))
 					{
 						System.out.println("getDocChangeType_FSM() 没有变化:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc/localEntry是空目录且一致, remoteEntry不存在");
 						return DocChangeType.NOCHANGE;

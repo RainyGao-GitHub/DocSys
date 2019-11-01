@@ -1079,21 +1079,18 @@ public class BaseFunction{
     
 	public boolean isEmptyDir(String dirPath) 
 	{
+		System.out.println("isEmptyDir() + dirPath:" + dirPath);
 		File dir = new File(dirPath);
-    	if(false == dir.exists())
+    	if(!dir.exists())
     	{
-    		return true;
-    	}
-    	
-    	if(dir.isFile())
-    	{
+    		System.out.println("isEmptyDir() " + dirPath + " 不存在");
     		return true;
     	}
 
     	File[] fileList = dir.listFiles();
-    	
-    	if(fileList.length > 0)
+    	if(fileList != null && fileList.length > 0)
     	{
+    		System.out.println("isEmptyDir() " + dirPath + " 不是空目录");
     		return false;
     	}
     	
