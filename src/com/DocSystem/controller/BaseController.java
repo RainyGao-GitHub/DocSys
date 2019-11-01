@@ -1884,11 +1884,9 @@ public class BaseController  extends BaseFunction{
 		}
 		System.out.println("deleteDoc_FSM() " + docId + " " + doc.getName() + " Lock OK");
 		
-		if(repos.getType() != 1)	//For FSM AsyncActionList will be created at dbDeleteDocEx
-		{
-			//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
-			BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
-		}
+
+		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
+		BuildMultiActionListForDocDelete(actionList, repos, doc, commitMsg, commitUser,true);
 		
 		//get RealDoc Full ParentPath
 		if(deleteRealDoc(repos,doc,rt) == false)
