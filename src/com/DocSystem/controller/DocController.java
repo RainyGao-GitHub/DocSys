@@ -281,9 +281,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 		
 		//executeCommonActionList(actionList, rt);
-		executeUniqueCommonActionList(actionList, rt);
-		
-		
+		executeUniqueCommonActionList(actionList, rt);	
 	}
 	
 	/****************   delete a Document ******************/
