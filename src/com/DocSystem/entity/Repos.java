@@ -1,6 +1,11 @@
 package com.DocSystem.entity;
 
-public class Repos {
+public class Repos {    
+	public static final Integer FSM = 1;
+	public static final Integer FSP = 2;
+	public static final Integer VRPSVN = 3;
+	public static final Integer VRPGIT = 4;
+    
     private Integer id;
 
     private String name;
