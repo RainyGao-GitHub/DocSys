@@ -1779,9 +1779,8 @@ public class DocController extends BaseController{
 		case "gif":
 		case "bmp":
 		case "py":
-			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath,rt) == false)
+			if(convertToPdf(localEntryPath, dstPath, rt) == false)
 			{
-				docSysDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath, rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -1795,6 +1794,30 @@ public class DocController extends BaseController{
 	
 		rt.setData(fileLink);
 		writeJson(rt, response);
+	}
+
+	private boolean convertToPdf(String localEntryPath, String dstPath, ReturnAjax rt) {
+		String officeHome = getOfficeHome();
+		if(officeHome == null)
+		{
+			docSysErrorLog("获取OpenOffice安装路径失败!", rt);
+			return false;				
+		}
+		
+		File officeDir = new File(officeHome);
+		if(!officeDir.exists())
+		{
+			docSysErrorLog("未找到OpenOffice软件:" + officeHome + " 不存在！", rt);
+			return false;								
+		}
+			
+		if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath,officeHome, rt) == false)
+		{
+			docSysErrorLog("文件转换失败: " + localEntryPath + " to " + dstPath, rt);
+			return false;
+		}
+
+		return true;
 	}
 
 	public void DocToPDF_FSM(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
@@ -1901,9 +1924,8 @@ public class DocController extends BaseController{
 		case "gif":
 		case "bmp":
 		case "py":
-			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath,rt) == false)
+			if(convertToPdf(localEntryPath,dstPath,rt) == false)
 			{
-				docSysDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath, rt);
 				writeJson(rt, response);
 				return;
 			}

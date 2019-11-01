@@ -1,15 +1,10 @@
 package util.DocConvertUtil;
 
-
-
 import java.io.File;
-import java.util.regex.Pattern;
-
 import org.artofsolving.jodconverter.OfficeDocumentConverter;
 import org.artofsolving.jodconverter.office.DefaultOfficeManagerConfiguration;
 import org.artofsolving.jodconverter.office.OfficeManager;
 
-import util.ReadProperties;
 import util.ReturnAjax;
 
 /**
@@ -30,64 +25,8 @@ public class Office2PDF {
      * @param rt 
      * @return
      */
-    public static boolean openOfficeToPDF(String inputFilePath,String outputFilePath, ReturnAjax rt) {    	 
-    	 return office2pdf(inputFilePath,outputFilePath,rt);
-    }
-
-    /**
-     * 根据操作系统的名称，获取OpenOffice.org 3的安装目录<br>
-     * 如我的OpenOffice.org 3安装在：C:/Program Files (x86)/OpenOffice.org 3<br>
-     * 
-     * @return OpenOffice.org 3的安装目录
-     */
-    public static String getOfficeHome() {
-    	//get OpenOffice Home From Config File
-    	String officeHome = null;
-        String osName = System.getProperty("os.name");
-        System.out.println("操作系统名称:" + osName);
-        
-        if (Pattern.matches("Linux.*", osName)) 
-        {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForLinux");
-        } 
-        else if (Pattern.matches("Windows.*", osName)) 
-        {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForWindows");
-        } 
-        else if (Pattern.matches("Mac.*", osName)) 
-        {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForMac");
-        }
-        else
-        {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePath");        	
-        }
-
-        System.out.println("officeHome:" + officeHome);
-    	if(officeHome == null || "".equals(officeHome))
-    	{
-    		return getDefaultOfficeHome();
-    	}
-    	return officeHome;
-    }
-
-    private static String getDefaultOfficeHome() 
-    {
-        String osName = System.getProperty("os.name");
-        System.out.println("操作系统名称:" + osName);
-        if (Pattern.matches("Linux.*", osName)) 
-        {
-            return "/opt/openoffice.org4";
-        } 
-        else if (Pattern.matches("Windows.*", osName)) 
-        {
-            return "C:/Program Files (x86)/OpenOffice 4";
-        } 
-        else if (Pattern.matches("Mac.*", osName)) 
-        {
-            return "/Applications/OpenOffice.org.app/Contents/";
-        }
-        return null;
+    public static boolean openOfficeToPDF(String inputFilePath,String outputFilePath, String officeHome, ReturnAjax rt) {    	 
+    	 return office2pdf(inputFilePath,outputFilePath, officeHome, rt);
     }
 
     /**
@@ -95,10 +34,10 @@ public class Office2PDF {
      * 
      * @return
      */
-    public static OfficeManager getOfficeManager() {
+    public static OfficeManager getOfficeManager(String officeHome) {
         DefaultOfficeManagerConfiguration config = new DefaultOfficeManagerConfiguration();
         // 设置OpenOffice.org 3的安装目录
-        config.setOfficeHome(getOfficeHome());
+        config.setOfficeHome(officeHome);
         // 启动OpenOffice的服务
         OfficeManager officeManager = config.buildOfficeManager();
         officeManager.start();
@@ -138,7 +77,7 @@ public class Office2PDF {
      * @param rt 
      * @return
      */
-    public static boolean office2pdf(String inputFilePath, String outputFilePath, ReturnAjax rt) {
+    public static boolean office2pdf(String inputFilePath, String outputFilePath, String officeHome, ReturnAjax rt) {
         if (inputFilePath == null || "".equals(inputFilePath)) {
             System.out.println("office2pdf() 输入文件地址为空，转换终止!");
             rt.setError("文件未指定！");
@@ -157,7 +96,7 @@ public class Office2PDF {
     	OfficeManager officeManager = null;
     	try {
 	    	// 获取OpenOffice的安装路劲
-	        officeManager = getOfficeManager();
+	        officeManager = getOfficeManager(officeHome);
     	} catch (Exception e) {
             rt.setError("请检查是否已安装Open Office!");
 			System.out.println("office2pdf() getOfficeManager Exception");
