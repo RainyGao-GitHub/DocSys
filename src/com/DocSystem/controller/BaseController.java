@@ -2320,6 +2320,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
+			System.out.println("**************************** 结束自动同步 syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
 			realDocSyncResult = true;
 		}
 		
