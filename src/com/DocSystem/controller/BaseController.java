@@ -447,12 +447,8 @@ public class BaseController  extends BaseFunction{
 		return resultList;
 	}
 	
-	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc) {
-		if(repos.getType() != 1)
-		{
-			return;
-		}
-
+	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc) 
+	{
 		User autoSync = new User();
 		autoSync.setId(0);
 		autoSync.setName("AutoSync");
@@ -2265,6 +2261,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Repos repos = action.getRepos();
+		printObject("syncupForDocChange repos:", repos);
 		
 		//文件管理系统类型需要进行RealDoc的同步
 		boolean realDocSyncResult = false;
