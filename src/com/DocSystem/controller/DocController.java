@@ -266,7 +266,7 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		if(repos.getType() == 1 && false == checkDocLocked(repos.getId(), doc, login_user, false))
+		if(false == checkDocLocked(repos.getId(), doc, login_user, false))
 		{
 			if(force != null && force == 1)
 			{

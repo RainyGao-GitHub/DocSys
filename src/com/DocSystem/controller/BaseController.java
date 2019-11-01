@@ -2255,30 +2255,6 @@ public class BaseController  extends BaseFunction{
 			login_user.setName("AutoSync");
 		}
 		
-		//Check the localDocChange behavior
-		Repos repos = action.getRepos();
-		
-		if(repos.getIsRemote() == 1)
-		{
-			//Sync Up local VerRepos with remote VerRepos
-			verReposPullPush(repos, true, null);
-		}
-		
-		Doc localEntry = fsGetDoc(repos, doc);
-		if(localEntry == null)
-		{
-			System.out.println("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return false;
-		}
-		Doc remoteEntry = verReposGetDoc(repos, doc, null);
-		if(remoteEntry == null)
-		{
-			System.out.println("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			return false;
-		}
-		
-		Doc dbDoc = dbGetDoc(repos, doc, false);
-		
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
@@ -2287,34 +2263,67 @@ public class BaseController  extends BaseFunction{
 		{
 			subDocSyncupFlag = 2;
 		}
-		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
-
-		System.out.println("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
-		if(remoteChanges.size() == 0)
-		{
-			System.out.println("**************************** syncupForDocChange() 远程没有改动");
-		}
-		else
-		{
-			//Do Remote SyncUp
-			syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
-		}
 		
-		if(localChanges.size() == 0)
+		Repos repos = action.getRepos();
+		
+		//文件管理系统类型需要进行RealDoc的同步
+		boolean realDocSyncResult = false;
+		if(repos.getType() == 1)	
 		{
-			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地没有改动");
-			return true;
+			if(repos.getIsRemote() == 1)
+			{
+				//Sync Up local VerRepos with remote VerRepos
+				verReposPullPush(repos, true, null);
+			}
+			
+			Doc localEntry = fsGetDoc(repos, doc);
+			if(localEntry == null)
+			{
+				System.out.println("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				return false;
+			}
+			Doc remoteEntry = verReposGetDoc(repos, doc, null);
+			if(remoteEntry == null)
+			{
+				System.out.println("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				return false;
+			}
+			
+			Doc dbDoc = dbGetDoc(repos, doc, false);
+			
+			boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
+	
+			System.out.println("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
+			if(remoteChanges.size() == 0)
+			{
+				System.out.println("**************************** syncupForDocChange() 远程没有改动");
+			}
+			else
+			{
+				//Do Remote SyncUp
+				syncupRemoteChanges_FSM(repos, login_user, remoteChanges, rt);
+			}
+			
+			if(localChanges.size() == 0)
+			{
+				System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地没有改动");
+				return true;
+			}
+			else
+			{
+				if(action.getAction() == Action.UNDEFINED)
+				{
+					System.out.println("**************************** 结束自动同步 Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+					return true;
+				}	
+				
+				//Do local SyncUp
+				realDocSyncResult =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+			}
 		}
 		else
 		{
-			if(action.getAction() == Action.UNDEFINED)
-			{
-				System.out.println("**************************** 结束自动同步 Action:" + action.getAction() + " 本地有改动不进行同步 ");			
-				return true;
-			}	
-			
-			//Do local SyncUp
-			ret =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
+			realDocSyncResult = true;
 		}
 		
 		if(action.getAction() == Action.FORCESYNC)
@@ -2325,7 +2334,7 @@ public class BaseController  extends BaseFunction{
 		{
 			refreshIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag);	
 		}
-		return ret;
+		return realDocSyncResult;
 	}
 	
 
