@@ -1980,10 +1980,10 @@ public class BaseController  extends BaseFunction{
 
 		//Insert delete action for VDoc
 		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.DELETE, DocType.VIRTURALDOC, null);
-		//Insert delete action for VDoc Index
-		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null, null);
 		//Insert delete action for VDoc verRepos 
 		//insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.DELETE, DocType.VIRTURALDOC,, null);
+		//Insert delete action for VDoc Index
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX,  Action.DELETE, DocType.VIRTURALDOC, null, null);
 	}
 	
 	private List<Doc> docSysGetSubDocList(Repos repos, Doc doc) 
@@ -2048,8 +2048,8 @@ public class BaseController  extends BaseFunction{
 			//Insert IndexAction For RealDoc Copy or Move (对于目录则会进行递归)
 			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, CommonAction.DocType.REALDOC, null, null);
 			//Copy VDoc (包括VDoc VerRepos and Index)
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.FS, actionId, DocType.VIRTURALDOC, null, null);
-			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.VERREPOS, actionId, DocType.VIRTURALDOC, null, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.FS, CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
+			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.VERREPOS, CommonAction.Action.COPY, DocType.VIRTURALDOC, null, null);
 			insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, actionId, DocType.VIRTURALDOC, null, null);
 		}
 		
