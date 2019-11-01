@@ -1285,10 +1285,8 @@ public class DocController extends BaseController{
 			switch(repos.getType())
 			{
 			case 1:
-				downloadDocPrepare_FSM(repos, doc, login_user, rt);
-				break;	
 			case 2:
-				downloadDocPrepare_FSP(repos, doc, login_user, rt);				
+				downloadDocPrepare_FSM(repos, doc, login_user, rt);				
 				break;
 			case 3:
 			case 4:
@@ -1351,55 +1349,6 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		docSysErrorLog("本地未知文件类型:" + dbDoc.getType(), rt);
-		return;		
-	}
-
-	public void downloadDocPrepare_FSP(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
-	{	
-		Doc dbDoc = docSysGetDoc(repos, doc);
-		if(dbDoc == null)
-		{
-			System.out.println("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");
-			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
-			return;
-		}
-		
-		String targetName = doc.getName();
-		String targetPath = doc.getLocalRootPath() + doc.getPath();
-		if(dbDoc.getType() == 1)
-		{
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
-			rt.setData(downloadDoc);
-			rt.setMsgData(0);	//下载完成后不能删除下载的文件
-			docSysDebugLog("本地文件: 原始路径下载", rt);
-			return;
-		}
-
-		targetPath = getReposUserTmpPath(repos,login_user);
-		if(dbDoc.getType() == 2)
-		{	
-			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()))
-			{
-				docSysErrorLog("空目录无法下载！", rt);
-				return;				
-			}
-			
-			//doCompressDir and save the zip File under userTmpDir
-			targetName = doc.getName() + ".zip";		
-			if(doCompressDir(doc.getLocalRootPath() + doc.getPath(), doc.getName(), targetPath, targetName, rt) == false)
-			{
-				docSysErrorLog("压缩本地目录失败！", rt);
-				return;
-			}
-			
-			Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
-			rt.setData(downloadDoc);
-			rt.setMsgData(1);	//下载完成后删除已下载的文件
-			docSysDebugLog("本地目录: 已压缩并存储在用户临时目录", rt);
-			return;						
-		}
-
 		docSysErrorLog("本地未知文件类型:" + dbDoc.getType(), rt);
 		return;		
 	}
@@ -1731,10 +1680,8 @@ public class DocController extends BaseController{
 		switch(repos.getType())
 		{
 		case 1:
-			DocToPDF_FSM(repos, doc, response, request, session);
-			break;
 		case 2:
-			DocToPDF_FSP(repos, doc, response, request, session);
+			DocToPDF_FSM(repos, doc, response, request, session);
 		case 3:
 		case 4:
 			DocToPDF_VRP(repos, doc, response, request, session);
@@ -1851,110 +1798,6 @@ public class DocController extends BaseController{
 		rt.setData(fileLink);
 		writeJson(rt, response);
 	}
-	
-	public void DocToPDF_FSP(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String fileSuffix = getFileSuffix(doc.getName());
-		if(fileSuffix == null)
-		{
-			docSysErrorLog("未知文件类型", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
-		{
-			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
-			writeJson(rt, response);	
-			return;
-		}
-			
-		Doc localEntry = fsGetDoc(repos, doc);
-		if(localEntry == null)
-		{
-			docSysErrorLog("文件不存在！", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		if(localEntry.getType() == 2)
-		{
-			docSysErrorLog("目录无法预览", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-
-		String webTmpPath = getWebTmpPath();
-		String dstName = repos.getId() + "_" + doc.getDocId() + ".pdf";
-		String dstPath = webTmpPath + "preview/" + dstName;
-		System.out.println("DocToPDF() dstPath:" + dstPath);
-
-		String fileLink = "/DocSystem/tmp/preview/" + dstName;
-		
-		File previewDir = new File(webTmpPath,"preview");
-		if(!previewDir.exists())
-		{
-			previewDir.mkdirs();
-		}
-		
-		//Do convert
-		String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
-		switch(fileSuffix)
-		{
-		case "pdf":
-			if(copyFile(localEntryPath, dstPath,true) == false)
-			{
-				docSysErrorLog("预览失败", rt);
-				docSysDebugLog("Failed to copy " + localEntryPath + " to " + dstPath, rt);
-				writeJson(rt, response);
-				return;					
-			}
-			break;
-		case "doc":
-		case "docx":
-		case "xls":
-		case "xlsx":
-		case "ppt":
-		case "pptx":
-		case "txt":
-		case "log":	
-		case "md":
-		case "html":	
-		case "jpg":
-		case "jpeg":
-		case "png":
-		case "gif":
-		case "bmp":
-		case "py":
-			if(Office2PDF.openOfficeToPDF(localEntryPath,dstPath,rt) == false)
-			{
-				docSysDebugLog("Failed execute openOfficeToPDF " + localEntryPath + " to " + dstPath, rt);
-				writeJson(rt, response);
-				return;
-			}
-			break;
-		default:
-			docSysErrorLog("该文件类型不支持预览", rt);
-			docSysDebugLog("srcPath:"+localEntryPath, rt);
-			writeJson(rt, response);
-			return;
-		}
-	
-		rt.setData(fileLink);
-		writeJson(rt, response);
-	}
-
 
 	public void DocToPDF_FSM(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -2010,13 +1853,17 @@ public class DocController extends BaseController{
 		//预览文件已存在
 		if(file.exists())
 		{
-			Doc dbDoc = dbGetDoc(repos, doc, false);
-			if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
+			//对于文件管理系统类型仓库，如果文件本地未变更则不需要重新生成预览文件
+			if(repos.getType() == 1)
 			{
-				rt.setData(fileLink);
-				writeJson(rt, response);
-				return;
-			}			
+				Doc dbDoc = dbGetDoc(repos, doc, false);
+				if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
+				{
+					rt.setData(fileLink);
+					writeJson(rt, response);
+					return;
+				}
+			}
 		}
 		else
 		{
