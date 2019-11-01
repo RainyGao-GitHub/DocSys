@@ -2266,6 +2266,21 @@ public class BaseController  extends BaseFunction{
 			verReposPullPush(repos, true, null);
 		}
 		
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
+		{
+			System.out.println("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			return false;
+		}
+		Doc remoteEntry = verReposGetDoc(repos, doc, null);
+		if(remoteEntry == null)
+		{
+			System.out.println("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+			return false;
+		}
+		
+		Doc dbDoc = dbGetDoc(repos, doc, false);
+		
 		//文件管理系统
 		HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 		HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
@@ -2274,7 +2289,8 @@ public class BaseController  extends BaseFunction{
 		{
 			subDocSyncupFlag = 2;
 		}
-		boolean ret = syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
+		boolean ret = syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry, remoteEntry, login_user, rt, remoteChanges, localChanges, subDocSyncupFlag);
+
 		System.out.println("syncupForDocChange() syncupScanForSubDocs_FSM ret:" + ret);
 		if(remoteChanges.size() == 0)
 		{
