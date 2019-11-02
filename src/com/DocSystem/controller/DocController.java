@@ -1326,7 +1326,7 @@ public class DocController extends BaseController{
 		}
 		else if(dbDoc.getType() == 2)
 		{
-			if(isEmptyDir(targetPath + doc.getName()))
+			if(isEmptyDir(targetPath + doc.getName(), true))
 			{
 				docSysErrorLog("空目录无法下载！", rt);
 				return;				
@@ -1382,7 +1382,7 @@ public class DocController extends BaseController{
 		targetPath = getReposUserTmpPath(repos,login_user);
 		if(localEntry.getType() == 2)
 		{	
-			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName()))
+			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
 			{
 				docSysErrorLog("空目录无法下载！", rt);
 				return;				
@@ -1437,7 +1437,7 @@ public class DocController extends BaseController{
 				return;
 			}
 
-			if(isEmptyDir(targetPath + doc.getName()))
+			if(isEmptyDir(targetPath + doc.getName(), true))
 			{
 				docSysErrorLog("空目录无法下载！", rt);
 				return;				
@@ -1472,7 +1472,7 @@ public class DocController extends BaseController{
 		{
 			targetName = repos.getName() + "_备注_.zip";	
 			
-			if(isEmptyDir(vDoc.getLocalRootPath()))
+			if(isEmptyDir(vDoc.getLocalRootPath(), true))
 			{
 				docSysErrorLog("空目录无法下载！", rt);
 				return;				
