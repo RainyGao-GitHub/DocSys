@@ -2747,13 +2747,13 @@ public class BaseController  extends BaseFunction{
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
 			if(isDocInVerRepos(repos, doc, dbDoc.getRevision()) == false)
 			{
-				System.out.println("syncupForDocChange_FSM() " + doc.getPath()+doc.getName() + " not exists in verRepos at revision:" + dbDoc.getRevision() + " treat it as LOCALADD");
+				System.out.println("syncupForDocChange_FSM() " + doc.getPath()+doc.getName() + " not exists in verRepos at revision:" + dbDoc.getRevision() + " treat it as LOCALCHANGE");
 				DocChange localChange1 = new DocChange();
 				localChange1.setDoc(doc);
 				localChange1.setDbDoc(dbDoc);
 				localChange1.setLocalEntry(localEntry);
 				localChange1.setRemoteEntry(remoteEntry);
-				localChange1.setType(DocChangeType.LOCALADD);
+				localChange1.setType(DocChangeType.LOCALCHANGE);	//LOCALCHANGE才能保证在AutoCommit的时候正常工作
 				localChanges.put(dbDoc.getDocId(), localChange1);
 				return true;
 			}
