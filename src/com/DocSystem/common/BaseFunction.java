@@ -1146,23 +1146,47 @@ public class BaseFunction{
     	return true;
     }
     
-	public boolean isEmptyDir(String dirPath) 
+    //strict: true there is not file and dir, false: there is no file
+	public boolean isEmptyDir(String dirPath, boolean strict) 
 	{
 		System.out.println("isEmptyDir() dirPath:" + dirPath);
 		File dir = new File(dirPath);
+		if(isEmptyDir(dir, strict) == true)
+		{
+			System.out.println("isEmptyDir() " + dirPath + " 是空目录");
+		}
+		return true;
+	}
+	
+    //strict: true there is not file and dir, false: there is no file
+	public boolean isEmptyDir(File dir, boolean strict) 
+	{
     	if(!dir.exists())
     	{
-    		System.out.println("isEmptyDir() " + dirPath + " 不存在");
     		return true;
     	}
 
     	File[] fileList = dir.listFiles();
     	if(fileList != null && fileList.length > 0)
     	{
-    		return false;
-    	}
-    	
-    	System.out.println("isEmptyDir() " + dirPath + " 是空目录");
+    		if(strict)
+    		{
+    			return false;
+    		}
+    		
+    		for(int i=0; i< fileList.length; i++)
+    		{
+    			if(fileList[i].isFile())
+    			{
+    				return false;
+    			}
+    			
+    			if(isEmptyDir(fileList[i], strict) == false)
+    			{
+    				return false;
+    			}
+    		}
+    	}    	
 		return true;
 	}
 
