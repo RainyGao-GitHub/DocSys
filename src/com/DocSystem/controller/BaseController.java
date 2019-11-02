@@ -3580,9 +3580,9 @@ public class BaseController  extends BaseFunction{
 			return  dbAddDoc(repos, doc, true, false);	
 		}
 		
-		if(dbDoc.getType() == 1)
+		if(localEntry.getType() == 1 || localEntry.getType() == 2)
 		{
-			System.out.println("dbUpdateDoc() 本地文件内容修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+			System.out.println("dbUpdateDoc() 本地文件/目录修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
 			//Update the size/lastEditTime/revision for doc
 			doc.setId(dbDoc.getId());
 			doc.setSize(localEntry.getSize());
@@ -3594,8 +3594,8 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		System.out.println("dbUpdateDoc() 本地目录内容修改（目录不需要修改数据库）:" + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
-		return true;
+		System.out.println("dbUpdateDoc() 未知文件类型:" + doc.getType() + doc.getDocId() + " " + doc.getPath() + doc.getName()); 
+		return false;
 	}
 
 	private Long buildDocId(String path, String name) 
