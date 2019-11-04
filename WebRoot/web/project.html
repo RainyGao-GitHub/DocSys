@@ -1757,17 +1757,20 @@
 	
 	function parseDocContent(content)
 	{
-		return content;
         if(!content || content == "")
         {
-        	docContent = "";	//Convert it to empty String
+        	content = "";	//Convert it to empty String
         }
         else
         {	
-        	docContent = JSON.parse(content);
+        	//docContent = JSON.parse(content);
         }
         
-        return docContent;
+        //前台的Decode和Encode结果是一致的，后台的Decode一致但Encode之后Decode的结果不正确
+        //Base64.encode(content);
+        //Base64.decode(content);
+        
+        return content;
 	}
 	
 	function showVirtualDoc(edit)
