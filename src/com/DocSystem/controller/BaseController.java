@@ -4169,7 +4169,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean updateDocContent(Repos repos, Doc doc, 
+	protected boolean updateRealDocContent(Repos repos, Doc doc, 
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
 	{		
 		DocLock docLock = null;
@@ -4187,7 +4187,50 @@ public class BaseController  extends BaseFunction{
 			unlock(); //线程锁
 		}
 		
-		boolean ret = updateDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+		
+		//revert the lockStatus
+		unlockDoc(doc, login_user, docLock);
+				
+		return ret;
+	}
+	
+	private boolean updateRealDocContent_FSM(Repos repos, Doc doc,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
+	{
+		if(saveRealDocContent(repos, doc, rt) == true)
+		{
+			verReposDocCommit(repos, false, doc, commitMsg, commitUser,rt, true, null, 2, null);
+
+			//Insert Push Action
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VERREPOS, Action.PUSH, DocType.REALDOC, null, login_user);
+
+			//Insert index add action for VDoc
+			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.UPDATE, DocType.REALDOC, null, login_user);
+			return true;
+		}
+		return false;
+	}
+	
+	protected boolean updateVirualDocContent(Repos repos, Doc doc, 
+			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
+	{		
+		DocLock docLock = null;
+		synchronized(syncLock)
+		{
+			//Try to lock Doc
+			docLock = lockDoc(doc,2, 1*60*60*1000, login_user,rt,false);
+			if(docLock == null)
+			{
+				unlock(); //线程锁
+	
+				System.out.println("updateDocContent() lockDoc Failed");
+				return false;
+			}
+			unlock(); //线程锁
+		}
+		
+		boolean ret = updateVirualDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 		
 		//revert the lockStatus
 		unlockDoc(doc, login_user, docLock);
@@ -4195,7 +4238,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private boolean updateDocContent_FSM(Repos repos, Doc doc,
+	private boolean updateVirualDocContent_FSM(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		//Save the content to virtual file
@@ -5578,17 +5621,23 @@ public class BaseController  extends BaseFunction{
 		return saveVirtualDocContent(repos, doc, rt);
 	}
 	
+	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
+	{	
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		return saveDocContentToFile(doc, filePath, rt);
+	}
+	
+	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
+	{	
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String filePath = userTmpDir + doc.getPath() + doc.getName();
+		
+		return saveDocContentToFile(doc, filePath, rt);
+	}
+	
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
-		String content = doc.getContent();
-		if(content == null)
-		{
-			System.out.println("saveVirtualDocContent() content is null");
-			return false;
-		}
-
 		String docVName = getVDocName(doc);
-		
 		String vDocPath = doc.getLocalVRootPath() + docVName + "/";
 		File folder = new File(vDocPath);
 		if(!folder.exists())
@@ -5602,11 +5651,75 @@ public class BaseController  extends BaseFunction{
 		}
 						
 		//set the md file Path
-		String mdFilePath = vDocPath + "content.md";
+		String filePath = vDocPath + "content.md";
+		return saveDocContentToFile(doc, filePath, rt);
+	}
+
+	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
+	{	
+		String docVName = getVDocName(doc);
+		
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String vDocPath = userTmpDir + docVName + "/";
+		File folder = new File(vDocPath);
+		if(!folder.exists())
+		{
+			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
+			if(folder.mkdir() == false)
+			{
+				docSysDebugLog("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!", rt);
+				return false;
+			}
+		}
+						
+		//set the md file Path
+		String filePath = vDocPath + "content.md";
+		return saveDocContentToFile(doc, filePath, rt);
+	}
+	
+	protected String readRealDocContent(Repos repos, Doc doc) 
+	{
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		return readDocContentFromFile(filePath);
+	}
+	
+	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
+	{
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String filePath = userTmpDir + doc.getPath() + doc.getName();
+		return readDocContentFromFile(filePath);
+	}
+	
+	protected String readVirtualDocContent(Repos repos, Doc doc) 
+	{
+		String docVName = getVDocName(doc);		
+		String localDocVPath = doc.getLocalVRootPath() + docVName + "/";
+		String filePath = localDocVPath + "content.md";
+		return readDocContentFromFile(filePath);
+	}
+	
+	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
+	{
+		String docVName = getVDocName(doc);		
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String localDocVPath = userTmpDir + docVName + "/";
+		String filePath = localDocVPath + "content.md";
+		return readDocContentFromFile(filePath);
+	}
+	
+	protected boolean saveDocContentToFile(Doc doc, String filePath, ReturnAjax rt)
+	{
+		String content = doc.getContent();
+		if(content == null)
+		{
+			System.out.println("saveDocContentToFile() content is null");
+			return false;
+		}
+		
 		//创建文件输入流
 		FileOutputStream out = null;
 		try {
-			out = new FileOutputStream(mdFilePath);
+			out = new FileOutputStream(filePath);
 		} catch (FileNotFoundException e) {
 			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
 			docSysDebugLog(e.toString(), rt);
@@ -5623,17 +5736,14 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}		
 		return true;
+		
 	}
 	
-	protected String readVirtualDocContent(String localParentPath, String vDocName) {
-		
-		String vDocPath = localParentPath + vDocName + "/";
-		String mdFilePath = vDocPath + "content.md";
-
+	protected String readDocContentFromFile(String filePath) 
+	{
 		try 
-		{
-				
-			File file = new File(mdFilePath);
+		{			
+			File file = new File(filePath);
 			if(!file.exists())
 			{
 				return null;
@@ -5645,7 +5755,7 @@ public class BaseController  extends BaseFunction{
 			byte buffer[] = new byte[fileSize];
 	
 			FileInputStream in;
-			in = new FileInputStream(mdFilePath);
+			in = new FileInputStream(filePath);
 			in.read(buffer, 0, fileSize);
 			in.close();	
 							
@@ -6280,9 +6390,7 @@ public class BaseController  extends BaseFunction{
 		String content = doc.getContent();
 		if(content == null)
 		{
-			String reposVPath = getReposVirtualPath(repos);
-			String VDocName = getVDocName(doc);
-			content = readVirtualDocContent(reposVPath, VDocName);
+			content = readVirtualDocContent(repos, doc);
 		}
 		
 		String indexLib = getIndexLibPath(repos,2);
@@ -6316,9 +6424,7 @@ public class BaseController  extends BaseFunction{
 		String content = doc.getContent();
 		if(content == null)
 		{
-			String reposVPath = getReposVirtualPath(repos);
-			String VDocName = getVDocName(doc);
-			content = readVirtualDocContent(reposVPath, VDocName);
+			content = readVirtualDocContent(repos, doc);
 		}		
 		
 		LuceneUtil2.deleteIndex(doc, indexLib);

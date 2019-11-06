@@ -177,6 +177,7 @@
 	                path: node.path,
 	                name: node.name,
 	                content : content,
+	                docType : gShowType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -233,6 +234,7 @@
 	                pid: node.pid,
 	                path: node.path,
 	                name: node.name,
+	                docType: gShowType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -340,11 +342,12 @@
 				type : "post",
 				dataType : "json",
 				data : {
-					lockType : 3, //LockType: VDoc Online Edit
+					lockType : 3, //LockType: Online Edit
 					reposId : gReposId, 
 					docId : gDocId,
 					path: gParentPath,
 					name: gDocName,
+					docType: gShowType,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -436,6 +439,7 @@
 					docId : gDocId,
 					path: gParentPath,
 					name: gDocName,
+					docType: gShowType,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -490,7 +494,8 @@
 	            	docId : gDocId,
 	            	path: gParentPath,
 	                name: gDocName,
-	            	content : content
+	            	content : content,
+	            	docType: gShowType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
