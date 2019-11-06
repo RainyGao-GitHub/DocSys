@@ -5716,6 +5716,13 @@ public class BaseController  extends BaseFunction{
 		case "md":
 		case "html":	
 		case "py":
+		case "java":
+		case "cpp":
+		case "hpp":
+		case "c":
+		case "h":
+		case "json":
+		case "xml":
 			return true;
 		default:
 			break;
