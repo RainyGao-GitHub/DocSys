@@ -1148,15 +1148,15 @@ public class DocController extends BaseController{
 		
 		doc.setContent(content);
 		
-		if(commitMsg == null)
-		{
-			commitMsg = "更新 " + path + name + " 备注";
-		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = false;
 		if(docType == 1)
 		{
+			if(commitMsg == null)
+			{
+				commitMsg = "更新 " + path + name;
+			}
 			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 			writeJson(rt, response);
 			if(ret)
@@ -1167,6 +1167,10 @@ public class DocController extends BaseController{
 		}
 		else
 		{
+			if(commitMsg == null)
+			{
+				commitMsg = "更新 " + path + name + " 备注";
+			}
 			ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
 			writeJson(rt, response);
 			
