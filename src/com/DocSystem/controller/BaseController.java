@@ -5689,7 +5689,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-	protected boolean isText(String fileSuffix) {
+	protected static boolean isText(String fileSuffix) {
 		if(fileSuffix == null)
 		{
 			//"未知文件类型"
@@ -6559,10 +6559,12 @@ public class BaseController  extends BaseFunction{
 				return LuceneUtil2.addIndexForPPT2007(filePath, doc, indexLib);
 			case "pdf":
 				return LuceneUtil2.addIndexForPdf(filePath, doc, indexLib);
-			case "txt":
-			case "log":
-			case "md":
-				return LuceneUtil2.addIndexForFile(filePath, doc, indexLib);
+			default:
+				if(isText(fileSuffix))
+				{
+					return LuceneUtil2.addIndexForFile(filePath, doc, indexLib);
+				}
+				break;
 			}
 		}
 
