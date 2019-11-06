@@ -544,7 +544,7 @@
 	var gDocContent = "";
 	var gTmpSavedContent = "";
 	var gEdit = false; 
-	var gShowType = 2; //默认显示vDoc
+	var gShowType = 1; //默认显示RealDoc
 
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -1697,12 +1697,11 @@
 							
 						if(gShowType == 1)	//显示预览
 						{	
-
+						    $("#btnSwitchShow").text("备注");
 							if(true == isPicture(doc.name))
 							{
 				    		    $("#btnExitEdit").hide();
 				    	      	$("#btnSaveWiki").hide(); 
-				    	      	//$("#btnEditWiki").hide();
 				    			$("#vdocPreview").hide();
 				    	      	$("#docPreview").show();
 			                    setImgPreview(ret);
@@ -1711,24 +1710,19 @@
 							{
 				    			 $("#btnExitEdit").hide();
 				    		     $("#btnSaveWiki").hide(); 
-				    		     //$("#btnEditWiki").show();
 				    		     $("#vdocPreview").show();	      	
 				    		     $("#docPreview").hide();
-								//目前文本文件也用markdown编辑器来编辑
-							  	$(".editormd-preview-close-btn").show();//css("display","none");
-								showDocContent(edit);
+							  	 $(".editormd-preview-close-btn").show();//css("display","none");
+								 showDocContent(edit);
 							}
 							else
 							{
-				    		    $("#btnExitEdit").hide();
-				    	      	$("#btnSaveWiki").hide(); 
-				    	      	//$("#btnEditWiki").hide();
-				    			$("#vdocPreview").hide();
-				    	      	$("#docPreview").show();
-							    setImgPreview(null);
+				    		     $("#btnExitEdit").hide();
+				    	      	 $("#btnSaveWiki").hide(); 
+				    			 $("#vdocPreview").hide();
+				    	      	 $("#docPreview").show();
+							     setImgPreview(null);
 							}
-			                //$("#docPreview").show();
-					      	return;
 						}
 						else	//显示备注
 						{
@@ -3451,12 +3445,10 @@ function CompareObj(objA, objB, flag) {
 		 if(gShowType == 2)	//Swith To 显示预览
 	   	 {
 			gShowType = 1;
-	      	$("#btnSwitchShow").text("备注");
 	     }
 	     else
 	     {
 			 gShowType = 2;	    	 
-		     $("#btnSwitchShow").text("关闭备注");
 	     }
 		 cleanDocPreview();
 	     var node = getNodeByNodeId(gDocId);
