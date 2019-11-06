@@ -2359,7 +2359,7 @@ public class BaseController  extends BaseFunction{
 			addIndexForVDoc(repos, doc);
 		}
 		
-		if(doc.getType() != null && doc.getType() != 2)
+		if(doc.getType() == null || doc.getType() != 2)
 		{
 			return true;
 		}
@@ -2408,6 +2408,11 @@ public class BaseController  extends BaseFunction{
 			//Refresh Index For VDoc
 			deleteIndexForVDoc(repos, doc);
 			addIndexForVDoc(repos, doc);
+		}
+		
+		if(doc.getType() == null || doc.getType() != 2)
+		{
+			return true;
 		}
 		
 		//子目录不递归
