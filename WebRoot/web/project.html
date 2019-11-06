@@ -535,9 +535,9 @@
 	var gInitParentPath = "";
 	var gInitDocName = ""; 
 	var gInitEdit = false;
-	var gInitShowType = 2; //默认显示vDOc
+	var gInitShowType = 1; //默认显示DOc
 	//Doc Info: 当前页面显示的文件信息
-	var gDoc = {}; 
+	var gDoc = null; 
 	var gDocId = 0;
 	var gParentPath = "";
 	var gDocName = "";
@@ -1604,7 +1604,8 @@
 	            doc : gDocId,
 	            path: path,
 	            name: name,
-	            edit: gEdit,   
+	            edit: gEdit,
+	            showType: gShowType,
 	        };
 	        var url = makeUrl(param);
 			window.history.pushState({}, "wiki", url);
@@ -1627,6 +1628,7 @@
 	{
     	console.log("cleanDocPreview() ");
 		//清除当前选中的信息
+		gDoc = null;
 		gDocId = 0;
 		gParentPath = "";
 		gDocName = "";
@@ -1640,7 +1642,6 @@
 	  	gDocContent = "";
 	  	gTmpSavedContent = "";
 	  	DocEdit.loadmd("");
-	  	
 	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
 	
@@ -1687,7 +1688,8 @@
 	            		
                 		//Show Doc
 	                	$('#filetitle').html(doc.name);
-	                    gDocId = doc.docId;
+	                    gDoc = doc;
+                		gDocId = doc.docId;
 	            		gParentPath = doc.path;
 	            		gDocName = doc.name;
 	            		updateUrl();
@@ -3372,11 +3374,10 @@ function CompareObj(objA, objB, flag) {
 	
 	function previewDoc()
 	{
-		console.log("previewDoc gDocId:" + gDocId);
-		if(gDocId)
+		console.log("previewDoc gDoc:", gDoc);
+		if(gDoc != null)
 		{
-			var node = getNodeByNodeId(docId);
-			doPreviewDoc(node);
+			doPreviewDoc(gDoc);
 		}
 	}
 	
@@ -3452,9 +3453,14 @@ function CompareObj(objA, objB, flag) {
 	     {
 			 gShowType = 2;	    	 
 	     }
-		 cleanDocPreview();
-	     var node = getNodeByNodeId(gDocId);
-	     getAndShowDoc(node, false);
+		 
+		 //清除文件预览内容
+		 gDocContent = "";
+		 gTmpSavedContent = "";
+		 DocEdit.loadmd("");
+		 $(".editormd-preview-close-btn").hide();//css("display","none");
+
+		 getAndShowDoc(gDoc, false);
 	}
 	
 	/************************** contextMenu 接口***************************/	
@@ -3861,7 +3867,11 @@ function CompareObj(objA, objB, flag) {
 		
 		if(!gInitShowType)
 		{
-			gInitShowType = 2;
+			gShowType = 1;
+		}
+		else
+		{
+			gShowType = gInitShowType;
 		}
 		console.log("globalVarInit() gReposId:" + gReposId  + " gInitDocId:"+gInitDocId + " gInitParentPath:" + gInitParentPath + " gInitDocName:" + gInitDocName + " gInitEdit:" + gInitEdit);
    	}
