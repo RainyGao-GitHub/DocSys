@@ -1097,11 +1097,11 @@ public class DocController extends BaseController{
 	/****************   update Document Content: This interface was triggered by save operation by user ******************/
 	@RequestMapping("/updateDocContent.do")
 	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
-			String content,
+			String content, Integer docType,
 			String commitMsg,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
 		System.out.println("updateDocContent content:[" + content + "]");
 		//System.out.println("content size: " + content.length());
 			
@@ -1154,14 +1154,27 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = updateDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
-		writeJson(rt, response);
-		
-		if(ret)
+		boolean ret = false;
+		if(docType == 1)
 		{
-			deleteTmpVirtualDocContent(repos, doc, login_user);
+			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+			writeJson(rt, response);
+			if(ret)
+			{
+				deleteTmpVirtualDocContent(repos, doc, login_user);
+				executeCommonActionList(actionList, rt);
+			}			
+		}
+		else
+		{
+			ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+			writeJson(rt, response);
 			
-			executeCommonActionList(actionList, rt);
+			if(ret)
+			{
+				deleteTmpVirtualDocContent(repos, doc, login_user);
+				executeCommonActionList(actionList, rt);
+			}
 		}
 	}
 
@@ -1176,10 +1189,17 @@ public class DocController extends BaseController{
 		delFileOrDir(vDocPath);
 	}
 	
+	private void deleteTmpRealDocContent(Repos repos, Doc doc, User login_user) 
+	{
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String mdFilePath = userTmpDir + doc.getDocId() + "_" + doc.getName();
+		delFileOrDir(mdFilePath);
+	}
+	
 	//this interface is for auto save of the virtual doc edit
 	@RequestMapping("/tmpSaveDocContent.do")
 	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String content,
+			String content, Integer docType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
@@ -1203,19 +1223,29 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, userTmpDir, null, null);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		doc.setContent(content);
 		
-		if(saveVirtualDocContent(repos, doc, rt) == false)
+		if(docType == 1)
 		{
-			docSysErrorLog("saveVirtualDocContent Error!", rt);
+			if(saveTmpRealDocContent(repos, doc, login_user, rt) == false)
+			{
+				docSysErrorLog("saveVirtualDocContent Error!", rt);
+			}			
+		}
+		else
+		{
+			if(saveTmpVirtualDocContent(repos, doc, login_user, rt) == false)
+			{
+				docSysErrorLog("saveVirtualDocContent Error!", rt);
+			}
 		}
 		writeJson(rt, response);
 	}
 	
 	@RequestMapping("/deleteTmpSavedDocContent.do")
-	public void deleteTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void deleteTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
@@ -1241,7 +1271,14 @@ public class DocController extends BaseController{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, userTmpDir, null, null);
 		
-		deleteTmpVirtualDocContent(repos, doc, login_user);
+		if(docType == 1)
+		{
+			deleteTmpRealDocContent(repos, doc, login_user);			
+		}
+		else
+		{
+			deleteTmpVirtualDocContent(repos, doc, login_user);
+		}
 		writeJson(rt, response);
 	}
 	
@@ -1962,9 +1999,9 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
-	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
 
 		if(path == null)
 		{
@@ -1986,9 +2023,16 @@ public class DocController extends BaseController{
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		String vDocName = getVDocName(doc);
-		String reposVPath = getReposVirtualPath(repos);
-		String content = readVirtualDocContent(reposVPath, vDocName);		
+		String content = "";
+		if(docType == 1)
+		{
+			content = readRealDocContent(repos, doc);		
+		}
+		else
+		{
+			content = readVirtualDocContent(repos, doc);		
+		}
+		
 		rt.setData(content);
 		//System.out.println(rt.getData());
 
@@ -1997,10 +2041,10 @@ public class DocController extends BaseController{
 	
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
-	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -2053,46 +2097,43 @@ public class DocController extends BaseController{
 			Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 			rt.setDataEx(downloadDoc);
 		}
-
-		String vDocName = getVDocName(doc);
-		String reposVPath = getReposVirtualPath(repos);
-		String content = readVirtualDocContent(reposVPath, vDocName);
-        if( null !=content){
+		
+		String content = null;
+		String tmpSavedContent = null;
+		if(docType == 1)
+		{
+			content = readRealDocContent(repos, doc);        
+			tmpSavedContent = readTmpRealDocContent(repos, doc, login_user);			
+		}
+		else
+		{
+			content = readVirtualDocContent(repos, doc);        
+			tmpSavedContent = readTmpVirtualDocContent(repos, doc, login_user);
+		}	
+		
+		if( null !=content){
         	content = content.replaceAll("\t","");
         }
 		doc.setContent(content);
-		
-		//if(content == null)
-        //{
-        //	content = "";
-        //}
  		//doc.setContent(JSONObject.toJSONString(content));
 		rt.setData(doc);
 		
-		//Try to read tmpSavedContent
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String tmpSavedContent = readVirtualDocContent(userTmpDir, vDocName);
-        if( null !=tmpSavedContent){
+	    if( null !=tmpSavedContent){
         	tmpSavedContent = tmpSavedContent.replaceAll("\t","");
         }
-		rt.setMsgData(tmpSavedContent);
-
-		//if(tmpSavedContent == null)
-		//{
-		//	tmpSavedContent = "";
-		//}
 		//rt.setMsgData(JSONObject.toJSONString(tmpSavedContent));
-		
+	    rt.setMsgData(tmpSavedContent);
+
 		writeJson(rt, response);
 	}
 	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
-			Integer lockType, 
+			Integer lockType, Integer docType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType);
+		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType);
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
@@ -2129,7 +2170,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
-
+		
 		synchronized(syncLock)
 		{
 			boolean subDocCheckFlag = false;
