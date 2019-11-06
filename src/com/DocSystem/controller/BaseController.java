@@ -5679,36 +5679,57 @@ public class BaseController  extends BaseFunction{
 	
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
-		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
-		return readDocContentFromFile(filePath);
+		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 	
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String filePath = userTmpDir + doc.getPath() + doc.getName();
-		return readDocContentFromFile(filePath);
+		return readDocContentFromFile(userTmpDir + doc.getPath(), doc.getName());
 	}
 	
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
 		String docVName = getVDocName(doc);		
-		String localDocVPath = doc.getLocalVRootPath() + docVName + "/";
-		String filePath = localDocVPath + "content.md";
-		return readDocContentFromFile(filePath);
+		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md");
 	}
 	
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String docVName = getVDocName(doc);		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String localDocVPath = userTmpDir + docVName + "/";
-		String filePath = localDocVPath + "content.md";
-		return readDocContentFromFile(filePath);
+		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md");
 	}
 	
+	private boolean isTextFile(String name) {
+		String fileSuffix = getFileSuffix(name);
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "txt":
+		case "log":	
+		case "md":
+		case "html":	
+		case "py":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+
 	protected boolean saveDocContentToFile(Doc doc, String filePath, ReturnAjax rt)
 	{
+		if(isTextFile(filePath) == false)
+		{
+			return false;
+		}
+		
 		String content = doc.getContent();
 		if(content == null)
 		{
@@ -5739,12 +5760,18 @@ public class BaseController  extends BaseFunction{
 		
 	}
 	
-	protected String readDocContentFromFile(String filePath) 
+	protected String readDocContentFromFile(String path, String name) 
 	{
+		if(isTextFile(name) == false)
+		{
+			return null;
+		}
+		
+		String filePath = path + name;
 		try 
 		{			
 			File file = new File(filePath);
-			if(!file.exists())
+			if(!file.exists() || !file.isFile())
 			{
 				return null;
 			}

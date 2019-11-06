@@ -2103,7 +2103,7 @@ public class DocController extends BaseController{
 		if(docType == 1)
 		{
 			content = readRealDocContent(repos, doc);        
-			tmpSavedContent = readTmpRealDocContent(repos, doc, login_user);			
+			tmpSavedContent = readTmpRealDocContent(repos, doc, login_user);
 		}
 		else
 		{
@@ -2126,7 +2126,6 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 	}
-	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
