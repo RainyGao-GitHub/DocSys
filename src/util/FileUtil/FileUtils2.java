@@ -195,6 +195,7 @@ public class FileUtils2 {
 		case "UTF-8":
 		case "UTF-16":
 		case "Unicode":
+		case "US-ASCII":
 			return false;
 		}
 		return true;
