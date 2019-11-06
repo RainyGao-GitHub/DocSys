@@ -537,6 +537,7 @@
 	var gInitEdit = false;
 	var gInitShowType = 2; //默认显示vDOc
 	//Doc Info: 当前页面显示的文件信息
+	var gDoc = {}; 
 	var gDocId = 0;
 	var gParentPath = "";
 	var gDocName = "";
@@ -1642,7 +1643,7 @@
 	  	
 	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
-
+	
 	//读取文件信息
     function getAndShowDoc(node, edit)
 	{	
@@ -1696,12 +1697,34 @@
 							
 						if(gShowType == 1)	//显示预览
 						{	
+
 							if(true == isPicture(doc.name))
 							{
+				    		    $("#btnExitEdit").hide();
+				    	      	$("#btnSaveWiki").hide(); 
+				    	      	//$("#btnEditWiki").hide();
+				    			$("#vdocPreview").hide();
+				    	      	$("#docPreview").show();
 			                    setImgPreview(ret);
+							}
+							else if(true == isTextFile(doc.name))
+							{
+				    			 $("#btnExitEdit").hide();
+				    		     $("#btnSaveWiki").hide(); 
+				    		     //$("#btnEditWiki").show();
+				    		     $("#vdocPreview").show();	      	
+				    		     $("#docPreview").hide();
+								//目前文本文件也用markdown编辑器来编辑
+							  	$(".editormd-preview-close-btn").show();//css("display","none");
+								showDocContent(edit);
 							}
 							else
 							{
+				    		    $("#btnExitEdit").hide();
+				    	      	$("#btnSaveWiki").hide(); 
+				    	      	//$("#btnEditWiki").hide();
+				    			$("#vdocPreview").hide();
+				    	      	$("#docPreview").show();
 							    setImgPreview(null);
 							}
 			                //$("#docPreview").show();
@@ -1709,8 +1732,14 @@
 						}
 						else	//显示备注
 						{
+			    		     $("#btnSwitchShow").text("关闭备注");
+			    			 $("#btnExitEdit").hide();
+			    		     $("#btnSaveWiki").hide(); 
+			    		     //$("#btnEditWiki").show();
+			    		     $("#vdocPreview").show();	      	
+			    		     $("#docPreview").hide();
 						  	$(".editormd-preview-close-btn").show();//css("display","none");
-							showVirtualDoc(edit);
+							showDocContent(edit);
 						}
             		}
                 }
@@ -1774,10 +1803,10 @@
         return content;
 	}
 	
-	function showVirtualDoc(edit)
+	function showDocContent(edit)
 	{
-		//console.log("showVirtualDoc gDocContent",gDocContent);
-		console.log("showVirtualDoc gDocId:" + gDocId);
+		//console.log("showDocContent gDocContent",gDocContent);
+		console.log("showDocContent gDocId:" + gDocId);
 
 		DocEdit.loadmd(gDocContent, edit);
 	}
@@ -2282,6 +2311,38 @@ function CompareObj(objA, objB, flag) {
 				png : true,
 				gif : true,
 				mpg : true,
+		};
+		
+		var suffix = getFileSuffix(fileName);
+		if(suffix == "")
+		{
+			return false;
+		}
+		
+		var type = fileTypeMap[suffix];
+		if ( undefined == type )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	function isTextFile(fileName)
+	{
+		var fileTypeMap = {
+			txt : true,
+			log : true,
+			md : true,
+			html : true,
+			py : true,
+			java : true,
+			cpp : true,
+			hpp : true,
+			c : true,
+			h : true,
+			json : true,
+			xml : true,
 		};
 		
 		var suffix = getFileSuffix(fileName);
@@ -3384,35 +3445,24 @@ function CompareObj(objA, objB, flag) {
 	     }
 	}
 	
+
 	function switchShowMode()
 	{
 		 if(gShowType == 2)	//Swith To 显示预览
 	   	 {
 			gShowType = 1;
-		    $("#btnExitEdit").hide();
-	      	$("#btnSaveWiki").hide(); 
-	      	//$("#btnEditWiki").hide();
 	      	$("#btnSwitchShow").text("备注");
-	      	//隐藏备注内容
-			$("#vdocPreview").hide();
-	      	//显示预览内容
-	      	$("#docPreview").show();
 	     }
 	     else
 	     {
 			 gShowType = 2;	    	 
-			 $("#btnExitEdit").hide();
-		     $("#btnSaveWiki").hide(); 
-		     //$("#btnEditWiki").show();
 		     $("#btnSwitchShow").text("关闭备注");
-		     //显示备注内容
-		     showVirtualDoc(false);
-		     $("#vdocPreview").show();	      	
-
-		     //隐藏预览内容
-		     $("#docPreview").hide();		     
 	     }
+		 cleanDocPreview();
+	     var node = getNodeByNodeId(gDocId);
+	     getAndShowDoc(node, false);
 	}
+	
 	/************************** contextMenu 接口***************************/	
 	//Get Node by NodeId
 	function getNodeByNodeId(nodeId)
