@@ -5623,82 +5623,47 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
-		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
-		return saveDocContentToFile(doc, filePath, rt);
+		return saveDocContentToFile(doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), rt);
 	}
-	
-	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
-	{	
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String filePath = userTmpDir + doc.getPath() + doc.getName();
-		
-		return saveDocContentToFile(doc, filePath, rt);
-	}
-	
-	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
-	{	
-		String docVName = getVDocName(doc);
-		String vDocPath = doc.getLocalVRootPath() + docVName + "/";
-		File folder = new File(vDocPath);
-		if(!folder.exists())
-		{
-			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
-			if(folder.mkdir() == false)
-			{
-				docSysDebugLog("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!", rt);
-				return false;
-			}
-		}
-						
-		//set the md file Path
-		String filePath = vDocPath + "content.md";
-		return saveDocContentToFile(doc, filePath, rt);
-	}
-
-	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
-	{	
-		String docVName = getVDocName(doc);
-		
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		String vDocPath = userTmpDir + docVName + "/";
-		File folder = new File(vDocPath);
-		if(!folder.exists())
-		{
-			System.out.println("saveVirtualDocContent() vDocPath:" + vDocPath + " not exists!");
-			if(folder.mkdir() == false)
-			{
-				docSysDebugLog("saveVirtualDocContent() mkdir vDocPath:" + vDocPath + " Failed!", rt);
-				return false;
-			}
-		}
-						
-		//set the md file Path
-		String filePath = vDocPath + "content.md";
-		return saveDocContentToFile(doc, filePath, rt);
-	}
-	
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
 		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 	
+	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
+	{	
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		return saveDocContentToFile(doc, userTmpDir + "RDOC/", doc.getDocId() + "_" + doc.getName(), rt);
+	}
+	
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		return readDocContentFromFile(userTmpDir + doc.getPath(), doc.getName());
+		return readDocContentFromFile(userTmpDir + "RDOC/", doc.getDocId() + "_" + doc.getName());
 	}
 	
+	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
+	{	
+		String docVName = getVDocName(doc);
+		return saveDocContentToFile(doc, doc.getLocalVRootPath() + docVName + "/", "content.md", rt);
+	}
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
 		String docVName = getVDocName(doc);		
 		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md");
 	}
-	
+
+	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
+	{	
+		String docVName = getVDocName(doc);
+		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		return saveDocContentToFile(doc,  userTmpDir + "VDOC/"+ docVName + "/", "content.md", rt);
+	}
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String docVName = getVDocName(doc);		
 		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md");
+		return readDocContentFromFile(userTmpDir + "VDOC/" + docVName + "/", "content.md");
 	}
 	
 	private boolean isTextFile(String name) {
@@ -5796,9 +5761,9 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}	
 
-	protected boolean saveDocContentToFile(Doc doc, String filePath, ReturnAjax rt)
+	protected boolean saveDocContentToFile(Doc doc, String path, String name, ReturnAjax rt)
 	{
-		if(isTextFile(filePath) == false)
+		if(isTextFile(name) == false)
 		{
 			return false;
 		}
@@ -5810,7 +5775,19 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		File folder = new File(path);
+		if(!folder.exists())
+		{
+			System.out.println("saveDocContentToFile() path:" + path + " not exists!");
+			if(folder.mkdir() == false)
+			{
+				docSysDebugLog("saveDocContentToFile() mkdir path:" + path + " Failed!", rt);
+				return false;
+			}
+		}
+		
 		//创建文件输入流
+		String filePath = path + name;
 		FileOutputStream out = null;
 		try {
 			out = new FileOutputStream(filePath);
