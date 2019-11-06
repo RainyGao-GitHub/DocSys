@@ -5703,18 +5703,39 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean isTextFile(String name) {
 		String fileSuffix = getFileSuffix(name);
+		return isText(fileSuffix);
+	}
+	
+	protected boolean isPdf(String fileSuffix) {
 		if(fileSuffix == null)
 		{
 			//"未知文件类型"
 			return false;
 		}
-		
+
+		switch(fileSuffix)
+		{
+		case "pdf":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+
+	
+	protected boolean isText(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+
 		switch(fileSuffix)
 		{
 		case "txt":
 		case "log":	
-		case "md":
-		case "html":	
+		case "md":	
 		case "py":
 		case "java":
 		case "cpp":
@@ -5723,12 +5744,57 @@ public class BaseController  extends BaseFunction{
 		case "h":
 		case "json":
 		case "xml":
+		case "html":
+		case "sql":
 			return true;
 		default:
 			break;
 		}
 		return false;
 	}
+	protected boolean isPicture(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "jpg":
+		case "jpeg":
+		case "png":
+		case "gif":
+		case "bmp":
+		case "mpg":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+	
+	protected boolean isOffice(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "doc":
+		case "docx":
+		case "xls":
+		case "xlsx":
+		case "ppt":
+		case "pptx":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}	
 
 	protected boolean saveDocContentToFile(Doc doc, String filePath, ReturnAjax rt)
 	{
