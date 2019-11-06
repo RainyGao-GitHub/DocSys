@@ -1961,6 +1961,7 @@ public class DocController extends BaseController{
 		case "gif":
 		case "bmp":
 		case "py":
+		case "sql":
 			if(convertToPdf(localEntryPath,dstPath,rt) == false)
 			{
 				writeJson(rt, response);
