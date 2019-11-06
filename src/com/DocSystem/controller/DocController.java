@@ -1789,9 +1789,8 @@ public class DocController extends BaseController{
 		
 		//Do convert
 		String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
-		switch(fileSuffix)
+		if(isPdf(fileSuffix))
 		{
-		case "pdf":
 			if(copyFile(localEntryPath, dstPath,true) == false)
 			{
 				docSysErrorLog("预览失败", rt);
@@ -1799,38 +1798,27 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;					
 			}
-			break;
-		case "doc":
-		case "docx":
-		case "xls":
-		case "xlsx":
-		case "ppt":
-		case "pptx":
-		case "txt":
-		case "log":	
-		case "md":
-		case "html":	
-		case "jpg":
-		case "jpeg":
-		case "png":
-		case "gif":
-		case "bmp":
-		case "py":
+			rt.setData(fileLink);
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(isOffice(fileSuffix) || isText(fileSuffix) || isPicture(fileSuffix))
+		{
 			if(convertToPdf(localEntryPath, dstPath, rt) == false)
 			{
 				writeJson(rt, response);
 				return;
 			}
-			break;
-		default:
-			docSysErrorLog("该文件类型不支持预览", rt);
-			docSysDebugLog("srcPath:"+localEntryPath, rt);
+			rt.setData(fileLink);
 			writeJson(rt, response);
 			return;
-		}
-	
-		rt.setData(fileLink);
+		}	
+		
+		docSysErrorLog("该文件类型不支持预览", rt);
+		docSysDebugLog("srcPath:"+localEntryPath, rt);
 		writeJson(rt, response);
+		return;
 	}
 
 	private boolean convertToPdf(String localEntryPath, String dstPath, ReturnAjax rt) {
@@ -1934,9 +1922,8 @@ public class DocController extends BaseController{
 		
 		//Do convert
 		String localEntryPath = getReposRealPath(repos) + doc.getPath() + doc.getName();
-		switch(fileSuffix)
+		if(isPdf(fileSuffix))
 		{
-		case "pdf":
 			if(copyFile(localEntryPath, dstPath,true) == false)
 			{
 				docSysErrorLog("预览失败", rt);
@@ -1944,39 +1931,28 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				return;					
 			}
-			break;
-		case "doc":
-		case "docx":
-		case "xls":
-		case "xlsx":
-		case "ppt":
-		case "pptx":
-		case "txt":
-		case "log":	
-		case "md":
-		case "html":	
-		case "jpg":
-		case "jpeg":
-		case "png":
-		case "gif":
-		case "bmp":
-		case "py":
-		case "sql":
+			
+			rt.setData(fileLink);
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(isOffice(fileSuffix) || isText(fileSuffix) || isPicture(fileSuffix))
+		{
 			if(convertToPdf(localEntryPath,dstPath,rt) == false)
 			{
 				writeJson(rt, response);
 				return;
 			}
-			break;
-		default:
-			docSysErrorLog("该文件类型不支持预览", rt);
-			docSysDebugLog("srcPath:"+localEntryPath, rt);
+			rt.setData(fileLink);
 			writeJson(rt, response);
 			return;
 		}
-	
-		rt.setData(fileLink);
+		
+		docSysErrorLog("该文件类型不支持预览", rt);
+		docSysDebugLog("srcPath:"+localEntryPath, rt);
 		writeJson(rt, response);
+		return;
 	}
 
 	private String getCheckSum(File localEntry, int chunkSize) 
