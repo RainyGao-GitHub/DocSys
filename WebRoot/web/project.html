@@ -538,6 +538,7 @@
 	var gInitShowType = 2; //默认显示备注
 	//Doc Info: 当前页面显示的文件信息
 	var gDoc = null; 
+	var gDocDataEx = null;
 	var gDocId = 0;
 	var gParentPath = "";
 	var gDocName = "";
@@ -1629,6 +1630,7 @@
     	console.log("cleanDocPreview() ");
 		//清除当前选中的信息
 		gDoc = null;
+		gDocDataEx = null;
 		gDocId = 0;
 		gParentPath = "";
 		gDocName = "";
@@ -1692,10 +1694,14 @@
                 	gDocId = doc.docId;
 	            	gParentPath = doc.path;
 	            	gDocName = doc.name;
+	            	
 	            	updateUrl();
-	                    
-	                gDocContent = parseDocContent(ret.data.content);
+	                
+	            	gDocContent = parseDocContent(ret.data.content);
 	                gTmpSavedContent = parseDocContent(ret.msgData);                    					
+	                
+	                gDocDataEx = ret.dataEx;
+	                	
 	                showGDoc(gShowType, edit);
                 }
                 else
@@ -1715,18 +1721,18 @@
     function showGDoc(showType, edit)
     {
 		console.log("showGDoc gDocId:" + gDocId + " docName:" + gDoc.name);
-		var docName = gDoc.name;
+		var fileSuffix = getFileSuffix(gDoc.name);
 		if(showType == 1)	//显示预览
 		{	
-			if(true == isPicture(docName))
+			if(isPicture(fileSuffix))
 			{
 			    $("#btnExitEdit").hide();
 		      	$("#btnSaveWiki").hide(); 
 				$("#vdocPreview").hide();
 		      	$("#docPreview").show();
-	            setImgPreview(ret);
+	            setImgPreview(gDocDataEx);
 			}
-			else if(true == isTextFile(docName))
+			else if(isText(fileSuffix))
 			{
 				 $("#btnExitEdit").hide();
 			     $("#btnSaveWiki").hide(); 
@@ -1735,20 +1741,28 @@
 			  	 $(".editormd-preview-close-btn").show();//css("display","none");
 				 showGDocContent(edit);
 			}
+			else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
+			{
+				 $("#btnExitEdit").hide();
+			     $("#btnSaveWiki").hide(); 
+			     $("#vdocPreview").show();	      	
+			     $("#docPreview").hide();
+			  	 $(".editormd-preview-close-btn").hide();//
+				 showGDocContent(edit);			
+			}
 			else
 			{
 			     $("#btnExitEdit").hide();
 		      	 $("#btnSaveWiki").hide(); 
 				 $("#vdocPreview").hide();
-		      	 $("#docPreview").show();
-			     setImgPreview(null);
+		      	 $("#docPreview").hide();
+			     //setImgPreview(null);
 			}
 		}
 		else	//显示备注
 		{
 			 $("#btnExitEdit").hide();
-		     $("#btnSaveWiki").hide(); 
-		     //$("#btnEditWiki").show();
+		     $("#btnSaveWiki").hide();
 		     $("#vdocPreview").show();	      	
 		     $("#docPreview").hide();
 		  	$(".editormd-preview-close-btn").show();//css("display","none");
@@ -1764,24 +1778,18 @@
 		DocEdit.loadmd(gDocContent, edit);
 	}
 	
-	function setImgPreview(ret)
-	{
-		if(!ret || ret == null)
-		{
-			console.log("setImgPreview() hide imgPreview");
-			//$("#imgPreview").hide();
-			$("#imgPreview").attr('src', "");
-	      	return;	
-		}
-		
-		if(!ret.dataEx)	//表明不是文件，无法预览
+	function setImgPreview(docDataEx)
+	{		
+		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 		{
 			console.log("setImgPreview() dataEx is null");
-	      	return;
+			//$("#imgPreview").hide();
+			$("#imgPreview").attr('src', "");
+	    	return;
 		}
 		
-		var targetName = ret.dataEx.name;
-		var targetPath = ret.dataEx.path;
+		var targetName = docDataEx.name;
+		var targetPath = docDataEx.path;
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
@@ -2301,9 +2309,7 @@ function CompareObj(objA, objB, flag) {
 		return iconType
 	}
 	
-
-	
-	function isPicture(fileName)
+	function isPicture(suffix)
 	{
 		var fileTypeMap = {
 		        jpg : true,
@@ -2314,11 +2320,38 @@ function CompareObj(objA, objB, flag) {
 				mpg : true,
 		};
 		
-		var suffix = getFileSuffix(fileName);
-		if(suffix == "")
+		var type = fileTypeMap[suffix];
+		if ( undefined == type )
 		{
 			return false;
 		}
+		
+		return true;
+	}
+	
+	function isText(suffix)
+	{
+		var fileTypeMap = {
+				txt : true,
+				log : true,
+				md : true,
+				py : true,
+				java : true,
+				cpp : true,
+				hpp : true,
+				c : true,
+				h : true,
+				json : true,
+				xml : true,
+				html : true,
+				sql : true,
+				js : true,
+				css : true,
+				jsp : true,
+				php : true,
+				properties : true,
+				conf : true,
+			};
 		
 		var type = fileTypeMap[suffix];
 		if ( undefined == type )
@@ -2329,29 +2362,16 @@ function CompareObj(objA, objB, flag) {
 		return true;
 	}
 	
-	function isTextFile(fileName)
+	function isOffice(suffix)
 	{
 		var fileTypeMap = {
-			txt : true,
-			log : true,
-			md : true,
-			py : true,
-			java : true,
-			cpp : true,
-			hpp : true,
-			c : true,
-			h : true,
-			json : true,
-			xml : true,
-			html : true,
-			sql : true,
-		};
-		
-		var suffix = getFileSuffix(fileName);
-		if(suffix == "")
-		{
-			return false;
-		}
+				doc : true,
+				docx : true,
+			 	ppt : true,
+				pptx : true,
+				xls : true,
+				xlsx : true,
+			};
 		
 		var type = fileTypeMap[suffix];
 		if ( undefined == type )
@@ -2360,6 +2380,35 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		return true;
+	}
+	
+	function isPdf(suffix)
+	{
+		var fileTypeMap = {
+				pdf : true,
+			};
+		
+		var type = fileTypeMap[suffix];
+		if ( undefined == type )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	
+
+	function isPictureFile(fileName)
+	{
+		var suffix = getFileSuffix(fileName);
+		return isPicture(suffix);
+	}
+	
+	function isTextFile(fileName)
+	{		
+		var suffix = getFileSuffix(fileName);
+		return isText(suffix);
 	}
 	
 	function asyncDataFilter(treeId, parentNode, responseData) {
