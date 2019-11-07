@@ -1995,7 +1995,7 @@ public class DocController extends BaseController{
 		return false;
 	}
 
-	private String getCheckSum(File localEntry, int chunkSize) 
+	public String getCheckSum(File localEntry, int chunkSize) 
 	{
 		String hash = null;
 		try {

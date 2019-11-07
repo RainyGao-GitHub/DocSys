@@ -1834,6 +1834,12 @@ public class BaseFunction{
 		case "xml":
 		case "html":
 		case "sql":
+		case "js":
+		case "css":
+		case "jsp":
+		case "php":
+		case "properties":
+		case "conf":
 			return true;
 		default:
 			break;
