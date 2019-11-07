@@ -1682,12 +1682,12 @@
 					//当前有打开的文件，需要先退出当前的编辑
 	            	if(gDocId && gDocId != 0 && gDocId != doc.docId)
 	            	{
-	            		//如果是非阻塞的话执行会有问题
+	            		//如果是非阻塞的话执行会有问题，但看起来好像是阻塞的，退出没有成功前并不会执行后面的代码
 	                	DocEdit.exitEdit();
 	            	}
             		
                 	//Show Doc
-	                $('#filetitle').html(doc.name);
+            		$('#filetitle').html(doc.name);
 	                gDoc = doc;
                 	gDocId = doc.docId;
 	            	gParentPath = doc.path;
@@ -1714,6 +1714,7 @@
 	//showGDoc根据showType和edit显示gDoc
     function showGDoc(showType, edit)
     {
+		console.log("showGDoc gDocId:" + gDocId + " docName:" + gDoc.name);
 		var docName = gDoc.name;
 		if(showType == 1)	//显示预览
 		{	
@@ -1757,7 +1758,7 @@
     
 	function showGDocContent(edit)
 	{
-		console.log("showGDocContent gDocContent",gDocContent);
+		//console.log("showGDocContent gDocContent",gDocContent);
 		console.log("showGDocContent gDocId:" + gDocId);
 
 		DocEdit.loadmd(gDocContent, edit);
