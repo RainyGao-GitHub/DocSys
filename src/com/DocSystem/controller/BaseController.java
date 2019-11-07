@@ -5632,14 +5632,14 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		return saveDocContentToFile(doc, userTmpDir + "RDOC/", doc.getDocId() + "_" + doc.getName(), rt);
+		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
+		return saveDocContentToFile(doc, userTmpDir, doc.getDocId() + "_" + doc.getName(), rt);
 	}
 	
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		return readDocContentFromFile(userTmpDir + "RDOC/", doc.getDocId() + "_" + doc.getName());
+		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
+		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());
 	}
 	
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
@@ -5656,14 +5656,14 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		return saveDocContentToFile(doc,  userTmpDir + "VDOC/"+ docVName + "/", "content.md", rt);
+		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
+		return saveDocContentToFile(doc,  userTmpDir + docVName + "/", "content.md", rt);
 	}
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String docVName = getVDocName(doc);		
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		return readDocContentFromFile(userTmpDir + "VDOC/" + docVName + "/", "content.md");
+		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
+		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md");
 	}
 	
 	private boolean isTextFile(String name) {

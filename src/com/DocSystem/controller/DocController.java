@@ -823,7 +823,7 @@ public class DocController extends BaseController{
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		String fileChunkName = name + "_" + chunkIndex;
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForUpload(repos,login_user);
 		String chunkParentPath = userTmpDir;
 		String chunkFilePath = chunkParentPath + fileChunkName;
 		if(false == isChunkMatched(chunkFilePath,chunkHash))
@@ -957,7 +957,7 @@ public class DocController extends BaseController{
 		{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
-			String userTmpDir = getReposUserTmpPath(repos,login_user);
+			String userTmpDir = getReposUserTmpPathForUpload(repos,login_user);
 			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
@@ -1186,7 +1186,7 @@ public class DocController extends BaseController{
 		
 		String docVName = getVDocName(doc);
 		
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
 		
 		String vDocPath = userTmpDir + docVName + "/";
 		
@@ -1195,7 +1195,7 @@ public class DocController extends BaseController{
 	
 	private void deleteTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
 		String mdFilePath = userTmpDir + doc.getDocId() + "_" + doc.getName();
 		delFileOrDir(mdFilePath);
 	}
@@ -1272,8 +1272,8 @@ public class DocController extends BaseController{
 		}
 		
 		String localRootPath = getReposRealPath(repos);
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, userTmpDir, null, null);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		
 		if(docType == 1)
 		{
@@ -1347,7 +1347,7 @@ public class DocController extends BaseController{
 		}
 				
 		String targetName = doc.getName();
-		String targetPath = getReposUserTmpPath(repos,login_user);
+		String targetPath = getReposUserTmpPathForDownload(repos,login_user);
 				
 		//Do checkout to local
 		if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
@@ -1420,7 +1420,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		targetPath = getReposUserTmpPath(repos,login_user);
+		targetPath = getReposUserTmpPathForDownload(repos,login_user);
 		if(localEntry.getType() == 2)
 		{	
 			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
@@ -1529,7 +1529,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		String targetPath = getReposUserTmpPath(repos,login_user);
+		String targetPath = getReposUserTmpPathForDownload(repos,login_user);
 		//doCompressDir and save the zip File under userTmpDir
 		if(doCompressDir(vDoc.getLocalRootPath() + vDoc.getPath(), vDoc.getName(), targetPath, targetName, rt) == false)
 		{
@@ -1680,7 +1680,7 @@ public class DocController extends BaseController{
 		}
 		
 		//get userTmpDir
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForDownload(repos,login_user);
 		
 		String localParentPath = userTmpDir;
 		if(path != null)
@@ -2341,7 +2341,7 @@ public class DocController extends BaseController{
 		List <Doc> successDocList = null;
 		
 		//userTmpDir will be used to tmp store the history doc 
-		String userTmpDir = getReposUserTmpPath(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForDownload(repos,login_user);
 		
 		if(isRealDoc)
 		{
