@@ -627,6 +627,11 @@ public class BaseFunction{
 		return userTmpDir;
 	}
 
+	protected String getReposUserTmpPathForOfficeTmp(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/OfficeTmp/";
+		return userTmpDir;
+	}
+	
 	protected String getReposUserTmpPathForRDOC(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/RDOC/";
 		return userTmpDir;
@@ -1211,12 +1216,7 @@ public class BaseFunction{
 	}
 	
 	protected String readDocContentFromFile(String path, String name) 
-	{
-		if(isTextFile(name) == false)
-		{
-			return null;
-		}
-		
+	{	
 		String filePath = path + name;
 		try 
 		{			
@@ -1788,7 +1788,7 @@ public class BaseFunction{
 		return isOffice(fileSuffix);
 	}
 	
-	private static boolean isTextFile(String name) {
+	protected static boolean isTextFile(String name) {
 		String fileSuffix = getFileSuffix(name);
 		return isText(fileSuffix);
 	}
