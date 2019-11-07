@@ -2,8 +2,10 @@ package com.DocSystem.common;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -19,6 +21,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.poi.hslf.extractor.PowerPointExtractor;
+import org.apache.poi.hssf.extractor.ExcelExtractor;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.usermodel.Paragraph;
+import org.apache.poi.hwpf.usermodel.Range;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.xslf.extractor.XSLFPowerPointExtractor;
+import org.apache.poi.xslf.usermodel.XMLSlideShow;
+import org.apache.poi.xssf.extractor.XSSFExcelExtractor;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
@@ -1135,6 +1152,89 @@ public class BaseFunction{
         return false;
     }
     
+	protected static boolean saveDocContentToFile(String content, String path, String name)
+	{
+		if(isTextFile(name) == false)
+		{
+			return false;
+		}
+		
+		if(content == null)
+		{
+			System.out.println("saveDocContentToFile() content is null");
+			return false;
+		}
+		
+		File folder = new File(path);
+		if(!folder.exists())
+		{
+			System.out.println("saveDocContentToFile() path:" + path + " not exists!");
+			if(folder.mkdirs() == false)
+			{
+				System.out.println("saveDocContentToFile() mkdir path:" + path + " Failed!");
+				return false;
+			}
+		}
+		
+		//创建文件输入流
+		String filePath = path + name;
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(filePath);
+		} catch (FileNotFoundException e) {
+			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
+			e.printStackTrace();
+			return false;
+		}
+		try {
+			byte[] buff = content.getBytes();
+			out.write(buff, 0, buff.length);
+			//关闭输出流
+			out.close();
+		} catch (IOException e) {
+			System.out.println("saveVirtualDocContent() out.write exception");
+			e.printStackTrace();
+			return false;
+		}		
+		return true;
+		
+	}
+	
+	protected String readDocContentFromFile(String path, String name) 
+	{
+		if(isTextFile(name) == false)
+		{
+			return null;
+		}
+		
+		String filePath = path + name;
+		try 
+		{			
+			File file = new File(filePath);
+			if(!file.exists() || !file.isFile())
+			{
+				return null;
+			}
+			
+			int fileSize = (int) file.length();
+			//System.out.println("fileSize:[" + fileSize + "]");
+
+			byte buffer[] = new byte[fileSize];
+	
+			FileInputStream in;
+			in = new FileInputStream(filePath);
+			in.read(buffer, 0, fileSize);
+			in.close();	
+							
+			String content = new String(buffer);
+			//System.out.println("content:[" + content + "]");
+			return content;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+    
     public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
         File srcFile=new File(srcFilePath);
         if(srcFile.exists() == false)
@@ -1672,8 +1772,92 @@ public class BaseFunction{
     	return suffix.toLowerCase();
     }
     
-	public static boolean isOfficeFile(String fileSuffix) 
+	public static boolean isOfficeFile(String name) 
 	{
+		String fileSuffix = getFileSuffix(name);
+		return isOffice(fileSuffix);
+	}
+	
+	private static boolean isTextFile(String name) {
+		String fileSuffix = getFileSuffix(name);
+		return isText(fileSuffix);
+	}
+	
+	protected boolean isPdf(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+
+		switch(fileSuffix)
+		{
+		case "pdf":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+
+	
+	protected static boolean isText(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+
+		switch(fileSuffix)
+		{
+		case "txt":
+		case "log":	
+		case "md":	
+		case "py":
+		case "java":
+		case "cpp":
+		case "hpp":
+		case "c":
+		case "h":
+		case "json":
+		case "xml":
+		case "html":
+		case "sql":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+	protected boolean isPicture(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "jpg":
+		case "jpeg":
+		case "png":
+		case "gif":
+		case "bmp":
+		case "mpg":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+	
+	protected static boolean isOffice(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
 		switch(fileSuffix)
 		{
 		case "doc":
@@ -1683,10 +1867,373 @@ public class BaseFunction{
 		case "ppt":
 		case "pptx":
 			return true;
+		default:
+			break;
 		}
 		return false;
+	}	
+	/****************** Office文件解析接口 *********************************************/
+	public static boolean extractToFileForWord(String filePath, String path, String name)
+	{
+    	HWPFDocument doc1 = null;
+    	FileInputStream fis = null;
+    	
+		try {
+			StringBuffer content = new StringBuffer("");// 文档内容
+	    	fis = new FileInputStream(filePath);
+    	
+    		doc1 = new HWPFDocument(fis);
+
+    		Range range = doc1.getRange();
+    	    int paragraphCount = range.numParagraphs();// 段落
+    	    for (int i = 0; i < paragraphCount; i++) {// 遍历段落读取数据
+    	    	Paragraph pp = range.getParagraph(i);
+    	    	content.append(pp.text());
+    	    }
+    	    
+    		doc1.close();
+    		doc1 = null;
+    	    fis.close();
+    	    fis = null;
+    		
+    	    return saveDocContentToFile(content.toString().trim(), path, name);
+		} catch (Exception e) {
+			if(doc1 != null)
+			{
+				try {
+					doc1.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(fis != null)
+			{
+				try {
+					fis.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+    		e.printStackTrace();
+    		return false;
+    	}
+	}
+
+	public static boolean extractToFileForWord2007(String filePath, String path, String name)
+	{
+    	FileInputStream fis = null;
+    	XWPFDocument xdoc = null;
+    	XWPFWordExtractor extractor = null;
+    	
+		try {
+	    	
+			File file = new File(filePath);
+	    	String str = "";
+	    	fis = new FileInputStream(file);
+	    	xdoc = new XWPFDocument(fis);
+    		extractor = new XWPFWordExtractor(xdoc);
+        	
+    		str = extractor.getText();
+        	
+        	extractor.close();
+        	extractor = null;
+        	xdoc.close();
+        	xdoc = null;
+        	fis.close();
+        	fis = null;
+        	
+    	    return saveDocContentToFile(str.toString().trim(), path, name);
+		} catch (Exception e) {			
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(xdoc != null)
+			{
+				try {
+					xdoc.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(fis != null)
+			{
+				try {
+					fis.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean extractToFileForExcel(String filePath, String path, String name)
+	{
+		InputStream is = null;  
+        HSSFWorkbook workBook = null;  
+        ExcelExtractor extractor = null; 
+        
+        try {  
+	
+			is = new FileInputStream(filePath);  
+			workBook = new HSSFWorkbook(new POIFSFileSystem(is));  
+
+            extractor=new ExcelExtractor(workBook);  
+            extractor.setFormulasNotResults(false);  
+            extractor.setIncludeSheetNames(true);  
+            String text = extractor.getText();  
+            
+            extractor.close();
+            extractor = null;
+            workBook.close();
+            workBook = null;
+            is.close();
+            is = null;
+              
+            return saveDocContentToFile( text.toString().trim(), path, name);
+        } catch(Exception e) {
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(workBook != null)
+			{
+				try {
+					workBook.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+        	
+            e.printStackTrace();
+            return false;
+        }
+        
+        return true;
+	}
+
+	public static boolean extractToFileForExcel2007(String filePath, String path, String name)
+	{
+        InputStream is = null;
+        XSSFWorkbook workBook = null;  
+        XSSFExcelExtractor extractor = null;
+        
+		try {  
+	        is = new FileInputStream(filePath);
+        	workBook = new XSSFWorkbook(is);  
+            extractor = new XSSFExcelExtractor(workBook);  
+            String text = extractor.getText();  
+
+            extractor.close();
+            extractor = null;
+            workBook.close();
+            workBook = null;
+            is.close();
+            is = null;
+            
+            return saveDocContentToFile( text.toString().trim(), path, name);
+		} catch (Exception e) { 
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(workBook != null)
+			{
+				try {
+					workBook.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+        	e.printStackTrace();  
+        	return false;
+        }       
+	}
+
+	public static boolean extractToFileForPPT(String filePath, String path, String name)
+	{
+		InputStream is = null;
+        PowerPointExtractor extractor = null;  
+        
+		try {
+			is = new FileInputStream(filePath);
+            extractor = new PowerPointExtractor(is);  
+            String text=extractor.getText();  
+            
+            extractor.close();
+            extractor = null;
+            is.close();      
+            is = null;
+            
+            return saveDocContentToFile( text.toString().trim(), path, name);
+		} catch (Exception e) {  
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+            e.printStackTrace(); 
+            return false;
+        }          
+	}
+
+	public static boolean extractToFileForPPT2007(String filePath, String path, String name)
+	{
+		InputStream is = null; 
+        XMLSlideShow slide = null;
+        XSLFPowerPointExtractor extractor = null;  
+        
+        try {  
+			is = new FileInputStream(filePath); 
+	        slide = new XMLSlideShow(is);
+            extractor=new XSLFPowerPointExtractor(slide);  
+            String text=extractor.getText();  
+            
+            extractor.close();
+            extractor = null;
+            slide.close();
+            slide = null;
+            is.close();
+            is = null;
+            
+            return saveDocContentToFile( text.toString().trim(), path, name);
+        } catch (Exception e) {  
+			if(extractor != null)
+			{
+				try {
+					extractor.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(slide != null)
+			{
+				try {
+					slide.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		
+			if(is != null)
+			{
+				try {
+					is.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+        	e.printStackTrace(); 
+            return false;
+        }
 	}
 	
+	public static boolean extractToFileForPdf(String filePath, String path, String name)
+	{
+		PDDocument document = null;
+				
+		try
+		{
+			File pdfFile=new File(filePath);			
+			document=PDDocument.load(pdfFile);
+			int pages = document.getNumberOfPages();
+			// 读文本内容
+			PDFTextStripper stripper=new PDFTextStripper();
+			// 设置按顺序输出
+			stripper.setSortByPosition(true);
+			stripper.setStartPage(1);
+			stripper.setEndPage(pages);
+			String content = stripper.getText(document);
+			
+			document.close();
+			document = null;
+			
+            return saveDocContentToFile( content.toString().trim(), path, name);
+	   }
+	   catch(Exception e)
+	   {
+			if(document != null)
+			{
+				try {
+					document.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}			
+			e.printStackTrace();
+			return false;
+	   }
+	}
 	/****************** 线程锁接口 *********************************************/
 	protected static final Object syncLock = new Object(); 
 	//释放线程锁
