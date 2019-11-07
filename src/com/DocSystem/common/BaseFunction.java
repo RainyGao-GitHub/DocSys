@@ -672,6 +672,16 @@ public class BaseFunction{
 		return webTmpPath;
 	}
 	
+	protected String getWebTmpPathForPreview() {
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        
+        String webTmpPath =  wac.getServletContext().getRealPath("/") +  "tmp/preview/";
+        webTmpPath = localDirPathFormat(webTmpPath);
+        System.out.println("getWebTmpPathForPreview() webTmpPath:" + webTmpPath);
+		return webTmpPath;
+	}
+
+	
 	//获取本地仓库默认存储位置（相对于仓库的存储路径）
 	protected String getDefaultLocalVerReposPath(String path) {
 		String localSvnPath = path + "DocSysVerReposes/";

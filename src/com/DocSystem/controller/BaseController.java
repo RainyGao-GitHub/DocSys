@@ -343,7 +343,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private boolean isDocRemoteChanged(Repos repos, Doc dbDoc, Doc remoteEntry) 
+	protected boolean isDocRemoteChanged(Repos repos, Doc dbDoc, Doc remoteEntry) 
 	{
 		if(repos.getVerCtrl() == 0)
 		{
@@ -3392,6 +3392,36 @@ public class BaseController  extends BaseFunction{
 		
 		Doc remoteDoc = gitUtil.getDoc(doc, revision);
 		return remoteDoc;
+	}
+	
+	protected Doc indexGetDoc(Repos repos, Doc doc, boolean dupCheck) 
+	{
+		Doc qDoc = new Doc();
+		qDoc.setVid(doc.getVid());
+		qDoc.setDocId(doc.getDocId());
+		
+		String indexLib = getIndexLibPath(repos, 0);
+		List<Doc> list = LuceneUtil2.getDocList(repos, doc, indexLib);
+		if(list == null || list.size() == 0)
+		{
+			return null;
+		}
+		
+		if(dupCheck)
+		{
+			if(list.size() > 1)
+			{
+				System.out.println("indexGetDoc() indexLib存在多个DOC记录(" + doc.getName() + ")，自动清理"); 
+				for(int i=0; i <list.size(); i++)
+				{
+					//delete Doc directly
+					LuceneUtil2.deleteDoc(list.get(i), indexLib);
+				}
+				return null;
+			}
+		}
+		
+		return null;
 	}
 
 	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
