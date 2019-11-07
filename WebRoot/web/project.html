@@ -284,7 +284,7 @@
 	                    </button>
 	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
 	                    </button>
-	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()">关闭备注
+	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()">备注
 	                   	</button>
         		</div>
          	</div>
@@ -535,7 +535,7 @@
 	var gInitParentPath = "";
 	var gInitDocName = ""; 
 	var gInitEdit = false;
-	var gInitShowType = 1; //默认显示DOc
+	var gInitShowType = 2; //默认显示备注
 	//Doc Info: 当前页面显示的文件信息
 	var gDoc = null; 
 	var gDocId = 0;
@@ -544,7 +544,7 @@
 	var gDocContent = "";
 	var gTmpSavedContent = "";
 	var gEdit = false; 
-	var gShowType = 1; //默认显示RealDoc
+	var gShowType = 2; //默认显示备注
 
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -1648,7 +1648,7 @@
 	//读取文件信息
     function getAndShowDoc(node, edit)
 	{	
-		console.log("getAndShowDoc() node:", node);
+		console.log("getAndShowDoc() gShowType:" + gShowType + " node:", node);
       	if(!node || node == null || node.id == 0)	//undefine do clean the info of rightDiv
       	{
       		cleanDocPreview();
@@ -1699,7 +1699,6 @@
 							
 						if(gShowType == 1)	//显示预览
 						{	
-						    $("#btnSwitchShow").text("备注");
 							if(true == isPicture(doc.name))
 							{
 				    		    $("#btnExitEdit").hide();
@@ -1728,7 +1727,6 @@
 						}
 						else	//显示备注
 						{
-			    		     $("#btnSwitchShow").text("关闭备注");
 			    			 $("#btnExitEdit").hide();
 			    		     $("#btnSaveWiki").hide(); 
 			    		     //$("#btnEditWiki").show();
@@ -1801,7 +1799,7 @@
 	
 	function showDocContent(edit)
 	{
-		//console.log("showDocContent gDocContent",gDocContent);
+		console.log("showDocContent gDocContent",gDocContent);
 		console.log("showDocContent gDocId:" + gDocId);
 
 		DocEdit.loadmd(gDocContent, edit);
@@ -3445,14 +3443,21 @@ function CompareObj(objA, objB, flag) {
 
 	function switchShowMode()
 	{
+		console.log("switchShowMode gShowType:" + gShowType);
 		 if(gShowType == 2)	//Swith To 显示预览
 	   	 {
 			gShowType = 1;
+		    $("#btnSwitchShow").text("备注");
 	     }
 	     else
 	     {
 			 gShowType = 2;	    	 
+			 $("#btnSwitchShow").text("关闭备注");
 	     }
+		 console.log("switchShowMode gShowType:" + gShowType);
+
+		 //showMode
+		 updateUrl();
 		 
 		 //清除文件预览内容
 		 gDocContent = "";
@@ -3855,7 +3860,6 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		gInitEdit = getQueryString("edit");
-		gInitShowType = getQueryString("showType");
 		if(!gInitEdit)
 		{
 			gInitEdit = false;
@@ -3864,15 +3868,25 @@ function CompareObj(objA, objB, flag) {
 		{
 			gInitEdit = false;
 		}		
-		
+
+		gInitShowType = getQueryString("showType");
 		if(!gInitShowType)
 		{
-			gShowType = 1;
+			//保持页面默认的gShowType
 		}
 		else
 		{
 			gShowType = gInitShowType;
 		}
+		if(gShowType == 1)
+		{
+		    $("#btnSwitchShow").text("备注");
+		}
+		else
+		{
+		    $("#btnSwitchShow").text("关闭备注");			
+		}
+		
 		console.log("globalVarInit() gReposId:" + gReposId  + " gInitDocId:"+gInitDocId + " gInitParentPath:" + gInitParentPath + " gInitDocName:" + gInitDocName + " gInitEdit:" + gInitEdit);
    	}
     
