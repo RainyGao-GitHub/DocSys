@@ -5623,7 +5623,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
-		return saveDocContentToFile(doc, doc.getLocalRootPath() + doc.getPath(), doc.getName(), rt);
+		return saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
@@ -5633,7 +5633,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
 		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
-		return saveDocContentToFile(doc, userTmpDir, doc.getDocId() + "_" + doc.getName(), rt);
+		return saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName());
 	}
 	
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
@@ -5645,7 +5645,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		return saveDocContentToFile(doc, doc.getLocalVRootPath() + docVName + "/", "content.md", rt);
+		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md");
 	}
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
@@ -5657,192 +5657,13 @@ public class BaseController  extends BaseFunction{
 	{	
 		String docVName = getVDocName(doc);
 		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
-		return saveDocContentToFile(doc,  userTmpDir + docVName + "/", "content.md", rt);
+		return saveDocContentToFile(doc.getContent(),  userTmpDir + docVName + "/", "content.md");
 	}
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String docVName = getVDocName(doc);		
 		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
 		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md");
-	}
-	
-	private boolean isTextFile(String name) {
-		String fileSuffix = getFileSuffix(name);
-		return isText(fileSuffix);
-	}
-	
-	protected boolean isPdf(String fileSuffix) {
-		if(fileSuffix == null)
-		{
-			//"未知文件类型"
-			return false;
-		}
-
-		switch(fileSuffix)
-		{
-		case "pdf":
-			return true;
-		default:
-			break;
-		}
-		return false;
-	}
-
-	
-	protected static boolean isText(String fileSuffix) {
-		if(fileSuffix == null)
-		{
-			//"未知文件类型"
-			return false;
-		}
-
-		switch(fileSuffix)
-		{
-		case "txt":
-		case "log":	
-		case "md":	
-		case "py":
-		case "java":
-		case "cpp":
-		case "hpp":
-		case "c":
-		case "h":
-		case "json":
-		case "xml":
-		case "html":
-		case "sql":
-			return true;
-		default:
-			break;
-		}
-		return false;
-	}
-	protected boolean isPicture(String fileSuffix) {
-		if(fileSuffix == null)
-		{
-			//"未知文件类型"
-			return false;
-		}
-		
-		switch(fileSuffix)
-		{
-		case "jpg":
-		case "jpeg":
-		case "png":
-		case "gif":
-		case "bmp":
-		case "mpg":
-			return true;
-		default:
-			break;
-		}
-		return false;
-	}
-	
-	protected boolean isOffice(String fileSuffix) {
-		if(fileSuffix == null)
-		{
-			//"未知文件类型"
-			return false;
-		}
-		
-		switch(fileSuffix)
-		{
-		case "doc":
-		case "docx":
-		case "xls":
-		case "xlsx":
-		case "ppt":
-		case "pptx":
-			return true;
-		default:
-			break;
-		}
-		return false;
-	}	
-
-	protected boolean saveDocContentToFile(Doc doc, String path, String name, ReturnAjax rt)
-	{
-		if(isTextFile(name) == false)
-		{
-			return false;
-		}
-		
-		String content = doc.getContent();
-		if(content == null)
-		{
-			System.out.println("saveDocContentToFile() content is null");
-			return false;
-		}
-		
-		File folder = new File(path);
-		if(!folder.exists())
-		{
-			System.out.println("saveDocContentToFile() path:" + path + " not exists!");
-			if(folder.mkdirs() == false)
-			{
-				docSysDebugLog("saveDocContentToFile() mkdir path:" + path + " Failed!", rt);
-				return false;
-			}
-		}
-		
-		//创建文件输入流
-		String filePath = path + name;
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(filePath);
-		} catch (FileNotFoundException e) {
-			System.out.println("saveVirtualDocContent() new FileOutputStream failed");
-			docSysDebugLog(e.toString(), rt);
-			return false;
-		}
-		try {
-			byte[] buff = content.getBytes();
-			out.write(buff, 0, buff.length);
-			//关闭输出流
-			out.close();
-		} catch (IOException e) {
-			System.out.println("saveVirtualDocContent() out.write exception");
-			docSysDebugLog(e.toString(), rt);
-			return false;
-		}		
-		return true;
-		
-	}
-	
-	protected String readDocContentFromFile(String path, String name) 
-	{
-		if(isTextFile(name) == false)
-		{
-			return null;
-		}
-		
-		String filePath = path + name;
-		try 
-		{			
-			File file = new File(filePath);
-			if(!file.exists() || !file.isFile())
-			{
-				return null;
-			}
-			
-			int fileSize = (int) file.length();
-			//System.out.println("fileSize:[" + fileSize + "]");
-
-			byte buffer[] = new byte[fileSize];
-	
-			FileInputStream in;
-			in = new FileInputStream(filePath);
-			in.read(buffer, 0, fileSize);
-			in.close();	
-							
-			String content = new String(buffer);
-			//System.out.println("content:[" + content + "]");
-			return content;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
 	}
 	
 	protected boolean deleteVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) {
