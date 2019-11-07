@@ -3441,24 +3441,40 @@ function CompareObj(objA, objB, flag) {
 	}
 	
 
-	function switchShowMode()
+	function switchShowMode(showType)
 	{
-		console.log("switchShowMode gShowType:" + gShowType);
-		 if(gShowType == 2)	//Swith To 显示预览
+		 console.log("switchShowMode showType:" + showType);
+		 
+		 if(!showType)	//showType为定义则进行切换
+		 {
+			 console.log("switchShowMode gShowType:" + gShowType);			 
+			 if(gShowType == 2)	//Swith To 显示预览
+		   	 {
+				gShowType = 1;
+			 }
+		     else
+		     {
+				 gShowType = 2;	    	 
+			 }
+		 }
+		 else
+		 {
+			 gShowType = showType;
+		 }
+		 
+		 console.log("switchShowMode after switch gShowType:" + gShowType);
+		 
+		 if(gShowType == 1)	//预览
 	   	 {
-			gShowType = 1;
 		    $("#btnSwitchShow").text("备注");
 	     }
 	     else
 	     {
-			 gShowType = 2;	    	 
 			 $("#btnSwitchShow").text("关闭备注");
 	     }
-		 console.log("switchShowMode gShowType:" + gShowType);
 
-		 //showMode
 		 updateUrl();
-		 
+
 		 //清除文件预览内容
 		 gDocContent = "";
 		 gTmpSavedContent = "";
@@ -4369,7 +4385,10 @@ function CompareObj(objA, objB, flag) {
 						{divider: true},
 						{text: '查看备注', action: function(e){
 								e.preventDefault();
-					 			getAndShowDoc(curRightClickedDocListNode);
+								gShowType = 2; //切换到备注模式
+								$("#btnSwitchShow").text("关闭备注");
+							    updateUrl();
+								getAndShowDoc(curRightClickedDocListNode);
 					 			showRightDiv();
 							}
 						},
