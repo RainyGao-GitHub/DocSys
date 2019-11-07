@@ -1682,6 +1682,7 @@
 					//当前有打开的文件，需要先退出当前的编辑
 	            	if(gDocId && gDocId != 0 && gDocId != doc.docId)
 	            	{
+	            		//如果是非阻塞的话执行会有问题
 	                	DocEdit.exitEdit();
 	            	}
             		
@@ -1713,9 +1714,10 @@
 	//showGDoc根据showType和edit显示gDoc
     function showGDoc(showType, edit)
     {
+		var docName = gDoc.name;
 		if(showType == 1)	//显示预览
 		{	
-			if(true == isPicture(doc.name))
+			if(true == isPicture(docName))
 			{
 			    $("#btnExitEdit").hide();
 		      	$("#btnSaveWiki").hide(); 
@@ -1723,7 +1725,7 @@
 		      	$("#docPreview").show();
 	            setImgPreview(ret);
 			}
-			else if(true == isTextFile(doc.name))
+			else if(true == isTextFile(docName))
 			{
 				 $("#btnExitEdit").hide();
 			     $("#btnSaveWiki").hide(); 
