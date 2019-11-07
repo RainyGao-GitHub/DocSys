@@ -608,7 +608,7 @@ public class LuceneUtil2   extends BaseFunction
     	    fis.close();
     	    fis = null;
     		
-    	    addIndex(doc, content.toString().trim(), indexLib);
+    	    return addIndex(doc, content.toString().trim(), indexLib);
 		} catch (Exception e) {
 			if(doc1 != null)
 			{
@@ -632,8 +632,7 @@ public class LuceneUtil2   extends BaseFunction
 			
     		e.printStackTrace();
     		return false;
-    	}
-    	return true;		
+    	}	
 	}
 
 	public static boolean addIndexForWord2007(String filePath, Doc doc, String indexLib)
@@ -659,7 +658,7 @@ public class LuceneUtil2   extends BaseFunction
         	fis.close();
         	fis = null;
         	
-        	addIndex(doc,str.toString().trim(), indexLib);
+        	return addIndex(doc,str.toString().trim(), indexLib);
 		} catch (Exception e) {			
 			if(extractor != null)
 			{
@@ -694,7 +693,6 @@ public class LuceneUtil2   extends BaseFunction
 			e.printStackTrace();
 			return false;
 		}
-    	return true;
 	}
 
 	public static boolean addIndexForExcel(String filePath, Doc doc, String indexLib)
@@ -720,7 +718,7 @@ public class LuceneUtil2   extends BaseFunction
             is.close();
             is = null;
               
-            addIndex(doc, text.toString().trim(), indexLib);
+            return addIndex(doc, text.toString().trim(), indexLib);
         } catch(Exception e) {
 			if(extractor != null)
 			{
@@ -755,8 +753,6 @@ public class LuceneUtil2   extends BaseFunction
             e.printStackTrace();
             return false;
         }
-        
-        return true;
 	}
 
 	public static boolean addIndexForExcel2007(String filePath, Doc doc, String indexLib)
@@ -778,7 +774,7 @@ public class LuceneUtil2   extends BaseFunction
             is.close();
             is = null;
             
-            addIndex(doc, text.toString().trim(), indexLib);
+            return addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) { 
 			if(extractor != null)
 			{
@@ -813,7 +809,6 @@ public class LuceneUtil2   extends BaseFunction
         	e.printStackTrace();  
         	return false;
         }       
-        return true;
 	}
 
 	public static boolean addIndexForPPT(String filePath, Doc doc, String indexLib)
@@ -831,7 +826,7 @@ public class LuceneUtil2   extends BaseFunction
             is.close();      
             is = null;
             
-            addIndex(doc, text.toString().trim(), indexLib);
+            return addIndex(doc, text.toString().trim(), indexLib);
 		} catch (Exception e) {  
 			if(extractor != null)
 			{
@@ -855,7 +850,6 @@ public class LuceneUtil2   extends BaseFunction
             e.printStackTrace(); 
             return false;
         }          
-		return true;
 	}
 
 	public static boolean addIndexForPPT2007(String filePath, Doc doc, String indexLib)
@@ -877,7 +871,7 @@ public class LuceneUtil2   extends BaseFunction
             is.close();
             is = null;
             
-            addIndex(doc, text.toString().trim(), indexLib);
+            return addIndex(doc, text.toString().trim(), indexLib);
         } catch (Exception e) {  
 			if(extractor != null)
 			{
@@ -911,7 +905,6 @@ public class LuceneUtil2   extends BaseFunction
         	e.printStackTrace(); 
             return false;
         }
-        return true;
 	}
 	
 	public static boolean addIndexForPdf(String filePath, Doc doc, String indexLib)
@@ -934,7 +927,7 @@ public class LuceneUtil2   extends BaseFunction
 			document.close();
 			document = null;
 			
-            addIndex(doc, content.toString().trim(), indexLib);
+            return addIndex(doc, content.toString().trim(), indexLib);
 	   }
 	   catch(Exception e)
 	   {
@@ -950,7 +943,6 @@ public class LuceneUtil2   extends BaseFunction
 			e.printStackTrace();
 			return false;
 	   }
-	   return true;
 	}
 
 	public static boolean addIndexForFile(String filePath, Doc doc, String indexLib)
