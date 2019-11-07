@@ -2041,8 +2041,6 @@ public class BaseFunction{
             e.printStackTrace();
             return false;
         }
-        
-        return true;
 	}
 
 	public static boolean extractToFileForExcel2007(String filePath, String path, String name)
