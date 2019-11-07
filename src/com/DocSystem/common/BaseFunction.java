@@ -606,7 +606,32 @@ public class BaseFunction{
 	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
-		createDir(userTmpDir);
+		//createDir(userTmpDir);
+		return userTmpDir;
+	}
+
+	protected String getReposUserTmpPathForRDOC(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/RDOC/";
+		return userTmpDir;
+	}
+	
+	protected String getReposUserTmpPathForVDOC(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/VDOC/";
+		return userTmpDir;
+	}
+	
+	protected String getReposUserTmpPathForPreview(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/preview/";
+		return userTmpDir;
+	}
+
+	protected String getReposUserTmpPathForDownload(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/download/";
+		return userTmpDir;
+	}
+	
+	protected String getReposUserTmpPathForUpload(Repos repos, User login_user) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/upload/";
 		return userTmpDir;
 	}
 	
