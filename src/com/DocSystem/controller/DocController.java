@@ -1153,6 +1153,13 @@ public class DocController extends BaseController{
 		boolean ret = false;
 		if(docType == 1)
 		{
+			if(isTextFile(name) == false)
+			{
+				docSysErrorLog(name + " 不是文本文件，禁止修改！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			
 			if(commitMsg == null)
 			{
 				commitMsg = "更新 " + path + name;
@@ -2070,6 +2077,7 @@ public class DocController extends BaseController{
 	
 	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, User login_user, String fileSuffix) 
 	{
+		
 		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos,login_user);
 		File file = new File(userTmpDir, doc.getDocId() + "_" + doc.getName());
 		if(file.exists())
@@ -2152,19 +2160,32 @@ public class DocController extends BaseController{
 			return;
 		}
 		doc.setType(dbDoc.getType());
-		
-		if(dbDoc.getType() == 1)
-		{
-			Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
-			rt.setDataEx(downloadDoc);
-		}
-		
+				
 		String content = null;
 		String tmpSavedContent = null;
 		if(docType == 1)
 		{
-			content = readRealDocContent(repos, doc);        
-			tmpSavedContent = readTmpRealDocContent(repos, doc, login_user);
+			if(dbDoc.getType() == 1)
+			{
+				String fileSuffix = getFileSuffix(name);
+				if(isText(fileSuffix))
+				{
+					content = readRealDocContent(repos, doc);
+					tmpSavedContent = readTmpRealDocContent(repos, doc, login_user);
+				}
+				else if(isOffice(fileSuffix) || isPdf(fileSuffix))
+				{
+					if(checkAndGenerateOfficeContent(repos, doc, login_user, fileSuffix))
+					{
+						content = readOfficeContent(repos, doc, login_user);
+					}
+				}
+				else if(isPicture(fileSuffix))
+				{
+					Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+					rt.setDataEx(downloadDoc);
+				}
+			}
 		}
 		else
 		{

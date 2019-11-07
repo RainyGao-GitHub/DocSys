@@ -623,37 +623,43 @@ public class BaseFunction{
 	//UserTmp Path on every repos, it was recommended to use, that have good copy performance
 	protected String getReposUserTmpPath(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/";
-		//createDir(userTmpDir);
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 
 	protected String getReposUserTmpPathForOfficeTmp(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/OfficeTmp/";
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
 	protected String getReposUserTmpPathForRDOC(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/RDOC/";
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
 	protected String getReposUserTmpPathForVDOC(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/VDOC/";
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
 	protected String getReposUserTmpPathForPreview(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/preview/";
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 
 	protected String getReposUserTmpPathForDownload(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/download/";
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
 	protected String getReposUserTmpPathForUpload(Repos repos, User login_user) {
 		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/" + login_user.getId() + "/upload/";
+		createDir(userTmpDir);
 		return userTmpDir;
 	}
 	
@@ -1168,12 +1174,7 @@ public class BaseFunction{
     }
     
 	protected static boolean saveDocContentToFile(String content, String path, String name)
-	{
-		if(isTextFile(name) == false)
-		{
-			return false;
-		}
-		
+	{	
 		if(content == null)
 		{
 			System.out.println("saveDocContentToFile() content is null");
