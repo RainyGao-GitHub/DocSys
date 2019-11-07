@@ -1892,9 +1892,9 @@ public class DocController extends BaseController{
 		}
 		
 
-		String webTmpPath = getWebTmpPath();
+		String webTmpPath = getWebTmpPathForPreview();
 		String dstName = repos.getId() + "_" + doc.getDocId() + ".pdf";
-		String dstPath = webTmpPath + "preview/" + dstName;
+		String dstPath = webTmpPath + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 
 		String fileLink = "/DocSystem/tmp/preview/" + dstName;
@@ -1903,21 +1903,16 @@ public class DocController extends BaseController{
 		//预览文件已存在
 		if(file.exists())
 		{
-			//对于文件管理系统类型仓库，如果文件本地未变更则不需要重新生成预览文件
-			if(repos.getType() == 1)
+			if(isUpdateNeeded(repos, doc) == false)
 			{
-				Doc dbDoc = dbGetDoc(repos, doc, false);
-				if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
-				{
-					rt.setData(fileLink);
-					writeJson(rt, response);
-					return;
-				}
+				rt.setData(fileLink);
+				writeJson(rt, response);
+				return;				
 			}
 		}
 		else
 		{
-			File previewDir = new File(webTmpPath,"preview");
+			File previewDir = new File(webTmpPath);
 			if(!previewDir.exists())
 			{
 				previewDir.mkdirs();
@@ -1957,6 +1952,40 @@ public class DocController extends BaseController{
 		docSysDebugLog("srcPath:"+localEntryPath, rt);
 		writeJson(rt, response);
 		return;
+	}
+
+	private boolean isUpdateNeeded(Repos repos, Doc doc) {
+		Doc localEntry = null;
+		Doc indexDoc = null;
+		switch(repos.getType())
+		{
+		case 1: //FSM
+			localEntry = fsGetDoc(repos, doc);
+			Doc dbDoc = dbGetDoc(repos, doc, false);
+			if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
+			{
+				return false;
+			}
+			return true;
+		case 2:
+			localEntry = fsGetDoc(repos, doc);
+			indexDoc = indexGetDoc(repos, doc, false);
+			if(false == isDocLocalChanged(indexDoc,localEntry))	//本地未变化，则直接返回链接
+			{
+				return false;
+			}
+			return true;
+		case 3:
+		case 4:
+			Doc remoteEntry = verReposGetDoc(repos, doc, null);
+			indexDoc = indexGetDoc(repos, doc, false);
+			if(false == isDocRemoteChanged(repos, indexDoc,remoteEntry))	//本地未变化，则直接返回链接
+			{
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	private String getCheckSum(File localEntry, int chunkSize) 

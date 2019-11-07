@@ -29,6 +29,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.NumericRangeQuery;
@@ -36,6 +38,7 @@ import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -180,24 +183,77 @@ public class LuceneUtil2   extends BaseFunction
         document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
         document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
         document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
-        document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	        
         document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-        Long size = doc.getSize();
-        if(size == null)
+        //Size
+        if(doc.getSize() != null)
         {
-        	size = (long) 0;
+            document.add(new LongField("size", doc.getSize(), Store.YES));
         }
-        document.add(new LongField("size", size, Store.YES));
-        Long latestEditTime = doc.getLatestEditTime();
-        if(latestEditTime == null)
+        //latestEditTime
+        if(doc.getLatestEditTime() != null)
         {
-        	latestEditTime = (long) 0;
+            document.add(new LongField("latestEditTime", doc.getLatestEditTime(), Store.YES));
         }
-        document.add(new LongField("latestEditTime", latestEditTime, Store.YES));
+        //Revision
+        if(doc.getRevision() != null)
+        {
+        	document.add(new Field("revision", doc.getRevision(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));
+        }
         
+        //Content
+        if(content != null)
+        {
+            document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	
+        }        
 		return document;
 	}
 	
+	public static Doc BuildDoc(Document document)
+	{
+		Doc doc = new Doc();
+    	//Set Doc 
+		String strVid = document.get("vid");
+    	if(strVid != null)
+    	{
+    		doc.setVid(Integer.parseInt(strVid));
+    	}
+
+    	String strPid = document.get("pid");
+	   	if(strPid != null)
+    	{
+    		doc.setPid(Long.parseLong(strPid));
+    	}
+
+    	String strDocId = document.get("docId");
+	   	if(strDocId != null)
+    	{
+    		doc.setDocId(Long.parseLong(strDocId));
+    	}
+	   	
+    	String strType = document.get("type");
+    	if(strType != null)
+    	{
+    		doc.setType(Integer.parseInt(strType));
+    	}
+    	
+    	
+    	String strSize = document.get("size");
+	   	if(strSize != null)
+    	{
+    		doc.setSize(Long.parseLong(strSize));
+    	}
+	   	
+    	String strLatestEditTime = document.get("latestEditTime");
+	   	if(strLatestEditTime != null)
+    	{
+    		doc.setLatestEditTime(Long.parseLong(strLatestEditTime));
+    	}
+
+	   	doc.setPath(document.get("path"));
+	   	doc.setName(document.get("name"));
+	   	doc.setRevision(document.get("revision"));
+    	return doc;
+    }
 
 	/**
 	 * 功能: 在指定的索引库里更新索引文件
@@ -1029,5 +1085,142 @@ public class LuceneUtil2   extends BaseFunction
 		    return false;
 		}
 		return true;
+	}
+	
+    /**
+     * 	关键字模糊查询， 返回docId List
+     * @param weight 
+     * @param parentPath 
+     * @param <SearchResult>
+     * @param str: 关键字
+     * @param indexLib: 索引库名字
+     */
+	public static List<Doc> multiQueryForDoc(Repos repos, List<String> fileds, List<String> strs, String indexLib)
+	{
+		if(fileds == null || strs == null)
+		{
+			System.out.println("multiQuery() 查询条件不能为空！");
+			return null;
+		}
+		
+		if(fileds.size() != strs.size())
+		{
+			return null;
+		}
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+       
+        
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("multiQuery() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        BooleanQuery builder = new BooleanQuery();
+	        for(int i=0; i< fileds.size(); i++)
+	        {
+	        	String field = fileds.get(i);
+	        	String str = strs.get(i);
+	        	Query query = new TermQuery(new Term(field,str));
+	        	builder.add( query, Occur.MUST);
+	        }
+	        
+	        List<Doc> docList = new ArrayList<Doc>();
+	        TopDocs hits = isearcher.search( builder, 1000);
+			for ( ScoreDoc scoreDoc : hits.scoreDocs )
+		    {
+		         Document document = isearcher.doc( scoreDoc.doc );
+		         Doc doc = BuildDoc(document);
+		         docList.add(doc);
+		    }
+			
+	        ireader.close();
+	        ireader = null;
+	        directory.close();
+	        directory=null;        
+			return docList;
+		} catch (Exception e) {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			
+			System.out.println("search() 异常");
+			e.printStackTrace();
+			return null;
+		}
+    }
+	
+    //在IndexLib中根据doc进行搜索
+	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib)
+	{
+		List<String> fields = new ArrayList<String>();
+		List<String> strs = new ArrayList<String>();
+
+		if(buildDocQueryConditions(doc, fields, strs) == false)
+		{
+			return null;
+		}
+		
+		return multiQueryForDoc(repos, fields, strs, indexLib);
+	}
+	
+	private static boolean buildDocQueryConditions(Doc doc, List<String> fields, List<String> strs) {
+		if(doc.getVid() != null)
+		{
+			fields.add("vid");
+			strs.add(doc.getVid() + "");
+		}
+		if(doc.getPid() != null)
+		{
+			fields.add("pid");
+			strs.add(doc.getPid() + "");
+		}
+		if(doc.getDocId() != null)
+		{
+			fields.add("docId");
+			strs.add(doc.getDocId() + "");
+		}
+		if(doc.getPath() != null)
+		{
+			fields.add("path");
+			strs.add(doc.getPath());
+		}
+		if(doc.getName() != null)
+		{
+			fields.add("name");
+			strs.add(doc.getName());
+		}
+		return false;
+	}
+
+	public static boolean deleteDoc(Doc doc, String indexLib) 
+	{
+		return deleteIndex(doc, indexLib);
 	}
 }
