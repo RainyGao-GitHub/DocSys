@@ -1673,69 +1673,29 @@
             	if( "ok" == ret.status )
             	{
             		var doc = ret.data
-
+  
+            		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId + " gShowType:" + gShowType);
+            		
             		//更新DocList
             		showDocList(doc);
             		
-            		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId + " gShowType:" + gShowType);
-                	if(!gDocId || gDocId == 0 || gDocId != doc.docId)
-            		{
-						//当前有打开的文件，需要先退出编辑状态
-		            	if(gDocId && gDocId != 0)
-		            	{
-		                	DocEdit.exitEdit();
-		            	}
-	            		
-                		//Show Doc
-	                	$('#filetitle').html(doc.name);
-	                    gDoc = doc;
-                		gDocId = doc.docId;
-	            		gParentPath = doc.path;
-	            		gDocName = doc.name;
-	            		updateUrl();
+					//当前有打开的文件，需要先退出当前的编辑
+	            	if(gDocId && gDocId != 0 && gDocId != doc.docId)
+	            	{
+	                	DocEdit.exitEdit();
+	            	}
+            		
+                	//Show Doc
+	                $('#filetitle').html(doc.name);
+	                gDoc = doc;
+                	gDocId = doc.docId;
+	            	gParentPath = doc.path;
+	            	gDocName = doc.name;
+	            	updateUrl();
 	                    
-	                    gDocContent = parseDocContent(ret.data.content);
-	                    gTmpSavedContent = parseDocContent(ret.msgData);                    
-							
-						if(gShowType == 1)	//显示预览
-						{	
-							if(true == isPicture(doc.name))
-							{
-				    		    $("#btnExitEdit").hide();
-				    	      	$("#btnSaveWiki").hide(); 
-				    			$("#vdocPreview").hide();
-				    	      	$("#docPreview").show();
-			                    setImgPreview(ret);
-							}
-							else if(true == isTextFile(doc.name))
-							{
-				    			 $("#btnExitEdit").hide();
-				    		     $("#btnSaveWiki").hide(); 
-				    		     $("#vdocPreview").show();	      	
-				    		     $("#docPreview").hide();
-							  	 $(".editormd-preview-close-btn").show();//css("display","none");
-								 showDocContent(edit);
-							}
-							else
-							{
-				    		     $("#btnExitEdit").hide();
-				    	      	 $("#btnSaveWiki").hide(); 
-				    			 $("#vdocPreview").hide();
-				    	      	 $("#docPreview").show();
-							     setImgPreview(null);
-							}
-						}
-						else	//显示备注
-						{
-			    			 $("#btnExitEdit").hide();
-			    		     $("#btnSaveWiki").hide(); 
-			    		     //$("#btnEditWiki").show();
-			    		     $("#vdocPreview").show();	      	
-			    		     $("#docPreview").hide();
-						  	$(".editormd-preview-close-btn").show();//css("display","none");
-							showDocContent(edit);
-						}
-            		}
+	                gDocContent = parseDocContent(ret.data.content);
+	                gTmpSavedContent = parseDocContent(ret.msgData);                    					
+	                showGDoc(gShowType, edit);
                 }
                 else
                 {
@@ -1749,6 +1709,57 @@
             }
         });
     }
+	
+	//showGDoc根据showType和edit显示gDoc
+    function showGDoc(showType, edit)
+    {
+		if(showType == 1)	//显示预览
+		{	
+			if(true == isPicture(doc.name))
+			{
+			    $("#btnExitEdit").hide();
+		      	$("#btnSaveWiki").hide(); 
+				$("#vdocPreview").hide();
+		      	$("#docPreview").show();
+	            setImgPreview(ret);
+			}
+			else if(true == isTextFile(doc.name))
+			{
+				 $("#btnExitEdit").hide();
+			     $("#btnSaveWiki").hide(); 
+			     $("#vdocPreview").show();	      	
+			     $("#docPreview").hide();
+			  	 $(".editormd-preview-close-btn").show();//css("display","none");
+				 showGDocContent(edit);
+			}
+			else
+			{
+			     $("#btnExitEdit").hide();
+		      	 $("#btnSaveWiki").hide(); 
+				 $("#vdocPreview").hide();
+		      	 $("#docPreview").show();
+			     setImgPreview(null);
+			}
+		}
+		else	//显示备注
+		{
+			 $("#btnExitEdit").hide();
+		     $("#btnSaveWiki").hide(); 
+		     //$("#btnEditWiki").show();
+		     $("#vdocPreview").show();	      	
+		     $("#docPreview").hide();
+		  	$(".editormd-preview-close-btn").show();//css("display","none");
+			showGDocContent(edit);
+		}
+    }
+    
+	function showGDocContent(edit)
+	{
+		console.log("showGDocContent gDocContent",gDocContent);
+		console.log("showGDocContent gDocId:" + gDocId);
+
+		DocEdit.loadmd(gDocContent, edit);
+	}
 	
 	function setImgPreview(ret)
 	{
@@ -1795,14 +1806,6 @@
         //Base64.decode(content);
         
         return content;
-	}
-	
-	function showDocContent(edit)
-	{
-		console.log("showDocContent gDocContent",gDocContent);
-		console.log("showDocContent gDocId:" + gDocId);
-
-		DocEdit.loadmd(gDocContent, edit);
 	}
 	
 	function showDocHistory(node, historyType)
