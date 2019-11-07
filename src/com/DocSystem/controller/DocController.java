@@ -2020,6 +2020,14 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -2036,7 +2044,18 @@ public class DocController extends BaseController{
 		String content = "";
 		if(docType == 1)
 		{
-			content = readRealDocContent(repos, doc);		
+			String fileSuffix = getFileSuffix(name);
+			if(isText(fileSuffix))
+			{
+				content = readRealDocContent(repos, doc);
+			}
+			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
+			{
+				if(checkAndGenerateOfficeContent(repos, doc, login_user, fileSuffix))
+				{
+					content = readOfficeContent(repos, doc, login_user);
+				}
+			}
 		}
 		else
 		{
@@ -2049,6 +2068,38 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, User login_user, String fileSuffix) 
+	{
+		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos,login_user);
+		File file = new File(userTmpDir, doc.getDocId() + "_" + doc.getName());
+		if(file.exists())
+		{
+			if(isUpdateNeeded(repos, doc) == false)
+			{
+				return true;
+			}
+		}
+		
+		switch(fileSuffix)
+		{
+		case "doc":
+			return extractToFileForWord(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		case "docx":
+			return extractToFileForWord2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		case "ppt":
+			return extractToFileForPPT(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		case "pptx":
+			return extractToFileForPPT2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		case "xls":
+			return extractToFileForExcel(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		case "xlsx":
+			return extractToFileForExcel2007(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		case "pdf":
+			return extractToFileForPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		}
+		return false;
+	}
+
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
 	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,

@@ -5651,6 +5651,12 @@ public class BaseController  extends BaseFunction{
 		return saveVirtualDocContent(repos, doc, rt);
 	}
 	
+	protected String readOfficeContent(Repos repos, Doc doc, User login_user)
+	{
+		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos,login_user);
+		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());
+	}
+	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		return saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
