@@ -5779,7 +5779,7 @@ public class BaseController  extends BaseFunction{
 		if(!folder.exists())
 		{
 			System.out.println("saveDocContentToFile() path:" + path + " not exists!");
-			if(folder.mkdir() == false)
+			if(folder.mkdirs() == false)
 			{
 				docSysDebugLog("saveDocContentToFile() mkdir path:" + path + " Failed!", rt);
 				return false;
