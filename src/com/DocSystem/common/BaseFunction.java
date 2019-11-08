@@ -1868,6 +1868,31 @@ public class BaseFunction{
 		return false;
 	}
 	
+	protected boolean isVideo(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+		
+		switch(fileSuffix)
+		{
+		case "avi":
+		case "mov":
+		case "mpeg":
+		case "mpg":
+		case "mp4":
+		case "rmvb":
+		case "asf":
+		case "flv":
+		case "ogg":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+	
 	protected static boolean isOffice(String fileSuffix) {
 		if(fileSuffix == null)
 		{

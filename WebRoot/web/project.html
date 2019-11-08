@@ -293,10 +293,13 @@
                 </div>
                 <div class="article-body editor-content"  id="docPreview" style="display:none;min-height: 650px">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" />
+                		<img id="imgPreview" name="imgPreview" src="" ></img>
+                		<video id="videoPreview" name="videoPreview" src="" controls="controls">
+						</video>
                 		<!-- OFFICE 365  <iframe id="filePreview" class="filename"  src="" width='100%' height='600' frameborder='1' ></iframe>
                 		-->
                 	</div>
+	                	
                 </div>
             </div>
         </div>
@@ -1731,6 +1734,16 @@
 				$("#vdocPreview").hide();
 		      	$("#docPreview").show();
 	            setImgPreview(gDocDataEx);
+	            setVideoPreview(null);
+			}
+			else if(isVideo(fileSuffix))
+			{
+			    $("#btnExitEdit").hide();
+		      	$("#btnSaveWiki").hide(); 
+				$("#vdocPreview").hide();
+		      	$("#docPreview").show();
+		      	setImgPreview(null);
+	            setVideoPreview(gDocDataEx);
 			}
 			else if(isText(fileSuffix))
 			{
@@ -1756,7 +1769,8 @@
 		      	 $("#btnSaveWiki").hide(); 
 				 $("#vdocPreview").hide();
 		      	 $("#docPreview").hide();
-			     //setImgPreview(null);
+		         setImgPreview(null);
+		         setVideoPreview(null);
 			}
 		}
 		else	//显示备注
@@ -1783,9 +1797,9 @@
 		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 		{
 			console.log("setImgPreview() dataEx is null");
-			//$("#imgPreview").hide();
 			$("#imgPreview").attr('src', "");
-	    	return;
+			$("#imgPreview").hide();
+			return;
 		}
 		
 		var targetName = docDataEx.name;
@@ -1795,10 +1809,27 @@
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
 		console.log("setImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);
+		$("#imgPreview").show();
+	}
+	
+	function setVideoPreview(docDataEx)
+	{		
+		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+		{
+			console.log("setVideoPreview() dataEx is null");
+			$("#videoPreview").attr('src', "");
+			$("#videoPreview").hide();
+			return;
+		}
 		
-		//Office 365
-		//var fileLink = "https://view.officeapps.live.com/op/view.aspx?src="+docLink;
-		//$("#filePreview").attr('src', fileLink);
+		var targetName = docDataEx.name;
+		var targetPath = docDataEx.path;
+	    targetName = encodeURI(targetName);
+	   	targetPath = encodeURI(targetPath);
+		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+		console.log("setImgPreview() docLink:" + docLink);
+		$("#videoPreview").attr('src', docLink);
+		$("#videoPreview").show();
 	}
 	
 	function parseDocContent(content)
@@ -2318,6 +2349,29 @@ function CompareObj(objA, objB, flag) {
 				gif : true,
 				bmp : true,
 				mpg : true,
+		};
+		
+		var type = fileTypeMap[suffix];
+		if ( undefined == type )
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	function isVideo(suffix)
+	{
+		var fileTypeMap = {
+				avi : true,
+				mov : true,
+				mpeg : true,
+				mpg : true,
+				mp4 : true,
+				rmvb : true,
+				asf : true,
+				flv : true,
+				ogg : true,
 		};
 		
 		var type = fileTypeMap[suffix];
