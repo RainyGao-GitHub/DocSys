@@ -2180,7 +2180,7 @@ public class DocController extends BaseController{
 						content = readOfficeContent(repos, doc, login_user);
 					}
 				}
-				else if(isPicture(fileSuffix))
+				else if(isPicture(fileSuffix) || isVideo(fileSuffix))
 				{
 					Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 					rt.setDataEx(downloadDoc);
