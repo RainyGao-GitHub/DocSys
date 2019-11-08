@@ -151,6 +151,8 @@
     <script src="static/markdown/plugins/help-dialog/help-dialog.js" type="text/javascript"></script>
     <script src="static/markdown/plugins/html-entities-dialog/html-entities-dialog.js" type="text/javascript"></script>
     <script src="static/markdown/plugins/preformatted-text-dialog/preformatted-text-dialog.js" type="text/javascript"></script>
+    <script src="static/pdfjs/build/pdf.js"></script>
+    <script src="static/pdfjs/build/pdf.worker.js"></script>
 </head>
 <body>
 <div class="m-manual manual-reader">
@@ -291,13 +293,13 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px">
                 </div>
-                <div class="article-body editor-content"  id="docPreview" style="display:none;min-height: 650px">
+                <div class="article-body editor-content"  id="docPreview" style="display:none;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" ></img>
-                		<video id="videoPreview" name="videoPreview" src="" controls="controls">
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none;">
+                		</img>
+                		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;">
 						</video>
-                		<!-- OFFICE 365  <iframe id="filePreview" class="filename"  src="" width='100%' height='600' frameborder='1' ></iframe>
-                		-->
+						<div id="pdfPreview" class="pdfPreview" style="width: 100%; height: 100%"></div>
                 	</div>
 	                	
                 </div>
@@ -1651,7 +1653,7 @@
 	}
 	
 	//读取文件信息
-    function getAndShowDoc(node, edit)
+    function getAndShowDoc(node, openMode, edit)
 	{	
 		console.log("getAndShowDoc() gShowType:" + gShowType + " node:", node);
       	if(!node || node == null || node.id == 0)	//undefine do clean the info of rightDiv
@@ -1685,10 +1687,12 @@
             		showDocList(doc);
             		
 					//当前有打开的文件，需要先退出当前的编辑
-	            	if(gDocId && gDocId != 0 && gDocId != doc.docId)
+	            	if(gDocId && gDocId != 0 && gDocId != doc.docId && gEdit == true)
 	            	{
 	            		//如果是非阻塞的话执行会有问题，但看起来好像是阻塞的，退出没有成功前并不会执行后面的代码
-	                	DocEdit.exitEdit();
+	                	alert("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
+	            		DocEdit.exitEdit();
+	            		return;
 	            	}
             		
                 	//Show Doc
@@ -1697,6 +1701,7 @@
                 	gDocId = doc.docId;
 	            	gParentPath = doc.path;
 	            	gDocName = doc.name;
+	            	gDoc.openMode = openMode;
 	            	
 	            	updateUrl();
 	                
@@ -1705,7 +1710,7 @@
 	                
 	                gDocDataEx = ret.dataEx;
 	                	
-	                showGDoc(gShowType, edit);
+	                showGDoc(gShowType, openMode, edit);
                 }
                 else
                 {
@@ -1721,9 +1726,9 @@
     }
 	
 	//showGDoc根据showType和edit显示gDoc
-    function showGDoc(showType, edit)
+    function showGDoc(showType, openMode, edit)
     {
-		console.log("showGDoc gDocId:" + gDocId + " docName:" + gDoc.name);
+		console.log("showGDoc gDocId:" + gDocId + " docName:" + gDoc.name + " showType:" + showType + " openMode:" + openMode);
 		var fileSuffix = getFileSuffix(gDoc.name);
 		if(showType == 1)	//显示预览
 		{	
@@ -1747,21 +1752,42 @@
 			}
 			else if(isText(fileSuffix))
 			{
-				 $("#btnExitEdit").hide();
-			     $("#btnSaveWiki").hide(); 
-			     $("#vdocPreview").show();	      	
-			     $("#docPreview").hide();
-			  	 $(".editormd-preview-close-btn").show();//css("display","none");
-				 showGDocContent(edit);
+				 if(openMode == 1) //摘要模式：图标+摘要
+				 {
+					 $("#btnExitEdit").hide();
+				     $("#btnSaveWiki").hide(); 
+				     $("#vdocPreview").show();	      	
+				     $("#docPreview").hide();
+				  	 $(".editormd-preview-close-btn").hide();//css("display","none");
+					 showGDocContent(edit);					 
+				 }
+				 else //详情模式：文件内容+编辑按键
+				 {
+					 $("#btnExitEdit").hide();
+				     $("#btnSaveWiki").hide(); 
+				     $("#vdocPreview").show();	      	
+				     $("#docPreview").hide();
+				  	 $(".editormd-preview-close-btn").show();//css("display","none");
+					 showGDocContent(edit);					 					 
+				 }
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
 			{
-				 $("#btnExitEdit").hide();
-			     $("#btnSaveWiki").hide(); 
-			     $("#vdocPreview").show();	      	
-			     $("#docPreview").hide();
-			  	 $(".editormd-preview-close-btn").hide();//
-				 showGDocContent(edit);			
+				 if(openMode == 1)
+				 {
+					 $("#btnExitEdit").hide();
+				     $("#btnSaveWiki").hide(); 
+				     $("#vdocPreview").show();	      	
+				     $("#docPreview").hide();
+				  	 $(".editormd-preview-close-btn").hide();//
+					 showGDocContent(edit);								 
+				 }
+				 else
+				 {
+					 //获取PDF文件并显示，如果成功则显示失败则保持不变
+					 //getAndShowPdf();
+					 previewDoc();
+				 }
 			}
 			else
 			{
@@ -2240,6 +2266,7 @@ function CompareObj(objA, objB, flag) {
 	            onDrop : zTreeOnDrop,
 	            onChange: zTreeOnChange,
 	            onClick: zTreeOnClick,
+	            onDblClick: zTreeOnDbClick,
 	            beforeRightClick: zTreeBeforeRightClick
 	            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
 	    },
@@ -2675,22 +2702,62 @@ function CompareObj(objA, objB, flag) {
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
-          if(!gDocId || gDocId == 0 || gDocId != treeNode.id)
+    	  if(!gDocId || gDocId == 0)
+    	  {
+    	  		//没有处于打开状态的文件，直接打开文件，摘要模式
+	      		getAndShowDoc(treeNode, 1, false);
+    	  		return;
+    	  }
+    	  
+    	  if(gDocId == treeNode.id)
+    	  {
+    		  //文件已打开了不处理
+    		  return;
+    	  }
+    	  
+          if(gEdit == true)
           {
-        	 if(gEdit == true)
-             {
-        		//如果当前文件处于编辑状态，必须先退出编辑（此时如果调用）
+				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
               	DocEdit.exitEdit(treeNode);
-             }
-        	 else
-             {
-	             //显示预览或备注
-	             getAndShowDoc(treeNode);
-             }
+          }
+          else
+          {
+        	  //当前打开的文件未处于编辑模式，直接打开新文件（摘要模式）
+	      	  getAndShowDoc(treeNode, 1, false);
           }
       }
       
       //Double Click 对于文件应该是编辑，对于目录应该是打开
+      function zTreeOnDbClick(event, treeId, treeNode) 
+      {
+    	  //alert("zTreeOnDbClick");
+    	  if(!gDocId || gDocId == 0)
+    	  {
+    	  		//没有处于打开状态的文件，直接打开新文件（详情模式）
+	      		getAndShowDoc(treeNode, 2, false);
+    	  		return;
+    	  }
+    	  
+    	  if(gDocId == treeNode.id)
+    	  {
+    		  if(gShowType == 1 && gDoc.openMode == 1 )	//如果处于预览模式且处于摘要状态，双击进入详情模式
+    		  {
+    	      	  getAndShowDoc(treeNode, 2, false); //切换至详情模式
+              }
+    		  return;
+    	  }
+    	  
+          if(gEdit == true)
+          {
+				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
+              	DocEdit.exitEdit(treeNode);
+          }
+          else
+          {
+        	  //当前打开的文件未处于编辑模式，直接打开新文件（详情模式）
+	      	  getAndShowDoc(treeNode, 2, false);        	  
+          }
+     }
 
 	//判断当前目录下名字为 name的Node是否已经存在，parentNode是null表示根目录
 	function isNodeExist(name,parentNode)
@@ -3116,7 +3183,7 @@ function CompareObj(objA, objB, flag) {
  		console.log("secondGetDoc node:", node);
  		
 		 //显示预览或备注
-		getAndShowDoc(node);
+		getAndShowDoc(node, 1, false);
 			
 		 //docList显示更新
 		if(type == 1)	//For File, show RightDiv
@@ -3518,7 +3585,8 @@ function CompareObj(objA, objB, flag) {
 	                var fileLink = ret.data;
 	                console.log("fileLink" + fileLink);
 	    			//在新的页面打开
-	    			window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink); 
+	    			//window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink);	
+	    		   	showPDF(fileLink);
 	            }
 	            else
 	            {
@@ -3530,6 +3598,12 @@ function CompareObj(objA, objB, flag) {
 	        }
 	    });
 	}
+	
+    function showPDF(url)
+   	{
+        $('.pdfPreview').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
+            '" style="width:100%; height:100%;"></iframe>');
+   	}
 	
 	function WikiEditBtnCtrl(edit)
 	{
