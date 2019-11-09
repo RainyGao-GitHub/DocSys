@@ -529,28 +529,30 @@
 <script type="text/javascript" src="js/DocHistoryDetail.js"></script>
 
 <script type="text/javascript">
-	//初始化全局变量 //Repos Info
-	var gReposId;
-	var gReposInfo = [];
-	var gReposType = 0;	//0: Unknown Type
-	var gReposName = "";
-	var gReposCreateTime = "";
-	//Init Doc Info: 页面第一次加载时从URL中获取的信息
-	var gInitDocId = 0;
-	var gInitParentPath = "";
-	var gInitDocName = ""; 
-	var gInitEdit = false;
-	var gInitShowType = 2; //默认显示备注
-	//Doc Info: 当前页面显示的文件信息
-	var gDoc = null; 
-	var gDocDataEx = null;
-	var gDocId = 0;
-	var gParentPath = "";
-	var gDocName = "";
-	var gDocContent = "";
-	var gTmpSavedContent = "";
-	var gEdit = false; 
-	var gShowType = 2; //默认显示备注
+	//全局变量定义 
+	//Repos Info
+	var gInitReposInfo = {};
+	var gReposInfo = {};
+	
+	//Doc Info
+	//页面第一次加载时从URL中获取的信息
+	var gInitDocInfo = {
+			docId : 0,
+			path : "",
+			name : "",
+			doc : null, //从后台取回的数据
+			dataEx : null, //文件的链接等信息
+			openMode : 1, //1:摘要模式  2:详情模式
+			contentType : 1, //1: ReadDocContent 2:VDocContent
+			content : "", //从后台返回的用于显示的内容
+			tmpSavedContent : "", //从后台取回的临时保存的内容
+			edit : false, //编辑状态
+	};	
+	var gDocInfo = {};
+	
+	//当前页面显示模式
+	var gInitShowType = 2;
+	var gShowType = 2; //1:标准模式 2:电子书模式
 
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -613,7 +615,7 @@
 				msg : msg,
 				},function () {
 			    	//alert("点击了确定");
-					DocDelete.deleteDocs(treeNodes, gReposId);
+					DocDelete.deleteDocs(treeNodes, gReposInfo.id);
 			    	return true;   
 			 	});
 		}
@@ -646,7 +648,7 @@
             type : "post",
             dataType : "json",
             data : {
-            	reposId: gReposId,
+            	reposId: gReposInfo.id,
                 docId : docId,
                 pid	: pid,
                 type: type,
@@ -722,7 +724,7 @@
             type : "post",
             dataType : "json",
             data : {
-            	reposId: gReposId,
+            	reposId: gReposInfo.id,
                 docId : docId,
                 pid	: pid,
                 type: type,
@@ -825,12 +827,12 @@
 		if(isCopy)
 		{
 			console.log("StartCopy");
-			DocCopy.copyDocs(treeNodes,dstParentNode,gReposId);
+			DocCopy.copyDocs(treeNodes,dstParentNode,gReposInfo.id);
 		}
 		else
 		{
 			console.log("StartMove");
-			DocMove.moveDocs(treeNodes,dstParentNode,gReposId);			
+			DocMove.moveDocs(treeNodes,dstParentNode,gReposInfo.id);			
 		}
 	}
 
@@ -887,11 +889,11 @@
 			return false;
 		}
 		
-		var vid = gReposId;
+		var vid = gReposInfo.id;
 		var docId = node.docId;
 	   	var path = Base64.encode(node.path);
 	   	var name = Base64.encode(node.name);
-	   	var href = "/DocSystem/web/project.html?vid="+gReposId+"&doc="+docId+"&path="+path+"&name="+name;
+	   	var href = "/DocSystem/web/project.html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
 			
 		console.log(href);
 		var host = window.location.host;	//域名带端口
@@ -948,20 +950,20 @@
 			}
 		}
 		
-		DocDownload.downloadDocs(treeNodes, null, gReposId,downloadType);
+		DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
 	}
 		
     /*文件上传实现*/
    	function uploadFilesEx()
     {
-    	var node = getNodeByNodeId(gDocId);
+    	var node = getNodeByNodeId(gDocInfo.docId);
 		gParentNodeForUpload = getParentNodeByNode(node);
 	    uploadFiles();
     }
     
    	function uploadDirEx()
     {
-    	var node = getNodeByNodeId(gDocId);
+    	var node = getNodeByNodeId(gDocInfo.docId);
 		gParentNodeForUpload = getParentNodeByNode(node);
 	    uploadDir();
     }
@@ -1063,7 +1065,7 @@
 			parentNode=null;
 		}
 		
-		var vid = gReposId;
+		var vid = gReposInfo.id;
 		var remoteDir = "/" + parentPath;	//only for display
 		
 		$.ajax({
@@ -1155,7 +1157,7 @@
 			parentNode=null;
 		}
 		
-		var vid = gReposId;
+		var vid = gReposInfo.id;
 
 		var remoteDir = "/" + parentPath;	//only for display
 		
@@ -1203,7 +1205,7 @@
 			parentNode=null;
 		}
 		
-		var vid = gReposId;
+		var vid = gReposInfo.id;
 		
 		//开始上传
 		DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid);
@@ -1487,22 +1489,19 @@
 
 <script type="text/javascript">
 	/******************************** Repos Interfaces***************************************/
-    function getReposInfo(callback){
+    function getReposInfo(reposId, callback){
 		console.log("getReposInfo");
         $.ajax({
             url : "/DocSystem/Repos/getRepos.do",
             type : "post",
             dataType : "json",
             data : {
-                vid:gReposId
+                vid : reposId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
-                    gReposName = gReposInfo.name;
-                    gReposType = gReposInfo.type;
-                    gReposCreateTime = gReposInfo.createTime;
-                    $("#projectName").text(gReposName);
+                    $("#projectName").text(gReposInfo.name);
 					//初始化目录树和Doc
 					InitMenuAndDoc();
                 }else {
@@ -1520,21 +1519,16 @@
 	//初始化目录树显示和Doc显示
 	function InitMenuAndDoc()
 	{
-		console.log("InitMenuAndDoc()");
-		var node = {};
-		node.id = gInitDocId;
-		node.path = gInitParentPath;
-		node.name = gInitDocName;
-		
-		if(gInitDocId != 0)
+		console.log("InitMenuAndDoc()");	
+		if(gInitDocInfo.docId != 0)
 		{
-	        getAndShowDoc(node, gInitEdit);
+	        getAndShowDoc(gInitDocInfo, gInitDocInfo.edit);
 		}
 		else
 		{
 			showDocList(null);
 		}
-	    getInitMenu(gInitDocId, gInitParentPath, gInitDocName);
+	    getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name);
 	}
 	
     function getNodeById(docId)
@@ -1558,7 +1552,7 @@
 		    type : "post",
 		    dataType : "json",
 		    data : {
-		        reposId : gReposId,  
+		        reposId : gReposInfo.id,  
 		    	docId:  docId,
 		    	path: parentPath,
 		    	name: docName,
@@ -1592,13 +1586,13 @@
     
     function updateUrl()
     {
-    	console.log("updateUrl() reposId:" + gReposId + " docId:" + gDocId + " path:" + gParentPath +" name:" + gDocName + " edit:" + gEdit);
+    	console.log("updateUrl() reposId:" + gReposInfo.id + " gDocInfo:", gDocInfo);
     	
-    	if(gDocId)
+    	if(gDocInfo.docId)
     	{
 	    	//避免取回来时乱码
-		   	var path = Base64.encode(gParentPath);
-		   	var name = Base64.encode(gDocName);
+		   	var path = Base64.encode(gDocInfo.path);
+		   	var name = Base64.encode(gDocInfo.name);
 		   	console.log("after encode path:" + path + " name:" + name);
 	   	
 		   	//path = decodeURI(path);
@@ -1606,11 +1600,11 @@
 		   	//console.log("after decode path:" + path + " name:" + name);
 	        //Update URL 保证页面刷新后还是处于正确的状态
 	        var param = {
-	        	vid : gReposId,
-	            doc : gDocId,
+	        	vid : gReposInfo.id,
+	            doc : gDocInfo.docId,
 	            path: path,
 	            name: name,
-	            edit: gEdit,
+	            edit: gDocInfo.edit,
 	            showType: gShowType,
 	        };
 	        var url = makeUrl(param);
@@ -1620,13 +1614,11 @@
     	{
             //Update URL 保证页面刷新后还是处于正确的状态
             var param = {
-            	vid : gReposId,
+            	vid : gReposInfo.id,
             };
             var url = makeUrl(param);
     		window.history.pushState({}, "wiki", url);
     	}	
-    	
-
 	}
     
     //清除Doc预览信息
@@ -1634,20 +1626,13 @@
 	{
     	console.log("cleanDocPreview() ");
 		//清除当前选中的信息
-		gDoc = null;
-		gDocDataEx = null;
-		gDocId = 0;
-		gParentPath = "";
-		gDocName = "";
-		gEdit = false;
+		gDocInfo = {};
 		updateUrl();
 		
 		//清除文件名
 	  	$('#filetitle').html("");
 	  		
 	  	//清除文件预览内容
-	  	gDocContent = "";
-	  	gTmpSavedContent = "";
 	  	DocEdit.loadmd("");
 	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
@@ -1668,7 +1653,7 @@
             type : "post",
             dataType : "json",
             data : {
-            	reposId: gReposId,
+            	reposId: gReposInfo.id,
                 docId : node.id,
                 pid: node.pid,
                 path: node.path,
@@ -1680,37 +1665,37 @@
             	if( "ok" == ret.status )
             	{
             		var doc = ret.data
-  
-            		console.log("getAndShowDoc gDocId:" + gDocId + " docId:" + doc.docId + " gShowType:" + gShowType);
+            		console.log("getAndShowDoc gDocInfo.docId:" + gDocInfo.docId + " docId:" + doc.docId + " gShowType:" + gShowType);
             		
             		//更新DocList
             		showDocList(doc);
             		
-					//当前有打开的文件，需要先退出当前的编辑
-	            	if(gDocId && gDocId != 0 && gDocId != doc.docId && gEdit == true)
+					//当前有打开的文件，还处于编辑状态必须先退出编辑，理论上不应该执行到这里
+	            	if(gDocInfo.docId && gDocInfo.docId != 0 && gDocInfo.docId != doc.docId && gDocInfo.edit == true)
 	            	{
-	            		//如果是非阻塞的话执行会有问题，但看起来好像是阻塞的，退出没有成功前并不会执行后面的代码
-	                	alert("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
+	            		alert("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
 	            		DocEdit.exitEdit();
 	            		return;
 	            	}
             		
-                	//Show Doc
+                	//Show Doc and update gDocInfo
             		$('#filetitle').html(doc.name);
-	                gDoc = doc;
-                	gDocId = doc.docId;
-	            	gParentPath = doc.path;
-	            	gDocName = doc.name;
-	            	gDoc.openMode = openMode;
-	            	
+	                //Reset gDocInfo
+                	gDocInfo = {};
+                	gDocInfo.docId = doc.docId;
+	            	gDocInfo.path = doc.path;
+	            	gDocInfo.name = doc.name;
+                	gDocInfo.doc = doc;
+                	gDocInfo.dataEx = ret.dataEx;
+	                
+                	gDocInfo.openMode = openMode;
+	            	gDocInfo.edit = edit;
 	            	updateUrl();
 	                
-	            	gDocContent = parseDocContent(ret.data.content);
-	                gTmpSavedContent = parseDocContent(ret.msgData);                    					
+	            	gDocInfo.content = parseDocContent(ret.data.content);
+	                gDocInfo.tmpSavedContent = parseDocContent(ret.msgData);                    					
 	                
-	                gDocDataEx = ret.dataEx;
-	                	
-	                showGDoc(gShowType, openMode, edit);
+	                showGDoc(gShowType);
                 }
                 else
                 {
@@ -1726,10 +1711,10 @@
     }
 	
 	//showGDoc根据showType和edit显示gDoc
-    function showGDoc(showType, openMode, edit)
+    function showGDoc(showType)
     {
-		console.log("showGDoc gDocId:" + gDocId + " docName:" + gDoc.name + " showType:" + showType + " openMode:" + openMode);
-		var fileSuffix = getFileSuffix(gDoc.name);
+		console.log("showGDoc gShowType:" + gShowType + " gDocInfo", gDocInfo);
+		var fileSuffix = getFileSuffix(gDocInfo.name);
 		if(showType == 1)	//显示预览
 		{	
 			if(isPicture(fileSuffix))
@@ -1738,8 +1723,8 @@
 		      	$("#btnSaveWiki").hide(); 
 				$("#vdocPreview").hide();
 		      	$("#docPreview").show();
-	            setImgPreview(gDocDataEx);
-	            setVideoPreview(null);
+	            showImgPreview(true);
+	            showVideoPreview(false);
 			}
 			else if(isVideo(fileSuffix))
 			{
@@ -1747,8 +1732,8 @@
 		      	$("#btnSaveWiki").hide(); 
 				$("#vdocPreview").hide();
 		      	$("#docPreview").show();
-		      	setImgPreview(null);
-	            setVideoPreview(gDocDataEx);
+		      	showImgPreview(false);
+	            showVideoPreview(true);
 			}
 			else if(isText(fileSuffix))
 			{
@@ -1759,7 +1744,7 @@
 				     $("#vdocPreview").show();	      	
 				     $("#docPreview").hide();
 				  	 $(".editormd-preview-close-btn").hide();//css("display","none");
-					 showGDocContent(edit);					 
+					 showGDocContentInMdEditor();					 
 				 }
 				 else //详情模式：文件内容+编辑按键
 				 {
@@ -1768,7 +1753,7 @@
 				     $("#vdocPreview").show();	      	
 				     $("#docPreview").hide();
 				  	 $(".editormd-preview-close-btn").show();//css("display","none");
-					 showGDocContent(edit);					 					 
+					 showGDocContentInMdEditor();					 					 
 				 }
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
@@ -1780,7 +1765,7 @@
 				     $("#vdocPreview").show();	      	
 				     $("#docPreview").hide();
 				  	 $(".editormd-preview-close-btn").hide();//
-					 showGDocContent(edit);								 
+					 showGDocContentInMdEditor();								 
 				 }
 				 else
 				 {
@@ -1795,8 +1780,8 @@
 		      	 $("#btnSaveWiki").hide(); 
 				 $("#vdocPreview").hide();
 		      	 $("#docPreview").hide();
-		         setImgPreview(null);
-		         setVideoPreview(null);
+		         showImgPreview(false);
+		         showVideoPreview(false);
 			}
 		}
 		else	//显示备注
@@ -1805,24 +1790,31 @@
 		     $("#btnSaveWiki").hide();
 		     $("#vdocPreview").show();	      	
 		     $("#docPreview").hide();
-		  	$(".editormd-preview-close-btn").show();//css("display","none");
-			showGDocContent(edit);
+		  	 $(".editormd-preview-close-btn").show();//css("display","none");
+			 showGDocContentInMdEditor();
 		}
     }
     
-	function showGDocContent(edit)
+	function showGDocContentInMdEditor()
 	{
-		//console.log("showGDocContent gDocContent",gDocContent);
-		console.log("showGDocContent gDocId:" + gDocId);
+		console.log("showGDocContentInMdEditor gDocInfo.docId:" + gDocInfo.docId);
 
-		DocEdit.loadmd(gDocContent, edit);
+		DocEdit.loadmd(gDocInfo.content, gDocInfo.edit);
 	}
 	
-	function setImgPreview(docDataEx)
+	function showImgPreview(showFlag)
 	{		
+		if(showFlag == false)
+		{
+			$("#imgPreview").attr('src', "");
+			$("#imgPreview").hide();
+			return;
+		}
+		
+		var docDataEx = gDocInfo.dataEx;
 		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 		{
-			console.log("setImgPreview() dataEx is null");
+			console.log("showImgPreview() dataEx is null");
 			$("#imgPreview").attr('src', "");
 			$("#imgPreview").hide();
 			return;
@@ -1833,16 +1825,24 @@
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		console.log("setImgPreview() docLink:" + docLink);
+		console.log("showImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);
 		$("#imgPreview").show();
 	}
 	
-	function setVideoPreview(docDataEx)
+	function showVideoPreview()
 	{		
-		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+		if(showFlag == false)
 		{
-			console.log("setVideoPreview() dataEx is null");
+			$("#videoPreview").attr('src', "");
+			$("#videoPreview").hide();
+			return;
+		}
+		
+		var docDataEx = gDocInfo.dataEx;
+ 		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+		{
+			console.log("showVideoPreview() dataEx is null");
 			$("#videoPreview").attr('src', "");
 			$("#videoPreview").hide();
 			return;
@@ -1853,7 +1853,7 @@
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		console.log("setImgPreview() docLink:" + docLink);
+		console.log("showImgPreview() docLink:" + docLink);
 		$("#videoPreview").attr('src', docLink);
 		$("#videoPreview").show();
 	}
@@ -1902,7 +1902,7 @@
 		{
 			if(docId == 0)
 			{
-				var title = "仓库历史版本: " + gReposName;
+				var title = "仓库历史版本: " + gReposInfo.name;
 			}
 			else
 			{
@@ -1916,7 +1916,7 @@
 		{
 			if(docId == 0)
 			{
-				var title = "仓库备注历史:" + gReposName;
+				var title = "仓库备注历史:" + gReposInfo.name;
 			}
 			else
 			{
@@ -1933,7 +1933,7 @@
 			foot: false,
 			big: true,
 			callback: function(){
-				DocHistory.historyLogsPageInit(gReposId, docId, pid, parentPath, docName, historyType);
+				DocHistory.historyLogsPageInit(gReposInfo.id, docId, pid, parentPath, docName, historyType);
 			},
 		});
 	}
@@ -2023,7 +2023,7 @@
 			dataType : "json",
 			data : {
 				lockType : 0, //unlock the doc
-				reposId : gReposId, 
+				reposId : gReposInfo.id, 
 				docId : docId,
 				pid: pid,
 				path: path,
@@ -2227,7 +2227,7 @@ function CompareObj(objA, objB, flag) {
             url : "/DocSystem/Repos/getSubDocList.do",
             type : "post",
     		autoParam : ["id","Level","path","name"],	//zTree会自动根据用户双击的节点设置参数为id=treeId，自动传递的参数必须符合zTree的规则，这也是为什么不得不把后台参数名parentId改为id的原因
-    		otherParam:{"vid":gReposId}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
+    		otherParam:{"vid":gReposInfo.id}, //这里设置的参数是固定的，如果需要修改的话需要修改配置文件，我就是这么做的，详见getReposInfo函数	
     		dataFilter: asyncDataFilter, 
 		},
 	   	//可编辑功能设置
@@ -2687,7 +2687,7 @@ function CompareObj(objA, objB, flag) {
       			return;
       		}
 			
-			var vid = gReposId;
+			var vid = gReposInfo.id;
  	 		
 	      	DocMove.moveDocs(treeNodes,parentNode,vid); 
       }
@@ -2702,20 +2702,20 @@ function CompareObj(objA, objB, flag) {
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
-    	  if(!gDocId || gDocId == 0)
+    	  if(!gDocInfo.docId || gDocInfo.docId == 0)
     	  {
     	  		//没有处于打开状态的文件，直接打开文件，摘要模式
 	      		getAndShowDoc(treeNode, 1, false);
     	  		return;
     	  }
     	  
-    	  if(gDocId == treeNode.id)
+    	  if(gDocInfo.docId == treeNode.id)
     	  {
     		  //文件已打开了不处理
     		  return;
     	  }
     	  
-          if(gEdit == true)
+          if(gDocInfo.edit == true)
           {
 				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
               	DocEdit.exitEdit(treeNode);
@@ -2731,14 +2731,14 @@ function CompareObj(objA, objB, flag) {
       function zTreeOnDbClick(event, treeId, treeNode) 
       {
     	  //alert("zTreeOnDbClick");
-    	  if(!gDocId || gDocId == 0)
+    	  if(!gDocInfo.docId || gDocInfo.docId == 0)
     	  {
     	  		//没有处于打开状态的文件，直接打开新文件（详情模式）
 	      		getAndShowDoc(treeNode, 2, false);
     	  		return;
     	  }
     	  
-    	  if(gDocId == treeNode.id)
+    	  if(gDocInfo.docId == treeNode.id)
     	  {
     		  if(gShowType == 1 && gDoc.openMode == 1 )	//如果处于预览模式且处于摘要状态，双击进入详情模式
     		  {
@@ -2747,7 +2747,7 @@ function CompareObj(objA, objB, flag) {
     		  return;
     	  }
     	  
-          if(gEdit == true)
+          if(gDocInfo.edit == true)
           {
 				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
               	DocEdit.exitEdit(treeNode);
@@ -2932,7 +2932,7 @@ function CompareObj(objA, objB, flag) {
                 	loginBtnCtrl(user);
                 	
                 	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
-            		getReposInfo();
+            		getReposInfo(gInitReposInfo.id);
                 }
                 else 
                 {
@@ -2981,7 +2981,7 @@ function CompareObj(objA, objB, flag) {
 	function syncUpMenu()
 	{
 		console.log("syncUpMenu");
-	    getInitMenu(gDocId, gParentPath, gDocName);
+	    getInitMenu(gDocInfo.docId, gDocInfo.path, gDocInfo.name);
 	}
 	
 	function reDrawMenu(data)
@@ -3146,7 +3146,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = $(obj).attr('latestEditTime');
 	 	
    	 	var node = {};
-   	 	node.vid = gReposId;
+   	 	node.vid = gReposInfo.id;
    	 	node.id = docId;
    	 	node.docId = docId;
    	 	node.pid = pid;
@@ -3172,7 +3172,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = docListNode.attr('latestEditTime');
 	 	
    	 	var node = {};
-   	 	node.vid = gReposId;
+   	 	node.vid = gReposInfo.id;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -3195,7 +3195,7 @@ function CompareObj(objA, objB, flag) {
 		 zTreeSelectDoc(docId, path, name);		
   	}
  	
- 	//根据gDocId选中文件
+ 	//根据gDocInfo.docId选中文件
  	function zTreeSelectDoc(docId, path, name)
  	{
 		console.log("zTreeSelectDoc docId:" + docId);
@@ -3257,7 +3257,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = docListNode.attr('latestEditTime');
    	 	
    	 	var node = {};
-   	 	node.vid = gReposId;
+   	 	node.vid = gReposInfo.id;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -3299,7 +3299,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = docListNode.attr('latestEditTime');
    	 	
    	 	var node = {};
-   	 	node.vid = gReposId;
+   	 	node.vid = gReposInfo.id;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -3324,7 +3324,7 @@ function CompareObj(objA, objB, flag) {
    	 	var latestEditTime = docListNode.attr('latestEditTime');
    	 	
    	 	var node = {};
-   	 	node.vid = gReposId;
+   	 	node.vid = gReposInfo.id;
    	 	node.id = docId;
    	 	node.pid = pid;
    		node.path = path;
@@ -3408,7 +3408,7 @@ function CompareObj(objA, objB, flag) {
             type : "post",
             dataType : "json",
             data : {
-                vid: gReposId,
+                vid: gReposInfo.id,
                 docId: docId,
                 path: path,
                 name: name,
@@ -3433,19 +3433,19 @@ function CompareObj(objA, objB, flag) {
 	
 	function backToParentDoc()
 	{
-		console.log("backToParentDoc() gDocId:" + gDocId);
-		if(!gDocId)
+		console.log("backToParentDoc() gDocInfo.docId:" + gDocInfo.docId);
+		if(!gDocInfo.docId)
 		{			
 			return;
 		}
 		
 		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",gDocId);
+		var node = zTree.getNodeByParam("id",gDocInfo.docId);
 		
-		//current Doc not exists, update gDocId and URL and showDocList under root dir
+		//current Doc not exists, update gDocInfo.docId and URL and showDocList under root dir
 		if(node == null)
 		{
-			console.log("backToParentDoc node not exist:" + gDocId);
+			console.log("backToParentDoc node not exist:" + gDocInfo.docId);
 			cleanDocPreview();
 
 			//Show DocList
@@ -3503,7 +3503,7 @@ function CompareObj(objA, objB, flag) {
 	
 		var pDocId = 0;
 		var parentPath = "";
-		var node = getParentNodeByNodeId(gDocId);
+		var node = getParentNodeByNodeId(gDocInfo.docId);
 		if(node != null)
 		{
 			pDocId = node.id;
@@ -3521,7 +3521,7 @@ function CompareObj(objA, objB, flag) {
                data : {
                    searchWord:searchWord,
                    sort:sort,
-                   reposId: gReposId,
+                   reposId: gReposInfo.id,
                    pid: pDocId,
          		   path: parentPath,
                },
@@ -3574,7 +3574,7 @@ function CompareObj(objA, objB, flag) {
 	        type : "post",
 	        dataType : "json",
 	        data : {
-	        	reposId: gReposId,
+	        	reposId: gReposInfo.id,
 	            docId : docId,
 	            pid: pid,
 	            path: path,
@@ -3726,7 +3726,7 @@ function CompareObj(objA, objB, flag) {
 	//add a new Doc
 	function newDocEx(type)
 	{
-		var parentNode = getParentNodeByNodeId(gDocId);
+		var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 		newDoc(type,parentNode);
 	}
 	
@@ -3742,7 +3742,7 @@ function CompareObj(objA, objB, flag) {
 			parentPath = getNodePath(parentNode) + parentNode.name+ "/";
 		}
 		
-		var remoteDir = gReposName+ "::" + parentPath; //only for display
+		var remoteDir = gReposInfo.name+ "::" + parentPath; //only for display
         
         //对话框 title
         var title = "新建文件";
@@ -3772,7 +3772,7 @@ function CompareObj(objA, objB, flag) {
 				showErrorMessage(name + " 已存在");
 			  	return false;
 			  }
-			  var vid = gReposId;
+			  var vid = gReposInfo.id;
 			  
 			  //发送新建文件请求到后台
               if( name ){
@@ -3901,7 +3901,7 @@ function CompareObj(objA, objB, flag) {
 			dataType : "json",
 			data : {
 				lockType : 1, //lockType: CheckOut
-				reposId : gReposId, 
+				reposId : gReposInfo.id, 
 				docId : docId,
 				pid: pid,
 				path: path,
@@ -4027,47 +4027,30 @@ function CompareObj(objA, objB, flag) {
         }
     	
     	console.log("globalVarInit() start");
-    	gReposId = getQueryString("vid");
-		//set the vid in upload form
-		$("#reposId").val(gReposId);
+    	setGInitReposInfo();
 
-		//Set Init Doc Info
-    	gInitDocId = getQueryString("doc");
-		if(!gInitDocId)
-		{
-			gInitDocId = 0;
-		}
-		
-		gInitParentPath = getQueryString("path");
-		if(gInitParentPath && gInitParentPath != null)
-		{
-			gInitParentPath = Base64.decode(gInitParentPath);
-		}
-		else
-		{
-			gInitParentPath = "";
-		}
-		
-		gInitDocName = getQueryString("name");
-		if(gInitDocName && gInitDocName != null)
-		{
-			gInitDocName = Base64.decode(gInitDocName);
-		}
-		else
-		{
-			gInitDocName = "";
-		}
-		
-		gInitEdit = getQueryString("edit");
-		if(!gInitEdit)
-		{
-			gInitEdit = false;
-		}
-		if(!gInitDocId)
-		{
-			gInitEdit = false;
-		}		
+		//set gInitDocInfo
+		setGInitDocInfo();
 
+		//setGShowType
+		setGShowType();
+		
+		console.log("globalVarInit() gInitReposId" + gInitReposInfo.id  + " gShowType:" + gShowType + " gInitDocInfo:", gInitDocInfo);
+   	}
+
+    function setGInitReposInfo()
+    {
+    	var reposId = getQueryString("vid");
+		
+    	gInitReposInfo.id = reposId;
+    	
+    	//set the vid in upload form
+		$("#reposId").val(reposId);
+
+    }
+    
+    function setGShowType()
+    {
 		gInitShowType = getQueryString("showType");
 		if(!gInitShowType)
 		{
@@ -4085,9 +4068,51 @@ function CompareObj(objA, objB, flag) {
 		{
 		    $("#btnSwitchShow").text("关闭备注");			
 		}
+    }
+    
+    function setGInitDocInfo()
+    {
+		var docId = getQueryString("doc");
+		if(!docId)
+		{
+			docId = 0;
+		}
 		
-		console.log("globalVarInit() gReposId:" + gReposId  + " gInitDocId:"+gInitDocId + " gInitParentPath:" + gInitParentPath + " gInitDocName:" + gInitDocName + " gInitEdit:" + gInitEdit);
-   	}
+		var path = getQueryString("path");
+		if(path && path != null)
+		{
+			path = Base64.decode(path);
+		}
+		else
+		{
+			path = "";
+		}
+		
+		var name = getQueryString("name");
+		if(name && name != null)
+		{
+			name = Base64.decode(name);
+		}
+		else
+		{
+			name = "";
+		}
+		
+		var edit = getQueryString("edit");
+		if(!edit)
+		{
+			edit = false;
+		}
+		if(docId == 0)
+		{
+			edit = false;
+		}		
+		
+		gInitDocInfo.docId = docId;
+		gInitDocInfo.path = path;
+		gInitDocInfo.name = name;
+		gInitDocInfo.edit = edit;
+    }
     
 	function dragDropUploadZoneInit()
 	{
@@ -4189,7 +4214,7 @@ function CompareObj(objA, objB, flag) {
             type : "post",
     		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
     		otherParam:{
-    			"vid":gReposId,
+    			"vid":gReposInfo.id,
     		},
     		dataFilter: asyncDataFilter, 
 		};
@@ -4447,13 +4472,13 @@ function CompareObj(objA, objB, flag) {
 			{text: '新建', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
-						var parentNode = getParentNodeByNodeId(gDocId);
+						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 	        			newDoc(1,parentNode);
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
-						var parentNode = getParentNodeByNodeId(gDocId);
+						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 	        			newDoc(2,parentNode);
 					}
 				},
@@ -4462,14 +4487,14 @@ function CompareObj(objA, objB, flag) {
 			{text: '上传', subMenu: [
 				{text: '文件',  action: function(e){
 						e.preventDefault();
-						var node = getNodeByNodeId(gDocId);
+						var node = getNodeByNodeId(gDocInfo.docId);
 						gParentNodeForUpload = getParentNodeByNode(node);
 	        			uploadFiles();
 					}
 				},
 				{text: '文件夹',  action: function(e){
 						e.preventDefault();
-						var node = getNodeByNodeId(gDocId);
+						var node = getNodeByNodeId(gDocInfo.docId);
 						gParentNodeForUpload = getParentNodeByNode(node);
 	        			uploadDir();
 					}
@@ -4515,7 +4540,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '粘贴', action: function(e){
 						e.preventDefault();
-						var parentNode = getParentNodeByNodeId(gDocId);
+						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
 						DoPaste(gCopiedNodes, parentNode, gIsCopy);
 					}
 			},

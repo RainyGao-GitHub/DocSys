@@ -31,8 +31,12 @@ public class Doc  implements Comparable<Doc>{
 
     private Long latestEditTime;
 
-    private String content;
-
+    private String content;	//vDoc Content
+    private String tmpContent;	//tmp Saved vDoc Content
+    
+    private String docText; //文本文件内容或者Office文件的文本内容
+    private String tmpDocText; //tmp Saved docText
+    
 	private int sortIndex;
 
     private String creatorName;
@@ -177,6 +181,30 @@ public class Doc  implements Comparable<Doc>{
         this.content = content;
     }
     
+    public String getTmpContent() {
+        return tmpContent;
+    }
+
+    public void setTmpContent(String tmpContent) {
+        this.tmpContent = tmpContent;
+    }
+    
+    public String getDocText() {
+        return docText;
+    }
+
+    public void setDocText(String docText) {
+        this.docText = docText;
+    }
+    
+    public String getTmpDocText() {
+        return tmpDocText;
+    }
+
+    public void setTmpDocText(String tmpDocText) {
+        this.tmpDocText = tmpDocText;
+    }
+   
     public Integer getLevel() {
         return level;
     }
