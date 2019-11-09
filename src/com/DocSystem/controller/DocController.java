@@ -2064,7 +2064,7 @@ public class DocController extends BaseController{
 				}
 			}
 		}
-		else
+		else if(docType == 2)
 		{
 			content = readVirtualDocContent(repos, doc);		
 		}

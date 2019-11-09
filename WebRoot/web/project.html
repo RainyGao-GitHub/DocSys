@@ -291,17 +291,14 @@
         		</div>
          	</div>
             <div class="manual-article" id="previewZone">
-                <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px">
-                </div>
                 <div class="article-body editor-content"  id="docPreview" style="display:none;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none;">
-                		</img>
-                		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;">
-						</video>
-						<div id="pdfPreview" class="pdfPreview" style="width: 100%; height: 100%"></div>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none;"></img>
+                		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
+						<div id="pdfPreview" class="pdfPreview" style="display:none; width: 100%; height: 100%"></div>
                 	</div>
-	                	
+	            </div>
+                <div class="article-body editor-content"  id="vDocPreview" style="min-height: 650px">
                 </div>
             </div>
         </div>
@@ -543,9 +540,6 @@
 			doc : null, //从后台取回的数据
 			dataEx : null, //文件的链接等信息
 			openMode : 1, //1:摘要模式  2:详情模式
-			contentType : 1, //1: ReadDocContent 2:VDocContent
-			content : "", //从后台返回的用于显示的内容
-			tmpSavedContent : "", //从后台取回的临时保存的内容
 			edit : false, //编辑状态
 	};	
 	var gDocInfo = {};
@@ -1637,10 +1631,10 @@
 	  	$(".editormd-preview-close-btn").hide();//css("display","none");
 	}
 	
-	//读取文件信息
+	//获取文件信息并显示
     function getAndShowDoc(node, openMode, edit)
 	{	
-		console.log("getAndShowDoc() gShowType:" + gShowType + " node:", node);
+		console.log("getAndShowDoc() gShowType:" + gShowType + " openMode:" + openMode + " edit:" + edit + " node:", node);
       	if(!node || node == null || node.id == 0)	//undefine do clean the info of rightDiv
       	{
       		cleanDocPreview();
@@ -1648,6 +1642,15 @@
         }
       	
         //To get DocInfo and Show Content
+        var docType = 2; //get VDoc Content only
+        if(gShowType == 1)
+        {
+        	if(openMode == 2)	//详情模式需要获取文本文件的详细内容
+        	{
+        		docType = 3; //get content and docText
+        	}
+        }
+        
     	$.ajax({
             url : "/DocSystem/Doc/getDoc.do",
             type : "post",
@@ -1658,7 +1661,7 @@
                 pid: node.pid,
                 path: node.path,
                 name: node.name,
-                docType: gShowType,
+                docType: docType,
             },
             success : function (ret) {
             	console.log("getAndShowDoc ret",ret);
@@ -1692,8 +1695,14 @@
 	            	gDocInfo.edit = edit;
 	            	updateUrl();
 	                
-	            	gDocInfo.content = parseDocContent(ret.data.content);
-	                gDocInfo.tmpSavedContent = parseDocContent(ret.msgData);                    					
+	            	gDocInfo.content = parseDocContent(doc.content);
+	                gDocInfo.tmpContent = parseDocContent(doc.tmpContent);
+	                
+	                if(showType == 1)
+	                {
+		                gDocInfo.docText = parseDocContent(doc.docText);
+		                gDocInfo.tmpDocText = parseDocContent(doc.tmpDocText);
+	                }
 	                
 	                showGDoc(gShowType);
                 }
@@ -1721,40 +1730,43 @@
 			{
 			    $("#btnExitEdit").hide();
 		      	$("#btnSaveWiki").hide(); 
-				$("#vdocPreview").hide();
 		      	$("#docPreview").show();
 	            showImgPreview(true);
 	            showVideoPreview(false);
+		        showFileLogo(false);
+				$("#vdocPreview").show();
+	            showGDocContentInMdEditor();
 			}
 			else if(isVideo(fileSuffix))
 			{
 			    $("#btnExitEdit").hide();
 		      	$("#btnSaveWiki").hide(); 
-				$("#vdocPreview").hide();
 		      	$("#docPreview").show();
 		      	showImgPreview(false);
 	            showVideoPreview(true);
+		        showFileLogo(false);
+				$("#vdocPreview").show();
+	            showGDocContentInMdEditor();
 			}
 			else if(isText(fileSuffix))
 			{
-				 if(openMode == 1) //摘要模式：图标+摘要
-				 {
-					 $("#btnExitEdit").hide();
-				     $("#btnSaveWiki").hide(); 
+			    $("#btnExitEdit").hide();
+		      	$("#btnSaveWiki").hide(); 
+		      	$("#docPreview").show();
+	            showImgPreview(false);
+	            showVideoPreview(false);
+		        showFileLogo(true);
+				if(openMode == 1) //摘要模式：图标+摘要
+				{
 				     $("#vdocPreview").show();	      	
+					 showGDocContentInMdEditor(); 
+				}
+				else //详情模式：文件内容+编辑按键
+				{
+			         showFileLogo(false);
 				     $("#docPreview").hide();
-				  	 $(".editormd-preview-close-btn").hide();//css("display","none");
-					 showGDocContentInMdEditor();					 
-				 }
-				 else //详情模式：文件内容+编辑按键
-				 {
-					 $("#btnExitEdit").hide();
-				     $("#btnSaveWiki").hide(); 
-				     $("#vdocPreview").show();	      	
-				     $("#docPreview").hide();
-				  	 $(".editormd-preview-close-btn").show();//css("display","none");
-					 showGDocContentInMdEditor();					 					 
-				 }
+					 showGDocTextInMdEditor(true);					 					 
+				}
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
 			{
@@ -1762,14 +1774,16 @@
 				 {
 					 $("#btnExitEdit").hide();
 				     $("#btnSaveWiki").hide(); 
-				     $("#vdocPreview").show();	      	
-				     $("#docPreview").hide();
-				  	 $(".editormd-preview-close-btn").hide();//
+				     $("#docPreview").show();
+			         showImgPreview(false);
+			         showVideoPreview(false);
+				     showFileLogo(true);
 					 showGDocContentInMdEditor();								 
 				 }
 				 else
 				 {
-					 //获取PDF文件并显示，如果成功则显示失败则保持不变
+				     showFileLogo(false);
+					 //获取PDF文件并显示，如果预览失败则显示摘要
 					 //getAndShowPdf();
 					 previewDoc();
 				 }
@@ -1782,15 +1796,16 @@
 		      	 $("#docPreview").hide();
 		         showImgPreview(false);
 		         showVideoPreview(false);
+		         showFileLogo(true);
+				 showGDocContentInMdEditor();
 			}
 		}
 		else	//显示备注
 		{
 			 $("#btnExitEdit").hide();
 		     $("#btnSaveWiki").hide();
-		     $("#vdocPreview").show();	      	
 		     $("#docPreview").hide();
-		  	 $(".editormd-preview-close-btn").show();//css("display","none");
+		     $("#vdocPreview").show();	      	
 			 showGDocContentInMdEditor();
 		}
     }
@@ -1798,9 +1813,30 @@
 	function showGDocContentInMdEditor()
 	{
 		console.log("showGDocContentInMdEditor gDocInfo.docId:" + gDocInfo.docId);
-
-		DocEdit.loadmd(gDocInfo.content, gDocInfo.edit);
+		gDocInfo.contentType = 2; //MdEditor中的是备注内容
+		gDocContent = gDocInfo.content;
+		gTmpSavedContent = gDocInfo.tmpContent;
+		DocEdit.loadmd(gDocContent, gDocInfo.edit);
+	  	$(".editormd-preview-close-btn").show();//css("display","none");
 	}
+	
+	function showGDocTextInMdEditor(enableEdit)
+	{
+		console.log("showGDocTextInMdEditor gDocInfo.docId:" + gDocInfo.docId);
+		gDocInfo.contentType = 1; //MdEditor中的是备注内容		
+		gDocContent = gDocInfo.docText;
+		gTmpSavedContent = gDocInfo.tmpDocText;
+		DocEdit.loadmd(gDocContent, gDocInfo.edit);
+		if(enableEdit)
+		{
+	  		$(".editormd-preview-close-btn").show();//css("display","none");
+		}
+		else
+		{
+	  		$(".editormd-preview-close-btn").hide();			
+		}
+	}
+	
 	
 	function showImgPreview(showFlag)
 	{		
