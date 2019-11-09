@@ -37,18 +37,18 @@
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
                imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
                onchange : function () {
-                   console.log("DocEdit onchange gEdit:" + gEdit);                  
+                   console.log("DocEdit onchange gDocInfo.edit:" + gDocInfo.edit);                  
                },
                onpreviewing : function () {
-                   console.log("DocEdit onpreviewing gEdit:" + gEdit);
+                   console.log("DocEdit onpreviewing gDocInfo.edit:" + gDocInfo.edit);
                    exitEditWiki();
                },
                onpreviewed :function () {
-                   console.log("DocEdit onpreviewed gEdit:" + gEdit);
+                   console.log("DocEdit onpreviewed gDocInfo.edit:" + gDocInfo.edit);
                    lockAndEditWiki();
                },
                onload : function () {
-                   console.log("DocEdit onload gEdit:" + gEdit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+                   console.log("DocEdit onload gDocInfo.edit:" + gDocInfo.edit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
    	    		   this.previewing(); 		  //加载成默认是预览
    	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载，会触发onchange事件
    	    		   isOnLoadTriggerChange = true;
@@ -73,7 +73,7 @@
         
     	function editorLoadmd(content) 
     	{
-    		console.log("DocEdit editorLoadmd() gEdit:" + gEdit);
+    		console.log("DocEdit editorLoadmd() gDocInfo.edit:" + gDocInfo.edit);
     		md.setMarkdown(content);
         }
         
@@ -98,9 +98,9 @@
 		      		
 		function editorSwitch(edit)
     	{
-    		console.log("DocEdit editorSwitch() edit:"+edit + " gEdit:" + gEdit);
+    		console.log("DocEdit editorSwitch() edit:"+edit + " gDocInfo.edit:" + gDocInfo.edit);
     		
-    		gEdit = edit;
+    		gDocInfo.edit = edit;
     		
     		if(!md)
        		{
@@ -177,7 +177,7 @@
 	                path: node.path,
 	                name: node.name,
 	                content : content,
-	                docType : gShowType,
+	                docType : gDocInfo.contentType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -234,7 +234,7 @@
 	                pid: node.pid,
 	                path: node.path,
 	                name: node.name,
-	                docType: gShowType,
+	                docType: gDocInfo.contentType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -266,13 +266,13 @@
 	    
 		//进入文件编辑状态
 	    function editWiki(){
-	    	console.log("editWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
-		    if(gEdit == true)
+	    	console.log("editWiki()  gDocId:" + gDocId + " gDocInfo.edit:" + gDocInfo.edit);
+		    if(gDocInfo.edit == true)
 		    {
 		    	return;
 		    }
 
-		    gEdit = true;
+		    gDocInfo.edit = true;
 	    	DocEdit.editorSwitch(true);
 	    	DocEdit.loadmd(gDocContent);
 	    	WikiEditBtnCtrl(true);
@@ -301,13 +301,13 @@
 	    }
 		
 	    function exitEditWiki() {
-	      	console.log("exitEditWiki()  gDocId:" + gDocId + " gEdit:" + gEdit);
-		    if(gEdit == false)
+	      	console.log("exitEditWiki()  gDocId:" + gDocId + " gDocInfo.edit:" + gDocInfo.edit);
+		    if(gDocInfo.edit == false)
 		    {
 		    	return;
 		    }
 
-		    gEdit = false;
+		    gDocInfo.edit = false;
 	      	editorSwitch(false);
 	      	loadmd(gDocContent);
 		    WikiEditBtnCtrl(false);
@@ -347,7 +347,7 @@
 					docId : gDocId,
 					path: gParentPath,
 					name: gDocName,
-					docType: gShowType,
+					docType: gDocInfo.contentType,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -384,7 +384,7 @@
 		//退出文件编辑状态
 	    function exitEdit(newNode) {
 	    	console.log("exitEdit gDocId:" + gDocId, newNode);	
-	    	if(gEdit == false)
+	    	if(gDocInfo.edit == false)
 	    	{
 	    		return;
 	    	}
@@ -439,7 +439,7 @@
 					docId : gDocId,
 					path: gParentPath,
 					name: gDocName,
-					docType: gShowType,
+					docType: gDocInfo.contentType,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -495,7 +495,7 @@
 	            	path: gParentPath,
 	                name: gDocName,
 	            	content : content,
-	            	docType: gShowType,
+	            	docType: gDocInfo.contentType,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
