@@ -1821,6 +1821,8 @@
 		gDocInfo.contentType = 2; //MdEditor中的是备注内容
 		gDocContent = gDocInfo.content;
 		gTmpSavedContent = gDocInfo.tmpContent;
+		console.log("showGDocContentInMdEditor gDocInfo.content:" + gDocInfo.content + " gDocContent:" + gDocContent);
+		
 		DocEdit.loadmd(gDocContent, gDocInfo.edit);
 	  	$(".editormd-preview-close-btn").show();//css("display","none");
 	}
