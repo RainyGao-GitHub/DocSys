@@ -544,10 +544,15 @@
 	};	
 	var gDocInfo = {};
 	
+	//当前处于展示状态的内容
+	var gDocContent = "";
+	var gTmpSavedDocContent = "";
+	
 	//当前页面显示模式
 	var gInitShowType = 2;
 	var gShowType = 2; //1:标准模式 2:电子书模式
 
+	
 	//通用函数接口
 	function showErrorMessage($msg) {
     	qiao.bs.alert($msg);
@@ -1516,7 +1521,7 @@
 		console.log("InitMenuAndDoc()");	
 		if(gInitDocInfo.docId != 0)
 		{
-	        getAndShowDoc(gInitDocInfo, gInitDocInfo.edit);
+	        getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
 		}
 		else
 		{
@@ -1688,7 +1693,7 @@
                 	gDocInfo.docId = doc.docId;
 	            	gDocInfo.path = doc.path;
 	            	gDocInfo.name = doc.name;
-                	gDocInfo.doc = doc;
+                	//gDocInfo.doc = doc;
                 	gDocInfo.dataEx = ret.dataEx;
 	                
                 	gDocInfo.openMode = openMode;
@@ -1698,7 +1703,7 @@
 	            	gDocInfo.content = parseDocContent(doc.content);
 	                gDocInfo.tmpContent = parseDocContent(doc.tmpContent);
 	                
-	                if(showType == 1)
+	                if(gShowType == 1)
 	                {
 		                gDocInfo.docText = parseDocContent(doc.docText);
 		                gDocInfo.tmpDocText = parseDocContent(doc.tmpDocText);
@@ -3495,12 +3500,12 @@ function CompareObj(objA, objB, flag) {
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
-				getAndShowDoc(parentNode);
+				getAndShowDoc(parentNode, 1, false);
 			}
 			else
 			{
 				zTree.cancelSelectedNode(node);
-				getAndShowDoc(parentNode);
+				getAndShowDoc(parentNode, 1, false);
 				
 				var searchWord = $("#searchWord").val();
 				console.log("backToParentDoc searchWord:" + searchWord);
@@ -3700,7 +3705,7 @@ function CompareObj(objA, objB, flag) {
 		 DocEdit.loadmd("");
 		 $(".editormd-preview-close-btn").hide();//css("display","none");
 
-		 getAndShowDoc(gDoc, false);
+		 getAndShowDoc(gDoc, 1, false);
 	}
 	
 	/************************** contextMenu 接口***************************/	
@@ -4239,7 +4244,7 @@ function CompareObj(objA, objB, flag) {
     function zTreeSettingInit()
     {
     	//处于编辑状态下，需要禁用删除和改名等所有编辑操作，避免出错
-        if(gInitEdit == true){
+        if(gInitDocInfo.edit == true){
             var edit = {};
             setting.edit = edit;
         }
@@ -4632,7 +4637,7 @@ function CompareObj(objA, objB, flag) {
 								gShowType = 2; //切换到备注模式
 								$("#btnSwitchShow").text("关闭备注");
 							    updateUrl();
-								getAndShowDoc(curRightClickedDocListNode);
+								getAndShowDoc(curRightClickedDocListNode, 1, false);
 					 			showRightDiv();
 							}
 						},
