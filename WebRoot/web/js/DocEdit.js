@@ -134,7 +134,7 @@
 					if(gTmpSavedContent != newContent)
 		    		{
 		    			console.log("autoTmpSaveWiki");
-		    			tmpSaveDoc(gDocId, newContent);
+		    			tmpSaveDoc(gDocInfo.docId, newContent);
 		    			gTmpSavedContent = newContent;
 		    		}
 		    	},20000);
@@ -266,7 +266,7 @@
 	    
 		//进入文件编辑状态
 	    function editWiki(){
-	    	console.log("editWiki()  gDocId:" + gDocId + " gDocInfo.edit:" + gDocInfo.edit);
+	    	console.log("editWiki()  gDocInfo.docId:" + gDocInfo.docId + " gDocInfo.edit:" + gDocInfo.edit);
 		    if(gDocInfo.edit == true)
 		    {
 		    	return;
@@ -294,14 +294,14 @@
 				 	},function (){
 				 		//alert("点击了取消");
 				        gTmpSavedContent = gDocContent;
-				        DocEdit.deleteTmpSavedContent(gDocId);
+				        DocEdit.deleteTmpSavedContent(gDocInfo.docId);
 				        return true;
 				 	});
 			}
 	    }
 		
 	    function exitEditWiki() {
-	      	console.log("exitEditWiki()  gDocId:" + gDocId + " gDocInfo.edit:" + gDocInfo.edit);
+	      	console.log("exitEditWiki()  gDocInfo.docId:" + gDocInfo.docId + " gDocInfo.edit:" + gDocInfo.edit);
 		    if(gDocInfo.edit == false)
 		    {
 		    	return;
@@ -331,7 +331,7 @@
 		function lockAndEditWiki()
 		{
 			console.log("lockAndEditWiki()");
-			if(!gDocId || gDocId == 0)
+			if(!gDocInfo.docId || gDocInfo.docId == 0)
 			{
 				showErrorMessage("请选择文件!");
 				return;
@@ -344,7 +344,7 @@
 				data : {
 					lockType : 3, //LockType: Online Edit
 					reposId : gReposId, 
-					docId : gDocId,
+					docId : gDocInfo.docId,
 					path: gParentPath,
 					name: gDocName,
 					docType: gDocInfo.contentType,
@@ -353,7 +353,7 @@
 					if( "ok" == ret.status)
 					{
 						console.log("lockAndEditWiki() ret.data",ret.data);
-						$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","red");
+						$("[dataId='"+ gDocInfo.docId +"']").children("div:first-child").css("color","red");
 						editWiki();
 					    return;
 	 				}
@@ -383,7 +383,7 @@
 
 		//退出文件编辑状态
 	    function exitEdit(newNode) {
-	    	console.log("exitEdit gDocId:" + gDocId, newNode);	
+	    	console.log("exitEdit gDocInfo.docId:" + gDocInfo.docId, newNode);	
 	    	if(gDocInfo.edit == false)
 	    	{
 	    		return;
@@ -421,8 +421,8 @@
 		//解锁文件并退出编辑
 		function unlockAndExitEditWiki(newNode)
 		{
-			console.log("unlockAndExitEditWiki()  gDocId:" + gDocId);
-			if(!gDocId || gDocId == 0)
+			console.log("unlockAndExitEditWiki()  gDocInfo.docId:" + gDocInfo.docId);
+			if(!gDocInfo.docId || gDocInfo.docId == 0)
 			{
 				showErrorMessage("文件不存在");
 				exitEditWiki();
@@ -436,7 +436,7 @@
 				data : {
 					lockType : 0, //unlock the doc
 					reposId : gReposId, 
-					docId : gDocId,
+					docId : gDocInfo.docId,
 					path: gParentPath,
 					name: gDocName,
 					docType: gDocInfo.contentType,
@@ -445,7 +445,7 @@
 					if( "ok" == ret.status)
 					{
 						console.log("unlockAndExitEditWiki() ret:" + ret.data);
-						$("[dataId='"+ gDocId +"']").children("div:first-child").css("color","black");
+						$("[dataId='"+ gDocInfo.docId +"']").children("div:first-child").css("color","black");
 						exitEditWiki();
 						if(newNode)
 						{
@@ -470,7 +470,7 @@
 	    //将编辑中的文件保存到后台
 	    function saveWikiAndExit(newNode) 
 	    {
-	    	console.log("saveWikiAndExit  gDoc:" + gDocId, newNode);
+	    	console.log("saveWikiAndExit  gDoc:" + gDocInfo.docId, newNode);
 	    	var newContent = getMarkdown();
 	    	if(gDocContent != newContent)
 	    	{
@@ -484,14 +484,14 @@
 	    
 	    function saveDoc(content, callback, newNode)
 		{
-			console.log("saveDoc gDocId:" + gDocId);
+			console.log("saveDoc gDocInfo.docId:" + gDocInfo.docId);
 			$.ajax({
 	            url : "/DocSystem/Doc/updateDocContent.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
 	                reposId: gReposId,
-	            	docId : gDocId,
+	            	docId : gDocInfo.docId,
 	            	path: gParentPath,
 	                name: gDocName,
 	            	content : content,
