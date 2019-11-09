@@ -2160,51 +2160,57 @@ public class DocController extends BaseController{
 			return;
 		}
 		doc.setType(dbDoc.getType());
-				
-		String content = null;
-		String tmpSavedContent = null;
-		if(docType == 1)
+		
+		//图片、视频、音频文件需要返回文件的访问信息，如果是文本文件或Office文件需要根据前端需求返回docText
+		if(doc.getType() == 1)
 		{
-			if(dbDoc.getType() == 1)
+			String fileSuffix = getFileSuffix(name);
+			if(isPicture(fileSuffix) || isVideo(fileSuffix))
 			{
-				String fileSuffix = getFileSuffix(name);
+				Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+				rt.setDataEx(downloadDoc);
+			}
+		
+			if(docType == 1 || docType == 3)	//docType { 1: get docText only, 2: get content only 3: get docText and content } 
+			{
+				String docText = null;
+				String tmpDocText = null;
 				if(isText(fileSuffix))
 				{
-					content = readRealDocContent(repos, doc);
-					tmpSavedContent = readTmpRealDocContent(repos, doc, login_user);
+					docText = readRealDocContent(repos, doc);
+					tmpDocText= readTmpRealDocContent(repos, doc, login_user);
 				}
 				else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 				{
 					if(checkAndGenerateOfficeContent(repos, doc, login_user, fileSuffix))
 					{
-						content = readOfficeContent(repos, doc, login_user);
+						docText = readOfficeContent(repos, doc, login_user);
 					}
 				}
-				else if(isPicture(fileSuffix) || isVideo(fileSuffix))
-				{
-					Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
-					rt.setDataEx(downloadDoc);
-				}
+				doc.setDocText(docText);
+				doc.setTmpDocText(tmpDocText);
 			}
 		}
-		else
+		
+		//获取文件备注信息
+		if(docType == 2 || docType == 3)
 		{
-			content = readVirtualDocContent(repos, doc);        
-			tmpSavedContent = readTmpVirtualDocContent(repos, doc, login_user);
-		}	
+			String content = readVirtualDocContent(repos, doc);
+			if( null !=content){
+	        	content = content.replaceAll("\t","");
+	        }
+	 		//doc.setContent(JSONObject.toJSONString(content));
+			doc.setContent(content);
+			
+			String tmpContent = readTmpVirtualDocContent(repos, doc, login_user);
+		    if( null !=tmpContent){
+		    	tmpContent = tmpContent.replaceAll("\t","");
+	        }
+			//rt.setTmpContent(JSONObject.toJSONString(tmpSavedContent));		
+			doc.setTmpContent(tmpContent);
+		}
 		
-		if( null !=content){
-        	content = content.replaceAll("\t","");
-        }
-		doc.setContent(content);
- 		//doc.setContent(JSONObject.toJSONString(content));
 		rt.setData(doc);
-		
-	    if( null !=tmpSavedContent){
-        	tmpSavedContent = tmpSavedContent.replaceAll("\t","");
-        }
-		//rt.setMsgData(JSONObject.toJSONString(tmpSavedContent));
-	    rt.setMsgData(tmpSavedContent);
 
 		writeJson(rt, response);
 	}
