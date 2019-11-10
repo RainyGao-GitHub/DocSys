@@ -2788,7 +2788,7 @@ function CompareObj(objA, objB, flag) {
     	  
     	  if(gDocInfo.docId == treeNode.id)
     	  {
-    		  if(gShowType == 1 && gDoc.openMode == 1 )	//如果处于预览模式且处于摘要状态，双击进入详情模式
+    		  if(gShowType == 1 && gDocInfo.openMode == 1 )	//如果处于预览模式且处于摘要状态，双击进入详情模式
     		  {
     	      	  getAndShowDoc(treeNode, 2, false); //切换至详情模式
               }
@@ -3596,10 +3596,10 @@ function CompareObj(objA, objB, flag) {
 	
 	function previewDoc()
 	{
-		console.log("previewDoc gDoc:", gDoc);
-		if(gDoc != null)
+		console.log("previewDoc gDocInfo:", gDocInfo);
+		if(gDocInfo != null)
 		{
-			doPreviewDoc(gDoc);
+			doPreviewDoc(gDocInfo);
 		}
 	}
 	
@@ -3712,7 +3712,7 @@ function CompareObj(objA, objB, flag) {
 		 DocEdit.loadmd("");
 		 $(".editormd-preview-close-btn").hide();//css("display","none");
 
-		 getAndShowDoc(gDoc, 1, false);
+		 getAndShowDoc(gDocInfo, 1, false);
 	}
 	
 	/************************** contextMenu 接口***************************/	
