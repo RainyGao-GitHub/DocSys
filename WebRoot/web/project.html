@@ -1728,6 +1728,7 @@
     function showGDoc(showType)
     {
 		console.log("showGDoc gShowType:" + gShowType + " gDocInfo", gDocInfo);
+		var openMode = gDocInfo.openMode;
 		var fileSuffix = getFileSuffix(gDocInfo.name);
 		if(showType == 1)	//显示预览
 		{	
@@ -1873,7 +1874,11 @@
 		$("#imgPreview").show();
 	}
 	
-	function showVideoPreview()
+	function showFileLogo(showFlag)
+	{
+		
+	}
+	function showVideoPreview(showFlag)
 	{		
 		if(showFlag == false)
 		{
