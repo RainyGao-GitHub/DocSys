@@ -191,6 +191,9 @@
 								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
 							</ul>
 					</li>
+					<li id="modeSwitchBtn" style="display:none">
+                        <a id="modeSwitchBtnText" onclick="switchShowMode()"  title="电子书模式">切换模式</a>
+                    </li>
 					<li id="loginBtn">
                         <a onclick="showLoginPanel()"  title="用户登录">登录</a>
                     </li>
@@ -282,12 +285,8 @@
         		<div style="position:absolute; right:5px; top:10px">
 	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
 	                   	</button>
-	                    <button id="btnEditWiki" class="btn btn-default" type="button" onclick="DocEdit.lockAndEditWiki()" style="display:none">编辑
-	                    </button>
 	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
 	                    </button>
-	                    <button id="btnSwitchShow" class="btn btn-default" type="button" onclick="switchShowMode()">备注
-	                   	</button>
         		</div>
          	</div>
             <div class="manual-article" id="previewZone">
@@ -3013,7 +3012,9 @@ function CompareObj(objA, objB, flag) {
         	$('#mobileLoginBtn').hide();
         	
         	$('#logoutBtn').show();
-           	$('#mobileLogoutBtn').show();            
+           	$('#mobileLogoutBtn').show();
+           	
+        	$('#modeSwitchBtn').show();
     	}
     	else
     	{
@@ -3022,6 +3023,8 @@ function CompareObj(objA, objB, flag) {
         	
         	$('#logoutBtn').hide();
            	$('#mobileLogoutBtn').hide();
+           	
+        	$('#modeSwitchBtn').hide();
     	}
     }
 	
@@ -3659,15 +3662,11 @@ function CompareObj(objA, objB, flag) {
 	   	 {
 		    $("#btnExitEdit").show();
 	      	$("#btnSaveWiki").show();  
-	      	//$("#btnEditWiki").hide();
-			$("#btnSwitchShow").hide();
 	     }
 	     else
 	     {
 		    $("#btnExitEdit").hide();
-	      	$("#btnSaveWiki").hide(); 
-	      	//$("#btnEditWiki").show();
-			$("#btnSwitchShow").show();
+	      	$("#btnSaveWiki").hide();
 	     }
 	}
 	
@@ -3697,11 +3696,11 @@ function CompareObj(objA, objB, flag) {
 		 
 		 if(gShowType == 1)	//预览
 	   	 {
-		    $("#btnSwitchShow").text("备注");
+		    $("#modeSwitchBtnText").css("title","标准模式");
 	     }
 	     else
 	     {
-			 $("#btnSwitchShow").text("关闭备注");
+			$("#modeSwitchBtnText").css("title","电子书模式"); 
 	     }
 
 		 updateUrl();
@@ -4108,14 +4107,14 @@ function CompareObj(objA, objB, flag) {
 		{
 			gShowType = gInitShowType;
 		}
-		if(gShowType == 1)
-		{
-		    $("#btnSwitchShow").text("备注");
-		}
-		else
-		{
-		    $("#btnSwitchShow").text("关闭备注");			
-		}
+		if(gShowType == 1)	//预览
+	   	{
+		    $("#modeSwitchBtnText").css("title","标准模式");
+	    }
+	    else
+	    {
+			$("#modeSwitchBtnText").css("title","电子书模式"); 
+	    }
     }
     
     function setGInitDocInfo()
@@ -4641,8 +4640,6 @@ function CompareObj(objA, objB, flag) {
 						{divider: true},
 						{text: '查看备注', action: function(e){
 								e.preventDefault();
-								gShowType = 2; //切换到备注模式
-								$("#btnSwitchShow").text("关闭备注");
 							    updateUrl();
 								getAndShowDoc(curRightClickedDocListNode, 1, false);
 					 			showRightDiv();
