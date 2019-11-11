@@ -1,0 +1,28 @@
+<script type="text/javascript">
+//PdfViewer类
+var PdfViewer = (function () {
+	var url;
+	
+	function pdfViewerPageInit(Input_url)
+	{
+		console.log("pdfViewerPageInit Input_url:" + Input_url);
+		url = Input_url;
+		showPDF(url);
+	}
+		
+	function showPDF(url)
+	{
+		$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
+		'" style="width:100%; height:100%;"></iframe>');
+	}
+	
+	//开放给外部的调用接口
+    return {
+    	pdfViewerPageInit: function(url){
+    		pdfViewerPageInit(url);
+        },
+    };
+})();
+</script>
+
+<div id="pdfPlayer" class="pdfPlayer" style="height: 557px; width: 100%; height: 100%"></div>
