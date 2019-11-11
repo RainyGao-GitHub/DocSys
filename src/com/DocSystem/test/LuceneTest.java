@@ -1,5 +1,11 @@
 package com.DocSystem.test;
-import java.util.List;
+import java.util.HashMap;
+
+import com.DocSystem.common.HitDoc;
+import com.DocSystem.entity.Doc;
+import com.DocSystem.entity.Repos;
+
+import util.LuceneUtil.LuceneUtil2;
 
 class LuceneTest  
 {  
@@ -8,25 +14,25 @@ class LuceneTest
         System.out.println("This is test app");
         String content = "abc efg hijk lmn 7788 国家";
        // String file1Content2 = "abc hijk efg ddddd 中国";
+       
+        Repos repos = new Repos();
+        Doc doc = new Doc();
         try {
         	System.out.println("************* Add Index Test ****************");
-        	//LuceneUtil2.addIndexForVDoc(1,content,"doc");        	
-        	//LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/77777ddd.txt","doc");
-        	//LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/CommitFailTest.xlsx","doc");
-        	//LuceneUtil2.addIndexForRDoc(1,"C:/Users/Administrator/Desktop/getHistoryDoc.js","doc");
-        	//LuceneUtil2.addIndexForRDoc(1,"C:\\Users\\ragao\\Desktop\\Rainy\\DocSys仓库详情页面布局需求.docx","doc");
-        	//LuceneUtil2.addIndexForRDoc(1,"C:\\Users\\ragao\\Desktop\\Rainy\\ci_dspnyq.log","doc");
-        	LuceneUtil2.addIndexForRDoc(1,"C:\\Users\\ragao\\Desktop\\Rainy\\URLProtocol.html","doc");
+        	LuceneUtil2.addIndexForFile("C:\\Users\\ragao\\Desktop\\Rainy\\URLProtocol.html", doc,"doc");
         	
         	System.out.println("************* Search Test ****************");
-        	LuceneUtil2.fuzzySearch("国家","doc");
+        	HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
+			int searchType = 5; //
+			int weight = 1;
+			LuceneUtil2.search(repos, "国家" , "", "content", "doc", searchResult, searchType, weight);
         	
         	System.out.println("*********** Delete Index Test *********** ");
            	//LuceneUtil2.deleteIndexForDoc(1,"doc");
-           	LuceneUtil2.deleteIndexForVDoc(1,"doc");
-           	LuceneUtil2.deleteIndexForRDoc(1,"doc");
+           	LuceneUtil2.deleteDoc(doc, "doc");
+           	LuceneUtil2.deleteDoc(doc, "doc");
            	System.out.println("************* Search Test after delete****************");
-        	LuceneUtil2.fuzzySearch("国家","doc");
+           	LuceneUtil2.search(repos, "国家" , "", "content", "doc", searchResult, searchType, weight);
         } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
