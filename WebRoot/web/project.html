@@ -1644,16 +1644,7 @@
           	return;
         }
       	
-        //To get DocInfo and Show Content
-        var docType = 2; //get VDoc Content only
-        if(gShowType == 1)
-        {
-        	if(openMode == 2)	//详情模式需要获取文本文件的详细内容
-        	{
-        		docType = 3; //get content and docText
-        	}
-        }
-        
+        //To get DocInfo and Show Doc 
     	$.ajax({
             url : "/DocSystem/Doc/getDoc.do",
             type : "post",
@@ -1664,7 +1655,7 @@
                 pid: node.pid,
                 path: node.path,
                 name: node.name,
-                docType: docType,
+                docType: 2, //取回备注内容
             },
             success : function (ret) {
             	console.log("getAndShowDoc ret",ret);
@@ -1701,12 +1692,6 @@
 	            	gDocInfo.content = parseDocContent(doc.content);
 	                gDocInfo.tmpContent = parseDocContent(doc.tmpContent);
 	                
-	                if(gShowType == 1)
-	                {
-		                gDocInfo.docText = parseDocContent(doc.docText);
-		                gDocInfo.tmpDocText = parseDocContent(doc.tmpDocText);
-	                }
-	                
 	                showGDoc(gShowType);
                 }
                 else
@@ -1727,83 +1712,171 @@
     {
 		console.log("showGDoc gShowType:" + gShowType + " gDocInfo", gDocInfo);
 		
-	     $("#btnExitEdit").hide();
-      	 $("#btnSaveWiki").hide(); 
-      	 
-		var openMode = gDocInfo.openMode;
+		//显示文件图标
 		var fileSuffix = getFileSuffix(gDocInfo.name);
-		if(showType == 1)	//显示预览
+		if(showType == 2)	//电子书模式：不显示图标
+		{
+		     $("#docPreview").hide();      	
+		}
+		else	//标准模式：显示图标或图片、视频
 		{	
+			$("#docPreview").show();  
 			if(isPicture(fileSuffix))
 			{
-		      	$("#docPreview").show();
 	            showImgPreview(true);
 	            showVideoPreview(false);
 		        showFileLogo(false);
-			    showGDocContentInMdEditor();
 			}
 			else if(isVideo(fileSuffix))
 			{
-		      	$("#docPreview").show();
 		      	showImgPreview(false);
 	            showVideoPreview(true);
 		        showFileLogo(false);
-	            showGDocContentInMdEditor();
-			}
-			else if(isText(fileSuffix))
-			{
-		      	$("#docPreview").show();
-	            showImgPreview(false);
-	            showVideoPreview(false);
-		        showFileLogo(true);
-				if(openMode == 1) //摘要模式：图标+摘要
-				{
-					 showGDocContentInMdEditor(); 
-				}
-				else //详情模式：文件内容+编辑按键
-				{
-					$("#docPreview").hide();
-					showFileLogo(false);
-				    showGDocTextInMdEditor(true);					 					 
-				}
-			}
-			else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
-			{
-				 if(openMode == 1)
-				 {
-				     $("#docPreview").show();
-			         showImgPreview(false);
-			         showVideoPreview(false);
-				     showFileLogo(true);
-					 showGDocContentInMdEditor();								 
-				 }
-				 else
-				 {
-				     showFileLogo(false);
-					 //获取PDF文件并显示，如果预览失败则显示摘要
-					 //getAndShowPdf();
-					 previewDoc();
-				 }
 			}
 			else
 			{
-
-				 $("#vdocPreview").hide();
-		      	 $("#docPreview").show();
-		         showImgPreview(false);
-		         showVideoPreview(false);
-		         showFileLogo(true);
-				 showGDocContentInMdEditor();
+		        showImgPreview(false);
+		        showVideoPreview(false);
+		        showFileLogo(true);
 			}
 		}
-		else	//显示备注
-		{
-			 $("#btnExitEdit").hide();
-		     $("#btnSaveWiki").hide();
-		     $("#docPreview").hide();      	
-			 showGDocContentInMdEditor();
+		
+		//显示备注
+	    $("#btnExitEdit").hide();
+      	$("#btnSaveWiki").hide(); 
+    	showGDocContentInMdEditor();
+		
+    	//显示文件内容
+    	if(gDocInfo.openMode == 2)
+    	{
+			//Open Doc in Dialog
+			openDocInDialog(gDocInfo, fileSuffix);
 		}
     }
+	
+	function openDocInDialog(doc, fileSuffix)
+	{
+		String url = null;
+		if(isPicture(fileSuffix))
+		{
+			showPictureInDialog(url);
+		}
+		else if(isText(fileSuffix))
+		{
+			showTextInDialog(doc); //这是个异步调用
+		}
+		else if(isOffice(fileSuffix) || isPdf(fielSuffix)) //View Only
+		{
+			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
+			showOfficeInDialog(doc); //这是个异步调用
+		}
+		else
+		{
+			//不支持该文件类型的预览
+		}
+	}
+	
+	function showOfficeInDialog(node)
+	{
+		if(!node || node == null)
+		{
+			showErrorMessage("请选择文件!");
+			return;
+		}
+		
+		var docId = node.id;
+		var pid = node.pid;
+		var path = node.path;
+		var name = node.name;
+		
+		//Convert doc to PDF and return the link, then show the pdf 
+	    $.ajax({
+	        url : "/DocSystem/Doc/DocToPDF.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: gReposInfo.id,
+	            docId : docId,
+	            pid: pid,
+	            path: path,
+	            name: name,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+	                var fileLink = ret.data;
+	                console.log("fileLink" + fileLink);
+	    			//在新的页面打开
+	    			showPdfInDialog(fileLink);	
+	            }
+	            else
+	            {
+	            	showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
+	            	showTextInDialog(node); //ReadOnly 方式显示文件内容
+	            }
+	        },
+	        error : function () {
+	            showErrorMessage("文件预览失败：服务器异常");
+	        }
+	    });
+	}
+	
+    function showPdfInDialog(url)
+   	{
+		//show HistoryLogs page
+		bootstrapQ.dialog({
+			id: "PdfViewer",
+			title: "文件预览",
+			url: 'PdfViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			callback: function(){
+				PdfViewer().pdfViewerPageInit(url);
+			},
+		});
+   	}
+	
+	function showTextInDialog(node)
+	{
+		console.log("showTextInDialog()  node:", node);
+	    if(!node || node == null || node.id == 0)
+	    {
+	    	//未定义需要显示的文件
+	    	return;
+	    }
+	      	
+	    //To get DocInfo and Show Doc 
+	    $.ajax({
+	           url : "/DocSystem/Doc/getDoc.do",
+	           type : "post",
+	           dataType : "json",
+	           data : {
+	            	reposId: gReposInfo.id,
+	                docId : node.id,
+	                pid: node.pid,
+	                path: node.path,
+	                name: node.name,
+	                docType: 1, //取回文件内容
+	            },
+	            success : function (ret) {
+	            	console.log("showTextInDialog ret",ret);
+	            	if( "ok" == ret.status )
+	            	{
+	            		var doc = ret.data
+	            		console.log("showTextInDialog doc:" + doc);
+	            		//show the docText in MdEditor in new Dialog	
+	                }
+	                else
+	                {
+	                	showErrorMessage("获取文件失败：" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("获取文件失败：服务器异常");
+	            }
+	        });
+	    }
+	}
     
 	function showGDocContentInMdEditor()
 	{
@@ -1819,6 +1892,7 @@
 	  	$(".editormd-preview-close-btn").show();//css("display","none");
 	}
 	
+	//为了避免相同位置的编辑器编辑不同的内容，因此DocEdit只用于编辑VDOC
 	function showGDocTextInMdEditor(enableEdit)
 	{
 		console.log("showGDocTextInMdEditor gDocInfo.docId:" + gDocInfo.docId);
@@ -3587,11 +3661,11 @@ function CompareObj(objA, objB, flag) {
 		console.log("previewDoc gDocInfo:", gDocInfo);
 		if(gDocInfo != null)
 		{
-			doPreviewDocInNewPage(gDocInfo);
+			showOfficeInNewPage(gDocInfo);
 		}
 	}
 	
-	function doPreviewDocInNewPage(node)
+	function showOfficeInNewPage(node)
 	{
 		if(!node || node == null)
 		{
@@ -3625,7 +3699,7 @@ function CompareObj(objA, objB, flag) {
 	            }
 	            else
 	            {
-	            	showErrorMessage("文件预览失败：" + ret.msgInfo);              	
+	            	showErrorMessage("文件预览失败：" + ret.msgInfo);           	
 	            }
 	        },
 	        error : function () {
@@ -3634,11 +3708,6 @@ function CompareObj(objA, objB, flag) {
 	    });
 	}
 	
-    function showPdfInDialog(url)
-   	{
-        $('.pdfPreview').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
-            '" style="width:100%; height:100%;"></iframe>');
-   	}
 	
 	function WikiEditBtnCtrl(edit)
 	{
