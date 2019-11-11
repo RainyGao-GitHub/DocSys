@@ -292,9 +292,8 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none;"></img>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none;" onclick="openGDocInDialog()"></img>
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
-						<div id="pdfPreview" class="pdfPreview" style="display:none; width: 100%; height: 100%"></div>
                 	</div>
 	            </div>
                 <div class="article-body editor-content"  id="vdocPreview" style="min-height: 650px">
@@ -1727,58 +1726,51 @@
     function showGDoc(showType)
     {
 		console.log("showGDoc gShowType:" + gShowType + " gDocInfo", gDocInfo);
+		
+	     $("#btnExitEdit").hide();
+      	 $("#btnSaveWiki").hide(); 
+      	 
 		var openMode = gDocInfo.openMode;
 		var fileSuffix = getFileSuffix(gDocInfo.name);
 		if(showType == 1)	//显示预览
 		{	
 			if(isPicture(fileSuffix))
 			{
-			    $("#btnExitEdit").hide();
-		      	$("#btnSaveWiki").hide(); 
 		      	$("#docPreview").show();
 	            showImgPreview(true);
 	            showVideoPreview(false);
 		        showFileLogo(false);
-				$("#vdocPreview").show();
-	            showGDocContentInMdEditor();
+			    showGDocContentInMdEditor();
 			}
 			else if(isVideo(fileSuffix))
 			{
-			    $("#btnExitEdit").hide();
-		      	$("#btnSaveWiki").hide(); 
 		      	$("#docPreview").show();
 		      	showImgPreview(false);
 	            showVideoPreview(true);
 		        showFileLogo(false);
-				$("#vdocPreview").show();
 	            showGDocContentInMdEditor();
 			}
 			else if(isText(fileSuffix))
 			{
-			    $("#btnExitEdit").hide();
-		      	$("#btnSaveWiki").hide(); 
 		      	$("#docPreview").show();
 	            showImgPreview(false);
 	            showVideoPreview(false);
 		        showFileLogo(true);
 				if(openMode == 1) //摘要模式：图标+摘要
 				{
-				     $("#vdocPreview").show();	      	
 					 showGDocContentInMdEditor(); 
 				}
 				else //详情模式：文件内容+编辑按键
 				{
-			         showFileLogo(false);
-				     $("#docPreview").hide();
-					 showGDocTextInMdEditor(true);					 					 
+					$("#docPreview").hide();
+					showFileLogo(false);
+				    showGDocTextInMdEditor(true);					 					 
 				}
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
 			{
 				 if(openMode == 1)
 				 {
-					 $("#btnExitEdit").hide();
-				     $("#btnSaveWiki").hide(); 
 				     $("#docPreview").show();
 			         showImgPreview(false);
 			         showVideoPreview(false);
@@ -1795,10 +1787,9 @@
 			}
 			else
 			{
-			     $("#btnExitEdit").hide();
-		      	 $("#btnSaveWiki").hide(); 
+
 				 $("#vdocPreview").hide();
-		      	 $("#docPreview").hide();
+		      	 $("#docPreview").show();
 		         showImgPreview(false);
 		         showVideoPreview(false);
 		         showFileLogo(true);
@@ -1809,8 +1800,7 @@
 		{
 			 $("#btnExitEdit").hide();
 		     $("#btnSaveWiki").hide();
-		     $("#docPreview").hide();
-		     $("#vdocPreview").show();	      	
+		     $("#docPreview").hide();      	
 			 showGDocContentInMdEditor();
 		}
     }
@@ -1818,6 +1808,8 @@
 	function showGDocContentInMdEditor()
 	{
 		console.log("showGDocContentInMdEditor gDocInfo.docId:" + gDocInfo.docId);
+	    $("#vdocPreview").show();	      				
+		
 		gDocInfo.contentType = 2; //MdEditor中的是备注内容
 		gDocContent = gDocInfo.content;
 		gTmpSavedContent = gDocInfo.tmpContent;
@@ -1830,6 +1822,8 @@
 	function showGDocTextInMdEditor(enableEdit)
 	{
 		console.log("showGDocTextInMdEditor gDocInfo.docId:" + gDocInfo.docId);
+	    $("#vdocPreview").show();	      	
+		
 		gDocInfo.contentType = 1; //MdEditor中的是备注内容		
 		gDocContent = gDocInfo.docText;
 		gTmpSavedContent = gDocInfo.tmpDocText;
@@ -3593,11 +3587,11 @@ function CompareObj(objA, objB, flag) {
 		console.log("previewDoc gDocInfo:", gDocInfo);
 		if(gDocInfo != null)
 		{
-			doPreviewDoc(gDocInfo);
+			doPreviewDocInNewPage(gDocInfo);
 		}
 	}
 	
-	function doPreviewDoc(node)
+	function doPreviewDocInNewPage(node)
 	{
 		if(!node || node == null)
 		{
@@ -3627,8 +3621,7 @@ function CompareObj(objA, objB, flag) {
 	                var fileLink = ret.data;
 	                console.log("fileLink" + fileLink);
 	    			//在新的页面打开
-	    			//window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink);	
-	    		   	showPDF(fileLink);
+	    			window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink);	
 	            }
 	            else
 	            {
@@ -3641,7 +3634,7 @@ function CompareObj(objA, objB, flag) {
 	    });
 	}
 	
-    function showPDF(url)
+    function showPdfInDialog(url)
    	{
         $('.pdfPreview').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
             '" style="width:100%; height:100%;"></iframe>');
