@@ -171,7 +171,7 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	            	reposId: gReposId,
+	            	reposId: gReposInfo.id,
 	                docId : docId,
 	                pid: node.pid,
 	                path: node.path,
@@ -229,7 +229,7 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	            	reposId: gReposId,
+	            	reposId: gReposInfo.id,
 	                docId : docId,
 	                pid: node.pid,
 	                path: node.path,
@@ -343,10 +343,10 @@
 				dataType : "json",
 				data : {
 					lockType : 3, //LockType: Online Edit
-					reposId : gReposId, 
+					reposId : gReposInfo.id, 
 					docId : gDocInfo.docId,
-					path: gParentPath,
-					name: gDocName,
+					path: gDocInfo.path,
+					name: gDocInfo.name,
 					docType: gDocInfo.contentType,
 				},
 				success : function (ret) {
@@ -435,10 +435,10 @@
 				dataType : "json",
 				data : {
 					lockType : 0, //unlock the doc
-					reposId : gReposId, 
+					reposId : gReposInfo.id, 
 					docId : gDocInfo.docId,
-					path: gParentPath,
-					name: gDocName,
+					path: gDocInfo.path,
+					name: gDocInfo.name,
 					docType: gDocInfo.contentType,
 				},
 				success : function (ret) {
@@ -490,10 +490,10 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
-	                reposId: gReposId,
+	                reposId: gReposInfo.id,
 	            	docId : gDocInfo.docId,
-	            	path: gParentPath,
-	                name: gDocName,
+	            	path: gDocInfo.path,
+	                name: gDocInfo.name,
 	            	content : content,
 	            	docType: gDocInfo.contentType,
 	            },
