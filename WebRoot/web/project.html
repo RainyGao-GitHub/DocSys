@@ -1756,7 +1756,7 @@
 	
 	function openDocInDialog(doc, fileSuffix)
 	{
-		String url = null;
+		var url = null;
 		if(isPicture(fileSuffix))
 		{
 			showPictureInDialog(url);
@@ -1765,7 +1765,7 @@
 		{
 			showTextInDialog(doc); //这是个异步调用
 		}
-		else if(isOffice(fileSuffix) || isPdf(fielSuffix)) //View Only
+		else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
 		{
 			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
 			showOfficeInDialog(doc); //这是个异步调用
@@ -1875,7 +1875,6 @@
 	                showErrorMessage("获取文件失败：服务器异常");
 	            }
 	        });
-	    }
 	}
     
 	function showGDocContentInMdEditor()
@@ -4135,7 +4134,7 @@ function CompareObj(objA, objB, flag) {
 		//setGShowType
 		setGShowType();
 		
-		console.log("globalVarInit() gInitReposId" + gInitReposInfo.id  + " gShowType:" + gShowType + " gInitDocInfo:", gInitDocInfo);
+		console.log("globalVarInit() gInitReposId:" + gInitReposInfo.id  + " gShowType:" + gShowType + " gInitDocInfo:", gInitDocInfo);
    	}
 
     function setGInitReposInfo()
@@ -4435,7 +4434,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 					e.preventDefault();
-					doPreviewDoc(curRightClickedTreeNode);
+					showOfficeInNewPage(curRightClickedTreeNode);
 				}
 			},
 			{text: '下载', action: function(e){
@@ -4605,7 +4604,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '预览', action: function(e){
 						e.preventDefault();
-						doPreviewDoc(curRightClickedDocListNode);
+						showOfficeInNewPage(curRightClickedDocListNode);
 					}
 			},
 			{text: '下载', action: function(e){
