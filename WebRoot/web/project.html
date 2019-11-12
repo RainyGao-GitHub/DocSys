@@ -292,7 +292,7 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none;" onclick="openGDocInDialog()" onerror="fileImgErrHandler();"></img>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none;" onclick="openGDocInDialog()" onerror="FileImgErrHandler();"></img>
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
                 	</div>
 	            </div>
@@ -1682,6 +1682,7 @@
                 	gDocInfo.docId = doc.docId;
 	            	gDocInfo.path = doc.path;
 	            	gDocInfo.name = doc.name;
+	            	gDocInfo.type = doc.type;
                 	//gDocInfo.doc = doc;
                 	gDocInfo.dataEx = ret.dataEx;
 	                
@@ -1714,6 +1715,8 @@
 		
 		//显示文件图标
 		var fileSuffix = getFileSuffix(gDocInfo.name);
+		gDocInfo.fileSuffix = fileSuffix;
+		
 		if(showType == 2)	//电子书模式：不显示图标
 		{
 		     $("#docPreview").hide();      	
@@ -1723,21 +1726,18 @@
 			$("#docPreview").show();  
 			if(isPicture(fileSuffix))
 			{
-	            showImgPreview(true);
+				showFileImg(gDocInfo, "picture");
 	            showVideoPreview(false);
-		        showFileLogo(false);
 			}
 			else if(isVideo(fileSuffix))
 			{
-		      	showImgPreview(false);
+				showFileImg(null);
 	            showVideoPreview(true);
-		        showFileLogo(false);
 			}
 			else
 			{
-		        showImgPreview(false);
+				showFileImg(gDocInfo);
 		        showVideoPreview(false);
-		        showFileLogo(true, fileSuffix);
 			}
 		}
 		
@@ -1912,22 +1912,36 @@
 		}
 	}
 	
-	
-	function showImgPreview(showFlag)
-	{		
-		if(showFlag == false)
+	function showFileImg(docInfo, showType)
+	{
+		if(docInfo == null)
 		{
 			$("#imgPreview").attr('src', "");
 			$("#imgPreview").hide();
 			return;
 		}
 		
-		var docDataEx = gDocInfo.dataEx;
+		if(docInfo.type == 2)
+		{
+			showFolderLogo("win10");
+			return;
+		}
+		
+		if(showType) //picture
+		{
+			return showImgPreview(docInfo);
+		}
+		
+		return showFileLogo(docInfo);
+	}
+	
+	function showImgPreview(docInfo)
+	{	
+		var docDataEx = docInfo.dataEx;
 		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 		{
 			console.log("showImgPreview() dataEx is null");
-			$("#imgPreview").attr('src', "");
-			$("#imgPreview").hide();
+			showFileImg(docInfo);
 			return;
 		}
 		
@@ -1941,13 +1955,10 @@
 		$("#imgPreview").show();
 	}
 	
-	function showFileLogo(showFlag, fileSuffix)
+	function showFileLogo(docInfo)
 	{
-		if(showFlag == false)
-		{
-			return;
-		}
-
+		var fileSuffix = docInfo.fileSuffix;
+		
 		var logoLink = "/DocSystem/web/images/file_icon/icon_file/file.png";
 		if(fileSuffix && fileSuffix != "")
 		{
@@ -1955,7 +1966,17 @@
 		}
 		$("#imgPreview").attr('src', logoLink);
 		$("#imgPreview").show();
-		
+	}
+	
+	function showFolderLogo(style)
+	{
+		var logoLink = "/DocSystem/web/images/file_icon/icon_others/folder.png";
+		if(style && style != "")
+		{
+			logoLink = "/DocSystem/web/images/file_icon/icon_others/" + style + ".png";			
+		}
+		$("#imgPreview").attr('src', logoLink);
+		$("#imgPreview").show();
 	}
 	
 	function FileImgErrHandler()
