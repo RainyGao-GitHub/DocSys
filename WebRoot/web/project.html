@@ -292,7 +292,7 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none;" onclick="openGDocInDialog()"></img>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none;" onclick="openGDocInDialog()" onerror="fileImgErrHandler();"></img>
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
                 	</div>
 	            </div>
@@ -1737,7 +1737,7 @@
 			{
 		        showImgPreview(false);
 		        showVideoPreview(false);
-		        showFileLogo(true);
+		        showFileLogo(true, fileSuffix);
 			}
 		}
 		
@@ -1826,12 +1826,13 @@
 		bootstrapQ.dialog({
 			id: "PdfViewer",
 			title: "文件预览",
-			url: 'PdfViewer.html',
+			url: 'pdfViewer.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
+			mstyle:'width:100%; height:100px;',
 			callback: function(){
-				PdfViewer().pdfViewerPageInit(url);
+				PdfViewer.pdfViewerPageInit(url);
 			},
 		});
    	}
@@ -1940,10 +1941,30 @@
 		$("#imgPreview").show();
 	}
 	
-	function showFileLogo(showFlag)
+	function showFileLogo(showFlag, fileSuffix)
 	{
+		if(showFlag == false)
+		{
+			return;
+		}
+
+		var logoLink = "/DocSystem/web/images/file_icon/icon_file/file.png";
+		if(fileSuffix && fileSuffix != "")
+		{
+			logoLink = "/DocSystem/web/images/file_icon/icon_file/" + fileSuffix + ".png";			
+		}
+		$("#imgPreview").attr('src', logoLink);
+		$("#imgPreview").show();
 		
 	}
+	
+	function FileImgErrHandler()
+	{
+		console.log("FileImgErrHandler");
+		$("#imgPreview").attr('src',"images/file_icon/icon_file/file.png"); 
+	}
+	
+	
 	function showVideoPreview(showFlag)
 	{		
 		if(showFlag == false)
