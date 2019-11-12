@@ -292,7 +292,7 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none;" onclick="openGDocInDialog()" onerror="FileImgErrHandler();"></img>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none; width:128px; height:128px;" onclick="openGDocInDialog()" onerror="FileImgErrHandler();"></img>
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
                 	</div>
 	            </div>
@@ -1806,7 +1806,7 @@
 	                var fileLink = ret.data;
 	                console.log("fileLink" + fileLink);
 	    			//在新的页面打开
-	    			showPdfInDialog(fileLink);	
+	    			showPdfInDialog(node, fileLink);	
 	            }
 	            else
 	            {
@@ -1820,17 +1820,17 @@
 	    });
 	}
 	
-    function showPdfInDialog(url)
+    function showPdfInDialog(node, url)
    	{
 		//show HistoryLogs page
 		bootstrapQ.dialog({
 			id: "PdfViewer",
-			title: "文件预览",
+			title: node.name,
 			url: 'pdfViewer.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
-			mstyle:'width:100%; height:100px;',
+			mstyle:'width:90%;',
 			callback: function(){
 				PdfViewer.pdfViewerPageInit(url);
 			},
@@ -1923,7 +1923,8 @@
 		
 		if(docInfo.type == 2)
 		{
-			showFolderLogo("win10");
+			//showFolderLogo("win10");
+			showFolderLogo("mac");
 			return;
 		}
 		
