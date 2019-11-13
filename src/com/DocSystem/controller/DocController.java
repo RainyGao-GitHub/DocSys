@@ -2031,6 +2031,10 @@ public class DocController extends BaseController{
 			content = readVirtualDocContent(repos, doc);		
 		}
 		
+		if(content == null)
+		{
+			content = "";
+		}
 		writeText(content, response);
 	}
 	
@@ -2083,6 +2087,10 @@ public class DocController extends BaseController{
 			content = readTmpVirtualDocContent(repos, doc, login_user);		
 		}
 		
+		if(content == null)
+		{
+			content = "";
+		}
 		writeText(content, response);
 	}
 	

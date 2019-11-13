@@ -1851,9 +1851,57 @@
 	    	return;
 	    }
 	      	
+	    var docText = "";
+	    var tmpSavedDocText = "";
+	    $.ajax({
+	           url : "/DocSystem/Doc/getDocContent.do",
+	           type : "post",
+	           dataType : "text",
+	           data : {
+	            	reposId: gReposInfo.id,
+	                docId : node.id,
+	                pid: node.pid,
+	                path: node.path,
+	                name: node.name,
+	                docType: 1, //取回文件内容
+	            },
+	            success : function (ret1) {
+	            	console.log("showTextInDialog ret1",ret1);
+	            	var docText = ret1;
+	            	//Try to get tmpSavedDocContent
+	            	$.ajax({
+	            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
+	            	           type : "post",
+	            	           dataType : "text",
+	            	           data : {
+	            	            	reposId: gReposInfo.id,
+	            	                docId : node.id,
+	            	                pid: node.pid,
+	            	                path: node.path,
+	            	                name: node.name,
+	            	                docType: 1, //取回文件内容
+	            	            },
+	            	            success : function (ret2) {
+	            	            	console.log("showTextInDialog ret2",ret2);
+	            	            	tmpSavedDocText = ret2;
+	            	            	//showDocInTextEditor(doc, docText, tmpSavedDocText, false) 
+	            	            },
+	            	            error : function () {	            	            	
+	            	                showErrorMessage("临时保存文件内容失败：服务器异常");
+	            	            }
+	            	        });
+	            },
+	            error : function () {
+	                showErrorMessage("获取文件内容失败：服务器异常");
+	            }
+	        });
+	}
+	
+	function getDocContent(doc, callback)
+	{
 	    //To get DocInfo and Show Doc 
 	    $.ajax({
-	           url : "/DocSystem/Doc/getDoc.do",
+	           url : "/DocSystem/Doc/getDocContent.do",
 	           type : "post",
 	           dataType : "json",
 	           data : {
@@ -1868,9 +1916,10 @@
 	            	console.log("showTextInDialog ret",ret);
 	            	if( "ok" == ret.status )
 	            	{
-	            		var doc = ret.data
-	            		console.log("showTextInDialog doc:" + doc);
-	            		//show the docText in MdEditor in new Dialog	
+	            		var docText = ret;
+	            		//Try to get tmpSavedDocContent
+	            		
+	            		
 	                }
 	                else
 	                {
@@ -1882,7 +1931,7 @@
 	            }
 	        });
 	}
-    
+	    
 	function showGDocContentInMdEditor()
 	{
 		console.log("showGDocContentInMdEditor gDocInfo.docId:" + gDocInfo.docId);
