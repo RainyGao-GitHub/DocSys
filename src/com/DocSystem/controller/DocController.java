@@ -1255,44 +1255,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	@RequestMapping("/deleteTmpSavedDocContent.do")
-	public void deleteTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
-			HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
-		
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-				
-		Repos repos = reposService.getRepos(reposId);
-		if(repos == null)
-		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
-		
-		if(docType == 1)
-		{
-			deleteTmpRealDocContent(repos, doc, login_user);			
-		}
-		else
-		{
-			deleteTmpVirtualDocContent(repos, doc, login_user);
-		}
-		writeJson(rt, response);
-	}
-	
 	/**************** downloadDocPrepare ******************/
 	@RequestMapping("/downloadDocPrepare.do")
 	public void downloadDocPrepare(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
@@ -2069,9 +2031,96 @@ public class DocController extends BaseController{
 			content = readVirtualDocContent(repos, doc);		
 		}
 		
-		rt.setData(content);
-		//System.out.println(rt.getData());
+		writeText(content, response);
+	}
+	
+	
+	/****************   get Tmp Saved Document Content ******************/
+	@RequestMapping("/getTmpSavedDocContent.do")
+	public void getTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
+			HttpServletRequest request,HttpServletResponse response,HttpSession session){
+		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
 
+		if(path == null)
+		{
+			path = "";
+		}
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		
+		String content = "";
+		if(docType == 1)
+		{
+			String fileSuffix = getFileSuffix(name);
+			if(isText(fileSuffix))
+			{
+				content = readTmpRealDocContent(repos, doc, login_user);
+			}
+		}
+		else if(docType == 2)
+		{
+			content = readTmpVirtualDocContent(repos, doc, login_user);		
+		}
+		
+		writeText(content, response);
+	}
+	
+	@RequestMapping("/deleteTmpSavedDocContent.do")
+	public void deleteTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+				
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		
+		if(docType == 1)
+		{
+			deleteTmpRealDocContent(repos, doc, login_user);			
+		}
+		else
+		{
+			deleteTmpVirtualDocContent(repos, doc, login_user);
+		}
 		writeJson(rt, response);
 	}
 	
