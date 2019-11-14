@@ -283,9 +283,9 @@
          		</div>
         		<div class="filetitle" id="filetitle"></div>
         		<div style="position:absolute; right:5px; top:10px">
-	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
+	                    <button id="btnMdExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
 	                   	</button>
-	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
+	                    <button id="btnMdSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
 	                    </button>
         		</div>
          	</div>
@@ -1744,7 +1744,7 @@
 		//显示备注
 	    $("#btnExitEdit").hide();
       	$("#btnSaveWiki").hide(); 
-    	showGDocContentInMdEditor();
+    	showGDocVDocContent();
 		
     	//显示文件内容
     	if(gDocInfo.openMode == 2)
@@ -1753,6 +1753,20 @@
 			openDocInDialog(gDocInfo, fileSuffix);
 		}
     }
+	
+	function showGDocVDocContent()
+	{
+		console.log("showGDocVDocContent gDocInfo.docId:" + gDocInfo.docId);
+	    $("#vdocPreview").show();	      				
+		
+		gDocInfo.contentType = 2; //MdEditor中的是备注内容
+		gDocContent = gDocInfo.content;
+		gTmpSavedContent = gDocInfo.tmpContent;
+		//console.log("showGDocVDocContent gDocInfo.content:" + gDocInfo.content + " gDocContent:" + gDocContent);
+		
+		DocEdit.loadmd(gDocContent, gDocInfo.edit);
+	  	$(".editormd-preview-close-btn").show();//css("display","none");
+	}
 	
     function openGDocInDialog()
     {
@@ -1827,7 +1841,6 @@
 	
     function showPdfInDialog(node, url)
    	{
-		//show HistoryLogs page
 		bootstrapQ.dialog({
 			id: "PdfViewer",
 			title: node.name,
@@ -1884,7 +1897,7 @@
 	            	            success : function (ret2) {
 	            	            	console.log("showTextInDialog ret2",ret2);
 	            	            	tmpSavedDocText = ret2;
-	            	            	//showDocInTextEditor(doc, docText, tmpSavedDocText, false) 
+	            	            	showMarkdownInDialog(node, docText, tmpSavedDocText);
 	            	            },
 	            	            error : function () {	            	            	
 	            	                showErrorMessage("临时保存文件内容失败：服务器异常");
@@ -1897,73 +1910,21 @@
 	        });
 	}
 	
-	function getDocContent(doc, callback)
+	function showMarkdownInDialog(node, docText, tmpSavedDocText)
 	{
-	    //To get DocInfo and Show Doc 
-	    $.ajax({
-	           url : "/DocSystem/Doc/getDocContent.do",
-	           type : "post",
-	           dataType : "json",
-	           data : {
-	            	reposId: gReposInfo.id,
-	                docId : node.id,
-	                pid: node.pid,
-	                path: node.path,
-	                name: node.name,
-	                docType: 1, //取回文件内容
-	            },
-	            success : function (ret) {
-	            	console.log("showTextInDialog ret",ret);
-	            	if( "ok" == ret.status )
-	            	{
-	            		var docText = ret;
-	            		//Try to get tmpSavedDocContent
-	            		
-	            		
-	                }
-	                else
-	                {
-	                	showErrorMessage("获取文件失败：" + ret.msgInfo);
-	                }
-	            },
-	            error : function () {
-	                showErrorMessage("获取文件失败：服务器异常");
-	            }
-	        });
-	}
-	    
-	function showGDocContentInMdEditor()
-	{
-		console.log("showGDocContentInMdEditor gDocInfo.docId:" + gDocInfo.docId);
-	    $("#vdocPreview").show();	      				
-		
-		gDocInfo.contentType = 2; //MdEditor中的是备注内容
-		gDocContent = gDocInfo.content;
-		gTmpSavedContent = gDocInfo.tmpContent;
-		//console.log("showGDocContentInMdEditor gDocInfo.content:" + gDocInfo.content + " gDocContent:" + gDocContent);
-		
-		DocEdit.loadmd(gDocContent, gDocInfo.edit);
-	  	$(".editormd-preview-close-btn").show();//css("display","none");
-	}
-	
-	//为了避免相同位置的编辑器编辑不同的内容，因此DocEdit只用于编辑VDOC
-	function showGDocTextInMdEditor(enableEdit)
-	{
-		console.log("showGDocTextInMdEditor gDocInfo.docId:" + gDocInfo.docId);
-	    $("#vdocPreview").show();	      	
-		
-		gDocInfo.contentType = 1; //MdEditor中的是备注内容		
-		gDocContent = gDocInfo.docText;
-		gTmpSavedContent = gDocInfo.tmpDocText;
-		DocEdit.loadmd(gDocContent, gDocInfo.edit);
-		if(enableEdit)
-		{
-	  		$(".editormd-preview-close-btn").show();//css("display","none");
-		}
-		else
-		{
-	  		$(".editormd-preview-close-btn").hide();			
-		}
+		console.log("showMarkdownInDialog node.docId:" + node.docId);
+		bootstrapQ.dialog({
+			id: "MdViewer",
+			title: node.name,
+			url: 'mdViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle:'width:90%;',
+			callback: function(){
+				MdViewer.mdViewerPageInit(node, docText, tmpSavedDocText);
+			},
+		});
 	}
 	
 	function showFileImg(docInfo, showType)
@@ -3841,13 +3802,13 @@ function CompareObj(objA, objB, flag) {
 	{
 		 if(edit == true)
 	   	 {
-		    $("#btnExitEdit").show();
-	      	$("#btnSaveWiki").show();  
+		    $("#btnMdExitEdit").show();
+	      	$("#btnMdSaveWiki").show();  
 	     }
 	     else
 	     {
-		    $("#btnExitEdit").hide();
-	      	$("#btnSaveWiki").hide();
+		    $("#btnMdExitEdit").hide();
+	      	$("#btnMdSaveWiki").hide();
 	     }
 	}
 	
