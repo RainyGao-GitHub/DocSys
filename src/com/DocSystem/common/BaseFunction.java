@@ -1276,7 +1276,7 @@ public class BaseFunction{
 		
 	}
 	
-	protected String readDocContentFromFile(String path, String name) 
+	protected String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
 	{	
 		String filePath = path + name;
 		try 
@@ -1300,37 +1300,43 @@ public class BaseFunction{
 			in.read(buffer, 0, fileSize);
 			in.close();	
 
-			int encodeDetectBufLen = 0;
-			byte [] encodeDetectBuf = null;
-
 			String content = null;
-			if(fileSize < 2)
+			if(encodeDetectEnable)
 			{
-				content = new String(buffer);
-				return content;
-			}
-			
-			if(fileSize < 100)
-			{
-				encodeDetectBufLen = (fileSize/2) *2;
-				encodeDetectBuf = new byte[encodeDetectBufLen];
+				int encodeDetectBufLen = 0;
+				byte [] encodeDetectBuf = null;
+	
+				if(fileSize < 2)
+				{
+					content = new String(buffer);
+					return content;
+				}
+				
+				if(fileSize < 100)
+				{
+					encodeDetectBufLen = (fileSize/2) *2;
+					encodeDetectBuf = new byte[encodeDetectBufLen];
+				}
+				else
+				{
+					encodeDetectBufLen = 100;
+					encodeDetectBuf = new byte[encodeDetectBufLen];
+				}
+				System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
+				String encode = getEncoding(encodeDetectBuf);
+				System.out.println("readDocContentFromFile encode:[" + encode + "]");	
+				if(encode == null)
+				{
+					content = new String(buffer);
+				}
+				else
+				{
+					content = new String(buffer, encode);
+				}
 			}
 			else
 			{
-				encodeDetectBufLen = 100;
-				encodeDetectBuf = new byte[encodeDetectBufLen];
-			}
-			System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
-			String encode = getEncoding(encodeDetectBuf);
-			System.out.println("readDocContentFromFile encode:[" + encode + "]");
-			
-			if(encode == null)
-			{
 				content = new String(buffer);
-			}
-			else
-			{
-				content = new String(buffer, encode);
 			}
 			//System.out.println("content:[" + content + "]");
 			return content;
