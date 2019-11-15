@@ -5654,7 +5654,7 @@ public class BaseController  extends BaseFunction{
 	protected String readOfficeContent(Repos repos, Doc doc, User login_user)
 	{
 		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos,login_user);
-		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());
+		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), true);
 	}
 	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
@@ -5663,7 +5663,7 @@ public class BaseController  extends BaseFunction{
 	}
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
-		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		return readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), true);
 	}
 	
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
@@ -5675,7 +5675,7 @@ public class BaseController  extends BaseFunction{
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
 	{
 		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
-		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName());
+		return readDocContentFromFile(userTmpDir, doc.getDocId() + "_" + doc.getName(), true);
 	}
 	
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
@@ -5686,7 +5686,7 @@ public class BaseController  extends BaseFunction{
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
 		String docVName = getVDocName(doc);		
-		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md");
+		return readDocContentFromFile(doc.getLocalVRootPath() + docVName + "/", "content.md", false);
 	}
 
 	protected boolean saveTmpVirtualDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
@@ -5699,7 +5699,7 @@ public class BaseController  extends BaseFunction{
 	{
 		String docVName = getVDocName(doc);		
 		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
-		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md");
+		return readDocContentFromFile(userTmpDir + docVName + "/", "content.md", false);
 	}
 	
 	protected boolean deleteVirtualDoc(Repos repos, Doc doc, ReturnAjax rt) {
