@@ -7,8 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1167,6 +1169,45 @@ public class BaseFunction{
         return charsetName;
 	}
 	
+	public static boolean checkEncoding(byte[] bytes, String encode) 
+	{   
+		String originStr = Arrays.toString(bytes);
+		System.out.println("checkEncoding() originStr:" + originStr + " detectEncode" + encode);
+		
+		String str;
+		try {
+			str = new String(bytes, encode);
+			System.out.println("checkEncoding() str:" + str);
+	        if(str.getBytes().equals(bytes)) 
+			{   
+	        	return true;    
+	        }
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return false;
+	}
+
+	String getEncoding(byte[] bytes)
+	{
+		String [] encodeCheckList = {
+				 "UTF8",
+				 "UTF-16",
+				 "ASCII",
+				 "ISO-8859-1",
+				 "GB2312",
+		};
+		for(int i=0; i<encodeCheckList.length; i++)
+		{
+			if(checkEncoding(bytes, encodeCheckList[i]) == true)
+			{
+				return encodeCheckList[i];
+			}
+		}
+		return null;
+    }
+	
     public boolean compressExe(String srcPathName,String finalFile) {
     	File zipFile = new File(finalFile);	//finalFile
     	
@@ -1251,15 +1292,49 @@ public class BaseFunction{
 			
 			int fileSize = (int) file.length();
 			//System.out.println("fileSize:[" + fileSize + "]");
-
-			byte buffer[] = new byte[fileSize];
+			if(fileSize  <= 0)
+			{
+				return null;
+			}
 	
+			byte buffer[] = new byte[fileSize];
 			FileInputStream in;
 			in = new FileInputStream(filePath);
 			in.read(buffer, 0, fileSize);
 			in.close();	
-							
-			String content = new String(buffer);
+
+			int encodeDetectBufLen = 0;
+			byte [] encodeDetectBuf = null;
+
+			String content = null;
+			if(fileSize < 2)
+			{
+				content = new String(buffer);
+				return content;
+			}
+			
+			if(fileSize < 100)
+			{
+				encodeDetectBufLen = (fileSize/2) *2;
+				encodeDetectBuf = new byte[encodeDetectBufLen];
+			}
+			else
+			{
+				encodeDetectBufLen = 100;
+				encodeDetectBuf = new byte[encodeDetectBufLen];
+			}
+			System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
+			String encode = getEncoding(encodeDetectBuf);
+			System.out.println("readDocContentFromFile encode:[" + encode + "]");
+			
+			if(encode == null)
+			{
+				content = new String(buffer);
+			}
+			else
+			{
+				content = new String(buffer, encode);
+			}
 			//System.out.println("content:[" + content + "]");
 			return content;
 		} catch (Exception e) {
