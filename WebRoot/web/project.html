@@ -1782,7 +1782,7 @@
 		}
 		else if(isText(fileSuffix))
 		{
-			showTextInDialog(doc); //这是个异步调用
+			showDocInTextDialog(doc); //这是个异步调用
 		}
 		else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
 		{
@@ -1855,10 +1855,10 @@
 		});
    	}
 	
-	function showTextInDialog(node)
+	function showDocInTextDialog(docInfo)
 	{
-		console.log("showTextInDialog()  node:", node);
-	    if(!node || node == null || node.id == 0)
+		console.log("showTextInDialog()  docInfo:", docInfo);
+	    if(!docInfo || docInfo == null || docInfo.id == 0)
 	    {
 	    	//未定义需要显示的文件
 	    	return;
@@ -1872,10 +1872,10 @@
 	           dataType : "text",
 	           data : {
 	            	reposId: gReposInfo.id,
-	                docId : node.id,
-	                pid: node.pid,
-	                path: node.path,
-	                name: node.name,
+	                docId : docInfo.id,
+	                pid: docInfo.pid,
+	                path: docInfo.path,
+	                name: docInfo.name,
 	                docType: 1, //取回文件内容
 	            },
 	            success : function (ret1) {
@@ -1888,16 +1888,24 @@
 	            	           dataType : "text",
 	            	           data : {
 	            	            	reposId: gReposInfo.id,
-	            	                docId : node.id,
-	            	                pid: node.pid,
-	            	                path: node.path,
-	            	                name: node.name,
+	            	                docId : docInfo.id,
+	            	                pid: docInfo.pid,
+	            	                path: docInfo.path,
+	            	                name: docInfo.name,
 	            	                docType: 1, //取回文件内容
 	            	            },
 	            	            success : function (ret2) {
 	            	            	console.log("showTextInDialog ret2",ret2);
 	            	            	tmpSavedDocText = ret2;
-	            	            	showMarkdownInDialog(node, docText, tmpSavedDocText);
+	            	            	switch(docInfo.fileSuffix)
+	            	            	{
+	            	            	case "md":
+	            	            		showMarkdownInDialog(docInfo, docText, tmpSavedDocText);
+	            	            		break;
+	            	            	default:
+	            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
+	            	            		break;
+	            	            	}
 	            	            },
 	            	            error : function () {	            	            	
 	            	                showErrorMessage("临时保存文件内容失败：服务器异常");
@@ -1910,19 +1918,36 @@
 	        });
 	}
 	
-	function showMarkdownInDialog(node, docText, tmpSavedDocText)
+	function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 	{
-		console.log("showMarkdownInDialog node.docId:" + node.docId);
+		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
 		bootstrapQ.dialog({
 			id: "MdViewer",
-			title: node.name,
+			title: docInfo.name,
 			url: 'mdViewer.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
 			mstyle:'width:90%;',
 			callback: function(){
-				MdViewer.mdViewerPageInit(node, docText, tmpSavedDocText);
+				MdViewer.mdViewerPageInit(docInfo, docText, tmpSavedDocText);
+			},
+		});
+	}
+	
+	function showTextInDialog(docInfo, docText, tmpSavedDocText)
+	{
+		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
+		bootstrapQ.dialog({
+			id: "TextViewer",
+			title: docInfo.name,
+			url: 'textViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle:'width:90%;',
+			callback: function(){
+				TextViewer.textViewerPageInit(docInfo, docText, tmpSavedDocText);
 			},
 		});
 	}
