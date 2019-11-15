@@ -1,0 +1,48 @@
+<script type="text/javascript">
+var ImgViewer = (function () {
+	var docInfo = {};
+	
+	var docText = "";
+	var tmpSavedDocText = "";
+	
+	function imgViewerPageInit(Input_doc)
+	{
+		console.log("imgViewerPageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+		showImgPreview(docInfo);
+  	}
+    
+	function showImgPreview(docInfo)
+	{	
+		var docDataEx = docInfo.dataEx;
+		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+		{
+			console.log("showImgPreview() dataEx is null");
+			showFileImg(docInfo);
+			return;
+		}
+		
+		var targetName = docDataEx.name;
+		var targetPath = docDataEx.path;
+		
+		targetName = encodeURI(targetName);
+	   	targetPath = encodeURI(targetPath);
+		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+		console.log("showImgPreview() docLink:" + docLink);
+		$("#imgPlayer").attr('src', docLink);
+		$("#imgPlayer").show();
+	}
+	
+    return {
+        imgViewerPageInit: function(docInfo){
+        	imgViewerPageInit(docInfo);
+        },
+    };
+})();
+
+</script>
+
+<div align="center" style="margin-top:20px; min-height:500px;">
+	<img id="imgPlayer" name="imgPlayer" src="" style="display:none;"></img>
+</div>

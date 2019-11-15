@@ -1778,7 +1778,7 @@
 		var url = null;
 		if(isPicture(docInfo.fileSuffix))
 		{
-			showPictureInDialog(docInfo.url);
+			showPictureInDialog(docInfo);
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
@@ -1853,6 +1853,22 @@
 		});
    	}
 	
+    function showPictureInDialog(docInfo)
+    {
+		console.log("showPictureInDialog docInfo.docId:" + docInfo.docId);
+		bootstrapQ.dialog({
+			id: "ImgViewer",
+			title: docInfo.name,
+			url: 'imgViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle:'width:90%;',
+			callback: function(){
+				ImgViewer.imgViewerPageInit(docInfo);
+			},
+		});
+    }
 	function showDocInTextDialog(docInfo)
 	{
 		console.log("showTextInDialog()  docInfo:", docInfo);
