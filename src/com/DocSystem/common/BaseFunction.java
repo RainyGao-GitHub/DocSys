@@ -1171,14 +1171,11 @@ public class BaseFunction{
 	
 	public static boolean checkEncoding(byte[] bytes, String encode) 
 	{   
-		String originStr = Arrays.toString(bytes);
-		System.out.println("checkEncoding() originStr:" + originStr + " detectEncode" + encode);
-		
 		String str;
 		try {
 			str = new String(bytes, encode);
 			System.out.println("checkEncoding() str:" + str);
-	        if(str.getBytes().equals(bytes)) 
+	        if(Arrays.equals(str.getBytes(), bytes)) 
 			{   
 	        	return true;    
 	        }
@@ -1192,11 +1189,11 @@ public class BaseFunction{
 	String getEncoding(byte[] bytes)
 	{
 		String [] encodeCheckList = {
-				 "UTF8",
-				 "UTF-16",
+				 "UTF-8",
 				 "ASCII",
 				 "ISO-8859-1",
 				 "GB2312",
+				 "UTF-16",
 		};
 		for(int i=0; i<encodeCheckList.length; i++)
 		{
