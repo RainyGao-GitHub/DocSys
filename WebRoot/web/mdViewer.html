@@ -49,7 +49,7 @@ var MdViewer = (function () {
            dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
            imageUpload : true,
            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-           imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
+           imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?docId="+docInfo.docId + "&path=" + docInfo.path + "&name=" + docInfo.name,
            onchange : function () {
                console.log("MdViewer onchange docInfo.edit:" + docInfo.edit);                  
            },
@@ -285,6 +285,21 @@ var MdViewer = (function () {
 		}
     }
 	
+	
+	function WikiEditBtnCtrl(edit)
+	{
+		 if(edit == true)
+	   	 {
+		    $("#btnMdExitEdit").show();
+	      	$("#btnMdSaveWiki").show();  
+	     }
+	     else
+	     {
+		    $("#btnMdExitEdit").hide();
+	      	$("#btnMdSaveWiki").hide();
+	     }
+	}
+	
     function exitEditWiki() {
       	console.log("exitEditWiki()  docInfo.docId:" + docInfo.docId + " docInfo.edit:" + docInfo.edit);
 	    if(docInfo.edit == false)
@@ -511,8 +526,8 @@ var MdViewer = (function () {
     
 	//开放给外部的调用接口
     return {
-        mdViewerPageInit: function(docInfo){
-        	mdViewerPageInit(docInfo);
+        mdViewerPageInit: function(docInfo, docText, tmpSavedDocText){
+        	mdViewerPageInit(docInfo, docText, tmpSavedDocText);
         },
     	resize: function(){
 			resize();
@@ -547,11 +562,12 @@ var MdViewer = (function () {
 
 </script>
 
-
-<div style="position:absolute; right:5px; top:10px">
-     <button id="btnExitEdit" class="btn btn-default" type="button" onclick="MdViewer.exitEdit()" style="display:none">退出编辑
-     </button>
-     <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="MdViewer.saveWiki()" style="display:none">保存
-     </button>
+<div>
+	<div style="position:relative; right:5px; top:10px">
+	     <button id="btnMdExitEdit" class="btn btn-default" type="button" onclick="MdViewer.exitEdit()" style="display:none">退出编辑
+	     </button>
+	     <button id="btnMdSaveWiki" class="btn btn-default" type="button" onclick="MdViewer.saveWiki()" style="display:none">保存
+	     </button>
+	</div>
+	<div id="mdPlayer" class="mdPlayer" style="width: 100%; min-height:1200px;"></div>
 </div>
-<div id="mdPlayer" class="mdPlayer" style="width: 100%; height:1200px;"></div>

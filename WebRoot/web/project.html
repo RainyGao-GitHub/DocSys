@@ -283,9 +283,9 @@
          		</div>
         		<div class="filetitle" id="filetitle"></div>
         		<div style="position:absolute; right:5px; top:10px">
-	                    <button id="btnMdExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
+	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
 	                   	</button>
-	                    <button id="btnMdSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
+	                    <button id="btnSaveWiki" class="btn btn-default" type="button" onclick="DocEdit.saveWiki()" style="display:none">保存
 	                    </button>
         		</div>
          	</div>
@@ -1770,24 +1770,24 @@
 	
     function openGDocInDialog()
     {
-    	openDocInDialog(gDocInfo, gDocInfo.fileSuffix);
+    	openDocInDialog(gDocInfo);
     }
 	
-	function openDocInDialog(doc, fileSuffix)
+	function openDocInDialog(docInfo)
 	{
 		var url = null;
-		if(isPicture(fileSuffix))
+		if(isPicture(docInfo.fileSuffix))
 		{
-			showPictureInDialog(url);
+			showPictureInDialog(docInfo.url);
 		}
-		else if(isText(fileSuffix))
+		else if(isText(docInfo.fileSuffix))
 		{
-			showDocInTextDialog(doc); //这是个异步调用
+			showDocInTextDialog(docInfo); //这是个异步调用
 		}
-		else if(isOffice(fileSuffix) || isPdf(fileSuffix)) //View Only
+		else if(isOffice(docInfo.fileSuffix) || isPdf(docInfo.fileSuffix)) //View Only
 		{
 			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
-			showOfficeInDialog(doc); //这是个异步调用
+			showOfficeInDialog(docInfo); //这是个异步调用
 		}
 		else
 		{
@@ -1795,18 +1795,13 @@
 		}
 	}
 	
-	function showOfficeInDialog(node)
+	function showOfficeInDialog(docInfo)
 	{
-		if(!node || node == null)
+		if(!docInfo || docInfo == null)
 		{
 			showErrorMessage("请选择文件!");
 			return;
 		}
-		
-		var docId = node.id;
-		var pid = node.pid;
-		var path = node.path;
-		var name = node.name;
 		
 		//Convert doc to PDF and return the link, then show the pdf 
 	    $.ajax({
@@ -1815,35 +1810,38 @@
 	        dataType : "json",
 	        data : {
 	        	reposId: gReposInfo.id,
-	            docId : docId,
-	            pid: pid,
-	            path: path,
-	            name: name,
+	            docId : docInfo.docId,
+	            pid: docInfo.pid,
+	            path: docInfo.path,
+	            name: docInfo.name,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
 	                var fileLink = ret.data;
-	                console.log("fileLink" + fileLink);
+	                console.log("showOfficeInDialog fileLink" + fileLink);
 	    			//在新的页面打开
-	    			showPdfInDialog(node, fileLink);	
+	    			showPdfInDialog(docInfo, fileLink);	
 	            }
 	            else
 	            {
-	            	showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
-	            	showTextInDialog(node); //ReadOnly 方式显示文件内容
+	            	console.log("showOfficeInDialog DocToPdf Failed");
+	    			//showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
+	            	showDocInTextDialog(docInfo); //ReadOnly 方式显示文件内容
 	            }
 	        },
 	        error : function () {
-	            showErrorMessage("文件预览失败：服务器异常");
+	            //showErrorMessage("文件预览失败：服务器异常");
+	            console.log("showOfficeInDialog DocToPdf Failed 服务器异常");
+	            showDocInTextDialog(docInfo); //ReadOnly 方式显示文件内容
 	        }
 	    });
 	}
 	
-    function showPdfInDialog(node, url)
+    function showPdfInDialog(docInfo, url)
    	{
 		bootstrapQ.dialog({
 			id: "PdfViewer",
-			title: node.name,
+			title: docInfo.name,
 			url: 'pdfViewer.html',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
@@ -1900,7 +1898,9 @@
 	            	            	switch(docInfo.fileSuffix)
 	            	            	{
 	            	            	case "md":
-	            	            		showMarkdownInDialog(docInfo, docText, tmpSavedDocText);
+	            	            		//暂时不用markdown编辑器
+	            	            		//showMarkdownInDialog(docInfo, docText, tmpSavedDocText);
+	            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
 	            	            		break;
 	            	            	default:
 	            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
@@ -1937,7 +1937,7 @@
 	
 	function showTextInDialog(docInfo, docText, tmpSavedDocText)
 	{
-		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
+		console.log("showTextInDialog docInfo.docId:" + docInfo.docId);
 		bootstrapQ.dialog({
 			id: "TextViewer",
 			title: docInfo.name,
@@ -3827,13 +3827,13 @@ function CompareObj(objA, objB, flag) {
 	{
 		 if(edit == true)
 	   	 {
-		    $("#btnMdExitEdit").show();
-	      	$("#btnMdSaveWiki").show();  
+		    $("#btnExitEdit").show();
+	      	$("#btnSaveWiki").show();  
 	     }
 	     else
 	     {
-		    $("#btnMdExitEdit").hide();
-	      	$("#btnMdSaveWiki").hide();
+		    $("#btnExitEdit").hide();
+	      	$("#btnSaveWiki").hide();
 	     }
 	}
 	
