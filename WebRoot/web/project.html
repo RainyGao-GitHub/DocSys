@@ -292,7 +292,8 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none; width:128px; height:128px;cursor:pointer;" ondblclick="openGDocInDialog();" onerror="FileImgErrHandler();"></img>
+                		<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" ondblclick="openGDocInDialog();" onerror="FileLogoErrHandler();"></img>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:800px; max-height:600px;cursor:pointer;" ondblclick="openGDocInDialog();" onerror="FileImgErrHandler();"></img>
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
                 	</div>
 	            </div>
@@ -1726,17 +1727,20 @@
 			$("#docPreview").show();  
 			if(isPicture(fileSuffix))
 			{
-				showFileImg(gDocInfo, "picture");
+				showFileLogo(null);
+				showFileImg(gDocInfo);
 	            showVideoPreview(false);
 			}
 			else if(isVideo(fileSuffix))
 			{
+				showFileLogo(null);
 				showFileImg(null);
 	            showVideoPreview(true);
 			}
 			else
 			{
-				showFileImg(gDocInfo);
+				showFileLogo(gDocInfo);
+				showFileImg(null);
 		        showVideoPreview(false);
 			}
 		}
@@ -1968,7 +1972,7 @@
 		});
 	}
 	
-	function showFileImg(docInfo, showType)
+	function showFileImg(docInfo)
 	{
 		if(docInfo == null)
 		{
@@ -1976,20 +1980,8 @@
 			$("#imgPreview").hide();
 			return;
 		}
-		
-		if(docInfo.type == 2)
-		{
-			//showFolderLogo("win10");
-			showFolderLogo("mac");
-			return;
-		}
-		
-		if(showType) //picture
-		{
-			return showImgPreview(docInfo);
-		}
-		
-		return showFileLogo(docInfo);
+				
+		return showImgPreview(docInfo);
 	}
 	
 	function showImgPreview(docInfo)
@@ -2011,18 +2003,32 @@
 		$("#imgPreview").attr('src', docLink);
 		$("#imgPreview").show();
 	}
-	
+
 	function showFileLogo(docInfo)
 	{
-		var fileSuffix = docInfo.fileSuffix;
+		if(docInfo == null)
+		{
+			$("#fileLogo").attr('src', "");
+			$("#fileLogo").hide();
+			return;
+		}
 		
+		if(docInfo.type == 2)
+		{
+			//showFolderLogo("win10");
+			showFolderLogo("mac");
+			return;
+		}
+				
+		//Show File Logo
+		var fileSuffix = docInfo.fileSuffix;
 		var logoLink = "/DocSystem/web/images/file_icon/icon_file/file.png";
 		if(fileSuffix && fileSuffix != "")
 		{
 			logoLink = "/DocSystem/web/images/file_icon/icon_file/" + fileSuffix + ".png";			
 		}
-		$("#imgPreview").attr('src', logoLink);
-		$("#imgPreview").show();
+		$("#fileLogo").attr('src', logoLink);
+		$("#fileLogo").show();
 	}
 	
 	function showFolderLogo(style)
@@ -2032,8 +2038,14 @@
 		{
 			logoLink = "/DocSystem/web/images/file_icon/icon_others/folder_" + style + ".png";			
 		}
-		$("#imgPreview").attr('src', logoLink);
-		$("#imgPreview").show();
+		$("#fileLogo").attr('src', logoLink);
+		$("#fileLogo").show();
+	}
+	
+	function FileLogoErrHandler()
+	{
+		console.log("FileLogoErrHandler");
+		$("#fileLogo").attr('src',"images/file_icon/icon_file/file.png"); 
 	}
 	
 	function FileImgErrHandler()
@@ -2041,7 +2053,6 @@
 		console.log("FileImgErrHandler");
 		$("#imgPreview").attr('src',"images/file_icon/icon_file/file.png"); 
 	}
-	
 	
 	function showVideoPreview(showFlag)
 	{		
