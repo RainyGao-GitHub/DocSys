@@ -167,7 +167,7 @@ public class FileUtils2 {
             ex.printStackTrace();
             return null;
         }
-        System.out.println("getFileEncode() " + charsetName);
+        //System.out.println("getFileEncode() " + charsetName);
         return charsetName;
     }
     
@@ -182,7 +182,7 @@ public class FileUtils2 {
     }
     
 	public static boolean isBinaryFile(String code) {
-		System.out.println("isBinaryFile:" + code);
+		//System.out.println("isBinaryFile:" + code);
 		if(code == null)
 		{
 			return true;

@@ -849,12 +849,12 @@ public class BaseFunction{
 	 * @param weight *******************************************/
 	protected static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc hitDoc, String keyWord, int weight) 
 	{
-		System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
+		//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
 		HitDoc tempHitDoc = searchResult.get(hitDoc.getDocPath());
 
 		if(tempHitDoc == null)
 		{
-			System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
+			//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
 			Doc doc = hitDoc.getDoc();
 			
 			//Create hitIfo
@@ -880,7 +880,7 @@ public class BaseFunction{
 			int sortIndex = doc.getSortIndex();
 			if(hitCount == null)
 			{
-				System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
+				//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, 1);
 				sortIndex = sortIndex + weight*100 + 1;
 				doc.setSortIndex(sortIndex);
@@ -888,12 +888,12 @@ public class BaseFunction{
 			else
 			{
 				hitCount++;	//hitCount++
-				System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is "+ hitCount +"th hit result for searchWord:" + keyWord);	
+				//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is "+ hitCount +"th hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, hitCount+1);
 				sortIndex = sortIndex + 1;
 				doc.setSortIndex(sortIndex);
 			}
-			System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
+			//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
 
 			//Java默认是引用，所以下面的操作是不需要的
 			//tempHitDoc.setHitInfo(hitInfo);
@@ -1879,7 +1879,7 @@ public class BaseFunction{
     public static String getFileSuffix(String filePath)
     {
     	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
-    	System.out.println("getFileSuffix() " + suffix);
+    	//System.out.println("getFileSuffix() " + suffix);
     	return suffix.toLowerCase();
     }
     
