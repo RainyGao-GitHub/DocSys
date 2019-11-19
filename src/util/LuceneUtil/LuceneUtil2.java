@@ -113,7 +113,7 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean addIndex(Doc doc, String content, String indexLib)
     {	
-    	System.out.println("addIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
+    	//System.out.println("addIndex() id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);    	
     	//System.out.println("addIndex() content:" + content);
     	
     	Analyzer analyzer = null;
@@ -140,9 +140,9 @@ public class LuceneUtil2   extends BaseFunction
 	        analyzer.close();
 	        analyzer = null;
 	        
-	        System.out.println("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
+	        //System.out.println("addIndex() Success id:" + doc.getId() + " docId:"+ doc.getDocId() + " path:" + doc.getPath() + " name:" + doc.getName() + " indexLib:"+indexLib);	        
 			Date date2 = new Date();
-	        System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        //System.out.println("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	    	return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
@@ -317,7 +317,7 @@ public class LuceneUtil2   extends BaseFunction
      */
     public static boolean deleteIndex(Doc doc, String indexLib)
     {
-    	System.out.println("deleteIndex() docId:" + doc.getDocId() + " indexLib:"+indexLib);
+    	//System.out.println("deleteIndex() docId:" + doc.getDocId() + " indexLib:"+indexLib);
     	Analyzer analyzer = null;
     	Directory directory = null;
     	IndexWriter indexWriter = null;
@@ -340,7 +340,7 @@ public class LuceneUtil2   extends BaseFunction
 	        directory = null;
 	        
 	        Date date2 = new Date();
-	        System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+	        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
 	        return true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
@@ -408,7 +408,7 @@ public class LuceneUtil2   extends BaseFunction
 	            {
 	            	continue;
 	            }
-	    		printObject("search() hitDoc:", hitDoc);
+	    		//printObject("search() hitDoc:", hitDoc);
 	            
 	            AddHitDocToSearchResult(searchResult,hitDoc, str, weight);
 	        }
