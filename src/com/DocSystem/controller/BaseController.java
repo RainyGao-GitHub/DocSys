@@ -6277,7 +6277,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For DocName
 	public boolean addIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
 	{
-		System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		//System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		String indexLib = getIndexLibPath(repos,0);
 
 		return LuceneUtil2.addIndex(doc, getDocPath(doc), indexLib);
@@ -6319,7 +6319,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For VDoc
 	public boolean addIndexForVDoc(Repos repos, Doc doc)
 	{
-		System.out.println("addIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		//System.out.println("addIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 
 		String content = doc.getContent();
 		if(content == null)
@@ -6331,7 +6331,7 @@ public class BaseController  extends BaseFunction{
 
 		if(content == null || content.isEmpty())
 		{
-			System.out.println("addIndexForVDoc() content is null or empty, do delete Index");
+			//System.out.println("addIndexForVDoc() content is null or empty, do delete Index");
 			return LuceneUtil2.deleteIndex(doc, indexLib);			
 		}
 		
@@ -6369,7 +6369,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For RDoc
 	public static boolean addIndexForRDoc(Repos repos, Doc doc)
 	{		
-		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		//System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos, 1);
 
@@ -6386,13 +6386,13 @@ public class BaseController  extends BaseFunction{
 		
 		if(file.isDirectory())
 		{
-			System.out.println("addIndexForRDoc() isDirectory");
+			//System.out.println("addIndexForRDoc() isDirectory");
 			return false; //LuceneUtil2.addIndex(LuceneUtil2.buildDocumentId(hashId,0), reposId, docId, parentPath, name, hashId, "", indexLib);
 		}
 		
 		if(file.length() == 0)
 		{
-			System.out.println("addIndexForRDoc() fileSize is 0, do delete index");
+			//System.out.println("addIndexForRDoc() fileSize is 0, do delete index");
 			return LuceneUtil2.deleteIndex(doc,indexLib);
 		}
 		
@@ -6400,6 +6400,7 @@ public class BaseController  extends BaseFunction{
 		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix != null)
 		{
+			System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 			switch(fileSuffix)
 			{
 			case "doc":
@@ -6425,7 +6426,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 
-		System.out.println("addIndexForRDoc() 未知文件类型不支持索引");
+		//System.out.println("addIndexForRDoc() 未知文件类型不支持索引");
 		return false;
 	}
 
