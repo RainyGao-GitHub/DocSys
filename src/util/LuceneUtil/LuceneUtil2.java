@@ -1019,7 +1019,7 @@ public class LuceneUtil2   extends BaseFunction
 			String code = FileUtils2.getFileEncode(filePath);
 			if(FileUtils2.isBinaryFile(code) == true)
 			{
-				System.out.println("addIndexForFile() BinaryFile will not add Index");
+				//System.out.println("addIndexForFile() BinaryFile will not add Index");
 				return true;
 			}
 			
@@ -1042,7 +1042,7 @@ public class LuceneUtil2   extends BaseFunction
 					addIndex(doc, buffer.toString().trim(), indexLib);
 					
 					chunkIndex ++;
-					System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
+					//System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 					//Clear StringBuffer
 					lineCount  = 0;
 					bufSize = 0;
@@ -1053,7 +1053,7 @@ public class LuceneUtil2   extends BaseFunction
 			{
 				addIndex(doc, buffer.toString().trim(), indexLib);
 				chunkIndex ++;
-				System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
+				//System.out.println("addIndexForFile() lineCount:" + lineCount + " bufSize:" + bufSize + " chunkIndex:" + chunkIndex);
 			}
 			
 		    reader.close();
@@ -1061,7 +1061,7 @@ public class LuceneUtil2   extends BaseFunction
 		    is.close();
 		    is = null;
 
-		    System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
+		    //System.out.println("addIndexForFile() totalLine:" + totalLine + " totalSize:" + totalSize + " chunks:" + chunkIndex);
 		} catch(Exception e){
 			if(reader != null)
 			{
