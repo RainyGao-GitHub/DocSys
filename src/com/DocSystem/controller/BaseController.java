@@ -1155,9 +1155,9 @@ public class BaseController  extends BaseFunction{
 		deleteLocalVerRepos(repos,false);
 
 		//Delete IndexLib
-    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,0));
-		LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,1));
-    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
+    	deleteIndexLib(repos,0);
+		deleteIndexLib(repos,1);
+    	deleteIndexLib(repos,2);
 		
 		return true;
 	}
@@ -6255,8 +6255,7 @@ public class BaseController  extends BaseFunction{
 	{
 		String libPath = getIndexLibPath(repos, indexLibType);
 		System.out.println("deleteIndexLib() libPath:" + libPath);
-
-		return delFileOrDir(libPath);
+		return LuceneUtil2.deleteIndexLib(libPath);
 	}
 	
 	boolean deleteDocNameIndexLib(Repos repos)
@@ -6266,12 +6265,12 @@ public class BaseController  extends BaseFunction{
 	
 	boolean deleteRDocIndexLib(Repos repos)
 	{
-		return deleteIndexLib(repos, 0);
+		return deleteIndexLib(repos, 1);
 	}
 
 	boolean deleteVDocIndexLib(Repos repos)
 	{
-		return deleteIndexLib(repos, 0);
+		return deleteIndexLib(repos, 2);
 	}
 
 	//Add Index For DocName
