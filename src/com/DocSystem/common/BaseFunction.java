@@ -1917,7 +1917,6 @@ public class BaseFunction{
 		return false;
 	}
 
-	
 	protected static boolean isText(String fileSuffix) {
 		if(fileSuffix == null)
 		{
@@ -1946,6 +1945,11 @@ public class BaseFunction{
 		case "php":
 		case "properties":
 		case "conf":
+		case "out":
+		case "sh":
+		case "bat":
+		case "msg":
+		case "cmake":
 			return true;
 		default:
 			break;
