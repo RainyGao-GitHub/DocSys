@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.DocConvertUtil.Office2PDF;
+import util.FileUtil.FileUtils2;
 import util.LuceneUtil.LuceneUtil2;
 
 import com.DocSystem.entity.ChangedItem;
@@ -2010,6 +2011,7 @@ public class DocController extends BaseController{
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
+		String status = "ok";
 		String content = "";
 		if(docType == 1)
 		{
@@ -2025,6 +2027,17 @@ public class DocController extends BaseController{
 					content = readOfficeContent(repos, doc, login_user);
 				}
 			}
+			else
+			{
+				if(isBinaryFile(repos, doc))
+				{
+					status="isBinary";
+				}
+				else
+				{
+					content = readRealDocContent(repos, doc);
+				}
+			}
 		}
 		else if(docType == 2)
 		{
@@ -2035,10 +2048,17 @@ public class DocController extends BaseController{
 		{
 			content = "";
 		}
-		writeText(content, response);
+		
+		writeText(status+content, response);
 	}
 	
 	
+	private boolean isBinaryFile(Repos repos, Doc doc) {
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		String code = FileUtils2.getFileEncode(filePath);
+		return FileUtils2.isBinaryFile(code);
+	}
+
 	/****************   get Tmp Saved Document Content ******************/
 	@RequestMapping("/getTmpSavedDocContent.do")
 	public void getTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,

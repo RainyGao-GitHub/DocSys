@@ -1779,23 +1779,30 @@
 	
 	function openDocInDialog(docInfo)
 	{
+		if(docInfo == null || docInfo.type == 2)
+		{
+			//Folder do nothing
+			return;
+		}
+		
 		var url = null;
 		if(isPicture(docInfo.fileSuffix))
 		{
 			showPictureInDialog(docInfo);
 		}
-		else if(isText(docInfo.fileSuffix))
+		else if(isVideo(docInfo.fileSuffix))
 		{
-			showDocInTextDialog(docInfo); //这是个异步调用
+			//Do nothing
 		}
 		else if(isOffice(docInfo.fileSuffix) || isPdf(docInfo.fileSuffix)) //View Only
 		{
 			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
 			showOfficeInDialog(docInfo); //这是个异步调用
 		}
-		else
+		else //if(isText(docInfo.fileSuffix))
 		{
-			//不支持该文件类型的预览
+			//文本文件
+			showDocInTextDialog(docInfo); //这是个异步调用
 		}
 	}
 	
@@ -1898,39 +1905,49 @@
 	            },
 	            success : function (ret1) {
 	            	console.log("showTextInDialog ret1",ret1);
-	            	var docText = ret1;
-	            	//Try to get tmpSavedDocContent
-	            	$.ajax({
-	            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
-	            	           type : "post",
-	            	           dataType : "text",
-	            	           data : {
-	            	            	reposId: gReposInfo.id,
-	            	                docId : docInfo.id,
-	            	                pid: docInfo.pid,
-	            	                path: docInfo.path,
-	            	                name: docInfo.name,
-	            	                docType: 1, //取回文件内容
-	            	            },
-	            	            success : function (ret2) {
-	            	            	console.log("showTextInDialog ret2",ret2);
-	            	            	tmpSavedDocText = ret2;
-	            	            	switch(docInfo.fileSuffix)
-	            	            	{
-	            	            	case "md":
-	            	            		//暂时不用markdown编辑器
-	            	            		//showMarkdownInDialog(docInfo, docText, tmpSavedDocText);
-	            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
-	            	            		break;
-	            	            	default:
-	            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
-	            	            		break;
-	            	            	}
-	            	            },
-	            	            error : function () {	            	            	
-	            	                showErrorMessage("临时保存文件内容失败：服务器异常");
-	            	            }
-	            	        });
+	            	var status = ret1.substring(0,2);
+	            	if("ok" == status)
+	            	{
+		            	var docText = ret1.substring(2);
+		            	console.log("showTextInDialog docText",docText);
+		            	
+		            	//Try to get tmpSavedDocContent
+		            	$.ajax({
+		            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
+		            	           type : "post",
+		            	           dataType : "text",
+		            	           data : {
+		            	            	reposId: gReposInfo.id,
+		            	                docId : docInfo.id,
+		            	                pid: docInfo.pid,
+		            	                path: docInfo.path,
+		            	                name: docInfo.name,
+		            	                docType: 1, //取回文件内容
+		            	            },
+		            	            success : function (ret2) {
+		            	            	console.log("showTextInDialog ret2",ret2);
+		            	            	tmpSavedDocText = ret2;
+		            	            	switch(docInfo.fileSuffix)
+		            	            	{
+		            	            	case "md":
+		            	            		//暂时不用markdown编辑器
+		            	            		//showMarkdownInDialog(docInfo, docText, tmpSavedDocText);
+		            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
+		            	            		break;
+		            	            	default:
+		            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
+		            	            		break;
+		            	            	}
+		            	            },
+		            	            error : function () {	            	            	
+		            	                showErrorMessage("临时保存文件内容失败：服务器异常");
+		            	            }
+		            	        });
+	            	}
+	            	else
+	            	{
+	            		showErrorMessage("获取文件内容失败：" + ret1);
+	            	}
 	            },
 	            error : function () {
 	                showErrorMessage("获取文件内容失败：服务器异常");
@@ -2647,6 +2664,11 @@ function CompareObj(objA, objB, flag) {
 				php : true,
 				properties : true,
 				conf : true,
+				out : true,
+				sh : true,
+				bat : true,
+				msg : true,
+				cmake : true,
 			};
 		
 		var type = fileTypeMap[suffix];
