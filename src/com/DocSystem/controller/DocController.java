@@ -983,7 +983,7 @@ public class DocController extends BaseController{
 				commitMsg = "上传 " + path + name;
 			}
 			String commitUser = login_user.getName();
-			String chunkParentPath = getReposUserTmpPath(repos,login_user);
+			String chunkParentPath = getReposUserTmpPathForUpload(repos,login_user);
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(dbDoc == null || dbDoc.getType() == 0)
 			{
