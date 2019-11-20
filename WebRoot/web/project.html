@@ -108,12 +108,12 @@
 			fill: currentColor;
 			overflow: hidden;
 		}
-		/* 调整zTree每行的高度
+		/* 调整zTree每行的高度 */
 		.ztree li a {
-            height: 30px !important;
+            /*height: 25px !important;*/
             width: 100% !important;
         }
-        .ztree li ul {
+        /*.ztree li ul {
             padding-left: 0 !important;
         }*/
     </style>
@@ -2522,28 +2522,28 @@ function CompareObj(objA, objB, flag) {
     function addDiyDom(treeId, treeNode) {
         var aObj = $("#" + treeNode.tId + "_a");
         if ($("#diyBtn_"+treeNode.id).length>0) return;
-		var cs = $("#" + treeNode.tId + "_a > span")[0]
-		console.log("cs", cs)
-		cs.remove()
-		console.log( "treeNode" , treeNode)
+		var cs = $("#" + treeNode.tId + "_a > span")[0];
+		console.log("cs", cs);
+		cs.remove();
+		console.log( "treeNode" , treeNode);
 
-        var spaceWidth = 15;
-        var switchObj = $("#" + treeNode.tId + "_switch")
-        switchObj.remove()
-
-
-        //增加边距
-        //此处通过往a标签最前位置增加透明元素来实现层级的缩进，层级越高，缩进的距离越大。同时也需要将原本的css中控制缩进的padding删除掉
-        var spaceStr = "<span style='display: inline-block;width:" + (spaceWidth * treeNode.level+15)+ "px'></span>";
-
-        var iType = getIconByNameAndType( treeNode.name , treeNode.type)
+        var switchObj = $("#" + treeNode.tId + "_switch");
+        switchObj.remove();
+        
+        var iType = getIconByNameAndType( treeNode.name , treeNode.type);
         var iconType = '<svg class="color-icon" aria-hidden="true">\n' +
             '  <use xlink:href="'+ iType + '"></use>\n' +
             '</svg>';
 
         aObj.prepend( iconType );
-        aObj.prepend( switchObj )
-        aObj.prepend( spaceStr )
+        aObj.prepend( switchObj );
+        
+        //增加边距
+        //此处通过往a标签最前位置增加透明元素来实现层级的缩进，层级越高，缩进的距离越大。同时也需要将原本的css中控制缩进的padding删除掉
+        //var spaceWidth = 15;
+        //var spaceStr = "<span style='display: inline-block;width:" + (spaceWidth * treeNode.level+15)+ "px'></span>";
+        //var spaceStr = "<span style='display: inline-block;'></span>";
+        //aObj.prepend( spaceStr )
     };
 
 	function getFileSuffix(name)
