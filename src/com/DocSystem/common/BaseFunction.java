@@ -1296,10 +1296,6 @@ public class BaseFunction{
 			}
 			
 			String encode = null;
-			if(encodeDetectEnable)
-			{
-				encode = FileUtils2.getFileEncode(filePath);
-			}	
 	
 			byte buffer[] = new byte[fileSize];
 			FileInputStream in;
@@ -1308,6 +1304,11 @@ public class BaseFunction{
 			in.close();	
 
 			String content = null;
+			if(encodeDetectEnable)
+			{
+				encode = getEncodeOfBuffer(buffer, fileSize);
+				System.out.println("readDocContentFromFile " +filePath+ " encode:" + encode);
+			}	
 			if(encode == null)
 			{
 				content = new String(buffer);
