@@ -1799,10 +1799,19 @@
 			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
 			showOfficeInDialog(docInfo); //这是个异步调用
 		}
-		else //if(isText(docInfo.fileSuffix))
+		else if(isText(docInfo.fileSuffix))
 		{
 			//文本文件
 			showDocInTextDialog(docInfo); //这是个异步调用
+		}
+		else if(isBinary(docInfo.fileSuffix))
+		{
+			//Do nothing	
+		}
+		else
+		{
+			//文本文件
+			showDocInTextDialog(docInfo); //这是个异步调用			
 		}
 	}
 	
@@ -2597,6 +2606,33 @@ function CompareObj(objA, objB, flag) {
 		}
 		
 		return iconType
+	}
+	
+	
+	function isBinary(suffix)
+	{
+		if(!suffix || suffix == "")
+		{
+			return true;
+		}
+		
+		var fileTypeMap = {
+		        bin : true,
+		        exe : true,
+				dll : true,
+				so : true,
+				lib : true,
+				war : true,
+				jar : true,
+		};
+		
+		var type = fileTypeMap[suffix];
+		if ( undefined == type )
+		{
+			return false;
+		}
+		
+		return true;
 	}
 	
 	function isPicture(suffix)
