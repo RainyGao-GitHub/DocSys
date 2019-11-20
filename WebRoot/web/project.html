@@ -1613,6 +1613,7 @@
             //Update URL 保证页面刷新后还是处于正确的状态
             var param = {
             	vid : gReposInfo.id,
+            	 showType: gShowType,
             };
             var url = makeUrl(param);
     		window.history.pushState({}, "wiki", url);
@@ -2526,7 +2527,7 @@ function CompareObj(objA, objB, flag) {
 		cs.remove()
 		console.log( "treeNode" , treeNode)
 
-        var spaceWidth = 10;
+        var spaceWidth = 15;
         var switchObj = $("#" + treeNode.tId + "_switch")
         switchObj.remove()
 
@@ -3283,7 +3284,7 @@ function CompareObj(objA, objB, flag) {
 	   //console.log(menu);
 	   zTreeInit(menu);
 	}
-	
+		
 	//DocList类
 	var DocListState = 0;
 	var DocListParentDocId = -1; //无效值
@@ -3294,9 +3295,7 @@ function CompareObj(objA, objB, flag) {
            	for(var i=0; i<data.length; i++)
      	    {
  	        	  
-           		//var iType = getIconByNameAndType( data[i].name , data[i].type)
-           		//var iconType = '<svg class="color-icon" aria-hidden="true"><use xlink:href="'+ iType + '"></use></svg>';
-           		var iconType = data[i].type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+           		var iconType = getIconType(data[i].name , data[i].type, gShowType);
            		var node = data[i];
        			str+= '<li dataId='+ node.docId 
 	   				+ ' dataPid='+ node.pid 
@@ -3319,6 +3318,20 @@ function CompareObj(objA, objB, flag) {
            	$("#secondList").html(str);
      	}
     	
+    	function getIconType(name, type, showType)
+    	{
+    		if(showType == 1)
+       		{
+       			var iType = getIconByNameAndType( name , type)
+       			iconType = '<svg class="color-icon" aria-hidden="true"><use xlink:href="'+ iType + '"></use></svg>';
+       		}
+    		else
+    		{
+       			iconType = type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+       		}
+    		return iconType;
+    	}
+    	
     	//Check if node exists
 		function isNodeExists(docId)
 		{
@@ -3332,7 +3345,7 @@ function CompareObj(objA, objB, flag) {
     	//Add Node
 		function addNode(node)
 		{
-	        var iconType = node.type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
+	        var iconType = getIconType(node.name, node.type, gShowType);
          	var nodeStr='<li dataId='+ node.docId 
          				+ ' dataPid='+ node.pid 
          				+' dataPath="' + node.path +'"'
@@ -3956,14 +3969,16 @@ function CompareObj(objA, objB, flag) {
 	     }
 
 		 updateUrl();
-
+		 //刷新页面，以便重新加载所有图标
+		 window.location.reload();
+		 
 		 //清除文件预览内容
-		 gDocContent = "";
-		 gTmpSavedContent = "";
-		 DocEdit.loadmd("");
-		 $(".editormd-preview-close-btn").hide();//css("display","none");
+		 //gDocContent = "";
+		 //gTmpSavedContent = "";
+		 //DocEdit.loadmd("");
+		 //$(".editormd-preview-close-btn").hide();//css("display","none");
 
-		 getAndShowDoc(gDocInfo, 1, false);
+		 //getAndShowDoc(gDocInfo, 1, false);
 	}
 	
 	/************************** contextMenu 接口***************************/	
@@ -4519,6 +4534,15 @@ function CompareObj(objA, objB, flag) {
     		dataFilter: asyncDataFilter, 
 		};
 		setting.async = async;
+		
+		if(gShowType == 1)
+		{
+			var view = {
+	        	showLine: false,	//不显示文件下面的下划线
+	        	addDiyDom: addDiyDom         //设置zTree的自定义图标
+			};
+			setting.view = view;
+		}
     }
     
     function contextMenuInit()
