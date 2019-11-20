@@ -51,6 +51,7 @@ import util.ReturnAjax;
 import util.Encrypt.Base64File;
 import util.Encrypt.MD5;
 import util.FileUtil.CompressPic;
+import util.FileUtil.FileUtils2;
 
 import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.entity.Doc;
@@ -1293,6 +1294,12 @@ public class BaseFunction{
 			{
 				return null;
 			}
+			
+			String encode = null;
+			if(encodeDetectEnable)
+			{
+				encode = FileUtils2.getFileEncode(filePath);
+			}	
 	
 			byte buffer[] = new byte[fileSize];
 			FileInputStream in;
@@ -1301,42 +1308,13 @@ public class BaseFunction{
 			in.close();	
 
 			String content = null;
-			if(encodeDetectEnable)
+			if(encode == null)
 			{
-				int encodeDetectBufLen = 0;
-				byte [] encodeDetectBuf = null;
-	
-				if(fileSize < 2)
-				{
-					content = new String(buffer);
-					return content;
-				}
-				
-				if(fileSize < 100)
-				{
-					encodeDetectBufLen = (fileSize/2) *2;
-					encodeDetectBuf = new byte[encodeDetectBufLen];
-				}
-				else
-				{
-					encodeDetectBufLen = 100;
-					encodeDetectBuf = new byte[encodeDetectBufLen];
-				}
-				System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
-				String encode = getEncoding(encodeDetectBuf);
-				System.out.println("readDocContentFromFile encode:[" + encode + "]");	
-				if(encode == null)
-				{
-					content = new String(buffer);
-				}
-				else
-				{
-					content = new String(buffer, encode);
-				}
+				content = new String(buffer);
 			}
 			else
 			{
-				content = new String(buffer);
+				content = new String(buffer, encode);
 			}
 			//System.out.println("content:[" + content + "]");
 			return content;
@@ -1346,7 +1324,34 @@ public class BaseFunction{
 		}
 	}
     
-    public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
+    private String getEncodeOfBuffer(byte[] buffer, int size) {
+		// TODO Auto-generated method stub
+		int encodeDetectBufLen = 0;
+		byte [] encodeDetectBuf = null;
+
+		if(size < 2)
+		{
+			return null;
+		}
+		
+		if(size < 100)
+		{
+			encodeDetectBufLen = (size/2) *2;
+			encodeDetectBuf = new byte[encodeDetectBufLen];
+		}
+		else
+		{
+			encodeDetectBufLen = 100;
+			encodeDetectBuf = new byte[encodeDetectBufLen];
+		}
+		System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
+		String encode = getEncoding(encodeDetectBuf);
+		System.out.println("getEncodeOfBuffer encode:[" + encode + "]");	
+
+		return encode;
+	}
+
+	public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
         File srcFile=new File(srcFilePath);
         if(srcFile.exists() == false)
         {
