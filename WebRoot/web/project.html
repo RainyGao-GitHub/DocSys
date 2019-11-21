@@ -108,6 +108,14 @@
 			fill: currentColor;
 			overflow: hidden;
 		}
+		
+		.folder{
+			background: url(images/sprite-e2e8774953.svg) no-repeat;
+    		background-position: 6.798866855524079% 76.0932944606414%;
+    		width: 24px;
+    		height: 24px;
+    	}
+    	
 		/* 调整zTree每行的高度 */
 		.ztree li a {
             /*height: 25px !important;*/
@@ -2534,6 +2542,7 @@ function CompareObj(objA, objB, flag) {
         var iconType = '<svg class="color-icon" aria-hidden="true">\n' +
             '  <use xlink:href="'+ iType + '"></use>\n' +
             '</svg>';
+        var iconType = '<svg class="color-icon"> <i class="folder"></i> </svg>';
 
         aObj.prepend( iconType );
         aObj.prepend( switchObj );
