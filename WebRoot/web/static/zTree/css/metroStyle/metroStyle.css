@@ -69,8 +69,13 @@ website:    http://code.google.com/p/jquerytree/
 .ztree li span.button.bottom_docu{background-position: -84px -42px;}
 .ztree li span.button.noline_docu{ background:none;}
 
-.ztree li span.button.ico_open{margin-right:2px; background-position: -147px -21px; vertical-align:top; *vertical-align:middle}
-.ztree li span.button.ico_close{margin-right:2px; margin-right:2px; background-position: -147px 0; vertical-align:top; *vertical-align:middle}
+.ztree li span.button.ico_open{margin-right:2px;vertical-align:top; *vertical-align:middle;
+     background: url("./img/sprite-e2e8774953.svg") no-repeat;
+     background-position: 13.597733711048159% 76.0932944606414%;}
+.ztree li span.button.ico_close{margin-right:2px; margin-right:2px; vertical-align:top; *vertical-align:middle;
+		background: url("./img/sprite-e2e8774953.svg") no-repeat;
+    	background-position: 6.798866855524079% 76.0932944606414%;
+    }
 .ztree li span.button.ico_docu{margin-right:2px; background-position: -147px -42px; vertical-align:top; *vertical-align:middle}
 .ztree li span.button.edit {margin-left:2px; margin-right: -1px; background-position: -189px -21px; vertical-align:top; *vertical-align:middle}
 .ztree li span.button.edit:hover {
