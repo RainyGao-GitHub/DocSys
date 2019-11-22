@@ -16,7 +16,8 @@
     <link href="static/highlight/styles/default.css" rel="stylesheet">
     <link href="static/highlight/styles/zenburn.css" rel="stylesheet">
     <link href="static/fonts/font.css" rel="stylesheet">
-    <link href="static/zTree/css/metroStyle/metroStyle.css" rel="stylesheet">
+    <link href="static/zTree/css/metroStyle/metroStyle.css" rel="stylesheet" id="zTreeCss">
+    <link href="css1.css" rel="stylesheet" type="text/css" id="css"/>
     <link href="static/nprogress/nprogress.css" rel="stylesheet">
     <link href="static/styles/kancloud.css" rel="stylesheet">
     <!-- bootStrapQ -->
@@ -3970,18 +3971,24 @@ function CompareObj(objA, objB, flag) {
 	     }
 
 		 updateUrl();
-		 //刷新页面，以便重新加载所有图标
-		 window.location.reload();
 		 
-		 //清除文件预览内容
-		 //gDocContent = "";
-		 //gTmpSavedContent = "";
-		 //DocEdit.loadmd("");
-		 //$(".editormd-preview-close-btn").hide();//css("display","none");
-
-		 //getAndShowDoc(gDocInfo, 1, false);
+		 changePageStyle(gShowType);
+		 
+		 showGDoc(gShowType);
 	}
-	
+
+	 function changePageStyle(showType)
+	 {
+		  var obj = document.getElementById("zTreeCss");
+		  if(showType == 1)
+		  {
+			  obj.setAttribute("href","static/zTree/css/metroStyle/standardStyle.css");			  
+		  }
+		  else
+		  {
+			  obj.setAttribute("href","static/zTree/css/metroStyle/metroStyle.css");			  
+		  }
+	}
 	/************************** contextMenu 接口***************************/	
 	//Get Node by NodeId
 	function getNodeByNodeId(nodeId)
@@ -4536,14 +4543,14 @@ function CompareObj(objA, objB, flag) {
 		};
 		setting.async = async;
 		
-		if(gShowType == 1)
+		/*if(gShowType == 1)
 		{
 			var view = {
 	        	showLine: false,	//不显示文件下面的下划线
 	        	addDiyDom: addDiyDom         //设置zTree的自定义图标
 			};
 			setting.view = view;
-		}
+		}*/
     }
     
     function contextMenuInit()
