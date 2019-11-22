@@ -99,23 +99,7 @@
 .second-list .fileTitle{
 	height: 22px;
 }
-.icons{
-	width: 16px;
-    height: 16px;
-    font-size:15px;
-    margin-right:5px;
-    color:#ffcc00;
-    display:inline-block;
-    text-align:center;
-}
-.icons.type1{
-	background-image:url("../static/zTree/css/metroStyle/img/metro.png");
-	background-position:-147px 0;
-}
-.icons.type2{
-	background-position:-147px -42px;
-	background-image:url("../static/zTree/css/metroStyle/img/metro.png");
-}
+
 .filedate{
     margin-left: 10px;
     display: inline-block;

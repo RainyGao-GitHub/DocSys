@@ -16,8 +16,7 @@
     <link href="static/highlight/styles/default.css" rel="stylesheet">
     <link href="static/highlight/styles/zenburn.css" rel="stylesheet">
     <link href="static/fonts/font.css" rel="stylesheet">
-    <link href="static/zTree/css/metroStyle/metroStyle.css" rel="stylesheet" id="zTreeCss">
-    <link href="css1.css" rel="stylesheet" type="text/css" id="css"/>
+    <link href="static/zTree/css/metroStyle/standardStyle.css" rel="stylesheet" id="zTreeCss">
     <link href="static/nprogress/nprogress.css" rel="stylesheet">
     <link href="static/styles/kancloud.css" rel="stylesheet">
     <!-- bootStrapQ -->
@@ -3322,6 +3321,7 @@ function CompareObj(objA, objB, flag) {
     	
     	function getIconType(name, type, showType)
     	{
+    		/*var iconType = "";
     		if(showType == 1)
        		{
        			var iType = getIconByNameAndType( name , type)
@@ -3330,7 +3330,8 @@ function CompareObj(objA, objB, flag) {
     		else
     		{
        			iconType = type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
-       		}
+       		}*/
+    		var iconType = type===1?'<i class="type2 icons"></i>':'<i class="type1 icons"></i>';
     		return iconType;
     	}
     	
