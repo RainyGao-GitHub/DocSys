@@ -94,3 +94,21 @@ span.tmpzTreeMove_arrow {width:16px; height:21px; display: inline-block; padding
 
 ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height:auto;overflow:hidden; background-color:#cfcfcf; border:1px #00B83F dotted; opacity:0.8; filter:alpha(opacity=80)}
 .ztreeMask {z-index:10000; background-color:#cfcfcf; opacity:0.0; filter:alpha(opacity=0); position:absolute}
+
+.icons{
+	width: 16px;
+    height: 16px;
+    font-size:15px;
+    margin-right:5px;
+    color:#ffcc00;
+    display:inline-block;
+    text-align:center;
+}
+.icons.type1{
+	background-image:url("./img/metro.png");
+	background-position:-147px 0;
+}
+.icons.type2{
+	background-image:url("./img/metro.png");
+	background-position:-147px -42px;
+}
