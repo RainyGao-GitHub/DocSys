@@ -28,7 +28,10 @@ website:    http://code.google.com/p/jquerytree/
 .ztree li span.button {line-height:0; margin:0; padding: 0; width:21px; height:21px; display: inline-block; vertical-align:middle;
   border:0 none; cursor: pointer;outline:none;
   background-color:transparent; background-repeat:no-repeat; background-attachment: scroll;
-  background-image:url("./img/metro.png"); *background-image:url("./img/metro.gif")}
+  background-image:url("./img/metro.png"); 
+  *background-image:url("./img/metro.gif");
+  margin-right:2px; background-position: -147px -42px; vertical-align:top;
+}
 
 .ztree li span.button.chk {width:13px; height:13px; margin:0 2px; cursor: auto}
 .ztree li span.button.chk.checkbox_false_full {background-position: -5px -5px;}
@@ -69,14 +72,126 @@ website:    http://code.google.com/p/jquerytree/
 .ztree li span.button.bottom_docu{background-position: -84px -42px;}
 .ztree li span.button.noline_docu{ background:none;}
 
-.ztree li span.button.ico_open{margin-right:2px;vertical-align:top; *vertical-align:middle;
-     background: url("./img/sprite-e2e8774953.svg") no-repeat;
-     background-position: 13.597733711048159% 76.0932944606414%;}
-.ztree li span.button.ico_close{margin-right:2px; margin-right:2px; vertical-align:top; *vertical-align:middle;
-		background: url("./img/sprite-e2e8774953.svg") no-repeat;
-    	background-position: 6.798866855524079% 76.0932944606414%;
-    }
-.ztree li span.button.ico_docu{margin-right:2px; background-position: -147px -42px; vertical-align:top; *vertical-align:middle}
+.ztree li span.button.ico_open{
+	margin-right:2px;
+	vertical-align:top; 
+	*vertical-align:middle;
+    background: url("./img/folder_open.svg") no-repeat;
+    background-position: 0 0;
+    background-size: 18px 18px;
+}
+.ztree li span.button.ico_close{
+	margin-right:2px; 
+	vertical-align:top; 
+	*vertical-align:middle;
+	background: url("./img/folder_close.svg") no-repeat;
+    background-position: 0 0;    	
+    background-size: 18px 18px;
+}
+.ztree li span.button.ico_docu{
+	margin-right:2px; 
+	vertical-align:top; 
+	*vertical-align:middle;
+	background: url("./img/file_unknown.svg") no-repeat; 
+	background-position: 0px 0px; 
+	background-size: 18px 18px;
+}
+.ztree li span.button.word_ico_docu{
+	margin-right:2px; 
+	vertical-align:top; 
+	*vertical-align:middle;
+	background: url("./img/file_word.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 	
+}
+.ztree li span.button.excel_ico_docu{
+	margin-right:2px; 
+	vertical-align:top; 
+	*vertical-align:middle;
+	background: url("./img/file_excel.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+}
+.ztree li span.button.ppt_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_ppt.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.pdf_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_pdf.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.picture_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_picture.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.video_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_video.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.audio_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_audio.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.html_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_html.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.txt_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_txt.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.zip_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_zip.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.exe_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_exe.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.psd_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_psd.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
 .ztree li span.button.edit {margin-left:2px; margin-right: -1px; background-position: -189px -21px; vertical-align:top; *vertical-align:middle}
 .ztree li span.button.edit:hover {
   background-position: -168px -21px;
@@ -101,19 +216,81 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 .ztreeMask {z-index:10000; background-color:#cfcfcf; opacity:0.0; filter:alpha(opacity=0); position:absolute}
 
 .icons{
-	width: 16px;
-    height: 16px;
+	width: 18px;
+    height: 18px;
     font-size:15px;
     margin-right:5px;
     color:#ffcc00;
     display:inline-block;
     text-align:center;
 }
-.icons.type1{
-	background: url("./img/sprite-e2e8774953.svg") no-repeat;
-    background-position: 6.798866855524079% 76.0932944606414%;
+.icons.folder{
+	background: url("./img/folder_close.svg") no-repeat;
+    background-position: 0px 0px;
+   	background-size: 18px 18px; 
 }
-.icons.type2{
-	background-position:-147px -42px;
-	background-image:url("./img/metro.png");
+.icons.file{
+	background: url("./img/file_unknown.svg") no-repeat;
+    background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.word{
+	background: url("./img/file_word.svg") no-repeat;
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.excel{
+	background: url("./img/file_excel.svg") no-repeat;
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.ppt{
+	background: url("./img/file_ppt.svg") no-repeat;
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.pdf{
+	background: url("./img/file_pdf.svg") no-repeat;
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.picture{
+	background: url("./img/file_picture.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.video{
+	background: url("./img/file_video.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.audio{
+	background: url("./img/file_audio.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.html{
+	background: url("./img/file_html.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.txt{
+	background: url("./img/file_txt.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.zip{
+	background: url("./img/file_zip.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.exe{
+	background: url("./img/file_exe.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.psd{
+	background: url("./img/file_psd.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
 }
