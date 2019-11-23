@@ -28,7 +28,9 @@ website:    http://code.google.com/p/jquerytree/
 .ztree li span.button {line-height:0; margin:0; padding: 0; width:21px; height:21px; display: inline-block; vertical-align:middle;
   border:0 none; cursor: pointer;outline:none;
   background-color:transparent; background-repeat:no-repeat; background-attachment: scroll;
-  background-image:url("./img/metro.png"); *background-image:url("./img/metro.gif")}
+  background-image:url("./img/metro.png"); *background-image:url("./img/metro.gif");
+  margin-right:2px; background-position: -147px -42px; vertical-align:top;
+}
 
 .ztree li span.button.chk {width:13px; height:13px; margin:0 2px; cursor: auto}
 .ztree li span.button.chk.checkbox_false_full {background-position: -5px -5px;}
@@ -104,11 +106,11 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
     display:inline-block;
     text-align:center;
 }
-.icons.type1{
+.icons.folder{
 	background-image:url("./img/metro.png");
 	background-position:-147px 0;
 }
-.icons.type2{
+.icons.file{
 	background-image:url("./img/metro.png");
 	background-position:-147px -42px;
 }
