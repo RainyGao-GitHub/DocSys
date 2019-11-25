@@ -277,8 +277,8 @@
             <div class="manual-article" id="previewZone">
                 <div class="article-body editor-content"  id="docPreview" style="display:none;border-bottom: 1px solid #e0e1e5;">
                 	<div align=center style="margin-top:20px" >
-                		<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" onclick="DocOnClick();" ondblclick="openGDocInDialog();" onerror="FileLogoErrHandler();"></img>
-                		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:500px; max-height:400px;cursor:pointer;" onclick="DocOnClick();" ondblclick="openGDocInDialog();" onerror="FileImgErrHandler();"></img>
+                		<img id="fileLogo" name="fileLogo" src="" style="display:none; width:128px; height:128px;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileLogoErrHandler();"></img>
+                		<img id="imgPreview" name="imgPreview" src="" style="display:none; max-width:500px; max-height:400px;cursor:pointer;" onclick="DocOnClick();" ondblclick="DocOnDblClick();" onerror="FileImgErrHandler();"></img>
                 		<video id="videoPreview" name="videoPreview" src="" controls="controls" style="display:none;"></video>
                 	</div>
 	            </div>
@@ -1740,7 +1740,7 @@
     	if(gDocInfo.openMode == 2)
     	{
 			//Open Doc in Dialog
-			openDocInDialog(gDocInfo, fileSuffix);
+			openDocInDialog(gDocInfo);
 		}
     }
 	
@@ -1763,16 +1763,18 @@
 		//for pad or phone need to open it
 		if(gIsPC == false)
 		{			
-			openGDocInDialog();
+			DocOnDblClick();
 		}
 	}
 	
-    function openGDocInDialog()
+	//对于直接图标直接点击将尝试打开二进制文件
+    function DocOnDblClick()
     {
-    	openDocInDialog(gDocInfo);
+    	//show unknown doc in text diaglog
+    	openDocInDialog(gDocInfo, true);
     }
 	
-	function openDocInDialog(docInfo)
+	function openDocInDialog(docInfo, showUnknownFile)
 	{
 		if(docInfo == null || docInfo.type == 2)
 		{
@@ -1803,10 +1805,13 @@
 		{
 			//Do nothing	
 		}
-		else
+		else	//UnknownFile
 		{
-			//文本文件
-			showDocInTextDialog(docInfo); //这是个异步调用			
+			if(showUnknownFile && showUnknownFile == true)
+			{
+				//文本文件
+				showDocInTextDialog(docInfo); //这是个异步调用
+			}
 		}
 	}
 	
@@ -2603,7 +2608,7 @@ function CompareObj(objA, objB, flag) {
 	{
 		if(!suffix || suffix == "")
 		{
-			return true;
+			return false;
 		}
 		
 		var fileTypeMap = {
@@ -2627,6 +2632,11 @@ function CompareObj(objA, objB, flag) {
 	
 	function isPicture(suffix)
 	{
+		if(!suffix || suffix == "")
+		{
+			return false;
+		}
+		
 		var fileTypeMap = {
 		        jpg : true,
 		        jpeg : true,
@@ -2647,6 +2657,10 @@ function CompareObj(objA, objB, flag) {
 	
 	function isVideo(suffix)
 	{
+		if(!suffix || suffix == "")
+		{
+			return false;
+		}
 		var fileTypeMap = {
 				avi : true,
 				mov : true,
@@ -2670,6 +2684,10 @@ function CompareObj(objA, objB, flag) {
 	
 	function isText(suffix)
 	{
+		if(!suffix || suffix == "")
+		{
+			return false;
+		}
 		var fileTypeMap = {
 				txt : true,
 				log : true,
@@ -2708,6 +2726,10 @@ function CompareObj(objA, objB, flag) {
 	
 	function isOffice(suffix)
 	{
+		if(!suffix || suffix == "")
+		{
+			return false;
+		}
 		var fileTypeMap = {
 				doc : true,
 				docx : true,
@@ -2728,6 +2750,10 @@ function CompareObj(objA, objB, flag) {
 	
 	function isPdf(suffix)
 	{
+		if(!suffix || suffix == "")
+		{
+			return false;
+		}
 		var fileTypeMap = {
 				pdf : true,
 			};
@@ -2740,8 +2766,6 @@ function CompareObj(objA, objB, flag) {
 		
 		return true;
 	}
-	
-	
 
 	function isPictureFile(fileName)
 	{
