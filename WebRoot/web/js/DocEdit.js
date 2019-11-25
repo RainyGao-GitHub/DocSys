@@ -35,7 +35,7 @@
                dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
                imageUpload : true,
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-               imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do",
+               imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+gDocInfo.path + "&name="+gDocInfo.name,
                onchange : function () {
                    console.log("DocEdit onchange gDocInfo.edit:" + gDocInfo.edit);                  
                },
