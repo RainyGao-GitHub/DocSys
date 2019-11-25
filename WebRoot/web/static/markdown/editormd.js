@@ -2249,6 +2249,15 @@
         },
         
         /**
+         * 设置图片上传URL
+         */
+        
+        setImageUploadURL : function(url)
+        {
+        	this.settings.imageUploadURL = url;
+        },
+        
+        /**
          * 获取编辑器的markdown源文档
          * Set Editor.md markdown/CodeMirror value
          * 
@@ -2280,7 +2289,6 @@
         
         setValue : function(value) {
             this.cm.setValue(value);
-            
             return this;
         },
         
