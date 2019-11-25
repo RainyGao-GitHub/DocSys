@@ -35,7 +35,7 @@
                dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
                imageUpload : true,
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-               imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+gDocInfo.path + "&name="+gDocInfo.name,
+               imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ Base64.encode(gDocInfo.path) + "&name="+Base64.encode(gDocInfo.name),
                onchange : function () {
                    console.log("DocEdit onchange gDocInfo.edit:" + gDocInfo.edit);                  
                },
@@ -75,7 +75,7 @@
     	{
     		console.log("DocEdit editorLoadmd() gDocInfo.edit:" + gDocInfo.edit);
     		md.setMarkdown(content);
-    		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+gDocInfo.path + "&name="+gDocInfo.name); 
+    		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ Base64.encode(gDocInfo.path) + "&name="+ Base64.encode(gDocInfo.name)); 
         }
         
         function loadmd(content, edit)

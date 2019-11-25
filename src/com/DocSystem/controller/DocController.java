@@ -1043,6 +1043,33 @@ public class DocController extends BaseController{
 			return;		
 		}
 		
+		if(path == null || name == null)
+		{
+			res.put("success", 0);
+			res.put("message", "目标路径不能为空！");
+			writeJson(res,response);
+			return;		
+		}
+		
+		path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+		path = base64Decode(path);
+		if(path == null)
+		{
+			res.put("success", 0);
+			res.put("message", "目标路径解码失败！");
+			writeJson(res,response);		
+			return;
+		}
+	
+		name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+		name = base64Decode(name);
+		if(name == null)
+		{
+			res.put("success", 0);
+			res.put("message", "目标文件名解码失败！");
+			writeJson(res,response);			
+			return;
+		}
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc curDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
