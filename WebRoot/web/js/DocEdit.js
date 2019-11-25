@@ -75,6 +75,7 @@
     	{
     		console.log("DocEdit editorLoadmd() gDocInfo.edit:" + gDocInfo.edit);
     		md.setMarkdown(content);
+    		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+gDocInfo.path + "&name="+gDocInfo.name); 
         }
         
         function loadmd(content, edit)
