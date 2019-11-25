@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -91,7 +93,7 @@ public class DocController extends BaseController{
 		//System.out.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -192,7 +194,7 @@ public class DocController extends BaseController{
 		
 		String commitMsg = "用户反馈 " + path + name;
 		String commitUser = "游客";
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user != null)
 		{
 			commitUser = login_user.getName();
@@ -241,7 +243,7 @@ public class DocController extends BaseController{
 		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -294,7 +296,7 @@ public class DocController extends BaseController{
 		System.out.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -361,7 +363,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -455,7 +457,7 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -528,7 +530,7 @@ public class DocController extends BaseController{
 		System.out.println("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -597,7 +599,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -804,7 +806,7 @@ public class DocController extends BaseController{
 			
 		ReturnAjax rt = new ReturnAjax();
 
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		
 		if("".equals(checkSum))
 		{
@@ -905,7 +907,7 @@ public class DocController extends BaseController{
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 		ReturnAjax rt = new ReturnAjax();
 
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1107,7 +1109,7 @@ public class DocController extends BaseController{
 		//System.out.println("content size: " + content.length());
 			
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1218,7 +1220,7 @@ public class DocController extends BaseController{
 		System.out.println("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1266,7 +1268,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1542,7 +1544,7 @@ public class DocController extends BaseController{
 		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1632,7 +1634,7 @@ public class DocController extends BaseController{
 		}
 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1701,7 +1703,7 @@ public class DocController extends BaseController{
 	public void DocToPDF_VRP(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1822,7 +1824,7 @@ public class DocController extends BaseController{
 	public void DocToPDF_FSM(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -1990,7 +1992,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2072,7 +2074,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2121,7 +2123,7 @@ public class DocController extends BaseController{
 		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2194,7 +2196,7 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2300,7 +2302,7 @@ public class DocController extends BaseController{
 		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2369,7 +2371,7 @@ public class DocController extends BaseController{
 		System.out.println("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2424,7 +2426,7 @@ public class DocController extends BaseController{
 		System.out.println("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2482,7 +2484,7 @@ public class DocController extends BaseController{
 		System.out.println("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath);
 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2690,7 +2692,7 @@ public class DocController extends BaseController{
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
@@ -2872,7 +2874,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/searchDoc.do")
 	public void searchDoc(Integer reposId,Integer pid, String path, 
 			String searchWord,String sort,
-			HttpServletResponse response,HttpSession session)
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort);
 		
@@ -2882,7 +2884,7 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			docSysErrorLog("用户未登录，请先登录！", rt);
