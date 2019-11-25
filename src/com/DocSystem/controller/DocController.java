@@ -1030,7 +1030,7 @@ public class DocController extends BaseController{
 			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
 	{
-		System.out.println("uploadMarkdownPic ");
+		System.out.println("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
 		JSONObject res = new JSONObject();
 
@@ -2204,12 +2204,6 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		
-		//Set currentDocId to session which will be used MarkDown ImgUpload
-		session.setAttribute("currentReposId", reposId);
-		session.setAttribute("currentDocId", docId);
-		session.setAttribute("currentParentPath", path);
-		session.setAttribute("currentDocName", name);
 		
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
