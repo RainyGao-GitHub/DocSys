@@ -1598,7 +1598,7 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 		}
-		return null;
+		return user;
 	}
 	
 	/**
