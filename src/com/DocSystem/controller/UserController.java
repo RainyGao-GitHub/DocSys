@@ -105,85 +105,17 @@ public class UserController extends BaseController {
 		userService.addUser(user);
 	}
 	
-	/**
-	 * 用户数据校验
-	 * @param uLists 根据条件从数据库中查出的user列表
-	 * @param rt 返回ajax信息的类
-	 * @param session 
-	 * @param localUser 前台传回的user信息，或者cookies中保存的用户信息
-	 * @return
-	 */
-	private boolean loginCheck(ReturnAjax rt,User localUser, List<User> uLists,HttpSession session,HttpServletResponse response)
-	{	
-		if(uLists == null)
-		{
-			System.out.println("loginCheck() uLists is null");
-			rt.setError("用户名或密码错误！");
-			return false;	
-		}
-		else if(uLists.size()<1){
-			System.out.println("loginCheck() uLists size < 1");
-			rt.setError("用户名或密码错误！");
-			return false;
-		}else if(uLists.size()>1){
-			//TODO系统异常需要处理
-			System.out.println("loginCheck() uLists size > 1");
-			rt.setError("登录失败！");
-			return false;
-		}
-		
-		return true;
-	}
-	
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
 	public void getLoginUser(HttpServletRequest request,HttpSession session,HttpServletResponse response){
 		System.out.println("getLoginUser SESSION ID:" + session.getId());
 		
 		ReturnAjax rt = new ReturnAjax();
-		User user = (User) session.getAttribute("login_user");
+		User user = getLoginUser(session, request, response, rt);
 		if(user == null)
 		{
-			//尝试自动登录
-			Cookie c1 = getCookieByName(request, "dsuser");
-			Cookie c2 = getCookieByName(request, "dstoken");
-			if(c1!=null&&c2!=null&&c1.getValue()!=null&&c2.getValue()!=null&&!"".equals(c1.getValue())&&!"".equals(c2.getValue())){
-				System.out.println("自动登录");
-				String userName = c1.getValue();
-				String pwd = c2.getValue();
-				//tmp_user is used for store the query condition
-				User tmp_user = new User();
-				tmp_user.setName(userName);			
-				tmp_user.setPwd(pwd);
-				List<User> uLists = getUserList(userName,pwd);
-				boolean ret =loginCheck(rt, tmp_user, uLists, session,response);
-				if(ret == false)
-				{
-					System.out.println("自动登录失败");
-					rt.setMsgData("自动登陆失败");
-					writeJson(rt, response);
-					return;
-				}
-				
-				System.out.println("自动登录成功");
-				//Set session
-				session.setAttribute("login_user", uLists.get(0));
-				//延长cookie的有效期
-				addCookie(response, "dsuser", userName, 7*24*60*60);//一周内免登录
-				addCookie(response, "dstoken", pwd, 7*24*60*60);
-				System.out.println("用户cookie保存成功");
-				System.out.println("SESSION ID:" + session.getId());
-
-				rt.setData(uLists.get(0));	//将数据库取出的用户信息返回至前台
-				writeJson(rt, response);
-				return;
-			}
-			else
-			{
-				rt.setError("用户未登录");
-				writeJson(rt, response);
-				return;
-			}
+			writeJson(rt, response);
+			return;
 		}
 		
 		//I not sure if the info in loginUser is lastest, so I need to get the usrInfo from database 

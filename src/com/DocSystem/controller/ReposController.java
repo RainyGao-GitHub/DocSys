@@ -38,7 +38,7 @@ public class ReposController extends BaseController{
 	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
 	/****************** get Repository List **************/
 	@RequestMapping("/getDocSysConfig.do")
-	public void getDocSysConfig(HttpSession session,HttpServletResponse response){
+	public void getDocSysConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getDocSysConfig");
 		ReturnAjax rt = new ReturnAjax();
 				
@@ -58,11 +58,11 @@ public class ReposController extends BaseController{
 
 	/****************** get Repository List **************/
 	@RequestMapping("/getReposList.do")
-	public void getReposList(HttpSession session,HttpServletResponse response){
+	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getReposList");
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -79,11 +79,11 @@ public class ReposController extends BaseController{
 	}
 	
 	@RequestMapping("/getManagerReposList.do")
-	public void getManagerReposList(HttpSession session,HttpServletResponse response){
+	public void getManagerReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getManagerReposList");
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -111,7 +111,7 @@ public class ReposController extends BaseController{
 	public void getRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getRepos vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -131,7 +131,7 @@ public class ReposController extends BaseController{
 		System.out.println("addRepos name: " + name + " info: " + info + " type: " + type + " path: " + path  + " realDocPath: " + realDocPath + " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -271,7 +271,7 @@ public class ReposController extends BaseController{
 	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("deleteRepos vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -340,7 +340,7 @@ public class ReposController extends BaseController{
 		System.out.println("updateReposInfo reposId:" + reposId + " name: " + name + " info: " + info + " type: " + type  + " path: " + path + " realDocPath:" + realDocPath +" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd + " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -495,7 +495,7 @@ public class ReposController extends BaseController{
 		System.out.println("getReposInitMenu reposId: " + reposId + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户登录，请先登录！");
@@ -579,7 +579,7 @@ public class ReposController extends BaseController{
 		System.out.println("getSubDocList reposId: " + vid + " docId: " + docId  + " pid:" + pid + " path:" + path + " name:"+ name + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -638,7 +638,7 @@ public class ReposController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getReposManagerMenu vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -716,7 +716,7 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("getReposAllUsers reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -759,7 +759,7 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("getReposAllGroups reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -783,7 +783,7 @@ public class ReposController extends BaseController{
 		System.out.println("getDocAuthList reposId: " + reposId + " docId:" + docId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			System.out.println("getDocAuthList() 用户未登录，请先登录！");
@@ -894,7 +894,7 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("configReposAuth userId: " + userId  + " groupId:" + groupId + " reposId:" + reposId + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -987,7 +987,7 @@ public class ReposController extends BaseController{
 		
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -1108,7 +1108,7 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("deleteUserReposAuth reposAuthId:"  + reposAuthId + " userId: " + userId  + " groupId: " + groupId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -1157,7 +1157,7 @@ public class ReposController extends BaseController{
 	{
 		System.out.println("deleteUserReposAuth docAuthId:"  + docAuthId + " userId: " + userId  + " groupId: " + groupId  + " docId: " + docId  + " reposId:" + reposId);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
@@ -1256,7 +1256,7 @@ public class ReposController extends BaseController{
 		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
+		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
 			rt.setError("用户未登录，请先登录！");
