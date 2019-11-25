@@ -1025,27 +1025,28 @@ public class DocController extends BaseController{
 	
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
-	public void uploadMarkdownPic(@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
-			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception{
+	public void uploadMarkdownPic(
+			Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
+			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
+	{
 		System.out.println("uploadMarkdownPic ");
 		
 		JSONObject res = new JSONObject();
 
-		//Get the currentDocId from Session which was set in getDocContent
-		Doc curDoc = new Doc();
-		Long docId = (Long) session.getAttribute("currentDocId");
-		if(docId == null || docId == 0)
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
 		{
 			res.put("success", 0);
-			res.put("message", "upload failed: currentDoc was not set!");
+			res.put("message", "仓库 " + reposId + " 不存在！");
 			writeJson(res,response);
-			return;
+			return;		
 		}
-		curDoc.setVid((Integer) session.getAttribute("currentReposId"));
-		curDoc.setDocId(docId);
-		curDoc.setPath((String)session.getAttribute("currentParentPath"));
-		curDoc.setName((String)session.getAttribute("currentDocName"));
-				
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc curDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+
 		if(file == null) 
 		{
 			res.put("success", 0);
@@ -1056,21 +1057,8 @@ public class DocController extends BaseController{
 		
 		//Save the file
 		String fileName =  file.getOriginalFilename();
-		
-		//get localParentPath for Markdown Img
-		//String localParentPath = getWebTmpPath() + "markdownImg/";
-		Repos repos = reposService.getRepos(curDoc.getVid());
-		if(repos == null)
-		{
-			res.put("success", 0);
-			res.put("message", "仓库 " + curDoc.getVid() + " 不存在！");
-			writeJson(res,response);
-			return;
-		}
-		
-		String reposVPath = getReposVirtualPath(repos);
 		String docVName = getVDocName(curDoc);
-		String localVDocPath = reposVPath + docVName;
+		String localVDocPath = localVRootPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
 		
 		//Check and create localParentPath
