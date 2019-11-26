@@ -11,6 +11,16 @@
       	{
       		console.log("DocEdit editorInit edit:" + edit);
 
+      		var watchEnable = true;
+      		if(gIsPC && gIsPC == false)
+      		{
+      			watchEnable = false;
+      		}
+      		console.log("DocEdit watchEnable:" + watchEnable);
+      		
+      		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ Base64.encode(gDocInfo.path) + "&name="+Base64.encode(gDocInfo.name);
+      		console.log("DocEdit imageUploadURL:" + imageUploadURL);
+      			
       		var params = {
                width: "100%",
                height: $(document).height()-70,
@@ -19,6 +29,7 @@
                //toolbar  : false,             // 关闭工具栏
                codeFold : true,
                searchReplace : true,
+               watch : watchEnable,                // 关闭实时预览
                saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
                htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
                emoji : true,
@@ -35,7 +46,7 @@
                dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
                imageUpload : true,
                imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-               imageUploadURL : "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ Base64.encode(gDocInfo.path) + "&name="+Base64.encode(gDocInfo.name),
+               imageUploadURL : imageUploadURL,
                onchange : function () {
                    console.log("DocEdit onchange gDocInfo.edit:" + gDocInfo.edit);                  
                },
@@ -78,7 +89,7 @@
     		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ Base64.encode(gDocInfo.path) + "&name="+ Base64.encode(gDocInfo.name)); 
         }
         
-        function loadmd(content, edit)
+        function loadmd(content, edit, initFlag)
         {
     		if(!content)
     		{
@@ -89,7 +100,14 @@
     		
 			if(md)
    			{
-      			editorLoadmd(content);               				
+				if(initFlag)
+				{
+					editorInit(content, edit);
+				}
+				else
+				{
+	      			editorLoadmd(content);               									
+				}
    			}
 			else
 			{
@@ -529,8 +547,8 @@
         		}
         		md.resize();
             },
-            loadmd: function(content, edit){
-               loadmd(content, edit);
+            loadmd: function(content, edit, initFlag){
+               loadmd(content, edit, initFlag);
             },
             editWiki: function(){
             	editWiki();
