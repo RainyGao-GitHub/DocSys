@@ -2733,6 +2733,16 @@
                 $.proxy(editormd.loadPlugins[name], this)(cm);
             }
             
+            //Rainy Added for change the imageUploadURL
+            if(name == "image-dialog")
+            {
+				//update the editormdImageUploader action
+				var obj = document.getElementById("editormdImageUploader");
+	  		  	if(obj && obj != null)
+	  		  	{
+	  		  		obj.setAttribute("action",settings.imageUploadURL);	
+	  		  	}
+            }
             return this;
         },
                 
