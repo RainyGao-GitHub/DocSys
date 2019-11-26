@@ -1752,7 +1752,7 @@
 		gTmpSavedContent = gDocInfo.tmpContent;
 		//console.log("showGDocVDocContent gDocInfo.content:" + gDocInfo.content + " gDocContent:" + gDocContent);
 		
-		DocEdit.loadmd(gDocContent, gDocInfo.edit, true);
+		DocEdit.loadmd(gDocContent, gDocInfo.edit);
 	  	$(".editormd-preview-close-btn").show();//css("display","none");
 	}
 	
@@ -3349,7 +3349,7 @@ function CompareObj(objA, objB, flag) {
     	
     	function docListGetIconItemStr(name, type, showType)
     	{
-			console.log("docListGetIconItemStr name:" + name + " showType:" + showType);
+			//console.log("docListGetIconItemStr name:" + name + " showType:" + showType);
     		var iconItemStr = "";
     		if(type == 2)
 			{
@@ -3364,7 +3364,7 @@ function CompareObj(objA, objB, flag) {
     		}
     		
  			var iconType = getDiyFileIconType(name);
-			console.log("docListGetIconItemStr iconType:" + iconType);
+			//console.log("docListGetIconItemStr iconType:" + iconType);
 	       	if(iconType && iconType != "")
 	       	{
 	        	iconItemStr = '<i class="icons file ' + iconType + '"></i>';       					
@@ -3373,7 +3373,7 @@ function CompareObj(objA, objB, flag) {
 	       	{
 	    		iconItemStr = '<i class="icons file"></i>';
 	    	}
-	       	console.log("docListGetIconItemStr iconItemStr:" + iconItemStr);
+	       	//console.log("docListGetIconItemStr iconItemStr:" + iconItemStr);
 	       	return iconItemStr;
     	}
     	
