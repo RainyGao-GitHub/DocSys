@@ -2700,7 +2700,7 @@
          */
         
         executePlugin : function(name, path) {
-            
+            console.log("executePlugin name:" + name);
             var _this    = this;
             var cm       = this.cm;
             var settings = this.settings;
@@ -2734,7 +2734,7 @@
             }
             
             //Rainy Added for change the imageUploadURL
-            if(name == "image-dialog")
+            if(name == "imageDialog")
             {
 				//update the editormdImageUploader action
 				var obj = document.getElementById("editormdImageUploader");
