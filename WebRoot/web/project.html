@@ -5053,14 +5053,17 @@ function CompareObj(objA, objB, flag) {
 		//右键菜单实现：contextMenu End
     }
     
+    //Markdown的图片截图粘贴接口
     document.addEventListener('paste', handlePasteImgEvent);        
     function handlePasteImgEvent(event)
     {
-    	console.log("handlePasteImgEvent event", event);
+    	if(!gDocInfo.edit || gDocInfo.edit == false)
+    	{
+    		return;
+    	}
     	
     	var  file = null;
-    	
-        //粘贴事件
+    	//粘贴事件
         if (event.clipboardData || event.originalEvent) 
         {
         	var clipboardData = (event.clipboardData || event.originalEvent.clipboardData);
