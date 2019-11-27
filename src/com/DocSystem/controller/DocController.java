@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -39,10 +38,8 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
-import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSONObject;
-import com.ibm.misc.BASE64Decoder;
 
 /*
 Something you need to know
@@ -1051,7 +1048,6 @@ public class DocController extends BaseController{
 			return;		
 		}
 		
-		path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
 		path = base64Decode(path);
 		if(path == null)
 		{
@@ -1061,7 +1057,6 @@ public class DocController extends BaseController{
 			return;
 		}
 	
-		name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
 		name = base64Decode(name);
 		if(name == null)
 		{
@@ -1070,6 +1065,8 @@ public class DocController extends BaseController{
 			writeJson(res,response);			
 			return;
 		}
+		System.out.println("uploadMarkdownPic path:" + path +" name:"+ name);
+
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc curDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
