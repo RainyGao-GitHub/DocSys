@@ -1023,11 +1023,11 @@ public class DocController extends BaseController{
 	/****************   Upload a Picture for Markdown ******************/
 	@RequestMapping("/uploadMarkdownPic.do")
 	public void uploadMarkdownPic(
-			Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String imgName,
 			@RequestParam(value = "editormd-image-file", required = true) MultipartFile file, 
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) throws Exception
 	{
-		System.out.println("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name);
+		System.out.println("uploadMarkdownPic reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name + " imgName:" + imgName);
 		
 		JSONObject res = new JSONObject();
 
@@ -1080,7 +1080,11 @@ public class DocController extends BaseController{
 		}
 		
 		//Save the file
-		String fileName =  file.getOriginalFilename();
+		String fileName = imgName;
+		if(fileName == null)
+		{
+			fileName = file.getOriginalFilename();
+		}
 		String docVName = getVDocName(curDoc);
 		String localVDocPath = localVRootPath + docVName;
 		String localParentPath = localVDocPath + "/res/";
