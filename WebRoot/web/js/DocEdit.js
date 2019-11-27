@@ -542,6 +542,12 @@
 	            }
 	        });
 	    }
+	    
+	    function insertTextAtCursor(text)
+	    {
+	    	console.log("insertTextAtCursor text:", text);
+	    	md.insertTextAtCursor(text);
+	    }
 
 		//开放给外部的调用接口
         return {
@@ -573,10 +579,11 @@
             stopAutoTmpSaver: function(){
             	stopAutoTmpSaver();
             },
-            
             deleteTmpSavedContent: function(docId){
             	deleteTmpSavedContent(docId);
             },
-            
+            insertTextAtCursor : function(text){
+            	insertTextAtCursor(text);
+            }
         };
     })();

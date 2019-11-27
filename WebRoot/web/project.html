@@ -3854,13 +3854,24 @@ function CompareObj(objA, objB, flag) {
 	//回车键监听函数，该event已经过兼容性处理 
 	function EnterKeyListenerForSearchDoc(event){
 		console.log("enter key listener for SearchDoc");
-		if (event.keyCode == 13){  
+		if (event.keyCode == 13)
+		{  
 			var isFocus=$("#searchWord").is(":focus");  
 			if(isFocus)
 			{
 				searchDoc();
 			}
-	 	}  
+			return;
+	 	}
+
+		/*
+		if(event.ctrlKey)
+		{
+	    	if(event.keyCode == 67)
+	    	{
+	    		handlePasteImgEvent(event);
+	        }
+		}*/
 	}
 	
 	function searchDoc()
@@ -5040,6 +5051,109 @@ function CompareObj(objA, objB, flag) {
 			$('.finale h1:first').css({opacity:1});
 		});
 		//右键菜单实现：contextMenu End
+    }
+    
+    document.addEventListener('paste', handlePasteImgEvent);        
+    function handlePasteImgEvent(event)
+    {
+    	console.log("handlePasteImgEvent event", event);
+    	
+    	var  file = null;
+    	
+        //粘贴事件
+        if (event.clipboardData || event.originalEvent) 
+        {
+        	var clipboardData = (event.clipboardData || event.originalEvent.clipboardData);
+        	console.log("handlePasteImgEvent clipboardData", clipboardData);
+        	var items = clipboardData.items;
+            if(items)
+            {
+            	console.log("handlePasteImgEvent items", items);
+                for (var i = 0; i <items.length; i++) 
+                {
+                	if (clipboardData.items[i].type.indexOf("image") !== -1) 
+                	{
+                		file = items[i].getAsFile();
+                        break;
+                    }
+                }
+            }	
+        }   
+        
+        if(file == null)
+    	{
+        	console.log("handlePasteImgEvent file is null");
+        	return;
+        }
+                
+        uploadMarkdownPic(file);
+        
+    	function uploadMarkdownPic(file)
+    	{
+			console.log("uploadMarkdownPic()");
+
+			var xhr = new XMLHttpRequest();
+			
+			var form = new FormData();
+			form.append("editormd-image-file", file);
+
+			//上传表单	
+			var path = Base64.urlsafe_encode(gDocInfo.path);
+    		var name = Base64.urlsafe_encode(gDocInfo.name);
+    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name; 
+      		xhr.open("post", imageUploadURL);
+			xhr.send(form);
+			
+			//设置异步上传状态变化回调处a理函数
+			xhr.onreadystatechange = function() {				
+				//文件上传状态
+				console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+				if(xhr.status == 200) 
+				{
+					if(xhr.readyState != 4)
+					{
+						//文件上传未结束
+						return;
+					}
+					
+					//上传成功！
+					var ret = JSON.parse(xhr.responseText);
+					console.log("uploadMarkdownPic ret", ret);
+					if(1 == ret.success)
+					{
+						//上传失败
+						console.log("上传成功");
+				        DocEdit.insertTextAtCursor("![]("+ ret.url +")");
+					}
+					else	//上传失败
+					{
+						//上传失败
+						console.log("上传失败：" + ret.msgInfo);
+						return;
+		            }
+				}else{
+					if(xhr.status < 300) 
+					{
+						//不是真正的异常
+						return;
+					}
+					//上传失败
+					console.log("系统异常: 上传异常！");
+					return;
+				}
+			};
+    	}
+
+        //setImg Directly,以下代码可以直接将
+        /*
+        var render = new FileReader();
+        render.onload = function (evt) {
+            //输出base64编码
+            var base64 = evt.target.result;
+            document.getElementById('fileLogo').setAttribute('src',base64);
+        }
+        render.readAsDataURL(file);
+        return;*/
     }
 </SCRIPT>
 </body>

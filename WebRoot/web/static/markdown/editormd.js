@@ -2257,6 +2257,19 @@
         	this.settings.imageUploadURL = url;
         },
         
+        insertTextAtCursor : function(text)
+        {
+            var cm        = this.cm;
+            var cursor    = cm.getCursor();
+            var selection = cm.getSelection();
+
+            cm.replaceSelection(text);
+
+            if(selection === "") {
+                cm.setCursor(cursor.line, cursor.ch + 2);
+            }
+        },
+        
         /**
          * 获取编辑器的markdown源文档
          * Set Editor.md markdown/CodeMirror value
