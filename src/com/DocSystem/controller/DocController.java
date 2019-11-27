@@ -1229,7 +1229,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
-		System.out.println("tmpSaveVirtualDocContent content:[" + content + "]");
+		//System.out.println("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
