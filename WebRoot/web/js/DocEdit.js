@@ -18,8 +18,8 @@
       		}
       		console.log("DocEdit watchEnable:" + watchEnable);
       		
-    		var path = Base64.urlsafe_encode(gDocInfo.path);
-    		var name = Base64.urlsafe_encode(gDocInfo.name);
+    		var path = base64_urlsafe_encode(gDocInfo.path);
+    		var name = base64_urlsafe_encode(gDocInfo.name);
     		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name; 
       		console.log("DocEdit imageUploadURL:" + imageUploadURL);
       			
@@ -89,8 +89,8 @@
     		console.log("DocEdit editorLoadmd() gDocInfo.edit:" + gDocInfo.edit);
     		md.setMarkdown(content);
     		
-    		var path = Base64.urlsafe_encode(gDocInfo.path);
-    		var name = Base64.urlsafe_encode(gDocInfo.name);
+    		var path = base64_urlsafe_encode(gDocInfo.path);
+    		var name = base64_urlsafe_encode(gDocInfo.name);
     		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name); 
         }
         
