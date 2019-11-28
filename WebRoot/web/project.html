@@ -140,15 +140,11 @@
 <body>
 <div class="m-manual manual-reader">
 
-    <header class="navbar navbar-static-top manual-head" role="banner">
+    <header class="navbar navbar-static-top  smart-nav navbar-fixed-top" role="banner">
         <div class="container-fluid">
-            <div class="navbar-header pull-left manual-title">
-  				<a class="navbar-brand" href="/DocSystem/web/projects.html"><i class="fa fa-paper-plane"></i> DocSys</a>
-                <span class="slidebar" id="slidebar">
-                    <i class="fa fa-align-justify"></i>
-                </span>
-                <a  id="projectName" class="navbar-brand" href="#">仓库名</a>
-                <span style="font-size: 12px;font-weight: 100;" class="projectVersion"></span>
+            <div class="navbar-header">
+  				<a class="navbar-brand" style="font-weight: 600;" href="/DocSystem/web/projects.html"><i class="fa fa-paper-plane"></i> DocSys</a>
+                <a  id="projectName" class="navbar-brand" style="font-weight: 600;" href="#">仓库名</a>
                             
 	            <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block" style="right:5px; top:5px;">
 	                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
@@ -157,7 +153,7 @@
 	                        <a onclick="showLoginPanel()" title="用户登录">登录</a>
 	                    </li>
 	                    <li id="mobileLogoutBtn">
-	                        <a onclick="userLogout()" title="退出登录">退出</a>
+	                        <a onclick="userLogout()" title="退出登录">退出登录</a>
 	                    </li>
 	                </ul>
 	            </div>  
@@ -872,8 +868,8 @@
 		
 		var vid = gReposInfo.id;
 		var docId = node.docId;
-	   	var path = Base64.encode(node.path);
-	   	var name = Base64.encode(node.name);
+	   	var path = base64_encode(node.path);
+	   	var name = base64_encode(node.name);
 	   	var href = "/DocSystem/web/project.html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
 			
 		console.log(href);
@@ -898,7 +894,6 @@
 					time : 1000,
 		});
 	}
-	
 	//文件下载接口 
  	function downloadDoc(treeNodes,needConfirm,downloadType)
 	{
@@ -1572,8 +1567,8 @@
     	if(gDocInfo.docId)
     	{
 	    	//避免取回来时乱码
-		   	var path = Base64.encode(gDocInfo.path);
-		   	var name = Base64.encode(gDocInfo.name);
+		   	var path = base64_encode(gDocInfo.path);
+		   	var name = base64_encode(gDocInfo.name);
 		   	console.log("after encode path:" + path + " name:" + name);
 	   	
 		   	//path = decodeURI(path);
@@ -2129,8 +2124,8 @@
         }
         
         //前台的Decode和Encode结果是一致的，后台的Decode一致但Encode之后Decode的结果不正确
-        //Base64.encode(content);
-        //Base64.decode(content);
+        //base64_encode(content);
+        //base64_decode(content);
         
         return content;
 	}
@@ -4467,7 +4462,7 @@ function CompareObj(objA, objB, flag) {
 		var path = getQueryString("path");
 		if(path && path != null)
 		{
-			path = Base64.decode(path);
+			path = base64_decode(path);
 		}
 		else
 		{
@@ -4477,7 +4472,7 @@ function CompareObj(objA, objB, flag) {
 		var name = getQueryString("name");
 		if(name && name != null)
 		{
-			name = Base64.decode(name);
+			name = base64_decode(name);
 		}
 		else
 		{
@@ -5109,8 +5104,8 @@ function CompareObj(objA, objB, flag) {
 
 			//上传表单	
 			var imgName =  file.lastModified + "_" + file.name;
-			var path = Base64.urlsafe_encode(gDocInfo.path);
-    		var name = Base64.urlsafe_encode(gDocInfo.name);
+			var path = base64_urlsafe_encode(gDocInfo.path);
+    		var name = base64_urlsafe_encode(gDocInfo.name);
     		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName; 
       		xhr.open("post", imageUploadURL);
 			xhr.send(form);
