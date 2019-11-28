@@ -227,3 +227,39 @@ var Base64 = (function () {
         }
     };
 })();
+
+function base64_encode(str)
+{
+	if(str)
+	{
+		return Base64.encode(str);
+	}
+	return "";
+}
+
+function base64_decode(str)
+{
+	if(str)
+	{
+		return Base64.decode(str);
+	}
+	return "";
+}
+
+function base64_urlsafe_encode(str)
+{
+	if(str)
+	{
+		return Base64.urlsafe_encode(str);
+	}
+	return "";
+}
+
+function base64_urlsafe_decode(str)
+{
+	if(str)
+	{
+		return Base64.urlsafe_decode(str);
+	}
+	return "";
+}
