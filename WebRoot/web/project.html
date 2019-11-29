@@ -1558,12 +1558,25 @@
 	}
 
 	/******************************** Doc Interfaces***************************************/
-	//文件保存操作: callback是指成功后的回调函数
-    
-    function updateUrl()
+	function updateProjectName()
+	{
+		if(!gDocInfo.docId || gDocInfo.docId == 0)
+		{
+			$("#projectName").text(gReposInfo.name);			
+		}
+		else
+		{
+			if(gDocInfo.type == 2)
+			{
+				$("#projectName").text(gDocInfo.name);
+			}
+		}
+	}
+	
+	function updateUrl()
     {
     	console.log("updateUrl() reposId:" + gReposInfo.id + " gDocInfo:", gDocInfo);
-    	
+    	updateProjectName();
     	if(gDocInfo.docId)
     	{
 	    	//避免取回来时乱码
