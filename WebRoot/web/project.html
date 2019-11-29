@@ -1569,6 +1569,11 @@
 			{
 				$("#projectName").text(gDocInfo.name);
 			}
+			else
+			{
+				//For File need to show parent docName
+				
+			}
 		}
 	}
 	
@@ -3357,11 +3362,11 @@ function CompareObj(objA, objB, flag) {
        			
        			if(data[i].state && data[i].state != 0)
        			{
-   	        		str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left" style="color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+   	        		str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
    	        	}
    	           	else
    	           	{
-   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
    	           	}	 
      	    }
            	$("#secondList").html(str);
@@ -3419,7 +3424,7 @@ function CompareObj(objA, objB, flag) {
          				+' dataSize=' + node.size 
          				+' createTime='+ node.createTime 
          				+' latestEditTime=' + node.latestEditTime
-         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
 		   $("#secondList").append(nodeStr);
 		}
 
