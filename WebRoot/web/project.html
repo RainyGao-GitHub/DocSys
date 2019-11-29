@@ -106,8 +106,7 @@
     <style>
         /* 强制不换行 */
         .nowrap{white-space:nowrap;}
-        /* 允许单词内断句，首先会尝试挪到下一行，看看下一行的宽度够不够，
-        不够的话就进行单词内的断句 */
+        /* 允许单词内断句，首先会尝试挪到下一行，看看下一行的宽度够不够，不够的话就进行单词内的断句 */
         .breakword{word-wrap: break-word;}
         /* 断句时，不会把长单词挪到下一行，而是直接进行单词内的断句 */
         .breakAll{word-break:break-all;}            
@@ -144,7 +143,7 @@
         <div class="container-fluid">
             <div class="navbar-header">
   				<a class="navbar-brand" style="font-weight: 600;" href="/DocSystem/web/projects.html"><i class="fa fa-paper-plane"></i> DocSys</a>
-                <a  id="projectName" class="navbar-brand" style="font-weight: 600;" href="#">仓库名</a>
+                <a  id="projectName" class="navbar-brand" style="font-weight: 600; width: 60vw; white-space:nowrap; text-overflow: ellipsis; overflow: hidden;" href="">仓库名</a>
                             
 	            <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block" style="right:5px; top:5px;">
 	                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
