@@ -137,7 +137,7 @@
     <script src="static/pdfjs/build/pdf.js"></script>
     <script src="static/pdfjs/build/pdf.worker.js"></script>
 </head>
-<body>
+<body class="-webkit-overflow-scrolling:touch;">
 <div class="m-manual manual-reader">
 
     <header class="navbar navbar-static-top  smart-nav navbar-fixed-top" role="banner">
@@ -4215,9 +4215,11 @@ function CompareObj(objA, objB, flag) {
 	        $(".manual-left")[0].style.width=0;
 	        $(".manual-left")[0].style.display="none";
 	        $(".second-table").css("left",$("#line").width());
-	        $(".second-table")[0].style.width=372+'px';
+	        $(".second-table")[0].style.width=100+'vw';
 	        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
+	        
 	        $(".manual-right")[0].style.left=$(".manual-left").width()+$(".second-table").width()+3+'px';
+	        $(".manual-right")[0].style.width = 0;
     	}
     }
     
@@ -4229,6 +4231,7 @@ function CompareObj(objA, objB, flag) {
 	        //$(".second-table")[0].style.display="none";
 	        $(".second-line").css("left",0);
 	        $(".manual-right")[0].style.left=2+'px';
+	        $(".manual-right")[0].style.width = 100 + "vw";
     	}
     }
     
