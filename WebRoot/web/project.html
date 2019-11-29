@@ -152,6 +152,9 @@
 	                    <li id="mobileLoginBtn">
 	                        <a onclick="showLoginPanel()" title="用户登录">登录</a>
 	                    </li>
+	                    <li id="mobileUploadDocBtn">
+	                        <a onclick="uploadFilesEx()" title="上传文件">上传文件</a>
+	                    </li>
 	                    <li id="mobileLogoutBtn">
 	                        <a onclick="userLogout()" title="退出登录">退出登录</a>
 	                    </li>
@@ -214,11 +217,11 @@
 				</div>
             </div>
 
-			<!-- 
-            <div id="container" class="m-copyright">
-                <p id="editTime">2017.7.7</p>   
+			<div id="container" class="m-copyright" style="border-style:none;overflow:hidden;">
+                <div style="width:0;height:0;">
+					<textarea id="copiedText"></textarea>
+				</div>	
             </div>
-             -->
         </div>
         <div id="line" class="manual-line" ></div>
         <div class="second-table disallowcopy"  id="secondDropZone">
@@ -456,9 +459,6 @@
 	<input id="uploadFiles" name="uploadFiles" type="file" onchange="selectUploadConfirm(event)" multiple="multiple"/>
 	<input id="uploadDir" type="file" onchange="selectUploadConfirm(event)" webkitdirectory>
 </div>
-<div style="width:0;height:0;">
-	<textarea id="copiedText" style="border-style:none;overflow:hidden;"></textarea>
-</div>	
 <!-- single file upload form -->
 <div style="display:none">
 	<form id="FileUploadForm" action="/DocSystem/Doc/uploadDoc.do" method="post" enctype="multipart/form-data">  
@@ -3264,6 +3264,7 @@ function CompareObj(objA, objB, flag) {
         	
         	$('#logoutBtn').show();
            	$('#mobileLogoutBtn').show();
+           	$('#mobileUploadDocBtn').show();
            	
         	$('#modeSwitchBtn').show();
     	}
@@ -3274,6 +3275,7 @@ function CompareObj(objA, objB, flag) {
         	
         	$('#logoutBtn').hide();
            	$('#mobileLogoutBtn').hide();
+           	$('#mobileUploadDocBtn').hide();
            	
         	$('#modeSwitchBtn').hide();
     	}
