@@ -262,7 +262,7 @@
          		<div class="back" onclick="showCenterDiv();"> 
          			<i class="backicon glyphicon glyphicon-arrow-left"></i>
          		</div>
-        		<div class="filetitle" id="filetitle"></div>
+        		<div class="filetitle nowrap ellipsis" id="filetitle"></div>
         		<div style="position:absolute; right:5px; top:10px">
 	                    <button id="btnExitEdit" class="btn btn-default" type="button" onclick="DocEdit.exitEdit()" style="display:none">退出编辑
 	                   	</button>
@@ -4229,16 +4229,8 @@ function CompareObj(objA, objB, flag) {
     function showCenterDiv(){
     	if(gIsPC == false)
     	{
-	        var oDiv=document.getElementById('line');
-	        oDiv.style.left=0;	//设置Line的位置
-	        $(".manual-left")[0].style.width=0;
-	        $(".manual-left")[0].style.display="none";
-	        $(".second-table").css("left",$("#line").width());
-	        $(".second-table")[0].style.width=100+'vw';
-	        $(".second-line").css("left",$(".manual-left").width()+$(".second-table").width()+$("#line").width());
-	        
-	        $(".manual-right")[0].style.left=$(".manual-left").width()+$(".second-table").width()+3+'px';
-	        $(".manual-right")[0].style.width = 0;
+	        $(".second-table").show();
+	        $(".manual-right").hide();
     	}
     }
     
@@ -4246,11 +4238,8 @@ function CompareObj(objA, objB, flag) {
 	function showRightDiv(){
     	if(gIsPC == false)
     	{
-	    	$(".second-table")[0].style.width=0;
-	        //$(".second-table")[0].style.display="none";
-	        $(".second-line").css("left",0);
-	        $(".manual-right")[0].style.left=2+'px';
-	        $(".manual-right")[0].style.width = 100 + "vw";
+	        $(".second-table").hide();
+	        $(".manual-right").show();
     	}
     }
     
@@ -4423,7 +4412,18 @@ function CompareObj(objA, objB, flag) {
         {
         	gIsPC = false;
     	    console.log("It is MP");
-    	    showCenterDiv();
+    	    //hide the drag lines
+    	    $("#line").hide();
+    	    $(".second-line").hide();
+    	    //hide the left div
+	        $(".manual-left").hide();
+    	    //show Center Div
+    	    $(".second-table").css("left",0);
+	        $(".second-table")[0].style.width=100+'vw';
+	        //hide right Dive 
+	        $(".manual-right")[0].style.left = 0;
+	        $(".manual-right")[0].style.width = 100+'vw';
+	        $(".manual-right").hide();
         }
     	
     	console.log("globalVarInit() start");
