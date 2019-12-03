@@ -60,7 +60,7 @@ import util.SvnUtil.SVNUtil;
 
 public class BaseController  extends BaseFunction{
 	@Autowired
-	protected ReposServiceImpl reposService;
+	protected static ReposServiceImpl reposService;
 	@Autowired
 	protected UserServiceImpl userService;
 	
