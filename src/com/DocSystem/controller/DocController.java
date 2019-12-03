@@ -565,7 +565,7 @@ public class DocController extends BaseController{
 		}
 		String commitUser = login_user.getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
