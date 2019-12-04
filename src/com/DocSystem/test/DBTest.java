@@ -1,9 +1,13 @@
 package com.DocSystem.test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +18,8 @@ import com.DocSystem.controller.BaseController;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.Statement;
 
@@ -50,6 +56,18 @@ class DBTest extends BaseController{
 		printObject("main() docAuthList:", docAuthList);
 		writeToJsonFile(docAuthList,"docAuthList.json");
 		
+		
+		String s = readJsonFile("docAuthList.json");
+		JSONObject jobj = JSON.parseObject(s);
+        JSONArray list = jobj.getJSONArray("docAuthList");
+
+        for (int i = 0 ; i < list.size();i++){
+            JSONObject obj = (JSONObject)list.get(i);
+            DocAuth docAuth = new DocAuth();
+            docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));
+            docAuth.setDocName( (String)obj.get("docName"));
+            System.out.println(" " + docAuth.getDocId() + " " + docAuth.getDocName());
+        }
     }
 
 	private static boolean writeToJsonFile(List<DocAuth> docAuthList, String filePath) {
@@ -60,6 +78,8 @@ class DBTest extends BaseController{
 			System.out.println("writeToJsonFile() content is null");
 			return false;
 		}
+		
+		content = "{docAuthList:" + content + "}";
 			
 		FileOutputStream out = null;
 		try {
@@ -212,4 +232,31 @@ class DBTest extends BaseController{
         System.out.println("Goodbye!");
 		return null;
 	}
+	
+	/**
+     * 读取json文件，返回json串
+     * @param fileName
+     * @return
+     */
+    public static String readJsonFile(String fileName) {
+        String jsonStr = "";
+        try {
+            File jsonFile = new File(fileName);
+            FileReader fileReader = new FileReader(jsonFile);
+
+            Reader reader = new InputStreamReader(new FileInputStream(jsonFile),"utf-8");
+            int ch = 0;
+            StringBuffer sb = new StringBuffer();
+            while ((ch = reader.read()) != -1) {
+                sb.append((char) ch);
+            }
+            fileReader.close();
+            reader.close();
+            jsonStr = sb.toString();
+            return jsonStr;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
