@@ -4,6 +4,6 @@ import com.DocSystem.controller.BaseController;
 
 class ExportDocAuthList extends BaseController{
     public static void main(String[] args) {
-    	exportDocAutListToJsonFile("docAuthList.json");
+    	exportDocAutListToJsonFile("docAuthList.json",20000);
     }
 }
