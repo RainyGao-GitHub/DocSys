@@ -6966,22 +6966,22 @@ public class BaseController  extends BaseFunction{
 			case "IS_ADMIN":
 				sql_value += " " + docAuth.getIsAdmin() + seperator;
 				break;	
-			case "ACCESS,":
+			case "ACCESS":
         		sql_value += " " + docAuth.getAccess() + seperator;
         		break;
-        	case "EDIT_EN,":
+        	case "EDIT_EN":
         		sql_value += " " + docAuth.getEditEn() + seperator;
         		break;
-        	case "ADD_EN,":
+        	case "ADD_EN":
         		sql_value += " " + docAuth.getAddEn() + seperator;
         		break;
-        	case "DELETE_EN,":
+        	case "DELETE_EN":
         		sql_value += " " + docAuth.getDeleteEn() + seperator;
         		break;
-        	case "HERITABLE,":
+        	case "HERITABLE":
         		sql_value += " " + docAuth.getHeritable() + seperator;
         		break;
-        	case "DOC_PATH,":
+        	case "DOC_PATH":
         		sql_value += " '" + docAuth.getDocPath() + "',";
         		break;
         	case "DOC_NAME":
