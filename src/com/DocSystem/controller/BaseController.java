@@ -3730,7 +3730,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private Long buildDocId(String path, String name) 
+	private static Long buildDocId(String path, String name) 
 	{
 		int level = getLevelByParentPath(path);
 		return buildDocIdByName(level, path, name);
@@ -6544,6 +6544,66 @@ public class BaseController  extends BaseFunction{
     static final String DB_USER = "root";
     static final String DB_PASS = "";
 	
+	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
+	protected static void exportDocAutListToJsonFile(String filePath) 
+	{
+    	List<DocAuth> docAuthList = queryDocAuth(null);
+    	
+    	for(int i=0; i<docAuthList.size(); i++)
+    	{
+    		DocAuth docAuth = docAuthList.get(i);
+    		
+    		//1.xx.xx版本的docId用的是doc的数据库ID
+    		Doc qDoc = new Doc();
+    		qDoc.setVid(docAuth.getReposId());
+    		qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
+    		
+    		List<Doc> docList = queryDoc(qDoc);
+    		if(docList != null && docList.size() == 1)
+    		{
+    			Doc doc = docList.get(0);
+    			docAuth.setDocPath(doc.getPath());
+    			docAuth.setDocName(doc.getName());
+    		}
+    	}
+		writeDocAuthListToJsonFile(docAuthList, filePath);
+	}
+	
+	protected static void importDocAutListFromJsonFile(String filePath) 
+	{
+		String s = readJsonFile(filePath);
+		JSONObject jobj = JSON.parseObject(s);
+        JSONArray list = jobj.getJSONArray("docAuthList");
+
+        for (int i = 0 ; i < list.size();i++)
+        {
+            JSONObject obj = (JSONObject)list.get(i);
+            DocAuth docAuth = new DocAuth();
+            docAuth.setId( (Integer)obj.get("id"));
+            docAuth.setReposId( (Integer)obj.get("reposId"));
+            //docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));
+            docAuth.setUserId( (Integer)obj.get("userId"));
+            docAuth.setGroupId( (Integer)obj.get("groupId"));
+            docAuth.setType( (Integer)obj.get("type"));
+            docAuth.setPriority( (Integer)obj.get("priority"));
+            docAuth.setIsAdmin( (Integer)obj.get("isAdmin"));
+            docAuth.setAddEn( (Integer)obj.get("addEnd"));
+            docAuth.setDeleteEn( (Integer)obj.get("deleteEn"));
+            docAuth.setEditEn( (Integer)obj.get("editEn"));
+            docAuth.setAccess( (Integer)obj.get("access"));
+            docAuth.setHeritable( (Integer)obj.get("heritable"));
+            docAuth.setDocPath( (String)obj.get("docPath"));
+            docAuth.setDocName( (String)obj.get("docName"));
+        
+            //rebuild docId for 1.xx.xx
+            Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
+        	docAuth.setDocId(docId);
+            
+            //insert the docAuth to DB
+            insertDocAuth(docAuth);
+        }
+	}
+    
 	protected static List<DocAuth> queryDocAuth(DocAuth qDocAuth) 
 	{
 		List<DocAuth> list = new ArrayList<DocAuth>();
@@ -6972,59 +7032,6 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}		
 		return true;
-	}
-	
-	protected static void exportDocAutListToJsonFile(String filePath) 
-	{
-    	List<DocAuth> docAuthList = queryDocAuth(null);
-    	
-    	for(int i=0; i<docAuthList.size(); i++)
-    	{
-    		DocAuth docAuth = docAuthList.get(i);
-    		Doc qDoc = new Doc();
-    		qDoc.setVid(docAuth.getReposId());
-    		qDoc.setDocId(docAuth.getDocId());
-    		
-    		List<Doc> docList = queryDoc(qDoc);
-    		if(docList != null && docList.size() == 1)
-    		{
-    			Doc doc = docList.get(0);
-    			docAuth.setDocPath(doc.getPath());
-    			docAuth.setDocName(doc.getName());
-    		}
-    	}
-		writeDocAuthListToJsonFile(docAuthList, filePath);
-	}
-	
-	protected static void importDocAutListFromJsonFile(String filePath) 
-	{
-		String s = readJsonFile(filePath);
-		JSONObject jobj = JSON.parseObject(s);
-        JSONArray list = jobj.getJSONArray("docAuthList");
-
-        for (int i = 0 ; i < list.size();i++)
-        {
-            JSONObject obj = (JSONObject)list.get(i);
-            DocAuth docAuth = new DocAuth();
-            docAuth.setId( (Integer)obj.get("id"));
-            docAuth.setReposId( (Integer)obj.get("reposId"));
-            docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));
-            docAuth.setUserId( (Integer)obj.get("userId"));
-            docAuth.setGroupId( (Integer)obj.get("groupId"));
-            docAuth.setType( (Integer)obj.get("type"));
-            docAuth.setPriority( (Integer)obj.get("priority"));
-            docAuth.setIsAdmin( (Integer)obj.get("isAdmin"));
-            docAuth.setAddEn( (Integer)obj.get("addEnd"));
-            docAuth.setDeleteEn( (Integer)obj.get("deleteEn"));
-            docAuth.setEditEn( (Integer)obj.get("editEn"));
-            docAuth.setAccess( (Integer)obj.get("access"));
-            docAuth.setHeritable( (Integer)obj.get("heritable"));
-            docAuth.setDocPath( (String)obj.get("docPath"));
-            docAuth.setDocName( (String)obj.get("docName"));
-            
-            //insert the docAuth to DB
-            insertDocAuth(docAuth);
-        }
 	}
 	
     public static String readJsonFile(String filePath) {

@@ -337,7 +337,7 @@ public class BaseFunction{
 	}
 	
 	//path必须是标准格式
-	protected int getLevelByParentPath(String path) 
+	protected static int getLevelByParentPath(String path) 
 	{
 		if(path == null || path.isEmpty())
 		{
@@ -802,7 +802,7 @@ public class BaseFunction{
 	}
 	
 	//Build DocId by DocName
-	protected Long buildDocIdByName(Integer level, String parentPath, String docName) 
+	protected static Long buildDocIdByName(Integer level, String parentPath, String docName) 
 	{
 		String docPath = parentPath + docName;
 		if(docName.isEmpty())
