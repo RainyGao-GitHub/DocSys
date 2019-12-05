@@ -4,11 +4,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,6 +59,11 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.mysql.jdbc.Connection;
+import com.mysql.jdbc.Statement;
 
 import util.GitUtil.GITUtil;
 import util.LuceneUtil.LuceneUtil2;
@@ -6526,6 +6537,518 @@ public class BaseController  extends BaseFunction{
 		deleteIndexForRDoc(repos, doc);
 		return addIndexForRDoc(repos, doc);
 	}
+	
+	/****************************DocSys数据库导出导出接口 *********************************/
+    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
+    static final String DB_URL = "jdbc:mysql://localhost:3306/docsystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+    static final String DB_USER = "root";
+    static final String DB_PASS = "";
+	
+	protected static List<DocAuth> queryDocAuth(DocAuth qDocAuth) 
+	{
+		List<DocAuth> list = new ArrayList<DocAuth>();
+		
+        Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            //System.out.println("连接数据库...");
+            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+        
+            // 执行查询
+            //System.out.println(" 实例化Statement对象...");
+            stmt = (Statement) conn.createStatement();
+            
+            String sql = buildQuerySqlForDocAuth(qDocAuth);
+            
+            ResultSet rs = stmt.executeQuery(sql);
+                  
+            // 展开结果集数据库
+            while(rs.next()){                
+                DocAuth obj = new DocAuth();
+                obj.setId(rs.getInt("ID"));
+                obj.setReposId(rs.getInt("REPOS_ID"));
+                obj.setDocId(rs.getLong("DOC_ID"));
+                obj.setType(rs.getInt("TYPE"));
+                obj.setPriority(rs.getInt("PRIORITY"));
+                obj.setUserId(rs.getInt("USER_ID"));
+                obj.setGroupId(rs.getInt("GROUP_ID"));
+                obj.setIsAdmin(rs.getInt("IS_ADMIN"));
+                obj.setAccess(rs.getInt("ACCESS"));
+                obj.setEditEn(rs.getInt("EDIT_EN"));
+                obj.setAddEn(rs.getInt("ADD_EN"));
+                obj.setDeleteEn(rs.getInt("DELETE_EN"));
+                obj.setHeritable(rs.getInt("HERITABLE"));
+                obj.setDocPath(rs.getString("DOC_PATH"));
+                obj.setDocName(rs.getString("DOC_NAME"));
+                
+                list.add(obj);
+            }
+            	
+            // 完成后关闭
+            rs.close();
+            stmt.close();
+            conn.close();
+            return list;
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return null;
+	}
+	
+	protected static List<Doc> queryDoc(Doc qDoc) 
+	{
+		List<Doc> list = new ArrayList<Doc>();
+		
+        Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            //System.out.println("连接数据库...");
+            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+        
+            // 执行查询
+            //System.out.println(" 实例化Statement对象...");
+            stmt = (Statement) conn.createStatement();
+            
+            String sql = buildQuerySqlForDoc(qDoc);
+            
+            ResultSet rs = stmt.executeQuery(sql);
+                  
+            // 展开结果集数据库
+            while(rs.next()){                
+                Doc obj = new Doc();
+                obj.setId(rs.getInt("ID"));
+                obj.setVid(rs.getInt("VID"));
+                obj.setDocId(rs.getLong("DOC_ID"));
+                obj.setType(rs.getInt("TYPE"));
+                obj.setPath(rs.getString("PATH"));
+                obj.setName(rs.getString("NAME"));
+                
+                list.add(obj);
+            }
+            	
+            // 完成后关闭
+            rs.close();
+            stmt.close();
+            conn.close();
+            return list;
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return null;
+	}
+
+	protected static boolean insertDocAuth(DocAuth docAuth)
+	{
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            //System.out.println("连接数据库...");
+            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+        
+            // 执行查询
+            //System.out.println(" 实例化Statement对象...");
+            stmt = (Statement) conn.createStatement();
+            
+            String sql = buildInsertSqlForDocAuth(docAuth);
+            System.out.println("sql:" + sql);
+            ret = stmt.execute(sql);
+            System.out.println("ret:" + ret);
+            // 完成后关闭
+            stmt.close();
+            conn.close();
+            return ret;
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
+	}
+	
+	private static String buildQuerySqlForDocAuth(DocAuth qDocAuth) 
+	{
+		String sql = "select * from doc_auth ";
+		if(qDocAuth == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamListForDocAuth(qDocAuth);
+		
+		sql += buildSqlConditionWithParamList(paramList);
+        return sql;
+	}
+	
+	private static String buildQuerySqlForDoc(Doc qDoc) {
+		String sql = "select * from doc ";
+		if(qDoc == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamListForDoc(qDoc);
+		
+		sql += buildSqlConditionWithParamList(paramList);
+        return sql;
+	}
+
+	private static List<String> buildParamListForDocAuth(DocAuth docAuth) 
+	{
+		List<String> paramList = new ArrayList<String>();
+        if(docAuth.getId() != null)
+        {	
+        	paramList.add("ID");
+        }
+        if(docAuth.getUserId() != null)
+        {
+        	paramList.add("USER_ID");
+        }
+        
+        if(docAuth.getGroupId() != null)
+        {
+        	paramList.add("GROUP_ID");
+        }
+        if(docAuth.getType() != null)
+        {
+        	paramList.add("TYPE");
+        }
+        if(docAuth.getPriority() != null)
+        {
+        	paramList.add("PRIORITY");
+        }
+        if(docAuth.getDocId() != null)
+        {
+        	paramList.add("DOC_ID");
+        }
+        if(docAuth.getReposId() != null)
+        {
+        	paramList.add("REPOS_ID");
+        }
+        if(docAuth.getIsAdmin() != null)
+        {
+        	paramList.add("IS_ADMIN");
+        }
+        if(docAuth.getAccess() != null)
+        {
+        	paramList.add("ACCESS");
+        }
+        if(docAuth.getEditEn() != null)
+        {
+        	paramList.add("EDIT_EN");
+        }
+        if(docAuth.getAddEn() != null)
+        {
+        	paramList.add("ADD_EN");
+        }
+        if(docAuth.getDeleteEn() != null)
+        {
+        	paramList.add("DELETE_EN");
+        }
+        if(docAuth.getHeritable() != null)
+        {
+        	paramList.add("HERITABLE");
+        }
+        if(docAuth.getDocPath() != null)
+        {
+        	paramList.add("DOC_PATH");
+        }
+        if(docAuth.getDocName() != null)
+        {
+        	paramList.add("DOC_NAME");
+        }
+        return paramList;
+	}
+	
+	private static List<String> buildParamListForDoc(Doc qDoc) {
+		List<String> paramList = new ArrayList<String>();
+        if(qDoc.getId() != null)
+        {	
+        	paramList.add("ID");
+        }
+        if(qDoc.getType() != null)
+        {
+        	paramList.add("TYPE");
+        }
+        if(qDoc.getDocId() != null)
+        {
+        	paramList.add("DOC_ID");
+        }
+        if(qDoc.getVid() != null)
+        {
+        	paramList.add("VID");
+        }
+        if(qDoc.getPath() != null)
+        {
+        	paramList.add("PATH");
+        }
+        if(qDoc.getName() != null)
+        {
+        	paramList.add("NAME");
+        }
+        return paramList;
+	}
+	
+	private static String buildInsertSqlForDocAuth(DocAuth docAuth) 
+	{
+		if(docAuth == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForDocAuth(docAuth);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{
+			case "ID":
+				sql_value += " " + docAuth.getId() + seperator;
+				break;
+			case "USER_ID":
+				sql_value += " " + docAuth.getUserId() + seperator;
+				break;
+			case "GROUP_ID":
+				sql_value += " " + docAuth.getGroupId() + seperator;
+				break;
+			case "TYPE":
+				sql_value += " " + docAuth.getType() + seperator;
+				break;
+			case "PRIORITY":
+				sql_value += " " + docAuth.getPriority() + seperator;
+				break;
+			case "DOC_ID":
+            	sql_value += " " + docAuth.getDocId() + seperator;
+            	break;
+			case "REPOS_ID":
+				sql_value += " " + docAuth.getReposId() + seperator;
+				break;
+			case "IS_ADMIN":
+				sql_value += " " + docAuth.getIsAdmin() + seperator;
+				break;	
+			case "ACCESS,":
+        		sql_value += " " + docAuth.getAccess() + seperator;
+        		break;
+        	case "EDIT_EN,":
+        		sql_value += " " + docAuth.getEditEn() + seperator;
+        		break;
+        	case "ADD_EN,":
+        		sql_value += " " + docAuth.getAddEn() + seperator;
+        		break;
+        	case "DELETE_EN,":
+        		sql_value += " " + docAuth.getDeleteEn() + seperator;
+        		break;
+        	case "HERITABLE,":
+        		sql_value += " " + docAuth.getHeritable() + seperator;
+        		break;
+        	case "DOC_PATH,":
+        		sql_value += " '" + docAuth.getDocPath() + "',";
+        		break;
+        	case "DOC_NAME":
+        		sql_value += " '" + docAuth.getDocName() + "'";
+				break;
+			}
+		}
+        
+        String sql = "insert into doc_auth (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+	static String buildSqlConditionWithParamList(List<String> paramList)
+	{
+		if(paramList.size() == 0)
+		{
+			return "";
+		}
+		
+		String sql_condition = "where ";
+		//int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i< paramList.size(); i++)
+		{
+			if(i==0)	//first param
+			{
+				sql_condition += "" + paramList.get(i);
+			}
+			else
+			{
+				sql_condition += " and " + paramList.get(i);			
+			}
+		}
+		return sql_condition;
+	}
+
+	protected static boolean writeDocAuthListToJsonFile(List<DocAuth> docAuthList, String filePath) 
+	{
+		String content = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
+		if(content == null)
+		{
+			System.out.println("writeToJsonFile() content is null");
+			return false;
+		}
+		
+		content = "{docAuthList:" + content + "}";
+			
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(filePath);
+		} catch (FileNotFoundException e) {
+			System.out.println("writeToJsonFile() new FileOutputStream failed");
+			e.printStackTrace();
+			return false;
+		}
+		try {
+			byte[] buff = content.getBytes();
+			out.write(buff, 0, buff.length);
+			//关闭输出流
+			out.close();
+		} catch (IOException e) {
+			System.out.println("writeToJsonFile() out.write exception");
+			e.printStackTrace();
+			return false;
+		}		
+		return true;
+	}
+	
+	protected static void exportDocAutListToJsonFile(String filePath) 
+	{
+    	List<DocAuth> docAuthList = queryDocAuth(null);
+    	
+    	for(int i=0; i<docAuthList.size(); i++)
+    	{
+    		DocAuth docAuth = docAuthList.get(i);
+    		Doc qDoc = new Doc();
+    		qDoc.setVid(docAuth.getReposId());
+    		qDoc.setDocId(docAuth.getDocId());
+    		
+    		List<Doc> docList = queryDoc(qDoc);
+    		if(docList != null && docList.size() == 1)
+    		{
+    			Doc doc = docList.get(0);
+    			docAuth.setDocPath(doc.getPath());
+    			docAuth.setDocName(doc.getName());
+    		}
+    	}
+		writeDocAuthListToJsonFile(docAuthList, filePath);
+	}
+	
+	protected static void importDocAutListFromJsonFile(String filePath) 
+	{
+		String s = readJsonFile(filePath);
+		JSONObject jobj = JSON.parseObject(s);
+        JSONArray list = jobj.getJSONArray("docAuthList");
+
+        for (int i = 0 ; i < list.size();i++)
+        {
+            JSONObject obj = (JSONObject)list.get(i);
+            DocAuth docAuth = new DocAuth();
+            docAuth.setId( (Integer)obj.get("id"));
+            docAuth.setReposId( (Integer)obj.get("reposId"));
+            docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));
+            docAuth.setUserId( (Integer)obj.get("userId"));
+            docAuth.setGroupId( (Integer)obj.get("groupId"));
+            docAuth.setType( (Integer)obj.get("type"));
+            docAuth.setPriority( (Integer)obj.get("priority"));
+            docAuth.setIsAdmin( (Integer)obj.get("isAdmin"));
+            docAuth.setAddEn( (Integer)obj.get("addEnd"));
+            docAuth.setDeleteEn( (Integer)obj.get("deleteEn"));
+            docAuth.setEditEn( (Integer)obj.get("editEn"));
+            docAuth.setAccess( (Integer)obj.get("access"));
+            docAuth.setHeritable( (Integer)obj.get("heritable"));
+            docAuth.setDocPath( (String)obj.get("docPath"));
+            docAuth.setDocName( (String)obj.get("docName"));
+            
+            //insert the docAuth to DB
+            insertDocAuth(docAuth);
+        }
+	}
+	
+    public static String readJsonFile(String filePath) {
+        String jsonStr = "";
+        try {
+            File jsonFile = new File(filePath);
+            FileReader fileReader = new FileReader(jsonFile);
+
+            Reader reader = new InputStreamReader(new FileInputStream(jsonFile),"utf-8");
+            int ch = 0;
+            StringBuffer sb = new StringBuffer();
+            while ((ch = reader.read()) != -1) {
+                sb.append((char) ch);
+            }
+            fileReader.close();
+            reader.close();
+            jsonStr = sb.toString();
+            return jsonStr;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 	
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
