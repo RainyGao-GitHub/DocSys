@@ -6548,11 +6548,11 @@ public class BaseController  extends BaseFunction{
     //version是指当前数据库对应的软件版本
 	protected static void exportDocAutListToJsonFile(String filePath, int version) 
 	{
-    	List<DocAuth> docAuthList = queryDocAuth(null);
+    	List<Object> docAuthList = queryDocAuth(null);
     	
     	for(int i=0; i<docAuthList.size(); i++)
     	{
-    		DocAuth docAuth = docAuthList.get(i);
+    		DocAuth docAuth = (DocAuth) docAuthList.get(i);
     		
     		Doc qDoc = new Doc();
     		qDoc.setVid(docAuth.getReposId());
@@ -6566,10 +6566,10 @@ public class BaseController  extends BaseFunction{
     			qDoc.setDocId(docAuth.getDocId());
     		}
     		
-    		List<Doc> docList = queryDoc(qDoc);
+    		List<Object> docList = queryDoc(qDoc);
     		if(docList != null && docList.size() == 1)
     		{
-    			Doc doc = docList.get(0);
+    			Doc doc = (Doc) docList.get(0);
     			docAuth.setDocPath(doc.getPath());
     			docAuth.setDocName(doc.getName());
     		}
@@ -6587,21 +6587,7 @@ public class BaseController  extends BaseFunction{
         for (int i = 0 ; i < list.size();i++)
         {
             JSONObject obj = (JSONObject)list.get(i);
-            DocAuth docAuth = new DocAuth();
-            docAuth.setId( (Integer)obj.get("id"));
-            docAuth.setReposId( (Integer)obj.get("reposId"));
-            docAuth.setUserId( (Integer)obj.get("userId"));
-            docAuth.setGroupId( (Integer)obj.get("groupId"));
-            docAuth.setType( (Integer)obj.get("type"));
-            docAuth.setPriority( (Integer)obj.get("priority"));
-            docAuth.setIsAdmin( (Integer)obj.get("isAdmin"));
-            docAuth.setAddEn( (Integer)obj.get("addEnd"));
-            docAuth.setDeleteEn( (Integer)obj.get("deleteEn"));
-            docAuth.setEditEn( (Integer)obj.get("editEn"));
-            docAuth.setAccess( (Integer)obj.get("access"));
-            docAuth.setHeritable( (Integer)obj.get("heritable"));
-            docAuth.setDocPath( (String)obj.get("docPath"));
-            docAuth.setDocName( (String)obj.get("docName"));
+            DocAuth docAuth = buildDocAuthFromJsonObj(obj);
         
             //1.xx.xx升级到2.xx.xx版本需要重新构建docId
             if(srcVersion != dstVersion && srcVersion < 20000 && dstVersion >= 20000)
@@ -6609,19 +6595,45 @@ public class BaseController  extends BaseFunction{
             	Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
             	docAuth.setDocId(docId);
             }
-            else
-            {
-                docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));            	
-            }
             
             //insert the docAuth to DB
             insertDocAuth(docAuth);
         }
 	}
     
-	protected static List<DocAuth> queryDocAuth(DocAuth qDocAuth) 
+	private static DocAuth buildDocAuthFromJsonObj(JSONObject obj) {
+		DocAuth docAuth = new DocAuth();
+		docAuth.setId( (Integer)obj.get("id"));
+		docAuth.setReposId( (Integer)obj.get("reposId"));
+        docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));            	
+		docAuth.setUserId( (Integer)obj.get("userId"));
+		docAuth.setGroupId( (Integer)obj.get("groupId"));
+		docAuth.setType( (Integer)obj.get("type"));
+		docAuth.setPriority( (Integer)obj.get("priority"));
+		docAuth.setIsAdmin( (Integer)obj.get("isAdmin"));
+		docAuth.setAddEn( (Integer)obj.get("addEnd"));
+		docAuth.setDeleteEn( (Integer)obj.get("deleteEn"));
+		docAuth.setEditEn( (Integer)obj.get("editEn"));
+		docAuth.setAccess( (Integer)obj.get("access"));
+		docAuth.setHeritable( (Integer)obj.get("heritable"));
+		docAuth.setDocPath( (String)obj.get("docPath"));
+		docAuth.setDocName( (String)obj.get("docName"));
+		return docAuth;
+	}
+
+	protected static List<Object> queryDocAuth(DocAuth qDocAuth) 
 	{
-		List<DocAuth> list = new ArrayList<DocAuth>();
+		return dbQuery(qDocAuth, DOC_AUTH);
+	}
+	
+	protected static List<Object> queryDoc(Doc qDoc) 
+	{
+		return dbQuery(qDoc, DOC);
+	}
+	
+	protected static List<Object> dbQuery(Object qObj, int objType) 
+	{
+		List<Object> list = new ArrayList<Object>();
 		
         Connection conn = null;
         Statement stmt = null;
@@ -6637,29 +6649,13 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildQuerySqlForDocAuth(qDocAuth);
+            String sql = buildQuerySql(qObj, objType);
             
             ResultSet rs = stmt.executeQuery(sql);
                   
             // 展开结果集数据库
             while(rs.next()){                
-                DocAuth obj = new DocAuth();
-                obj.setId(rs.getInt("ID"));
-                obj.setReposId(rs.getInt("REPOS_ID"));
-                obj.setDocId(rs.getLong("DOC_ID"));
-                obj.setType(rs.getInt("TYPE"));
-                obj.setPriority(rs.getInt("PRIORITY"));
-                obj.setUserId(rs.getInt("USER_ID"));
-                obj.setGroupId(rs.getInt("GROUP_ID"));
-                obj.setIsAdmin(rs.getInt("IS_ADMIN"));
-                obj.setAccess(rs.getInt("ACCESS"));
-                obj.setEditEn(rs.getInt("EDIT_EN"));
-                obj.setAddEn(rs.getInt("ADD_EN"));
-                obj.setDeleteEn(rs.getInt("DELETE_EN"));
-                obj.setHeritable(rs.getInt("HERITABLE"));
-                obj.setDocPath(rs.getString("DOC_PATH"));
-                obj.setDocName(rs.getString("DOC_NAME"));
-                
+                Object obj = createObject(rs, objType);
                 list.add(obj);
             }
             	
@@ -6689,68 +6685,67 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	protected static List<Doc> queryDoc(Doc qDoc) 
-	{
-		List<Doc> list = new ArrayList<Doc>();
+	
+	private static Object createObject(ResultSet rs, int objType) throws Exception {
 		
-        Connection conn = null;
-        Statement stmt = null;
-        try{
-            // 注册 JDBC 驱动
-            Class.forName(JDBC_DRIVER);
-        
-            // 打开链接
-            //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
-        
-            // 执行查询
-            //System.out.println(" 实例化Statement对象...");
-            stmt = (Statement) conn.createStatement();
-            
-            String sql = buildQuerySqlForDoc(qDoc);
-            
-            ResultSet rs = stmt.executeQuery(sql);
-                  
-            // 展开结果集数据库
-            while(rs.next()){                
-                Doc obj = new Doc();
-                obj.setId(rs.getInt("ID"));
-                obj.setVid(rs.getInt("VID"));
-                obj.setDocId(rs.getLong("DOC_ID"));
-                obj.setType(rs.getInt("TYPE"));
-                obj.setPath(rs.getString("PATH"));
-                obj.setName(rs.getString("NAME"));
-                
-                list.add(obj);
-            }
-            	
-            // 完成后关闭
-            rs.close();
-            stmt.close();
-            conn.close();
-            return list;
-        }catch(SQLException se){
-            // 处理 JDBC 错误
-            se.printStackTrace();
-        }catch(Exception e){
-            // 处理 Class.forName 错误
-            e.printStackTrace();
-        }finally{
-            // 关闭资源
-            try{
-                if(stmt!=null) stmt.close();
-            }catch(SQLException se2){
-            }// 什么都不做
-            try{
-                if(conn!=null) conn.close();
-            }catch(SQLException se){
-                se.printStackTrace();
-            }
-        }
+		switch(objType)
+		{
+		case DOC_AUTH:
+			return createDocAuth(rs);
+		case DOC:
+			return createDoc(rs);
+		}		
 		return null;
 	}
 
-	protected static boolean insertDocAuth(DocAuth docAuth)
+	private static DocAuth createDocAuth(ResultSet rs) throws Exception {
+        DocAuth obj = new DocAuth();
+        obj.setId(rs.getInt("ID"));
+        obj.setReposId(rs.getInt("REPOS_ID"));
+        obj.setDocId(rs.getLong("DOC_ID"));
+        obj.setType(rs.getInt("TYPE"));
+        obj.setPriority(rs.getInt("PRIORITY"));
+        obj.setUserId(rs.getInt("USER_ID"));
+        obj.setGroupId(rs.getInt("GROUP_ID"));
+        obj.setIsAdmin(rs.getInt("IS_ADMIN"));
+        obj.setAccess(rs.getInt("ACCESS"));
+        obj.setEditEn(rs.getInt("EDIT_EN"));
+        obj.setAddEn(rs.getInt("ADD_EN"));
+        obj.setDeleteEn(rs.getInt("DELETE_EN"));
+        obj.setHeritable(rs.getInt("HERITABLE"));
+        obj.setDocPath(rs.getString("DOC_PATH"));
+        obj.setDocName(rs.getString("DOC_NAME"));
+		return obj;
+	}
+
+	private static Doc createDoc(ResultSet rs) throws Exception {
+		Doc obj = new Doc();
+        obj.setId(rs.getInt("ID"));
+        obj.setVid(rs.getInt("VID"));
+        obj.setDocId(rs.getLong("DOC_ID"));
+        obj.setType(rs.getInt("TYPE"));
+        obj.setPath(rs.getString("PATH"));
+        obj.setName(rs.getString("NAME"));
+		return obj;
+	}
+
+	private static String buildQuerySql(Object qObj, int objType) 
+	{
+		switch(objType)
+		{
+		case DOC_AUTH:
+			return buildQuerySql((DocAuth) qObj);
+		}
+		return null;
+	}
+
+	
+	private static String buildQuerySql(DocAuth qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static boolean dbInsert(Object obj, int objType)
 	{
 		boolean ret = false;
 		Connection conn = null;
@@ -6767,7 +6762,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildInsertSqlForDocAuth(docAuth);
+            String sql = buildInsertSqlStr(obj, objType);
             System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
             System.out.println("ret:" + ret);
@@ -6794,6 +6789,24 @@ public class BaseController  extends BaseFunction{
             }
         }
 		return ret;
+	}
+
+	final static int DOC=1;
+	final static int DOC_AUTH=2;
+	private static String buildInsertSqlStr(Object obj, int objType) {
+		
+		switch(objType)
+		{
+		case DOC_AUTH:
+			buildInsertSql((DocAuth) obj);
+			break;
+		}
+		return null;
+	}
+
+	protected static boolean insertDocAuth(DocAuth docAuth)
+	{
+		return dbInsert(docAuth, DOC_AUTH);
 	}
 	
 	private static String buildQuerySqlForDocAuth(DocAuth qDocAuth) 
@@ -6919,7 +6932,7 @@ public class BaseController  extends BaseFunction{
         return paramList;
 	}
 	
-	private static String buildInsertSqlForDocAuth(DocAuth docAuth) 
+	private static String buildInsertSql(DocAuth docAuth) 
 	{
 		if(docAuth == null)
 		{
@@ -7007,7 +7020,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(i==0)	//first param
 			{
-				sql_condition += "" + paramList.get(i);
+				sql_condition += " " + paramList.get(i);
 			}
 			else
 			{
@@ -7017,7 +7030,7 @@ public class BaseController  extends BaseFunction{
 		return sql_condition;
 	}
 
-	protected static boolean writeDocAuthListToJsonFile(List<DocAuth> docAuthList, String filePath) 
+	protected static boolean writeDocAuthListToJsonFile(List<Object> docAuthList, String filePath) 
 	{
 		String content = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
 		if(content == null)
