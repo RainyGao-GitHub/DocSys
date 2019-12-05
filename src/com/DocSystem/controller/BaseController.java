@@ -6545,7 +6545,8 @@ public class BaseController  extends BaseFunction{
     static final String DB_PASS = "";
 	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
-	protected static void exportDocAutListToJsonFile(String filePath) 
+    //version是指当前数据库对应的软件版本
+	protected static void exportDocAutListToJsonFile(String filePath, int version) 
 	{
     	List<DocAuth> docAuthList = queryDocAuth(null);
     	
@@ -6553,10 +6554,17 @@ public class BaseController  extends BaseFunction{
     	{
     		DocAuth docAuth = docAuthList.get(i);
     		
-    		//1.xx.xx版本的docId用的是doc的数据库ID
     		Doc qDoc = new Doc();
     		qDoc.setVid(docAuth.getReposId());
-    		qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
+    		
+    		if(version < 20000) //1.xx.xx版本的docId用的是doc的数据库ID
+        	{
+    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
+    		}
+    		else //2.xx.xx
+    		{
+    			qDoc.setDocId(docAuth.getDocId());
+    		}
     		
     		List<Doc> docList = queryDoc(qDoc);
     		if(docList != null && docList.size() == 1)
@@ -6569,7 +6577,8 @@ public class BaseController  extends BaseFunction{
 		writeDocAuthListToJsonFile(docAuthList, filePath);
 	}
 	
-	protected static void importDocAutListFromJsonFile(String filePath) 
+	//srcVersion是指jsonFile对应的软件版本，dstVersion是指目前系统数据库对应的软件版本
+	protected static void importDocAutListFromJsonFile(String filePath, int srcVersion, int dstVersion)
 	{
 		String s = readJsonFile(filePath);
 		JSONObject jobj = JSON.parseObject(s);
@@ -6581,7 +6590,6 @@ public class BaseController  extends BaseFunction{
             DocAuth docAuth = new DocAuth();
             docAuth.setId( (Integer)obj.get("id"));
             docAuth.setReposId( (Integer)obj.get("reposId"));
-            //docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));
             docAuth.setUserId( (Integer)obj.get("userId"));
             docAuth.setGroupId( (Integer)obj.get("groupId"));
             docAuth.setType( (Integer)obj.get("type"));
@@ -6595,9 +6603,16 @@ public class BaseController  extends BaseFunction{
             docAuth.setDocPath( (String)obj.get("docPath"));
             docAuth.setDocName( (String)obj.get("docName"));
         
-            //rebuild docId for 1.xx.xx
-            Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
-        	docAuth.setDocId(docId);
+            //1.xx.xx升级到2.xx.xx版本需要重新构建docId
+            if(srcVersion != dstVersion && srcVersion < 20000 && dstVersion >= 20000)
+            {
+            	Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
+            	docAuth.setDocId(docId);
+            }
+            else
+            {
+                docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));            	
+            }
             
             //insert the docAuth to DB
             insertDocAuth(docAuth);

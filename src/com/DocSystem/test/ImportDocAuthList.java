@@ -6,6 +6,6 @@ class ImportDocAuthList extends BaseController
 { 
     public static void main(String[] args) 
     {
-    	importDocAutListFromJsonFile("docAuthList.json");
+    	importDocAutListFromJsonFile("docAuthList.json", 20000, 20000);
     }
 }
