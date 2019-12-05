@@ -6544,106 +6544,174 @@ public class BaseController  extends BaseFunction{
     static final String DB_USER = "root";
     static final String DB_PASS = "";
 	
+    //定义数据库的ObjType
+	final static int DOC=1;
+	protected final static int DOC_AUTH=2;
+	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
     //version是指当前数据库对应的软件版本
-	protected static void exportDBToJsonFile(int dbTabId, String filePath, int version) 
+	protected static void exportObjectListToJsonFile(int objType, String filePath, int srcVersion, int dstVersion) 
 	{
-    	List<Object> list = dbQuery(null, dbTabId);
-    	
-		writeListToJsonFile(dbTabId, list, filePath);
+		System.out.println("exportObjectListToJsonFile() objType:" + objType + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
+
+		List<Object> list = null;
+		if(objType == DOC_AUTH)
+    	{
+    		list = queryDocAuth(null, srcVersion, dstVersion);
+    	}
+		else
+		{	
+			list = dbQuery(null, objType);
+		}
+		writeObjectListToJsonFile(objType, list, filePath);
+		System.out.println("exportObjectListToJsonFile() export OK");
 	}
     
-	private static void writeListToJsonFile(int dbTabId, List<Object> list, String filePath) {
-		// TODO Auto-generated method stub
-	}
-
-	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
-    //version是指当前数据库对应的软件版本
-	protected static void exportDocAutListToJsonFile(String filePath, int version) 
+	protected static boolean writeObjectListToJsonFile(int objType, List<Object> list, String filePath) 
 	{
-    	List<Object> docAuthList = queryDocAuth(null);
-    	
-    	for(int i=0; i<docAuthList.size(); i++)
-    	{
-    		DocAuth docAuth = (DocAuth) docAuthList.get(i);
-    		
-    		Doc qDoc = new Doc();
-    		qDoc.setVid(docAuth.getReposId());
-    		
-    		if(version < 20000) //1.xx.xx版本的docId用的是doc的数据库ID
-        	{
-    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
-    		}
-    		else //2.xx.xx
-    		{
-    			qDoc.setDocId(docAuth.getDocId());
-    		}
-    		
-    		List<Object> docList = queryDoc(qDoc);
-    		if(docList != null && docList.size() == 1)
-    		{
-    			Doc doc = (Doc) docList.get(0);
-    			docAuth.setDocPath(doc.getPath());
-    			docAuth.setDocName(doc.getName());
-    		}
-    	}
-		writeDocAuthListToJsonFile(docAuthList, filePath);
+		String content = JSON.toJSONStringWithDateFormat(list, "yyy-MM-dd HH:mm:ss");
+		if(content == null)
+		{
+			System.out.println("writeObjectListToJsonFile() content is null");
+			return false;
+		}
+		
+		String name = getListNameByObjType(objType);
+		content = "{" + name + ":" + content + "}";
+			
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(filePath);
+		} catch (FileNotFoundException e) {
+			System.out.println("writeToJsonFile() new FileOutputStream failed");
+			e.printStackTrace();
+			return false;
+		}
+		try {
+			byte[] buff = content.getBytes();
+			out.write(buff, 0, buff.length);
+			//关闭输出流
+			out.close();
+		} catch (IOException e) {
+			System.out.println("writeToJsonFile() out.write exception");
+			e.printStackTrace();
+			return false;
+		}		
+		return true;
+	}
+	
+	private static String getListNameByObjType(int objType) {
+		switch(objType)
+		{
+		case DOC:
+			return "docList";
+		case DOC_AUTH:
+			return "docAuthList";
+		}
+		return null;
+	}
+	
+	private static String getDBTabNameByObjType(int objType) {
+		switch(objType)
+		{
+		case DOC:
+			return "DOC";
+		case DOC_AUTH:
+			return "DOC_AUTH";
+		}
+		return null;
 	}
 	
 	//srcVersion是指jsonFile对应的软件版本，dstVersion是指目前系统数据库对应的软件版本
-	protected static void importDocAutListFromJsonFile(String filePath, int srcVersion, int dstVersion)
+	protected static void importObjectListFromJsonFile(int objType, String filePath)
 	{
+		System.out.println("importObjectListFromJsonFile() objType:" + objType + " filePath:" + filePath);
+
 		String s = readJsonFile(filePath);
 		JSONObject jobj = JSON.parseObject(s);
-        JSONArray list = jobj.getJSONArray("docAuthList");
+		
+		String name = getListNameByObjType(objType);
+        JSONArray list = jobj.getJSONArray(name);
 
         for (int i = 0 ; i < list.size();i++)
         {
-            JSONObject obj = (JSONObject)list.get(i);
-            DocAuth docAuth = buildDocAuthFromJsonObj(obj);
-        
-            //1.xx.xx升级到2.xx.xx版本需要重新构建docId
-            if(srcVersion != dstVersion && srcVersion < 20000 && dstVersion >= 20000)
-            {
-            	Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
-            	docAuth.setDocId(docId);
-            }
+            JSONObject jsonObj = (JSONObject)list.get(i);
             
-            //insert the docAuth to DB
-            insertDocAuth(docAuth);
+            
+            Object obj = buildObjectFromJsonObj(jsonObj, objType);
+            
+            dbInsert(obj, objType);
         }
+    	System.out.println("importObjectListFromJsonFile() import OK");
 	}
 	
-	
-    
-	private static DocAuth buildDocAuthFromJsonObj(JSONObject obj) {
-		DocAuth docAuth = new DocAuth();
-		docAuth.setId( (Integer)obj.get("id"));
-		docAuth.setReposId( (Integer)obj.get("reposId"));
-        docAuth.setDocId( Long.parseLong(obj.get("docId").toString()));            	
-		docAuth.setUserId( (Integer)obj.get("userId"));
-		docAuth.setGroupId( (Integer)obj.get("groupId"));
-		docAuth.setType( (Integer)obj.get("type"));
-		docAuth.setPriority( (Integer)obj.get("priority"));
-		docAuth.setIsAdmin( (Integer)obj.get("isAdmin"));
-		docAuth.setAddEn( (Integer)obj.get("addEnd"));
-		docAuth.setDeleteEn( (Integer)obj.get("deleteEn"));
-		docAuth.setEditEn( (Integer)obj.get("editEn"));
-		docAuth.setAccess( (Integer)obj.get("access"));
-		docAuth.setHeritable( (Integer)obj.get("heritable"));
-		docAuth.setDocPath( (String)obj.get("docPath"));
-		docAuth.setDocName( (String)obj.get("docName"));
-		return docAuth;
+	private static Object buildObjectFromJsonObj(JSONObject jsonObj, int objType) {
+		switch(objType)
+		{
+		case DOC:
+			return buildDocFromJsonObj(jsonObj);
+		case DOC_AUTH:
+			return buildDocAuthFromJsonObj(jsonObj);
+		}
+		return null;
 	}
 
-	protected static List<Object> queryDocAuth(DocAuth qDocAuth) 
-	{
-		return dbQuery(qDocAuth, DOC_AUTH);
+	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
+		DocAuth obj = new DocAuth();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setReposId( (Integer)jsonObj.get("reposId"));
+		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));            	
+		obj.setUserId( (Integer)jsonObj.get("userId"));
+		obj.setGroupId( (Integer)jsonObj.get("groupId"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPriority( (Integer)jsonObj.get("priority"));
+		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
+		obj.setAddEn( (Integer)jsonObj.get("addEnd"));
+		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
+		obj.setEditEn( (Integer)jsonObj.get("editEn"));
+		obj.setAccess( (Integer)jsonObj.get("access"));
+		obj.setHeritable( (Integer)jsonObj.get("heritable"));
+		obj.setDocPath( (String)jsonObj.get("docPath"));
+		obj.setDocName( (String)jsonObj.get("docName"));
+		return obj;
 	}
 	
-	protected static List<Object> queryDoc(Doc qDoc) 
+	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
+		Doc obj = new Doc();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setVid( (Integer)jsonObj.get("vid"));
+        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+        obj.setPath( (String)jsonObj.get("path"));
+		obj.setName( (String)jsonObj.get("name"));
+		return obj;
+	}
+
+	protected static List<Object> queryDocAuth(DocAuth qDocAuth, int srcVersion, int dstVersion) 
 	{
-		return dbQuery(qDoc, DOC);
+		List<Object> docAuthList = dbQuery(qDocAuth, DOC_AUTH);
+    	
+		if(srcVersion != dstVersion &&  srcVersion < 20000 && dstVersion >= 20000) //1.xx.xx版本的docId用的是doc的数据库ID
+    	{		
+			for(int i=0; i<docAuthList.size(); i++)
+	    	{
+	    		DocAuth docAuth = (DocAuth) docAuthList.get(i);
+	    		
+	    		Doc qDoc = new Doc();
+	    		qDoc.setVid(docAuth.getReposId());
+	    		qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
+	    		
+	    		List<Object> docList = dbQuery(qDoc, DOC);
+	    		if(docList != null && docList.size() == 1)
+	    		{
+	    			Doc doc = (Doc) docList.get(0);
+	    			docAuth.setDocPath(doc.getPath());
+	    			docAuth.setDocName(doc.getName());
+	    			Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
+	    	        docAuth.setDocId(docId);
+	    		}
+	    	}
+    	}
+    	return docAuthList;
 	}
 	
 	protected static List<Object> dbQuery(Object qObj, int objType) 
@@ -6706,14 +6774,14 @@ public class BaseController  extends BaseFunction{
 		switch(objType)
 		{
 		case DOC_AUTH:
-			return createDocAuth(rs);
+			return buildDocAuthFromResultSet(rs);
 		case DOC:
-			return createDoc(rs);
+			return buildDocFromResultSet(rs);
 		}		
 		return null;
 	}
 
-	private static DocAuth createDocAuth(ResultSet rs) throws Exception {
+	private static DocAuth buildDocAuthFromResultSet(ResultSet rs) throws Exception {
         DocAuth obj = new DocAuth();
         obj.setId(rs.getInt("ID"));
         obj.setReposId(rs.getInt("REPOS_ID"));
@@ -6733,7 +6801,7 @@ public class BaseController  extends BaseFunction{
 		return obj;
 	}
 
-	private static Doc createDoc(ResultSet rs) throws Exception {
+	private static Doc buildDocFromResultSet(ResultSet rs) throws Exception {
 		Doc obj = new Doc();
         obj.setId(rs.getInt("ID"));
         obj.setVid(rs.getInt("VID"));
@@ -6746,18 +6814,32 @@ public class BaseController  extends BaseFunction{
 
 	private static String buildQuerySql(Object qObj, int objType) 
 	{
+		String name = getDBTabNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(qObj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = null;
 		switch(objType)
 		{
+		case DOC:
+			paramList = buildParamListForDoc((Doc) qObj);
+			break;
 		case DOC_AUTH:
-			return buildQuerySql((DocAuth) qObj);
+			paramList = buildParamListForDocAuth((DocAuth) qObj);
+			break;
 		}
-		return null;
-	}
-
-	
-	private static String buildQuerySql(DocAuth qObj) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		sql += buildSqlConditionWithParamList(paramList);
+        return sql;
 	}
 
 	public static boolean dbInsert(Object obj, int objType)
@@ -6806,49 +6888,21 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	final static int DOC=1;
-	final static int DOC_AUTH=2;
 	private static String buildInsertSqlStr(Object obj, int objType) {
 		
 		switch(objType)
 		{
+		case DOC:
+			return buildInserSqlForDoc((Doc)obj);
 		case DOC_AUTH:
-			buildInsertSql((DocAuth) obj);
-			break;
+			return buildInsertSqlForDocAuth((DocAuth) obj);
 		}
 		return null;
 	}
 
-	protected static boolean insertDocAuth(DocAuth docAuth)
-	{
-		return dbInsert(docAuth, DOC_AUTH);
-	}
-	
-	private static String buildQuerySqlForDocAuth(DocAuth qDocAuth) 
-	{
-		String sql = "select * from doc_auth ";
-		if(qDocAuth == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamListForDocAuth(qDocAuth);
-		
-		sql += buildSqlConditionWithParamList(paramList);
-        return sql;
-	}
-	
-	private static String buildQuerySqlForDoc(Doc qDoc) {
-		String sql = "select * from doc ";
-		if(qDoc == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamListForDoc(qDoc);
-		
-		sql += buildSqlConditionWithParamList(paramList);
-        return sql;
+	private static String buildInserSqlForDoc(Doc obj) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private static List<String> buildParamListForDocAuth(DocAuth docAuth) 
@@ -6947,7 +7001,7 @@ public class BaseController  extends BaseFunction{
         return paramList;
 	}
 	
-	private static String buildInsertSql(DocAuth docAuth) 
+	private static String buildInsertSqlForDocAuth(DocAuth docAuth) 
 	{
 		if(docAuth == null)
 		{
@@ -7043,38 +7097,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		return sql_condition;
-	}
-
-	protected static boolean writeDocAuthListToJsonFile(List<Object> docAuthList, String filePath) 
-	{
-		String content = JSON.toJSONStringWithDateFormat(docAuthList, "yyy-MM-dd HH:mm:ss");
-		if(content == null)
-		{
-			System.out.println("writeToJsonFile() content is null");
-			return false;
-		}
-		
-		content = "{docAuthList:" + content + "}";
-			
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(filePath);
-		} catch (FileNotFoundException e) {
-			System.out.println("writeToJsonFile() new FileOutputStream failed");
-			e.printStackTrace();
-			return false;
-		}
-		try {
-			byte[] buff = content.getBytes();
-			out.write(buff, 0, buff.length);
-			//关闭输出流
-			out.close();
-		} catch (IOException e) {
-			System.out.println("writeToJsonFile() out.write exception");
-			e.printStackTrace();
-			return false;
-		}		
-		return true;
 	}
 	
     public static String readJsonFile(String filePath) {
