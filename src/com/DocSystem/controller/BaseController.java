@@ -6546,6 +6546,19 @@ public class BaseController  extends BaseFunction{
 	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
     //version是指当前数据库对应的软件版本
+	protected static void exportDBToJsonFile(int dbTabId, String filePath, int version) 
+	{
+    	List<Object> list = dbQuery(null, dbTabId);
+    	
+		writeListToJsonFile(dbTabId, list, filePath);
+	}
+    
+	private static void writeListToJsonFile(int dbTabId, List<Object> list, String filePath) {
+		// TODO Auto-generated method stub
+	}
+
+	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
+    //version是指当前数据库对应的软件版本
 	protected static void exportDocAutListToJsonFile(String filePath, int version) 
 	{
     	List<Object> docAuthList = queryDocAuth(null);
@@ -6600,6 +6613,8 @@ public class BaseController  extends BaseFunction{
             insertDocAuth(docAuth);
         }
 	}
+	
+	
     
 	private static DocAuth buildDocAuthFromJsonObj(JSONObject obj) {
 		DocAuth docAuth = new DocAuth();
