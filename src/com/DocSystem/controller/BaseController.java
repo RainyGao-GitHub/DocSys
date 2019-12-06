@@ -6840,513 +6840,6 @@ public class BaseController  extends BaseFunction{
 		
 		return null;
 	}
-	
-
-
-	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj) {
-		SysConfig obj = new SysConfig();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setRegEnable((Integer)jsonObj.get("regEnable"));
-		obj.setPrivateReposEnable( (Integer)jsonObj.get("privateReposEnable"));
-		return obj;
-	}
-	
-	private static Object buildSysConfigFromResultSet(ResultSet rs) throws SQLException {
-		SysConfig obj = new SysConfig();
-		obj.setId( rs.getInt("ID"));
-		obj.setRegEnable(rs.getInt("REG_ENABLE"));
-		obj.setPrivateReposEnable( rs.getInt("PRIVATE_REPOS_ENABLE"));
-		return obj;
-	}
-	
-	private static List<String> buildParamListForSysConfig(SysConfig obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId() != null) { paramList.add("ID");}
-		if(obj.getRegEnable() != null) { paramList.add("REG_ENABLE");}
-		if(obj.getPrivateReposEnable() != null) { paramList.add("PRIVATE_REPOS_ENABLE");}
-		return paramList;
-	}
-
-	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj) {
-		GroupMember obj = new GroupMember();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setGroupId((Integer)jsonObj.get("groupId"));
-		obj.setUserId((Integer)jsonObj.get("userId"));
-		return obj;
-	}
-	
-	private static Object buildGroupMemberFromResultSet(ResultSet rs) throws SQLException {
-		GroupMember obj = new GroupMember();
-		obj.setId( rs.getInt("ID"));
-		obj.setGroupId(rs.getInt("GROUP_ID"));
-		obj.setUserId(rs.getInt("USER_ID"));
-		return obj;
-	}
-
-	
-	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj) {
-		UserGroup obj = new UserGroup();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setType((Integer)jsonObj.get("type"));
-		obj.setInfo((String)jsonObj.get("info"));
-		obj.setImg((String)jsonObj.get("img"));
-		obj.setPriority((Integer)jsonObj.get("priority"));
-		obj.setCreateTime((String)jsonObj.get("createTime"));
-		return obj;
-	}
-	
-	private static Object buildUserGroupFromResultSet(ResultSet rs) throws SQLException {
-		UserGroup obj = new UserGroup();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setInfo( rs.getString("INFO"));
-		obj.setImg( rs.getString("IMG"));
-		obj.setPriority( rs.getInt("PRIORITY"));
-		obj.setCreateTime( rs.getString("CREATE_TIME"));
-		return obj;
-	}
-
-	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
-		Role obj = new Role();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setRoleId((Integer)jsonObj.get("roleId"));
-		return obj;
-	}
-	
-
-	private static Object buildRoleFromResultSet(ResultSet rs) throws SQLException {
-		Role obj = new Role();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setRoleId(rs.getInt("ROLE_ID"));
-		return obj;
-	}
-
-	private static Object buildUserFromJsonObj(JSONObject jsonObj) {
-		User obj = new User();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setPwd((String)jsonObj.get("pwd"));
-		obj.setRole( (Integer)jsonObj.get("role"));
-		obj.setRealName((String)jsonObj.get("realName"));
-		obj.setNickName((String)jsonObj.get("nickName"));
-		obj.setIntro((String)jsonObj.get("intro"));
-		obj.setImg((String)jsonObj.get("img"));
-		obj.setEmail((String)jsonObj.get("email"));
-		obj.setEmailValid((Integer)jsonObj.get("emailValid"));
-		obj.setTel((String)jsonObj.get("tel"));
-		obj.setTelValid((Integer)jsonObj.get("telValid"));
-		obj.setLastLoginTime((String)jsonObj.get("lastLoginTime"));
-		obj.setLastLoginIp((String)jsonObj.get("lastLoginIp"));
-		obj.setLastLoginCity((String)jsonObj.get("lastLoginCity"));
-		obj.setCreateType((Integer)jsonObj.get("createType"));
-		obj.setCreateTime((String)jsonObj.get("createTime"));
-		return obj;
-	}
-	
-	private static Object buildUserFromResultSet(ResultSet rs) throws SQLException {
-		User obj = new User();
-		obj.setId( rs.getInt("ID"));
-		obj.setName(rs.getString("NAME"));
-		obj.setPwd(rs.getString("PWD"));
-		obj.setRole( rs.getInt("ROLE"));
-		obj.setRealName(rs.getString("REAL_NAME"));
-		obj.setNickName(rs.getString("NICK_NAME"));
-		obj.setIntro(rs.getString("INTRO"));
-		obj.setImg(rs.getString("IMG"));
-		obj.setEmail(rs.getString("EMAIL"));
-		obj.setEmailValid(rs.getInt("EMAIL_VALID"));
-		obj.setTel(rs.getString("TEL"));
-		obj.setTelValid(rs.getInt("TEL_VALID"));
-		obj.setLastLoginTime(rs.getString("LAST_LOGIN_TIME"));
-		obj.setLastLoginIp(rs.getString("LAST_LOGIN_IP"));
-		obj.setLastLoginCity(rs.getString("LAST_LOGIN_CITY"));
-		obj.setCreateType(rs.getInt("CREATE_TYPE"));
-		obj.setCreateTime(rs.getString("CREATE_TIME"));
-		return obj;
-	}
-
-	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
-		Repos obj = new Repos();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName( (String)jsonObj.get("name"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPath( (String)jsonObj.get("path"));
-		obj.setRealDocPath( (String)jsonObj.get("realDocPath"));
-		obj.setVerCtrl((Integer)jsonObj.get("verCtrl"));
-		obj.setIsRemote( (Integer)jsonObj.get("isRemote"));
-		obj.setLocalSvnPath( (String)jsonObj.get("localSvnPath"));
-		obj.setSvnPath( (String)jsonObj.get("svnPath"));
-		obj.setSvnUser( (String)jsonObj.get("svnUser"));		
-		obj.setSvnPwd( (String)jsonObj.get("svnPwd"));		
-		obj.setRevision( (String)jsonObj.get("revision"));		
-		obj.setVerCtrl1((Integer)jsonObj.get("verCtrl1"));
-		obj.setIsRemote1( (Integer)jsonObj.get("isRemote1"));
-		obj.setLocalSvnPath1( (String)jsonObj.get("localSvnPath1"));
-		obj.setSvnPath1( (String)jsonObj.get("svnPath1"));
-		obj.setSvnUser1( (String)jsonObj.get("svnUser1"));		
-		obj.setSvnPwd1( (String)jsonObj.get("svnPwd1"));		
-		obj.setRevision1( (String)jsonObj.get("revision1"));
-		obj.setPwd( (String)jsonObj.get("pwd"));
-		obj.setOwner( (Integer)jsonObj.get("owner"));
-		obj.setCreateTime(Long.parseLong(jsonObj.get("createTime").toString()));
-		obj.setState( (Integer) jsonObj.get("state"));
-		obj.setLockBy( (Integer)jsonObj.get("lockBy"));
-		obj.setLockTime(Long.parseLong(jsonObj.get("lockTime").toString()));
-		return obj;
-	}
-	
-	private static Object buildReposFromResultSet(ResultSet rs) throws SQLException {
-		Repos obj = new Repos();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setPath( rs.getString("PATH"));
-		obj.setRealDocPath( rs.getString("REAL_DOC_PATH"));
-		obj.setVerCtrl(rs.getInt("VER_CTRL"));
-		obj.setIsRemote( rs.getInt("IS_REMOTE"));
-		obj.setLocalSvnPath( rs.getString("LOCAL_SVN_PATH"));
-		obj.setSvnPath( rs.getString("SVN_PATH"));
-		obj.setSvnUser( rs.getString("SVN_USER"));		
-		obj.setSvnPwd( rs.getString("SVN_PWD"));		
-		obj.setRevision( rs.getString("REVISION"));		
-		obj.setVerCtrl1(rs.getInt("VER_CTRL1"));
-		obj.setIsRemote1( rs.getInt("IS_REMOTE1"));
-		obj.setLocalSvnPath1( rs.getString("LOCAL_SVN_PATH1"));
-		obj.setSvnPath1( rs.getString("SVN_PATH1"));
-		obj.setSvnUser1( rs.getString("SVN_USER1"));		
-		obj.setSvnPwd1( rs.getString("SVN_PWD1"));		
-		obj.setRevision1( rs.getString("REVISION1"));
-		obj.setPwd( rs.getString("PWD"));
-		obj.setOwner( rs.getInt("OWNER"));
-		obj.setCreateTime(rs.getLong("CREATE_TIME"));
-		obj.setState( rs.getInt("STATE"));
-		obj.setLockBy( rs.getInt("LOCK_BY"));
-		obj.setLockTime(rs.getLong("LOCK_TIME"));
-		return obj;
-	}
-	
-	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
-		ReposAuth obj = new ReposAuth();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setReposId( (Integer)jsonObj.get("reposId"));
-		obj.setUserId( (Integer)jsonObj.get("userId"));
-		obj.setGroupId( (Integer)jsonObj.get("groupId"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPriority( (Integer)jsonObj.get("priority"));
-		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
-		obj.setAddEn( (Integer)jsonObj.get("addEn"));
-		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
-		obj.setEditEn( (Integer)jsonObj.get("editEn"));
-		obj.setAccess( (Integer)jsonObj.get("access"));
-		obj.setHeritable( (Integer)jsonObj.get("heritable"));
-		return obj;
-	}
-
-	private static Object buildReposAuthFromResultSet(ResultSet rs) throws SQLException {
-		ReposAuth obj = new ReposAuth();
-		obj.setId( rs.getInt("ID"));
-		obj.setReposId( rs.getInt("REPOS_ID"));
-		obj.setUserId( rs.getInt("USER_ID"));
-		obj.setGroupId( rs.getInt("GROUP_ID"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setPriority( rs.getInt("PRIORITY"));
-		obj.setIsAdmin( rs.getInt("IS_ADMIN"));
-		obj.setAddEn( rs.getInt("ADD_EN"));
-		obj.setDeleteEn( rs.getInt("DELETE_EN"));
-		obj.setEditEn( rs.getInt("EDIT_EN"));
-		obj.setAccess( rs.getInt("ACCESS"));
-		obj.setHeritable( rs.getInt("HERITABLE"));
-		return obj;
-	}
-
-	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
-		Doc obj = new Doc();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName( (String)jsonObj.get("name"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setSize( Long.parseLong(jsonObj.get("size").toString()));
-        obj.setCheckSum((String)jsonObj.get("checkSum"));
-        obj.setRevision((String)jsonObj.get("revision"));
-        obj.setContent((String)jsonObj.get("content"));
-        obj.setPath( (String)jsonObj.get("path"));
-        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-        obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
-        obj.setVid( (Integer)jsonObj.get("vid"));
-        obj.setPwd( (String)jsonObj.get("pwd"));
-        obj.setCreator( (Integer)jsonObj.get("creator"));
-        obj.setCreateTime( Long.parseLong(jsonObj.get("createTime").toString()));
-        obj.setLatestEditor( (Integer)jsonObj.get("latestEditor"));
-        obj.setLatestEditTime( Long.parseLong(jsonObj.get("latestEditTime").toString()));
-        return obj;
-	}
-	
-	private static Doc buildDocFromResultSet(ResultSet rs) throws Exception {
-		Doc obj = new Doc();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setSize( rs.getLong("SIZE"));
-        obj.setCheckSum(rs.getString("CHECK_SUM"));
-        obj.setRevision(rs.getString("REVISION"));
-        obj.setContent(rs.getString("CONTENT"));
-        obj.setPath( rs.getString("PATH"));
-        obj.setDocId( rs.getLong("DOC_ID"));
-        obj.setPid( rs.getLong("PID"));
-        obj.setVid( rs.getInt("VID"));
-        obj.setPwd( rs.getString("PWD"));
-        obj.setCreator( rs.getInt("CREATOR"));
-        obj.setCreateTime( rs.getLong("CREATE_TIME"));
-        obj.setLatestEditor( rs.getInt("LATEST_EDITOR"));
-        obj.setLatestEditTime( rs.getLong("LATEST_EDIT_TIME"));
-        return obj;        
-	}
-	
-	private static List<String> buildParamListForDoc(Doc qDoc) {
-		List<String> paramList = new ArrayList<String>();
-        if(qDoc.getId() != null)
-        {	
-        	paramList.add("ID");
-        }
-        if(qDoc.getName() != null)
-        {
-        	paramList.add("NAME");
-        }
-        if(qDoc.getType() != null)
-        {
-        	paramList.add("TYPE");
-        }
-        if(qDoc.getSize() != null)
-        {
-        	paramList.add("SIZE");
-        }
-        if(qDoc.getCheckSum() != null)
-        {
-        	paramList.add("CHECK_SUM");
-        }        
-        if(qDoc.getRevision() != null)
-        {
-        	paramList.add("REVISION");
-        }        
-        if(qDoc.getContent() != null)
-        {
-        	paramList.add("setContent");
-        }        
-        if(qDoc.getPath() != null)
-        {
-        	paramList.add("PATH");
-        }        
-        if(qDoc.getDocId() != null)
-        {
-        	paramList.add("DOC_ID");
-        }
-        if(qDoc.getPid() != null)
-        {
-        	paramList.add("PID");
-        }
-        if(qDoc.getVid() != null)
-        {
-        	paramList.add("VID");
-        }
-        if(qDoc.getPwd() != null)
-        {
-        	paramList.add("PWD");
-        }
-        if(qDoc.getCreator() != null)
-        {
-        	paramList.add("CREATOR");
-        }        
-        if(qDoc.getCreateTime() != null)
-        {
-        	paramList.add("CREATE_TIME");
-        }        
-        if(qDoc.getLatestEditor() != null)
-        {
-        	paramList.add("LATEST_EDITOR");
-        }
-        if(qDoc.getLatestEditTime() != null)
-        {
-        	paramList.add("LATEST_EDIT_TIME");
-        }
-        return paramList;
-	}
-
-	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
-		DocAuth obj = new DocAuth();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setReposId( (Integer)jsonObj.get("reposId"));
-		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));            	
-		obj.setUserId( (Integer)jsonObj.get("userId"));
-		obj.setGroupId( (Integer)jsonObj.get("groupId"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPriority( (Integer)jsonObj.get("priority"));
-		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
-		obj.setAddEn( (Integer)jsonObj.get("addEn"));
-		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
-		obj.setEditEn( (Integer)jsonObj.get("editEn"));
-		obj.setAccess( (Integer)jsonObj.get("access"));
-		obj.setHeritable( (Integer)jsonObj.get("heritable"));
-		obj.setDocPath( (String)jsonObj.get("docPath"));
-		obj.setDocName( (String)jsonObj.get("docName"));
-		return obj;
-	}
-
-	private static DocAuth buildDocAuthFromResultSet(ResultSet rs) throws Exception {
-        DocAuth obj = new DocAuth();
-        obj.setId(rs.getInt("ID"));
-        obj.setReposId(rs.getInt("REPOS_ID"));
-        obj.setDocId(rs.getLong("DOCSYS_DOCSYS_DOC_ID"));
-        obj.setType(rs.getInt("TYPE"));
-        obj.setPriority(rs.getInt("PRIORITY"));
-        obj.setUserId(rs.getInt("USER_ID"));
-        obj.setGroupId(rs.getInt("GROUP_ID"));
-        obj.setIsAdmin(rs.getInt("IS_ADMIN"));
-        obj.setAccess(rs.getInt("ACCESS"));
-        obj.setEditEn(rs.getInt("EDIT_EN"));
-        obj.setAddEn(rs.getInt("ADD_EN"));
-        obj.setDeleteEn(rs.getInt("DELETE_EN"));
-        obj.setHeritable(rs.getInt("HERITABLE"));
-        obj.setDocPath(rs.getString("DOC_PATH"));
-        obj.setDocName(rs.getString("DOC_NAME"));
-		return obj;
-	}
-	
-	private static List<String> buildParamListForDocAuth(DocAuth docAuth) 
-	{
-		List<String> paramList = new ArrayList<String>();
-        if(docAuth.getId() != null)
-        {	
-        	paramList.add("ID");
-        }
-        if(docAuth.getUserId() != null)
-        {
-        	paramList.add("USER_ID");
-        }
-        
-        if(docAuth.getGroupId() != null)
-        {
-        	paramList.add("GROUP_ID");
-        }
-        if(docAuth.getType() != null)
-        {
-        	paramList.add("TYPE");
-        }
-        if(docAuth.getPriority() != null)
-        {
-        	paramList.add("PRIORITY");
-        }
-        if(docAuth.getDocId() != null)
-        {
-        	paramList.add("DOC_ID");
-        }
-        if(docAuth.getReposId() != null)
-        {
-        	paramList.add("REPOS_ID");
-        }
-        if(docAuth.getIsAdmin() != null)
-        {
-        	paramList.add("IS_ADMIN");
-        }
-        if(docAuth.getAccess() != null)
-        {
-        	paramList.add("ACCESS");
-        }
-        if(docAuth.getEditEn() != null)
-        {
-        	paramList.add("EDIT_EN");
-        }
-        if(docAuth.getAddEn() != null)
-        {
-        	paramList.add("ADD_EN");
-        }
-        if(docAuth.getDeleteEn() != null)
-        {
-        	paramList.add("DELETE_EN");
-        }
-        if(docAuth.getHeritable() != null)
-        {
-        	paramList.add("HERITABLE");
-        }
-        if(docAuth.getDocPath() != null)
-        {
-        	paramList.add("DOC_PATH");
-        }
-        if(docAuth.getDocName() != null)
-        {
-        	paramList.add("DOC_NAME");
-        }
-        return paramList;
-	}
-	
-	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
-		DocLock obj = new DocLock();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setType((Integer)jsonObj.get("type"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setPath((String)jsonObj.get("path"));
-		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-		obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
-		obj.setVid( (Integer)jsonObj.get("vid"));
-		obj.setState((Integer)jsonObj.get("state"));
-		obj.setLockBy((Integer)jsonObj.get("lockBy"));
-		obj.setLockTime( Long.parseLong(jsonObj.get("lockTime").toString()));
-		return obj;
-	}
-	
-	private static Object buildDocLockFromResultSet(ResultSet rs) throws SQLException {
-		DocLock obj = new DocLock();
-		obj.setId( rs.getInt("ID"));
-		obj.setType(rs.getInt("TYPE"));
-		obj.setName(rs.getString("NAME"));
-		obj.setPath(rs.getString("PATH"));
-		obj.setDocId( rs.getLong("DOC_ID"));
-		obj.setPid( rs.getLong("PID"));
-		obj.setVid( rs.getInt("VID"));
-		obj.setState(rs.getInt("STATE"));
-		obj.setLockBy(rs.getInt("LOCK_BY"));
-		obj.setLockTime( rs.getLong("LOCK_TIME"));
-		return obj;
-	}
-	
-	private static List<String> buildParamListForGroupMember(GroupMember qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<String> buildParamListForUserGroup(UserGroup qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<String> buildParamListForRole(Role qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<String> buildParamListForUser(User qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<String> buildParamListForDocLock(DocLock qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<String> buildParamListForReposAuth(ReposAuth qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<String> buildParamListForRepos(Repos object) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
 
 	public static boolean dbInsert(Object obj, int objType)
 	{
@@ -7421,61 +6914,905 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static String buildInsertSqlForSysConfig(SysConfig qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForGroupMember(GroupMember qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForUserGroup(UserGroup qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForRole(Role qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForUser(User qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForDocLock(DocLock qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForReposAuth(ReposAuth qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForRepos(Repos qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForDoc(Doc obj) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj) {
+		SysConfig obj = new SysConfig();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setRegEnable((Integer)jsonObj.get("regEnable"));
+		obj.setPrivateReposEnable( (Integer)jsonObj.get("privateReposEnable"));
+		return obj;
 	}
 	
-	private static String buildInsertSqlForDocAuth(DocAuth docAuth) 
-	{
-		if(docAuth == null)
+	private static Object buildSysConfigFromResultSet(ResultSet rs) throws SQLException {
+		SysConfig obj = new SysConfig();
+		obj.setId( rs.getInt("ID"));
+		obj.setRegEnable(rs.getInt("REG_ENABLE"));
+		obj.setPrivateReposEnable( rs.getInt("PRIVATE_REPOS_ENABLE"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForSysConfig(SysConfig obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId() != null) { paramList.add("ID");}
+		if(obj.getRegEnable() != null) { paramList.add("REG_ENABLE");}
+		if(obj.getPrivateReposEnable() != null) { paramList.add("PRIVATE_REPOS_ENABLE");}
+		return paramList;
+	}
+	
+	private static String buildInsertSqlForSysConfig(SysConfig obj) {
+		if(obj == null)
 		{
 			return 	null;
 		}
 		
 		String sql_condition = "";
 		String sql_value="";
-		List<String> paramList = buildParamListForDocAuth(docAuth);
+		List<String> paramList = buildParamListForSysConfig(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID":
+				sql_value += " " + obj.getId() + seperator;
+				break;
+			case "REG_ENABLE":
+				sql_value += " " + obj.getRegEnable() + seperator;
+				break;
+			case "PRIVATE_REPOS_ENABLE":
+				sql_value += " " + obj.getPrivateReposEnable() + seperator;
+				break;
+			}
+		}
+        
+        String sql = "insert into SYS_CONFIG (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+
+	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj) {
+		GroupMember obj = new GroupMember();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setGroupId((Integer)jsonObj.get("groupId"));
+		obj.setUserId((Integer)jsonObj.get("userId"));
+		return obj;
+	}
+	
+	private static Object buildGroupMemberFromResultSet(ResultSet rs) throws SQLException {
+		GroupMember obj = new GroupMember();
+		obj.setId( rs.getInt("ID"));
+		obj.setGroupId(rs.getInt("GROUP_ID"));
+		obj.setUserId(rs.getInt("USER_ID"));
+		return obj;
+	}
+
+	private static List<String> buildParamListForGroupMember(GroupMember obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId() != null) { paramList.add("ID");}
+		if(obj.getGroupId() != null) { paramList.add("GROUP_ID");}
+		if(obj.getUserId() != null) { paramList.add("USER_ID");}
+		return paramList;
+	}
+	
+	private static String buildInsertSqlForGroupMember(GroupMember obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForGroupMember(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID":
+				sql_value += " " + obj.getId() + seperator;
+				break;
+			case "GROUP_ID":
+				sql_value += " " + obj.getGroupId() + seperator;
+				break;
+			case "USER_ID":
+				sql_value += " " + obj.getUserId() + seperator;
+				break;
+			}
+		}
+        
+        String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj) {
+		UserGroup obj = new UserGroup();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setType((Integer)jsonObj.get("type"));
+		obj.setInfo((String)jsonObj.get("info"));
+		obj.setImg((String)jsonObj.get("img"));
+		obj.setPriority((Integer)jsonObj.get("priority"));
+		obj.setCreateTime((String)jsonObj.get("createTime"));
+		return obj;
+	}
+	
+	private static Object buildUserGroupFromResultSet(ResultSet rs) throws SQLException {
+		UserGroup obj = new UserGroup();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setInfo( rs.getString("INFO"));
+		obj.setImg( rs.getString("IMG"));
+		obj.setPriority( rs.getInt("PRIORITY"));
+		obj.setCreateTime( rs.getString("CREATE_TIME"));
+		return obj;
+	}
+
+	private static List<String> buildParamListForUserGroup(UserGroup obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId() != null) { paramList.add("ID");}
+		if(obj.getName() != null) { paramList.add("NAME");}
+		if(obj.getType() != null) { paramList.add("TYPE");}
+		if(obj.getInfo() != null) { paramList.add("INFO");}
+		if(obj.getImg() != null) { paramList.add("IMG");}
+		if(obj.getPriority() != null) { paramList.add("PRIORITY");}
+		if(obj.getCreateTime() != null) { paramList.add("CREATE_TIME");}
+		return paramList;
+	}
+
+	private static String buildInsertSqlForUserGroup(UserGroup obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForUserGroup(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID":
+				sql_value += " " + obj.getId() + seperator;
+				break;
+			case "NAME":
+				sql_value += " " + obj.getName() + seperator;
+				break;
+			case "TYPE":
+				sql_value += " " + obj.getType() + seperator;
+				break;
+			case "INFO":
+				sql_value += " " + obj.getInfo() + seperator;
+				break;
+			case "IMG":
+				sql_value += " " + obj.getImg() + seperator;
+				break;	
+			case "PRIORITY":
+				sql_value += " " + obj.getPriority() + seperator;
+				break;
+			case "CREATE_TIME":
+				sql_value += " " + obj.getCreateTime() + seperator;
+				break;
+			}
+		}
+        
+        String sql = "insert into USER_GROUP (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
+		Role obj = new Role();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setRoleId((Integer)jsonObj.get("roleId"));
+		return obj;
+	}
+	
+	private static Object buildRoleFromResultSet(ResultSet rs) throws SQLException {
+		Role obj = new Role();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setRoleId(rs.getInt("ROLE_ID"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForRole(Role obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId() != null) { paramList.add("ID");}
+		if(obj.getName() != null) { paramList.add("NAME");}
+		if(obj.getRoleId() != null) { paramList.add("ROLE_ID");}
+		return paramList;
+	}
+	
+	private static String buildInsertSqlForRole(Role obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForRole(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID":
+				sql_value += " " + obj.getId() + seperator;
+				break;
+			case "NAME":
+				sql_value += " " + obj.getName() + seperator;
+				break;
+			case "ROLE_ID":
+				sql_value += " " + obj.getRoleId() + seperator;
+				break;
+			}
+		}
+        
+        String sql = "insert into ROLE (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+
+	private static Object buildUserFromJsonObj(JSONObject jsonObj) {
+		User obj = new User();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setPwd((String)jsonObj.get("pwd"));
+		obj.setRole( (Integer)jsonObj.get("role"));
+		obj.setRealName((String)jsonObj.get("realName"));
+		obj.setNickName((String)jsonObj.get("nickName"));
+		obj.setIntro((String)jsonObj.get("intro"));
+		obj.setImg((String)jsonObj.get("img"));
+		obj.setEmail((String)jsonObj.get("email"));
+		obj.setEmailValid((Integer)jsonObj.get("emailValid"));
+		obj.setTel((String)jsonObj.get("tel"));
+		obj.setTelValid((Integer)jsonObj.get("telValid"));
+		obj.setLastLoginTime((String)jsonObj.get("lastLoginTime"));
+		obj.setLastLoginIp((String)jsonObj.get("lastLoginIp"));
+		obj.setLastLoginCity((String)jsonObj.get("lastLoginCity"));
+		obj.setCreateType((Integer)jsonObj.get("createType"));
+		obj.setCreateTime((String)jsonObj.get("createTime"));
+		return obj;
+	}
+	
+	private static Object buildUserFromResultSet(ResultSet rs) throws SQLException {
+		User obj = new User();
+		obj.setId( rs.getInt("ID"));
+		obj.setName(rs.getString("NAME"));
+		obj.setPwd(rs.getString("PWD"));
+		obj.setRole( rs.getInt("ROLE"));
+		obj.setRealName(rs.getString("REAL_NAME"));
+		obj.setNickName(rs.getString("NICK_NAME"));
+		obj.setIntro(rs.getString("INTRO"));
+		obj.setImg(rs.getString("IMG"));
+		obj.setEmail(rs.getString("EMAIL"));
+		obj.setEmailValid(rs.getInt("EMAIL_VALID"));
+		obj.setTel(rs.getString("TEL"));
+		obj.setTelValid(rs.getInt("TEL_VALID"));
+		obj.setLastLoginTime(rs.getString("LAST_LOGIN_TIME"));
+		obj.setLastLoginIp(rs.getString("LAST_LOGIN_IP"));
+		obj.setLastLoginCity(rs.getString("LAST_LOGIN_CITY"));
+		obj.setCreateType(rs.getInt("CREATE_TYPE"));
+		obj.setCreateTime(rs.getString("CREATE_TIME"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForUser(User obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId() != null) { paramList.add("ID");}
+		if(obj.getName() != null) { paramList.add("NAME");}
+		if(obj.getPwd() != null) { paramList.add("PWD");}
+		if(obj.getRole() != null) { paramList.add("ROLE");}
+		if(obj.getRealName() != null) { paramList.add("REAL_NAME");}
+		if(obj.getNickName() != null) { paramList.add("NICK_NAME");}
+		if(obj.getIntro() != null) { paramList.add("INTRO");}
+		if(obj.getImg() != null) { paramList.add("IMG");}
+		if(obj.getEmail() != null) { paramList.add("EMAIL");}
+		if(obj.getEmailValid() != null) { paramList.add("EMAIL_VALID");}
+		if(obj.getTel() != null) { paramList.add("TEL");}
+		if(obj.getTelValid() != null) { paramList.add("TEL_VALID");}
+		if(obj.getLastLoginTime() != null) { paramList.add("LAST_LOGIN_TIME");}
+		if(obj.getLastLoginIp() != null) { paramList.add("LAST_LOGIN_IP");}
+		if(obj.getLastLoginCity() != null) { paramList.add("LAST_LOGIN_CITY");}
+		if(obj.getCreateType() != null) { paramList.add("CREATE_TYPE");}
+		if(obj.getCreateTime() != null) { paramList.add("CREATE_TIME");}
+		return paramList;
+	}
+	
+	private static String buildInsertSqlForUser(User obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForUser(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID":
+				sql_value += " " + obj.getId() + seperator;
+				break;
+			case "NAME":
+				sql_value += " " + obj.getName() + seperator;
+				break;
+			case "PWD":
+				sql_value += " " + obj.getPwd() + seperator;
+				break;
+			case "ROLE":
+				sql_value += " " + obj.getRole() + seperator;
+				break;
+			case "REAL_NAME":
+				sql_value += " " + obj.getRealName() + seperator;
+				break;
+			case "NICK_NAME":
+				sql_value += " " + obj.getNickName() + seperator;
+				break;
+			case "INTRO":
+				sql_value += " " + obj.getIntro() + seperator;
+				break;
+			case "IMG":
+				sql_value += " " + obj.getImg() + seperator;
+				break;
+			case "EMAIL":
+				sql_value += " " + obj.getEmail() + seperator;
+				break;
+			case "EMAIL_VALID":
+				sql_value += " " + obj.getEmailValid() + seperator;
+				break;
+			case "TEL":
+				sql_value += " " + obj.getTel() + seperator;
+				break;
+			case "TEL_VALID":
+				sql_value += " " + obj.getTelValid() + seperator;
+				break;
+			case "LAST_LOGIN_TIME":
+				sql_value += " " + obj.getLastLoginTime() + seperator;
+				break;
+			case "LAST_LOGIN_IP":
+				sql_value += " " + obj.getLastLoginIp() + seperator;
+				break;
+			case "LAST_LOGIN_CITY":
+				sql_value += " " + obj.getLastLoginCity() + seperator;
+				break;
+			case "CREATE_TYPE":
+				sql_value += " " + obj.getCreateType() + seperator;
+				break;				
+			case "CREATE_TIME":
+				sql_value += " " + obj.getCreateTime() + seperator;
+				break;
+			}
+		}
+        String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+
+	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
+		Repos obj = new Repos();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName( (String)jsonObj.get("name"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPath( (String)jsonObj.get("path"));
+		obj.setRealDocPath( (String)jsonObj.get("realDocPath"));
+		obj.setVerCtrl((Integer)jsonObj.get("verCtrl"));
+		obj.setIsRemote( (Integer)jsonObj.get("isRemote"));
+		obj.setLocalSvnPath( (String)jsonObj.get("localSvnPath"));
+		obj.setSvnPath( (String)jsonObj.get("svnPath"));
+		obj.setSvnUser( (String)jsonObj.get("svnUser"));		
+		obj.setSvnPwd( (String)jsonObj.get("svnPwd"));		
+		obj.setRevision( (String)jsonObj.get("revision"));		
+		obj.setVerCtrl1((Integer)jsonObj.get("verCtrl1"));
+		obj.setIsRemote1( (Integer)jsonObj.get("isRemote1"));
+		obj.setLocalSvnPath1( (String)jsonObj.get("localSvnPath1"));
+		obj.setSvnPath1( (String)jsonObj.get("svnPath1"));
+		obj.setSvnUser1( (String)jsonObj.get("svnUser1"));		
+		obj.setSvnPwd1( (String)jsonObj.get("svnPwd1"));		
+		obj.setRevision1( (String)jsonObj.get("revision1"));
+		obj.setPwd( (String)jsonObj.get("pwd"));
+		obj.setOwner( (Integer)jsonObj.get("owner"));
+		obj.setCreateTime(Long.parseLong(jsonObj.get("createTime").toString()));
+		obj.setState( (Integer) jsonObj.get("state"));
+		obj.setLockBy( (Integer)jsonObj.get("lockBy"));
+		obj.setLockTime(Long.parseLong(jsonObj.get("lockTime").toString()));
+		return obj;
+	}
+	
+	private static Object buildReposFromResultSet(ResultSet rs) throws SQLException {
+		Repos obj = new Repos();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setPath( rs.getString("PATH"));
+		obj.setRealDocPath( rs.getString("REAL_DOC_PATH"));
+		obj.setVerCtrl(rs.getInt("VER_CTRL"));
+		obj.setIsRemote( rs.getInt("IS_REMOTE"));
+		obj.setLocalSvnPath( rs.getString("LOCAL_SVN_PATH"));
+		obj.setSvnPath( rs.getString("SVN_PATH"));
+		obj.setSvnUser( rs.getString("SVN_USER"));		
+		obj.setSvnPwd( rs.getString("SVN_PWD"));		
+		obj.setRevision( rs.getString("REVISION"));		
+		obj.setVerCtrl1(rs.getInt("VER_CTRL1"));
+		obj.setIsRemote1( rs.getInt("IS_REMOTE1"));
+		obj.setLocalSvnPath1( rs.getString("LOCAL_SVN_PATH1"));
+		obj.setSvnPath1( rs.getString("SVN_PATH1"));
+		obj.setSvnUser1( rs.getString("SVN_USER1"));		
+		obj.setSvnPwd1( rs.getString("SVN_PWD1"));		
+		obj.setRevision1( rs.getString("REVISION1"));
+		obj.setPwd( rs.getString("PWD"));
+		obj.setOwner( rs.getInt("OWNER"));
+		obj.setCreateTime(rs.getLong("CREATE_TIME"));
+		obj.setState( rs.getInt("STATE"));
+		obj.setLockBy( rs.getInt("LOCK_BY"));
+		obj.setLockTime(rs.getLong("LOCK_TIME"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForRepos(Repos obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId( ) != null) { paramList.add("ID");}
+		if(obj.getName( ) != null) { paramList.add("NAME");}
+		if(obj.getType( ) != null) { paramList.add("TYPE");}
+		if(obj.getPath( ) != null) { paramList.add("PATH");}
+		if(obj.getRealDocPath( ) != null) { paramList.add("REAL_DOC_PATH");}
+		if(obj.getVerCtrl() != null) { paramList.add("VER_CTRL");}
+		if(obj.getIsRemote( ) != null) { paramList.add("IS_REMOTE");}
+		if(obj.getLocalSvnPath( ) != null) { paramList.add("LOCAL_SVN_PATH");}
+		if(obj.getSvnPath( ) != null) { paramList.add("SVN_PATH");}
+		if(obj.getSvnUser( ) != null) { paramList.add("SVN_USER");}		
+		if(obj.getSvnPwd( ) != null) { paramList.add("SVN_PWD");}		
+		if(obj.getRevision( ) != null) { paramList.add("REVISION");}		
+		if(obj.getVerCtrl1() != null) { paramList.add("VER_CTRL1");}
+		if(obj.getIsRemote1( ) != null) { paramList.add("IS_REMOTE1");}
+		if(obj.getLocalSvnPath1( ) != null) { paramList.add("LOCAL_SVN_PATH1");}
+		if(obj.getSvnPath1( ) != null) { paramList.add("SVN_PATH1");}
+		if(obj.getSvnUser1( ) != null) { paramList.add("SVN_USER1");}		
+		if(obj.getSvnPwd1( ) != null) { paramList.add("SVN_PWD1");}		
+		if(obj.getRevision1( ) != null) { paramList.add("REVISION1");}
+		if(obj.getPwd( ) != null) { paramList.add("PWD");}
+		if(obj.getOwner( ) != null) { paramList.add("OWNER");}
+		if(obj.getCreateTime() != null) { paramList.add("CREATE_TIME");}
+		if(obj.getState( ) != null) { paramList.add("STATE");}
+		if(obj.getLockBy( ) != null) { paramList.add("LOCK_BY");}
+		if(obj.getLockTime() != null) { paramList.add("LOCK_TIME");}
+		return paramList;
+	}
+	
+	private static String buildInsertSqlForRepos(Repos obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForRepos(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
+			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
+			case "REAL_DOC_PATH": sql_value += " " + obj.getRealDocPath() + seperator; break;
+			case "VER_CTRL": sql_value += " " + obj.getVerCtrl() + seperator; break;
+			case "IS_REMOTE": sql_value += " " + obj.getIsRemote() + seperator; break;
+			case "LOCAL_SVN_PATH": sql_value += " " + obj.getLocalSvnPath() + seperator; break;
+			case "SVN_PATH": sql_value += " " + obj.getSvnPath() + seperator; break;
+			case "SVN_USER": sql_value += " " + obj.getSvnUser() + seperator; break;
+			case "SVN_PWD": sql_value += " " + obj.getSvnPwd() + seperator; break;
+			case "REVISION": sql_value += " " + obj.getRevision() + seperator; break;
+			case "VER_CTRL1": sql_value += " " + obj.getVerCtrl1() + seperator; break;
+			case "IS_REMOTE1": sql_value += " " + obj.getIsRemote1() + seperator; break;
+			case "LOCAL_SVN_PATH1": sql_value += " " + obj.getLocalSvnPath1() + seperator; break;
+			case "SVN_PATH1": sql_value += " " + obj.getSvnPath1() + seperator; break;
+			case "SVN_USER1": sql_value += " " + obj.getSvnUser1() + seperator; break;
+			case "SVN_PWD1": sql_value += " " + obj.getSvnPwd1() + seperator; break;
+			case "REVISION1": sql_value += " " + obj.getRevision1() + seperator; break;
+			case "PWD": sql_value += " " + obj.getPwd() + seperator; break;
+			case "OWNER": sql_value += " " + obj.getOwner() + seperator; break;
+			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
+			case "STATE": sql_value += " " + obj.getState() + seperator; break;
+			case "LOCK_BY": sql_value += " " + obj.getLockBy() + seperator; break;
+			case "LOCK_TIME": sql_value += " " + obj.getLockTime() + seperator; break;
+			}
+		}
+        String sql = "insert into REPOS (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
+		ReposAuth obj = new ReposAuth();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setReposId( (Integer)jsonObj.get("reposId"));
+		obj.setUserId( (Integer)jsonObj.get("userId"));
+		obj.setGroupId( (Integer)jsonObj.get("groupId"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPriority( (Integer)jsonObj.get("priority"));
+		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
+		obj.setAddEn( (Integer)jsonObj.get("addEn"));
+		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
+		obj.setEditEn( (Integer)jsonObj.get("editEn"));
+		obj.setAccess( (Integer)jsonObj.get("access"));
+		obj.setHeritable( (Integer)jsonObj.get("heritable"));
+		return obj;
+	}
+
+	private static Object buildReposAuthFromResultSet(ResultSet rs) throws SQLException {
+		ReposAuth obj = new ReposAuth();
+		obj.setId( rs.getInt("ID"));
+		obj.setReposId( rs.getInt("REPOS_ID"));
+		obj.setUserId( rs.getInt("USER_ID"));
+		obj.setGroupId( rs.getInt("GROUP_ID"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setPriority( rs.getInt("PRIORITY"));
+		obj.setIsAdmin( rs.getInt("IS_ADMIN"));
+		obj.setAddEn( rs.getInt("ADD_EN"));
+		obj.setDeleteEn( rs.getInt("DELETE_EN"));
+		obj.setEditEn( rs.getInt("EDIT_EN"));
+		obj.setAccess( rs.getInt("ACCESS"));
+		obj.setHeritable( rs.getInt("HERITABLE"));
+		return obj;
+	}
+
+	private static List<String> buildParamListForReposAuth(ReposAuth obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId( ) != null) { paramList.add("ID");}
+		if(obj.getReposId( ) != null) { paramList.add("REPOS_ID");}
+		if(obj.getUserId( ) != null) { paramList.add("USER_ID");}
+		if(obj.getGroupId( ) != null) { paramList.add("GROUP_ID");}
+		if(obj.getType( ) != null) { paramList.add("TYPE");}
+		if(obj.getPriority( ) != null) { paramList.add("PRIORITY");}
+		if(obj.getIsAdmin( ) != null) { paramList.add("IS_ADMIN");}
+		if(obj.getAddEn( ) != null) { paramList.add("ADD_EN");}
+		if(obj.getDeleteEn( ) != null) { paramList.add("DELETE_EN");}
+		if(obj.getEditEn( ) != null) { paramList.add("EDIT_EN");}
+		if(obj.getAccess( ) != null) { paramList.add("ACCESS");}
+		if(obj.getHeritable( ) != null) { paramList.add("HERITABLE");}
+		return paramList;
+	}
+
+	private static String buildInsertSqlForReposAuth(ReposAuth obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForReposAuth(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "REPOS_ID": sql_value += " " + obj.getReposId() + seperator; break;
+			case "USER_ID": sql_value += " " + obj.getUserId() + seperator; break;
+			case "GROUP_ID": sql_value += " " + obj.getGroupId() + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
+			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
+			case "IS_ADMIN": sql_value += " " + obj.getIsAdmin() + seperator; break;
+			case "ADD_EN": sql_value += " " + obj.getAddEn() + seperator; break;
+			case "DELETE_EN": sql_value += " " + obj.getDeleteEn() + seperator; break;
+			case "EDIT_EN": sql_value += " " + obj.getEditEn() + seperator; break;
+			case "ACCESS": sql_value += " " + obj.getAccess() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getHeritable() + seperator; break;
+			}
+		}
+        String sql = "insert into REPOS_AUTH (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+
+	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
+		Doc obj = new Doc();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName( (String)jsonObj.get("name"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setSize( Long.parseLong(jsonObj.get("size").toString()));
+        obj.setCheckSum((String)jsonObj.get("checkSum"));
+        obj.setRevision((String)jsonObj.get("revision"));
+        obj.setContent((String)jsonObj.get("content"));
+        obj.setPath( (String)jsonObj.get("path"));
+        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+        obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
+        obj.setVid( (Integer)jsonObj.get("vid"));
+        obj.setPwd( (String)jsonObj.get("pwd"));
+        obj.setCreator( (Integer)jsonObj.get("creator"));
+        obj.setCreateTime( Long.parseLong(jsonObj.get("createTime").toString()));
+        obj.setLatestEditor( (Integer)jsonObj.get("latestEditor"));
+        obj.setLatestEditTime( Long.parseLong(jsonObj.get("latestEditTime").toString()));
+        return obj;
+	}
+	
+	private static Doc buildDocFromResultSet(ResultSet rs) throws Exception {
+		Doc obj = new Doc();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setSize( rs.getLong("SIZE"));
+        obj.setCheckSum(rs.getString("CHECK_SUM"));
+        obj.setRevision(rs.getString("REVISION"));
+        obj.setContent(rs.getString("CONTENT"));
+        obj.setPath( rs.getString("PATH"));
+        obj.setDocId( rs.getLong("DOC_ID"));
+        obj.setPid( rs.getLong("PID"));
+        obj.setVid( rs.getInt("VID"));
+        obj.setPwd( rs.getString("PWD"));
+        obj.setCreator( rs.getInt("CREATOR"));
+        obj.setCreateTime( rs.getLong("CREATE_TIME"));
+        obj.setLatestEditor( rs.getInt("LATEST_EDITOR"));
+        obj.setLatestEditTime( rs.getLong("LATEST_EDIT_TIME"));
+        return obj;        
+	}
+	
+	private static List<String> buildParamListForDoc(Doc obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId( ) != null) { paramList.add("ID");}
+		if(obj.getName( ) != null) { paramList.add("NAME");}
+		if(obj.getType( ) != null) { paramList.add("TYPE");}
+		if(obj.getSize( ) != null) { paramList.add("SIZE");}
+        if(obj.getCheckSum() != null) { paramList.add("CHECK_SUM");}
+        if(obj.getRevision() != null) { paramList.add("REVISION");}
+        if(obj.getContent() != null) { paramList.add("CONTENT");}
+        if(obj.getPath( ) != null) { paramList.add("PATH");}
+        if(obj.getDocId( ) != null) { paramList.add("DOC_ID");}
+        if(obj.getPid( ) != null) { paramList.add("PID");}
+        if(obj.getVid( ) != null) { paramList.add("VID");}
+        if(obj.getPwd( ) != null) { paramList.add("PWD");}
+        if(obj.getCreator( ) != null) { paramList.add("CREATOR");}
+        if(obj.getCreateTime( ) != null) { paramList.add("CREATE_TIME");}
+        if(obj.getLatestEditor( ) != null) { paramList.add("LATEST_EDITOR");}
+        if(obj.getLatestEditTime( ) != null) { paramList.add("LATEST_EDIT_TIME");}
+        return paramList;
+	}
+
+	private static String buildInsertSqlForDoc(Doc obj) {
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForDoc(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{			
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
+			case "SIZE": sql_value += " " + obj.getSize() + seperator; break;
+			case "CHECK_SUM": sql_value += " " + obj.getCheckSum() + seperator; break;
+			case "REVISION": sql_value += " " + obj.getRevision() + seperator; break;
+			case "CONTENT": sql_value += " " + obj.getContent() + seperator; break;
+			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
+			case "DELETE_EN": sql_value += " " + obj.getDocId() + seperator; break;
+			case "EDIT_EN": sql_value += " " + obj.getPid() + seperator; break;
+			case "ACCESS": sql_value += " " + obj.getVid() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			}
+			
+			if(obj.getId( ) != null) { paramList.add("ID");}
+			if(obj.getName( ) != null) { paramList.add("NAME");}
+			if(obj.getType( ) != null) { paramList.add("TYPE");}
+			if(obj.getSize( ) != null) { paramList.add("SIZE");}
+	        if(obj.getCheckSum() != null) { paramList.add("CHECK_SUM");}
+	        if(obj.getRevision() != null) { paramList.add("REVISION");}
+	        if(obj.getContent() != null) { paramList.add("CONTENT");}
+	        if(obj.getPath( ) != null) { paramList.add("PATH");}
+	        if(obj.getDocId( ) != null) { paramList.add("DOC_ID");}
+	        if(obj.getPid( ) != null) { paramList.add("PID");}
+	        if(obj.getVid( ) != null) { paramList.add("VID");}
+	        if(obj.getPwd( ) != null) { paramList.add("PWD");}
+	        if(obj.getCreator( ) != null) { paramList.add("CREATOR");}
+	        if(obj.getCreateTime( ) != null) { paramList.add("CREATE_TIME");}
+	        if(obj.getLatestEditor( ) != null) { paramList.add("LATEST_EDITOR");}
+	        if(obj.getLatestEditTime( ) != null) { paramList.add("LATEST_EDIT_TIME");}
+		}
+        String sql = "insert into DOC (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+
+	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
+		DocAuth obj = new DocAuth();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setReposId( (Integer)jsonObj.get("reposId"));
+		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));            	
+		obj.setUserId( (Integer)jsonObj.get("userId"));
+		obj.setGroupId( (Integer)jsonObj.get("groupId"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPriority( (Integer)jsonObj.get("priority"));
+		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
+		obj.setAddEn( (Integer)jsonObj.get("addEn"));
+		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
+		obj.setEditEn( (Integer)jsonObj.get("editEn"));
+		obj.setAccess( (Integer)jsonObj.get("access"));
+		obj.setHeritable( (Integer)jsonObj.get("heritable"));
+		obj.setDocPath( (String)jsonObj.get("docPath"));
+		obj.setDocName( (String)jsonObj.get("docName"));
+		return obj;
+	}
+
+	private static DocAuth buildDocAuthFromResultSet(ResultSet rs) throws Exception {
+        DocAuth obj = new DocAuth();
+        obj.setId(rs.getInt("ID"));
+        obj.setReposId(rs.getInt("REPOS_ID"));
+        obj.setDocId(rs.getLong("DOCSYS_DOCSYS_DOC_ID"));
+        obj.setType(rs.getInt("TYPE"));
+        obj.setPriority(rs.getInt("PRIORITY"));
+        obj.setUserId(rs.getInt("USER_ID"));
+        obj.setGroupId(rs.getInt("GROUP_ID"));
+        obj.setIsAdmin(rs.getInt("IS_ADMIN"));
+        obj.setAccess(rs.getInt("ACCESS"));
+        obj.setEditEn(rs.getInt("EDIT_EN"));
+        obj.setAddEn(rs.getInt("ADD_EN"));
+        obj.setDeleteEn(rs.getInt("DELETE_EN"));
+        obj.setHeritable(rs.getInt("HERITABLE"));
+        obj.setDocPath(rs.getString("DOC_PATH"));
+        obj.setDocName(rs.getString("DOC_NAME"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForDocAuth(DocAuth obj) 
+	{
+		List<String> paramList = new ArrayList<String>();
+        if(obj.getId() != null) { paramList.add("ID");}
+        if(obj.getReposId() != null) { paramList.add("REPOS_ID");}
+        if(obj.getDocId() != null) { paramList.add("DOCSYS_DOCSYS_DOC_ID");}
+        if(obj.getType() != null) { paramList.add("TYPE");}
+        if(obj.getPriority() != null) { paramList.add("PRIORITY");}
+        if(obj.getUserId() != null) { paramList.add("USER_ID");}
+        if(obj.getGroupId() != null) { paramList.add("GROUP_ID");}
+        if(obj.getIsAdmin() != null) { paramList.add("IS_ADMIN");}
+        if(obj.getAccess() != null) { paramList.add("ACCESS");}
+        if(obj.getEditEn() != null) { paramList.add("EDIT_EN");}
+        if(obj.getAddEn() != null) { paramList.add("ADD_EN");}
+        if(obj.getDeleteEn() != null) { paramList.add("DELETE_EN");}
+        if(obj.getHeritable() != null) { paramList.add("HERITABLE");}
+        if(obj.getDocPath() != null) { paramList.add("DOC_PATH");}
+        if(obj.getDocName() != null) { paramList.add("DOC_NAME");}
+        return paramList;
+	}
+	
+	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
+		DocLock obj = new DocLock();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setType((Integer)jsonObj.get("type"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setPath((String)jsonObj.get("path"));
+		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+		obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
+		obj.setVid( (Integer)jsonObj.get("vid"));
+		obj.setState((Integer)jsonObj.get("state"));
+		obj.setLockBy((Integer)jsonObj.get("lockBy"));
+		obj.setLockTime( Long.parseLong(jsonObj.get("lockTime").toString()));
+		return obj;
+	}
+	
+	private static Object buildDocLockFromResultSet(ResultSet rs) throws SQLException {
+		DocLock obj = new DocLock();
+		obj.setId( rs.getInt("ID"));
+		obj.setType(rs.getInt("TYPE"));
+		obj.setName(rs.getString("NAME"));
+		obj.setPath(rs.getString("PATH"));
+		obj.setDocId( rs.getLong("DOC_ID"));
+		obj.setPid( rs.getLong("PID"));
+		obj.setVid( rs.getInt("VID"));
+		obj.setState(rs.getInt("STATE"));
+		obj.setLockBy(rs.getInt("LOCK_BY"));
+		obj.setLockTime( rs.getLong("LOCK_TIME"));
+		return obj;
+	}
+
+	private static List<String> buildParamListForDocLock(DocLock obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId( ) != null) { paramList.add("ID");}
+		if(obj.getType() != null) { paramList.add("TYPE");}
+		if(obj.getName() != null) { paramList.add("NAME");}
+		if(obj.getPath() != null) { paramList.add("PATH");}
+		if(obj.getDocId( ) != null) { paramList.add("DOC_ID");}
+		if(obj.getPid( ) != null) { paramList.add("PID");}
+		if(obj.getVid( ) != null) { paramList.add("VID");}
+		if(obj.getState() != null) { paramList.add("STATE");}
+		if(obj.getLockBy() != null) { paramList.add("LOCK_BY");}
+		if(obj.getLockTime( ) != null) { paramList.add("LOCK_TIME");}
+        return paramList;
+	}
+	
+	
+	private static String buildInsertSqlForDocLock(DocLock qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForDocAuth(DocAuth obj) 
+	{
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForDocAuth(obj);
 		int lastParamIndex = paramList.size() - 1;
 		for(int i=0; i < paramList.size(); i++)
 		{
@@ -7490,49 +7827,49 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{
 			case "ID":
-				sql_value += " " + docAuth.getId() + seperator;
+				sql_value += " " + obj.getId() + seperator;
 				break;
 			case "USER_ID":
-				sql_value += " " + docAuth.getUserId() + seperator;
+				sql_value += " " + obj.getUserId() + seperator;
 				break;
 			case "GROUP_ID":
-				sql_value += " " + docAuth.getGroupId() + seperator;
+				sql_value += " " + obj.getGroupId() + seperator;
 				break;
 			case "TYPE":
-				sql_value += " " + docAuth.getType() + seperator;
+				sql_value += " " + obj.getType() + seperator;
 				break;
 			case "PRIORITY":
-				sql_value += " " + docAuth.getPriority() + seperator;
+				sql_value += " " + obj.getPriority() + seperator;
 				break;
 			case "DOC_ID":
-            	sql_value += " " + docAuth.getDocId() + seperator;
+            	sql_value += " " + obj.getDocId() + seperator;
             	break;
 			case "REPOS_ID":
-				sql_value += " " + docAuth.getReposId() + seperator;
+				sql_value += " " + obj.getReposId() + seperator;
 				break;
 			case "IS_ADMIN":
-				sql_value += " " + docAuth.getIsAdmin() + seperator;
+				sql_value += " " + obj.getIsAdmin() + seperator;
 				break;	
 			case "ACCESS":
-        		sql_value += " " + docAuth.getAccess() + seperator;
+        		sql_value += " " + obj.getAccess() + seperator;
         		break;
         	case "EDIT_EN":
-        		sql_value += " " + docAuth.getEditEn() + seperator;
+        		sql_value += " " + obj.getEditEn() + seperator;
         		break;
         	case "ADD_EN":
-        		sql_value += " " + docAuth.getAddEn() + seperator;
+        		sql_value += " " + obj.getAddEn() + seperator;
         		break;
         	case "DELETE_EN":
-        		sql_value += " " + docAuth.getDeleteEn() + seperator;
+        		sql_value += " " + obj.getDeleteEn() + seperator;
         		break;
         	case "HERITABLE":
-        		sql_value += " " + docAuth.getHeritable() + seperator;
+        		sql_value += " " + obj.getHeritable() + seperator;
         		break;
         	case "DOC_PATH":
-        		sql_value += " '" + docAuth.getDocPath() + "',";
+        		sql_value += " '" + obj.getDocPath() + "',";
         		break;
         	case "DOC_NAME":
-        		sql_value += " '" + docAuth.getDocName() + "'";
+        		sql_value += " '" + obj.getDocName() + "'";
 				break;
 			}
 		}
