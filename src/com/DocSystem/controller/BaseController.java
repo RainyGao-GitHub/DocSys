@@ -6756,8 +6756,20 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
-		// TODO Auto-generated method stub
-		return null;
+		ReposAuth obj = new ReposAuth();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setReposId( (Integer)jsonObj.get("reposId"));
+		obj.setUserId( (Integer)jsonObj.get("userId"));
+		obj.setGroupId( (Integer)jsonObj.get("groupId"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPriority( (Integer)jsonObj.get("priority"));
+		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
+		obj.setAddEn( (Integer)jsonObj.get("addEnd"));
+		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
+		obj.setEditEn( (Integer)jsonObj.get("editEn"));
+		obj.setAccess( (Integer)jsonObj.get("access"));
+		obj.setHeritable( (Integer)jsonObj.get("heritable"));
+		return obj;
 	}
 
 	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
@@ -6813,11 +6825,22 @@ public class BaseController  extends BaseFunction{
 	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
 		Doc obj = new Doc();
 		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setVid( (Integer)jsonObj.get("vid"));
-        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-        obj.setPath( (String)jsonObj.get("path"));
 		obj.setName( (String)jsonObj.get("name"));
-		return obj;
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setSize( Long.parseLong(jsonObj.get("size").toString()));
+        obj.setCheckSum((String)jsonObj.get("checkSum"));
+        obj.setRevision((String)jsonObj.get("revision"));
+        obj.setContent((String)jsonObj.get("content"));
+        obj.setPath( (String)jsonObj.get("path"));
+        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+        obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
+        obj.setVid( (Integer)jsonObj.get("vid"));
+        obj.setPwd( (String)jsonObj.get("pwd"));
+        obj.setCreator( (Integer)jsonObj.get("creator"));
+        obj.setCreateTime( Long.parseLong(jsonObj.get("createTime").toString()));
+        obj.setLatestEditor( (Integer)jsonObj.get("latestEditor"));
+        obj.setLatestEditTime( Long.parseLong(jsonObj.get("latestEditTime").toString()));
+        return obj;
 	}
 
 	protected static List<Object> queryDocAuth(DocAuth qDocAuth, int srcVersion, int dstVersion) 
