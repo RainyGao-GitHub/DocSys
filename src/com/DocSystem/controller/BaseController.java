@@ -7023,15 +7023,9 @@ public class BaseController  extends BaseFunction{
 			
 			switch(param)
 			{			
-			case "ID":
-				sql_value += " " + obj.getId() + seperator;
-				break;
-			case "GROUP_ID":
-				sql_value += " " + obj.getGroupId() + seperator;
-				break;
-			case "USER_ID":
-				sql_value += " " + obj.getUserId() + seperator;
-				break;
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "GROUP_ID": sql_value += " " + obj.getGroupId() + seperator; break;
+			case "USER_ID": sql_value += " " + obj.getUserId() + seperator; break;
 			}
 		}
         
@@ -7097,27 +7091,13 @@ public class BaseController  extends BaseFunction{
 			
 			switch(param)
 			{			
-			case "ID":
-				sql_value += " " + obj.getId() + seperator;
-				break;
-			case "NAME":
-				sql_value += " " + obj.getName() + seperator;
-				break;
-			case "TYPE":
-				sql_value += " " + obj.getType() + seperator;
-				break;
-			case "INFO":
-				sql_value += " " + obj.getInfo() + seperator;
-				break;
-			case "IMG":
-				sql_value += " " + obj.getImg() + seperator;
-				break;	
-			case "PRIORITY":
-				sql_value += " " + obj.getPriority() + seperator;
-				break;
-			case "CREATE_TIME":
-				sql_value += " " + obj.getCreateTime() + seperator;
-				break;
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
+			case "INFO": sql_value += " " + obj.getInfo() + seperator; break;
+			case "IMG": sql_value += " " + obj.getImg() + seperator; break;	
+			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
+			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
 			}
 		}
         
@@ -7171,15 +7151,9 @@ public class BaseController  extends BaseFunction{
 			
 			switch(param)
 			{			
-			case "ID":
-				sql_value += " " + obj.getId() + seperator;
-				break;
-			case "NAME":
-				sql_value += " " + obj.getName() + seperator;
-				break;
-			case "ROLE_ID":
-				sql_value += " " + obj.getRoleId() + seperator;
-				break;
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "ROLE_ID": sql_value += " " + obj.getRoleId() + seperator; break;
 			}
 		}
         
@@ -7275,57 +7249,23 @@ public class BaseController  extends BaseFunction{
 			
 			switch(param)
 			{			
-			case "ID":
-				sql_value += " " + obj.getId() + seperator;
-				break;
-			case "NAME":
-				sql_value += " " + obj.getName() + seperator;
-				break;
-			case "PWD":
-				sql_value += " " + obj.getPwd() + seperator;
-				break;
-			case "ROLE":
-				sql_value += " " + obj.getRole() + seperator;
-				break;
-			case "REAL_NAME":
-				sql_value += " " + obj.getRealName() + seperator;
-				break;
-			case "NICK_NAME":
-				sql_value += " " + obj.getNickName() + seperator;
-				break;
-			case "INTRO":
-				sql_value += " " + obj.getIntro() + seperator;
-				break;
-			case "IMG":
-				sql_value += " " + obj.getImg() + seperator;
-				break;
-			case "EMAIL":
-				sql_value += " " + obj.getEmail() + seperator;
-				break;
-			case "EMAIL_VALID":
-				sql_value += " " + obj.getEmailValid() + seperator;
-				break;
-			case "TEL":
-				sql_value += " " + obj.getTel() + seperator;
-				break;
-			case "TEL_VALID":
-				sql_value += " " + obj.getTelValid() + seperator;
-				break;
-			case "LAST_LOGIN_TIME":
-				sql_value += " " + obj.getLastLoginTime() + seperator;
-				break;
-			case "LAST_LOGIN_IP":
-				sql_value += " " + obj.getLastLoginIp() + seperator;
-				break;
-			case "LAST_LOGIN_CITY":
-				sql_value += " " + obj.getLastLoginCity() + seperator;
-				break;
-			case "CREATE_TYPE":
-				sql_value += " " + obj.getCreateType() + seperator;
-				break;				
-			case "CREATE_TIME":
-				sql_value += " " + obj.getCreateTime() + seperator;
-				break;
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "PWD": sql_value += " " + obj.getPwd() + seperator; break;
+			case "ROLE": sql_value += " " + obj.getRole() + seperator; break;
+			case "REAL_NAME": sql_value += " " + obj.getRealName() + seperator; break;
+			case "NICK_NAME": sql_value += " " + obj.getNickName() + seperator; break;
+			case "INTRO": sql_value += " " + obj.getIntro() + seperator; break;
+			case "IMG": sql_value += " " + obj.getImg() + seperator; break;
+			case "EMAIL": sql_value += " " + obj.getEmail() + seperator; break;
+			case "EMAIL_VALID": sql_value += " " + obj.getEmailValid() + seperator; break;
+			case "TEL": sql_value += " " + obj.getTel() + seperator; break;
+			case "TEL_VALID": sql_value += " " + obj.getTelValid() + seperator; break;
+			case "LAST_LOGIN_TIME": sql_value += " " + obj.getLastLoginTime() + seperator; break;
+			case "LAST_LOGIN_IP": sql_value += " " + obj.getLastLoginIp() + seperator; break;
+			case "LAST_LOGIN_CITY": sql_value += " " + obj.getLastLoginCity() + seperator; break;
+			case "CREATE_TYPE": sql_value += " " + obj.getCreateType() + seperator; break;				
+			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
 			}
 		}
         String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
@@ -7659,33 +7599,15 @@ public class BaseController  extends BaseFunction{
 			case "REVISION": sql_value += " " + obj.getRevision() + seperator; break;
 			case "CONTENT": sql_value += " " + obj.getContent() + seperator; break;
 			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
-			case "DELETE_EN": sql_value += " " + obj.getDocId() + seperator; break;
-			case "EDIT_EN": sql_value += " " + obj.getPid() + seperator; break;
-			case "ACCESS": sql_value += " " + obj.getVid() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getPwd() + seperator; break;
+			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
+			case "PID": sql_value += " " + obj.getPid() + seperator; break;
+			case "VID": sql_value += " " + obj.getVid() + seperator; break;
+			case "PWD": sql_value += " " + obj.getPwd() + seperator; break;
+			case "CREATOR": sql_value += " " + obj.getPwd() + seperator; break;
+			case "CREATE_TIME": sql_value += " " + obj.getPwd() + seperator; break;
+			case "LATEST_EDITOR": sql_value += " " + obj.getPwd() + seperator; break;
+			case "LATEST_EDIT_TIME": sql_value += " " + obj.getPwd() + seperator; break;
 			}
-			
-			if(obj.getId( ) != null) { paramList.add("ID");}
-			if(obj.getName( ) != null) { paramList.add("NAME");}
-			if(obj.getType( ) != null) { paramList.add("TYPE");}
-			if(obj.getSize( ) != null) { paramList.add("SIZE");}
-	        if(obj.getCheckSum() != null) { paramList.add("CHECK_SUM");}
-	        if(obj.getRevision() != null) { paramList.add("REVISION");}
-	        if(obj.getContent() != null) { paramList.add("CONTENT");}
-	        if(obj.getPath( ) != null) { paramList.add("PATH");}
-	        if(obj.getDocId( ) != null) { paramList.add("DOC_ID");}
-	        if(obj.getPid( ) != null) { paramList.add("PID");}
-	        if(obj.getVid( ) != null) { paramList.add("VID");}
-	        if(obj.getPwd( ) != null) { paramList.add("PWD");}
-	        if(obj.getCreator( ) != null) { paramList.add("CREATOR");}
-	        if(obj.getCreateTime( ) != null) { paramList.add("CREATE_TIME");}
-	        if(obj.getLatestEditor( ) != null) { paramList.add("LATEST_EDITOR");}
-	        if(obj.getLatestEditTime( ) != null) { paramList.add("LATEST_EDIT_TIME");}
 		}
         String sql = "insert into DOC (" + sql_condition + ")" + " values (" + sql_value + ")";
         return sql;
@@ -7715,7 +7637,7 @@ public class BaseController  extends BaseFunction{
         DocAuth obj = new DocAuth();
         obj.setId(rs.getInt("ID"));
         obj.setReposId(rs.getInt("REPOS_ID"));
-        obj.setDocId(rs.getLong("DOCSYS_DOCSYS_DOC_ID"));
+        obj.setDocId(rs.getLong("DOC_ID"));
         obj.setType(rs.getInt("TYPE"));
         obj.setPriority(rs.getInt("PRIORITY"));
         obj.setUserId(rs.getInt("USER_ID"));
@@ -7736,7 +7658,7 @@ public class BaseController  extends BaseFunction{
 		List<String> paramList = new ArrayList<String>();
         if(obj.getId() != null) { paramList.add("ID");}
         if(obj.getReposId() != null) { paramList.add("REPOS_ID");}
-        if(obj.getDocId() != null) { paramList.add("DOCSYS_DOCSYS_DOC_ID");}
+        if(obj.getDocId() != null) { paramList.add("DOC_ID");}
         if(obj.getType() != null) { paramList.add("TYPE");}
         if(obj.getPriority() != null) { paramList.add("PRIORITY");}
         if(obj.getUserId() != null) { paramList.add("USER_ID");}
@@ -7750,6 +7672,52 @@ public class BaseController  extends BaseFunction{
         if(obj.getDocPath() != null) { paramList.add("DOC_PATH");}
         if(obj.getDocName() != null) { paramList.add("DOC_NAME");}
         return paramList;
+	}
+	
+
+	private static String buildInsertSqlForDocAuth(DocAuth obj) 
+	{
+		if(obj == null)
+		{
+			return 	null;
+		}
+		
+		String sql_condition = "";
+		String sql_value="";
+		List<String> paramList = buildParamListForDocAuth(obj);
+		int lastParamIndex = paramList.size() - 1;
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = ",";
+			String param = paramList.get(i);
+			if(i == lastParamIndex)
+			{
+				seperator = "";
+			}
+			sql_condition += param + seperator;	//不带,
+			
+			switch(param)
+			{
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "USER_ID": sql_value += " " + obj.getUserId() + seperator; break;
+			case "GROUP_ID": sql_value += " " + obj.getGroupId() + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
+			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
+			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
+			case "REPOS_ID": sql_value += " " + obj.getReposId() + seperator; break;
+			case "IS_ADMIN": sql_value += " " + obj.getIsAdmin() + seperator; break;	
+			case "ACCESS": sql_value += " " + obj.getAccess() + seperator; break;
+        	case "EDIT_EN": sql_value += " " + obj.getEditEn() + seperator; break;
+        	case "ADD_EN": sql_value += " " + obj.getAddEn() + seperator; break;
+        	case "DELETE_EN": sql_value += " " + obj.getDeleteEn() + seperator; break;
+        	case "HERITABLE": sql_value += " " + obj.getHeritable() + seperator; break;
+        	case "DOC_PATH": sql_value += " '" + obj.getDocPath() + "',"; break;
+        	case "DOC_NAME": sql_value += " '" + obj.getDocName() + "'"; break;
+			}
+		}
+        
+        String sql = "insert into doc_auth (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
 	}
 	
 	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
@@ -7798,13 +7766,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	
-	private static String buildInsertSqlForDocLock(DocLock qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildInsertSqlForDocAuth(DocAuth obj) 
-	{
+	private static String buildInsertSqlForDocLock(DocLock obj) {
 		if(obj == null)
 		{
 			return 	null;
@@ -7812,7 +7774,7 @@ public class BaseController  extends BaseFunction{
 		
 		String sql_condition = "";
 		String sql_value="";
-		List<String> paramList = buildParamListForDocAuth(obj);
+		List<String> paramList = buildParamListForDocLock(obj);
 		int lastParamIndex = paramList.size() - 1;
 		for(int i=0; i < paramList.size(); i++)
 		{
@@ -7825,58 +7787,23 @@ public class BaseController  extends BaseFunction{
 			sql_condition += param + seperator;	//不带,
 			
 			switch(param)
-			{
-			case "ID":
-				sql_value += " " + obj.getId() + seperator;
-				break;
-			case "USER_ID":
-				sql_value += " " + obj.getUserId() + seperator;
-				break;
-			case "GROUP_ID":
-				sql_value += " " + obj.getGroupId() + seperator;
-				break;
-			case "TYPE":
-				sql_value += " " + obj.getType() + seperator;
-				break;
-			case "PRIORITY":
-				sql_value += " " + obj.getPriority() + seperator;
-				break;
-			case "DOC_ID":
-            	sql_value += " " + obj.getDocId() + seperator;
-            	break;
-			case "REPOS_ID":
-				sql_value += " " + obj.getReposId() + seperator;
-				break;
-			case "IS_ADMIN":
-				sql_value += " " + obj.getIsAdmin() + seperator;
-				break;	
-			case "ACCESS":
-        		sql_value += " " + obj.getAccess() + seperator;
-        		break;
-        	case "EDIT_EN":
-        		sql_value += " " + obj.getEditEn() + seperator;
-        		break;
-        	case "ADD_EN":
-        		sql_value += " " + obj.getAddEn() + seperator;
-        		break;
-        	case "DELETE_EN":
-        		sql_value += " " + obj.getDeleteEn() + seperator;
-        		break;
-        	case "HERITABLE":
-        		sql_value += " " + obj.getHeritable() + seperator;
-        		break;
-        	case "DOC_PATH":
-        		sql_value += " '" + obj.getDocPath() + "',";
-        		break;
-        	case "DOC_NAME":
-        		sql_value += " '" + obj.getDocName() + "'";
-				break;
+			{			
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
+			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
+			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
+			case "PID": sql_value += " " + obj.getPid() + seperator; break;
+			case "VID": sql_value += " " + obj.getVid() + seperator; break;
+			case "STATE": sql_value += " " + obj.getState() + seperator; break;
+			case "LOCK_BY": sql_value += " " + obj.getLockBy() + seperator; break;
+			case "LOCK_TIME": sql_value += " " + obj.getLockTime() + seperator; break;
 			}
 		}
-        
-        String sql = "insert into doc_auth (" + sql_condition + ")" + " values (" + sql_value + ")";
+        String sql = "insert into DOC_LOCK (" + sql_condition + ")" + " values (" + sql_value + ")";
         return sql;
 	}
+
 	
 	static String buildSqlConditionWithParamList(List<String> paramList)
 	{
