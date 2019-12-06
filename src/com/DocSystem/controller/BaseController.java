@@ -6559,6 +6559,61 @@ public class BaseController  extends BaseFunction{
 	protected final static int DOCSYS_GROUP_MEMBER	=8;
 	protected final static int DOCSYS_SYS_CONFIG	=9;
 	
+	private static boolean DBUpgrade(int oldVersion, int newVersion)
+	{
+		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
+		if(dbTabsNeedToUpgrade == null || dbTabsNeedToUpgrade.size() == 0)
+		{
+			System.out.println("DBUpgrade() no DB Table need to upgrade from " + oldVersion + " to " + newVersion);
+			return true;
+		}
+		
+		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
+		if(doBackupDB() == false)
+		{
+			System.out.println("DBUpgrade() 数据库备份失败!");
+			return true;
+		}
+		
+		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
+		{
+			int dbTabId = dbTabsNeedToUpgrade.get(i);
+			String jsonFilePath = getNameByObjType(dbTabId) + ".json";
+			exportObjectListToJsonFile(dbTabId, jsonFilePath, oldVersion, newVersion);
+		}
+		
+		//UPdate DataBase Structure with the DocSystem.sql
+		if(doInitDB() == false)
+		{
+			System.out.println("DBUpgrade() 数据库表结构初始化失败!");
+			return true;
+		}
+		
+		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
+		{
+			int dbTabId = dbTabsNeedToUpgrade.get(i);
+			String jsonFilePath = getNameByObjType(dbTabId) + ".json";
+			importObjectListFromJsonFile(dbTabId, jsonFilePath);
+		}
+		return false;
+	}
+	
+	//将数据库初始化为系统默认的结构，清除原有数据，并用war包中的sql文件进行初始化
+	private static boolean doInitDB() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private static boolean doBackupDB() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private static String getNameByObjType(int objType) {
 		String [] NameMap = {
 				"REPOS",
