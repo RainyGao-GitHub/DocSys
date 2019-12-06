@@ -52,9 +52,12 @@ import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.entity.Role;
+import com.DocSystem.entity.SysConfig;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
@@ -6545,8 +6548,37 @@ public class BaseController  extends BaseFunction{
     static final String DB_PASS = "";
 	
     //定义数据库的ObjType
-	final static int DOC=1;
-	protected final static int DOC_AUTH=2;
+    protected final static int DOCSYS_REPOS			=0;
+    protected final static int DOCSYS_REPOS_AUTH	=1;
+    protected final static int DOCSYS_DOC			=2;
+	protected final static int DOCSYS_DOC_AUTH		=3;
+	protected final static int DOCSYS_DOC_LOCK		=4;
+	protected final static int DOCSYS_USER			=5;
+	protected final static int DOCSYS_ROLE			=6;
+	protected final static int DOCSYS_USER_GROUP	=7;
+	protected final static int DOCSYS_GROUP_MEMBER	=8;
+	protected final static int DOCSYS_SYS_CONFIG	=9;
+	
+	private static String getNameByObjType(int objType) {
+		String [] NameMap = {
+				"REPOS",
+				"REPOS_AUTH",
+				"DOC",
+				"DOC_AUTH",
+				"DOC_LOCK",
+				"USER",
+				"ROLE",
+				"USER_GROUP",
+				"GROUP_MEMBER",
+				"SYS_CONFIG",
+		};
+		
+		if(objType < NameMap.length)
+		{
+			return NameMap[objType];
+		}
+		return null;
+	}
 	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
     //version是指当前数据库对应的软件版本
@@ -6555,7 +6587,7 @@ public class BaseController  extends BaseFunction{
 		System.out.println("exportObjectListToJsonFile() objType:" + objType + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
 
 		List<Object> list = null;
-		if(objType == DOC_AUTH)
+		if(objType == DOCSYS_DOC_AUTH)
     	{
     		list = queryDocAuth(null, srcVersion, dstVersion);
     	}
@@ -6576,7 +6608,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String name = getListNameByObjType(objType);
+		String name = getNameByObjType(objType);
 		content = "{" + name + ":" + content + "}";
 			
 		FileOutputStream out = null;
@@ -6599,29 +6631,7 @@ public class BaseController  extends BaseFunction{
 		}		
 		return true;
 	}
-	
-	private static String getListNameByObjType(int objType) {
-		switch(objType)
-		{
-		case DOC:
-			return "docList";
-		case DOC_AUTH:
-			return "docAuthList";
-		}
-		return null;
-	}
-	
-	private static String getDBTabNameByObjType(int objType) {
-		switch(objType)
-		{
-		case DOC:
-			return "DOC";
-		case DOC_AUTH:
-			return "DOC_AUTH";
-		}
-		return null;
-	}
-	
+
 	//srcVersion是指jsonFile对应的软件版本，dstVersion是指目前系统数据库对应的软件版本
 	protected static void importObjectListFromJsonFile(int objType, String filePath)
 	{
@@ -6630,7 +6640,7 @@ public class BaseController  extends BaseFunction{
 		String s = readJsonFile(filePath);
 		JSONObject jobj = JSON.parseObject(s);
 		
-		String name = getListNameByObjType(objType);
+		String name = getNameByObjType(objType);
         JSONArray list = jobj.getJSONArray(name);
 
         for (int i = 0 ; i < list.size();i++)
@@ -6648,12 +6658,136 @@ public class BaseController  extends BaseFunction{
 	private static Object buildObjectFromJsonObj(JSONObject jsonObj, int objType) {
 		switch(objType)
 		{
-		case DOC:
+		case DOCSYS_REPOS:
+			return buildReposFromJsonObj(jsonObj);
+		case DOCSYS_REPOS_AUTH:
+			return buildReposAuthFromJsonObj(jsonObj);
+		case DOCSYS_DOC:
 			return buildDocFromJsonObj(jsonObj);
-		case DOC_AUTH:
+		case DOCSYS_DOC_AUTH:
 			return buildDocAuthFromJsonObj(jsonObj);
+		case DOCSYS_DOC_LOCK:
+			return buildDocLockFromJsonObj(jsonObj);
+		case DOCSYS_USER:
+			return buildUserFromJsonObj(jsonObj);		
+		case DOCSYS_ROLE:
+			return buildRoleFromJsonObj(jsonObj);
+		case DOCSYS_USER_GROUP:
+			return buildUserGroupFromJsonObj(jsonObj);
+		case DOCSYS_GROUP_MEMBER:
+			return buildGroupMemberFromJsonObj(jsonObj);
+		case DOCSYS_SYS_CONFIG:
+			return buildSysConfigFromJsonObj(jsonObj);
 		}
 		return null;
+	}
+
+	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj) {
+		SysConfig obj = new SysConfig();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setRegEnable((Integer)jsonObj.get("regEnable"));
+		obj.setPrivateReposEnable( (Integer)jsonObj.get("privateReposEnable"));
+		return obj;
+	}
+
+	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj) {
+		GroupMember obj = new GroupMember();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setGroupId((Integer)jsonObj.get("groupId"));
+		obj.setUserId((Integer)jsonObj.get("userId"));
+		return obj;
+	}
+
+	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj) {
+		UserGroup obj = new UserGroup();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setType((Integer)jsonObj.get("type"));
+		obj.setInfo((String)jsonObj.get("info"));
+		obj.setImg((String)jsonObj.get("img"));
+		obj.setPriority((Integer)jsonObj.get("priority"));
+		obj.setCreateTime((String)jsonObj.get("createTime"));
+		return obj;
+	}
+
+	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
+		Role obj = new Role();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setRoleId((Integer)jsonObj.get("roleId"));
+		return obj;
+	}
+
+	private static Object buildUserFromJsonObj(JSONObject jsonObj) {
+		User obj = new User();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setPwd((String)jsonObj.get("pwd"));
+		obj.setRole( (Integer)jsonObj.get("role"));
+		obj.setRealName((String)jsonObj.get("realName"));
+		obj.setNickName((String)jsonObj.get("nickName"));
+		obj.setIntro((String)jsonObj.get("intro"));
+		obj.setImg((String)jsonObj.get("img"));
+		obj.setEmail((String)jsonObj.get("email"));
+		obj.setEmailValid((Integer)jsonObj.get("emailValid"));
+		obj.setTel((String)jsonObj.get("tel"));
+		obj.setTelValid((Integer)jsonObj.get("telValid"));
+		obj.setLastLoginTime((String)jsonObj.get("lastLoginTime"));
+		obj.setLastLoginIp((String)jsonObj.get("lastLoginIp"));
+		obj.setLastLoginCity((String)jsonObj.get("lastLoginCity"));
+		obj.setCreateType((Integer)jsonObj.get("createType"));
+		obj.setCreateTime((String)jsonObj.get("createTime"));
+		return obj;
+	}
+
+	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
+		DocLock obj = new DocLock();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setType((Integer)jsonObj.get("type"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setPath((String)jsonObj.get("path"));
+		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+		obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
+		obj.setVid( (Integer)jsonObj.get("vid"));
+		obj.setState((Integer)jsonObj.get("state"));
+		obj.setLockBy((Integer)jsonObj.get("lockBy"));
+		obj.setLockTime( Long.parseLong(jsonObj.get("lockTime").toString()));
+		return obj;
+	}
+
+	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
+		Repos obj = new Repos();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName( (String)jsonObj.get("name"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPath( (String)jsonObj.get("path"));
+		obj.setRealDocPath( (String)jsonObj.get("realDocPath"));
+		obj.setVerCtrl((Integer)jsonObj.get("verCtrl"));
+		obj.setIsRemote( (Integer)jsonObj.get("isRemote"));
+		obj.setLocalSvnPath( (String)jsonObj.get("localSvnPath"));
+		obj.setSvnPath( (String)jsonObj.get("svnPath"));
+		obj.setSvnUser( (String)jsonObj.get("svnUser"));		
+		obj.setSvnPwd( (String)jsonObj.get("svnPwd"));		
+		obj.setRevision( (String)jsonObj.get("revision"));		
+		obj.setVerCtrl1((Integer)jsonObj.get("verCtrl1"));
+		obj.setIsRemote1( (Integer)jsonObj.get("isRemote1"));
+		obj.setLocalSvnPath1( (String)jsonObj.get("localSvnPath1"));
+		obj.setSvnPath1( (String)jsonObj.get("svnPath1"));
+		obj.setSvnUser1( (String)jsonObj.get("svnUser1"));		
+		obj.setSvnPwd1( (String)jsonObj.get("svnPwd1"));		
+		obj.setRevision1( (String)jsonObj.get("revision1"));
+		obj.setPwd( (String)jsonObj.get("pwd"));
+		obj.setOwner( (Integer)jsonObj.get("owner"));
+		obj.setCreateTime(Long.parseLong(jsonObj.get("createTime").toString()));
+		obj.setState( (Integer) jsonObj.get("state"));
+		obj.setLockBy( (Integer)jsonObj.get("lockBy"));
+		obj.setLockTime(Long.parseLong(jsonObj.get("lockTime").toString()));
+		return obj;
 	}
 
 	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
@@ -6688,7 +6822,7 @@ public class BaseController  extends BaseFunction{
 
 	protected static List<Object> queryDocAuth(DocAuth qDocAuth, int srcVersion, int dstVersion) 
 	{
-		List<Object> docAuthList = dbQuery(qDocAuth, DOC_AUTH);
+		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH);
     	
 		if(srcVersion != dstVersion &&  srcVersion < 20000 && dstVersion >= 20000) //1.xx.xx版本的docId用的是doc的数据库ID
     	{		
@@ -6700,7 +6834,7 @@ public class BaseController  extends BaseFunction{
 	    		qDoc.setVid(docAuth.getReposId());
 	    		qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
 	    		
-	    		List<Object> docList = dbQuery(qDoc, DOC);
+	    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC);
 	    		if(docList != null && docList.size() == 1)
 	    		{
 	    			Doc doc = (Doc) docList.get(0);
@@ -6770,14 +6904,69 @@ public class BaseController  extends BaseFunction{
 	
 	
 	private static Object createObject(ResultSet rs, int objType) throws Exception {
-		
 		switch(objType)
 		{
-		case DOC_AUTH:
-			return buildDocAuthFromResultSet(rs);
-		case DOC:
+		case DOCSYS_REPOS:
+			return buildReposFromResultSet(rs);
+		case DOCSYS_REPOS_AUTH:
+			return buildReposAuthFromResultSet(rs);
+		case DOCSYS_DOC:
 			return buildDocFromResultSet(rs);
-		}		
+		case DOCSYS_DOC_AUTH:
+			return buildDocAuthFromResultSet(rs);
+		case DOCSYS_DOC_LOCK:
+			return buildDocLockFromResultSet(rs);
+		case DOCSYS_USER:
+			return buildUserFromResultSet(rs);		
+		case DOCSYS_ROLE:
+			return buildRoleFromResultSet(rs);
+		case DOCSYS_USER_GROUP:
+			return buildUserGroupFromResultSet(rs);
+		case DOCSYS_GROUP_MEMBER:
+			return buildGroupMemberFromResultSet(rs);
+		case DOCSYS_SYS_CONFIG:
+			return buildSysConfigFromResultSet(rs);
+		}
+		return null;
+	}
+
+	private static Object buildSysConfigFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildGroupMemberFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildUserGroupFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildRoleFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildUserFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildDocLockFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildReposAuthFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static Object buildReposFromResultSet(ResultSet rs) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -6785,7 +6974,7 @@ public class BaseController  extends BaseFunction{
         DocAuth obj = new DocAuth();
         obj.setId(rs.getInt("ID"));
         obj.setReposId(rs.getInt("REPOS_ID"));
-        obj.setDocId(rs.getLong("DOC_ID"));
+        obj.setDocId(rs.getLong("DOCSYS_DOCSYS_DOC_ID"));
         obj.setType(rs.getInt("TYPE"));
         obj.setPriority(rs.getInt("PRIORITY"));
         obj.setUserId(rs.getInt("USER_ID"));
@@ -6814,7 +7003,7 @@ public class BaseController  extends BaseFunction{
 
 	private static String buildQuerySql(Object qObj, int objType) 
 	{
-		String name = getDBTabNameByObjType(objType);
+		String name = getNameByObjType(objType);
 		String sql = "select * from " + name;
 		
 		if(qObj == null)
@@ -6822,16 +7011,7 @@ public class BaseController  extends BaseFunction{
 			return 	sql;
 		}
 		
-		List<String> paramList = null;
-		switch(objType)
-		{
-		case DOC:
-			paramList = buildParamListForDoc((Doc) qObj);
-			break;
-		case DOC_AUTH:
-			paramList = buildParamListForDocAuth((DocAuth) qObj);
-			break;
-		}
+		List<String> paramList = buildParamList(qObj, objType);
 		
 		if(paramList == null)
 		{
@@ -6841,66 +7021,71 @@ public class BaseController  extends BaseFunction{
 		sql += buildSqlConditionWithParamList(paramList);
         return sql;
 	}
-
-	public static boolean dbInsert(Object obj, int objType)
-	{
-		boolean ret = false;
-		Connection conn = null;
-        Statement stmt = null;
-        try{
-            // 注册 JDBC 驱动
-            Class.forName(JDBC_DRIVER);
-        
-            // 打开链接
-            //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
-        
-            // 执行查询
-            //System.out.println(" 实例化Statement对象...");
-            stmt = (Statement) conn.createStatement();
-            
-            String sql = buildInsertSqlStr(obj, objType);
-            System.out.println("sql:" + sql);
-            ret = stmt.execute(sql);
-            System.out.println("ret:" + ret);
-            // 完成后关闭
-            stmt.close();
-            conn.close();
-            return ret;
-        }catch(SQLException se){
-            // 处理 JDBC 错误
-            se.printStackTrace();
-        }catch(Exception e){
-            // 处理 Class.forName 错误
-            e.printStackTrace();
-        }finally{
-            // 关闭资源
-            try{
-                if(stmt!=null) stmt.close();
-            }catch(SQLException se2){
-            }// 什么都不做
-            try{
-                if(conn!=null) conn.close();
-            }catch(SQLException se){
-                se.printStackTrace();
-            }
-        }
-		return ret;
-	}
-
-	private static String buildInsertSqlStr(Object obj, int objType) {
-		
+	
+	private static List<String> buildParamList(Object qObj, int objType) {
 		switch(objType)
 		{
-		case DOC:
-			return buildInserSqlForDoc((Doc)obj);
-		case DOC_AUTH:
-			return buildInsertSqlForDocAuth((DocAuth) obj);
+		case DOCSYS_REPOS:
+			return buildParamListForRepos((Repos) qObj);
+		case DOCSYS_REPOS_AUTH:
+			return buildParamListForReposAuth((ReposAuth) qObj);
+		case DOCSYS_DOC:
+			return buildParamListForDoc((Doc) qObj);
+		case DOCSYS_DOC_AUTH:
+			return buildParamListForDocAuth((DocAuth) qObj);
+		case DOCSYS_DOC_LOCK:
+			return buildParamListForDocLock((DocLock)qObj);
+		case DOCSYS_USER:
+			return buildParamListForUser((User) qObj);
+		case DOCSYS_ROLE:
+			return buildParamListForRole((Role) qObj);
+		case DOCSYS_USER_GROUP:
+			return buildParamListForUserGroup((UserGroup) qObj);
+		case DOCSYS_GROUP_MEMBER:
+			return buildParamListForGroupMember((GroupMember) qObj);
+		case DOCSYS_SYS_CONFIG:
+			return buildParamListForSysConfig((SysConfig) qObj);
 		}
+		
+		return null;
+	}
+	
+	private static List<String> buildParamListForSysConfig(SysConfig qObj) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static String buildInserSqlForDoc(Doc obj) {
+	private static List<String> buildParamListForGroupMember(GroupMember qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForUserGroup(UserGroup qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForRole(Role qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForUser(User qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForDocLock(DocLock qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForReposAuth(ReposAuth qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForRepos(Repos object) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -6999,6 +7184,124 @@ public class BaseController  extends BaseFunction{
         	paramList.add("NAME");
         }
         return paramList;
+	}
+
+	public static boolean dbInsert(Object obj, int objType)
+	{
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            //System.out.println("连接数据库...");
+            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+        
+            // 执行查询
+            //System.out.println(" 实例化Statement对象...");
+            stmt = (Statement) conn.createStatement();
+            
+            String sql = buildInsertSqlStr(obj, objType);
+            System.out.println("sql:" + sql);
+            ret = stmt.execute(sql);
+            System.out.println("ret:" + ret);
+            // 完成后关闭
+            stmt.close();
+            conn.close();
+            return ret;
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
+	}
+
+	private static String buildInsertSqlStr(Object qObj, int objType) {
+		switch(objType)
+		{
+		case DOCSYS_REPOS:
+			return buildInsertSqlForRepos((Repos) qObj);
+		case DOCSYS_REPOS_AUTH:
+			return buildInsertSqlForReposAuth((ReposAuth) qObj);
+		case DOCSYS_DOC:
+			return buildInsertSqlForDoc((Doc) qObj);
+		case DOCSYS_DOC_AUTH:
+			return buildInsertSqlForDocAuth((DocAuth) qObj);
+		case DOCSYS_DOC_LOCK:
+			return buildInsertSqlForDocLock((DocLock)qObj);
+		case DOCSYS_USER:
+			return buildInsertSqlForUser((User) qObj);
+		case DOCSYS_ROLE:
+			return buildInsertSqlForRole((Role) qObj);
+		case DOCSYS_USER_GROUP:
+			return buildInsertSqlForUserGroup((UserGroup) qObj);
+		case DOCSYS_GROUP_MEMBER:
+			return buildInsertSqlForGroupMember((GroupMember) qObj);
+		case DOCSYS_SYS_CONFIG:
+			return buildInsertSqlForSysConfig((SysConfig) qObj);
+		}
+		return null;
+	}
+
+	private static String buildInsertSqlForSysConfig(SysConfig qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForGroupMember(GroupMember qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForUserGroup(UserGroup qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForRole(Role qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForUser(User qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForDocLock(DocLock qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForReposAuth(ReposAuth qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForRepos(Repos qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildInsertSqlForDoc(Doc obj) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	private static String buildInsertSqlForDocAuth(DocAuth docAuth) 
