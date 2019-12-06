@@ -6682,167 +6682,6 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj) {
-		SysConfig obj = new SysConfig();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setRegEnable((Integer)jsonObj.get("regEnable"));
-		obj.setPrivateReposEnable( (Integer)jsonObj.get("privateReposEnable"));
-		return obj;
-	}
-
-	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj) {
-		GroupMember obj = new GroupMember();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setGroupId((Integer)jsonObj.get("groupId"));
-		obj.setUserId((Integer)jsonObj.get("userId"));
-		return obj;
-	}
-
-	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj) {
-		UserGroup obj = new UserGroup();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setType((Integer)jsonObj.get("type"));
-		obj.setInfo((String)jsonObj.get("info"));
-		obj.setImg((String)jsonObj.get("img"));
-		obj.setPriority((Integer)jsonObj.get("priority"));
-		obj.setCreateTime((String)jsonObj.get("createTime"));
-		return obj;
-	}
-
-	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
-		Role obj = new Role();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setRoleId((Integer)jsonObj.get("roleId"));
-		return obj;
-	}
-
-	private static Object buildUserFromJsonObj(JSONObject jsonObj) {
-		User obj = new User();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setPwd((String)jsonObj.get("pwd"));
-		obj.setRole( (Integer)jsonObj.get("role"));
-		obj.setRealName((String)jsonObj.get("realName"));
-		obj.setNickName((String)jsonObj.get("nickName"));
-		obj.setIntro((String)jsonObj.get("intro"));
-		obj.setImg((String)jsonObj.get("img"));
-		obj.setEmail((String)jsonObj.get("email"));
-		obj.setEmailValid((Integer)jsonObj.get("emailValid"));
-		obj.setTel((String)jsonObj.get("tel"));
-		obj.setTelValid((Integer)jsonObj.get("telValid"));
-		obj.setLastLoginTime((String)jsonObj.get("lastLoginTime"));
-		obj.setLastLoginIp((String)jsonObj.get("lastLoginIp"));
-		obj.setLastLoginCity((String)jsonObj.get("lastLoginCity"));
-		obj.setCreateType((Integer)jsonObj.get("createType"));
-		obj.setCreateTime((String)jsonObj.get("createTime"));
-		return obj;
-	}
-
-	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
-		DocLock obj = new DocLock();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setType((Integer)jsonObj.get("type"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setPath((String)jsonObj.get("path"));
-		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-		obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
-		obj.setVid( (Integer)jsonObj.get("vid"));
-		obj.setState((Integer)jsonObj.get("state"));
-		obj.setLockBy((Integer)jsonObj.get("lockBy"));
-		obj.setLockTime( Long.parseLong(jsonObj.get("lockTime").toString()));
-		return obj;
-	}
-
-	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
-		ReposAuth obj = new ReposAuth();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setReposId( (Integer)jsonObj.get("reposId"));
-		obj.setUserId( (Integer)jsonObj.get("userId"));
-		obj.setGroupId( (Integer)jsonObj.get("groupId"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPriority( (Integer)jsonObj.get("priority"));
-		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
-		obj.setAddEn( (Integer)jsonObj.get("addEnd"));
-		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
-		obj.setEditEn( (Integer)jsonObj.get("editEn"));
-		obj.setAccess( (Integer)jsonObj.get("access"));
-		obj.setHeritable( (Integer)jsonObj.get("heritable"));
-		return obj;
-	}
-
-	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
-		Repos obj = new Repos();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName( (String)jsonObj.get("name"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPath( (String)jsonObj.get("path"));
-		obj.setRealDocPath( (String)jsonObj.get("realDocPath"));
-		obj.setVerCtrl((Integer)jsonObj.get("verCtrl"));
-		obj.setIsRemote( (Integer)jsonObj.get("isRemote"));
-		obj.setLocalSvnPath( (String)jsonObj.get("localSvnPath"));
-		obj.setSvnPath( (String)jsonObj.get("svnPath"));
-		obj.setSvnUser( (String)jsonObj.get("svnUser"));		
-		obj.setSvnPwd( (String)jsonObj.get("svnPwd"));		
-		obj.setRevision( (String)jsonObj.get("revision"));		
-		obj.setVerCtrl1((Integer)jsonObj.get("verCtrl1"));
-		obj.setIsRemote1( (Integer)jsonObj.get("isRemote1"));
-		obj.setLocalSvnPath1( (String)jsonObj.get("localSvnPath1"));
-		obj.setSvnPath1( (String)jsonObj.get("svnPath1"));
-		obj.setSvnUser1( (String)jsonObj.get("svnUser1"));		
-		obj.setSvnPwd1( (String)jsonObj.get("svnPwd1"));		
-		obj.setRevision1( (String)jsonObj.get("revision1"));
-		obj.setPwd( (String)jsonObj.get("pwd"));
-		obj.setOwner( (Integer)jsonObj.get("owner"));
-		obj.setCreateTime(Long.parseLong(jsonObj.get("createTime").toString()));
-		obj.setState( (Integer) jsonObj.get("state"));
-		obj.setLockBy( (Integer)jsonObj.get("lockBy"));
-		obj.setLockTime(Long.parseLong(jsonObj.get("lockTime").toString()));
-		return obj;
-	}
-
-	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
-		DocAuth obj = new DocAuth();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setReposId( (Integer)jsonObj.get("reposId"));
-		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));            	
-		obj.setUserId( (Integer)jsonObj.get("userId"));
-		obj.setGroupId( (Integer)jsonObj.get("groupId"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPriority( (Integer)jsonObj.get("priority"));
-		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
-		obj.setAddEn( (Integer)jsonObj.get("addEnd"));
-		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
-		obj.setEditEn( (Integer)jsonObj.get("editEn"));
-		obj.setAccess( (Integer)jsonObj.get("access"));
-		obj.setHeritable( (Integer)jsonObj.get("heritable"));
-		obj.setDocPath( (String)jsonObj.get("docPath"));
-		obj.setDocName( (String)jsonObj.get("docName"));
-		return obj;
-	}
-	
-	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
-		Doc obj = new Doc();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName( (String)jsonObj.get("name"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setSize( Long.parseLong(jsonObj.get("size").toString()));
-        obj.setCheckSum((String)jsonObj.get("checkSum"));
-        obj.setRevision((String)jsonObj.get("revision"));
-        obj.setContent((String)jsonObj.get("content"));
-        obj.setPath( (String)jsonObj.get("path"));
-        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-        obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
-        obj.setVid( (Integer)jsonObj.get("vid"));
-        obj.setPwd( (String)jsonObj.get("pwd"));
-        obj.setCreator( (Integer)jsonObj.get("creator"));
-        obj.setCreateTime( Long.parseLong(jsonObj.get("createTime").toString()));
-        obj.setLatestEditor( (Integer)jsonObj.get("latestEditor"));
-        obj.setLatestEditTime( Long.parseLong(jsonObj.get("latestEditTime").toString()));
-        return obj;
-	}
-
 	protected static List<Object> queryDocAuth(DocAuth qDocAuth, int srcVersion, int dstVersion) 
 	{
 		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH);
@@ -6953,77 +6792,6 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	private static Object buildSysConfigFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildGroupMemberFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildUserGroupFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildRoleFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildUserFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildDocLockFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildReposAuthFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static Object buildReposFromResultSet(ResultSet rs) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static DocAuth buildDocAuthFromResultSet(ResultSet rs) throws Exception {
-        DocAuth obj = new DocAuth();
-        obj.setId(rs.getInt("ID"));
-        obj.setReposId(rs.getInt("REPOS_ID"));
-        obj.setDocId(rs.getLong("DOCSYS_DOCSYS_DOC_ID"));
-        obj.setType(rs.getInt("TYPE"));
-        obj.setPriority(rs.getInt("PRIORITY"));
-        obj.setUserId(rs.getInt("USER_ID"));
-        obj.setGroupId(rs.getInt("GROUP_ID"));
-        obj.setIsAdmin(rs.getInt("IS_ADMIN"));
-        obj.setAccess(rs.getInt("ACCESS"));
-        obj.setEditEn(rs.getInt("EDIT_EN"));
-        obj.setAddEn(rs.getInt("ADD_EN"));
-        obj.setDeleteEn(rs.getInt("DELETE_EN"));
-        obj.setHeritable(rs.getInt("HERITABLE"));
-        obj.setDocPath(rs.getString("DOC_PATH"));
-        obj.setDocName(rs.getString("DOC_NAME"));
-		return obj;
-	}
-
-	private static Doc buildDocFromResultSet(ResultSet rs) throws Exception {
-		Doc obj = new Doc();
-        obj.setId(rs.getInt("ID"));
-        obj.setVid(rs.getInt("VID"));
-        obj.setDocId(rs.getLong("DOC_ID"));
-        obj.setType(rs.getInt("TYPE"));
-        obj.setPath(rs.getString("PATH"));
-        obj.setName(rs.getString("NAME"));
-		return obj;
-	}
-
 	private static String buildQuerySql(Object qObj, int objType) 
 	{
 		String name = getNameByObjType(objType);
@@ -7073,46 +6841,379 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private static List<String> buildParamListForSysConfig(SysConfig qObj) {
-		// TODO Auto-generated method stub
-		return null;
+
+
+	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj) {
+		SysConfig obj = new SysConfig();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setRegEnable((Integer)jsonObj.get("regEnable"));
+		obj.setPrivateReposEnable( (Integer)jsonObj.get("privateReposEnable"));
+		return obj;
+	}
+	
+	private static Object buildSysConfigFromResultSet(ResultSet rs) throws SQLException {
+		SysConfig obj = new SysConfig();
+		obj.setId( rs.getInt("ID"));
+		obj.setRegEnable(rs.getInt("REG_ENABLE"));
+		obj.setPrivateReposEnable( rs.getInt("PRIVATE_REPOS_ENABLE"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForSysConfig(SysConfig obj) {
+		List<String> paramList = new ArrayList<String>();
+		if(obj.getId() != null) { paramList.add("ID");}
+		if(obj.getRegEnable() != null) { paramList.add("REG_ENABLE");}
+		if(obj.getPrivateReposEnable() != null) { paramList.add("PRIVATE_REPOS_ENABLE");}
+		return paramList;
 	}
 
-	private static List<String> buildParamListForGroupMember(GroupMember qObj) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj) {
+		GroupMember obj = new GroupMember();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setGroupId((Integer)jsonObj.get("groupId"));
+		obj.setUserId((Integer)jsonObj.get("userId"));
+		return obj;
+	}
+	
+	private static Object buildGroupMemberFromResultSet(ResultSet rs) throws SQLException {
+		GroupMember obj = new GroupMember();
+		obj.setId( rs.getInt("ID"));
+		obj.setGroupId(rs.getInt("GROUP_ID"));
+		obj.setUserId(rs.getInt("USER_ID"));
+		return obj;
 	}
 
-	private static List<String> buildParamListForUserGroup(UserGroup qObj) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj) {
+		UserGroup obj = new UserGroup();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setType((Integer)jsonObj.get("type"));
+		obj.setInfo((String)jsonObj.get("info"));
+		obj.setImg((String)jsonObj.get("img"));
+		obj.setPriority((Integer)jsonObj.get("priority"));
+		obj.setCreateTime((String)jsonObj.get("createTime"));
+		return obj;
+	}
+	
+	private static Object buildUserGroupFromResultSet(ResultSet rs) throws SQLException {
+		UserGroup obj = new UserGroup();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setInfo( rs.getString("INFO"));
+		obj.setImg( rs.getString("IMG"));
+		obj.setPriority( rs.getInt("PRIORITY"));
+		obj.setCreateTime( rs.getString("CREATE_TIME"));
+		return obj;
 	}
 
-	private static List<String> buildParamListForRole(Role qObj) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
+		Role obj = new Role();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setRoleId((Integer)jsonObj.get("roleId"));
+		return obj;
+	}
+	
+
+	private static Object buildRoleFromResultSet(ResultSet rs) throws SQLException {
+		Role obj = new Role();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setRoleId(rs.getInt("ROLE_ID"));
+		return obj;
 	}
 
-	private static List<String> buildParamListForUser(User qObj) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Object buildUserFromJsonObj(JSONObject jsonObj) {
+		User obj = new User();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setPwd((String)jsonObj.get("pwd"));
+		obj.setRole( (Integer)jsonObj.get("role"));
+		obj.setRealName((String)jsonObj.get("realName"));
+		obj.setNickName((String)jsonObj.get("nickName"));
+		obj.setIntro((String)jsonObj.get("intro"));
+		obj.setImg((String)jsonObj.get("img"));
+		obj.setEmail((String)jsonObj.get("email"));
+		obj.setEmailValid((Integer)jsonObj.get("emailValid"));
+		obj.setTel((String)jsonObj.get("tel"));
+		obj.setTelValid((Integer)jsonObj.get("telValid"));
+		obj.setLastLoginTime((String)jsonObj.get("lastLoginTime"));
+		obj.setLastLoginIp((String)jsonObj.get("lastLoginIp"));
+		obj.setLastLoginCity((String)jsonObj.get("lastLoginCity"));
+		obj.setCreateType((Integer)jsonObj.get("createType"));
+		obj.setCreateTime((String)jsonObj.get("createTime"));
+		return obj;
+	}
+	
+	private static Object buildUserFromResultSet(ResultSet rs) throws SQLException {
+		User obj = new User();
+		obj.setId( rs.getInt("ID"));
+		obj.setName(rs.getString("NAME"));
+		obj.setPwd(rs.getString("PWD"));
+		obj.setRole( rs.getInt("ROLE"));
+		obj.setRealName(rs.getString("REAL_NAME"));
+		obj.setNickName(rs.getString("NICK_NAME"));
+		obj.setIntro(rs.getString("INTRO"));
+		obj.setImg(rs.getString("IMG"));
+		obj.setEmail(rs.getString("EMAIL"));
+		obj.setEmailValid(rs.getInt("EMAIL_VALID"));
+		obj.setTel(rs.getString("TEL"));
+		obj.setTelValid(rs.getInt("TEL_VALID"));
+		obj.setLastLoginTime(rs.getString("LAST_LOGIN_TIME"));
+		obj.setLastLoginIp(rs.getString("LAST_LOGIN_IP"));
+		obj.setLastLoginCity(rs.getString("LAST_LOGIN_CITY"));
+		obj.setCreateType(rs.getInt("CREATE_TYPE"));
+		obj.setCreateTime(rs.getString("CREATE_TIME"));
+		return obj;
 	}
 
-	private static List<String> buildParamListForDocLock(DocLock qObj) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
+		Repos obj = new Repos();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName( (String)jsonObj.get("name"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPath( (String)jsonObj.get("path"));
+		obj.setRealDocPath( (String)jsonObj.get("realDocPath"));
+		obj.setVerCtrl((Integer)jsonObj.get("verCtrl"));
+		obj.setIsRemote( (Integer)jsonObj.get("isRemote"));
+		obj.setLocalSvnPath( (String)jsonObj.get("localSvnPath"));
+		obj.setSvnPath( (String)jsonObj.get("svnPath"));
+		obj.setSvnUser( (String)jsonObj.get("svnUser"));		
+		obj.setSvnPwd( (String)jsonObj.get("svnPwd"));		
+		obj.setRevision( (String)jsonObj.get("revision"));		
+		obj.setVerCtrl1((Integer)jsonObj.get("verCtrl1"));
+		obj.setIsRemote1( (Integer)jsonObj.get("isRemote1"));
+		obj.setLocalSvnPath1( (String)jsonObj.get("localSvnPath1"));
+		obj.setSvnPath1( (String)jsonObj.get("svnPath1"));
+		obj.setSvnUser1( (String)jsonObj.get("svnUser1"));		
+		obj.setSvnPwd1( (String)jsonObj.get("svnPwd1"));		
+		obj.setRevision1( (String)jsonObj.get("revision1"));
+		obj.setPwd( (String)jsonObj.get("pwd"));
+		obj.setOwner( (Integer)jsonObj.get("owner"));
+		obj.setCreateTime(Long.parseLong(jsonObj.get("createTime").toString()));
+		obj.setState( (Integer) jsonObj.get("state"));
+		obj.setLockBy( (Integer)jsonObj.get("lockBy"));
+		obj.setLockTime(Long.parseLong(jsonObj.get("lockTime").toString()));
+		return obj;
+	}
+	
+	private static Object buildReposFromResultSet(ResultSet rs) throws SQLException {
+		Repos obj = new Repos();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setPath( rs.getString("PATH"));
+		obj.setRealDocPath( rs.getString("REAL_DOC_PATH"));
+		obj.setVerCtrl(rs.getInt("VER_CTRL"));
+		obj.setIsRemote( rs.getInt("IS_REMOTE"));
+		obj.setLocalSvnPath( rs.getString("LOCAL_SVN_PATH"));
+		obj.setSvnPath( rs.getString("SVN_PATH"));
+		obj.setSvnUser( rs.getString("SVN_USER"));		
+		obj.setSvnPwd( rs.getString("SVN_PWD"));		
+		obj.setRevision( rs.getString("REVISION"));		
+		obj.setVerCtrl1(rs.getInt("VER_CTRL1"));
+		obj.setIsRemote1( rs.getInt("IS_REMOTE1"));
+		obj.setLocalSvnPath1( rs.getString("LOCAL_SVN_PATH1"));
+		obj.setSvnPath1( rs.getString("SVN_PATH1"));
+		obj.setSvnUser1( rs.getString("SVN_USER1"));		
+		obj.setSvnPwd1( rs.getString("SVN_PWD1"));		
+		obj.setRevision1( rs.getString("REVISION1"));
+		obj.setPwd( rs.getString("PWD"));
+		obj.setOwner( rs.getInt("OWNER"));
+		obj.setCreateTime(rs.getLong("CREATE_TIME"));
+		obj.setState( rs.getInt("STATE"));
+		obj.setLockBy( rs.getInt("LOCK_BY"));
+		obj.setLockTime(rs.getLong("LOCK_TIME"));
+		return obj;
+	}
+	
+	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
+		ReposAuth obj = new ReposAuth();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setReposId( (Integer)jsonObj.get("reposId"));
+		obj.setUserId( (Integer)jsonObj.get("userId"));
+		obj.setGroupId( (Integer)jsonObj.get("groupId"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPriority( (Integer)jsonObj.get("priority"));
+		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
+		obj.setAddEn( (Integer)jsonObj.get("addEn"));
+		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
+		obj.setEditEn( (Integer)jsonObj.get("editEn"));
+		obj.setAccess( (Integer)jsonObj.get("access"));
+		obj.setHeritable( (Integer)jsonObj.get("heritable"));
+		return obj;
 	}
 
-	private static List<String> buildParamListForReposAuth(ReposAuth qObj) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Object buildReposAuthFromResultSet(ResultSet rs) throws SQLException {
+		ReposAuth obj = new ReposAuth();
+		obj.setId( rs.getInt("ID"));
+		obj.setReposId( rs.getInt("REPOS_ID"));
+		obj.setUserId( rs.getInt("USER_ID"));
+		obj.setGroupId( rs.getInt("GROUP_ID"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setPriority( rs.getInt("PRIORITY"));
+		obj.setIsAdmin( rs.getInt("IS_ADMIN"));
+		obj.setAddEn( rs.getInt("ADD_EN"));
+		obj.setDeleteEn( rs.getInt("DELETE_EN"));
+		obj.setEditEn( rs.getInt("EDIT_EN"));
+		obj.setAccess( rs.getInt("ACCESS"));
+		obj.setHeritable( rs.getInt("HERITABLE"));
+		return obj;
 	}
 
-	private static List<String> buildParamListForRepos(Repos object) {
-		// TODO Auto-generated method stub
-		return null;
+	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
+		Doc obj = new Doc();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setName( (String)jsonObj.get("name"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setSize( Long.parseLong(jsonObj.get("size").toString()));
+        obj.setCheckSum((String)jsonObj.get("checkSum"));
+        obj.setRevision((String)jsonObj.get("revision"));
+        obj.setContent((String)jsonObj.get("content"));
+        obj.setPath( (String)jsonObj.get("path"));
+        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+        obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
+        obj.setVid( (Integer)jsonObj.get("vid"));
+        obj.setPwd( (String)jsonObj.get("pwd"));
+        obj.setCreator( (Integer)jsonObj.get("creator"));
+        obj.setCreateTime( Long.parseLong(jsonObj.get("createTime").toString()));
+        obj.setLatestEditor( (Integer)jsonObj.get("latestEditor"));
+        obj.setLatestEditTime( Long.parseLong(jsonObj.get("latestEditTime").toString()));
+        return obj;
+	}
+	
+	private static Doc buildDocFromResultSet(ResultSet rs) throws Exception {
+		Doc obj = new Doc();
+		obj.setId( rs.getInt("ID"));
+		obj.setName( rs.getString("NAME"));
+		obj.setType( rs.getInt("TYPE"));
+		obj.setSize( rs.getLong("SIZE"));
+        obj.setCheckSum(rs.getString("CHECK_SUM"));
+        obj.setRevision(rs.getString("REVISION"));
+        obj.setContent(rs.getString("CONTENT"));
+        obj.setPath( rs.getString("PATH"));
+        obj.setDocId( rs.getLong("DOC_ID"));
+        obj.setPid( rs.getLong("PID"));
+        obj.setVid( rs.getInt("VID"));
+        obj.setPwd( rs.getString("PWD"));
+        obj.setCreator( rs.getInt("CREATOR"));
+        obj.setCreateTime( rs.getLong("CREATE_TIME"));
+        obj.setLatestEditor( rs.getInt("LATEST_EDITOR"));
+        obj.setLatestEditTime( rs.getLong("LATEST_EDIT_TIME"));
+        return obj;        
+	}
+	
+	private static List<String> buildParamListForDoc(Doc qDoc) {
+		List<String> paramList = new ArrayList<String>();
+        if(qDoc.getId() != null)
+        {	
+        	paramList.add("ID");
+        }
+        if(qDoc.getName() != null)
+        {
+        	paramList.add("NAME");
+        }
+        if(qDoc.getType() != null)
+        {
+        	paramList.add("TYPE");
+        }
+        if(qDoc.getSize() != null)
+        {
+        	paramList.add("SIZE");
+        }
+        if(qDoc.getCheckSum() != null)
+        {
+        	paramList.add("CHECK_SUM");
+        }        
+        if(qDoc.getRevision() != null)
+        {
+        	paramList.add("REVISION");
+        }        
+        if(qDoc.getContent() != null)
+        {
+        	paramList.add("setContent");
+        }        
+        if(qDoc.getPath() != null)
+        {
+        	paramList.add("PATH");
+        }        
+        if(qDoc.getDocId() != null)
+        {
+        	paramList.add("DOC_ID");
+        }
+        if(qDoc.getPid() != null)
+        {
+        	paramList.add("PID");
+        }
+        if(qDoc.getVid() != null)
+        {
+        	paramList.add("VID");
+        }
+        if(qDoc.getPwd() != null)
+        {
+        	paramList.add("PWD");
+        }
+        if(qDoc.getCreator() != null)
+        {
+        	paramList.add("CREATOR");
+        }        
+        if(qDoc.getCreateTime() != null)
+        {
+        	paramList.add("CREATE_TIME");
+        }        
+        if(qDoc.getLatestEditor() != null)
+        {
+        	paramList.add("LATEST_EDITOR");
+        }
+        if(qDoc.getLatestEditTime() != null)
+        {
+        	paramList.add("LATEST_EDIT_TIME");
+        }
+        return paramList;
 	}
 
+	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
+		DocAuth obj = new DocAuth();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setReposId( (Integer)jsonObj.get("reposId"));
+		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));            	
+		obj.setUserId( (Integer)jsonObj.get("userId"));
+		obj.setGroupId( (Integer)jsonObj.get("groupId"));
+		obj.setType( (Integer)jsonObj.get("type"));
+		obj.setPriority( (Integer)jsonObj.get("priority"));
+		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
+		obj.setAddEn( (Integer)jsonObj.get("addEn"));
+		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
+		obj.setEditEn( (Integer)jsonObj.get("editEn"));
+		obj.setAccess( (Integer)jsonObj.get("access"));
+		obj.setHeritable( (Integer)jsonObj.get("heritable"));
+		obj.setDocPath( (String)jsonObj.get("docPath"));
+		obj.setDocName( (String)jsonObj.get("docName"));
+		return obj;
+	}
+
+	private static DocAuth buildDocAuthFromResultSet(ResultSet rs) throws Exception {
+        DocAuth obj = new DocAuth();
+        obj.setId(rs.getInt("ID"));
+        obj.setReposId(rs.getInt("REPOS_ID"));
+        obj.setDocId(rs.getLong("DOCSYS_DOCSYS_DOC_ID"));
+        obj.setType(rs.getInt("TYPE"));
+        obj.setPriority(rs.getInt("PRIORITY"));
+        obj.setUserId(rs.getInt("USER_ID"));
+        obj.setGroupId(rs.getInt("GROUP_ID"));
+        obj.setIsAdmin(rs.getInt("IS_ADMIN"));
+        obj.setAccess(rs.getInt("ACCESS"));
+        obj.setEditEn(rs.getInt("EDIT_EN"));
+        obj.setAddEn(rs.getInt("ADD_EN"));
+        obj.setDeleteEn(rs.getInt("DELETE_EN"));
+        obj.setHeritable(rs.getInt("HERITABLE"));
+        obj.setDocPath(rs.getString("DOC_PATH"));
+        obj.setDocName(rs.getString("DOC_NAME"));
+		return obj;
+	}
+	
 	private static List<String> buildParamListForDocAuth(DocAuth docAuth) 
 	{
 		List<String> paramList = new ArrayList<String>();
@@ -7180,34 +7281,72 @@ public class BaseController  extends BaseFunction{
         return paramList;
 	}
 	
-	private static List<String> buildParamListForDoc(Doc qDoc) {
-		List<String> paramList = new ArrayList<String>();
-        if(qDoc.getId() != null)
-        {	
-        	paramList.add("ID");
-        }
-        if(qDoc.getType() != null)
-        {
-        	paramList.add("TYPE");
-        }
-        if(qDoc.getDocId() != null)
-        {
-        	paramList.add("DOC_ID");
-        }
-        if(qDoc.getVid() != null)
-        {
-        	paramList.add("VID");
-        }
-        if(qDoc.getPath() != null)
-        {
-        	paramList.add("PATH");
-        }
-        if(qDoc.getName() != null)
-        {
-        	paramList.add("NAME");
-        }
-        return paramList;
+	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
+		DocLock obj = new DocLock();
+		obj.setId( (Integer)jsonObj.get("id"));
+		obj.setType((Integer)jsonObj.get("type"));
+		obj.setName((String)jsonObj.get("name"));
+		obj.setPath((String)jsonObj.get("path"));
+		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
+		obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
+		obj.setVid( (Integer)jsonObj.get("vid"));
+		obj.setState((Integer)jsonObj.get("state"));
+		obj.setLockBy((Integer)jsonObj.get("lockBy"));
+		obj.setLockTime( Long.parseLong(jsonObj.get("lockTime").toString()));
+		return obj;
 	}
+	
+	private static Object buildDocLockFromResultSet(ResultSet rs) throws SQLException {
+		DocLock obj = new DocLock();
+		obj.setId( rs.getInt("ID"));
+		obj.setType(rs.getInt("TYPE"));
+		obj.setName(rs.getString("NAME"));
+		obj.setPath(rs.getString("PATH"));
+		obj.setDocId( rs.getLong("DOC_ID"));
+		obj.setPid( rs.getLong("PID"));
+		obj.setVid( rs.getInt("VID"));
+		obj.setState(rs.getInt("STATE"));
+		obj.setLockBy(rs.getInt("LOCK_BY"));
+		obj.setLockTime( rs.getLong("LOCK_TIME"));
+		return obj;
+	}
+	
+	private static List<String> buildParamListForGroupMember(GroupMember qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForUserGroup(UserGroup qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForRole(Role qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForUser(User qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForDocLock(DocLock qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForReposAuth(ReposAuth qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static List<String> buildParamListForRepos(Repos object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 
 	public static boolean dbInsert(Object obj, int objType)
 	{
