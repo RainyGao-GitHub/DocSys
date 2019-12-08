@@ -34,8 +34,8 @@
         <property name="maxStatements" value="0" />  
         <property name="initialPoolSize" value="2" />  
         <property name="idleConnectionTestPeriod" value="1800" />  
-        <property name="acquireRetryAttempts" value="30" />  
-        <property name="breakAfterAcquireFailure" value="true" />  
+        <property name="acquireRetryAttempts" value="2" />  
+        <property name="breakAfterAcquireFailure" value="false" />  
         <property name="testConnectionOnCheckout" value="false" />  
     </bean>  
       
