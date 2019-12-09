@@ -6618,6 +6618,22 @@ public class BaseController  extends BaseFunction{
 
 	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
 		// TODO Auto-generated method stub
+		if(oldVersion == null || oldVersion == 0)	//这是全新安装
+		{
+			//检查docsystem数据库是否存在
+			//已存在返回true
+			//不存在则尝试新建docsystem数据库
+			//失败返回false
+			//成功则尝试导入初始sql文件(docSys.ini/config/docsystem.sql不存在则使用war包下的sql文件初始化)
+			//初始化失败返回false
+			//返回true
+		}
+		
+		//升级操作
+		//备份数据库
+		//导出json
+		//导入数据库结构
+		//导入json
 		return false;
 	}
 
