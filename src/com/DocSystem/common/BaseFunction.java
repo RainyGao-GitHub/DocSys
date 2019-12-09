@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import javax.servlet.ServletContextEvent;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -675,8 +676,18 @@ public class BaseFunction{
         System.out.println("getWebUserTmpPath() webUserTmpPath:" + webUserTmpPath);
 		return webUserTmpPath;
 	}
+
+	//WebPath was 
+	protected String getWebAppPath() {
+		String webPath = getWebPath();
+        webPath = localDirPathFormat(webPath);
+        String webParentPath = webPath + "../";
+        System.out.println("getWebAppPath() webParentPath:" + webParentPath);
+		return webPath;
+	}
+
 	
-	//WebTmPath was 
+	//WebPath was 
 	protected String getWebPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         

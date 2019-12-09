@@ -6560,20 +6560,22 @@ public class BaseController  extends BaseFunction{
 	protected final static int DOCSYS_SYS_CONFIG	=9;
 	
 	protected void docSysInit() {
-		// TODO Auto-generated method stub
-		if(isDocSysInitNeeded() == false)
+		
+		String webPath = getWebPath();
+		if(isFileExist( webPath + "../docSys.ini") == false)
 		{
 			return;
 		}
 		
-		Integer newVersion = getVersionFromFile("");
-		Integer version = getVersionFromFile("");
+		String docSysIniDirPath = webPath + "../docSys.ini/";
+		Integer newVersion = getVersionFromFile(docSysIniDirPath, "newVersion");
+		Integer version = getVersionFromFile(webPath, "version");
 		if(newVersion == null || version == null || version != newVersion)
 		{
 			return;
 		}
 			
-		Integer oldVersion = getVersionFromFile("");
+		Integer oldVersion = getVersionFromFile(docSysIniDirPath , "oldVersion");
 
 		//State = 1; //war update failed
 		//检查数据库是否存在或是否需要升级
@@ -6617,21 +6619,58 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private Integer getVersionFromFile(String string) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	private Integer getVersionFromFile(String path, String name) 
+	{
+		String versionStr = readDocContentFromFile(path, name, false);
+		System.out.println("getVersionFromFile() versionStr:" + versionStr);
 
-	private boolean isDocSysInitNeeded() {
-		// TODO Auto-generated method stub
-		String tomcatPath = getWebPath();
-		String dosSysIniDirPath = tomcatPath + "docSys.ini";
-		File dir = new File(dosSysIniDirPath);
-		if(dir.exists())
+		if(versionStr == null || versionStr.isEmpty())
 		{
-			return true;
+			return null;
 		}
-		return false;
+		
+		int version = 0;
+		String [] versions = versionStr.split(".");
+		for(int i=0; i< versions.length; i++)
+		{
+			//xx.xx.xx超过3级的忽略
+			if(i > 2)
+			{
+				break;
+			}
+			
+			String tmp = versions[i];
+			System.out.println("getVersionFromFile() tmp:" + tmp);
+
+			if(tmp.isEmpty())
+			{
+				//非法版本号
+				return null;
+			}
+			
+			int tmpVersion = Integer.parseInt(tmp);
+			System.out.println("getVersionFromFile() tmpVersion:" + tmpVersion);
+			if(tmpVersion > 99)
+			{
+				//非法版本号
+				return null;
+			}
+			
+			if(i == 0)
+			{
+				tmpVersion = tmpVersion*10000;
+			}
+			else if(i == 1)
+			{
+				tmpVersion = tmpVersion*100;				
+			}
+			System.out.println("getVersionFromFile() tmpVersion:" + tmpVersion);
+			
+			version += tmpVersion;
+		}
+		
+		System.out.println("getVersionFromFile() version:" + version);
+		return version;
 	}
 
 	private static boolean DBUpgrade(int oldVersion, int newVersion)
