@@ -6566,10 +6566,12 @@ public class BaseController  extends BaseFunction{
 		{
 			return;
 		}
+
+		//get the version info in war
+		Integer version = getVersionFromFile(webPath, "version");
 		
 		String docSysIniDirPath = webPath + "../docSys.ini/";
 		Integer newVersion = getVersionFromFile(docSysIniDirPath, "newVersion");
-		Integer version = getVersionFromFile(webPath, "version");
 		if(newVersion == null || version == null || version != newVersion)
 		{
 			return;
@@ -6631,7 +6633,9 @@ public class BaseController  extends BaseFunction{
 		
 		int version = 0;
 		String [] versions = versionStr.split(".");
-		for(int i=0; i< versions.length; i++)
+		System.out.println("getVersionFromFile() versions.length:" + versions.length); 
+		
+		for(int i=0; i<versions.length; i++)
 		{
 			//xx.xx.xx超过3级的忽略
 			if(i > 2)
