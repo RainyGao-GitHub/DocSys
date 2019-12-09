@@ -6559,6 +6559,26 @@ public class BaseController  extends BaseFunction{
 	protected final static int DOCSYS_GROUP_MEMBER	=8;
 	protected final static int DOCSYS_SYS_CONFIG	=9;
 	
+	protected void docSysInit() {
+		// TODO Auto-generated method stub
+		if(isDocSysInitNeeded() == false)
+		{
+			return;
+		}
+	}
+	
+	private boolean isDocSysInitNeeded() {
+		// TODO Auto-generated method stub
+		String tomcatPath = getWebPath();
+		String dosSysIniDirPath = tomcatPath + "docSys.ini";
+		File dir = new File(dosSysIniDirPath);
+		if(dir.exists())
+		{
+			return true;
+		}
+		return false;
+	}
+
 	private static boolean DBUpgrade(int oldVersion, int newVersion)
 	{
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);

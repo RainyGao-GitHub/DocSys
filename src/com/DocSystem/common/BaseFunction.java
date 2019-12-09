@@ -676,6 +676,16 @@ public class BaseFunction{
 		return webUserTmpPath;
 	}
 	
+	//WebTmPath was 
+	protected String getWebPath() {
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        
+        String webPath =  wac.getServletContext().getRealPath("/");
+        webPath = localDirPathFormat(webPath);
+        System.out.println("getWebPath() webPath:" + webPath);
+		return webPath;
+	}
+	
 	//WebTmpPath was 
 	protected String getWebTmpPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
