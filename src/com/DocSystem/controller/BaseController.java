@@ -6565,8 +6565,63 @@ public class BaseController  extends BaseFunction{
 		{
 			return;
 		}
+		
+		Integer newVersion = getVersionFromFile("");
+		Integer version = getVersionFromFile("");
+		if(newVersion == null || version == null || version != newVersion)
+		{
+			return;
+		}
+			
+		Integer oldVersion = getVersionFromFile("");
+
+		//State = 1; //war update failed
+		//检查数据库是否存在或是否需要升级
+		if(checkAndUpdateDB(oldVersion, newVersion) == false)
+		{
+			//To Make sure system will always jump to install page, to make user can set the DB
+			//error=true
+			return;
+		}
+
+		//State = 2; //war update failed
+		//根据config是否存在决定是否需要更新War包
+		if(checkAndUpdateWar() == false)
+		{
+			//error=true
+			return;
+		}
+		
+		//State = 3; //war copy failed
+		if(doCopyWar() == false)
+		{
+			//error=true
+			return;
+		}
+		
+		return;
 	}
 	
+	private boolean checkAndUpdateWar() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean doCopyWar() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private Integer getVersionFromFile(String string) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	private boolean isDocSysInitNeeded() {
 		// TODO Auto-generated method stub
 		String tomcatPath = getWebPath();
