@@ -6579,6 +6579,9 @@ public class BaseController  extends BaseFunction{
 			
 		Integer oldVersion = getVersionFromFile(docSysIniDirPath , "oldVersion");
 
+		//SET DB Info
+		getAndSetDBInfo(docSysIniDirPath, webPath);
+		
 		//State = 1; //war update failed
 		//检查数据库是否存在或是否需要升级
 		if(checkAndUpdateDB(oldVersion, newVersion) == false)
@@ -6634,6 +6637,28 @@ public class BaseController  extends BaseFunction{
 		//导出json
 		//导入数据库结构
 		//导入json
+		return false;
+	}
+
+	private boolean getAndSetDBInfo(String docSysIniDirPath, String webPath) {
+		// TODO Auto-generated method stub
+		String userJDBCSettingPath = docSysIniDirPath + "config/jdbc.properity";
+		if(isFileExist(userJDBCSettingPath) == true)
+		{
+			return getAndSetDBInfoFromFile(userJDBCSettingPath);
+		}
+		
+		String defaultJDBCSettingPath = docSysIniDirPath + "config/jdbc.properity";
+		if(isFileExist(defaultJDBCSettingPath) == false)
+		{
+			return false;
+		}
+		
+		return getAndSetDBInfoFromFile(defaultJDBCSettingPath);
+	}
+
+	private boolean getAndSetDBInfoFromFile(String defaultJDBCSettingPath) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
