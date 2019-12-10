@@ -4819,7 +4819,7 @@ public class BaseController  extends BaseFunction{
 				rt.setError("您无权访问该目录，请联系管理员");
 				return false;
 			}
-			else if(docUserAuth.getAddEn() != 1)
+			else if(docUserAuth.getAddEn() == null || docUserAuth.getAddEn() != 1)
 			{
 				rt.setError("您没有该目录的新增权限，请联系管理员");
 				return false;				
@@ -4843,7 +4843,7 @@ public class BaseController  extends BaseFunction{
 				rt.setError("您无权访问该目录，请联系管理员");
 				return false;
 			}
-			else if(docUserAuth.getDeleteEn() != 1)
+			else if(docUserAuth.getDeleteEn() == null || docUserAuth.getDeleteEn() != 1)
 			{
 				rt.setError("您没有该目录的删除权限，请联系管理员");
 				return false;				
@@ -4867,7 +4867,7 @@ public class BaseController  extends BaseFunction{
 				rt.setError("您无权访问该文件，请联系管理员");
 				return false;
 			}
-			else if(docUserAuth.getEditEn() != 1)
+			else if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
 			{
 				rt.setError("您没有该文件的编辑权限，请联系管理员");
 				return false;				
