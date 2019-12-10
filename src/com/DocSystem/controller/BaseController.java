@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 
+import util.ReadProperties;
 import util.ReturnAjax;
 
 import com.DocSystem.common.BaseFunction;
@@ -6543,9 +6544,9 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************DocSys数据库导出导出接口 *********************************/
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-    static final String DB_URL = "jdbc:mysql://localhost:3306/docsystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-    static final String DB_USER = "root";
-    static final String DB_PASS = "";
+    static String DB_URL = "jdbc:mysql://localhost:3306/docsystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+    static String DB_USER = "root";
+    static String DB_PASS = "";
 	
     //定义数据库的ObjType
     protected final static int DOCSYS_REPOS			=0;
@@ -6657,9 +6658,27 @@ public class BaseController  extends BaseFunction{
 		return getAndSetDBInfoFromFile(defaultJDBCSettingPath);
 	}
 
-	private boolean getAndSetDBInfoFromFile(String defaultJDBCSettingPath) {
-		// TODO Auto-generated method stub
-		return false;
+	private boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
+		String jdbcUrl = ReadProperties.read(JDBCSettingPath, "url");
+		if(jdbcUrl == null || "".equals(jdbcUrl))
+		{
+			return false;
+		}
+		DB_URL = jdbcUrl;
+		
+		String jdbcUser = ReadProperties.read(JDBCSettingPath, "user");
+		if(jdbcUser != null)
+		{
+			DB_USER = jdbcUser;
+		}
+		
+		String jdbcPwd = ReadProperties.read(JDBCSettingPath, "pwd");
+		if(jdbcPwd != null)
+		{
+			DB_PASS = jdbcPwd;
+		}
+		System.out.println("getAndSetDBInfoFromFile DB_URL:" + DB_URL + " DB_USER:" + DB_USER + " DB_PASS:" + DB_PASS);
+		return true;
 	}
 
 	private Integer getVersionFromFile(String path, String name) 
