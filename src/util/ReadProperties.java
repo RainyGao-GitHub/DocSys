@@ -21,17 +21,21 @@ import java.util.Properties;
 public class ReadProperties {
 
 	public static String read(String fileName, String key){
+		String basePath = new ReadProperties().getClass().getClassLoader().getResource("/").getPath();
+		String filePath = basePath+fileName;
+		return getValue(filePath, key);
+	}
+	
+	public static String getValue(String filePath, String key){
 		try {
 			Properties props = new Properties();
-			String basePath = new ReadProperties().getClass().getClassLoader().getResource("/").getPath();
-			File config = new File(basePath+fileName);
+			File config = new File(filePath);
 			InputStream in = new FileInputStream(config);
 			props.load(in);
 			return (String) props.get(key);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return "";
-		}
-		
+			return null;
+		}		
 	}
 }

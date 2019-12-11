@@ -6661,20 +6661,20 @@ public class BaseController  extends BaseFunction{
 	private boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
 
-		String jdbcUrl = ReadProperties.read(JDBCSettingPath, "db.url");
+		String jdbcUrl = ReadProperties.getValue(JDBCSettingPath, "db.url");
 		if(jdbcUrl == null || "".equals(jdbcUrl))
 		{
 			return false;
 		}
 		DB_URL = jdbcUrl;
 		
-		String jdbcUser = ReadProperties.read(JDBCSettingPath, "db.username");
+		String jdbcUser = ReadProperties.getValue(JDBCSettingPath, "db.username");
 		if(jdbcUser != null)
 		{
 			DB_USER = jdbcUser;
 		}
 		
-		String jdbcPwd = ReadProperties.read(JDBCSettingPath, "db.password");
+		String jdbcPwd = ReadProperties.getValue(JDBCSettingPath, "db.password");
 		if(jdbcPwd != null)
 		{
 			DB_PASS = jdbcPwd;
