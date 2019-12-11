@@ -7235,7 +7235,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildQuerySql(qObj, objType);
+            String sql = buildQuerySqlStr(qObj, objType);
     		System.out.println("dbQuery() sql:" + sql);
 
             ResultSet rs = stmt.executeQuery(sql);
@@ -7298,27 +7298,6 @@ public class BaseController  extends BaseFunction{
 			return buildSysConfigFromResultSet(rs);
 		}
 		return null;
-	}
-
-	private static String buildQuerySql(Object qObj, int objType) 
-	{
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(qObj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(qObj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		sql += buildSqlConditionWithParamList(paramList);
-        return sql;
 	}
 	
 	private static List<String> buildParamList(Object qObj, int objType) {
@@ -7393,6 +7372,34 @@ public class BaseController  extends BaseFunction{
             }
         }
 		return ret;
+	}
+
+	private static String buildQuerySqlStr(Object qObj, int objType) 
+	{
+		switch(objType)
+		{
+		case DOCSYS_REPOS:
+			return buildQuerySqlForRepos((Repos) qObj);
+		case DOCSYS_REPOS_AUTH:
+			return buildQuerySqlForReposAuth((ReposAuth) qObj);
+		case DOCSYS_DOC:
+			return buildQuerySqlForDoc((Doc) qObj);
+		case DOCSYS_DOC_AUTH:
+			return buildQuerySqlForDocAuth((DocAuth) qObj);
+		case DOCSYS_DOC_LOCK:
+			return buildQuerySqlForDocLock((DocLock)qObj);
+		case DOCSYS_USER:
+			return buildQuerySqlForUser((User) qObj);
+		case DOCSYS_ROLE:
+			return buildQuerySqlForRole((Role) qObj);
+		case DOCSYS_USER_GROUP:
+			return buildQuerySqlForUserGroup((UserGroup) qObj);
+		case DOCSYS_GROUP_MEMBER:
+			return buildQuerySqlForGroupMember((GroupMember) qObj);
+		case DOCSYS_SYS_CONFIG:
+			return buildQuerySqlForSysConfig((SysConfig) qObj);
+		}
+		return null;
 	}
 
 	private static String buildInsertSqlStr(Object qObj, int objType) {
@@ -7923,6 +7930,113 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 	
+	private static String buildQuerySqlForRepos(Repos obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
+			case "NAME": sql_value += seperator + param + "="  + obj.getName() ; break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType() ; break;
+			case "PATH": sql_value += seperator + param + "="  + obj.getPath() ; break;
+			case "REAL_DOC_PATH": sql_value += seperator + param + "="  + obj.getRealDocPath() ; break;
+			case "VER_CTRL": sql_value += seperator + param + "="  + obj.getVerCtrl() ; break;
+			case "IS_REMOTE": sql_value += seperator + param + "="  + obj.getIsRemote() ; break;
+			case "LOCAL_SVN_PATH": sql_value += seperator + param + "="  + obj.getLocalSvnPath() ; break;
+			case "SVN_PATH": sql_value += seperator + param + "="  + obj.getSvnPath() ; break;
+			case "SVN_USER": sql_value += seperator + param + "="  + obj.getSvnUser() ; break;
+			case "SVN_PWD": sql_value += seperator + param + "="  + obj.getSvnPwd() ; break;
+			case "REVISION": sql_value += seperator + param + "="  + obj.getRevision() ; break;
+			case "VER_CTRL1": sql_value += seperator + param + "="  + obj.getVerCtrl1() ; break;
+			case "IS_REMOTE1": sql_value += seperator + param + "="  + obj.getIsRemote1() ; break;
+			case "LOCAL_SVN_PATH1": sql_value += seperator + param + "="  + obj.getLocalSvnPath1() ; break;
+			case "SVN_PATH1": sql_value += seperator + param + "="  + obj.getSvnPath1() ; break;
+			case "SVN_USER1": sql_value += seperator + param + "="  + obj.getSvnUser1() ; break;
+			case "SVN_PWD1": sql_value += seperator + param + "="  + obj.getSvnPwd1() ; break;
+			case "REVISION1": sql_value += seperator + param + "="  + obj.getRevision1() ; break;
+			case "PWD": sql_value += seperator + param + "="  + obj.getPwd() ; break;
+			case "OWNER": sql_value += seperator + param + "="  + obj.getOwner() ; break;
+			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime() ; break;
+			case "STATE": sql_value += seperator + param + "="  + obj.getState() ; break;
+			case "LOCK_BY": sql_value += seperator + param + "="  + obj.getLockBy() ; break;
+			case "LOCK_TIME": sql_value += seperator + param + "="  + obj.getLockTime() ; break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
+        return sql;
+	}
+	
+	private static String buildQuerySqlForSysConfig(SysConfig qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForGroupMember(GroupMember qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForUserGroup(UserGroup qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForRole(Role qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForUser(User qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForDocLock(DocLock qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForDocAuth(DocAuth qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForDoc(Doc qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private static String buildQuerySqlForReposAuth(ReposAuth qObj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	
 	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
 		ReposAuth obj = new ReposAuth();
 		obj.setId( (Integer)jsonObj.get("id"));
@@ -8320,7 +8434,7 @@ public class BaseController  extends BaseFunction{
 			return "";
 		}
 		
-		String sql_condition = "where ";
+		String sql_condition = " where ";
 		//int lastParamIndex = paramList.size() - 1;
 		for(int i=0; i< paramList.size(); i++)
 		{
