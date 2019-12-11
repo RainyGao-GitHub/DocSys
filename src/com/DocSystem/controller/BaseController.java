@@ -6618,12 +6618,33 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean checkAndUpdateWar() {
 		// TODO Auto-generated method stub
+		if(isFileExist(docSysIniPath + "config") == false)
+		{
+			//no need to update the war
+			return true;
+		}
+		
+		//Copy DocSystem
+		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", true) == false)
+		{
+			return false;
+		}
+		
+		if(copyDir(docSysIniPath + "config", docSysIniPath + "DocSystem/WEB-INF/classes", true) == false)
+		{
+			return false;
+		}	
+		
+		//zip to war
+		if(doCompressDir(docSysIniPath, "DocSystem", docSysIniPath, "DocSystem.war", null) == false)
+		{
+			return false;
+		}		
 		return false;
 	}
 
 	private boolean doCopyWar() {
-		// TODO Auto-generated method stub
-		return false;
+		return copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true);
 	}
 
 	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
