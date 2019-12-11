@@ -6573,7 +6573,7 @@ public class BaseController  extends BaseFunction{
 		
 		String docSysIniDirPath = webPath + "../docSys.ini/";
 		Integer newVersion = getVersionFromFile(docSysIniDirPath, "newVersion");
-		if(newVersion == null || version == null || version != newVersion)
+		if(newVersion == null || version == null || !version.equals(newVersion))
 		{
 			return;
 		}
@@ -6642,37 +6642,39 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean getAndSetDBInfo(String docSysIniDirPath, String webPath) {
-		// TODO Auto-generated method stub
-		String userJDBCSettingPath = docSysIniDirPath + "config/jdbc.properity";
-		if(isFileExist(userJDBCSettingPath) == true)
+		System.out.println("getAndSetDBInfo docSysIniDirPath:" + docSysIniDirPath + " webPath:" + webPath);
+		
+		String userJDBCSettingPath = docSysIniDirPath + "config/jdbc.properties";
+		if(isFileExist(userJDBCSettingPath))
 		{
 			return getAndSetDBInfoFromFile(userJDBCSettingPath);
 		}
 		
-		String defaultJDBCSettingPath = webPath + "WEB-INF/classes/jdbc.properity";
-		if(isFileExist(defaultJDBCSettingPath) == false)
+		String defaultJDBCSettingPath = webPath + "WEB-INF/classes/jdbc.properties";
+		if(isFileExist(defaultJDBCSettingPath))
 		{
-			return false;
+			return getAndSetDBInfoFromFile(defaultJDBCSettingPath);
 		}
-		
-		return getAndSetDBInfoFromFile(defaultJDBCSettingPath);
+		return false;
 	}
 
 	private boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
-		String jdbcUrl = ReadProperties.read(JDBCSettingPath, "url");
+		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
+
+		String jdbcUrl = ReadProperties.read(JDBCSettingPath, "db.url");
 		if(jdbcUrl == null || "".equals(jdbcUrl))
 		{
 			return false;
 		}
 		DB_URL = jdbcUrl;
 		
-		String jdbcUser = ReadProperties.read(JDBCSettingPath, "user");
+		String jdbcUser = ReadProperties.read(JDBCSettingPath, "db.username");
 		if(jdbcUser != null)
 		{
 			DB_USER = jdbcUser;
 		}
 		
-		String jdbcPwd = ReadProperties.read(JDBCSettingPath, "pwd");
+		String jdbcPwd = ReadProperties.read(JDBCSettingPath, "db.password");
 		if(jdbcPwd != null)
 		{
 			DB_PASS = jdbcPwd;
@@ -6693,7 +6695,7 @@ public class BaseController  extends BaseFunction{
 		
 		int version = 0;
 		String [] versions = versionStr.split("\\."); //.需要转义
-		System.out.println("getVersionFromFile() versions.length:" + versions.length); 
+		//System.out.println("getVersionFromFile() versions.length:" + versions.length); 
 		
 		for(int i=0; i<versions.length; i++)
 		{
@@ -6704,7 +6706,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			String tmp = versions[i];
-			System.out.println("getVersionFromFile() tmp:" + tmp);
+			//System.out.println("getVersionFromFile() tmp:" + tmp);
 
 			if(tmp.isEmpty())
 			{
@@ -6713,7 +6715,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			int tmpVersion = Integer.parseInt(tmp);
-			System.out.println("getVersionFromFile() tmpVersion:" + tmpVersion);
+			//System.out.println("getVersionFromFile() tmpVersion:" + tmpVersion);
 			if(tmpVersion > 99)
 			{
 				//非法版本号
@@ -6728,7 +6730,7 @@ public class BaseController  extends BaseFunction{
 			{
 				tmpVersion = tmpVersion*100;				
 			}
-			System.out.println("getVersionFromFile() tmpVersion:" + tmpVersion);
+			//System.out.println("getVersionFromFile() tmpVersion:" + tmpVersion);
 			
 			version += tmpVersion;
 		}
