@@ -7379,25 +7379,25 @@ public class BaseController  extends BaseFunction{
 		switch(objType)
 		{
 		case DOCSYS_REPOS:
-			return buildQuerySqlForRepos((Repos) qObj);
+			return buildQuerySqlForRepos((Repos) qObj, objType);
 		case DOCSYS_REPOS_AUTH:
-			return buildQuerySqlForReposAuth((ReposAuth) qObj);
+			return buildQuerySqlForReposAuth((ReposAuth) qObj, objType);
 		case DOCSYS_DOC:
-			return buildQuerySqlForDoc((Doc) qObj);
+			return buildQuerySqlForDoc((Doc) qObj, objType);
 		case DOCSYS_DOC_AUTH:
-			return buildQuerySqlForDocAuth((DocAuth) qObj);
+			return buildQuerySqlForDocAuth((DocAuth) qObj, objType);
 		case DOCSYS_DOC_LOCK:
-			return buildQuerySqlForDocLock((DocLock)qObj);
+			return buildQuerySqlForDocLock((DocLock)qObj, objType);
 		case DOCSYS_USER:
-			return buildQuerySqlForUser((User) qObj);
+			return buildQuerySqlForUser((User) qObj, objType);
 		case DOCSYS_ROLE:
-			return buildQuerySqlForRole((Role) qObj);
+			return buildQuerySqlForRole((Role) qObj, objType);
 		case DOCSYS_USER_GROUP:
-			return buildQuerySqlForUserGroup((UserGroup) qObj);
+			return buildQuerySqlForUserGroup((UserGroup) qObj, objType);
 		case DOCSYS_GROUP_MEMBER:
-			return buildQuerySqlForGroupMember((GroupMember) qObj);
+			return buildQuerySqlForGroupMember((GroupMember) qObj, objType);
 		case DOCSYS_SYS_CONFIG:
-			return buildQuerySqlForSysConfig((SysConfig) qObj);
+			return buildQuerySqlForSysConfig((SysConfig) qObj, objType);
 		}
 		return null;
 	}
@@ -7476,19 +7476,52 @@ public class BaseController  extends BaseFunction{
 			
 			switch(param)
 			{			
-			case "ID":
-				sql_value += " " + obj.getId() + seperator;
-				break;
-			case "REG_ENABLE":
-				sql_value += " " + obj.getRegEnable() + seperator;
-				break;
-			case "PRIVATE_REPOS_ENABLE":
-				sql_value += " " + obj.getPrivateReposEnable() + seperator;
-				break;
+			case "ID": sql_value += " " + obj.getId() + seperator; break;
+			case "REG_ENABLE": sql_value += " " + obj.getRegEnable() + seperator; break;
+			case "PRIVATE_REPOS_ENABLE": sql_value += " " + obj.getPrivateReposEnable() + seperator; break;
 			}
 		}
         
         String sql = "insert into SYS_CONFIG (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+
+	
+	private static String buildQuerySqlForSysConfig(SysConfig obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "REG_ENABLE": sql_value += seperator + param + "="  + obj.getRegEnable(); break;
+			case "PRIVATE_REPOS_ENABLE": sql_value += seperator + param + "="  + obj.getPrivateReposEnable(); break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
         return sql;
 	}
 
@@ -7545,6 +7578,45 @@ public class BaseController  extends BaseFunction{
 		}
         
         String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+	
+	private static String buildQuerySqlForGroupMember(GroupMember obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "GROUP_ID": sql_value += seperator + param + "="  + obj.getGroupId(); break;
+			case "USER_ID": sql_value += seperator + param + "="  + obj.getUserId(); break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
         return sql;
 	}
 	
@@ -7620,6 +7692,48 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 	
+	private static String buildQuerySqlForUserGroup(UserGroup obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
+			case "INFO": sql_value += seperator + param + "="  + obj.getInfo(); break;
+			case "IMG": sql_value += seperator + param + "="  + obj.getImg(); break;	
+			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority(); break;
+			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime(); break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
+        return sql;
+	}
+	
 	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
 		Role obj = new Role();
 		obj.setId( (Integer)jsonObj.get("id"));
@@ -7673,6 +7787,44 @@ public class BaseController  extends BaseFunction{
 		}
         
         String sql = "insert into ROLE (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+	private static String buildQuerySqlForRole(Role obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "ROLE_ID": sql_value += seperator + param + "="  + obj.getRoleId(); break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
         return sql;
 	}
 
@@ -7784,6 +7936,59 @@ public class BaseController  extends BaseFunction{
 			}
 		}
         String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+
+	private static String buildQuerySqlForUser(User obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
+			case "NAME": sql_value += seperator + param + "="  + obj.getName() ; break;
+			case "PWD": sql_value += seperator + param + "="  + obj.getPwd() ; break;
+			case "ROLE": sql_value += seperator + param + "="  + obj.getRole() ; break;
+			case "REAL_NAME": sql_value += seperator + param + "="  + obj.getRealName() ; break;
+			case "NICK_NAME": sql_value += seperator + param + "="  + obj.getNickName() ; break;
+			case "INTRO": sql_value += seperator + param + "="  + obj.getIntro() ; break;
+			case "IMG": sql_value += seperator + param + "="  + obj.getImg() ; break;
+			case "EMAIL": sql_value += seperator + param + "="  + obj.getEmail() ; break;
+			case "EMAIL_VALID": sql_value += seperator + param + "="  + obj.getEmailValid() ; break;
+			case "TEL": sql_value += seperator + param + "="  + obj.getTel() ; break;
+			case "TEL_VALID": sql_value += seperator + param + "="  + obj.getTelValid() ; break;
+			case "LAST_LOGIN_TIME": sql_value += seperator + param + "="  + obj.getLastLoginTime() ; break;
+			case "LAST_LOGIN_IP": sql_value += seperator + param + "="  + obj.getLastLoginIp() ; break;
+			case "LAST_LOGIN_CITY": sql_value += seperator + param + "="  + obj.getLastLoginCity() ; break;
+			case "CREATE_TYPE": sql_value += seperator + param + "="  + obj.getCreateType() ; break;				
+			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime() ; break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
         return sql;
 	}
 
@@ -7990,53 +8195,6 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 	
-	private static String buildQuerySqlForSysConfig(SysConfig qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForGroupMember(GroupMember qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForUserGroup(UserGroup qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForRole(Role qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForUser(User qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForDocLock(DocLock qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForDocAuth(DocAuth qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForDoc(Doc qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static String buildQuerySqlForReposAuth(ReposAuth qObj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	
 	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
 		ReposAuth obj = new ReposAuth();
 		obj.setId( (Integer)jsonObj.get("id"));
@@ -8125,6 +8283,54 @@ public class BaseController  extends BaseFunction{
 			}
 		}
         String sql = "insert into REPOS_AUTH (" + sql_condition + ")" + " values (" + sql_value + ")";
+        return sql;
+	}
+	
+
+	private static String buildQuerySqlForReposAuth(ReposAuth obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
+			case "REPOS_ID": sql_value += seperator + param + "="  + obj.getReposId() ; break;
+			case "USER_ID": sql_value += seperator + param + "="  + obj.getUserId() ; break;
+			case "GROUP_ID": sql_value += seperator + param + "="  + obj.getGroupId() ; break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType() ; break;
+			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority() ; break;
+			case "IS_ADMIN": sql_value += seperator + param + "="  + obj.getIsAdmin() ; break;
+			case "ADD_EN": sql_value += seperator + param + "="  + obj.getAddEn() ; break;
+			case "DELETE_EN": sql_value += seperator + param + "="  + obj.getDeleteEn() ; break;
+			case "EDIT_EN": sql_value += seperator + param + "="  + obj.getEditEn() ; break;
+			case "ACCESS": sql_value += seperator + param + "="  + obj.getAccess() ; break;
+			case "HERITABLE": sql_value += seperator + param + "="  + obj.getHeritable() ; break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
         return sql;
 	}
 
@@ -8234,6 +8440,58 @@ public class BaseController  extends BaseFunction{
         String sql = "insert into DOC (" + sql_condition + ")" + " values (" + sql_value + ")";
         return sql;
 	}
+	
+
+	private static String buildQuerySqlForDoc(Doc obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
+			case "SIZE": sql_value += seperator + param + "="  + obj.getSize(); break;
+			case "CHECK_SUM": sql_value += seperator + param + "="  + obj.getCheckSum(); break;
+			case "REVISION": sql_value += seperator + param + "="  + obj.getRevision(); break;
+			case "CONTENT": sql_value += seperator + param + "="  + obj.getContent(); break;
+			case "PATH": sql_value += seperator + param + "="  + obj.getPath(); break;
+			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
+			case "PID": sql_value += seperator + param + "="  + obj.getPid(); break;
+			case "VID": sql_value += seperator + param + "="  + obj.getVid(); break;
+			case "PWD": sql_value += seperator + param + "="  + obj.getPwd(); break;
+			case "CREATOR": sql_value += seperator + param + "="  + obj.getPwd(); break;
+			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getPwd(); break;
+			case "LATEST_EDITOR": sql_value += seperator + param + "="  + obj.getPwd(); break;
+			case "LATEST_EDIT_TIME": sql_value += seperator + param + "="  + obj.getPwd(); break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
+        return sql;
+	}
 
 	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
 		DocAuth obj = new DocAuth();
@@ -8333,8 +8591,8 @@ public class BaseController  extends BaseFunction{
         	case "ADD_EN": sql_value += " " + obj.getAddEn() + seperator; break;
         	case "DELETE_EN": sql_value += " " + obj.getDeleteEn() + seperator; break;
         	case "HERITABLE": sql_value += " " + obj.getHeritable() + seperator; break;
-        	case "DOC_PATH": sql_value += " '" + obj.getDocPath() + "',"; break;
-        	case "DOC_NAME": sql_value += " '" + obj.getDocName() + "'"; break;
+        	case "DOC_PATH": sql_value += " '" + obj.getDocPath() + "'"  + seperator; break;
+        	case "DOC_NAME": sql_value += " '" + obj.getDocName() + "'"  + seperator; break;
 			}
 		}
         
@@ -8342,6 +8600,57 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 	
+
+	private static String buildQuerySqlForDocAuth(DocAuth obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "USER_ID": sql_value += seperator + param + "="  + obj.getUserId(); break;
+			case "GROUP_ID": sql_value += seperator + param + "="  + obj.getGroupId(); break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
+			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority(); break;
+			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
+			case "REPOS_ID": sql_value += seperator + param + "="  + obj.getReposId(); break;
+			case "IS_ADMIN": sql_value += seperator + param + "="  + obj.getIsAdmin(); break;	
+			case "ACCESS": sql_value += seperator + param + "="  + obj.getAccess(); break;
+        	case "EDIT_EN": sql_value += seperator + param + "="  + obj.getEditEn(); break;
+        	case "ADD_EN": sql_value += seperator + param + "="  + obj.getAddEn(); break;
+        	case "DELETE_EN": sql_value += seperator + param + "="  + obj.getDeleteEn(); break;
+        	case "HERITABLE": sql_value +=  + obj.getHeritable() + seperator; break;
+        	case "DOC_PATH": sql_value += seperator + param + "= '" + obj.getDocPath() + "'"; break;
+        	case "DOC_NAME": sql_value += seperator + param + "= '" + obj.getDocName() + "'"; break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
+        return sql;
+	}
+
 	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
 		DocLock obj = new DocLock();
 		obj.setId( (Integer)jsonObj.get("id"));
@@ -8426,7 +8735,52 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 
-	
+
+	private static String buildQuerySqlForDocLock(DocLock obj, int objType) {
+		String name = getNameByObjType(objType);
+		String sql = "select * from " + name;
+		
+		if(obj == null)
+		{
+			return 	sql;
+		}
+		
+		List<String> paramList = buildParamList(obj, objType);
+		
+		if(paramList == null)
+		{
+			return sql;
+		}
+		
+		String sql_condition = " where ";
+		String sql_value="";
+		for(int i=0; i < paramList.size(); i++)
+		{
+			String seperator = " and ";
+			String param = paramList.get(i);
+			if(i == 0)
+			{
+				seperator = " ";
+			}
+			
+			switch(param)
+			{			
+			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
+			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "PATH": sql_value += seperator + param + "="  + obj.getPath(); break;
+			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
+			case "PID": sql_value += seperator + param + "="  + obj.getPid(); break;
+			case "VID": sql_value += seperator + param + "="  + obj.getVid(); break;
+			case "STATE": sql_value += seperator + param + "="  + obj.getState(); break;
+			case "LOCK_BY": sql_value += seperator + param + "="  + obj.getLockBy(); break;
+			case "LOCK_TIME": sql_value += seperator + param + "="  + obj.getLockTime(); break;
+			}
+		}
+        sql = sql + sql_condition + sql_value;
+        return sql;
+	}
+
 	static String buildSqlConditionWithParamList(List<String> paramList)
 	{
 		if(paramList.size() == 0)
