@@ -7236,7 +7236,8 @@ public class BaseController  extends BaseFunction{
             stmt = (Statement) conn.createStatement();
             
             String sql = buildQuerySql(qObj, objType);
-            
+    		System.out.println("dbQuery() sql:" + sql);
+
             ResultSet rs = stmt.executeQuery(sql);
                   
             // 展开结果集数据库
