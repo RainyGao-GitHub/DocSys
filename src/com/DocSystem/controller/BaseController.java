@@ -6569,7 +6569,7 @@ public class BaseController  extends BaseFunction{
 		
 		docSysWebPath = getWebPath();
 		docSysIniPath = docSysWebPath + "../docSys.ini/";
-		if(isFileExist( docSysWebPath + "../docSys.ini") == false)
+		if(isFileExist(docSysIniPath) == false)
 		{
 			return;
 		}
@@ -6597,6 +6597,7 @@ public class BaseController  extends BaseFunction{
 			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
+		saveDocContentToFile(State, docSysIniPath, "State");
 
 		State = "{Step: 2, Status: 'OK'}";
 		//根据config是否存在决定是否需要更新War包
@@ -6606,15 +6607,16 @@ public class BaseController  extends BaseFunction{
 			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
+		saveDocContentToFile(State, docSysIniPath, "State");
 		
 		State = "{Step: 3, Status: 'OK'}";
 		if(doCopyWar() == false)
 		{
-			State = "{Step: 2, Status: 'ERROR'}";
+			State = "{Step: 3, Status: 'ERROR'}";
 			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
-		
+		saveDocContentToFile(State, docSysIniPath, "State");
 		return;
 	}
 	
@@ -6645,7 +6647,12 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean doCopyWar() {
+	private boolean doCopyWar() 
+	{
+		if(isFileExist(docSysIniPath + "DocSystem.war") == false)
+		{
+			return true;
+		}
 		return copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true);
 	}
 
