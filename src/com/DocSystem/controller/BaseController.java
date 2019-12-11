@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,6 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.jdbc.ScriptRunner;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
@@ -6547,6 +6550,8 @@ public class BaseController  extends BaseFunction{
     static String DB_URL = "jdbc:mysql://localhost:3306/docsystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
     static String DB_USER = "root";
     static String DB_PASS = "";
+    static String docSysIniPath = null;
+    static String docSysWebPath = null;
 	
     //定义数据库的ObjType
     protected final static int DOCSYS_REPOS			=0;
@@ -6562,26 +6567,27 @@ public class BaseController  extends BaseFunction{
 	
 	protected void docSysInit() {
 		
-		String webPath = getWebPath();
-		if(isFileExist( webPath + "../docSys.ini") == false)
+		docSysWebPath = getWebPath();
+		docSysIniPath = docSysWebPath + "../docSys.ini/";
+		if(isFileExist( docSysWebPath + "../docSys.ini") == false)
 		{
 			return;
 		}
 
 		//get the version info in war
-		Integer version = getVersionFromFile(webPath, "version");
+		Integer version = getVersionFromFile(docSysWebPath, "version");
 		
-		String docSysIniDirPath = webPath + "../docSys.ini/";
-		Integer newVersion = getVersionFromFile(docSysIniDirPath, "newVersion");
+		
+		Integer newVersion = getVersionFromFile(docSysIniPath, "newVersion");
 		if(newVersion == null || version == null || !version.equals(newVersion))
 		{
 			return;
 		}
 			
-		Integer oldVersion = getVersionFromFile(docSysIniDirPath , "oldVersion");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "oldVersion");
 
 		//SET DB Info
-		getAndSetDBInfo(docSysIniDirPath, webPath);
+		getAndSetDBInfo();
 		
 		//State = 1; //war update failed
 		//检查数据库是否存在或是否需要升级
@@ -6622,35 +6628,183 @@ public class BaseController  extends BaseFunction{
 
 	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
 		// TODO Auto-generated method stub
-		if(oldVersion == null || oldVersion == 0)	//这是全新安装
-		{
+		if(oldVersion == null)	//这是全新安装
+		{	
 			//检查docsystem数据库是否存在
-			//已存在返回true
-			//不存在则尝试新建docsystem数据库
-			//失败返回false
-			//成功则尝试导入初始sql文件(docSys.ini/config/docsystem.sql不存在则使用war包下的sql文件初始化)
-			//初始化失败返回false
-			//返回true
+			if(testDB(DB_URL, DB_USER, DB_PASS) == true)
+			{
+				//数据库已存在
+				return true;
+			}
+			
+			if(createDB() == false)
+			{
+				return false;
+			}
+			
+			String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
+			if(isFileExist(sqlScriptPath) == false)
+			{
+				sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+			}
+			return executeSqlScript(sqlScriptPath);			
 		}
 		
-		//升级操作
-		//备份数据库
-		//导出json
-		//导入数据库结构
-		//导入json
+		return DBUpgrade(oldVersion, newVersion);
+	}
+	
+    private static boolean executeSqlScript(String filePath) 
+    {
+        try {
+            Connection conn = (Connection) DriverManager.getConnection(DB_URL ,DB_USER, DB_PASS);
+            ScriptRunner runner = new ScriptRunner(conn);
+            Resources.setCharset(Charset.forName("UTF-8")); //设置字符集,不然中文乱码插入错误
+            runner.setLogWriter(null);//设置是否输出日志
+            
+            // 从class目录下直接读取
+            Reader read = Resources.getResourceAsReader(filePath);
+            runner.runScript(read);
+            runner.closeConnection();
+            conn.close();
+            System.out.println("sql脚本执行完毕");
+            return true;
+        } catch (Exception e) {
+            System.out.println("sql脚本执行发生异常");
+            e.printStackTrace();
+        }
 		return false;
 	}
 
-	private boolean getAndSetDBInfo(String docSysIniDirPath, String webPath) {
-		System.out.println("getAndSetDBInfo docSysIniDirPath:" + docSysIniDirPath + " webPath:" + webPath);
+	private boolean createDB() 
+    {
+    	String dbName = getDBNameFromUrl(DB_URL);
+    	if(dbName == null || dbName.isEmpty())
+    	{
+    		return false;
+    	}
+
+        try {
+			Class.forName(JDBC_DRIVER);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+        
+        
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+            conn = (Connection) DriverManager.getConnection(url ,DB_USER, DB_PASS);
+        
+            stmt = (Statement) conn.createStatement();
+            String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
+	    	String createdatabase="create  database  " + dbName;	//创建数据库     
+	    	ResultSet resultSet = stmt.executeQuery(checkdatabase);
+	    	if (resultSet.next()) 
+	    	{
+	    		//若数据库存在
+	    		System.out.println("createDB " + dbName + " exist!");
+	    		stmt.close();
+	    		conn.close();
+	    		return true;
+	    	}
+
+	    	if(stmt.executeUpdate(createdatabase) == 0)		 
+	    	{
+	    		System.out.println("create table success!");
+	    		stmt.close();
+	    		conn.close();
+	    		return true;
+	    	}   
+	    	
+            // 完成后关闭
+            stmt.close();
+            conn.close();
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
+	}
+
+	private static String getDBNameFromUrl(String url) 
+	{
+		String[] urlParts = url.split("\\?");
+		if(urlParts == null || urlParts.length == 0)
+		{
+			return null;
+		}
 		
-		String userJDBCSettingPath = docSysIniDirPath + "config/jdbc.properties";
+		String baseUrl = urlParts[0];
+		String[] subStrs = baseUrl.split("/");
+		if(subStrs == null || subStrs.length < 2)
+		{
+			return null;
+		}
+		
+		return subStrs[subStrs.length-1];
+	}
+
+	public boolean testDB(String url, String user, String pwd)
+    {
+        Connection conn = null;
+        try {
+			Class.forName(JDBC_DRIVER);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    
+        // 打开链接
+        System.out.println("连接数据库...");
+        try {
+			conn = (Connection) DriverManager.getConnection(url, user, pwd);
+            conn.close();
+    		System.out.println("连接数据库成功");
+            return true;
+		} catch (SQLException e) {
+			System.out.println("连接数据库失败");
+			e.printStackTrace();
+		} finally{
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+        return false;        
+    }
+    
+	private boolean getAndSetDBInfo() 
+	{
+		String userJDBCSettingPath = docSysIniPath + "config/jdbc.properties";
 		if(isFileExist(userJDBCSettingPath))
 		{
 			return getAndSetDBInfoFromFile(userJDBCSettingPath);
 		}
 		
-		String defaultJDBCSettingPath = webPath + "WEB-INF/classes/jdbc.properties";
+		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
 		if(isFileExist(defaultJDBCSettingPath))
 		{
 			return getAndSetDBInfoFromFile(defaultJDBCSettingPath);
@@ -6749,7 +6903,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
-		if(doBackupDB() == false)
+		if(backupDB(docSysIniPath + "backup/", "docsystem.sql") == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -6763,11 +6917,18 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//UPdate DataBase Structure with the DocSystem.sql
-		if(doInitDB() == false)
+		if(cleanDB() == false)
 		{
-			System.out.println("DBUpgrade() 数据库表结构初始化失败!");
+			System.out.println("DBUpgrade() 清除数据库失败!");
 			return true;
 		}
+		
+		String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
+		if(isFileExist(sqlScriptPath) == false)
+		{
+			sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+		}
+		executeSqlScript(sqlScriptPath);
 		
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
@@ -6778,13 +6939,65 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	//将数据库初始化为系统默认的结构，清除原有数据，并用war包中的sql文件进行初始化
-	private static boolean doInitDB() {
-		// TODO Auto-generated method stub
-		return false;
+	private static boolean cleanDB() {
+    	String dbName = getDBNameFromUrl(DB_URL);
+    	if(dbName == null || dbName.isEmpty())
+    	{
+    		return false;
+    	}
+
+		try {
+			Class.forName(JDBC_DRIVER);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+        
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+            conn = (Connection) DriverManager.getConnection(DB_URL ,DB_USER, DB_PASS);
+        
+            stmt = (Statement) conn.createStatement();
+            String deleteTabs = "SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '" + dbName + "'";
+            if(stmt.executeUpdate(deleteTabs) == 0)
+		    {
+	    		System.out.println("delete tables success!");
+	    		stmt.close();
+	    		conn.close();
+	    		return true;
+	    	}   
+	    	
+            // 完成后关闭
+            stmt.close();
+            conn.close();
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
 	}
 
-	private static boolean doBackupDB() {
+	private static boolean backupDB(String path, String name) 
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
