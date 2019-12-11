@@ -6564,7 +6564,18 @@ public class BaseController  extends BaseFunction{
 	protected final static int DOCSYS_USER_GROUP	=7;
 	protected final static int DOCSYS_GROUP_MEMBER	=8;
 	protected final static int DOCSYS_SYS_CONFIG	=9;
-	
+	protected final static String [] DBTabNameMap = {
+			"REPOS",
+			"REPOS_AUTH",
+			"DOC",
+			"DOC_AUTH",
+			"DOC_LOCK",
+			"USER",
+			"ROLE",
+			"USER_GROUP",
+			"GROUP_MEMBER",
+			"SYS_CONFIG",
+	};
 	protected void docSysInit() {
 		
 		docSysWebPath = getWebPath();
@@ -7028,28 +7039,34 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) {
-		// TODO Auto-generated method stub
-		return null;
+	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) 
+	{
+		if(oldVersion >= 20000)
+		{
+			return null;
+		}
+
+		//2.xx.xx版本以下的需要进行数据库升级
+		List<Integer> dbTabList = new ArrayList<Integer>();
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+//			if(newVersion >= 20000)	//2.xx.xx版本以上DOC和DOC_LOCK是非强制信息
+//			{
+//				if(DBTabNameMap[i].equals("DOC") || DBTabNameMap[i].equals("DOC_LOCK")) 
+//				{
+//					continue;
+//				}
+//			}
+			dbTabList.add(i);
+		}
+		
+		return dbTabList;
 	}
 
-	private static String getNameByObjType(int objType) {
-		String [] NameMap = {
-				"REPOS",
-				"REPOS_AUTH",
-				"DOC",
-				"DOC_AUTH",
-				"DOC_LOCK",
-				"USER",
-				"ROLE",
-				"USER_GROUP",
-				"GROUP_MEMBER",
-				"SYS_CONFIG",
-		};
-		
-		if(objType < NameMap.length)
+	private static String getNameByObjType(int objType) {		
+		if(objType < DBTabNameMap.length)
 		{
-			return NameMap[objType];
+			return DBTabNameMap[objType];
 		}
 		return null;
 	}
