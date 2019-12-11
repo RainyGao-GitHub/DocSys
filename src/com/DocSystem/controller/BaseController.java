@@ -7679,10 +7679,10 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "NAME": sql_value += " '" + obj.getName() + "'" + seperator; break;
 			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "INFO": sql_value += " " + obj.getInfo() + seperator; break;
-			case "IMG": sql_value += " " + obj.getImg() + seperator; break;	
+			case "INFO": sql_value += " '" + obj.getInfo() + "'" + seperator; break;
+			case "IMG": sql_value += " '" + obj.getImg() + "'" + seperator; break;	
 			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
 			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
 			}
@@ -7722,10 +7722,10 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "NAME": sql_value += seperator + param + "= '"  + obj.getName() + "'"; break;
 			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "INFO": sql_value += seperator + param + "="  + obj.getInfo(); break;
-			case "IMG": sql_value += seperator + param + "="  + obj.getImg(); break;	
+			case "INFO": sql_value += seperator + param + "= '"  + obj.getInfo() + "'"; break;
+			case "IMG": sql_value += seperator + param + "= '"  + obj.getImg() + "'"; break;	
 			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority(); break;
 			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime(); break;
 			}
@@ -7781,7 +7781,7 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "NAME": sql_value += " '" + obj.getName()  + "'" + seperator; break;
 			case "ROLE_ID": sql_value += " " + obj.getRoleId() + seperator; break;
 			}
 		}
@@ -7820,7 +7820,7 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "NAME": sql_value += seperator + param + "='"  + obj.getName()  + "'"; break;
 			case "ROLE_ID": sql_value += seperator + param + "="  + obj.getRoleId(); break;
 			}
 		}
@@ -7917,22 +7917,22 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " " + obj.getName() + seperator; break;
-			case "PWD": sql_value += " " + obj.getPwd() + seperator; break;
+			case "NAME": sql_value += " '" + obj.getName() + "'" + seperator; break;
+			case "PWD": sql_value += " '" + obj.getPwd()  + "'" + seperator; break;
 			case "ROLE": sql_value += " " + obj.getRole() + seperator; break;
-			case "REAL_NAME": sql_value += " " + obj.getRealName() + seperator; break;
-			case "NICK_NAME": sql_value += " " + obj.getNickName() + seperator; break;
-			case "INTRO": sql_value += " " + obj.getIntro() + seperator; break;
-			case "IMG": sql_value += " " + obj.getImg() + seperator; break;
-			case "EMAIL": sql_value += " " + obj.getEmail() + seperator; break;
+			case "REAL_NAME": sql_value += " '" + obj.getRealName() + "'"  + seperator; break;
+			case "NICK_NAME": sql_value += " '" + obj.getNickName()  + "'" + seperator; break;
+			case "INTRO": sql_value += " '" + obj.getIntro()  + "'" + seperator; break;
+			case "IMG": sql_value += " '" + obj.getImg()  + "'" + seperator; break;
+			case "EMAIL": sql_value += " '" + obj.getEmail() + "'"  + seperator; break;
 			case "EMAIL_VALID": sql_value += " " + obj.getEmailValid() + seperator; break;
-			case "TEL": sql_value += " " + obj.getTel() + seperator; break;
+			case "TEL": sql_value += " '" + obj.getTel()  + "'" + seperator; break;
 			case "TEL_VALID": sql_value += " " + obj.getTelValid() + seperator; break;
-			case "LAST_LOGIN_TIME": sql_value += " " + obj.getLastLoginTime() + seperator; break;
-			case "LAST_LOGIN_IP": sql_value += " " + obj.getLastLoginIp() + seperator; break;
-			case "LAST_LOGIN_CITY": sql_value += " " + obj.getLastLoginCity() + seperator; break;
+			case "LAST_LOGIN_TIME": sql_value += " '" + obj.getLastLoginTime()  + "'" + seperator; break;
+			case "LAST_LOGIN_IP": sql_value += " '" + obj.getLastLoginIp()  + "'" + seperator; break;
+			case "LAST_LOGIN_CITY": sql_value += " '" + obj.getLastLoginCity()  + "'" + seperator; break;
 			case "CREATE_TYPE": sql_value += " " + obj.getCreateType() + seperator; break;				
-			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
+			case "CREATE_TIME": sql_value += " '" + obj.getCreateTime()  + "'" + seperator; break;
 			}
 		}
         String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
@@ -7970,22 +7970,22 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
-			case "NAME": sql_value += seperator + param + "="  + obj.getName() ; break;
-			case "PWD": sql_value += seperator + param + "="  + obj.getPwd() ; break;
+			case "NAME": sql_value += seperator + param + "='"  + obj.getName()  + "'" ; break;
+			case "PWD": sql_value += seperator + param + "='"  + obj.getPwd()  + "'" ; break;
 			case "ROLE": sql_value += seperator + param + "="  + obj.getRole() ; break;
-			case "REAL_NAME": sql_value += seperator + param + "="  + obj.getRealName() ; break;
-			case "NICK_NAME": sql_value += seperator + param + "="  + obj.getNickName() ; break;
-			case "INTRO": sql_value += seperator + param + "="  + obj.getIntro() ; break;
-			case "IMG": sql_value += seperator + param + "="  + obj.getImg() ; break;
-			case "EMAIL": sql_value += seperator + param + "="  + obj.getEmail() ; break;
+			case "REAL_NAME": sql_value += seperator + param + "='"  + obj.getRealName()  + "'" ; break;
+			case "NICK_NAME": sql_value += seperator + param + "='"  + obj.getNickName()  + "'" ; break;
+			case "INTRO": sql_value += seperator + param + "='"  + obj.getIntro()  + "'" ; break;
+			case "IMG": sql_value += seperator + param + "='"  + obj.getImg()  + "'" ; break;
+			case "EMAIL": sql_value += seperator + param + "='"  + obj.getEmail()  + "'" ; break;
 			case "EMAIL_VALID": sql_value += seperator + param + "="  + obj.getEmailValid() ; break;
-			case "TEL": sql_value += seperator + param + "="  + obj.getTel() ; break;
+			case "TEL": sql_value += seperator + param + "='"  + obj.getTel()  + "'" ; break;
 			case "TEL_VALID": sql_value += seperator + param + "="  + obj.getTelValid() ; break;
-			case "LAST_LOGIN_TIME": sql_value += seperator + param + "="  + obj.getLastLoginTime() ; break;
-			case "LAST_LOGIN_IP": sql_value += seperator + param + "="  + obj.getLastLoginIp() ; break;
-			case "LAST_LOGIN_CITY": sql_value += seperator + param + "="  + obj.getLastLoginCity() ; break;
+			case "LAST_LOGIN_TIME": sql_value += seperator + param + "='"  + obj.getLastLoginTime()  + "'" ; break;
+			case "LAST_LOGIN_IP": sql_value += seperator + param + "='"  + obj.getLastLoginIp()  + "'" ; break;
+			case "LAST_LOGIN_CITY": sql_value += seperator + param + "='"  + obj.getLastLoginCity()  + "'" ; break;
 			case "CREATE_TYPE": sql_value += seperator + param + "="  + obj.getCreateType() ; break;				
-			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime() ; break;
+			case "CREATE_TIME": sql_value += seperator + param + "='"  + obj.getCreateTime()  + "'" ; break;
 			}
 		}
         sql = sql + sql_condition + sql_value;
