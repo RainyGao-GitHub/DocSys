@@ -7684,7 +7684,7 @@ public class BaseController  extends BaseFunction{
 			case "INFO": sql_value += " '" + obj.getInfo() + "'" + seperator; break;
 			case "IMG": sql_value += " '" + obj.getImg() + "'" + seperator; break;	
 			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
-			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
+			case "CREATE_TIME": sql_value += " '" + obj.getCreateTime() + "'"  + seperator; break;
 			}
 		}
         
@@ -7722,12 +7722,12 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "= '"  + obj.getName() + "'"; break;
+			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'"; break;
 			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
 			case "INFO": sql_value += seperator + param + "= '"  + obj.getInfo() + "'"; break;
-			case "IMG": sql_value += seperator + param + "= '"  + obj.getImg() + "'"; break;	
+			case "IMG": sql_value += seperator + param + "='"  + obj.getImg() + "'"; break;	
 			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority(); break;
-			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime(); break;
+			case "CREATE_TIME": sql_value += seperator + param + "='"  + obj.getCreateTime() + "'"; break;
 			}
 		}
         sql = sql + sql_condition + sql_value;
@@ -8105,25 +8105,25 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "NAME": sql_value += " '" + obj.getName()  + "'" + seperator; break;
 			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
-			case "REAL_DOC_PATH": sql_value += " " + obj.getRealDocPath() + seperator; break;
+			case "PATH": sql_value += " '" + obj.getPath()  + "'" + seperator; break;
+			case "REAL_DOC_PATH": sql_value += " '" + obj.getRealDocPath()  + "'" + seperator; break;
 			case "VER_CTRL": sql_value += " " + obj.getVerCtrl() + seperator; break;
 			case "IS_REMOTE": sql_value += " " + obj.getIsRemote() + seperator; break;
-			case "LOCAL_SVN_PATH": sql_value += " " + obj.getLocalSvnPath() + seperator; break;
-			case "SVN_PATH": sql_value += " " + obj.getSvnPath() + seperator; break;
-			case "SVN_USER": sql_value += " " + obj.getSvnUser() + seperator; break;
-			case "SVN_PWD": sql_value += " " + obj.getSvnPwd() + seperator; break;
-			case "REVISION": sql_value += " " + obj.getRevision() + seperator; break;
+			case "LOCAL_SVN_PATH": sql_value += " '" + obj.getLocalSvnPath()  + "'" + seperator; break;
+			case "SVN_PATH": sql_value += " '" + obj.getSvnPath() + "'"  + seperator; break;
+			case "SVN_USER": sql_value += " '" + obj.getSvnUser() + "'"  + seperator; break;
+			case "SVN_PWD": sql_value += " '" + obj.getSvnPwd() + "'"  + seperator; break;
+			case "REVISION": sql_value += " '" + obj.getRevision() + "'"  + seperator; break;
 			case "VER_CTRL1": sql_value += " " + obj.getVerCtrl1() + seperator; break;
 			case "IS_REMOTE1": sql_value += " " + obj.getIsRemote1() + seperator; break;
-			case "LOCAL_SVN_PATH1": sql_value += " " + obj.getLocalSvnPath1() + seperator; break;
-			case "SVN_PATH1": sql_value += " " + obj.getSvnPath1() + seperator; break;
-			case "SVN_USER1": sql_value += " " + obj.getSvnUser1() + seperator; break;
-			case "SVN_PWD1": sql_value += " " + obj.getSvnPwd1() + seperator; break;
-			case "REVISION1": sql_value += " " + obj.getRevision1() + seperator; break;
-			case "PWD": sql_value += " " + obj.getPwd() + seperator; break;
+			case "LOCAL_SVN_PATH1": sql_value += " '" + obj.getLocalSvnPath1() + "'"  + seperator; break;
+			case "SVN_PATH1": sql_value += " '" + obj.getSvnPath1() + "'"  + seperator; break;
+			case "SVN_USER1": sql_value += " '" + obj.getSvnUser1() + "'"  + seperator; break;
+			case "SVN_PWD1": sql_value += " '" + obj.getSvnPwd1() + "'"  + seperator; break;
+			case "REVISION1": sql_value += " '" + obj.getRevision1() + "'"  + seperator; break;
+			case "PWD": sql_value += " '" + obj.getPwd() + "'"  + seperator; break;
 			case "OWNER": sql_value += " " + obj.getOwner() + seperator; break;
 			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
 			case "STATE": sql_value += " " + obj.getState() + seperator; break;
@@ -8165,25 +8165,25 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
-			case "NAME": sql_value += seperator + param + "="  + obj.getName() ; break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType() ; break;
-			case "PATH": sql_value += seperator + param + "="  + obj.getPath() ; break;
-			case "REAL_DOC_PATH": sql_value += seperator + param + "="  + obj.getRealDocPath() ; break;
+			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'"; break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
+			case "PATH": sql_value += seperator + param + "='"  + obj.getPath() + "'"  ; break;
+			case "REAL_DOC_PATH": sql_value += seperator + param + "='"  + obj.getRealDocPath() + "'"  ; break;
 			case "VER_CTRL": sql_value += seperator + param + "="  + obj.getVerCtrl() ; break;
 			case "IS_REMOTE": sql_value += seperator + param + "="  + obj.getIsRemote() ; break;
-			case "LOCAL_SVN_PATH": sql_value += seperator + param + "="  + obj.getLocalSvnPath() ; break;
-			case "SVN_PATH": sql_value += seperator + param + "="  + obj.getSvnPath() ; break;
-			case "SVN_USER": sql_value += seperator + param + "="  + obj.getSvnUser() ; break;
-			case "SVN_PWD": sql_value += seperator + param + "="  + obj.getSvnPwd() ; break;
-			case "REVISION": sql_value += seperator + param + "="  + obj.getRevision() ; break;
+			case "LOCAL_SVN_PATH": sql_value += seperator + param + "='"  + obj.getLocalSvnPath() + "'"  ; break;
+			case "SVN_PATH": sql_value += seperator + param + "='"  + obj.getSvnPath() + "'"  ; break;
+			case "SVN_USER": sql_value += seperator + param + "'="  + obj.getSvnUser() + "'"  ; break;
+			case "SVN_PWD": sql_value += seperator + param + "='"  + obj.getSvnPwd() + "'"  ; break;
+			case "REVISION": sql_value += seperator + param + "='"  + obj.getRevision() + "'"  ; break;
 			case "VER_CTRL1": sql_value += seperator + param + "="  + obj.getVerCtrl1() ; break;
 			case "IS_REMOTE1": sql_value += seperator + param + "="  + obj.getIsRemote1() ; break;
-			case "LOCAL_SVN_PATH1": sql_value += seperator + param + "="  + obj.getLocalSvnPath1() ; break;
-			case "SVN_PATH1": sql_value += seperator + param + "="  + obj.getSvnPath1() ; break;
-			case "SVN_USER1": sql_value += seperator + param + "="  + obj.getSvnUser1() ; break;
-			case "SVN_PWD1": sql_value += seperator + param + "="  + obj.getSvnPwd1() ; break;
-			case "REVISION1": sql_value += seperator + param + "="  + obj.getRevision1() ; break;
-			case "PWD": sql_value += seperator + param + "="  + obj.getPwd() ; break;
+			case "LOCAL_SVN_PATH1": sql_value += seperator + param + "='"  + obj.getLocalSvnPath1() + "'"  ; break;
+			case "SVN_PATH1": sql_value += seperator + param + "='"  + obj.getSvnPath1() + "'"  ; break;
+			case "SVN_USER1": sql_value += seperator + param + "='"  + obj.getSvnUser1() + "'"  ; break;
+			case "SVN_PWD1": sql_value += seperator + param + "='"  + obj.getSvnPwd1() + "'"  ; break;
+			case "REVISION1": sql_value += seperator + param + "='"  + obj.getRevision1() + "'"  ; break;
+			case "PWD": sql_value += seperator + param + "="  + obj.getPwd() + "'"  ; break;
 			case "OWNER": sql_value += seperator + param + "="  + obj.getOwner() ; break;
 			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime() ; break;
 			case "STATE": sql_value += seperator + param + "="  + obj.getState() ; break;
@@ -8420,21 +8420,21 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " " + obj.getName() + seperator; break;
+			case "NAME": sql_value += " '" + obj.getName()  + "'"  + seperator; break;
 			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
 			case "SIZE": sql_value += " " + obj.getSize() + seperator; break;
-			case "CHECK_SUM": sql_value += " " + obj.getCheckSum() + seperator; break;
-			case "REVISION": sql_value += " " + obj.getRevision() + seperator; break;
-			case "CONTENT": sql_value += " " + obj.getContent() + seperator; break;
-			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
+			case "CHECK_SUM": sql_value += " '" + obj.getCheckSum() + "'"  + seperator; break;
+			case "REVISION": sql_value += " '" + obj.getRevision() + "'"  + seperator; break;
+			case "CONTENT": sql_value += " '" + obj.getContent() + "'"  + seperator; break;
+			case "PATH": sql_value += " '" + obj.getPath() + "'"  + seperator; break;
 			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
 			case "PID": sql_value += " " + obj.getPid() + seperator; break;
 			case "VID": sql_value += " " + obj.getVid() + seperator; break;
-			case "PWD": sql_value += " " + obj.getPwd() + seperator; break;
-			case "CREATOR": sql_value += " " + obj.getPwd() + seperator; break;
-			case "CREATE_TIME": sql_value += " " + obj.getPwd() + seperator; break;
-			case "LATEST_EDITOR": sql_value += " " + obj.getPwd() + seperator; break;
-			case "LATEST_EDIT_TIME": sql_value += " " + obj.getPwd() + seperator; break;
+			case "PWD": sql_value += " '" + obj.getPwd() + "'"  + seperator; break;
+			case "CREATOR": sql_value += " " + obj.getCreator() + seperator; break;
+			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
+			case "LATEST_EDITOR": sql_value += " " + obj.getLatestEditor() + seperator; break;
+			case "LATEST_EDIT_TIME": sql_value += " " + obj.getLatestEditTime() + seperator; break;
 			}
 		}
         String sql = "insert into DOC (" + sql_condition + ")" + " values (" + sql_value + ")";
@@ -8472,21 +8472,21 @@ public class BaseController  extends BaseFunction{
 			switch(param)
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
+			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'" ; break;
 			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
 			case "SIZE": sql_value += seperator + param + "="  + obj.getSize(); break;
-			case "CHECK_SUM": sql_value += seperator + param + "="  + obj.getCheckSum(); break;
-			case "REVISION": sql_value += seperator + param + "="  + obj.getRevision(); break;
-			case "CONTENT": sql_value += seperator + param + "="  + obj.getContent(); break;
-			case "PATH": sql_value += seperator + param + "="  + obj.getPath(); break;
+			case "CHECK_SUM": sql_value += seperator + param + "='"  + obj.getCheckSum() + "'" ; break;
+			case "REVISION": sql_value += seperator + param + "='"  + obj.getRevision() + "'" ; break;
+			case "CONTENT": sql_value += seperator + param + "='"  + obj.getContent() + "'" ; break;
+			case "PATH": sql_value += seperator + param + "='"  + obj.getPath() + "'" ; break;
 			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
 			case "PID": sql_value += seperator + param + "="  + obj.getPid(); break;
 			case "VID": sql_value += seperator + param + "="  + obj.getVid(); break;
-			case "PWD": sql_value += seperator + param + "="  + obj.getPwd(); break;
-			case "CREATOR": sql_value += seperator + param + "="  + obj.getPwd(); break;
-			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getPwd(); break;
-			case "LATEST_EDITOR": sql_value += seperator + param + "="  + obj.getPwd(); break;
-			case "LATEST_EDIT_TIME": sql_value += seperator + param + "="  + obj.getPwd(); break;
+			case "PWD": sql_value += seperator + param + "='"  + obj.getPwd() + "'" ; break;
+			case "CREATOR": sql_value += seperator + param + "="  + obj.getCreator(); break;
+			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime(); break;
+			case "LATEST_EDITOR": sql_value += seperator + param + "="  + obj.getLatestEditor(); break;
+			case "LATEST_EDIT_TIME": sql_value += seperator + param + "="  + obj.getLatestEditTime(); break;
 			}
 		}
         sql = sql + sql_condition + sql_value;
@@ -8721,8 +8721,8 @@ public class BaseController  extends BaseFunction{
 			{			
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
 			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "NAME": sql_value += " " + obj.getName() + seperator; break;
-			case "PATH": sql_value += " " + obj.getPath() + seperator; break;
+			case "NAME": sql_value += " '" + obj.getName() + "'"  + seperator; break;
+			case "PATH": sql_value += " '" + obj.getPath() + "'"  + seperator; break;
 			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
 			case "PID": sql_value += " " + obj.getPid() + seperator; break;
 			case "VID": sql_value += " " + obj.getVid() + seperator; break;
@@ -8767,8 +8767,8 @@ public class BaseController  extends BaseFunction{
 			{			
 			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
 			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "NAME": sql_value += seperator + param + "="  + obj.getName(); break;
-			case "PATH": sql_value += seperator + param + "="  + obj.getPath(); break;
+			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'" ; break;
+			case "PATH": sql_value += seperator + param + "='"  + obj.getPath() + "'" ; break;
 			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
 			case "PID": sql_value += seperator + param + "="  + obj.getPid(); break;
 			case "VID": sql_value += seperator + param + "="  + obj.getVid(); break;
@@ -8779,29 +8779,6 @@ public class BaseController  extends BaseFunction{
 		}
         sql = sql + sql_condition + sql_value;
         return sql;
-	}
-
-	static String buildSqlConditionWithParamList(List<String> paramList)
-	{
-		if(paramList.size() == 0)
-		{
-			return "";
-		}
-		
-		String sql_condition = " where ";
-		//int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i< paramList.size(); i++)
-		{
-			if(i==0)	//first param
-			{
-				sql_condition += " " + paramList.get(i);
-			}
-			else
-			{
-				sql_condition += " and " + paramList.get(i);			
-			}
-		}
-		return sql_condition;
 	}
 	
     public static String readJsonFile(String filePath) {
