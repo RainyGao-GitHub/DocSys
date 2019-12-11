@@ -91,20 +91,10 @@ public class Office2PDF {
             rt.setError("文件 " + inputFilePath + " 不存在！");
             return false;
         }
-
     	
     	OfficeManager officeManager = null;
     	try {
-	    	// 获取OpenOffice的安装路劲
-	        officeManager = getOfficeManager(officeHome);
-    	} catch (Exception e) {
-            rt.setError("请检查是否已安装Open Office!");
-			System.out.println("office2pdf() getOfficeManager Exception");
-			e.printStackTrace();
-			return false;
-    	}
-    	
-    	try {
+    		officeManager = getOfficeManager(officeHome);
     		// 连接OpenOffice
         	OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);
         	boolean ret = converterFile(inputFile, outputFilePath, inputFilePath, converter);
