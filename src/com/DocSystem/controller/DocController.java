@@ -1766,9 +1766,9 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		String webTmpPath = getWebTmpPath();
+		String webTmpPath = getWebTmpPathForPreview();
 		String dstName = repos.getId() + "_" + doc.getDocId() + ".pdf";
-		String dstPath = webTmpPath + "preview/" + dstName;
+		String dstPath = webTmpPath + dstName;
 		System.out.println("DocToPDF() dstPath:" + dstPath);
 
 		String fileLink = "/DocSystem/tmp/preview/" + dstName;
