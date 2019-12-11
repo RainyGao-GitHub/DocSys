@@ -6577,7 +6577,6 @@ public class BaseController  extends BaseFunction{
 		//get the version info in war
 		Integer version = getVersionFromFile(docSysWebPath, "version");
 		
-		
 		Integer newVersion = getVersionFromFile(docSysIniPath, "newVersion");
 		if(newVersion == null || version == null || !version.equals(newVersion))
 		{
@@ -6589,27 +6588,30 @@ public class BaseController  extends BaseFunction{
 		//SET DB Info
 		getAndSetDBInfo();
 		
-		//State = 1; //war update failed
+		String State = "{Step: 1, Status: 'OK'}"; //war update failed
 		//检查数据库是否存在或是否需要升级
 		if(checkAndUpdateDB(oldVersion, newVersion) == false)
 		{
 			//To Make sure system will always jump to install page, to make user can set the DB
-			//error=true
+			State = "{Step: 1, Status: 'ERROR'}";
+			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
 
-		//State = 2; //war update failed
+		State = "{Step: 2, Status: 'OK'}";
 		//根据config是否存在决定是否需要更新War包
 		if(checkAndUpdateWar() == false)
 		{
-			//error=true
+			State = "{Step: 2, Status: 'ERROR'}";
+			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
 		
-		//State = 3; //war copy failed
+		State = "{Step: 3, Status: 'OK'}";
 		if(doCopyWar() == false)
 		{
-			//error=true
+			State = "{Step: 2, Status: 'ERROR'}";
+			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
 		
