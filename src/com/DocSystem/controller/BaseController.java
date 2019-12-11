@@ -6649,7 +6649,7 @@ public class BaseController  extends BaseFunction{
 			return getAndSetDBInfoFromFile(userJDBCSettingPath);
 		}
 		
-		String defaultJDBCSettingPath = docSysIniDirPath + "config/jdbc.properity";
+		String defaultJDBCSettingPath = webPath + "WEB-INF/classes/jdbc.properity";
 		if(isFileExist(defaultJDBCSettingPath) == false)
 		{
 			return false;
