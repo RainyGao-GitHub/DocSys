@@ -1876,7 +1876,7 @@ public class BaseFunction{
         return true;
     }
     //检查文件是否存在
-    public boolean isFileExist(String path){
+    public static boolean isFileExist(String path){
     	File file=new File(path);
         return file.exists();
     }
