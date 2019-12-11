@@ -7035,7 +7035,23 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean backupDB(String path, String name) 
 	{
-		// TODO Auto-generated method stub
+    	String dbName = getDBNameFromUrl(DB_URL);
+    	if(dbName == null || dbName.isEmpty())
+    	{
+    		return false;
+    	}
+    	
+		String command = new String("cmd /k mysqldump -u"+ DB_USER +" -p"+ DB_PASS +" " + dbName +" >" + path + name);
+		//执行命令行
+		Runtime runtime = Runtime.getRuntime();
+		try {
+			//cmd /k在执行命令后不关掉命令行窗口  cmd /c在执行完命令行后关掉命令行窗口   \\表示转译符也可使用/替代，linux使用/
+			Process process = runtime.exec(command);
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return false;
 	}
 
