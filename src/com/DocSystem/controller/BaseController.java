@@ -5854,7 +5854,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String dstName = doc.getVid() + "_" + doc.getDocId() + ".pdf";
-		String dstPath = getWebTmpPath() + "preview/" + dstName;
+		String dstPath = getWebTmpPathForPreview() + dstName;
 		delFileOrDir(dstPath);
 	}
 	
