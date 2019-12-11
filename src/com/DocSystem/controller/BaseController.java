@@ -6608,15 +6608,6 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		saveDocContentToFile(State, docSysIniPath, "State");
-		
-		State = "{Step: 3, Status: 'OK'}";
-		if(doCopyWar() == false)
-		{
-			State = "{Step: 3, Status: 'ERROR'}";
-			saveDocContentToFile(State, docSysIniPath, "State");
-			return;
-		}
-		saveDocContentToFile(State, docSysIniPath, "State");
 		return;
 	}
 	
@@ -6644,7 +6635,12 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}		
-		return false;
+		
+		if(doCopyWar() == false)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private boolean doCopyWar() 
