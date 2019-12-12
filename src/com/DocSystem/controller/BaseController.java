@@ -6587,21 +6587,21 @@ public class BaseController  extends BaseFunction{
 
 		//get the version info in war
 		Integer version = getVersionFromFile(docSysWebPath, "version");
-		
 		Integer newVersion = getVersionFromFile(docSysIniPath, "newVersion");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "oldVersion");
 		if(newVersion == null || version == null || !version.equals(newVersion))
 		{
 			return;
 		}
 			
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "oldVersion");
-
+		
 		//SET DB Info
 		getAndSetDBInfo();
 		
 		String State = "{Step: 1, Status: 'OK'}"; //war update failed
-		//检查数据库是否存在或是否需要升级
-		if(checkAndUpdateDB(oldVersion, newVersion) == false)
+
+		String dbName = getDBNameFromUrl(DB_URL);
+		if(checkAndUpdateDB(dbName, oldVersion, newVersion) == false)
 		{
 			//To Make sure system will always jump to install page, to make user can set the DB
 			State = "{Step: 1, Status: 'ERROR'}";
@@ -6663,7 +6663,7 @@ public class BaseController  extends BaseFunction{
 		return copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true);
 	}
 
-	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
+	private boolean checkAndUpdateDB(String dbName, Integer oldVersion, Integer newVersion) {
 		// TODO Auto-generated method stub
 		if(oldVersion == null)	//这是全新安装
 		{	
@@ -6674,21 +6674,15 @@ public class BaseController  extends BaseFunction{
 				return true;
 			}
 			
-			if(createDB() == false)
+			if(createDB(dbName) == false)
 			{
 				return false;
 			}
 			
-			String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
-			if(isFileExist(sqlScriptPath) == false)
+			if(initDB() == false)
 			{
-				sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
-				if(isFileExist(sqlScriptPath) == false)
-				{
-					return false;
-				}
-			}
-			return executeSqlScript(sqlScriptPath);			
+				return false;
+			}			
 		}
 		
 		return DBUpgrade(oldVersion, newVersion);
@@ -6716,14 +6710,8 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean createDB() 
+	private boolean createDB(String dbName) 
     {
-    	String dbName = getDBNameFromUrl(DB_URL);
-    	if(dbName == null || dbName.isEmpty())
-    	{
-    		return false;
-    	}
-
         try {
 			Class.forName(JDBC_DRIVER);
 		} catch (ClassNotFoundException e) {
@@ -6837,7 +6825,7 @@ public class BaseController  extends BaseFunction{
         return false;        
     }
     
-	private boolean getAndSetDBInfo() 
+	private boolean getAndSetDBInfo()
 	{
 		String userJDBCSettingPath = docSysIniPath + "config/jdbc.properties";
 		if(isFileExist(userJDBCSettingPath))
@@ -6944,31 +6932,23 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
-		if(backupDB(docSysIniPath, "docsystem.sql") == false)
+		if(backupDB(oldVersion, newVersion) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
 		}
 		
-		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
+		if(deleteDBTabs() == false)
 		{
-			int dbTabId = dbTabsNeedToUpgrade.get(i);
-			String jsonFilePath = getNameByObjType(dbTabId) + ".json";
-			exportObjectListToJsonFile(dbTabId, jsonFilePath, oldVersion, newVersion);
-			deleteDBTab(getNameByObjType(dbTabId));
+			System.out.println("DBUpgrade() 数据库表删除失败!");
+			return true;		
 		}
 		
-		//Init DB Tabs
-		String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
-		if(isFileExist(sqlScriptPath) == false)
+		if(initDB() == false)
 		{
-			sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
-			if(isFileExist(sqlScriptPath) == false)
-			{
-				return false;
-			}
+			System.out.println("DBUpgrade() 数据库初始化失败!");
+			return false;
 		}
-		executeSqlScript(sqlScriptPath);
 		
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
@@ -6995,7 +6975,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = "drop table " + tabName;
+            String sql = "DROP TABLE IF EXISTS " + tabName;
             System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
             System.out.println("ret:" + ret);
@@ -7025,85 +7005,47 @@ public class BaseController  extends BaseFunction{
 		
 	}
 
-	private static boolean cleanDB() {
-    	String dbName = getDBNameFromUrl(DB_URL);
-    	if(dbName == null || dbName.isEmpty())
-    	{
-    		return false;
-    	}
-
-		try {
-			Class.forName(JDBC_DRIVER);
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-        
-		boolean ret = false;
-		Connection conn = null;
-        Statement stmt = null;
-        try{
-            // 注册 JDBC 驱动
-            Class.forName(JDBC_DRIVER);
-            conn = (Connection) DriverManager.getConnection(DB_URL ,DB_USER, DB_PASS);
-        
-            stmt = (Statement) conn.createStatement();
-            String deleteTabs = "SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '" + dbName + "'";
-            if(stmt.executeUpdate(deleteTabs) == 0)
-		    {
-	    		System.out.println("delete tables success!");
-	    		stmt.close();
-	    		conn.close();
-	    		return true;
-	    	}   
-	    	
-            // 完成后关闭
-            stmt.close();
-            conn.close();
-        }catch(SQLException se){
-            // 处理 JDBC 错误
-            se.printStackTrace();
-        }catch(Exception e){
-            // 处理 Class.forName 错误
-            e.printStackTrace();
-        }finally{
-            // 关闭资源
-            try{
-                if(stmt!=null) stmt.close();
-            }catch(SQLException se2){
-            }// 什么都不做
-            try{
-                if(conn!=null) conn.close();
-            }catch(SQLException se){
-                se.printStackTrace();
-            }
-        }
-		return ret;
-	}
-
-	private static boolean backupDB(String path, String name) 
+	private static boolean backupDB(Integer oldVersion, Integer newVersion) 
 	{
-    	String dbName = getDBNameFromUrl(DB_URL);
-    	if(dbName == null || dbName.isEmpty())
-    	{
-    		return false;
-    	}
-    	
-		String command = new String("cmd /k mysqldump -u"+ DB_USER +" -p"+ DB_PASS +" " + dbName +" >" + path + name);
-		//执行命令行
-		Runtime runtime = Runtime.getRuntime();
-		try {
-			//cmd /k在执行命令后不关掉命令行窗口  cmd /c在执行完命令行后关掉命令行窗口   \\表示转译符也可使用/替代，linux使用/
-			Process process = runtime.exec(command);
-			return true;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
+		//Create backup dir
+		String backUpTime = "";
+		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+		File backUpDir = new File(backUpPath);
+		backUpDir.mkdirs();
+		
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			String jsonFileName = DBTabNameMap[i] + ".json";
+			String jsonFilePath = docSysIniPath + jsonFileName;
+			exportObjectListToJsonFile(i, jsonFilePath, oldVersion, newVersion);
+			copyFile(jsonFilePath, backUpPath + jsonFileName, true);
+		}		
+		return true;
+	}
+	
+	private static boolean deleteDBTabs() 
+	{
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			deleteDBTab(DBTabNameMap[i]);
+		}	
+		return true;
 	}
 
+	private static boolean initDB() 
+	{
+		String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
+		if(isFileExist(sqlScriptPath) == false)
+		{
+			sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+			if(isFileExist(sqlScriptPath) == false)
+			{
+				return false;
+			}
+		}
+		return executeSqlScript(sqlScriptPath);	
+	}
+	
 	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) 
 	{
 		if(newVersion == oldVersion)
