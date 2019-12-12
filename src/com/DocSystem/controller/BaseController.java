@@ -7034,16 +7034,16 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean initDB() 
 	{
-		String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
-		if(isFileExist(sqlScriptPath) == false)
+		String userSqlScriptPath = docSysIniPath + "config/docsystem.sql";
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+		if(isFileExist(userSqlScriptPath) == true)
 		{
-			sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
-			if(isFileExist(sqlScriptPath) == false)
+			if(copyFile(userSqlScriptPath, sqlScriptPath, true) == false)
 			{
 				return false;
 			}
 		}
-		return executeSqlScript(sqlScriptPath);	
+		return executeSqlScript("docsystem.sql");	
 	}
 	
 	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) 
