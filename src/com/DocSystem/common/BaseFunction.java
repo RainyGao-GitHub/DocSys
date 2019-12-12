@@ -1373,7 +1373,7 @@ public class BaseFunction{
 		return encode;
 	}
 
-	public boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
+	public static boolean copyFile(String srcFilePath,String dstFilePath,boolean cover){
         File srcFile=new File(srcFilePath);
         if(srcFile.exists() == false)
         {
