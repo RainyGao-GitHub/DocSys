@@ -112,17 +112,17 @@ CREATE TABLE `group_member` (
 CREATE TABLE `repos` (
   `ID` int(8) NOT NULL COMMENT '主键',
   `NAME` varchar(255) DEFAULT NULL COMMENT '项目名',
-  `TYPE` int(10) DEFAULT '1' COMMENT '文件系统类型：0：虚拟文件系统 1-普通文件系统',
+  `TYPE` int(10) DEFAULT '1' COMMENT '文件系统类型',
   `PATH` varchar(200) NOT NULL DEFAULT 'D:/DocSysReposes' COMMENT '仓库所在的目录',
   `REAL_DOC_PATH` varchar(300) DEFAULT NULL COMMENT 'RealDoc的存储路径',
-  `VER_CTRL` int(2) NOT NULL DEFAULT '0' COMMENT 'RealDoc版本控制：0：无版本控制；1：SVN；2：GIT',
+  `VER_CTRL` int(2) NOT NULL DEFAULT '0' COMMENT 'RealDoc版本控制: 0:无版本控制 1:SVN 2:GIT',
   `IS_REMOTE` int(1) NOT NULL DEFAULT '1' COMMENT '0:本地版本仓库 1:远程版本仓库',
   `LOCAL_SVN_PATH` varchar(200) DEFAULT NULL COMMENT '本地版本仓库所在目录',
   `SVN_PATH` varchar(200) DEFAULT NULL COMMENT '远程版本仓库地址',
   `SVN_USER` varchar(50) DEFAULT NULL COMMENT '远程版本仓库访问用户名',
   `SVN_PWD` varchar(20) DEFAULT NULL COMMENT '远程版本仓库访问用户密码',
   `REVISION` varchar(100) DEFAULT NULL COMMENT 'RealDoc版本仓库版本号',
-  `VER_CTRL1` int(2) NOT NULL DEFAULT '0' COMMENT 'VirtualDoc版本控制: 0:无;  1: SVN; 2: GIT;',
+  `VER_CTRL1` int(2) NOT NULL DEFAULT '0' COMMENT 'VirtualDoc版本控制: 0:无版本控制 1:SVN 2:GIT',
   `IS_REMOTE1` int(1) NOT NULL DEFAULT '1' COMMENT '0:本地版本仓库 1:远程版本仓库',
   `LOCAL_SVN_PATH1` varchar(200) DEFAULT NULL COMMENT '本地版本仓库所在目录',
   `SVN_PATH1` varchar(200) DEFAULT NULL COMMENT '远程版本仓库地址',
@@ -135,7 +135,7 @@ CREATE TABLE `repos` (
   `CREATE_TIME` bigint(20) DEFAULT '0' COMMENT '仓库创建时间',
   `STATE` int(1) NOT NULL DEFAULT '0' COMMENT '0: unlock 1: lock',
   `LOCK_BY` int(11) DEFAULT NULL COMMENT 'UserID用于给Repos上锁',
-  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0' COMMENT '仓库锁定时间，该参数用于Lock的自动解锁'
+  `LOCK_TIME` bigint(20) NOT NULL DEFAULT '0' COMMENT '仓库锁定时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
