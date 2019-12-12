@@ -6683,6 +6683,10 @@ public class BaseController  extends BaseFunction{
 			if(isFileExist(sqlScriptPath) == false)
 			{
 				sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+				if(isFileExist(sqlScriptPath) == false)
+				{
+					return false;
+				}
 			}
 			return executeSqlScript(sqlScriptPath);			
 		}
@@ -6940,7 +6944,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
-		if(backupDB(docSysIniPath + "backup/", "docsystem.sql") == false)
+		if(backupDB(docSysIniPath, "docsystem.sql") == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -6951,19 +6955,18 @@ public class BaseController  extends BaseFunction{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
 			String jsonFilePath = getNameByObjType(dbTabId) + ".json";
 			exportObjectListToJsonFile(dbTabId, jsonFilePath, oldVersion, newVersion);
+			deleteDBTab(getNameByObjType(dbTabId));
 		}
 		
-		//UPdate DataBase Structure with the DocSystem.sql
-		if(cleanDB() == false)
-		{
-			System.out.println("DBUpgrade() 清除数据库失败!");
-			return true;
-		}
-		
+		//Init DB Tabs
 		String sqlScriptPath = docSysIniPath + "config/docsystem.sql";
 		if(isFileExist(sqlScriptPath) == false)
 		{
 			sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+			if(isFileExist(sqlScriptPath) == false)
+			{
+				return false;
+			}
 		}
 		executeSqlScript(sqlScriptPath);
 		
@@ -6976,6 +6979,52 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private static boolean deleteDBTab(String tabName) {
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            //System.out.println("连接数据库...");
+            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+        
+            // 执行查询
+            //System.out.println(" 实例化Statement对象...");
+            stmt = (Statement) conn.createStatement();
+            
+            String sql = "drop table " + tabName;
+            System.out.println("sql:" + sql);
+            ret = stmt.execute(sql);
+            System.out.println("ret:" + ret);
+            // 完成后关闭
+            stmt.close();
+            conn.close();
+            return ret;
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
+		
+	}
+
 	private static boolean cleanDB() {
     	String dbName = getDBNameFromUrl(DB_URL);
     	if(dbName == null || dbName.isEmpty())
@@ -7057,7 +7106,7 @@ public class BaseController  extends BaseFunction{
 
 	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) 
 	{
-		if(oldVersion >= 20000)
+		if(newVersion == oldVersion)
 		{
 			return null;
 		}
