@@ -7140,6 +7140,11 @@ public class BaseController  extends BaseFunction{
 		
 		String name = getNameByObjType(objType);
         JSONArray list = jobj.getJSONArray(name);
+        if(list == null || list.size() == 0)
+        {
+        	System.out.println("importObjectListFromJsonFile() list is empty");
+        	return;
+        }
 
         for (int i = 0 ; i < list.size();i++)
         {
