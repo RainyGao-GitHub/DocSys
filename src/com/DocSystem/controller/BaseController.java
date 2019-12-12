@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
 
+import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
 
@@ -6924,6 +6925,8 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean DBUpgrade(int oldVersion, int newVersion)
 	{
+		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
+		
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
 		if(dbTabsNeedToUpgrade == null || dbTabsNeedToUpgrade.size() == 0)
 		{
@@ -6953,7 +6956,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
-			String jsonFilePath = getNameByObjType(dbTabId) + ".json";
+			String jsonFilePath = docSysIniPath + "backup/" + getNameByObjType(dbTabId) + ".json";
 			importObjectListFromJsonFile(dbTabId, jsonFilePath);
 		}
 		return false;
@@ -7007,8 +7010,11 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean backupDB(Integer oldVersion, Integer newVersion) 
 	{
+		System.out.println("backupDB() from " + oldVersion + " to " + newVersion);
+
 		//Create backup dir
-		String backUpTime = "";
+		Date date = new Date();
+		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		File backUpDir = new File(backUpPath);
 		backUpDir.mkdirs();
@@ -7016,7 +7022,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< DBTabNameMap.length; i++)
 		{
 			String jsonFileName = DBTabNameMap[i] + ".json";
-			String jsonFilePath = docSysIniPath + jsonFileName;
+			String jsonFilePath = docSysIniPath + "backup/" + jsonFileName;
 			exportObjectListToJsonFile(i, jsonFilePath, oldVersion, newVersion);
 			copyFile(jsonFilePath, backUpPath + jsonFileName, true);
 		}		
@@ -7025,6 +7031,8 @@ public class BaseController  extends BaseFunction{
 	
 	private static boolean deleteDBTabs() 
 	{
+		System.out.println("deleteDBTabs()");
+
 		for(int i=0; i< DBTabNameMap.length; i++)
 		{
 			deleteDBTab(DBTabNameMap[i]);
@@ -7034,6 +7042,7 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean initDB() 
 	{
+		System.out.println("initDB()");
 		String userSqlScriptPath = docSysIniPath + "config/docsystem.sql";
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
 		if(isFileExist(userSqlScriptPath) == true)
