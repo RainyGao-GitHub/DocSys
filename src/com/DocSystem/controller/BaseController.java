@@ -6622,41 +6622,44 @@ public class BaseController  extends BaseFunction{
 		if(isFileExist(docSysIniPath + "config") == false)
 		{
 			//no need to update the war
+			System.out.println("checkAndUpdateWar() config not exists, no need to update war");
 			return true;
 		}
 		
 		//Copy DocSystem
+		System.out.println("checkAndUpdateWar() copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
 		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", true) == false)
 		{
+			//Failed to copy 
+			System.out.println("checkAndUpdateWar() Failed to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
 			return false;
 		}
-		
+		System.out.println("checkAndUpdateWar() Success to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
+
+		System.out.println("checkAndUpdateWar() Start to copy config");
 		if(copyDir(docSysIniPath + "config", docSysIniPath + "DocSystem/WEB-INF/classes", true) == false)
 		{
+			System.out.println("checkAndUpdateWar() Failed to copy config");
 			return false;
 		}	
+		System.out.println("checkAndUpdateWar() Success to copy config");
 		
-		//zip to war
+		System.out.println("checkAndUpdateWar() Start to build new war");
 		if(doCompressDir(docSysIniPath, "DocSystem", docSysIniPath, "DocSystem.war", null) == false)
 		{
+			System.out.println("checkAndUpdateWar() Failed to build new war");
 			return false;
 		}		
+		System.out.println("checkAndUpdateWar() Success to build new war");
 		
-		if(doCopyWar() == false)
+		System.out.println("checkAndUpdateWar() Start to copy new war");
+		if(copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true) == false)
 		{
+			System.out.println("checkAndUpdateWar() Failed to copy new war");
 			return false;
 		}
-		
+		System.out.println("checkAndUpdateWar() Success to copy new war");
 		return true;
-	}
-
-	private boolean doCopyWar() 
-	{
-		if(isFileExist(docSysIniPath + "DocSystem.war") == false)
-		{
-			return true;
-		}
-		return copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true);
 	}
 
 	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
