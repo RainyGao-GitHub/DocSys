@@ -6593,25 +6593,18 @@ public class BaseController  extends BaseFunction{
 		if(newVersion == null || version == null || !version.equals(newVersion))
 		{
 			return;
-		}
-			
+		}		
 		
-		//SET DB Info
-		getAndSetDBInfo();
-		
-		String State = "{Step: 1, Status: 'OK'}"; //war update failed
-
-		String dbName = getDBNameFromUrl(DB_URL);
-		if(checkAndUpdateDB(dbName, oldVersion, newVersion) == false)
+		String State = "{Step: 1, Status: 'OK'}"; //update db
+		if(checkAndUpdateDB(oldVersion, newVersion) == false)
 		{
-			//To Make sure system will always jump to install page, to make user can set the DB
 			State = "{Step: 1, Status: 'ERROR'}";
 			saveDocContentToFile(State, docSysIniPath, "State");
 			return;
 		}
 		saveDocContentToFile(State, docSysIniPath, "State");
 
-		State = "{Step: 2, Status: 'OK'}";
+		State = "{Step: 2, Status: 'OK'}"; //update war
 		//根据config是否存在决定是否需要更新War包
 		if(checkAndUpdateWar() == false)
 		{
@@ -6624,7 +6617,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean checkAndUpdateWar() {
-		// TODO Auto-generated method stub
+		System.out.println("checkAndUpdateWar()");
+		
 		if(isFileExist(docSysIniPath + "config") == false)
 		{
 			//no need to update the war
@@ -6652,6 +6646,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
+		
 		return true;
 	}
 
@@ -6664,17 +6659,16 @@ public class BaseController  extends BaseFunction{
 		return copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true);
 	}
 
-	private boolean checkAndUpdateDB(String dbName, Integer oldVersion, Integer newVersion) {
-		// TODO Auto-generated method stub
-		if(oldVersion == null)	//这是全新安装
-		{	
-			//检查docsystem数据库是否存在
-			if(testDB(DB_URL, DB_USER, DB_PASS) == true)
-			{
-				//数据库已存在
-				return true;
-			}
-			
+	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
+		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);
+
+		//SET DB Info
+		getAndSetDBInfo();
+		
+		String dbName = getDBNameFromUrl(DB_URL);
+		//检查docsystem数据库是否存在
+		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
+		{
 			if(createDB(dbName) == false)
 			{
 				return false;
@@ -6683,9 +6677,14 @@ public class BaseController  extends BaseFunction{
 			if(initDB() == false)
 			{
 				return false;
-			}			
+			}
+			return true;
 		}
 		
+		if(oldVersion == null)
+		{
+			oldVersion = 0;
+		}
 		return DBUpgrade(oldVersion, newVersion);
 	}
 	
@@ -6959,7 +6958,7 @@ public class BaseController  extends BaseFunction{
 			String jsonFilePath = docSysIniPath + "backup/" + getNameByObjType(dbTabId) + ".json";
 			importObjectListFromJsonFile(dbTabId, jsonFilePath);
 		}
-		return false;
+		return true;
 	}
 	
 	private static boolean deleteDBTab(String tabName) {
@@ -7043,16 +7042,13 @@ public class BaseController  extends BaseFunction{
 	private static boolean initDB() 
 	{
 		System.out.println("initDB()");
-		String userSqlScriptPath = docSysIniPath + "config/docsystem.sql";
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
-		if(isFileExist(userSqlScriptPath) == true)
+		if(isFileExist(sqlScriptPath) == false)
 		{
-			if(copyFile(userSqlScriptPath, sqlScriptPath, true) == false)
-			{
-				return false;
-			}
+			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
+			return false;
 		}
-		return executeSqlScript("docsystem.sql");	
+		return executeSqlScript("docsystem.sql");
 	}
 	
 	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) 
