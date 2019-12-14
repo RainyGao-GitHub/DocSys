@@ -7062,7 +7062,7 @@ public class BaseController  extends BaseFunction{
 				for(int i=0; i< list.size(); i++)
 				{
 					Object obj = list.get(i);
-					String sql = buildInsertSqlStr(obj, i);
+					String sql = buildInsertSqlStr(obj, objId);
 					backUpContent += sql + ";/n";
 				}
 				backUpContent += "/n";	//换行
