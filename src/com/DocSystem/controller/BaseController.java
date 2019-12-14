@@ -7063,9 +7063,9 @@ public class BaseController  extends BaseFunction{
 				{
 					Object obj = list.get(i);
 					String sql = buildInsertSqlStr(obj, objId);
-					backUpContent += sql + ";/n";
+					backUpContent += sql + ";\r\n";
 				}
-				backUpContent += "/n";	//换行
+				backUpContent += "\r\n";	//换行
 			}
 		}
 		return saveDocContentToFile(backUpContent, path, name);
@@ -7324,7 +7324,7 @@ public class BaseController  extends BaseFunction{
             ResultSet rs = stmt.executeQuery(sql);
                   
             // 展开结果集数据库
-            while(rs.next()){                
+            while(rs.next()){
                 Object obj = createObject(rs, objType);
                 list.add(obj);
             }
@@ -7861,6 +7861,7 @@ public class BaseController  extends BaseFunction{
 		obj.setId( (Integer)jsonObj.get("id"));
 		obj.setName((String)jsonObj.get("name"));
 		obj.setPwd((String)jsonObj.get("pwd"));
+		obj.setType( (Integer)jsonObj.get("type"));
 		obj.setRole( (Integer)jsonObj.get("role"));
 		obj.setRealName((String)jsonObj.get("realName"));
 		obj.setNickName((String)jsonObj.get("nickName"));
@@ -7883,6 +7884,7 @@ public class BaseController  extends BaseFunction{
 		obj.setId( rs.getInt("ID"));
 		obj.setName(rs.getString("NAME"));
 		obj.setPwd(rs.getString("PWD"));
+		obj.setType( rs.getInt("TYPE"));
 		obj.setRole( rs.getInt("ROLE"));
 		obj.setRealName(rs.getString("REAL_NAME"));
 		obj.setNickName(rs.getString("NICK_NAME"));
@@ -7905,6 +7907,7 @@ public class BaseController  extends BaseFunction{
 		if(obj.getId() != null) { paramList.add("ID");}
 		if(obj.getName() != null) { paramList.add("NAME");}
 		if(obj.getPwd() != null) { paramList.add("PWD");}
+		if(obj.getType() != null) { paramList.add("TYPE");}
 		if(obj.getRole() != null) { paramList.add("ROLE");}
 		if(obj.getRealName() != null) { paramList.add("REAL_NAME");}
 		if(obj.getNickName() != null) { paramList.add("NICK_NAME");}
@@ -7947,6 +7950,7 @@ public class BaseController  extends BaseFunction{
 			case "ID": sql_value += " " + obj.getId() + seperator; break;
 			case "NAME": sql_value += " '" + obj.getName() + "'" + seperator; break;
 			case "PWD": sql_value += " '" + obj.getPwd()  + "'" + seperator; break;
+			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
 			case "ROLE": sql_value += " " + obj.getRole() + seperator; break;
 			case "REAL_NAME": sql_value += " '" + obj.getRealName() + "'"  + seperator; break;
 			case "NICK_NAME": sql_value += " '" + obj.getNickName()  + "'" + seperator; break;
@@ -8000,6 +8004,7 @@ public class BaseController  extends BaseFunction{
 			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
 			case "NAME": sql_value += seperator + param + "='"  + obj.getName()  + "'" ; break;
 			case "PWD": sql_value += seperator + param + "='"  + obj.getPwd()  + "'" ; break;
+			case "TYPE": sql_value += seperator + param + "="  + obj.getType() ; break;
 			case "ROLE": sql_value += seperator + param + "="  + obj.getRole() ; break;
 			case "REAL_NAME": sql_value += seperator + param + "='"  + obj.getRealName()  + "'" ; break;
 			case "NICK_NAME": sql_value += seperator + param + "='"  + obj.getNickName()  + "'" ; break;
