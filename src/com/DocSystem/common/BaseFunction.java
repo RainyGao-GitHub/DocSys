@@ -1208,7 +1208,7 @@ public class BaseFunction{
         return false;
 	}
 
-	String getEncoding(byte[] bytes)
+	static String getEncoding(byte[] bytes)
 	{
 		String [] encodeCheckList = {
 				 "UTF-8",
@@ -1298,7 +1298,7 @@ public class BaseFunction{
 		
 	}
 	
-	protected String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
+	protected static String readDocContentFromFile(String path, String name, boolean encodeDetectEnable) 
 	{	
 		String filePath = path + name;
 		try 
@@ -1346,7 +1346,7 @@ public class BaseFunction{
 		}
 	}
     
-    private String getEncodeOfBuffer(byte[] buffer, int size) {
+    private static String getEncodeOfBuffer(byte[] buffer, int size) {
 		// TODO Auto-generated method stub
 		int encodeDetectBufLen = 0;
 		byte [] encodeDetectBuf = null;
