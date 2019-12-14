@@ -6546,7 +6546,7 @@ public class BaseController  extends BaseFunction{
 		return addIndexForRDoc(repos, doc);
 	}
 	
-	/****************************DocSys数据库导出导出接口 *********************************/
+	/****************************DocSys系统初始化接口 *********************************/
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
     static String DB_URL = "jdbc:mysql://localhost:3306/docsystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
     static String DB_USER = "root";
@@ -6577,45 +6577,70 @@ public class BaseController  extends BaseFunction{
 			"GROUP_MEMBER",
 			"SYS_CONFIG",
 	};
-	protected void docSysInit() {
+	
+	//系统需要根据该标志是否跳转至系统初始化配置页面（以便用户能够重新配置数据库）
+	static Integer docSysIniState = 0;
+	protected void docSysInit() 
+	{	
+		//Update the value of DB_URL/DB_USER/DB_PASS
+		getAndSetDBInfo();
+		String dbName = getDBNameFromUrl(DB_URL);
 		
 		docSysWebPath = getWebPath();
 		docSysIniPath = docSysWebPath + "../docSys.ini/";
 		if(isFileExist(docSysIniPath) == false)
 		{
+			//检查docsystem数据库是否存在
+			if(testDB(DB_URL, DB_USER, DB_PASS) == true)	//数据库不存在
+			{
+				return;
+			}
+			if(createDB(dbName) == false)
+			{
+				docSysIniState = 1;
+				return;
+			}
+			
+			if(initDB() == false)
+			{
+				docSysIniState = 2;
+				return;
+			}
 			return;
 		}
 
+		if(isFileExist(docSysIniPath + "State") == true)
+		{
+			System.out.println("数据库升级操作已执行，如需重新执行请删除文件：" + docSysIniPath + "State");
+			return;
+		}
+
+		
+		//docSys.ini存在，则需要根据里面的版本号信息更新数据库
 		//get the version info in war
 		Integer version = getVersionFromFile(docSysWebPath, "version");
+		//get the version info in docSys.ini
 		Integer newVersion = getVersionFromFile(docSysIniPath, "newVersion");
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "oldVersion");
 		if(newVersion == null || version == null || !version.equals(newVersion))
 		{
+			setDocSysInitState("{action: '升级数据库', step: 0, status: 'ERROR'}");
 			return;
 		}		
 		
-		String State = "{Step: 1, Status: 'OK'}"; //update db
 		if(checkAndUpdateDB(oldVersion, newVersion) == false)
 		{
-			State = "{Step: 1, Status: 'ERROR'}";
-			saveDocContentToFile(State, docSysIniPath, "State");
+			docSysIniState = 3;
+			setDocSysInitState("{action: '升级数据库', step: 1,  status: 'ERROR'}");
 			return;
 		}
-		saveDocContentToFile(State, docSysIniPath, "State");
-
-		State = "{Step: 2, Status: 'OK'}"; //update war
-		//根据config是否存在决定是否需要更新War包
-		if(checkAndUpdateWar() == false)
-		{
-			State = "{Step: 2, Status: 'ERROR'}";
-			saveDocContentToFile(State, docSysIniPath, "State");
-			return;
-		}
-		saveDocContentToFile(State, docSysIniPath, "State");
-		return;
+		setDocSysInitState("{action: '升级数据库', step: 1, status: 'OK'}");
 	}
 	
+	private void setDocSysInitState(String State) {
+		saveDocContentToFile(State, docSysIniPath, "State");
+	}
+
 	private boolean checkAndUpdateWar() {
 		System.out.println("checkAndUpdateWar()");
 		
@@ -6663,11 +6688,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
-		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);
-
-		//SET DB Info
-		getAndSetDBInfo();
-		
+		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
 		String dbName = getDBNameFromUrl(DB_URL);
 		//检查docsystem数据库是否存在
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
@@ -6732,7 +6753,8 @@ public class BaseController  extends BaseFunction{
             Class.forName(JDBC_DRIVER);
         
             // 打开链接
-            String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+            String url = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+            //String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
             conn = (Connection) DriverManager.getConnection(url ,DB_USER, DB_PASS);
         
             stmt = (Statement) conn.createStatement();
@@ -6830,11 +6852,12 @@ public class BaseController  extends BaseFunction{
     
 	private boolean getAndSetDBInfo()
 	{
-		String userJDBCSettingPath = docSysIniPath + "config/jdbc.properties";
-		if(isFileExist(userJDBCSettingPath))
-		{
-			return getAndSetDBInfoFromFile(userJDBCSettingPath);
-		}
+		//为了避免出现不同步要求，war包的配置必须是正确的
+//		String userJDBCSettingPath = docSysIniPath + "config/jdbc.properties";
+//		if(isFileExist(userJDBCSettingPath))
+//		{
+//			return getAndSetDBInfoFromFile(userJDBCSettingPath);
+//		}
 		
 		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
 		if(isFileExist(defaultJDBCSettingPath))
@@ -7101,6 +7124,7 @@ public class BaseController  extends BaseFunction{
 		{	
 			list = dbQuery(null, objType);
 		}
+		printObject("exportObjectListToJsonFile() list:", list);
 		writeObjectListToJsonFile(objType, list, filePath);
 		System.out.println("exportObjectListToJsonFile() export OK");
 	}
@@ -7114,6 +7138,8 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		System.out.println("writeObjectListToJsonFile() content:" + content);
+		
 		String name = getNameByObjType(objType);
 		content = "{" + name + ":" + content + "}";
 			
@@ -7121,7 +7147,7 @@ public class BaseController  extends BaseFunction{
 		try {
 			out = new FileOutputStream(filePath);
 		} catch (FileNotFoundException e) {
-			System.out.println("writeToJsonFile() new FileOutputStream failed");
+			System.out.println("writeObjectListToJsonFile() new FileOutputStream failed");
 			e.printStackTrace();
 			return false;
 		}
