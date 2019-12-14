@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -6997,8 +6998,9 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
-			String jsonFilePath = docSysIniPath + "backup/" + getNameByObjType(dbTabId) + ".json";
-			importObjectListFromJsonFile(dbTabId, jsonFilePath);
+			String jsonFilePath = docSysIniPath + "backup/";
+			String jsonFileName = getNameByObjType(dbTabId) + ".json";
+			importObjectListFromJsonFile(dbTabId, jsonFilePath, jsonFileName);
 		}
 		return true;
 	}
@@ -7145,11 +7147,11 @@ public class BaseController  extends BaseFunction{
 		writeObjectListToJsonFile(objType, list, filePath, fileName);
 		System.out.println("exportObjectListToJsonFile() export OK");
 	}
-	protected static void importObjectListFromJsonFile(int objType, String filePath)
+	protected static void importObjectListFromJsonFile(int objType, String filePath, String fileName)
 	{
-		System.out.println("importObjectListFromJsonFile() objType:" + objType + " filePath:" + filePath);
+		System.out.println("importObjectListFromJsonFile() objType:" + objType + " filePath:" + filePath + " fileName:" + fileName);
 
-		String s = readJsonFile(filePath);
+		String s = readDocContentFromFile(filePath, fileName, false);
 		JSONObject jobj = JSON.parseObject(s);
 		
 		String name = getNameByObjType(objType);
@@ -7174,13 +7176,13 @@ public class BaseController  extends BaseFunction{
     
 	protected static boolean writeObjectListToJsonFile(int objType, List<Object> list, String filePath, String fileName) 
 	{
-		String content = JSON.toJSONStringWithDateFormat(list, "yyy-MM-dd HH:mm:ss");
+		String content = JSON.toJSONString(list);
 		if(content == null)
 		{
 			System.out.println("writeObjectListToJsonFile() content is null");
 			return false;
 		}
-		
+				
 		System.out.println("writeObjectListToJsonFile() content:" + content);
 		
 		String name = getNameByObjType(objType);
@@ -8813,29 +8815,6 @@ public class BaseController  extends BaseFunction{
         sql = sql + sql_condition + sql_value;
         return sql;
 	}
-	
-    public static String readJsonFile(String filePath) {
-        String jsonStr = "";
-        try {
-            File jsonFile = new File(filePath);
-            FileReader fileReader = new FileReader(jsonFile);
-
-            Reader reader = new InputStreamReader(new FileInputStream(jsonFile),"utf-8");
-            int ch = 0;
-            StringBuffer sb = new StringBuffer();
-            while ((ch = reader.read()) != -1) {
-                sb.append((char) ch);
-            }
-            fileReader.close();
-            reader.close();
-            jsonStr = sb.toString();
-            return jsonStr;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
 	
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
