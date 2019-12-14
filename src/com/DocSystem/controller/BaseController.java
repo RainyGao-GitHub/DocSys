@@ -6588,24 +6588,32 @@ public class BaseController  extends BaseFunction{
 		
 		docSysWebPath = getWebPath();
 		docSysIniPath = docSysWebPath + "../docSys.ini/";
-		if(isFileExist(docSysIniPath) == false)
+		File docSysIniDir = new File(docSysIniPath);
+		if(docSysIniDir.exists() == false)
 		{
+			docSysIniDir.mkdirs();
 			//检查docsystem数据库是否存在
-			if(testDB(DB_URL, DB_USER, DB_PASS) == true)	//数据库不存在
+			if(testDB(DB_URL, DB_USER, DB_PASS) == true)	//数据库存在
 			{
+				setDocSysInitState("{action: '检查数据库', step: 0, status: 'OK'}");
 				return;
 			}
+						
 			if(createDB(dbName) == false)
 			{
 				docSysIniState = 1;
+				setDocSysInitState("{action: '新建数据库', step: 0, status: 'ERROR'}");
 				return;
 			}
+			setDocSysInitState("{action: '新建数据库', step: 0, status: 'OK'}");
 			
 			if(initDB() == false)
 			{
 				docSysIniState = 2;
+				setDocSysInitState("{action: '新建数据库', step: 1, status: 'ERROR'}");
 				return;
 			}
+			setDocSysInitState("{action: '新建数据库', step: 1, status: 'OK'}");
 			return;
 		}
 
@@ -6852,13 +6860,6 @@ public class BaseController  extends BaseFunction{
     
 	private boolean getAndSetDBInfo()
 	{
-		//为了避免出现不同步要求，war包的配置必须是正确的
-//		String userJDBCSettingPath = docSysIniPath + "config/jdbc.properties";
-//		if(isFileExist(userJDBCSettingPath))
-//		{
-//			return getAndSetDBInfoFromFile(userJDBCSettingPath);
-//		}
-		
 		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
 		if(isFileExist(defaultJDBCSettingPath))
 		{
@@ -6960,10 +6961,25 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
-		if(backupDB(oldVersion, newVersion) == false)
+		Date date = new Date();
+		String backUpTime = DateFormat.dateTimeFormat2(date);
+		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+		if(backupDB(backUpPath, "docsystem.sql") == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
+		}
+		
+		//export dbTab to json File
+		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
+		{	
+			int dbTabId = dbTabsNeedToUpgrade.get(i);
+			String jsonFileName = DBTabNameMap[dbTabId] + ".json";
+			String jsonFilePath = docSysIniPath + "backup/";
+			exportObjectListToJsonFile(dbTabId, jsonFilePath, jsonFileName, oldVersion, newVersion);
+
+			//copy to backup dir
+			copyFile(jsonFilePath + jsonFileName, backUpPath + jsonFileName, true);
 		}
 		
 		if(deleteDBTabs() == false)
@@ -7032,26 +7048,27 @@ public class BaseController  extends BaseFunction{
 		return ret;
 		
 	}
-
-	private static boolean backupDB(Integer oldVersion, Integer newVersion) 
+	
+	private static boolean backupDB(String path, String name) 
 	{
-		System.out.println("backupDB() from " + oldVersion + " to " + newVersion);
-
-		//Create backup dir
-		Date date = new Date();
-		String backUpTime = DateFormat.dateTimeFormat2(date);
-		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		File backUpDir = new File(backUpPath);
-		backUpDir.mkdirs();
+		System.out.println("backupDB()");
 		
-		for(int i=0; i< DBTabNameMap.length; i++)
+		String backUpContent = "";
+		for(int objId=0; objId< DBTabNameMap.length; objId++)
 		{
-			String jsonFileName = DBTabNameMap[i] + ".json";
-			String jsonFilePath = docSysIniPath + "backup/" + jsonFileName;
-			exportObjectListToJsonFile(i, jsonFilePath, oldVersion, newVersion);
-			copyFile(jsonFilePath, backUpPath + jsonFileName, true);
-		}		
-		return true;
+			List<Object> list = dbQuery(null, objId);
+			if(list != null)
+			{
+				for(int i=0; i< list.size(); i++)
+				{
+					Object obj = list.get(i);
+					String sql = buildInsertSqlStr(obj, i);
+					backUpContent += sql + ";/n";
+				}
+				backUpContent += "/n";	//换行
+			}
+		}
+		return saveDocContentToFile(backUpContent, path, name);
 	}
 	
 	private static boolean deleteDBTabs() 
@@ -7111,7 +7128,7 @@ public class BaseController  extends BaseFunction{
 	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
     //version是指当前数据库对应的软件版本
-	protected static void exportObjectListToJsonFile(int objType, String filePath, int srcVersion, int dstVersion) 
+	protected static void exportObjectListToJsonFile(int objType, String filePath, String fileName, int srcVersion, int dstVersion) 
 	{
 		System.out.println("exportObjectListToJsonFile() objType:" + objType + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
 
@@ -7125,46 +7142,9 @@ public class BaseController  extends BaseFunction{
 			list = dbQuery(null, objType);
 		}
 		printObject("exportObjectListToJsonFile() list:", list);
-		writeObjectListToJsonFile(objType, list, filePath);
+		writeObjectListToJsonFile(objType, list, filePath, fileName);
 		System.out.println("exportObjectListToJsonFile() export OK");
 	}
-    
-	protected static boolean writeObjectListToJsonFile(int objType, List<Object> list, String filePath) 
-	{
-		String content = JSON.toJSONStringWithDateFormat(list, "yyy-MM-dd HH:mm:ss");
-		if(content == null)
-		{
-			System.out.println("writeObjectListToJsonFile() content is null");
-			return false;
-		}
-		
-		System.out.println("writeObjectListToJsonFile() content:" + content);
-		
-		String name = getNameByObjType(objType);
-		content = "{" + name + ":" + content + "}";
-			
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(filePath);
-		} catch (FileNotFoundException e) {
-			System.out.println("writeObjectListToJsonFile() new FileOutputStream failed");
-			e.printStackTrace();
-			return false;
-		}
-		try {
-			byte[] buff = content.getBytes();
-			out.write(buff, 0, buff.length);
-			//关闭输出流
-			out.close();
-		} catch (IOException e) {
-			System.out.println("writeToJsonFile() out.write exception");
-			e.printStackTrace();
-			return false;
-		}		
-		return true;
-	}
-
-	//srcVersion是指jsonFile对应的软件版本，dstVersion是指目前系统数据库对应的软件版本
 	protected static void importObjectListFromJsonFile(int objType, String filePath)
 	{
 		System.out.println("importObjectListFromJsonFile() objType:" + objType + " filePath:" + filePath);
@@ -7191,6 +7171,24 @@ public class BaseController  extends BaseFunction{
         }
     	System.out.println("importObjectListFromJsonFile() import OK");
 	}
+    
+	protected static boolean writeObjectListToJsonFile(int objType, List<Object> list, String filePath, String fileName) 
+	{
+		String content = JSON.toJSONStringWithDateFormat(list, "yyy-MM-dd HH:mm:ss");
+		if(content == null)
+		{
+			System.out.println("writeObjectListToJsonFile() content is null");
+			return false;
+		}
+		
+		System.out.println("writeObjectListToJsonFile() content:" + content);
+		
+		String name = getNameByObjType(objType);
+		content = "{" + name + ":" + content + "}";
+			
+		return saveDocContentToFile(content, filePath, fileName);
+	}
+
 	
 	private static Object buildObjectFromJsonObj(JSONObject jsonObj, int objType) {
 		switch(objType)
@@ -7216,6 +7214,61 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_SYS_CONFIG:
 			return buildSysConfigFromJsonObj(jsonObj);
 		}
+		return null;
+	}
+	
+	private static Object createObject(ResultSet rs, int objType) throws Exception {
+		switch(objType)
+		{
+		case DOCSYS_REPOS:
+			return buildReposFromResultSet(rs);
+		case DOCSYS_REPOS_AUTH:
+			return buildReposAuthFromResultSet(rs);
+		case DOCSYS_DOC:
+			return buildDocFromResultSet(rs);
+		case DOCSYS_DOC_AUTH:
+			return buildDocAuthFromResultSet(rs);
+		case DOCSYS_DOC_LOCK:
+			return buildDocLockFromResultSet(rs);
+		case DOCSYS_USER:
+			return buildUserFromResultSet(rs);		
+		case DOCSYS_ROLE:
+			return buildRoleFromResultSet(rs);
+		case DOCSYS_USER_GROUP:
+			return buildUserGroupFromResultSet(rs);
+		case DOCSYS_GROUP_MEMBER:
+			return buildGroupMemberFromResultSet(rs);
+		case DOCSYS_SYS_CONFIG:
+			return buildSysConfigFromResultSet(rs);
+		}
+		return null;
+	}
+	
+	private static List<String> buildParamList(Object qObj, int objType) {
+		switch(objType)
+		{
+		case DOCSYS_REPOS:
+			return buildParamListForRepos((Repos) qObj);
+		case DOCSYS_REPOS_AUTH:
+			return buildParamListForReposAuth((ReposAuth) qObj);
+		case DOCSYS_DOC:
+			return buildParamListForDoc((Doc) qObj);
+		case DOCSYS_DOC_AUTH:
+			return buildParamListForDocAuth((DocAuth) qObj);
+		case DOCSYS_DOC_LOCK:
+			return buildParamListForDocLock((DocLock)qObj);
+		case DOCSYS_USER:
+			return buildParamListForUser((User) qObj);
+		case DOCSYS_ROLE:
+			return buildParamListForRole((Role) qObj);
+		case DOCSYS_USER_GROUP:
+			return buildParamListForUserGroup((UserGroup) qObj);
+		case DOCSYS_GROUP_MEMBER:
+			return buildParamListForGroupMember((GroupMember) qObj);
+		case DOCSYS_SYS_CONFIG:
+			return buildParamListForSysConfig((SysConfig) qObj);
+		}
+		
 		return null;
 	}
 
@@ -7301,62 +7354,7 @@ public class BaseController  extends BaseFunction{
         }
 		return null;
 	}
-	
-	
-	private static Object createObject(ResultSet rs, int objType) throws Exception {
-		switch(objType)
-		{
-		case DOCSYS_REPOS:
-			return buildReposFromResultSet(rs);
-		case DOCSYS_REPOS_AUTH:
-			return buildReposAuthFromResultSet(rs);
-		case DOCSYS_DOC:
-			return buildDocFromResultSet(rs);
-		case DOCSYS_DOC_AUTH:
-			return buildDocAuthFromResultSet(rs);
-		case DOCSYS_DOC_LOCK:
-			return buildDocLockFromResultSet(rs);
-		case DOCSYS_USER:
-			return buildUserFromResultSet(rs);		
-		case DOCSYS_ROLE:
-			return buildRoleFromResultSet(rs);
-		case DOCSYS_USER_GROUP:
-			return buildUserGroupFromResultSet(rs);
-		case DOCSYS_GROUP_MEMBER:
-			return buildGroupMemberFromResultSet(rs);
-		case DOCSYS_SYS_CONFIG:
-			return buildSysConfigFromResultSet(rs);
-		}
-		return null;
-	}
-	
-	private static List<String> buildParamList(Object qObj, int objType) {
-		switch(objType)
-		{
-		case DOCSYS_REPOS:
-			return buildParamListForRepos((Repos) qObj);
-		case DOCSYS_REPOS_AUTH:
-			return buildParamListForReposAuth((ReposAuth) qObj);
-		case DOCSYS_DOC:
-			return buildParamListForDoc((Doc) qObj);
-		case DOCSYS_DOC_AUTH:
-			return buildParamListForDocAuth((DocAuth) qObj);
-		case DOCSYS_DOC_LOCK:
-			return buildParamListForDocLock((DocLock)qObj);
-		case DOCSYS_USER:
-			return buildParamListForUser((User) qObj);
-		case DOCSYS_ROLE:
-			return buildParamListForRole((Role) qObj);
-		case DOCSYS_USER_GROUP:
-			return buildParamListForUserGroup((UserGroup) qObj);
-		case DOCSYS_GROUP_MEMBER:
-			return buildParamListForGroupMember((GroupMember) qObj);
-		case DOCSYS_SYS_CONFIG:
-			return buildParamListForSysConfig((SysConfig) qObj);
-		}
-		
-		return null;
-	}
+
 
 	public static boolean dbInsert(Object obj, int objType)
 	{
