@@ -339,19 +339,19 @@
 	        case "user":
 	            title = "用户管理";
 	            showUserList();
-	            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
+	            $("#nav li[data-eb-params=user]>a").addClass("open");
 	            $("ul.sublist").show();
 	            break;
 	        case "group":
 	            title = "用户组管理";
 	            showGroupList();
-	            $("#nav li[data-eb-params=ctrl]>a").addClass("open");
+	            $("#nav li[data-eb-params=group]>a").addClass("open");
 	            $("ul.sublist").show();
 	            break;
-	        case "suggest":
-	            title = "意见建议";
-	            $("#nav li[data-eb-params=suggest]>a").addClass("open");
-	            bus.trigger("Suggest.refresh");
+	        case "system":
+	            title = "系统管理";
+	            $("#nav li[data-eb-params=system]>a").addClass("open");
+	            $("ul.sublist").show();
 	            break;
 	    }
 	
