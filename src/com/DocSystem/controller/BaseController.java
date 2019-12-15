@@ -6577,7 +6577,7 @@ public class BaseController  extends BaseFunction{
 	
 	//系统需要根据该标志是否跳转至系统初始化配置页面（以便用户能够重新配置数据库）
 	static Integer docSysIniState = 0;
-	protected void docSysInit() 
+	protected static void docSysInit() 
 	{	
 		//Update the value of DB_URL/DB_USER/DB_PASS
 		getAndSetDBInfo();
@@ -6642,7 +6642,7 @@ public class BaseController  extends BaseFunction{
 		setDocSysInitState("{action: '升级数据库', step: 1, status: 'OK'}");
 	}
 	
-	private void setDocSysInitState(String State) {
+	private static void setDocSysInitState(String State) {
 		saveDocContentToFile(State, docSysIniPath, "State");
 	}
 
@@ -6692,7 +6692,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
+	private static boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
 		String dbName = getDBNameFromUrl(DB_URL);
 		//检查docsystem数据库是否存在
@@ -6739,7 +6739,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean createDB(String dbName) 
+	private static boolean createDB(String dbName) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -6825,7 +6825,7 @@ public class BaseController  extends BaseFunction{
 		return subStrs[subStrs.length-1];
 	}
 
-	public boolean testDB(String url, String user, String pwd)
+	public static boolean testDB(String url, String user, String pwd)
     {
         Connection conn = null;
         try {
@@ -6855,7 +6855,7 @@ public class BaseController  extends BaseFunction{
         return false;        
     }
     
-	private boolean getAndSetDBInfo()
+	private static boolean getAndSetDBInfo()
 	{
 		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
 		if(isFileExist(defaultJDBCSettingPath))
@@ -6865,7 +6865,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
+	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
 
 		String jdbcUrl = ReadProperties.getValue(JDBCSettingPath, "db.url");
@@ -6890,7 +6890,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private Integer getVersionFromFile(String path, String name) 
+	private static Integer getVersionFromFile(String path, String name) 
 	{
 		String versionStr = readDocContentFromFile(path, name, false);
 		System.out.println("getVersionFromFile() versionStr:" + versionStr);
