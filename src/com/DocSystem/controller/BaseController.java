@@ -7051,7 +7051,7 @@ public class BaseController  extends BaseFunction{
 		
 	}
 	
-	private static boolean backupDB(String path, String name, String encode) 
+	protected static boolean backupDB(String path, String name, String encode) 
 	{
 		System.out.println("backupDB()");
 		
