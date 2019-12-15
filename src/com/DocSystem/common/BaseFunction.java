@@ -1267,7 +1267,7 @@ public class BaseFunction{
 		File folder = new File(path);
 		if(!folder.exists())
 		{
-			System.out.println("saveDocContentToFile() path:" + path + " not exists!");
+			//System.out.println("saveDocContentToFile() path:" + path + " not exists!");
 			if(folder.mkdirs() == false)
 			{
 				System.out.println("saveDocContentToFile() mkdir path:" + path + " Failed!");

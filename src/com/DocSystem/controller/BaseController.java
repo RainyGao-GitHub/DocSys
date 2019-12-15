@@ -6548,8 +6548,8 @@ public class BaseController  extends BaseFunction{
     static String DB_URL = "jdbc:mysql://localhost:3306/docsystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
     static String DB_USER = "root";
     static String DB_PASS = "";
-    static String docSysIniPath = null;
-    static String docSysWebPath = null;
+    protected static String docSysIniPath = null;
+    protected static String docSysWebPath = null;
 	
     //定义数据库的ObjType
     protected final static int DOCSYS_REPOS			=0;
@@ -6946,7 +6946,7 @@ public class BaseController  extends BaseFunction{
 		return version;
 	}
 
-	private static boolean DBUpgrade(int oldVersion, int newVersion)
+	protected static boolean DBUpgrade(int oldVersion, int newVersion)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
 		
