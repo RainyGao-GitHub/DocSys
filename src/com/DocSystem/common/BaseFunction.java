@@ -495,7 +495,7 @@ public class BaseFunction{
 	}
 
 	//格式化本地路径
-	protected String localDirPathFormat(String path) {
+	protected static String localDirPathFormat(String path) {
 		if(path.isEmpty())
 		{
 			return path;
@@ -540,7 +540,7 @@ public class BaseFunction{
 		return path;
 	}
 	
-	private String buildPath(String[] paths) {
+	private static String buildPath(String[] paths) {
 		String path = "";
 		for(int i=0; i<paths.length; i++)
 		{
@@ -688,7 +688,7 @@ public class BaseFunction{
 
 	
 	//WebPath was 
-	protected String getWebPath() {
+	protected static String getWebPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         
         String webPath =  wac.getServletContext().getRealPath("/");
@@ -2440,7 +2440,7 @@ public class BaseFunction{
 		return false;
 	}
 
-	protected boolean isWinDiskStr(String Str) 
+	protected static boolean isWinDiskStr(String Str) 
 	{
 		if(Str.length() != 2)
 		{

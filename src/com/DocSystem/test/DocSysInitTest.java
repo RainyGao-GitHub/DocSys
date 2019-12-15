@@ -16,7 +16,7 @@ class DocSysInitTest extends BaseController{
     	//DB upgrade Test
     	docSysWebPath = "/DocSysTestDir/WebRoot/";
     	docSysIniPath = docSysWebPath + "../docSys.ini/";
-    	DBUpgrade(0, 20000);
+    	docSysInit();
     	
     }
 }
