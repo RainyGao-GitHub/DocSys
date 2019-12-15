@@ -6579,12 +6579,31 @@ public class BaseController  extends BaseFunction{
 	static Integer docSysIniState = 0;
 	protected static void docSysInit() 
 	{	
+		if(docSysWebPath == null)
+		{
+			docSysWebPath = getWebPath();
+			docSysIniPath = docSysWebPath + "../docSys.ini/";
+		}	
+		
+		//检查数据库初始化
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+		if(isFileExist(sqlScriptPath) == false)
+		{
+			System.out.println("docSysInit() sqlScriptPath:" + sqlScriptPath + " not exists");
+			return;
+		}
+		
 		//Update the value of DB_URL/DB_USER/DB_PASS
-		getAndSetDBInfo();
+		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
+		if(isFileExist(defaultJDBCSettingPath))
+		{
+			getAndSetDBInfoFromFile(defaultJDBCSettingPath);
+		}
+		
+		//Get dbName from the DB URL
 		String dbName = getDBNameFromUrl(DB_URL);
 		
-		docSysWebPath = getWebPath();
-		docSysIniPath = docSysWebPath + "../docSys.ini/";
+		//Check If DocIniDir exists
 		File docSysIniDir = new File(docSysIniPath);
 		if(docSysIniDir.exists() == false)
 		{
@@ -6614,14 +6633,15 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 
+		//docSys.ini存在
+		//如果 State存在表示已进行过初始化
 		if(isFileExist(docSysIniPath + "State") == true)
 		{
 			System.out.println("数据库升级操作已执行，如需重新执行请删除文件：" + docSysIniPath + "State");
 			return;
 		}
-
 		
-		//docSys.ini存在，则需要根据里面的版本号信息更新数据库
+		//根据里面的版本号信息更新数据库
 		//get the version info in war
 		Integer version = getVersionFromFile(docSysWebPath, "version");
 		//get the version info in docSys.ini
@@ -6854,16 +6874,6 @@ public class BaseController  extends BaseFunction{
         }
         return false;        
     }
-    
-	private static boolean getAndSetDBInfo()
-	{
-		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
-		if(isFileExist(defaultJDBCSettingPath))
-		{
-			return getAndSetDBInfoFromFile(defaultJDBCSettingPath);
-		}
-		return false;
-	}
 
 	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
@@ -7282,7 +7292,11 @@ public class BaseController  extends BaseFunction{
 	protected static List<Object> queryDocAuth(DocAuth qDocAuth, int srcVersion, int dstVersion) 
 	{
 		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH);
-    	
+    	if(docAuthList == null || docAuthList.size() == 0)
+    	{
+    		return docAuthList;
+    	}
+		
 		if(srcVersion != dstVersion &&  srcVersion < 20000 && dstVersion >= 20000) //1.xx.xx版本的docId用的是doc的数据库ID
     	{		
 			for(int i=0; i<docAuthList.size(); i++)
