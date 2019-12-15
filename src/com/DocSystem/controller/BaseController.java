@@ -2,12 +2,8 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
@@ -7152,7 +7148,7 @@ public class BaseController  extends BaseFunction{
 		{	
 			list = dbQuery(null, objType);
 		}
-		printObject("exportObjectListToJsonFile() list:", list);
+		//printObject("exportObjectListToJsonFile() list:", list);
 		writeObjectListToJsonFile(objType, list, filePath, fileName);
 		System.out.println("exportObjectListToJsonFile() export OK");
 	}
@@ -7192,7 +7188,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 				
-		System.out.println("writeObjectListToJsonFile() content:" + content);
+		//System.out.println("writeObjectListToJsonFile() content:" + content);
 		
 		String name = getNameByObjType(objType);
 		content = "{" + name + ":" + content + "}";
