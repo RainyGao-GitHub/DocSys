@@ -8,9 +8,9 @@ class DocSysInitTest extends BaseController{
     	backupDB("/DocSysTestDir/", "docsystem.sql", "UTF-8");
     	
     	//Export to json file Test
-    	exportObjectListToJsonFile(DOCSYS_USER, "", "docAuthList.json", 0, 20000);
+    	exportObjectListToJsonFile(DOCSYS_USER, "/DocSysTestDir/", "USER.json", 0, 20000);
     	
-    	//import json to DB Test
-    	importObjectListFromJsonFile(DOCSYS_DOC_AUTH, "", "docAuthList.json");
+    	//Import json to DB Test
+    	importObjectListFromJsonFile(DOCSYS_USER, "/DocSysTestDir/", "USER.json");
     }
 }
