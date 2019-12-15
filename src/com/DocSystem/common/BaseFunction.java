@@ -1170,7 +1170,8 @@ public class BaseFunction{
 	 * @return UTF-8/Unicode/UTF-16BE/GBK
 	 * @throws Exception
 	 */
-	public static String getFileEncode(String filePath) throws Exception {
+	public static String getFileEncode(String filePath)
+	{
         String charsetName = null;
         try {
             File file = new File(filePath);
