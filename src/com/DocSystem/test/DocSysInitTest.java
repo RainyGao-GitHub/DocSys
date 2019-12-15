@@ -12,5 +12,11 @@ class DocSysInitTest extends BaseController{
     	
     	//Import json to DB Test
     	importObjectListFromJsonFile(DOCSYS_USER, "/DocSysTestDir/", "USER.json");
+    	
+    	//DB upgrade Test
+    	docSysWebPath = "/DocSysTestDir/WebRoot/";
+    	docSysIniPath = docSysWebPath + "../docSys.ini/";
+    	DBUpgrade(0, 20000);
+    	
     }
 }
