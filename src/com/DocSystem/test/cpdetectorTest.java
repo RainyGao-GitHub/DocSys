@@ -38,8 +38,6 @@ class cpdetectorTest
             charset = detector.detectCodepage(file.toURI().toURL());
             if (charset != null) {
                 charsetName = charset.name();
-            } else {
-                charsetName = "UTF-8";
             }
         } catch (Exception ex) {
             ex.printStackTrace();
