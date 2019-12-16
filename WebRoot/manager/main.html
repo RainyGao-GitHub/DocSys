@@ -286,7 +286,7 @@
 
 	//click event handler  for data-eb-event="content.refresh"
 	$(document).on("click","[data-eb-event]", function () {
-		console.log("data-eb-event click handler");
+		console.log("[data-eb-event] onclick()");
 		
         var event = $(this).attr("data-eb-event");
         var params = $(this).attr("data-eb-params");
@@ -300,11 +300,15 @@
         case "content.refresh":
         	showContentPage(params);
         	break;
+        case "system.refresh":
+        	showSystemSubPage(params);
+        	break;
         }
     });
 	
-	  //展开子项目
-	  $(document).on("click",".has_sub",function(){
+	//展开子项目
+	$(document).on("click",".has_sub",function(){
+		  console.log(".has_sub onclick()");
 	      var title = $(this).children("a");
 	      if( title.hasClass("subdrop") ){
 	          title.removeClass("subdrop");
@@ -317,11 +321,11 @@
 
 	  //展开子目录
 	  $(document).on("click","li.has_sublist",function(){
-	      var $this = $(this);
+		  console.log("li.has_sublist onclick()");
+		  var $this = $(this);
 	      if( ! $this.children("a").hasClass("open") ){
 	          $this.children("ul.sublist").toggle();
 	      }
-
 	  });
 	
 	//显示对应菜单
@@ -350,6 +354,7 @@
 	            title = "系统管理";
 	            $("#nav li[data-eb-params=system]>a").addClass("open");
 	            $("ul.sublist").show();
+	    		$Func.render($("#container"),"emailSet");
 	            break;
 	    }
 	
@@ -357,6 +362,45 @@
 	        title : title,
 	        subtitle : title
 	    });
+	}
+
+	//系统邮件服务设置
+	var systemEmailSetting = {
+			email: "",
+			pwd: "",
+	}
+	function enableSystemEmailSet(){
+		$("#btnEnableSystemEmailSet").hide();
+		$("#btnCancelSystemEmailSet").show();
+		$("#btnSaveSystemEmailSet").show();
+		systemEmailSetting.email = $("#systemEmail").val();
+		systemEmailSetting.pwd = $("#systemEmailPwd").val();
+		$("#systemEmail").attr('disabled',false);;
+		$("#systemEmailPwd").attr('disabled',false);;
+	}
+	
+	function cancelSystemEmailSet(){
+		$("#btnEnableSystemEmailSet").show();
+		$("#btnCancelSystemEmailSet").hide();
+		$("#btnSaveSystemEmailSet").hide();
+		//revert the value
+		$("#systemEmail").attr('disabled',true);
+		$("#systemEmailPwd").attr('disabled',true);
+		$("#systemEmail").val(systemEmailSetting.email);
+		$("#systemEmailPwd").val(systemEmailSetting.pwd);
+	}
+	
+	function saveSystemEmailSet(){
+		$("#btnEnableSystemEmailSet").show();
+		$("#btnCancelSystemEmailSet").hide();
+		$("#btnSaveSystemEmailSet").hide();
+		//revert the value
+		$("#systemEmail").attr('disabled',true);
+		$("#systemEmailPwd").attr('disabled',true);
+		systemEmailSetting.email = $("#systemEmail").val();
+		systemEmailSetting.pwd = $("#systemEmailPwd").val();
+		//Save the config to config: will trigger the restart
+		
 	}
 
 
