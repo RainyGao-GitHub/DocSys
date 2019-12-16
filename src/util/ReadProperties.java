@@ -9,6 +9,7 @@ package util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -38,4 +39,31 @@ public class ReadProperties {
 			return null;
 		}		
 	}
+	
+    public static boolean setValue(String filePath, String key, String value){
+    	boolean ret = false;
+        FileOutputStream fileOutputStream = null;
+        try {
+			Properties props = new Properties();
+			File config = new File(filePath);
+			InputStream in = new FileInputStream(config);
+			props.load(in);
+			props.setProperty(key, value);
+    	
+            fileOutputStream = new FileOutputStream(filePath);
+            props.store(fileOutputStream, "");
+            ret = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (null != fileOutputStream){
+                    fileOutputStream.close();
+                }
+            } catch (Exception e) {
+                System.out.println("文件流关闭出现异常");
+            }
+        }
+        return ret;
+    }
 }

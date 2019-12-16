@@ -17,6 +17,7 @@ $(document).ready(function(){
 
 
   $("#nav > li > a").on('click',function(e){
+	  console.log("#nav > li > a onclick() ");
       if($(this).parent().hasClass("has_sub")) {
         e.preventDefault();
       }   
@@ -41,6 +42,8 @@ $(document).ready(function(){
 
 $(document).ready(function(){
   $(".sidebar-dropdown a").on('click',function(e){
+	  console.log(".sidebar-dropdown a onclick() ");
+
       e.preventDefault();
 
       if(!$(this).hasClass("open")) {
@@ -52,7 +55,6 @@ $(document).ready(function(){
         $(".sidebar #nav").slideDown(350);
         $(this).addClass("open");
       }
-      
       else if($(this).hasClass("open")) {
         $(this).removeClass("open");
         $(".sidebar #nav").slideUp(350);

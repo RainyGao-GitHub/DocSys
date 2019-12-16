@@ -14,3 +14,5 @@ main.html的具体工作流程如下:
 main.html中注册了data-eb-event / .has_sub / li.has_sublist的click事件，这是我为event-bus保留的一点点的入口，后面我就截断了。
 1. data-eb-event的click用于处理菜单的onclick事件（用户只要在这里定义自己的处理代码即可）
 2. has_sub / li.has_sublist用于展开和关闭子菜单
+
+custom.js中注册菜单sidebar的点击事件，菜单项的选中在该接口中实现，用户如果想自己定义建议删除该接口来自己实现
