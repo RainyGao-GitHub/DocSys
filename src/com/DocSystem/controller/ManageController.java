@@ -83,6 +83,43 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/********** 获取系统邮件配置 ***************/
+	@RequestMapping("/getSystemSmsConfig.do")
+	public void getSystemSmsConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getSystemSmsConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
+		if(email == null)
+		{
+			email = "";
+		}
+		String pwd = ReadProperties.read("docSysConfig.properties", "frompwd");
+		if(pwd == null)
+		{
+			pwd = "";
+		}
+		String emailConfig = "{\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
+		rt.setData(emailConfig);
+		writeJson(rt, response);
+	}
+	
+	
 	/********** 设置系统邮件配置 ***************/
 	@RequestMapping("/setSystemEmailConfig.do")
 	public void setSystemEmailConfig(String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
