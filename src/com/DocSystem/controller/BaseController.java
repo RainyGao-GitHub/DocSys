@@ -6265,7 +6265,9 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitDocCopy(repos, srcDoc, dstDoc, commitMsg, commitUser, rt, commitActionList);
 		}
-		return null;
+		
+		//If there is no verCtl, return ""
+		return "";
 	}
 	
 	
