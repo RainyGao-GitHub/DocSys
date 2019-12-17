@@ -397,9 +397,9 @@
 		//revert the value
 		$("#systemEmail").attr('disabled',true);
 		$("#systemEmailPwd").attr('disabled',true);
-		systemEmailSetting.email = $("#systemEmail").val();
-		systemEmailSetting.pwd = $("#systemEmailPwd").val();
-		//Save the config to config: will trigger the restart
+		var email = $("#systemEmail").val();
+		var pwd = $("#systemEmailPwd").val();
+		updateSysEmailConfig(email, pwd);
 	}
 
 	function showSysEmailConfig(){
@@ -425,6 +425,39 @@
 	        },
 	        error : function () {
 	        	showErrorMessage("服务器异常:获取邮件服务配置信息失败");
+	        }
+	    });
+	}
+	
+	function updateSysEmailConfig(email, pwd){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemEmailConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	email: email,
+	        	pwd: pwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemEmailSetting.email = email;
+	        		systemEmailSetting.pwd = pwd;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新邮件服务配置信息失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#systemEmail").val(systemEmailSetting.email);
+	        		$("#systemEmailPwd").val(systemEmailSetting.pwd);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新邮件服务配置信息失败");
+        		//restore the setting
+        		$("#systemEmail").val(systemEmailSetting.email);
+        		$("#systemEmailPwd").val(systemEmailSetting.pwd);
 	        }
 	    });
 	}
