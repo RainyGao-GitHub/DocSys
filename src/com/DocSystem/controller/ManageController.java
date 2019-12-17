@@ -78,7 +78,7 @@ public class ManageController extends BaseController{
 		{
 			pwd = "";
 		}
-		String emailConfig = "{systemEmailConfig: {email:'" + email + "', pwd:'"+ pwd +"'}}";
+		String emailConfig = "{email:'" + email + "', pwd:'"+ pwd +"'}";
 		
 		rt.setData(emailConfig);
 		writeJson(rt, response);
