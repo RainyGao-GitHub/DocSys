@@ -120,7 +120,7 @@ public class ManageController extends BaseController{
 		}
 		
 		//copy DocSystem to docSysIni Dir 
-		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", false) == false)
+		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", true) == false)
 		{
 			//Failed to copy 
 			System.out.println("setSystemEmailConfig() Failed to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
@@ -129,15 +129,15 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String tmpDocSystemPath = docSysIniPath + "DocSystem/";
+		String tmpDocSystemConfigPath = docSysIniPath + "DocSystem/WEB-INF/classes/";
 		String configFileName = "docSysConfig.properties";
 		if(email != null)
 		{
-			ReadProperties.setValue(tmpDocSystemPath + configFileName, "fromuser", email);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "fromuser", email);
 		}
 		if(pwd != null)
 		{
-			ReadProperties.setValue(tmpDocSystemPath + configFileName, "frompwd", pwd);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "frompwd", pwd);
 		}
 		
 		//Build new war
