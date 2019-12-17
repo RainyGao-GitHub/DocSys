@@ -6585,14 +6585,6 @@ public class BaseController  extends BaseFunction{
 			docSysIniPath = docSysWebPath + "../docSys.ini/";
 		}	
 		
-		//检查数据库初始化
-		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
-		if(isFileExist(sqlScriptPath) == false)
-		{
-			System.out.println("docSysInit() sqlScriptPath:" + sqlScriptPath + " not exists");
-			return;
-		}
-		
 		//Update the value of DB_URL/DB_USER/DB_PASS
 		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
 		if(isFileExist(defaultJDBCSettingPath))
@@ -6664,52 +6656,6 @@ public class BaseController  extends BaseFunction{
 	
 	private static void setDocSysInitState(String State) {
 		saveDocContentToFile(State, docSysIniPath, "State");
-	}
-
-	private boolean checkAndUpdateWar() {
-		System.out.println("checkAndUpdateWar()");
-		
-		if(isFileExist(docSysIniPath + "config") == false)
-		{
-			//no need to update the war
-			System.out.println("checkAndUpdateWar() config not exists, no need to update war");
-			return true;
-		}
-		
-		//Copy DocSystem
-		System.out.println("checkAndUpdateWar() copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
-		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", true) == false)
-		{
-			//Failed to copy 
-			System.out.println("checkAndUpdateWar() Failed to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
-			return false;
-		}
-		System.out.println("checkAndUpdateWar() Success to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
-
-		System.out.println("checkAndUpdateWar() Start to copy config");
-		if(copyDir(docSysIniPath + "config", docSysIniPath + "DocSystem/WEB-INF/classes", true) == false)
-		{
-			System.out.println("checkAndUpdateWar() Failed to copy config");
-			return false;
-		}	
-		System.out.println("checkAndUpdateWar() Success to copy config");
-		
-		System.out.println("checkAndUpdateWar() Start to build new war");
-		if(doCompressDir(docSysIniPath, "DocSystem", docSysIniPath, "DocSystem.war", null) == false)
-		{
-			System.out.println("checkAndUpdateWar() Failed to build new war");
-			return false;
-		}		
-		System.out.println("checkAndUpdateWar() Success to build new war");
-		
-		System.out.println("checkAndUpdateWar() Start to copy new war");
-		if(copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true) == false)
-		{
-			System.out.println("checkAndUpdateWar() Failed to copy new war");
-			return false;
-		}
-		System.out.println("checkAndUpdateWar() Success to copy new war");
-		return true;
 	}
 
 	private static boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
@@ -6959,6 +6905,14 @@ public class BaseController  extends BaseFunction{
 	protected static boolean DBUpgrade(int oldVersion, int newVersion)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
+		
+		//检查数据库初始化脚本是否存在
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+		if(isFileExist(sqlScriptPath) == false)
+		{
+			System.out.println("DBUpgrade() sqlScriptPath:" + sqlScriptPath + " not exists");
+			return false;
+		}
 		
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
 		if(dbTabsNeedToUpgrade == null || dbTabsNeedToUpgrade.size() == 0)

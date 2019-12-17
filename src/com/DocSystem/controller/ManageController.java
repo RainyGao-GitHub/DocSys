@@ -18,6 +18,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.tmatesoft.svn.core.SVNException;
 
+import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
 import util.SvnUtil.SVNUtil;
@@ -46,6 +47,133 @@ public class ManageController extends BaseController{
 	@Autowired
 	private ReposServiceImpl reposService;
 	
+	/********** 获取系统邮件配置 ***************/
+	@RequestMapping("/getSystemEmailConfig.do")
+	public void getSystemEmailConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getSystemEmailConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
+		if(email == null)
+		{
+			email = "";
+		}
+		String pwd = ReadProperties.read("docSysConfig.properties", "frompwd");
+		if(pwd == null)
+		{
+			pwd = "";
+		}
+		String emailConfig = "{systemEmailConfig: {email:'" + email + "', pwd:'"+ pwd +"'}}";
+		
+		rt.setData(emailConfig);
+		writeJson(rt, response);
+	}
+	
+	/********** 设置系统邮件配置 ***************/
+	@RequestMapping("/setSystemEmailConfig.do")
+	public void setSystemEmailConfig(String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(email == null && pwd == null)
+		{
+			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//checkAndAdd docSys.ini Dir
+		if(checkAndAddDocSysIniDir())
+		{
+			docSysErrorLog("系统初始化目录创建失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//copy DocSystem to docSysIni Dir 
+		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", false) == false)
+		{
+			//Failed to copy 
+			System.out.println("setSystemEmailConfig() Failed to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
+			docSysErrorLog("创建临时DocSystem失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		String tmpDocSystemPath = docSysIniPath + "DocSystem/";
+		String configFileName = "docSysConfig.properties";
+		if(email != null)
+		{
+			ReadProperties.setValue(tmpDocSystemPath + configFileName, "fromuser", email);
+		}
+		if(pwd != null)
+		{
+			ReadProperties.setValue(tmpDocSystemPath + configFileName, "frompwd", pwd);
+		}
+		
+		//Build new war
+		System.out.println("setSystemEmailConfig() Start to build new war");
+		if(doCompressDir(docSysIniPath, "DocSystem", docSysIniPath, "DocSystem.war", null) == false)
+		{
+			System.out.println("setSystemEmailConfig() Failed to build new war");
+			docSysErrorLog("创建War包失败！", rt);
+			writeJson(rt, response);
+			return;
+		}	
+		
+		System.out.println("setSystemEmailConfig() Start to install new war");
+		if(copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true) == false)
+		{
+			System.out.println("setSystemEmailConfig() Failed to install new war");
+			docSysErrorLog("安装War包失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
+
+	
+	private boolean checkAndAddDocSysIniDir() {
+		File docSysIniDir = new File(docSysIniPath);
+		if(docSysIniDir.exists() == true)
+		{
+			return false;
+		}
+		
+		return docSysIniDir.mkdirs();
+	}
+
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
 	public void getUserList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
