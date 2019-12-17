@@ -283,28 +283,6 @@
 	        }
 	    });
 	}
-
-	//click event handler  for data-eb-event="content.refresh"
-	$(document).on("click","[data-eb-event]", function () {
-		console.log("[data-eb-event] onclick()");
-		
-        var event = $(this).attr("data-eb-event");
-        var params = $(this).attr("data-eb-params");
-      	
-        console.log("data-eb-event:"+ event + " " + params);
-        
-        //非回调方式更加容易被理解，so I give up the event bus 
-        switch(event)
-        {
-        //菜单点击
-        case "content.refresh":
-        	showContentPage(params);
-        	break;
-        case "system.refresh":
-        	showSystemSubPage(params);
-        	break;
-        }
-    });
 	
 	//展开子项目
 	$(document).on("click",".has_sub",function(){
@@ -327,6 +305,25 @@
 	          $this.children("ul.sublist").toggle();
 	      }
 	  });
+	  
+	//click event handler  for data-eb-event="content.refresh"
+	$(document).on("click","[data-eb-event]", function () {
+		console.log("[data-eb-event] onclick()");
+		
+        var event = $(this).attr("data-eb-event");
+        var params = $(this).attr("data-eb-params");
+      	
+        console.log("data-eb-event:"+ event + " " + params);
+        
+        //非回调方式更加容易被理解，so I give up the event bus 
+        switch(event)
+        {
+        //菜单点击
+        case "content.refresh":
+        	showContentPage(params);
+        	break;
+        }
+    });
 	
 	//显示对应菜单
 	function showContentPage(curPath) {
@@ -356,8 +353,54 @@
 	            $("ul.sublist").show();
 	            showSysEmailConfig();
 	            break;
+	        case "systemEmailConfig":
+	        	showSysEmailConfig();
+	            break;
+	        case "systemSmsConfig":
+	        	showSysSmsConfig();
+	            break;
+	        case "systemDbConfig":
+	        	ShowSysDbConfig();
+	        	break;
+	        case "systemUpgrade":
+	        	ShowSysUpgrade();
+	        	break;
 	    }
+	}
 	
+	//显示对应菜单
+	function showContentPage(curPath) {
+	    console.log("showContentPage() " + curPath);
+		var title = "载入中...";
+	    var subtitle = "载入中...";
+		
+	    $("#container").html("载入中...");
+	
+	    $("#nav li>a").removeClass("open");
+	    $("ul.sublist").hide();
+	
+	    switch ( curPath ){
+	        case "user":
+	            title = "用户管理";
+	            showUserList();
+	            $("#nav li[data-eb-params=user]>a").addClass("open");
+	            break;
+	        case "group":
+	            title = "用户组管理";
+	            showGroupList();
+	            $("#nav li[data-eb-params=group]>a").addClass("open");
+	            break;
+	        case "system":
+	            title = "系统管理";
+	            $("#nav li[data-eb-params=system]>a").addClass("open");
+	            $("ul.sublist").show();
+	            showSysEmailConfig();
+	            break;
+	        default:
+	        	showContentPage(curPath);
+	        	break;
+	    }
+		
 	    $Func.render($("#pagehead"),"pagehead",{
 	        title : title,
 	        subtitle : title
