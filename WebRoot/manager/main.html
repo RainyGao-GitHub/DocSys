@@ -354,7 +354,7 @@
 	            title = "系统管理";
 	            $("#nav li[data-eb-params=system]>a").addClass("open");
 	            $("ul.sublist").show();
-	    		$Func.render($("#container"),"emailSet");
+	            showSysEmailConfig();
 	            break;
 	    }
 	
@@ -403,8 +403,31 @@
 		
 	}
 
-
-
+	function showEmailConfig(){
+		$.ajax({
+	        url : "/DocSystem/Manage/getSystemEmailConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	console.log("getSystemEmailConfig",ret.data);
+	            	systemEmailSetting.email = ret.data.email;
+	            	systemEmailSetting.pwd = ret.data.pwd;
+	            	$Func.render($("#container"),"emailSet",{"value":systemEmailSetting});
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取用户列表失败");
+	        }
+	    });
+	}
+	
 	//成员管理
 	function showUserList(){
 		
