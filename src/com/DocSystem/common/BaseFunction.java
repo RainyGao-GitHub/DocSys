@@ -1390,24 +1390,52 @@ public class BaseFunction{
         	return false;
         }
         
+    	boolean ret = false;
+        FileInputStream in=null;
+        FileOutputStream out=null;
+        FileChannel inputChannel = null;    
+        FileChannel outputChannel = null;   
+    
         try {
 	        //Copy by Channel
-	        FileInputStream in=new FileInputStream(srcFilePath);
-	        FileOutputStream out=new FileOutputStream(dstFilePath);
-	        FileChannel inputChannel = in.getChannel();    
-	        FileChannel outputChannel = out.getChannel();   
+	        in=new FileInputStream(srcFilePath);
+	        out=new FileOutputStream(dstFilePath);
+	        inputChannel = in.getChannel();    
+	        outputChannel = out.getChannel();   
 	        outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
-		   	inputChannel.close();
+	        inputChannel.close();
 		    outputChannel.close();
 		    in.close();
 		    out.close();
+		    ret = true;
         }
     	catch (Exception e) { 
     		System.err.println("copyFile() from " + srcFilePath + " to " + dstFilePath + " Exception"); 
     		e.printStackTrace(); 
-    		return false;
+    	} finally {
+			try {
+	    		if(inputChannel != null)
+	    		{
+	    			inputChannel.close();
+	    		}
+	    		if(outputChannel != null)
+	    		{
+					outputChannel.close();
+	    		}
+	    		if(in != null)
+	    		{
+	    			in.close();
+	    		}
+	    		if(out != null)
+	    		{
+	    			out.close();
+	    		}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
     	}
-    	return true;
+    	return ret;
     }
     
     //strict: true there is not file and dir, false: there is no file
