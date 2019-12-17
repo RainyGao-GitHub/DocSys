@@ -78,12 +78,11 @@ public class ManageController extends BaseController{
 		{
 			pwd = "";
 		}
-		String emailConfig = "{\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
-		rt.setData(emailConfig);
+		String config = "{\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
+		rt.setData(config);
 		writeJson(rt, response);
 	}
 	
-	/********** 获取系统邮件配置 ***************/
 	@RequestMapping("/getSystemSmsConfig.do")
 	public void getSystemSmsConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -104,22 +103,90 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
-		if(email == null)
+		String apikey = ReadProperties.read("docSysConfig.properties", "apikey");
+		if(apikey == null)
 		{
-			email = "";
+			apikey = "";
 		}
-		String pwd = ReadProperties.read("docSysConfig.properties", "frompwd");
+
+		String config = "{\"apikey\":\"" + apikey + "\"}";
+		rt.setData(config);
+		writeJson(rt, response);
+	}
+
+	@RequestMapping("/getSystemDbConfig.do")
+	public void getSystemDbConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getSystemDbConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String url = ReadProperties.read("jdbc.properties", "db.url");
+		if(url == null)
+		{
+			url = "";
+		}
+		String user = ReadProperties.read("jdbc.properties", "db.username");
+		if(user == null)
+		{
+			user = "";
+		}
+		
+		String pwd = ReadProperties.read("jdbc.properties", "db.password");
 		if(pwd == null)
 		{
 			pwd = "";
 		}
-		String emailConfig = "{\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
-		rt.setData(emailConfig);
+
+		String config = "{\"url\":\"" + url + "\", \"user\":\"" + user + "\", \"pwd\":\"" + pwd + "\"}";
+		rt.setData(config);
 		writeJson(rt, response);
 	}
-	
-	
+
+	@RequestMapping("/getSystemInfo.do")
+	public void getSystemInfo(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getSystemInfo()");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			rt.setError("非管理员用户，请联系统管理员！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String version = readDocContentFromFile(docSysWebPath, "version", false);
+		if(version == null)
+		{
+			version = "";
+		}
+
+		String config = "{\"version\":\"" + version + "\"}";
+		rt.setData(config);
+		writeJson(rt, response);
+	}
+
 	/********** 设置系统邮件配置 ***************/
 	@RequestMapping("/setSystemEmailConfig.do")
 	public void setSystemEmailConfig(String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
