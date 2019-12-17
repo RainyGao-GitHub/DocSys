@@ -373,8 +373,8 @@
 		$("#btnEnableSystemEmailSet").hide();
 		$("#btnCancelSystemEmailSet").show();
 		$("#btnSaveSystemEmailSet").show();
-		systemEmailSetting.email = $("#systemEmail").val();
-		systemEmailSetting.pwd = $("#systemEmailPwd").val();
+		$("#systemEmail").val(systemEmailSetting.email);
+		$("#systemEmailPwd").val(systemEmailSetting.pwd);
 		$("#systemEmail").attr('disabled',false);;
 		$("#systemEmailPwd").attr('disabled',false);;
 	}
@@ -400,10 +400,9 @@
 		systemEmailSetting.email = $("#systemEmail").val();
 		systemEmailSetting.pwd = $("#systemEmailPwd").val();
 		//Save the config to config: will trigger the restart
-		
 	}
 
-	function showEmailConfig(){
+	function showSysEmailConfig(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getSystemEmailConfig.do",
 	        type : "post",
@@ -412,9 +411,11 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	console.log("getSystemEmailConfig",ret.data);
-	            	systemEmailSetting.email = ret.data.email;
-	            	systemEmailSetting.pwd = ret.data.pwd;
+	            	//console.log("getSystemEmailConfig ret", ret);
+					var config = JSON.parse(ret.data); 	
+	            	systemEmailSetting.email = config.email;
+	            	systemEmailSetting.pwd = config.pwd;
+	            	console.log("getSystemEmailConfig systemEmailSetting",systemEmailSetting);
 	            	$Func.render($("#container"),"emailSet",{"value":systemEmailSetting});
 	            }
 	            else 
@@ -423,7 +424,7 @@
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取用户列表失败");
+	        	showErrorMessage("服务器异常:获取邮件服务配置信息失败");
 	        }
 	    });
 	}
