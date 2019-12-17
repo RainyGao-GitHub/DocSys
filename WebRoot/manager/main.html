@@ -454,7 +454,8 @@
 	            }
 	            else 
 	            {
-	                console.log(ret.msgInfo);
+	            	showErrorMessage("获取邮件服务配置信息失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
 	            }
 	        },
 	        error : function () {
@@ -463,86 +464,93 @@
 	    });
 	}
 	
-
+	//系统邮件服务设置
+	var systemSmsSetting = {
+			apikey: "",
+	}
 	function showSystemSmsConfig(){
 		$.ajax({
-	        url : "/DocSystem/Manage/getSystemEmailConfig.do",
+	        url : "/DocSystem/Manage/getSystemSmsConfig.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {},
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	//console.log("getSystemEmailConfig ret", ret);
 					var config = JSON.parse(ret.data); 	
-	            	systemEmailSetting.email = config.email;
-	            	systemEmailSetting.pwd = config.pwd;
-	            	console.log("getSystemEmailConfig systemEmailSetting",systemEmailSetting);
-	            	$Func.render($("#container"),"systemSmsConfig",{"value":systemEmailSetting});
+	            	systemSmsSetting.apikey = config.apikey;
+	            	$Func.render($("#container"),"systemSmsConfig",{"value":systemSmsSetting});
 	            }
 	            else 
 	            {
-	                console.log(ret.msgInfo);
+		        	showErrorMessage("获取短信服务配置信息失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取邮件服务配置信息失败");
+	        	showErrorMessage("服务器异常:获取短信服务配置信息失败");
 	        }
 	    });
 	}
 	
+	//系统邮件服务设置
+	var systemDbSetting = {
+			url: "",
+			user: "",
+			pwd: "",
+	}
 
 	function showSystemDbConfig(){
 		$.ajax({
-	        url : "/DocSystem/Manage/getSystemEmailConfig.do",
+	        url : "/DocSystem/Manage/getSystemDbConfig.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {},
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	//console.log("getSystemEmailConfig ret", ret);
 					var config = JSON.parse(ret.data); 	
-	            	systemEmailSetting.email = config.email;
-	            	systemEmailSetting.pwd = config.pwd;
-	            	console.log("getSystemEmailConfig systemEmailSetting",systemEmailSetting);
-	            	$Func.render($("#container"),"systemDbConfig",{"value":systemEmailSetting});
+					systemDbSetting.url = config.url;
+					systemDbSetting.user = config.user;
+					systemDbSetting.pwd = config.pwd;
+	            	$Func.render($("#container"),"systemDbConfig",{"value":systemDbSetting});
 	            }
 	            else 
 	            {
-	                console.log(ret.msgInfo);
+		        	showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取邮件服务配置信息失败");
+	        	showErrorMessage("服务器异常:获取数据库信息失败");
 	        }
 	    });
 	}
 	
-
+	var systemInfo = {
+			version: "",
+	}
 	function showSystemUpgrade(){
 		$.ajax({
-	        url : "/DocSystem/Manage/getSystemEmailConfig.do",
+	        url : "/DocSystem/Manage/getSystemUpgrade.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {},
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	//console.log("getSystemEmailConfig ret", ret);
-					var config = JSON.parse(ret.data); 	
-	            	systemEmailSetting.email = config.email;
-	            	systemEmailSetting.pwd = config.pwd;
-	            	console.log("getSystemEmailConfig systemEmailSetting",systemEmailSetting);
-	            	$Func.render($("#container"),"systemUpgrade",{"value":systemEmailSetting});
+	            	var config = JSON.parse(ret.data); 	
+	            	systemInfo.version = config.version;
+	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 
 	            {
-	                console.log(ret.msgInfo);
+		        	showErrorMessage("获取系统信息失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取邮件服务配置信息失败");
+	        	showErrorMessage("服务器异常:获取系统信息失败");
 	        }
 	    });
 	}
