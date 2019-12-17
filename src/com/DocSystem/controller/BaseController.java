@@ -4230,6 +4230,12 @@ public class BaseController  extends BaseFunction{
 	protected boolean copyDoc_FSM(Repos repos, Doc srcDoc, Doc dstDoc,
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList)
 	{				
+		//Set the doc Creator and LasteEditor
+		dstDoc.setCreator(login_user.getId());
+		dstDoc.setCreatorName(login_user.getName());
+		dstDoc.setLatestEditor(login_user.getId());
+		dstDoc.setLatestEditorName(login_user.getName());
+		
 		DocLock srcDocLock = null;
 		DocLock dstDocLock = null;
 		synchronized(syncLock)
