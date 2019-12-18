@@ -7260,8 +7260,12 @@ public class BaseController  extends BaseFunction{
 	    		
 	    		Doc qDoc = new Doc();
 	    		qDoc.setVid(docAuth.getReposId());
-	    		qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
-	    		
+	    		try {
+	    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
+	    		} catch(Exception e){
+	    			e.printStackTrace();
+	    			break;
+	    		}
 	    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC);
 	    		if(docList != null && docList.size() == 1)
 	    		{
