@@ -4045,17 +4045,17 @@ function CompareObj(objA, objB, flag) {
 		 if(gShowType == 1)	//预览
 	   	 {
 		    $("#modeSwitchBtnText").css("title","标准模式");
+		    $("#docPreview").show(); 
 	     }
 	     else
 	     {
-			$("#modeSwitchBtnText").css("title","电子书模式"); 
+			$("#modeSwitchBtnText").css("title","电子书模式");
+			$("#docPreview").hide(); 
 	     }
 
 		 updateUrl();
 		 
-		 changePageStyle(gShowType);
-		 
-		 showGDoc(gShowType);
+		 changePageStyle(gShowType);		 
 	}
 
 	 function changePageStyle(showType)
