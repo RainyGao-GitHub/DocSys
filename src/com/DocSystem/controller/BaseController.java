@@ -6684,10 +6684,6 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(oldVersion == null)
-		{
-			oldVersion = 0;
-		}
 		return DBUpgrade(oldVersion, newVersion);
 	}
 	
@@ -6930,7 +6926,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		//export dbTab to json File
+		//导出数据库表数据
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{	
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
@@ -6942,18 +6938,7 @@ public class BaseController  extends BaseFunction{
 			copyFile(jsonFilePath + jsonFileName, backUpPath + jsonFileName, true);
 		}
 		
-		if(deleteDBTabs() == false)
-		{
-			System.out.println("DBUpgrade() 数据库表删除失败!");
-			return true;		
-		}
-		
-		if(initDB() == false)
-		{
-			System.out.println("DBUpgrade() 数据库初始化失败!");
-			return false;
-		}
-		
+		//更新数据库表结构并导入数据
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
@@ -7082,24 +7067,24 @@ public class BaseController  extends BaseFunction{
 	
 	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
 	{
-		//未知oldVersion或者旧版本是20000版本都不需要更新数据库结构
 		if(oldVersion == null || newVersion == null || newVersion == oldVersion)
 		{
 			return null;
 		}
 
-		//2.xx.xx版本以下的需要进行数据库升级
 		List<Integer> dbTabList = new ArrayList<Integer>();
-		for(int i=0; i< DBTabNameMap.length; i++)
+		if(oldVersion < 20000) //2.00.00版本以下升级到该版本需要更新所有数据库表
 		{
-//			if(newVersion >= 20000)	//2.xx.xx版本以上DOC和DOC_LOCK是非强制信息
-//			{
-//				if(DBTabNameMap[i].equals("DOC") || DBTabNameMap[i].equals("DOC_LOCK")) 
-//				{
-//					continue;
-//				}
-//			}
-			dbTabList.add(i);
+			dbTabList.add(DOCSYS_REPOS);
+			dbTabList.add(DOCSYS_REPOS_AUTH);
+			dbTabList.add(DOCSYS_DOC);
+			dbTabList.add(DOCSYS_DOC_AUTH);			
+			dbTabList.add(DOCSYS_DOC_LOCK);
+			dbTabList.add(DOCSYS_USER);
+			dbTabList.add(DOCSYS_ROLE);
+			dbTabList.add(DOCSYS_USER_GROUP);	
+			dbTabList.add(DOCSYS_GROUP_MEMBER);	
+			dbTabList.add(DOCSYS_SYS_CONFIG);	
 		}
 		
 		return dbTabList;
