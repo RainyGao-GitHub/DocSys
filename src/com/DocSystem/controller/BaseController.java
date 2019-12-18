@@ -7585,7 +7585,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
         
-        String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
+        String sql = "insert into GROUP_MEMBER (" + sql_condition + ")" + " values (" + sql_value + ")";
         return sql;
 	}
 	
