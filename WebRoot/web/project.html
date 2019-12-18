@@ -1049,7 +1049,9 @@
 			dataType : "json",
 			data : {
 				docId : parentId,
-				reposId : vid
+				reposId : vid,
+				path: parentNode.path,
+				name: parentNode.name,
 			},
 			success : function (ret){
 				if( "ok" == ret.status){
