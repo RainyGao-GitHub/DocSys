@@ -6946,7 +6946,7 @@ public class BaseController  extends BaseFunction{
 			
 			//更新数据库表结构
 			//check if init script exists
-			String dbTabInitSqlScriptName = dbTabName + "Upgrade.sql";
+			String dbTabInitSqlScriptName = "docsystem_" + dbTabName + ".sql";
 			String sqlScriptPath = docSysWebPath + "WEB-INF/classes/" + dbTabInitSqlScriptName;
 			if(isFileExist(sqlScriptPath) == false)
 			{
