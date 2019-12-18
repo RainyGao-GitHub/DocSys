@@ -6910,18 +6910,9 @@ public class BaseController  extends BaseFunction{
 		return version;
 	}
 
-	protected static boolean DBUpgrade(int oldVersion, int newVersion)
+	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
-		
-		//检查数据库初始化脚本是否存在
-		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
-		if(isFileExist(sqlScriptPath) == false)
-		{
-			System.out.println("DBUpgrade() sqlScriptPath:" + sqlScriptPath + " not exists");
-			return false;
-		}
-		
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
 		if(dbTabsNeedToUpgrade == null || dbTabsNeedToUpgrade.size() == 0)
 		{
@@ -6966,8 +6957,24 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
+			String dbTabName = getNameByObjType(dbTabId);
+			
+			//更新数据库表结构
+			//check if init script exists
+			String dbTabInitSqlScriptName = dbTabName + "Upgrade.sql";
+			String sqlScriptPath = docSysWebPath + "WEB-INF/classes/" + dbTabInitSqlScriptName;
+			if(isFileExist(sqlScriptPath) == false)
+			{
+				System.out.println("DBUpgrade() sqlScriptPath:" + sqlScriptPath + " 不存在");
+				continue;
+			}
+			//delete tab
+			deleteDBTab(dbTabName);
+			//init tab
+			executeSqlScript(dbTabInitSqlScriptName);
+			//import the data back to new db
 			String jsonFilePath = docSysIniPath + "backup/";
-			String jsonFileName = getNameByObjType(dbTabId) + ".json";
+			String jsonFileName = dbTabName + ".json";
 			importObjectListFromJsonFile(dbTabId, jsonFilePath, jsonFileName);
 		}
 		return true;
@@ -7073,9 +7080,10 @@ public class BaseController  extends BaseFunction{
 		return executeSqlScript("docsystem.sql");
 	}
 	
-	private static List<Integer> getDBTabListForUpgarde(int oldVersion, int newVersion) 
+	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
 	{
-		if(newVersion == oldVersion)
+		//未知oldVersion或者旧版本是20000版本都不需要更新数据库结构
+		if(oldVersion == null || newVersion == null || newVersion == oldVersion)
 		{
 			return null;
 		}
