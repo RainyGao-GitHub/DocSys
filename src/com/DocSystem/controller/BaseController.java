@@ -303,7 +303,7 @@ public class BaseController  extends BaseFunction{
 	    			continue;
 	    		}
 	    		
-	    		if(isDocLocalChanged(subDoc, subLocalEntry))
+	    		if(isDocLocalChanged(repos, subDoc, subLocalEntry))
 	    		{
 	    			System.out.println("isDirLocalChanged() 本地文件内容修改: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
@@ -333,7 +333,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected boolean isDocLocalChanged(Doc dbDoc, Doc localEntry) 
+	protected boolean isDocLocalChanged(Repos repos, Doc dbDoc, Doc localEntry) 
 	{
 		//文件大小变化了则一定是变化了
 		if(!dbDoc.getSize().equals(localEntry.getSize()))
@@ -350,11 +350,14 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		//如果日期和大小都没变表示文件没有改变
-		if(dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty())
+		//如果仓库带有版本管理，那么revision未设置则认为文件本地有修改
+		if(repos.getVerCtrl() == 1 || repos.getVerCtrl() == 2)
 		{
-			System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
-			return true;
+			if(dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty())
+			{
+				System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
+				return true;
+			}
 		}
 		
 		return false;
@@ -2954,7 +2957,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.LOCALDIRTOFILE;
 			}
 			
-			if(isDocLocalChanged(dbDoc, localEntry))
+			if(isDocLocalChanged(repos, dbDoc, localEntry))
 			{
 				//本地文件 内容修改
 				System.out.println("getDocChangeType_FSM() 本地文件修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc和localEntry是文件");
@@ -5964,9 +5967,37 @@ public class BaseController  extends BaseFunction{
 			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		
+		//all localChanges need to be add to commitActionList, so that the Index can be rebuild for changed files
+        for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) {
+            DocChange val = entry.getValue();
+            switch(val.getType())
+            {
+            case LOCALADD:
+            	insertAddAction(commitActionList, doc);
+            	break;
+            case LOCALDELETE:
+            	insertDeleteAction(commitActionList, doc);
+            	break;
+            case LOCALCHANGE:
+            	insertModifyFile(commitActionList, doc);
+            	break;
+            case LOCALFILETODIR:
+            case LOCALDIRTOFILE:
+            	insertDeleteAction(commitActionList, doc);
+            	insertAddAction(commitActionList, doc);
+            	break;
+			default:
+				break;
+            }
+        }
 		return "";
 	}
 	
+	private void insertAddAction(List<CommitAction> commitActionList, Doc doc) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private int getVerCtrl(Repos repos, Doc doc) {
 		int verCtrl = repos.getVerCtrl();
 		if(doc.getIsRealDoc() == false)
