@@ -749,7 +749,7 @@ public class DocController extends BaseController{
 		}
 			
 		//数据库记录与本地文件已经不一致无法检查文件是否相同
-		if(isDocLocalChanged(dbDoc, fsDoc))
+		if(isDocLocalChanged(repos, dbDoc, fsDoc))
 		{
 			return false;					
 		}
@@ -1950,7 +1950,7 @@ public class DocController extends BaseController{
 		case 1: //FSM
 			localEntry = fsGetDoc(repos, doc);
 			Doc dbDoc = dbGetDoc(repos, doc, false);
-			if(false == isDocLocalChanged(dbDoc,localEntry))	//本地未变化，则直接返回链接
+			if(false == isDocLocalChanged(repos, dbDoc,localEntry))	//本地未变化，则直接返回链接
 			{
 				return false;
 			}
@@ -1958,7 +1958,7 @@ public class DocController extends BaseController{
 		case 2:
 			localEntry = fsGetDoc(repos, doc);
 			indexDoc = indexGetDoc(repos, doc, false);
-			if(false == isDocLocalChanged(indexDoc,localEntry))	//本地未变化，则直接返回链接
+			if(false == isDocLocalChanged(repos, indexDoc,localEntry))	//本地未变化，则直接返回链接
 			{
 				return false;
 			}
