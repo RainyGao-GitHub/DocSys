@@ -3460,7 +3460,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return gitGetDoc(repos, doc, revision);	
 		}
-		return null;
+		return doc;
 	}
 
 	private Doc svnGetDoc(Repos repos, Doc doc, String revision) {
