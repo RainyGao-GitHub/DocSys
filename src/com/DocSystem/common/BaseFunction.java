@@ -230,14 +230,21 @@ public class BaseFunction{
     	actionList.add(action);
 	}
     
-	protected void insertModifyFile(List<CommitAction> actionList, Doc doc) {
-		printObject("insertModifyFile:", doc);
+	protected void insertModifyAction(List<CommitAction> actionList, Doc doc) {
+		printObject("insertModifyAction:", doc);
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.MODIFY);
     	action.setDoc(doc);
     	actionList.add(action);	
 	}
 	
+	protected void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType) {
+		printObject("insertModifyAction:", doc);
+    	CommitAction action = new CommitAction();
+    	action.setAction(actionType);
+    	action.setDoc(doc);
+    	actionList.add(action);	
+	}	
 	/******************************* 路径相关接口  
 	 * @param isRealDoc 
 	 * @param localRootPath *******************************/

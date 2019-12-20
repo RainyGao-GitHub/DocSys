@@ -5967,37 +5967,35 @@ public class BaseController  extends BaseFunction{
 			return gitDocCommit(repos, doc, commitMsg, commitUser, rt, modifyEnable, localChanges, subDocCommitFlag, commitActionList);
 		}
 		
-		//all localChanges need to be add to commitActionList, so that the Index can be rebuild for changed files
+		//对于没有版本管理的仓库，需要认为所有的LocalChanges都会commit成功
         for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) {
             DocChange val = entry.getValue();
-            switch(val.getType())
+            CommitType commitType = CommitType.UNDEFINED;
+			switch(val.getType())
             {
             case LOCALADD:
-            	insertAddAction(commitActionList, doc);
+            	commitType  = CommitType.ADD;
             	break;
             case LOCALDELETE:
-            	insertDeleteAction(commitActionList, doc);
+            	commitType = CommitType.DELETE;
             	break;
             case LOCALCHANGE:
-            	insertModifyFile(commitActionList, doc);
+            	commitType = CommitType.MODIFY;
             	break;
             case LOCALFILETODIR:
+            	commitType = CommitType.FILETODIR;
+            	break;
             case LOCALDIRTOFILE:
-            	insertDeleteAction(commitActionList, doc);
-            	insertAddAction(commitActionList, doc);
+            	commitType = CommitType.DIRTOFILE;
             	break;
 			default:
-				break;
+				continue;
             }
+            insertAction(commitActionList, val.getDoc(), commitType);
         }
 		return "";
 	}
 	
-	private void insertAddAction(List<CommitAction> commitActionList, Doc doc) {
-		// TODO Auto-generated method stub
-		
-	}
-
 	private int getVerCtrl(Repos repos, Doc doc) {
 		int verCtrl = repos.getVerCtrl();
 		if(doc.getIsRealDoc() == false)
