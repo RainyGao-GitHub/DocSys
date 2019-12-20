@@ -1332,7 +1332,7 @@ public class GITUtil  extends BaseController{
 			            if(modifyEnable)
 			            {
 		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		            		insertModifyFile(commitActionList,doc);
+		            		insertModifyAction(commitActionList,doc);
 		            	}
 		    		}
 		    		else
@@ -1343,7 +1343,7 @@ public class GITUtil  extends BaseController{
 		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)
 		    				{
 			            		System.out.println("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		insertModifyFile(commitActionList,doc);
+			            		insertModifyAction(commitActionList,doc);
 		    				}
 		    			}
 		    		}
@@ -2247,7 +2247,7 @@ public class GITUtil  extends BaseController{
 	            if(modifyEnable)
 	            {
             		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyFile(actionList,doc);
+            		insertModifyAction(actionList,doc);
             		return;
             	}
     		}
@@ -2259,7 +2259,7 @@ public class GITUtil  extends BaseController{
     				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
 	        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-	            		insertModifyFile(actionList,doc);
+	            		insertModifyAction(actionList,doc);
 	            		return;
     				}
     			}
