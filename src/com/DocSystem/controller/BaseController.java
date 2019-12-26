@@ -8110,15 +8110,20 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-	private static Object getValueFromResultSet(ResultSet rs, String field, String type) throws Exception {
-		switch(type)
-		{
-		case "String": //String
-			return rs.getString(field);
-		case "Integer": //Integer
-			return rs.getInt(field);
-		case "Long": //Long
-			return rs.getLong(field);
+	private static Object getValueFromResultSet(ResultSet rs, String field, String type){
+		try {			
+			switch(type)
+			{
+			case "String": //String
+				return rs.getString(field);
+			case "Integer": //Integer
+				return rs.getInt(field);
+			case "Long": //Long
+				return rs.getLong(field);
+			}
+		} catch (SQLException e) {
+			System.out.println("getValueFromResultSet() Failed to get value from ResultSet for field:" + field);
+			//e.printStackTrace();
 		}
 		return null;
 	}
@@ -8141,19 +8146,14 @@ public class BaseController  extends BaseFunction{
          	String name = (String) objMember.get("name");
             System.out.println("convertResultSetToObj field:" + name);
          	
- 			Object value = null;
-			try {
-				value = getValueFromResultSet(rs, name, type);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
-			
-			if(setFieldValue(obj, name, value) == false)
-			{
-				return null;
-			}
+ 			Object value =  getValueFromResultSet(rs, name, type);
+ 			if(value != null)
+ 			{
+				if(setFieldValue(obj, name, value) == false)
+				{
+					return null;
+				}
+ 			}
 		}
 		return obj;
 	}
