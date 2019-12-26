@@ -20,7 +20,7 @@
   	{"dbName":"REVISION1", "name":"revision1", "type":"String"},
   	{"dbName":"INFO", "name":"info", "type":"String"},
   	{"dbName":"PWD", "name":"pwd", "type":"String"},
-  	{"dbName":"OWNER", "name":"owner", "type":"String"},
+  	{"dbName":"OWNER", "name":"owner", "type":"Integer"},
   	{"dbName":"CREATE_TIME", "name":"createTime", "type":"Long"},
 	{"dbName":"STATE", "name":"state", "type":"Integer"},
 	{"dbName":"LOCK_BY", "name":"lockBy", "type":"Integer"},
