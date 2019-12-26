@@ -48,6 +48,7 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.ObjMember;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
@@ -6601,6 +6602,7 @@ public class BaseController  extends BaseFunction{
 	protected final static int DOCSYS_USER_GROUP	=7;
 	protected final static int DOCSYS_GROUP_MEMBER	=8;
 	protected final static int DOCSYS_SYS_CONFIG	=9;
+	protected final static int DOCSYS_DOC_SHARE		=10;
 	protected final static String [] DBTabNameMap = {
 			"REPOS",
 			"REPOS_AUTH",
@@ -6612,6 +6614,7 @@ public class BaseController  extends BaseFunction{
 			"USER_GROUP",
 			"GROUP_MEMBER",
 			"SYS_CONFIG",
+			"DOC_SHARE",
 	};
 	
 	//系统需要根据该标志是否跳转至系统初始化配置页面（以便用户能够重新配置数据库）
@@ -7055,7 +7058,7 @@ public class BaseController  extends BaseFunction{
 				for(int i=0; i< list.size(); i++)
 				{
 					Object obj = list.get(i);
-					String sql = buildInsertSqlStr(obj, objId);
+					String sql = buildInsertSqlForObject(obj, objId);
 					if(encode != null)
 					{
 						try {
@@ -7073,7 +7076,7 @@ public class BaseController  extends BaseFunction{
 		return saveDocContentToFile(backUpContent, path, name);
 	}
 	
-	private static boolean deleteDBTabs() 
+	protected static boolean deleteDBTabs() 
 	{
 		System.out.println("deleteDBTabs()");
 
@@ -7116,6 +7119,11 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_USER_GROUP);	
 			dbTabList.add(DOCSYS_GROUP_MEMBER);	
 			dbTabList.add(DOCSYS_SYS_CONFIG);	
+		}
+		
+		if(oldVersion < 200120)
+		{
+			dbTabList.add(DOCSYS_DOC_SHARE);	
 		}
 		
 		return dbTabList;
@@ -7197,7 +7205,7 @@ public class BaseController  extends BaseFunction{
 		switch(objType)
 		{
 		case DOCSYS_REPOS:
-			return buildReposFromJsonObj(jsonObj);
+			return buildReposFromJsonObj(jsonObj, objType);
 		case DOCSYS_REPOS_AUTH:
 			return buildReposAuthFromJsonObj(jsonObj);
 		case DOCSYS_DOC:
@@ -7224,7 +7232,7 @@ public class BaseController  extends BaseFunction{
 		switch(objType)
 		{
 		case DOCSYS_REPOS:
-			return buildReposFromResultSet(rs);
+			return buildReposFromResultSet(rs, objType);
 		case DOCSYS_REPOS_AUTH:
 			return buildReposAuthFromResultSet(rs);
 		case DOCSYS_DOC:
@@ -7250,8 +7258,6 @@ public class BaseController  extends BaseFunction{
 	private static List<String> buildParamList(Object qObj, int objType) {
 		switch(objType)
 		{
-		case DOCSYS_REPOS:
-			return buildParamListForRepos((Repos) qObj);
 		case DOCSYS_REPOS_AUTH:
 			return buildParamListForReposAuth((ReposAuth) qObj);
 		case DOCSYS_DOC:
@@ -7329,7 +7335,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildQuerySqlStr(qObj, objType);
+            String sql = buildQuerySqlForObject(qObj, objType);
     		System.out.println("dbQuery() sql:" + sql);
 
             ResultSet rs = stmt.executeQuery(sql);
@@ -7384,7 +7390,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildInsertSqlStr(obj, objType);
+            String sql = buildInsertSqlForObject(obj, objType);
             System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
             System.out.println("ret:" + ret);
@@ -7417,8 +7423,6 @@ public class BaseController  extends BaseFunction{
 	{
 		switch(objType)
 		{
-		case DOCSYS_REPOS:
-			return buildQuerySqlForRepos((Repos) qObj, objType);
 		case DOCSYS_REPOS_AUTH:
 			return buildQuerySqlForReposAuth((ReposAuth) qObj, objType);
 		case DOCSYS_DOC:
@@ -7444,8 +7448,6 @@ public class BaseController  extends BaseFunction{
 	private static String buildInsertSqlStr(Object qObj, int objType) {
 		switch(objType)
 		{
-		case DOCSYS_REPOS:
-			return buildInsertSqlForRepos((Repos) qObj);
 		case DOCSYS_REPOS_AUTH:
 			return buildInsertSqlForReposAuth((ReposAuth) qObj);
 		case DOCSYS_DOC:
@@ -8036,150 +8038,199 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 
-	private static Object buildReposFromJsonObj(JSONObject jsonObj) {
+	private static Object buildReposFromJsonObj(JSONObject jsonObj, int objType) {
 		Repos obj = new Repos();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName( (String)jsonObj.get("name"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPath( (String)jsonObj.get("path"));
-		obj.setRealDocPath( (String)jsonObj.get("realDocPath"));
-		obj.setVerCtrl((Integer)jsonObj.get("verCtrl"));
-		obj.setIsRemote( (Integer)jsonObj.get("isRemote"));
-		obj.setLocalSvnPath( (String)jsonObj.get("localSvnPath"));
-		obj.setSvnPath( (String)jsonObj.get("svnPath"));
-		obj.setSvnUser( (String)jsonObj.get("svnUser"));		
-		obj.setSvnPwd( (String)jsonObj.get("svnPwd"));		
-		obj.setRevision( (String)jsonObj.get("revision"));		
-		obj.setVerCtrl1((Integer)jsonObj.get("verCtrl1"));
-		obj.setIsRemote1( (Integer)jsonObj.get("isRemote1"));
-		obj.setLocalSvnPath1( (String)jsonObj.get("localSvnPath1"));
-		obj.setSvnPath1( (String)jsonObj.get("svnPath1"));
-		obj.setSvnUser1( (String)jsonObj.get("svnUser1"));		
-		obj.setSvnPwd1( (String)jsonObj.get("svnPwd1"));		
-		obj.setRevision1( (String)jsonObj.get("revision1"));
-		obj.setPwd( (String)jsonObj.get("pwd"));
-		obj.setOwner( (Integer)jsonObj.get("owner"));
-		obj.setCreateTime(Long.parseLong(jsonObj.get("createTime").toString()));
-		obj.setState( (Integer) jsonObj.get("state"));
-		obj.setLockBy( (Integer)jsonObj.get("lockBy"));
-		obj.setLockTime(Long.parseLong(jsonObj.get("lockTime").toString()));
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+	
+	private static Object convertJsonObjToObj(JSONObject jsonObj, Object obj, int objType) 
+	{
+		JSONArray ObjMemberList = getObjMemberList(objType);
+		if(ObjMemberList == null)
+		{
+			return null;
+		}
+			
+		for(int i=0; i<ObjMemberList.size(); i++)
+		{
+            JSONObject objMember = (JSONObject)ObjMemberList.get(i);
+        	String type = (String) objMember.get("type");
+         	String name = (String) objMember.get("name");
+              
+ 			Object value = getValueFormJsonObj(jsonObj, name, type);
+			if(setFieldValue(obj, name, value) == false)
+			{
+				return null;
+			}
+		}
 		return obj;
 	}
 	
-	private static Object buildReposFromResultSet(ResultSet rs) throws SQLException {
-		Repos obj = new Repos();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setPath( rs.getString("PATH"));
-		obj.setRealDocPath( rs.getString("REAL_DOC_PATH"));
-		obj.setVerCtrl(rs.getInt("VER_CTRL"));
-		obj.setIsRemote( rs.getInt("IS_REMOTE"));
-		obj.setLocalSvnPath( rs.getString("LOCAL_SVN_PATH"));
-		obj.setSvnPath( rs.getString("SVN_PATH"));
-		obj.setSvnUser( rs.getString("SVN_USER"));		
-		obj.setSvnPwd( rs.getString("SVN_PWD"));		
-		obj.setRevision( rs.getString("REVISION"));		
-		obj.setVerCtrl1(rs.getInt("VER_CTRL1"));
-		obj.setIsRemote1( rs.getInt("IS_REMOTE1"));
-		obj.setLocalSvnPath1( rs.getString("LOCAL_SVN_PATH1"));
-		obj.setSvnPath1( rs.getString("SVN_PATH1"));
-		obj.setSvnUser1( rs.getString("SVN_USER1"));		
-		obj.setSvnPwd1( rs.getString("SVN_PWD1"));		
-		obj.setRevision1( rs.getString("REVISION1"));
-		obj.setPwd( rs.getString("PWD"));
-		obj.setOwner( rs.getInt("OWNER"));
-		obj.setCreateTime(rs.getLong("CREATE_TIME"));
-		obj.setState( rs.getInt("STATE"));
-		obj.setLockBy( rs.getInt("LOCK_BY"));
-		obj.setLockTime(rs.getLong("LOCK_TIME"));
+	private static Object getValueFormJsonObj(JSONObject jsonObj, String field, String type) {
+		Object value = jsonObj.get(field);
+		if(value == null)
+		{
+			return null;
+		}
+		
+		switch(type)
+		{
+		case "String": //String
+			return (String)value;
+		case "Integer": //Integer
+			return (Integer)value;
+		case "Long": //Long
+			return Long.parseLong(value.toString());
+		}
+		return null;
+	}
+
+	private static JSONArray getObjMemberList(int objType) {
+		
+		String objName = getNameByObjType(objType);
+		if(objName == null)
+		{
+			return null;
+		}
+		
+		String fileName = "docsystem_" + objName + ".json";
+		String filePath = docSysWebPath + "WEB-INF/classes/";
+		String s = readDocContentFromFile(filePath, fileName, false);
+		if(s == null)
+		{
+			return null;
+		}
+		
+		JSONObject jobj = JSON.parseObject(s);
+		JSONArray list = jobj.getJSONArray(objName);
+        return list;
+	}
+
+	
+	private static Object getValueFromResultSet(ResultSet rs, String field, String type) throws Exception {
+		switch(type)
+		{
+		case "String": //String
+			return rs.getString(field);
+		case "Integer": //Integer
+			return rs.getInt(field);
+		case "Long": //Long
+			return rs.getLong(field);
+		}
+		return null;
+	}
+	
+	private static Object convertResultSetToObj(ResultSet rs, Object obj, int objType) 
+	{
+		JSONArray ObjMemberList = getObjMemberList(objType);
+		if(ObjMemberList == null)
+		{
+			return null;
+		}
+			
+		for(int i=0; i<ObjMemberList.size(); i++)
+		{
+            JSONObject objMember = (JSONObject)ObjMemberList.get(i);
+        	String type = (String) objMember.get("type");
+         	String name = (String) objMember.get("name");
+              
+ 			Object value = null;
+			try {
+				value = getValueFromResultSet(rs, name, type);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			
+			if(setFieldValue(obj, name, value) == false)
+			{
+				return null;
+			}
+		}
 		return obj;
 	}
 	
-	private static List<String> buildParamListForRepos(Repos obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId( ) != null) { paramList.add("ID");}
-		if(obj.getName( ) != null) { paramList.add("NAME");}
-		if(obj.getType( ) != null) { paramList.add("TYPE");}
-		if(obj.getPath( ) != null) { paramList.add("PATH");}
-		if(obj.getRealDocPath( ) != null) { paramList.add("REAL_DOC_PATH");}
-		if(obj.getVerCtrl() != null) { paramList.add("VER_CTRL");}
-		if(obj.getIsRemote( ) != null) { paramList.add("IS_REMOTE");}
-		if(obj.getLocalSvnPath( ) != null) { paramList.add("LOCAL_SVN_PATH");}
-		if(obj.getSvnPath( ) != null) { paramList.add("SVN_PATH");}
-		if(obj.getSvnUser( ) != null) { paramList.add("SVN_USER");}		
-		if(obj.getSvnPwd( ) != null) { paramList.add("SVN_PWD");}		
-		if(obj.getRevision( ) != null) { paramList.add("REVISION");}		
-		if(obj.getVerCtrl1() != null) { paramList.add("VER_CTRL1");}
-		if(obj.getIsRemote1( ) != null) { paramList.add("IS_REMOTE1");}
-		if(obj.getLocalSvnPath1( ) != null) { paramList.add("LOCAL_SVN_PATH1");}
-		if(obj.getSvnPath1( ) != null) { paramList.add("SVN_PATH1");}
-		if(obj.getSvnUser1( ) != null) { paramList.add("SVN_USER1");}		
-		if(obj.getSvnPwd1( ) != null) { paramList.add("SVN_PWD1");}		
-		if(obj.getRevision1( ) != null) { paramList.add("REVISION1");}
-		if(obj.getPwd( ) != null) { paramList.add("PWD");}
-		if(obj.getOwner( ) != null) { paramList.add("OWNER");}
-		if(obj.getCreateTime() != null) { paramList.add("CREATE_TIME");}
-		if(obj.getState( ) != null) { paramList.add("STATE");}
-		if(obj.getLockBy( ) != null) { paramList.add("LOCK_BY");}
-		if(obj.getLockTime() != null) { paramList.add("LOCK_TIME");}
+	private static Object buildReposFromResultSet(ResultSet rs, int objType)
+	{
+		Repos obj = new Repos();
+		return convertResultSetToObj(rs, obj, objType);
+	}
+	
+	private static List<JSONObject> buildParamListForObj(Object obj, int objType) {
+		List<JSONObject> paramList = new ArrayList<JSONObject>();
+		
+		JSONArray ObjMemberList = getObjMemberList(objType);
+		if(ObjMemberList == null)
+		{
+			return null;
+		}
+			
+		for(int i=0; i<ObjMemberList.size(); i++)
+		{
+            JSONObject objMember = (JSONObject)ObjMemberList.get(i);
+        	String name = (String) objMember.get("name");
+              
+ 			Object value = null;
+			try {
+				value = getFieldValue(obj, name);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+			
+			if(value != null)
+			{
+				paramList.add(objMember);
+			}			
+		}
+		
 		return paramList;
 	}
 	
-	private static String buildInsertSqlForRepos(Repos obj) {
+	private static String buildInsertSqlForObject(Object obj, int objType) {
 		if(obj == null)
 		{
 			return 	null;
 		}
 		
+		String dbTabName = getNameByObjType(objType);
+		
 		String sql_condition = "";
 		String sql_value="";
-		List<String> paramList = buildParamListForRepos(obj);
+		List<JSONObject> paramList = buildParamListForObj(obj, objType);
 		int lastParamIndex = paramList.size() - 1;
 		for(int i=0; i < paramList.size(); i++)
 		{
 			String seperator = ",";
-			String param = paramList.get(i);
 			if(i == lastParamIndex)
 			{
 				seperator = "";
 			}
-			sql_condition += param + seperator;	//不带,
 			
-			switch(param)
+			JSONObject param = paramList.get(i);
+			String type = (String) param.get("type");
+			String field = (String) param.get("name");
+						
+			sql_condition += field + seperator;	//不带,
+			
+			Object value = getFieldValue(obj, field);
+			switch(type)
 			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " '" + obj.getName()  + "'" + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "PATH": sql_value += " '" + obj.getPath()  + "'" + seperator; break;
-			case "REAL_DOC_PATH": sql_value += " '" + obj.getRealDocPath()  + "'" + seperator; break;
-			case "VER_CTRL": sql_value += " " + obj.getVerCtrl() + seperator; break;
-			case "IS_REMOTE": sql_value += " " + obj.getIsRemote() + seperator; break;
-			case "LOCAL_SVN_PATH": sql_value += " '" + obj.getLocalSvnPath()  + "'" + seperator; break;
-			case "SVN_PATH": sql_value += " '" + obj.getSvnPath() + "'"  + seperator; break;
-			case "SVN_USER": sql_value += " '" + obj.getSvnUser() + "'"  + seperator; break;
-			case "SVN_PWD": sql_value += " '" + obj.getSvnPwd() + "'"  + seperator; break;
-			case "REVISION": sql_value += " '" + obj.getRevision() + "'"  + seperator; break;
-			case "VER_CTRL1": sql_value += " " + obj.getVerCtrl1() + seperator; break;
-			case "IS_REMOTE1": sql_value += " " + obj.getIsRemote1() + seperator; break;
-			case "LOCAL_SVN_PATH1": sql_value += " '" + obj.getLocalSvnPath1() + "'"  + seperator; break;
-			case "SVN_PATH1": sql_value += " '" + obj.getSvnPath1() + "'"  + seperator; break;
-			case "SVN_USER1": sql_value += " '" + obj.getSvnUser1() + "'"  + seperator; break;
-			case "SVN_PWD1": sql_value += " '" + obj.getSvnPwd1() + "'"  + seperator; break;
-			case "REVISION1": sql_value += " '" + obj.getRevision1() + "'"  + seperator; break;
-			case "PWD": sql_value += " '" + obj.getPwd() + "'"  + seperator; break;
-			case "OWNER": sql_value += " " + obj.getOwner() + seperator; break;
-			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
-			case "STATE": sql_value += " " + obj.getState() + seperator; break;
-			case "LOCK_BY": sql_value += " " + obj.getLockBy() + seperator; break;
-			case "LOCK_TIME": sql_value += " " + obj.getLockTime() + seperator; break;
+			case "Integer": 
+			case "Long":
+				sql_value += " " + value + seperator; 
+				break;
+			case "String": 
+				sql_value += " '" + value  + "'" + seperator; 
+				break;
 			}
 		}
-        String sql = "insert into REPOS (" + sql_condition + ")" + " values (" + sql_value + ")";
+        String sql = "insert into " + dbTabName+ " (" + sql_condition + ")" + " values (" + sql_value + ")";
         return sql;
 	}
 	
-	private static String buildQuerySqlForRepos(Repos obj, int objType) {
+	private static String buildQuerySqlForObject(Object obj, int objType) {
 		String name = getNameByObjType(objType);
 		String sql = "select * from " + name;
 		
@@ -8188,8 +8239,7 @@ public class BaseController  extends BaseFunction{
 			return 	sql;
 		}
 		
-		List<String> paramList = buildParamList(obj, objType);
-		
+		List<JSONObject> paramList = buildParamListForObj(obj, objType);
 		if(paramList == null)
 		{
 			return sql;
@@ -8200,39 +8250,25 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i < paramList.size(); i++)
 		{
 			String seperator = " and ";
-			String param = paramList.get(i);
 			if(i == 0)
 			{
 				seperator = " ";
 			}
 			
-			switch(param)
+			JSONObject param = paramList.get(i);
+			String type = (String) param.get("type");
+			String field = (String) param.get("name");
+			
+			Object value = getFieldValue(obj, field);
+			switch(type)
 			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
-			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'"; break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "PATH": sql_value += seperator + param + "='"  + obj.getPath() + "'"  ; break;
-			case "REAL_DOC_PATH": sql_value += seperator + param + "='"  + obj.getRealDocPath() + "'"  ; break;
-			case "VER_CTRL": sql_value += seperator + param + "="  + obj.getVerCtrl() ; break;
-			case "IS_REMOTE": sql_value += seperator + param + "="  + obj.getIsRemote() ; break;
-			case "LOCAL_SVN_PATH": sql_value += seperator + param + "='"  + obj.getLocalSvnPath() + "'"  ; break;
-			case "SVN_PATH": sql_value += seperator + param + "='"  + obj.getSvnPath() + "'"  ; break;
-			case "SVN_USER": sql_value += seperator + param + "'="  + obj.getSvnUser() + "'"  ; break;
-			case "SVN_PWD": sql_value += seperator + param + "='"  + obj.getSvnPwd() + "'"  ; break;
-			case "REVISION": sql_value += seperator + param + "='"  + obj.getRevision() + "'"  ; break;
-			case "VER_CTRL1": sql_value += seperator + param + "="  + obj.getVerCtrl1() ; break;
-			case "IS_REMOTE1": sql_value += seperator + param + "="  + obj.getIsRemote1() ; break;
-			case "LOCAL_SVN_PATH1": sql_value += seperator + param + "='"  + obj.getLocalSvnPath1() + "'"  ; break;
-			case "SVN_PATH1": sql_value += seperator + param + "='"  + obj.getSvnPath1() + "'"  ; break;
-			case "SVN_USER1": sql_value += seperator + param + "='"  + obj.getSvnUser1() + "'"  ; break;
-			case "SVN_PWD1": sql_value += seperator + param + "='"  + obj.getSvnPwd1() + "'"  ; break;
-			case "REVISION1": sql_value += seperator + param + "='"  + obj.getRevision1() + "'"  ; break;
-			case "PWD": sql_value += seperator + param + "="  + obj.getPwd() + "'"  ; break;
-			case "OWNER": sql_value += seperator + param + "="  + obj.getOwner() ; break;
-			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime() ; break;
-			case "STATE": sql_value += seperator + param + "="  + obj.getState() ; break;
-			case "LOCK_BY": sql_value += seperator + param + "="  + obj.getLockBy() ; break;
-			case "LOCK_TIME": sql_value += seperator + param + "="  + obj.getLockTime() ; break;
+			case "Integer": 
+			case "Long":
+				sql_value += seperator + field + "="  + value;
+				break;
+			case "String": 
+				sql_value += seperator + field + "='"  + value + "'";
+				break;
 			}
 		}
         sql = sql + sql_condition + sql_value;
