@@ -7229,6 +7229,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static Object createObject(ResultSet rs, int objType) throws Exception {
+		System.out.println("createObject() ");
 		switch(objType)
 		{
 		case DOCSYS_REPOS:
@@ -7319,6 +7320,8 @@ public class BaseController  extends BaseFunction{
 	
 	protected static List<Object> dbQuery(Object qObj, int objType) 
 	{
+		System.out.println("dbQuery() objType:" + objType);
+		
 		List<Object> list = new ArrayList<Object>();
 		
         Connection conn = null;
@@ -8084,7 +8087,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
-
+	
 	private static JSONArray getObjMemberList(int objType) {
 		
 		String objName = getNameByObjType(objType);
@@ -8122,9 +8125,12 @@ public class BaseController  extends BaseFunction{
 	
 	private static Object convertResultSetToObj(ResultSet rs, Object obj, int objType) 
 	{
+		System.out.println("convertResultSetToObj() ");
+		
 		JSONArray ObjMemberList = getObjMemberList(objType);
 		if(ObjMemberList == null)
 		{
+			System.out.println("convertResultSetToObj() ObjMemberList is null");
 			return null;
 		}
 			
@@ -8133,7 +8139,8 @@ public class BaseController  extends BaseFunction{
             JSONObject objMember = (JSONObject)ObjMemberList.get(i);
         	String type = (String) objMember.get("type");
          	String name = (String) objMember.get("name");
-              
+            System.out.println("convertResultSetToObj field:" + name);
+         	
  			Object value = null;
 			try {
 				value = getValueFromResultSet(rs, name, type);
@@ -8153,6 +8160,7 @@ public class BaseController  extends BaseFunction{
 	
 	private static Object buildReposFromResultSet(ResultSet rs, int objType)
 	{
+		System.out.println("buildReposFromResultSet() ");
 		Repos obj = new Repos();
 		return convertResultSetToObj(rs, obj, objType);
 	}
