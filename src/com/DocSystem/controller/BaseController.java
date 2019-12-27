@@ -7246,23 +7246,25 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_REPOS:
 			return buildReposFromJsonObj(jsonObj, objType);
 		case DOCSYS_REPOS_AUTH:
-			return buildReposAuthFromJsonObj(jsonObj);
+			return buildReposAuthFromJsonObj(jsonObj, objType);
 		case DOCSYS_DOC:
-			return buildDocFromJsonObj(jsonObj);
+			return buildDocFromJsonObj(jsonObj, objType);
 		case DOCSYS_DOC_AUTH:
-			return buildDocAuthFromJsonObj(jsonObj);
+			return buildDocAuthFromJsonObj(jsonObj, objType);
 		case DOCSYS_DOC_LOCK:
-			return buildDocLockFromJsonObj(jsonObj);
+			return buildDocLockFromJsonObj(jsonObj, objType);
 		case DOCSYS_USER:
-			return buildUserFromJsonObj(jsonObj);		
+			return buildUserFromJsonObj(jsonObj, objType);		
 		case DOCSYS_ROLE:
-			return buildRoleFromJsonObj(jsonObj);
+			return buildRoleFromJsonObj(jsonObj, objType);
 		case DOCSYS_USER_GROUP:
-			return buildUserGroupFromJsonObj(jsonObj);
+			return buildUserGroupFromJsonObj(jsonObj, objType);
 		case DOCSYS_GROUP_MEMBER:
-			return buildGroupMemberFromJsonObj(jsonObj);
+			return buildGroupMemberFromJsonObj(jsonObj, objType);
 		case DOCSYS_SYS_CONFIG:
-			return buildSysConfigFromJsonObj(jsonObj);
+			return buildSysConfigFromJsonObj(jsonObj, objType);
+		case DOCSYS_DOC_SHARE:
+			return buildDocShareFromJsonObj(jsonObj, objType);
 		}
 		return null;
 	}
@@ -7274,50 +7276,26 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_REPOS:
 			return buildReposFromResultSet(rs, objType);
 		case DOCSYS_REPOS_AUTH:
-			return buildReposAuthFromResultSet(rs);
+			return buildReposAuthFromResultSet(rs, objType);
 		case DOCSYS_DOC:
-			return buildDocFromResultSet(rs);
+			return buildDocFromResultSet(rs, objType);
 		case DOCSYS_DOC_AUTH:
-			return buildDocAuthFromResultSet(rs);
+			return buildDocAuthFromResultSet(rs, objType);
 		case DOCSYS_DOC_LOCK:
-			return buildDocLockFromResultSet(rs);
+			return buildDocLockFromResultSet(rs, objType);
 		case DOCSYS_USER:
-			return buildUserFromResultSet(rs);		
+			return buildUserFromResultSet(rs, objType);		
 		case DOCSYS_ROLE:
-			return buildRoleFromResultSet(rs);
+			return buildRoleFromResultSet(rs, objType);
 		case DOCSYS_USER_GROUP:
-			return buildUserGroupFromResultSet(rs);
+			return buildUserGroupFromResultSet(rs, objType);
 		case DOCSYS_GROUP_MEMBER:
-			return buildGroupMemberFromResultSet(rs);
+			return buildGroupMemberFromResultSet(rs, objType);
 		case DOCSYS_SYS_CONFIG:
-			return buildSysConfigFromResultSet(rs);
+			return buildSysConfigFromResultSet(rs, objType);
+		case DOCSYS_DOC_SHARE:
+			return buildDocShareFromResultSet(rs, objType);
 		}
-		return null;
-	}
-	
-	private static List<String> buildParamList(Object qObj, int objType) {
-		switch(objType)
-		{
-		case DOCSYS_REPOS_AUTH:
-			return buildParamListForReposAuth((ReposAuth) qObj);
-		case DOCSYS_DOC:
-			return buildParamListForDoc((Doc) qObj);
-		case DOCSYS_DOC_AUTH:
-			return buildParamListForDocAuth((DocAuth) qObj);
-		case DOCSYS_DOC_LOCK:
-			return buildParamListForDocLock((DocLock)qObj);
-		case DOCSYS_USER:
-			return buildParamListForUser((User) qObj);
-		case DOCSYS_ROLE:
-			return buildParamListForRole((Role) qObj);
-		case DOCSYS_USER_GROUP:
-			return buildParamListForUserGroup((UserGroup) qObj);
-		case DOCSYS_GROUP_MEMBER:
-			return buildParamListForGroupMember((GroupMember) qObj);
-		case DOCSYS_SYS_CONFIG:
-			return buildParamListForSysConfig((SysConfig) qObj);
-		}
-		
 		return null;
 	}
 
@@ -7460,629 +7438,116 @@ public class BaseController  extends BaseFunction{
         }
 		return ret;
 	}
-
-	private static String buildQuerySqlStr(Object qObj, int objType) 
-	{
-		switch(objType)
-		{
-		case DOCSYS_REPOS_AUTH:
-			return buildQuerySqlForReposAuth((ReposAuth) qObj, objType);
-		case DOCSYS_DOC:
-			return buildQuerySqlForDoc((Doc) qObj, objType);
-		case DOCSYS_DOC_AUTH:
-			return buildQuerySqlForDocAuth((DocAuth) qObj, objType);
-		case DOCSYS_DOC_LOCK:
-			return buildQuerySqlForDocLock((DocLock)qObj, objType);
-		case DOCSYS_USER:
-			return buildQuerySqlForUser((User) qObj, objType);
-		case DOCSYS_ROLE:
-			return buildQuerySqlForRole((Role) qObj, objType);
-		case DOCSYS_USER_GROUP:
-			return buildQuerySqlForUserGroup((UserGroup) qObj, objType);
-		case DOCSYS_GROUP_MEMBER:
-			return buildQuerySqlForGroupMember((GroupMember) qObj, objType);
-		case DOCSYS_SYS_CONFIG:
-			return buildQuerySqlForSysConfig((SysConfig) qObj, objType);
-		}
-		return null;
-	}
-
-	private static String buildInsertSqlStr(Object qObj, int objType) {
-		switch(objType)
-		{
-		case DOCSYS_REPOS_AUTH:
-			return buildInsertSqlForReposAuth((ReposAuth) qObj);
-		case DOCSYS_DOC:
-			return buildInsertSqlForDoc((Doc) qObj);
-		case DOCSYS_DOC_AUTH:
-			return buildInsertSqlForDocAuth((DocAuth) qObj);
-		case DOCSYS_DOC_LOCK:
-			return buildInsertSqlForDocLock((DocLock)qObj);
-		case DOCSYS_USER:
-			return buildInsertSqlForUser((User) qObj);
-		case DOCSYS_ROLE:
-			return buildInsertSqlForRole((Role) qObj);
-		case DOCSYS_USER_GROUP:
-			return buildInsertSqlForUserGroup((UserGroup) qObj);
-		case DOCSYS_GROUP_MEMBER:
-			return buildInsertSqlForGroupMember((GroupMember) qObj);
-		case DOCSYS_SYS_CONFIG:
-			return buildInsertSqlForSysConfig((SysConfig) qObj);
-		}
-		return null;
-	}
-
 	
-	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj) {
+	private static Object buildSysConfigFromJsonObj(JSONObject jsonObj, int objType) {
 		SysConfig obj = new SysConfig();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setRegEnable((Integer)jsonObj.get("regEnable"));
-		obj.setPrivateReposEnable( (Integer)jsonObj.get("privateReposEnable"));
-		return obj;
+		return convertJsonObjToObj(jsonObj, obj, objType);
 	}
 	
-	private static Object buildSysConfigFromResultSet(ResultSet rs) throws SQLException {
+	private static Object buildSysConfigFromResultSet(ResultSet rs, int objType) throws SQLException {
 		SysConfig obj = new SysConfig();
-		obj.setId( rs.getInt("ID"));
-		obj.setRegEnable(rs.getInt("REG_ENABLE"));
-		obj.setPrivateReposEnable( rs.getInt("PRIVATE_REPOS_ENABLE"));
-		return obj;
+		return convertResultSetToObj(rs, obj, objType);
 	}
 	
-	private static List<String> buildParamListForSysConfig(SysConfig obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId() != null) { paramList.add("ID");}
-		if(obj.getRegEnable() != null) { paramList.add("REG_ENABLE");}
-		if(obj.getPrivateReposEnable() != null) { paramList.add("PRIVATE_REPOS_ENABLE");}
-		return paramList;
-	}
-	
-	private static String buildInsertSqlForSysConfig(SysConfig obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForSysConfig(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "REG_ENABLE": sql_value += " " + obj.getRegEnable() + seperator; break;
-			case "PRIVATE_REPOS_ENABLE": sql_value += " " + obj.getPrivateReposEnable() + seperator; break;
-			}
-		}
-        
-        String sql = "insert into SYS_CONFIG (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-
-	
-	private static String buildQuerySqlForSysConfig(SysConfig obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "REG_ENABLE": sql_value += seperator + param + "="  + obj.getRegEnable(); break;
-			case "PRIVATE_REPOS_ENABLE": sql_value += seperator + param + "="  + obj.getPrivateReposEnable(); break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-
-	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj) {
+	private static Object buildGroupMemberFromJsonObj(JSONObject jsonObj, int objType) {
 		GroupMember obj = new GroupMember();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setGroupId((Integer)jsonObj.get("groupId"));
-		obj.setUserId((Integer)jsonObj.get("userId"));
-		return obj;
+		return convertJsonObjToObj(jsonObj, obj, objType);
 	}
 	
-	private static Object buildGroupMemberFromResultSet(ResultSet rs) throws SQLException {
+	private static Object buildGroupMemberFromResultSet(ResultSet rs, int objType) throws SQLException {
 		GroupMember obj = new GroupMember();
-		obj.setId( rs.getInt("ID"));
-		obj.setGroupId(rs.getInt("GROUP_ID"));
-		obj.setUserId(rs.getInt("USER_ID"));
-		return obj;
+		return convertResultSetToObj(rs, obj, objType);
 	}
 
-	private static List<String> buildParamListForGroupMember(GroupMember obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId() != null) { paramList.add("ID");}
-		if(obj.getGroupId() != null) { paramList.add("GROUP_ID");}
-		if(obj.getUserId() != null) { paramList.add("USER_ID");}
-		return paramList;
-	}
-	
-	private static String buildInsertSqlForGroupMember(GroupMember obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForGroupMember(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "GROUP_ID": sql_value += " " + obj.getGroupId() + seperator; break;
-			case "USER_ID": sql_value += " " + obj.getUserId() + seperator; break;
-			}
-		}
-        
-        String sql = "insert into GROUP_MEMBER (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-	
-	private static String buildQuerySqlForGroupMember(GroupMember obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "GROUP_ID": sql_value += seperator + param + "="  + obj.getGroupId(); break;
-			case "USER_ID": sql_value += seperator + param + "="  + obj.getUserId(); break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-	
-	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj) {
+	private static Object buildUserGroupFromJsonObj(JSONObject jsonObj, int objType) {
 		UserGroup obj = new UserGroup();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setType((Integer)jsonObj.get("type"));
-		obj.setInfo((String)jsonObj.get("info"));
-		obj.setImg((String)jsonObj.get("img"));
-		obj.setPriority((Integer)jsonObj.get("priority"));
-		obj.setCreateTime((String)jsonObj.get("createTime"));
-		return obj;
+		return convertJsonObjToObj(jsonObj, obj, objType);
 	}
 	
-	private static Object buildUserGroupFromResultSet(ResultSet rs) throws SQLException {
+	private static Object buildUserGroupFromResultSet(ResultSet rs, int objType) throws SQLException {
 		UserGroup obj = new UserGroup();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setInfo( rs.getString("INFO"));
-		obj.setImg( rs.getString("IMG"));
-		obj.setPriority( rs.getInt("PRIORITY"));
-		obj.setCreateTime( rs.getString("CREATE_TIME"));
-		return obj;
+		return convertResultSetToObj(rs, obj, objType);
 	}
 
-	private static List<String> buildParamListForUserGroup(UserGroup obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId() != null) { paramList.add("ID");}
-		if(obj.getName() != null) { paramList.add("NAME");}
-		if(obj.getType() != null) { paramList.add("TYPE");}
-		if(obj.getInfo() != null) { paramList.add("INFO");}
-		if(obj.getImg() != null) { paramList.add("IMG");}
-		if(obj.getPriority() != null) { paramList.add("PRIORITY");}
-		if(obj.getCreateTime() != null) { paramList.add("CREATE_TIME");}
-		return paramList;
-	}
-
-	private static String buildInsertSqlForUserGroup(UserGroup obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForUserGroup(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " '" + obj.getName() + "'" + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "INFO": sql_value += " '" + obj.getInfo() + "'" + seperator; break;
-			case "IMG": sql_value += " '" + obj.getImg() + "'" + seperator; break;	
-			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
-			case "CREATE_TIME": sql_value += " '" + obj.getCreateTime() + "'"  + seperator; break;
-			}
-		}
-        
-        String sql = "insert into USER_GROUP (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-	private static String buildQuerySqlForUserGroup(UserGroup obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'"; break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "INFO": sql_value += seperator + param + "= '"  + obj.getInfo() + "'"; break;
-			case "IMG": sql_value += seperator + param + "='"  + obj.getImg() + "'"; break;	
-			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority(); break;
-			case "CREATE_TIME": sql_value += seperator + param + "='"  + obj.getCreateTime() + "'"; break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-	
-	private static Object buildRoleFromJsonObj(JSONObject jsonObj) {
+	private static Object buildRoleFromJsonObj(JSONObject jsonObj, int objType) {
 		Role obj = new Role();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setRoleId((Integer)jsonObj.get("roleId"));
-		return obj;
+		return convertJsonObjToObj(jsonObj, obj, objType);
 	}
 	
-	private static Object buildRoleFromResultSet(ResultSet rs) throws SQLException {
+	private static Object buildRoleFromResultSet(ResultSet rs, int objType) throws SQLException {
 		Role obj = new Role();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setRoleId(rs.getInt("ROLE_ID"));
-		return obj;
+		return convertResultSetToObj(rs, obj, objType);
 	}
 	
-	private static List<String> buildParamListForRole(Role obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId() != null) { paramList.add("ID");}
-		if(obj.getName() != null) { paramList.add("NAME");}
-		if(obj.getRoleId() != null) { paramList.add("ROLE_ID");}
-		return paramList;
-	}
-	
-	private static String buildInsertSqlForRole(Role obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForRole(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " '" + obj.getName()  + "'" + seperator; break;
-			case "ROLE_ID": sql_value += " " + obj.getRoleId() + seperator; break;
-			}
-		}
-        
-        String sql = "insert into ROLE (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-	private static String buildQuerySqlForRole(Role obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "='"  + obj.getName()  + "'"; break;
-			case "ROLE_ID": sql_value += seperator + param + "="  + obj.getRoleId(); break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-
-	private static Object buildUserFromJsonObj(JSONObject jsonObj) {
+	private static Object buildUserFromJsonObj(JSONObject jsonObj, int objType) {
 		User obj = new User();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setPwd((String)jsonObj.get("pwd"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setRole( (Integer)jsonObj.get("role"));
-		obj.setRealName((String)jsonObj.get("realName"));
-		obj.setNickName((String)jsonObj.get("nickName"));
-		obj.setIntro((String)jsonObj.get("intro"));
-		obj.setImg((String)jsonObj.get("img"));
-		obj.setEmail((String)jsonObj.get("email"));
-		obj.setEmailValid((Integer)jsonObj.get("emailValid"));
-		obj.setTel((String)jsonObj.get("tel"));
-		obj.setTelValid((Integer)jsonObj.get("telValid"));
-		obj.setLastLoginTime((String)jsonObj.get("lastLoginTime"));
-		obj.setLastLoginIp((String)jsonObj.get("lastLoginIp"));
-		obj.setLastLoginCity((String)jsonObj.get("lastLoginCity"));
-		obj.setCreateType((Integer)jsonObj.get("createType"));
-		obj.setCreateTime((String)jsonObj.get("createTime"));
-		return obj;
+		return convertJsonObjToObj(jsonObj, obj, objType);
 	}
 	
-	private static Object buildUserFromResultSet(ResultSet rs) throws SQLException {
+	private static Object buildUserFromResultSet(ResultSet rs, int objType) throws SQLException {
 		User obj = new User();
-		obj.setId( rs.getInt("ID"));
-		obj.setName(rs.getString("NAME"));
-		obj.setPwd(rs.getString("PWD"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setRole( rs.getInt("ROLE"));
-		obj.setRealName(rs.getString("REAL_NAME"));
-		obj.setNickName(rs.getString("NICK_NAME"));
-		obj.setIntro(rs.getString("INTRO"));
-		obj.setImg(rs.getString("IMG"));
-		obj.setEmail(rs.getString("EMAIL"));
-		obj.setEmailValid(rs.getInt("EMAIL_VALID"));
-		obj.setTel(rs.getString("TEL"));
-		obj.setTelValid(rs.getInt("TEL_VALID"));
-		obj.setLastLoginTime(rs.getString("LAST_LOGIN_TIME"));
-		obj.setLastLoginIp(rs.getString("LAST_LOGIN_IP"));
-		obj.setLastLoginCity(rs.getString("LAST_LOGIN_CITY"));
-		obj.setCreateType(rs.getInt("CREATE_TYPE"));
-		obj.setCreateTime(rs.getString("CREATE_TIME"));
-		return obj;
+		return convertResultSetToObj(rs, obj, objType);
 	}
 	
-	private static List<String> buildParamListForUser(User obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId() != null) { paramList.add("ID");}
-		if(obj.getName() != null) { paramList.add("NAME");}
-		if(obj.getPwd() != null) { paramList.add("PWD");}
-		if(obj.getType() != null) { paramList.add("TYPE");}
-		if(obj.getRole() != null) { paramList.add("ROLE");}
-		if(obj.getRealName() != null) { paramList.add("REAL_NAME");}
-		if(obj.getNickName() != null) { paramList.add("NICK_NAME");}
-		if(obj.getIntro() != null) { paramList.add("INTRO");}
-		if(obj.getImg() != null) { paramList.add("IMG");}
-		if(obj.getEmail() != null) { paramList.add("EMAIL");}
-		if(obj.getEmailValid() != null) { paramList.add("EMAIL_VALID");}
-		if(obj.getTel() != null) { paramList.add("TEL");}
-		if(obj.getTelValid() != null) { paramList.add("TEL_VALID");}
-		if(obj.getLastLoginTime() != null) { paramList.add("LAST_LOGIN_TIME");}
-		if(obj.getLastLoginIp() != null) { paramList.add("LAST_LOGIN_IP");}
-		if(obj.getLastLoginCity() != null) { paramList.add("LAST_LOGIN_CITY");}
-		if(obj.getCreateType() != null) { paramList.add("CREATE_TYPE");}
-		if(obj.getCreateTime() != null) { paramList.add("CREATE_TIME");}
-		return paramList;
-	}
-	
-	private static String buildInsertSqlForUser(User obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForUser(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " '" + obj.getName() + "'" + seperator; break;
-			case "PWD": sql_value += " '" + obj.getPwd()  + "'" + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "ROLE": sql_value += " " + obj.getRole() + seperator; break;
-			case "REAL_NAME": sql_value += " '" + obj.getRealName() + "'"  + seperator; break;
-			case "NICK_NAME": sql_value += " '" + obj.getNickName()  + "'" + seperator; break;
-			case "INTRO": sql_value += " '" + obj.getIntro()  + "'" + seperator; break;
-			case "IMG": sql_value += " '" + obj.getImg()  + "'" + seperator; break;
-			case "EMAIL": sql_value += " '" + obj.getEmail() + "'"  + seperator; break;
-			case "EMAIL_VALID": sql_value += " " + obj.getEmailValid() + seperator; break;
-			case "TEL": sql_value += " '" + obj.getTel()  + "'" + seperator; break;
-			case "TEL_VALID": sql_value += " " + obj.getTelValid() + seperator; break;
-			case "LAST_LOGIN_TIME": sql_value += " '" + obj.getLastLoginTime()  + "'" + seperator; break;
-			case "LAST_LOGIN_IP": sql_value += " '" + obj.getLastLoginIp()  + "'" + seperator; break;
-			case "LAST_LOGIN_CITY": sql_value += " '" + obj.getLastLoginCity()  + "'" + seperator; break;
-			case "CREATE_TYPE": sql_value += " " + obj.getCreateType() + seperator; break;				
-			case "CREATE_TIME": sql_value += " '" + obj.getCreateTime()  + "'" + seperator; break;
-			}
-		}
-        String sql = "insert into USER (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-
-	private static String buildQuerySqlForUser(User obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
-			case "NAME": sql_value += seperator + param + "='"  + obj.getName()  + "'" ; break;
-			case "PWD": sql_value += seperator + param + "='"  + obj.getPwd()  + "'" ; break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType() ; break;
-			case "ROLE": sql_value += seperator + param + "="  + obj.getRole() ; break;
-			case "REAL_NAME": sql_value += seperator + param + "='"  + obj.getRealName()  + "'" ; break;
-			case "NICK_NAME": sql_value += seperator + param + "='"  + obj.getNickName()  + "'" ; break;
-			case "INTRO": sql_value += seperator + param + "='"  + obj.getIntro()  + "'" ; break;
-			case "IMG": sql_value += seperator + param + "='"  + obj.getImg()  + "'" ; break;
-			case "EMAIL": sql_value += seperator + param + "='"  + obj.getEmail()  + "'" ; break;
-			case "EMAIL_VALID": sql_value += seperator + param + "="  + obj.getEmailValid() ; break;
-			case "TEL": sql_value += seperator + param + "='"  + obj.getTel()  + "'" ; break;
-			case "TEL_VALID": sql_value += seperator + param + "="  + obj.getTelValid() ; break;
-			case "LAST_LOGIN_TIME": sql_value += seperator + param + "='"  + obj.getLastLoginTime()  + "'" ; break;
-			case "LAST_LOGIN_IP": sql_value += seperator + param + "='"  + obj.getLastLoginIp()  + "'" ; break;
-			case "LAST_LOGIN_CITY": sql_value += seperator + param + "='"  + obj.getLastLoginCity()  + "'" ; break;
-			case "CREATE_TYPE": sql_value += seperator + param + "="  + obj.getCreateType() ; break;				
-			case "CREATE_TIME": sql_value += seperator + param + "='"  + obj.getCreateTime()  + "'" ; break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-
 	private static Object buildReposFromJsonObj(JSONObject jsonObj, int objType) {
 		Repos obj = new Repos();
 		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+	
+	private static Object buildReposFromResultSet(ResultSet rs, int objType)
+	{
+		Repos obj = new Repos();
+		return convertResultSetToObj(rs, obj, objType);
+	}
+	
+	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj, int objType) {
+		ReposAuth obj = new ReposAuth();
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+
+	private static Object buildReposAuthFromResultSet(ResultSet rs, int objType) throws SQLException {
+		ReposAuth obj = new ReposAuth();
+		return convertResultSetToObj(rs, obj, objType);
+	}
+
+	private static Object buildDocFromJsonObj(JSONObject jsonObj, int objType) {
+		Doc obj = new Doc();
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+	
+	private static Object buildDocFromResultSet(ResultSet rs, int objType) throws Exception {
+		Doc obj = new Doc();
+		return convertResultSetToObj(rs, obj, objType); 
+	}
+	
+	private static Object buildDocAuthFromJsonObj(JSONObject jsonObj, int objType) {
+		DocAuth obj = new DocAuth();
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+
+	private static Object buildDocAuthFromResultSet(ResultSet rs, int objType) throws Exception {
+        DocAuth obj = new DocAuth();
+		return convertResultSetToObj(rs, obj, objType);
+	}
+	
+	private static Object buildDocLockFromJsonObj(JSONObject jsonObj, int objType) {
+		DocLock obj = new DocLock();
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+	
+	private static Object buildDocLockFromResultSet(ResultSet rs, int objType) throws SQLException {
+		DocLock obj = new DocLock();
+		return convertResultSetToObj(rs, obj, objType);
+	}
+	
+	private static Object buildDocShareFromJsonObj(JSONObject jsonObj, int objType) {
+		DocShare obj = new DocShare();
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+	
+	private static Object buildDocShareFromResultSet(ResultSet rs, int objType) {
+		DocShare obj = new DocShare();
+		return convertResultSetToObj(rs, obj, objType);
 	}
 	
 	private static Object convertJsonObjToObj(JSONObject jsonObj, Object obj, int objType) 
@@ -8179,14 +7644,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return obj;
 	}
-	
-	private static Object buildReposFromResultSet(ResultSet rs, int objType)
-	{
-		System.out.println("buildReposFromResultSet() ");
-		Repos obj = new Repos();
-		return convertResultSetToObj(rs, obj, objType);
-	}
-	
+
 	private static List<JSONObject> buildParamListForObj(Object obj, int objType) {
 		List<JSONObject> paramList = new ArrayList<JSONObject>();
 		
@@ -8304,593 +7762,6 @@ public class BaseController  extends BaseFunction{
         sql = sql + sql_condition + sql_value;
         return sql;
 	}
-	
-	private static Object buildReposAuthFromJsonObj(JSONObject jsonObj) {
-		ReposAuth obj = new ReposAuth();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setReposId( (Integer)jsonObj.get("reposId"));
-		obj.setUserId( (Integer)jsonObj.get("userId"));
-		obj.setGroupId( (Integer)jsonObj.get("groupId"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPriority( (Integer)jsonObj.get("priority"));
-		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
-		obj.setAddEn( (Integer)jsonObj.get("addEn"));
-		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
-		obj.setEditEn( (Integer)jsonObj.get("editEn"));
-		obj.setAccess( (Integer)jsonObj.get("access"));
-		obj.setHeritable( (Integer)jsonObj.get("heritable"));
-		return obj;
-	}
-
-	private static Object buildReposAuthFromResultSet(ResultSet rs) throws SQLException {
-		ReposAuth obj = new ReposAuth();
-		obj.setId( rs.getInt("ID"));
-		obj.setReposId( rs.getInt("REPOS_ID"));
-		obj.setUserId( rs.getInt("USER_ID"));
-		obj.setGroupId( rs.getInt("GROUP_ID"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setPriority( rs.getInt("PRIORITY"));
-		obj.setIsAdmin( rs.getInt("IS_ADMIN"));
-		obj.setAddEn( rs.getInt("ADD_EN"));
-		obj.setDeleteEn( rs.getInt("DELETE_EN"));
-		obj.setEditEn( rs.getInt("EDIT_EN"));
-		obj.setAccess( rs.getInt("ACCESS"));
-		obj.setHeritable( rs.getInt("HERITABLE"));
-		return obj;
-	}
-
-	private static List<String> buildParamListForReposAuth(ReposAuth obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId( ) != null) { paramList.add("ID");}
-		if(obj.getReposId( ) != null) { paramList.add("REPOS_ID");}
-		if(obj.getUserId( ) != null) { paramList.add("USER_ID");}
-		if(obj.getGroupId( ) != null) { paramList.add("GROUP_ID");}
-		if(obj.getType( ) != null) { paramList.add("TYPE");}
-		if(obj.getPriority( ) != null) { paramList.add("PRIORITY");}
-		if(obj.getIsAdmin( ) != null) { paramList.add("IS_ADMIN");}
-		if(obj.getAddEn( ) != null) { paramList.add("ADD_EN");}
-		if(obj.getDeleteEn( ) != null) { paramList.add("DELETE_EN");}
-		if(obj.getEditEn( ) != null) { paramList.add("EDIT_EN");}
-		if(obj.getAccess( ) != null) { paramList.add("ACCESS");}
-		if(obj.getHeritable( ) != null) { paramList.add("HERITABLE");}
-		return paramList;
-	}
-
-	private static String buildInsertSqlForReposAuth(ReposAuth obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForReposAuth(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "REPOS_ID": sql_value += " " + obj.getReposId() + seperator; break;
-			case "USER_ID": sql_value += " " + obj.getUserId() + seperator; break;
-			case "GROUP_ID": sql_value += " " + obj.getGroupId() + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
-			case "IS_ADMIN": sql_value += " " + obj.getIsAdmin() + seperator; break;
-			case "ADD_EN": sql_value += " " + obj.getAddEn() + seperator; break;
-			case "DELETE_EN": sql_value += " " + obj.getDeleteEn() + seperator; break;
-			case "EDIT_EN": sql_value += " " + obj.getEditEn() + seperator; break;
-			case "ACCESS": sql_value += " " + obj.getAccess() + seperator; break;
-			case "HERITABLE": sql_value += " " + obj.getHeritable() + seperator; break;
-			}
-		}
-        String sql = "insert into REPOS_AUTH (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-
-	private static String buildQuerySqlForReposAuth(ReposAuth obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId() ; break;
-			case "REPOS_ID": sql_value += seperator + param + "="  + obj.getReposId() ; break;
-			case "USER_ID": sql_value += seperator + param + "="  + obj.getUserId() ; break;
-			case "GROUP_ID": sql_value += seperator + param + "="  + obj.getGroupId() ; break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType() ; break;
-			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority() ; break;
-			case "IS_ADMIN": sql_value += seperator + param + "="  + obj.getIsAdmin() ; break;
-			case "ADD_EN": sql_value += seperator + param + "="  + obj.getAddEn() ; break;
-			case "DELETE_EN": sql_value += seperator + param + "="  + obj.getDeleteEn() ; break;
-			case "EDIT_EN": sql_value += seperator + param + "="  + obj.getEditEn() ; break;
-			case "ACCESS": sql_value += seperator + param + "="  + obj.getAccess() ; break;
-			case "HERITABLE": sql_value += seperator + param + "="  + obj.getHeritable() ; break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-
-	private static Doc buildDocFromJsonObj(JSONObject jsonObj) {
-		Doc obj = new Doc();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setName( (String)jsonObj.get("name"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setSize( Long.parseLong(jsonObj.get("size").toString()));
-        obj.setCheckSum((String)jsonObj.get("checkSum"));
-        obj.setRevision((String)jsonObj.get("revision"));
-        obj.setContent((String)jsonObj.get("content"));
-        obj.setPath( (String)jsonObj.get("path"));
-        obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-        obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
-        obj.setVid( (Integer)jsonObj.get("vid"));
-        obj.setPwd( (String)jsonObj.get("pwd"));
-        obj.setCreator( (Integer)jsonObj.get("creator"));
-        obj.setCreateTime( Long.parseLong(jsonObj.get("createTime").toString()));
-        obj.setLatestEditor( (Integer)jsonObj.get("latestEditor"));
-        obj.setLatestEditTime( Long.parseLong(jsonObj.get("latestEditTime").toString()));
-        return obj;
-	}
-	
-	private static Doc buildDocFromResultSet(ResultSet rs) throws Exception {
-		Doc obj = new Doc();
-		obj.setId( rs.getInt("ID"));
-		obj.setName( rs.getString("NAME"));
-		obj.setType( rs.getInt("TYPE"));
-		obj.setSize( rs.getLong("SIZE"));
-        obj.setCheckSum(rs.getString("CHECK_SUM"));
-        obj.setRevision(rs.getString("REVISION"));
-        obj.setContent(rs.getString("CONTENT"));
-        obj.setPath( rs.getString("PATH"));
-        obj.setDocId( rs.getLong("DOC_ID"));
-        obj.setPid( rs.getLong("PID"));
-        obj.setVid( rs.getInt("VID"));
-        obj.setPwd( rs.getString("PWD"));
-        obj.setCreator( rs.getInt("CREATOR"));
-        obj.setCreateTime( rs.getLong("CREATE_TIME"));
-        obj.setLatestEditor( rs.getInt("LATEST_EDITOR"));
-        obj.setLatestEditTime( rs.getLong("LATEST_EDIT_TIME"));
-        return obj;        
-	}
-	
-	private static List<String> buildParamListForDoc(Doc obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId( ) != null) { paramList.add("ID");}
-		if(obj.getName( ) != null) { paramList.add("NAME");}
-		if(obj.getType( ) != null) { paramList.add("TYPE");}
-		if(obj.getSize( ) != null) { paramList.add("SIZE");}
-        if(obj.getCheckSum() != null) { paramList.add("CHECK_SUM");}
-        if(obj.getRevision() != null) { paramList.add("REVISION");}
-        if(obj.getContent() != null) { paramList.add("CONTENT");}
-        if(obj.getPath( ) != null) { paramList.add("PATH");}
-        if(obj.getDocId( ) != null) { paramList.add("DOC_ID");}
-        if(obj.getPid( ) != null) { paramList.add("PID");}
-        if(obj.getVid( ) != null) { paramList.add("VID");}
-        if(obj.getPwd( ) != null) { paramList.add("PWD");}
-        if(obj.getCreator( ) != null) { paramList.add("CREATOR");}
-        if(obj.getCreateTime( ) != null) { paramList.add("CREATE_TIME");}
-        if(obj.getLatestEditor( ) != null) { paramList.add("LATEST_EDITOR");}
-        if(obj.getLatestEditTime( ) != null) { paramList.add("LATEST_EDIT_TIME");}
-        return paramList;
-	}
-
-	private static String buildInsertSqlForDoc(Doc obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForDoc(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "NAME": sql_value += " '" + obj.getName()  + "'"  + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "SIZE": sql_value += " " + obj.getSize() + seperator; break;
-			case "CHECK_SUM": sql_value += " '" + obj.getCheckSum() + "'"  + seperator; break;
-			case "REVISION": sql_value += " '" + obj.getRevision() + "'"  + seperator; break;
-			case "CONTENT": sql_value += " '" + obj.getContent() + "'"  + seperator; break;
-			case "PATH": sql_value += " '" + obj.getPath() + "'"  + seperator; break;
-			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
-			case "PID": sql_value += " " + obj.getPid() + seperator; break;
-			case "VID": sql_value += " " + obj.getVid() + seperator; break;
-			case "PWD": sql_value += " '" + obj.getPwd() + "'"  + seperator; break;
-			case "CREATOR": sql_value += " " + obj.getCreator() + seperator; break;
-			case "CREATE_TIME": sql_value += " " + obj.getCreateTime() + seperator; break;
-			case "LATEST_EDITOR": sql_value += " " + obj.getLatestEditor() + seperator; break;
-			case "LATEST_EDIT_TIME": sql_value += " " + obj.getLatestEditTime() + seperator; break;
-			}
-		}
-        String sql = "insert into DOC (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-
-	private static String buildQuerySqlForDoc(Doc obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'" ; break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "SIZE": sql_value += seperator + param + "="  + obj.getSize(); break;
-			case "CHECK_SUM": sql_value += seperator + param + "='"  + obj.getCheckSum() + "'" ; break;
-			case "REVISION": sql_value += seperator + param + "='"  + obj.getRevision() + "'" ; break;
-			case "CONTENT": sql_value += seperator + param + "='"  + obj.getContent() + "'" ; break;
-			case "PATH": sql_value += seperator + param + "='"  + obj.getPath() + "'" ; break;
-			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
-			case "PID": sql_value += seperator + param + "="  + obj.getPid(); break;
-			case "VID": sql_value += seperator + param + "="  + obj.getVid(); break;
-			case "PWD": sql_value += seperator + param + "='"  + obj.getPwd() + "'" ; break;
-			case "CREATOR": sql_value += seperator + param + "="  + obj.getCreator(); break;
-			case "CREATE_TIME": sql_value += seperator + param + "="  + obj.getCreateTime(); break;
-			case "LATEST_EDITOR": sql_value += seperator + param + "="  + obj.getLatestEditor(); break;
-			case "LATEST_EDIT_TIME": sql_value += seperator + param + "="  + obj.getLatestEditTime(); break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-
-	private static DocAuth buildDocAuthFromJsonObj(JSONObject jsonObj) {
-		DocAuth obj = new DocAuth();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setReposId( (Integer)jsonObj.get("reposId"));
-		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));            	
-		obj.setUserId( (Integer)jsonObj.get("userId"));
-		obj.setGroupId( (Integer)jsonObj.get("groupId"));
-		obj.setType( (Integer)jsonObj.get("type"));
-		obj.setPriority( (Integer)jsonObj.get("priority"));
-		obj.setIsAdmin( (Integer)jsonObj.get("isAdmin"));
-		obj.setAddEn( (Integer)jsonObj.get("addEn"));
-		obj.setDeleteEn( (Integer)jsonObj.get("deleteEn"));
-		obj.setEditEn( (Integer)jsonObj.get("editEn"));
-		obj.setAccess( (Integer)jsonObj.get("access"));
-		obj.setHeritable( (Integer)jsonObj.get("heritable"));
-		obj.setDocPath( (String)jsonObj.get("docPath"));
-		obj.setDocName( (String)jsonObj.get("docName"));
-		return obj;
-	}
-
-	private static DocAuth buildDocAuthFromResultSet(ResultSet rs) throws Exception {
-        DocAuth obj = new DocAuth();
-        obj.setId(rs.getInt("ID"));
-        obj.setReposId(rs.getInt("REPOS_ID"));
-        obj.setDocId(rs.getLong("DOC_ID"));
-        obj.setType(rs.getInt("TYPE"));
-        obj.setPriority(rs.getInt("PRIORITY"));
-        obj.setUserId(rs.getInt("USER_ID"));
-        obj.setGroupId(rs.getInt("GROUP_ID"));
-        obj.setIsAdmin(rs.getInt("IS_ADMIN"));
-        obj.setAccess(rs.getInt("ACCESS"));
-        obj.setEditEn(rs.getInt("EDIT_EN"));
-        obj.setAddEn(rs.getInt("ADD_EN"));
-        obj.setDeleteEn(rs.getInt("DELETE_EN"));
-        obj.setHeritable(rs.getInt("HERITABLE"));
-        obj.setDocPath(rs.getString("DOC_PATH"));
-        obj.setDocName(rs.getString("DOC_NAME"));
-		return obj;
-	}
-	
-	private static List<String> buildParamListForDocAuth(DocAuth obj) 
-	{
-		List<String> paramList = new ArrayList<String>();
-        if(obj.getId() != null) { paramList.add("ID");}
-        if(obj.getReposId() != null) { paramList.add("REPOS_ID");}
-        if(obj.getDocId() != null) { paramList.add("DOC_ID");}
-        if(obj.getType() != null) { paramList.add("TYPE");}
-        if(obj.getPriority() != null) { paramList.add("PRIORITY");}
-        if(obj.getUserId() != null) { paramList.add("USER_ID");}
-        if(obj.getGroupId() != null) { paramList.add("GROUP_ID");}
-        if(obj.getIsAdmin() != null) { paramList.add("IS_ADMIN");}
-        if(obj.getAccess() != null) { paramList.add("ACCESS");}
-        if(obj.getEditEn() != null) { paramList.add("EDIT_EN");}
-        if(obj.getAddEn() != null) { paramList.add("ADD_EN");}
-        if(obj.getDeleteEn() != null) { paramList.add("DELETE_EN");}
-        if(obj.getHeritable() != null) { paramList.add("HERITABLE");}
-        if(obj.getDocPath() != null) { paramList.add("DOC_PATH");}
-        if(obj.getDocName() != null) { paramList.add("DOC_NAME");}
-        return paramList;
-	}
-	
-
-	private static String buildInsertSqlForDocAuth(DocAuth obj) 
-	{
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForDocAuth(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "USER_ID": sql_value += " " + obj.getUserId() + seperator; break;
-			case "GROUP_ID": sql_value += " " + obj.getGroupId() + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "PRIORITY": sql_value += " " + obj.getPriority() + seperator; break;
-			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
-			case "REPOS_ID": sql_value += " " + obj.getReposId() + seperator; break;
-			case "IS_ADMIN": sql_value += " " + obj.getIsAdmin() + seperator; break;	
-			case "ACCESS": sql_value += " " + obj.getAccess() + seperator; break;
-        	case "EDIT_EN": sql_value += " " + obj.getEditEn() + seperator; break;
-        	case "ADD_EN": sql_value += " " + obj.getAddEn() + seperator; break;
-        	case "DELETE_EN": sql_value += " " + obj.getDeleteEn() + seperator; break;
-        	case "HERITABLE": sql_value += " " + obj.getHeritable() + seperator; break;
-        	case "DOC_PATH": sql_value += " '" + obj.getDocPath() + "'"  + seperator; break;
-        	case "DOC_NAME": sql_value += " '" + obj.getDocName() + "'"  + seperator; break;
-			}
-		}
-        
-        String sql = "insert into doc_auth (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-	
-
-	private static String buildQuerySqlForDocAuth(DocAuth obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "USER_ID": sql_value += seperator + param + "="  + obj.getUserId(); break;
-			case "GROUP_ID": sql_value += seperator + param + "="  + obj.getGroupId(); break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "PRIORITY": sql_value += seperator + param + "="  + obj.getPriority(); break;
-			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
-			case "REPOS_ID": sql_value += seperator + param + "="  + obj.getReposId(); break;
-			case "IS_ADMIN": sql_value += seperator + param + "="  + obj.getIsAdmin(); break;	
-			case "ACCESS": sql_value += seperator + param + "="  + obj.getAccess(); break;
-        	case "EDIT_EN": sql_value += seperator + param + "="  + obj.getEditEn(); break;
-        	case "ADD_EN": sql_value += seperator + param + "="  + obj.getAddEn(); break;
-        	case "DELETE_EN": sql_value += seperator + param + "="  + obj.getDeleteEn(); break;
-        	case "HERITABLE": sql_value +=  + obj.getHeritable() + seperator; break;
-        	case "DOC_PATH": sql_value += seperator + param + "= '" + obj.getDocPath() + "'"; break;
-        	case "DOC_NAME": sql_value += seperator + param + "= '" + obj.getDocName() + "'"; break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-
-	private static Object buildDocLockFromJsonObj(JSONObject jsonObj) {
-		DocLock obj = new DocLock();
-		obj.setId( (Integer)jsonObj.get("id"));
-		obj.setType((Integer)jsonObj.get("type"));
-		obj.setName((String)jsonObj.get("name"));
-		obj.setPath((String)jsonObj.get("path"));
-		obj.setDocId( Long.parseLong(jsonObj.get("docId").toString()));
-		obj.setPid( Long.parseLong(jsonObj.get("pid").toString()));
-		obj.setVid( (Integer)jsonObj.get("vid"));
-		obj.setState((Integer)jsonObj.get("state"));
-		obj.setLockBy((Integer)jsonObj.get("lockBy"));
-		obj.setLockTime( Long.parseLong(jsonObj.get("lockTime").toString()));
-		return obj;
-	}
-	
-	private static Object buildDocLockFromResultSet(ResultSet rs) throws SQLException {
-		DocLock obj = new DocLock();
-		obj.setId( rs.getInt("ID"));
-		obj.setType(rs.getInt("TYPE"));
-		obj.setName(rs.getString("NAME"));
-		obj.setPath(rs.getString("PATH"));
-		obj.setDocId( rs.getLong("DOC_ID"));
-		obj.setPid( rs.getLong("PID"));
-		obj.setVid( rs.getInt("VID"));
-		obj.setState(rs.getInt("STATE"));
-		obj.setLockBy(rs.getInt("LOCK_BY"));
-		obj.setLockTime( rs.getLong("LOCK_TIME"));
-		return obj;
-	}
-
-	private static List<String> buildParamListForDocLock(DocLock obj) {
-		List<String> paramList = new ArrayList<String>();
-		if(obj.getId( ) != null) { paramList.add("ID");}
-		if(obj.getType() != null) { paramList.add("TYPE");}
-		if(obj.getName() != null) { paramList.add("NAME");}
-		if(obj.getPath() != null) { paramList.add("PATH");}
-		if(obj.getDocId( ) != null) { paramList.add("DOC_ID");}
-		if(obj.getPid( ) != null) { paramList.add("PID");}
-		if(obj.getVid( ) != null) { paramList.add("VID");}
-		if(obj.getState() != null) { paramList.add("STATE");}
-		if(obj.getLockBy() != null) { paramList.add("LOCK_BY");}
-		if(obj.getLockTime( ) != null) { paramList.add("LOCK_TIME");}
-        return paramList;
-	}
-	
-	
-	private static String buildInsertSqlForDocLock(DocLock obj) {
-		if(obj == null)
-		{
-			return 	null;
-		}
-		
-		String sql_condition = "";
-		String sql_value="";
-		List<String> paramList = buildParamListForDocLock(obj);
-		int lastParamIndex = paramList.size() - 1;
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = ",";
-			String param = paramList.get(i);
-			if(i == lastParamIndex)
-			{
-				seperator = "";
-			}
-			sql_condition += param + seperator;	//不带,
-			
-			switch(param)
-			{			
-			case "ID": sql_value += " " + obj.getId() + seperator; break;
-			case "TYPE": sql_value += " " + obj.getType() + seperator; break;
-			case "NAME": sql_value += " '" + obj.getName() + "'"  + seperator; break;
-			case "PATH": sql_value += " '" + obj.getPath() + "'"  + seperator; break;
-			case "DOC_ID": sql_value += " " + obj.getDocId() + seperator; break;
-			case "PID": sql_value += " " + obj.getPid() + seperator; break;
-			case "VID": sql_value += " " + obj.getVid() + seperator; break;
-			case "STATE": sql_value += " " + obj.getState() + seperator; break;
-			case "LOCK_BY": sql_value += " " + obj.getLockBy() + seperator; break;
-			case "LOCK_TIME": sql_value += " " + obj.getLockTime() + seperator; break;
-			}
-		}
-        String sql = "insert into DOC_LOCK (" + sql_condition + ")" + " values (" + sql_value + ")";
-        return sql;
-	}
-
-
-	private static String buildQuerySqlForDocLock(DocLock obj, int objType) {
-		String name = getNameByObjType(objType);
-		String sql = "select * from " + name;
-		
-		if(obj == null)
-		{
-			return 	sql;
-		}
-		
-		List<String> paramList = buildParamList(obj, objType);
-		
-		if(paramList == null)
-		{
-			return sql;
-		}
-		
-		String sql_condition = " where ";
-		String sql_value="";
-		for(int i=0; i < paramList.size(); i++)
-		{
-			String seperator = " and ";
-			String param = paramList.get(i);
-			if(i == 0)
-			{
-				seperator = " ";
-			}
-			
-			switch(param)
-			{			
-			case "ID": sql_value += seperator + param + "="  + obj.getId(); break;
-			case "TYPE": sql_value += seperator + param + "="  + obj.getType(); break;
-			case "NAME": sql_value += seperator + param + "='"  + obj.getName() + "'" ; break;
-			case "PATH": sql_value += seperator + param + "='"  + obj.getPath() + "'" ; break;
-			case "DOC_ID": sql_value += seperator + param + "="  + obj.getDocId(); break;
-			case "PID": sql_value += seperator + param + "="  + obj.getPid(); break;
-			case "VID": sql_value += seperator + param + "="  + obj.getVid(); break;
-			case "STATE": sql_value += seperator + param + "="  + obj.getState(); break;
-			case "LOCK_BY": sql_value += seperator + param + "="  + obj.getLockBy(); break;
-			case "LOCK_TIME": sql_value += seperator + param + "="  + obj.getLockTime(); break;
-			}
-		}
-        sql = sql + sql_condition + sql_value;
-        return sql;
-	}
-	
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
 		// TODO Auto-generated method stub
