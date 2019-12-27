@@ -6618,38 +6618,6 @@ public class BaseController  extends BaseFunction{
 	};
 	static JSONArray[] ObjMemberListMap = {null,null,null,null,null,null,null,null,null,null,null};
 	
-	private static boolean initObjMemberListMap() {
-		for(int i=0; i<DBTabNameMap.length; i++)
-		{
-			String objName = getNameByObjType(i);
-			if(objName != null)
-			{
-
-				String fileName = "docsystem_" + objName + ".json";
-				String filePath = docSysWebPath + "WEB-INF/classes/";
-				ObjMemberListMap[i] = getObjMemberListFromFile(filePath, fileName, objName);
-			}
-		}
-		return true;
-	}	
-	
-	private static JSONArray getObjMemberList(int objType) {
-		return ObjMemberListMap[objType];
-	}	
-	
-	private static JSONArray getObjMemberListFromFile(String filePath, String fileName, String objName) {
-
-		String s = readDocContentFromFile(filePath, fileName, false);
-		if(s == null)
-		{
-			return null;
-		}
-		
-		JSONObject jobj = JSON.parseObject(s);
-		JSONArray list = jobj.getJSONArray(objName);
-        return list;
-	}
-	
 	//系统需要根据该标志是否跳转至系统初始化配置页面（以便用户能够重新配置数据库）
 	static Integer docSysIniState = 0;
 	protected static void docSysInit() 
@@ -6983,7 +6951,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(initObjMemberListMap() == false)
+		if(initObjMemberListMap(dbTabsNeedToUpgrade) == false)
 		{
 			System.out.println("DBUpgrade() initObjMemberListMap Faield!");
 			return false;			
@@ -7166,6 +7134,39 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return dbTabList;
+	}
+	
+	private static boolean initObjMemberListMap(List<Integer> dbTabsNeedToUpgrade) {
+		for(int i=0; i<DBTabNameMap.length; i++)
+		{
+			Integer objType = dbTabsNeedToUpgrade.get(i);
+			String objName = getNameByObjType(objType);
+			if(objName != null)
+			{
+
+				String fileName = "docsystem_" + objName + ".json";
+				String filePath = docSysWebPath + "WEB-INF/classes/";
+				ObjMemberListMap[i] = getObjMemberListFromFile(filePath, fileName, objName);
+			}
+		}
+		return true;
+	}	
+	
+	private static JSONArray getObjMemberList(int objType) {
+		return ObjMemberListMap[objType];
+	}	
+	
+	private static JSONArray getObjMemberListFromFile(String filePath, String fileName, String objName) {
+
+		String s = readDocContentFromFile(filePath, fileName, false);
+		if(s == null)
+		{
+			return null;
+		}
+		
+		JSONObject jobj = JSON.parseObject(s);
+		JSONArray list = jobj.getJSONArray(objName);
+        return list;
 	}
 
 	private static String getNameByObjType(int objType) {		
