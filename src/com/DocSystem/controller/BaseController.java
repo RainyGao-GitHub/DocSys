@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
@@ -6722,16 +6723,16 @@ public class BaseController  extends BaseFunction{
 		return DBUpgrade(oldVersion, newVersion);
 	}
 	
-    private static boolean executeSqlScript(String filePath) 
+    protected static boolean executeSqlScript(String filePath) 
     {
         try {
             Connection conn = (Connection) DriverManager.getConnection(DB_URL ,DB_USER, DB_PASS);
             ScriptRunner runner = new ScriptRunner(conn);
-            Resources.setCharset(Charset.forName("UTF-8")); //设置字符集,不然中文乱码插入错误
             runner.setLogWriter(null);//设置是否输出日志
             
             // 从class目录下直接读取
-            Reader read = Resources.getResourceAsReader(filePath);
+            InputStream in = new FileInputStream(filePath);
+            Reader read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
             runner.runScript(read);
             runner.closeConnection();
             conn.close();
@@ -6997,7 +6998,7 @@ public class BaseController  extends BaseFunction{
 			//delete tab
 			deleteDBTab(dbTabName);
 			//init tab
-			executeSqlScript(dbTabInitSqlScriptName);
+			executeSqlScript(sqlScriptPath);
 			//import the data back to new db
 			String jsonFilePath = docSysIniPath + "backup/";
 			String jsonFileName = dbTabName + ".json";
@@ -7103,7 +7104,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
 			return false;
 		}
-		return executeSqlScript("docsystem.sql");
+		return executeSqlScript(sqlScriptPath);
 	}
 	
 	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
@@ -7264,7 +7265,7 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_SYS_CONFIG:
 			return buildSysConfigFromJsonObj(jsonObj, objType);
 		case DOCSYS_DOC_SHARE:
-			return buildDocShareFromJsonObj(jsonObj, objType);
+			//return buildDocShareFromJsonObj(jsonObj, objType);
 		}
 		return null;
 	}
@@ -7294,7 +7295,7 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_SYS_CONFIG:
 			return buildSysConfigFromResultSet(rs, objType);
 		case DOCSYS_DOC_SHARE:
-			return buildDocShareFromResultSet(rs, objType);
+			//return buildDocShareFromResultSet(rs, objType);
 		}
 		return null;
 	}
@@ -7541,15 +7542,15 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-	private static Object buildDocShareFromJsonObj(JSONObject jsonObj, int objType) {
-		DocShare obj = new DocShare();
-		return convertJsonObjToObj(jsonObj, obj, objType);
-	}
-	
-	private static Object buildDocShareFromResultSet(ResultSet rs, int objType) {
-		DocShare obj = new DocShare();
-		return convertResultSetToObj(rs, obj, objType);
-	}
+//	private static Object buildDocShareFromJsonObj(JSONObject jsonObj, int objType) {
+//		DocShare obj = new DocShare();
+//		return convertJsonObjToObj(jsonObj, obj, objType);
+//	}
+//	
+//	private static Object buildDocShareFromResultSet(ResultSet rs, int objType) {
+//		DocShare obj = new DocShare();
+//		return convertResultSetToObj(rs, obj, objType);
+//	}
 	
 	private static Object convertJsonObjToObj(JSONObject jsonObj, Object obj, int objType) 
 	{
