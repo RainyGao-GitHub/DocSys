@@ -6990,7 +6990,7 @@ public class BaseController  extends BaseFunction{
 			//更新数据库表结构
 			//check if init script exists
 			String dbTabInitSqlScriptName = "docsystem_" + dbTabName + ".sql";
-			String sqlScriptPath = docSysWebPath + "WEB-INF/classes/" + dbTabInitSqlScriptName;
+			String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/" + dbTabInitSqlScriptName;
 			if(isFileExist(sqlScriptPath) == false)
 			{
 				System.out.println("DBUpgrade() sqlScriptPath:" + sqlScriptPath + " 不存在");
@@ -7099,7 +7099,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean initDB() 
 	{
 		System.out.println("initDB()");
-		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/docsystem.sql";
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
 		if(isFileExist(sqlScriptPath) == false)
 		{
 			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
@@ -7127,7 +7127,8 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_ROLE);
 			dbTabList.add(DOCSYS_USER_GROUP);	
 			dbTabList.add(DOCSYS_GROUP_MEMBER);	
-			dbTabList.add(DOCSYS_SYS_CONFIG);	
+			dbTabList.add(DOCSYS_SYS_CONFIG);
+			dbTabList.add(DOCSYS_DOC_SHARE);			
 		}
 		
 		if(oldVersion < 200120)
@@ -7146,7 +7147,7 @@ public class BaseController  extends BaseFunction{
 			{
 
 				String fileName = "docsystem_" + objName + ".json";
-				String filePath = docSysWebPath + "WEB-INF/classes/";
+				String filePath = docSysWebPath + "WEB-INF/classes/config/";
 				ObjMemberListMap[i] = getObjMemberListFromFile(filePath, fileName, objName);
 			}
 		}
