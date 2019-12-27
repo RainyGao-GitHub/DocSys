@@ -1,0 +1,9 @@
+{USER_GROUP:[
+	{"dbName":"ID",  "name":"id",   "type":"Integer"},
+	{"dbName":"NAME",  "name":"name",  "type":"String"},
+	{"dbName":"TYPE",  "name":"type",   "type":"Integer"},
+	{"dbName":"INFO",  "name":"info",  "type":"String"},
+	{"dbName":"IMG",  "name":"img",  "type":"String"},
+	{"dbName":"PRIORITY",  "name":"priority",   "type":"Integer"},
+	{"dbName":"CREATE_TIME",  "name":"createTime",  "type":"String"},
+}]
