@@ -56,6 +56,7 @@ import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
@@ -7265,7 +7266,7 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_SYS_CONFIG:
 			return buildSysConfigFromJsonObj(jsonObj, objType);
 		case DOCSYS_DOC_SHARE:
-			//return buildDocShareFromJsonObj(jsonObj, objType);
+			return buildDocShareFromJsonObj(jsonObj, objType);
 		}
 		return null;
 	}
@@ -7295,7 +7296,7 @@ public class BaseController  extends BaseFunction{
 		case DOCSYS_SYS_CONFIG:
 			return buildSysConfigFromResultSet(rs, objType);
 		case DOCSYS_DOC_SHARE:
-			//return buildDocShareFromResultSet(rs, objType);
+			return buildDocShareFromResultSet(rs, objType);
 		}
 		return null;
 	}
@@ -7542,15 +7543,15 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-//	private static Object buildDocShareFromJsonObj(JSONObject jsonObj, int objType) {
-//		DocShare obj = new DocShare();
-//		return convertJsonObjToObj(jsonObj, obj, objType);
-//	}
-//	
-//	private static Object buildDocShareFromResultSet(ResultSet rs, int objType) {
-//		DocShare obj = new DocShare();
-//		return convertResultSetToObj(rs, obj, objType);
-//	}
+	private static Object buildDocShareFromJsonObj(JSONObject jsonObj, int objType) {
+		DocShare obj = new DocShare();
+		return convertJsonObjToObj(jsonObj, obj, objType);
+	}
+	
+	private static Object buildDocShareFromResultSet(ResultSet rs, int objType) {
+		DocShare obj = new DocShare();
+		return convertResultSetToObj(rs, obj, objType);
+	}
 	
 	private static Object convertJsonObjToObj(JSONObject jsonObj, Object obj, int objType) 
 	{
