@@ -16,12 +16,12 @@ class DocSysInitTest extends BaseController{
     	//executeSqlScript(filePath);
     	
     	//数据库导出测试
-    	//exportObjectListToJsonFile(DOCSYS_REPOS, "/DocSysTestDir/", "REPOS.json", 0, 20000);
+    	exportObjectListToJsonFile(DOCSYS_REPOS, "/DocSysTestDir/", "REPOS.json", 0, 20000);
     	
     	//数据库导入测试
     	//importObjectListFromJsonFile(DOCSYS_REPOS, "/DocSysTestDir/", "REPOS.json");
     	
     	//系统初始化测试
-    	docSysInit();
+    	//docSysInit();
     }
 }
