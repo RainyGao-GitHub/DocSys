@@ -7159,7 +7159,7 @@ public class BaseController  extends BaseFunction{
 	}	
 	
 	private static JSONArray getObjMemberListFromFile(String filePath, String fileName, String objName) {
-
+		System.out.println("getObjMemberListFromFile() filePath:" + filePath + " fileName:" + fileName + " objName:" + objName);
 		String s = readDocContentFromFile(filePath, fileName, false);
 		if(s == null)
 		{
