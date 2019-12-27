@@ -12,16 +12,16 @@ class DocSysInitTest extends BaseController{
     	//backupDB("/DocSysTestDir/", "docsystem.sql", "UTF-8");
     	
     	//数据库导入测试
-    	String filePath = docSysWebPath + "docsystem_DOC_SHARE.sql";
-    	executeSqlScript(filePath);
+    	//String filePath = docSysWebPath + "docsystem_DOC_SHARE.sql";
+    	//executeSqlScript(filePath);
     	
-    	//Export to json file Test
+    	//数据库导出测试
     	//exportObjectListToJsonFile(DOCSYS_REPOS, "/DocSysTestDir/", "REPOS.json", 0, 20000);
     	
-    	//Import json to DB Test
+    	//数据库导入测试
     	//importObjectListFromJsonFile(DOCSYS_REPOS, "/DocSysTestDir/", "REPOS.json");
     	
-    	//DB upgrade Test
-    	//docSysInit();
+    	//系统初始化测试
+    	docSysInit();
     }
 }
