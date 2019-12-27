@@ -4,7 +4,7 @@
 	{"dbName":"GROUP_ID",   "name":"groupId", "type":"Integer"},
 	{"dbName":"TYPE",   "name":"type", "type":"Integer"},
 	{"dbName":"PRIORITY",   "name":"priority", "type":"Integer"},
-	{"dbName":"DOC_ID",  big "name":"docId", "type":"Integer"},
+	{"dbName":"DOC_ID",  "name":"docId", "type":"Long"},
 	{"dbName":"REPOS_ID",   "name":"reposId", "type":"Integer"},
 	{"dbName":"IS_ADMIN",   "name":"isAdmin", "type":"Integer"},
 	{"dbName":"ACCESS",   "name":"access", "type":"Integer"},
