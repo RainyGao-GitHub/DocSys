@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.DocSystem.dao.DocShareMapper" >
+  <resultMap id="BaseResultMap" type="com.DocSystem.entity.DocShare" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="SHARE_ID" property="shareId" jdbcType="INTEGER" />
+    <result column="NAME" property="name" jdbcType="VARCHAR" />
+    <result column="PATH" property="path" jdbcType="VARCHAR" />
+    <result column="DOC_ID" property="docId" jdbcType="BIGINT" />
+    <result column="VID" property="vid" jdbcType="INTEGER" />
+    <result column="SHARE_AUTH" property="shareAuth" jdbcType="VARCHAR" />
+    <result column="SHARE_PWD" property="sharePwd" jdbcType="VARCHAR" />
+    <result column="SHARED_BY" property="sharedBy" jdbcType="INTEGER" />
+    <result column="EXPIRE_TIME" property="expireTime" jdbcType="BIGINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    ID, SHARE_ID, NAME, PATH, DOC_ID, VID, SHARE_AUTH, SHARE_PWD, SHARED_BY, EXPIRE_TIME
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from doc_share
+    where ID = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from doc_share
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.DocSystem.entity.DocShare" >
+    insert into doc_share (ID, SHARE_ID, NAME, 
+      PATH, DOC_ID, VID, SHARE_AUTH, 
+      SHARE_PWD, SHARED_BY, EXPIRE_TIME
+      )
+    values (#{id,jdbcType=INTEGER}, #{shareId,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, 
+      #{path,jdbcType=VARCHAR}, #{docId,jdbcType=BIGINT}, #{vid,jdbcType=INTEGER}, #{shareAuth,jdbcType=VARCHAR}, 
+      #{sharePwd,jdbcType=VARCHAR}, #{sharedBy,jdbcType=INTEGER}, #{expireTime,jdbcType=BIGINT}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.DocSystem.entity.DocShare" >
+    insert into doc_share
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        ID,
+      </if>
+      <if test="shareId != null" >
+        SHARE_ID,
+      </if>
+      <if test="name != null" >
+        NAME,
+      </if>
+      <if test="path != null" >
+        PATH,
+      </if>
+      <if test="docId != null" >
+        DOC_ID,
+      </if>
+      <if test="vid != null" >
+        VID,
+      </if>
+      <if test="shareAuth != null" >
+        SHARE_AUTH,
+      </if>
+      <if test="sharePwd != null" >
+        SHARE_PWD,
+      </if>
+      <if test="sharedBy != null" >
+        SHARED_BY,
+      </if>
+      <if test="expireTime != null" >
+        EXPIRE_TIME,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="shareId != null" >
+        #{shareId,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null" >
+        #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="docId != null" >
+        #{docId,jdbcType=BIGINT},
+      </if>
+      <if test="vid != null" >
+        #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="shareAuth != null" >
+        #{shareAuth,jdbcType=VARCHAR},
+      </if>
+      <if test="sharePwd != null" >
+        #{sharePwd,jdbcType=VARCHAR},
+      </if>
+      <if test="sharedBy != null" >
+        #{sharedBy,jdbcType=INTEGER},
+      </if>
+      <if test="expireTime != null" >
+        #{expireTime,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.DocSystem.entity.DocShare" >
+    update doc_share
+    <set >
+      <if test="shareId != null" >
+        SHARE_ID = #{shareId,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="path != null" >
+        PATH = #{path,jdbcType=VARCHAR},
+      </if>
+      <if test="docId != null" >
+        DOC_ID = #{docId,jdbcType=BIGINT},
+      </if>
+      <if test="vid != null" >
+        VID = #{vid,jdbcType=INTEGER},
+      </if>
+      <if test="shareAuth != null" >
+        SHARE_AUTH = #{shareAuth,jdbcType=VARCHAR},
+      </if>
+      <if test="sharePwd != null" >
+        SHARE_PWD = #{sharePwd,jdbcType=VARCHAR},
+      </if>
+      <if test="sharedBy != null" >
+        SHARED_BY = #{sharedBy,jdbcType=INTEGER},
+      </if>
+      <if test="expireTime != null" >
+        EXPIRE_TIME = #{expireTime,jdbcType=BIGINT},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.DocSystem.entity.DocShare" >
+    update doc_share
+    set SHARE_ID = #{shareId,jdbcType=INTEGER},
+      NAME = #{name,jdbcType=VARCHAR},
+      PATH = #{path,jdbcType=VARCHAR},
+      DOC_ID = #{docId,jdbcType=BIGINT},
+      VID = #{vid,jdbcType=INTEGER},
+      SHARE_AUTH = #{shareAuth,jdbcType=VARCHAR},
+      SHARE_PWD = #{sharePwd,jdbcType=VARCHAR},
+      SHARED_BY = #{sharedBy,jdbcType=INTEGER},
+      EXPIRE_TIME = #{expireTime,jdbcType=BIGINT}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
