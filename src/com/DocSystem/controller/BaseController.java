@@ -7539,6 +7539,7 @@ public class BaseController  extends BaseFunction{
 		DocLock obj = new DocLock();
 		return convertResultSetToObj(rs, obj, objType);
 	}
+
 	
 	private static Object buildDocShareFromJsonObj(JSONObject jsonObj, int objType) {
 		DocShare obj = new DocShare();
@@ -7698,7 +7699,7 @@ public class BaseController  extends BaseFunction{
 			
 			JSONObject param = paramList.get(i);
 			String type = (String) param.get("type");
-			String field = (String) param.get("name");
+			String field = (String) param.get("dbName");
 						
 			sql_condition += field + seperator;	//不带,
 			
@@ -7745,7 +7746,7 @@ public class BaseController  extends BaseFunction{
 			
 			JSONObject param = paramList.get(i);
 			String type = (String) param.get("type");
-			String field = (String) param.get("name");
+			String field = (String) param.get("dbName");
 			
 			Object value = getFieldValue(obj, field);
 			switch(type)

@@ -1,0 +1,18 @@
+{DOC:[
+   {"dbName":"ID", "type":"Integer"},
+   {"dbName":"NAME", "type":"String"},
+   {"dbName":"TYPE", "type":"Integer"},
+   {"dbName":"SIZE", "type":"Long"},
+   {"dbName":"CHECK_SUM", "type":"String"},
+   {"dbName":"REVISION", "type":"String"},
+   {"dbName":"CONTENT", "type":"String",
+   {"dbName":"PATH", "type":"String"},
+   {"dbName":"DOC_ID", "type":"Long"},
+   {"dbName":"PID", "type":"Long"},
+   {"dbName":"VID", "type":"Integer"},
+   {"dbName":"PWD", "type":"String"},
+   {"dbName":"CREATOR", "type":"Integer"},
+   {"dbName":"CREATE_TIME", "type":"Long"},
+   {"dbName":"LATEST_EDITOR", "type":"Integer"},
+   {"dbName":"LATEST_EDIT_TIME", "type":"Long"},
+]}
