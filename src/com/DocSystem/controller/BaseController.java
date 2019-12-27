@@ -7139,7 +7139,7 @@ public class BaseController  extends BaseFunction{
 		return dbTabList;
 	}
 	
-	private static boolean initObjMemberListMap() {
+	protected static boolean initObjMemberListMap() {
 		for(int i=0; i<DBTabNameMap.length; i++)
 		{
 			String objName = getNameByObjType(i);
