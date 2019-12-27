@@ -6616,6 +6616,39 @@ public class BaseController  extends BaseFunction{
 			"SYS_CONFIG",
 			"DOC_SHARE",
 	};
+	static JSONArray[] ObjMemberListMap = {null,null,null,null,null,null,null,null,null,null,null};
+	
+	private static boolean initObjMemberListMap() {
+		for(int i=0; i<DBTabNameMap.length; i++)
+		{
+			String objName = getNameByObjType(i);
+			if(objName != null)
+			{
+
+				String fileName = "docsystem_" + objName + ".json";
+				String filePath = docSysWebPath + "WEB-INF/classes/";
+				ObjMemberListMap[i] = getObjMemberListFromFile(filePath, fileName, objName);
+			}
+		}
+		return true;
+	}	
+	
+	private static JSONArray getObjMemberList(int objType) {
+		return ObjMemberListMap[objType];
+	}	
+	
+	private static JSONArray getObjMemberListFromFile(String filePath, String fileName, String objName) {
+
+		String s = readDocContentFromFile(filePath, fileName, false);
+		if(s == null)
+		{
+			return null;
+		}
+		
+		JSONObject jobj = JSON.parseObject(s);
+		JSONArray list = jobj.getJSONArray(objName);
+        return list;
+	}
 	
 	//系统需要根据该标志是否跳转至系统初始化配置页面（以便用户能够重新配置数据库）
 	static Integer docSysIniState = 0;
@@ -6948,6 +6981,12 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("DBUpgrade() no DB Table need to upgrade from " + oldVersion + " to " + newVersion);
 			return true;
+		}
+		
+		if(initObjMemberListMap() == false)
+		{
+			System.out.println("DBUpgrade() initObjMemberListMap Faield!");
+			return false;			
 		}
 		
 		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
@@ -8061,10 +8100,14 @@ public class BaseController  extends BaseFunction{
          	String name = (String) objMember.get("name");
               
  			Object value = getValueFormJsonObj(jsonObj, name, type);
-			if(setFieldValue(obj, name, value) == false)
-			{
-				return null;
-			}
+ 			if(value != null)
+ 			{
+				if(setFieldValue(obj, name, value) == false)
+				{
+					System.out.print("convertJsonObjToObj() setFieldValue Failed for field:" + name); 
+					return null;
+				}
+ 			}
 		}
 		return obj;
 	}
@@ -8086,27 +8129,6 @@ public class BaseController  extends BaseFunction{
 			return Long.parseLong(value.toString());
 		}
 		return null;
-	}
-	
-	private static JSONArray getObjMemberList(int objType) {
-		
-		String objName = getNameByObjType(objType);
-		if(objName == null)
-		{
-			return null;
-		}
-		
-		String fileName = "docsystem_" + objName + ".json";
-		String filePath = docSysWebPath + "WEB-INF/classes/";
-		String s = readDocContentFromFile(filePath, fileName, false);
-		if(s == null)
-		{
-			return null;
-		}
-		
-		JSONObject jobj = JSON.parseObject(s);
-		JSONArray list = jobj.getJSONArray(objName);
-        return list;
 	}
 
 	
