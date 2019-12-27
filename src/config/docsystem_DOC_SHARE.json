@@ -1,12 +1,12 @@
 {DOC_SHARE:[
-	{"dbName":"ID",   "name":"id", "type":"Integer"},
-	{"dbName":"SHARE_ID",   "name":"shareId", "type":"Integer"},
-	{"dbName":"NAME",  "type":"name"},
-	{"dbName":"PATH",  "type":"path"},
-	{"dbName":"DOC_ID",  "name":"docId", "type":"Long"},
-	{"dbName":"VID",   "name":"vid", "type":"Integer"},
-	{"dbName":"SHARE_AUTH",   "name":"shareAuth", "type":"String"},
-	{"dbName":"SHARE_PWD",  "name":"sharePwd", "type":"String"},
-	{"dbName":"SHARED_BY",   "name":"sharedBy", "type":"Integer"},
-	{"dbName":"EXPIRE_TIME",  "name":"expireTime", "type":"Long"},
-}]
+	{"dbName":"ID",   			"name":"id", 			"type":"Integer"},
+	{"dbName":"SHARE_ID",   	"name":"shareId", 		"type":"Integer"},
+	{"dbName":"NAME",  			"name":"name",			"type":"String"},
+	{"dbName":"PATH", 	 		"name":"path",			"type":"String"},
+	{"dbName":"DOC_ID",  		"name":"docId", 		"type":"Long"},
+	{"dbName":"VID",   			"name":"vid", 			"type":"Integer"},
+	{"dbName":"SHARE_AUTH",   	"name":"shareAuth", 	"type":"String"},
+	{"dbName":"SHARE_PWD",  	"name":"sharePwd", 		"type":"String"},
+	{"dbName":"SHARED_BY",   	"name":"sharedBy", 		"type":"Integer"},
+	{"dbName":"EXPIRE_TIME",  	"name":"expireTime",	"type":"Long"},
+]}
