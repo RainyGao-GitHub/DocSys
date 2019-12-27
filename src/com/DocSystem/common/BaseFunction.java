@@ -1348,7 +1348,7 @@ public class BaseFunction{
 			{
 				content = new String(buffer, encode);
 			}
-			//System.out.println("content:[" + content + "]");
+			System.out.println("content:[" + content + "]");
 			return content;
 		} catch (Exception e) {
 			e.printStackTrace();
