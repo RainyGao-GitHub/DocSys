@@ -1,0 +1,17 @@
+{DOC_AUTH:[
+	{"dbName":"ID",   "name":"id", "type":"Integer"},
+	{"dbName":"USER_ID",   "name":"userId", "type":"Integer"},
+	{"dbName":"GROUP_ID",   "name":"groupId", "type":"Integer"},
+	{"dbName":"TYPE",   "name":"type", "type":"Integer"},
+	{"dbName":"PRIORITY",   "name":"priority", "type":"Integer"},
+	{"dbName":"DOC_ID",  big "name":"docId", "type":"Integer"},
+	{"dbName":"REPOS_ID",   "name":"reposId", "type":"Integer"},
+	{"dbName":"IS_ADMIN",   "name":"isAdmin", "type":"Integer"},
+	{"dbName":"ACCESS",   "name":"access", "type":"Integer"},
+	{"dbName":"EDIT_EN",   "name":"editEn", "type":"Integer"},
+	{"dbName":"ADD_EN",   "name":"addEn", "type":"Integer"},
+	{"dbName":"DELETE_EN",   "name":"deleteEn", "type":"Integer"},
+	{"dbName":"HERITABLE",   "name":"heritable", "type":"Integer"},
+	{"dbName":"DOC_PATH",   "name":"docPath", "type":"String"},
+	{"dbName":"DOC_NAME",   "name":"docName", "type":"String"},
+]}
