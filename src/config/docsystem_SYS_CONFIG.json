@@ -1,0 +1,5 @@
+{SYS_CONFIG:[
+	{"dbName":"ID",  "name":"id",   "type":"Integer"},
+	{"dbName":"REG_ENABLE",  "name":"regEnable",   "type":"Integer"},
+	{"dbName":"PRIVATE_REPOS_ENABLE",  "name":"privateReposEnable",   "type":"Integer"},
+}]
