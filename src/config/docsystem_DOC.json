@@ -5,7 +5,7 @@
 	{"dbName":"SIZE", 				"name":"size", 			 "type":"Long"},
 	{"dbName":"CHECK_SUM", 			"name":"checkSum", 		 "type":"String"},
 	{"dbName":"REVISION", 			"name":"revision", 		 "type":"String"},
-	{"dbName":"CONTENT", 			"name":"content", 		 "type":"String",
+	{"dbName":"CONTENT", 			"name":"content", 		 "type":"String"},
 	{"dbName":"PATH", 				"name":"path", 			 "type":"String"},
 	{"dbName":"DOC_ID", 			"name":"docId", 		 "type":"Long"},
 	{"dbName":"PID", 				"name":"pid", 			 "type":"Long"},

@@ -6,4 +6,4 @@
 	{"dbName":"IMG",  "name":"img",  "type":"String"},
 	{"dbName":"PRIORITY",  "name":"priority",   "type":"Integer"},
 	{"dbName":"CREATE_TIME",  "name":"createTime",  "type":"String"},
-}]
+]}
