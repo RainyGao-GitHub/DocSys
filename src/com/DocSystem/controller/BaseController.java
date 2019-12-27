@@ -6951,7 +6951,7 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(initObjMemberListMap(dbTabsNeedToUpgrade) == false)
+		if(initObjMemberListMap() == false)
 		{
 			System.out.println("DBUpgrade() initObjMemberListMap Faield!");
 			return false;			
@@ -7136,11 +7136,10 @@ public class BaseController  extends BaseFunction{
 		return dbTabList;
 	}
 	
-	private static boolean initObjMemberListMap(List<Integer> dbTabsNeedToUpgrade) {
+	private static boolean initObjMemberListMap() {
 		for(int i=0; i<DBTabNameMap.length; i++)
 		{
-			Integer objType = dbTabsNeedToUpgrade.get(i);
-			String objName = getNameByObjType(objType);
+			String objName = getNameByObjType(i);
 			if(objName != null)
 			{
 
