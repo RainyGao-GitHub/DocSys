@@ -46,7 +46,7 @@ CREATE TABLE `doc_share` (
 --
 
 --
--- Indexes for table `doc`
+-- Indexes for table `doc_share`
 --
 ALTER TABLE `doc_share`
   ADD PRIMARY KEY (`ID`);
