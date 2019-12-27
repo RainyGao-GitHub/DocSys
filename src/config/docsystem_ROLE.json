@@ -2,4 +2,4 @@
 	{"dbName":"ID",  		"name":"id",   		"type":"Integer"},
 	{"dbName":"NAME",  		"name":"name",  	"type":"String"},
 	{"dbName":"ROLE_ID",  	"name":"roleId",   	"type":"Integer"},
-]
+]}
