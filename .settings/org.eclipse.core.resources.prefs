@@ -36,5 +36,6 @@ encoding//WebRoot/web/textViewer.html=UTF-8
 encoding//src/config/docsystem_DOC_AUTH.json=UTF-8
 encoding//src/config/docsystem_DOC_LOCK.json=UTF-8
 encoding//src/config/docsystem_DOC_SHARE.json=UTF-8
+encoding//src/config/docsystem_REPOS_AUTH.json=UTF-8
 encoding//src/util/SvnUtil/SVNUtil.java=UTF-8
 encoding/<project>=UTF-8
