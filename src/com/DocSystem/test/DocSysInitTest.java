@@ -23,6 +23,6 @@ class DocSysInitTest extends BaseController{
     	importObjectListFromJsonFile(DOCSYS_REPOS, "/DocSysTestDir/", "REPOS.json");
     	
     	//系统初始化测试
-    	//docSysInit();
+    	docSysInit();
     }
 }
