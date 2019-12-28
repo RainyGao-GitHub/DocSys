@@ -7702,9 +7702,10 @@ public class BaseController  extends BaseFunction{
 			
 			JSONObject param = paramList.get(i);
 			String type = (String) param.get("type");
-			String field = (String) param.get("dbName");
+			String field = (String) param.get("name");
+			String dbField = (String) param.get("dbName");
 						
-			sql_condition += field + seperator;	//不带,
+			sql_condition += dbField + seperator;	//不带,
 			
 			Object value = getFieldValue(obj, field);
 			switch(type)
@@ -7713,8 +7714,9 @@ public class BaseController  extends BaseFunction{
 			case "Long":
 				sql_value += " " + value + seperator; 
 				break;
-			case "String": 
-				sql_value += " '" + value  + "'" + seperator; 
+			case "String":
+				String sqlValue = convertToSqlValue(value);
+				sql_value += " '" + sqlValue  + "'" + seperator; 
 				break;
 			}
 		}
@@ -7749,23 +7751,35 @@ public class BaseController  extends BaseFunction{
 			
 			JSONObject param = paramList.get(i);
 			String type = (String) param.get("type");
-			String field = (String) param.get("dbName");
+			String field = (String) param.get("name");
+			String dbField = (String) param.get("dbName");
 			
 			Object value = getFieldValue(obj, field);
 			switch(type)
 			{			
 			case "Integer": 
 			case "Long":
-				sql_value += seperator + field + "="  + value;
+				sql_value += seperator + dbField + "="  + value;
 				break;
 			case "String": 
-				sql_value += seperator + field + "='"  + value + "'";
+				String sqlValue = convertToSqlValue(value);
+				sql_value += seperator + dbField + "='"  + sqlValue + "'";
 				break;
 			}
 		}
         sql = sql + sql_condition + sql_value;
         return sql;
 	}
+	
+	static String convertToSqlValue(Object value)
+	{
+		String sqlValue = value.toString();
+		sqlValue = sqlValue.replace("\\","\\\\");
+		sqlValue = sqlValue.replace("'","\\'");
+		sqlValue = sqlValue.replace('"','\"');
+		return sqlValue;
+	}
+	
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
 		// TODO Auto-generated method stub
