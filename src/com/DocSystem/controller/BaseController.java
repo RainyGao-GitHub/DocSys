@@ -6956,7 +6956,8 @@ public class BaseController  extends BaseFunction{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDB(backUpPath, "docsystem.sql", "UTF-8") == false)
+		JSONArray DBTabList = getListFromJsonFile();
+		if(backupDB(DBTabList, backUpPath, "docsystem.sql", "UTF-8") == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -7054,6 +7055,12 @@ public class BaseController  extends BaseFunction{
 		String backUpContent = "";
 		for(int objId=0; objId< DBTabNameMap.length; objId++)
 		{
+			if(objId == DOCSYS_DOC)
+			{
+				//DOC is too large no need to backup
+				continue;
+			}
+				
 			List<Object> list = dbQuery(null, objId);
 			if(list != null)
 			{
@@ -7067,8 +7074,9 @@ public class BaseController  extends BaseFunction{
 							String tmpSql = new String(sql.getBytes(), encode);
 							sql = tmpSql;
 							System.out.println("backupDB() sql:" + sql);
-						} catch (UnsupportedEncodingException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
+							return false;
 						}
 					}
 					backUpContent += sql + ";\r\n";
@@ -7144,7 +7152,7 @@ public class BaseController  extends BaseFunction{
 
 				String fileName = "docsystem_" + objName + ".json";
 				String filePath = docSysWebPath + "WEB-INF/classes/config/";
-				ObjMemberListMap[i] = getObjMemberListFromFile(filePath, fileName, objName);
+				ObjMemberListMap[i] = getListFromJsonFile(filePath, fileName, objName);
 			}
 		}
 		return true;
@@ -7154,8 +7162,8 @@ public class BaseController  extends BaseFunction{
 		return ObjMemberListMap[objType];
 	}	
 	
-	private static JSONArray getObjMemberListFromFile(String filePath, String fileName, String objName) {
-		System.out.println("getObjMemberListFromFile() filePath:" + filePath + " fileName:" + fileName + " objName:" + objName);
+	private static JSONArray getListFromJsonFile(String filePath, String fileName, String listName) {
+		System.out.println("getObjMemberListFromFile() filePath:" + filePath + " fileName:" + fileName + " listName:" + listName);
 		String s = readDocContentFromFile(filePath, fileName, false);
 		if(s == null)
 		{
@@ -7163,7 +7171,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		JSONObject jobj = JSON.parseObject(s);
-		JSONArray list = jobj.getJSONArray(objName);
+		JSONArray list = jobj.getJSONArray(listName);
         return list;
 	}
 
