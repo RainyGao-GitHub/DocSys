@@ -2025,11 +2025,8 @@ public class BaseController  extends BaseFunction{
 	
 	private void BuildMultiActionListForDocAdd(List<CommonAction> actionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
 	{
-		if(repos.getType() != 1)
-		{
-			//Insert index add action for RDoc Name
-			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null);
-		}	
+		//Insert index add action for RDoc Name
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.DOCNAME, null, null);
 		//Insert index add action for RDoc
 		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.ADD, DocType.REALDOC, null, null);
 		
@@ -2038,8 +2035,8 @@ public class BaseController  extends BaseFunction{
 		{
 			return;
 		}
-		
 		//Insert add action for VDoc
+
 		//Build subActionList
 		List<CommonAction> subActionList = new ArrayList<CommonAction>();
 		if(repos.getVerCtrl1() > 0)
@@ -2067,11 +2064,8 @@ public class BaseController  extends BaseFunction{
 			}
 		}	
 
-		//Insert index add action for RDoc Name
-		if(repos.getType() != 1)
-		{
-			insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.DOCNAME, null, null);
-		}
+		//Insert index delete action for RDoc Name
+		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.DOCNAME, null, null);
 		//Insert index delete action for RDoc
 		insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.INDEX, Action.DELETE, DocType.REALDOC, null, null);
 
@@ -2130,16 +2124,13 @@ public class BaseController  extends BaseFunction{
 		    //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
 			
 			//Insert IndexAction For RealDoc Name Copy or Move (对于目录则会进行递归)
-			if(repos.getType() != 1)
+			if(isMove)
 			{
-				if(isMove)
-				{
-					insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.UPDATE, CommonAction.DocType.DOCNAME, null, null);
-				}
-				else	//对于copy操作则新增对该docName的索引
-				{
-					insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.ADD, CommonAction.DocType.DOCNAME, null, null);				
-				}
+				insertCommonAction(actionList, repos, srcDoc, dstDoc, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.UPDATE, CommonAction.DocType.DOCNAME, null, null);
+			}
+			else	//对于copy操作则新增对该docName的索引
+			{
+				insertCommonAction(actionList, repos, dstDoc, null, commitMsg, commitUser, CommonAction.ActionType.INDEX, CommonAction.Action.ADD, CommonAction.DocType.DOCNAME, null, null);				
 			}
 			
 			//Insert IndexAction For RealDoc Copy or Move (对于目录则会进行递归)
@@ -7058,7 +7049,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected static boolean backupDB(String path, String name, String encode) 
 	{
-		System.out.println("backupDB()");
+		System.out.println("backupDB() encode:" + encode + " backup to file:" + path+name);
 		
 		String backUpContent = "";
 		for(int objId=0; objId< DBTabNameMap.length; objId++)
@@ -7075,6 +7066,7 @@ public class BaseController  extends BaseFunction{
 						try {
 							String tmpSql = new String(sql.getBytes(), encode);
 							sql = tmpSql;
+							System.out.println("backupDB() sql:" + sql);
 						} catch (UnsupportedEncodingException e) {
 							e.printStackTrace();
 						}
@@ -7084,7 +7076,9 @@ public class BaseController  extends BaseFunction{
 				backUpContent += "\r\n";	//换行
 			}
 		}
-		return saveDocContentToFile(backUpContent, path, name);
+		boolean ret = saveDocContentToFile(backUpContent, path, name);
+		System.out.println("backupDB() End with ret:" + ret);
+		return ret;
 	}
 	
 	protected static boolean deleteDBTabs() 
