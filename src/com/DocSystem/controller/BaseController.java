@@ -6956,8 +6956,7 @@ public class BaseController  extends BaseFunction{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		JSONArray DBTabList = getListFromJsonFile();
-		if(backupDB(DBTabList, backUpPath, "docsystem.sql", "UTF-8") == false)
+		if(backupDB(backUpPath, "docsystem.sql", "UTF-8") == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -6967,6 +6966,12 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{	
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
+			if(dbTabId == DOCSYS_DOC)
+			{
+				//DOC表太大不备份，只更新表结构
+				continue;
+			}
+			
 			String jsonFileName = DBTabNameMap[dbTabId] + ".json";
 			String jsonFilePath = docSysIniPath + "backup/";
 			exportObjectListToJsonFile(dbTabId, jsonFilePath, jsonFileName, oldVersion, newVersion);
@@ -6994,7 +6999,13 @@ public class BaseController  extends BaseFunction{
 			deleteDBTab(dbTabName);
 			//init tab
 			executeSqlScript(sqlScriptPath);
+			
 			//import the data back to new db
+			if(dbTabId == DOCSYS_DOC)
+			{
+				//DOC表太大不恢复，只更新表结构
+				continue;
+			}
 			String jsonFilePath = docSysIniPath + "backup/";
 			String jsonFileName = dbTabName + ".json";
 			importObjectListFromJsonFile(dbTabId, jsonFilePath, jsonFileName);
@@ -7319,14 +7330,14 @@ public class BaseController  extends BaseFunction{
 			for(int i=0; i<docAuthList.size(); i++)
 	    	{
 	    		DocAuth docAuth = (DocAuth) docAuthList.get(i);
-	    		
+	    		printObject("queryDocAuth() docAuth:", docAuth);
 	    		Doc qDoc = new Doc();
 	    		qDoc.setVid(docAuth.getReposId());
 	    		try {
 	    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
 	    		} catch(Exception e){
 	    			e.printStackTrace();
-	    			break;
+	    			continue;
 	    		}
 	    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC);
 	    		if(docList != null && docList.size() == 1)
