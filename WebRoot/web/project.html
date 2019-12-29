@@ -1029,15 +1029,20 @@
 	  	var parentPath = "";
 	  	var parentId = 0;
 	  	var level = 0;
+	  	var pPath = "";
+	  	var pName = "";
 		if(parentNode && parentNode != null)
 		{
 			parentPath = parentNode.path + parentNode.name+"/";
+			pPath = parentNode.path;
+			pName = parentNode.name;
 			parentId=parentNode.id;
 			level = parentNode.Level;
 		}
 		else
 		{
 			parentNode=null;
+			
 		}
 		
 		var vid = gReposInfo.id;
@@ -1050,8 +1055,8 @@
 			data : {
 				docId : parentId,
 				reposId : vid,
-				path: parentNode.path,
-				name: parentNode.name,
+				path: pPath,
+				name: pName,
 			},
 			success : function (ret){
 				if( "ok" == ret.status){
