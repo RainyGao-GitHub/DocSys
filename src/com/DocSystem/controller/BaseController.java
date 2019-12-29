@@ -6889,6 +6889,8 @@ public class BaseController  extends BaseFunction{
 
 	private static Integer getVersionFromFile(String path, String name) 
 	{
+		System.out.println("getVersionFromFile() file:" + path + name);
+
 		String versionStr = readDocContentFromFile(path, name, false);
 		System.out.println("getVersionFromFile() versionStr:" + versionStr);
 
@@ -7273,7 +7275,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private static Object createObject(ResultSet rs, int objType) throws Exception {
-		System.out.println("createObject() ");
+		//System.out.println("createObject() ");
 		switch(objType)
 		{
 		case DOCSYS_REPOS:
@@ -7613,7 +7615,7 @@ public class BaseController  extends BaseFunction{
 				return rs.getLong(field);
 			}
 		} catch (SQLException e) {
-			System.out.println("getValueFromResultSet() Failed to get value from ResultSet for field:" + field);
+			//System.out.println("getValueFromResultSet() Failed to get value from ResultSet for field:" + field);
 			//e.printStackTrace();
 		}
 		return null;
@@ -7621,7 +7623,7 @@ public class BaseController  extends BaseFunction{
 	
 	private static Object convertResultSetToObj(ResultSet rs, Object obj, int objType) 
 	{
-		System.out.println("convertResultSetToObj() ");
+		//System.out.println("convertResultSetToObj() ");
 		
 		JSONArray ObjMemberList = getObjMemberList(objType);
 		if(ObjMemberList == null)
@@ -7635,7 +7637,7 @@ public class BaseController  extends BaseFunction{
             JSONObject objMember = (JSONObject)ObjMemberList.get(i);
         	String type = (String) objMember.get("type");
          	String name = (String) objMember.get("name");
-            System.out.println("convertResultSetToObj field:" + name);
+            //System.out.println("convertResultSetToObj field:" + name);
          	
  			Object value =  getValueFromResultSet(rs, name, type);
  			if(value != null)
