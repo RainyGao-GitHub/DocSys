@@ -151,7 +151,7 @@ public class DocAuth {
         this.docName = docName == null ? null : docName.trim();
     }
     
-    //DocAuth 附加信息: 需要通过joint doc and user or group Table to get these info
+    //DocAuth joint doc and user or group Table to get these info
 	private String  userName="";	//from user Table
 	private String  realName="";	//from user Table
 	private String  groupName="";	//from group Table
