@@ -2947,15 +2947,7 @@ public class DocController extends BaseController{
 		
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
-			if(repos.getType() == 1)
-			{
-				luceneSearch(repos, searchWord, path, searchResult , 6);	//Search RDoc and VDoc only
-				databaseSearch(repos, pDocId, searchWord, path, searchResult);
-			}
-			else
-			{
-				luceneSearch(repos, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc				
-			}
+			luceneSearch(repos, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
 		}
 		
 		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
