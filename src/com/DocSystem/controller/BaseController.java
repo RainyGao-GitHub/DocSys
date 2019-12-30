@@ -5962,6 +5962,15 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//对于没有版本管理的仓库，需要认为所有的LocalChanges都会commit成功
+		if(localChanges == null)
+		{
+			return "";
+		}
+		
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
         for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) {
             DocChange val = entry.getValue();
             CommitType commitType = CommitType.UNDEFINED;
@@ -7209,7 +7218,7 @@ public class BaseController  extends BaseFunction{
 		{	
 			list = dbQuery(null, objType);
 		}
-		//printObject("exportObjectListToJsonFile() list:", list);
+		printObject("exportObjectListToJsonFile() list:", list);
 		writeObjectListToJsonFile(objType, list, filePath, fileName);
 		System.out.println("exportObjectListToJsonFile() export OK");
 	}
@@ -7324,30 +7333,35 @@ public class BaseController  extends BaseFunction{
     	{
     		return docAuthList;
     	}
-		
+    	printObject("queryDocAuth() docAuthList:", docAuthList);
+    	
 		if(srcVersion != dstVersion &&  srcVersion < 20000 && dstVersion >= 20000) //1.xx.xx版本的docId用的是doc的数据库ID
-    	{		
+    	{	
+			//convert docId
 			for(int i=0; i<docAuthList.size(); i++)
 	    	{
-	    		DocAuth docAuth = (DocAuth) docAuthList.get(i);
+	    		DocAuth docAuth = (DocAuth) docAuthList.get(i);	    		
 	    		printObject("queryDocAuth() docAuth:", docAuth);
-	    		Doc qDoc = new Doc();
-	    		qDoc.setVid(docAuth.getReposId());
-	    		try {
-	    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
-	    		} catch(Exception e){
-	    			e.printStackTrace();
-	    			continue;
-	    		}
-	    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC);
-	    		if(docList != null && docList.size() == 1)
-	    		{
-	    			Doc doc = (Doc) docList.get(0);
-	    			docAuth.setDocPath(doc.getPath());
-	    			docAuth.setDocName(doc.getName());
-	    			Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
-	    	        docAuth.setDocId(docId);
-	    		}
+				if(docAuth.getDocId() != null)
+				{
+		    		Doc qDoc = new Doc();
+		    		qDoc.setVid(docAuth.getReposId());
+		    		try {
+		    			qDoc.setId(Integer.parseInt(docAuth.getDocId().toString()));
+		    		} catch(Exception e){
+		    			e.printStackTrace();
+		    			continue;
+		    		}
+		    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC);
+		    		if(docList != null && docList.size() == 1)
+		    		{
+		    			Doc doc = (Doc) docList.get(0);
+		    			docAuth.setDocPath(doc.getPath());
+		    			docAuth.setDocName(doc.getName());
+		    			Long docId = buildDocId(docAuth.getDocPath(), docAuth.getDocName());
+		    	        docAuth.setDocId(docId);
+		    		}
+				}
 	    	}
     	}
     	return docAuthList;
@@ -7582,10 +7596,14 @@ public class BaseController  extends BaseFunction{
             JSONObject objMember = (JSONObject)ObjMemberList.get(i);
         	String type = (String) objMember.get("type");
          	String name = (String) objMember.get("name");
-              
+            //System.out.println("convertJsonObjToObj() type:" + type); 
+         	//System.out.println("convertJsonObjToObj() name:" + name); 
+         	
  			Object value = getValueFormJsonObj(jsonObj, name, type);
+         	//System.out.println("convertJsonObjToObj() value:" + value); 
+
  			if(value != null)
- 			{
+ 			{ 				
 				if(setFieldValue(obj, name, value) == false)
 				{
 					System.out.print("convertJsonObjToObj() setFieldValue Failed for field:" + name); 
@@ -7650,9 +7668,14 @@ public class BaseController  extends BaseFunction{
             JSONObject objMember = (JSONObject)ObjMemberList.get(i);
         	String type = (String) objMember.get("type");
          	String name = (String) objMember.get("name");
-            //System.out.println("convertResultSetToObj field:" + name);
+         	String dbName = (String) objMember.get("dbName");
+
+            //System.out.println("convertResultSetToObj() type:" + type); 
+         	//System.out.println("convertResultSetToObj() name:" + name); 
          	
- 			Object value =  getValueFromResultSet(rs, name, type);
+ 			Object value =  getValueFromResultSet(rs, dbName, type);
+            //System.out.println("convertResultSetToObj() value:" + value); 
+
  			if(value != null)
  			{
 				if(setFieldValue(obj, name, value) == false)
