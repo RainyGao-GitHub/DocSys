@@ -6965,7 +6965,7 @@ public class BaseController  extends BaseFunction{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDB(backUpPath, "docsystem.sql", "UTF-8") == false)
+		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8") == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
