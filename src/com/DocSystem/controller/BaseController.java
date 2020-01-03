@@ -338,6 +338,12 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean isDocLocalChanged(Repos repos, Doc dbDoc, Doc localEntry) 
 	{
+		//dbDoc不存在，无发确认本地是否修改，因此总是认为有修改
+		if(dbDoc == null)
+		{
+			return true;
+		}
+		
 		//文件大小变化了则一定是变化了
 		if(!dbDoc.getSize().equals(localEntry.getSize()))
 		{
@@ -368,6 +374,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean isDocRemoteChanged(Repos repos, Doc dbDoc, Doc remoteEntry) 
 	{
+		//dbDoc不存在，无法确认远程是否修改，此时总是认为有改动
+		if(dbDoc == null)
+		{
+			return true;
+		}
+		
 		if(repos.getVerCtrl() == 0)
 		{
 			return false;
