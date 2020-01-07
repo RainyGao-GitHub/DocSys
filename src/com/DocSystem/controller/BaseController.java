@@ -6664,17 +6664,10 @@ public class BaseController  extends BaseFunction{
 				return;
 			}
 						
-			if(createDB(dbName) == false)
-			{
-				docSysIniState = 1;
-				setDocSysInitState("{action: '新建数据库', step: 0, status: 'ERROR'}");
-				return;
-			}
-			setDocSysInitState("{action: '新建数据库', step: 0, status: 'OK'}");
+			createDB(dbName);
 			
 			if(initDB() == false)
 			{
-				docSysIniState = 2;
 				setDocSysInitState("{action: '新建数据库', step: 1, status: 'ERROR'}");
 				return;
 			}
@@ -6690,6 +6683,20 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
+		if(isFileExist(docSysIniPath + "reInstall") == true)
+		{
+			deleteDB(dbName);
+			createDB(dbName);
+			if(initDB() == false)
+			{
+				setDocSysInitState("{action: '新建数据库', step: 1, status: 'ERROR'}");
+				return;
+			}
+			setDocSysInitState("{action: '新建数据库', step: 1, status: 'OK'}");
+			return;
+		}
+		
+		
 		//根据里面的版本号信息更新数据库
 		//get the version info in war
 		Integer version = getVersionFromFile(docSysWebPath, "version");
@@ -6704,7 +6711,6 @@ public class BaseController  extends BaseFunction{
 		
 		if(checkAndUpdateDB(oldVersion, newVersion) == false)
 		{
-			docSysIniState = 3;
 			setDocSysInitState("{action: '升级数据库', step: 1,  status: 'ERROR'}");
 			return;
 		}
@@ -6825,6 +6831,75 @@ public class BaseController  extends BaseFunction{
         }
 		return ret;
 	}
+	
+	private static boolean deleteDB(String dbName) 
+    {
+        try {
+			Class.forName(JDBC_DRIVER);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+        
+        
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(JDBC_DRIVER);
+        
+            // 打开链接
+            String url = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+            //String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+            conn = (Connection) DriverManager.getConnection(url ,DB_USER, DB_PASS);
+        
+            stmt = (Statement) conn.createStatement();
+            String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
+	    	String deletedatabase="drop  database  " + dbName;	//创建数据库     
+	    	ResultSet resultSet = stmt.executeQuery(checkdatabase);
+	    	if (resultSet.next()) 
+	    	{
+	    		//若数据库存在
+	    		System.out.println("deleteDB " + dbName + " exist!");
+		    	if(stmt.executeUpdate(deletedatabase) == 0)		 
+		    	{
+		    		System.out.println("delete table success!");
+		    		ret = true;
+		    	}   
+	    		stmt.close();
+	    		conn.close();
+	    	}
+	    	else
+	    	{
+	    		System.out.println("deleteDB " + dbName + " not exist!");
+	    		ret = true;
+	    	}
+	    	// 完成后关闭
+            stmt.close();
+            conn.close();
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
+	}
+
 
 	private static String getDBNameFromUrl(String url) 
 	{
