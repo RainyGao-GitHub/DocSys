@@ -1835,7 +1835,7 @@ public class BaseFunction{
         }
     }
     //Delete File
-    public boolean delFile(String path){
+    public static boolean delFile(String path){
         File file=new File(path);
         if(file.exists())
         {
