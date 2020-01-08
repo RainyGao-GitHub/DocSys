@@ -6689,9 +6689,8 @@ public class BaseController  extends BaseFunction{
 		System.out.println("docSysInit() oldVersion:" + oldVersion);
 		if(oldVersion == null)
 		{
-			System.out.println("docSysInit() oldVersion is null");
-			//setDocSysInitState("{action: '获取版本号', step: 0, status: 'ERROR', msg: 'oldVersion is null'}");
-			return;
+			System.out.println("docSysInit() oldVersion is null, 默认为0");
+			oldVersion = 0;
 		}
 		
 		if(newVersion.equals(oldVersion))
@@ -7253,6 +7252,11 @@ public class BaseController  extends BaseFunction{
 				String fileName = "docsystem_" + objName + ".json";
 				String filePath = docSysWebPath + "WEB-INF/classes/config/";
 				ObjMemberListMap[i] = getListFromJsonFile(filePath, fileName, objName);
+				if(ObjMemberListMap[i] == null)
+				{
+					System.out.println("initObjMemberListMap() 获取 " + objName +" MemberList失败");
+					return false;
+				}
 			}
 		}
 		return true;
