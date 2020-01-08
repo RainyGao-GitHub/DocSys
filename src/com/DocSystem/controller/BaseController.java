@@ -6657,64 +6657,59 @@ public class BaseController  extends BaseFunction{
 		if(docSysIniDir.exists() == false)
 		{
 			docSysIniDir.mkdirs();
-			//检查docsystem数据库是否存在
-			if(testDB(DB_URL, DB_USER, DB_PASS) == true)	//数据库存在
-			{
-				setDocSysInitState("{action: '检查数据库', step: 0, status: 'OK'}");
-				return;
-			}
-						
-			createDB(dbName);
-			
-			if(initDB() == false)
-			{
-				setDocSysInitState("{action: '新建数据库', step: 1, status: 'ERROR'}");
-				return;
-			}
-			setDocSysInitState("{action: '新建数据库', step: 1, status: 'OK'}");
-			return;
-		}
-
-		//docSys.ini存在
-		//如果 State存在表示已进行过初始化
-		if(isFileExist(docSysIniPath + "State") == true)
-		{
-			System.out.println("数据库升级操作已执行，如需重新执行请删除文件：" + docSysIniPath + "State");
-			return;
 		}
 		
-		if(isFileExist(docSysIniPath + "reInstall") == true)
+		if(isFileExist(docSysIniPath + "reset") == true)
 		{
 			deleteDB(dbName);
 			createDB(dbName);
 			if(initDB() == false)
 			{
-				setDocSysInitState("{action: '新建数据库', step: 1, status: 'ERROR'}");
+				setDocSysInitState("{action: '重置数据库', msg: '数据库初始化失败', step: 0, status: 'ERROR'}");
 				return;
 			}
-			setDocSysInitState("{action: '新建数据库', step: 1, status: 'OK'}");
+			setDocSysInitState("{action: '重置数据库', msg: '数据库初始化成功',  step: 0, status: 'OK'}");
+			
+			//删除复位文件，避免重复重置
+			delFile(docSysIniPath + "reset");
 			return;
 		}
-		
 		
 		//根据里面的版本号信息更新数据库
-		//get the version info in war
-		Integer version = getVersionFromFile(docSysWebPath, "version");
-		//get the version info in docSys.ini
-		Integer newVersion = getVersionFromFile(docSysIniPath, "newVersion");
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "oldVersion");
-		if(newVersion == null || version == null || !version.equals(newVersion))
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		System.out.println("docSysInit() newVersion:" + newVersion);
+		if(newVersion == null)
 		{
-			setDocSysInitState("{action: '升级数据库', step: 0, status: 'ERROR'}");
-			return;
-		}		
-		
-		if(checkAndUpdateDB(oldVersion, newVersion) == false)
-		{
-			setDocSysInitState("{action: '升级数据库', step: 1,  status: 'ERROR'}");
+			System.out.println("docSysInit() newVersion is null");
+			//setDocSysInitState("{action: '获取版本号', step: 0, status: 'ERROR', msg: 'newVersion is null'}");
 			return;
 		}
-		setDocSysInitState("{action: '升级数据库', step: 1, status: 'OK'}");
+		
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		System.out.println("docSysInit() oldVersion:" + oldVersion);
+		if(oldVersion == null)
+		{
+			System.out.println("docSysInit() oldVersion is null");
+			//setDocSysInitState("{action: '获取版本号', step: 0, status: 'ERROR', msg: 'oldVersion is null'}");
+			return;
+		}
+		
+		if(newVersion.equals(oldVersion))
+		{
+			System.out.println("docSysInit() newVersion is same with oldVersion");
+			//setDocSysInitState("{action: '获取版本号', step: 0, status: 'ERROR', msg: 'newVersion is same with oldVersion'}");
+			return;			
+		}
+				
+		if(checkAndUpdateDB(oldVersion, newVersion) == false)
+		{
+			setDocSysInitState("{action: '升级数据库', step: 0,  status: 'ERROR'}");
+			return;
+		}
+		System.out.println("docSysInit() 数据库升级成功");
+		
+		//更新版本号，避免重复升级数据库
+		copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 	}
 	
 	private static void setDocSysInitState(String State) {
@@ -6727,15 +6722,13 @@ public class BaseController  extends BaseFunction{
 		//检查docsystem数据库是否存在
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
-			if(createDB(dbName) == false)
-			{
-				return false;
-			}
-			
+			createDB(dbName);
 			if(initDB() == false)
 			{
+				System.out.println("checkAndUpdateDB() 数据库初始化失败");		
 				return false;
 			}
+			System.out.println("checkAndUpdateDB() 数据库初始化成功");		
 			return true;
 		}
 		
