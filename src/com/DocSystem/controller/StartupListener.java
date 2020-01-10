@@ -63,7 +63,7 @@ public class StartupListener  extends BaseController implements ApplicationConte
 			authCode.setUsage(usage);
 			authCode.setCode(docSysInitAuthCode);
 			authCode.setExpTime(expTime);
-			authCode.setRemainCount(10);
+			authCode.setRemainCount(1000);
 			authCodeMap.put(docSysInitAuthCode, authCode);
 		}
 	}
