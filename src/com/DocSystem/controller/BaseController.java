@@ -83,6 +83,26 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	protected UserServiceImpl userService;
 	
+	
+	protected static ConcurrentHashMap<String, Long> authCodeMap = new ConcurrentHashMap<String, Long>();
+	protected boolean checkAuthCode(String authCode) {
+		System.out.println("checkAuthCode() authCode:" + authCode);
+		Long authCodeExpDate = authCodeMap.get(authCode);
+		if(authCodeExpDate == null)
+		{
+			System.out.println("checkAuthCode() 无效授权码");
+			return false;
+		}
+		
+		long curTime = new Date().getTime();
+		if(curTime > authCodeExpDate)
+		{
+			System.out.println("checkAuthCode() 授权码已过期");
+			return false;			
+		}
+		return true;
+	}
+	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
@@ -6640,7 +6660,7 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
-	protected static void docSysInit() 
+	protected static boolean docSysInit() 
 	{	
 		System.out.println("docSysInit() Start docSysInitState:" + docSysIniState);
 		if(docSysWebPath == null)
@@ -6675,7 +6695,7 @@ public class BaseController  extends BaseFunction{
 			if(initDB() == false)
 			{
 				System.out.println("docSysInit() reset database failed: initDB error");
-				return;
+				return false;
 			}
 			
 			//删除复位文件，避免重复重置
@@ -6683,8 +6703,7 @@ public class BaseController  extends BaseFunction{
 			
 			//更新版本号
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-			docSysIniState = 0;
-			return;
+			return true;
 		}
 		
 		//检查docsystem数据库是否存在
@@ -6694,20 +6713,19 @@ public class BaseController  extends BaseFunction{
 			if(initDB() == false)
 			{
 				System.out.println("docSysInit() 新建数据库失败");
-				return;
+				return false;
 			}
 			System.out.println("docSysInit() 新建数据库失败");
 			
 			//更新版本号
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-			docSysIniState = 0;
-			return;
+			return true;
 		}
 				
 		if(checkAndUpdateDB() == false)
 		{
 			System.out.println("docSysInit() 数据库升级失败");
-			return;
+			return false;
 		}
 		else
 		{
@@ -6715,8 +6733,7 @@ public class BaseController  extends BaseFunction{
 		
 			//更新版本号，避免重复升级数据库
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-			docSysIniState = 0;
-			return;
+			return true;
 		}
 	}
 	
