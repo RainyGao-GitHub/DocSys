@@ -121,7 +121,7 @@ public class ManageController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode) == false)
+			if(checkAuthCode(authCode,"docSysInit") == false)
 			{
 				rt.setError("无效授权码或授权码已过期！");
 				writeJson(rt, response);			
@@ -169,23 +169,36 @@ public class ManageController extends BaseController{
 	}
 
 	@RequestMapping("/getSystemInfo.do")
-	public void getSystemInfo(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSystemInfo(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSystemInfo()");
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(authCode != null)
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
-		
-		if(login_user.getType() < 1)
-		{
-			rt.setError("非管理员用户，请联系统管理员！");
-			writeJson(rt, response);			
-			return;
+		else
+		{	
+			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		String version = readDocContentFromFile(docSysWebPath, "version", false);
