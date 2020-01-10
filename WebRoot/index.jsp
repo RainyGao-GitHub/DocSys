@@ -11,10 +11,12 @@
 <script language="javascript" type="text/javascript"> 
 <%
 Integer docSysInitState = BaseController.getDocSysInitState();
-System.out.println("index.jsp: docSysInitState:" + docSysInitState);
+String docSysInitAuthCode = BaseController.getDocSysInitAuthCode();
+System.out.println("index.jsp: docSysInitState:" + docSysInitState + " docSysInitAuthCode:" + docSysInitAuthCode);
 %>
 
 var docSysInitState=<%=docSysInitState%>;
+var docSysInitAuthCode=<%=docSysInitAuthCode%>;
 if(docSysInitState == null || docSysInitState == 0)
 {
 	// 以下方式直接跳转
@@ -24,7 +26,7 @@ if(docSysInitState == null || docSysInitState == 0)
 }
 else
 {
-	window.location.href='/DocSystem/web/install.html';
+	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
 }
 </script>
 

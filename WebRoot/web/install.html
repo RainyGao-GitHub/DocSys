@@ -32,8 +32,8 @@
         <div class="row">
             <div id="menu" class="page-left"  style="display:none">
                 <ul class="menu">
-                    <li id="sysConfigTag" class="active"><a href="/DocSystem/web/install.html" class="item"> 系统信息</a> </li>
-                    <li id="dbConfigTag"><a href="/DocSystem/web/install.html?toHref=dbConfig" class="item"> 数据库</a> </li>  
+                    <li id="sysConfigTag" class="active"><a href="javascript:PageSwitch('sysConfig')" class="item"> 系统信息</a> </li>
+                    <li id="dbConfigTag"><a href="javascript:PageSwitch('dbConfig')" class="item"> 数据库</a> </li>  
                 </ul>
             </div>
             <div id="sysConfig" class="page-right" style="display:none">
@@ -59,7 +59,7 @@
                         <strong class="box-title"> 数据库</strong>
                     </div>
                 </div>
-                <div class="box-body" style="width: 300px;">
+                <div class="box-body" style="padding-right: 200px;">
                     <div id="dbConfigForm">
                         <div class="form-group">
                             <label for="dbUrl">数据库链接</label>
@@ -102,9 +102,13 @@
 	
    	//页面初始化
 	var gToHref;
+   	var authCode;
     function pageInit()
     {
     	console.log("pageInit");
+    	authCode = getQueryString("authCode");
+    	console.log("pageInit authCode:" + authCode);
+    	
         //显示左侧菜单栏
         $('#menu').show();
         //根据url中的toHref信息确定需要显示的内容
@@ -145,6 +149,7 @@
 
 	   		$("#dbConfigTag").removeClass("active");
 		    $("#dbConfig").hide();
+		    updateUrl(page);
 		    sysConfigPageInit();
 	      	break;
 	    default:	//myInfo
@@ -153,10 +158,40 @@
 	
 		    $("#sysConfigTag").removeClass("active");
 		    $("#sysConfig").hide();
+		    updateUrl(page);
 		    dbConfigPageInit();
 	     	break;
 	     }
 	}
+  
+	function updateUrl(pageName)
+    {
+    	console.log("updateUrl() pageName:" + pageName);
+    	var param = {
+    			toHref : pageName,
+	            authCode : authCode,
+	        };
+	        var url = makeUrl(param);
+			window.history.pushState({}, "wiki", url);
+	}
+	
+    function makeUrl(params) {
+        var href = window.location.href;
+        var i = href.indexOf("?");
+        if ( i< 0 ){
+            i = href.length;
+        }
+        href = href.substring(0,i);
+
+        var str = ""
+        for( k in params ){
+            if ( params[k]){ //params[k]
+              str += "&" + k + "=" + params[k];
+            }
+        }
+        return href + "?" + str.substr(1);
+    }
+	
     
 	function sysConfigPageInit(){
 		console.log("sysConfigPageInit");
@@ -164,7 +199,9 @@
 	        url : "/DocSystem/Manage/getSystemInfo.do",
 	        type : "post",
 	        dataType : "json",
-	        data : {},
+	        data : {
+	        	authCode: authCode,
+	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
@@ -188,7 +225,9 @@
 	        url : "/DocSystem/Manage/getSystemDbConfig.do",
 	        type : "post",
 	        dataType : "json",
-	        data : {},
+	        data : {
+	        	authCode: authCode,
+	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
