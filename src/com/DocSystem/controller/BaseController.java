@@ -1492,6 +1492,25 @@ public class BaseController  extends BaseFunction{
 		return -1;
 	}
 	
+	Doc buildDownloadDocInfo(String targetPath, String targetName)
+	{
+		String encTargetName = base64Encode(targetName);
+		if(encTargetName == null)
+		{
+			return null;			
+		}	
+		String encTargetPath = base64Encode(targetPath);
+		if(encTargetPath == null)
+		{
+			return null;			
+		}	
+		
+		Doc doc = new Doc();
+		doc.setPath(encTargetPath);
+		doc.setName(encTargetName);
+		return doc;
+	}
+	
 	protected void sendTargetToWebPage(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,HttpServletResponse response, HttpServletRequest request, boolean deleteEnable) throws Exception 
 	{
 		File localEntry = new File(localParentPath,targetName);
