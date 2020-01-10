@@ -252,7 +252,7 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8") == false)
+		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8", url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
@@ -267,7 +267,7 @@ public class ManageController extends BaseController{
 		{	
 			int dbTabId = i;
 			String jsonFileName = DBTabNameMap[dbTabId] + ".json";
-			exportObjectListToJsonFile(dbTabId, backUpPath, jsonFileName, oldVersion, newVersion);
+			exportObjectListToJsonFile(dbTabId, backUpPath, jsonFileName, oldVersion, newVersion, url, user, pwd);
 		}
 		
 		String targetPath = docSysIniPath + "backup/";
@@ -329,7 +329,7 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8") == false)
+		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8", url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
@@ -338,9 +338,9 @@ public class ManageController extends BaseController{
 		}
 		
 		String dbName = getDBNameFromUrl(url);
-		deleteDB(dbName);
-		createDB(dbName);
-		if(initDB() == false)
+		deleteDB(dbName, url, user, pwd);
+		createDB(dbName, url, user, pwd);
+		if(initDB(url, user, pwd) == false)
 		{
 			System.out.println("docSysInit() reset database failed: initDB error");
 			docSysErrorLog("数据库初始化失败", rt);
