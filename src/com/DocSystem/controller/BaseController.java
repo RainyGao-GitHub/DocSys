@@ -7031,7 +7031,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private static Integer getVersionFromFile(String path, String name) 
+	protected static Integer getVersionFromFile(String path, String name) 
 	{
 		System.out.println("getVersionFromFile() file:" + path + name);
 
@@ -7354,7 +7354,7 @@ public class BaseController  extends BaseFunction{
 	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
     //version是指当前数据库对应的软件版本
-	protected static void exportObjectListToJsonFile(int objType, String filePath, String fileName, int srcVersion, int dstVersion) 
+	protected static void exportObjectListToJsonFile(int objType, String filePath, String fileName, Integer srcVersion, Integer dstVersion) 
 	{
 		System.out.println("exportObjectListToJsonFile() objType:" + objType + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
 
@@ -7475,7 +7475,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected static List<Object> queryDocAuth(DocAuth qDocAuth, int srcVersion, int dstVersion) 
+	protected static List<Object> queryDocAuth(DocAuth qDocAuth, Integer srcVersion, Integer dstVersion) 
 	{
 		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH);
     	if(docAuthList == null || docAuthList.size() == 0)
@@ -7484,7 +7484,7 @@ public class BaseController  extends BaseFunction{
     	}
     	printObject("queryDocAuth() docAuthList:", docAuthList);
     	
-		if(srcVersion != dstVersion &&  srcVersion < 20000 && dstVersion >= 20000) //1.xx.xx版本的docId用的是doc的数据库ID
+		if(srcVersion != null && dstVersion!= null && srcVersion != dstVersion &&  srcVersion < 20000 && dstVersion >= 20000) //1.xx.xx版本的docId用的是doc的数据库ID
     	{	
 			//convert docId
 			for(int i=0; i<docAuthList.size(); i++)
