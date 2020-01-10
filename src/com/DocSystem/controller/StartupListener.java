@@ -12,6 +12,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.ServletContextAware;
+
+import com.DocSystem.common.AuthCode;
   
 @Service
 public class StartupListener  extends BaseController implements ApplicationContextAware, ServletContextAware, InitializingBean, ApplicationListener<ContextRefreshedEvent> {
@@ -52,11 +54,17 @@ public class StartupListener  extends BaseController implements ApplicationConte
 		else
 		{
 			//add authCode to authCodeMap
-			Long eventTime = new Date().getTime();
-			String event = "docSysInit" + eventTime;
-			String authCode = "" + event.hashCode();
-			Long expTime = eventTime + 7*24*60*60*1000;
-			authCodeMap.put(authCode, expTime);
+			AuthCode authCode = new AuthCode();
+			String usage = "docSysInit";
+			Long curTime = new Date().getTime();
+			Long expTime = curTime + 7*24*60*60*1000;
+			String codeStr = usage + curTime;
+			docSysInitAuthCode = "" + codeStr.hashCode();
+			authCode.setUsage(usage);
+			authCode.setCode(docSysInitAuthCode);
+			authCode.setExpTime(expTime);
+			authCode.setRemainCount(10);
+			authCodeMap.put(docSysInitAuthCode, authCode);
 		}
 	}
 }

@@ -41,6 +41,7 @@ import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
 
+import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.CommitAction;
 import com.DocSystem.common.CommitAction.CommitType;
@@ -84,22 +85,45 @@ public class BaseController  extends BaseFunction{
 	protected UserServiceImpl userService;
 	
 	
-	protected static ConcurrentHashMap<String, Long> authCodeMap = new ConcurrentHashMap<String, Long>();
-	protected boolean checkAuthCode(String authCode) {
-		System.out.println("checkAuthCode() authCode:" + authCode);
-		Long authCodeExpDate = authCodeMap.get(authCode);
-		if(authCodeExpDate == null)
+	protected static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
+	protected boolean checkAuthCode(String code, String expUsage) {
+		System.out.println("checkAuthCode() authCode:" + code);
+		AuthCode authCode = authCodeMap.get(code);
+		if(authCode == null || authCode.getUsage() == null || authCode.getExpTime() == null || authCode.getRemainCount() == null)
 		{
 			System.out.println("checkAuthCode() 无效授权码");
 			return false;
 		}
 		
+		if(expUsage != null)
+		{
+			System.out.println("checkAuthCode() usage:" + authCode.getUsage() + " expUsage:" + expUsage);				
+			if(expUsage.equals(authCode.getUsage()))
+			{
+				System.out.println("checkAuthCode() usage not matched");				
+				return false;
+			}			
+		}
+		
+		
+		Integer remainCount = authCode.getRemainCount();
+		if(remainCount == 0)
+		{
+			System.out.println("checkAuthCode() 授权码使用次数为0");
+			authCodeMap.remove(code);
+			return false;	
+		}
+		
 		long curTime = new Date().getTime();
-		if(curTime > authCodeExpDate)
+		if(curTime > authCode.getExpTime())
 		{
 			System.out.println("checkAuthCode() 授权码已过期");
+			authCodeMap.remove(code);
 			return false;			
 		}
+		
+		//update the remainCount
+		authCode.setRemainCount(remainCount-1);				
 		return true;
 	}
 	
@@ -6654,10 +6678,16 @@ public class BaseController  extends BaseFunction{
 	
 	//index.jsp页面将根据该标志来确定	跳转到install还是index.html
 	static Integer docSysIniState = -1;
+	static String docSysInitAuthCode = null;
 	
 	public static Integer getDocSysInitState()
 	{
 		return docSysIniState;
+	}
+	
+	public static String getDocSysInitAuthCode()
+	{
+		return docSysInitAuthCode;
 	}
 	
 	protected static boolean docSysInit() 
