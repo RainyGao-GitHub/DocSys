@@ -201,9 +201,9 @@ public class ManageController extends BaseController{
 			}
 		}
 
-		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
+		if(testDB(url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("testDatabase() 连接数据库:" + DB_URL + " 失败");
+			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
 		}
 		writeJson(rt, response);

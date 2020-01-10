@@ -6735,11 +6735,17 @@ public class BaseController  extends BaseFunction{
 			docSysIniDir.mkdirs();
 		}
 		
+		if(initObjMemberListMap() == false)
+		{
+			System.out.println("docSysInit() initObjMemberListMap Faield!");
+			return false;			
+		}
+		
 		//检查docsystem数据库是否存在
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
-			createDB(dbName);
-			if(initDB() == false)
+			createDB(dbName, DB_URL, DB_USER, DB_PASS);
+			if(initDB(DB_URL, DB_USER, DB_PASS) == false)
 			{
 				System.out.println("docSysInit() 新建数据库失败");
 				return false;
@@ -6795,13 +6801,13 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		return DBUpgrade(oldVersion, newVersion);
+		return DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS);
 	}
 	
-    protected static boolean executeSqlScript(String filePath) 
+    protected static boolean executeSqlScript(String filePath, String url, String user, String pwd) 
     {
         try {
-            Connection conn = (Connection) DriverManager.getConnection(DB_URL ,DB_USER, DB_PASS);
+            Connection conn = (Connection) DriverManager.getConnection(url ,user, pwd);
             ScriptRunner runner = new ScriptRunner(conn);
             runner.setLogWriter(null);//设置是否输出日志
             
@@ -6820,7 +6826,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected static boolean createDB(String dbName) 
+	protected static boolean createDB(String dbName,String url, String user, String pwd) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -6839,9 +6845,9 @@ public class BaseController  extends BaseFunction{
             Class.forName(JDBC_DRIVER);
         
             // 打开链接
-            String url = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-            //String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
-            conn = (Connection) DriverManager.getConnection(url ,DB_USER, DB_PASS);
+            String tmpUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+            //String tmpUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+            conn = (Connection) DriverManager.getConnection(tmpUrl ,user, pwd);
         
             stmt = (Statement) conn.createStatement();
             String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
@@ -6888,7 +6894,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	protected static boolean deleteDB(String dbName) 
+	protected static boolean deleteDB(String dbName, String url, String user, String pwd) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -6907,9 +6913,9 @@ public class BaseController  extends BaseFunction{
             Class.forName(JDBC_DRIVER);
         
             // 打开链接
-            String url = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-            //String url = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
-            conn = (Connection) DriverManager.getConnection(url ,DB_USER, DB_PASS);
+            String tmpUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+            //String tmpUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+            conn = (Connection) DriverManager.getConnection(tmpUrl ,user, pwd);
         
             stmt = (Statement) conn.createStatement();
             String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
@@ -7088,7 +7094,7 @@ public class BaseController  extends BaseFunction{
 		return version;
 	}
 
-	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion)
+	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String url, String user, String pwd)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
@@ -7098,17 +7104,11 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(initObjMemberListMap() == false)
-		{
-			System.out.println("DBUpgrade() initObjMemberListMap Faield!");
-			return false;			
-		}
-		
 		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8") == false)
+		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8", url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -7126,7 +7126,7 @@ public class BaseController  extends BaseFunction{
 			
 			String jsonFileName = DBTabNameMap[dbTabId] + ".json";
 			String jsonFilePath = docSysIniPath + "backup/";
-			exportObjectListToJsonFile(dbTabId, jsonFilePath, jsonFileName, oldVersion, newVersion);
+			exportObjectListToJsonFile(dbTabId, jsonFilePath, jsonFileName, oldVersion, newVersion, url, user, pwd);
 
 			//copy to backup dir
 			copyFile(jsonFilePath + jsonFileName, backUpPath + jsonFileName, true);
@@ -7148,9 +7148,9 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}
 			//delete tab
-			deleteDBTab(dbTabName);
+			deleteDBTab(dbTabName, url, user, pwd);
 			//init tab
-			executeSqlScript(sqlScriptPath);
+			executeSqlScript(sqlScriptPath, url, user, pwd);
 			
 			//import the data back to new db
 			if(dbTabId == DOCSYS_DOC)
@@ -7160,12 +7160,12 @@ public class BaseController  extends BaseFunction{
 			}
 			String jsonFilePath = docSysIniPath + "backup/";
 			String jsonFileName = dbTabName + ".json";
-			importObjectListFromJsonFile(dbTabId, jsonFilePath, jsonFileName);
+			importObjectListFromJsonFile(dbTabId, jsonFilePath, jsonFileName, url, user, pwd);
 		}
 		return true;
 	}
 	
-	private static boolean deleteDBTab(String tabName) {
+	private static boolean deleteDBTab(String tabName, String url, String user, String pwd) {
 		boolean ret = false;
 		Connection conn = null;
         Statement stmt = null;
@@ -7175,7 +7175,7 @@ public class BaseController  extends BaseFunction{
         
             // 打开链接
             //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+            conn = (Connection) DriverManager.getConnection(url,user,pwd);
         
             // 执行查询
             //System.out.println(" 实例化Statement对象...");
@@ -7211,7 +7211,7 @@ public class BaseController  extends BaseFunction{
 		
 	}
 	
-	protected static boolean backupDB(String path, String name, String encode) 
+	protected static boolean backupDB(String path, String name, String encode, String url, String user, String pwd) 
 	{
 		System.out.println("backupDB() encode:" + encode + " backup to file:" + path+name);
 		
@@ -7224,7 +7224,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}
 				
-			List<Object> list = dbQuery(null, objId);
+			List<Object> list = dbQuery(null, objId, url, user, pwd);
 			if(list != null)
 			{
 				for(int i=0; i< list.size(); i++)
@@ -7252,18 +7252,18 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	protected static boolean deleteDBTabs() 
+	protected static boolean deleteDBTabs(String url, String user, String pwd) 
 	{
 		System.out.println("deleteDBTabs()");
 
 		for(int i=0; i< DBTabNameMap.length; i++)
 		{
-			deleteDBTab(DBTabNameMap[i]);
+			deleteDBTab(DBTabNameMap[i], url, user, pwd);
 		}	
 		return true;
 	}
 
-	protected static boolean initDB() 
+	protected static boolean initDB(String url, String user, String pwd) 
 	{
 		System.out.println("initDB()");
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
@@ -7272,7 +7272,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
 			return false;
 		}
-		return executeSqlScript(sqlScriptPath);
+		return executeSqlScript(sqlScriptPath, url, user, pwd);
 	}
 	
 	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
@@ -7353,24 +7353,24 @@ public class BaseController  extends BaseFunction{
 	
 	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
     //version是指当前数据库对应的软件版本
-	protected static void exportObjectListToJsonFile(int objType, String filePath, String fileName, Integer srcVersion, Integer dstVersion) 
+	protected static void exportObjectListToJsonFile(int objType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
 	{
 		System.out.println("exportObjectListToJsonFile() objType:" + objType + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
 
 		List<Object> list = null;
 		if(objType == DOCSYS_DOC_AUTH)
     	{
-    		list = queryDocAuth(null, srcVersion, dstVersion);
+    		list = queryDocAuth(null, srcVersion, dstVersion, url, user, pwd);
     	}
 		else
 		{	
-			list = dbQuery(null, objType);
+			list = dbQuery(null, objType, url, user, pwd);
 		}
 		printObject("exportObjectListToJsonFile() list:", list);
 		writeObjectListToJsonFile(objType, list, filePath, fileName);
 		System.out.println("exportObjectListToJsonFile() export OK");
 	}
-	protected static void importObjectListFromJsonFile(int objType, String filePath, String fileName)
+	protected static void importObjectListFromJsonFile(int objType, String filePath, String fileName, String url, String user, String pwd)
 	{
 		System.out.println("importObjectListFromJsonFile() objType:" + objType + " filePath:" + filePath + " fileName:" + fileName);
 
@@ -7392,7 +7392,7 @@ public class BaseController  extends BaseFunction{
             
             Object obj = buildObjectFromJsonObj(jsonObj, objType);
             
-            dbInsert(obj, objType);
+            dbInsert(obj, objType, url, user, pwd);
         }
     	System.out.println("importObjectListFromJsonFile() import OK");
 	}
@@ -7474,9 +7474,9 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected static List<Object> queryDocAuth(DocAuth qDocAuth, Integer srcVersion, Integer dstVersion) 
+	protected static List<Object> queryDocAuth(DocAuth qDocAuth, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
 	{
-		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH);
+		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH, url, user, pwd);
     	if(docAuthList == null || docAuthList.size() == 0)
     	{
     		return docAuthList;
@@ -7500,7 +7500,7 @@ public class BaseController  extends BaseFunction{
 		    			e.printStackTrace();
 		    			continue;
 		    		}
-		    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC);
+		    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC, url, user, pwd);
 		    		if(docList != null && docList.size() == 1)
 		    		{
 		    			Doc doc = (Doc) docList.get(0);
@@ -7515,7 +7515,7 @@ public class BaseController  extends BaseFunction{
     	return docAuthList;
 	}
 	
-	protected static List<Object> dbQuery(Object qObj, int objType) 
+	protected static List<Object> dbQuery(Object qObj, int objType, String url, String user, String pwd) 
 	{
 		System.out.println("dbQuery() objType:" + objType);
 		
@@ -7529,7 +7529,7 @@ public class BaseController  extends BaseFunction{
         
             // 打开链接
             //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+            conn = (Connection) DriverManager.getConnection(url,user,pwd);
         
             // 执行查询
             //System.out.println(" 实例化Statement对象...");
@@ -7573,7 +7573,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	public static boolean dbInsert(Object obj, int objType)
+	public static boolean dbInsert(Object obj, int objType,String url, String user, String pwd)
 	{
 		boolean ret = false;
 		Connection conn = null;
@@ -7584,7 +7584,7 @@ public class BaseController  extends BaseFunction{
         
             // 打开链接
             //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(DB_URL,DB_USER,DB_PASS);
+            conn = (Connection) DriverManager.getConnection(url,user,pwd);
         
             // 执行查询
             //System.out.println(" 实例化Statement对象...");
