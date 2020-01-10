@@ -18,6 +18,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.tmatesoft.svn.core.SVNException;
 
+import util.DateFormat;
 import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
@@ -113,46 +114,6 @@ public class ManageController extends BaseController{
 		rt.setData(config);
 		writeJson(rt, response);
 	}
-
-	@RequestMapping("/testDatabase.do")
-	public void getSystemDbConfig(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("getSystemDbConfig()");
-		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
-		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-
-		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
-		{
-			System.out.println("testDatabase() 连接数据库:" + DB_URL + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
-		}
-		writeJson(rt, response);
-	}
 	
 	@RequestMapping("/getSystemDbConfig.do")
 	public void getSystemDbConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -206,6 +167,117 @@ public class ManageController extends BaseController{
 		String config = "{\"url\":\"" + url + "\", \"user\":\"" + user + "\", \"pwd\":\"" + pwd + "\"}";
 		rt.setData(config);
 		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/testDatabase.do")
+	public void testDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getSystemDbConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+
+		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
+		{
+			System.out.println("testDatabase() 连接数据库:" + DB_URL + " 失败");
+			docSysErrorLog("连接数据库失败", rt);
+		}
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/exportDBData.do")
+	public void exportDBData(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	{
+		System.out.println("getSystemDbConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+
+		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
+		{
+			System.out.println("testDatabase() 连接数据库:" + DB_URL + " 失败");
+			docSysErrorLog("连接数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		Date date = new Date();
+		String backUpTime = DateFormat.dateTimeFormat2(date);
+		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8") == false)
+		{
+			System.out.println("DBUpgrade() 数据库备份失败!");
+			docSysErrorLog("备份数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//导出数据库表数据
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{	
+			int dbTabId = i;
+			String jsonFileName = DBTabNameMap[dbTabId] + ".json";
+			exportObjectListToJsonFile(dbTabId, backUpPath, jsonFileName, oldVersion, newVersion);
+		}
+		
+		String targetPath = docSysIniPath + "backup/";
+		String targetName = "docsystem_"+backUpTime;
+		if(doCompressDir(docSysIniPath + "backup/", backUpTime, docSysIniPath + "backup/", targetName, rt) == false)
+		{
+			docSysErrorLog("压缩本地目录失败！", rt);
+			return;
+		}
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,true);
 	}
 
 	@RequestMapping("/getSystemInfo.do")
