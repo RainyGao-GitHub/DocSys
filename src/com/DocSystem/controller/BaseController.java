@@ -6632,10 +6632,17 @@ public class BaseController  extends BaseFunction{
 	};
 	static JSONArray[] ObjMemberListMap = {null,null,null,null,null,null,null,null,null,null,null};
 	
-	//系统需要根据该标志是否跳转至系统初始化配置页面（以便用户能够重新配置数据库）
-	static Integer docSysIniState = 0;
+	//index.jsp页面将根据该标志来确定	跳转到install还是index.html
+	static Integer docSysIniState = -1;
+	
+	public static Integer getDocSysInitState()
+	{
+		return docSysIniState;
+	}
+	
 	protected static void docSysInit() 
 	{	
+		System.out.println("docSysInit() Start docSysInitState:" + docSysIniState);
 		if(docSysWebPath == null)
 		{
 			docSysWebPath = getWebPath();
@@ -6658,79 +6665,90 @@ public class BaseController  extends BaseFunction{
 		{
 			docSysIniDir.mkdirs();
 		}
-		
+				
+		//强制复位数据库
 		if(isFileExist(docSysIniPath + "reset") == true)
 		{
+			System.out.println("docSysInit() reset database");
 			deleteDB(dbName);
 			createDB(dbName);
 			if(initDB() == false)
 			{
-				setDocSysInitState("{action: '重置数据库', msg: '数据库初始化失败', step: 0, status: 'ERROR'}");
+				System.out.println("docSysInit() reset database failed: initDB error");
 				return;
 			}
-			setDocSysInitState("{action: '重置数据库', msg: '数据库初始化成功',  step: 0, status: 'OK'}");
 			
 			//删除复位文件，避免重复重置
 			delFile(docSysIniPath + "reset");
+			
+			//更新版本号
+			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
+			docSysIniState = 0;
 			return;
 		}
 		
-		//根据里面的版本号信息更新数据库
-		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
-		System.out.println("docSysInit() newVersion:" + newVersion);
-		if(newVersion == null)
-		{
-			System.out.println("docSysInit() newVersion is null");
-			//setDocSysInitState("{action: '获取版本号', step: 0, status: 'ERROR', msg: 'newVersion is null'}");
-			return;
-		}
-		
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		System.out.println("docSysInit() oldVersion:" + oldVersion);
-		if(oldVersion == null)
-		{
-			System.out.println("docSysInit() oldVersion is null, 默认为0");
-			oldVersion = 0;
-		}
-		
-		if(newVersion.equals(oldVersion))
-		{
-			System.out.println("docSysInit() newVersion is same with oldVersion");
-			//setDocSysInitState("{action: '获取版本号', step: 0, status: 'ERROR', msg: 'newVersion is same with oldVersion'}");
-			return;			
-		}
-				
-		if(checkAndUpdateDB(oldVersion, newVersion) == false)
-		{
-			setDocSysInitState("{action: '升级数据库', step: 0,  status: 'ERROR'}");
-			return;
-		}
-		System.out.println("docSysInit() 数据库升级成功");
-		
-		//更新版本号，避免重复升级数据库
-		copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-	}
-	
-	private static void setDocSysInitState(String State) {
-		saveDocContentToFile(State, docSysIniPath, "State");
-	}
-
-	private static boolean checkAndUpdateDB(Integer oldVersion, Integer newVersion) {
-		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		String dbName = getDBNameFromUrl(DB_URL);
 		//检查docsystem数据库是否存在
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
 			createDB(dbName);
 			if(initDB() == false)
 			{
-				System.out.println("checkAndUpdateDB() 数据库初始化失败");		
-				return false;
+				System.out.println("docSysInit() 新建数据库失败");
+				return;
 			}
-			System.out.println("checkAndUpdateDB() 数据库初始化成功");		
-			return true;
+			System.out.println("docSysInit() 新建数据库失败");
+			
+			//更新版本号
+			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
+			docSysIniState = 0;
+			return;
+		}
+				
+		if(checkAndUpdateDB() == false)
+		{
+			System.out.println("docSysInit() 数据库升级失败");
+			return;
+		}
+		else
+		{
+			System.out.println("docSysInit() 数据库升级成功");
+		
+			//更新版本号，避免重复升级数据库
+			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
+			docSysIniState = 0;
+			return;
+		}
+	}
+	
+	private static void setDocSysInitState(String State) {
+		saveDocContentToFile(State, docSysIniPath, "State");
+	}
+
+	private static boolean checkAndUpdateDB() {
+		//根据里面的版本号信息更新数据库
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		System.out.println("checkAndUpdateDB() newVersion:" + newVersion);
+		if(newVersion == null)
+		{
+			System.out.println("checkAndUpdateDB() newVersion is null");
+			return false;
 		}
 		
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		System.out.println("checkAndUpdateDB() oldVersion:" + oldVersion);
+		if(oldVersion == null)
+		{
+			System.out.println("checkAndUpdateDB() oldVersion is null, 默认为0");
+			oldVersion = 0;
+		}
+		
+		if(newVersion.equals(oldVersion))
+		{
+			System.out.println("checkAndUpdateDB() newVersion is same with oldVersion");
+			return true;		
+		}
+		
+		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
 		return DBUpgrade(oldVersion, newVersion);
 	}
 	
