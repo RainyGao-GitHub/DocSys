@@ -98,7 +98,7 @@ public class BaseController  extends BaseFunction{
 		if(expUsage != null)
 		{
 			System.out.println("checkAuthCode() usage:" + authCode.getUsage() + " expUsage:" + expUsage);				
-			if(expUsage.equals(authCode.getUsage()))
+			if(!expUsage.equals(authCode.getUsage()))
 			{
 				System.out.println("checkAuthCode() usage not matched");				
 				return false;
