@@ -6734,26 +6734,6 @@ public class BaseController  extends BaseFunction{
 		{
 			docSysIniDir.mkdirs();
 		}
-				
-		//强制复位数据库
-		if(isFileExist(docSysIniPath + "reset") == true)
-		{
-			System.out.println("docSysInit() reset database");
-			deleteDB(dbName);
-			createDB(dbName);
-			if(initDB() == false)
-			{
-				System.out.println("docSysInit() reset database failed: initDB error");
-				return false;
-			}
-			
-			//删除复位文件，避免重复重置
-			delFile(docSysIniPath + "reset");
-			
-			//更新版本号
-			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-			return true;
-		}
 		
 		//检查docsystem数据库是否存在
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
@@ -6840,7 +6820,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	private static boolean createDB(String dbName) 
+	protected static boolean createDB(String dbName) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -6908,7 +6888,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	private static boolean deleteDB(String dbName) 
+	protected static boolean deleteDB(String dbName) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -6977,7 +6957,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	private static String getDBNameFromUrl(String url) 
+	protected static String getDBNameFromUrl(String url) 
 	{
 		String[] urlParts = url.split("\\?");
 		if(urlParts == null || urlParts.length == 0)
@@ -7283,7 +7263,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private static boolean initDB() 
+	protected static boolean initDB() 
 	{
 		System.out.println("initDB()");
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
