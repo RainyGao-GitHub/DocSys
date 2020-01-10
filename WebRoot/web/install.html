@@ -293,6 +293,40 @@
 		
 	}
 	
+    
+	function exportDBData(){
+		var dbUrl = $("#dbUrl").val();
+		var dbUser = $("#dbUser").val();
+		var dbPwd = $("#dbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/exportDBData.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("数据库测试失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:数据库测试失败");
+	        }
+	    });
+		
+	}
+	
 	function updateSystemDbConfig(){
 		
 		var dbUrl = $("#dbUrl").val();
