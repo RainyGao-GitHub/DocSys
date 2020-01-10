@@ -1,5 +1,7 @@
 package com.DocSystem.controller;
 
+import java.util.Date;
+
 import javax.servlet.ServletContext;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
@@ -42,6 +44,19 @@ public class StartupListener  extends BaseController implements ApplicationConte
 		log.info(">>>>>>>>>>>>系统启动完成，onApplicationEvent()<<<<<<<<<<<<");
 		System.out.println(">>>>>>>>>>>>系统启动完成，onApplicationEvent()<<<<<<<<<<<<");
 		
-		docSysInit();
+		boolean ret = docSysInit();
+		if(ret == true)
+		{
+			docSysIniState = 0;
+		}
+		else
+		{
+			//add authCode to authCodeMap
+			Long eventTime = new Date().getTime();
+			String event = "docSysInit" + eventTime;
+			String authCode = "" + event.hashCode();
+			Long expTime = eventTime + 7*24*60*60*1000;
+			authCodeMap.put(authCode, expTime);
+		}
 	}
 }

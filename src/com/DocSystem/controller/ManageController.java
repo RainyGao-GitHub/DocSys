@@ -115,23 +115,35 @@ public class ManageController extends BaseController{
 	}
 
 	@RequestMapping("/getSystemDbConfig.do")
-	public void getSystemDbConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSystemDbConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSystemDbConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(authCode != null)
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
+			if(checkAuthCode(authCode) == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
-		
-		if(login_user.getType() < 1)
-		{
-			rt.setError("非管理员用户，请联系统管理员！");
-			writeJson(rt, response);			
-			return;
+		else
+		{			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		String url = ReadProperties.read("jdbc.properties", "db.url");
