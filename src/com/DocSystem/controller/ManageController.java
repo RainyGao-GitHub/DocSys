@@ -271,13 +271,18 @@ public class ManageController extends BaseController{
 		}
 		
 		String targetPath = docSysIniPath + "backup/";
-		String targetName = "docsystem_"+backUpTime;
+		String targetName = "docsystem_"+backUpTime+".zip";
 		if(doCompressDir(docSysIniPath + "backup/", backUpTime, docSysIniPath + "backup/", targetName, rt) == false)
 		{
 			docSysErrorLog("压缩本地目录失败！", rt);
+			writeJson(rt, response);
 			return;
 		}
-		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,true);
+		
+		Doc downloadDoc = buildDownloadDocInfo(targetPath, targetName);
+		rt.setData(downloadDoc);
+		rt.setMsgData(1);	//下载完成后删除已下载的文件
+		writeJson(rt, response);
 	}
 
 	@RequestMapping("/getSystemInfo.do")

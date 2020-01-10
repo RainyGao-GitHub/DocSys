@@ -1532,25 +1532,6 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	Doc buildDownloadDocInfo(String targetPath, String targetName)
-	{
-		String encTargetName = base64Encode(targetName);
-		if(encTargetName == null)
-		{
-			return null;			
-		}	
-		String encTargetPath = base64Encode(targetPath);
-		if(encTargetPath == null)
-		{
-			return null;			
-		}	
-		
-		Doc doc = new Doc();
-		doc.setPath(encTargetPath);
-		doc.setName(encTargetName);
-		return doc;
-	}
-	
 	/**************** download Doc ******************/
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(String targetPath, String targetName, 
@@ -1602,42 +1583,6 @@ public class DocController extends BaseController{
 			delFileOrDir(targetPath+targetName);
 		}
 	}
-	
-	private String base64Encode(String str) 
-	{
-		try {
-			byte[] textByte = str.getBytes("UTF-8");
-			//编码
-			String base64Str = Base64.encodeBase64URLSafeString(textByte);
-			return base64Str;
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}		
-	}
-	
-	private String base64Decode(String base64Str) 
-	{
-		//misc库
-		//BASE64Decoder decoder = new BASE64Decoder();
-		//return new String(decoder.decodeBuffer(base64Str),"UTF-8");
-		
-		//apache库
-		byte [] data = Base64.decodeBase64(base64Str);
-		try {
-			String str =  new String(data,"UTF-8");
-			return str;
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			System.out.println("base64Decode new String Error");
-			e.printStackTrace();
-			return null;
-		}
-		
-		//java8自带库，据说速度最快
-	}
-	
 	/**************** get Tmp File ******************/
 	@RequestMapping("/doGetTmpFile.do")
 	public void doGetTmp(Integer reposId,String path, String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
