@@ -74,7 +74,8 @@
                             <input type="text" name="dbPwd" id="dbPwd" class="form-control disabled" placeholder="密码">
                         </div>
                         <div class="form-group">
-                            <button onclick="saveDbConfig();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
+                        	<button onclick="testDatabase();" class="btn btn-success" data-loading-text="连接中...">测试连接</button>
+                            <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
                             <span id="form-error-message" class="error-message"></span>
                         </div>
                     </div>
@@ -220,6 +221,12 @@
 	    });
     }
 	
+	//系统邮件服务设置
+	var systemDbConfig = {
+			url: "",
+			user: "",
+			pwd: "",
+	}
 	function dbConfigPageInit(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getSystemDbConfig.do",
@@ -232,9 +239,12 @@
 	            if( "ok" == ret.status )
 	            {
 					var config = JSON.parse(ret.data);
-	            	$("#dbUrl").val(config.url);
-	            	$("#dbUser").val(config.user);
-	            	$("#dbPwd").val(config.pwd);					
+					systemDbConfig.url = config.url;
+					systemDbConfig.user = config.user;
+					systemDbConfig.pwd = config.pwd;
+	            	$("#dbUrl").val(systemDbConfig.url);
+	            	$("#dbUser").val(systemDbConfig.user);
+	            	$("#dbPwd").val(systemDbConfig.pwd);				
 	            }
 	            else 
 	            {
@@ -248,71 +258,81 @@
 	    });
 	}
     
-    //Update UserInfo
-	function UpdateUserInfo(){
-		console.log("UpdateUserInfo");
-        $.ajax({
-            url : "/DocSystem/updateLoginUserInfo.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $("#name").val(),
-                 nickName : $("#nickName").val(),
-                 realName : $("#realName").val(),
-                 intro: $("#userIntro").val(),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	console.log("UpdateUserInfo 成功");
-        			bootstrapQ.msg({
-    					msg : '保存成功！', 
-    					type : 'success',
-    					time : 2000,
-    				    });
-                }else {
-                	showErrorMessage("错误："+ret.msgInfo);
-                	//showError(ret.msgInfo);
-                }
-            },
-            error : function () {
-                showErrorMessage("服务器异常:保存失败");
-            }
-        });
-    }
-    
-    
-	//ModifyPassword
-	function ModifyPassword(){
-		console.log("ModifyPassword");
-        $.ajax({
-            url : "/DocSystem/modifyPwd.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $("#name").val(),
-                 oldPwd : MD5($("#password1").val()),
-                 pwd : MD5($("#password2").val()),
-                 pwd2 : MD5($("#password3").val()),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	console.log("ModifyPassword 成功");
-        			bootstrapQ.msg({
-    					msg : '修改成功！', 
-    					type : 'success',
-    					time : 2000,
-    				    });
-                }else {
-                	showErrorMessage("错误："+ret.msgInfo);
-                	//showError(ret.msgInfo);
-                }
-            },
-            error : function () {
-                showErrorMessage("服务器异常:修改失败");
-            }
-        });
-    }
-
+	function testDatabase(){
+		var dbUrl = $("#dbUrl").val();
+		var dbUser = $("#dbUser").val();
+		var dbPwd = $("#dbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/testDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("数据库测试失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:数据库测试失败");
+	        }
+	    });
+		
+	}
+	
+	function updateSystemDbConfig(){
+		
+		var dbUrl = $("#dbUrl").val();
+		var dbUser = $("#dbUser").val();
+		var dbPwd = $("#dbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemDbConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	        		systemDbConfig.url = dbUrl;
+	        		systemDbConfig.user = dbUser;
+	        		systemDbConfig.pwd = dbPwd;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新邮件服务配置信息失败:" + ret.msgInfo);
+	        		//restore the setting
+	            	$("#dbUrl").val(systemDbConfig.url);
+	            	$("#dbUser").val(systemDbConfig.user);
+	            	$("#dbPwd").val(systemDbConfig.pwd);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新邮件服务配置信息失败");
+        		//restore the setting
+            	$("#dbUrl").val(systemDbConfig.url);
+            	$("#dbUser").val(systemDbConfig.user);
+            	$("#dbPwd").val(systemDbConfig.pwd);
+	        }
+	    });
+	}
+	
 </script>
 
 </body></html>

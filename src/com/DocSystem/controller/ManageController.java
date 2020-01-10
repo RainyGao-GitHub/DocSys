@@ -114,6 +114,46 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	@RequestMapping("/testDatabase.do")
+	public void getSystemDbConfig(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getSystemDbConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+
+		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
+		{
+			System.out.println("testDatabase() 连接数据库:" + DB_URL + " 失败");
+			docSysErrorLog("连接数据库失败", rt);
+		}
+		writeJson(rt, response);
+	}
+	
 	@RequestMapping("/getSystemDbConfig.do")
 	public void getSystemDbConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
