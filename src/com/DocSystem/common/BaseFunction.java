@@ -24,6 +24,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -1158,6 +1159,42 @@ public class BaseFunction{
 			}
 		}
 		return false;
+	}
+	
+	/************************ base64Encode相关接口 **************************************/
+	protected String base64Encode(String str) 
+	{
+		try {
+			byte[] textByte = str.getBytes("UTF-8");
+			//编码
+			String base64Str = Base64.encodeBase64URLSafeString(textByte);
+			return base64Str;
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}		
+	}
+	
+	protected String base64Decode(String base64Str) 
+	{
+		//misc库
+		//BASE64Decoder decoder = new BASE64Decoder();
+		//return new String(decoder.decodeBuffer(base64Str),"UTF-8");
+		
+		//apache库
+		byte [] data = Base64.decodeBase64(base64Str);
+		try {
+			String str =  new String(data,"UTF-8");
+			return str;
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			System.out.println("base64Decode new String Error");
+			e.printStackTrace();
+			return null;
+		}
+		
+		//java8自带库，据说速度最快
 	}
 	
 	/************************ session相关接口 **************************************/

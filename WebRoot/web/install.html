@@ -290,7 +290,6 @@
 	        	showErrorMessage("服务器异常:数据库测试失败");
 	        }
 	    });
-		
 	}
 	
     
@@ -313,6 +312,14 @@
 	            if( "ok" == ret.status )
 	            {	        		
 	            	//设置成功
+            	    console.log("exportDBData Ok:",ret);	   		
+        	   		var targetName = ret.data.name;
+            	    var targetPath = ret.data.path;
+            	    var deleteFlag = ret.msgData;
+        	   		
+            	    targetName = encodeURI(targetName);
+        		   	targetPath = encodeURI(targetPath);
+        	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
 	            }
 	            else 
 	            {
@@ -324,7 +331,6 @@
 	        	showErrorMessage("服务器异常:数据库测试失败");
 	        }
 	    });
-		
 	}
 	
 	function updateSystemDbConfig(){
