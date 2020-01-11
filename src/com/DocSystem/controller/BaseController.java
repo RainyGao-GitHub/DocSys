@@ -7211,47 +7211,146 @@ public class BaseController  extends BaseFunction{
 		
 	}
 	
-	protected static boolean backupDB(String path, String name, String encode, String url, String user, String pwd) 
+	protected static boolean exportDatabase(List<Integer> exportTabList, String exportType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd)
+	{
+		if(exportType == "sql")
+		{
+			return exportDatabaseAsSql(exportTabList, filePath, fileName, "UTF-8", url, user, pwd);
+		}
+		else if(exportType == "json")
+		{
+			return exportDatabaseAsJson(exportTabList, filePath, fileName, srcVersion, dstVersion,url, user, pwd);
+		}
+		return false;
+	}
+	
+	protected static boolean exportDatabaseAsJson(List<Integer> exportTabList, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
+	{
+		System.out.println("exportDatabaseAsJson() " + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
+
+		String jsonStr = "{";
+		for(int i=0; i< exportTabList.size(); i++)
+		{
+			int objType = exportTabList.get(i);
+			List<Object> list = null;
+			if(objType == DOCSYS_DOC_AUTH)
+	    	{
+	    		list = queryDocAuth(null, srcVersion, dstVersion, url, user, pwd);
+	    	}
+			else
+			{	
+				list = dbQuery(null, objType, url, user, pwd);
+			}
+			
+			//Convert list to jsonStr
+			jsonStr = JSON.toJSONString(list);
+			if(jsonStr == null)
+			{
+				System.out.println("exportDatabaseAsJson() jsonStr is null");
+				return false;
+			}			
+			String name = getNameByObjType(objType);
+			jsonStr += name + ":" + jsonStr + ",";		
+		}
+		jsonStr += "}";
+		return saveDocContentToFile(jsonStr, filePath, fileName);
+	}
+
+	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd)
+	{
+		if(importType == "sql")
+		{
+			return importDatabaseFromSqlFile(importTabList, filePath, fileName, url, user, pwd);
+		}
+		else if(importType == "json")
+		{
+			return importDatabaseFromJsonFile(importTabList, filePath, fileName, url, user, pwd);
+		}
+		return false;
+	}
+	
+	private static boolean importDatabaseFromSqlFile(List<Integer> importTabList, String filePath, String fileName,
+			String url, String user, String pwd) {
+		return executeSqlScript(filePath+fileName, url, user, pwd);
+	}
+
+	protected static boolean importDatabaseFromJsonFile(List<Integer> importTabList, String filePath, String fileName, String url, String user, String pwd)
+	{
+		System.out.println("importDatabaseFromJsonFile() filePath:" + filePath + " fileName:" + fileName);
+
+		String s = readDocContentFromFile(filePath, fileName, false);
+		JSONObject jobj = JSON.parseObject(s);
+		
+		for(int i=0; i<importTabList.size(); i++)
+		{
+			int objType = importTabList.get(i);
+			String name = getNameByObjType(objType);
+	        JSONArray list = jobj.getJSONArray(name);
+	        if(list == null || list.size() == 0)
+	        {
+	        	System.out.println("importDatabaseFromJsonFile() list is empty for " + name);
+	        	continue;
+	        }
+	
+	        importJsonObjListToDataBase(objType, list, url, user, pwd);
+	    	System.out.println("importObjectListFromJsonFile() import OK");
+		}
+		return true;
+	}
+	
+	private static void importJsonObjListToDataBase(int objType, JSONArray list, String url, String user, String pwd) {
+        for (int i = 0 ; i < list.size();i++)
+        {
+            JSONObject jsonObj = (JSONObject)list.get(i);
+            
+            Object obj = buildObjectFromJsonObj(jsonObj, objType);
+            
+            dbInsert(obj, objType, url, user, pwd);
+        }
+	}
+
+	protected static boolean exportDatabaseAsSql(List<Integer> exportTabList, String path, String name, String encode, String url, String user, String pwd) 
 	{
 		System.out.println("backupDB() encode:" + encode + " backup to file:" + path+name);
 		
-		String backUpContent = "";
-		for(int objId=0; objId< DBTabNameMap.length; objId++)
+		String sqlStr = "";
+		for(int i=0; i< exportTabList.size(); i++)
 		{
-			if(objId == DOCSYS_DOC)
-			{
-				//DOC is too large no need to backup
-				continue;
-			}
-				
+			int objId = exportTabList.get(i);
 			List<Object> list = dbQuery(null, objId, url, user, pwd);
 			if(list != null)
 			{
-				for(int i=0; i< list.size(); i++)
-				{
-					Object obj = list.get(i);
-					String sql = buildInsertSqlForObject(obj, objId);
-					if(encode != null)
-					{
-						try {
-							String tmpSql = new String(sql.getBytes(), encode);
-							sql = tmpSql;
-							System.out.println("backupDB() sql:" + sql);
-						} catch (Exception e) {
-							e.printStackTrace();
-							return false;
-						}
-					}
-					backUpContent += sql + ";\r\n";
-				}
-				backUpContent += "\r\n";	//换行
+				sqlStr = convertListToInertSqls(objId, list, encode);
 			}
 		}
-		boolean ret = saveDocContentToFile(backUpContent, path, name);
+		boolean ret = saveDocContentToFile(sqlStr, path, name);
 		System.out.println("backupDB() End with ret:" + ret);
 		return ret;
 	}
 	
+	private static String convertListToInertSqls(int objId, List<Object> list, String encode) {
+		String sqlStr = "";
+		for(int i=0; i< list.size(); i++)
+		{
+			Object obj = list.get(i);
+			String sql = buildInsertSqlForObject(obj, objId);
+			if(encode != null)
+			{
+				try {
+					String tmpSql = new String(sql.getBytes(), encode);
+					sql = tmpSql;
+					System.out.println("backupDB() sql:" + sql);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+			sqlStr = sql + ";\r\n";
+		}
+		sqlStr += "\r\n";	//换行
+		return sqlStr;
+	}
+
 	protected static boolean deleteDBTabs(String url, String user, String pwd) 
 	{
 		System.out.println("deleteDBTabs()");
@@ -7350,71 +7449,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return null;
 	}
-	
-	//exportDocAutListToJsonFile 和 importDocAutListFromJsonFile主要用于实现从1.xx.xx到2.xx.xx的数据库迁移
-    //version是指当前数据库对应的软件版本
-	protected static void exportObjectListToJsonFile(int objType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
-	{
-		System.out.println("exportObjectListToJsonFile() objType:" + objType + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
 
-		List<Object> list = null;
-		if(objType == DOCSYS_DOC_AUTH)
-    	{
-    		list = queryDocAuth(null, srcVersion, dstVersion, url, user, pwd);
-    	}
-		else
-		{	
-			list = dbQuery(null, objType, url, user, pwd);
-		}
-		printObject("exportObjectListToJsonFile() list:", list);
-		writeObjectListToJsonFile(objType, list, filePath, fileName);
-		System.out.println("exportObjectListToJsonFile() export OK");
-	}
-	protected static void importObjectListFromJsonFile(int objType, String filePath, String fileName, String url, String user, String pwd)
-	{
-		System.out.println("importObjectListFromJsonFile() objType:" + objType + " filePath:" + filePath + " fileName:" + fileName);
-
-		String s = readDocContentFromFile(filePath, fileName, false);
-		JSONObject jobj = JSON.parseObject(s);
-		
-		String name = getNameByObjType(objType);
-        JSONArray list = jobj.getJSONArray(name);
-        if(list == null || list.size() == 0)
-        {
-        	System.out.println("importObjectListFromJsonFile() list is empty");
-        	return;
-        }
-
-        for (int i = 0 ; i < list.size();i++)
-        {
-            JSONObject jsonObj = (JSONObject)list.get(i);
-            
-            
-            Object obj = buildObjectFromJsonObj(jsonObj, objType);
-            
-            dbInsert(obj, objType, url, user, pwd);
-        }
-    	System.out.println("importObjectListFromJsonFile() import OK");
-	}
-    
-	protected static boolean writeObjectListToJsonFile(int objType, List<Object> list, String filePath, String fileName) 
-	{
-		String content = JSON.toJSONString(list);
-		if(content == null)
-		{
-			System.out.println("writeObjectListToJsonFile() content is null");
-			return false;
-		}
-				
-		//System.out.println("writeObjectListToJsonFile() content:" + content);
-		
-		String name = getNameByObjType(objType);
-		content = "{" + name + ":" + content + "}";
-			
-		return saveDocContentToFile(content, filePath, fileName);
-	}
-
-	
 	private static Object buildObjectFromJsonObj(JSONObject jsonObj, int objType) {
 		switch(objType)
 		{
