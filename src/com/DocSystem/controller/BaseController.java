@@ -7104,35 +7104,23 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		//由于以下操作存在导致数据库数据全部丢失的风险，因此必须先完成数据库完整备份
+		//备份数据
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDB(backUpPath, "docsystem_data.sql", "UTF-8", url, user, pwd) == false)
+		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
 		}
 		
-		//导出数据库表数据
-		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
-		{	
-			int dbTabId = dbTabsNeedToUpgrade.get(i);
-			if(dbTabId == DOCSYS_DOC)
-			{
-				//DOC表太大不备份，只更新表结构
-				continue;
-			}
-			
-			String jsonFileName = DBTabNameMap[dbTabId] + ".json";
-			String jsonFilePath = docSysIniPath + "backup/";
-			exportObjectListToJsonFile(dbTabId, jsonFilePath, jsonFileName, oldVersion, newVersion, url, user, pwd);
-
-			//copy to backup dir
-			copyFile(jsonFilePath + jsonFileName, backUpPath + jsonFileName, true);
-		}
+		//导出数据
+		String jsonFileName = "docsystem_data.json";
+		String jsonFilePath = docSysIniPath + "backup/";
+		exportDatabaseAsJson(dbTabsNeedToUpgrade, jsonFilePath, jsonFileName, oldVersion, newVersion, url, user, pwd);
+		copyFile(jsonFilePath + jsonFileName, backUpPath + jsonFileName, true);
 		
-		//更新数据库表结构并导入数据
+		//更新数据库表结构
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
 		{
 			int dbTabId = dbTabsNeedToUpgrade.get(i);
@@ -7151,20 +7139,31 @@ public class BaseController  extends BaseFunction{
 			deleteDBTab(dbTabName, url, user, pwd);
 			//init tab
 			executeSqlScript(sqlScriptPath, url, user, pwd);
-			
-			//import the data back to new db
-			if(dbTabId == DOCSYS_DOC)
-			{
-				//DOC表太大不恢复，只更新表结构
-				continue;
-			}
-			String jsonFilePath = docSysIniPath + "backup/";
-			String jsonFileName = dbTabName + ".json";
-			importObjectListFromJsonFile(dbTabId, jsonFilePath, jsonFileName, url, user, pwd);
 		}
+		
+		//导入数据
+		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, jsonFilePath, jsonFileName, url, user, pwd);
 		return true;
 	}
+
+	protected static boolean backupDatabaseAsSql(String backUpPath, String fileName, String url, String user, String pwd) {
+		List<Integer> exportTabList = new ArrayList<Integer>();
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			exportTabList.add(i);
+		}			
+		return exportDatabaseAsSql(exportTabList, backUpPath, fileName, "UTF-8", url, user, pwd);
+	}
 	
+	protected static boolean backupDatabaseAsJson(String backUpPath, String fileName, Integer srcVersion, Integer dstVersion,  String url, String user, String pwd) {
+		List<Integer> exportTabList = new ArrayList<Integer>();
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			exportTabList.add(i);
+		}			
+		return exportDatabaseAsJson(exportTabList, backUpPath, fileName, srcVersion, dstVersion,url, user, pwd);
+	}
+
 	private static boolean deleteDBTab(String tabName, String url, String user, String pwd) {
 		boolean ret = false;
 		Connection conn = null;
