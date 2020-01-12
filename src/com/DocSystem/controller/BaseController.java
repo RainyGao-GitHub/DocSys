@@ -6771,19 +6771,14 @@ public class BaseController  extends BaseFunction{
 			}
 			System.out.println("docSysInit() 新建数据库失败");
 			
+			checkAndAddFirstUser();
+			
 			//更新版本号
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 			return true;
 		}
 		
-		//获取用户列表
-		List<Object> list = dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
-		if(list == null)
-		{
-			//Add admin User
-			User adminUser = buildAdminUser();
-			dbInsert(adminUser, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
-		}
+		checkAndAddFirstUser();
 			
 		if(checkAndUpdateDB() == false)
 		{
@@ -6800,6 +6795,17 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	private static void checkAndAddFirstUser() {
+		//获取用户列表
+		List<Object> list = dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
+		if(list == null)
+		{
+			//Add admin User
+			User adminUser = buildAdminUser();
+			dbInsert(adminUser, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
+		}
+	}
+
 	private static void setDocSysInitState(String State) {
 		saveDocContentToFile(State, docSysIniPath, "State");
 	}

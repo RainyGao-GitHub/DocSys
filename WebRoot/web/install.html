@@ -74,10 +74,11 @@
                             <input type="text" name="dbPwd" id="dbPwd" class="form-control disabled" placeholder="密码">
                         </div>
                         <div class="form-group">
-                            <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
                             <button onclick="testDatabase();" class="btn btn-success" data-loading-text="连接中...">测试连接</button>
+                            <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
                             <button onclick="exportDBData();" class="btn btn-success" data-loading-text="导出中...">导出数据</button>
                             <button onclick="importDBData();" class="btn btn-success" data-loading-text="导入中...">导入数据</button>
+                            <button onclick="resetDatabase();" class="btn btn-success" data-loading-text="重置中...">重置数据库</button>
                             <span id="form-error-message" class="error-message"></span>
                         </div>
                     </div>
@@ -292,7 +293,38 @@
 	    });
 	}
 	
-    
+	function resetDatabase(){
+		var dbUrl = $("#dbUrl").val();
+		var dbUser = $("#dbUser").val();
+		var dbPwd = $("#dbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/resetDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("重置数据库失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:重置数据库失败");
+	        }
+	    });
+	}
+	
 	function exportDBData(){
 		var dbUrl = $("#dbUrl").val();
 		var dbUser = $("#dbUser").val();
