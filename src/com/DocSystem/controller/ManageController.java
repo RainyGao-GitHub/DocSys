@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNException;
 
 import util.DateFormat;
@@ -277,6 +278,55 @@ public class ManageController extends BaseController{
 		rt.setData(downloadDoc);
 		rt.setMsgData(1);	//下载完成后删除已下载的文件
 		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/importDBData.do")
+	public void importDBData(MultipartFile uploadFile, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	{
+		System.out.println("importDBData()");
+		ReturnAjax rt = new ReturnAjax();
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		
+		//saveFile to tmpPath
+		String fileName = uploadFile.getName();
+		String suffix = getFileSuffix(fileName);
+		String webTmpPathForImportDBData = getWebTmpPath() + "importDBData/";
+		saveFile(uploadFile, webTmpPathForImportDBData, fileName);
+		
+		if(testDB(url, user, pwd) == false)	//数据库不存在
+		{
+			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
+			docSysErrorLog("连接数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		importDatabase(null, webTmpPathForImportDBData, fileName, suffix, url, user, pwd);
 	}
 	
 	//强制复位数据库
