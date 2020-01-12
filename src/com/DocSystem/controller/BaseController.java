@@ -7246,6 +7246,15 @@ public class BaseController  extends BaseFunction{
 	
 	protected static boolean exportDatabase(List<Integer> exportTabList, String exportType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd)
 	{
+		if(exportTabList == null)
+		{
+			exportTabList = new ArrayList<Integer>();
+			for(int i=0; i< DBTabNameMap.length; i++)
+			{
+				exportTabList.add(i);
+			}			
+		}
+	
 		if(exportType == "sql")
 		{
 			return exportDatabaseAsSql(exportTabList, filePath, fileName, "UTF-8", url, user, pwd);
@@ -7255,6 +7264,48 @@ public class BaseController  extends BaseFunction{
 			return exportDatabaseAsJson(exportTabList, filePath, fileName, srcVersion, dstVersion,url, user, pwd);
 		}
 		return false;
+	}
+	
+	protected static boolean exportDatabaseAsSql(List<Integer> exportTabList, String path, String name, String encode, String url, String user, String pwd) 
+	{
+		System.out.println("backupDB() encode:" + encode + " backup to file:" + path+name);
+		
+		String sqlStr = "";
+		for(int i=0; i< exportTabList.size(); i++)
+		{
+			int objId = exportTabList.get(i);
+			List<Object> list = dbQuery(null, objId, url, user, pwd);
+			if(list != null)
+			{
+				sqlStr = convertListToInertSqls(objId, list, encode);
+			}
+		}
+		boolean ret = saveDocContentToFile(sqlStr, path, name);
+		System.out.println("backupDB() End with ret:" + ret);
+		return ret;
+	}
+	
+	private static String convertListToInertSqls(int objId, List<Object> list, String encode) {
+		String sqlStr = "";
+		for(int i=0; i< list.size(); i++)
+		{
+			Object obj = list.get(i);
+			String sql = buildInsertSqlForObject(obj, objId);
+			if(encode != null)
+			{
+				try {
+					String tmpSql = new String(sql.getBytes(), encode);
+					sql = tmpSql;
+					System.out.println("backupDB() sql:" + sql);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+			sqlStr = sql + ";\r\n";
+		}
+		sqlStr += "\r\n";	//换行
+		return sqlStr;
 	}
 	
 	protected static boolean exportDatabaseAsJson(List<Integer> exportTabList, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
@@ -7289,8 +7340,17 @@ public class BaseController  extends BaseFunction{
 		return saveDocContentToFile(jsonStr, filePath, fileName);
 	}
 
-	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd)
+	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String url, String user, String pwd)
 	{
+		if(importTabList == null)
+		{
+			importTabList = new ArrayList<Integer>();
+			for(int i=0; i< DBTabNameMap.length; i++)
+			{
+				importTabList.add(i);
+			}			
+		}
+		
 		if(importType == "sql")
 		{
 			return importDatabaseFromSqlFile(importTabList, filePath, fileName, url, user, pwd);
@@ -7340,48 +7400,6 @@ public class BaseController  extends BaseFunction{
             
             dbInsert(obj, objType, url, user, pwd);
         }
-	}
-
-	protected static boolean exportDatabaseAsSql(List<Integer> exportTabList, String path, String name, String encode, String url, String user, String pwd) 
-	{
-		System.out.println("backupDB() encode:" + encode + " backup to file:" + path+name);
-		
-		String sqlStr = "";
-		for(int i=0; i< exportTabList.size(); i++)
-		{
-			int objId = exportTabList.get(i);
-			List<Object> list = dbQuery(null, objId, url, user, pwd);
-			if(list != null)
-			{
-				sqlStr = convertListToInertSqls(objId, list, encode);
-			}
-		}
-		boolean ret = saveDocContentToFile(sqlStr, path, name);
-		System.out.println("backupDB() End with ret:" + ret);
-		return ret;
-	}
-	
-	private static String convertListToInertSqls(int objId, List<Object> list, String encode) {
-		String sqlStr = "";
-		for(int i=0; i< list.size(); i++)
-		{
-			Object obj = list.get(i);
-			String sql = buildInsertSqlForObject(obj, objId);
-			if(encode != null)
-			{
-				try {
-					String tmpSql = new String(sql.getBytes(), encode);
-					sql = tmpSql;
-					System.out.println("backupDB() sql:" + sql);
-				} catch (Exception e) {
-					e.printStackTrace();
-					return null;
-				}
-			}
-			sqlStr = sql + ";\r\n";
-		}
-		sqlStr += "\r\n";	//换行
-		return sqlStr;
 	}
 
 	protected static boolean deleteDBTabs(String url, String user, String pwd) 
