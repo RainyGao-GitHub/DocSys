@@ -249,6 +249,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		//backUpDB
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
@@ -259,8 +260,6 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
-		//导出数据库表数据
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
 		backupDatabaseAsJson(backUpPath, "docsystem_data.json", oldVersion, newVersion, url, user, pwd);
@@ -321,6 +320,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		//backUpDB
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
@@ -331,6 +331,10 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
+		
 		
 		String dbName = getDBNameFromUrl(url);
 		deleteDB(dbName, url, user, pwd);
