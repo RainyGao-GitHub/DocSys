@@ -90,20 +90,6 @@ public class UserController extends BaseController {
 		writeJson(rt, response);	
 		return;
 	}
-
-	private void addAdminUser() {
-		User user = new User();
-		user.setName("Admin");
-		user.setNickName("超级管理员");
-		user.setPwd(MD5.md5("Admin"));
-		user.setCreateType(0);	//系统自动创建
-		//set createTime
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-		String createTime = df.format(new Date());// new Date()为获取当前系统时间
-		user.setCreateTime(createTime);	//设置时间
-		user.setType(2);
-		userService.addUser(user);
-	}
 	
 	//获取当前登录用户信息
 	@RequestMapping(value="getLoginUser")
