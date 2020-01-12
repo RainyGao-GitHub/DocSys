@@ -27,7 +27,7 @@
         <nav class="navbar-collapse hidden-xs hidden-sm" role="navigation">
         </nav>
     </div>
-</header>
+	</header>
     <div class="container manual-body">
         <div class="row">
             <div id="menu" class="page-left"  style="display:none">
@@ -88,6 +88,10 @@
     </div>
     <div class="footer">
 </div>
+</div>
+
+<div style="display:none">
+	<input id="uploadFiles" name="uploadFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
 </div>
 
 <script src="static/scripts/jquery.min.js" type="text/javascript"></script>
@@ -363,6 +367,77 @@
 	        	showErrorMessage("服务器异常:数据库测试失败");
 	        }
 	    });
+	}
+	
+	function importDBData(){
+		console.log("importDBData()");
+  		//清除文件控件
+		$("#uploadFiles").val("");
+	    return $("#uploadFiles").click();
+	}
+	
+	function importDBDataConfirm(e)
+	{
+		console.log("importDBData()");
+		
+		var dbUrl = $("#dbUrl").val();
+		var dbUser = $("#dbUser").val();
+		var dbPwd = $("#dbPwd").val();
+		
+	    var file = e.target.file;
+	    
+		//新建文件上传表单
+		var form = new FormData();
+		form.append("url", dbUrl);
+		form.append("user", dbUser);
+		form.append("pwd", dbPwd);
+		form.append("authCode", authCode);
+		form.append("uploadFile", file);
+
+		//新建http异步请求
+		var xhr = new XMLHttpRequest();
+		
+		//设置异步上传状态变化回调处a理函数
+		xhr.onreadystatechange = function() {				
+			//文件上传状态
+			console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+			if(xhr.status == 200) 
+			{
+				if(xhr.readyState != 4)
+				{
+					//文件上传未结束
+					return;
+				}
+				
+				//上传成功！
+				var ret = JSON.parse(xhr.responseText);
+				if("ok" == ret.status){
+					uploadSuccessHandler(SubContext,ret.msgInfo);
+				 }
+				 else	//上传失败
+				 {
+					//上传失败
+					console.log("上传失败：" + ret.msgInfo);
+
+					uploadErrorConfirmHandler(SubContext, ret.msgInfo);
+					return;
+	             }
+			}else{
+				if(xhr.status < 300) 
+				{
+					//不是真正的异常
+					return;
+				}
+				//上传失败
+				console.log("系统异常: " + name + " 上传异常！");
+				uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
+				return;
+			}
+		};
+		
+		//上传表单			
+		xhr.open("post", "/DocSystem/Manage/importDBData.do");
+		xhr.send(form);
 	}
 	
 	function updateSystemDbConfig(){
