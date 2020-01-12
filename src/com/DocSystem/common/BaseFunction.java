@@ -724,7 +724,6 @@ public class BaseFunction{
         System.out.println("getWebTmpPathForPreview() webTmpPath:" + webTmpPath);
 		return webTmpPath;
 	}
-
 	
 	//获取本地仓库默认存储位置（相对于仓库的存储路径）
 	protected String getDefaultLocalVerReposPath(String path) {
@@ -1968,8 +1967,7 @@ public class BaseFunction{
 		if(!forder1.exists())
 		{
 			System.out.println("saveFile() path:" + path + " not exists!");
-			//forder1.mkdirs(); //创建目录
-			return null;
+			forder1.mkdirs(); //创建目录
 		}
 		
 		File dstFile = new File(path,fileName);
