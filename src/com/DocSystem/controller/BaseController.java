@@ -40,6 +40,7 @@ import org.tmatesoft.svn.core.SVNDirEntry;
 import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
+import util.Encrypt.MD5;
 
 import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.BaseFunction;
@@ -84,6 +85,24 @@ public class BaseController  extends BaseFunction{
 	@Autowired
 	protected UserServiceImpl userService;
 	
+	protected static User buildAdminUser() {
+		User user = new User();
+		user.setName("Admin");
+		user.setNickName("超级管理员");
+		user.setPwd(MD5.md5("Admin"));
+		user.setCreateType(0);	//系统自动创建
+		//set createTime
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		String createTime = df.format(new Date());// new Date()为获取当前系统时间
+		user.setCreateTime(createTime);	//设置时间
+		user.setType(2);
+		return user;
+	}
+	
+	protected void addAdminUser() {
+		User user = buildAdminUser();
+		userService.addUser(user);
+	}
 	
 	protected static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
 	protected boolean checkAuthCode(String code, String expUsage) {
@@ -6756,7 +6775,16 @@ public class BaseController  extends BaseFunction{
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 			return true;
 		}
-				
+		
+		//获取用户列表
+		List<Object> list = dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
+		if(list == null)
+		{
+			//Add admin User
+			User adminUser = buildAdminUser();
+			dbInsert(adminUser, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
+		}
+			
 		if(checkAndUpdateDB() == false)
 		{
 			System.out.println("docSysInit() 数据库升级失败");
