@@ -6780,7 +6780,7 @@ public class BaseController  extends BaseFunction{
 		
 		checkAndAddFirstUser();
 			
-		if(checkAndUpdateDB() == false)
+		if(checkAndUpdateDB(true) == false)
 		{
 			System.out.println("docSysInit() 数据库升级失败");
 			return false;
@@ -6810,7 +6810,7 @@ public class BaseController  extends BaseFunction{
 		saveDocContentToFile(State, docSysIniPath, "State");
 	}
 
-	private static boolean checkAndUpdateDB() {
+	private static boolean checkAndUpdateDB(boolean isStartUp) {
 		//根据里面的版本号信息更新数据库
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		System.out.println("checkAndUpdateDB() newVersion:" + newVersion);
@@ -6835,7 +6835,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		return DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS);
+		return DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS, isStartUp);
 	}
 	
     protected static boolean executeSqlScript(String filePath, String url, String user, String pwd) 
@@ -7128,7 +7128,7 @@ public class BaseController  extends BaseFunction{
 		return version;
 	}
 
-	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String url, String user, String pwd)
+	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String url, String user, String pwd, boolean isStartUp)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
@@ -7142,17 +7142,14 @@ public class BaseController  extends BaseFunction{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
+		List<Integer> backupTabList = buildBackUpTabList(isStartUp);
+		if(exportDatabaseAsSql(backupTabList, backUpPath, "docsystem_data.sql", url, user, pwd, backUpPath) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
 		}
-		
-		//导出数据
 		String jsonFileName = "docsystem_data.json";
-		String jsonFilePath = docSysIniPath + "backup/";
-		exportDatabaseAsJson(dbTabsNeedToUpgrade, jsonFilePath, jsonFileName, oldVersion, newVersion, url, user, pwd);
-		copyFile(jsonFilePath + jsonFileName, backUpPath + jsonFileName, true);
+		exportDatabaseAsJson(backupTabList, backUpPath, jsonFileName, oldVersion, newVersion, url, user, pwd);
 		
 		//更新数据库表结构
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
@@ -7176,8 +7173,21 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//导入数据
-		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, jsonFilePath, jsonFileName, url, user, pwd);
+		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, backUpPath, jsonFileName, url, user, pwd);
 		return true;
+	}
+
+	private static List<Integer> buildBackUpTabList(boolean isStartUp) {
+		List<Integer> tabList = new ArrayList<Integer>();
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			if(isStartUp && i==DOCSYS_DOC)
+			{
+				continue;
+			}
+			tabList.add(i);
+		}		
+		return tabList;
 	}
 
 	protected static boolean backupDatabaseAsSql(String backUpPath, String fileName, String url, String user, String pwd) {
