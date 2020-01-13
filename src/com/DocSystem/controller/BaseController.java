@@ -6778,7 +6778,11 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		checkAndAddFirstUser();
+		if(checkAndAddFirstUser() == false)
+		{
+			System.out.println("docSysInit() checkAndAddFirstUser Failed");
+			return false;
+		}
 			
 		if(checkAndUpdateDB(true) == false)
 		{
@@ -6795,7 +6799,7 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	private static void checkAndAddFirstUser() {
+	private static boolean checkAndAddFirstUser() {
 		//获取用户列表
 		List<Object> list = dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
 		if(list == null)
@@ -6803,7 +6807,12 @@ public class BaseController  extends BaseFunction{
 			//Add admin User
 			User adminUser = buildAdminUser();
 			dbInsert(adminUser, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
+			if(dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS) == null)
+			{
+				return false;
+			}
 		}
+		return true;
 	}
 
 	private static void setDocSysInitState(String State) {
