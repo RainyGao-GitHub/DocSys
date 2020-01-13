@@ -194,6 +194,10 @@
 <!-- Scroll to top -->
 <span class="totop"><a href="#"><i class="icon-chevron-up"></i></a></span>
 
+<div style="display:none">
+	<input id="uploadFiles" name="uploadFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
+</div>
+
 <script type="application/javascript">
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -634,6 +638,179 @@
 	    		$("#systemDbPwd").val(SystemDBSetting.pwd);
 	        }
 	    });
+	}
+	
+	function testDatabase(){
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/testDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            	showErrorMessage("数据库连接成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("数据库连接失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:数据库连接失败");
+	        }
+	    });
+	}
+	
+	function resetDatabase(){
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/resetDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            	showErrorMessage("重置数据库成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("重置数据库失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:重置数据库失败");
+	        }
+	    });
+	}
+	
+	function exportDBData(){
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/exportDBData.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+            	    console.log("exportDBData Ok:",ret);	   		
+        	   		var targetName = ret.data.name;
+            	    var targetPath = ret.data.path;
+            	    var deleteFlag = ret.msgData;
+        	   		
+            	    targetName = encodeURI(targetName);
+        		   	targetPath = encodeURI(targetPath);
+        	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("数据库导出失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:数据库导出失败");
+	        }
+	    });
+	}
+	
+	function importDBData(){
+		console.log("importDBData()");
+  		//清除文件控件
+		$("#uploadFiles").val("");
+	    return $("#uploadFiles").click();
+	}
+	
+	function importDBDataConfirm(e)
+	{
+		console.log("importDBData()");
+		
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+	    var file = e.target.file;
+	    
+		//新建文件上传表单
+		var form = new FormData();
+		form.append("url", dbUrl);
+		form.append("user", dbUser);
+		form.append("pwd", dbPwd);
+		form.append("uploadFile", file);
+
+		//新建http异步请求
+		var xhr = new XMLHttpRequest();
+		
+		//设置异步上传状态变化回调处a理函数
+		xhr.onreadystatechange = function() {				
+			//文件上传状态
+			console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+			if(xhr.status == 200) 
+			{
+				if(xhr.readyState != 4)
+				{
+					//文件上传未结束
+					return;
+				}
+				
+				//上传成功！
+				var ret = JSON.parse(xhr.responseText);
+				if("ok" == ret.status){
+					uploadSuccessHandler(SubContext,ret.msgInfo);
+				 }
+				 else	//上传失败
+				 {
+					//上传失败
+					console.log("上传失败：" + ret.msgInfo);
+
+					uploadErrorConfirmHandler(SubContext, ret.msgInfo);
+					return;
+	             }
+			}else{
+				if(xhr.status < 300) 
+				{
+					//不是真正的异常
+					return;
+				}
+				//上传失败
+				console.log("系统异常: " + name + " 上传异常！");
+				uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
+				return;
+			}
+		};
+		
+		//上传表单			
+		xhr.open("post", "/DocSystem/Manage/importDBData.do");
+		xhr.send(form);
 	}
 	
 	var systemInfo = {
