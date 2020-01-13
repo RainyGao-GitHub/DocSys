@@ -7344,7 +7344,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 			}			
 			String name = getNameByObjType(objType);
-			jsonStr += name + ":" + tmpJsonStr + ",";		
+			jsonStr += name + ":" + tmpJsonStr + ",\r\n";		
 		}
 		jsonStr += "}";
 		return saveDocContentToFile(jsonStr, filePath, fileName);
