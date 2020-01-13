@@ -7306,7 +7306,7 @@ public class BaseController  extends BaseFunction{
 				try {
 					String tmpSql = new String(sql.getBytes(), encode);
 					sql = tmpSql;
-					System.out.println("backupDB() sql:" + sql);
+					//System.out.println("backupDB() sql:" + sql);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return null;
