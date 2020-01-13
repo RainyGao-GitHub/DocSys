@@ -198,6 +198,27 @@
 	<input id="uploadFiles" name="uploadFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
 </div>
 
+<div id="uploadConfirmDialog" style="display:none">
+    <div class="modal-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">文件：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="uploadContent" title="上传文件">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+  	<div class="modal-footer">
+    	<div class="form-group">
+            <label class="col-sm-2 control-label">上传至：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="remoteDir" title="目标地址">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
 <script type="application/javascript">
 	//通用函数接口
 	function showErrorMessage($msg) {
@@ -758,14 +779,65 @@
 		var dbUser = $("#systemDbUser").val();
 		var dbPwd = $("#systemDbPwd").val();
 		
-	    var file = e.target.file;
+	    var files = e.target.files;
+	    var firstFile;
+	    if(files.length > 0)
+	   	{
+	    	console.log("files.length:" + files.length);
+	    	for( var i = 0 ; i < files.length ; i++ )
+	    	{  
+	    		firstFile = files[i];
+	    	   	if(typeof firstFile == 'object')
+	    	   	{
+	    	   		var relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
+	    	   		console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
+	    	   		break;
+	    	   	}
+	    	   	else
+	    	   	{
+	    	   		//This is something else 
+	    	   		//console.log("it is not a file");
+	    	   	}
+	    	}
+	    }
+	    else
+	   	{
+	   		bootstrapQ.alert("请选择文件");
+	      	return false;
+	   	}  
+		
+		var fileName = firstFile.name;
+	    console.log("firstFile:"+fileName);
 	    
+	    qiao.bs.dialog({
+	        id: "dialog-uploadDialog",
+	        url: '#uploadConfirmDialog',
+	        title: '文件上传',
+	        okbtn: "开始上传",
+	        callback: function () {
+	            setTimeout(function () {
+	                $("#dialog-uploadDialog input[name='uploadContent']").val(uploadDispInfo);
+	                //set the show name for destiontion remote directory
+	                $("#dialog-uploadDialog input[name='remoteDir']").val(remoteDir);                
+	                 
+	            },100);
+	        }
+	    },function () {
+	    	//alert("点击了确定");
+			//开始上传
+			startImportDBData(firstFile, dbUrl, dbUser, dbPwd);
+	    	return true;   
+	    });
+	}
+	
+	function startImportDBData(file, dbUrl, dbUser, dbPwd)
+	{
 		//新建文件上传表单
 		var form = new FormData();
 		form.append("url", dbUrl);
 		form.append("user", dbUser);
 		form.append("pwd", dbPwd);
-		form.append("uploadFile", file);
+		form.append("uploadFile", firstFile);
 
 		//新建http异步请求
 		var xhr = new XMLHttpRequest();
