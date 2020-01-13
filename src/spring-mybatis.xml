@@ -16,8 +16,10 @@
         http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd  
         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd  
         http://www.springmodules.org/schema/ehcache http://www.springmodules.org/schema/cache/springmodules-ehcache.xsd">  
+    
     <!-- 引入属性文件 -->  
-    <context:property-placeholder location="classpath:jdbc.properties" />  
+    <context:property-placeholder location="classpath:jdbc.properties" ignore-resource-not-found="true"/> 
+    
     <!-- 自动扫描(自动注入) -->  
     <context:component-scan base-package="com.DocSystem.service" />  
     <!-- 配置数据源 -->  
