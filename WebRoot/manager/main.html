@@ -493,68 +493,6 @@
 	    });
 	}
 	
-	//系统数据库设置
-	var systemDbSetting = {
-			url: "",
-			user: "",
-			pwd: "",
-	}
-
-	function showSystemDbConfig(){
-		$.ajax({
-	        url : "/DocSystem/Manage/getSystemDbConfig.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {},
-	        success : function (ret) {
-	            if( "ok" == ret.status )
-	            {
-					var config = JSON.parse(ret.data); 	
-					systemDbSetting.url = config.url;
-					systemDbSetting.user = config.user;
-					systemDbSetting.pwd = config.pwd;
-	            	$Func.render($("#container"),"systemDbConfig",{"value":systemDbSetting});
-	            }
-	            else 
-	            {
-		        	showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
-	            	console.log(ret.msgInfo);
-	            }
-	        },
-	        error : function () {
-	        	showErrorMessage("服务器异常:获取数据库信息失败");
-	        }
-	    });
-	}
-	
-	var systemInfo = {
-			version: "",
-	}
-	function showSystemUpgrade(){
-		$.ajax({
-	        url : "/DocSystem/Manage/getSystemInfo.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {},
-	        success : function (ret) {
-	            if( "ok" == ret.status )
-	            {
-	            	var config = JSON.parse(ret.data); 	
-	            	systemInfo.version = config.version;
-	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
-	            }
-	            else 
-	            {
-		        	showErrorMessage("获取系统信息失败:" + ret.msgInfo);
-	            	console.log(ret.msgInfo);
-	            }
-	        },
-	        error : function () {
-	        	showErrorMessage("服务器异常:获取系统信息失败");
-	        }
-	    });
-	}
-	
 	function updateSystemEmailConfig(email, pwd){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemEmailConfig.do",
@@ -584,6 +522,144 @@
         		//restore the setting
         		$("#systemEmail").val(systemEmailSetting.email);
         		$("#systemEmailPwd").val(systemEmailSetting.pwd);
+	        }
+	    });
+	}
+	
+	//系统数据库设置
+	var systemDbSetting = {
+			url: "",
+			user: "",
+			pwd: "",
+	}
+	function enableSystemDBSet(){
+		$("#btnEnableSystemDBSet").hide();
+		$("#btnCancelSystemDBSet").show();
+		$("#btnSaveSystemDBSet").show();
+		$("#systemDbUrl").val(SystemDBSetting.url);
+		$("#systemDbUser").val(SystemDBSetting.user);
+		$("#systemDbPwd").val(SystemDBSetting.pwd);
+		
+		$("#systemDbUrl").attr('disabled',false);;
+		$("#systemDbUser").attr('disabled',false);
+		$("#systemDbPwd").attr('disabled',false);
+	}
+	
+	function cancelSystemDBSet(){
+		$("#btnEnableSystemDBSet").show();
+		$("#btnCancelSystemDBSet").hide();
+		$("#btnSaveSystemDBSet").hide();
+		//revert the value
+		$("#systemDbUrl").attr('disabled',true);;
+		$("#systemDbUser").attr('disabled',true);
+		$("#systemDbPwd").attr('disabled',true);
+		$("#systemDbUrl").val(SystemDBSetting.url);
+		$("#systemDbUser").val(SystemDBSetting.user);
+		$("#systemDbPwd").val(SystemDBSetting.pwd);
+	}
+	
+	function saveSystemDBSet(){
+		$("#btnEnableSystemDBSet").show();
+		$("#btnCancelSystemDBSet").hide();
+		$("#btnSaveSystemDBSet").hide();
+		//revert the value
+		$("#systemDbUrl").attr('disabled',true);;
+		$("#systemDbUser").attr('disabled',true);
+		$("#systemDbPwd").attr('disabled',true);
+		var url = $("#systemDbUrl").val();
+		var user = $("#systemDbUser").val();
+		var pwd = $("#systemDbPwd").val();
+		updateSystemDBConfig(url, user, pwd);
+	}
+
+	function showSystemDbConfig(){
+		$.ajax({
+	        url : "/DocSystem/Manage/getSystemDbConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+					var config = JSON.parse(ret.data); 	
+					systemDbSetting.url = config.url;
+					systemDbSetting.user = config.user;
+					systemDbSetting.pwd = config.pwd;
+	            	$Func.render($("#container"),"systemDbConfig",{"value":systemDbSetting});
+	            }
+	            else 
+	            {
+		        	showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取数据库信息失败");
+	        }
+	    });
+	}
+	
+	function updateSystemDBConfig(url, user, pwd){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemDBConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: url,
+	        	user: user,
+	        	pwd: pwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemDBSetting.url = url;
+	        		systemDBSetting.user = user;
+	        		systemDBSetting.pwd = pwd;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#systemDbUrl").val(SystemDBSetting.url);
+	        		$("#systemDbUser").val(SystemDBSetting.user);
+	        		$("#systemDbPwd").val(SystemDBSetting.pwd);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新数据库配置信息失败");
+        		//restore the setting
+	    		$("#systemDbUrl").val(SystemDBSetting.url);
+	    		$("#systemDbUser").val(SystemDBSetting.user);
+	    		$("#systemDbPwd").val(SystemDBSetting.pwd);
+	        }
+	    });
+	}
+	
+	var systemInfo = {
+			version: "",
+	}
+	function showSystemUpgrade(){
+		$.ajax({
+	        url : "/DocSystem/Manage/getSystemInfo.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	var config = JSON.parse(ret.data); 	
+	            	systemInfo.version = config.version;
+	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
+	            }
+	            else 
+	            {
+		        	showErrorMessage("获取系统信息失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取系统信息失败");
 	        }
 	    });
 	}
