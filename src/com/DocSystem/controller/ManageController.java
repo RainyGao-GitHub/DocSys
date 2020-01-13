@@ -311,8 +311,14 @@ public class ManageController extends BaseController{
 				return;
 			}
 		}
-		
 		//saveFile to tmpPath
+		if(uploadFile == null)
+		{
+			System.out.println("importDBData() uploadFile is null");
+			docSysErrorLog("上传文件为空", rt);
+			writeJson(rt, response);
+			return;
+		}
 		String fileName = uploadFile.getName();
 		String suffix = getFileSuffix(fileName);
 		String webTmpPathForImportDBData = getWebTmpPath() + "importDBData/";
@@ -320,13 +326,20 @@ public class ManageController extends BaseController{
 		
 		if(testDB(url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
+			System.out.println("importDBData() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
 
-		importDatabase(null, webTmpPathForImportDBData, fileName, suffix, url, user, pwd);
+		if(importDatabase(null, webTmpPathForImportDBData, fileName, suffix, url, user, pwd) == false)
+		{
+			System.out.println("importDBData() 数据库导入失败");
+			docSysErrorLog("数据库导入失败", rt);
+			writeJson(rt, response);
+			return;			
+		}
+		writeJson(rt, response);
 	}
 	
 	//强制复位数据库
