@@ -1536,17 +1536,29 @@ public class DocController extends BaseController{
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(String targetPath, String targetName, 
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+			String authCode, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		if(authCode != null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{
+			User login_user = getLoginUser(session, request, response, rt);
+			if(login_user == null)
+			{
+				docSysErrorLog("用户未登录，请先登录！", rt);
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		if(targetPath == null || targetName == null)
