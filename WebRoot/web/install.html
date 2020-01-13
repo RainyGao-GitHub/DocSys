@@ -57,28 +57,32 @@
                 <div class="m-box">
                     <div class="box-head">
                         <strong class="box-title"> 数据库</strong>
+                        <span style="float:right">
+                        <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中..." style="margin-right:1px">编辑</button>
+                        <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中..." style="margin-right:1px; display:none;">保存</button>
+                        <button onclick="updateSystemDbConfig();" class="btn btn-warning" data-loading-text="保存中..." style="margin-right:1px; display:none;">取消</button>
+                        </span>
                     </div>
                 </div>
                 <div class="box-body" style="padding-right: 200px;">
                     <div id="dbConfigForm">
                         <div class="form-group">
                             <label for="dbUrl">数据库链接</label>
-                            <input type="text" name="dbUrl" id="dbUrl" class="form-control disabled" placeholder="数据库链接">
+                            <input type="text" name="dbUrl" id="dbUrl" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
                         </div>
                         <div class="form-group">
                             <label for="dbUser">用户名</label>
-                            <input type="text" name="dbUser" id="dbUser" class="form-control disabled" placeholder="用户名">
+                            <input type="text" name="dbUser" id="dbUser" class="form-control disabled" disabled="disabled"  placeholder="用户名">
                         </div>
                         <div class="form-group">
                             <label for="dbPwd">密码</label>
-                            <input type="text" name="dbPwd" id="dbPwd" class="form-control disabled" placeholder="密码">
+                            <input type="text" name="dbPwd" id="dbPwd" class="form-control disabled" disabled="disabled"  placeholder="密码">
                         </div>
                         <div class="form-group">
-                            <button onclick="testDatabase();" class="btn btn-success" data-loading-text="连接中...">测试连接</button>
-                            <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
-                            <button onclick="exportDBData();" class="btn btn-success" data-loading-text="导出中...">导出数据</button>
-                            <button onclick="importDBData();" class="btn btn-success" data-loading-text="导入中...">导入数据</button>
-                            <button onclick="resetDatabase();" class="btn btn-success" data-loading-text="重置中...">重置数据库</button>
+                            <button onclick="testDatabase();" class="btn btn-warning" data-loading-text="连接中...">测试连接</button>
+                            <button onclick="exportDBData();" class="btn btn-warning" data-loading-text="导出中...">导出数据</button>
+                            <button onclick="importDBData();" class="btn btn-warning" data-loading-text="导入中...">导入数据</button>
+                            <button onclick="resetDatabase();" class="btn btn-danger" data-loading-text="重置中...">重置数据库</button>
                             <span id="form-error-message" class="error-message"></span>
                         </div>
                     </div>
