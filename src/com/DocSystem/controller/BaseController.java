@@ -7287,7 +7287,7 @@ public class BaseController  extends BaseFunction{
 			List<Object> list = dbQuery(null, objId, url, user, pwd);
 			if(list != null)
 			{
-				sqlStr = convertListToInertSqls(objId, list, encode);
+				sqlStr += convertListToInertSqls(objId, list, encode);
 			}
 		}
 		boolean ret = saveDocContentToFile(sqlStr, path, name);
@@ -7312,7 +7312,7 @@ public class BaseController  extends BaseFunction{
 					return null;
 				}
 			}
-			sqlStr = sql + ";\r\n";
+			sqlStr += sql + ";\r\n";
 		}
 		sqlStr += "\r\n";	//换行
 		return sqlStr;
@@ -7337,14 +7337,14 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//Convert list to jsonStr
-			jsonStr = JSON.toJSONString(list);
-			if(jsonStr == null)
+			String tmpJsonStr = JSON.toJSONString(list);
+			if(tmpJsonStr == null)
 			{
 				System.out.println("exportDatabaseAsJson() jsonStr is null");
 				return false;
 			}			
 			String name = getNameByObjType(objType);
-			jsonStr += name + ":" + jsonStr + ",";		
+			jsonStr += name + ":" + tmpJsonStr + ",";		
 		}
 		jsonStr += "}";
 		return saveDocContentToFile(jsonStr, filePath, fileName);
