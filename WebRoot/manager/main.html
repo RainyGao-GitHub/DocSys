@@ -73,14 +73,7 @@
   
   <!-- bootstrapQ based on jquery and bootstrap-->
   <link href="./static/bootstrapQ/qiao.css" rel="stylesheet">
-  <script type="text/javascript" src="./static/bootstrapQ/qiao.js"></script>  
-  
-
-  <!-- HTML5 Support for IE -->
-  <!--[if lt IE 9]>
-  <script src="./static/js/html5shim.js"></script>
-  <![endif]-->
-
+  <script type="text/javascript" src="./static/bootstrapQ/qiao.js"></script>
   <!-- Favicon -->
   <link rel="shortcut icon" href="./static/img/icons/metro.png">
 </head>
@@ -98,27 +91,19 @@
       <!-- Site name for smallar screens -->
       <a href="./" class="navbar-brand hidden-lg">首页</a>
     </div>
-
-
-
     <!-- Navigation starts -->
     <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
-
       <!-- Links -->
       <ul class="nav navbar-nav pull-right" id="headbar" data-tmpl="headbar">
-
       </ul>
     </nav>
-
   </div>
 </div>
-
 
 <!-- Header starts -->
 <header>
   <div class="container">
     <div class="row">
-
       <!-- Logo section -->
       <div class="col-md-4">
         <!-- Logo. -->
@@ -143,9 +128,6 @@
 
 <!-- Main content starts -->
 
-
-
-
 <div class="content">
 <div class="sidebar" id="sidebar" data-tmpl="sidebar">
 </div>
@@ -161,9 +143,6 @@
   <!-- Matter -->
   <div class="matter">
     <div class="container" id="container">
-
-
-
 
     </div>
   </div>
@@ -196,27 +175,6 @@
 
 <div style="display:none">
 	<input id="uploadFiles" name="uploadFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
-</div>
-
-<div id="uploadConfirmDialog" style="display:none">
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">文件：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="uploadContent" title="上传文件">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-  	<div class="modal-footer">
-    	<div class="form-group">
-            <label class="col-sm-2 control-label">上传至：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="remoteDir" title="目标地址">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
 </div>
 
 <script type="application/javascript">
@@ -809,25 +767,23 @@
 		var fileName = firstFile.name;
 	    console.log("firstFile:"+fileName);
 	    
-	    qiao.bs.dialog({
-	        id: "dialog-uploadDialog",
-	        url: '#uploadConfirmDialog',
-	        title: '文件上传',
-	        okbtn: "开始上传",
-	        callback: function () {
-	            setTimeout(function () {
-	                $("#dialog-uploadDialog input[name='uploadContent']").val(uploadDispInfo);
-	                //set the show name for destiontion remote directory
-	                $("#dialog-uploadDialog input[name='remoteDir']").val(remoteDir);                
-	                 
-	            },100);
-	        }
-	    },function () {
-	    	//alert("点击了确定");
-			//开始上传
-			startImportDBData(firstFile, dbUrl, dbUser, dbPwd);
-	    	return true;   
-	    });
+		//qiao.bs.confirm
+	    bootstrapQ.confirm({
+		        title: "导入数据",
+		        msg: "是否导入 " + fileName+ " ？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				//开始上传
+				startImportDBData(firstFile, dbUrl, dbUser, dbPwd);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
 	}
 	
 	function startImportDBData(file, dbUrl, dbUser, dbPwd)
