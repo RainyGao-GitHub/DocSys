@@ -110,7 +110,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String docSystemConfigPath = docSysWebPath + "DocSystem/WEB-INF/classes/";
+		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
 		String tmpDocSystemConfigPath = docSysIniPath;
 		String configFileName = "docSysConfig.properties";
 		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
