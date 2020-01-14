@@ -332,7 +332,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		if(importDatabase(null, webTmpPathForImportDBData, fileName, suffix, url, user, pwd) == false)
+		if(importDatabase(null, suffix, webTmpPathForImportDBData, fileName, url, user, pwd) == false)
 		{
 			System.out.println("importDBData() 数据库导入失败");
 			docSysErrorLog("数据库导入失败", rt);
