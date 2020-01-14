@@ -767,8 +767,7 @@
 		var fileName = firstFile.name;
 	    console.log("firstFile:"+fileName);
 	    
-		//qiao.bs.confirm
-	    bootstrapQ.confirm({
+	    qiao.bs.confirm({
 		        title: "导入数据",
 		        msg: "是否导入 " + fileName+ " ？",
 		        okbtn: "确认",
@@ -793,7 +792,7 @@
 		form.append("url", dbUrl);
 		form.append("user", dbUser);
 		form.append("pwd", dbPwd);
-		form.append("uploadFile", firstFile);
+		form.append("uploadFile", file);
 
 		//新建http异步请求
 		var xhr = new XMLHttpRequest();
@@ -813,14 +812,13 @@
 				//上传成功！
 				var ret = JSON.parse(xhr.responseText);
 				if("ok" == ret.status){
-					uploadSuccessHandler(SubContext,ret.msgInfo);
+					showErrorMessage("导入成功");
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
 					console.log("上传失败：" + ret.msgInfo);
-
-					uploadErrorConfirmHandler(SubContext, ret.msgInfo);
+					showErrorMessage("导入失败:" + ret.msgInfo);
 					return;
 	             }
 			}else{
@@ -830,8 +828,8 @@
 					return;
 				}
 				//上传失败
-				console.log("系统异常: " + name + " 上传异常！");
-				uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
+				console.log("系统异常: " + file.name + " 上传异常！");
+				showErrorMessage("系统异常: 上传异常");
 				return;
 			}
 		};

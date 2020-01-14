@@ -7359,6 +7359,7 @@ public class BaseController  extends BaseFunction{
 
 	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String url, String user, String pwd)
 	{
+		System.out.println("importDatabase() importType:" + importType);
 		if(importTabList == null)
 		{
 			importTabList = new ArrayList<Integer>();
@@ -7368,11 +7369,11 @@ public class BaseController  extends BaseFunction{
 			}			
 		}
 		
-		if(importType == "sql")
+		if(importType.equals("sql"))
 		{
 			return importDatabaseFromSqlFile(importTabList, filePath, fileName, url, user, pwd);
 		}
-		else if(importType == "json")
+		else if(importType.equals("json"))
 		{
 			return importDatabaseFromJsonFile(importTabList, filePath, fileName, url, user, pwd);
 		}
