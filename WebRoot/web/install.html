@@ -382,14 +382,59 @@
 	
 	function importDBDataConfirm(e)
 	{
-		console.log("importDBData()");
+		console.log("importDBDataConfirm()");
 		
 		var dbUrl = $("#dbUrl").val();
 		var dbUser = $("#dbUser").val();
 		var dbPwd = $("#dbPwd").val();
 		
-	    var file = e.target.file;
+	    var files = e.target.files;
+	    var firstFile;
+	    if(files.length > 0)
+	   	{
+	    	console.log("files.length:" + files.length);
+	    	for( var i = 0 ; i < files.length ; i++ )
+	    	{  
+	    		firstFile = files[i];
+	    	   	if(typeof firstFile == 'object')
+	    	   	{
+	    	   		var relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
+	    	   		console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
+	    	   		break;
+	    	   	}
+	    	   	else
+	    	   	{
+	    	   		//This is something else 
+	    	   		//console.log("it is not a file");
+	    	   	}
+	    	}
+	    }
+	    else
+	   	{
+	   		bootstrapQ.alert("请选择文件");
+	      	return false;
+	   	}  
+		
+		var fileName = firstFile.name;
+	    console.log("firstFile:"+fileName);
 	    
+	    bootstrapQ.confirm({
+	    	options
+	    	},function () {
+		    	//alert("点击了确定");
+				//开始上传
+				startImportDBData(firstFile, dbUrl, dbUser, dbPwd);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startImportDBData(file, dbUrl, dbUser, dbPwd)
+	{
 		//新建文件上传表单
 		var form = new FormData();
 		form.append("url", dbUrl);
