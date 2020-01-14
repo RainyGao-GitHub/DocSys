@@ -319,7 +319,7 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		String fileName = uploadFile.getName();
+		String fileName = uploadFile.getOriginalFilename();
 		String suffix = getFileSuffix(fileName);
 		String webTmpPathForImportDBData = getWebTmpPath() + "importDBData/";
 		saveFile(uploadFile, webTmpPathForImportDBData, fileName);
