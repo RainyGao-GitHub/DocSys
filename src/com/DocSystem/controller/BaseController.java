@@ -7695,9 +7695,9 @@ public class BaseController  extends BaseFunction{
             stmt = (Statement) conn.createStatement();
             
             String sql = buildInsertSqlForObject(obj, objType);
-            System.out.println("sql:" + sql);
+            //System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
-            System.out.println("ret:" + ret);
+            //System.out.println("ret:" + ret);
             // 完成后关闭
             stmt.close();
             conn.close();
