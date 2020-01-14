@@ -233,7 +233,7 @@
     }
 	
 	//系统数据库设置
-	var systemDbSetting = {
+	var systemDbConfig = {
 			url: "",
 			user: "",
 			pwd: "",
@@ -242,9 +242,9 @@
 		$("#btnEnableSystemDBSet").hide();
 		$("#btnCancelSystemDBSet").show();
 		$("#btnSaveSystemDBSet").show();
-		$("#systemDbUrl").val(systemDbSetting.url);
-		$("#systemDbUser").val(systemDbSetting.user);
-		$("#systemDbPwd").val(systemDbSetting.pwd);
+		$("#systemDbUrl").val(systemDbConfig.url);
+		$("#systemDbUser").val(systemDbConfig.user);
+		$("#systemDbPwd").val(systemDbConfig.pwd);
 		
 		$("#systemDbUrl").attr('disabled',false);;
 		$("#systemDbUser").attr('disabled',false);
@@ -259,9 +259,9 @@
 		$("#systemsystemDbUrl").attr('disabled',true);;
 		$("#systemDbUser").attr('disabled',true);
 		$("#systemDbPwd").attr('disabled',true);
-		$("#systemDbUrl").val(systemDbSetting.url);
-		$("#systemDbUser").val(systemDbSetting.user);
-		$("#systemDbPwd").val(systemDbSetting.pwd);
+		$("#systemDbUrl").val(systemDbConfig.url);
+		$("#systemDbUser").val(systemDbConfig.user);
+		$("#systemDbPwd").val(systemDbConfig.pwd);
 	}
 	
 	function saveSystemDBSet(){
@@ -309,6 +309,44 @@
 	    });
 	}
     
+	function updateSystemDBConfig(url, user, pwd){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemDBConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: url,
+	        	user: user,
+	        	pwd: pwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemDbSetting.url = url;
+	        		systemDbSetting.user = user;
+	        		systemDbSetting.pwd = pwd;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#systemDbUrl").val(systemDbSetting.url);
+	        		$("#systemDbUser").val(systemDbSetting.user);
+	        		$("#systemDbPwd").val(systemDbSetting.pwd);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新数据库配置信息失败");
+        		//restore the setting
+	    		$("#systemDbUrl").val(systemDbSetting.url);
+	    		$("#systemDbUser").val(systemDbSetting.user);
+	    		$("#systemDbPwd").val(systemDbSetting.pwd);
+	        }
+	    });
+	}
+	
 	function testDatabase(){
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
@@ -328,15 +366,16 @@
 	            if( "ok" == ret.status )
 	            {	        		
 	            	//设置成功
+	            	showErrorMessage("数据库连接成功");
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("数据库测试失败:" + ret.msgInfo);
+	                showErrorMessage("数据库连接失败:" + ret.msgInfo);
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:数据库测试失败");
+	        	showErrorMessage("服务器异常:数据库连接失败");
 	        }
 	    });
 	}
@@ -360,6 +399,7 @@
 	            if( "ok" == ret.status )
 	            {	        		
 	            	//设置成功
+	            	showErrorMessage("重置数据库成功");
 	            }
 	            else 
 	            {
@@ -399,7 +439,7 @@
         	   		
             	    targetName = encodeURI(targetName);
         		   	targetPath = encodeURI(targetPath);
-        	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag+"&authCode="+authCode;
+        	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&authCode="+authCode;
 	            }
 	            else 
 	            {
@@ -422,7 +462,7 @@
 	
 	function importDBDataConfirm(e)
 	{
-		console.log("importDBDataConfirm()");
+		console.log("importDBData()");
 		
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
@@ -458,8 +498,11 @@
 		var fileName = firstFile.name;
 	    console.log("firstFile:"+fileName);
 	    
-	    bootstrapQ.confirm({
-	    	options
+	    qiao.bs.confirm({
+		        title: "导入数据",
+		        msg: "是否导入 " + fileName+ " ？",
+		        okbtn: "确认",
+		        qubtn: "取消",
 	    	},function () {
 		    	//alert("点击了确定");
 				//开始上传
@@ -480,8 +523,9 @@
 		form.append("url", dbUrl);
 		form.append("user", dbUser);
 		form.append("pwd", dbPwd);
-		form.append("authCode", authCode);
 		form.append("uploadFile", file);
+		form.append("authCode", authCode);
+
 
 		//新建http异步请求
 		var xhr = new XMLHttpRequest();
@@ -501,14 +545,13 @@
 				//上传成功！
 				var ret = JSON.parse(xhr.responseText);
 				if("ok" == ret.status){
-					uploadSuccessHandler(SubContext,ret.msgInfo);
+					showErrorMessage("导入成功");
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
 					console.log("上传失败：" + ret.msgInfo);
-
-					uploadErrorConfirmHandler(SubContext, ret.msgInfo);
+					showErrorMessage("导入失败:" + ret.msgInfo);
 					return;
 	             }
 			}else{
@@ -518,8 +561,8 @@
 					return;
 				}
 				//上传失败
-				console.log("系统异常: " + name + " 上传异常！");
-				uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
+				console.log("系统异常: " + file.name + " 上传异常！");
+				showErrorMessage("系统异常: 上传异常");
 				return;
 			}
 		};
@@ -527,50 +570,6 @@
 		//上传表单			
 		xhr.open("post", "/DocSystem/Manage/importDBData.do");
 		xhr.send(form);
-	}
-	
-	function updateSystemDbConfig(){
-		
-		var dbUrl = $("#systemDbUrl").val();
-		var dbUser = $("#systemDbUser").val();
-		var dbPwd = $("#systemDbPwd").val();
-		
-		$.ajax({
-	        url : "/DocSystem/Manage/setSystemDbConfig.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	        	url: dbUrl,
-	        	user: dbUser,
-	        	pwd: dbPwd,
-	        	authCode: authCode,
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status )
-	            {	        		
-	            	//设置成功
-	        		systemDbConfig.url = dbUrl;
-	        		systemDbConfig.user = dbUser;
-	        		systemDbConfig.pwd = dbPwd;
-	            }
-	            else 
-	            {
-	                console.log(ret.msgInfo);
-	                showErrorMessage("更新邮件服务配置信息失败:" + ret.msgInfo);
-	        		//restore the setting
-	            	$("#systemDbUrl").val(systemDbConfig.url);
-	            	$("#systemDbUser").val(systemDbConfig.user);
-	            	$("#systemDbPwd").val(systemDbConfig.pwd);
-		        }
-	        },
-	        error : function () {
-	        	showErrorMessage("服务器异常:更新邮件服务配置信息失败");
-        		//restore the setting
-            	$("#systemDbUrl").val(systemDbConfig.url);
-            	$("#systemDbUser").val(systemDbConfig.user);
-            	$("#systemDbPwd").val(systemDbConfig.pwd);
-	        }
-	    });
 	}
 	
 </script>
