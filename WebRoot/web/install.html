@@ -58,25 +58,25 @@
                     <div class="box-head">
                         <strong class="box-title"> 数据库</strong>
                         <span style="float:right">
-                        <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中..." style="margin-right:1px">编辑</button>
-                        <button onclick="updateSystemDbConfig();" class="btn btn-success" data-loading-text="保存中..." style="margin-right:1px; display:none;">保存</button>
-                        <button onclick="updateSystemDbConfig();" class="btn btn-warning" data-loading-text="保存中..." style="margin-right:1px; display:none;">取消</button>
+                        <button id="btnEnableSystemDBSet" onclick="enableSystemDBSet();" class="btn btn-success" data-loading-text="保存中..." style="margin-right:1px">编辑</button>
+                        <button id="btnSaveSystemDBSet" onclick="saveSystemDBSet();" class="btn btn-success" data-loading-text="保存中..." style="margin-right:1px; display:none;">保存</button>
+                        <button  id="btnCancelSystemDBSet" onclick="cancelSystemDBSet();" class="btn btn-warning" data-loading-text="保存中..." style="margin-right:1px; display:none;">取消</button>
                         </span>
                     </div>
                 </div>
                 <div class="box-body" style="padding-right: 200px;">
                     <div id="dbConfigForm">
                         <div class="form-group">
-                            <label for="dbUrl">数据库链接</label>
-                            <input type="text" name="dbUrl" id="dbUrl" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
+                            <label for="systemDbUrl">数据库链接</label>
+                            <input type="text" name="systemDbUrl" id="systemDbUrl" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
                         </div>
                         <div class="form-group">
-                            <label for="dbUser">用户名</label>
-                            <input type="text" name="dbUser" id="dbUser" class="form-control disabled" disabled="disabled"  placeholder="用户名">
+                            <label for="systemDbUser">用户名</label>
+                            <input type="text" name="systemDbUser" id="systemDbUser" class="form-control disabled" disabled="disabled"  placeholder="用户名">
                         </div>
                         <div class="form-group">
-                            <label for="dbPwd">密码</label>
-                            <input type="text" name="dbPwd" id="dbPwd" class="form-control disabled" disabled="disabled"  placeholder="密码">
+                            <label for="systemDbPwd">密码</label>
+                            <input type="text" name="systemDbPwd" id="systemDbPwd" class="form-control disabled" disabled="disabled"  placeholder="密码">
                         </div>
                         <div class="form-group">
                             <button onclick="testDatabase();" class="btn btn-warning" data-loading-text="连接中...">测试连接</button>
@@ -232,12 +232,52 @@
 	    });
     }
 	
-	//系统邮件服务设置
-	var systemDbConfig = {
+	//系统数据库设置
+	var systemDbSetting = {
 			url: "",
 			user: "",
 			pwd: "",
 	}
+	function enableSystemDBSet(){
+		$("#btnEnableSystemDBSet").hide();
+		$("#btnCancelSystemDBSet").show();
+		$("#btnSaveSystemDBSet").show();
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
+		
+		$("#systemDbUrl").attr('disabled',false);;
+		$("#systemDbUser").attr('disabled',false);
+		$("#systemDbPwd").attr('disabled',false);
+	}
+	
+	function cancelSystemDBSet(){
+		$("#btnEnableSystemDBSet").show();
+		$("#btnCancelSystemDBSet").hide();
+		$("#btnSaveSystemDBSet").hide();
+		//revert the value
+		$("#systemsystemDbUrl").attr('disabled',true);;
+		$("#systemDbUser").attr('disabled',true);
+		$("#systemDbPwd").attr('disabled',true);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
+	}
+	
+	function saveSystemDBSet(){
+		$("#btnEnableSystemDBSet").show();
+		$("#btnCancelSystemDBSet").hide();
+		$("#btnSaveSystemDBSet").hide();
+		//revert the value
+		$("#systemDbUrl").attr('disabled',true);;
+		$("#systemDbUser").attr('disabled',true);
+		$("#systemDbPwd").attr('disabled',true);
+		var url = $("#systemDbUrl").val();
+		var user = $("#systemDbUser").val();
+		var pwd = $("#systemDbPwd").val();
+		updateSystemDBConfig(url, user, pwd);
+	}
+	
 	function dbConfigPageInit(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getSystemDbConfig.do",
@@ -253,9 +293,9 @@
 					systemDbConfig.url = config.url;
 					systemDbConfig.user = config.user;
 					systemDbConfig.pwd = config.pwd;
-	            	$("#dbUrl").val(systemDbConfig.url);
-	            	$("#dbUser").val(systemDbConfig.user);
-	            	$("#dbPwd").val(systemDbConfig.pwd);				
+	            	$("#systemDbUrl").val(systemDbConfig.url);
+	            	$("#systemDbUser").val(systemDbConfig.user);
+	            	$("#systemDbPwd").val(systemDbConfig.pwd);				
 	            }
 	            else 
 	            {
@@ -270,9 +310,9 @@
 	}
     
 	function testDatabase(){
-		var dbUrl = $("#dbUrl").val();
-		var dbUser = $("#dbUser").val();
-		var dbPwd = $("#dbPwd").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
 		
 		$.ajax({
 	        url : "/DocSystem/Manage/testDatabase.do",
@@ -302,9 +342,9 @@
 	}
 	
 	function resetDatabase(){
-		var dbUrl = $("#dbUrl").val();
-		var dbUser = $("#dbUser").val();
-		var dbPwd = $("#dbPwd").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
 		
 		$.ajax({
 	        url : "/DocSystem/Manage/resetDatabase.do",
@@ -334,9 +374,9 @@
 	}
 	
 	function exportDBData(){
-		var dbUrl = $("#dbUrl").val();
-		var dbUser = $("#dbUser").val();
-		var dbPwd = $("#dbPwd").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
 		
 		$.ajax({
 	        url : "/DocSystem/Manage/exportDBData.do",
@@ -384,9 +424,9 @@
 	{
 		console.log("importDBDataConfirm()");
 		
-		var dbUrl = $("#dbUrl").val();
-		var dbUser = $("#dbUser").val();
-		var dbPwd = $("#dbPwd").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
 		
 	    var files = e.target.files;
 	    var firstFile;
@@ -491,9 +531,9 @@
 	
 	function updateSystemDbConfig(){
 		
-		var dbUrl = $("#dbUrl").val();
-		var dbUser = $("#dbUser").val();
-		var dbPwd = $("#dbPwd").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
 		
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemDbConfig.do",
@@ -503,6 +543,7 @@
 	        	url: dbUrl,
 	        	user: dbUser,
 	        	pwd: dbPwd,
+	        	authCode: authCode,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
@@ -517,17 +558,17 @@
 	                console.log(ret.msgInfo);
 	                showErrorMessage("更新邮件服务配置信息失败:" + ret.msgInfo);
 	        		//restore the setting
-	            	$("#dbUrl").val(systemDbConfig.url);
-	            	$("#dbUser").val(systemDbConfig.user);
-	            	$("#dbPwd").val(systemDbConfig.pwd);
+	            	$("#systemDbUrl").val(systemDbConfig.url);
+	            	$("#systemDbUser").val(systemDbConfig.user);
+	            	$("#systemDbPwd").val(systemDbConfig.pwd);
 		        }
 	        },
 	        error : function () {
 	        	showErrorMessage("服务器异常:更新邮件服务配置信息失败");
         		//restore the setting
-            	$("#dbUrl").val(systemDbConfig.url);
-            	$("#dbUser").val(systemDbConfig.user);
-            	$("#dbPwd").val(systemDbConfig.pwd);
+            	$("#systemDbUrl").val(systemDbConfig.url);
+            	$("#systemDbUser").val(systemDbConfig.user);
+            	$("#systemDbPwd").val(systemDbConfig.pwd);
 	        }
 	    });
 	}
