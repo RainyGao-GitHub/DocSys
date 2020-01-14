@@ -6795,13 +6795,6 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			System.out.println("docSysInit() 数据库升级成功");
-		
-			//更新版本号，避免重复升级数据库
-			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
-			if(isFileExist(userJDBCSettingPath))
-			{
-				copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
-			}
 			return true;
 		}
 	}
@@ -6851,7 +6844,21 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		return DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS, isStartUp);
+		if(DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS, isStartUp) == true)
+		{
+			//更新版本号，避免重复升级数据库
+			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
+			
+			//更新数据库配置
+			String userJDBCSettingPath = docSysIniPath + "jdbc.properties";
+			String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
+			if(isFileExist(userJDBCSettingPath))
+			{
+				copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
+			}
+			return true;
+		}
+		return false;
 	}
 	
     protected static boolean executeSqlScript(String filePath, String url, String user, String pwd) 
