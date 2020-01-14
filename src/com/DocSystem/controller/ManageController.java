@@ -1,11 +1,8 @@
 package com.DocSystem.controller;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,31 +11,23 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
-import org.tmatesoft.svn.core.SVNException;
-
 import util.DateFormat;
 import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
-import util.SvnUtil.SVNUtil;
-
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.GroupMember;
-import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.UserGroup;
 
-import com.DocSystem.service.UserService;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 
 import com.DocSystem.controller.BaseController;
-import com.alibaba.fastjson.JSON;
 
 @Controller
 @RequestMapping("/Manage")
@@ -83,6 +72,85 @@ public class ManageController extends BaseController{
 		String config = "{\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
 		rt.setData(config);
 		writeJson(rt, response);
+	}
+	
+	/********** 设置系统邮件配置 ***************/
+	@RequestMapping("/setSystemEmailConfig.do")
+	public void setSystemEmailConfig(String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(email == null && pwd == null)
+		{
+			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//checkAndAdd docSys.ini Dir
+		if(checkAndAddDocSysIniDir())
+		{
+			docSysErrorLog("系统初始化目录创建失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String docSystemConfigPath = docSysWebPath + "DocSystem/WEB-INF/classes/";
+		String tmpDocSystemConfigPath = docSysIniPath;
+		String configFileName = "docSysConfig.properties";
+		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		{
+			//Failed to copy 
+			System.out.println("setSystemEmailConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			docSysErrorLog("创建临时配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(email != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "fromuser", email);
+		}
+		if(pwd != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "frompwd", pwd);
+		}
+		
+		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		{
+			System.out.println("setSystemEmailConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			docSysErrorLog("写入配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
+
+	
+	private boolean checkAndAddDocSysIniDir() {
+		File docSysIniDir = new File(docSysIniPath);
+		if(docSysIniDir.exists() == true)
+		{
+			return false;
+		}
+		
+		return docSysIniDir.mkdirs();
 	}
 	
 	@RequestMapping("/getSystemSmsConfig.do")
@@ -206,6 +274,76 @@ public class ManageController extends BaseController{
 		{
 			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
+		}
+		writeJson(rt, response);
+	}
+	
+	//强制复位数据库
+	@RequestMapping("/resetDatabase.do")
+	public void resetDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	{
+		System.out.println("resetDatabase()");
+		ReturnAjax rt = new ReturnAjax();
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{			
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+
+		if(testDB(url, user, pwd) == false)	//数据库不存在
+		{
+			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
+			docSysErrorLog("连接数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//backUpDB
+		Date date = new Date();
+		String backUpTime = DateFormat.dateTimeFormat2(date);
+		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
+		{
+			System.out.println("DBUpgrade() 数据库备份失败!");
+			docSysErrorLog("备份数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
+		
+		
+		String dbName = getDBNameFromUrl(url);
+		deleteDB(dbName, url, user, pwd);
+		createDB(dbName, url, user, pwd);
+		if(initDB(url, user, pwd) == false)
+		{
+			System.out.println("docSysInit() reset database failed: initDB error");
+			docSysErrorLog("数据库初始化失败", rt);
+			writeJson(rt, response);			
+			return;
 		}
 		writeJson(rt, response);
 	}
@@ -341,76 +479,6 @@ public class ManageController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
-	//强制复位数据库
-	@RequestMapping("/resetDatabase.do")
-	public void resetDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
-	{
-		System.out.println("resetDatabase()");
-		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
-		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-
-		if(testDB(url, user, pwd) == false)	//数据库不存在
-		{
-			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		//backUpDB
-		Date date = new Date();
-		String backUpTime = DateFormat.dateTimeFormat2(date);
-		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
-		{
-			System.out.println("DBUpgrade() 数据库备份失败!");
-			docSysErrorLog("备份数据库失败", rt);
-			writeJson(rt, response);
-			return;
-		}
-		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
-		
-		
-		String dbName = getDBNameFromUrl(url);
-		deleteDB(dbName, url, user, pwd);
-		createDB(dbName, url, user, pwd);
-		if(initDB(url, user, pwd) == false)
-		{
-			System.out.println("docSysInit() reset database failed: initDB error");
-			docSysErrorLog("数据库初始化失败", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		writeJson(rt, response);
-	}
 
 	@RequestMapping("/getSystemInfo.do")
 	public void getSystemInfo(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -455,97 +523,6 @@ public class ManageController extends BaseController{
 		rt.setData(config);
 		writeJson(rt, response);
 	}
-
-	/********** 设置系统邮件配置 ***************/
-	@RequestMapping("/setSystemEmailConfig.do")
-	public void setSystemEmailConfig(String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(login_user.getType() < 1)
-		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(email == null && pwd == null)
-		{
-			docSysErrorLog("没有参数改动，请重新设置！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//checkAndAdd docSys.ini Dir
-		if(checkAndAddDocSysIniDir())
-		{
-			docSysErrorLog("系统初始化目录创建失败！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		//copy DocSystem to docSysIni Dir 
-		if(copyDir(docSysWebPath, docSysIniPath + "DocSystem", true) == false)
-		{
-			//Failed to copy 
-			System.out.println("setSystemEmailConfig() Failed to copy " + docSysWebPath + " to " + docSysIniPath + "DocSystem");
-			docSysErrorLog("创建临时DocSystem失败！", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		String tmpDocSystemConfigPath = docSysIniPath + "DocSystem/WEB-INF/classes/";
-		String configFileName = "docSysConfig.properties";
-		if(email != null)
-		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "fromuser", email);
-		}
-		if(pwd != null)
-		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "frompwd", pwd);
-		}
-		
-		//Build new war
-		System.out.println("setSystemEmailConfig() Start to build new war");
-		if(doCompressDir(docSysIniPath, "DocSystem", docSysIniPath, "DocSystem.war", null) == false)
-		{
-			System.out.println("setSystemEmailConfig() Failed to build new war");
-			docSysErrorLog("创建War包失败！", rt);
-			writeJson(rt, response);
-			return;
-		}	
-		
-		System.out.println("setSystemEmailConfig() Start to install new war");
-		if(copyFile(docSysIniPath + "DocSystem.war", docSysWebPath + "../", true) == false)
-		{
-			System.out.println("setSystemEmailConfig() Failed to install new war");
-			docSysErrorLog("安装War包失败！", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
-		writeJson(rt, response);
-	}
-
-	
-	private boolean checkAndAddDocSysIniDir() {
-		File docSysIniDir = new File(docSysIniPath);
-		if(docSysIniDir.exists() == true)
-		{
-			return false;
-		}
-		
-		return docSysIniDir.mkdirs();
-	}
-
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
 	public void getUserList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
