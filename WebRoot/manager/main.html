@@ -519,9 +519,9 @@
 		$("#btnEnableSystemDBSet").hide();
 		$("#btnCancelSystemDBSet").show();
 		$("#btnSaveSystemDBSet").show();
-		$("#systemDbUrl").val(SystemDBSetting.url);
-		$("#systemDbUser").val(SystemDBSetting.user);
-		$("#systemDbPwd").val(SystemDBSetting.pwd);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
 		
 		$("#systemDbUrl").attr('disabled',false);;
 		$("#systemDbUser").attr('disabled',false);
@@ -536,9 +536,9 @@
 		$("#systemDbUrl").attr('disabled',true);;
 		$("#systemDbUser").attr('disabled',true);
 		$("#systemDbPwd").attr('disabled',true);
-		$("#systemDbUrl").val(SystemDBSetting.url);
-		$("#systemDbUser").val(SystemDBSetting.user);
-		$("#systemDbPwd").val(SystemDBSetting.pwd);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
 	}
 	
 	function saveSystemDBSet(){
@@ -595,26 +595,26 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {	        		
-	        		systemDBSetting.url = url;
-	        		systemDBSetting.user = user;
-	        		systemDBSetting.pwd = pwd;
+	        		systemDbSetting.url = url;
+	        		systemDbSetting.user = user;
+	        		systemDbSetting.pwd = pwd;
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
 	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
 	        		//restore the setting
-	        		$("#systemDbUrl").val(SystemDBSetting.url);
-	        		$("#systemDbUser").val(SystemDBSetting.user);
-	        		$("#systemDbPwd").val(SystemDBSetting.pwd);
+	        		$("#systemDbUrl").val(systemDbSetting.url);
+	        		$("#systemDbUser").val(systemDbSetting.user);
+	        		$("#systemDbPwd").val(systemDbSetting.pwd);
 		        }
 	        },
 	        error : function () {
 	        	showErrorMessage("服务器异常:更新数据库配置信息失败");
         		//restore the setting
-	    		$("#systemDbUrl").val(SystemDBSetting.url);
-	    		$("#systemDbUser").val(SystemDBSetting.user);
-	    		$("#systemDbPwd").val(SystemDBSetting.pwd);
+	    		$("#systemDbUrl").val(systemDbSetting.url);
+	    		$("#systemDbUser").val(systemDbSetting.user);
+	    		$("#systemDbPwd").val(systemDbSetting.pwd);
 	        }
 	    });
 	}
