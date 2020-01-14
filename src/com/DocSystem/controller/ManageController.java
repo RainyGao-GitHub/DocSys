@@ -40,23 +40,35 @@ public class ManageController extends BaseController{
 	
 	/********** 获取系统邮件配置 ***************/
 	@RequestMapping("/getSystemEmailConfig.do")
-	public void getSystemEmailConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSystemEmailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSystemEmailConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(authCode != null)
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
-		
-		if(login_user.getType() < 1)
+		else
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
-			writeJson(rt, response);			
-			return;
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				rt.setError("非管理员用户，请联系统管理员！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
@@ -76,23 +88,35 @@ public class ManageController extends BaseController{
 	
 	/********** 设置系统邮件配置 ***************/
 	@RequestMapping("/setSystemEmailConfig.do")
-	public void setSystemEmailConfig(String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void setSystemEmailConfig(String authCode, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(authCode != null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
-		
-		if(login_user.getType() < 1)
+		else
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-			writeJson(rt, response);			
-			return;
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				docSysErrorLog("用户未登录，请先登录！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		if(email == null && pwd == null)
@@ -240,23 +264,35 @@ public class ManageController extends BaseController{
 	
 	/********** 设置系统数据库配置 ***************/
 	@RequestMapping("/setSystemDBConfig.do")
-	public void setSystemDBConfig(String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void setSystemDBConfig(String authCode, String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("setSystemDBConfig() url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(authCode != null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
+			if(checkAuthCode(authCode,"docSysInit") == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
-		
-		if(login_user.getType() < 1)
+		else
 		{
-			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-			writeJson(rt, response);			
-			return;
+			User login_user = (User) session.getAttribute("login_user");
+			if(login_user == null)
+			{
+				docSysErrorLog("用户未登录，请先登录！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			if(login_user.getType() < 1)
+			{
+				docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		if(url == null && user == null && pwd == null)
