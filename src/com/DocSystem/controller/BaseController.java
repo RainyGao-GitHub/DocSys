@@ -6736,8 +6736,13 @@ public class BaseController  extends BaseFunction{
 		}	
 		
 		//Update the value of DB_URL/DB_USER/DB_PASS
+		String userJDBCSettingPath = docSysIniPath + "jdbc.properties";
 		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
-		if(isFileExist(defaultJDBCSettingPath))
+		if(isFileExist(userJDBCSettingPath))
+		{
+			getAndSetDBInfoFromFile(userJDBCSettingPath);
+		}
+		else
 		{
 			getAndSetDBInfoFromFile(defaultJDBCSettingPath);
 		}
@@ -6792,7 +6797,11 @@ public class BaseController  extends BaseFunction{
 			System.out.println("docSysInit() 数据库升级成功");
 		
 			//更新版本号，避免重复升级数据库
-			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
+			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
+			if(isFileExist(userJDBCSettingPath))
+			{
+				copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
+			}
 			return true;
 		}
 	}
