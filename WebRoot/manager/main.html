@@ -490,18 +490,19 @@
 	            {	        		
 	        		systemEmailSetting.email = email;
 	        		systemEmailSetting.pwd = pwd;
+	        		 showErrorMessage("更新邮件服务配置成功");
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("更新邮件服务配置信息失败:" + ret.msgInfo);
+	                showErrorMessage("更新邮件服务配置失败:" + ret.msgInfo);
 	        		//restore the setting
 	        		$("#systemEmail").val(systemEmailSetting.email);
 	        		$("#systemEmailPwd").val(systemEmailSetting.pwd);
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:更新邮件服务配置信息失败");
+	        	showErrorMessage("服务器异常:更新邮件服务配置失败");
         		//restore the setting
         		$("#systemEmail").val(systemEmailSetting.email);
         		$("#systemEmailPwd").val(systemEmailSetting.pwd);
