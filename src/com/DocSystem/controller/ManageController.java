@@ -326,9 +326,9 @@ public class ManageController extends BaseController{
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.url", url);
 		}
-		if(pwd != null)
+		if(user != null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.username", pwd);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.username", user);
 		}
 		if(pwd != null)
 		{
