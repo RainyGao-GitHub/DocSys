@@ -238,6 +238,78 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/********** 设置系统数据库配置 ***************/
+	@RequestMapping("/setSystemDBConfig.do")
+	public void setSystemDBConfig(String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("setSystemDBConfig() url:" + url + " user:" + user  + " pwd:" + pwd);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(url == null && user == null && pwd == null)
+		{
+			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//checkAndAdd docSys.ini Dir
+		if(checkAndAddDocSysIniDir())
+		{
+			docSysErrorLog("系统初始化目录创建失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
+		String tmpDocSystemConfigPath = docSysIniPath;
+		String configFileName = "jdbc.properties";
+		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		{
+			//Failed to copy 
+			System.out.println("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			docSysErrorLog("创建临时配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(url != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.url", url);
+		}
+		if(pwd != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.username", pwd);
+		}
+		if(pwd != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.password", pwd);
+		}
+		
+		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		{
+			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			docSysErrorLog("写入配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
+	
 	@RequestMapping("/testDatabase.do")
 	public void testDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
