@@ -66,7 +66,7 @@ public class ManageController extends BaseController{
 		{
 			pwd = "";
 		}
-		String config = "{\"host\":\"" + host + "\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
+		String config = "{\"host\":\"" + host + "\", \"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
 		rt.setData(config);
 		writeJson(rt, response);
 	}
