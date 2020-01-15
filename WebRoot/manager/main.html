@@ -652,6 +652,38 @@
 	    });
 	}
 	
+	function deleteDatabase(){
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/deleteDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            	showErrorMessage("删除数据库成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("删除数据库失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:删除数据库失败");
+	        }
+	    });
+	}
+	
 	function resetDatabase(){
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();

@@ -44,31 +44,10 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemEmailConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 		
 		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
@@ -86,20 +65,17 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	/********** 设置系统邮件配置 ***************/
-	@RequestMapping("/setSystemEmailConfig.do")
-	public void setSystemEmailConfig(String authCode, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	{
-		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
-		ReturnAjax rt = new ReturnAjax();
+	
+	
+	private boolean mamageAccessCheck(String authCode, String expUsage, HttpSession session, ReturnAjax rt) {
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
+			if(checkAuthCode(authCode,"docSysInit") == true)
 			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
+				return true;
 			}
+			docSysErrorLog("无效授权码或授权码已过期！", rt);
+			return false;
 		}
 		else
 		{
@@ -107,16 +83,30 @@ public class ManageController extends BaseController{
 			if(login_user == null)
 			{
 				docSysErrorLog("用户未登录，请先登录！", rt);
-				writeJson(rt, response);			
-				return;
+				return false;
 			}
-			
+				
 			if(login_user.getType() < 1)
 			{
 				docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-				writeJson(rt, response);			
-				return;
+				return false;
 			}
+			return true;
+		}
+	}
+
+
+
+	/********** 设置系统邮件配置 ***************/
+	@RequestMapping("/setSystemEmailConfig.do")
+	public void setSystemEmailConfig(String authCode, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
 		}
 		
 		if(email == null && pwd == null)
@@ -178,21 +168,12 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/getSystemSmsConfig.do")
-	public void getSystemSmsConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getSystemSmsConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getSystemSmsConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(login_user.getType() < 1)
-		{
-			rt.setError("非管理员用户，请联系统管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -213,31 +194,10 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemDbConfig()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 		
 		String url = ReadProperties.read("jdbc.properties", "db.url");
@@ -268,31 +228,10 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("setSystemDBConfig() url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				docSysErrorLog("用户未登录，请先登录！", rt);
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				docSysErrorLog("非管理员用户，请联系统管理员！", rt);
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 		
 		if(url == null && user == null && pwd == null)
@@ -351,31 +290,10 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("testDatabase()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 
 		if(testDB(url, user, pwd) == false)	//数据库不存在
@@ -387,41 +305,20 @@ public class ManageController extends BaseController{
 	}
 	
 	//强制复位数据库
-	@RequestMapping("/resetDatabase.do")
-	public void resetDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	@RequestMapping("/deleteDatabase.do")
+	public void deleteDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("resetDatabase()");
+		System.out.println("deleteDatabase()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 
 		if(testDB(url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
+			System.out.println("deleteDatabase() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -433,7 +330,64 @@ public class ManageController extends BaseController{
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
 		{
-			System.out.println("DBUpgrade() 数据库备份失败!");
+			System.out.println("deleteDatabase() 数据库备份失败!");
+			docSysErrorLog("备份数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
+		
+		
+		String dbName = getDBNameFromUrl(url);
+		String tmpDbName = dbName.toLowerCase();
+		System.out.println("deleteDatabase() dbName:" + dbName + " tmpDbName:" + tmpDbName);
+		if(!tmpDbName.equals("docsystem"))
+		{
+			System.out.println("deleteDatabase() reset database failed: initDB error");
+			docSysErrorLog("非法删除操作：" + dbName, rt);
+			writeJson(rt, response);			
+			return;			
+		}
+		
+		if(deleteDB(dbName, url, user, pwd) == false)
+		{
+			System.out.println("deleteDatabase() reset database failed: initDB error");
+			docSysErrorLog("数据库初始化失败", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		writeJson(rt, response);
+	}
+	
+	//强制复位数据库
+	@RequestMapping("/resetDatabase.do")
+	public void resetDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	{
+		System.out.println("resetDatabase()");
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+
+		if(testDB(url, user, pwd) == false)	//数据库不存在
+		{
+			System.out.println("resetDatabase() 连接数据库:" + url + " 失败");
+			docSysErrorLog("连接数据库失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//backUpDB
+		Date date = new Date();
+		String backUpTime = DateFormat.dateTimeFormat2(date);
+		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
+		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
+		{
+			System.out.println("resetDatabase() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -448,7 +402,7 @@ public class ManageController extends BaseController{
 		createDB(dbName, url, user, pwd);
 		if(initDB(url, user, pwd) == false)
 		{
-			System.out.println("docSysInit() reset database failed: initDB error");
+			System.out.println("resetDatabase() reset database failed: initDB error");
 			docSysErrorLog("数据库初始化失败", rt);
 			writeJson(rt, response);			
 			return;
@@ -461,36 +415,15 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("exportDBData()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 
 		if(testDB(url, user, pwd) == false)	//数据库不存在
 		{
-			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
+			System.out.println("exportDBData() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -502,7 +435,7 @@ public class ManageController extends BaseController{
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
 		{
-			System.out.println("DBUpgrade() 数据库备份失败!");
+			System.out.println("exportDBData() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
@@ -531,32 +464,12 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("importDBData()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
-		else
-		{			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
+		
 		//saveFile to tmpPath
 		if(uploadFile == null)
 		{
@@ -593,32 +506,10 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getSystemInfo()");
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{	
-			
-			User login_user = (User) session.getAttribute("login_user");
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			
-			if(login_user.getType() < 1)
-			{
-				rt.setError("非管理员用户，请联系统管理员！");
-				writeJson(rt, response);			
-				return;
-			}
+			writeJson(rt, response);			
+			return;
 		}
 		
 		String version = readDocContentFromFile(docSysWebPath, "version", false);
@@ -637,17 +528,8 @@ public class ManageController extends BaseController{
 	{
 		System.out.println("getUserList()");
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = (User) session.getAttribute("login_user");
-		if(login_user == null)
+		if(mamageAccessCheck(null, null, session, rt) == false)
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		if(login_user.getType() < 1)
-		{
-			rt.setError("非管理员用户，请联系统管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -673,14 +555,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -694,7 +576,7 @@ public class ManageController extends BaseController{
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			rt.setError("danger#越权操作！");
+			docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -702,7 +584,7 @@ public class ManageController extends BaseController{
 		//检查用户名是否为空
 		if(userName ==null||"".equals(userName))
 		{
-			rt.setError("danger#账号不能为空！");
+			docSysErrorLog("danger#账号不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -712,7 +594,7 @@ public class ManageController extends BaseController{
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该邮箱已注册！");
+				docSysErrorLog("error#该邮箱已注册！", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -721,7 +603,7 @@ public class ManageController extends BaseController{
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该手机已注册！");
+				docSysErrorLog("error#该手机已注册！", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -730,7 +612,7 @@ public class ManageController extends BaseController{
 		{
 			if(isUserRegistered(userName) == true)
 			{
-				rt.setError("error#该用户名已注册！");
+				docSysErrorLog("error#该用户名已注册！", rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -739,7 +621,7 @@ public class ManageController extends BaseController{
 		//检查密码是否为空
 		if(pwd==null||"".equals(pwd))
 		{
-			rt.setError("danger#密码不能为空！");
+			docSysErrorLog("danger#密码不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -752,7 +634,7 @@ public class ManageController extends BaseController{
 
 		if(userService.addUser(user) == 0)
 		{
-			rt.setError("Failed to add new User in DB");
+			docSysErrorLog("Failed to add new User in DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -767,14 +649,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -789,7 +671,7 @@ public class ManageController extends BaseController{
 		//检查是否越权设置
 		if(type > login_user.getType())
 		{
-			rt.setError("danger#越权操作！");
+			docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -798,21 +680,21 @@ public class ManageController extends BaseController{
 		User tempUser  = userService.getUser(userId);
 		if(tempUser.getType() >= login_user.getType())
 		{
-			rt.setError("danger#越权操作！");
+			docSysErrorLog("danger#越权操作！", rt);
 			writeJson(rt, response);
 			return;			
 		}
 		
 		if(userId == null)
 		{
-			rt.setError("用户ID不能为空");
+			docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(userService.editUser(user) == 0)
 		{
-			rt.setError("更新数据库失败");
+			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -829,21 +711,21 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 2)
 		{
-			rt.setError("您无权进行此操作！");
+			docSysErrorLog("您无权进行此操作！", rt);
 			writeJson(rt, response);
 			return;			
 		}
@@ -855,7 +737,7 @@ public class ManageController extends BaseController{
 	
 		if(userId == null)
 		{
-			rt.setError("用户ID不能为空");
+			docSysErrorLog("用户ID不能为空", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -866,7 +748,7 @@ public class ManageController extends BaseController{
 			User tempUser  = userService.getUser(userId);
 			if(tempUser.getType() >= login_user.getType())
 			{
-				rt.setError("danger#越权操作！");
+				docSysErrorLog("danger#越权操作！", rt);
 				writeJson(rt, response);
 				return;			
 			}
@@ -875,7 +757,7 @@ public class ManageController extends BaseController{
 		
 		if(userService.editUser(user) == 0)
 		{
-			rt.setError("更新数据库失败");
+			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -894,28 +776,28 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 2)
 		{
-			rt.setError("您无权进行此操作！");
+			docSysErrorLog("您无权进行此操作！", rt);
 			writeJson(rt, response);
 			return;			
 		}
 		
 		if(userService.delUser(userId) == 0)
 		{
-			rt.setError("Failed to delete User in DB");
+			docSysErrorLog("Failed to delete User in DB", rt);
 			writeJson(rt, response);
 			return;		
 		}
@@ -947,14 +829,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -984,14 +866,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -999,14 +881,14 @@ public class ManageController extends BaseController{
 		//检查用户名是否为空
 		if(name ==null||"".equals(name))
 		{
-			rt.setError("组名不能为空！");
+			docSysErrorLog("组名不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(isGroupExist(name) == true)
 		{
-			rt.setError("用户组 " + name + " 已存在！");
+			docSysErrorLog("用户组 " + name + " 已存在！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1018,7 +900,7 @@ public class ManageController extends BaseController{
 
 		if(userService.addGroup(group) == 0)
 		{
-			rt.setError("Failed to add new Group in DB");
+			docSysErrorLog("Failed to add new Group in DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -1051,21 +933,21 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(userService.delGroup(id) == 0)
 		{
-			rt.setError("Failed to delete Group from DB");
+			docSysErrorLog("Failed to delete Group from DB", rt);
 			writeJson(rt, response);
 			return;		
 		}
@@ -1104,28 +986,28 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(groupId == null || "".equals(groupId))
 		{
-			rt.setError("用户组ID不能为空");
+			docSysErrorLog("用户组ID不能为空", rt);
 			writeJson(rt, response);
 			return;
 		}
 		
 		if(userService.editGroup(group) == 0)
 		{
-			rt.setError("更新数据库失败");
+			docSysErrorLog("更新数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1143,14 +1025,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1171,14 +1053,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1186,7 +1068,7 @@ public class ManageController extends BaseController{
 		//检查GroupId是否为空
 		if(groupId ==null||"".equals(groupId))
 		{
-			rt.setError("组ID不能为空！");
+			docSysErrorLog("组ID不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1194,7 +1076,7 @@ public class ManageController extends BaseController{
 		//检查用户ID是否为空
 		if(userId ==null||"".equals(userId))
 		{
-			rt.setError("用户ID不能为空！");
+			docSysErrorLog("用户ID不能为空！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1205,7 +1087,7 @@ public class ManageController extends BaseController{
 		if(isGroupMemberExist(groupMember) == true)
 		{
 			System.out.println("addGroupMember() 用户 " + userId + " 已是该组成员！");
-			rt.setError("用户 " + userId + " 已是该组成员！");
+			docSysErrorLog("用户 " + userId + " 已是该组成员！", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1213,7 +1095,7 @@ public class ManageController extends BaseController{
 		if(userService.addGroupMember(groupMember) == 0)
 		{
 			System.out.println("addGroupMember() Failed to add groupMember");
-			rt.setError("Failed to add new GroupMember in DB");
+			docSysErrorLog("Failed to add new GroupMember in DB", rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1240,21 +1122,21 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(userService.delGroupMember(id) == 0)
 		{
-			rt.setError("Failed to delete GroupMember from DB");
+			docSysErrorLog("Failed to delete GroupMember from DB", rt);
 		}
 		
 		writeJson(rt, response);
@@ -1268,14 +1150,14 @@ public class ManageController extends BaseController{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
 		if(login_user.getType() < 1)
 		{
-			rt.setError("非管理员用户，请联系统管理员！");
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
 			writeJson(rt, response);			
 			return;
 		}
