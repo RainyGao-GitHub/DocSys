@@ -382,7 +382,8 @@
     }
 	
 	//系统邮件服务设置
-	var systemEmailSetting = {
+	var systemEmailConfig = {
+			host: "",
 			email: "",
 			pwd: "",
 	}
@@ -390,10 +391,12 @@
 		$("#btnEnableSystemEmailSet").hide();
 		$("#btnCancelSystemEmailSet").show();
 		$("#btnSaveSystemEmailSet").show();
-		$("#systemEmail").val(systemEmailSetting.email);
-		$("#systemEmailPwd").val(systemEmailSetting.pwd);
-		$("#systemEmail").attr('disabled',false);;
-		$("#systemEmailPwd").attr('disabled',false);;
+		$("#systemEmailHost").val(systemEmailConfig.host);
+		$("#systemEmailUser").val(systemEmailConfig.email);
+		$("#systemEmailPwd").val(systemEmailConfig.pwd);
+		$("#systemEmailHost").attr('disabled',false);
+		$("#systemEmailUser").attr('disabled',false);
+		$("#systemEmailPwd").attr('disabled',false);
 	}
 	
 	function cancelSystemEmailSet(){
@@ -401,10 +404,12 @@
 		$("#btnCancelSystemEmailSet").hide();
 		$("#btnSaveSystemEmailSet").hide();
 		//revert the value
-		$("#systemEmail").attr('disabled',true);
+		$("#systemEmailHost").attr('disabled',true);
+		$("#systemEmailUser").attr('disabled',true);
 		$("#systemEmailPwd").attr('disabled',true);
-		$("#systemEmail").val(systemEmailSetting.email);
-		$("#systemEmailPwd").val(systemEmailSetting.pwd);
+		$("#systemEmailHost").val(systemEmailConfig.host);
+		$("#systemEmailUser").val(systemEmailConfig.email);
+		$("#systemEmailPwd").val(systemEmailConfig.pwd);
 	}
 	
 	function saveSystemEmailSet(){
@@ -412,11 +417,13 @@
 		$("#btnCancelSystemEmailSet").hide();
 		$("#btnSaveSystemEmailSet").hide();
 		//revert the value
-		$("#systemEmail").attr('disabled',true);
+		$("#systemEmailHost").attr('disabled',true);
+		$("#systemEmailUser").attr('disabled',true);
 		$("#systemEmailPwd").attr('disabled',true);
-		var email = $("#systemEmail").val();
+		var host = $("#systemEmailHost").val();
+		var user = $("#systemEmailUser").val();
 		var pwd = $("#systemEmailPwd").val();
-		updateSystemEmailConfig(email, pwd);
+		updateSystemEmailConfig(host, user, pwd);
 	}
 
 	function showSystemEmailConfig(){
@@ -430,10 +437,11 @@
 	            {
 	            	//console.log("getSystemEmailConfig ret", ret);
 					var config = JSON.parse(ret.data); 	
-	            	systemEmailSetting.email = config.email;
-	            	systemEmailSetting.pwd = config.pwd;
-	            	console.log("getSystemEmailConfig systemEmailSetting",systemEmailSetting);
-	            	$Func.render($("#container"),"systemEmailConfig",{"value":systemEmailSetting});
+					systemEmailConfig.host = config.host;
+	            	systemEmailConfig.email = config.email;
+	            	systemEmailConfig.pwd = config.pwd;
+	            	console.log("getSystemEmailConfig systemEmailConfig",systemEmailConfig);
+	            	$Func.render($("#container"),"systemEmailConfig",{"value":systemEmailConfig});
 	            }
 	            else 
 	            {
@@ -447,7 +455,45 @@
 	    });
 	}
 	
-	//系统邮件服务设置
+	function updateSystemEmailConfig(host, email, pwd){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemEmailConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	host: host,
+	        	email: email,
+	        	pwd: pwd,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemEmailConfig.host = host;
+	            	systemEmailConfig.email = email;
+	        		systemEmailConfig.pwd = pwd;
+	        		showErrorMessage("更新邮件服务配置成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新邮件服务配置失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#systemEmailHost").val(systemEmailConfig.host);
+	        		$("#systemEmailUser").val(systemEmailConfig.email);
+	        		$("#systemEmailPwd").val(systemEmailConfig.pwd);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新邮件服务配置失败");
+        		//restore the setting
+	        	$("#systemEmailHost").val(systemEmailConfig.host);
+        		$("#systemEmailUser").val(systemEmailConfig.email);
+        		$("#systemEmailPwd").val(systemEmailConfig.pwd);
+	        }
+	    });
+	}
+	
+	//系统短信服务设置
 	var systemSmsSetting = {
 			apikey: "",
 	}
@@ -472,40 +518,6 @@
 	        },
 	        error : function () {
 	        	showErrorMessage("服务器异常:获取短信服务配置信息失败");
-	        }
-	    });
-	}
-	
-	function updateSystemEmailConfig(email, pwd){
-		$.ajax({
-	        url : "/DocSystem/Manage/setSystemEmailConfig.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	        	email: email,
-	        	pwd: pwd,
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status )
-	            {	        		
-	        		systemEmailSetting.email = email;
-	        		systemEmailSetting.pwd = pwd;
-	        		 showErrorMessage("更新邮件服务配置成功");
-	            }
-	            else 
-	            {
-	                console.log(ret.msgInfo);
-	                showErrorMessage("更新邮件服务配置失败:" + ret.msgInfo);
-	        		//restore the setting
-	        		$("#systemEmail").val(systemEmailSetting.email);
-	        		$("#systemEmailPwd").val(systemEmailSetting.pwd);
-		        }
-	        },
-	        error : function () {
-	        	showErrorMessage("服务器异常:更新邮件服务配置失败");
-        		//restore the setting
-        		$("#systemEmail").val(systemEmailSetting.email);
-        		$("#systemEmailPwd").val(systemEmailSetting.pwd);
 	        }
 	    });
 	}

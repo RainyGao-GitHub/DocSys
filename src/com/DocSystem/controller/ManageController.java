@@ -50,6 +50,12 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		
+		String host = ReadProperties.read("docSysConfig.properties", "mail.smtp.host");
+		if(host == null)
+		{
+			host = "";
+		}
 		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
 		if(email == null)
 		{
@@ -60,7 +66,7 @@ public class ManageController extends BaseController{
 		{
 			pwd = "";
 		}
-		String config = "{\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
+		String config = "{\"host\":\"" + host + "\"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
 		rt.setData(config);
 		writeJson(rt, response);
 	}
@@ -95,13 +101,11 @@ public class ManageController extends BaseController{
 		}
 	}
 
-
-
 	/********** 设置系统邮件配置 ***************/
 	@RequestMapping("/setSystemEmailConfig.do")
-	public void setSystemEmailConfig(String authCode, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void setSystemEmailConfig(String authCode,String host, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("setSystemEmailConfig() email:" + email + " pwd:" + pwd);
+		System.out.println("setSystemEmailConfig() host:" + host + " email:" + email + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -135,7 +139,11 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
+
+		if(host != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "mail.smtp.host", host);
+		}
 		if(email != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "fromuser", email);
