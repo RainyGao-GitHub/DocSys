@@ -7181,7 +7181,7 @@ public class BaseController  extends BaseFunction{
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
 		List<Integer> backupTabList = buildBackUpTabList(isStartUp);
-		if(exportDatabaseAsSql(backupTabList, backUpPath, "docsystem_data.sql", url, user, pwd, backUpPath) == false)
+		if(exportDatabaseAsSql(backupTabList, backUpPath, "docsystem_data.sql", "UTF-8", url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
