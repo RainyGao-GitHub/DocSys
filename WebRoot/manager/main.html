@@ -652,6 +652,27 @@
 	    });
 	}
 	
+	function deleteDatabaseConfirm()
+	{
+		console.log("deleteDatabaseConfirm()");
+		
+	    qiao.bs.confirm({
+		        title: "删除数据库",
+		        msg: "是否删除数据库？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				deleteDatabase();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
 	function deleteDatabase(){
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
@@ -682,6 +703,26 @@
 	        	showErrorMessage("服务器异常:删除数据库失败");
 	        }
 	    });
+	}
+	
+	function resetDatabaseConfirm()
+	{
+		console.log("resetDatabaseConfirm()");
+	    qiao.bs.confirm({
+		        title: "重置数据库",
+		        msg: "是否重置数据库？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				resetDatabase();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
 	}
 	
 	function resetDatabase(){
