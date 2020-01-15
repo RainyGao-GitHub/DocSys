@@ -82,7 +82,7 @@
                             <button onclick="testDatabase();" class="btn btn-warning" data-loading-text="连接中...">测试连接</button>
                             <button onclick="exportDBData();" class="btn btn-warning" data-loading-text="导出中...">导出数据</button>
                             <button onclick="importDBData();" class="btn btn-warning" data-loading-text="导入中...">导入数据</button>
-                            <button onclick="resetDatabase();" class="btn btn-danger" data-loading-text="重置中...">重置数据库</button>
+                            <button onclick="resetDatabaseConfirm();" class="btn btn-danger" data-loading-text="重置中...">重置数据库</button>
                             <span id="form-error-message" class="error-message"></span>
                         </div>
                     </div>
@@ -378,6 +378,26 @@
 	        	showErrorMessage("服务器异常:数据库连接失败");
 	        }
 	    });
+	}
+	
+	function resetDatabaseConfirm()
+	{
+		console.log("resetDatabaseConfirm()");
+	    qiao.bs.confirm({
+		        title: "重置数据库",
+		        msg: "是否重置数据库？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				resetDatabase();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
 	}
 	
 	function resetDatabase(){
