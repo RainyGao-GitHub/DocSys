@@ -345,7 +345,7 @@ public class ManageController extends BaseController{
 		System.out.println("deleteDatabase() dbName:" + dbName + " tmpDbName:" + tmpDbName);
 		if(!tmpDbName.equals("docsystem"))
 		{
-			System.out.println("deleteDatabase() reset database failed: initDB error");
+			System.out.println("deleteDatabase() 非法删除操作");
 			docSysErrorLog("非法删除操作：" + dbName, rt);
 			writeJson(rt, response);			
 			return;			
@@ -353,7 +353,7 @@ public class ManageController extends BaseController{
 		
 		if(deleteDB(dbName, url, user, pwd) == false)
 		{
-			System.out.println("deleteDatabase() reset database failed: initDB error");
+			System.out.println("deleteDatabase() 删除数据库失败");
 			docSysErrorLog("数据库初始化失败", rt);
 			writeJson(rt, response);			
 			return;
