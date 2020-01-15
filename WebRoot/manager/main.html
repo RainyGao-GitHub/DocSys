@@ -657,6 +657,7 @@
 		console.log("deleteDatabaseConfirm()");
 		
 	    qiao.bs.confirm({
+	    		id: "deleteDatabaseConfirmDialog",
 		        title: "删除数据库",
 		        msg: "是否删除数据库？",
 		        okbtn: "确认",
@@ -709,6 +710,7 @@
 	{
 		console.log("resetDatabaseConfirm()");
 	    qiao.bs.confirm({
+	    		id: "resetDatabaseConfirmDialog",
 		        title: "重置数据库",
 		        msg: "是否重置数据库？",
 		        okbtn: "确认",
@@ -842,6 +844,7 @@
 	    console.log("firstFile:"+fileName);
 	    
 	    qiao.bs.confirm({
+	    		id: "importDBDataConfirmDialog",
 		        title: "导入数据",
 		        msg: "是否导入 " + fileName+ " ？",
 		        okbtn: "确认",
@@ -975,6 +978,7 @@
 	{	
 		console.log("delUserConfirm");
 		qiao.bs.confirm({
+			id: "delUserConfirmDialog",
 	        title: "删除用户",
 	        msg: "是否删除用户？",
 	        okbtn: "删除",
@@ -1144,6 +1148,7 @@
 	{	
 		console.log("delGroupConfirm");
 		qiao.bs.confirm({
+			id: "delUserConfirmDialog",
 	        title: "删除用户组",
 	        msg: "是否删除用户组？",
 	        okbtn: "删除",
