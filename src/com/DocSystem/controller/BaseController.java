@@ -6771,7 +6771,7 @@ public class BaseController  extends BaseFunction{
 				System.out.println("docSysInit() 新建数据库失败");
 				return false;
 			}
-			System.out.println("docSysInit() 新建数据库失败");
+			System.out.println("docSysInit() 新建数据库成功");
 			
 			checkAndAddFirstUser();
 			
