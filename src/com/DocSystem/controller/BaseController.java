@@ -6919,7 +6919,7 @@ public class BaseController  extends BaseFunction{
 	    		return true;
 	    	}
 
-	    	if(stmt.executeUpdate(createdatabase) == 0)		 
+	    	if(stmt.executeUpdate(createdatabase) != 0)		 
 	    	{
 	    		System.out.println("create table success!");
 	    		stmt.close();
