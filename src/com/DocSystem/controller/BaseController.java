@@ -6920,6 +6920,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
+        String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+        //String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+        if(testDB(defaultDBUrl, user, pwd) == false)
+        {
+            defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";        	
+        }
         
 		boolean ret = false;
 		Connection conn = null;
@@ -6928,10 +6934,7 @@ public class BaseController  extends BaseFunction{
             // 注册 JDBC 驱动
             Class.forName(JDBC_DRIVER);
         
-            // 打开链接
-            String tmpUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-            //String tmpUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
-            conn = (Connection) DriverManager.getConnection(tmpUrl ,user, pwd);
+            conn = (Connection) DriverManager.getConnection(defaultDBUrl ,user, pwd);
         
             stmt = (Statement) conn.createStatement();
             String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
