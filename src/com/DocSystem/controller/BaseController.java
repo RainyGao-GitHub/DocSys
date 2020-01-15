@@ -6863,24 +6863,44 @@ public class BaseController  extends BaseFunction{
 	
     protected static boolean executeSqlScript(String filePath, String url, String user, String pwd) 
     {
+    	boolean ret = false;
+    	Connection conn = null;
+    	ScriptRunner runner = null;
+    	InputStream in = null;
+        Reader read = null;
+    	
         try {
-            Connection conn = (Connection) DriverManager.getConnection(url ,user, pwd);
-            ScriptRunner runner = new ScriptRunner(conn);
+            conn = (Connection) DriverManager.getConnection(url ,user, pwd);
+            runner = new ScriptRunner(conn);
             runner.setLogWriter(null);//设置是否输出日志
             
             // 从class目录下直接读取
-            InputStream in = new FileInputStream(filePath);
-            Reader read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
+            in = new FileInputStream(filePath);
+            read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
             runner.runScript(read);
+            
             runner.closeConnection();
             conn.close();
+            in.close();
+            read.close();
             System.out.println("sql脚本执行完毕");
             return true;
         } catch (Exception e) {
             System.out.println("sql脚本执行发生异常");
             e.printStackTrace();
-        }
-		return false;
+        }finally{
+	        // 关闭资源
+	        try{
+	            if(runner!=null) runner.closeConnection();
+	            if(conn!=null) conn.close();
+	            if(in!=null) in.close();
+	            if(read!=null) read.close();
+	        }catch(Exception se){
+	            se.printStackTrace();
+	        }
+	    }
+        
+		return ret;
 	}
 
 	protected static boolean createDB(String dbName,String url, String user, String pwd) 
