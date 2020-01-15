@@ -6924,7 +6924,11 @@ public class BaseController  extends BaseFunction{
         //String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
         if(testDB(defaultDBUrl, user, pwd) == false)
         {
-            defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";        	
+            defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";   
+            if(testDB(defaultDBUrl, user, pwd) == false)
+            {
+            	defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
+            }
         }
         
 		boolean ret = false;
