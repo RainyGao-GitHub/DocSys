@@ -376,7 +376,16 @@ public class ManageController extends BaseController{
 		if(testDB(url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("resetDatabase() 连接数据库:" + url + " 失败");
-			docSysErrorLog("连接数据库失败", rt);
+			String dbName = getDBNameFromUrl(url);
+
+			createDB(dbName, url, user, pwd);
+			if(initDB(url, user, pwd) == false)
+			{
+				System.out.println("resetDatabase() 新建数据库失败");
+				docSysErrorLog("新建数据库失败", rt);
+				writeJson(rt, response);
+				return;
+			}
 			writeJson(rt, response);
 			return;
 		}
@@ -396,10 +405,7 @@ public class ManageController extends BaseController{
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
 		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
 		
-		
-		String dbName = getDBNameFromUrl(url);
-		deleteDB(dbName, url, user, pwd);
-		createDB(dbName, url, user, pwd);
+		deleteDBTabs(url, user, pwd);
 		if(initDB(url, user, pwd) == false)
 		{
 			System.out.println("resetDatabase() reset database failed: initDB error");
