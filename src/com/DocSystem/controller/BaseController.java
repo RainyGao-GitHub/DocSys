@@ -6728,7 +6728,6 @@ public class BaseController  extends BaseFunction{
 	
 	protected static boolean docSysInit() 
 	{	
-		System.out.println("docSysInit() Start docSysInitState:" + docSysIniState);
 		if(docSysWebPath == null)
 		{
 			docSysWebPath = getWebPath();
@@ -6813,10 +6812,6 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		return true;
-	}
-
-	private static void setDocSysInitState(String State) {
-		saveDocContentToFile(State, docSysIniPath, "State");
 	}
 
 	private static boolean checkAndUpdateDB(boolean isStartUp) {
