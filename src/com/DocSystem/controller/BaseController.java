@@ -6982,7 +6982,7 @@ public class BaseController  extends BaseFunction{
 	    	{
 	    		//若数据库存在
 	    		System.out.println("deleteDB " + dbName + " exist!");
-		    	if(stmt.executeUpdate(deletedatabase) == 0)		 
+		    	if(stmt.executeUpdate(deletedatabase) != 0)		 
 		    	{
 		    		System.out.println("delete table success!");
 		    		ret = true;
