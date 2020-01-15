@@ -46,12 +46,15 @@ public class StartupListener  extends BaseController implements ApplicationConte
 		log.info(">>>>>>>>>>>>系统启动完成，onApplicationEvent()<<<<<<<<<<<<");
 		System.out.println(">>>>>>>>>>>>系统启动完成，onApplicationEvent()<<<<<<<<<<<<");
 		
+		System.out.println("docSysInit() Start docSysInitState:" + docSysIniState);
 		boolean ret = docSysInit();
 		if(ret == true)
 		{
 			docSysIniState = 0;
 		}
-		else
+		System.out.println("docSysInit() End docSysInitState:" + docSysIniState);
+		
+		if(docSysIniState != 0)
 		{
 			//add authCode to authCodeMap
 			AuthCode authCode = new AuthCode();
