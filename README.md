@@ -26,15 +26,6 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 ## 一、准备工作
 ### 1、下载DocSystem.war
 下载地址： https://gitee.com/RainyGao/DocSys/releases
-### 2、DocSystem.war配置文件修改
-将DocSystem.war重命名为DocSystem.zip文件，进入zip文件的WEB-INF/classes/目录，修改以下两个配置文件，修改完成后改为DocSystem.war
-
-(1) 数据库配置：jdbc.properties
-- 数据库访问地址
-- 数据库访问用户
-
-(2) 系统配置：docSysConfig.properties
-- 邮件服务配置
 
 ## 二、Windows系统安装步骤
 ### 1、安装JDK
