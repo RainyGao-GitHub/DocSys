@@ -2629,7 +2629,7 @@ public class BaseController  extends BaseFunction{
 					if(indexGetDoc(repos, localChangeDoc, false) == null)
 					{
 						System.out.println("rebuildIndexForDoc index 已存在:" + localChangeDoc.getDocId() + localChangeDoc.getName());
-						buildIndexForDoc(repos,localChangeDoc, null, null, rt, 1);
+						buildIndexForDoc(repos,localChangeDoc, null, null, rt, 0); //不更新子目录
 					}
 				}
 			}
@@ -2643,7 +2643,7 @@ public class BaseController  extends BaseFunction{
 					if(indexGetDoc(repos, remoteChangeDoc, false) == null)
 					{
 						System.out.println("rebuildIndexForDoc index 已存在:" + remoteChangeDoc.getDocId() + remoteChangeDoc.getName());
-						buildIndexForDoc(repos, remoteChangeDoc, null, null, rt, 1);
+						buildIndexForDoc(repos, remoteChangeDoc, null, null, rt, 0); //不更新子目录
 					}
 				}
 			}	
