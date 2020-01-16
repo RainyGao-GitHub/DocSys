@@ -6920,16 +6920,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
-        String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-        //String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
-        if(testDB(defaultDBUrl, user, pwd) == false)
-        {
-            defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";   
-            if(testDB(defaultDBUrl, user, pwd) == false)
-            {
-            	defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
-            }
-        }
+        String defaultDBUrl = getDefaultDBUrl(user, pwd);
         
 		boolean ret = false;
 		Connection conn = null;
@@ -6985,6 +6976,21 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
+	private static String getDefaultDBUrl(String user, String pwd) {
+		String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+		//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
+		if(testDB(defaultDBUrl, user, pwd) == false)
+		{
+		    defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";   
+		    if(testDB(defaultDBUrl, user, pwd) == false)
+		    {
+		    	defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
+		    }
+		}
+
+		return defaultDBUrl;
+	}
+
 	protected static boolean deleteDB(String dbName, String url, String user, String pwd) 
     {
         try {
@@ -6995,6 +7001,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
+        String defaultDBUrl = getDefaultDBUrl(user, pwd);
         
 		boolean ret = false;
 		Connection conn = null;
@@ -7003,10 +7010,8 @@ public class BaseController  extends BaseFunction{
             // 注册 JDBC 驱动
             Class.forName(JDBC_DRIVER);
         
-            // 打开链接
-            String tmpUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-            //String tmpUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";   
-            conn = (Connection) DriverManager.getConnection(tmpUrl ,user, pwd);
+            //利用系统默认的数据库进行删除操作
+            conn = (Connection) DriverManager.getConnection(defaultDBUrl ,user, pwd);
         
             stmt = (Statement) conn.createStatement();
             String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
