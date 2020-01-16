@@ -2618,6 +2618,31 @@ public class BaseController  extends BaseFunction{
 		//子目录不递归
 		if(subDocSyncupFlag == 0)
 		{
+			//不递归的情况下只处理index不存在的清空
+			if(localChanges != null)
+			{
+				//遍历localChanges，对LocalAdd进行建Index操作
+				for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) 
+				{
+					DocChange docChange = entry.getValue();
+					if(indexGetDoc(repos, docChange.getDoc(), false) == null)
+					{
+						buildIndexForDoc(repos, docChange.getDoc(), null, null, rt, 2);
+					}
+				}
+			}
+			if(remoteChanges != null)
+			{
+				//遍历remoteChanges，对LocalAdd进行建Index操作
+				for (HashMap.Entry<Long, DocChange> entry : remoteChanges.entrySet()) 
+				{
+					DocChange docChange = entry.getValue();
+					if(indexGetDoc(repos, docChange.getDoc(), false) == null)
+					{
+						buildIndexForDoc(repos, docChange.getDoc(), null, null, rt, 2);
+					}
+				}
+			}	
 			return true;
 		}
 
@@ -7258,7 +7283,7 @@ public class BaseController  extends BaseFunction{
 		{
 			exportTabList.add(i);
 		}			
-		return exportDatabaseAsSql(exportTabList, backUpPath, fileName, "UTF-8", url, user, pwd);
+		return exportDatabaseAsSql(exportTabList, backUpPath, fileName, null, url, user, pwd);
 	}
 	
 	protected static boolean backupDatabaseAsJson(String backUpPath, String fileName, Integer srcVersion, Integer dstVersion,  String url, String user, String pwd) {
