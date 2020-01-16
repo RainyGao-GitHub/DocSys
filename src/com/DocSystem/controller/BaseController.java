@@ -6551,7 +6551,7 @@ public class BaseController  extends BaseFunction{
 		//System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		String indexLib = getIndexLibPath(repos,0);
 
-		return LuceneUtil2.addIndex(doc, getDocPath(doc), indexLib);
+		return LuceneUtil2.addIndex(doc, doc.getName(), indexLib);
 	}
 
 	//Delete Indexs For DocName
