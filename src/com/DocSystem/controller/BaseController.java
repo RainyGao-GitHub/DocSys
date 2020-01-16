@@ -2625,9 +2625,11 @@ public class BaseController  extends BaseFunction{
 				for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet()) 
 				{
 					DocChange docChange = entry.getValue();
-					if(indexGetDoc(repos, docChange.getDoc(), false) == null)
+					Doc localChangeDoc = docChange.getDoc();
+					if(indexGetDoc(repos, localChangeDoc, false) == null)
 					{
-						buildIndexForDoc(repos, docChange.getDoc(), null, null, rt, 2);
+						System.out.println("rebuildIndexForDoc index 已存在:" + localChangeDoc.getDocId() + localChangeDoc.getName());
+						buildIndexForDoc(repos,localChangeDoc, null, null, rt, 2);
 					}
 				}
 			}
@@ -2637,9 +2639,11 @@ public class BaseController  extends BaseFunction{
 				for (HashMap.Entry<Long, DocChange> entry : remoteChanges.entrySet()) 
 				{
 					DocChange docChange = entry.getValue();
-					if(indexGetDoc(repos, docChange.getDoc(), false) == null)
+					Doc remoteChangeDoc = docChange.getDoc();
+					if(indexGetDoc(repos, remoteChangeDoc, false) == null)
 					{
-						buildIndexForDoc(repos, docChange.getDoc(), null, null, rt, 2);
+						System.out.println("rebuildIndexForDoc index 已存在:" + remoteChangeDoc.getDocId() + remoteChangeDoc.getName());
+						buildIndexForDoc(repos, remoteChangeDoc, null, null, rt, 2);
 					}
 				}
 			}	
