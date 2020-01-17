@@ -7391,18 +7391,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< list.size(); i++)
 		{
 			Object obj = list.get(i);
-			String sql = buildInsertSqlForObject(obj, objId);
-			if(encode != null)
-			{
-				try {
-					String tmpSql = new String(sql.getBytes(), encode);
-					sql = tmpSql;
-					//System.out.println("backupDB() sql:" + sql);
-				} catch (Exception e) {
-					e.printStackTrace();
-					return null;
-				}
-			}
+			String sql = buildInsertSqlForObject(obj, objId, encode);
 			sqlStr += sql + ";\r\n";
 		}
 		sqlStr += "\r\n";	//换行
@@ -7723,7 +7712,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildQuerySqlForObject(qObj, objType);
+            String sql = buildQuerySqlForObject(qObj, objType, null);
     		System.out.println("dbQuery() sql:" + sql);
 
             ResultSet rs = stmt.executeQuery(sql);
@@ -7778,7 +7767,7 @@ public class BaseController  extends BaseFunction{
             //System.out.println(" 实例化Statement对象...");
             stmt = (Statement) conn.createStatement();
             
-            String sql = buildInsertSqlForObject(obj, objType);
+            String sql = buildInsertSqlForObject(obj, objType, null);
             //System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
             //System.out.println("ret:" + ret);
@@ -8054,7 +8043,7 @@ public class BaseController  extends BaseFunction{
 		return paramList;
 	}
 	
-	private static String buildInsertSqlForObject(Object obj, int objType) {
+	private static String buildInsertSqlForObject(Object obj, int objType, String encode) {
 		if(obj == null)
 		{
 			return 	null;
@@ -8090,6 +8079,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case "String":
 				String sqlValue = convertToSqlValue(value);
+				sqlValue = enocdeString(sqlValue, encode);
 				sql_value += " '" + sqlValue  + "'" + seperator; 
 				break;
 			}
@@ -8098,7 +8088,21 @@ public class BaseController  extends BaseFunction{
         return sql;
 	}
 	
-	private static String buildQuerySqlForObject(Object obj, int objType) {
+	private static String enocdeString(String str, String encode) {
+		if(encode != null)
+		{
+			try {
+				String tmpStr = new String(str.getBytes(), encode);
+				//System.out.println("enocdeString() tmpSqlValue:" + tmpStr);
+				return tmpStr;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return str;
+	}
+
+	private static String buildQuerySqlForObject(Object obj, int objType, String encode) {
 		String name = getNameByObjType(objType);
 		String sql = "select * from " + name;
 		
@@ -8137,6 +8141,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case "String": 
 				String sqlValue = convertToSqlValue(value);
+				sqlValue = enocdeString(sqlValue, encode);
 				sql_value += seperator + dbField + "='"  + sqlValue + "'";
 				break;
 			}
