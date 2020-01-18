@@ -6855,7 +6855,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private static boolean checkAndUpdateDB(boolean isStartUp) {
+	private static boolean checkAndUpdateDB(boolean skipDocTab) {
 		//根据里面的版本号信息更新数据库
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		System.out.println("checkAndUpdateDB() newVersion:" + newVersion);
@@ -6880,7 +6880,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		if(DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS, isStartUp) == true)
+		if(DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS, skipDocTab) == true)
 		{
 			//更新版本号，避免重复升级数据库
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
@@ -7219,7 +7219,7 @@ public class BaseController  extends BaseFunction{
 		return version;
 	}
 
-	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String url, String user, String pwd, boolean isStartUp)
+	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String url, String user, String pwd, boolean skipDocTab)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
@@ -7229,18 +7229,15 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		//备份数据
+		//backupDB
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		List<Integer> backupTabList = buildBackUpTabList(isStartUp);
-		if(exportDatabaseAsSql(backupTabList, backUpPath, "docsystem_data.sql", "UTF-8", url, user, pwd) == false)
+		if(backupDatabase(backUpPath, url, user, pwd, skipDocTab) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
 		}
-		String jsonFileName = "docsystem_data.json";
-		exportDatabaseAsJson(backupTabList, backUpPath, jsonFileName, oldVersion, newVersion, url, user, pwd);
 		
 		//更新数据库表结构
 		for(int i=0; i< dbTabsNeedToUpgrade.size(); i++)
@@ -7264,15 +7261,15 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//导入数据
-		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, backUpPath, jsonFileName, url, user, pwd);
+		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, backUpPath, "docsystem_data.json", url, user, pwd);
 		return true;
 	}
 
-	private static List<Integer> buildBackUpTabList(boolean isStartUp) {
+	private static List<Integer> buildBackUpTabList(boolean skipDocTab) {
 		List<Integer> tabList = new ArrayList<Integer>();
 		for(int i=0; i< DBTabNameMap.length; i++)
 		{
-			if(isStartUp && i==DOCSYS_DOC)
+			if(skipDocTab && i==DOCSYS_DOC)
 			{
 				continue;
 			}
@@ -7280,23 +7277,21 @@ public class BaseController  extends BaseFunction{
 		}		
 		return tabList;
 	}
-
-	protected static boolean backupDatabaseAsSql(String backUpPath, String fileName, String url, String user, String pwd) {
-		List<Integer> exportTabList = new ArrayList<Integer>();
-		for(int i=0; i< DBTabNameMap.length; i++)
-		{
-			exportTabList.add(i);
-		}			
-		return exportDatabaseAsSql(exportTabList, backUpPath, fileName, null, url, user, pwd);
-	}
 	
-	protected static boolean backupDatabaseAsJson(String backUpPath, String fileName, Integer srcVersion, Integer dstVersion,  String url, String user, String pwd) {
-		List<Integer> exportTabList = new ArrayList<Integer>();
-		for(int i=0; i< DBTabNameMap.length; i++)
+	protected static boolean backupDatabase(String backUpPath, String url, String user, String pwd, boolean skipDocTab) {		
+		List<Integer> backupTabList = buildBackUpTabList(skipDocTab);
+		
+		String backUpName = "docsystem_data";
+		
+		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", "UTF-8", url, user, pwd) == false)
 		{
-			exportTabList.add(i);
-		}			
-		return exportDatabaseAsJson(exportTabList, backUpPath, fileName, srcVersion, dstVersion,url, user, pwd);
+			System.out.println("DBUpgrade() 数据库备份失败!");
+			return true;
+		}
+		
+		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, url, user, pwd);
 	}
 
 	private static boolean deleteDBTab(String tabName, String url, String user, String pwd) {
@@ -7343,28 +7338,6 @@ public class BaseController  extends BaseFunction{
         }
 		return ret;
 		
-	}
-	
-	protected static boolean exportDatabase(List<Integer> exportTabList, String exportType, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd)
-	{
-		if(exportTabList == null)
-		{
-			exportTabList = new ArrayList<Integer>();
-			for(int i=0; i< DBTabNameMap.length; i++)
-			{
-				exportTabList.add(i);
-			}			
-		}
-	
-		if(exportType == "sql")
-		{
-			return exportDatabaseAsSql(exportTabList, filePath, fileName, "UTF-8", url, user, pwd);
-		}
-		else if(exportType == "json")
-		{
-			return exportDatabaseAsJson(exportTabList, filePath, fileName, srcVersion, dstVersion,url, user, pwd);
-		}
-		return false;
 	}
 	
 	protected static boolean exportDatabaseAsSql(List<Integer> exportTabList, String path, String name, String encode, String url, String user, String pwd) 
