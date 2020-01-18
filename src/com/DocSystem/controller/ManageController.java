@@ -336,17 +336,13 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
+		if(backupDatabase(backUpPath, url, user, pwd, true) == false)
 		{
 			System.out.println("deleteDatabase() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
-		}
-		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
-		
+		}		
 		
 		String dbName = getDBNameFromUrl(url);
 		String tmpDbName = dbName.toLowerCase();
@@ -402,16 +398,13 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
+		if(backupDatabase(backUpPath, url, user, pwd, true) == false)
 		{
 			System.out.println("resetDatabase() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
-		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		backupDatabaseAsJson(backUpPath, "docsystem_data.json",oldVersion, newVersion, url, user, pwd);
 		
 		deleteDBTabs(url, user, pwd);
 		if(initDB(url, user, pwd) == false)
@@ -447,16 +440,13 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabaseAsSql(backUpPath, "docsystem_data.sql", url, user, pwd) == false)
+		if(backupDatabase(backUpPath, url, user, pwd, true) == false)
 		{
 			System.out.println("exportDBData() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
 			writeJson(rt, response);
 			return;
 		}
-		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
-		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		backupDatabaseAsJson(backUpPath, "docsystem_data.json", oldVersion, newVersion, url, user, pwd);
 		
 		String targetPath = docSysIniPath + "backup/";
 		String targetName = "docsystem_"+backUpTime+".zip";
