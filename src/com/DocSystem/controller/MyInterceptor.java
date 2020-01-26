@@ -22,7 +22,24 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 	//被允许的url
 	private String[] allowedUrl = 
 	{
-		"login","logout","register","sendVerifyCode","feeback","Manage/getSystemLog", "Manage/importDBData", "Doc/downloadDoc"
+		//登录	
+		"login",
+		"logout",
+		//注册
+		"register",
+		"sendVerifyCode",
+		//意见反馈
+		"feeback",
+		//系统管理
+		"Manage/getSystemLog", 
+		"Manage/importDBData", 
+		//文件下载
+		"Doc/downloadDoc",
+		//文件分享
+		"Doc/getDocShare",
+		"Doc/getDoc",
+		"Repos/getReposInitMenu",
+		"Repos/getSubDocList",		
 	};
 	
 	

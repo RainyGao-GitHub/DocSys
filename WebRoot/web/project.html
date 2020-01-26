@@ -3262,7 +3262,7 @@ function CompareObj(objA, objB, flag) {
 		{
 	    	//确定当前登录用户是否已登录
 	    	$.ajax({
-	            url : "/DocSystem/getDocShare.do",
+	            url : "/DocSystem/Doc/getDocShare.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
@@ -3713,7 +3713,7 @@ function CompareObj(objA, objB, flag) {
             type : "post",
             dataType : "json",
             data : {
-                vid: reposId,
+            	reposId: reposId,
                 path: path,
                 name: name,                
             },
@@ -4500,8 +4500,11 @@ function CompareObj(objA, objB, flag) {
 	        $(".manual-right").hide();
         }
     	
-    	console.log("globalVarInit() start");
-    	setGInitReposInfo();
+        console.log("globalVarInit() start");
+    	
+        setGDocShareInfo();
+        
+        setGInitReposInfo();
 
 		//set gInitDocInfo
 		setGInitDocInfo();
@@ -4511,6 +4514,15 @@ function CompareObj(objA, objB, flag) {
 		
 		console.log("globalVarInit() gInitReposId:" + gInitReposInfo.id  + " gShowType:" + gShowType + " gInitDocInfo:", gInitDocInfo);
    	}
+    
+    function setGDocShareInfo()
+    {
+    	var shareId = getQueryString("shareId");
+		if(shareId)
+		{
+			gShareId = shareId;
+		}
+    }
 
     function setGInitReposInfo()
     {
