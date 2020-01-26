@@ -3931,6 +3931,17 @@ public class BaseController  extends BaseFunction{
 
 		return true;
 	}
+	
+	protected DocShare getDocShare(Integer shareId) {
+		DocShare qDocShare = new DocShare();
+		qDocShare.setShareId(shareId);
+		List<DocShare> results = reposService.getDocShareList(qDocShare);
+		if(results == null || results.size() < 1)
+		{
+			return null;
+		}
+		return results.get(0);
+	}
 
 	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
 	{
