@@ -107,18 +107,27 @@ public class ReposServiceImpl implements ReposService {
     	return docDao.updateByPrimaryKey(doc);
     }
 
-    
     //delete a Document
     public int deleteDoc(Integer id)
     {
     	return docDao.deleteByPrimaryKey(id);
     }
     
+	public int deleteDoc(Doc doc) {
+		return docDao.deleteSelective(doc);	
+	}
+    
     //Get the docList by doc
     public List<Doc> getDocList(Doc doc) {  
         List<Doc> list = docDao.selectSelective(doc);  
         return list;
     }
+    
+	//Doc List 查询
+	public List<Doc> queryDocList(HashMap<String, Object> params)
+	{
+		return docDao.queryDocList(params);
+	}    
     
 	public int addDocLock(DocLock docLock) {
     	return docLockDao.insertSelective(docLock);
@@ -238,18 +247,33 @@ public class ReposServiceImpl implements ReposService {
 		return userGroupDao.selectByPrimaryKey(groupId);
 	}
 	
-	//Doc List 查询
-	public List<Doc> queryDocList(HashMap<String, Object> params)
-	{
-		return docDao.queryDocList(params);
-	}
+    public int addDocShare(DocShare docShare)
+    {
+    	return docShareDao.insertSelective(docShare);
+    }
+    
+    public DocShare getDocShare(Integer id)
+    {
+    	return docShareDao.selectByPrimaryKey(id);
+    }
+    
+    public int updateDocShare(DocShare docShare)
+    {
+    	return docShareDao.updateByPrimaryKeySelective(docShare);
+    }
 
-	public int deleteDoc(Doc doc) {
-		return docDao.deleteSelective(doc);	
-	}
-	
-	//get DocShare by primaryKey
-	public DocShare getDocShare(Integer shareId) {
-		return docShareDao.selectByPrimaryKey(shareId);	
-	}	
+    public int updateDocShareByPrimaryKey(DocShare docShare)
+    {
+    	return docShareDao.updateByPrimaryKey(docShare);
+    }
+    
+    public int deleteDocShare(Integer id)
+    {
+    	return docShareDao.deleteByPrimaryKey(id);
+    }
+    
+    public List<DocShare> getDocShareList(DocShare docShare) {  
+        List<DocShare> list = docShareDao.selectSelective(docShare);  
+        return list;
+    }	
 }  
