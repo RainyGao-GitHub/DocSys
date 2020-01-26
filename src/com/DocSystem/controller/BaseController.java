@@ -502,7 +502,13 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		String [] paths = doc.getPath().split("/");
+		String relativePath = getRelativePath(doc, rootDoc);
+		if(relativePath == null || relativePath.isEmpty())
+		{
+			return resultList;
+		}
+		
+		String [] paths = relativePath.split("/");
 		int deepth = paths.length;
 		System.out.println("getDocListFromRootToDoc() deepth:" + deepth); 
 		if(deepth < 1)
@@ -511,9 +517,14 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Integer reposId = repos.getId();
-		Long pid = 0L;
-		String  path = "";
-		int level = 0;
+		Long pid = rootDoc.getDocId();
+		String path = "";
+		if(!rootDoc.getName().isEmpty())
+		{
+			path = rootDoc.getPath() + rootDoc.getName();
+		}
+		int level = rootDoc.getLevel();
+		
 		DocAuth pDocAuth = rootDocAuth;
 		for(int i=0; i<deepth; i++)
 		{
@@ -544,6 +555,24 @@ public class BaseController  extends BaseFunction{
 		return resultList;
 	}
 	
+	private String getRelativePath(Doc doc, Doc rootDoc) {
+		String docPath = doc.getPath() + doc.getName();
+		String rootDocPath = doc.getPath() + doc.getName();
+		if(docPath.equals(rootDocPath))
+		{
+			return "";
+		}
+		
+		if(docPath.indexOf(rootDocPath) != 0)
+		{
+			return null;
+		}
+		
+		String relativePath =  docPath.substring(rootDocPath.length());
+		System.out.println("getRelativePath() relativePath:" + relativePath);
+		return relativePath;
+	}
+
 	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc) 
 	{
 		User autoSync = new User();

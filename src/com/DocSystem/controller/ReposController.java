@@ -560,9 +560,14 @@ public class ReposController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, rootDocPath, rootDocName, 0, 2, true, localRootPath, localVRootPath, null, null);
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		
-		printObject("getReposInitMenu() doc:", doc);
+		printObject("getReposInitMenu() rootDoc:", rootDoc);
+
+		Doc doc = null;
+		if(path != null && name != null)
+		{
+			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+			printObject("getReposInitMenu() doc:", doc);
+		}
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, userId, rootDoc, authMask);
@@ -581,7 +586,7 @@ public class ReposController extends BaseController{
 
 		List <Doc> docList = null;
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		if(doc.getDocId() == 0)
+		if(doc == null)
 		{
 			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
