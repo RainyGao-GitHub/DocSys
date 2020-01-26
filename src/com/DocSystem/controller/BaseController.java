@@ -485,11 +485,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 		
-		Doc rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+		if(rootDoc == null)
+		{
+			rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+		}
 		
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
 		addDocToSyncUpList(actionList, repos, rootDoc);
