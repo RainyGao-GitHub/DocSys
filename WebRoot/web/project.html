@@ -508,6 +508,16 @@
 	var gInitReposInfo = {};
 	var gReposInfo = {};
 	
+	//DocShare Info
+	var gShareId;
+	
+	//RootDoc Inof
+	var gRootDoc = {
+			docId : 0,
+			path : "",
+			name : "",
+	};
+	
 	//Doc Info
 	//页面第一次加载时从URL中获取的信息
 	var gInitDocInfo = {
@@ -1057,6 +1067,7 @@
 				reposId : vid,
 				path: pPath,
 				name: pName,
+				shareId: gShareId,
 			},
 			success : function (ret){
 				if( "ok" == ret.status){
@@ -1538,6 +1549,7 @@
 		    	docId:  docId,
 		    	path: parentPath,
 		    	name: docName,
+		    	shareId: gShareId,
 		    },
 		    success : function (ret) {
 		        	if( "ok" == ret.status ){
@@ -3238,39 +3250,74 @@ function CompareObj(objA, objB, flag) {
 			EnterKeyListenerForSearchDoc(e);	
 		}
 		
-    	//确定当前登录用户是否已登录e
-    	$.ajax({
-            url : "/DocSystem/getLoginUser.do",
-            type : "post",
-            dataType : "json",
-            data : {},
-            success : function (ret) {
-                if( "ok" == ret.status )
-                {
-                	var user = ret.data;
-                	login_user = user;
-                	//显示用户信息
-                	ShowUserInfo(user);
-                	loginBtnCtrl(user);
-                	
-                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
-            		getReposInfo(gInitReposInfo.id);
-                }
-                else 
-                {
-                	console.log(ret.msgInfo);
-                	alert(ret.msgInfo);
-                	//Jump to index.html
-                    //window.location.href = "index.html";
-                    
-                	//Show Login Dialog
-                    //showLoginPanel();
-                }
-            },
-            error : function () {
-            	showErrorMessage("服务器异常:获取用户信息失败");
-            }
-        });		
+		if(gShareId)
+		{
+	    	//确定当前登录用户是否已登录
+	    	$.ajax({
+	            url : "/DocSystem/getDocShare.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	shareId: gShareId,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status )
+	                {
+	                	var docShare = ret.data;
+	                	gRootDoc.docId = docShare.docId;
+	                	gRootDoc.path = docShare.path;
+	                	gRootDoc.name = docShare.name;
+	                	
+	                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
+	            		getReposInfo(gInitReposInfo.id);
+	                }
+	                else 
+	                {
+	                	console.log(ret.msgInfo);
+	                	alert(ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	            	showErrorMessage("服务器异常:获取文件分享信息失败");
+	            }
+	        });		
+		}
+		else
+		{
+	    	//确定当前登录用户是否已登录
+	    	$.ajax({
+	            url : "/DocSystem/getLoginUser.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {},
+	            success : function (ret) {
+	                if( "ok" == ret.status )
+	                {
+	                	var user = ret.data;
+	                	login_user = user;
+	                	//显示用户信息
+	                	ShowUserInfo(user);
+	                	loginBtnCtrl(user);
+	                	
+	                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
+	            		getReposInfo(gInitReposInfo.id);
+	                }
+	                else 
+	                {
+	                	console.log(ret.msgInfo);
+	                	alert(ret.msgInfo);
+	                	//Jump to index.html
+	                    //window.location.href = "index.html";
+	                    
+	                	//Show Login Dialog
+	                    //showLoginPanel();
+	                }
+	            },
+	            error : function () {
+	            	showErrorMessage("服务器异常:获取用户信息失败");
+	            }
+	        });		
+		}
 	}
 	
     function userLogout()
