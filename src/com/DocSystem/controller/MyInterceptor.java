@@ -37,6 +37,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/downloadDoc",
 		//文件分享
 		"Doc/getDocShare",
+		"Repos/getRepos",
 		"Doc/getDoc",
 		"Repos/getReposInitMenu",
 		"Repos/getSubDocList",		

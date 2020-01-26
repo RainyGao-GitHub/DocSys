@@ -109,15 +109,39 @@ public class ReposController extends BaseController{
 
 	/****************** get Repository **************/
 	@RequestMapping("/getRepos.do")
-	public void getRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void getRepos(Integer vid,
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getRepos vid: " + vid);
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		
+		Integer userId = null;
+		DocAuth authMask = null;
+		String rootDocPath = "";
+		String rootDocName = "";
+		if(shareId != null)
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
+			DocShare docShare = reposService.getDocShare(shareId);
+			if(verifyDocShare(docShare, vid, null, null) == false)
+			{
+				docSysErrorLog("无效分享或分享已过期！",rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			vid = docShare.getVid();
+			userId = docShare.getSharedBy();
+			rootDocPath = docShare.getPath();
+			rootDocName = docShare.getName();
+		}
+		else
+		{
+			User login_user = getLoginUser(session, request, response, rt);
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		Repos repos = reposService.getRepos(vid);
@@ -505,7 +529,7 @@ public class ReposController extends BaseController{
 		if(shareId != null)
 		{
 			DocShare docShare = reposService.getDocShare(shareId);
-			if(verifyDocShare(docShare, path, name) == false)
+			if(verifyDocShare(docShare, reposId, path, name) == false)
 			{
 				docSysErrorLog("无效分享或分享已过期！",rt);
 				writeJson(rt, response);			
@@ -610,7 +634,7 @@ public class ReposController extends BaseController{
 		if(shareId != null)
 		{
 			DocShare docShare = getDocShare(shareId);
-			if(verifyDocShare(docShare, path, name) == false)
+			if(verifyDocShare(docShare, vid, path, name) == false)
 			{
 				docSysErrorLog("无效分享或分享已过期！",rt);
 				writeJson(rt, response);			
@@ -675,7 +699,7 @@ public class ReposController extends BaseController{
 		//executeCommonActionList(actionList, rt);
 	}
 
-	private boolean verifyDocShare(DocShare docShare, String path, String name) {
+	private boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name) {
 		if(docShare == null)
 		{
 			System.out.println("verifyDocShare() docShare is null");
@@ -705,37 +729,40 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		String sharedDocPath = docShare.getPath();
-		String sharedDocName = docShare.getName();
-		if(sharedDocPath == null)
+		if(reposId != null)
 		{
-			System.out.println("verifyDocShare() docShare.path is null");
-			return false;
-		}
-		if(sharedDocName == null)
-		{
-			System.out.println("verifyDocShare() docShare.name is null");
-			return false;
-		}
-		String sharedPath = sharedDocPath + sharedDocName;
-		if(!sharedPath.isEmpty())
-		{
-			if(path == null)
+			if(reposId != docShare.getVid())
 			{
-				path = "";
-			}
-			if(name == null)
-			{
-				name = "";
-			}
-			String accessPath = path + name;
-			if(sharedPath.indexOf(accessPath) == 0)
-			{
-				System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
-				return false;
+				System.out.println("verifyDocShare() reposId not matched");
+				return false;				
 			}
 		}
 		
+		if(path != null && name != null)
+		{
+			String sharedDocPath = docShare.getPath();
+			String sharedDocName = docShare.getName();
+			if(sharedDocPath == null)
+			{
+				System.out.println("verifyDocShare() docShare.path is null");
+				return false;
+			}
+			if(sharedDocName == null)
+			{
+				System.out.println("verifyDocShare() docShare.name is null");
+				return false;
+			}
+			String sharedPath = sharedDocPath + sharedDocName;
+			if(!sharedPath.isEmpty())
+			{
+				String accessPath = path + name;
+				if(!sharedPath.equals(accessPath) && sharedPath.indexOf(accessPath) == 0)
+				{
+					System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
+					return false;
+				}
+			}
+		}		
 		return true;
 	}
 
