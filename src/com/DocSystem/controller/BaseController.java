@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +48,6 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
-import com.DocSystem.common.ObjMember;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
@@ -5258,6 +5256,46 @@ public class BaseController  extends BaseFunction{
 		return getRealDocAuth(repos, null, groupId, doc);
 	}
 	
+	protected DocAuth getUserDocAuthWithMask(Repos repos, Integer userId, Doc doc, DocAuth authMask) 
+	{
+		DocAuth docAuth = getUserDocAuth(repos, userId, doc);
+		if(docAuth == null || authMask == null)
+		{
+			return docAuth;
+		}
+		
+		updateDocAuthWithMask(docAuth, authMask);
+		return docAuth;
+	}
+	
+	protected void updateDocAuthWithMask(DocAuth docAuth, DocAuth authMask)
+	{
+		if(authMask.getAccess() == null || authMask.getAccess() == 0)
+		{
+			docAuth.setAccess(0);
+		}
+		
+		if(authMask.getAddEn() == null || authMask.getAddEn() == 0)
+		{
+			docAuth.setAddEn(0);
+		}
+
+		if(authMask.getDeleteEn() == null || authMask.getDeleteEn() == 0)
+		{
+			docAuth.setDeleteEn(0);
+		}
+		
+		if(authMask.getEditEn() == null || authMask.getEditEn() == 0)
+		{
+			docAuth.setEditEn(0);
+		}
+
+		if(authMask.getHeritable() == null || authMask.getHeritable() == 0)
+		{
+			docAuth.setHeritable(0);
+		}		
+	}
+	
 	protected DocAuth getUserDocAuth(Repos repos, Integer userId, Doc doc) 
 	{
 		return getRealDocAuth(repos, userId, null, doc);
@@ -5334,6 +5372,22 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return docIdList;
+	}
+
+	protected HashMap<Long,DocAuth> getUserDocAuthHashMapWithMask(Integer UserID,Integer reposID, DocAuth authMask) 
+	{
+		HashMap<Long,DocAuth> hashMap = getUserDocAuthHashMap(UserID, reposID);
+		if(hashMap == null || authMask == null)
+		{
+			return hashMap;
+		}
+		
+		for (HashMap.Entry<Long, DocAuth> entry : hashMap.entrySet()) 
+		{
+			DocAuth docAuth = entry.getValue();
+			updateDocAuthWithMask(docAuth, authMask);
+		}
+		return hashMap;
 	}
 	
 	protected HashMap<Long,DocAuth> getUserDocAuthHashMap(Integer UserID,Integer reposID) 
@@ -7283,7 +7337,7 @@ public class BaseController  extends BaseFunction{
 		
 		String backUpName = "docsystem_data";
 		
-		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", "UTF-8", url, user, pwd) == false)
+		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", null, url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
