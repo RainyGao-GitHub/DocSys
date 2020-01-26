@@ -516,6 +516,7 @@
 			docId : 0,
 			path : "",
 			name : "",
+			type : 2,
 	};
 	
 	//Doc Info
@@ -1495,8 +1496,9 @@
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
                     $("#projectName").text(gReposInfo.name);
-					//初始化目录树和Doc
-					InitMenuAndDoc();
+					callback && callback();
+                    //初始化目录树和Doc
+					//InitMenuAndDoc();
                 }else {
                     $("#projectName").text("仓库名");
                     alert(ret.msgInfo);
@@ -1513,13 +1515,19 @@
 	function InitMenuAndDoc()
 	{
 		console.log("InitMenuAndDoc()");	
-		if(gInitDocInfo.docId != 0)
+		if(gInitDocInfo.docId != gRootDoc.docId)
 		{
-	        getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
+			if(gInitDocInfo.docId == 0)
+			{
+				gInitDocInfo.docId = gRootDoc.docId;
+				gInitDocInfo.path = gRootDoc.path;
+				gInitDocInfo.name = gRootDoc.name;
+			}
+			getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
 		}
 		else
 		{
-			showDocList(null);
+			showDocList(gRootDoc);
 		}
 	    getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name);
 	}
@@ -3267,9 +3275,10 @@ function CompareObj(objA, objB, flag) {
 	                	gRootDoc.docId = docShare.docId;
 	                	gRootDoc.path = docShare.path;
 	                	gRootDoc.name = docShare.name;
+	                	gRootDoc.type = 2;
 	                	
 	                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
-	            		getReposInfo(gInitReposInfo.id);
+	            		getReposInfo(gInitReposInfo.id, InitMenuAndDoc);
 	                }
 	                else 
 	                {
@@ -3300,7 +3309,7 @@ function CompareObj(objA, objB, flag) {
 	                	loginBtnCtrl(user);
 	                	
 	                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
-	            		getReposInfo(gInitReposInfo.id);
+	            		getReposInfo(gInitReposInfo.id,InitMenuAndDoc);
 	                }
 	                else 
 	                {
