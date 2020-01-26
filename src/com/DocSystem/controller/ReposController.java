@@ -112,16 +112,12 @@ public class ReposController extends BaseController{
 	public void getRepos(Integer vid,
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
-		System.out.println("getRepos vid: " + vid);
+		System.out.println("getRepos vid: " + vid + " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
 		
-		Integer userId = null;
-		DocAuth authMask = null;
-		String rootDocPath = "";
-		String rootDocName = "";
 		if(shareId != null)
 		{
-			DocShare docShare = reposService.getDocShare(shareId);
+			DocShare docShare = getDocShare(shareId);
 			if(verifyDocShare(docShare, vid, null, null) == false)
 			{
 				docSysErrorLog("无效分享或分享已过期！",rt);
@@ -129,9 +125,6 @@ public class ReposController extends BaseController{
 				return;				
 			}
 			vid = docShare.getVid();
-			userId = docShare.getSharedBy();
-			rootDocPath = docShare.getPath();
-			rootDocName = docShare.getName();
 		}
 		else
 		{
@@ -528,7 +521,7 @@ public class ReposController extends BaseController{
 		String rootDocName = "";
 		if(shareId != null)
 		{
-			DocShare docShare = reposService.getDocShare(shareId);
+			DocShare docShare = getDocShare(shareId);
 			if(verifyDocShare(docShare, reposId, path, name) == false)
 			{
 				docSysErrorLog("无效分享或分享已过期！",rt);
