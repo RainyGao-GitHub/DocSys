@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,6 +30,7 @@ import com.DocSystem.entity.ChangedItem;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -39,6 +41,7 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.controller.BaseController;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 /*
@@ -2830,6 +2833,78 @@ public class DocController extends BaseController{
 		
 		unlockDoc(doc,login_user,docLock);
 		writeJson(rt, response);
+	}
+
+	/****************   add a DocShare ******************/
+	@RequestMapping("/addDocShare.do")
+	public void addDocShare(Integer reposId, String path, String name,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+			String sharePwd,
+			Integer shareHours,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+		
+		DocShare docShare = new DocShare();
+		docShare.setVid(doc.getVid());
+		docShare.setDocId(doc.getDocId());
+		docShare.setPath(doc.getPath());
+		docShare.setName(doc.getName());
+		docShare.setSharedBy(login_user.getId());
+		docShare.setSharePwd(sharePwd);
+
+		DocAuth docAuth = new DocAuth();
+		docAuth.setIsAdmin(isAdmin);
+		docAuth.setAccess(access);
+		docAuth.setAddEn(addEn);
+		docAuth.setDeleteEn(deleteEn);
+		docAuth.setEditEn(editEn);
+		docAuth.setHeritable(heritable);
+		String shareAuth = JSON.toJSONString(docAuth);
+		docShare.setShareAuth(shareAuth);
+		if(shareHours != null)
+		{
+			long curTime = new Date().getTime();
+			long expireTime = curTime + shareHours * 60 * 60;
+			docShare.setExpireTime(expireTime);			
+		}		
+		Integer shareId = buildShareId(docShare);
+		docShare.setShareId(shareId);
+		
+		if(reposService.addDocShare(docShare) == 0)
+		{
+			docSysErrorLog("创建文件分享失败！", rt);
+		}
+		else
+		{
+			rt.setData(docShare);
+		}
+		writeJson(rt, response);
+	}
+	
+	private Integer buildShareId(DocShare docShare) {
+		return docShare.hashCode();
 	}
 
 	/* 文件搜索与排序 

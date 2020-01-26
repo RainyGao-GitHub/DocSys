@@ -609,7 +609,7 @@ public class ReposController extends BaseController{
 		DocAuth authMask = null;
 		if(shareId != null)
 		{
-			DocShare docShare = reposService.getDocShare(shareId);
+			DocShare docShare = getDocShare(shareId);
 			if(verifyDocShare(docShare, path, name) == false)
 			{
 				docSysErrorLog("无效分享或分享已过期！",rt);
@@ -674,7 +674,7 @@ public class ReposController extends BaseController{
 		executeUniqueCommonActionList(actionList, rt);
 		//executeCommonActionList(actionList, rt);
 	}
-	
+
 	private boolean verifyDocShare(DocShare docShare, String path, String name) {
 		if(docShare == null)
 		{
