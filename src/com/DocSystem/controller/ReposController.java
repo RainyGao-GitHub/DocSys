@@ -500,6 +500,8 @@ public class ReposController extends BaseController{
 
 		Integer userId = null;
 		DocAuth authMask = null;
+		String rootDocPath = "";
+		String rootDocName = "";
 		if(shareId != null)
 		{
 			DocShare docShare = reposService.getDocShare(shareId);
@@ -511,6 +513,8 @@ public class ReposController extends BaseController{
 			}
 			reposId = docShare.getVid();
 			userId = docShare.getSharedBy();
+			rootDocPath = docShare.getPath();
+			rootDocName = docShare.getName();
 		}
 		else
 		{
@@ -537,13 +541,14 @@ public class ReposController extends BaseController{
 		//Add doc for SyncUp
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-		
+
+		Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, rootDocPath, rootDocName, 0, 2, true, localRootPath, localVRootPath, null, null);
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		printObject("getReposInitMenu() doc:", doc);
 		
 		//get the rootDocAuth
-		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
+		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, userId, rootDoc, authMask);
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
 			System.out.println("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
@@ -561,13 +566,12 @@ public class ReposController extends BaseController{
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		if(doc.getDocId() == 0)
 		{
-			docId = 0L;
-			docList = getAccessableSubDocList(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
 		}
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt, actionList);
 		}
 		printObject("getReposInitMenu() docList:", docList);
 
@@ -701,17 +705,19 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		String tmpPath = docShare.getPath();
-		String tmpName = docShare.getName();
-		if(tmpPath == null)
+		String sharedDocPath = docShare.getPath();
+		String sharedDocName = docShare.getName();
+		if(sharedDocPath == null)
 		{
-			tmpPath = "";
+			System.out.println("verifyDocShare() docShare.path is null");
+			return false;
 		}
-		if(tmpName == null)
+		if(sharedDocName == null)
 		{
-			tmpName = "";
+			System.out.println("verifyDocShare() docShare.name is null");
+			return false;
 		}
-		String sharedPath = tmpPath + tmpName;
+		String sharedPath = sharedDocPath + sharedDocName;
 		if(!sharedPath.isEmpty())
 		{
 			if(path == null)
@@ -794,7 +800,7 @@ public class ReposController extends BaseController{
 			Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, rt, actionList);
 		}
 		
 		//合并列表
