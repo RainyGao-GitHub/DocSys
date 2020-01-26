@@ -1622,7 +1622,8 @@
 	        //Update URL 保证页面刷新后还是处于正确的状态
 	        var param = {
 	        	vid : gReposInfo.id,
-	            doc : gDocInfo.docId,
+	            shareId: gShareId,
+		        doc : gDocInfo.docId,
 	            path: path,
 	            name: name,
 	            edit: gDocInfo.edit,
@@ -1636,7 +1637,8 @@
             //Update URL 保证页面刷新后还是处于正确的状态
             var param = {
             	vid : gReposInfo.id,
-            	 showType: gShowType,
+            	shareId: gShareId,
+            	showType: gShowType,
             };
             var url = makeUrl(param);
     		window.history.pushState({}, "wiki", url);
