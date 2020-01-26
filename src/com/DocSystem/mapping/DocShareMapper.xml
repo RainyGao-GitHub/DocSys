@@ -158,31 +158,31 @@
         and ID = #{id,jdbcType=INTEGER}
       </if>
       <if test="shareId != null" >
-        and SHARE_ID = #{shareId,jdbcType=INTEGER},
+        and SHARE_ID = #{shareId,jdbcType=INTEGER}
       </if>
       <if test="name != null" >
-        and NAME = #{name,jdbcType=VARCHAR},
+        and NAME = #{name,jdbcType=VARCHAR}
       </if>
       <if test="path != null" >
-        and PATH = #{path,jdbcType=VARCHAR},
+        and PATH = #{path,jdbcType=VARCHAR}
       </if>
       <if test="docId != null" >
-        and DOC_ID = #{docId,jdbcType=BIGINT},
+        and DOC_ID = #{docId,jdbcType=BIGINT}
       </if>
       <if test="vid != null" >
-        and VID = #{vid,jdbcType=INTEGER},
+        and VID = #{vid,jdbcType=INTEGER}
       </if>
       <if test="shareAuth != null" >
-        and SHARE_AUTH = #{shareAuth,jdbcType=VARCHAR},
+        and SHARE_AUTH = #{shareAuth,jdbcType=VARCHAR}
       </if>
       <if test="sharePwd != null" >
-        and SHARE_PWD = #{sharePwd,jdbcType=VARCHAR},
+        and SHARE_PWD = #{sharePwd,jdbcType=VARCHAR}
       </if>
       <if test="sharedBy != null" >
-        and SHARED_BY = #{sharedBy,jdbcType=INTEGER},
+        and SHARED_BY = #{sharedBy,jdbcType=INTEGER}
       </if>
       <if test="expireTime != null" >
-        and EXPIRE_TIME = #{expireTime,jdbcType=BIGINT},
+        and EXPIRE_TIME = #{expireTime,jdbcType=BIGINT}
       </if>
   </select>
  
@@ -193,31 +193,31 @@
         and ID = #{id,jdbcType=INTEGER}
       </if>
       <if test="shareId != null" >
-        and SHARE_ID = #{shareId,jdbcType=INTEGER},
+        and SHARE_ID = #{shareId,jdbcType=INTEGER}
       </if>
       <if test="name != null" >
-        and NAME = #{name,jdbcType=VARCHAR},
+        and NAME = #{name,jdbcType=VARCHAR}
       </if>
       <if test="path != null" >
-        and PATH = #{path,jdbcType=VARCHAR},
+        and PATH = #{path,jdbcType=VARCHAR}
       </if>
       <if test="docId != null" >
-        and DOC_ID = #{docId,jdbcType=BIGINT},
+        and DOC_ID = #{docId,jdbcType=BIGINT}
       </if>
       <if test="vid != null" >
-        and VID = #{vid,jdbcType=INTEGER},
+        and VID = #{vid,jdbcType=INTEGER}
       </if>
       <if test="shareAuth != null" >
-        and SHARE_AUTH = #{shareAuth,jdbcType=VARCHAR},
+        and SHARE_AUTH = #{shareAuth,jdbcType=VARCHAR}
       </if>
       <if test="sharePwd != null" >
-        and SHARE_PWD = #{sharePwd,jdbcType=VARCHAR},
+        and SHARE_PWD = #{sharePwd,jdbcType=VARCHAR}
       </if>
       <if test="sharedBy != null" >
-        and SHARED_BY = #{sharedBy,jdbcType=INTEGER},
+        and SHARED_BY = #{sharedBy,jdbcType=INTEGER}
       </if>
       <if test="expireTime != null" >
-        and EXPIRE_TIME = #{expireTime,jdbcType=BIGINT},
+        and EXPIRE_TIME = #{expireTime,jdbcType=BIGINT}
       </if>
   </delete>
 </mapper>

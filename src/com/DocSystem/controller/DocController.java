@@ -2906,6 +2906,27 @@ public class DocController extends BaseController{
 	private Integer buildShareId(DocShare docShare) {
 		return docShare.hashCode();
 	}
+	
+	/****************   get DocShare ******************/
+	@RequestMapping("/getDocShare.do")
+	public void getDocShare(Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getDocShare shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+			
+		DocShare docShare = getDocShare(shareId);
+		if(docShare == null)
+		{
+			docSysErrorLog("分享信息不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		rt.setData(docShare);
+		writeJson(rt, response);
+	}
 
 	/* 文件搜索与排序 
 	 * reposId: 在指定的仓库下搜索，如果为空表示搜索所有可见仓库下的文件
