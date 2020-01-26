@@ -3971,6 +3971,73 @@ public class BaseController  extends BaseFunction{
 		}
 		return results.get(0);
 	}
+	
+	protected boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name) {
+		if(docShare == null)
+		{
+			System.out.println("verifyDocShare() docShare is null");
+			return false;
+		}
+		
+		if(docShare.getVid() == null)
+		{
+			System.out.println("verifyDocShare() docShare.vid is null");
+			return false;
+		}
+		
+		if(docShare.getSharedBy() == null)
+		{
+			System.out.println("verifyDocShare() docShare.sharedBy is null");
+			return false;
+		}
+		
+		Long expireTime = docShare.getExpireTime();
+		if(expireTime != null)
+		{
+			long curTime = new Date().getTime();
+			if(curTime < expireTime)	//
+			{
+				System.out.println("verifyDocShare() docShare is expired");
+				return false;
+			}
+		}
+		
+		if(reposId != null)
+		{
+			if(reposId != docShare.getVid())
+			{
+				System.out.println("verifyDocShare() reposId not matched");
+				return false;				
+			}
+		}
+		
+		if(path != null && name != null)
+		{
+			String sharedDocPath = docShare.getPath();
+			String sharedDocName = docShare.getName();
+			if(sharedDocPath == null)
+			{
+				System.out.println("verifyDocShare() docShare.path is null");
+				return false;
+			}
+			if(sharedDocName == null)
+			{
+				System.out.println("verifyDocShare() docShare.name is null");
+				return false;
+			}
+			String sharedPath = sharedDocPath + sharedDocName;
+			if(!sharedPath.isEmpty())
+			{
+				String accessPath = path + name;
+				if(!sharedPath.equals(accessPath) && sharedPath.indexOf(accessPath) == 0)
+				{
+					System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
+					return false;
+				}
+			}
+		}		
+		return true;
+	}
 
 	private boolean executeDBAction(CommonAction action, ReturnAjax rt) 
 	{
@@ -5056,9 +5123,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUseAccessRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt)
+	protected boolean checkUseAccessRight(Repos repos, Integer userId, Doc doc, DocAuth authMask, ReturnAjax rt)
 	{
-		DocAuth docAuth = getUserDocAuth(repos, userId, doc);
+		DocAuth docAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
