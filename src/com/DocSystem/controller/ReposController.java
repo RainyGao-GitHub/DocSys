@@ -606,7 +606,7 @@ public class ReposController extends BaseController{
 		if(shareId != null)
 		{
 			DocShare docShare = reposService.getDocShare(shareId);
-			if(verifyDocShare(docShare) == false)
+			if(verifyDocShare(docShare, path, name) == false)
 			{
 				docSysErrorLog("无效分享或分享已过期！",rt);
 				writeJson(rt, response);			
