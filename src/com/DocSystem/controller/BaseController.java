@@ -2658,7 +2658,7 @@ public class BaseController  extends BaseFunction{
 					Doc localChangeDoc = docChange.getDoc();
 					if(indexGetDoc(repos, localChangeDoc, false) == null)
 					{
-						System.out.println("rebuildIndexForDoc index 已存在:" + localChangeDoc.getDocId() + localChangeDoc.getName());
+						//System.out.println("rebuildIndexForDoc index 已存在:" + localChangeDoc.getDocId() + localChangeDoc.getName());
 						buildIndexForDoc(repos,localChangeDoc, null, null, rt, 0); //不更新子目录
 					}
 				}

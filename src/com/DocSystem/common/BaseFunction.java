@@ -1351,7 +1351,7 @@ public class BaseFunction{
 			File file = new File(filePath);
 			if(!file.exists() || !file.isFile())
 			{
-				System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				//System.out.println("readDocContentFromFile " +filePath+ " 不存在或不是文件");
 				return null;
 			}
 			
