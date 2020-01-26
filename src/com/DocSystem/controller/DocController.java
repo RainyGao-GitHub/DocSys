@@ -1696,7 +1696,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), doc, null, rt) == false)
 		{
 			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
 			writeJson(rt, response);	
@@ -1817,7 +1817,7 @@ public class DocController extends BaseController{
 		}
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUseAccessRight(repos, login_user.getId(), doc, null, rt) == false)
 		{
 			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
 			writeJson(rt, response);	
@@ -2166,18 +2166,36 @@ public class DocController extends BaseController{
 	/****************   get Document Info ******************/
 	@RequestMapping("/getDoc.do")
 	public void getDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
+		System.out.println("getDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		Integer userId = null;
+		DocAuth authMask = null;
+		if(shareId != null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
+			DocShare docShare = getDocShare(shareId);
+			if(verifyDocShare(docShare, reposId, path, name) == false)
+			{
+				docSysErrorLog("无效分享或分享已过期！",rt);
+				writeJson(rt, response);			
+				return;				
+			}
+			reposId = docShare.getVid();
+			userId = docShare.getSharedBy();
+		}
+		else
+		{
+			User login_user = getLoginUser(session, request, response, rt);
+			if(login_user == null)
+			{
+				docSysErrorLog("用户未登录，请先登录！", rt);
+				writeJson(rt, response);			
+				return;
+			}
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -2194,13 +2212,16 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUseAccessRight(repos, userId, doc,authMask, rt) == false)
 		{
 			System.out.println("getDoc() you have no access right on doc:" + docId);
 			writeJson(rt, response);	
 			return;
 		}
 
+		User access_user = new User();
+		access_user.setId(userId);
+		
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
@@ -2219,7 +2240,7 @@ public class DocController extends BaseController{
 				Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 				rt.setDataEx(downloadDoc);
 			}
-		
+			
 			if(docType == 1 || docType == 3)	//docType { 1: get docText only, 2: get content only 3: get docText and content } 
 			{
 				String docText = null;
@@ -2227,13 +2248,13 @@ public class DocController extends BaseController{
 				if(isText(fileSuffix))
 				{
 					docText = readRealDocContent(repos, doc);
-					tmpDocText= readTmpRealDocContent(repos, doc, login_user);
+					tmpDocText= readTmpRealDocContent(repos, doc, access_user);
 				}
 				else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 				{
-					if(checkAndGenerateOfficeContent(repos, doc, login_user, fileSuffix))
+					if(checkAndGenerateOfficeContent(repos, doc, access_user, fileSuffix))
 					{
-						docText = readOfficeContent(repos, doc, login_user);
+						docText = readOfficeContent(repos, doc, access_user);
 					}
 				}
 				doc.setDocText(docText);
@@ -2251,7 +2272,7 @@ public class DocController extends BaseController{
 	 		//doc.setContent(JSONObject.toJSONString(content));
 			doc.setContent(content);
 			
-			String tmpContent = readTmpVirtualDocContent(repos, doc, login_user);
+			String tmpContent = readTmpVirtualDocContent(repos, doc, access_user);
 		    if( null !=tmpContent){
 		    	tmpContent = tmpContent.replaceAll("\t","");
 	        }
