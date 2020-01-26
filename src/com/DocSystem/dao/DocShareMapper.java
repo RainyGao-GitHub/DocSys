@@ -1,5 +1,8 @@
 package com.DocSystem.dao;
 
+import java.util.List;
+
+import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.DocShare;
 
 public interface DocShareMapper {
@@ -14,4 +17,10 @@ public interface DocShareMapper {
     int updateByPrimaryKeySelective(DocShare record);
 
     int updateByPrimaryKey(DocShare record);
+    
+    //get DocShareList
+    List<DocShare> selectSelective(DocShare record);
+    
+    //delete selctive
+	int deleteSelective(DocShare record);
 }
