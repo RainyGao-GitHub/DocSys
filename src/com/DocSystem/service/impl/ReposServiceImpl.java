@@ -14,8 +14,10 @@ import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.dao.ReposAuthMapper;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.dao.DocMapper;
+import com.DocSystem.dao.DocShareMapper;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.DocShare;
 import com.DocSystem.dao.DocAuthMapper;
 import com.DocSystem.dao.DocLockMapper;
 import com.DocSystem.entity.User;
@@ -40,6 +42,8 @@ public class ReposServiceImpl implements ReposService {
     private UserMapper userDao;  
     @Autowired
     private UserGroupMapper userGroupDao;  
+    @Autowired
+    private DocShareMapper docShareDao;  
     
     //add a Repos
     public int addRepos(Repos repos) {  
@@ -243,4 +247,9 @@ public class ReposServiceImpl implements ReposService {
 	public int deleteDoc(Doc doc) {
 		return docDao.deleteSelective(doc);	
 	}
+	
+	//get DocShare by primaryKey
+	public DocShare getDocShare(Integer shareId) {
+		return docShareDao.selectByPrimaryKey(shareId);	
+	}	
 }  
