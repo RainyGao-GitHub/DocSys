@@ -4013,7 +4013,9 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private DocAuth getShareAuth(DocShare docShare) {
-		// TODO Auto-generated method stub
+		DocAuth docAuth = new DocAuth();
+		docAuth.setAccess(1);
+		
 		if(docShare == null)
 		{
 			return null;
@@ -4022,14 +4024,13 @@ public class BaseController  extends BaseFunction{
 		String shareAuth = docShare.getShareAuth();
 		if(shareAuth == null || shareAuth.isEmpty())
 		{
-			return null;
+			return docAuth;
 		}
 		
 		//解析JsonString
-		
-		
-		
-		return null;
+		JSONObject jobj = JSON.parseObject(shareAuth);
+		docAuth = (DocAuth) convertJsonObjToObj(jobj, docAuth, DOCSYS_DOC_AUTH);		
+		return docAuth;
 	}
 	
 	protected boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name, ReturnAjax rt) {
