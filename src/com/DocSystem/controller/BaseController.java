@@ -48,6 +48,7 @@ import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.common.DocChange;
+import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.DocChange.DocChangeType;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.entity.ChangedItem;
@@ -3970,6 +3971,62 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		return results.get(0);
+	}
+	
+	protected ReposAccess checkAndGetAccessInfo(
+			Integer shareId, 
+			HttpSession session, HttpServletRequest request, HttpServletResponse response, 
+			Integer reposId, String path, String name, 
+			ReturnAjax rt) 
+	{
+		ReposAccess reposAccess = null;
+		if(shareId != null)
+		{
+			DocShare docShare = getDocShare(shareId);
+			if(verifyDocShare(docShare, reposId, path, name, rt) == false)
+			{
+				return null;				
+			}
+			reposAccess = new ReposAccess();
+			reposAccess.setAccessUserId(docShare.getSharedBy());
+			reposAccess.setDocShare(docShare);
+			reposAccess.setRootDocPath(docShare.getPath());
+			reposAccess.setRootDocName(docShare.getName());
+			DocAuth authMask = getShareAuth(docShare);
+			reposAccess.setAuthMask(authMask);
+		}
+		else
+		{
+			User login_user = getLoginUser(session, request, response, rt);
+			if(login_user == null)
+			{
+				rt.setError("用户未登录，请先登录！");
+			}
+			reposAccess = new ReposAccess();
+			reposAccess.setAccessUserId(login_user.getId());
+			reposAccess.setAccessUser(login_user);
+		}
+		return reposAccess;
+	}
+
+	private DocAuth getShareAuth(DocShare docShare) {
+		// TODO Auto-generated method stub
+		if(docShare == null)
+		{
+			return null;
+		}
+		
+		String shareAuth = docShare.getShareAuth();
+		if(shareAuth == null || shareAuth.isEmpty())
+		{
+			return null;
+		}
+		
+		//解析JsonString
+		
+		
+		
+		return null;
 	}
 	
 	protected boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name, ReturnAjax rt) {
