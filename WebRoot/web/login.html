@@ -112,7 +112,12 @@
                 	console.log("登录成功");
                 	login_user = $('input[name="userName"]').val();
                 	//document.location.reload();
-                	var url = window.location.href;
+                	if(gShareId)
+                	{
+                		gShareId = undefined;
+                		updateUrl();
+                	}
+                	var url = window.location.href;               	
                 	window.location.href = url;	//刷新页面
                 }else {
                 	alert("错误："+ret.msgInfo);
