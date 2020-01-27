@@ -5141,9 +5141,9 @@ public class BaseController  extends BaseFunction{
 	}	
 	/********************* DocSys权限相关接口 ****************************/
 	//检查用户的新增权限
-	protected boolean checkUserAddRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt) 
+	protected boolean checkUserAddRight(Repos repos, Integer userId, Doc doc,  DocAuth authMask, ReturnAjax rt) 
 	{		
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, doc);
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -5165,9 +5165,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt)
+	protected boolean checkUserDeleteRight(Repos repos, Integer userId, Doc doc,  DocAuth authMask, ReturnAjax rt)
 	{	
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, doc);
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
@@ -5189,9 +5189,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean checkUserEditRight(Repos repos, Integer userId, Doc doc, ReturnAjax rt)
+	protected boolean checkUserEditRight(Repos repos, Integer userId, Doc doc,  DocAuth authMask, ReturnAjax rt)
 	{
-		DocAuth docUserAuth = getUserDocAuth(repos, userId, doc);
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
 			rt.setError("您无此操作权限，请联系管理员");
