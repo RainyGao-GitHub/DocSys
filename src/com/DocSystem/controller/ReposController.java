@@ -549,8 +549,6 @@ public class ReposController extends BaseController{
 		printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
 		
 		List <Doc> docList = null;
-		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		
 		if(rootFile.isFile())
 		{
 			rootDoc.setType(1);
@@ -563,6 +561,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		
 		Doc doc = null;
 		if(path != null && name != null)
@@ -642,11 +641,32 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		File file = new File(localRootPath + doc.getPath(), doc.getName());
+		if(file.exists() == false)
+		{
+			docSysErrorLog("目录不存在！",rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		List <Doc> docList = null;
+		if(file.isFile())
+		{
+			doc.setType(1);
+			doc.setCreateTime(file.lastModified());
+			doc.setLatestEditTime(file.lastModified());
+			docList = new ArrayList<Doc>();
+			docList.add(doc);
+			rt.setData(docList);
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//docAuthHashMap for access_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		List <Doc> docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
+		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
 
 		if(docList == null)
 		{
@@ -659,7 +679,6 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 		
 		executeUniqueCommonActionList(actionList, rt);
-		//executeCommonActionList(actionList, rt);
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
