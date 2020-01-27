@@ -1282,17 +1282,18 @@ public class DocController extends BaseController{
 	@RequestMapping("/downloadDocPrepare.do")
 	public void downloadDocPrepare(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			Integer downloadType,
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+			Integer shareId,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
-		System.out.println("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType);
+		System.out.println("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			return;
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -1309,7 +1310,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		if(downloadType != null && downloadType == 2)
 		{
-			downloadVDocPrepare_FSM(repos, doc, login_user, rt);
+			downloadVDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);
 		}
 		else
 		{
@@ -1317,18 +1318,18 @@ public class DocController extends BaseController{
 			{
 			case 1:
 			case 2:
-				downloadDocPrepare_FSM(repos, doc, login_user, rt);				
+				downloadDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);				
 				break;
 			case 3:
 			case 4:
-				downloadDocPrepare_VRP(repos, doc, login_user, rt);				
+				downloadDocPrepare_VRP(repos, doc, reposAccess.getAccessUser(), rt);				
 				break;
 			}
 		}
 		writeJson(rt, response);
 	}
 
-	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
+	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User login_user, ReturnAjax rt)
 	{	
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)
@@ -1384,7 +1385,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
+	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt)
 	{	
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
@@ -1495,7 +1496,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadVDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt) throws Exception
+	public void downloadVDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt)
 	{	
 		Doc vDoc = buildVDoc(doc);
 
@@ -1540,6 +1541,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/downloadDoc.do")
 	public void downloadDoc(String targetPath, String targetName, 
 			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
+			Integer shareId,
 			String authCode, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
@@ -1556,12 +1558,11 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			User login_user = getLoginUser(session, request, response, rt);
-			if(login_user == null)
+			ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, rt);
+			if(reposAccess == null)
 			{
-				docSysErrorLog("用户未登录，请先登录！", rt);
 				writeJson(rt, response);			
-				return;
+				return;	
 			}
 		}
 		
