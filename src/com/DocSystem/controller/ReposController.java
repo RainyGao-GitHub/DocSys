@@ -22,6 +22,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocSysConfig;
+import com.DocSystem.common.ReposAccess;
 import com.DocSystem.controller.BaseController;
 
 /*
@@ -114,17 +115,40 @@ public class ReposController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		System.out.println("getRepos vid: " + vid + " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
+
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, null, null, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
 		
+		Repos repos = reposService.getRepos(vid);
+		rt.setData(repos);
+		writeJson(rt, response);
+	}
+
+	private ReposAccess checkAndGetAccessInfo(
+			Integer shareId, 
+			HttpSession session, HttpServletRequest request, HttpServletResponse response, 
+			Integer reposId, String path, String name, 
+			ReturnAjax rt) 
+	{
+		ReposAccess reposAccess = null;
 		if(shareId != null)
 		{
 			DocShare docShare = getDocShare(shareId);
-			if(verifyDocShare(docShare, vid, null, null) == false)
+			if(verifyDocShare(docShare, reposId, path, name, rt) == false)
 			{
-				docSysErrorLog("无效分享或分享已过期！",rt);
-				writeJson(rt, response);			
-				return;				
+				return null;				
 			}
-			vid = docShare.getVid();
+			reposAccess = new ReposAccess();
+			reposAccess.setAccessUserId(docShare.getSharedBy());
+			reposAccess.setDocShare(docShare);
+			reposAccess.setRootDocPath(docShare.getPath());
+			reposAccess.setRootDocName(docShare.getName());
+			DocAuth authMask = getShareAuth(docShare);
+			reposAccess.setAuthMask(authMask);
 		}
 		else
 		{
@@ -132,14 +156,32 @@ public class ReposController extends BaseController{
 			if(login_user == null)
 			{
 				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
 			}
+			reposAccess = new ReposAccess();
+			reposAccess.setAccessUserId(login_user.getId());
+			reposAccess.setAccessUser(login_user);
+		}
+		return reposAccess;
+	}
+
+	private DocAuth getShareAuth(DocShare docShare) {
+		// TODO Auto-generated method stub
+		if(docShare == null)
+		{
+			return null;
 		}
 		
-		Repos repos = reposService.getRepos(vid);
-		rt.setData(repos);
-		writeJson(rt, response);
+		String shareAuth = docShare.getShareAuth();
+		if(shareAuth == null || shareAuth.isEmpty())
+		{
+			return null;
+		}
+		
+		//解析JsonString
+		
+		
+		
+		return null;
 	}
 
 	/****************   add a Repository ******************/
@@ -515,34 +557,11 @@ public class ReposController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 
-		Integer userId = null;
-		DocAuth authMask = null;
-		String rootDocPath = "";
-		String rootDocName = "";
-		if(shareId != null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			DocShare docShare = getDocShare(shareId);
-			if(verifyDocShare(docShare, reposId, path, name) == false)
-			{
-				docSysErrorLog("无效分享或分享已过期！",rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			reposId = docShare.getVid();
-			userId = docShare.getSharedBy();
-			rootDocPath = docShare.getPath();
-			rootDocName = docShare.getName();
-		}
-		else
-		{
-			User login_user = getLoginUser(session, request, response, rt);
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			userId = login_user.getId();
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		//Get Repos
@@ -558,8 +577,8 @@ public class ReposController extends BaseController{
 		//Add doc for SyncUp
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
-
-		Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, rootDocPath, rootDocName, 0, 2, true, localRootPath, localVRootPath, null, null);
+		
+		Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), 0, 2, true, localRootPath, localVRootPath, null, null);
 		printObject("getReposInitMenu() rootDoc:", rootDoc);
 
 		Doc doc = null;
@@ -570,7 +589,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//get the rootDocAuth
-		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, userId, rootDoc, authMask);
+		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), rootDoc, reposAccess.getAuthMask());
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
 			System.out.println("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
@@ -581,7 +600,7 @@ public class ReposController extends BaseController{
 		printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
 		//docAuthHashMap for login_user
-		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(userId,repos.getId(), authMask);
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
 
 		List <Doc> docList = null;
@@ -627,30 +646,11 @@ public class ReposController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		Integer userId = null;
-		DocAuth authMask = null;
-		if(shareId != null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, path, name, rt);
+		if(reposAccess == null)
 		{
-			DocShare docShare = getDocShare(shareId);
-			if(verifyDocShare(docShare, vid, path, name) == false)
-			{
-				docSysErrorLog("无效分享或分享已过期！",rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			vid = docShare.getVid();
-			userId = docShare.getSharedBy();
-		}
-		else
-		{
-			User login_user = getLoginUser(session, request, response, rt);
-			if(login_user == null)
-			{
-				rt.setError("用户未登录，请先登录！");
-				writeJson(rt, response);			
-				return;
-			}
-			userId = login_user.getId();
+			writeJson(rt, response);			
+			return;	
 		}
 		
 		//Get Repos
@@ -668,7 +668,7 @@ public class ReposController extends BaseController{
 		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true, localRootPath, localVRootPath, null, null);
 		
 		//get the rootDocAuth
-		DocAuth docAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
 			System.out.println("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
@@ -678,7 +678,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//docAuthHashMap for access_user
-		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(userId,repos.getId(), authMask);
+		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		List <Doc> docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
