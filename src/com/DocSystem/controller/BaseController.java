@@ -3989,6 +3989,9 @@ public class BaseController  extends BaseFunction{
 			}
 			reposAccess = new ReposAccess();
 			reposAccess.setAccessUserId(docShare.getSharedBy());
+			User accessUser = new User();
+			accessUser.setId(docShare.getSharedBy());
+			reposAccess.setAccessUser(accessUser);
 			reposAccess.setDocShare(docShare);
 			reposAccess.setRootDocPath(docShare.getPath());
 			reposAccess.setRootDocName(docShare.getName());
