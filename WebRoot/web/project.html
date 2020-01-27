@@ -643,6 +643,7 @@
                 path: parentPath,
                 name: docName,
                 force: force,
+                shareId: gShareId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -719,6 +720,7 @@
                 path: parentPath,
                 name: docName,
                 dstName: newName,
+                shareId: gShareId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -881,7 +883,10 @@
 	   	var path = base64_encode(node.path);
 	   	var name = base64_encode(node.name);
 	   	var href = "/DocSystem/web/project.html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
-			
+		if(gShareId)
+		{
+			href += "&shareId"+gShareId;
+		}
 		console.log(href);
 		var host = window.location.host;	//域名带端口
 		//var host2=document.domain; 			//域名不带端口
@@ -1875,6 +1880,7 @@
 	            pid: docInfo.pid,
 	            path: docInfo.path,
 	            name: docInfo.name,
+                shareId: gShareId,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
@@ -1973,6 +1979,7 @@
 		            	                path: docInfo.path,
 		            	                name: docInfo.name,
 		            	                docType: 1, //取回文件内容
+		            	                shareId: gShareId,
 		            	            },
 		            	            success : function (ret2) {
 		            	            	console.log("showTextInDialog ret2",ret2);
@@ -2077,6 +2084,10 @@
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+		if(gShareId)
+		{
+			docLink += "&shareId="+gShareId;
+		}
 		console.log("showImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);
 		$("#imgPreview").show();
@@ -3882,6 +3893,7 @@ function CompareObj(objA, objB, flag) {
                 docId: docId,
                 path: path,
                 name: name,
+                shareId: gShareId,
             },
             success : function (ret) {
          		console.log("showDocList ret:", ret)
@@ -4374,6 +4386,7 @@ function CompareObj(objA, objB, flag) {
 				path: path,
 				name: name,
 				type: type,
+                shareId: gShareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -4709,6 +4722,7 @@ function CompareObj(objA, objB, flag) {
     		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
     		otherParam:{
     			"vid": reposId,
+                "shareId": gShareId,
     		},
     		dataFilter: asyncDataFilter, 
 		};
@@ -5218,8 +5232,12 @@ function CompareObj(objA, objB, flag) {
 			var imgName =  file.lastModified + "_" + file.name;
 			var path = base64_urlsafe_encode(gDocInfo.path);
     		var name = base64_urlsafe_encode(gDocInfo.name);
-    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName; 
-      		xhr.open("post", imageUploadURL);
+    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name + "&imgName=" + imgName;
+      		if(gShareId)
+      		{
+      			imageUploadURL="&shareId="+gShareId;
+      		}
+    		xhr.open("post", imageUploadURL);
 			xhr.send(form);
 			
 			//设置异步上传状态变化回调处a理函数
