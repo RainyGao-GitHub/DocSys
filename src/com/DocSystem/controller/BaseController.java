@@ -4048,6 +4048,27 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		if(docShare.getDocId() == null)
+		{
+			System.out.println("verifyDocShare() docShare.docId is null");
+			rt.setError("无效文件分享");
+			return false;
+		}
+
+		if(docShare.getPath() == null)
+		{
+			System.out.println("verifyDocShare() docShare.path is null");
+			rt.setError("无效文件分享");
+			return false;
+		}
+
+		if(docShare.getName() == null)
+		{
+			System.out.println("verifyDocShare() docShare.name is null");
+			rt.setError("无效文件分享");
+			return false;
+		}
+		
 		if(docShare.getSharedBy() == null)
 		{
 			System.out.println("verifyDocShare() docShare.sharedBy is null");
