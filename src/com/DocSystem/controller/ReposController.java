@@ -1,5 +1,6 @@
 package com.DocSystem.controller;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -518,19 +519,11 @@ public class ReposController extends BaseController{
 		}
 		printObject("getReposInitMenu() repos:", repos);
 		
-		//Add doc for SyncUp
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
 		Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), 0, 2, true, localRootPath, localVRootPath, null, null);
 		printObject("getReposInitMenu() rootDoc:", rootDoc);
-
-		Doc doc = null;
-		if(path != null && name != null)
-		{
-			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-			printObject("getReposInitMenu() doc:", doc);
-		}
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), rootDoc, reposAccess.getAuthMask());
@@ -543,12 +536,40 @@ public class ReposController extends BaseController{
 		}
 		printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
+		File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
+		if(rootFile.exists() == false)
+		{
+			docSysErrorLog("根目录不存在！",rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
-
+		
 		List <Doc> docList = null;
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
+		
+		if(rootFile.isFile())
+		{
+			rootDoc.setType(1);
+			rootDoc.setCreateTime(rootFile.lastModified());
+			rootDoc.setLatestEditTime(rootFile.lastModified());
+			docList = new ArrayList<Doc>();
+			docList.add(rootDoc);
+			rt.setData(docList);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		
+		Doc doc = null;
+		if(path != null && name != null)
+		{
+			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+			printObject("getReposInitMenu() doc:", doc);
+		}
 		if(doc == null)
 		{
 			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
