@@ -88,18 +88,18 @@ public class DocController extends BaseController{
 	public void addDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String content,
 			String commitMsg,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
 		//System.out.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 
 		Repos repos = reposService.getRepos(reposId);
@@ -115,7 +115,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath,localVRootPath, 0L, "");
 		doc.setContent(content);
 				
-		if(checkUserAddRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUserAddRight(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -135,9 +135,9 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "新增 " + path + name;
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,login_user,rt, actionList); 
+		boolean ret = addDoc(repos, doc, null, null,null,null, commitMsg,commitUser,reposAccess.getAccessUser(),rt, actionList); 
 		writeJson(rt, response);
 		
 		if(ret == false)
@@ -239,17 +239,17 @@ public class DocController extends BaseController{
 	@RequestMapping("/refreshDoc.do")
 	public void refreshDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitMsg, Integer force,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -268,17 +268,17 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "同步 " + doc.getPath() + doc.getName();
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		if(false == checkDocLocked(repos.getId(), doc, login_user, false))
+		if(false == checkDocLocked(repos.getId(), doc, reposAccess.getAccessUser(), false))
 		{
 			if(force != null && force == 1)
 			{
-				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.FORCESYNC, DocType.REALDOC, null, login_user);
+				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.FORCESYNC, DocType.REALDOC, null, reposAccess.getAccessUser());
 			}
 			else
 			{
-				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.SYNC, DocType.REALDOC, null, login_user);				
+				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.SYNC, DocType.REALDOC, null, reposAccess.getAccessUser());				
 			}
 		}
 		
@@ -292,17 +292,17 @@ public class DocController extends BaseController{
 	@RequestMapping("/deleteDoc.do")
 	public void deleteDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitMsg,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -317,7 +317,7 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		if(checkUserDeleteRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -327,9 +327,9 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "删除 " + doc.getPath() + doc.getName();
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		String ret = deleteDoc(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+		String ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		
 		writeJson(rt, response);
 		
@@ -344,6 +344,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/renameDoc.do")
 	public void renameDoc(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, String dstName, 
 							String commitMsg, 
+							Integer shareId,
 							HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName);
@@ -364,12 +365,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 	
 		Repos repos = reposService.getRepos(reposId);
@@ -384,13 +384,13 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
 		
-		if(checkUserDeleteRight(repos, login_user.getId(), parentDoc, rt) == false)
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 	
-		if(checkUserAddRight(repos, login_user.getId(), parentDoc, rt) == false)
+		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -400,7 +400,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "重命名 " + path + name + " 为 " + dstName;
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath, localVRootPath, null, null);
@@ -414,7 +414,7 @@ public class DocController extends BaseController{
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
-		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -444,6 +444,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/moveDoc.do")
 	public void moveDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type, 
 			String commitMsg, 
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel);
@@ -458,12 +459,11 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 
 		Repos repos = reposService.getRepos(reposId);
@@ -477,14 +477,14 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc srcParentDoc = buildBasicDoc(reposId, srcPid, null, srcPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
-		if(checkUserDeleteRight(repos, login_user.getId(), srcParentDoc, rt) == false)
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), srcParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
 		}
 
 		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
-		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
+		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -499,7 +499,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, localVRootPath, null, null);
 		
@@ -513,7 +513,7 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -526,17 +526,17 @@ public class DocController extends BaseController{
 	@RequestMapping("/copyDoc.do")
 	public void copyDoc(Integer reposId, Long docId, Long srcPid, String srcPath, String srcName, Integer srcLevel, Long dstPid, String dstPath, String dstName, Integer dstLevel, Integer type,
 			String commitMsg,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 	
 		Repos repos = reposService.getRepos(reposId);
@@ -552,7 +552,7 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		
 		Doc dstParentDoc = buildBasicDoc(reposId, dstPid, null, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
-		if(checkUserAddRight(repos, login_user.getId(), dstParentDoc, rt) == false)
+		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
 			return;
@@ -567,7 +567,7 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
@@ -581,7 +581,7 @@ public class DocController extends BaseController{
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, login_user, rt, actionList);
+		boolean ret = copyDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 		writeJson(rt, response);
 		
 		if(ret)
@@ -594,18 +594,18 @@ public class DocController extends BaseController{
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
 			String commitMsg,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum);
 		
 		ReturnAjax rt = new ReturnAjax();
 
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -621,7 +621,7 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc parentDoc = buildBasicDoc(reposId, pid, null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
-		DocAuth UserDocAuth = getUserDocAuth(repos, login_user.getId(), parentDoc);
+		DocAuth UserDocAuth = getUserDocAuth(repos, reposAccess.getAccessUser().getId(), parentDoc);
 		if(UserDocAuth == null)
 		{
 			docSysErrorLog("您无权在该目录上传文件!", rt);
@@ -702,9 +702,9 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "上传 " + path + name;
 		}
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, login_user,rt,actionList);
+		boolean ret = copyDoc(repos, sameDoc, doc, commitMsg, commitUser, reposAccess.getAccessUser(),rt,actionList);
 		if(ret == true)
 		{
 			rt.setData(fsDoc);
@@ -800,6 +800,7 @@ public class DocController extends BaseController{
 	public void checkChunkUploaded(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size, String checkSum,
 			Integer chunkIndex,Integer chunkNum,Integer cutSize,Integer chunkSize,String chunkHash, 
 			String commitMsg,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
 		System.out.println("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
@@ -807,7 +808,12 @@ public class DocController extends BaseController{
 			
 		ReturnAjax rt = new ReturnAjax();
 
-		User login_user = getLoginUser(session, request, response, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
 		
 		if("".equals(checkSum))
 		{
@@ -827,7 +833,7 @@ public class DocController extends BaseController{
 		
 		//判断tmp目录下是否有分片文件，并且checkSum和size是否相同 
 		String fileChunkName = name + "_" + chunkIndex;
-		String userTmpDir = getReposUserTmpPathForUpload(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
 		String chunkParentPath = userTmpDir;
 		String chunkFilePath = chunkParentPath + fileChunkName;
 		if(false == isChunkMatched(chunkFilePath,chunkHash))
@@ -847,7 +853,7 @@ public class DocController extends BaseController{
 				{
 					commitMsg = "上传 " + path + name;
 				}
-				String commitUser = login_user.getName();
+				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				
 				//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
@@ -868,7 +874,7 @@ public class DocController extends BaseController{
 				{
 					boolean ret = addDoc(repos, doc,
 								null,
-								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
+								chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 					writeJson(rt, response);
 					if(ret == true)
 					{
@@ -880,7 +886,7 @@ public class DocController extends BaseController{
 				{
 					boolean ret = updateDoc(repos, doc, 
 							null,   
-							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);				
+							chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);				
 				
 					writeJson(rt, response);	
 					if(ret == true)
@@ -902,18 +908,18 @@ public class DocController extends BaseController{
 			MultipartFile uploadFile,
 			Integer chunkIndex, Integer chunkNum, Integer cutSize, Integer chunkSize, String chunkHash,
 			String commitMsg,
+			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
 							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
 		ReturnAjax rt = new ReturnAjax();
 
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -941,7 +947,7 @@ public class DocController extends BaseController{
 		if(dbDoc == null || dbDoc.getType() == 0)	//0: add  1: update
 		{
 			Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
-			if(checkUserAddRight(repos,login_user.getId(), parentDoc, rt) == false)
+			if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -949,7 +955,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
+			if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 			{
 				writeJson(rt, response);	
 				return;
@@ -961,7 +967,7 @@ public class DocController extends BaseController{
 		{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
-			String userTmpDir = getReposUserTmpPathForUpload(repos,login_user);
+			String userTmpDir = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
 			if(saveFile(uploadFile,userTmpDir,fileChunkName) == null)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
@@ -985,14 +991,14 @@ public class DocController extends BaseController{
 			{
 				commitMsg = "上传 " + path + name;
 			}
-			String commitUser = login_user.getName();
-			String chunkParentPath = getReposUserTmpPathForUpload(repos,login_user);
+			String commitUser = reposAccess.getAccessUser().getName();
+			String chunkParentPath = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
 			List<CommonAction> actionList = new ArrayList<CommonAction>();
 			if(dbDoc == null || dbDoc.getType() == 0)
 			{
 				boolean ret = addDoc(repos, doc, 
 						uploadFile,
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 				writeJson(rt, response);
 
 				if(ret == true)
@@ -1005,7 +1011,7 @@ public class DocController extends BaseController{
 			{
 				boolean ret = updateDoc(repos, doc, 
 						uploadFile,  
-						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, login_user, rt, actionList);					
+						chunkNum, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
 			
 				writeJson(rt, response);	
 				if(ret == true)
@@ -1122,6 +1128,7 @@ public class DocController extends BaseController{
 	public void updateDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			String content, Integer docType,
 			String commitMsg,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
@@ -1129,12 +1136,11 @@ public class DocController extends BaseController{
 		//System.out.println("content size: " + content.length());
 			
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -1163,7 +1169,7 @@ public class DocController extends BaseController{
 		doc.setLatestEditTime(dbDoc.getLatestEditTime());
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -1171,7 +1177,7 @@ public class DocController extends BaseController{
 		
 		doc.setContent(content);
 		
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = false;
 		if(docType == 1)
@@ -1187,11 +1193,11 @@ public class DocController extends BaseController{
 			{
 				commitMsg = "更新 " + path + name;
 			}
-			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 			writeJson(rt, response);
 			if(ret)
 			{
-				deleteTmpVirtualDocContent(repos, doc, login_user);
+				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
 				executeCommonActionList(actionList, rt);
 			}			
 		}
@@ -1201,31 +1207,31 @@ public class DocController extends BaseController{
 			{
 				commitMsg = "更新 " + path + name + " 备注";
 			}
-			ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+			ret = updateVirualDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 			writeJson(rt, response);
 			
 			if(ret)
 			{
-				deleteTmpVirtualDocContent(repos, doc, login_user);
+				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
 				executeCommonActionList(actionList, rt);
 			}
 		}
 	}
 
-	private void deleteTmpVirtualDocContent(Repos repos, Doc doc, User login_user) {
+	private void deleteTmpVirtualDocContent(Repos repos, Doc doc, User accessUser) {
 		
 		String docVName = getVDocName(doc);
 		
-		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForVDOC(repos, accessUser);
 		
 		String vDocPath = userTmpDir + docVName + "/";
 		
 		delFileOrDir(vDocPath);
 	}
 	
-	private void deleteTmpRealDocContent(Repos repos, Doc doc, User login_user) 
+	private void deleteTmpRealDocContent(Repos repos, Doc doc, User accessUser) 
 	{
-		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForRDOC(repos, accessUser);
 		String mdFilePath = userTmpDir + doc.getDocId() + "_" + doc.getName();
 		delFileOrDir(mdFilePath);
 	}
@@ -1234,18 +1240,18 @@ public class DocController extends BaseController{
 	@RequestMapping("/tmpSaveDocContent.do")
 	public void tmpSaveVirtualDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String content, Integer docType,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		//System.out.println("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 				
 		Repos repos = reposService.getRepos(reposId);
@@ -1263,14 +1269,14 @@ public class DocController extends BaseController{
 		
 		if(docType == 1)
 		{
-			if(saveTmpRealDocContent(repos, doc, login_user, rt) == false)
+			if(saveTmpRealDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
 				docSysErrorLog("saveVirtualDocContent Error!", rt);
 			}			
 		}
 		else
 		{
-			if(saveTmpVirtualDocContent(repos, doc, login_user, rt) == false)
+			if(saveTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser(), rt) == false)
 			{
 				docSysErrorLog("saveVirtualDocContent Error!", rt);
 			}
@@ -1329,7 +1335,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User login_user, ReturnAjax rt)
+	public void downloadDocPrepare_VRP(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)
@@ -1340,7 +1346,7 @@ public class DocController extends BaseController{
 		}
 				
 		String targetName = doc.getName();
-		String targetPath = getReposUserTmpPathForDownload(repos,login_user);
+		String targetPath = getReposUserTmpPathForDownload(repos,accessUser);
 				
 		//Do checkout to local
 		if(verReposCheckOut(repos, false, doc, targetPath, doc.getName(), null, true, true, null) == null)
@@ -1385,7 +1391,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt)
+	public void downloadDocPrepare_FSM(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
@@ -1413,7 +1419,7 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		targetPath = getReposUserTmpPathForDownload(repos,login_user);
+		targetPath = getReposUserTmpPathForDownload(repos,accessUser);
 		if(localEntry.getType() == 2)
 		{	
 			if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), true))
@@ -1496,7 +1502,7 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
-	public void downloadVDocPrepare_FSM(Repos repos, Doc doc, User login_user, ReturnAjax rt)
+	public void downloadVDocPrepare_FSM(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
 		Doc vDoc = buildVDoc(doc);
 
@@ -1522,7 +1528,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		String targetPath = getReposUserTmpPathForDownload(repos,login_user);
+		String targetPath = getReposUserTmpPathForDownload(repos,accessUser);
 		//doCompressDir and save the zip File under userTmpDir
 		if(doCompressDir(vDoc.getLocalRootPath() + vDoc.getPath(), vDoc.getName(), targetPath, targetName, rt) == false)
 		{
@@ -1602,7 +1608,9 @@ public class DocController extends BaseController{
 	}
 	/**************** get Tmp File ******************/
 	@RequestMapping("/doGetTmpFile.do")
-	public void doGetTmp(Integer reposId,String path, String fileName,HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void doGetTmp(Integer reposId,String path, String fileName,
+			Integer shareId,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName);
 
@@ -1612,12 +1620,11 @@ public class DocController extends BaseController{
 		}
 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, fileName, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		//虚拟文件下载
@@ -1630,7 +1637,7 @@ public class DocController extends BaseController{
 		}
 		
 		//get userTmpDir
-		String userTmpDir = getReposUserTmpPathForDownload(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForDownload(repos,reposAccess.getAccessUser());
 		
 		String localParentPath = userTmpDir;
 		if(path != null)
@@ -1644,6 +1651,7 @@ public class DocController extends BaseController{
 	/**************** convert Doc To PDF ******************/
 	@RequestMapping("/DocToPDF.do")
 	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
 		System.out.println("DocToPDF reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
@@ -1654,6 +1662,13 @@ public class DocController extends BaseController{
 		}
 
 		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -1666,29 +1681,29 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有文件读取权限
+		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == false)
+		{
+			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
+			writeJson(rt, response);	
+			return;
+		}	
+		
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
-			DocToPDF_FSM(repos, doc, response, request, session);
+			DocToPDF_FSM(repos, doc, response, request, session, rt);
 		case 3:
 		case 4:
-			DocToPDF_VRP(repos, doc, response, request, session);
+			DocToPDF_VRP(repos, doc, response, request, session, rt);
 			break;
 		}
 	}
 	
-	public void DocToPDF_VRP(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
+	public void DocToPDF_VRP(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session, ReturnAjax rt) throws Exception
+	{		
 		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix == null)
 		{
@@ -1697,14 +1712,6 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), doc, null, rt) == false)
-		{
-			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
-			writeJson(rt, response);	
-			return;
-		}
-			
 		Doc localEntry = docSysGetDoc(repos, doc);
 		if(localEntry == null)
 		{
@@ -1799,30 +1806,13 @@ public class DocController extends BaseController{
 		return true;
 	}
 
-	public void DocToPDF_FSM(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	public void DocToPDF_FSM(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session, ReturnAjax rt) throws Exception
 	{
-		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
-		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
 		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix == null)
 		{
 			docSysErrorLog("未知文件类型", rt);
 			writeJson(rt, response);
-			return;
-		}
-		
-		//检查用户是否有文件读取权限
-		if(checkUseAccessRight(repos, login_user.getId(), doc, null, rt) == false)
-		{
-			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
-			writeJson(rt, response);	
 			return;
 		}
 			
@@ -1960,6 +1950,7 @@ public class DocController extends BaseController{
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
+			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
 
@@ -1969,13 +1960,11 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -2002,9 +1991,9 @@ public class DocController extends BaseController{
 			}
 			else if(isOffice(fileSuffix) || isPdf(fileSuffix))
 			{
-				if(checkAndGenerateOfficeContent(repos, doc, login_user, fileSuffix))
+				if(checkAndGenerateOfficeContent(repos, doc, reposAccess.getAccessUser(), fileSuffix))
 				{
-					content = readOfficeContent(repos, doc, login_user);
+					content = readOfficeContent(repos, doc, reposAccess.getAccessUser());
 				}
 			}
 			else
@@ -2042,6 +2031,7 @@ public class DocController extends BaseController{
 	/****************   get Tmp Saved Document Content ******************/
 	@RequestMapping("/getTmpSavedDocContent.do")
 	public void getTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
+			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
 		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
 
@@ -2051,13 +2041,11 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -2079,12 +2067,12 @@ public class DocController extends BaseController{
 			String fileSuffix = getFileSuffix(name);
 			if(isText(fileSuffix))
 			{
-				content = readTmpRealDocContent(repos, doc, login_user);
+				content = readTmpRealDocContent(repos, doc, reposAccess.getAccessUser());
 			}
 		}
 		else if(docType == 2)
 		{
-			content = readTmpVirtualDocContent(repos, doc, login_user);		
+			content = readTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());		
 		}
 		
 		if(content == null)
@@ -2096,17 +2084,17 @@ public class DocController extends BaseController{
 	
 	@RequestMapping("/deleteTmpSavedDocContent.do")
 	public void deleteTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 				
 		Repos repos = reposService.getRepos(reposId);
@@ -2123,19 +2111,19 @@ public class DocController extends BaseController{
 		
 		if(docType == 1)
 		{
-			deleteTmpRealDocContent(repos, doc, login_user);			
+			deleteTmpRealDocContent(repos, doc, reposAccess.getAccessUser());			
 		}
 		else
 		{
-			deleteTmpVirtualDocContent(repos, doc, login_user);
+			deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
 		}
 		writeJson(rt, response);
 	}
 	
-	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, User login_user, String fileSuffix) 
+	private boolean checkAndGenerateOfficeContent(Repos repos, Doc doc, User accessUser, String fileSuffix) 
 	{
 		
-		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForOfficeTmp(repos, accessUser);
 		File file = new File(userTmpDir, doc.getDocId() + "_" + doc.getName());
 		if(file.exists())
 		{
@@ -2269,17 +2257,17 @@ public class DocController extends BaseController{
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer lockType, Integer docType,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		if(docId == null)
@@ -2303,7 +2291,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
 		
 		//检查用户是否有权限编辑文件
-		if(checkUserEditRight(repos, login_user.getId(), doc, rt) == false)
+		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
 			return;
@@ -2318,7 +2306,7 @@ public class DocController extends BaseController{
 			}
 				
 			//Try to lock the Doc
-			DocLock docLock = lockDoc(doc,lockType,86400000,login_user,rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
+			DocLock docLock = lockDoc(doc,lockType,86400000,reposAccess.getAccessUser(),rt,subDocCheckFlag); //24 Hours 24*60*60*1000 = 86400,000
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -2338,17 +2326,17 @@ public class DocController extends BaseController{
 	@RequestMapping("/getDocHistory.do")
 	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer historyType,Integer maxLogNum, 
+			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		if(reposId == null)
@@ -2393,17 +2381,17 @@ public class DocController extends BaseController{
 	public void getHistoryDetail(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
+			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		if(reposId == null)
@@ -2451,17 +2439,17 @@ public class DocController extends BaseController{
 			Integer historyType, 
 			String entryPath,
 			Integer downloadAll,
+			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath);
 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		//get reposInfo to 
@@ -2499,7 +2487,7 @@ public class DocController extends BaseController{
 		List <Doc> successDocList = null;
 		
 		//userTmpDir will be used to tmp store the history doc 
-		String userTmpDir = getReposUserTmpPathForDownload(repos,login_user);
+		String userTmpDir = getReposUserTmpPathForDownload(repos,reposAccess.getAccessUser());
 		
 		if(isRealDoc)
 		{
@@ -2658,18 +2646,18 @@ public class DocController extends BaseController{
 			String entryPath,
 			Integer downloadAll,
 			String commitMsg,
+			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath);
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		if(reposId == null)
@@ -2690,7 +2678,7 @@ public class DocController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		String commitUser = login_user.getName();
+		String commitUser = reposAccess.getAccessUser().getName();
 		
 		boolean isRealDoc = true;
 		Doc doc = null;
@@ -2737,7 +2725,7 @@ public class DocController extends BaseController{
 		synchronized(syncLock)
 		{
 			//LockDoc
-			docLock = lockDoc(doc, 2,  2*60*60*1000, login_user, rt, false);
+			docLock = lockDoc(doc, 2,  2*60*60*1000, reposAccess.getAccessUser(), rt, false);
 			if(docLock == null)
 			{
 				unlock(); //线程锁
@@ -2753,7 +2741,7 @@ public class DocController extends BaseController{
 			if(localEntry == null)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
-				unlockDoc(doc,login_user,docLock);
+				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 				writeJson(rt, response);
 				return;				
 			}
@@ -2762,7 +2750,7 @@ public class DocController extends BaseController{
 			if(remoteEntry == null)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
-				unlockDoc(doc,login_user,docLock);
+				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 				writeJson(rt, response);
 				return;				
 			}
@@ -2771,11 +2759,11 @@ public class DocController extends BaseController{
 			
 			HashMap<Long, DocChange> localChanges = new HashMap<Long, DocChange>();
 			HashMap<Long, DocChange> remoteChanges = new HashMap<Long, DocChange>();
-			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, login_user, rt, remoteChanges, localChanges, 2) == false)
+			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, remoteChanges, localChanges, 2) == false)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
 				System.out.println("revertDocHistory() syncupScanForDoc_FSM!");	
-				unlockDoc(doc,login_user,docLock);
+				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 				writeJson(rt, response);
 				return;
 			}
@@ -2786,7 +2774,7 @@ public class DocController extends BaseController{
 				String localChangeInfo = buildChangeInfo(localChanges);
 				
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 本地有改动!" + "</br></br>"+ localChangeInfo,rt);
-				unlockDoc(doc,login_user,docLock);
+				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 				writeJson(rt, response);
 				return;
 			}
@@ -2796,7 +2784,7 @@ public class DocController extends BaseController{
 				System.out.println("revertDocHistory() 远程有改动！");
 				String remoteChangeInfo = buildChangeInfo(remoteChanges);				
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 远程有改动!" + "</br></br>"+ remoteChangeInfo,rt);
-				unlockDoc(doc,login_user,docLock);
+				unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 				writeJson(rt, response);
 				return;
 			}
@@ -2807,13 +2795,13 @@ public class DocController extends BaseController{
 				{
 					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision());
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-					unlockDoc(doc,login_user,docLock);
+					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 					writeJson(rt, response);
 					return;
 				}
 			}
 			
-			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, login_user, rt, null);
+			revertDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}	
 		else
 		{
@@ -2825,15 +2813,15 @@ public class DocController extends BaseController{
 				{
 					System.out.println("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId);
 					docSysErrorLog("恢复失败:" + vDoc.getPath() + vDoc.getName() + " 已是最新版本!",rt);					
-					unlockDoc(doc,login_user,docLock);
+					unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 					writeJson(rt, response);
 					return;				
 				}
 			}
-			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, login_user, rt, null);
+			revertDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null);
 		}
 		
-		unlockDoc(doc,login_user,docLock);
+		unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 		writeJson(rt, response);
 	}
 
@@ -2848,12 +2836,11 @@ public class DocController extends BaseController{
 		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name);
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 
 		Repos repos = reposService.getRepos(reposId);
@@ -2873,7 +2860,7 @@ public class DocController extends BaseController{
 		docShare.setDocId(doc.getDocId());
 		docShare.setPath(doc.getPath());
 		docShare.setName(doc.getName());
-		docShare.setSharedBy(login_user.getId());
+		docShare.setSharedBy(reposAccess.getAccessUser().getId());
 		docShare.setSharePwd(sharePwd);
 
 		DocAuth docAuth = new DocAuth();
@@ -2939,6 +2926,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/searchDoc.do")
 	public void searchDoc(Integer reposId,Integer pid, String path, 
 			String searchWord,String sort,
+			Integer shareId,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
 		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort);
@@ -2949,19 +2937,18 @@ public class DocController extends BaseController{
 		}
 		
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, "", rt);
+		if(reposAccess == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 
 		List<Repos> reposList = new ArrayList<Repos>();
 		if(reposId == null || reposId == -1)
 		{
 			//Do search all AccessableRepos
-			reposList = getAccessableReposList(login_user.getId());
+			reposList = getAccessableReposList(reposAccess.getAccessUser().getId());
 			pid = 0;
 			path = "";
 		}
