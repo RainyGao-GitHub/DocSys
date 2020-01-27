@@ -3931,7 +3931,7 @@ function CompareObj(objA, objB, flag) {
 			cleanDocPreview();
 
 			//Show DocList
-			showDocList(null);
+			showDocList(gRootDoc);
 			return;
 		}
 		else
@@ -3953,7 +3953,7 @@ function CompareObj(objA, objB, flag) {
 				if(!searchWord || searchWord == "")
 				{
 					//如果searchBox is empty
-					showDocList(null);
+					showDocList(gRootDoc);
 				}
 				else
 				{
