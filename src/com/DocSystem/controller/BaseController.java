@@ -4004,6 +4004,7 @@ public class BaseController  extends BaseFunction{
 			if(login_user == null)
 			{
 				rt.setError("用户未登录，请先登录！");
+				return null;
 			}
 			reposAccess = new ReposAccess();
 			reposAccess.setAccessUserId(login_user.getId());
