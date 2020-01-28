@@ -6,6 +6,10 @@ function showPdf() {
             container.style.display = "block";
             //var url = 'http://127.0.0.1:8080/java.pdf';
             var url = "http://localhost:8080/DocSystem/Doc/downloadDoc.do?targetPath=" + "QzovRG9jU3lzUmVwb3Nlcy8xNC9kYXRhL3JkYXRhLw" + "&targetName=" + "44CK6Leo6YOo6Zeo5rKf6YCa5oqA5ben44CL5a2m5ZGY5omL5YaMICgxKS5wZGY";
+            if(gShareId)
+            {
+            	url += "&shareId=" + gShareId;
+            }
  
             pdfjsLib.workerSrc = "static/pdfjs/build/pdf.worker.js";
             pdfjsLib.getDocument(url).then(function getPdfHelloWorld(pdf) {

@@ -107,6 +107,7 @@
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
 	             	 downloadAll: 1,
+		             shareId: gShareId,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
@@ -208,6 +209,7 @@
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
 	             	 downloadAll: 1,
+		             shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -240,6 +242,7 @@
 	             	 name: docName,
 	             	 historyType: historyType,
 	             	 maxLogNum: 100,
+		             shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){

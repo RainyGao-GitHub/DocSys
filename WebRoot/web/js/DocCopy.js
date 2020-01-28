@@ -291,6 +291,7 @@
 	                dstPid: SubContext.dstPid,	//目标doc dstPid
 	                dstPath: SubContext.dstPath,
 	                dstName: SubContext.dstName, //目标docName
+	                shareId: gShareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){

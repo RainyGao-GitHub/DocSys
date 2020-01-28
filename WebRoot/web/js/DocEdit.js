@@ -202,6 +202,7 @@
 	                name: node.name,
 	                content : content,
 	                docType : gDocInfo.contentType,
+	                shareId: gShareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -259,6 +260,7 @@
 	                path: node.path,
 	                name: node.name,
 	                docType: gDocInfo.contentType,
+	                shareId: gShareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -372,6 +374,7 @@
 					path: gDocInfo.path,
 					name: gDocInfo.name,
 					docType: gDocInfo.contentType,
+	                shareId: gShareId,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -464,6 +467,7 @@
 					path: gDocInfo.path,
 					name: gDocInfo.name,
 					docType: gDocInfo.contentType,
+	                shareId: gShareId,
 				},
 				success : function (ret) {
 					if( "ok" == ret.status)
@@ -520,6 +524,7 @@
 	                name: gDocInfo.name,
 	            	content : content,
 	            	docType: gDocInfo.contentType,
+	                shareId: gShareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
