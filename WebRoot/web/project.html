@@ -1501,12 +1501,18 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
-                    $("#projectName").text(gReposInfo.name);
+                	if(gRootDoc.docId == 0)
+                	{
+                    	$("#projectName").text(gReposInfo.name);
+                	}
 					callback && callback();
                     //初始化目录树和Doc
 					//InitMenuAndDoc();
                 }else {
-                    $("#projectName").text("仓库名");
+                	if(gRootDoc.docId == 0)
+                	{
+                    	$("#projectName").text("仓库名");
+                	}
                     alert(ret.msgInfo);
                 }
             },
@@ -4471,8 +4477,9 @@ function CompareObj(objA, objB, flag) {
 	                	gRootDoc.docId = docShare.docId;
 	                	gRootDoc.path = docShare.path;
 	                	gRootDoc.name = docShare.name;
-	                	gRootDoc.type = 2;
-	                	
+	                	gRootDoc.type = 2;          	
+                    	$("#projectName").text(gRootDoc.name);
+
 	            		SysInit();
 	                }
 	                else 
