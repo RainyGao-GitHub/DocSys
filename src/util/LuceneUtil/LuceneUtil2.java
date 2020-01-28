@@ -529,7 +529,7 @@ public class LuceneUtil2   extends BaseFunction
 	            	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " is empty");
 	        		return null;
 	            }
-	            else if(!docParentPath.contains(pathFilter))
+	            else if(docParentPath.indexOf(pathFilter) != 0)
 	            {
 	               	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " was not under path:" + pathFilter);
 	            	return null;
