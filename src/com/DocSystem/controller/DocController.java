@@ -91,7 +91,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
+		System.out.println("addDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content+ " shareId:" + shareId);
 		//System.out.println(Charset.defaultCharset());
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -242,7 +242,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force);
+		System.out.println("refreshDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " force:" + force+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -295,7 +295,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("deleteDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -347,7 +347,7 @@ public class DocController extends BaseController{
 							Integer shareId,
 							HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName);
+		System.out.println("renameDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type +  " dstName:" + dstName+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -447,7 +447,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel);
+		System.out.println("moveDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 
 		if(srcPath == null)
 		{
@@ -529,7 +529,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel);
+		System.out.println("copyDoc reposId:" + reposId + " docId: " + docId + " srcPid:" + srcPid + " srcPath:" + srcPath + " srcName:" + srcName  + " srcLevel:" + srcLevel + " type:" + type + " dstPath:" + dstPath+ " dstName:" + dstName + " dstLevel:" + dstLevel+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, srcPath, srcName, rt);
@@ -597,7 +597,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum);
+		System.out.println("checkDocInfo  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -804,7 +804,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{		
 		System.out.println("checkChunkUploaded  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
+				+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 			
 		ReturnAjax rt = new ReturnAjax();
 
@@ -912,7 +912,7 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("uploadDoc  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " size:" + size + " checkSum:" + checkSum
-							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash);
+							+ " chunkIndex:" + chunkIndex + " chunkNum:" + chunkNum + " cutSize:" + cutSize  + " chunkSize:" + chunkSize + " chunkHash:" + chunkHash+ " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
 
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -1131,7 +1131,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
+		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 		System.out.println("updateDocContent content:[" + content + "]");
 		//System.out.println("content size: " + content.length());
 			
@@ -1243,7 +1243,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("tmpSaveVirtualDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		//System.out.println("tmpSaveVirtualDocContent content:[" + content + "]");
 		
 		ReturnAjax rt = new ReturnAjax();
@@ -1550,7 +1550,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			String authCode, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		if(authCode != null)
@@ -1612,7 +1612,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName);
+		System.out.println("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -1654,7 +1654,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
-		System.out.println("DocToPDF reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("DocToPDF reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -1952,7 +1952,7 @@ public class DocController extends BaseController{
 	public void getDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
+		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -2033,7 +2033,7 @@ public class DocController extends BaseController{
 	public void getTmpSavedDocContent(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Integer docType,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session){
-		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType);
+		System.out.println("getDocContent reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -2087,7 +2087,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type);
+		System.out.println("deleteTmpSavedDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -2260,7 +2260,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType);
+		System.out.println("lockDoc reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " lockType:" + lockType + " docType:" + docType + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -2329,7 +2329,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType);
+		System.out.println("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -2384,7 +2384,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId);
+		System.out.println("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -2442,7 +2442,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath);
+		System.out.println("downloadHistoryDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId: " + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
@@ -2649,7 +2649,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath);
+		System.out.println("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
 		ReturnAjax rt = new ReturnAjax();
@@ -2929,7 +2929,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
-		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort);
+		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId);
 		
 		if(path == null)
 		{
