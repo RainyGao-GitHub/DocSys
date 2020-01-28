@@ -289,6 +289,40 @@
     	    	return true;
       		});
       	}
+      	
+      	//DeleteEndHandler
+      	function DeleteEndHandler()
+      	{
+      		console.log("DeleteEndHandler() 删除结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+			
+      		//清除标记
+      		isDeleteing = false;
+  			
+      		//显示移动完成 
+      		showDeleteEndInfo();
+      	}
+      	
+  		function showDeleteEndInfo()
+  		{
+  			var deleteEndInfo = "移动完成(共" + totalNum +"个)";
+      		if(successNum != totalNum)
+      		{
+      			deleteEndInfo = "移动完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      		    bootstrapQ.msg({
+					msg : deleteEndInfo,
+					type : 'warning',
+					time : 2000,
+				    }); 
+      		}
+      		else
+      		{
+	            bootstrapQ.msg({
+						msg : deleteEndInfo,
+						type : 'success',
+						time : 2000,
+					    }); 
+      		}
+  		}
 		
       	function DeleteNextDoc()
       	{
