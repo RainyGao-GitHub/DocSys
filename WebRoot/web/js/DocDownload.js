@@ -270,6 +270,7 @@
                     path: SubContext.path,
                     name: SubContext.name,
                     downloadType: SubContext.downloadType,
+                    shareId: gShareId,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
