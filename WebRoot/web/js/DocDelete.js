@@ -228,6 +228,7 @@
                     pid: pid,
                     path: path,
                     name: name,
+	                shareId: gShareId,
                 },
 	            success : function (ret) {
 	                if( "ok" == ret.status ) //后台删除成功

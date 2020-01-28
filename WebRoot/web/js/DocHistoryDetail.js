@@ -50,6 +50,7 @@
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
 	             	 downloadAll: 1,
+		             shareId: gShareId,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
@@ -145,6 +146,7 @@
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
 	             	 downloadAll: 1,
+		             shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
@@ -176,6 +178,7 @@
 	            	 path : parentPath,
 	             	 name: docName,
 	             	 historyType: historyType,
+		             shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
