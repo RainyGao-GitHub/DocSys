@@ -276,6 +276,7 @@
                     srcName: SubContext.name,
                     dstPath: SubContext.dstPath,
                     dstName: SubContext.name,
+		            shareId: gShareId,
                 },
                 success : function (ret) {
                    if( "ok" == ret.status )
