@@ -552,6 +552,7 @@ public class ReposController extends BaseController{
 		if(rootFile.isFile())
 		{
 			rootDoc.setType(1);
+			rootDoc.setSize(rootFile.length());
 			rootDoc.setCreateTime(rootFile.lastModified());
 			rootDoc.setLatestEditTime(rootFile.lastModified());
 			docList = new ArrayList<Doc>();
@@ -653,6 +654,7 @@ public class ReposController extends BaseController{
 		if(file.isFile())
 		{
 			doc.setType(1);
+			doc.setSize(file.length());
 			doc.setCreateTime(file.lastModified());
 			doc.setLatestEditTime(file.lastModified());
 			docList = new ArrayList<Doc>();
