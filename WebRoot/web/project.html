@@ -1958,6 +1958,7 @@
 	                path: docInfo.path,
 	                name: docInfo.name,
 	                docType: 1, //取回文件内容
+	                shareId: gShareId,
 	            },
 	            success : function (ret1) {
 	            	console.log("showTextInDialog ret1",ret1);
@@ -3913,7 +3914,7 @@ function CompareObj(objA, objB, flag) {
 			else
 			{
 				zTree.cancelSelectedNode(node);
-				getAndShowDoc(parentNode, 1, false);
+				getAndShowDoc(gRootDoc, 1, false);
 				
 				var searchWord = $("#searchWord").val();
 				console.log("backToParentDoc searchWord:" + searchWord);

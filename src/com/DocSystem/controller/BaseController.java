@@ -5504,7 +5504,7 @@ public class BaseController  extends BaseFunction{
 	//Function:getUserDocAuth
 	protected DocAuth getRealDocAuth(Repos repos, Integer userId,Integer groupId, Doc doc) 
 	{
-		System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
+		//System.out.println("getRealDocAuth()  reposId:"+ repos.getId() + " userId:" + userId + " groupId:"+ groupId + " docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
 		
 		//获取从docId到rootDoc的全路径，put it to docPathList
 		List<Long> docIdList = new ArrayList<Long>();
@@ -5513,7 +5513,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return null;
 		}
-		printObject("getRealDocAuth() docIdList:",docIdList); 
+		//printObject("getRealDocAuth() docIdList:",docIdList); 
 		
 		//Get UserDocAuthHashMap
 		HashMap<Long, DocAuth> docAuthHashMap = null;
@@ -5533,7 +5533,7 @@ public class BaseController  extends BaseFunction{
 		for(int i= 0; i < docPathDeepth; i++)
 		{
 			Long curDocId = docIdList.get(i);
-			System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
+			//System.out.println("getRealDocAuth() curDocId[" + i+ "]:" + curDocId); 
 			docAuth = getDocAuthFromHashMap(curDocId,parentDocAuth,docAuthHashMap);
 			parentDocAuth = docAuth;
 		}		
@@ -5605,7 +5605,7 @@ public class BaseController  extends BaseFunction{
 		{
 			docAuthList = reposService.getDocAuthForUser(docAuth);
 		}
-		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
+		//printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " docAuthList:", docAuthList);
 		
 		if(docAuthList == null || docAuthList.size() == 0)
 		{
@@ -5613,7 +5613,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		HashMap<Long,DocAuth> hashMap = BuildHashMapByDocAuthList(docAuthList);
-		printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
+		//printObject("getUserDocAuthHashMap() "+ "userID:" + UserID + " hashMap:", hashMap);
 		return hashMap;
 	}
 	
