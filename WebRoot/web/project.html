@@ -3275,36 +3275,7 @@ function CompareObj(objA, objB, flag) {
 		
 		if(gShareId)
 		{
-	    	//确定当前登录用户是否已登录
-	    	$.ajax({
-	            url : "/DocSystem/Doc/getDocShare.do",
-	            type : "post",
-	            dataType : "json",
-	            data : {
-	            	shareId: gShareId,
-	            },
-	            success : function (ret) {
-	                if( "ok" == ret.status )
-	                {
-	                	var docShare = ret.data;
-	                	gRootDoc.docId = docShare.docId;
-	                	gRootDoc.path = docShare.path;
-	                	gRootDoc.name = docShare.name;
-	                	gRootDoc.type = 2;
-	                	
-	                	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
-	            		getReposInfo(gInitReposInfo.id, InitMenuAndDoc);
-	                }
-	                else 
-	                {
-	                	console.log(ret.msgInfo);
-	                	alert(ret.msgInfo);
-	                }
-	            },
-	            error : function () {
-	            	showErrorMessage("服务器异常:获取文件分享信息失败");
-	            }
-	        });		
+    		getReposInfo(gInitReposInfo.id,InitMenuAndDoc);			
 		}
 		else
 		{
@@ -3853,27 +3824,23 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("showDocList() node:", node);
 		
-		var docId = 0;
-		var path = "";
-		var name = "";
+		var docId = gRootDoc.docId;
+		var path = gRootDoc.path;
+		var name = gRootDoc.name;
     
 		if(node &&  node != null)
 		{
-			if(node.type == 1)
+			docId = node.docId;
+		    path = node.path;
+		    name = node.name;
+			//如果是文件且不是根文件则获取上层目录的文件
+		    if(node.type == 1 && node.docId != gRootDoc.docId)
 			{
-				//如果是文件则不需要获取subDocList
-				console.log("showDocList() node is File");
+		    	console.log("showDocList() node is File and is not rootDoc");
 				docId = node.pid;
 				path = node.path;
 				name = "";				
 			}	
-			else
-			{
-				console.log("showDocList() node is Dir");
-				docId = node.docId;
-			    path = node.path;
-			    name = node.name;
-			}
 	    }
 
 		console.log("showDocList() DocListParentDocId:" + DocListParentDocId + " docId:" + docId );	
@@ -4484,11 +4451,45 @@ function CompareObj(objA, objB, flag) {
     	//拖拽上传区域初始化
 		dragDropUploadZoneInit();
         
-		//系统初始化
-		SysInit();
-		
 		//右键菜单初始化
 		contextMenuInit();
+
+		if(gShareId)
+		{
+	    	$.ajax({
+	            url : "/DocSystem/Doc/getDocShare.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	shareId: gShareId,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status )
+	                {
+	                	var docShare = ret.data;
+	                	gRootDoc.docId = docShare.docId;
+	                	gRootDoc.path = docShare.path;
+	                	gRootDoc.name = docShare.name;
+	                	gRootDoc.type = 2;
+	                	
+	            		SysInit();
+	                }
+	                else 
+	                {
+	                	console.log(ret.msgInfo);
+	                	alert(ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	            	showErrorMessage("服务器异常:获取文件分享信息失败");
+	            }
+	        });		
+		}
+		else
+		{
+			//系统初始化
+			SysInit();
+		}
     });
     
     function globalVarInit()
