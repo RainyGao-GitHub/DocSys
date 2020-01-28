@@ -1520,30 +1520,9 @@
                 showErrorMessage("服务器异常:获取仓库信息失败");
             }
         });
-
     }
 	
-	//初始化目录树显示和Doc显示
-	function InitMenuAndDoc()
-	{
-		console.log("InitMenuAndDoc()");	
-		if(gInitDocInfo.docId != gRootDoc.docId)
-		{
-			if(gInitDocInfo.docId == 0)
-			{
-				gInitDocInfo.docId = gRootDoc.docId;
-				gInitDocInfo.path = gRootDoc.path;
-				gInitDocInfo.name = gRootDoc.name;
-			}
-			getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
-		}
-		else
-		{
-			showDocList(gRootDoc);
-		}
-	    getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name);
-	}
-	
+
     function getNodeById(docId)
    	{
     	if(docId && docId != null)
@@ -3322,6 +3301,24 @@ function CompareObj(objA, objB, flag) {
 		}
 	}
 	
+	//初始化目录树显示和Doc显示
+	//该接口只能被调用一次，否则会导致逻辑错误
+	function InitMenuAndDoc()
+	{
+		console.log("InitMenuAndDoc() gInitDocInfo:", gInitDocInfo);	
+		
+		if(gInitDocInfo.docId == 0)
+		{
+			gInitDocInfo.docId = gRootDoc.docId;
+			gInitDocInfo.path = gRootDoc.path;
+			gInitDocInfo.name = gRootDoc.name;
+		}
+		getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
+		
+		getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name);
+		showDocList(gRootDoc);
+	}
+	
     function userLogout()
    	{
     	logout();
@@ -4479,8 +4476,8 @@ function CompareObj(objA, objB, flag) {
 	                	gRootDoc.name = docShare.name;
 	                	gRootDoc.type = 2;          	
                     	$("#projectName").text(gRootDoc.name);
-
-	            		SysInit();
+	            		
+                    	SysInit();
 	                }
 	                else 
 	                {
