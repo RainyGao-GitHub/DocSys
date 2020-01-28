@@ -2933,17 +2933,17 @@ public class DocController extends BaseController{
 	{
 		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId);
 		
-		if(path == null)
-		{
-			path = "";
-		}
-		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, "", rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, null, null, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
 			return;	
+		}
+		
+		if(path == null)
+		{
+			path = reposAccess.getRootDocPath() + reposAccess.getRootDocName();
 		}
 
 		List<Repos> reposList = new ArrayList<Repos>();
