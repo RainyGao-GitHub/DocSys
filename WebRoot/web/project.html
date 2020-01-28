@@ -2328,6 +2328,7 @@
 				path: path,
 				name: name,
 				type: type,
+	            shareId: gShareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status){
@@ -3988,6 +3989,7 @@ function CompareObj(objA, objB, flag) {
                    reposId: gReposInfo.id,
                    pid: pDocId,
          		   path: parentPath,
+   	               shareId: gShareId,
                },
                success : function (ret) {
             		console.log("searchDoc ret:", ret)
@@ -4043,6 +4045,7 @@ function CompareObj(objA, objB, flag) {
 	            pid: pid,
 	            path: path,
 	            name: name,
+	            shareId: gShareId,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
