@@ -4034,7 +4034,8 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 	
-	protected boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name, ReturnAjax rt) {
+	protected boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name, ReturnAjax rt) 
+	{
 		if(docShare == null)
 		{
 			System.out.println("verifyDocShare() docShare is null");
@@ -4046,6 +4047,7 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("verifyDocShare() docShare.vid is null");
 			rt.setError("无效文件分享");
+			deleteDocShare(docShare);
 			return false;
 		}
 		
@@ -4053,6 +4055,7 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("verifyDocShare() docShare.docId is null");
 			rt.setError("无效文件分享");
+			deleteDocShare(docShare);
 			return false;
 		}
 
@@ -4060,6 +4063,7 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("verifyDocShare() docShare.path is null");
 			rt.setError("无效文件分享");
+			deleteDocShare(docShare);
 			return false;
 		}
 
@@ -4067,6 +4071,7 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("verifyDocShare() docShare.name is null");
 			rt.setError("无效文件分享");
+			deleteDocShare(docShare);
 			return false;
 		}
 		
@@ -4074,6 +4079,7 @@ public class BaseController  extends BaseFunction{
 		{
 			System.out.println("verifyDocShare() docShare.sharedBy is null");
 			rt.setError("无效文件分享");
+			deleteDocShare(docShare);
 			return false;
 		}
 		
@@ -4085,6 +4091,7 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("verifyDocShare() docShare is expired");
 				rt.setError("文件分享已过期");
+				deleteDocShare(docShare);
 				return false;
 			}
 		}
@@ -4094,28 +4101,14 @@ public class BaseController  extends BaseFunction{
 			if(reposId != docShare.getVid())
 			{
 				System.out.println("verifyDocShare() reposId not matched");
-				rt.setError("无效文件分享");
+				rt.setError("非法仓库访问");
 				return false;				
 			}
 		}
 		
 		if(path != null && name != null)
 		{
-			String sharedDocPath = docShare.getPath();
-			String sharedDocName = docShare.getName();
-			if(sharedDocPath == null)
-			{
-				System.out.println("verifyDocShare() docShare.path is null");
-				rt.setError("无效文件分享");
-				return false;
-			}
-			if(sharedDocName == null)
-			{
-				System.out.println("verifyDocShare() docShare.name is null");
-				rt.setError("无效文件分享");
-				return false;
-			}
-			String sharedPath = sharedDocPath + sharedDocName;
+			String sharedPath = docShare.getPath() + docShare.getName();
 			if(!sharedPath.isEmpty())
 			{
 				String accessPath = path + name;
@@ -4127,6 +4120,15 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		}		
+		return true;
+	}
+
+	private boolean deleteDocShare(DocShare docShare) {
+		
+		if(reposService.deleteDocShare(docShare.getId()) == 0)
+		{
+			return false;
+		}
 		return true;
 	}
 
