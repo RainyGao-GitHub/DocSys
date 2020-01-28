@@ -287,7 +287,7 @@
             		   	var url = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
             		   	if(gShareId)
             		   	{
-            		   		url += "&shareId=" + gShareId,
+            		   		url += "&shareId=" + gShareId;
             		   	}
             	   		window.location.href = url;
                 	   	downloadSuccessHandler(SubContext, ret.msgInfo);
