@@ -4092,7 +4092,6 @@ public class BaseController  extends BaseFunction{
 			{
 				System.out.println("verifyDocShare() docShare is expired");
 				rt.setError("文件分享已过期");
-				deleteDocShare(docShare);
 				return false;
 			}
 		}
