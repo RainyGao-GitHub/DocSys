@@ -284,8 +284,12 @@
             		   	//targetPath = encodeURI(Base64.encode(targetPath));
                 	    targetName = encodeURI(targetName);
             		   	targetPath = encodeURI(targetPath);
-            	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
-
+            		   	var url = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag;
+            		   	if(gShareId)
+            		   	{
+            		   		url += "&shareId=" + gShareId,
+            		   	}
+            	   		window.location.href = url;
                 	   	downloadSuccessHandler(SubContext, ret.msgInfo);
                 	   	return;
                    }
