@@ -2877,7 +2877,7 @@ public class DocController extends BaseController{
 			shareHours = 24;	//默认分享时间为一天
 		}
 		long curTime = new Date().getTime();
-		long expireTime = curTime + shareHours * 60 * 60;
+		long expireTime = curTime + shareHours * 60 * 60 * 1000;
 		docShare.setExpireTime(expireTime);	
 		
 		Integer shareId = buildShareId(docShare);
