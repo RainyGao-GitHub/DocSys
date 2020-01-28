@@ -2872,12 +2872,14 @@ public class DocController extends BaseController{
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
 		docShare.setShareAuth(shareAuth);
-		if(shareHours != null)
+		if(shareHours == null)
 		{
-			long curTime = new Date().getTime();
-			long expireTime = curTime + shareHours * 60 * 60;
-			docShare.setExpireTime(expireTime);			
-		}		
+			shareHours = 24;	//默认分享时间为一天
+		}
+		long curTime = new Date().getTime();
+		long expireTime = curTime + shareHours * 60 * 60;
+		docShare.setExpireTime(expireTime);	
+		
 		Integer shareId = buildShareId(docShare);
 		docShare.setShareId(shareId);
 		
