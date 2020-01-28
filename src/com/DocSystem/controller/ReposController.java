@@ -522,7 +522,7 @@ public class ReposController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), 0, 2, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
 		printObject("getReposInitMenu() rootDoc:", rootDoc);
 		
 		//get the rootDocAuth
