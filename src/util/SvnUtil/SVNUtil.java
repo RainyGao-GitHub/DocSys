@@ -548,7 +548,11 @@ public class SVNUtil  extends BaseController{
 	
 	public Integer checkPath(String entryPath, String commitId)
 	{
-		long revision = getRevisionByCommitId(commitId);
+		Long revision = getRevisionByCommitId(commitId);
+		if(revision == null)
+		{
+			return null;
+		}
 		return checkPath(entryPath, revision);
 	}
 	
@@ -1587,18 +1591,19 @@ public class SVNUtil  extends BaseController{
 	    return subEntryList;
 	}
 	
-	private long getRevisionByCommitId(String commitId) {
+	private Long getRevisionByCommitId(String commitId) {
 		if(commitId == null)
 		{
-			return -1;
+			return -1L;
 		}
 
 		try {
 			long revision = Long.parseLong(commitId);
 			return revision;
 		} catch (Exception e) {
+			System.out.println("getRevisionByCommitId() 非法SVN commitId:" + commitId);
 			e.printStackTrace();
-			return -1;
+			return null;
 		}	
 	}
 
