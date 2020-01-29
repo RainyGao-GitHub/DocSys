@@ -2193,8 +2193,7 @@ public class GITUtil  extends BaseController{
 	private void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, DocChange> localChanges, int subDocCommitFlag) {
 		
 		String localRootPath = doc.getLocalRootPath();
-		String localRefRootPath = doc.getLocalRefRootPath();
-		System.out.println("scheduleForCommit()  doc:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		System.out.println("scheduleForCommit()  localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
 		
     	if(doc.getName().isEmpty())
     	{
