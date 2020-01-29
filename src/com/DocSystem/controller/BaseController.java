@@ -492,12 +492,12 @@ public class BaseController  extends BaseFunction{
 	//
 	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
 	{
-		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
+		//System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
 				
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
-			System.out.println("getDocListFromRootToDoc() docList under root is empty");			
+			//System.out.println("getDocListFromRootToDoc() docList under root is empty");			
 			return null;
 		}
 		
@@ -509,7 +509,7 @@ public class BaseController  extends BaseFunction{
 		
 		String [] paths = relativePath.split("/");
 		int deepth = paths.length;
-		System.out.println("getDocListFromRootToDoc() deepth:" + deepth); 
+		//System.out.println("getDocListFromRootToDoc() deepth:" + deepth); 
 		if(deepth < 1)
 		{
 			return resultList;
@@ -7543,7 +7543,7 @@ public class BaseController  extends BaseFunction{
 		
 		String backUpName = "docsystem_data";
 		
-		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", null, url, user, pwd) == false)
+		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", "UTF-8", url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
