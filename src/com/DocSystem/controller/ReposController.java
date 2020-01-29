@@ -518,13 +518,13 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		printObject("getReposInitMenu() repos:", repos);
+		//printObject("getReposInitMenu() repos:", repos);
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
-		printObject("getReposInitMenu() rootDoc:", rootDoc);
+		//printObject("getReposInitMenu() rootDoc:", rootDoc);
 		
 		//get the rootDocAuth
 		DocAuth rootDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), rootDoc, reposAccess.getAuthMask());
@@ -535,7 +535,7 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
+		//printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
 		File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
 		if(rootFile.exists() == false)
@@ -547,7 +547,7 @@ public class ReposController extends BaseController{
 		
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
-		printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
+		//printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
 		
 		List <Doc> docList = null;
 		if(rootFile.isFile())
@@ -567,7 +567,7 @@ public class ReposController extends BaseController{
 		if(path != null && name != null)
 		{
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-			printObject("getReposInitMenu() doc:", doc);
+			//printObject("getReposInitMenu() doc:", doc);
 		}
 		if(doc == null)
 		{
@@ -578,7 +578,7 @@ public class ReposController extends BaseController{
 			//获取用户可访问文件列表(From Root to Doc)
 			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt);
 		}
-		printObject("getReposInitMenu() docList:", docList);
+		//printObject("getReposInitMenu() docList:", docList);
 
 		if(docList == null)
 		{
