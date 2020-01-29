@@ -646,7 +646,7 @@ public class GITUtil  extends BaseController{
 	//get the subEntryList under remoteEntryPath,only useful for Directory
 	public TreeWalk getSubEntries(String remoteEntryPath, String revision) 
 	{    	
-    	System.out.println("getSubEntries() revision:" + revision);
+    	//System.out.println("getSubEntries() revision:" + revision);
     	if(OpenRepos() == false)
     	{
         	System.out.println("getSubEntries() Failed to open git repository");
@@ -789,7 +789,7 @@ public class GITUtil  extends BaseController{
         			subDoc.setRevision(subDocRevisionCommit.getName());
         			subDoc.setLatestEditTime(convertCommitTime(subDocRevisionCommit.getCommitTime()));	
         		}
-                System.out.println("getDocList() subDoc:" + subDoc.getName() + " size:" + subDoc.getSize());    			
+                //System.out.println("getDocList() subDoc:" + subDoc.getName() + " size:" + subDoc.getSize());    			
         	}
         }
         
