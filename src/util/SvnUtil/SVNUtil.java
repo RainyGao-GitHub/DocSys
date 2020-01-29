@@ -1592,9 +1592,14 @@ public class SVNUtil  extends BaseController{
 		{
 			return -1;
 		}
-		
-		long revision = Long.parseLong(commitId);
-		return revision;
+
+		try {
+			long revision = Long.parseLong(commitId);
+			return revision;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}	
 	}
 
 	//get the subEntryList under remoteEntryPath,only useful for Directory

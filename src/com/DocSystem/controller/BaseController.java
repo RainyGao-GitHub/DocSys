@@ -1991,7 +1991,7 @@ public class BaseController  extends BaseFunction{
 
 	
 	private boolean dbUpdateDocRevision(Repos repos, Doc doc, String revision) {
-		System.out.println("dbUpdateDocRevision " + revision + " doc " + doc.getDocId() + " [" +doc.getPath() + doc.getName());
+		System.out.println("dbUpdateDocRevision " + revision + " doc " + doc.getDocId() + " [" +doc.getPath() + doc.getName() + "]");
 
 		Doc dbDoc = dbGetDoc(repos, doc, false);
 		if(dbDoc == null)
@@ -2732,7 +2732,8 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
+	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) 
+	{
 		//本地有改动需要提交
 		System.out.println("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
 		if(commitMsg == null)
@@ -2771,7 +2772,7 @@ public class BaseController  extends BaseFunction{
 		//推送到远程仓库
 		verReposPullPush(repos, true, rt);
 		
-		if(commitActionList != null)
+		if(commitActionList.size() > 0)
 		{
 			for(int i=0; i<commitActionList.size(); i++)
 			{
@@ -2784,6 +2785,19 @@ public class BaseController  extends BaseFunction{
 				dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
 			}			
 			dbUpdateDocRevision(repos, doc, revision);
+		}
+		else
+		{
+			if(localChanges != null)
+			{
+				for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
+				{
+					DocChange docChange = entry.getValue();
+					Doc localChangeDoc = docChange.getDoc();
+					localChangeDoc.setRevision(revision);
+					dbUpdateDoc(repos, localChangeDoc, true);
+				}
+			}
 		}
 		
 		System.out.println("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
