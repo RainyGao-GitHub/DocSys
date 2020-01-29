@@ -1486,11 +1486,11 @@ public class BaseFunction{
     //strict: true there is not file and dir, false: there is no file
 	public boolean isEmptyDir(String dirPath, boolean strict) 
 	{
-		System.out.println("isEmptyDir() dirPath:" + dirPath);
+		//System.out.println("isEmptyDir() dirPath:" + dirPath);
 		File dir = new File(dirPath);
 		if(isEmptyDir(dir, strict) == true)
 		{
-			System.out.println("isEmptyDir() " + dirPath + " 本地文件不存在或是空目录");
+			//System.out.println("isEmptyDir() " + dirPath + " 本地是空目录");
 			return true;
 		}
 		return false;
