@@ -2455,7 +2455,7 @@ public class BaseController  extends BaseFunction{
 		uniqueAction.setExpireTimeStamp(null);
 		uniqueAction.getUniqueCommonActionHashMap().clear();
 		uniqueAction.getUniqueCommonActionList().clear();	
-		System.out.println("executeUniqueCommonActionList completed for " + reposId);
+		System.out.println("executeUniqueCommonActionList completed for repos: " + reposId);
 		return true;
 	}	
 	
@@ -2471,7 +2471,8 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		printObject("**************************** 启动自动同步  syncupForDocChange() doc:",doc);
+		System.out.println("syncupForDocChange() **************************** 启动自动同步 ********************************");
+		printObject("syncupForDocChange() doc:",doc);
 		
 		User login_user = action.getUser();
 		if(login_user == null)
@@ -2491,7 +2492,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Repos repos = action.getRepos();
-		printObject("syncupForDocChange repos:", repos);
+		printObject("syncupForDocChange() repos:", repos);
 		
 		//文件管理系统类型需要进行RealDoc的同步
 		boolean realDocSyncResult = false;
@@ -2507,12 +2508,14 @@ public class BaseController  extends BaseFunction{
 			if(localEntry == null)
 			{
 				System.out.println("syncupForDocChange() 本地文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
 				return false;
 			}
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
 			if(remoteEntry == null)
 			{
 				System.out.println("syncupForDocChange() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+				System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
 				return false;
 			}
 			
@@ -2523,7 +2526,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("syncupForDocChange() syncupScanForDoc_FSM ret:" + ret);
 			if(remoteChanges.size() == 0)
 			{
-				System.out.println("**************************** syncupForDocChange() 远程没有改动");
+				System.out.println("syncupForDocChange() 远程没有改动");
 			}
 			else
 			{
@@ -2533,14 +2536,14 @@ public class BaseController  extends BaseFunction{
 			
 			if(localChanges.size() == 0)
 			{
-				System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地没有改动");
+				System.out.println("syncupForDocChange() 本地没有改动");
 				realDocSyncResult = true;
 			}
 			else
 			{
 				if(action.getAction() == Action.UNDEFINED)
 				{
-					System.out.println("**************************** 结束自动同步 Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+					System.out.println("syncupForDocChange() **************************** Action:" + action.getAction() + " 本地有改动不进行同步 ");			
 					realDocSyncResult = true;
 				}	
 				else
@@ -2549,10 +2552,12 @@ public class BaseController  extends BaseFunction{
 					realDocSyncResult =  syncupLocalChanges_FSM(repos, doc, action.getCommitMsg(), action.getCommitUser(), login_user, localChanges, subDocSyncupFlag, rt);
 				}
 			}
+			System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
 		}
 		else
 		{
-			System.out.println("**************************** 结束自动同步 syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
+			System.out.println("syncupForDocChange() 前置类型仓库不需要同步:" + repos.getType());
+			System.out.println("syncupForDocChange() ************************ 结束自动同步 ****************************");
 			realDocSyncResult = true;
 		}
 		
