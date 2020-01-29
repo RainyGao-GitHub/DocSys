@@ -76,7 +76,7 @@ public class GITUtil  extends BaseController{
     
 	public boolean Init(Repos repos,boolean isRealDoc, String commitUser) {
     	String localVerReposPath = getLocalVerReposPath(repos,isRealDoc);
-    	System.out.println("GITUtil Init() localVerReposPath:" + localVerReposPath); 
+    	//System.out.println("GITUtil Init() localVerReposPath:" + localVerReposPath); 
 		
 		gitDir = localVerReposPath + ".git/";
 		wcDir = localVerReposPath;
