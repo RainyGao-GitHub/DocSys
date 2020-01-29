@@ -145,21 +145,18 @@ public class BaseController  extends BaseFunction{
 	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
-	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList) 
+	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
 		System.out.println("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );
 						
-		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
+		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
 	
 		if(docList != null)
 		{
 			Collections.sort(docList);
 		
 			printObject("getAccessableSubDocList() docList:", docList);
-		}
-		
-		addDocToSyncUpList(actionList, repos, doc);
-		
+		}		
 		return docList;
 	}
 	
@@ -195,7 +192,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//getSubDocHashMap will do get HashMap for subDocList under pid,
-	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getAuthedSubDocList(Repos repos, Doc doc, DocAuth pDocAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
 	{
 		List<Doc> docList = new ArrayList<Doc>();
 		List<Doc> tmpDocList = docSysGetSubDocList(repos, doc);
@@ -486,17 +483,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//
-	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt, List<CommonAction> actionList)
+	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt)
 	{
 		System.out.println("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
-		
-		if(rootDoc == null)
-		{
-			rootDoc = buildBasicDoc(repos.getId(), 0L, -1L, "", "", 0, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-		}
-		
-		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);	//get subDocList under root
-		addDocToSyncUpList(actionList, repos, rootDoc);
+				
+		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
 			System.out.println("getDocListFromRootToDoc() docList under root is empty");			
@@ -538,8 +529,7 @@ public class BaseController  extends BaseFunction{
 			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
-			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt, actionList);
-			addDocToSyncUpList(actionList, repos, tempDoc);
+			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
 				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + path+name, rt);
