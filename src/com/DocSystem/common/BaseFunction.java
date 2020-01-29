@@ -166,6 +166,11 @@ public class BaseFunction{
 	//版本仓库底层通用接口
 	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
 		//printObject("insertAddFileAction:", doc);
+		if(doc.getName().equals(".git"))
+		{
+			return;
+		}
+		
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.ADD);
     	action.setDoc(doc);
@@ -176,6 +181,10 @@ public class BaseFunction{
 	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
 	{
 		printObject("insertAddDirAction:", doc);
+		if(doc.getName().equals(".git"))
+		{
+			return;
+		}
 
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
