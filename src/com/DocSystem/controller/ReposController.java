@@ -24,6 +24,7 @@ import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocSysConfig;
 import com.DocSystem.common.ReposAccess;
+import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.controller.BaseController;
 
 /*
@@ -675,7 +676,7 @@ public class ReposController extends BaseController{
 		
 		//Add doc for AutoSync
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		addDocToSyncUpList(actionList, repos, doc);
+		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null);
 		executeUniqueCommonActionList(actionList, rt);
 	}
 	

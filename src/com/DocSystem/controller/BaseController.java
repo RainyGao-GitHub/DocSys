@@ -564,15 +564,19 @@ public class BaseController  extends BaseFunction{
 		return relativePath;
 	}
 
-	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc) 
+	protected void addDocToSyncUpList(List<CommonAction> actionList, Repos repos, Doc doc, CommonAction.Action syncType, User user, String commitMsg) 
 	{
-		User autoSync = new User();
-		autoSync.setId(0);
-		autoSync.setName("AutoSync");
-		if(false == checkDocLocked(repos.getId(), doc, autoSync, false))
+		printObject("addDocToSyncUpList() syncType:" + syncType + " doc:", doc);
+		if(user == null)
 		{
-			//insertSyncUpAction(actionList,repos,doc,5,3,2, null);
-			insertCommonAction(actionList,repos,doc, null, null, null, ActionType.AUTOSYNCUP, Action.UNDEFINED, DocType.REALDOC, null, autoSync);
+			user = new User();
+			user.setId(0);
+			user.setName("AutoSync");
+		}
+		
+		if(false == checkDocLocked(repos.getId(), doc, user, false))
+		{
+			insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AUTOSYNCUP, syncType, DocType.REALDOC, null, user);
 		}
 	}
 	
