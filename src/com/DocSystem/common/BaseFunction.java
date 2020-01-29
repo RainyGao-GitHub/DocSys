@@ -180,11 +180,11 @@ public class BaseFunction{
     
 	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
 	{
-		printObject("insertAddDirAction:", doc);
 		if(doc.getName().equals(".git"))
 		{
 			return;
 		}
+		printObject("insertAddDirAction:", doc);
 
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
