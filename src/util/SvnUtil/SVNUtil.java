@@ -1580,6 +1580,8 @@ public class SVNUtil  extends BaseController{
 	    	subDoc.setCreatorName(subEntry.getAuthor());
 	    	subDoc.setLatestEditorName(subEntry.getAuthor());
 	    	subDoc.setRevision(subEntry.getRevision()+"");
+    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
 	        subEntryList.add(subDoc);
 	    }
 	    return subEntryList;
