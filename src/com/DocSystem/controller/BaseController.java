@@ -3076,7 +3076,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		
+				
 		Integer type = verReposCheckPath(repos, false, doc, commitId);
 		if(type == null || type <= 0)
 		{
