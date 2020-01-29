@@ -3702,7 +3702,9 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 	
-		Doc dbDoc = list.get(0);		
+		Doc dbDoc = list.get(0);
+		dbDoc.setLocalRootPath(doc.getLocalRootPath());
+		dbDoc.setLocalVRootPath(doc.getLocalVRootPath());
 		return dbDoc;
 	}
 
