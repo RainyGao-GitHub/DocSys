@@ -3004,14 +3004,22 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean syncupScanForDoc_FSM(Repos repos, Doc doc, Doc dbDoc, Doc localEntry, Doc remoteEntry, User login_user, ReturnAjax rt, HashMap<Long, DocChange> remoteChanges, HashMap<Long, DocChange> localChanges, int subDocSyncFlag) 
 	{
-		//printObject("syncupForDocChange_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
+		//printObject("syncupScanForDoc_FSM() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " ", doc);
 
 		if(doc.getDocId() == 0)	//For root dir, go syncUpSubDocs
 		{
-			System.out.println("syncupForDocChange_FSM() 同步根目录");			
+			System.out.println("syncupScanForDoc_FSM() 同步根目录");			
 			return syncupScanForSubDocs_FSM(repos, doc, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 		}
 		
+		if(repos.getVerCtrl() == 2)
+		{
+			if(doc.getName().equals(".git"))
+			{
+				System.out.println("syncupScanForDoc_FSM() .git was ignored");		
+				return true;
+			}
+		}
 		DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
 		
 		switch(docChangeType)
@@ -3028,7 +3036,7 @@ public class BaseController  extends BaseFunction{
 			localChange.setRemoteEntry(remoteEntry);
 			localChange.setType(docChangeType);
 			localChanges.put(doc.getDocId(), localChange);
-			System.out.println("syncupForDocChange_FSM() docChangeType: " + localChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
+			System.out.println("syncupScanForDoc_FSM() docChangeType: " + localChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		//由于远程同步需要直接修改或删除本地文件，一旦误操作将无法恢复，必须保证删除修改操作的文件的历史已经在版本仓库中
 		case REMOTEDELETE:	//remoteDelete
@@ -3045,7 +3053,7 @@ public class BaseController  extends BaseFunction{
 				localChange1.setRemoteEntry(remoteEntry);
 				localChange1.setType(DocChangeType.LOCALCHANGE);	//LOCALCHANGE才能保证在AutoCommit的时候正常工作
 				localChanges.put(dbDoc.getDocId(), localChange1);
-				System.out.println("syncupForDocChange_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
+				System.out.println("syncupScanForDoc_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 				return true;
 			}
 		case REMOTEADD:	//remoteAdd
@@ -3056,7 +3064,7 @@ public class BaseController  extends BaseFunction{
 			remoteChange.setRemoteEntry(remoteEntry);
 			remoteChange.setType(docChangeType);
 			remoteChanges.put(doc.getDocId(), remoteChange);
-			System.out.println("syncupForDocChange_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
+			System.out.println("syncupScanForDoc_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		case NOCHANGE:		//no change
 			if(dbDoc != null && dbDoc.getType() == 2)
