@@ -2194,7 +2194,7 @@ public class GITUtil  extends BaseController{
 		
 		String localRootPath = doc.getLocalRootPath();
 		String localRefRootPath = doc.getLocalRefRootPath();
-		System.out.println("scheduleForCommit()  parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		System.out.println("scheduleForCommit()  doc:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
 		
     	if(doc.getName().isEmpty())
     	{
