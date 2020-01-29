@@ -2543,7 +2543,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(action.getAction() == Action.UNDEFINED)
 				{
-					System.out.println("syncupForDocChange() **************************** Action:" + action.getAction() + " 本地有改动不进行同步 ");			
+					System.out.println("syncupForDocChange() Action:" + action.getAction() + " 本地有改动不进行同步 ");			
 					realDocSyncResult = true;
 				}	
 				else
