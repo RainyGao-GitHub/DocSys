@@ -2200,6 +2200,12 @@ public class GITUtil  extends BaseController{
     		scanForSubDocCommit(actionList, doc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
     		return;
     	}
+    	
+    	if(doc.getName().equals(".git"))
+    	{
+    		System.out.println("scheduleForCommit() .git was ignored");
+    		return;
+    	}
  	
     	String entryPath = doc.getPath() + doc.getName();
     	String localEntryPath = localRootPath + entryPath;    	
