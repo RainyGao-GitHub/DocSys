@@ -3464,7 +3464,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(remoteEntry != null && remoteEntry.getType() != 0)
 			{
-				System.out.println("getRemoteChangeType() 远程文件/目录新增:"+remoteEntry.getName());
+				//System.out.println("getRemoteChangeType() 远程文件/目录新增:"+remoteEntry.getName());
 				return DocChangeType.REMOTEADD;				
 			}
 			//System.out.println("getRemoteChangeType() 远程文件未变更");
@@ -3473,7 +3473,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(remoteEntry == null ||remoteEntry.getType() == 0)
 		{
-			System.out.println("getRemoteChangeType() 远程文件删除:"+dbDoc.getName());
+			//System.out.println("getRemoteChangeType() 远程文件删除:"+dbDoc.getName());
 			if(repos.getVerCtrl() == 2)
 			{
 				//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变（不存在、文件也会被认为是空目录）
@@ -3490,13 +3490,13 @@ public class BaseController  extends BaseFunction{
 		case 1:
 			if(dbDoc.getType() == null || dbDoc.getType() != 1)
 			{
-				System.out.println("getRemoteChangeType() 远程文件类型改变(目录->文件):"+remoteEntry.getName());
+				//System.out.println("getRemoteChangeType() 远程文件类型改变(目录->文件):"+remoteEntry.getName());
 				return DocChangeType.REMOTEDIRTOFILE;
 			}
 			
 			if(isDocRemoteChanged(repos, dbDoc, remoteEntry))
 			{
-				System.out.println("getRemoteChangeType() 远程文件内容修改:"+remoteEntry.getName());
+				//System.out.println("getRemoteChangeType() 远程文件内容修改:"+remoteEntry.getName());
 				return DocChangeType.REMOTECHANGE;
 			}
 			
@@ -3505,7 +3505,7 @@ public class BaseController  extends BaseFunction{
 		case 2:
 			if(dbDoc.getType() == null || dbDoc.getType() != 2)
 			{
-				System.out.println("getRemoteChangeType() 远程文件类型改变(文件->目录):"+remoteEntry.getName());
+				//System.out.println("getRemoteChangeType() 远程文件类型改变(文件->目录):"+remoteEntry.getName());
 				return DocChangeType.REMOTEFILETODIR;
 			}
 
@@ -3513,7 +3513,7 @@ public class BaseController  extends BaseFunction{
 			return DocChangeType.NOCHANGE;
 		}
 		
-		System.out.println("getRemoteChangeType() 远程文件类型未知:"+dbDoc.getName());
+		//System.out.println("getRemoteChangeType() 远程文件类型未知:"+dbDoc.getName());
 		return DocChangeType.UNDEFINED;
 	}
 
