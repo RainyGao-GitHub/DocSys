@@ -754,6 +754,8 @@ public class GITUtil  extends BaseController{
 	    		subDoc.setName(name);
 	    		subDoc.setLevel(subDocLevel);
 	    		subDoc.setType(type);
+	    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+	    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
 	    		//GIT的tree包含了在当前版本上存在的目录树信息，但并不知道这个目录树上每个节点的大小和最近一次的提交信息（因为有些节点不是在当前版本修改的）
 	    		//所以需要size是通过获取节点的blod信息来获取的，而文件的最近提交信息怎是要通过查询节点最近的一次log来获取
 	    		//为什么这么做主要是由GIT仓库的实现方式决定的 RevCommit[Tree[blob/Tree]]

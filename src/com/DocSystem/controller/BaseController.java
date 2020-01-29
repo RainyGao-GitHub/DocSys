@@ -218,7 +218,14 @@ public class BaseController  extends BaseFunction{
 		Doc qDoc = new Doc();
 		qDoc.setVid(repos.getId());
 		qDoc.setPid(doc.getDocId());
-		return reposService.getDocList(qDoc);
+    	List <Doc> subEntryList =  reposService.getDocList(qDoc);
+    	for(int i=0;i<subEntryList.size();i++)
+    	{
+    		Doc subDoc = subEntryList.get(i);
+    		subDoc.setLocalRootPath(doc.getLocalRootPath());
+    		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+    	}
+    	return subEntryList;
 	}
 
 	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
