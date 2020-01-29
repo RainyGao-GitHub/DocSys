@@ -2795,7 +2795,7 @@ public class BaseController  extends BaseFunction{
 		printObject("syncupForDocChange_NoFS() dbDoc: ", dbDoc);
 
 		
-		DocChangeType remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
+		DocChangeType remoteChangeType = getRemoteChangeType(repos, doc, dbDoc, remoteEntry);
 		if(remoteChangeType != DocChangeType.NOCHANGE)
 		{
 			//LockDoc
@@ -3086,7 +3086,7 @@ public class BaseController  extends BaseFunction{
 		//dbDoc存在，localEntry不存在
 		if(localEntry == null || localEntry.getType() == 0)
 		{
-			DocChangeType remoteChangeType = getRemoteChangeType(repos, dbDoc, remoteEntry);
+			DocChangeType remoteChangeType = getRemoteChangeType(repos, doc, dbDoc, remoteEntry);
 			if(remoteChangeType == DocChangeType.NOCHANGE || remoteChangeType == DocChangeType.REMOTEDELETE)
 			{
 				//本地文件/目录删除
@@ -3445,7 +3445,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	private DocChangeType getRemoteChangeType(Repos repos, Doc dbDoc, Doc remoteEntry) 
+	private DocChangeType getRemoteChangeType(Repos repos, Doc doc, Doc dbDoc, Doc remoteEntry) 
 	{
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
@@ -3470,7 +3470,7 @@ public class BaseController  extends BaseFunction{
 			if(repos.getVerCtrl() == 2)
 			{
 				//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变（不存在、文件也会被认为是空目录）
-				if(isEmptyDir(remoteEntry.getLocalRootPath() + remoteEntry.getPath() + remoteEntry.getName(), false))
+				if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), false))
 				{
 					return DocChangeType.NOCHANGE;
 				}
