@@ -562,8 +562,6 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		
 		Doc doc = null;
 		if(path != null && name != null)
 		{
@@ -572,12 +570,12 @@ public class ReposController extends BaseController{
 		}
 		if(doc == null)
 		{
-			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt);
 		}
 		printObject("getReposInitMenu() docList:", docList);
 
@@ -590,10 +588,6 @@ public class ReposController extends BaseController{
 			rt.setData(docList);
 		}
 		writeJson(rt, response);
-		
-		printObject("getReposInitMenu() actionList:", actionList);
-		executeUniqueCommonActionList(actionList, rt);
-		return;		
 	}
 
 	/* 
@@ -667,8 +661,7 @@ public class ReposController extends BaseController{
 		//docAuthHashMap for access_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		
-		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
-		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt, actionList);
+		docList = getAccessableSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
 
 		if(docList == null)
 		{
@@ -680,6 +673,9 @@ public class ReposController extends BaseController{
 		}
 		writeJson(rt, response);
 		
+		//Add doc for AutoSync
+		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
+		addDocToSyncUpList(actionList, repos, doc);
 		executeUniqueCommonActionList(actionList, rt);
 	}
 	
@@ -734,17 +730,16 @@ public class ReposController extends BaseController{
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMap(login_user.getId(),repos.getId());
 		
 		List <Doc> docList = null;
-		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		if(docId == null || docId == 0)
 		{
-			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt, actionList);
+			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
 			Doc doc = buildBasicDoc(repos.getId(), docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, rt, actionList);
+			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, null, docAuthHashMap, rt);
 		}
 		
 		//合并列表
@@ -755,10 +750,7 @@ public class ReposController extends BaseController{
 		
 		docList.add(rootDoc);
 		rt.setData(docList);
-		writeJson(rt, response);
-		
-		//executeCommonActionList(actionList, rt);
-		executeUniqueCommonActionList(actionList, rt);
+		writeJson(rt, response);		
 	}
 
 	/********** 获取系统所有用户和任意用户 ：前台用于给仓库添加访问用户，返回的结果实际上是reposAuth列表***************/
