@@ -2734,7 +2734,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean syncupLocalChanges_FSM(Repos repos, Doc doc, String commitMsg, String commitUser, User login_user, HashMap<Long, DocChange> localChanges, Integer subDocSyncupFlag, ReturnAjax rt) {
 		//本地有改动需要提交
-		System.out.println("syncupForDocChange() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
+		System.out.println("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
 		if(commitMsg == null)
 		{
 			commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
@@ -2753,8 +2753,8 @@ public class BaseController  extends BaseFunction{
 			if(docLock == null)
 			{
 				unlock(); //线程锁
-				docSysDebugLog("syncupForDocChange() Failed to lock Doc: " + doc.getName(), rt);
-				System.out.println("**************************** 结束自动同步 syncupForDocChange() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
+				docSysDebugLog("syncupLocalChanges_FSM() Failed to lock Doc: " + doc.getName(), rt);
+				System.out.println("syncupLocalChanges_FSM() 文件已被锁定:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
 				return false;
 			}
 			unlock(); //线程锁
@@ -2764,7 +2764,7 @@ public class BaseController  extends BaseFunction{
 		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, true, localChanges, subDocSyncupFlag, commitActionList);
 		if(revision == null)
 		{
-			System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动Commit失败:" + revision);
+			System.out.println("syncupLocalChanges_FSM() 本地改动Commit失败:" + revision);
 			unlockDoc(doc, login_user, docLock);
 			return false;
 		}
@@ -2776,7 +2776,7 @@ public class BaseController  extends BaseFunction{
 			for(int i=0; i<commitActionList.size(); i++)
 			{
 				Doc commitDoc = commitActionList.get(i).getDoc();
-				printObject("syncupForDocChange() dbUpdateDoc commitDoc: ", commitDoc);						
+				printObject("syncupLocalChanges_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
 				//需要根据commitAction的行为来决定相应的操作
 				commitDoc.setRevision(revision);
 				commitDoc.setLatestEditorName(login_user.getName());
@@ -2786,7 +2786,7 @@ public class BaseController  extends BaseFunction{
 			dbUpdateDocRevision(repos, doc, revision);
 		}
 		
-		System.out.println("**************************** 结束自动同步 syncupForDocChange() 本地改动已更新:" + revision);
+		System.out.println("syncupLocalChanges_FSM() 本地改动更新完成:" + revision);
 		unlockDoc(doc, login_user, docLock);
 		
 		return true;	
