@@ -147,7 +147,7 @@ public class BaseController  extends BaseFunction{
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
 	{	
-		System.out.println("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );
+		//System.out.println("getAccessableSubDocList() " + doc.getDocId() + " " + doc.getPath() + doc.getName() );
 						
 		List<Doc> docList = getAuthedSubDocList(repos, doc, docAuth, docAuthHashMap, rt);
 	
@@ -155,7 +155,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Collections.sort(docList);
 		
-			printObject("getAccessableSubDocList() docList:", docList);
+			//printObject("getAccessableSubDocList() docList:", docList);
 		}		
 		return docList;
 	}
@@ -345,19 +345,19 @@ public class BaseController  extends BaseFunction{
 	    	{
 	    		subDoc = dbDocList.get(i);
 	    		docHashMap.put(subDoc.getName(), subDoc);
-	    		printObject("isDirLocalChanged() dbDoc:", subDoc);
+	    		//printObject("isDirLocalChanged() dbDoc:", subDoc);
 	    	   	
 	    		Doc subLocalEntry = fsGetDoc(repos, subDoc);
-	    		printObject("isDirLocalChanged() localEntry: ", subLocalEntry);
+	    		//printObject("isDirLocalChanged() localEntry: ", subLocalEntry);
 	    		if(subLocalEntry.getType() == 0)
 	    		{
-	    			System.out.println("isDirLocalChanged() 本地文件删除: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    			//System.out.println("isDirLocalChanged() 本地文件删除: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    		
 	    		if(!subLocalEntry.getType().equals(subDoc.getType()))
 	    		{
-	    			System.out.println("isDirLocalChanged() 本地文件类型变化: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    			//System.out.println("isDirLocalChanged() 本地文件类型变化: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    		
@@ -372,14 +372,14 @@ public class BaseController  extends BaseFunction{
 	    		
 	    		if(isDocLocalChanged(repos, subDoc, subLocalEntry))
 	    		{
-	    			System.out.println("isDirLocalChanged() 本地文件内容修改: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+	    			//System.out.println("isDirLocalChanged() 本地文件内容修改: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    			return true;
 	    		}
 	    	}
     	}
 
     	List<Doc> localEntryList = getLocalEntryList(repos, doc);
-		printObject("isDirLocalChanged() localEntryList:", localEntryList);
+		//printObject("isDirLocalChanged() localEntryList:", localEntryList);
 		if(localEntryList != null)
     	{
 	    	for(int i=0;i<localEntryList.size();i++)
@@ -392,7 +392,7 @@ public class BaseController  extends BaseFunction{
 	    		}
 	    		
 	    		//local Added
-    			System.out.println("isDirLocalChanged() local Doc Added: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
+    			//System.out.println("isDirLocalChanged() local Doc Added: " + subDoc.getDocId() + " " + subDoc.getPath() + subDoc.getName());
 	    		return true;
 	    	}
     	}
@@ -2994,7 +2994,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
-		System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 		
 		switch(docChangeType)
 		{
@@ -3010,6 +3009,7 @@ public class BaseController  extends BaseFunction{
 			localChange.setRemoteEntry(remoteEntry);
 			localChange.setType(docChangeType);
 			localChanges.put(doc.getDocId(), localChange);
+			System.out.println("syncupForDocChange_FSM() docChangeType: " + localChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		//由于远程同步需要直接修改或删除本地文件，一旦误操作将无法恢复，必须保证删除修改操作的文件的历史已经在版本仓库中
 		case REMOTEDELETE:	//remoteDelete
@@ -3018,7 +3018,7 @@ public class BaseController  extends BaseFunction{
 		case REMOTEDIRTOFILE:	//remoteTypeChanged(From Dir To File)
 			if(isDocInVerRepos(repos, doc, dbDoc.getRevision()) == false)
 			{
-				System.out.println("syncupForDocChange_FSM() " + doc.getPath()+doc.getName() + " not exists in verRepos at revision:" + dbDoc.getRevision() + " treat it as LOCALCHANGE");
+				//System.out.println("syncupForDocChange_FSM() " + doc.getPath()+doc.getName() + " not exists in verRepos at revision:" + dbDoc.getRevision() + " treat it as LOCALCHANGE");
 				DocChange localChange1 = new DocChange();
 				localChange1.setDoc(doc);
 				localChange1.setDbDoc(dbDoc);
@@ -3026,6 +3026,7 @@ public class BaseController  extends BaseFunction{
 				localChange1.setRemoteEntry(remoteEntry);
 				localChange1.setType(DocChangeType.LOCALCHANGE);	//LOCALCHANGE才能保证在AutoCommit的时候正常工作
 				localChanges.put(dbDoc.getDocId(), localChange1);
+				System.out.println("syncupForDocChange_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 				return true;
 			}
 		case REMOTEADD:	//remoteAdd
@@ -3036,6 +3037,7 @@ public class BaseController  extends BaseFunction{
 			remoteChange.setRemoteEntry(remoteEntry);
 			remoteChange.setType(docChangeType);
 			remoteChanges.put(doc.getDocId(), remoteChange);
+			System.out.println("syncupForDocChange_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		case NOCHANGE:		//no change
 			if(dbDoc != null && dbDoc.getType() == 2)
