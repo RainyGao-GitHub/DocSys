@@ -2061,8 +2061,8 @@ public class GITUtil  extends BaseController{
 	private boolean executeModifyAction(Git git, CommitAction action) {
 		Doc doc = action.getDoc();
 		
-		printObject("executeModifyAction:", doc);
-		System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
+		//printObject("executeModifyAction:", doc);
+		//System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
 		
 		boolean ret = modifyFile(git, doc);
 		return ret;
@@ -2071,16 +2071,16 @@ public class GITUtil  extends BaseController{
 	private boolean executeDeleteAction(Git git, CommitAction action) {
 		Doc doc = action.getDoc();
 
-		printObject("executeDeleteAction:", doc);
-		System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		//printObject("executeDeleteAction:", doc);
+		//System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
 		return deleteEntry(git, doc);
 	}
 	
 	private boolean executeAddAction(Git git, CommitAction action) {
 		Doc doc = action.getDoc();
 	
-		printObject("executeAddAction:", doc);
-		System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
+		//printObject("executeAddAction:", doc);
+		//System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
 		
 		//entry is file
 		if(doc.getType() == 1)

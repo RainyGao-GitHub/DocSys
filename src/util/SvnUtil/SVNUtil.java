@@ -836,12 +836,12 @@ public class SVNUtil  extends BaseController{
 	private boolean executeModifyAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
 
-		printObject("executeModifyAction:",doc);
+		//printObject("executeModifyAction:",doc);
 		
 		String entryPath = doc.getPath() + doc.getName();
 		String localPath = doc.getLocalRootPath();
 		String localRefPath = doc.getLocalRefRootPath();
-		System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		//System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		
 		
 		InputStream oldData = null;
@@ -871,15 +871,15 @@ public class SVNUtil  extends BaseController{
 	private boolean executeDeleteAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
 
-		printObject("executeModifyAction:",doc);
-		System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		//printObject("executeModifyAction:",doc);
+		//System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
 		return deleteEntry(editor, doc, false);
 	}
 
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
 		Doc doc = action.getDoc();
 
-		printObject("executeAddAction:",doc);
+		//printObject("executeAddAction:",doc);
 
 		String localPath = doc.getLocalRootPath();
 		String localRefPath = doc.getLocalRefRootPath();
@@ -888,7 +888,7 @@ public class SVNUtil  extends BaseController{
 		String entryName = doc.getName();
 		String entryPath = doc.getPath() + doc.getName();
 		
-		System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		//System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
 		
 		//entry is file
 		if(doc.getType() == 1)
@@ -1324,7 +1324,7 @@ public class SVNUtil  extends BaseController{
 	
 	//add Entry
     private boolean addEntry(ISVNEditor editor,String parentPath, String entryName,boolean isFile,InputStream fileData,boolean openRoot, boolean openParent,boolean keepOpen){    
-    	System.out.println("addEntry() parentPath:" + parentPath + " entryName:" + entryName + " isFile:" + isFile);
+    	//System.out.println("addEntry() parentPath:" + parentPath + " entryName:" + entryName + " isFile:" + isFile);
     	
     	if(parentPath == null || entryName == null)
     	{
@@ -1350,7 +1350,7 @@ public class SVNUtil  extends BaseController{
 	    		editor.applyTextDelta(entryPath, null);
 	    		SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 	    		String checksum = deltaGenerator.sendDelta(entryPath, fileData, editor, true);
-	    		System.out.println("addEntry() checksum[" + checksum +"]");
+	    		//System.out.println("addEntry() checksum[" + checksum +"]");
 	    		//close new added File
 	    		editor.closeFile(entryPath, checksum);
 	    	}
