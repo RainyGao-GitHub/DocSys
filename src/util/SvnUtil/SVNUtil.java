@@ -1088,9 +1088,7 @@ public class SVNUtil  extends BaseController{
 			HashMap<Long, DocChange> localChanges, int subDocCommitFlag) {
 
 		String localRootPath = doc.getLocalRootPath(); 
-		String localRefRootPath = doc.getLocalRefRootPath();
-
-		System.out.println("scanForSubDocCommit()  parentPath:" + doc.getPath() + doc.getName() + " localRootPath:" + localRootPath + " localRefParentPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		//System.out.println("scanForSubDocCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
 		
 		if(subDocCommitFlag == 0) //不递归
 		{
@@ -1112,7 +1110,7 @@ public class SVNUtil  extends BaseController{
 		int subDocLevel = getSubDocLevel(doc);
 
 		//遍历仓库所有子目录
-		System.out.println("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
+		//System.out.println("scanForSubDocCommit() go through verRepos subDocs under:" + subDocParentPath);
 		Collection<SVNDirEntry> entries = getSubEntries(subDocParentPath, -1L);
         if(entries != null)
         {
@@ -1122,7 +1120,7 @@ public class SVNUtil  extends BaseController{
 	            SVNDirEntry remoteSubEntry = (SVNDirEntry) iterator.next();
 	            int subDocType = (remoteSubEntry.getKind() == SVNNodeKind.FILE)? 1:2;
 	            Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, remoteSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), remoteSubEntry.getSize(), "");
-	            System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
+	            //System.out.println("scanForSubDocCommit() verRepos subDoc:" + subDoc.getName());
 	            
 	            docHashMap.put(subDoc.getName(), subDoc);
 	            scheduleForCommit(actionList, subDoc, modifyEnable, isSubAction, localChanges, subDocCommitFlag);
@@ -1130,7 +1128,7 @@ public class SVNUtil  extends BaseController{
         }
         
         //Go Through localSubDocs
-		System.out.println("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
+		//System.out.println("scanForSubDocCommit() go through local subDocs under:" + subDocParentPath);
         File dir = new File(localRootPath + subDocParentPath);
         File[] tmp=dir.listFiles();
         for(int i=0;i<tmp.length;i++)
@@ -1138,7 +1136,7 @@ public class SVNUtil  extends BaseController{
         	File localSubEntry = tmp[i];
         	int subDocType = localSubEntry.isFile()? 1: 2;
         	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subDocParentPath, localSubEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localSubEntry.length(), "");
-        	System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
+        	//System.out.println("scanForSubDocCommit() local subDoc:" + subDoc.getName());
         	
         	if(docHashMap.get(subDoc.getName()) == null)
         	{
