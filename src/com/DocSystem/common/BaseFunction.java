@@ -110,7 +110,7 @@ public class BaseFunction{
 		action.setAction(actionType);
 		action.setDocType(docType);
 
-		System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		//System.out.println("insertCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		
 		action.setRepos(repos);
 		action.setDoc(srcDoc);
@@ -139,7 +139,7 @@ public class BaseFunction{
 		UniqueAction uniqueAction = uniqueActionHashMap.get(reposId);
 		if(uniqueAction == null)
 		{
-			System.out.println("insertUniqueCommonAction create uniqueAction for repos:" + reposId);
+			//System.out.println("insertUniqueCommonAction create uniqueAction for repos:" + reposId);
 			UniqueAction newUniqueAction = new UniqueAction();
 			uniqueActionHashMap.put(reposId, newUniqueAction);
 			uniqueAction = newUniqueAction;
@@ -148,16 +148,17 @@ public class BaseFunction{
 		ConcurrentHashMap<Long, CommonAction> uniqueCommonActionHashMap = uniqueAction.getUniqueCommonActionHashMap();
 		List<CommonAction> uniqueCommonActionList = uniqueAction.getUniqueCommonActionList();		
 
-		System.out.println("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
+		//System.out.println("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		CommonAction tempAction = uniqueCommonActionHashMap.get(srcDoc.getDocId());
 		if(tempAction != null && tempAction.getType() == action.getType() && tempAction.getAction() == action.getAction() && tempAction.getDocType() == action.getDocType())
 		{
-			System.out.println("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
+			//System.out.println("insertUniqueCommonAction action for doc:"+ srcDoc.getDocId() + " [" + srcDoc.getPath() + srcDoc.getName() + "] alreay in uniqueActionList");
 			return false;
 		}
 		
 		uniqueCommonActionHashMap.put(srcDoc.getDocId(), action);
 		uniqueCommonActionList.add(action);
+		System.out.println("insertUniqueCommonAction actionType:" + action.getAction() + " docType:" + action.getDocType() + " actionId:" + action.getType() + " doc:"+ srcDoc.getDocId() + " " + srcDoc.getPath() + srcDoc.getName());
 		return true;
 	}
 	
