@@ -268,23 +268,21 @@ public class DocController extends BaseController{
 		{
 			commitMsg = "同步 " + doc.getPath() + doc.getName();
 		}
-		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		if(false == checkDocLocked(repos.getId(), doc, reposAccess.getAccessUser(), false))
 		{
 			if(force != null && force == 1)
 			{
-				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.FORCESYNC, DocType.REALDOC, null, reposAccess.getAccessUser());
+				addDocToSyncUpList(actionList, repos, doc, Action.FORCESYNC, reposAccess.getAccessUser(), commitMsg);
 			}
 			else
 			{
-				insertCommonAction(actionList,repos,doc, null, commitMsg, commitUser, ActionType.AUTOSYNCUP, Action.SYNC, DocType.REALDOC, null, reposAccess.getAccessUser());				
+				addDocToSyncUpList(actionList, repos, doc, Action.SYNC, reposAccess.getAccessUser(), commitMsg);
 			}
 		}
 		
 		writeJson(rt, response);
 		
-		//executeCommonActionList(actionList, rt);
 		executeUniqueCommonActionList(actionList, rt);	
 	}
 	
