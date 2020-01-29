@@ -2994,7 +2994,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		DocChangeType docChangeType = getDocChangeType_FSM(repos, doc, dbDoc, localEntry, remoteEntry);
-		//System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType);
+		System.out.println("syncupForDocChange_FSM() docChangeType: " + docChangeType + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 		
 		switch(docChangeType)
 		{
