@@ -460,9 +460,60 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		writeJson(rt, response);	
+		writeJson(rt, response);
+		
+		//如果RealDoc版本仓库的类型变化，那么必须删除所有的doc记录并重新同步
+		if(isReposVerCtrlChanged(newReposInfo, reposInfo))
+		{
+			System.out.println("updateReposInfo() 版本仓库类型变更 from " + reposInfo.getVerCtrl() + " to " + newReposInfo.getVerCtrl());
+			if(dbDeleteAllDocs(repos) == true)
+			{
+				//Add doc for AutoSync
+				List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
+				String localRootPath = getReposRealPath(repos);
+				String localVRootPath = getReposVirtualPath(repos);			
+				Doc rootDoc = buildBasicDoc(reposId, 0L, -1L, "", "", 0, 2, true, localRootPath, localVRootPath, null, null);
+				addDocToSyncUpList(actionList, repos, rootDoc, Action.SYNC, login_user, "自动同步：版本仓库类型变更 " + reposInfo.getVerCtrl() + ":" + newReposInfo.getVerCtrl());
+				executeUniqueCommonActionList(actionList, rt);
+			}
+			else
+			{
+				System.out.println("updateReposInfo() dbDeleteAllDocs failed");
+			}
+		}
 	}
 	
+	private boolean isReposVerCtrlChanged(Repos newReposInfo, Repos reposInfo) {
+		Integer newVerCtrl = newReposInfo.getVerCtrl();
+		Integer verCtrl = reposInfo.getVerCtrl();
+		
+		if(verCtrl == null)
+		{
+			if(newVerCtrl != null)
+			{
+				return true;
+			}
+			return false;
+		}	
+			
+		if(!verCtrl.equals(newVerCtrl))
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
+	private boolean dbDeleteAllDocs(Repos repos) {
+		Doc qDoc = new Doc();
+		qDoc.setVid(repos.getId());
+		if(reposService.deleteDoc(qDoc) == 0)
+		{
+			return false;
+		}
+		return true;
+	}
+
 	private void formatReposInfo(Repos repos) {
 		String path = repos.getPath();
 		String realDocPath = repos.getRealDocPath();
