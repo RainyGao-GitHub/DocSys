@@ -6430,7 +6430,7 @@ public class BaseController  extends BaseFunction{
 			default:
 				continue;
             }
-            insertAction(commitActionList, val.getDoc(), commitType);
+            insertAction(commitActionList, val.getDoc(), commitType, verCtrl==2);
         }
 		return "";
 	}
