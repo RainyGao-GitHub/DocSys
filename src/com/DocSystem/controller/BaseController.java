@@ -244,13 +244,13 @@ public class BaseController  extends BaseFunction{
 		File dir = new File(localRootPath + doc.getPath() + docName);
     	if(false == dir.exists())
     	{
-    		System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不存在！");
+    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不存在！");
     		return null;
     	}
     	
     	if(dir.isFile())
     	{
-    		System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不是目录！");
+    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不是目录！");
     		return null;
     	}
 
