@@ -666,13 +666,13 @@ public class SVNUtil  extends BaseController{
 			    if(type == 0)
 			    {
 					System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-					insertAddFileAction(commitActionList,doc,false);
+					insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else if(type != 1)
 			    {
 					System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 			    	insertDeleteAction(commitActionList,doc);
-					insertAddFileAction(commitActionList,doc,false);
+					insertAddFileAction(commitActionList,doc,false, false);
 			    }
 			    else
 			    {
@@ -1023,7 +1023,7 @@ public class SVNUtil  extends BaseController{
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
         		//System.out.println("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    			insertAddFileAction(actionList,doc,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
@@ -1031,7 +1031,7 @@ public class SVNUtil  extends BaseController{
     		{
         		//System.out.println("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertDeleteAction(actionList,doc);
-    			insertAddFileAction(actionList,doc,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
@@ -1064,7 +1064,7 @@ public class SVNUtil  extends BaseController{
 	    	{
         		//System.out.println("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
-    			insertAddDirAction(actionList,doc,isSubAction);
+    			insertAddDirAction(actionList,doc,isSubAction, false);
 	            return;
     		}
     		
@@ -1072,7 +1072,7 @@ public class SVNUtil  extends BaseController{
     		{
     			//System.out.println("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertDeleteAction(actionList,doc);
-	        	insertAddDirAction(actionList,doc, isSubAction);
+	        	insertAddDirAction(actionList,doc, isSubAction, false);
 	            return;
     		}
     		
@@ -1141,11 +1141,11 @@ public class SVNUtil  extends BaseController{
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, subDoc, isSubAction);
+        			insertAddDirAction(actionList, subDoc, isSubAction, false);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, subDoc, isSubAction);
+        			insertAddFileAction(actionList, subDoc, isSubAction, false);
         		}
         	}
         }
@@ -1262,11 +1262,11 @@ public class SVNUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			insertAddFileAction(commitActionList, dstDoc,false);
+			insertAddFileAction(commitActionList, dstDoc,false, false);
 		}
 		else
 		{
-			insertAddDirAction(commitActionList, dstDoc,false);
+			insertAddDirAction(commitActionList, dstDoc,false, false);
 		}
 	    
         ISVNEditor editor = getCommitEditor(commitMsg);
