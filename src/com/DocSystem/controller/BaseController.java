@@ -3145,7 +3145,7 @@ public class BaseController  extends BaseFunction{
 				return DocChangeType.LOCALDIRTOFILE;
 			}
 			
-			if(isDocLocalChanged(repos, dbDoc, localEntry))
+			if(isDocLocalChanged(repos, dbDoc, localEntry) || remoteEntry.getRevision() == null)
 			{
 				//本地文件 内容修改
 				//System.out.println("getDocChangeType_FSM() 本地文件修改:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc和localEntry是文件");
@@ -3165,7 +3165,7 @@ public class BaseController  extends BaseFunction{
 				//System.out.println("getDocChangeType_FSM() 远程类型改变（文件->目录）:" + doc.getDocId() + " " + doc.getPath() + doc.getName() + " dbDoc和localEntry是文件且一致, remoteEntry是目录");
 				return DocChangeType.REMOTEFILETODIR;
 			}
-			
+						
 			if(isDocRemoteChanged(repos, dbDoc, remoteEntry))
 			{
 				//远程文件 内容修改
