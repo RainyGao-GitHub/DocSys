@@ -164,12 +164,12 @@ public class BaseFunction{
 	
 	/******************************** Basic Interface for CommitAction *************************************/
 	//版本仓库底层通用接口
-	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction) {
-		//printObject("insertAddFileAction:", doc);
-		if(doc.getName().equals(".git"))
+	protected void insertAddFileAction(List<CommitAction> actionList, Doc doc, boolean isSubAction, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
 		{
 			return;
 		}
+		//printObject("insertAddFileAction:", doc);
 		
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.ADD);
@@ -178,9 +178,9 @@ public class BaseFunction{
     	actionList.add(action);
 	}
     
-	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction) 
+	protected void insertAddDirAction(List<CommitAction> actionList,Doc doc, boolean isSubAction, boolean isGit) 
 	{
-		if(doc.getName().equals(".git"))
+		if(isGit && doc.getName().equals(".git"))
 		{
 			return;
 		}
@@ -219,11 +219,11 @@ public class BaseFunction{
 	    	Doc subDoc = buildBasicDoc(doc.getVid(), null, doc.getDocId(), subParentPath, localEntry.getName(), subDocLevel, subDocType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), localEntry.length(), "");
 	    	if(localEntry.isDirectory())
 	    	{	
-	    		insertAddDirAction(subActionList,subDoc,true);
+	    		insertAddDirAction(subActionList,subDoc,true, isGit);
 	    	}
 	    	else
 	    	{
-	    		insertAddFileAction(subActionList,subDoc,true);
+	    		insertAddFileAction(subActionList,subDoc,true, isGit);
 	    	}
 	 	}
 		
