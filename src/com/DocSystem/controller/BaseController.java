@@ -3505,8 +3505,21 @@ public class BaseController  extends BaseFunction{
 			//System.out.println("getRemoteChangeType() 远程文件删除:"+dbDoc.getName());
 			if(repos.getVerCtrl() == 2)
 			{
-				//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变（不存在、文件也会被认为是空目录）
-				if(isEmptyDir(doc.getLocalRootPath() + doc.getPath() + doc.getName(), false))
+				//System.out.println("isEmptyDir() dirPath:" + dirPath);
+				File file = new File(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+				if(!file.exists())
+				{
+					return DocChangeType.NOCHANGE;
+				}
+				
+				//需要根据dbDoc中的revision确定版本仓库是否已经包含了该文件的历史才能最后确认为删除操作				
+				if(file.isFile())
+				{
+					return DocChangeType.REMOTEDELETE;			
+				}
+
+				//GIT 仓库无法识别空目录，因此如果是空目录则认为没有改变
+				if(isEmptyDir(file, false) == true)
 				{
 					return DocChangeType.NOCHANGE;
 				}
