@@ -2781,19 +2781,21 @@ public class BaseController  extends BaseFunction{
 				//需要根据commitAction的行为来决定相应的操作
 				commitDoc.setRevision(revision);
 				commitDoc.setLatestEditorName(login_user.getName());
-				dbUpdateDoc(repos, commitDoc, true);
+				dbUpdateDoc(repos, commitDoc, true);				
 				dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
 			}			
 			dbUpdateDocRevision(repos, doc, revision);
 		}
 		
+		//将localChanges中的版本号更新为文件的最新版本
 		if(localChanges != null)
 		{
 			for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
 			{
 				DocChange docChange = entry.getValue();
 				Doc localChangeDoc = docChange.getDoc();
-				localChangeDoc.setRevision(revision);
+				String latestRevison = verReposGetLatestRevision(repos, true, localChangeDoc);
+				localChangeDoc.setRevision(latestRevison);
 				dbUpdateDoc(repos, localChangeDoc, true);
 			}
 		}
