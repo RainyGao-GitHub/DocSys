@@ -502,6 +502,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		String relativePath = getRelativePath(doc, rootDoc);
+		System.out.println("getDocListFromRootToDoc() relativePath:" + relativePath);		
 		if(relativePath == null || relativePath.isEmpty())
 		{
 			return resultList;
@@ -555,7 +556,7 @@ public class BaseController  extends BaseFunction{
 	
 	private String getRelativePath(Doc doc, Doc rootDoc) {
 		String docPath = doc.getPath() + doc.getName();
-		String rootDocPath = doc.getPath() + doc.getName();
+		String rootDocPath = rootDoc.getPath() + rootDoc.getName();
 		if(docPath.equals(rootDocPath))
 		{
 			return "";
