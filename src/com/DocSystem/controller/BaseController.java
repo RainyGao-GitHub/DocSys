@@ -2786,17 +2786,15 @@ public class BaseController  extends BaseFunction{
 			}			
 			dbUpdateDocRevision(repos, doc, revision);
 		}
-		else
+		
+		if(localChanges != null)
 		{
-			if(localChanges != null)
+			for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
 			{
-				for (HashMap.Entry<Long, DocChange> entry : localChanges.entrySet())
-				{
-					DocChange docChange = entry.getValue();
-					Doc localChangeDoc = docChange.getDoc();
-					localChangeDoc.setRevision(revision);
-					dbUpdateDoc(repos, localChangeDoc, true);
-				}
+				DocChange docChange = entry.getValue();
+				Doc localChangeDoc = docChange.getDoc();
+				localChangeDoc.setRevision(revision);
+				dbUpdateDoc(repos, localChangeDoc, true);
 			}
 		}
 		
