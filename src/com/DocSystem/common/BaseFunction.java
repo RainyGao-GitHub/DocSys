@@ -235,7 +235,12 @@ public class BaseFunction{
     	actionList.add(action);    	
 	}
 	
-	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
+	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+
 		//printObject("insertDeleteAction:", doc);
 		
 		System.out.println("insertDeleteAction() " + doc.getPath() + doc.getName());
@@ -246,7 +251,12 @@ public class BaseFunction{
     	actionList.add(action);
 	}
     
-	protected void insertModifyAction(List<CommitAction> actionList, Doc doc) {
+	protected void insertModifyAction(List<CommitAction> actionList, Doc doc, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+
 		//printObject("insertModifyAction:", doc);
 		System.out.println("insertModifyAction() " + doc.getPath() + doc.getName());
 
@@ -256,7 +266,12 @@ public class BaseFunction{
     	actionList.add(action);	
 	}
 	
-	protected void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType) {
+	protected void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType, boolean isGit) {
+		if(isGit && doc.getName().equals(".git"))
+		{
+			return;
+		}
+
 		//printObject("insertAction:", doc);
 		System.out.println("insertAction() actionType:" + actionType + " doc:" + doc.getPath() + doc.getName());
 
