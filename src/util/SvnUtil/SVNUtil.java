@@ -982,8 +982,7 @@ public class SVNUtil  extends BaseController{
 	public void scheduleForCommit(List<CommitAction> actionList, Doc doc, boolean modifyEnable,boolean isSubAction, HashMap<Long, DocChange> localChanges, int subDocCommitFlag)
 	{	
 		String localRootPath = doc.getLocalRootPath(); 
-		String localRefRootPath = doc.getLocalRefRootPath();
-		System.out.println("scheduleForCommit()  parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + localRootPath + " localRefRootPath:" + localRefRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag);
+		System.out.println("scheduleForCommit() localRootPath:" + localRootPath + " modifyEnable:" + modifyEnable + " subDocCommitFlag:" + subDocCommitFlag + " doc:" + doc.getPath() + doc.getName());
 		
     	if(doc.getName().isEmpty())
     	{
@@ -1010,7 +1009,7 @@ public class SVNUtil  extends BaseController{
     			//已同步
     			return;
     		}
-    		System.out.println("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+    		//System.out.println("scheduleForCommit() 删除:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     		insertDeleteAction(actionList,doc);
     		return;
     	}
@@ -1023,14 +1022,14 @@ public class SVNUtil  extends BaseController{
     	case 1:	//文件
     		if(remoteEntryType == 0) 	//新增文件
 	    	{
-        		System.out.println("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+        		//System.out.println("scheduleForCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
     		}
     		
     		if(remoteEntryType != 1)	//文件类型改变
     		{
-        		System.out.println("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+        		//System.out.println("scheduleForCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertDeleteAction(actionList,doc);
     			insertAddFileAction(actionList,doc,isSubAction);
 	            return;
@@ -1041,7 +1040,7 @@ public class SVNUtil  extends BaseController{
     		{
 	            if(modifyEnable)
 	            {
-            		System.out.println("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+            		//System.out.println("scheduleForCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
             		insertModifyAction(actionList,doc);
             		return;
             	}
@@ -1053,7 +1052,7 @@ public class SVNUtil  extends BaseController{
     			{
     				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
-	            		System.out.println("scheduleForCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+	            		//System.out.println("scheduleForCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 	            		insertModifyAction(actionList,doc);
 	            		return;
     				}
@@ -1063,7 +1062,7 @@ public class SVNUtil  extends BaseController{
     	case 2:
     		if(remoteEntryType == 0) 	//新增目录
 	    	{
-        		System.out.println("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+        		//System.out.println("scheduleForCommit() 新增目录:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			//Add Dir
     			insertAddDirAction(actionList,doc,isSubAction);
 	            return;
@@ -1071,7 +1070,7 @@ public class SVNUtil  extends BaseController{
     		
     		if(remoteEntryType != 2)	//文件类型改变
     		{
-    			System.out.println("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
+    			//System.out.println("scheduleForCommit() 文件类型变更(文件->目录):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
     			insertDeleteAction(actionList,doc);
 	        	insertAddDirAction(actionList,doc, isSubAction);
 	            return;
