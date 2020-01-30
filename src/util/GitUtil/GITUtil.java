@@ -1321,13 +1321,13 @@ public class GITUtil  extends BaseController{
 			    if(type == 0)
 			    {
 	        		System.out.println("doAutoCommit() 新增文件:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-	    			insertAddFileAction(commitActionList,doc,false);
+	    			insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else if(type != 1)
 			    {
 			    	System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
 		    		insertDeleteAction(commitActionList,doc);
-	    			insertAddFileAction(commitActionList,doc,false);
+	    			insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else
 			    {
@@ -1437,11 +1437,11 @@ public class GITUtil  extends BaseController{
 	    
 		if(dstDoc.getType() == 1)
 		{
-			insertAddFileAction(commitActionList, dstDoc,false);
+			insertAddFileAction(commitActionList, dstDoc,false, true);
 		}
 		else
 		{
-			insertAddDirAction(commitActionList, dstDoc,false);
+			insertAddDirAction(commitActionList, dstDoc,false, true);
 		}
 	    
 		Git git = null;
@@ -2240,14 +2240,14 @@ public class GITUtil  extends BaseController{
     	case 1:	//文件
     		if(type == 0) 	//新增文件
 	    	{
-    			insertAddFileAction(actionList,doc,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
     		if(type != 1)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
-    			insertAddFileAction(actionList,doc,isSubAction);
+    			insertAddFileAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
@@ -2279,14 +2279,14 @@ public class GITUtil  extends BaseController{
     		if(type == 0) 	//新增目录
 	    	{
     			//Add Dir
-    			insertAddDirAction(actionList,doc,isSubAction);
+    			insertAddDirAction(actionList,doc,isSubAction, true);
 	            return;
     		}
     		
     		if(type != 2)	//文件类型改变
     		{
     			insertDeleteAction(actionList,doc);
-	        	insertAddDirAction(actionList,doc, isSubAction);
+	        	insertAddDirAction(actionList,doc, isSubAction, true);
 	            return;
     		}
     		
@@ -2357,11 +2357,11 @@ public class GITUtil  extends BaseController{
         	{
         		if(localSubEntry.isDirectory())
         		{
-        			insertAddDirAction(actionList, subDoc, isSubAction);
+        			insertAddDirAction(actionList, subDoc, isSubAction, true);
         		}
         		else
         		{
-        			insertAddFileAction(actionList, subDoc, isSubAction);
+        			insertAddFileAction(actionList, subDoc, isSubAction, true);
         		}
         	}
         }
@@ -2379,7 +2379,7 @@ public class GITUtil  extends BaseController{
 				commitActionList = new ArrayList<CommitAction>();
 			}
 			
-    		insertAddDirAction(commitActionList, rootDoc, false);
+    		insertAddDirAction(commitActionList, rootDoc, false, true);
     		
     		Git git = null;
     		try {
