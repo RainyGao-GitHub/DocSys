@@ -184,7 +184,8 @@ public class BaseFunction{
 		{
 			return;
 		}
-		printObject("insertAddDirAction:", doc);
+		//printObject("insertAddDirAction:", doc);
+		System.out.println("insertAddDirAction() " + doc.getPath() + doc.getName());
 
 		String localParentPath = doc.getLocalRootPath() + doc.getPath();
 		File dir = new File(localParentPath, doc.getName());
