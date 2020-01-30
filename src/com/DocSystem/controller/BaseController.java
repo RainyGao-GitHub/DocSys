@@ -518,37 +518,38 @@ public class BaseController  extends BaseFunction{
 		
 		Integer reposId = repos.getId();
 		Long pid = rootDoc.getDocId();
-		String path = "";
-		if(!rootDoc.getName().isEmpty())
+		String pPath = rootDoc.getPath() + rootDoc.getName() + "/";
+		if(rootDoc.getName().isEmpty())
 		{
-			path = rootDoc.getPath() + rootDoc.getName();
+			pPath = rootDoc.getPath();
 		}
-		int level = rootDoc.getLevel();
-		
+		int pLevel = rootDoc.getLevel();
 		DocAuth pDocAuth = rootDocAuth;
+		
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
+			System.out.println("name:" + name);
 			if(name.isEmpty())
 			{
 				continue;
 			}	
 			
-			Doc tempDoc = buildBasicDoc(reposId, null, pid, path, name, level, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
+			Doc tempDoc = buildBasicDoc(reposId, null, pid, pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, rt);
 			if(subDocList == null || subDocList.size() == 0)
 			{
-				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + path+name, rt);
+				docSysDebugLog("getDocListFromRootToDoc() Failed to get the subDocList under doc: " + pPath+name, rt);
 				break;
 			}
 			resultList.addAll(subDocList);
 			
-			path = path + name + "/";
+			pPath = pPath + name + "/";
 			pid = tempDoc.getPid();
 			pDocAuth = docAuth;
-			level++;
+			pLevel++;
 		}
 		
 		return resultList;
