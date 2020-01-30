@@ -3306,11 +3306,13 @@ public class BaseController  extends BaseFunction{
 
 		
 		HashMap<String, Doc> docHashMap = new HashMap<String, Doc>();	//the doc already syncUped		
-		System.out.println("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
+		//System.out.println("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for remoteEntryList");
         syncupScanForDocList_FSM(remoteEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
-		System.out.println("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
+		
+        //System.out.println("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for localEntryList");
         syncupScanForDocList_FSM(localEntryList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
-		System.out.println("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
+		
+        //System.out.println("SyncUpSubDocs_FSM() syncupScanForDocList_FSM for dbDocList");
         syncupScanForDocList_FSM(dbDocList, docHashMap, repos, dbDocHashMap, localDocHashMap, remoteDocHashMap, login_user, rt, remoteChanges, localChanges, subDocSyncFlag);
 
 		return true;
