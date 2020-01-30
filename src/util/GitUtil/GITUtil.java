@@ -1274,7 +1274,7 @@ public class GITUtil  extends BaseController{
 		        return getLatestRevision(doc);
 		    }
 
-    		insertDeleteAction(commitActionList,doc);
+    		insertDeleteAction(commitActionList,doc, true);
 		}
 		else
 		{		
@@ -1326,7 +1326,7 @@ public class GITUtil  extends BaseController{
 			    else if(type != 1)
 			    {
 			    	System.out.println("doAutoCommit() 文件类型变更(目录->文件):" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		    		insertDeleteAction(commitActionList,doc);
+		    		insertDeleteAction(commitActionList,doc, true);
 	    			insertAddFileAction(commitActionList,doc,false, true);
 			    }
 			    else
@@ -1337,7 +1337,7 @@ public class GITUtil  extends BaseController{
 			            if(modifyEnable)
 			            {
 		            		System.out.println("doAutoCommit() 文件内容变更:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-		            		insertModifyAction(commitActionList,doc);
+		            		insertModifyAction(commitActionList,doc, true);
 		            	}
 		    		}
 		    		else
@@ -1348,7 +1348,7 @@ public class GITUtil  extends BaseController{
 		    				if(docChange.getType() == DocChangeType.LOCALCHANGE)
 		    				{
 			            		System.out.println("doAutoCommit() 文件内容变更（localChanges）:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
-			            		insertModifyAction(commitActionList,doc);
+			            		insertModifyAction(commitActionList,doc, true);
 		    				}
 		    			}
 		    		}
@@ -1428,7 +1428,7 @@ public class GITUtil  extends BaseController{
 	    if(isMove)
 	    {
 	    	System.out.println("copyDoc() move " + srcEntryPath + " to " + dstEntryPath);
-   			insertDeleteAction(commitActionList,srcDoc);
+   			insertDeleteAction(commitActionList,srcDoc, true);
 	    }
         else
         {
@@ -2229,7 +2229,7 @@ public class GITUtil  extends BaseController{
     			//已同步
     			return;
     		}
-    		insertDeleteAction(actionList,doc);
+    		insertDeleteAction(actionList,doc, true);
     		return;
     	}
     	
@@ -2246,7 +2246,7 @@ public class GITUtil  extends BaseController{
     		
     		if(type != 1)	//文件类型改变
     		{
-    			insertDeleteAction(actionList,doc);
+    			insertDeleteAction(actionList,doc, true);
     			insertAddFileAction(actionList,doc,isSubAction, true);
 	            return;
     		}
@@ -2257,7 +2257,7 @@ public class GITUtil  extends BaseController{
 	            if(modifyEnable)
 	            {
             		System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-            		insertModifyAction(actionList,doc);
+            		insertModifyAction(actionList,doc, true);
             		return;
             	}
     		}
@@ -2269,7 +2269,7 @@ public class GITUtil  extends BaseController{
     				if(docChange.getType() == DocChangeType.LOCALCHANGE)
     				{
 	        			System.out.println("scheduleForCommit() insert " + entryPath + " to actionList for Modify" );
-	            		insertModifyAction(actionList,doc);
+	            		insertModifyAction(actionList,doc, true);
 	            		return;
     				}
     			}
@@ -2285,7 +2285,7 @@ public class GITUtil  extends BaseController{
     		
     		if(type != 2)	//文件类型改变
     		{
-    			insertDeleteAction(actionList,doc);
+    			insertDeleteAction(actionList,doc, true);
 	        	insertAddDirAction(actionList,doc, isSubAction, true);
 	            return;
     		}
