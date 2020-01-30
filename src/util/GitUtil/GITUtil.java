@@ -789,7 +789,10 @@ public class GITUtil  extends BaseController{
         			subDoc.setRevision(subDocRevisionCommit.getName());
         			subDoc.setLatestEditTime(convertCommitTime(subDocRevisionCommit.getCommitTime()));	
         		}
-                //System.out.println("getDocList() subDoc:" + subDoc.getName() + " size:" + subDoc.getSize());    			
+        		else
+        		{
+        			System.out.println("getDocList() Failed to get revision for " + subDoc.getPath() + subDoc.getName());
+        		}
         	}
         }
         
