@@ -236,7 +236,10 @@ public class BaseFunction{
 	}
 	
 	protected void insertDeleteAction(List<CommitAction> actionList, Doc doc) {
-		printObject("insertDeleteAction:", doc);
+		//printObject("insertDeleteAction:", doc);
+		
+		System.out.println("insertDeleteAction() " + doc.getPath() + doc.getName());
+
     	CommitAction action = new CommitAction();
     	action.setAction(CommitType.DELETE);
     	action.setDoc(doc);
@@ -244,16 +247,20 @@ public class BaseFunction{
 	}
     
 	protected void insertModifyAction(List<CommitAction> actionList, Doc doc) {
-		printObject("insertModifyAction:", doc);
-    	CommitAction action = new CommitAction();
+		//printObject("insertModifyAction:", doc);
+		System.out.println("insertModifyAction() " + doc.getPath() + doc.getName());
+
+		CommitAction action = new CommitAction();
     	action.setAction(CommitType.MODIFY);
     	action.setDoc(doc);
     	actionList.add(action);	
 	}
 	
 	protected void insertAction(List<CommitAction> actionList, Doc doc, CommitType actionType) {
-		printObject("insertModifyAction:", doc);
-    	CommitAction action = new CommitAction();
+		//printObject("insertAction:", doc);
+		System.out.println("insertAction() actionType:" + actionType + " doc:" + doc.getPath() + doc.getName());
+
+		CommitAction action = new CommitAction();
     	action.setAction(actionType);
     	action.setDoc(doc);
     	actionList.add(action);	
