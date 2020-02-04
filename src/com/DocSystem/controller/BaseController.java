@@ -4073,6 +4073,8 @@ public class BaseController  extends BaseFunction{
 	private DocAuth getShareAuth(DocShare docShare) {
 		DocAuth docAuth = new DocAuth();
 		docAuth.setAccess(1);
+		docAuth.setAddEn(1);		
+		docAuth.setEditEn(1);
 		docAuth.setHeritable(1);
 		
 		if(docShare == null)
