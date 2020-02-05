@@ -400,8 +400,8 @@ public class DocController extends BaseController{
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
-		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDoc = buildBasicDoc(reposId, docId, pid, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, pid, path, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
@@ -498,8 +498,8 @@ public class DocController extends BaseController{
 			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
-		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, dstLevel, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
+		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
@@ -566,7 +566,7 @@ public class DocController extends BaseController{
 			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
-		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, srcLevel, type, true, localRootPath, localVRootPath, null, null);
+		Doc srcDoc = buildBasicDoc(reposId, docId, srcPid, srcPath, srcName, null, type, true, localRootPath, localVRootPath, null, null);
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc);
