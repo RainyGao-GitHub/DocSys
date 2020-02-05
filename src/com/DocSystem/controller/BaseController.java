@@ -2431,34 +2431,48 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 
-		long curTime = new Date().getTime();
-		uniqueAction.setExpireTimeStamp(curTime + 43200000); //12 Hours 12*60*60*1000 = 43200,000
-		uniqueAction.setIsRunning(true);
-		ConcurrentHashMap<Long, CommonAction> hashMap = uniqueAction.getUniqueCommonActionHashMap();
-		List<CommonAction> list = uniqueAction.getUniqueCommonActionList();
-		while(hashMap.size() > 0)
-		{
-			if(actionList.size() > 0)
+		boolean ret = false;
+		try {
+			long curTime = new Date().getTime();
+			uniqueAction.setExpireTimeStamp(curTime + 43200000); //12 Hours 12*60*60*1000 = 43200,000
+			uniqueAction.setIsRunning(true);
+			ConcurrentHashMap<Long, CommonAction> hashMap = uniqueAction.getUniqueCommonActionHashMap();
+			List<CommonAction> list = uniqueAction.getUniqueCommonActionList();
+			while(hashMap.size() > 0)
 			{
-				CommonAction action = list.get(0);
-				long docId = action.getDoc().getDocId();
-				executeCommonAction(action, rt);
-				list.remove(0);
-				hashMap.remove(docId);
+				if(actionList.size() > 0)
+				{
+					CommonAction action = list.get(0);
+					long docId = action.getDoc().getDocId();
+					executeCommonAction(action, rt);
+					list.remove(0);
+					hashMap.remove(docId);
+				}
+				else
+				{
+					System.out.println("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 actionHashMap");
+				}
 			}
-			else
+			//清空uniqueAction
+			uniqueAction.setIsRunning(false);
+			uniqueAction.setExpireTimeStamp(null);
+			uniqueAction.getUniqueCommonActionHashMap().clear();
+			uniqueAction.getUniqueCommonActionList().clear();	
+			System.out.println("executeUniqueCommonActionList completed for repos: " + reposId);			
+			ret = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(uniqueAction.getIsRunning())
 			{
-				System.out.println("executeUniqueCommonActionList() hashMap 和 list不同步，强制清除 actionHashMap");
+				//清空uniqueAction
+				uniqueAction.setIsRunning(false);
+				uniqueAction.setExpireTimeStamp(null);
+				uniqueAction.getUniqueCommonActionHashMap().clear();
+				uniqueAction.getUniqueCommonActionList().clear();	
 			}
 		}
-		
-		//清空uniqueAction
-		uniqueAction.setIsRunning(false);
-		uniqueAction.setExpireTimeStamp(null);
-		uniqueAction.getUniqueCommonActionHashMap().clear();
-		uniqueAction.getUniqueCommonActionList().clear();	
-		System.out.println("executeUniqueCommonActionList completed for repos: " + reposId);
-		return true;
+		return ret;
 	}	
 	
 	private boolean executeSyncUpAction(CommonAction action, ReturnAjax rt) {
