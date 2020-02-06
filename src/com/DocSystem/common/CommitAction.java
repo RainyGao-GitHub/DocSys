@@ -24,12 +24,13 @@ public class CommitAction{
     private String localRootPath;
     private String localRefRootPath;
     
-    //subAction
-    public boolean isSubAction = false;
-
     //Sub Action List
+    public boolean isSubAction = false;
     private List<CommitAction> subActionList = null;
 	
+    //result: execute result
+    public boolean result = true;
+    
 	public void setAction(CommitType commitActionType) {
 		this.action = commitActionType;
 	}
@@ -84,4 +85,11 @@ public class CommitAction{
 		return subActionList;
 	}
 	
+	public void setResult(boolean result) {
+		this.result = result;
+	}
+	public boolean setResult()
+	{
+		return result;
+	}
 }
