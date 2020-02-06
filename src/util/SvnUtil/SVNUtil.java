@@ -789,7 +789,7 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeCommitActionList(ISVNEditor editor,List<CommitAction> commitActionList,boolean openRoot) {
-    	System.out.println("executeCommitActionList() szie: " + commitActionList.size());
+    	//System.out.println("executeCommitActionList() szie: " + commitActionList.size());
 		try {
 	    	if(openRoot)
 	    	{
@@ -815,8 +815,7 @@ public class SVNUtil  extends BaseController{
 	    		}
 	    		if(ret == false)
 	    		{
-	    			System.out.println("executeCommitActionList() failed");	
-	    			return false;
+	    			System.out.println("executeCommitActionList() failed for " + action.getDoc().getPath() + action.getDoc().getName());	
 	    		} 
 	    	}
 	    	
@@ -860,6 +859,8 @@ public class SVNUtil  extends BaseController{
 		{
    			ret = modifyFile(editor, doc.getPath(), doc.getName(), oldData, newData,false,true);       			
 		}
+		action.setResult(ret);
+		
 		if(oldData != null)
 		{
 			closeFileInputStream(oldData);
@@ -873,7 +874,9 @@ public class SVNUtil  extends BaseController{
 
 		//printObject("executeModifyAction:",doc);
 		//System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
-		return deleteEntry(editor, doc, false);
+		boolean ret = deleteEntry(editor, doc, false);
+		action.setResult(ret);
+		return ret;
 	}
 
 	private boolean executeAddAction(ISVNEditor editor, CommitAction action) {
@@ -882,14 +885,15 @@ public class SVNUtil  extends BaseController{
 		//printObject("executeAddAction:",doc);
 
 		String localPath = doc.getLocalRootPath();
-		String localRefPath = doc.getLocalRefRootPath();
 		
 		String parentPath = doc.getPath();
 		String entryName = doc.getName();
 		String entryPath = doc.getPath() + doc.getName();
 		
 		//System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
-		
+
+		boolean ret = false;
+
 		//entry is file
 		if(doc.getType() == 1)
 		{
@@ -898,10 +902,10 @@ public class SVNUtil  extends BaseController{
     		InputStream fileData = getFileInputStream(localEntryPath);
     		if(fileData == null)
     		{
+    			action.setResult(false);
     			return false;
     		}
     		
-    		boolean ret = false;
     		if(action.isSubAction)
     		{
     			//No need to openParent
@@ -911,7 +915,9 @@ public class SVNUtil  extends BaseController{
     		{	
     			ret = addEntry(editor, parentPath, entryName, true, fileData, false, true, false);
     		}
-    		closeFileInputStream(fileData);
+    		action.setResult(ret);
+
+    		closeFileInputStream(fileData);    		
     		return ret;
     	}
 		
@@ -920,12 +926,15 @@ public class SVNUtil  extends BaseController{
     	{
     		if(action.getSubActionList() == null)	
     		{
-    			return addEntry(editor, parentPath, entryName, false, null, false, false, false);
+    			ret = addEntry(editor, parentPath, entryName, false, null, false, false, false);
+        		action.setResult(ret);
+        		return ret;
     		}
     		else //Keep the added Dir open until the subActionLis was executed
     		{	
     			if(addEntry(editor, parentPath, entryName, false, null, false, false, true) == false)
     			{
+            		action.setResult(false);
     				return false;
     			}
     			
@@ -938,6 +947,7 @@ public class SVNUtil  extends BaseController{
     			try {
 					editor.closeDir();
 				} catch (SVNException e) {
+					action.setResult(false);
 					System.out.println("executeAddAction() closeDir failed");
 					e.printStackTrace();
 					return false;
@@ -949,7 +959,9 @@ public class SVNUtil  extends BaseController{
     	{
     		if(action.getSubActionList() == null)	
     		{
-    			return addDir(editor, parentPath, entryName);
+    			ret = addDir(editor, parentPath, entryName);
+    			action.setResult(ret);
+    			return ret;
     		}
     		else //Keep the added Dir open until the subActionLis was executed
     		{	
@@ -959,6 +971,7 @@ public class SVNUtil  extends BaseController{
 	    			
 	    			if(addEntry(editor, parentPath, entryName, false, null, false, false, true) == false)
 	    			{
+	    				action.setResult(false);
 	    				return false;
 	    			}
 	    			
@@ -970,6 +983,7 @@ public class SVNUtil  extends BaseController{
 					editor.closeDir();	//close new add Dir
 					editor.closeDir();	//close parent
 				} catch (SVNException e) {
+					action.setResult(false);
 					System.out.println("executeAddAction() closeDir failed");
 					e.printStackTrace();
 					return false;
