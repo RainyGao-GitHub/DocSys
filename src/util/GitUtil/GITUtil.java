@@ -2048,8 +2048,7 @@ public class GITUtil  extends BaseController{
 	    		}
 	    		if(ret == false)
 	    		{
-	    			System.out.println("executeCommitActionList() failed");	
-	    			return false;
+	    			System.out.println("executeCommitActionList() failed for " + action.getDoc().getPath() + action.getDoc().getName());	
 	    		} 
 	    	}
 	    	
@@ -2067,8 +2066,12 @@ public class GITUtil  extends BaseController{
 		//printObject("executeModifyAction:", doc);
 		//System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
 		
-		boolean ret = modifyFile(git, doc);
-		return ret;
+		if(!modifyFile(git, doc))
+		{
+			action.setResult(false);
+			return false;
+		}
+		return true;
 	}
 
 	private boolean executeDeleteAction(Git git, CommitAction action) {
@@ -2076,7 +2079,12 @@ public class GITUtil  extends BaseController{
 
 		//printObject("executeDeleteAction:", doc);
 		//System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
-		return deleteEntry(git, doc);
+		if(!deleteEntry(git, doc))
+		{
+			action.setResult(false);
+			return false;
+		}
+		return true;
 	}
 	
 	private boolean executeAddAction(Git git, CommitAction action) {
@@ -2087,27 +2095,36 @@ public class GITUtil  extends BaseController{
 		
 		//entry is file
 		if(doc.getType() == 1)
-		{
-			return addEntry(git, doc);
+		{		
+			if(!addEntry(git, doc))
+			{
+				action.setResult(false);
+				return false;
+			}
+			return true;
 		}
 		
     	if(action.getSubActionList() == null)	
     	{
-    		return addEntry(git, doc);
+			if(!addEntry(git, doc))
+			{
+				action.setResult(false);
+				return false;
+			}
+			return true;
     	}
-    	else //Keep the added Dir open until the subActionLis was executed
-    	{	
-    		if(addEntry(git, doc) == false)
-    		{
-    			return false;
-    		}
+    	
+    	if(!addEntry(git, doc))
+    	{
+			action.setResult(false);
+			return false;
+    	}
     			
-    		if(executeCommitActionList(git, action.getSubActionList(),false) == false)
-    		{
-    			return false;
-    		}
-    		return true;
+    	if(executeCommitActionList(git, action.getSubActionList(),false) == false)
+    	{
+    		return false;
     	}
+    	return true;
   	}
 
     //doModifyFile
