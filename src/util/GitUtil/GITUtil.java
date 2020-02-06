@@ -2026,7 +2026,7 @@ public class GITUtil  extends BaseController{
 	
 
 	private boolean executeCommitActionList(Git git, List<CommitAction> commitActionList,boolean openRoot) {
-    	System.out.println("executeCommitActionList() szie: " + commitActionList.size());
+    	//System.out.println("executeCommitActionList() szie: " + commitActionList.size());
 		try {
 	    	for(int i=0;i<commitActionList.size();i++)
 	    	{
