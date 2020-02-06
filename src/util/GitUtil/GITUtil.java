@@ -2026,7 +2026,7 @@ public class GITUtil  extends BaseController{
 	
 
 	private boolean executeCommitActionList(Git git, List<CommitAction> commitActionList,boolean openRoot) {
-    	//System.out.println("executeCommitActionList() szie: " + commitActionList.size());
+    	System.out.println("executeCommitActionList() szie: " + commitActionList.size());
 		try {
 	    	for(int i=0;i<commitActionList.size();i++)
 	    	{
@@ -2064,7 +2064,7 @@ public class GITUtil  extends BaseController{
 		Doc doc = action.getDoc();
 		
 		//printObject("executeModifyAction:", doc);
-		//System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
+		System.out.println("executeModifyAction() " + doc.getPath() + doc.getName());
 		
 		if(!modifyFile(git, doc))
 		{
@@ -2078,7 +2078,7 @@ public class GITUtil  extends BaseController{
 		Doc doc = action.getDoc();
 
 		//printObject("executeDeleteAction:", doc);
-		//System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		System.out.println("executeDeleteAction() " + doc.getPath() + doc.getName());
 		if(!deleteEntry(git, doc))
 		{
 			action.setResult(false);
@@ -2091,7 +2091,7 @@ public class GITUtil  extends BaseController{
 		Doc doc = action.getDoc();
 	
 		//printObject("executeAddAction:", doc);
-		//System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localRootPath:" + doc.getLocalRootPath());
+		System.out.println("executeAddAction() " + doc.getPath() + doc.getName());
 		
 		//entry is file
 		if(doc.getType() == 1)
