@@ -192,6 +192,23 @@ website:    http://code.google.com/p/jquerytree/
 	vertical-align:top; 
 	*vertical-align:middle
 }
+.ztree li span.button.flash_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_flash.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+.ztree li span.button.swf_ico_docu{
+	margin-right:2px; 
+	background: url("./img/file_swf.svg") no-repeat; 
+	background-position: 0px 0px;
+	background-size: 18px 18px; 
+	vertical-align:top; 
+	*vertical-align:middle
+}
+
 .ztree li span.button.edit {margin-left:2px; margin-right: -1px; background-position: -189px -21px; vertical-align:top; *vertical-align:middle}
 .ztree li span.button.edit:hover {
   background-position: -168px -21px;
@@ -291,6 +308,16 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 }
 .icons.file.psd{
 	background: url("./img/file_psd.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.flash{
+	background: url("./img/file_flash.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.file.swf{
+	background: url("./img/file_swf.svg") no-repeat; 
 	background-position: 0px 0px;
    	background-size: 18px 18px; 
 }
