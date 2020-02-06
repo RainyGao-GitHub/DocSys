@@ -789,7 +789,7 @@ public class SVNUtil  extends BaseController{
 	}
 
 	private boolean executeCommitActionList(ISVNEditor editor,List<CommitAction> commitActionList,boolean openRoot) {
-    	//System.out.println("executeCommitActionList() szie: " + commitActionList.size());
+		System.out.println("executeCommitActionList() szie: " + commitActionList.size());
 		try {
 	    	if(openRoot)
 	    	{
@@ -840,7 +840,7 @@ public class SVNUtil  extends BaseController{
 		String entryPath = doc.getPath() + doc.getName();
 		String localPath = doc.getLocalRootPath();
 		String localRefPath = doc.getLocalRefRootPath();
-		//System.out.println("executeModifyAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		System.out.println("executeModifyAction() " + doc.getPath() + doc.getName());
 		
 		
 		InputStream oldData = null;
@@ -873,7 +873,7 @@ public class SVNUtil  extends BaseController{
 		Doc doc = action.getDoc();
 
 		//printObject("executeModifyAction:",doc);
-		//System.out.println("executeDeleteAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName());
+		System.out.println("executeDeleteAction() " + doc.getPath() + doc.getName());
 		boolean ret = deleteEntry(editor, doc, false);
 		action.setResult(ret);
 		return ret;
@@ -890,7 +890,7 @@ public class SVNUtil  extends BaseController{
 		String entryName = doc.getName();
 		String entryPath = doc.getPath() + doc.getName();
 		
-		//System.out.println("executeAddAction() parentPath:" + doc.getPath() + " entryName:" + doc.getName() + " localPath:" + localPath + " localRefPath:" + localRefPath);
+		System.out.println("executeAddAction() " + doc.getPath() + doc.getName());
 
 		boolean ret = false;
 
