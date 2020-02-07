@@ -13,11 +13,12 @@
     <result column="EDIT_EN" jdbcType="INTEGER" property="editEn" />
     <result column="ADD_EN" jdbcType="INTEGER" property="addEn" />
     <result column="DELETE_EN" jdbcType="INTEGER" property="deleteEn" />
+    <result column="DOWNLOAD_EN" jdbcType="INTEGER" property="downloadEn" />
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, USER_ID, GROUP_ID, TYPE, PRIORITY, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, 
-    DELETE_EN, HERITABLE
+    DELETE_EN, DOWNLOAD_EN, HERITABLE
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -33,13 +34,13 @@
     insert into repos_auth (ID, USER_ID, GROUP_ID, 
       TYPE, PRIORITY, REPOS_ID, 
       IS_ADMIN, ACCESS, EDIT_EN, 
-      ADD_EN, DELETE_EN, HERITABLE
-      )
+      ADD_EN, DELETE_EN, DOWNLOAD_EN, 
+      HERITABLE)
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
       #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{reposId,jdbcType=INTEGER}, 
       #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, #{editEn,jdbcType=INTEGER}, 
-      #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, #{heritable,jdbcType=INTEGER}
-      )
+      #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, #{downloadEn,jdbcType=INTEGER}, 
+      #{heritable,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.ReposAuth">
     insert into repos_auth
@@ -76,6 +77,9 @@
       </if>
       <if test="deleteEn != null">
         DELETE_EN,
+      </if>
+      <if test="downloadEn != null">
+        DOWNLOAD_EN,
       </if>
       <if test="heritable != null">
         HERITABLE,
@@ -115,6 +119,9 @@
       <if test="deleteEn != null">
         #{deleteEn,jdbcType=INTEGER},
       </if>
+      <if test="downloadEn != null">
+        #{downloadEn,jdbcType=INTEGER},
+      </if>
       <if test="heritable != null">
         #{heritable,jdbcType=INTEGER},
       </if>
@@ -153,6 +160,9 @@
       <if test="deleteEn != null">
         DELETE_EN = #{deleteEn,jdbcType=INTEGER},
       </if>
+      <if test="downloadEn != null">
+        DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER},
+      </if>
       <if test="heritable != null">
         HERITABLE = #{heritable,jdbcType=INTEGER},
       </if>
@@ -171,6 +181,7 @@
       EDIT_EN = #{editEn,jdbcType=INTEGER},
       ADD_EN = #{addEn,jdbcType=INTEGER},
       DELETE_EN = #{deleteEn,jdbcType=INTEGER},
+      DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER},
       HERITABLE = #{heritable,jdbcType=INTEGER}
     where ID = #{id,jdbcType=INTEGER}
   </update>
@@ -206,6 +217,9 @@
     <if test="deleteEn != null">
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
+    <if test="downloadEn != null">
+      and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
+    </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
@@ -240,6 +254,9 @@
     </if>
     <if test="deleteEn != null">
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    </if>
+    <if test="downloadEn != null">
+      and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
@@ -278,6 +295,9 @@
     <if test="deleteEn != null">
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
+    <if test="downloadEn != null">
+      and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
+    </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
@@ -286,7 +306,7 @@
 	select 
 		user.ID as userId,user.NAME as userName,user.REAL_NAME as realName,
 		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE
       from user
     LEFT JOIN repos_auth ON user.ID = repos_auth.USER_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>
@@ -294,7 +314,7 @@
 	select 
 		user_group.ID as groupId,user_group.NAME as groupName,
 		repos_auth.ID as id, 
-		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE
+		REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE
       from user_group
     LEFT JOIN repos_auth ON  user_group.ID = repos_auth.GROUP_ID and repos_auth.REPOS_ID = #{reposId,jdbcType=INTEGER}
   </select>

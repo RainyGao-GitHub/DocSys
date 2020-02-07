@@ -23,6 +23,8 @@ public class ReposAuth {
 
     private Integer deleteEn;
 
+    private Integer downloadEn;
+
     private Integer heritable;
 
     public Integer getId() {
@@ -113,6 +115,14 @@ public class ReposAuth {
         this.deleteEn = deleteEn;
     }
 
+    public Integer getDownloadEn() {
+        return downloadEn;
+    }
+
+    public void setDownloadEn(Integer downloadEn) {
+        this.downloadEn = downloadEn;
+    }
+
     public Integer getHeritable() {
         return heritable;
     }
@@ -121,7 +131,7 @@ public class ReposAuth {
         this.heritable = heritable;
     }
     
-    //ReposAuth 闄勫姞淇℃伅: 闇�瑕侀�氳繃joint doc and user or group Table to get these info
+    //ReposAuth 附加信息: 需要通过joint doc and user or group Table to get these info
     private String  userName="";	//from user Table
     private String  realName="";	//from user Table
     private String  groupName="";	//from group Table
