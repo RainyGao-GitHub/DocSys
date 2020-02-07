@@ -1312,6 +1312,14 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有权限下载文件
+		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
 		if(downloadType != null && downloadType == 2)
 		{
 			downloadVDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);
