@@ -120,12 +120,13 @@
 							<i class="cell username w10">用户名</i>
 							<i class="cell groupname w10">组</i>
 							<i class="cell docpath w15">路径</i>
-							<i class="cell access w8">管理员权限</i>
-							<i class="cell read w8">读权限</i>
-							<i class="cell edit w8">写权限</i>
-							<i class="cell add w8">增加权限</i>
-							<i class="cell delete w8">删除权限</i>
-							<i class="cell delete w8">可继承</i>
+							<i class="cell access w7">管理员权限</i>
+							<i class="cell read w7">读权限</i>
+							<i class="cell edit w7">写权限</i>
+							<i class="cell add w7">增加权限</i>
+							<i class="cell delete w7">删除权限</i>
+							<i class="cell download w7">下载权限</i>
+							<i class="cell heritable w7">可继承</i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
@@ -601,6 +602,7 @@
 				docAuth.editEn = $("#EditEn"+index).prop("checked")?1:0;
 				docAuth.addEn = $("#AddEn"+index).prop("checked")?1:0;
 				docAuth.deleteEn = $("#DeleteEn"+index).prop("checked")?1:0;
+				docAuth.downloadEn = $("#DownloadEn"+index).prop("checked")?1:0;
 				docAuth.heritable = $("#Heritable"+index).prop("checked")?1:0;
 				console.log(docAuth);
 				docAuths.push(docAuth);	//将用户加入到列表中
@@ -984,6 +986,7 @@ function showDocAuthList(){
 			var editChecked = d.editEn == 1? "checked":"";
 			var addChecked = d.addEn == 1? "checked":"";
 			var deleteChecked = d.deleteEn == 1? "checked":"";
+			var downloadChecked = d.downloadEn == 1? "checked":"";
 			var heritableChecked = d.heritable == 1? "checked":"";
 			var opBtn = "";
 			var docAuthId = "";
@@ -1022,22 +1025,25 @@ function showDocAuthList(){
 				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 				+"		</span>"
 				+"	</i>"
-				+"	<i class='cell access w8'>"
+				+"	<i class='cell access w7'>"
 				+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
 				+"	</i>"
-				+"	<i class='cell  read w8'>"
+				+"	<i class='cell  read w7'>"
 				+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
 				+"	</i>"
-				+"	<i class='cell edit w8'>"
+				+"	<i class='cell edit w7'>"
 				+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
 				+"	</i>"
-				+"	<i class='cell add w8'>"
+				+"	<i class='cell add w7'>"
 				+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>增加</input>"
 				+"	</i>"
-				+"	<i class='cell delete w8'>"
+				+"	<i class='cell delete w7'>"
 				+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
 				+"	</i>"
-				+"	<i class='cell heritable w8'>"
+				+"	<i class='cell download w7'>"
+				+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>下载</input>"
+				+"	</i>"
+				+"	<i class='cell heritable w7'>"
 				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>可继承</input>"
 				+"	</i>"
 				+"	<i class='cell operation w10'>"
@@ -1373,6 +1379,7 @@ function showReposSettingPanel(){
 				         editEn: docAuth.editEn, 
 				         addEn: docAuth.addEn, 
 				         deleteEn: docAuth.deleteEn, 
+				         downloadEn: docAuth.downloadEn,
 				         heritable: docAuth.heritable,
 				     },
 				     success : function (ret) {
