@@ -88,7 +88,7 @@ public class CommitAction{
 	public void setResult(boolean result) {
 		this.result = result;
 	}
-	public boolean setResult()
+	public boolean getResult()
 	{
 		return result;
 	}
