@@ -2031,27 +2031,21 @@ public class GITUtil  extends BaseController{
 	    	for(int i=0;i<commitActionList.size();i++)
 	    	{
 	    		CommitAction action = commitActionList.get(i);
-	    		boolean ret = false;
 	    		switch(action.getAction())
 	    		{
 	    		case ADD:	//add
-	        		ret = executeAddAction(git,action);
+	        		executeAddAction(git,action);
 	    			break;
 	    		case DELETE: //delete
-	    			ret = executeDeleteAction(git,action);
+	    			executeDeleteAction(git,action);
 	    			break;
 	    		case MODIFY: //modify
-	    			ret = executeModifyAction(git,action);
+	    			executeModifyAction(git,action);
 	        		break;
 				default:
 					break;
 	    		}
-	    		if(ret == false)
-	    		{
-	    			System.out.println("executeCommitActionList() failed for " + action.getDoc().getPath() + action.getDoc().getName());	
-	    		} 
-	    	}
-	    	
+	    	}	    	
 	    	return true;
 		} catch (Exception e) {
 			System.out.println("executeCommitActionList() 异常");	
