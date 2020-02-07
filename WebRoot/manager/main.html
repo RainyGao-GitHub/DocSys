@@ -1197,6 +1197,54 @@
         });
 	}
 	
+	function showEditReposPanel(e, id)
+	{
+		console.log("showEditReposPanel() " + id);
+		var Obj = e.target;
+		var trObj =  $(e.target).parent().parent();
+		var reposId = trObj.children("td:eq(0)").text();
+		var name = trObj.children("td:eq(1)").text();
+		var info = trObj.children("td:eq(2)").text();		
+		
+		qiao.bs.dialog({
+			url: 'editRepos.html',
+			title: '编辑仓库',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+			    console.log("page loaded callback");
+			    //Page Value Init
+			    $("#ReposId").val(ReposId);
+				$("#name").val(name);
+			    $("#info").val(info);
+			}
+		}, null);	
+	}
+	
+	//显示组成员管理页面
+	function showManageReposMemberPanel(e,ReposId){
+		console.log("showManageReposMemberPanel ReposId:" + ReposId);
+		
+		//get current click the Repos Info
+		var Obj = e.target;
+		console.log(Obj);
+		var trObj =  $(e.target).parent().parent();
+		//var ReposId = trObj.children("td:eq(0)").text();
+		var ReposName = trObj.children("td:eq(1)").text();
+		
+		qiao.bs.dialog({
+			title: '成员管理 -'+ ReposName,
+			url: 'manageReposMember.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			callback: function(){
+				manageReposMemberPageInit(ReposId);
+			},
+		});
+	}
+	
 	//用户组管理
 	function showGroupList(){
 		$.ajax({
