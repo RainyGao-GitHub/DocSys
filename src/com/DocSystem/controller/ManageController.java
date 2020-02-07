@@ -23,6 +23,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.entity.ReposMember;
 import com.DocSystem.entity.UserGroup;
 
 import com.DocSystem.service.impl.ReposServiceImpl;
@@ -856,6 +857,34 @@ public class ManageController extends BaseController{
 	private List<Repos> getAllReposes() {
 		List <Repos> list = userService.geAllReposes();
 		return list;
+	}
+	
+	/********** 获取系统所有用户 ：前台用于给repos添加访问用户，返回的结果实际上是reposMember列表***************/
+	@RequestMapping("/getReposAllUsers.do")
+	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getReposAllUsers groupId: " + reposId);
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		List <ReposMember> UserList = userService.getReposAllUsers(reposId);	
+		printObject("UserList:",UserList);
+		
+		rt.setData(UserList);
+		writeJson(rt, response);
 	}
 	
 	/********** 获取用户组列表 ***************/
