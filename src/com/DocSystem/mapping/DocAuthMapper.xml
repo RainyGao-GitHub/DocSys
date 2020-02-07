@@ -255,8 +255,8 @@
     <if test="deleteEn != null">
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
-    <if test="donwloadEn != null">
-      and DOWNLOAD_EN = #{donwloadEn,jdbcType=INTEGER}
+    <if test="downloadEn != null">
+      and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER},
