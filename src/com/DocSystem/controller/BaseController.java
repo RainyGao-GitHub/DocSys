@@ -2792,13 +2792,17 @@ public class BaseController  extends BaseFunction{
 		{
 			for(int i=0; i<commitActionList.size(); i++)
 			{
-				Doc commitDoc = commitActionList.get(i).getDoc();
-				printObject("syncupLocalChanges_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
-				//需要根据commitAction的行为来决定相应的操作
-				commitDoc.setRevision(revision);
-				commitDoc.setLatestEditorName(login_user.getName());
-				dbUpdateDoc(repos, commitDoc, true);				
-				dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
+				CommitAction commitAction = commitActionList.get(i);
+				if(commitAction.getResult())
+				{
+					Doc commitDoc = commitActionList.get(i).getDoc();
+					printObject("syncupLocalChanges_FSM() dbUpdateDoc commitDoc: ", commitDoc);						
+					//需要根据commitAction的行为来决定相应的操作
+					commitDoc.setRevision(revision);
+					commitDoc.setLatestEditorName(login_user.getName());
+					dbUpdateDoc(repos, commitDoc, true);				
+					dbCheckAddUpdateParentDoc(repos, commitDoc, null, null);
+				}
 			}			
 			dbUpdateDocRevision(repos, doc, revision);
 		}
