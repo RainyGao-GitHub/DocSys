@@ -37,12 +37,13 @@ CREATE TABLE `doc_auth` (
   `DOC_ID` bigint(20) DEFAULT NULL COMMENT 'Doc Node id',
   `REPOS_ID` int(11) NOT NULL DEFAULT '0' COMMENT '权限类型：1：User 2:Group 3: anyUser',
   `IS_ADMIN` int(1) DEFAULT NULL,
-  `ACCESS` int(2) NOT NULL DEFAULT '0' COMMENT '0:不可见  1:只读',
+  `ACCESS` int(1) NOT NULL DEFAULT '0' COMMENT '0:不可见  1:只读',
   `EDIT_EN` int(1) DEFAULT NULL,
   `ADD_EN` int(1) DEFAULT NULL,
   `DELETE_EN` int(1) DEFAULT NULL,
+  `DOWNLOAD_EN` int(1) DEFAULT NULL,
   `HERITABLE` int(1) NOT NULL DEFAULT '0' COMMENT '0:不可继承  1:可继承',
-  `DOC_PATH` varchar(1000) DEFAULT NULL COMMENT 'doc path',
+  `DOC_PATH` varchar(2000) DEFAULT NULL COMMENT 'doc path',
   `DOC_NAME` varchar(200) DEFAULT NULL COMMENT 'doc name'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
