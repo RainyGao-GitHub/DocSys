@@ -1148,6 +1148,55 @@
 		$Func.render($("#container"),"repos",{"list":list});
 	}
 	
+	//showAddReposPanel
+	function showAddReposPanel(){
+		console.log("showAddReposPanel");
+		qiao.bs.dialog({
+			url: 'addRepos.html',
+			title: '新增仓库',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false
+		}, null);
+	}
+	
+	function delReposConfirm(id)
+	{	
+		console.log("delReposConfirm");
+		qiao.bs.confirm({
+			id: "delReposConfirmDialog",
+	        title: "删除仓库",
+	        msg: "是否删除仓库，仓库数据将无法恢复？",
+	        okbtn: "删除",
+	        qubtn: "取消",
+	    },function () {
+	    	delRepos(id);
+	    	return true;   
+	    });
+	}
+	
+	function delRepos(id){
+        $.ajax({
+            url : "/DocSystem/Manage/delRepos.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 id : id,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                   	showReposList();	//刷新ReposList
+                    alert("删除成功");
+                }else {
+                	alert("错误：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	alert("服务器异常:删除失败");
+            }
+        });
+	}
+	
 	//用户组管理
 	function showGroupList(){
 		$.ajax({
@@ -1194,7 +1243,7 @@
 	{	
 		console.log("delGroupConfirm");
 		qiao.bs.confirm({
-			id: "delUserConfirmDialog",
+			id: "delGroupConfirmDialog",
 	        title: "删除用户组",
 	        msg: "是否删除用户组？",
 	        okbtn: "删除",
