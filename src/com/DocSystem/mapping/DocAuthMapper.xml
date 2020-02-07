@@ -14,13 +14,14 @@
     <result column="EDIT_EN" jdbcType="INTEGER" property="editEn" />
     <result column="ADD_EN" jdbcType="INTEGER" property="addEn" />
     <result column="DELETE_EN" jdbcType="INTEGER" property="deleteEn" />
+    <result column="DOWNLOAD_EN" jdbcType="INTEGER" property="downloadEn" />
     <result column="HERITABLE" jdbcType="INTEGER" property="heritable" />
     <result column="DOC_PATH" jdbcType="VARCHAR" property="docPath" />
     <result column="DOC_NAME" jdbcType="VARCHAR" property="docName" />
   </resultMap>
   <sql id="Base_Column_List">
     ID, USER_ID, GROUP_ID, TYPE, PRIORITY, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, 
-    ADD_EN, DELETE_EN, HERITABLE, DOC_PATH, DOC_NAME
+    ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE, DOC_PATH, DOC_NAME
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -37,14 +38,14 @@
       TYPE, PRIORITY, DOC_ID, 
       REPOS_ID, IS_ADMIN, ACCESS, 
       EDIT_EN, ADD_EN, DELETE_EN, 
-      HERITABLE, DOC_PATH, DOC_NAME
-      )
+      DOWNLOAD_EN, HERITABLE, DOC_PATH, 
+      DOC_NAME)
     values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{groupId,jdbcType=INTEGER}, 
       #{type,jdbcType=INTEGER}, #{priority,jdbcType=INTEGER}, #{docId,jdbcType=BIGINT}, 
       #{reposId,jdbcType=INTEGER}, #{isAdmin,jdbcType=INTEGER}, #{access,jdbcType=INTEGER}, 
       #{editEn,jdbcType=INTEGER}, #{addEn,jdbcType=INTEGER}, #{deleteEn,jdbcType=INTEGER}, 
-      #{heritable,jdbcType=INTEGER}, #{docPath,jdbcType=VARCHAR}, #{docName,jdbcType=VARCHAR}
-      )
+      #{downloadEn,jdbcType=INTEGER}, #{heritable,jdbcType=INTEGER}, #{docPath,jdbcType=VARCHAR}, 
+      #{docName,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.DocSystem.entity.DocAuth">
     insert into doc_auth
@@ -84,6 +85,9 @@
       </if>
       <if test="deleteEn != null">
         DELETE_EN,
+      </if>
+      <if test="downloadEn != null">
+        DOWNLOAD_EN,
       </if>
       <if test="heritable != null">
         HERITABLE,
@@ -132,6 +136,9 @@
       <if test="deleteEn != null">
         #{deleteEn,jdbcType=INTEGER},
       </if>
+      <if test="downloadEn != null">
+        #{downloadEn,jdbcType=INTEGER},
+      </if>
       <if test="heritable != null">
         #{heritable,jdbcType=INTEGER},
       </if>
@@ -179,6 +186,9 @@
       <if test="deleteEn != null">
         DELETE_EN = #{deleteEn,jdbcType=INTEGER},
       </if>
+      <if test="downloadEn != null">
+        DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER},
+      </if>
       <if test="heritable != null">
         HERITABLE = #{heritable,jdbcType=INTEGER},
       </if>
@@ -204,6 +214,7 @@
       EDIT_EN = #{editEn,jdbcType=INTEGER},
       ADD_EN = #{addEn,jdbcType=INTEGER},
       DELETE_EN = #{deleteEn,jdbcType=INTEGER},
+      DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER},
       HERITABLE = #{heritable,jdbcType=INTEGER},
       DOC_PATH = #{docPath,jdbcType=VARCHAR},
       DOC_NAME = #{docName,jdbcType=VARCHAR}
@@ -243,6 +254,9 @@
     </if>
     <if test="deleteEn != null">
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
+    </if>
+    <if test="donwloadEn != null">
+      and DOWNLOAD_EN = #{donwloadEn,jdbcType=INTEGER}
     </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER},
@@ -289,6 +303,9 @@
     <if test="deleteEn != null">
       and DELETE_EN = #{deleteEn,jdbcType=INTEGER}
     </if>
+    <if test="downloadEn != null">
+      and DOWNLOAD_EN = #{downloadEn,jdbcType=INTEGER}
+    </if>
     <if test="heritable != null">
       and HERITABLE = #{heritable,jdbcType=INTEGER}
     </if>
@@ -321,7 +338,7 @@
   </delete>
   <select id="getAllDocAuthList" parameterType="java.util.Map" resultMap="BaseResultMap">
     select 
-        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE, DOC_PATH, DOC_NAME, 
+        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE, DOC_PATH, DOC_NAME, 
     	user.NAME as userName,user.REAL_NAME as realName,
     	user_group.NAME as groupName
     from doc_auth 
@@ -331,7 +348,7 @@
   </select>    
   <select id="getDocAuthForUser" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
-        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE, DOC_PATH, DOC_NAME, 
+        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE, DOC_PATH, DOC_NAME, 
 	    user.NAME as userName,user.REAL_NAME as realName
 	from doc_auth
     LEFT JOIN user on doc_auth.USER_ID = user.ID
@@ -340,7 +357,7 @@
   </select>
   <select id="getDocAuthForGroup" parameterType="com.DocSystem.entity.DocAuth" resultMap="BaseResultMap">
     select 
-        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, HERITABLE, DOC_PATH, DOC_NAME, 
+        doc_auth.ID as id, doc_auth.TYPE as type, doc_auth.PRIORITY as priority, USER_ID, GROUP_ID, DOC_ID, REPOS_ID, IS_ADMIN, ACCESS, EDIT_EN, ADD_EN, DELETE_EN, DOWNLOAD_EN, HERITABLE, DOC_PATH, DOC_NAME, 
 	    user_group.NAME as groupName
 	from doc_auth
     LEFT JOIN user_group on doc_auth.GROUP_ID = user_group.ID

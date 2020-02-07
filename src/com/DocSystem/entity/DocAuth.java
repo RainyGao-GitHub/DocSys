@@ -25,6 +25,8 @@ public class DocAuth {
 
     private Integer deleteEn;
 
+    private Integer downloadEn;
+
     private Integer heritable;
 
     private String docPath;
@@ -125,6 +127,14 @@ public class DocAuth {
 
     public void setDeleteEn(Integer deleteEn) {
         this.deleteEn = deleteEn;
+    }
+
+    public Integer getDownloadEn() {
+        return downloadEn;
+    }
+
+    public void setDownloadEn(Integer downloadEn) {
+        this.downloadEn = downloadEn;
     }
 
     public Integer getHeritable() {
