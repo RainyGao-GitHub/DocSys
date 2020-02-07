@@ -341,6 +341,11 @@
 	            showGroupList();
 	            $("#nav li[data-eb-params=group]>a").addClass("open");
 	            break;
+	        case "repos":
+	            title = "仓库管理";
+	            showReposList();
+	            $("#nav li[data-eb-params=repos]>a").addClass("open");
+	            break;    
 	        case "system":
 	        case "systemEmailConfig":
 	        case "systemSmsConfig":
@@ -1114,7 +1119,36 @@
 		}, null);	
 	}
 	
-	//角色管理
+	//仓库管理
+	function showReposList(){
+		$.ajax({
+	        url : "/DocSystem/Manage/getReposList.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {},
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	ReposListDisplay(ret.data);
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取仓库列表失败");
+	        }
+	    });
+	}
+
+	function ReposListDisplay(list)
+	{
+		console.log("ReposListDisplay", list);
+		$Func.render($("#container"),"repos",{"list":list});
+	}
+	
+	//用户组管理
 	function showGroupList(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getGroupList.do",
@@ -1132,7 +1166,7 @@
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取用户列表失败");
+	        	showErrorMessage("服务器异常:获取用户组列表失败");
 	        }
 	    });
 	}

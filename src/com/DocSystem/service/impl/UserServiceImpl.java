@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;  
   
 import com.DocSystem.dao.GroupMemberMapper;
+import com.DocSystem.dao.ReposMapper;
 import com.DocSystem.dao.UserGroupMapper;
 import com.DocSystem.dao.UserMapper;
 import com.DocSystem.entity.GroupMember;
+import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.UserService;
@@ -21,7 +23,9 @@ public class UserServiceImpl implements UserService {
     private UserGroupMapper groupDao;  
     @Autowired
     private GroupMemberMapper groupMemberDao;  
-    
+    @Autowired
+    private ReposMapper reposDao;  
+
     public  int addUser(User user) {
     	return userDao.insertSelective(user);
     }
@@ -56,6 +60,11 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	/*The following interface is for repos*/
+	public List<Repos> geAllReposes() {
+		return reposDao.selectAll();
+	}
+	
 	/*The following interface is for group*/
 	public List<UserGroup> geAllGroups() {
 		return groupDao.selectAll();
