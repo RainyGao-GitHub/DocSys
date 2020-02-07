@@ -798,25 +798,20 @@ public class SVNUtil  extends BaseController{
 	    	for(int i=0;i<commitActionList.size();i++)
 	    	{
 	    		CommitAction action = commitActionList.get(i);
-	    		boolean ret = false;
 	    		switch(action.getAction())
 	    		{
 	    		case ADD:	//add
-	        		ret = executeAddAction(editor,action);
+	        		executeAddAction(editor,action);
 	    			break;
 	    		case DELETE: //delete
-	    			ret = executeDeleteAction(editor,action);
+	    			executeDeleteAction(editor,action);
 	    			break;
 	    		case MODIFY: //modify
-	    			ret = executeModifyAction(editor,action);
+	    			executeModifyAction(editor,action);
 	        		break;
 				default:
 					break;
 	    		}
-	    		if(ret == false)
-	    		{
-	    			System.out.println("executeCommitActionList() failed for " + action.getDoc().getPath() + action.getDoc().getName());	
-	    		} 
 	    	}
 	    	
 	    	if(openRoot)
