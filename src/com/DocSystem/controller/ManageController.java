@@ -19,6 +19,7 @@ import util.RegularUtil;
 import util.ReturnAjax;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.GroupMember;
+import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.ReposAuth;
@@ -824,6 +825,39 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 		return;		
 	}
+	
+	/********** 获取仓库列表 ***************/
+	@RequestMapping("/getReposList.do")
+	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getReposList()");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		List <Repos> list = getAllReposes();
+		
+		rt.setData(list);
+		writeJson(rt, response);
+	}
+
+	private List<Repos> getAllReposes() {
+		List <Repos> list = userService.geAllReposes();
+		return list;
+	}
+	
 	/********** 获取用户组列表 ***************/
 	@RequestMapping("/getGroupList.do")
 	public void getGroupList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
