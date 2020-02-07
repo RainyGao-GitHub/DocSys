@@ -32,7 +32,7 @@ CREATE TABLE `doc_lock` (
   `ID` int(11) NOT NULL,
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
   `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
-  `PATH` varchar(1000) NOT NULL DEFAULT '/' COMMENT '基于仓库目录的相对路径',
+  `PATH` varchar(2000) NOT NULL DEFAULT '/' COMMENT '基于仓库目录的相对路径',
   `DOC_ID` bigint(20) DEFAULT NULL COMMENT 'Doc Node id',
   `PID` bigint(20) DEFAULT NULL COMMENT 'Parent Node id',
   `VID` int(10) UNSIGNED DEFAULT NULL COMMENT '所属仓库id',

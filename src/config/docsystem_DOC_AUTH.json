@@ -11,6 +11,7 @@
 	{"dbName":"EDIT_EN",   	"name":"editEn", 	"type":"Integer"},
 	{"dbName":"ADD_EN",   	"name":"addEn", 	"type":"Integer"},
 	{"dbName":"DELETE_EN",  "name":"deleteEn", 	"type":"Integer"},
+	{"dbName":"DOWNLOAD_EN","name":"downloadEn","type":"Integer"},
 	{"dbName":"HERITABLE",  "name":"heritable", "type":"Integer"},
 	{"dbName":"DOC_PATH",   "name":"docPath", 	"type":"String"},
 	{"dbName":"DOC_NAME",   "name":"docName", 	"type":"String"},
