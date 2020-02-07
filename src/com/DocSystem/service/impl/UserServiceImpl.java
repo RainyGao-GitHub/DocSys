@@ -11,6 +11,7 @@ import com.DocSystem.dao.UserGroupMapper;
 import com.DocSystem.dao.UserMapper;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.ReposMember;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.UserService;
@@ -104,6 +105,11 @@ public class UserServiceImpl implements UserService {
 
 	public int deleteGroupMemberSelective(GroupMember groupMember) {
 		return groupMemberDao.deleteSelective(groupMember);	
+	}
+
+	public List<ReposMember> getReposAllUsers(Integer reposId) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }  
