@@ -65,4 +65,7 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 远程访问：将localhost改为IP地址即可
 
+## 四、安装常见问题
+https://blog.csdn.net/highrain/article/details/88946783
+
 # DocSys技术交流群: 953982034
