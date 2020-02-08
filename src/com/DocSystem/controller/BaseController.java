@@ -753,7 +753,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		if(verCtrl != 0 )
+		if(verCtrl !=null && verCtrl != 0 )
 		{
 			if(isRemote == 0)	//本地版本仓库
 			{
