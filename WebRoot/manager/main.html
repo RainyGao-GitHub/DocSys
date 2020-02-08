@@ -1217,7 +1217,7 @@
 			callback: function(){
 			    console.log("page loaded callback");
 			    //Page Value Init
-			    $("#ReposId").val(ReposId);
+			    $("#reposId").val(reposId);
 				$("#name").val(name);
 			    $("#info").val(info);
 				$("#path").val(path);
@@ -1227,14 +1227,14 @@
 	}
 	
 	//显示组成员管理页面
-	function showManageReposMemberPanel(e,ReposId){
-		console.log("showManageReposMemberPanel ReposId:" + ReposId);
+	function showManageReposMemberPanel(e,reposId){
+		console.log("showManageReposMemberPanel reposId:" + reposId);
 		
 		//get current click the Repos Info
 		var Obj = e.target;
 		console.log(Obj);
 		var trObj =  $(e.target).parent().parent();
-		//var ReposId = trObj.children("td:eq(0)").text();
+		//var reposId = trObj.children("td:eq(0)").text();
 		var ReposName = trObj.children("td:eq(1)").text();
 		
 		qiao.bs.dialog({
@@ -1244,7 +1244,7 @@
 			foot: false,
 			big: true,
 			callback: function(){
-				manageReposMemberPageInit(ReposId);
+				manageReposMemberPageInit(reposId);
 			},
 		});
 	}

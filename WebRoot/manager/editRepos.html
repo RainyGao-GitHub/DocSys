@@ -26,13 +26,13 @@
 	function editRepos(){
 		console.log("editRepos()");
 
-		var reposId =  $("#ReposId").val();
+		var reposId =  $("#reposId").val();
 		var name = $("#name").val();
 	    var info = $("#info").val();
 	    var path = $("#path").val();
 	    var type = $("#type").val();
 	    
-	    console.log(name,info);
+	    console.log(name,info,path,type);
 	    
         $.ajax({
             url : "/DocSystem/Repos/updateReposInfo.do",
@@ -69,9 +69,9 @@
                     
                   <div class="form-horizontal">
                     <div class="form-group" hidden>
-                      <label class="control-label col-lg-3" for="ReposId">仓库ID</label>
+                      <label class="control-label col-lg-3" for="reposId">仓库ID</label>
                       <div class="col-lg-9">
-                        <input type="text" class="form-control" id="ReposId" name="ReposId">
+                        <input type="text" class="form-control" id="reposId" name="reposId">
                       </div>
                     </div>
                     <!-- ReposName -->
@@ -97,7 +97,7 @@
                     <div class="form-group">
                       <label class="control-label col-lg-3" for="type">仓库类型</label>
                       <div class="col-lg-9">
-                        <input type="text" class="form-control" id="type" name="type">
+                        <input type="number" class="form-control" id="type" name="type">
                       </div>
                     </div>
                     <!-- Buttons -->
