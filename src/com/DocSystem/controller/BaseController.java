@@ -959,7 +959,7 @@ public class BaseController  extends BaseFunction{
 			isRemote = repos.getIsRemote1();
 		}
 		
-		if(verCtrl != 0)
+		if(verCtrl != null && verCtrl != 0)
 		{
 			if(isRemote == 0)
 			{	
