@@ -231,56 +231,61 @@ public class BaseController  extends BaseFunction{
 	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
-    	
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
-		
-		String docName = doc.getName();
-		if(doc.getDocId() == 0)
-		{
-			docName = "";
-		}
-
-		File dir = new File(localRootPath + doc.getPath() + docName);
-    	if(false == dir.exists())
-    	{
-    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不存在！");
+    	try {
+			String localRootPath = getReposRealPath(repos);
+			String localVRootPath = getReposVirtualPath(repos);
+			
+			String docName = doc.getName();
+			if(doc.getDocId() == 0)
+			{
+				docName = "";
+			}
+	
+			File dir = new File(localRootPath + doc.getPath() + docName);
+	    	if(false == dir.exists())
+	    	{
+	    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不存在！");
+	    		return null;
+	    	}
+	    	
+	    	if(dir.isFile())
+	    	{
+	    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不是目录！");
+	    		return null;
+	    	}
+	
+			String subDocParentPath = doc.getPath() + docName + "/";
+			if(docName.isEmpty())
+			{
+				subDocParentPath = doc.getPath();
+			}
+			
+			Integer subDocLevel = getSubDocLevel(doc);
+	    	
+	        //Go through the subEntries
+	    	List <Doc> subEntryList =  new ArrayList<Doc>();
+	    	
+	    	File[] localFileList = dir.listFiles();
+	    	for(int i=0;i<localFileList.length;i++)
+	    	{
+	    		File file = localFileList[i];
+	    		
+	    		int type = file.isDirectory()? 2:1;
+	    		String name = file.getName();
+	    		//System.out.println("getLocalEntryList subFile:" + name);
+	
+	    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, file.length(), "");
+	    		subDoc.setSize(file.length());
+	    		subDoc.setLatestEditTime(file.lastModified());
+	    		subDoc.setCreateTime(file.lastModified());
+	    		subEntryList.add(subDoc);
+	    	}
+	    	return subEntryList;
+    	}catch(Exception e){
+    		System.out.println("getLocalEntryList() Excepiton for " + doc.getDocId() + " " + doc.getPath() + doc.getName());    		
+    		e.printStackTrace();
     		return null;
     	}
-    	
-    	if(dir.isFile())
-    	{
-    		//System.out.println("getLocalEntryList() " + doc.getPath() + docName + " 不是目录！");
-    		return null;
-    	}
-
-		String subDocParentPath = doc.getPath() + docName + "/";
-		if(docName.isEmpty())
-		{
-			subDocParentPath = doc.getPath();
-		}
-		
-		Integer subDocLevel = getSubDocLevel(doc);
-    	
-        //Go through the subEntries
-    	List <Doc> subEntryList =  new ArrayList<Doc>();
-    	
-    	File[] localFileList = dir.listFiles();
-    	for(int i=0;i<localFileList.length;i++)
-    	{
-    		File file = localFileList[i];
-    		
-    		int type = file.isDirectory()? 2:1;
-    		String name = file.getName();
-    		//System.out.println("getLocalEntryList subFile:" + name);
-
-    		Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(), subDocParentPath, name, subDocLevel, type, true, localRootPath, localVRootPath, file.length(), "");
-    		subDoc.setSize(file.length());
-    		subDoc.setLatestEditTime(file.lastModified());
-    		subDoc.setCreateTime(file.lastModified());
-    		subEntryList.add(subDoc);
-    	}
-    	return subEntryList;
 	}
     	
 
@@ -2220,8 +2225,6 @@ public class BaseController  extends BaseFunction{
 		switch(repos.getType())
 		{
 		case 1:
-			//return getDBEntryList(repos, doc);			
-			return getLocalEntryList(repos, doc);
 		case 2:
 			return getLocalEntryList(repos, doc);
 		case 3:
