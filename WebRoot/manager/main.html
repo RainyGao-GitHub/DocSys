@@ -1197,9 +1197,9 @@
         });
 	}
 	
-	function showEditReposPanel(e, reposId)
+	function showEditReposPanel(e, i)
 	{
-		console.log("showEditReposPanel() " + reposId);
+		console.log("showEditReposPanel() " + i);
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
 		var reposId = trObj.children("td:eq(0)").text();
