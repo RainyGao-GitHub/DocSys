@@ -49,12 +49,13 @@ function addReposMember(userId,reposId)
    	console.log("addReposMember userId:" + userId+ " reposId:" + reposId);
    
     $.ajax({
-            url : "/DocSystem/Manage/addReposMember.do",
+            url : "/DocSystem/Repos/configReposAuth.do",
             type : "post",
             dataType : "json",
             data : {
             	userId: userId,
                 reposId : reposId,
+                access: 1,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -95,11 +96,11 @@ function delReposMemeber(id,userId,reposId)
    	console.log("deleteReposMember() id:" + id + " reposId:" + reposId + " userId:" + userId);
    	
     $.ajax({
-            url : "/DocSystem/Manage/delReposMember.do",
+            url : "/DocSystem/Repos/deleteReposAuth.do",
             type : "post",
             dataType : "json",
             data : {
-            	id: id,
+            	reposAuthId: id,
                 reposId: reposId,
                 userId: userId,
             },

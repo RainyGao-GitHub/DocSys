@@ -124,6 +124,7 @@ public class UserServiceImpl implements UserService {
 		{
 			ReposAuth reposAuth = reposAuthList.get(i);
 			ReposMember reposMember = new ReposMember();
+			reposMember.setId(reposAuth.getId());
 			reposMember.setUserId(reposAuth.getUserId());
 			reposMember.setUserName(reposAuth.getUserName());
 			reposMember.setRealName(reposAuth.getRealName());

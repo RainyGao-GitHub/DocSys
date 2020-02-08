@@ -34,11 +34,11 @@
                     <td>{{value.realName}}</td>
                     <td class="edit">
                       {{if undefined != value.id}} 
-                      <button onclick="delReposMemeber({{value.id}},{{value.userId}},{{value.reposId}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+                      <button onclick="delReposMemeber({{value.id}},{{value.userId}},{{reposId}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
                       {{/if}}
                     
                       {{if undefined == value.id}} 
-                      <button onclick="addReposMember({{value.userId}},{{value.reposId}})" class="btn btn-lg btn-success examine_ban">添加 </button>
+                      <button onclick="addReposMember({{value.userId}},{{reposId}})" class="btn btn-lg btn-success examine_ban">添加 </button>
                       {{/if}}
                     </td>
                   </tr>
