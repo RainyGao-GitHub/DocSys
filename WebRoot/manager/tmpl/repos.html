@@ -20,7 +20,8 @@
                   <th>#</th>
                   <th>仓库名称</th>
                   <th>简介</th>
-                  <th>成员列表</th>
+                  <th>仓库位置</th>
+                  <th>仓库类型</th>
                   <th>操作</th>
                 </tr>
                 </thead>
@@ -31,7 +32,8 @@
                     <td>{{value.id}}</td>
                     <td>{{value.name}}</td>
                     <td>{{value.info}}</td>
-                    <td>{{value.memberList}}</td>
+                    <td>{{value.path}}</td>
+                    <td>{{value.type}}</td>
                     <td class="edit">
                       <button onclick="delReposConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
                       <button onclick="showEditReposPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">编辑 </button>

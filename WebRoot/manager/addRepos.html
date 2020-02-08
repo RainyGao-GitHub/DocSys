@@ -28,16 +28,20 @@
 
 		var name = $("#name").val();
 	    var info = $("#info").val();
+		var path = $("#path").val();
+	    var type = $("#type").val();
 	    
-	    console.log(name,info);
+	    console.log(name,info,path,type);
 	    
         $.ajax({
-            url : "/DocSystem/Manage/addRepos.do",
+            url : "/DocSystem/Repos/addRepos.do",
             type : "post",
             dataType : "json",
             data : {
                  name : name,
                  info : info,
+                 path : path,
+                 type : type,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -76,7 +80,18 @@
                         <input type="text" class="form-control" id="info" name="info">
                       </div>
                     </div>
-
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="path">仓库位置</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="path" name="path">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="type">仓库类型</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="type" name="type">
+                      </div>
+                    </div>
                     <!-- Buttons -->
                     <div class="form-group">
                       <!-- Buttons -->

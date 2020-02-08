@@ -1,16 +1,19 @@
 package com.DocSystem.service.impl;  
   
+import java.util.ArrayList;
 import java.util.List;  
   
 import org.springframework.beans.factory.annotation.Autowired;  
 import org.springframework.stereotype.Service;  
   
 import com.DocSystem.dao.GroupMemberMapper;
+import com.DocSystem.dao.ReposAuthMapper;
 import com.DocSystem.dao.ReposMapper;
 import com.DocSystem.dao.UserGroupMapper;
 import com.DocSystem.dao.UserMapper;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.ReposMember;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
@@ -26,6 +29,8 @@ public class UserServiceImpl implements UserService {
     private GroupMemberMapper groupMemberDao;  
     @Autowired
     private ReposMapper reposDao;  
+    @Autowired
+    private ReposAuthMapper reposAuthDao;  
 
     public  int addUser(User user) {
     	return userDao.insertSelective(user);
@@ -108,8 +113,23 @@ public class UserServiceImpl implements UserService {
 	}
 
 	public List<ReposMember> getReposAllUsers(Integer reposId) {
-		// TODO Auto-generated method stub
-		return null;
+		List<ReposAuth> reposAuthList = reposAuthDao.getReposAllUsers(reposId);
+		if(reposAuthList == null)
+		{
+			return null;
+		}
+		
+		List<ReposMember> list = new ArrayList<ReposMember>();
+		for(int i=0; i< reposAuthList.size(); i++)
+		{
+			ReposAuth reposAuth = reposAuthList.get(i);
+			ReposMember reposMember = new ReposMember();
+			reposMember.setUserId(reposAuth.getUserId());
+			reposMember.setUserName(reposAuth.getUserName());
+			reposMember.setRealName(reposAuth.getRealName());
+			reposMember.setReposId(reposAuth.getReposId());
+			list.add(reposMember);
+		}
+		return list;
 	}
-
 }  

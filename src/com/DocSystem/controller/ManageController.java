@@ -863,7 +863,7 @@ public class ManageController extends BaseController{
 	@RequestMapping("/getReposAllUsers.do")
 	public void getReposAllUsers(Integer reposId,HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getReposAllUsers groupId: " + reposId);
+		System.out.println("getReposAllUsers reposId: " + reposId);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
