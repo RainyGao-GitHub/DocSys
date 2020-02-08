@@ -1175,13 +1175,13 @@
 	    });
 	}
 	
-	function delRepos(id){
+	function delRepos(reposId){
         $.ajax({
-            url : "/DocSystem/Manage/delRepos.do",
+            url : "/DocSystem/Repos/deleteRepos.do",
             type : "post",
             dataType : "json",
             data : {
-                 id : id,
+                 vid : reposId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -1197,14 +1197,16 @@
         });
 	}
 	
-	function showEditReposPanel(e, id)
+	function showEditReposPanel(e, reposId)
 	{
-		console.log("showEditReposPanel() " + id);
+		console.log("showEditReposPanel() " + reposId);
 		var Obj = e.target;
 		var trObj =  $(e.target).parent().parent();
 		var reposId = trObj.children("td:eq(0)").text();
 		var name = trObj.children("td:eq(1)").text();
 		var info = trObj.children("td:eq(2)").text();		
+		var path = trObj.children("td:eq(3)").text();		
+		var type = trObj.children("td:eq(4)").text();		
 		
 		qiao.bs.dialog({
 			url: 'editRepos.html',
@@ -1218,6 +1220,8 @@
 			    $("#ReposId").val(ReposId);
 				$("#name").val(name);
 			    $("#info").val(info);
+				$("#path").val(path);
+			    $("#type").val(type);
 			}
 		}, null);	
 	}
