@@ -2904,6 +2904,56 @@ public class DocController extends BaseController{
 		return docShare.hashCode();
 	}
 	
+	/****************   update a DocShare ******************/
+	@RequestMapping("/updateDocShare.do")
+	public void addDocShare(Integer shareId,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+			String sharePwd,
+			Integer shareHours,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("addDocShare shareId:" + shareId + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		DocAuth docAuth = new DocAuth();
+		docAuth.setIsAdmin(isAdmin);
+		docAuth.setAccess(access);
+		docAuth.setAddEn(addEn);
+		docAuth.setDeleteEn(deleteEn);
+		docAuth.setEditEn(editEn);
+		docAuth.setHeritable(heritable);
+		String shareAuth = JSON.toJSONString(docAuth);
+		
+		DocShare docShare = new DocShare();
+		docShare.setShareId(shareId);
+		docShare.setShareAuth(shareAuth);
+		if(shareHours == null)
+		{
+			shareHours = 24;	//默认分享时间为一天
+		}
+		long curTime = new Date().getTime();
+		long expireTime = curTime + shareHours * 60 * 60 * 1000;
+		docShare.setExpireTime(expireTime);	
+		docShare.setSharePwd(sharePwd);
+				
+		if(reposService.updateDocShare(docShare) == 0)
+		{
+			docSysErrorLog("更新文件分享失败！", rt);
+		}
+		else
+		{
+			rt.setData(docShare);
+		}
+		writeJson(rt, response);
+	}
+	
 	/****************   get DocShare ******************/
 	@RequestMapping("/getDocShare.do")
 	public void getDocShare(Integer shareId,
