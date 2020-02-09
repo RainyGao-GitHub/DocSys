@@ -4859,15 +4859,21 @@ function CompareObj(objA, objB, flag) {
 				]
 			},
 			{divider: true},
-			{text: '预览', action: function(e){
+			{text: '打开', action: function(e){
 					e.preventDefault();
-					showOfficeInNewPage(curRightClickedTreeNode);
+					//showOfficeInNewPage(curRightClickedTreeNode);
+					openDocInDialog(curRightClickedTreeNode, true);    
 				}
 			},
 			{text: '下载', action: function(e){
 						e.preventDefault();
 						var treeNodes = getSelectedNodes();
 						downloadDoc(treeNodes,true,1);
+					}
+			},
+			{text: '分享', action: function(e){
+						e.preventDefault();
+						shareDoc(curRightClickedTreeNode);    
 					}
 			},
 			{divider: true},
@@ -5029,9 +5035,10 @@ function CompareObj(objA, objB, flag) {
 				]
 			},
 			{divider: true},
-			{text: '预览', action: function(e){
+			{text: '打开', action: function(e){
 						e.preventDefault();
-						showOfficeInNewPage(curRightClickedDocListNode);
+						//showOfficeInNewPage(curRightClickedDocListNode);
+						openDocInDialog(curRightClickedDocListNode, true);    
 					}
 			},
 			{text: '下载', action: function(e){
@@ -5040,6 +5047,11 @@ function CompareObj(objA, objB, flag) {
 					treeNodes.push(curRightClickedDocListNode);
 					downloadDoc(treeNodes,true,1);
 				}
+			},
+			{text: '分享', action: function(e){
+						e.preventDefault();
+						shareDoc(curRightClickedDocListNode);    
+					}
 			},
 			{divider: true},
 			{text: '复制', action: function(e){
@@ -5190,6 +5202,61 @@ function CompareObj(objA, objB, flag) {
 		});
 		//右键菜单实现：contextMenu End
     }
+    
+ 	function shareDoc(node){
+ 		var path = node.path;
+   	 	var name = node.name;
+   	 	if(path == null)
+   	 	{
+   	 		path = "";
+   	 	}
+   	 	
+   	 	var reposId = gReposInfo.id;
+   	 	
+		$.ajax({
+            url : "/DocSystem/Doc/addDocShare.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	reposId: reposId,
+                path: path,
+                name: name,                
+            },
+            success : function (ret) {
+         		console.log("showDocList ret:", ret)
+         		if(ret.status == "ok")
+            	{
+         			var docShare = ret.data;
+         	 		var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
+         	 		console.log(href);
+         	 		var host = window.location.host;	//域名带端口
+         	 		var url = host+href;
+         	 		console.log(url);
+         	 		
+         	 		var obj=document.getElementById("copiedText");
+         	 		obj.value=url;	//修改其中的值
+         	 		obj.select(); // 选择对象
+         	 		document.execCommand("Copy"); // 执行浏览器复制命令
+         	 	    
+         	 		// 普通消息提示条
+         	 		bootstrapQ.msg({
+         	 			msg : '分享链接已复制！',
+         	 			type : 'success',
+         	 			time : 1000,
+         	 		});
+            	}
+                else
+                {
+                	showErrorMessage("创建文件分享失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage('服务器异常: 创建文件分享失败');
+            }
+        });
+		
+ 		event.stopPropagation();
+ 	}
     
     //Markdown的图片截图粘贴接口
     document.addEventListener('paste', handlePasteImgEvent);        
