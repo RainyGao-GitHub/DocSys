@@ -2,20 +2,20 @@
 <script type="text/javascript">
 	function FeebackPageInit()
 	{
-		EnterKeyListenerForRegister();
+		EnterKeyListenerForFeeback();
 	}
 	
 	function showFeeback(text){
-		$(".registerModal").fadeIn("slow");
+		$(".feebackModal").fadeIn("slow");
 		$("#realName").focus();
 	}
 	
 	function closeFeeback(){
-		$(".registerModal").fadeOut("slow");
+		$(".feebackModal").fadeOut("slow");
 	}
 	
 	//回车键监听函数
-	function EnterKeyListenerForRegister(){
+	function EnterKeyListenerForFeeback(){
 		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
 	 	if (event.keyCode == 13){  
 	 		feeback();

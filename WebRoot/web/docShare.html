@@ -1,187 +1,121 @@
-<script src="js/md5.js"></script>
+
 <script type="text/javascript">
-	function DocSharePageInit()
+	var shareId = null;
+	function DocSharePageInit(id, docName, url)
 	{
-		//console.log($.cookie("dsuser"));
-		//回车键监听函数
-		EnterKeyListenerForDocShare();
+		shareId = id;
+		$("#shareLink").val(url);
 	}
 	
 	function showDocShare(text){
 		$(".docShareModal").fadeIn("slow");
-		$("#realName").focus();
 	}
 	
 	function closeDocShare(){
 		$(".docShareModal").fadeOut("slow");
 	}
 	
-	//回车键监听函数
-	function EnterKeyListenerForDocShare(){
-		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
-	 	if (event.keyCode == 13){  
-	 		docShare();
-	 	}  
-	}
-	
-	//使能submit按键
-	function canSubmit(dom){
-		if(dom.checked) {
-			$("#submit").attr('disabled',false);
-		}
-		else {
-			$("#submit").attr('disabled',true);
-		}
-	}
-	
 	//登录按键处理函数
-	function docShare(){
-		console.log("docShare");
+	function updateDocShare(){
+		console.log("updateDocShare() shareId:" + shareId);
 		
-        $.ajax({
-            url : "/DocSystem/docShare.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $('input[name="userName"]').val(),
-                 pwd : MD5($('input[name="pwd"]').val()),
-                 pwd2: MD5($('input[name="pwd2"]').val()),
-                 verifyCode : $('input[name="verifyCode"]').val(),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	//window.location.href = "index.html";	//跳转到主页
-                	//弹出登录对话框
-                	showLoginPanel();
-                	loginUser =  $('input[name="userName"]').val();
-                }else {
-                	alert("错误：" + ret.msgInfo);
+		var sharePwd;
+		var shareHours;
+		var addEn;
+		var deleteEn;
+		var editEn;
+		
+    	$.ajax({
+             url : "http://dw.gofreeteam.com/DocSystem/Doc/updateDocShare.do",
+             type : "post",
+             dataType : "json",
+             data : {
+            	shareId : shareId,
+            	isAdmin : 0,
+            	access : 1,
+            	addEn : addEn,
+            	deleteEn : deleteEn,
+            	editEn : editEn,
+            	heritable : 1,     
+            	sharePwd : sharePwd,
+            	shareHours : shareHours,
+             },
+             success : function (ret) {
+             	if( "ok" == ret.status){
+            		bootstrapQ.msg({
+    					msg : '保存成功！',
+    					type : 'success',
+    					time : 1000,
+    				});
+            		closeDocShare();
+            		return;
+	            }
+                else
+                {
+            		bootstrapQ.msg({
+    					msg : '保存失败:' + ret.MsgInfo,
+    					type : 'danger',
+    					time : 1000,
+    				});
+            		return false;
                 }
             },
             error : function () {
-            	alert("服务器异常:注册失败");
+        		bootstrapQ.msg({
+					msg : '保存失败:服务器异常',
+					type : 'danger',
+					time : 1000,
+				});
+	            return false;
             }
         });
+		return true;
     }
-	
-	//检查用户是否注册并发送验证码
-	function checkUserAndSendVerifyCode(){
-		console.log("checkUserAndSendVerifyCode");
-		
-		$.ajax({
-            url : "/DocSystem/checkUserDocShareed.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $('input[name="userName"]').val(),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	//alert("用户不存在，可以注册");
-                	sendVerifyCode();
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:发送验证码失败");
-            }
-        });
-        
-	}
-	
-	//发送验证码
-	function sendVerifyCode()
-	{
-		var dom = $("#svc");
-		
-		$(dom).attr("disabled","disabled");
-		$(dom).attr("second","60");
-		remainTime(dom);
-			
-		$.ajax({
-            url : "/DocSystem/sendVerifyCode.do",
-            type : "post",
-            dataType : "json",
-            data : {
-                 userName : $('input[name="userName"]').val(),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	alert("验证码已发送，请注意查收！");
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:发送验证码失败");
-            }
-        });
-	}
-	
-	//验证码倒计时
-	function remainTime(){
-		var dom = $("#svc");
-		var i = $(dom).attr("second");
-		$(dom).val(--i + "s"); 
-		$(dom).attr("second",i);
-	    var t = setTimeout(remainTime,1000);
-	    if(i==0){
-	    	clearTimeout(t);
-	    	$(dom).removeAttr("disabled");
-	    	$(dom).val("获取验证码");
-	    }
-	} 
-	
-	//页面初始化代码    
-    $(function(){
-    	console.log("docShare Page init");
-		docSharePageInit();
-		$("#userName").click().focus();
-	});
 </script>
 
-                    <div class="form-horizontal">
-                        <div class="form-group" id="userIdDiv">
-                            <label class="col-sm-2 control-label">邮箱/手机</label>
-                            <div class="col-sm-10">
-                                <input type="text" id="userName" name="userName" class="form-control"  maxlength="40" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="请填写您的有效邮箱/手机，以便找回密码以及验证" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                        	<label class="col-sm-2 control-label">验证码</label>
-                        	<div class="col-sm-7">
-                        		<input type="text" id="verifyCode" name="verifyCode" class="form-control" maxlength="6" needvalicate=true valicate="_required _num"  placeholder="请输入验证码"/>
-                        	</div>
-                        	<div class="col-sm-3">
-                        		<input type="button" id="svc" class="mybtn-primary m3" second="60" onclick="checkUserAndSendVerifyCode();" value="获取验证码"/>
-                        	</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">密 码</label>
-                            <div class="col-sm-10">
-                                <input type="password" id="pwd" name="pwd" needvalicate="true" valicate="_required _minlen=6" class="form-control" placeholder="6-18位，可由数字字母特殊字符组成"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">重复密码</label>
-                            <div class="col-sm-10">
-                                <input type="password" id="pwd2" name="pwd2" needvalicate="true" valicate="_required _minlen=6 _equals=pwdForReg" class="form-control" placeholder="请填写重复密码"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-12 text-center">
-                                <input onclick="canSubmit(this);" type="checkbox">
-									<!-- <span class="p5">我已阅读并同意<a target="_blank" href="/DocSystem/pageTo.do?p=contactUs#useAgreement">《DocSys注册条款》</a></span> -->
-									<span class="p5">我已阅读并同意<a>《DocSys注册条款》</a></span>
-								</input>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-sm-12 text-center">
-                            	<input id="submitBtn" type="submit" class="hidden"/>
-                                <button  id="submit" type="button" class="btn btnPrimary" onclick="docShare();" style="width: 288px;height: 42px;" disabled>立即注册</button>
-                            </div>
-                        </div>
-                    </div>
+<div class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label">分享链接</label>
+        <div class="col-sm-10">
+            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">提取密码</label>
+        <div class="col-sm-10">
+            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">有效时间</label>
+        <div class="col-sm-10">
+            <select class="form-control" name="shareHours" onchange="doSelectExpireTime();" style="width: 100%">   
+            	<option value="1" >永久有效</option>
+            	<option value="2" selected="selected">7天</option>
+            	<option value="3">1天</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">权限设置</label>
+        <div class="col-sm-10" style="margin-top:0.5em;">
+	        <input name="downloadEn" onclick="disableDownload(this);" type="checkbox" >
+				<span class="p5">禁止下载</span>
+			</input>
+			<input name="addEn" onclick="enableAdd(this);" type="checkbox" style="margin-left:1em;">
+				<span class="p5">允许上传</span>
+			</input>
+			<input name="editEn" onclick="enableAdd(this);" type="checkbox" style="margin-left:1em;">
+				<span class="p5">允许修改</span>
+			</input>
+			<input name="deleteEn" onclick="enableAdd(this);" type="checkbox" style="margin-left:1em;">
+				<span class="p5">允许删除</span>
+			</input>
+		</div>
+    </div>    
+	<div class="form-group">
+	    <div class="col-sm-12 text-center">
+	        <button  id="submit" type="button" class="btn btnPrimary" onclick="updateDocShare();" style="width: 288px;height: 42px;">保存</button>
+		</div>
+	</div>
+</div>
