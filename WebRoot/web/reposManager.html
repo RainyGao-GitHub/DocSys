@@ -872,12 +872,6 @@
 			},
 			{divider: true},
 			{text: '删除仓库', action: function(e){
-						currentNode = curRightClickedTreeNode.getParentNode();
-						if(curRightClickedTreeNode.id != 0)
-						{
-							alert("请选择仓库目录进行删除！");
-							return;
-						}
 						var vid = getQueryString("vid");
 						console.log("删除仓库：" + vid);	
 						deleteReposConfirm(vid);
