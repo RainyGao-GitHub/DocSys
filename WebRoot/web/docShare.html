@@ -6,6 +6,26 @@
 		shareId = docShare.shareId;
 		$("#shareLink").val(url);
 		
+		if(!docShare.validHours)
+		{
+			$("#shareHours").get(0).selectedIndex=0;
+		}
+		else 
+		{
+			if(docShare.validHours > )
+			{
+				$("#shareHours").get(0).selectedIndex=0;
+			}
+			else if(docShare.validHours > 24)
+			{
+				$("#shareHours").get(0).selectedIndex=1;
+			}
+			else
+			{
+				$("#shareHours").get(0).selectedIndex=2;
+			}			
+		}
+		
 		//分享权限转换
 		var shareAuth = JSON.parse(docShare.shareAuth);
 		if(shareAuth.downloadEn && shareAuth.downloadEn == 1)
@@ -45,7 +65,15 @@
 		var shareHours = $("#shareHours").val();
 		if(shareHours == 1)
 		{
-			
+			shareHours = 1000000; //100万小时（100年）
+		}
+		else if(shareHours == 2)
+		{
+			shareHours = 7*24; //7天			
+		}
+		else
+		{
+			shareHours = 24; //1天						
 		}
 		
 		var downloadEn = $("#downloadEn").prop("checked")?1:0;;
