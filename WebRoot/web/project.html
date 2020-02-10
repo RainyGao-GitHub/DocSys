@@ -5179,10 +5179,18 @@ function CompareObj(objA, objB, flag) {
             data : {
             	reposId: reposId,
                 path: path,
-                name: name,                
+                name: name,    
+            	isAdmin : 0,
+            	access : 1,
+            	downloadEn : 1,
+            	addEn : 1,
+            	deleteEn : 0,
+            	editEn : 1,
+            	heritable : 1,     
+            	shareHours : 7*24, //默认7天
             },
             success : function (ret) {
-         		console.log("showDocList ret:", ret)
+         		console.log("addDocShare ret:", ret)
          		if(ret.status == "ok")
             	{
          			var docShare = ret.data;
@@ -5192,7 +5200,7 @@ function CompareObj(objA, objB, flag) {
          	 		var url = host+href;
          	 		console.log(url);
          	 		
-         	 		showDocSharePanel(docShare.shareId, name, url);
+         	 		showDocSharePanel(docShare, name, url);
          	 		
          	 		/*var obj=document.getElementById("copiedText");
          	 		obj.value=url;	//修改其中的值
@@ -5219,9 +5227,9 @@ function CompareObj(objA, objB, flag) {
  		event.stopPropagation();
  	}
     
-	function showDocSharePanel(shareId, docName, url)
+	function showDocSharePanel(docShare, docName, url)
 	{
-		console.log("showDocSharePanel");
+		console.log("showDocSharePanel docName:" + docName);
 		bootstrapQ.dialog({
 			url: 'docShare.html',
 			title: '文件分享:' + docName,
@@ -5229,7 +5237,7 @@ function CompareObj(objA, objB, flag) {
 			foot: false,
 			big: false,
 			callback: function(){
-				DocSharePageInit(shareId, docName, url);
+				DocSharePageInit(docShare, docName, url);
 			},
 		});
 	}
