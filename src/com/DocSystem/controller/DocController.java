@@ -2836,7 +2836,7 @@ public class DocController extends BaseController{
 	public void addDocShare(Integer reposId, String path, String name,
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
 			String sharePwd,
-			Integer shareHours,
+			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
@@ -2879,12 +2879,15 @@ public class DocController extends BaseController{
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
 		docShare.setShareAuth(shareAuth);
-		if(shareHours != null)
+		if(shareHours == null)
 		{
-			long curTime = new Date().getTime();
-			long expireTime = curTime + shareHours * 60 * 60 * 1000;
-			docShare.setExpireTime(expireTime);	
-		}
+			shareHours = (long) 24; // one Day
+		}	
+		docShare.setValidHours(shareHours);
+		long curTime = new Date().getTime();
+		long expireTime = curTime + shareHours * 60 * 60 * 1000;
+		docShare.setExpireTime(expireTime);	
+		
 		Integer shareId = buildShareId(docShare);
 		docShare.setShareId(shareId);
 		
@@ -2908,7 +2911,7 @@ public class DocController extends BaseController{
 	public void updateDocShare(Integer shareId,
 			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
 			String sharePwd,
-			Integer shareHours,
+			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("updateDocShare() shareId:" + shareId + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
@@ -2935,8 +2938,9 @@ public class DocController extends BaseController{
 		docShare.setShareAuth(shareAuth);
 		if(shareHours == null)
 		{
-			shareHours = 24;	//默认分享时间为一天
+			shareHours = (long) 24;	//默认分享时间为一天
 		}
+		docShare.setValidHours(shareHours);
 		long curTime = new Date().getTime();
 		long expireTime = curTime + shareHours * 60 * 60 * 1000;
 		docShare.setExpireTime(expireTime);	
@@ -2994,8 +2998,26 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		Long validHours = getValidHours(docShare.getExpireTime());
+		docShare.setValidHours(validHours);
 		rt.setData(docShare);
 		writeJson(rt, response);
+	}
+
+	private Long getValidHours(Long expireTime) {
+		if(expireTime == null)
+		{
+			return null;
+		}
+		
+		long curTime = new Date().getTime();
+		if(expireTime < curTime)
+		{
+			return 0L;
+		}
+		
+		long validHours = (expireTime - curTime)/3600000; 
+		return validHours;
 	}
 
 	/* 文件搜索与排序 

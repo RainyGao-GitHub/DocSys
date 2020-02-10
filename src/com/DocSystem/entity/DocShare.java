@@ -21,6 +21,8 @@ public class DocShare {
 
     private Long expireTime;
 
+    private Long validHours; //有效时间
+
     public Integer getId() {
         return id;
     }
@@ -100,4 +102,13 @@ public class DocShare {
     public void setExpireTime(Long expireTime) {
         this.expireTime = expireTime;
     }
+    
+    public Long getValidHours() {
+        return validHours;
+    }
+
+    public void setValidHours(Long validHours) {
+        this.validHours = validHours;
+    }
+
 }
