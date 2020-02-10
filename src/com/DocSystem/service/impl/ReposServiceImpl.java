@@ -272,6 +272,11 @@ public class ReposServiceImpl implements ReposService {
     	return docShareDao.deleteByPrimaryKey(id);
     }
     
+    public int deleteDocShare(DocShare docShare)
+    {
+    	return docShareDao.deleteSelective(docShare);
+    }
+    
     public List<DocShare> getDocShareList(DocShare docShare) {  
         List<DocShare> list = docShareDao.selectSelective(docShare);  
         return list;

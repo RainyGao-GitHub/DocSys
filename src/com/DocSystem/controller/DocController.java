@@ -2834,12 +2834,12 @@ public class DocController extends BaseController{
 	/****************   add a DocShare ******************/
 	@RequestMapping("/addDocShare.do")
 	public void addDocShare(Integer reposId, String path, String name,
-			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
 			String sharePwd,
 			Integer shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name);
+		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, rt);
@@ -2872,20 +2872,19 @@ public class DocController extends BaseController{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setIsAdmin(isAdmin);
 		docAuth.setAccess(access);
+		docAuth.setDownloadEn(downloadEn);
 		docAuth.setAddEn(addEn);
 		docAuth.setDeleteEn(deleteEn);
 		docAuth.setEditEn(editEn);
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
 		docShare.setShareAuth(shareAuth);
-		if(shareHours == null)
+		if(shareHours != null)
 		{
-			shareHours = 24;	//默认分享时间为一天
+			long curTime = new Date().getTime();
+			long expireTime = curTime + shareHours * 60 * 60 * 1000;
+			docShare.setExpireTime(expireTime);	
 		}
-		long curTime = new Date().getTime();
-		long expireTime = curTime + shareHours * 60 * 60 * 1000;
-		docShare.setExpireTime(expireTime);	
-		
 		Integer shareId = buildShareId(docShare);
 		docShare.setShareId(shareId);
 		
@@ -2906,13 +2905,13 @@ public class DocController extends BaseController{
 	
 	/****************   update a DocShare ******************/
 	@RequestMapping("/updateDocShare.do")
-	public void addDocShare(Integer shareId,
-			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn,Integer heritable,
+	public void updateDocShare(Integer shareId,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
 			String sharePwd,
 			Integer shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addDocShare shareId:" + shareId + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn + " heritable:" + heritable);
+		System.out.println("updateDocShare() shareId:" + shareId + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, rt);
@@ -2950,6 +2949,30 @@ public class DocController extends BaseController{
 		else
 		{
 			rt.setData(docShare);
+		}
+		writeJson(rt, response);
+	}
+	
+	/****************   delete a DocShare ******************/
+	@RequestMapping("/deleteDocShare.do")
+	public void deleteDocShare(Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("deleteDocShare() shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		DocShare docShare = new DocShare();
+		docShare.setShareId(shareId);				
+		if(reposService.deleteDocShare(docShare) == 0)
+		{
+			docSysErrorLog("删除文件分享失败！", rt);
 		}
 		writeJson(rt, response);
 	}
