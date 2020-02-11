@@ -2923,6 +2923,14 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;	
 		}
+		
+		DocShare docShare = getDocShare(shareId);
+		if(docShare == null)
+		{
+			docSysErrorLog("分享信息不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
 
 		DocAuth docAuth = new DocAuth();
 		docAuth.setIsAdmin(isAdmin);
@@ -2932,8 +2940,7 @@ public class DocController extends BaseController{
 		docAuth.setEditEn(editEn);
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
-		
-		DocShare docShare = new DocShare();
+				
 		docShare.setShareId(shareId);
 		docShare.setShareAuth(shareAuth);
 		if(shareHours == null)
