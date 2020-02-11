@@ -186,7 +186,7 @@
       </if>
   </select>
  
-  <delete id="deleteSelective" parameterType="com.DocSystem.entity.Doc" >
+  <delete id="deleteSelective" parameterType="com.DocSystem.entity.DocShare" >
     delete from doc
     where 1 = 1
       <if test="id != null">
