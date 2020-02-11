@@ -12,15 +12,15 @@
 		}
 		else 
 		{
-			if(docShare.validHours > )
+			if(docShare.validHours > 10000) //大于10000小时
 			{
 				$("#shareHours").get(0).selectedIndex=0;
 			}
-			else if(docShare.validHours > 24)
+			else if(docShare.validHours > 48) //大于48小时
 			{
 				$("#shareHours").get(0).selectedIndex=1;
 			}
-			else
+			else //其他清空
 			{
 				$("#shareHours").get(0).selectedIndex=2;
 			}			

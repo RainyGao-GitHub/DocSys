@@ -2839,7 +2839,7 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, rt);
@@ -2914,7 +2914,7 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("updateDocShare() shareId:" + shareId + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		System.out.println("updateDocShare() shareId:" + shareId + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, rt);
