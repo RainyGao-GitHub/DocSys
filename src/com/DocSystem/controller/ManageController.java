@@ -528,6 +528,54 @@ public class ManageController extends BaseController{
 		rt.setData(config);
 		writeJson(rt, response);
 	}
+	
+	@RequestMapping("/upgradeSystem.do")
+	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	{
+		System.out.println("importDBData()");
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//saveFile to tmpPath
+		if(uploadFile == null)
+		{
+			System.out.println("upgradeSystem() uploadFile is null");
+			docSysErrorLog("上传文件为空", rt);
+			writeJson(rt, response);
+			return;
+		}
+		String fileName = uploadFile.getOriginalFilename();
+		if(!fileName.equals("DocSystem.war"))
+		{
+			System.out.println("upgradeSystem() 非法升级文件");
+			docSysErrorLog("非法升级文件:" + fileName, rt);
+			writeJson(rt, response);
+			return;
+		}		
+		if(saveFile(uploadFile, docSysIniPath, fileName) == null)
+		{
+			System.out.println("upgradeSystem() 保存升级文件失败");
+			docSysErrorLog("保存升级文件失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//开始升级
+		if(copyFile(docSysIniPath + fileName, docSysIniPath + "../DocSystem.war", true) == false)
+		{
+			System.out.println("upgradeSystem() 升级系统失败");
+			docSysErrorLog("升级系统失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
 	public void getUserList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
