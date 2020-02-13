@@ -854,7 +854,7 @@
 	    }
 	    else
 	   	{
-	   		bootstrapQ.alert("请选择文件");
+	   		showErrorMessage("请选择文件");
 	      	return false;
 	   	}  
 		
@@ -1115,12 +1115,17 @@
 	    }
 	    else
 	   	{
-	   		bootstrapQ.alert("请选择文件");
+	   		showErrorMessage("请选择文件");
 	      	return false;
 	   	}  
 		
 		var fileName = firstFile.name;
 	    console.log("firstFile:"+fileName);
+	    if(fileName != "DocSystem.war")
+	    {
+	    	showErrorMessage("非法升级文件");
+	    	return false;
+	    }
 	    
 	    qiao.bs.confirm({
 	    		id: "upgradeSystemConfirmDialog",
