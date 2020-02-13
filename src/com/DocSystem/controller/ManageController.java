@@ -535,6 +535,68 @@ public class ManageController extends BaseController{
 		rt.setData(config);
 		writeJson(rt, response);
 	}
+	
+	/********** 设置系统数据库配置 ***************/
+	@RequestMapping("/setSystemInfo.do")
+	public void setSystemInfo(String authCode, 
+			String tomcatPath, 
+			String openOfficePath, 
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("setSystemDBConfig() tomcatPath:" + tomcatPath + " openOfficePath:" + openOfficePath);
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(tomcatPath == null && openOfficePath == null)
+		{
+			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//checkAndAdd docSys.ini Dir
+		if(checkAndAddDocSysIniDir())
+		{
+			docSysErrorLog("系统初始化目录创建失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
+		String tmpDocSystemConfigPath = docSysIniPath;
+		String configFileName = "docSysConfig.properties";
+		if(copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		{
+			//Failed to copy 
+			System.out.println("setSystemDBConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
+			docSysErrorLog("创建临时配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		if(tomcatPath != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "tomcatPath", tomcatPath);
+		}
+		if(openOfficePath != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "openOfficePath", openOfficePath);
+		}
+		
+		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		{
+			System.out.println("setSystemDBConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
+			docSysErrorLog("写入配置文件失败！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
 
 
 	@RequestMapping("/upgradeSystem.do")
