@@ -599,7 +599,6 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 
-
 	@RequestMapping("/upgradeSystem.do")
 	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
@@ -641,6 +640,39 @@ public class ManageController extends BaseController{
 		{
 			System.out.println("upgradeSystem() 升级系统失败");
 			docSysErrorLog("升级系统失败", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/restartServer.do")
+	public void restartTomcat(String authCode, String tomcatPath,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	{
+		System.out.println("restartTomcat() tomcatPath:" + tomcatPath);
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//saveFile to tmpPath
+		if(tomcatPath == null)
+		{
+			System.out.println("restartTomcat() tomcatPath is null");
+			docSysErrorLog("Tomcat安装路径未指定", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//开始重启
+		if(restartTomcat(tomcatPath) == false)
+		{
+			System.out.println("restartTomcat() 重启服务失败");
+			docSysErrorLog("重启服务失败", rt);
 			writeJson(rt, response);
 			return;
 		}

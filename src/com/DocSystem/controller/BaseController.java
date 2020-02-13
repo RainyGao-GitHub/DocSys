@@ -1,5 +1,6 @@
 package com.DocSystem.controller;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8522,7 +8523,54 @@ public class BaseController  extends BaseFunction{
 		sqlValue = sqlValue.replace('"','\"');
 		return sqlValue;
 	}
-	
+
+	/**************************** Tomcat控制接口 *********************************/
+    public static boolean restartTomcat(String tomcatPath) {
+        if(shutdownTomcat(tomcatPath))
+        {
+        	return startupTomcat(tomcatPath);
+        }
+        return false;
+    }
+    public static boolean shutdownTomcat(String tomcatPath) {
+       return run(tomcatPath, "shutdown");
+    }
+ 
+    public static boolean startupTomcat(String tomcatPath) {
+       return run(tomcatPath, "startup");
+    }
+    private static boolean run(String tomcatPath, String shName) {
+        Runtime rt = Runtime.getRuntime();
+        Process ps = null;
+ 
+        try {
+            String os = System.getProperty("os.name");
+            if (os.startsWith("Windows")) {
+                ps = rt.exec("cmd /c " + tomcatPath + File.separator + "bin" + File.separator + shName + ".bat", (String[])null, new File(tomcatPath));
+            } else {
+                ps = rt.exec("sh " + tomcatPath + File.separator + "bin" + File.separator + shName + ".sh", (String[])null, new File(tomcatPath));
+            }
+ 
+            InputStream is = ps.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+ 
+            String line;
+            while((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+ 
+            ps.waitFor();
+            is.close();
+            reader.close();
+            ps.destroy();
+        } catch (Exception var8) {
+            var8.printStackTrace();
+            return false;
+            
+        }
+        return true;
+    }
+
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
 		// TODO Auto-generated method stub
