@@ -481,19 +481,19 @@ public class BaseFunction{
         String osName = System.getProperty("os.name");
         if (Pattern.matches("Linux.*", osName)) 
         {
-        	path = "/opt/openoffice.org4";
+        	path = "/opt/tomcat/";
             return path;
         } 
         
         if (Pattern.matches("Windows.*", osName)) 
         {
-        	path = "C:/Program Files (x86)/OpenOffice 4";
+        	path = "C:/xampp/tomcat/";
             return path;
         } 
         
         if (Pattern.matches("Mac.*", osName)) 
         {
-        	path = "C:/Program Files (x86)/OpenOffice 4";
+        	path = "/Applications/Tomcat.org.app/Contents/";
             return path;
         }
         
@@ -515,19 +515,19 @@ public class BaseFunction{
         
         if (Pattern.matches("Linux.*", osName)) 
         {
-        	path = "/opt/openoffice.org4";
+        	path = "/opt/openoffice.org4/";
             return path;
         } 
         
         if (Pattern.matches("Windows.*", osName)) 
         {
-        	path = "C:/Program Files (x86)/OpenOffice 4";
+        	path = "C:/Program Files (x86)/OpenOffice 4/";
             return path;
         } 
         
         if (Pattern.matches("Mac.*", osName)) 
         {
-        	path = "C:/Program Files (x86)/OpenOffice 4";
+        	path = "/Applications/OpenOffice.org.app/Contents/";
             return path;
         }
         
