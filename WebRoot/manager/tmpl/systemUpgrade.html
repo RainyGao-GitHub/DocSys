@@ -12,19 +12,35 @@
             </div>
 
             <div class="widget-content">
-                  <div class="form-horizontal" style="margin-top: 20px;">
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">当前版本</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemVersion" name="systemVersion" value="{{value.version}}" disabled="disabled" >
-                      </div>                      
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="op"></label>
-                      <div class="col-lg-9">
-                      	<button onclick="upgradeSystem()" data-id="" class="btn btn-lg btn-warning examine_ban">系统升级</button>
-                      </div>
-                  </div>
+	          <table class="table table-striped table-bordered table-hover">
+	                <thead>
+	                <tr>
+	                  <th>系统信息</th>
+	                  <th>详情</th>
+	                  <th>操作</th>
+	                </tr>
+	                </thead>
+	                <tbody>
+	                  <tr>
+	                    <td>当前版本</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="systemVersion" name="systemVersion" value="{{value.version}}" disabled="disabled" >
+	                    </td>
+	                    <td class="edit">
+	                      	<button onclick="upgradeSystem()" data-id="" class="btn btn-lg btn-warning examine_ban">系统升级</button>
+	                    </td>
+	                  </tr>
+	                  <tr>
+	                    <td>服务器</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="tomcatPath" name="tomcatPath" value="{{value.tomcatPath}}" disabled="disabled" >
+	                    </td>
+	                    <td class="edit">
+	                      	<button onclick="restartTomcat()" data-id="" class="btn btn-lg btn-warning examine_ban">重启</button>
+	                    </td>
+	                  </tr>
+	                </tbody>
+	          </table>
               <div class="widget-foot">
                 <div class="clearfix"></div>                
               </div>

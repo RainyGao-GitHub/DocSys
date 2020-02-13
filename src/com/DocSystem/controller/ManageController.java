@@ -523,12 +523,20 @@ public class ManageController extends BaseController{
 		{
 			version = "";
 		}
+		
+		String tomcatPath = getTomcatPath();
+		String openOfficePath = getOpenOfficePath();
 
-		String config = "{\"version\":\"" + version + "\"}";
+		String config = "{" 
+				+"\"version\":\"" + version + "\"," 
+				+ "\"tomcatPath\":\"" + tomcatPath + "\"," 
+				+ "\"openOfficePath\":\"" + openOfficePath + "\"," 
+				+ "}";
 		rt.setData(config);
 		writeJson(rt, response);
 	}
-	
+
+
 	@RequestMapping("/upgradeSystem.do")
 	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception

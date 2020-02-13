@@ -944,7 +944,8 @@
 	        dataType : "json",
 	        data : {},
 	        success : function (ret) {
-	            if( "ok" == ret.status )
+	            console.log("showSystemUpgrade() ret", ret);
+	        	if( "ok" == ret.status )
 	            {
 	            	var config = JSON.parse(ret.data); 	
 	            	systemInfo.version = config.version;

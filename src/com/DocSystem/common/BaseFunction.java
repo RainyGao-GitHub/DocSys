@@ -468,53 +468,67 @@ public class BaseFunction{
 		return path;
 	}
 	
+	//获取Tomcat的安装路径
+    public String getTomcatPath() {
+    	//get Tomcat Path From Config File
+    	String path = null;
+        path = ReadProperties.read("docSysConfig.properties", "tomcatPath");
+        if(path != null && !path.isEmpty())
+        {
+        	return localDirPathFormat(path);
+        }
+
+        String osName = System.getProperty("os.name");
+        if (Pattern.matches("Linux.*", osName)) 
+        {
+        	path = "/opt/openoffice.org4";
+            return path;
+        } 
+        
+        if (Pattern.matches("Windows.*", osName)) 
+        {
+        	path = "C:/Program Files (x86)/OpenOffice 4";
+            return path;
+        } 
+        
+        if (Pattern.matches("Mac.*", osName)) 
+        {
+        	path = "C:/Program Files (x86)/OpenOffice 4";
+            return path;
+        }
+        
+        return null;
+    }
+	
 	//获取OpenOffice的安装路径
-    public String getOfficeHome() {
+    public String getOpenOfficePath() {
     	//get OpenOffice Home From Config File
-    	String officeHome = null;
+    	String path = null;
+    	path = ReadProperties.read("docSysConfig.properties", "openOfficePath");
+        if(path != null && !path.isEmpty())
+        {
+        	return localDirPathFormat(path);
+        }
+
         String osName = System.getProperty("os.name");
         //System.out.println("操作系统名称:" + osName);
         
         if (Pattern.matches("Linux.*", osName)) 
         {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForLinux");
-            if(officeHome == null || officeHome.isEmpty())
-            {
-            	officeHome = "/opt/openoffice.org4";
-            }
-            else
-            {
-            	officeHome = localDirPathFormat(officeHome);
-            }
-            return officeHome;
+        	path = "/opt/openoffice.org4";
+            return path;
         } 
         
         if (Pattern.matches("Windows.*", osName)) 
         {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForWindows");
-            if(officeHome == null || officeHome.isEmpty())
-            {
-            	officeHome = "C:/Program Files (x86)/OpenOffice 4";
-            }
-            else
-            {
-            	officeHome = localDirPathFormat(officeHome);
-            }
-            return officeHome;
+        	path = "C:/Program Files (x86)/OpenOffice 4";
+            return path;
         } 
         
         if (Pattern.matches("Mac.*", osName)) 
         {
-        	officeHome = ReadProperties.read("docSysConfig.properties", "openOfficePathForMac");
-            if(officeHome == null || officeHome.isEmpty())
-            {
-            	officeHome = "C:/Program Files (x86)/OpenOffice 4";
-            }
-            else
-            {
-            	officeHome = localDirPathFormat(officeHome);
-            }
-            return officeHome;
+        	path = "C:/Program Files (x86)/OpenOffice 4";
+            return path;
         }
         
         return null;

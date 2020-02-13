@@ -1789,7 +1789,7 @@ public class DocController extends BaseController{
 	}
 
 	private boolean convertToPdf(String localEntryPath, String dstPath, ReturnAjax rt) {
-		String officeHome = getOfficeHome();
+		String officeHome = getOpenOfficePath();
 		if(officeHome == null)
 		{
 			docSysErrorLog("获取OpenOffice安装路径失败!", rt);
