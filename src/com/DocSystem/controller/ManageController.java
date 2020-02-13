@@ -595,6 +595,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		
 		writeJson(rt, response);
 	}
 

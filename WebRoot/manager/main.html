@@ -936,7 +936,75 @@
 	
 	var systemInfo = {
 			version: "",
+			tomcatPath: "",
+			openOfficePath:"",
 	}
+	function enableSystemInfoSet(){
+		$("#btnEnableSystemInfoSet").hide();
+		$("#btnCancelSystemInfoSet").show();
+		$("#btnSaveSystemInfoSet").show();
+		$("#tomcatPath").val(systemInfo.tomcatPath);
+		$("#openOfficePath").val(systemInfo.openOfficePath);
+		$("#tomcatPath").attr('disabled',false);
+		$("#openOfficePath").attr('disabled',false);
+	}
+	
+	function cancelSystemInfoSet(){
+		$("#btnEnableSystemInfoSet").show();
+		$("#btnCancelSystemInfoSet").hide();
+		$("#btnSaveSystemInfoSet").hide();
+		//revert the value
+		$("#tomcatPath").attr('disabled',true);
+		$("#openOfficePath").attr('disabled',true);
+		$("#tomcatPath").val(systemInfo.tomcatPath);
+		$("#openOfficePath").val(systemInfo.openOfficePath);
+	}
+	
+	function saveSystemInfoSet(){
+		$("#btnEnableSystemInfoSet").show();
+		$("#btnCancelSystemInfoSet").hide();
+		$("#btnSaveSystemInfoSet").hide();
+		//revert the value
+		$("#tomcatPath").attr('disabled',true);
+		$("#openOfficePath").attr('disabled',true);
+		var tomcatPath = $("#tomcatPath").val();
+		var openOfficePath = $("#openOfficePath").val();
+		updateSystemInfo(tomcatPath, openOfficePath);
+	}
+	
+	function updateSystemInfo(tomcatPath, openOfficePath){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemInfo.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	tomcatPath: tomcatPath,
+	        	openOfficePath: openOfficePath,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.tomcatPath = tomcatPath;
+	        		systemInfo.openOfficePath = openOfficePath;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#tomcatPath").val(systemInfo.tomcatPath);
+	        		$("#openOfficePath").val(systemInfo.openOfficePath);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("更新数据库配置信息失败:服务器异常");
+        		//restore the setting
+        		$("#tomcatPath").val(systemInfo.tomcatPath);
+        		$("#openOfficePath").val(systemInfo.openOfficePath);
+	        }
+	    });
+	}
+	
 	function showSystemUpgrade(){
 		$.ajax({
 	        url : "/DocSystem/Manage/getSystemInfo.do",
