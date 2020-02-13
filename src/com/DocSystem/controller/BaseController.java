@@ -7250,6 +7250,15 @@ public class BaseController  extends BaseFunction{
 			{
 				copyFile(userJDBCSettingPath, defaultJDBCSettingPath, true);
 			}
+			
+			//更新 docSysConfig
+			String userSystemSettingPath = docSysIniPath + "docSysConfig.properties";
+			String defaultSystemSettingPath = docSysWebPath + "WEB-INF/classes/docSysConfig.properties";
+			if(isFileExist(userSystemSettingPath))
+			{
+				copyFile(userSystemSettingPath, defaultSystemSettingPath, true);
+			}
+
 			return true;
 		}
 		return false;
