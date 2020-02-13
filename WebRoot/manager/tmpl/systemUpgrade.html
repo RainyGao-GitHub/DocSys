@@ -4,9 +4,9 @@
             <div class="widget-head">
               <div class="pull-left">系统升级</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemEmailSet" onclick="enableSystemEmailSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">编辑</button>
-                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">保存</button>                
-                <button id="btnCancelSystemEmailSet" onclick="cancelSystemEmailSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
+                <button id="btnEnableSystemInfoSet" onclick="enableSystemInfoSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
+                <button id="btnSaveSystemInfoSet" onclick="saveSystemInfoSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">保存</button>                
+                <button id="btnCancelSystemInfoSet" onclick="cancelSystemInfoSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -37,6 +37,14 @@
 	                    </td>
 	                    <td class="edit">
 	                      	<button onclick="restartTomcat()" data-id="" class="btn btn-lg btn-warning examine_ban">重启服务</button>
+	                    </td>
+	                  </tr>
+	                  <tr>
+	                    <td>OpenOffice</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="openOfficePath" name="openOfficePath" value="{{value.openOfficePath}}" disabled="disabled" >
+	                    </td>
+	                    <td class="edit">
 	                    </td>
 	                  </tr>
 	                </tbody>
