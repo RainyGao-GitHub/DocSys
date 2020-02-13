@@ -1033,6 +1033,55 @@
 	    });
 	}
 	
+	function restartTomcat(){
+		console.log("restartTomcat()");
+	    qiao.bs.confirm({
+	    		id: "restartTomcatConfirmDialog",
+		        title: "重启服务",
+		        msg: "是否重启服务？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				//开始上传
+				var tomcatPath = $("#tomcatPath").val();
+				doRestartTomcat(tomcatPath);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function doRestartTomcat(tomcatPath)
+	{
+		console.log("doRestartTomcat tomcatPath:" + tomcatPath);
+		$.ajax({
+	        url : "/DocSystem/Manage/restartServer.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	tomcatPath: tomcatPath,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("重启成功!");
+	        	}
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("重启失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("重启失败:服务器异常");
+	        }
+	    });
+	}
+	
 	function upgradeSystem(){
 		console.log("upgradeSystem()");
   		//清除文件控件
