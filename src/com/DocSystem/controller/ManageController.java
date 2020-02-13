@@ -530,7 +530,7 @@ public class ManageController extends BaseController{
 		String config = "{" 
 				+"\"version\":\"" + version + "\"," 
 				+ "\"tomcatPath\":\"" + tomcatPath + "\"," 
-				+ "\"openOfficePath\":\"" + openOfficePath + "\"," 
+				+ "\"openOfficePath\":\"" + openOfficePath + "\"" 
 				+ "}";
 		rt.setData(config);
 		writeJson(rt, response);

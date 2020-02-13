@@ -949,6 +949,8 @@
 	            {
 	            	var config = JSON.parse(ret.data); 	
 	            	systemInfo.version = config.version;
+	            	systemInfo.tomcatPath = config.tomcatPath;
+	            	systemInfo.openOfficePath = config.openOfficePath;
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 
