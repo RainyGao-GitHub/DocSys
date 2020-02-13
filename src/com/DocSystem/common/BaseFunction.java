@@ -481,7 +481,7 @@ public class BaseFunction{
         String osName = System.getProperty("os.name");
         if (Pattern.matches("Linux.*", osName)) 
         {
-        	path = "/opt/tomcat/";
+        	path = "/var/lib/tomcat7/";
             return path;
         } 
         
@@ -493,7 +493,7 @@ public class BaseFunction{
         
         if (Pattern.matches("Mac.*", osName)) 
         {
-        	path = "/Applications/Tomcat.org.app/Contents/";
+        	path = "/Library/tomcat/";
             return path;
         }
         
