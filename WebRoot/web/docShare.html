@@ -93,6 +93,27 @@
 	 	});
 	}
 	
+	function showShareLinkQRCode()
+	{
+		showDocShareQRCodePanel(shareLink);
+	}
+	
+	function showDocShareQRCodePanel(url)
+	{
+		console.log("showDocShareQRCodePanel url:" + url);
+		bootstrapQ.dialog({
+			id: 'docShareQRCode',
+			url: 'docShareQRCode.html',
+			title: '分享二维码',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				DocShareQRCodePageInit(url);
+			},
+		});
+	}
+	
 	function generateSharePwd()
 	{
 		var sharePwd = randomString(6);
