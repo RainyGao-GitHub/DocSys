@@ -5219,6 +5219,7 @@ function CompareObj(objA, objB, flag) {
 	{
 		console.log("showDocSharePanel docName:" + docName);
 		bootstrapQ.dialog({
+			id: 'docShare',
 			url: 'docShare.html',
 			title: '文件分享:' + docName,
 			msg: '页面正在加载，请稍等...',
