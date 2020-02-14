@@ -201,10 +201,10 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">分享链接</label>
         <div class="col-sm-7" style="padding-right:0;">
-            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400" style="border-radius:4px 0 0 4px;"></input>
+            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"></input>
         </div>
-        <div class="col-sm-3" style="padding-left:0;">
-           <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:0px;">
+        <div class="col-sm-3">
+           <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
 				<i class="icons open"></i>
 			</span>
            <span class="btn" title="复制链接" onclick="copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
@@ -217,11 +217,11 @@
     </div>
     <div class="form-group">
         <label class="col-sm-2 control-label">提取密码</label>
-        <div class="col-sm-7" style="padding-right:0;">
-            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码" style="border-radius:4px 0 0 4px;"/>
+        <div class="col-sm-7"  style="padding-right:0;">
+            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码"/>
         </div>
-        <div class="col-sm-3" style="padding-left:0;">
-           <span class="btn" style="border:1px solid #ccc; border-radius:0 4px 4px 0;margin:0; margin-right: -5px;">
+        <div class="col-sm-3">
+           <span class="btn" style="border:1px solid #ccc; border-radius:4px;">
 				随机生成
 			</span>
         </div>
@@ -239,16 +239,16 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">权限设置</label>
         <div class="col-sm-10" style="margin-top:0.5em;">
-	        <input id="downloadEn" name="downloadEn" type="checkbox" >
+	        <input id="downloadEn" name="downloadEn" type="checkbox" style="margin-right:1em;">
 				<span class="p5">允许下载</span>
 			</input>
-			<input id="addEn" name="addEn" type="checkbox" style="margin-left:1em;">
+			<input id="addEn" name="addEn" type="checkbox" style="margin-right:1em;">
 				<span class="p5">允许上传</span>
 			</input>
-			<input id="editEn" name="editEn" type="checkbox" style="margin-left:1em;">
+			<input id="editEn" name="editEn" type="checkbox" style="margin-right:1em;">
 				<span class="p5">允许修改</span>
 			</input>
-			<input id="deleteEn" name="deleteEn" type="checkbox" style="margin-left:1em;">
+			<input id="deleteEn" name="deleteEn" type="checkbox" style="margin-right:1em;">
 				<span class="p5">允许删除</span>
 			</input>
 		</div>
