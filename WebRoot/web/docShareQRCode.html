@@ -1,0 +1,20 @@
+<script src="js/qrcode.js"></script>
+<script type="text/javascript">
+	var shareId = null;
+	var shareLink = null;
+	function DocShareQRCodePageInit(url)
+	{
+		new QRCode(document.getElementById("qrcode"), "http://www.runoob.com");  // 设置要生成二维码的链接
+		//build QRCode 
+		/*var qrcode = new QRCode("test", {
+		    text: url,
+		    width: 128,
+		    height: 128,
+		    colorDark : "#000000",
+		    colorLight : "#ffffff",
+		    correctLevel : QRCode.CorrectLevel.H
+		});*/
+	}
+</script>
+
+<div id="qrcode"></div>
