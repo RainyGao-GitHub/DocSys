@@ -176,19 +176,35 @@
 <div class="form-horizontal">
     <div class="form-group">
         <label class="col-sm-2 control-label">分享链接</label>
-        <div class="col-sm-10">
-            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"/>
+        <div class="col-sm-7" style="padding-right:0;">
+            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400" style="border-radius:4px 0 0 4px;"></input>
+        </div>
+        <div class="col-sm-3" style="padding-left:0;">
+           <span class="btn" title="打开分享链接" style="color:#ccc; border:1px solid #ccc; border-radius:0px; margin:0; margin-right: -5px;">
+				<i class="icons open"></i>
+			</span>
+           <span class="btn" title="复制链接" style="color:#ccc; border:1px solid #ccc; border-radius:0px; margin:0; margin-right: -5px;">
+				<i class="icons copy"></i>
+			</span>
+           <span class="btn" title="二维码" style="color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;margin:0; margin-right: -5px;">
+				<i class="icons qrcode"></i>
+			</span>
         </div>
     </div>
     <div class="form-group">
         <label class="col-sm-2 control-label">提取密码</label>
-        <div class="col-sm-10">
-            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码" />
+        <div class="col-sm-7" style="padding-right:0;">
+            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码" style="border-radius:4px 0 0 4px;"/>
+        </div>
+        <div class="col-sm-3" style="padding-left:0;">
+           <span class="btn" style="border:1px solid #ccc; border-radius:0 4px 4px 0;margin:0; margin-right: -5px;">
+				随机生成
+			</span>
         </div>
     </div>
     <div class="form-group">
         <label class="col-sm-2 control-label">有效时间</label>
-        <div class="col-sm-10">
+        <div class="col-sm-4">
             <select class="form-control" id="shareHours" name="shareHours" style="width: 100%">   
             	<option value="1000000" >永久有效</option>
             	<option value="168" selected="selected">7天</option>
@@ -215,8 +231,8 @@
     </div>    
 	<div class="form-group">
 	    <div class="col-sm-12 text-center">
-	        <button  id="submit" type="button" class="btn btnPrimary" onclick="deleteDocShare();" style="width: 100px;height: 42px;">取消分享</button>
-	        <button  id="submit" type="button" class="btn btnPrimary" onclick="updateDocShare();" style="width: 100px;height: 42px;">保存</button>
+	        <button  type="button" class="btn btnPrimary" onclick="deleteDocShare();" style="width: 100px;height: 42px;">取消分享</button>
+	        <button  type="button" class="btn btnPrimary" onclick="updateDocShare();" style="width: 100px;height: 42px;">保存</button>
 		</div>
 	</div>
 </div>
