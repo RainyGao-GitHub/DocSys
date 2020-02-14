@@ -1,9 +1,11 @@
 
 <script type="text/javascript">
 	var shareId = null;
+	var shareLink = null;
 	function DocSharePageInit(docShare, docName, url)
 	{
 		shareId = docShare.shareId;
+		shareLink = url;
 		$("#shareLink").val(url);
 		
 		//设置分享密码
@@ -67,6 +69,28 @@
 	
 	function closeDocShare(){
 		$(".docShareModal").fadeOut("slow");
+	}
+	
+	function openShareLink()
+	{
+		console.log("openShareLink() shareLink:" + shareLink);
+		window.open("http://" + shareLink,target="_blank");
+	}
+	
+	function copyShareLink()
+	{
+		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
+		var obj=document.getElementById("copiedText");
+		obj.value=shareLink;	//修改其中的值
+		obj.select(); // 选择对象
+		document.execCommand("Copy"); // 执行浏览器复制命令
+	 	    
+	 	// 普通消息提示条
+	 	bootstrapQ.msg({
+	 		msg : '分享链接已复制！',
+	 		type : 'success',
+	 		time : 1000,
+	 	});
 	}
 	
 	function updateDocShare(){
@@ -180,13 +204,13 @@
             <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400" style="border-radius:4px 0 0 4px;"></input>
         </div>
         <div class="col-sm-3" style="padding-left:0;">
-           <span class="btn" title="打开分享链接" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:0px;">
+           <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:0px;">
 				<i class="icons open"></i>
 			</span>
-           <span class="btn" title="复制链接" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+           <span class="btn" title="复制链接" onclick="copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
 				<i class="icons copy"></i>
 			</span>
-           <span class="btn" title="二维码" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
+           <span class="btn" title="二维码" onclick="showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
 				<i class="icons qrcode"></i>
 			</span>
         </div>
