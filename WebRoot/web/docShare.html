@@ -93,6 +93,24 @@
 	 	});
 	}
 	
+	function generateSharePwd()
+	{
+		var sharePwd = randomString(6);
+		console.log("generateSharePwd() sharePwd:" + sharePwd);
+	    $("#sharePwd").val(sharePwd);
+	}
+	
+	function randomString(len) {
+		len = len || 32;
+		var $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';    /****默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1****/
+		var maxPos = $chars.length;
+		var pwd = '';
+		for (i = 0; i < len; i++) {
+			pwd += $chars.charAt(Math.floor(Math.random() * maxPos));
+		}
+		return pwd;
+	}
+	
 	function updateDocShare(){
 		console.log("updateDocShare() shareId:" + shareId);
 		
@@ -221,7 +239,7 @@
             <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码"/>
         </div>
         <div class="col-sm-3">
-           <span class="btn" style="border:1px solid #ccc; border-radius:4px;">
+           <span class="btn" onclick="generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
 				随机生成
 			</span>
         </div>
