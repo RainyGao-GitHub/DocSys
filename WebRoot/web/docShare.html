@@ -67,7 +67,7 @@
 		$(".docShareModal").fadeIn("slow");
 	}
 	
-	function closeDocShare(){
+	function hideDocShare(){
 		$(".docShareModal").fadeOut("slow");
 	}
 	
@@ -167,7 +167,6 @@
     					type : 'success',
     					time : 1000,
     				});
-            		closeDocShare();
             		return;
 	            }
                 else
@@ -211,7 +210,9 @@
     					type : 'success',
     					time : 1000,
     				});
-            		closeDocShare();
+            		
+            		//关闭对话框
+            		closeBootstrapDialog("docShare");
             		return;
 	            }
                 else
