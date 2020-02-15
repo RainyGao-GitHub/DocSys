@@ -2988,6 +2988,45 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/****************   verifyDocSharePwd ******************/
+	@RequestMapping("/verifyDocSharePwd.do")
+	public void verifyDocSharePwd(Integer shareId, String sharePwd,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getDocShare shareId:" + shareId + " sharePwd:" + sharePwd);
+		
+		ReturnAjax rt = new ReturnAjax();
+			
+		DocShare docShare = getDocShare(shareId);
+		if(docShare == null)
+		{
+			docSysErrorLog("分享信息不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		String pwd = docShare.getSharePwd();
+		if(pwd != null && !pwd.isEmpty())
+		{
+			if(sharePwd == null || sharePwd.isEmpty() || !sharePwd.equals(pwd))
+			{
+				docSysErrorLog("密码错误！", rt);
+				writeJson(rt, response);
+				return;
+			}
+			else
+			{
+				//save sharePwd into session
+				session.setAttribute("sharePwd_"+shareId, sharePwd);
+			}
+		}
+		
+		Long validHours = getValidHours(docShare.getExpireTime());
+		docShare.setValidHours(validHours);
+		rt.setData(docShare);
+		writeJson(rt, response);
+	}
+	
 	/****************   get DocShare ******************/
 	@RequestMapping("/getDocShare.do")
 	public void getDocShare(Integer shareId,
@@ -3003,6 +3042,20 @@ public class DocController extends BaseController{
 			docSysErrorLog("分享信息不存在！", rt);
 			writeJson(rt, response);
 			return;
+		}
+		
+		String pwd = docShare.getSharePwd();
+		if(pwd != null && !pwd.isEmpty())
+		{
+			//Do check the sharePwd
+			String sharePwd = (String) session.getAttribute("sharePwd_" + shareId);
+			if(sharePwd == null || sharePwd.isEmpty() || !sharePwd.equals(pwd))
+			{
+				docSysErrorLog("分享密码错误！", rt);
+				rt.setMsgData("1"); //分享密码错误或未提供
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		Long validHours = getValidHours(docShare.getExpireTime());
