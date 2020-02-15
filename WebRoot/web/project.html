@@ -4423,35 +4423,7 @@ function CompareObj(objA, objB, flag) {
 
 		if(gShareId)
 		{
-	    	$.ajax({
-	            url : "/DocSystem/Doc/getDocShare.do",
-	            type : "post",
-	            dataType : "json",
-	            data : {
-	            	shareId: gShareId,
-	            },
-	            success : function (ret) {
-	                if( "ok" == ret.status )
-	                {
-	                	var docShare = ret.data;
-	                	gRootDoc.docId = docShare.docId;
-	                	gRootDoc.path = docShare.path;
-	                	gRootDoc.name = docShare.name;
-	                	gRootDoc.type = 2;          	
-                    	$("#projectName").text(gRootDoc.name);
-	            		
-                    	SysInit();
-	                }
-	                else 
-	                {
-	                	console.log(ret.msgInfo);
-	                	alert(ret.msgInfo);
-	                }
-	            },
-	            error : function () {
-	            	showErrorMessage("服务器异常:获取文件分享信息失败");
-	            }
-	        });		
+			getDocShare(SysInit);
 		}
 		else
 		{
@@ -4459,6 +4431,64 @@ function CompareObj(objA, objB, flag) {
 			SysInit();
 		}
     });
+    
+    function getDocShare(callback)
+    {
+    	//获取DocShare
+    	$.ajax({
+            url : "/DocSystem/Doc/getDocShare.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	shareId: gShareId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                	var docShare = ret.data;
+                	gRootDoc.docId = docShare.docId;
+                	gRootDoc.path = docShare.path;
+                	gRootDoc.name = docShare.name;
+                	gRootDoc.type = 2;          	
+                	$("#projectName").text(gRootDoc.name);
+            		
+                	//成功后台回调
+                	callback && callback();
+                }
+                else 
+                {
+                	console.log(ret.msgInfo);
+                	if(ret.msgData && ret.msgData == "1")	//需要验证分享密码
+                	{
+                		showDocSharePwdVerifyPanel(gShareId, callback);
+                	}
+                	else
+                	{
+                		showErrorMessage(ret.msgInfo);
+                	}
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:获取文件分享信息失败");
+            }
+        });    	
+    }
+    
+	function showDocSharePwdVerifyPanel(shareId, successCallback)
+	{
+		console.log("showDocSharePwdVerifyPanel shareId:" + shareId);
+		bootstrapQ.dialog({
+			id: 'docSharePwdVerify',
+			url: 'docSharePwdVerify.html',
+			title: '密码验证',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				DocSharePwdVerifyPageInit(shareId, successCallback);
+			},
+		});
+	}	
     
     function globalVarInit()
    	{
