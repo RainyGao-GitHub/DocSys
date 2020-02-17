@@ -1923,7 +1923,7 @@
     }
 	function showDocInTextDialog(docInfo)
 	{
-		console.log("showTextInDialog()  docInfo:", docInfo);
+		console.log("showDocInTextDialog()  docInfo:", docInfo);
 	    if(!docInfo || docInfo == null || docInfo.id == 0)
 	    {
 	    	//未定义需要显示的文件
@@ -1946,12 +1946,12 @@
 	                shareId: gShareId,
 	            },
 	            success : function (ret1) {
-	            	console.log("showTextInDialog ret1",ret1);
+	            	console.log("showDocInTextDialog ret1",ret1);
 	            	var status = ret1.substring(0,2);
 	            	if("ok" == status)
 	            	{
 		            	var docText = ret1.substring(2);
-		            	console.log("showTextInDialog docText",docText);
+		            	console.log("showDocInTextDialog docText",docText);
 		            	
 		            	//Try to get tmpSavedDocContent
 		            	$.ajax({
@@ -1973,9 +1973,8 @@
 		            	            	switch(docInfo.fileSuffix)
 		            	            	{
 		            	            	case "md":
-		            	            		//暂时不用markdown编辑器
-		            	            		//showMarkdownInDialog(docInfo, docText, tmpSavedDocText);
-		            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
+		            	            	case "txt":
+		            	            		showTextInEditor(docInfo, docText, tmpSavedDocText);
 		            	            		break;
 		            	            	default:
 		            	            		showTextInDialog(docInfo, docText, tmpSavedDocText);
@@ -2030,7 +2029,7 @@
 	{
 		console.log("showTextInDialog docInfo.docId:" + docInfo.docId);
 		bootstrapQ.dialog({
-			id: "TextViewer",
+			id: "textViewer",
 			title: docInfo.name,
 			url: 'textViewer.html',
 			msg: '页面正在加载，请稍等...',
@@ -2039,6 +2038,23 @@
 			mstyle: getDialogStyle(),
 			callback: function(){
 				TextViewer.textViewerPageInit(docInfo, docText, tmpSavedDocText);
+			},
+		});
+	}
+	
+	function showTextInEditor(docInfo, docText, tmpSavedDocText)
+	{
+		console.log("showTextInEditor docInfo.docId:" + docInfo.docId);
+		bootstrapQ.dialog({
+			id: "textEditor",
+			title: docInfo.name,
+			url: 'textEditor.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: getDialogStyle(),
+			callback: function(){
+				TextEditor.textEditorPageInit(docInfo, docText, tmpSavedDocText);
 			},
 		});
 	}
