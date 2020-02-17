@@ -1,0 +1,41 @@
+<script src="static/ace-builds/src/ace.js" type="text/javascript" charset="utf-8"></script>
+<div id="textEditor">
+</div>
+
+<script type="text/javascript">
+var editor = ace.edit("textEditor");
+editor.setTheme("ace/theme/twilight");
+editor.session.setMode("ace/mode/javascript");
+editor.getSession().setMode("ace/mode/javascript");
+
+var TextEditor = (function () {
+    var docInfo = {};
+	var docText = "";
+	var tmpSavedDocText = "";
+	
+	function textEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
+	{
+		console.log("textEditorPageInit InputDoc:", Input_doc);
+		console.log("textEditorPageInit Input_docText:", Input_docText);
+		docInfo = Input_doc;		
+		docText = Input_docText;
+		tmpSavedDocText = Input_tmpSavedDocText;
+		
+		showText(docText);
+  	}
+    
+	function showText(content)
+	{
+		editor.setValue(docText);
+	}
+	
+    return {
+        textEditorPageInit: function(docInfo, content, tmpSavedContent){
+        	textEditorPageInit(docInfo, content, tmpSavedContent);
+        },
+    };
+})();
+
+</script>
+
+
