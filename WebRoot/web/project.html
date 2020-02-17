@@ -1805,12 +1805,32 @@
     	openDocInDialog(gDocInfo, true);
     }
 	
-	function openDocInDialog(docInfo, showUnknownFile)
+    function copyDocInfo(doc)
+    {
+    	if(doc)
+    	{
+    		var docInfo = {};
+        	docInfo.docId = doc.docId;
+    		docInfo.path = doc.path;
+    		docInfo.name = doc.name;
+    		docInfo.fileSuffix = doc.fileSuffix;	
+    		return docInfo;
+    	}
+    	return null;
+    }
+	function openDocInDialog(doc, showUnknownFile)
 	{
-		if(docInfo == null || docInfo.type == 2)
+		if(doc == null || doc.type == 2)
 		{
 			//Folder do nothing
 			return;
+		}
+		
+		//copy do to docInfo
+		var docInfo = copyDocInfo(doc);
+		if(!docInfo.fileSuffix)
+		{
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
 		}
 		
 		var url = null;
