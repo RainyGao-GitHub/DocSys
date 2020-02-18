@@ -14,12 +14,18 @@
   }
 </style>
 <div id="textEditor">
-	<pre id="editor">function foo(items) {
-    var i;
-    for (i = 0; i &lt; items.length; i++) {
-        alert("Ace Rocks " + items[i]);
-    }
-}</pre>
+	<div id="textEditorToolBar" style="height:100px;">工具条
+	</div>
+	<div class="textEditorContent" style="min-height: 600px;">
+		<pre id="editor">
+			function foo(items) {
+		    	var i;
+		    	for (i = 0; i &lt; items.length; i++) {
+		        	alert("Ace Rocks " + items[i]);
+		    	}
+			}
+		</pre>
+	</div>
 </div>
 
 <script type="text/javascript">
