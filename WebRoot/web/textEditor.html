@@ -1,12 +1,31 @@
 <script src="static/ace-builds/src/ace.js" type="text/javascript" charset="utf-8"></script>
+<style type="text/css" media="screen">
+  body {
+      overflow: hidden;
+  }
+
+  #editor {
+      margin: 0;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+  }
+</style>
 <div id="textEditor">
+	<pre id="editor">function foo(items) {
+    var i;
+    for (i = 0; i &lt; items.length; i++) {
+        alert("Ace Rocks " + items[i]);
+    }
+}</pre>
 </div>
 
 <script type="text/javascript">
-var editor = ace.edit("textEditor");
+var editor = ace.edit("editor");
 editor.setTheme("ace/theme/twilight");
 editor.session.setMode("ace/mode/javascript");
-editor.getSession().setMode("ace/mode/javascript");
 
 var TextEditor = (function () {
     var docInfo = {};
