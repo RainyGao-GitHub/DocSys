@@ -50,11 +50,12 @@ var editor = ace.edit("editor");
 editor.setTheme("ace/theme/twilight");
 editor.session.setMode("ace/mode/javascript");
 editor.setReadOnly(true); // false to make it editable
-
+	
 var TextEditor = (function () {
     var docInfo = {};
 	var docText = "";
 	var tmpSavedDocText = "";
+	var isContentChanged = false;
 	
 	function textEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
 	{
@@ -74,6 +75,10 @@ var TextEditor = (function () {
 			}
 		}
 		showText(docText);
+		
+		editor.getSession().on('change', function(e) {
+			isContentChanged = true;
+		});
   	}
     
 	function showText(content)
@@ -83,8 +88,15 @@ var TextEditor = (function () {
 	    
     function saveDoc()
 	{
+    	console.log("saveDoc docInfo.docId:" + docInfo.docId);
+		
+    	if(isContentChanged == false)
+    	{
+    	   	console.log("saveDoc there is no change");
+    		return;
+    	}
+    	
 		var content = editor.getValue();
-		console.log("saveDoc docInfo.docId:" + docInfo.docId, content);
 		$.ajax({
             url : "/DocSystem/Doc/updateDocContent.do",
             type : "post",
@@ -102,6 +114,7 @@ var TextEditor = (function () {
                 if( "ok" == ret.status ){
                     console.log("保存成功 : " , (new Date()).toLocaleDateString());
                     docText = content;
+                    isContentChanged = false;
 
                     bootstrapQ.msg({
 								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
