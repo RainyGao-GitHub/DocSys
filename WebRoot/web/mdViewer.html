@@ -1,3 +1,16 @@
+<div id="mdViewer">
+	<div id="mdViewerToolBar" style="height:100px;">
+	     <button id="btnMdExitEdit" class="btn btn-default" type="button" onclick="MdViewer.exitEdit()" style="display:none">退出编辑
+	     </button>
+	     <button id="btnMdSaveWiki" class="btn btn-default" type="button" onclick="MdViewer.saveWiki()" style="display:none">保存
+	     </button>
+	</div>
+	<div class="mdViewerContent" style="min-height: 600px;">
+		<div id="mdPlayer">
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
 var MdViewer = (function () {
 	var docInfo = {};
@@ -30,7 +43,7 @@ var MdViewer = (function () {
            height: $(document).height()-70,
            path : 'static/markdown/lib/',
            markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
-           //toolbar  : false,             // 关闭工具栏
+           toolbar  : false,             // 关闭工具栏
            codeFold : true,
            searchReplace : true,
            saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
@@ -100,9 +113,9 @@ var MdViewer = (function () {
 		//console.log("loadmd content:", content);				
 		
 		if(md)
-			{
+		{
   			editorLoadmd(content);               				
-			}
+		}
 		else
 		{
 			editorInit(content, edit);	
@@ -561,13 +574,3 @@ var MdViewer = (function () {
 })();
 
 </script>
-
-<div>
-	<div style="position:relative; right:5px; top:10px">
-	     <button id="btnMdExitEdit" class="btn btn-default" type="button" onclick="MdViewer.exitEdit()" style="display:none">退出编辑
-	     </button>
-	     <button id="btnMdSaveWiki" class="btn btn-default" type="button" onclick="MdViewer.saveWiki()" style="display:none">保存
-	     </button>
-	</div>
-	<div id="mdPlayer" class="mdPlayer" style="width: 100%; min-height:1200px;"></div>
-</div>
