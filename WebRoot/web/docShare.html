@@ -80,8 +80,7 @@
 	function copyShareLink()
 	{
 		//window.clipboardData.setData("Text",url);	//剪贴板存在兼容性问题
-		var obj=document.getElementById("copiedText");
-		obj.value=shareLink;	//修改其中的值
+		var obj=document.getElementById("shareLink");
 		obj.select(); // 选择对象
 		document.execCommand("Copy"); // 执行浏览器复制命令
 	 	    
