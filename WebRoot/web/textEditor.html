@@ -5,7 +5,7 @@
   }
 
   #editor {
-      margin: 60px 0 0 0;
+      margin: 39px 0 0 0;
       position: absolute;
       top: 0;
       bottom: 0;
@@ -14,16 +14,21 @@
   }
 </style>
 <div id="textEditor">
-	<div id="textEditorToolBar" style="height:100px;">工具条
+	<div id="textEditorToolBar" style="height:40px;">
+		<div class="editormd-toolbar" style="display: block;">
+			<div class="editormd-toolbar-container">
+				<ul class="editormd-menu">
+					<li><a href="javascript:;" onclick="TextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+					<li class="divider" unselectable="on">|</li>
+					<li><a href="javascript:;" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
+					<li><a href="javascript:;" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a>
+					</li><li class="divider" unselectable="on">|</li>
+				</ul>
+			</div>
+		</div>
 	</div>
 	<div class="textEditorContent" style="min-height: 600px;">
 		<pre id="editor">
-			function foo(items) {
-		    	var i;
-		    	for (i = 0; i &lt; items.length; i++) {
-		        	alert("Ace Rocks " + items[i]);
-		    	}
-			}
 		</pre>
 	</div>
 </div>
@@ -53,10 +58,51 @@ var TextEditor = (function () {
 	{
 		editor.setValue(docText);
 	}
-	
+	    
+    function saveDoc()
+	{
+		var content = editor.getValue();
+		console.log("saveDoc docInfo.docId:" + docInfo.docId, content);
+		$.ajax({
+            url : "/DocSystem/Doc/updateDocContent.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                reposId: gReposInfo.id,
+            	docId : docInfo.docId,
+            	path: docInfo.path,
+                name: docInfo.name,
+            	content : content,
+            	docType: 1, //RealDoc
+                shareId: gShareId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    console.log("保存成功 : " , (new Date()).toLocaleDateString());
+                    docText = content;
+
+                    bootstrapQ.msg({
+								msg : "保存成功 :" + (new Date()).toLocaleDateString(),
+								type : 'success',
+								time : 1000,
+					});
+				}else {
+                    bootstrapQ.alert("保存失败:"+ret.msgInfo);
+                }
+            },
+            error : function () {
+                bootstrapQ.alert("保存失败:服务器异常");
+            }
+        });
+    }
+
+    //开放给外部的接口
     return {
         textEditorPageInit: function(docInfo, content, tmpSavedContent){
         	textEditorPageInit(docInfo, content, tmpSavedContent);
+        },
+        saveDoc: function(){
+        	saveDoc();
         },
     };
 })();
