@@ -17,13 +17,25 @@
 	<div id="textEditorToolBar" style="height:40px;">
 		<div class="editormd-toolbar" style="display: block;">
 			<div class="editormd-toolbar-container">
-				<ul class="editormd-menu">
+				<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
 					<li><a href="javascript:;" onclick="TextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
 					<li class="divider" unselectable="on">|</li>
 					<li><a href="javascript:;" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
-					<li><a href="javascript:;" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a>
-					</li><li class="divider" unselectable="on">|</li>
+					<li><a href="javascript:;" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
+					<li class="divider" unselectable="on">|</li>
 				</ul>
+				<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
+					<li id="textEditorCloseBtn" style="display:none;">
+						<a href="javascript:;" onclick="TextEditor.exitEdit()" title="退出编辑" unselectable="on">
+							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
+						</a>
+					</li>
+					<li id="textEditorEditBtn">
+						<a href="javascript:;" onclick="TextEditor.enableEdit()" title="编辑" unselectable="on">
+							<i class="fa fa-edit" name="edit" unselectable="on"></i>
+						</a>
+					</li>
+				</ul>				
 			</div>
 		</div>
 	</div>
@@ -37,6 +49,7 @@
 var editor = ace.edit("editor");
 editor.setTheme("ace/theme/twilight");
 editor.session.setMode("ace/mode/javascript");
+editor.setReadOnly(true); // false to make it editable
 
 var TextEditor = (function () {
     var docInfo = {};
@@ -105,6 +118,129 @@ var TextEditor = (function () {
         });
     }
 
+    function enableEdit()
+    {
+		console.log("enableEdit()");
+		if(!docInfo.docId || docInfo.docId == 0)
+		{
+			showErrorMessage("请选择文件!");
+			return;
+		}
+
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 3, //LockType: Online Edit
+				reposId : gReposInfo.id, 
+				docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+                shareId: gShareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("enableEdit() ret.data",ret.data);
+					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","red");
+
+					//显示工具条和退出编辑按键
+					switchEditMode(true);
+					return;
+ 				}
+				else
+				{
+					showErrorMessage("lockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("lockDoc 异常");
+				return;
+			}
+		});
+    }
+    
+	//退出文件编辑状态
+    function exitEdit() {   	
+		console.log("exitEdit()  docInfo.docId:" + docInfo.docId);
+		if(!docInfo.docId || docInfo.docId == 0)
+		{
+			showErrorMessage("文件不存在");
+			switchEditMode(false);
+			return;
+		}
+		
+		$.ajax({
+			url : "/DocSystem/Doc/lockDoc.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				lockType : 0, //unlock the doc
+				reposId : gReposInfo.id, 
+				docId : docInfo.docId,
+				path: docInfo.path,
+				name: docInfo.name,
+				docType: 1,
+                shareId: gShareId,
+			},
+			success : function (ret) {
+				if( "ok" == ret.status)
+				{
+					console.log("exitEdit() ret:",ret.data);
+					$("[dataId='"+ docInfo.docId +"']").children("div:first-child").css("color","black");
+					switchEditMode(false);
+					return;
+ 				}
+				else
+				{
+					showErrorMessage("exitEdit() unlockDoc Error:" + ret.msgInfo);
+					return;
+				}
+			},
+			error : function () 
+			{
+				showErrorMessage("exitEdit() unlockDoc 异常");
+				return;
+			}
+		});
+	}
+
+	function switchEditMode(edit)
+	{
+		if(edit == true)
+		{
+			//显示工具条
+			$("#toolBarMenu").show();
+			
+			//显示退出编辑按键
+			$("#textEditorCloseBtn").show();
+			
+			//隐藏编辑按键
+			$("#textEditorEditBtn").hide();
+
+			//Enable Edit
+			editor.setReadOnly(false);
+		}
+		else
+		{
+			//隐藏工具条
+			$("#toolBarMenu").hide();
+			
+			//隐藏退出编辑按键
+			$("#textEditorCloseBtn").hide();
+		
+			//显示编辑按键
+			$("#textEditorEditBtn").show();			
+			
+			//Disable Edit
+			editor.setReadOnly(true);
+		}
+	}
+
     //开放给外部的接口
     return {
         textEditorPageInit: function(docInfo, content, tmpSavedContent){
@@ -112,6 +248,12 @@ var TextEditor = (function () {
         },
         saveDoc: function(){
         	saveDoc();
+        },
+        enableEdit: function(){
+        	enableEdit();
+        },
+        exitEdit: function(){
+        	exitEdit();
         },
     };
 })();
