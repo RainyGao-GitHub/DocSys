@@ -49,8 +49,17 @@ var TextEditor = (function () {
 		console.log("textEditorPageInit Input_docText:", Input_docText);
 		docInfo = Input_doc;		
 		docText = Input_docText;
-		tmpSavedDocText = Input_tmpSavedDocText;
-		
+		tmpSavedDocText = Input_tmpSavedDocText;		
+
+		if(docInfo.fileSuffix)
+		{
+			switch(docInfo.fileSuffix)
+			{
+			case "md":
+				editor.session.setMode("ace/mode/markdown");
+				break;
+			}
+		}
 		showText(docText);
   	}
     
