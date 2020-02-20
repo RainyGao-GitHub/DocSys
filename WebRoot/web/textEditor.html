@@ -48,7 +48,7 @@
 <script type="text/javascript">
 var editor = ace.edit("editor");
 editor.setTheme("ace/theme/twilight");
-editor.session.setMode("ace/mode/javascript");
+editor.session.setMode("ace/mode/Plain");
 editor.setReadOnly(true); // false to make it editable
 	
 var TextEditor = (function () {
@@ -73,7 +73,6 @@ var TextEditor = (function () {
 				editor.session.setMode("ace/mode/markdown");
 				$("#textEditorEditBtn").show();		
 				break;
-        	case "txt":
         	case "cpp":
         	case "hpp":
         	case "c":
@@ -81,8 +80,12 @@ var TextEditor = (function () {
         	case "java":
         	case "py":
         	case "js":
+        		editor.session.setMode("ace/mode/javascript");
 				$("#textEditorEditBtn").show();		
 				break;
+        	case "txt":
+				$("#textEditorEditBtn").show();
+        		break;
 			}
 		}
 		showText(docText);
