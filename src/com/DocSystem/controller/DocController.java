@@ -1130,7 +1130,7 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("updateDocContent  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " docType:" + docType+ " shareId:" + shareId);
-		System.out.println("updateDocContent content:[" + content + "]");
+		//System.out.println("updateDocContent content:[" + content + "]");
 		//System.out.println("content size: " + content.length());
 			
 		ReturnAjax rt = new ReturnAjax();
