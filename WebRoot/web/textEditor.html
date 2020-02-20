@@ -30,7 +30,7 @@
 							<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
 						</a>
 					</li>
-					<li id="textEditorEditBtn">
+					<li id="textEditorEditBtn" style="display:none;">
 						<a href="javascript:;" onclick="TextEditor.enableEdit()" title="编辑" unselectable="on">
 							<i class="fa fa-edit" name="edit" unselectable="on"></i>
 						</a>
@@ -71,6 +71,17 @@ var TextEditor = (function () {
 			{
 			case "md":
 				editor.session.setMode("ace/mode/markdown");
+				$("#textEditorEditBtn").show();		
+				break;
+        	case "txt":
+        	case "cpp":
+        	case "hpp":
+        	case "c":
+        	case "h":
+        	case "java":
+        	case "py":
+        	case "js":
+				$("#textEditorEditBtn").show();		
 				break;
 			}
 		}
