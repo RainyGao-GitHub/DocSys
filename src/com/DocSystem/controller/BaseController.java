@@ -8542,13 +8542,23 @@ public class BaseController  extends BaseFunction{
     private static boolean run(String tomcatPath, String shName) {
         Runtime rt = Runtime.getRuntime();
         Process ps = null;
- 
         try {
             String os = System.getProperty("os.name");
+            String shellScriptPath = tomcatPath + File.separator + "bin" + File.separator + shName;               	
             if (os.startsWith("Windows")) {
-                ps = rt.exec("cmd /c " + tomcatPath + File.separator + "bin" + File.separator + shName + ".bat", (String[])null, new File(tomcatPath));
+            	shellScriptPath = shellScriptPath + ".bat";
+            	if(isFileExist(shellScriptPath) == false)
+            	{
+            		return false;
+            	}
+                ps = rt.exec("cmd /c " + shellScriptPath, (String[])null, new File(tomcatPath));
             } else {
-                ps = rt.exec("sh " + tomcatPath + File.separator + "bin" + File.separator + shName + ".sh", (String[])null, new File(tomcatPath));
+            	shellScriptPath = shellScriptPath + ".sh";
+               	if(isFileExist(shellScriptPath) == false)
+            	{
+            		return false;
+            	}
+            	ps = rt.exec("sh " + shellScriptPath, (String[])null, new File(tomcatPath));
             }
  
             InputStream is = ps.getInputStream();
