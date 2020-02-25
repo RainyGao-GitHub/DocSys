@@ -47,7 +47,7 @@
 
 <script type="text/javascript">
 var editor = ace.edit("editor");
-editor.setTheme("ace/theme/twilight");
+editor.setTheme("ace/theme/Chrome");
 editor.session.setMode("ace/mode/Plain");
 editor.setReadOnly(true); // false to make it editable
 	
@@ -80,8 +80,37 @@ var TextEditor = (function () {
         	case "java":
         	case "py":
         	case "js":
+        	case "go":
         		editor.session.setMode("ace/mode/javascript");
 				$("#textEditorEditBtn").show();		
+				break;
+        	case "css":
+        		editor.session.setMode("ace/mode/css");
+				$("#textEditorEditBtn").show();		
+				break;
+        	case "html":
+        		editor.session.setMode("ace/mode/HTML");
+				$("#textEditorEditBtn").show();		
+				break;
+        	case "json":
+        		editor.session.setMode("ace/mode/JSON");
+				$("#textEditorEditBtn").show();		
+				break;
+        	case "sql":
+        		editor.session.setMode("ace/mode/SQL");
+				$("#textEditorEditBtn").show();	
+				break;
+        	case "xml":
+        		editor.session.setMode("ace/mode/XML");
+				$("#textEditorEditBtn").show();	
+				break;
+        	case "php":
+        		editor.session.setMode("ace/mode/PHP");
+				$("#textEditorEditBtn").show();	
+				break;
+        	case "sh":
+        		editor.session.setMode("ace/mode/SH");
+				$("#textEditorEditBtn").show();	
 				break;
         	case "txt":
 				$("#textEditorEditBtn").show();
