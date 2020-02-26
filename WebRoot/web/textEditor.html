@@ -65,58 +65,10 @@ var TextEditor = (function () {
 		docText = Input_docText;
 		tmpSavedDocText = Input_tmpSavedDocText;		
 
-		if(docInfo.fileSuffix)
-		{
-			switch(docInfo.fileSuffix)
-			{
-			case "md":
-				editor.session.setMode("ace/mode/markdown");
-				$("#textEditorEditBtn").show();		
-				break;
-        	case "cpp":
-        	case "hpp":
-        	case "c":
-        	case "h":
-        	case "java":
-        	case "py":
-        	case "js":
-        	case "go":
-        		editor.session.setMode("ace/mode/javascript");
-				$("#textEditorEditBtn").show();		
-				break;
-        	case "css":
-        		editor.session.setMode("ace/mode/css");
-				$("#textEditorEditBtn").show();		
-				break;
-        	case "html":
-        		editor.session.setMode("ace/mode/HTML");
-				$("#textEditorEditBtn").show();		
-				break;
-        	case "json":
-        		editor.session.setMode("ace/mode/JSON");
-				$("#textEditorEditBtn").show();		
-				break;
-        	case "sql":
-        		editor.session.setMode("ace/mode/SQL");
-				$("#textEditorEditBtn").show();	
-				break;
-        	case "xml":
-        		editor.session.setMode("ace/mode/XML");
-				$("#textEditorEditBtn").show();	
-				break;
-        	case "php":
-        		editor.session.setMode("ace/mode/PHP");
-				$("#textEditorEditBtn").show();	
-				break;
-        	case "sh":
-        		editor.session.setMode("ace/mode/SH");
-				$("#textEditorEditBtn").show();	
-				break;
-        	case "txt":
-				$("#textEditorEditBtn").show();
-        		break;
-			}
-		}
+		checkAndSetFileShowMode(docInfo);
+		
+		checkAndSetEditBtn(docInfo);
+		
 		showText(docText);
 		
 		editor.getSession().on('change', function(e) {
@@ -296,6 +248,252 @@ var TextEditor = (function () {
 			editor.setReadOnly(true);
 		}
 	}
+	
+	function checkAndSetEditBtn(docInfo)
+	{
+		if(docInfo.fileSuffix)
+		{
+			switch(docInfo.fileSuffix)
+			{
+			case "md":
+	    	case "cpp":
+	    	case "hpp":
+	    	case "c":
+	    	case "h":
+	    	case "java":
+	    	case "py":
+	    	case "go":
+	    	case "js":
+	    	case "css":
+	    	case "html":
+	    	case "json":
+	    	case "sql":
+	    	case "xml":
+	    	case "php":
+	    	case "sh":
+	    	case "txt":
+				$("#textEditorEditBtn").show();
+	    		break;
+			}
+		}
+	}
+	
+	function checkAndSetFileShowMode(docInfo)
+	{
+		var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
+		editor.session.setMode("ace/mode/" + showMode);
+	}
+
+	function getFileShowMode(name, suffix)
+	{	
+        var showMode = fileIconTypeMap[name];
+		if (undefined == showMode)
+		{
+			showMode = fileIconTypeMap[suffix];
+			if(undefined == showMode)
+			{
+				return "Plain";
+			}
+		}
+		
+		return showMode;
+	}
+	
+	
+	
+	var fileShowModeMap = {
+			abap	:	"ABAP",
+			abc		:	"ABC",
+			as		:	"ActionScript",
+			ada		:	"ADA",
+			adb		:	"ADA",
+    		htaccess:	"Apache_Conf",
+    		htpasswd:	"Apache_Conf",
+    		conf	:	"Apache_Conf",
+    		htaccess:	"Apache_Conf",
+    		htgroups:	"Apache_Conf",
+    		htpasswd:	"Apache_Conf",
+    		asciidoc:	"AsciiDoc",
+    		adoc	:	"AsciiDoc",
+    		dsl		:	"ASL",
+    		asl		:	"ASL",
+    		asm		:	"Assembly_x86",
+    		ahk		:	"AutoHotKey",
+    		apex	:	"Apex",
+    		cls		:	"Apex",
+    		trigger	:	"Apex",
+    		tgr		:	"Apex",
+    		aql		:	"AQL",
+    		cmd		:	"BatchFile",
+    		bat		:	"BatchFile",
+    		cpp		:	"C_Cpp",
+    		c		:	"C_Cpp",
+    		cc		:	"C_Cpp",
+    		cxx		:	"C_Cpp",
+    		h		:	"C_Cpp",
+    		hh		:	"C_Cpp",
+    		hpp		:	"C_Cpp",
+    		ino		:	"C_Cpp",
+    		c9search_results	:	"C9Search",
+    		cr		:	"Cirru",
+    		cirru	:	"Cirru",
+    		clj		:	"Clojure",		
+    		cljs	:	"Clojure",		
+    		CBL		:	"Cobol",		
+    		COB		:	"Cobol",		
+    		coffee	:	"coffee",		
+    		cf	:	"coffee",		
+    		cson	:	"coffee",		
+    		Cakefile:	"coffee",		
+    		cfm		:	"ColdFusion",		
+    		cs		:	"CSharp",		
+    		csd		:	"Csound_Document",		
+    		orc		:	"Csound_Orchestra",		
+    		sco		:	"Csound_Score",		
+    		css		:	"CSS",		
+    		curly	:	"Curly",		
+    		d		:	"D",		
+    		di		:	"D",		
+    		dart	:	"Dart",		
+    		diff	:	"Diff",		
+    		patch	:	"Diff",		
+    		Dockerfile		:	"Dockerfile",		
+    		dot		:	"Dot",		
+    		drl		:	"Drools",		
+    		edi		:	"Edifact",		
+    		e		:	"Eiffel",		
+    		ge		:	"Eiffel",		
+    		ejs		:	"EJS",		
+    		ex		:	"Elixir",		
+    		exs		:	"Elixir",		
+    		elm		:	"Elm",		
+    		erl		:	"Erlang",	
+    		hrl		:	"Erlang",	
+    		frt		:	"Forth",		
+    		fs		:	"Forth",		
+    		ldr		:	"Forth",		
+    		fth		:	"Forth",		
+    		4th		:	"Forth",		
+    		f		:	"Fortran",		
+    		f90		:	"Fortran",		
+    		fsi		:	"FSharp",		
+    		fs		:	"FSharp",		
+    		ml		:	"FSharp",		
+    		mli		:	"FSharp",		
+    		fsx		:	"FSharp",		
+    		fsscript	:	"FSharp",		
+    		fsl		:	"FSL",		
+    		ftl		:	"FTL",		
+    		gcode	:	"Gcode",
+    		feature	:	"Gherkin",
+    		gitignore		:	"Gitignore",
+    		glsl	:	"Glsl",
+    		frag	:	"Glsl",
+    		vert	:	"Glsl",
+    		gbs		:	"Gobstones",
+    		go		:	"golang",
+    		ggl		:	"GraphQLSchema",
+    		groovy	:	"Groovy",
+    		haml	:	"HAML",
+    		hbs		:	"Handlebars",
+    		handlebars		:	"Handlebars",
+    		tpl		:	"Handlebars",
+    		mustache		:	"Handlebars",
+    		hs		:	"Haskell",
+    		cabal	:	"Haskell_Cabal",
+    		hx		:	"haXe",
+    		hjson		:	"Hjson",
+    		html		:	"HTML",
+    		htm		:	"HTML",
+    		xhtml		:	"HTML",
+    		vue		:	"HTML",
+    		we		:	"HTML",
+    		wpy		:	"HTML",
+    		eex		:	"HTML_Elixir",
+    		erb		:	"HTML_Ruby",
+    		rhtml		:	"HTML_Ruby",
+    		ini		:	"INI",
+    		conf	:	"INI",
+    		cfg		:	"INI",
+    		prefs	:	"INI",
+    		io		:	"Io",
+    		jack	:	"Jack",
+    		jade	:	"Jade",
+    		pug		:	"Jade",
+    		java	:	"Java",
+    		js		:	"JavaScript",
+    		jsm		:	"JavaScript",
+    		jsx		:	"JavaScript",
+    		json5	:	"JSON5",
+    		jq		:	"JSONiq",
+    		jsp		:	"JSP",
+    		jssm	:	"JSSM",
+    		jssm_state	:	"JSSM",
+    		jsx		:	"JSX",
+    		jl		:	"Julia",
+    		kt		:	"Kotlin",
+    		kts		:	"Kotlin",
+    		tex		:	"LaTeX",
+    		latex	:	"LaTeX",
+    		ltx		:	"LaTeX",
+    		bib		:	"LaTeX",
+    		less	:	"LESS",
+    		liquid		:	"Liquid",
+    		lisp		:	"Lisp",
+    		logic		:	"LiveScript",
+    		lql			:	"LiveScript",
+    		lsl			:	"LSL",
+    		lua			:	"Lua",
+    		lp			:	"LuaPage",
+    		lucene		:	"Lucene",
+    		Makefile		:	"Makefile",
+    		GNUmakefile		:	"Makefile",
+    		makefile		:	"Makefile",
+    		OCamlMakefile	:	"Makefile",
+    		make			:	"Makefile",
+	        md		:	"Markdown",
+	        markdown:	"Markdown",
+	        mask	:	"Mask",
+	        matlab 	:	"MATLAB",
+	        php 	: 	"PHP",
+	        inc 	: 	"PHP",
+	        phtml 	: 	"PHP",
+	        shtml 	: 	"PHP",
+	        php3 	: 	"PHP",
+	        php4 	: 	"PHP",
+	        php5	: 	"PHP",
+	        phps 	: 	"PHP",
+	        phpt 	: 	"PHP",
+	        aw	 	: 	"PHP",
+	        ctp 	: 	"PHP",
+	        module 	: 	"PHP",
+	        py		:   "Python",
+	        txt		:	"Text",
+	        vbs		:    "VBScript",
+	        v		:    "Verilog",
+	        vh		:    "Verilog",
+	        sv		:    "Verilog",
+	        svh		:    "Verilog",
+	        vhd		:    "VHDL",
+	        vhdl	:    "VHDL",
+	        xml		:    "XML",
+	        rdf		:    "XML",
+	        rss		:    "XML",
+	        wsdl	:    "XML",
+	        xslt	:    "XML",
+	        atom	:    "XML",
+	        mathml	:    "XML",
+	        mml		:    "XML",
+	        xul		:    "XML",
+	        xbl		:    "XML",
+	        xaml	:    "XML",
+	        xq		:    "XQuery",
+	        yaml	:    "YAML",
+	        yml		:    "YAML",
+	        xq		:    "XQuery",
+	        zeek	:    "Zeek",
+	        bro		:    "Zeek",
+	};
 
     //开放给外部的接口
     return {
