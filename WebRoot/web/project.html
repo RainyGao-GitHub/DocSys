@@ -1969,12 +1969,12 @@
 	                shareId: gShareId,
 	            },
 	            success : function (ret1) {
-	            	console.log("showDocInTextDialog ret1",ret1);
+	            	//console.log("showDocInTextDialog ret1",ret1);
 	            	var status = ret1.substring(0,2);
 	            	if("ok" == status)
 	            	{
 		            	var docText = ret1.substring(2);
-		            	console.log("showDocInTextDialog docText",docText);
+		            	//console.log("showDocInTextDialog docText",docText);
 		            	
 		            	//Try to get tmpSavedDocContent
 		            	$.ajax({
