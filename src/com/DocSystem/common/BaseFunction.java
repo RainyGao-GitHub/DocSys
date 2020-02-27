@@ -1304,10 +1304,12 @@ public class BaseFunction{
 	{
 		String [] encodeCheckList = {
 				 "UTF-8",
-				 "ASCII",
-				 "ISO-8859-1",
+				 "GBK",
 				 "GB2312",
+				 "ISO-8859-1",
+				 "ASCII",
 				 "UTF-16",
+				 "GB18030",
 		};
 		for(int i=0; i<encodeCheckList.length; i++)
 		{
@@ -1449,14 +1451,14 @@ public class BaseFunction{
 			return null;
 		}
 		
-		if(size < 100)
+		if(size < 600)
 		{
-			encodeDetectBufLen = (size/2) *2;
+			encodeDetectBufLen = size;
 			encodeDetectBuf = new byte[encodeDetectBufLen];
 		}
 		else
 		{
-			encodeDetectBufLen = 100;
+			encodeDetectBufLen = 600;
 			encodeDetectBuf = new byte[encodeDetectBufLen];
 		}
 		System.arraycopy(buffer, 0, encodeDetectBuf, 0, encodeDetectBufLen);
