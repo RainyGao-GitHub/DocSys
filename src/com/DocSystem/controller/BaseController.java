@@ -2692,9 +2692,6 @@ public class BaseController  extends BaseFunction{
 						addIndexForDocName(repos, doc, rt);
 						addIndexForRDoc(repos, doc);
 						addIndexForVDoc(repos, doc);
-						
-						System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 索引不存在，需要遍历子目录");
-						subDocSyncupFlag = 2;	//对于新增的index需要强行扫描子目录
 					}
 				}
 				else
@@ -2738,7 +2735,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc localChangeDoc = docChange.getDoc();
-					rebuildIndexForDoc(repos,localChangeDoc, null, null, rt, 0, true); //强行更新localChangeDoc（不更新子目录）
+					rebuildIndexForDoc(repos,localChangeDoc, null, null, rt, subDocSyncupFlag, force);
 				}
 			}
 			if(remoteChanges != null)
@@ -2748,7 +2745,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc remoteChangeDoc = docChange.getDoc();
-					rebuildIndexForDoc(repos,remoteChangeDoc, null, null, rt, 0, true);//强行更新remoteChangeDoc（不更新子目录）
+					rebuildIndexForDoc(repos,remoteChangeDoc, null, null, rt, subDocSyncupFlag, force);
 				}
 			}	
 			return true;
