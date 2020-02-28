@@ -2655,6 +2655,7 @@ public class BaseController  extends BaseFunction{
 	private boolean rebuildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
 			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
+		System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag + " force:" + force);
 		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
 		{
 			if(force)
