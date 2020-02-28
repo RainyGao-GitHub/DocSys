@@ -2591,7 +2591,7 @@ public class BaseController  extends BaseFunction{
 				deleteRDocIndexLib(repos);
 				deleteVDocIndexLib(repos);
 				//Build All Index For Doc
-				buildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag, true);
+				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
 			}
 			else
 			{
@@ -2692,6 +2692,7 @@ public class BaseController  extends BaseFunction{
 						addIndexForRDoc(repos, doc);
 						addIndexForVDoc(repos, doc);
 						
+						System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 索引不存在，需要遍历子目录");
 						subDocSyncupFlag = 2;	//对于新增的index需要强行扫描子目录
 					}
 				}
