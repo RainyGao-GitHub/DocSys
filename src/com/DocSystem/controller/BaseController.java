@@ -2670,7 +2670,50 @@ public class BaseController  extends BaseFunction{
 			}
 			else	//update the index when local change
 			{
-				
+				Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
+				Doc localDoc = fsGetDoc(repos, doc);
+				if(indexDoc == null)
+				{
+					if(localDoc == null || localDoc.getType() == 0)
+					{
+						deleteIndexForRDoc(repos, doc);
+						deleteIndexForRDoc(repos, doc);
+					}
+					else
+					{
+						//update the size and editTime
+						doc.setSize(localDoc.getSize());
+						doc.setLatestEditTime(localDoc.getLatestEditTime());
+
+						addIndexForDocName(repos, doc, rt);
+						addIndexForRDoc(repos, doc);
+						addIndexForVDoc(repos, doc);
+						
+						subDocSyncupFlag = 2;	//对于新增的index需要强行扫描子目录
+					}
+				}
+				else
+				{
+					//文件大小变化了则一定是变化了
+					if(!indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))
+					{
+						//update the size and editTime
+						doc.setSize(localDoc.getSize());
+						doc.setLatestEditTime(localDoc.getLatestEditTime());
+						
+						//Refresh Index For DocName
+						deleteIndexForDocName(repos, doc, rt);
+						addIndexForDocName(repos, doc, rt);
+						
+						//Refresh Index For RealDoc
+						deleteIndexForRDoc(repos, doc);
+						addIndexForRDoc(repos, doc);
+						
+						//Refresh Index For VDoc
+						deleteIndexForVDoc(repos, doc);
+						addIndexForVDoc(repos, doc);
+					}					
+				}
 			}
 		}
 		
@@ -2690,7 +2733,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc localChangeDoc = docChange.getDoc();
-					if(indexGetDoc(repos, localChangeDoc, false) == null)
+					if(indexGetDoc(repos, localChangeDoc, INDEX_DOC_NAME, false) == null)
 					{
 						//System.out.println("rebuildIndexForDoc index 已存在:" + localChangeDoc.getDocId() + localChangeDoc.getName());
 						buildIndexForDoc(repos,localChangeDoc, null, null, rt, 0); //不更新子目录
@@ -2704,7 +2747,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc remoteChangeDoc = docChange.getDoc();
-					if(indexGetDoc(repos, remoteChangeDoc, false) == null)
+					if(indexGetDoc(repos, remoteChangeDoc, INDEX_DOC_NAME, false) == null)
 					{
 						System.out.println("rebuildIndexForDoc index 已存在:" + remoteChangeDoc.getDocId() + remoteChangeDoc.getName());
 						buildIndexForDoc(repos, remoteChangeDoc, null, null, rt, 0); //不更新子目录
@@ -3740,13 +3783,13 @@ public class BaseController  extends BaseFunction{
 		return remoteDoc;
 	}
 	
-	protected Doc indexGetDoc(Repos repos, Doc doc, boolean dupCheck) 
+	protected Doc indexGetDoc(Repos repos, Doc doc, Integer IndexLibType, boolean dupCheck) 
 	{
 		Doc qDoc = new Doc();
 		qDoc.setVid(doc.getVid());
 		qDoc.setDocId(doc.getDocId());
 		
-		String indexLib = getIndexLibPath(repos, 0);
+		String indexLib = getIndexLibPath(repos, IndexLibType);
 		List<Doc> list = LuceneUtil2.getDocList(repos, doc, indexLib);
 		if(list == null || list.size() == 0)
 		{
@@ -6868,6 +6911,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
     /************************* DocSys全文搜索操作接口 ***********************************/
+    //indexLibType
+    protected final static int INDEX_DOC_NAME	=0;
+    protected final static int INDEX_R_DOC		=1;
+    protected final static int INDEX_V_DOC		=2;
 	protected static String getIndexLibPath(Repos repos, int indexLibType) 
 	{
 		String lucenePath = repos.getPath() + "DocSysLucene/";
