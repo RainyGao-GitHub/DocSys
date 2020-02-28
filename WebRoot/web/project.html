@@ -3830,6 +3830,11 @@ function CompareObj(objA, objB, flag) {
 	function showDocList(node)
 	{
 		console.log("showDocList() node:", node);
+		if(DocListState == 1)
+		{
+			console.log("showDocList() it is searchResult:");			
+			return;
+		}
 		
 		var docId = gRootDoc.docId;
 		var path = gRootDoc.path;
@@ -3890,6 +3895,7 @@ function CompareObj(objA, objB, flag) {
 	function backToParentDoc()
 	{
 		console.log("backToParentDoc() gDocInfo.docId:" + gDocInfo.docId);
+		DocListState = 0;
 		if(!gDocInfo.docId || gDocInfo.docId == gRootDoc.docId)	//reach the top level
 		{			
 			return;
