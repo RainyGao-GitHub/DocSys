@@ -1915,7 +1915,7 @@ public class DocController extends BaseController{
 			return true;
 		case 2:
 			localEntry = fsGetDoc(repos, doc);
-			indexDoc = indexGetDoc(repos, doc, false);
+			indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
 			if(false == isDocLocalChanged(repos, indexDoc,localEntry))	//本地未变化，则直接返回链接
 			{
 				return false;
@@ -1924,7 +1924,7 @@ public class DocController extends BaseController{
 		case 3:
 		case 4:
 			Doc remoteEntry = verReposGetDoc(repos, doc, null);
-			indexDoc = indexGetDoc(repos, doc, false);
+			indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
 			if(false == isDocRemoteChanged(repos, indexDoc,remoteEntry))	//本地未变化，则直接返回链接
 			{
 				return false;
