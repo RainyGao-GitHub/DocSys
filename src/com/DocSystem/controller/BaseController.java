@@ -2595,13 +2595,13 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				rebuildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
+				rebuildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag, true);
 			}
 		}
 		else
 		{
 			System.out.println("**************************** syncupForDocChange() 刷新Index for: " + doc.getDocId());
-			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag);	
+			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag, false);	
 		}
 		return realDocSyncResult;
 	}
@@ -2650,21 +2650,28 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean rebuildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
-			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
+			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
 		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
 		{
-			//Refresh Index For DocName
-			deleteIndexForDocName(repos, doc, rt);
-			addIndexForDocName(repos, doc, rt);
-			
-			//Refresh Index For RealDoc
-			deleteIndexForRDoc(repos, doc);
-			addIndexForRDoc(repos, doc);
-			
-			//Refresh Index For VDoc
-			deleteIndexForVDoc(repos, doc);
-			addIndexForVDoc(repos, doc);
+			if(force)
+			{
+				//Refresh Index For DocName
+				deleteIndexForDocName(repos, doc, rt);
+				addIndexForDocName(repos, doc, rt);
+				
+				//Refresh Index For RealDoc
+				deleteIndexForRDoc(repos, doc);
+				addIndexForRDoc(repos, doc);
+				
+				//Refresh Index For VDoc
+				deleteIndexForVDoc(repos, doc);
+				addIndexForVDoc(repos, doc);
+			}
+			else	//update the index when local change
+			{
+				
+			}
 		}
 		
 		if(doc.getType() == null || doc.getType() != 2)
@@ -2724,7 +2731,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0; i< localEntryList.size(); i++)
     	{
     		Doc subDoc = localEntryList.get(i);
-    		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
+    		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
     	}
 		return true;
 	}
