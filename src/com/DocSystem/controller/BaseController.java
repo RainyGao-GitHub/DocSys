@@ -2591,7 +2591,7 @@ public class BaseController  extends BaseFunction{
 				deleteRDocIndexLib(repos);
 				deleteVDocIndexLib(repos);
 				//Build All Index For Doc
-				buildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag);
+				buildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag, true);
 			}
 			else
 			{
@@ -2607,14 +2607,17 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean buildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
-			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag) 
+			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
-		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
+		if(force == false)
 		{
-			addIndexForDocName(repos, doc, rt);
-			addIndexForRDoc(repos, doc);
-			addIndexForVDoc(repos, doc);
-		}
+			return buildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
+		}	
+		
+		//强行添加Index
+		addIndexForDocName(repos, doc, rt);
+		addIndexForRDoc(repos, doc);
+		addIndexForVDoc(repos, doc);			
 		
 		if(doc.getType() == null || doc.getType() != 2)
 		{
@@ -2644,7 +2647,7 @@ public class BaseController  extends BaseFunction{
     	for(int i=0; i< localEntryList.size(); i++)
     	{
     		Doc subDoc = localEntryList.get(i);
-    		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag);
+    		buildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
     	}
 		return true;
 	}
@@ -2733,11 +2736,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc localChangeDoc = docChange.getDoc();
-					if(indexGetDoc(repos, localChangeDoc, INDEX_DOC_NAME, false) == null)
-					{
-						//System.out.println("rebuildIndexForDoc index 已存在:" + localChangeDoc.getDocId() + localChangeDoc.getName());
-						buildIndexForDoc(repos,localChangeDoc, null, null, rt, 0); //不更新子目录
-					}
+					rebuildIndexForDoc(repos,localChangeDoc, null, null, rt, 0, true); //强行更新localChangeDoc（不更新子目录）
 				}
 			}
 			if(remoteChanges != null)
@@ -2747,11 +2746,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc remoteChangeDoc = docChange.getDoc();
-					if(indexGetDoc(repos, remoteChangeDoc, INDEX_DOC_NAME, false) == null)
-					{
-						System.out.println("rebuildIndexForDoc index 已存在:" + remoteChangeDoc.getDocId() + remoteChangeDoc.getName());
-						buildIndexForDoc(repos, remoteChangeDoc, null, null, rt, 0); //不更新子目录
-					}
+					rebuildIndexForDoc(repos,remoteChangeDoc, null, null, rt, 0, true);//强行更新remoteChangeDoc（不更新子目录）
 				}
 			}	
 			return true;
