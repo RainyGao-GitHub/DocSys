@@ -150,15 +150,18 @@
 	                	<i class="icons plus" style="margin-left:-8px;margin-top:-2px;"></i>
 	                </button>
 	                <ul class="dropdown-menu" role="menu">
-	                    <li id="mobileLoginBtn">
-	                        <a onclick="showLoginPanel()" title="用户登录">登录</a>
+	                    <li>
+	                    	<a onclick="newDocEx(1)">新建文件</a>
 	                    </li>
-	                    <li id="mobileUploadDocBtn">
-	                        <a onclick="uploadFilesEx()" title="上传文件">上传文件</a>
-	                    </li>
-	                    <li id="mobileLogoutBtn">
-	                        <a onclick="userLogout()" title="退出登录">退出登录</a>
-	                    </li>
+						<li>
+							<a onclick="newDocEx(2)">新建文件夹</a>
+						</li>
+						<li>
+							<a onclick="uploadFilesEx();">上传文件</a>
+						</li>
+						<li>
+							<a onclick="uploadDirEx()">上传文件夹</a>
+						</li>
 	                </ul>
 	            </div>  
             </div>
@@ -3376,24 +3379,14 @@ function CompareObj(objA, objB, flag) {
     	if(user)
     	{
         	$('#loginBtn').hide();
-        	$('#mobileLoginBtn').hide();
-        	
         	$('#logoutBtn').show();
-           	$('#mobileLogoutBtn').show();
-           	$('#mobileUploadDocBtn').show();
-           	
-        	$('#modeSwitchBtn').show();
+           	$('#modeSwitchBtn').show();
     	}
     	else
     	{
         	$('#loginBtn').show();
-        	$('#mobileLoginBtn').show();
-        	
         	$('#logoutBtn').hide();
-           	$('#mobileLogoutBtn').hide();
-           	$('#mobileUploadDocBtn').hide();
-           	
-        	$('#modeSwitchBtn').hide();
+           	$('#modeSwitchBtn').hide();
     	}
     }
 	
