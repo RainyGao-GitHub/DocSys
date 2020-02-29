@@ -341,4 +341,13 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 	background-position: 0px 0px;
    	background-size: 18px 18px; 
 }
-
+.icons.more{
+	background: url("./img/more.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
+.icons.more{
+	background: url("./img/detail.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
