@@ -3454,11 +3454,25 @@ function CompareObj(objA, objB, flag) {
        			
        			if(data[i].state && data[i].state != 0)
        			{
-   	        		str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';   
+       				if(node.type == 2)
+       				{
+   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons detail" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';   
+       				}
+       				else
+       				{
+   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';          					
+       				}
    	        	}
    	           	else
    	           	{
-   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
+   	           		if(node.type == 2)
+   	           		{
+	   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons detail" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+   	           		}
+   	           		else
+   	           		{
+	   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';   	           			
+   	           		}
    	           	}	 
      	    }
            	$("#secondList").html(str);
@@ -3515,9 +3529,16 @@ function CompareObj(objA, objB, flag) {
          				+' dataType=' + node.type 
          				+' dataSize=' + node.size 
          				+' createTime='+ node.createTime 
-         				+' latestEditTime=' + node.latestEditTime
-         				+' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="glyphicon glyphicon-new-window" onclick="fx(this,event)"></i><i class="glyphicon glyphicon-download-alt" onclick="xz(this,event)"></i><i onclick="sc(this,event)" class="glyphicon glyphicon-trash"></i><i onclick="showContextMenu(this,event)" class="glyphicon glyphicon-list"></i></div></li>';
-		   $("#secondList").append(nodeStr);
+         				+' latestEditTime=' + node.latestEditTime;
+         	if(node.type == 2)
+         	{
+         		nodeStr += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons detail" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+         	}
+         	else
+         	{
+         		nodeStr += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left nowrap ellipsis" style="width: 60%;">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';             		
+         	}
+         	$("#secondList").append(nodeStr);
 		}
 
     	//Delete Node
@@ -3729,6 +3750,37 @@ function CompareObj(objA, objB, flag) {
 		console.log("node was not exists in current zTree, getInitMenu for:" + docId  + " " + path + name);
 		getInitMenu(docId, path, name);
  	}
+
+ 	//显示
+ 	function xs(obj,event){
+		var docListNode = $(obj).parents('li');
+
+ 		var docId = docListNode.attr('dataId');
+   	 	var pid = docListNode.attr('dataPid');
+   	 	var path = docListNode.attr('dataPath');
+   	 	var name = docListNode.attr('dataName');
+   	 	var type = docListNode.attr('dataType');
+   	 	var latestEditTime = docListNode.attr('latestEditTime');
+	 	
+   	 	var node = {};
+   	 	node.vid = gReposInfo.id;
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
+   		node.latestEditTime = latestEditTime;
+ 		
+ 		console.log("xs() node:", node);
+ 		
+		//显示预览或备注
+		getAndShowDoc(node, 1, false);
+
+		showRightDiv();
+		 	
+		 //在zTree上选中该doc
+		 //zTreeSelectDoc(docId, path, name);		
+	}
  	
  	function fx(obj,event){
  		var docListNode = $(obj).parents('li');
