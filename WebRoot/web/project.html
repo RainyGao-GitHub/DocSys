@@ -3897,11 +3897,11 @@ function CompareObj(objA, objB, flag) {
     
 		if(node &&  node != null)
 		{
-			docId = node.docId;
+			docId = node.id;
 		    path = node.path;
 		    name = node.name;
 			//如果是文件且不是根文件则获取上层目录的文件
-		    if(node.type == 1 && node.docId != gRootDoc.docId)
+		    if(node.type == 1 && docId != gRootDoc.docId)
 			{
 		    	console.log("showDocList() node is File and is not rootDoc");
 				docId = node.pid;
@@ -3975,6 +3975,7 @@ function CompareObj(objA, objB, flag) {
 			if(parentNode && parentNode.id)
 			{
 				zTree.selectNode(parentNode);
+				showDocList(parentNode);
 				getAndShowDoc(parentNode, 1, false);
 			}
 			else
