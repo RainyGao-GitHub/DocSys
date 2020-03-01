@@ -210,7 +210,7 @@
                     <div class="tab-item manual-catalog" id="uuz">
 
                         <div class="catalog-list read-book-preview" id="tree">
-                            <ul id="doctree" class="ztree"></ul>
+                            <ul id="doctree" class="ztree" style="margin-bottom: 80px;"></ul>
                         </div>
 
                     </div>
@@ -252,7 +252,7 @@
  		                </ul>
          		</div>
          	</div>
-         	<div class="second-list">
+         	<div id="secondListBody" class="second-list" style="padding-bottom: 80px;">
          		<ul id="secondList">
          		</ul>
          	</div>
@@ -3106,6 +3106,8 @@ function CompareObj(objA, objB, flag) {
     		  return;
     	  }
     	  
+    	  showDocList(treeNode);
+    	  
           if(gDocInfo.edit == true)
           {
 				//如果当前打开的文件处于编辑状态，必须先退出编辑再显示新文件
@@ -5084,6 +5086,80 @@ function CompareObj(objA, objB, flag) {
    			},
 		]);
 		
+		
+		//secondList外部的右键菜单
+		context.attach('#secondListBody', [
+			{text: '新建', subMenu: [
+				{text: '文件',  action: function(e){
+						e.preventDefault();
+						curRightClickedTreeNode = null; 
+						var parentNode = getParentNodeByNode(null);
+	        			newDoc(1,parentNode);
+					}
+				},
+				{text: '文件夹',  action: function(e){
+						e.preventDefault();
+	        			curRightClickedTreeNode = null;
+	        			var parentNode = getParentNodeByNode(null);
+	        			newDoc(2,parentNode);
+					}
+				},
+				]
+			},
+			{text: '上传', subMenu: [
+				{text: '文件',  action: function(e){
+						e.preventDefault();
+						curRightClickedTreeNode = null;
+					    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
+					  	uploadFiles();
+					}
+				},
+				{text: '文件夹',  action: function(e){
+						e.preventDefault();
+						curRightClickedTreeNode = null; 
+					    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
+						uploadDir();
+					}
+				},	
+				]
+			},
+			{divider: true},
+			{text: '粘贴', action: function(e){
+						e.preventDefault();
+						curRightClickedTreeNode = null; 
+						DoPaste(gCopiedNodes,null,gIsCopy);
+					}
+			},
+			{divider: true},
+			{text: '刷新', action: function(e){
+						e.preventDefault();
+						refreshDoc(null, 0);
+					}
+			},			
+			{divider: true},
+			{text: '更多...', subMenu: [
+						{text: '查看仓库历史', action: function(e){
+									e.preventDefault();
+									curRightClickedTreeNode = null; 
+				        			showDocHistory(null,0);
+								}
+						},
+						{text: '查看备注历史', action: function(e){
+							e.preventDefault();
+							curRightClickedTreeNode = null; 
+		        			showDocHistory(null, 1);
+		        			}
+						},
+						{divider: true},
+						{text: '强制刷新', action: function(e){
+							e.preventDefault();
+							refreshDoc(null, 1);
+							}
+						},
+				]
+   			},
+			]
+		);		
 		//secondList上的右键菜单
 		if(gIsPC == false)
 		{
