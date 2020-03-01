@@ -3093,6 +3093,8 @@ function CompareObj(objA, objB, flag) {
       //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
       function zTreeOnClick(event, treeId, treeNode) 
       {
+    	  DocListState = 0;
+    	  
     	  if(!gDocInfo.docId || gDocInfo.docId == 0)
     	  {
     	  		//没有处于打开状态的文件，直接打开文件，摘要模式
@@ -3631,7 +3633,7 @@ function CompareObj(objA, objB, flag) {
 	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
     }
 	
- 	function DocListOnClick(obj){
+ 	function DocListOnClick(obj){ 		
  		var docListNode = $(obj).parents('li');
 
  		var docId = docListNode.attr('dataId');
@@ -3688,6 +3690,9 @@ function CompareObj(objA, objB, flag) {
    		node.latestEditTime = latestEditTime;
  		
  		console.log("DocListOnDbClick node:", node);
+ 		
+		//更新DocList
+		showDocList(node);
  		
 		//显示预览或备注
 		getAndShowDoc(node, 2, false);
@@ -3878,12 +3883,13 @@ function CompareObj(objA, objB, flag) {
 	
 	function showDocList(node)
 	{
-		console.log("showDocList() node:", node);
 		if(DocListState == 1)
 		{
-			console.log("showDocList() it is searchResult:");			
+			console.log("showDocList() DocListState:" + DocListState);			
 			return;
 		}
+		
+		console.log("showDocList() node:", node);
 		
 		var docId = gRootDoc.docId;
 		var path = gRootDoc.path;
@@ -3906,7 +3912,6 @@ function CompareObj(objA, objB, flag) {
 
 		console.log("showDocList() DocListParentDocId:" + DocListParentDocId + " docId:" + docId );	
 		//Set DocListState and DocListParentDocId
-	    DocListState = 0;
 		if(DocListParentDocId == docId)
 		{
 			return;
