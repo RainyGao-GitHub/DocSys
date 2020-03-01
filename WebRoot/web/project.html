@@ -1688,9 +1688,6 @@
             		var doc = ret.data
             		console.log("getAndShowDoc gDocInfo.docId:" + gDocInfo.docId + " docId:" + doc.docId + " gShowType:" + gShowType);
             		
-            		//更新DocList
-            		showDocList(doc);
-            		
 					//当前有打开的文件，还处于编辑状态必须先退出编辑，理论上不应该执行到这里
 	            	if(gDocInfo.docId && gDocInfo.docId != 0 && gDocInfo.docId != doc.docId && gDocInfo.edit == true)
 	            	{
@@ -3653,6 +3650,9 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("DocListOnClick node:", node);
  		
+		//更新DocList
+		showDocList(node);
+		
 		//显示预览或备注
 		getAndShowDoc(node, 1, false);
 
