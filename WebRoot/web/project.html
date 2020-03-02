@@ -3951,7 +3951,8 @@ function CompareObj(objA, objB, flag) {
 		console.log("backToParentDoc() gDocInfo.docId:" + gDocInfo.docId);
 		DocListState = 0;
 		if(!gDocInfo.docId || gDocInfo.docId == gRootDoc.docId)	//reach the top level
-		{			
+		{	
+			showDocList(gRootDoc);
 			return;
 		}
 		
@@ -3981,19 +3982,8 @@ function CompareObj(objA, objB, flag) {
 			else
 			{
 				zTree.cancelSelectedNode(node);
+				showDocList(gRootDoc);
 				getAndShowDoc(gRootDoc, 1, false);
-				
-				var searchWord = $("#searchWord").val();
-				console.log("backToParentDoc searchWord:" + searchWord);
-				if(!searchWord || searchWord == "")
-				{
-					//如果searchBox is empty
-					showDocList(gRootDoc);
-				}
-				else
-				{
-					searchDoc();
-				}
 			}
 		}
 		
