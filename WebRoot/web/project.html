@@ -5470,7 +5470,22 @@ function CompareObj(objA, objB, flag) {
          			var docShare = ret.data;
          	 		var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
          	 		console.log(href);
-         	 		var host = window.location.host;	//域名带端口
+					
+         	 		//var host = window.location.host;	//域名带端口
+         	 		var host = window.location.hostname; //域名不带端口       	 		
+         	 		
+         	 		var IpAddress = ret.dataEx;
+         	 		if(host == "localhost" && IpAddress && IpAddress != "")
+         	 		{
+         	 			host = 	IpAddress;
+         	 		}
+         	 		
+         	 		var port = window.location.port;
+         	 		if(port && port != "")
+         	 		{
+         	 			host += ":" + port;
+         	 		}
+         	 		
          	 		var url = host+href;
          	 		console.log(url);
          	 		
