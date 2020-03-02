@@ -3,6 +3,8 @@ package com.DocSystem.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -2891,6 +2893,8 @@ public class DocController extends BaseController{
 		Integer shareId = buildShareId(docShare);
 		docShare.setShareId(shareId);
 		
+		String IpAddress = getIpAddress();
+		
 		if(reposService.addDocShare(docShare) == 0)
 		{
 			docSysErrorLog("创建文件分享失败！", rt);
@@ -2898,10 +2902,23 @@ public class DocController extends BaseController{
 		else
 		{
 			rt.setData(docShare);
+			rt.setDataEx(IpAddress);
 		}
 		writeJson(rt, response);
 	}
 	
+	private String getIpAddress() {
+		String IP = null;
+		try {
+			InetAddress ip4 = Inet4Address.getLocalHost();
+			IP = ip4.getHostAddress();
+			System.out.println(ip4.getHostAddress());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
+		return IP;
+	}
+
 	private Integer buildShareId(DocShare docShare) {
 		return docShare.hashCode();
 	}
