@@ -3633,9 +3633,9 @@ function CompareObj(objA, objB, flag) {
 	 	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
     }
 	
- 	function DocListOnClick(obj){ 		
+ 	function DocListOnClick(obj)
+ 	{ 			
  		var docListNode = $(obj).parents('li');
-
  		var docId = docListNode.attr('dataId');
    	 	var pid = docListNode.attr('dataPid');
    	 	var path = docListNode.attr('dataPath');
@@ -3654,8 +3654,15 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("DocListOnClick node:", node);
  		
-		//更新DocList
-		showDocList(node);
+		if(DocListState == 1)
+		{
+			console.log("DocListOnClick() DocListState:" + DocListState);			
+		}
+		else
+		{
+			//更新DocList
+			showDocList(node);
+		}
 		
 		//显示预览或备注
 		getAndShowDoc(node, 1, false);
@@ -3670,7 +3677,9 @@ function CompareObj(objA, objB, flag) {
 		 zTreeSelectDoc(docId, path, name);		
   	}
  	
- 	function DocListOnDbClick(obj){
+ 	function DocListOnDbClick(obj)
+ 	{	
+ 		DocListState = 0;
  		var docListNode = $(obj).parents('li');
 
  		var docId = docListNode.attr('dataId');
@@ -3691,8 +3700,15 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("DocListOnDbClick node:", node);
  		
-		//更新DocList
-		showDocList(node);
+		if(DocListState == 1 && type == 1)
+		{
+			console.log("DocListOnClick() DocListState:" + DocListState);			
+		}
+		else
+		{
+			//更新DocList
+			showDocList(node);
+		}
  		
 		//显示预览或备注
 		getAndShowDoc(node, 2, false);
@@ -3883,12 +3899,6 @@ function CompareObj(objA, objB, flag) {
 	
 	function showDocList(node)
 	{
-		if(DocListState == 1)
-		{
-			console.log("showDocList() DocListState:" + DocListState);			
-			return;
-		}
-		
 		console.log("showDocList() node:", node);
 		
 		var docId = gRootDoc.docId;
