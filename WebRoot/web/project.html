@@ -3654,11 +3654,7 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("DocListOnClick node:", node);
  		
-		if(DocListState == 1)
-		{
-			console.log("DocListOnClick() DocListState:" + DocListState);			
-		}
-		else
+		if(DocListState == 0 && type == 2)
 		{
 			//更新DocList
 			showDocList(node);
@@ -3679,7 +3675,6 @@ function CompareObj(objA, objB, flag) {
  	
  	function DocListOnDbClick(obj)
  	{	
- 		DocListState = 0;
  		var docListNode = $(obj).parents('li');
 
  		var docId = docListNode.attr('dataId');
@@ -3700,13 +3695,10 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("DocListOnDbClick node:", node);
  		
-		if(DocListState == 1 && type == 1)
+		if(type == 2)
 		{
-			console.log("DocListOnClick() DocListState:" + DocListState);			
-		}
-		else
-		{
-			//更新DocList
+			DocListState == 1;
+	 		//更新DocList
 			showDocList(node);
 		}
  		
