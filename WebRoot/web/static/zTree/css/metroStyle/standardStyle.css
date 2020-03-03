@@ -366,3 +366,8 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 	background-position: 0px 0px;
    	background-size: 18px 18px; 
 }
+.icons.sort-amount-down{
+	background: url("./img/sort-amount-down.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
