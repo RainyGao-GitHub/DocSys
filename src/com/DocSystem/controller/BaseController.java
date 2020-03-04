@@ -4106,10 +4106,34 @@ public class BaseController  extends BaseFunction{
 		if(shareId != null)
 		{
 			DocShare docShare = getDocShare(shareId);
-			if(verifyDocShare(docShare, reposId, path, name, rt) == false)
+			if(verifyDocShare(docShare, rt) == false)
 			{
 				return null;				
 			}
+			
+			if(reposId != docShare.getVid())
+			{
+				System.out.println("checkAndGetAccessInfo() reposId not matched");
+				rt.setError("非法仓库访问");
+				return null;
+			}
+			
+			//文件非法访问检查: 不能访问分享文件的上层目录或者同层的其他文件
+			if(path != null)
+			{
+				String sharedPath = docShare.getPath() + docShare.getName();
+				if(!sharedPath.isEmpty())	//分享的不是根目录，则需要检查是否进行了非法访问
+				{
+					String accessPath = path + name;
+					if(accessPath.indexOf(sharedPath) != 0) //分享的文件本身或者子目录才可以访问
+					{
+						System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
+						rt.setError("非法文件访问");
+						return null;
+					}
+				}
+			}
+			
 			reposAccess = new ReposAccess();
 			reposAccess.setAccessUserId(docShare.getSharedBy());
 			User accessUser = new User();
@@ -4161,7 +4185,7 @@ public class BaseController  extends BaseFunction{
 		return docAuth;
 	}
 	
-	protected boolean verifyDocShare(DocShare docShare, Integer reposId, String path, String name, ReturnAjax rt) 
+	protected boolean verifyDocShare(DocShare docShare, ReturnAjax rt) 
 	{
 		if(docShare == null)
 		{
@@ -4219,31 +4243,6 @@ public class BaseController  extends BaseFunction{
 				System.out.println("verifyDocShare() docShare is expired");
 				rt.setError("文件分享已过期");
 				return false;
-			}
-		}
-		
-		if(reposId != null)
-		{
-			if(reposId != docShare.getVid())
-			{
-				System.out.println("verifyDocShare() reposId not matched");
-				rt.setError("非法仓库访问");
-				return false;				
-			}
-		}
-		
-		if(path != null && name != null)
-		{
-			String sharedPath = docShare.getPath() + docShare.getName();
-			if(!sharedPath.isEmpty())
-			{
-				String accessPath = path + name;
-				if(!sharedPath.equals(accessPath) && sharedPath.indexOf(accessPath) == 0)
-				{
-					System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
-					rt.setError("非法文件访问");
-					return false;
-				}
 			}
 		}		
 		return true;
