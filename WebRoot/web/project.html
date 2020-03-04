@@ -3595,7 +3595,7 @@ function CompareObj(objA, objB, flag) {
     
     function addDocListNode(node)
     {
-		console.log("addTreeNode pid:" + node.pid + " DocListParentDocId:" + DocListParentDocId );
+		console.log("addDocListNode() pid:" + node.pid + " DocListParentDocId:" + DocListParentDocId );
 		if(node.pid == DocListParentDocId)
 		{
 			if(DocList.isNodeExists(node.docId) == false)
