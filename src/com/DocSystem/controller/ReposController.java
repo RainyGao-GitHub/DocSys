@@ -1373,18 +1373,18 @@ public class ReposController extends BaseController{
 	
 	/********************* get UserDocAuth ******************************/
 	@RequestMapping("/getUserDocAuth.do")
-	public void getUserDocAuth(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,  
+	public void getUserDocAuth(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getUserDocAuth "  + " docId: " + docId  + " reposId:" + reposId + " path:" + path + " name:" + name);
 
 		ReturnAjax rt = new ReturnAjax();
-		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
 		{
-			rt.setError("用户未登录，请先登录！");
 			writeJson(rt, response);			
-			return;
+			return;	
 		}
 		
 		Repos repos = reposService.getRepos(reposId);
@@ -1401,7 +1401,7 @@ public class ReposController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		//检查该用户是否设置了目录权限
-		DocAuth docAuth = getUserDispDocAuth(repos, login_user.getId(), doc); 
+		DocAuth docAuth = getUserDispDocAuth(repos, reposAccess.getAccessUser().getId(), doc); 
 		if(docAuth == null)
 		{
 			rt.setError("您没有该目录/文件的权限");

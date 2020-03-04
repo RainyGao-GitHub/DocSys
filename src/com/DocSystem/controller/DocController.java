@@ -2171,7 +2171,7 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax();
 		
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
