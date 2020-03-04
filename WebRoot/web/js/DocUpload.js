@@ -1232,7 +1232,8 @@
 	             	//level: SubContext.realLevel,
 					type: SubContext.type,
 					size: SubContext.size,
-	             	checkSum: SubContext.checkSum,	             	
+	             	checkSum: SubContext.checkSum,	
+	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -1563,6 +1564,7 @@
 	             	cutSize: SubContext.cutSize,
 	             	chunkSize: chunk.chunkSize,
 	             	chunkHash: chunk.checkSum,
+	             	shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status)
@@ -1697,6 +1699,7 @@
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
 				form.append("uploadFile", SubContext.file);
+				form.append("shareId", gShareId);
 			}
 			else
 			{
@@ -1710,6 +1713,7 @@
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
+				form.append("shareId", gShareId);
 				
 				var chunkIndex = SubContext.chunkIndex;
 				var chunkNum = SubContext.chunkNum;
