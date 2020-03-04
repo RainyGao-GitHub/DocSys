@@ -7244,11 +7244,8 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}
 		
-		if(checkAndAddFirstUser() == false)
-		{
-			System.out.println("docSysInit() checkAndAddFirstUser Failed");
-			return false;
-		}
+		//有些情况下这个接口未必会成功，因此不进行错误检查
+		checkAndAddFirstUser();
 			
 		if(checkAndUpdateDB(true) == false)
 		{
