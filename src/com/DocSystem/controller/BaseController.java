@@ -97,9 +97,13 @@ public class BaseController  extends BaseFunction{
 		return user;
 	}
 	
-	protected void addAdminUser() {
+	protected boolean addAdminUser() {
 		User user = buildAdminUser();
-		userService.addUser(user);
+		if(userService.addUser(user) == 0)
+		{
+			return false;
+		}
+		return true;
 	}
 	
 	protected static ConcurrentHashMap<String, AuthCode> authCodeMap = new ConcurrentHashMap<String, AuthCode>();
