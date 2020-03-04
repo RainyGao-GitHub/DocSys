@@ -4099,7 +4099,7 @@ public class BaseController  extends BaseFunction{
 	protected ReposAccess checkAndGetAccessInfo(
 			Integer shareId, 
 			HttpSession session, HttpServletRequest request, HttpServletResponse response, 
-			Integer reposId, String path, String name, 
+			Integer reposId, String path, String name, boolean forceCheck,
 			ReturnAjax rt) 
 	{
 		ReposAccess reposAccess = null;
@@ -4119,12 +4119,25 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//文件非法访问检查: 不能访问分享文件的上层目录或者同层的其他文件
+			if(forceCheck) //强制检查则无论path是否为空都要检查
+			{
+				if(path == null)
+				{
+					path = "";
+				}
+				if(name == null)
+				{
+					name = "";
+				}
+			}
+			
 			if(path != null)
 			{
+				String accessPath = path + name;
+				
 				String sharedPath = docShare.getPath() + docShare.getName();
 				if(!sharedPath.isEmpty())	//分享的不是根目录，则需要检查是否进行了非法访问
 				{
-					String accessPath = path + name;
 					if(accessPath.indexOf(sharedPath) != 0) //分享的文件本身或者子目录才可以访问
 					{
 						System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
