@@ -118,7 +118,7 @@ public class ReposController extends BaseController{
 		System.out.println("getRepos vid: " + vid + " shareId:" + shareId);
 		ReturnAjax rt = new ReturnAjax();
 
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, null, null, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, null, null, false,rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -554,7 +554,7 @@ public class ReposController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -661,7 +661,7 @@ public class ReposController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, path, name, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, vid, path, name, false, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
