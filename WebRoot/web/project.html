@@ -523,6 +523,7 @@
 			//path : "",
 			//name : "",
 			//type : 2,
+			//showName: "仓库名",
 	};
 	
 	//Doc Info
@@ -1507,18 +1508,17 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
-                	if(gRootDoc.docId == 0)
+                	if(!gRootDoc.showName)
                 	{
-                    	$("#projectName").text(gReposInfo.name);
+	                	gRootDoc.showName = gReposInfo.name;
+	                    $("#projectName").text(gRootDoc.showName);
                 	}
+                    
 					callback && callback();
                     //初始化目录树和Doc
 					//InitMenuAndDoc();
                 }else {
-                	if(gRootDoc.docId == 0)
-                	{
-                    	$("#projectName").text("仓库名");
-                	}
+                    $("#projectName").text("仓库名");
                     alert(ret.msgInfo);
                 }
             },
@@ -1585,7 +1585,7 @@
 	{
 		if(!gDocInfo.docId || gDocInfo.docId == 0)
 		{
-			$("#projectName").text(gReposInfo.name);			
+			$("#projectName").text(gRootDoc.showName);		
 		}
 		else
 		{
@@ -4542,12 +4542,8 @@ function CompareObj(objA, objB, flag) {
                 {
                 	var docShare = ret.data;
                 	
-                	//gRootDoc永远都是指向仓库根目录，因此不需要修改
-                	//gRootDoc.docId = docShare.docId;
-                	//gRootDoc.path = docShare.path;
-                	//gRootDoc.name = docShare.name;
-                	//gRootDoc.type = 2;          	
-                	//$("#projectName").text(gRootDoc.name);
+                	gRootDoc.showName = docShare.name;
+                	$("#projectName").text(gRootDoc.showName);
             		
                 	//成功后台回调
                 	callback && callback();
