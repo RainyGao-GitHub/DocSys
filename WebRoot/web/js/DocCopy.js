@@ -300,6 +300,8 @@
                 	    var doc = ret.data;
                 	    
                   	    addTreeNode(doc);
+                  	    
+                 		addDocListNode(doc);
                   	    	          			
 	                	copySuccessHandler(SubContext, ret.msgInfo);
 	                	return;
