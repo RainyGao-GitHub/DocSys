@@ -3366,10 +3366,10 @@ function CompareObj(objA, objB, flag) {
 			gInitDocInfo.path = gRootDoc.path;
 			gInitDocInfo.name = gRootDoc.name;
 		}
-		getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
 		
 		getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name);
-		showDocList(gRootDoc);
+		showDocList(gInitDocInfo);		
+		getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);		
 	}
 	
     function userLogout()
@@ -5116,6 +5116,14 @@ function CompareObj(objA, objB, flag) {
 					}
 				},	
 				]
+			},
+			{divider: true},
+			{text: '粘贴', action: function(e){
+						e.preventDefault();
+						curRightClickedDocListNode = null;
+						var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						DoPaste(gCopiedNodes, parentNode, gIsCopy);
+					}
 			},
 			{divider: true},
 			{text: '刷新', action: function(e){
