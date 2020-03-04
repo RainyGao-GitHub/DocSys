@@ -2318,6 +2318,9 @@
                     //Add zTreeNode
              		addTreeNode(ret.data);
                     
+                    //Add docListNode
+             		addDocListNode(ret.data);
+                    
              		// 普通消息提示条
 					bootstrapQ.msg({
 								msg : "新建完成！",
@@ -3913,11 +3916,10 @@ function CompareObj(objA, objB, flag) {
 	    }
 
 		console.log("showDocList() DocListParentDocId:" + DocListParentDocId + " docId:" + docId );	
-		//Set DocListState and DocListParentDocId
-		if(DocListParentDocId == docId)
-		{
-			return;
-		}
+		//if(DocListParentDocId == docId)
+		//{
+		//	return;
+		//}
 			
 		$.ajax({
             url : "/DocSystem/Repos/getSubDocList.do",
@@ -3934,7 +3936,10 @@ function CompareObj(objA, objB, flag) {
          		console.log("showDocList ret:", ret)
          		if(ret.status == "ok")
             	{
-         		    DocListParentDocId = docId;
+         			if(docId)
+         			{
+	         		    DocListParentDocId = docId;
+         			}
          			DocList.showList(ret.data);
                 }
                 else
