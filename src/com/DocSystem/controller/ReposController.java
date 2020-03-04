@@ -588,18 +588,18 @@ public class ReposController extends BaseController{
 		}
 		//printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
-		File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
-		if(rootFile.exists() == false)
-		{
-			docSysErrorLog("根目录不存在！",rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
 		//getReposInitMenu是获取仓库或分享根目录下的文件列表（分享的不是仓库的根目录，那么总是返回分享的文件或目录）
 		List <Doc> docList = new ArrayList<Doc>();
 		if(rootDoc.getDocId() != 0) //不是仓库根目录
 		{
+			File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
+			if(rootFile.exists() == false)
+			{
+				docSysErrorLog("根目录不存在！",rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
 			rootDoc.setSize(rootFile.length());
 			rootDoc.setCreateTime(rootFile.lastModified());
 			rootDoc.setLatestEditTime(rootFile.lastModified());
@@ -680,7 +680,45 @@ public class ReposController extends BaseController{
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);
 		
-		Doc doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true, localRootPath, localVRootPath, null, null);
+		//getSubDocList如果没有指定path和name表示要获取仓库根目录或者分享根目录（分享的不是仓库根目录，那么总是返回分享的文件或目录）
+		List <Doc> docList = new ArrayList<Doc>();
+		Doc doc = null;
+		if(path == null)
+		{
+			Doc rootDoc = buildBasicDoc(vid, null, null, reposAccess.getRootDocPath(), reposAccess.getRootDocName(), null, 2, true, localRootPath, localVRootPath, null, null);
+			//printObject("getReposInitMenu() rootDoc:", rootDoc);
+			
+			if(rootDoc.getDocId() != 0) //不是仓库根目录
+			{
+				File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
+				if(rootFile.exists() == false)
+				{
+					docSysErrorLog("根目录不存在！",rt);
+					writeJson(rt, response);			
+					return;
+				}
+				
+				rootDoc.setSize(rootFile.length());
+				rootDoc.setCreateTime(rootFile.lastModified());
+				rootDoc.setLatestEditTime(rootFile.lastModified());
+				docList.add(rootDoc);
+				
+				if(rootFile.isFile())
+				{
+					rootDoc.setType(1);
+				}
+				
+				rt.setData(docList);
+				writeJson(rt, response);			
+				return;				
+			}
+			doc = rootDoc;
+		}
+		
+		if(doc == null)
+		{
+			doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true, localRootPath, localVRootPath, null, null);
+		}
 		
 		//get the rootDocAuth
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
@@ -688,28 +726,6 @@ public class ReposController extends BaseController{
 		{
 			System.out.println("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
 			rt.setError("您没有该目录的访问权限，请联系管理员！");
-			writeJson(rt, response);			
-			return;
-		}
-		
-		File file = new File(localRootPath + doc.getPath(), doc.getName());
-		if(file.exists() == false)
-		{
-			docSysErrorLog("目录不存在！",rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		List <Doc> docList = null;
-		if(file.isFile())
-		{
-			doc.setType(1);
-			doc.setSize(file.length());
-			doc.setCreateTime(file.lastModified());
-			doc.setLatestEditTime(file.lastModified());
-			docList = new ArrayList<Doc>();
-			docList.add(doc);
-			rt.setData(docList);
 			writeJson(rt, response);			
 			return;
 		}
