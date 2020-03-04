@@ -519,10 +519,10 @@
 	
 	//RootDoc Inof
 	var gRootDoc = {
-			docId : 0,
-			path : "",
-			name : "",
-			type : 2,
+			//docId : 0,
+			//path : "",
+			//name : "",
+			//type : 2,
 	};
 	
 	//Doc Info
@@ -4541,11 +4541,13 @@ function CompareObj(objA, objB, flag) {
                 if( "ok" == ret.status )
                 {
                 	var docShare = ret.data;
-                	gRootDoc.docId = docShare.docId;
-                	gRootDoc.path = docShare.path;
-                	gRootDoc.name = docShare.name;
-                	gRootDoc.type = 2;          	
-                	$("#projectName").text(gRootDoc.name);
+                	
+                	//gRootDoc永远都是指向仓库根目录，因此不需要修改
+                	//gRootDoc.docId = docShare.docId;
+                	//gRootDoc.path = docShare.path;
+                	//gRootDoc.name = docShare.name;
+                	//gRootDoc.type = 2;          	
+                	//$("#projectName").text(gRootDoc.name);
             		
                 	//成功后台回调
                 	callback && callback();
