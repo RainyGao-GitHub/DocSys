@@ -4111,11 +4111,14 @@ public class BaseController  extends BaseFunction{
 				return null;				
 			}
 			
-			if(reposId != docShare.getVid())
+			if(reposId != null)
 			{
-				System.out.println("checkAndGetAccessInfo() reposId not matched");
-				rt.setError("非法仓库访问");
-				return null;
+				if(reposId != docShare.getVid())
+				{
+					System.out.println("checkAndGetAccessInfo() reposId not matched");
+					rt.setError("非法仓库访问");
+					return null;
+				}
 			}
 			
 			//文件非法访问检查: 不能访问分享文件的上层目录或者同层的其他文件
