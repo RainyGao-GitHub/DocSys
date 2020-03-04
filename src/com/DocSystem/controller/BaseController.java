@@ -4119,6 +4119,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//文件非法访问检查: 不能访问分享文件的上层目录或者同层的其他文件
+			System.out.println("checkAndGetAccessInfo() forceCheck:" + forceCheck);
 			if(forceCheck) //强制检查则无论path是否为空都要检查
 			{
 				if(path == null)
@@ -4140,7 +4141,7 @@ public class BaseController  extends BaseFunction{
 				{
 					if(accessPath.indexOf(sharedPath) != 0) //分享的文件本身或者子目录才可以访问
 					{
-						System.out.println("verifyDocShare() 非法访问路径 accessPath:" + accessPath);
+						System.out.println("checkAndGetAccessInfo() 非法访问路径 accessPath:" + accessPath);
 						rt.setError("非法文件访问");
 						return null;
 					}
