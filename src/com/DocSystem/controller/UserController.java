@@ -56,7 +56,12 @@ public class UserController extends BaseController {
 		if(uList == null || uList.size() == 0)
 		{
 			//Add a default user(Admin)
-			addAdminUser();
+			if(addAdminUser() == false)
+			{
+				System.out.println("系统管理员创建失败,请检查数据库设置!");
+				writeJson(rt, response);	
+				return;
+			}
 		}
 
 		//tmp_user is used for store the query condition
