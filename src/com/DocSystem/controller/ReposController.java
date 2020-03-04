@@ -596,49 +596,53 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
+		//getReposInitMenu是获取仓库或分享根目录下的文件列表（分享的不是仓库的根目录，那么总是返回分享的文件或目录）
+		List <Doc> docList = new ArrayList<Doc>();
+		if(rootDoc.getDocId() != 0) //不是仓库根目录
+		{
+			rootDoc.setSize(rootFile.length());
+			rootDoc.setCreateTime(rootFile.lastModified());
+			rootDoc.setLatestEditTime(rootFile.lastModified());
+			docList.add(rootDoc);
+			
+			//如果rootDoc是文件则不需要获取子目录文件
+			if(rootFile.isFile())
+			{
+				rootDoc.setType(1);
+				rt.setData(docList);
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		
 		//docAuthHashMap for login_user
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUserId(), repos.getId(), reposAccess.getAuthMask());
 		//printObject("getReposInitMenu() docAuthHashMap:", docAuthHashMap);
 		
-		List <Doc> docList = null;
-		if(rootFile.isFile())
-		{
-			rootDoc.setType(1);
-			rootDoc.setSize(rootFile.length());
-			rootDoc.setCreateTime(rootFile.lastModified());
-			rootDoc.setLatestEditTime(rootFile.lastModified());
-			docList = new ArrayList<Doc>();
-			docList.add(rootDoc);
-			rt.setData(docList);
-			writeJson(rt, response);			
-			return;
-		}
-		
+		//getReposInitMenu如果指定了path和name表示要获取从根目录到该doc的文件列表，否则表示获取rootDoc下的子目录即可
 		Doc doc = null;
 		if(path != null && name != null)
 		{
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			//printObject("getReposInitMenu() doc:", doc);
 		}
+		
+		List <Doc> subDocList = null;
 		if(doc == null)
 		{
-			docList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);
+			subDocList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, rt);
 		}
 		else
 		{
 			//获取用户可访问文件列表(From Root to Doc)
-			docList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt);
+			subDocList = getDocListFromRootToDoc(repos, doc, rootDocAuth, rootDoc, docAuthHashMap, rt);
 		}
+		
+		docList.addAll(subDocList);
 		//printObject("getReposInitMenu() docList:", docList);
 
-		if(docList == null)
-		{
-			rt.setData("");
-		}
-		else
-		{
-			rt.setData(docList);
-		}
+
+		rt.setData(docList);	
 		writeJson(rt, response);
 	}
 
