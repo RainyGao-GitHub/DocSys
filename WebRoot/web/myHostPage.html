@@ -369,8 +369,7 @@
     	console.log("MyInfoPageInit");
     	
     	//Set userImg
-    	var headImgUrl = getUserImgUrl(loginUser.img); 
-    	$("#headimgurl").attr('src',headImgUrl); 
+    	setUserImg();
     	
     	//Set the evnent handler for hidden.bs.modal(This handler will show the immg upload dialog)
         $("#upload-logo-panel").on("hidden.bs.modal",function () {
@@ -436,9 +435,8 @@
                 if(res.status === "ok"){
                     $("#upload-logo-panel").modal('hide');
                     //Set the headimg url
-                    var headImgUrl = getUserImgUrl(res.data.img); 
-                    $("#headimgurl").attr('src',headImgUrl);
-                    $("#userImg").attr('src',headImgUrl);
+                    loginUser.img = res.data.img;
+                    setUserImg();
                 }else{
                     $("#error-message").text(res.message);
                 }
@@ -476,6 +474,19 @@
             console.log(e);
         }
     }
+    
+    function setUserImg()
+    {
+    	if(!loginUser.img || loginUser.img == "")
+    	{
+    		return;
+    	}
+		var headImgUrl = getUserImgUrl(loginUser.img); 
+		$("#headimgurl").attr('src',headImgUrl); 
+        $("#userImg").attr('src',headImgUrl);
+
+    }
+    
 	function getUserImgUrl(imgName)
 	{
 		return "/DocSystem/getUserImg.do?fileName=" + imgName;
