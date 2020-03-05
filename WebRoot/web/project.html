@@ -4314,6 +4314,30 @@ function CompareObj(objA, objB, flag) {
           });
    	}
 	
+	//不再使用非标的bootstrapQ
+	function showAddDocPanel(type, parentNode)
+	{
+	    //对话框 title
+        var title = "新建文件";
+        if(type == 2)
+        {
+        	title = "新建目录";
+        }
+    
+		console.log("showAddDocPanel title:" + title);
+		bootstrapQ.dialog({
+			id: 'addDoc',
+			url: 'addDoc.html',
+			title: title,
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				addDocPageInit(type, parentNode);
+			},
+		});
+	}
+	
 	//显示文件详情
 	function showDocDetail(node)
 	{
