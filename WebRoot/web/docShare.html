@@ -1,3 +1,58 @@
+<div class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label">分享链接</label>
+        <div class="col-sm-7" style="padding-right:0;">
+            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"></input>
+        </div>
+        <div class="col-sm-3">
+           <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
+				<i class="icons open"></i>
+			</span>
+           <span class="btn" title="复制链接" onclick="copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+				<i class="icons copy"></i>
+			</span>
+           <span class="btn" title="二维码" onclick="showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
+				<i class="icons qrcode"></i>
+			</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">提取密码</label>
+        <div class="col-sm-7"  style="padding-right:0;">
+            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码"/>
+        </div>
+        <div class="col-sm-3">
+           <span class="btn" onclick="generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
+				随机生成
+			</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">有效时间</label>
+        <div class="col-sm-4">
+            <select class="form-control" id="shareHours" name="shareHours" style="width: 100%">   
+            	<option value="1000000" >永久有效</option>
+            	<option value="168" selected="selected">7天</option>
+            	<option value="24">1天</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">权限设置</label>
+        <div class="col-sm-9" style="margin-top:0.5em;margin-right:0;">
+	        <input id="downloadEn" name="downloadEn" type="checkbox" /><span class="p5" style="padding-right:20px;">允许下载</span>
+			<input id="addEn" name="addEn" type="checkbox" /><span class="p5"  style="padding-right:20px;">允许上传</span>
+	    	<input id="editEn" name="editEn" type="checkbox" /><span class="p5" style="padding-right:20px;">允许修改</span>
+	    	<input id="deleteEn" name="deleteEn" type="checkbox" /><span class="p5"  style="padding-right:20px;">允许删除</span>
+		</div>
+    </div>    
+	<div class="form-group">
+	    <div class="col-sm-12 text-center">
+	        <button  type="button" class="btn btnPrimary" onclick="deleteDocShare();" style="width: 100px;height: 42px;">取消分享</button>
+	        <button  type="button" class="btn btnPrimary" onclick="updateDocShare();" style="width: 100px;height: 42px;">保存</button>
+		</div>
+	</div>
+</div>
 
 <script type="text/javascript">
 	var shareId = null;
@@ -236,59 +291,3 @@
 		return true;
     }
 </script>
-
-<div class="form-horizontal">
-    <div class="form-group">
-        <label class="col-sm-2 control-label">分享链接</label>
-        <div class="col-sm-7" style="padding-right:0;">
-            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"></input>
-        </div>
-        <div class="col-sm-3">
-           <span class="btn" title="打开分享链接" onclick="openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
-				<i class="icons open"></i>
-			</span>
-           <span class="btn" title="复制链接" onclick="copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
-				<i class="icons copy"></i>
-			</span>
-           <span class="btn" title="二维码" onclick="showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
-				<i class="icons qrcode"></i>
-			</span>
-        </div>
-    </div>
-    <div class="form-group">
-        <label class="col-sm-2 control-label">提取密码</label>
-        <div class="col-sm-7"  style="padding-right:0;">
-            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="提取密码"/>
-        </div>
-        <div class="col-sm-3">
-           <span class="btn" onclick="generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
-				随机生成
-			</span>
-        </div>
-    </div>
-    <div class="form-group">
-        <label class="col-sm-2 control-label">有效时间</label>
-        <div class="col-sm-4">
-            <select class="form-control" id="shareHours" name="shareHours" style="width: 100%">   
-            	<option value="1000000" >永久有效</option>
-            	<option value="168" selected="selected">7天</option>
-            	<option value="24">1天</option>
-            </select>
-        </div>
-    </div>
-    <div class="form-group">
-        <label class="col-sm-2 control-label">权限设置</label>
-        <div class="col-sm-9" style="margin-top:0.5em;margin-right:0;">
-	        <input id="downloadEn" name="downloadEn" type="checkbox" /><span class="p5" style="padding-right:20px;">允许下载</span>
-			<input id="addEn" name="addEn" type="checkbox" /><span class="p5"  style="padding-right:20px;">允许上传</span>
-	    	<input id="editEn" name="editEn" type="checkbox" /><span class="p5" style="padding-right:20px;">允许修改</span>
-	    	<input id="deleteEn" name="deleteEn" type="checkbox" /><span class="p5"  style="padding-right:20px;">允许删除</span>
-		</div>
-    </div>    
-	<div class="form-group">
-	    <div class="col-sm-12 text-center">
-	        <button  type="button" class="btn btnPrimary" onclick="deleteDocShare();" style="width: 100px;height: 42px;">取消分享</button>
-	        <button  type="button" class="btn btnPrimary" onclick="updateDocShare();" style="width: 100px;height: 42px;">保存</button>
-		</div>
-	</div>
-</div>
