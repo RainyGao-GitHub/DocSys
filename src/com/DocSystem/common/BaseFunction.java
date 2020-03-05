@@ -754,6 +754,16 @@ public class BaseFunction{
 	}
 	
 	//WebTmpPath was 
+	protected String getWebUploadPath() {
+		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+	        
+	    String webTmpPath =  wac.getServletContext().getRealPath("/") +  "uploads/";
+	    webTmpPath = localDirPathFormat(webTmpPath);
+	    System.out.println("getWebUploadPath() webTmpPath:" + webTmpPath);
+		return webTmpPath;
+	}
+	
+	//WebTmpPath was 
 	protected String getWebTmpPath() {
         WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
         

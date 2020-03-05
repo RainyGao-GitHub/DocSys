@@ -764,32 +764,11 @@ public class UserController extends BaseController {
 	
 	private String getUserImgPath()
 	{
-		//String rootPath = getCurrentAppPath();
-		String rootPath = getDocSysDataPath();
-	    String imgDirPath = rootPath + "uploads/userImg/";
+		String webUploadPath = getWebUploadPath();
+		String imgDirPath = webUploadPath + "userImg/";
         return imgDirPath;
 	}
-	
-	private String getCurrentAppPath() {
-		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-        String currentAppPath = wac.getServletContext().getRealPath("/");
-        return currentAppPath;
-	}
-	
-	private String getDocSysDataPath() {
-		String docSysDataPath = "";
-		String os = System.getProperty("os.name");  
-		System.out.println("OS:"+ os);  
-		if(os.toLowerCase().startsWith("win")){  
-			docSysDataPath = "D:/DocSysData/";
-		}
-		else
-		{
-			docSysDataPath = "/data/DocSysData/";	//Linux系统放在  /data	
-		}
-		return docSysDataPath;
-	}
-	
+		
 	//This interface is for getUserImg if useImgs not under tomcat
 	@RequestMapping(value="getUserImg")
     public  void getUserImg(String fileName, HttpServletRequest request, HttpServletResponse response,HttpSession session) throws Exception 
