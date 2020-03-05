@@ -77,6 +77,15 @@ public class Office2PDF {
      * @param rt 
      * @return
      */
+	/****************** 线程锁接口 *********************************************/
+	protected static final Object syncLock = new Object(); 
+	protected static void unlock() {
+		unlockSyncLock(syncLock);
+	}
+	protected static void unlockSyncLock(Object syncLock) {
+		syncLock.notifyAll();//唤醒等待线程
+	}  
+
     public static boolean office2pdf(String inputFilePath, String outputFilePath, String officeHome, ReturnAjax rt) {
         if (inputFilePath == null || "".equals(inputFilePath)) {
             System.out.println("office2pdf() 输入文件地址为空，转换终止!");
@@ -92,25 +101,31 @@ public class Office2PDF {
             return false;
         }
     	
-    	OfficeManager officeManager = null;
-    	try {
-    		officeManager = getOfficeManager(officeHome);
-    		// 连接OpenOffice
-        	OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);
-        	boolean ret = converterFile(inputFile, outputFilePath, inputFilePath, converter);
-        	officeManager.stop();
-        	officeManager = null;
-        	return ret;
-    	} catch (Exception e) {
-    		rt.setError("文件转换异常!");
-    		if(officeManager != null)
-    		{
+        //以下代码需要用线程锁
+		synchronized(syncLock)
+		{		
+	    	OfficeManager officeManager = null;
+	    	try {
+	    		officeManager = getOfficeManager(officeHome);
+	    		// 连接OpenOffice
+	        	OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);
+	        	boolean ret = converterFile(inputFile, outputFilePath, inputFilePath, converter);
 	        	officeManager.stop();
-    		}
-    		System.out.println("office2pdf() getOfficeManager Exception");
-			e.printStackTrace();
-			return false;
-    	}
+	        	officeManager = null;
+	        	unlock();
+	        	return ret;
+	    	} catch (Exception e) {
+	    		rt.setError("文件转换异常!");
+	    		if(officeManager != null)
+	    		{
+		        	officeManager.stop();
+	    		}
+	    		System.out.println("office2pdf() getOfficeManager Exception");
+				e.printStackTrace();
+				unlock();
+				return false;
+	    	}
+		}
     }
 
     /**
