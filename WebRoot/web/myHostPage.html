@@ -12,15 +12,12 @@
     <link href="static/webuploader/webuploader.css" rel="stylesheet">
     <link href="static/cropper/cropper.min.css" rel="stylesheet">
     <link href="css/main.css" rel="stylesheet">
-
-    
-    
-    
 </head>
 <body>
 <div class="manual-reader">
     <header class="navbar navbar-static-top navbar-fixed-top manual-header" role="banner">
     <div class="container">
+        
         <div class="navbar-header col-sm-12 col-md-9 col-lg-8">
             <a href="/DocSystem" class="navbar-brand" title="DocSys"><i class="fa fa-paper-plane"></i> DocSys</a>
             <nav class="collapse navbar-collapse col-sm-10">
@@ -30,7 +27,7 @@
                     </li>
                     <li>
                         <a href="http://doc.iminho.me/tags" title="标签">标签</a>
-                    </li> -->
+                    </li>
                 </ul>
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
                     <form class="form-inline" action="http://doc.iminho.me/search" method="get">
@@ -40,61 +37,36 @@
                         </button>
                     </form>
                 </div>
+                 -->
             </nav>
 
             <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block visible-sm-inline-block">
                 <button class="btn btn-default dropdown-toggle hidden-lg" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                 <ul class="dropdown-menu" role="menu">
-                    
-                            <li>
-                                <a href="/DocSystem/web/myHostPage.html" title="个人中心"> 个人中心</a>
-                            </li>
-
-                            <li>
-                                <a href="/DocSystem/web/reposManager.html" title="管理后台"> 管理后台</a>
-                            </li>
-                            
-                            <li>
-                                <a onclick="logout()" title="退出登录"> 退出登录</a>
-                            </li>
-                    
+                    <li><a href="/DocSystem/web/myHostPage.html" title="个人中心"> 个人中心</a></li>
+					<li><a href="/DocSystem/web/reposManager.html" title="管理后台"> 管理后台</a></li>
+                    <li><a onclick="logout()" title="退出登录"> 退出登录</a></li>
                 </ul>
             </div>
-
         </div>
+        
         <nav class="navbar-collapse hidden-xs hidden-sm" role="navigation">
             <ul class="nav navbar-nav navbar-right">
-                
-                <li>
-                	<li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" onerror="UserImgErrHandler();" class="img-circle m5"/></li>
-					<li id="userInfoDiv" style="display:none">
-							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
-							<ul class="dropdown-menu" role="menu">
-								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
-								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
-								<li><a onclick="logout()">退出登录</a></li>
-							</ul>
-					</li>
-					<li id="loginBtn">
-                        <a onclick="showLoginPanel()"  title="用户登录">登录</a>
-                    </li>
-                    <ul class="dropdown-menu user-info-dropdown" role="menu">
-                        <li>
-                            <a href="/DocSystem/web/myHostPage.html" title="个人中心"> 个人中心</a>
-                        </li>
-                        
-                        <li>
-                            <a href="/DocSystem/web/reposManager.html" title="仓库管理"> 仓库管理</a>
-                        </li>
-                        
-                        <li>
-                            <a onclick="logout()" title="退出登录"> 退出登录</a>
-                        </li>
-                    </ul>
-                </li>
-                
+                <li id="userImgDiv" style="display:none"><img id="userImg" name="userImg" width="40px" height="40px" src="images/default/defaultHeadPic.png" onerror="UserImgErrHandler();" class="img-circle m5"/></li>
+				<li id="userInfoDiv" style="display:none">
+					<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+						<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
+						<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
+						<li><a onclick="logout()">退出登录</a></li>
+					</ul>
+				</li>
+				<li id="loginBtn">
+                     <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                </li>          
             </ul>
         </nav>
+        
     </div>
 </header>
     <div class="container manual-body">
@@ -230,7 +202,10 @@
 <script src="js/logon.js" type="text/javascript"></script>
 <script src="js/md5.js"></script>
 <script type="text/javascript">
-    $(function () {
+	var login_user = "";	//用来保存刚才登录的用户
+	var gShareId;
+    
+	$(function () {
     	pageInit();
 
     });
@@ -325,6 +300,8 @@
                    	
                 	//显示用户信息
                 	ShowUserInfo(user);
+                	$("#loginBtn").hide();
+                   	
                 	
                 	//显示左侧菜单栏
                 	$('#menu').show();
@@ -342,6 +319,7 @@
                 else 
                 {
                     console.log(ret.msgInfo);
+                	$("#loginBtn").show();
                 }
             },
             error : function () {
