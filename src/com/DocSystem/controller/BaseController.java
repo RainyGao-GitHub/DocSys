@@ -7962,7 +7962,7 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_SYS_CONFIG);
 			dbTabList.add(DOCSYS_DOC_SHARE);			
 		}
-		else if(oldVersion < 200120)
+		else if(oldVersion < 20120)
 		{
 			dbTabList.add(DOCSYS_DOC_SHARE);
 			dbTabList.add(DOCSYS_REPOS);
@@ -7970,7 +7970,7 @@ public class BaseController  extends BaseFunction{
 			dbTabList.add(DOCSYS_DOC_AUTH);			
 			dbTabList.add(DOCSYS_DOC_LOCK);
 		}
-		else if(oldVersion < 200128)
+		else if(oldVersion < 20128)
 		{
 			dbTabList.add(DOCSYS_REPOS);
 			dbTabList.add(DOCSYS_REPOS_AUTH);
