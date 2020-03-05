@@ -17,15 +17,33 @@
 <div class="manual-reader">
     <header class="navbar navbar-static-top navbar-fixed-top manual-header" role="banner">
     <div class="container">
+        
         <div class="navbar-header col-sm-12 col-md-9 col-lg-8">
             <a href="/DocSystem" class="navbar-brand" title="DocSys"><i class="fa fa-paper-plane"></i> DocSys</a>
             <nav class="collapse navbar-collapse col-sm-10">
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
                 </div>
             </nav>
+            
+            <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block visible-sm-inline-block">
+                <button class="btn btn-default dropdown-toggle hidden-lg" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <a href="/DocSystem/web/index.html" title="进入系统">进入系统</a>
+                    </li>
+                    
+                </ul>
+            </div>
         </div>
+        
         <nav class="navbar-collapse hidden-xs hidden-sm" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+				<li id="loginBtn">
+                     <a href="/DocSystem/web/index.html" title="进入系统">进入系统</a>
+                </li>          
+            </ul>
         </nav>
+        
     </div>
 	</header>
     <div class="container manual-body">
@@ -108,6 +126,9 @@
 <script src="js/logon.js" type="text/javascript"></script>
 <script src="js/md5.js"></script>
 <script type="text/javascript">
+	var login_user = "";	//用来保存刚才登录的用户
+	var gShareId;
+
     $(function () {
     	pageInit();
     });
