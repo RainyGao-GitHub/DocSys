@@ -1,3 +1,23 @@
+<div class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label">建议</label>
+        <div class="col-sm-10">
+            <input type="text" id="title" name="title" class="form-control"  maxlength="40" placeholder="意见与建议" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">详细描述</label>
+        <div class="col-sm-10">
+            <input type="text" id="detail" name="detail" class="form-control"  maxlength="40" placeholder="详细描述" />
+        </div>
+    </div>
+    
+	<div class="form-group">
+	    <div class="col-sm-12 text-center">
+	        <button  id="submit" type="button" class="btn btnPrimary" onclick="feeback();" style="width: 288px;height: 42px;">提交</button>
+		</div>
+	</div>
+</div>
 
 <script type="text/javascript">
 	function FeebackPageInit()
@@ -67,24 +87,3 @@
 		return true;
     }
 </script>
-
-<div class="form-horizontal">
-    <div class="form-group">
-        <label class="col-sm-2 control-label">建议</label>
-        <div class="col-sm-10">
-            <input type="text" id="title" name="title" class="form-control"  maxlength="40" placeholder="意见与建议" />
-        </div>
-    </div>
-    <div class="form-group">
-        <label class="col-sm-2 control-label">详细描述</label>
-        <div class="col-sm-10">
-            <input type="text" id="detail" name="detail" class="form-control"  maxlength="40" placeholder="详细描述" />
-        </div>
-    </div>
-    
-	<div class="form-group">
-	    <div class="col-sm-12 text-center">
-	        <button  id="submit" type="button" class="btn btnPrimary" onclick="feeback();" style="width: 288px;height: 42px;">提交</button>
-		</div>
-	</div>
-</div>
