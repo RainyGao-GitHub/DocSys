@@ -2280,64 +2280,6 @@
 			},
 		});
 	}
-	
-   	//addDoc接口	
-   	function addDoc(name,type,content,parentNode,parentId,vid)
-   	{
-   		console.log("addDoc name:" + name + " type:" +  type + " content:" +  content + " parentNode:" +  parentNode + " vid:" +  vid);
-   		var parentPath = "";
-   		if(parentNode && parentNode != null)
-   		{
-   			parentPath = parentNode.path + parentNode.name + "/";
-   		}
-
-    	$.ajax({
-             url : "/DocSystem/Doc/addDoc.do",
-             type : "post",
-             dataType : "json",
-             data : {
-                reposId : vid, 
-				type : type, //文件类型
-	            pid : parentId,
-                path: parentPath,
-                name : name,
-             	content: content,
-             	shareId: gShareId,
-             },
-             success : function (ret) {
-            	console.log("addDoc ret:", ret);            		
-             	if( "ok" == ret.status && ret.data.docId){
-             		if(type == 2)
-                    {
-                    	isParent = true;
-                    }
-                    else
-                    {
-                    	isParent = false;                    	
-                    }
-                    //Add zTreeNode
-             		addTreeNode(ret.data);
-                    
-                    //Add docListNode
-             		addDocListNode(ret.data);
-                    
-             		// 普通消息提示条
-					bootstrapQ.msg({
-								msg : "新建完成！",
-								type : 'success',
-								time : 2000,
-					});
-                }
-                else
-                {
-                	showErrorMessage("新建失败:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-                showErrorMessage("新建失败:服务器异常！");
-            }
-        });
-    }
 </script>
 
 <script type="text/javascript">
@@ -4258,62 +4200,7 @@ function CompareObj(objA, objB, flag) {
 	//add a new Doc: type 1: 文件  2:目录
     function newDoc(type,parentNode) {
 		console.log("type:" + type, parentNode);
-		//计算 parentId remoteDir
-		/*var parentId = 0;
-		var parentPath = "";
-		if(parentNode && parentNode.id)
-		{
-			parentId = parentNode.id;
-			parentPath = getNodePath(parentNode) + parentNode.name+ "/";
-		}
-		
-		var remoteDir = gReposInfo.name+ "::" + parentPath; //only for display
-        
-        //对话框 title
-        var title = "新建文件";
-        if(type == 2)
-        {
-        	title = "新建目录";
-        }
-          
-        //显示新建对话框
-        qiao.bs.dialog({
-              id: "dialog-new-doc",
-              url: '#new-doc',
-              title: title,
-              okbtn: "确定",
-              qubtn: "取消",
-              callback: function () {
-                      $("#dialog-new-doc input[name='name']").focus();
-                      $("#dialog-new-doc input[name='remoteDir']").val(remoteDir);                
-              }
-        },function () {
-
-              var name = $("#dialog-new-doc input[name='name']").val();
-              var content = $("#dialog-new-doc input[name='content']").val();
-			  //检查当前目录下是否有同名文件
-			  if(isNodeExist(name,parentNode) == true)
-			  {	
-				showErrorMessage(name + " 已存在");
-			  	return false;
-			  }
-			  var vid = gReposInfo.id;
-			  
-			  //发送新建文件请求到后台
-              if( name ){
-            	  if(content && content != "")
-            	  {
-            		  content = "#" + content; 
-            	  }
-                  addDoc(name,type,content,parentNode,parentId,vid);
-                  return true;
-              }else{
-              	  alert("文件名不能为空");
-                  return false;
-              }
-          });*/
-          
-          showAddDocPanel(type, parentNode);
+        showAddDocPanel(type, parentNode);
    	}
 	
 	//不再使用非标的bootstrapQ
@@ -4336,31 +4223,7 @@ function CompareObj(objA, objB, flag) {
 				big: false,
 				callback: function(){
 					addDocPageInit(type, parentNode);
-				},
-				function (){
-	              var name = $("#dialog-new-doc input[name='name']").val();
-	              var content = $("#dialog-new-doc input[name='content']").val();
-				  //检查当前目录下是否有同名文件
-				  if(isNodeExist(name,parentNode) == true)
-				  {	
-					showErrorMessage(name + " 已存在");
-				  	return false;
-				  }
-				  var vid = gReposInfo.id;
-				  
-				  //发送新建文件请求到后台
-	              if( name ){
-	            	  if(content && content != "")
-	            	  {
-	            		  content = "#" + content; 
-	            	  }
-	                  addDoc(name,type,content,parentNode,parentId,vid);
-	                  return true;
-	              }else{
-	              	  alert("文件名不能为空");
-	                  return false;
-	              }
-	       	   }
+				}
 		});
 	}
 	
