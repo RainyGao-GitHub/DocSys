@@ -4259,7 +4259,7 @@ function CompareObj(objA, objB, flag) {
     function newDoc(type,parentNode) {
 		console.log("type:" + type, parentNode);
 		//计算 parentId remoteDir
-		var parentId = 0;
+		/*var parentId = 0;
 		var parentPath = "";
 		if(parentNode && parentNode.id)
 		{
@@ -4311,7 +4311,9 @@ function CompareObj(objA, objB, flag) {
               	  alert("文件名不能为空");
                   return false;
               }
-          });
+          });*/
+          
+          showAddDocPanel(type, parentNode);
    	}
 	
 	//不再使用非标的bootstrapQ
@@ -4326,15 +4328,39 @@ function CompareObj(objA, objB, flag) {
     
 		console.log("showAddDocPanel title:" + title);
 		bootstrapQ.dialog({
-			id: 'addDoc',
-			url: 'addDoc.html',
-			title: title,
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-			big: false,
-			callback: function(){
-				addDocPageInit(type, parentNode);
-			},
+				id: 'addDoc',
+				url: 'addDoc.html',
+				title: title,
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+				big: false,
+				callback: function(){
+					addDocPageInit(type, parentNode);
+				},
+				function (){
+	              var name = $("#dialog-new-doc input[name='name']").val();
+	              var content = $("#dialog-new-doc input[name='content']").val();
+				  //检查当前目录下是否有同名文件
+				  if(isNodeExist(name,parentNode) == true)
+				  {	
+					showErrorMessage(name + " 已存在");
+				  	return false;
+				  }
+				  var vid = gReposInfo.id;
+				  
+				  //发送新建文件请求到后台
+	              if( name ){
+	            	  if(content && content != "")
+	            	  {
+	            		  content = "#" + content; 
+	            	  }
+	                  addDoc(name,type,content,parentNode,parentId,vid);
+	                  return true;
+	              }else{
+	              	  alert("文件名不能为空");
+	                  return false;
+	              }
+	       	   }
 		});
 	}
 	
