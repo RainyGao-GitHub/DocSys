@@ -1699,7 +1699,10 @@
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
 				form.append("uploadFile", SubContext.file);
-				form.append("shareId", gShareId);
+				if(gShareId)
+				{
+					form.append("shareId", gShareId);
+				}
 			}
 			else
 			{
@@ -1713,7 +1716,10 @@
 				form.append("filePath", SubContext.filePath);
 				form.append("size", SubContext.size);
 				form.append("checkSum", SubContext.checkSum);
-				form.append("shareId", gShareId);
+				if(gShareId)
+				{
+					form.append("shareId", gShareId);
+				}
 				
 				var chunkIndex = SubContext.chunkIndex;
 				var chunkNum = SubContext.chunkNum;
