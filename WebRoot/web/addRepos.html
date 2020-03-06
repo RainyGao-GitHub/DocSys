@@ -85,15 +85,9 @@
 </div>
 
 <script type="text/javascript">
-	var type;
-	var parentNode;
-	
-	var parentId = 0;
-	var parentPath = "";
-	var remoteDir = gReposInfo.name+ "::"; //only for display
-
 	function addReposPageInit(_type, _parentNode)
 	{
+		console.log("addReposPageInit()");
         setTimeout(function () {
             $("#dialog-new-repos input[name='name']").focus();
 
@@ -213,11 +207,11 @@
 	                }
 	                else
 	                {
-	                	alert(ret.msgInfo);
+	                	showErrorMessage(ret.msgInfo);
 	                }
 	            },
 	            error : function () {
-	                alert('服务器异常: 创建仓库失败');
+	            	showErrorMessage('服务器异常: 创建仓库失败');
 	            }
 	        });
 	    
