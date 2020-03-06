@@ -444,6 +444,7 @@
 <script type="text/javascript" src="static/js-spark-md5/spark-md5.min.js"></script>
 
 <!-- DocSys class -->
+<script type="text/javascript" src="js/DocSys.js"></script>
 <script type="text/javascript" src="js/DocDownload.js"></script>
 <script type="text/javascript" src="js/DocUpload.js"></script>
 <script type="text/javascript" src="js/DocDelete.js"></script>
@@ -492,18 +493,7 @@
 	//当前页面显示模式
 	var gInitShowType = 1;
 	var gShowType = 1; //1:标准模式 2:电子书模式
-
 	
-	//通用函数接口
-	function showErrorMessage($msg) {
-    	qiao.bs.alert($msg);
-	}
-	
-	function closeBootstrapDialog(id){ 
-		$("#"+id + "div").remove();	//删除全屏遮罩
-		$("#"+id).remove();	//删除对话框
-	}
-
 	function getDeleteNodes()
 	{
 		var deleteNodes = [];
