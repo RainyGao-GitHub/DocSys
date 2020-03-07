@@ -158,7 +158,13 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
-
+		
+		//设置跨域访问允许
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
+		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
+		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
+		
 		if(reposId == null)
 		{
 			reposId = getReposIdForFeeback();		
@@ -179,6 +185,7 @@ public class DocController extends BaseController{
 		{
 			type = 1;
 		}
+		
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -209,12 +216,6 @@ public class DocController extends BaseController{
 		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = addDoc(repos, doc, null, null,null,null,commitMsg,commitUser,login_user,rt, actionList);
-		
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
-		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
-		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");		
-
 		writeJson(rt, response);
 		
 		if(ret == false)
