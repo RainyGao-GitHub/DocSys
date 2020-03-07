@@ -7610,6 +7610,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
+		versionStr = versionStr.trim();
+		
 		int version = 0;
 		String [] versions = versionStr.split("\\."); //.需要转义
 		//System.out.println("getVersionFromFile() versions.length:" + versions.length); 
