@@ -1,0 +1,56 @@
+<div id="dialog-doc-detail">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">文件名</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="name" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">大小</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="size" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">位置</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="position" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">创建时间</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="createTime" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-2 control-label">修改时间</label>
+	       <div class="col-sm-10">
+ 	           <input class="form-control" type="text" name="latestEditTime" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function docDetailPageInit(node)
+	{
+		console.log("docDetailPageInit()");
+        var path = "::/" + node.path;
+        var createTime = formatTime(node.createTime);  
+        var lastEditTime = formatTime(node.latestEditTime);  
+		
+        $("#dialog-doc-detail input[name='name']").val(node.name);
+        $("#dialog-doc-detail input[name='size']").val(node.size);               
+        $("#dialog-doc-detail input[name='position']").val(path);                
+        $("#dialog-doc-detail input[name='createTime']").val(createTime);                
+        $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);    
+	}
+</script>
+

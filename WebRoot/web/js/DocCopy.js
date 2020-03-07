@@ -372,27 +372,32 @@
       	
 		function CopyConflictConfirm(SubContext)
 		{
+			showCopyConflictConfirmPanel(SubContext);
+		}
+		
+		function showCopyConflictConfirmPanel(SubContext)
+		{
+			console.log("showCopyConflictConfirmPanel()");
 			var copiedNodeName = SubContext.dstName;
-		    qiao.bs.dialog({
-		        id: "dialog-copyConflictDialog",
-		        url: '#copyConflictConfirmDialog',
-		        title: copiedNodeName + '已存在',
-    	        //close: false,		
-		        okbtn: "确定",
-    	        qubtn: "取消",
-		        callback: function () {
-		            setTimeout(function () {
-		                $("#dialog-copyConflictDialog input[name='newDocName']").val("Copy of " + copiedNodeName);
-		            },100);
-		        }
-		    },function () {
-		    	//确定按键
-		    	var dstName =  $("#dialog-copyConflictDialog input[name='newDocName']").val();
-		    	console.log("copyConflictConfirm newName:",dstName);
-		    	SubContext.dstName = dstName;
-				copyDoc();
-		    	return true;   
-		    });
+			
+			bootstrapQ.dialog({
+					id: 'copyConflictConfirm',
+					url: 'copyConflictConfirm.html',
+					title: copiedNodeName + '已存在',
+					msg: '页面正在加载，请稍等...',
+			        okbtn: "确定",
+	    	        qubtn: "取消",
+		             callback: function () {
+		            	 copyConflictConfirmPageInit(copiedNodeName);
+		             }
+		        },function(){
+			    	//确定按键
+			    	var dstName =  $("#dialog-copyConflictDialog input[name='newDocName']").val();
+			    	console.log("copyConflictConfirm newName:",dstName);
+			    	SubContext.dstName = dstName;
+					copyDoc();
+			    	return true;
+		        });	
 		}
 		
       	function copyErrorConfirm(SubContext,errMsg)

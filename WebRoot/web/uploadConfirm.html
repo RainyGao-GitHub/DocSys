@@ -1,0 +1,134 @@
+<div id="dialog-upload-confirm" class="form-horizontal">
+    <div class="modal-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">文件：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="uploadContent" title="上传文件">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+  	<div class="modal-footer">
+    	<div class="form-group">
+            <label class="col-sm-2 control-label">上传至：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="remoteDir" title="目标地址">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+    
+    <div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="doUploadDocs();" style="width: 200px;height: 42px;">开始上传</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function uploadConfirmPageInit(files, parentNode)
+	{
+		console.log("uploadConfirmPageInit()");
+		UploadConfirm.init(files, parentNode);            
+	}
+	
+	function closeUploadConfirmDialog()
+	{
+		closeBootstrapDialog("uploadConfirm");
+	}
+	
+	function doUploadDocs()
+	{
+		UploadConfirm.doUploadDocs();
+		closeUploadConfirmDialog();
+	}
+	
+	var UploadConfirm = (function () {
+		var files;
+		var parentNode;
+   	  	var parentPath = "";
+   	  	var parentId = 0;
+   	  	var level = 0;
+   		var vid = gReposInfo.id;
+		
+		function init(_files, _parentNode)
+		{
+			console.log("UploadConfirm.init()");
+			files = _files;
+			parentNode = _parentNode;
+	    		
+			var firstFile;
+			var relativePath;
+			
+		    if(files.length > 0)
+	   	   	{
+	   	    	console.log("files.length:" + files.length);
+	   	    	for( var i = 0 ; i < files.length ; i++ )
+	   	    	{  
+	   	    		firstFile = files[i];
+	   	    	   	if(typeof firstFile == 'object')
+	   	    	   	{
+	   	    	   		relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
+	   	    	   		console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
+	   	    	   		break;
+	   	    	   	}
+	   	    	   	else
+	   	    	   	{
+	   	    	   		//This is something else 
+	   	    	   		//console.log("it is not a file");
+	   	    	   	}
+	   	    	}
+	   	    }
+	   	    else
+	   	   	{
+	   	   		bootstrapQ.alert("请选择文件");
+	   	      	return false;
+	   	   	}  
+	   		
+	   		var fileName = firstFile.name;
+	   	    console.log("firstFile:"+fileName);
+	   	  	
+	   	  	var uploadDispInfo = fileName;
+	   	  	if(files.length > 1)
+	   	  	{
+	   	  		uploadDispInfo = uploadDispInfo + " 等" + files.length + "个文件";
+	   	  	}
+	   	  	
+	   		if(parentNode && parentNode != null)
+	   		{
+	   			parentPath = parentNode.path + parentNode.name+"/";
+	   			parentId=parentNode.id;
+	   			level = parentNode.Level+1;
+	   		}
+	   		else
+	   		{
+	   			parentNode=null;
+	   		}
+
+	   		var remoteDir = "/" + parentPath;	//only for display
+	       	
+	        $("#dialog-upload-confirm input[name='uploadContent']").val(uploadDispInfo);
+	        $("#dialog-upload-confirm input[name='remoteDir']").val(remoteDir);                
+		}
+		
+		function doUploadDocs()
+		{ 
+			//开始上传
+			DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid);
+		    return true;   
+		}
+		
+		//开放给外部的调用接口
+        return {
+			init: function(_files, _parentNode){
+				init(_files, _parentNode);
+			},
+        	doUploadDocs: function(){
+        		doUploadDocs();
+            },
+        };
+	})();
+</script>
+

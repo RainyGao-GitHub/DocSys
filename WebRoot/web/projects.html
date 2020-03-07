@@ -15,13 +15,6 @@
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 
     <link href="static/styles/styles.css" rel="stylesheet">
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="static/bootstrap/js/html5shiv.min.js"></script>
-    <script src="static/bootstrap/js/respond.min.js"></script>
-    <![endif]-->
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="static/scripts/jquery.min.js"></script>
 
 </head>
@@ -268,72 +261,6 @@
 
     $(function () {
     	pageInit();
-
-        var modalHtml = $("#create-project").find('.modal-body').html();
-        
-        //getReposList();
-
-        //弹出提示
-        $("[data-toggle='tooltip']").tooltip();
-
-        $("#projectName,#btn-project-passwd").on('focus',function () {
-            $(this).tooltip('destroy').parent('div').removeClass('has-error');;
-        });
-
-        $("#create-project").on('hidden.bs.modal',function () {
-            $("#create-project").find('.modal-body').html(modalHtml);
-        });
-
-        $("#create-project").on('click','#projectPasswd1,#projectPasswd2',function () {
-            $("#btn-project-passwd").hide();
-        });
-        $("#create-project").on('click','#projectPasswd3',function () {
-            $("#btn-project-passwd").show();
-        });
-
-        $("#btn-create").on('click',function () {
-            var $btn = $(this).button('loading');
-
-            var name = $.trim($("#projectName").val());
-
-            if(name == "") {
-                $("#projectName").tooltip({placement: "auto", title: "项目名称不能为空", trigger: 'manual'})
-                        .tooltip('show')
-                        .parent('div').addClass('has-error');
-                $btn.button('reset');
-                return false;
-            }
-            if($("#btn-project-passwd").css('display') == 'block'){
-                var passwd = $.trim($("#btn-project-passwd").val());
-                if(passwd == ""){
-                    $("#btn-project-passwd").tooltip({placement: "auto", title: "项目名称不能为空", trigger: 'manual'})
-                            .tooltip('show')
-                            .parent('div').addClass('has-error');
-                    $btn.button('reset');
-                    return false;
-                }
-            }
-            $.ajax({
-                url : "/DocSystem/Repos/doCreateRepos.do",
-                type :"post",
-                dataType :"json",
-                data : $("#create-form").serializeArray(),
-                success : function (res) {
-                    console.log(res);
-                    if(res.errcode == 20002){
-                        $(".project-box").prepend(res.data.body);
-                        $("#create-project").modal('hide');
-                    }else{
-                        alert(res.message);
-                    }
-                },
-                error : function () {
-                    alert('服务器异常:创建仓库失败');
-                }
-            });
-
-            return false;
-        });
     });
     
     function newRepos() {
