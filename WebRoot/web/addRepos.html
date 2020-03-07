@@ -1,10 +1,3 @@
-<div id="new-repos" style="display:none">
-    <form class="form" onkeydown="if(event.keyCode==13)return false;">
-
-    </form>
-</div>
-
-
 <div id="dialog-new-repos" class="form-horizontal">
 	<div class="modal-body">
         <div class="form-group">
@@ -87,8 +80,7 @@
 <script type="text/javascript">
 	function addReposPageInit(_type, _parentNode)
 	{
-		console.log("addReposPageInit()");
-        setTimeout(function () {
+			console.log("addReposPageInit()");
             $("#dialog-new-repos input[name='name']").focus();
 
             //alert(login_user.type);
@@ -112,8 +104,6 @@
             $("#dialog-new-repos input[name='svnPath1']").val("");	//置空
             $("#dialog-new-repos input[name='svnUser1']").val("");
     		$("#dialog-new-repos input[name='svnPwd1']").val("");
-            
-        },100); 
 	}
 	
 	function cancelAddRepos()
