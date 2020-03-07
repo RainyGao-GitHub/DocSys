@@ -1,0 +1,17 @@
+<div id="dialog-copyConflictDialog" class="form-horizontal">
+	<div class="modal-body">
+	    <div class="form-group">
+	        <label>请输入新的文件名/目录名</label>
+	        <input class="form-control" type="text" name="newDocName" style="width: 100%"/>
+	    </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+	function copyConflictConfirmPageInit(copiedNodeName)
+	{
+		console.log("copyConflictConfirmPageInit()");
+        $("#dialog-copyConflictDialog input[name='newDocName']").val("Copy of " + copiedNodeName);
+	}	
+</script>
+

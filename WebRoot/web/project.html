@@ -294,112 +294,6 @@
 	<p>文件上传中...</p>
 </div>
 
-<div id="doc-detail" style="display:none">
-	<div class="modal-body">
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">文件名</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="name" style="width: 100%"/>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">大小</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="size" style="width: 100%"/>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">位置</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="position" style="width: 100%"/>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">创建时间</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="createTime" style="width: 100%"/>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	   <div class="form-group">
-	       <label class="col-sm-2 control-label">修改时间</label>
-	       <div class="col-sm-10">
- 	           <input class="form-control" type="text" name="latestEditTime" style="width: 100%"/>
-	       </div>
-	       <div class="clearfix"></div>
-	   </div>
-	</div>
-</div>
-
-<div id="copyConflictConfirmDialog" style="display:none">
-    <form class="form" onkeydown="if(event.keyCode==13)return false;">
-        <div class="form-group">
-            <label>请输入新的文件名/目录名</label>
-            <input class="form-control" type="text" name="newDocName" style="width: 100%"/>
-        </div>
-    </form>
-</div>
-
-<div id="uploadConfirmDialog" style="display:none">
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">文件：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="uploadContent" title="上传文件">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-  	<div class="modal-footer">
-    	<div class="form-group">
-            <label class="col-sm-2 control-label">上传至：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="remoteDir" title="目标地址">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-
-<div id="fileCoverConfirmDialog" style="display:none">
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">文件：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="uploadContent" title="上传文件">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-
-<div id="renameConfirmDialog" style="display:none">
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">文件名：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="docName" title="rename">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-
-<div id="downloadConfirmDialog" style="display:none">
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">文件名：</label>
-            <div class="col-sm-10">
-                <input type="text" value="" class="form-control" name="entryPath" title="rename">
-            </div>
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-
 <div  style="opacity: 0;position: absolute;">
 	<textarea id="copiedText"></textarea>
 </div>	
@@ -612,111 +506,28 @@
 	               showErrorMessage("刷新失败:服务器异常！");
             }
     	});
-		
-
 	}
 	
 	function showRenameDialog(node)
 	{
 		console.log("showRenameDialog node:", node);
 
-		var docId = node.id;
-		var pid = node.pid;
-		var parentPath = node.path;
-		var docName = node.name;
-		var level = node.level;
-		var type = node.type;
-		console.log("showRenameDialog docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+		bootstrapQ.dialog(
+			{
+				id: 'renameConfirm',
+				url: 'renameConfirm.html',
+				title: '重命名',
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+		        //okbtn: "确定",
+				callback: function(){
+					renameConfirmPageInit(node);
+				}, 
+			},
+		);
 		
-		//Show dialog
-	    qiao.bs.dialog({
-	        id: "dialog-renameDialog",
-	        url: '#renameConfirmDialog',
-	        title: '重命名',
-	        okbtn: "确定",
-	        callback: function () {
-	            setTimeout(function () {
-	                $("#dialog-renameDialog input[name='docName']").val(docName);	                 
-	            },100);
-	        }
-	    },function () {
-			var newName = $("#dialog-renameDialog input[name='docName']").val();
-			doRenameDoc(docId, type, level, pid, parentPath, docName,newName);
-	    	return true;   
-	    });
 		return true;
 	}
-		
-	function doRenameDoc(docId, type,  level, pid, parentPath, docName, newName)
-	{
-   		console.log("doRenameDoc docId:" + docId + " type:"+ type + " level:" + level + " pid:" + pid + " path:" + parentPath + " name:" + docName + " newName:" +  newName);
-		$.ajax({
-            url : "/DocSystem/Doc/renameDoc.do",
-            type : "post",
-            dataType : "json",
-            data : {
-            	reposId: gReposInfo.id,
-                docId : docId,
-                pid	: pid,
-                type: type,
-                level: level,
-                path: parentPath,
-                name: docName,
-                dstName: newName,
-                shareId: gShareId,
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	console.log("renameDoc ok:", ret.data)
-                    //Rename at zTree
-              	    addTreeNode(ret.data);
-              	    deleteTreeNodeById(docId);
-
-              		//Rename at docList
-              		DocList.deleteNode(docId);
-              		addDocListNode(ret.data);
-		            
-			     	bootstrapQ.msg({
-							msg : "重命名完成！",
-							type : 'success',
-							time : 2000,
-					});
-                }
-                else
-                {
-                	showErrorMessage("重命名失败:" + ret.msgInfo);
-                }
-            },
-            error : function () {
-	               showErrorMessage("重命名失败:服务器异常！");
-            }
-    	});
-	}
-	
-	function renameTreeNode(id, newDocId, newName)
-	{
-		var zTree = $.fn.zTree.getZTreeObj("doctree");
-		var node = zTree.getNodeByParam("id",id);
-		if(node && node != null)
-		{
-			node.name = newName;
-			node.id = newDocId;
-			node.docId = newDocId;
-		}
-		zTree.updateNode(node);
-		
-	    //Add or Delete from zTree
-  	    addTreeNode(doc);
-  	    deleteTreeNodeById(SubContext.docId);
-
-		
-		if(node.isParent == true && node.open == true) //刷新目录
-		{
-			//强制异步刷新子目录，以保证子目录的信息正确
-			zTree.reAsyncChildNodes(node, "refresh",true);	
-		}
-	}
-	
 
 	function getSelectedNodes()
 	{
@@ -1049,83 +860,27 @@
 	function uploadConfirm(files,parentNode)
 	{	
 		console.log("uploadConfirm()");
-		//build upload confirm text
-	    if(files.length > 0)
-	   	{
-	    	console.log("files.length:" + files.length);
-	    	for( var i = 0 ; i < files.length ; i++ )
-	    	{  
-	    		firstFile = files[i];
-	    	   	if(typeof firstFile == 'object')
-	    	   	{
-	    	   		relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
-	    	   		console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
-	    	   		break;
-	    	   	}
-	    	   	else
-	    	   	{
-	    	   		//This is something else 
-	    	   		//console.log("it is not a file");
-	    	   	}
-	    	}
-	    }
-	    else
-	   	{
-	   		bootstrapQ.alert("请选择文件");
-	      	return false;
-	   	}  
-		
-		var fileName = firstFile.name;
-	    console.log("firstFile:"+fileName);
-	  	
-	  	var uploadDispInfo = fileName;
-	  	if(files.length > 1)
-	  	{
-	  		uploadDispInfo = uploadDispInfo + " 等" + files.length + "个文件";
-	  	}
-	  	
-		//get the parentInfo
-	  	var parentPath = "";
-	  	var parentId = 0;
-	  	var level = 0;
-		if(parentNode && parentNode != null)
-		{
-			parentPath = parentNode.path + parentNode.name+"/";
-			parentId=parentNode.id;
-			level = parentNode.Level+1;
-		}
-		else
-		{
-			parentNode=null;
-		}
-		
-		var vid = gReposInfo.id;
-
-		var remoteDir = "/" + parentPath;	//only for display
-		
-	    qiao.bs.dialog({
-	        id: "dialog-uploadDialog",
-	        url: '#uploadConfirmDialog',
-	        title: '文件上传',
-	        okbtn: "开始上传",
-	        callback: function () {
-	            setTimeout(function () {
-	                //alert("it works now");
-	                //set the show name for uploadFiles
-	                //$("#uploadContent").val(uploadContent);
-	                $("#dialog-uploadDialog input[name='uploadContent']").val(uploadDispInfo);
-	                //set the show name for destiontion remote directory
-	                $("#dialog-uploadDialog input[name='remoteDir']").val(remoteDir);                
-	                 
-	            },100);
-	        }
-	    },function () {
-	    	//alert("点击了确定");
-			//开始上传
-			DocUpload.uploadDocs(files,parentNode,parentPath,parentId,level,vid);
-	    	return true;   
-	    });
+		showUploadConfirmPanel(files, parentNode);
 		return true;
+	}
+	
+	function showUploadConfirmPanel(files, parentNode)
+	{
+		console.log("showUploadConfirmPanel()");
+		
+		bootstrapQ.dialog(
+			{
+				id: 'uploadConfirm',
+				url: 'uploadConfirm.html',
+				title: '文件上传',
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+				big: false,
+				//okbtn: "开始上传",
+				callback: function(){	//page load ok callback
+					uploadConfirmPageInit(files, parentNode);
+				},
+			});		
 	}
 	
 	function uploadWithoutConfirm(files,parentNode)
@@ -4141,15 +3896,16 @@ function CompareObj(objA, objB, flag) {
 	
 	//不再使用非标的bootstrapQ
 	function showAddDocPanel(type, parentNode)
-	{
-	    //对话框 title
+	{	    
+		console.log("showAddDocPanel()");
+
+		//对话框 title
         var title = "新建文件";
         if(type == 2)
         {
         	title = "新建目录";
         }
-    
-		console.log("showAddDocPanel title:" + title);
+
 		bootstrapQ.dialog({
 				id: 'addDoc',
 				url: 'addDoc.html',
@@ -4175,29 +3931,25 @@ function CompareObj(objA, objB, flag) {
 			return;
 		}
 		
-        //显示新建对话框
-        //对话框 title
-        var title = "详细信息";
-        var path = "::/" + node.path;
-        var createTime = formatTime(node.createTime);  
-        var lastEditTime = formatTime(node.latestEditTime);  
-        qiao.bs.dialog({
-              id: "dialog-doc-detail",
-              url: '#doc-detail',
-              title: title,
-              okbtn: "确定",
-              callback: function () {
-                      $("#dialog-doc-detail input[name='name']").val(node.name);
-                      $("#dialog-doc-detail input[name='size']").val(node.size);               
-                      $("#dialog-doc-detail input[name='position']").val(path);                
-                      $("#dialog-doc-detail input[name='createTime']").val(createTime);                
-                      $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);                
-              }
-        },function(){
-        	return true;
-        });	
-
-	}	
+		showDocDetailPanel(node);
+	}
+	
+	function showDocDetailPanel(node)
+	{
+		console.log("showDocDetailPanel()");
+		bootstrapQ.dialog({
+				id: 'docDetail',
+				url: 'docDetail.html',
+				title: '详细信息',
+				msg: '页面正在加载，请稍等...',
+	            okbtn: "确定",
+	              callback: function () {
+	            	  docDetailPageInit(node);
+	              }
+	        },function(){
+	        	return true;
+	        });	
+	}
     
     //ShowCenter: hide left and right
     function showCenterDiv(){
