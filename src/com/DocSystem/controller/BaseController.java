@@ -7198,7 +7198,7 @@ public class BaseController  extends BaseFunction{
 		return docSysInitAuthCode;
 	}
 	
-	protected static boolean docSysInit() 
+	protected static boolean docSysInit(boolean force) 
 	{	
 		if(docSysWebPath == null)
 		{
@@ -7229,24 +7229,28 @@ public class BaseController  extends BaseFunction{
 		//测试数据库连接
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
-			System.out.println("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
-			return false;
-			
-			/* 自动创建数据库
-			createDB(dbName, DB_URL, DB_USER, DB_PASS);
-			if(initDB(DB_URL, DB_USER, DB_PASS) == false)
+			if(force == false)
 			{
-				System.out.println("docSysInit() 新建数据库失败");
+				System.out.println("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
 				return false;
 			}
-			System.out.println("docSysInit() 新建数据库成功");
-			
-			checkAndAddFirstUser();
-			
-			//更新版本号
-			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
-			return true;
-			*/
+			else
+			{
+				//自动创建数据库
+				createDB(dbName, DB_URL, DB_USER, DB_PASS);
+				if(initDB(DB_URL, DB_USER, DB_PASS) == false)
+				{
+					System.out.println("docSysInit() 新建数据库失败");
+					return false;
+				}
+				System.out.println("docSysInit() 新建数据库成功");
+				
+				checkAndAddFirstUser();
+				
+				//更新版本号
+				copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
+				return true;
+			}
 		}
 		
 		//有些情况下这个接口未必会成功，因此不进行错误检查
