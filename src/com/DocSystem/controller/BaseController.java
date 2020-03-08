@@ -7207,25 +7207,17 @@ public class BaseController  extends BaseFunction{
 		}	
 		
 		//Update the value of DB_URL/DB_USER/DB_PASS
-		String userJDBCSettingPath = docSysIniPath + "jdbc.properties";
-		String defaultJDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
-		if(isFileExist(userJDBCSettingPath))
-		{
-			getAndSetDBInfoFromFile(userJDBCSettingPath);
-		}
-		else
-		{
-			getAndSetDBInfoFromFile(defaultJDBCSettingPath);
-		}
+		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
+		getAndSetDBInfoFromFile(JDBCSettingPath);
 		
 		//Get dbName from the DB URL
 		String dbName = getDBNameFromUrl(DB_URL);
 		
-		//Check If DocIniDir exists
 		File docSysIniDir = new File(docSysIniPath);
 		if(docSysIniDir.exists() == false)
 		{
-			docSysIniDir.mkdirs();
+			//docSysIniDir不存在有两种可能，首次安装或者旧版本版本过低
+			docSysIniDir.mkdirs();	
 		}
 		
 		if(initObjMemberListMap() == false)
@@ -7234,9 +7226,13 @@ public class BaseController  extends BaseFunction{
 			return false;			
 		}
 		
-		//检查docsystem数据库是否存在
+		//测试数据库连接
 		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
+			System.out.println("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");				
+			return false;
+			
+			/* 自动创建数据库
 			createDB(dbName, DB_URL, DB_USER, DB_PASS);
 			if(initDB(DB_URL, DB_USER, DB_PASS) == false)
 			{
@@ -7250,6 +7246,7 @@ public class BaseController  extends BaseFunction{
 			//更新版本号
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
 			return true;
+			*/
 		}
 		
 		//有些情况下这个接口未必会成功，因此不进行错误检查

@@ -29,7 +29,7 @@
                 <button class="btn btn-default dropdown-toggle hidden-lg" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                 <ul class="dropdown-menu" role="menu">
                     <li>
-                        <a href="/DocSystem/web/index.html" title="进入系统">进入系统</a>
+                        <a onclick="docSysInit();" title="进入系统">进入系统</a>
                     </li>
                     
                 </ul>
@@ -38,8 +38,8 @@
         
         <nav class="navbar-collapse hidden-xs hidden-sm" role="navigation">
             <ul class="nav navbar-nav navbar-right">
-				<li id="loginBtn">
-                     <a href="/DocSystem/web/index.html" title="进入系统">进入系统</a>
+				<li id="enterSystemBtn">
+                     <a onclick="docSysInit();" title="进入系统">进入系统</a>
                 </li>          
             </ul>
         </nav>
@@ -50,8 +50,8 @@
         <div class="row">
             <div id="menu" class="page-left"  style="display:none">
                 <ul class="menu">
-                    <li id="sysConfigTag" class="active"><a href="javascript:PageSwitch('sysConfig')" class="item"> 系统信息</a> </li>
-                    <li id="dbConfigTag"><a href="javascript:PageSwitch('dbConfig')" class="item"> 数据库</a> </li>  
+                    <li id="dbConfigTag" class="active"><a href="javascript:PageSwitch('dbConfig')" class="item"> 数据库</a> </li>  
+                    <li id="sysConfigTag"><a href="javascript:PageSwitch('sysConfig')" class="item"> 系统信息</a> </li>
                 </ul>
             </div>
             <div id="sysConfig" class="page-right" style="display:none">
@@ -148,7 +148,8 @@
         gToHref = getQueryString("toHref");
         if(!gToHref)
         {
-        	gToHref = "sysConfig";
+        	//gToHref = "sysConfig";
+        	gToHref = "dbConfig";
         }           
         
         console.log("gToHref:" + gToHref); 
@@ -224,7 +225,34 @@
         }
         return href + "?" + str.substr(1);
     }
-	
+    
+    function docSysInit()
+    {
+    	console.log("sysConfigPageInit");
+		$.ajax({
+	        url : "/DocSystem/Manage/docSysInit.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	//进入系统主页
+	            	window.location.href='/DocSystem/web/index.html';            	
+	            }
+	            else
+	            {
+		        	showErrorMessage("系统初始化失败:" + ret.msgInfo);
+	            	console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:系统初始化失败");
+	        }
+	    });
+    }
     
 	function sysConfigPageInit(){
 		console.log("sysConfigPageInit");
