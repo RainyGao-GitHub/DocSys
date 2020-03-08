@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -6173,29 +6174,51 @@ public class BaseController  extends BaseFunction{
 			e.printStackTrace();
 		}  
 	}
-
-	protected boolean isChunkMatched(String chunkFilePath, String chunkHash) {
+	
+	protected static String getFileCheckSum(String filePath) {
+		String checkSum = null;
+		
 		//检查文件是否存在
-		File f = new File(chunkFilePath);
+		File f = new File(filePath);
 		if(!f.exists()){
-			return false;
+			return null;
 		}
 
-		//Check if chunkHash is same
+		FileInputStream in = null;
 		try {
-			FileInputStream file = new FileInputStream(chunkFilePath);
-			String hash=DigestUtils.md5Hex(file);
-			file.close();
-			if(hash.equals(chunkHash))
-			{
-				return true;
-			}
+			in = new FileInputStream(filePath);
+			checkSum=DigestUtils.md5Hex(in);
+			in.close();
 		} catch (Exception e) {
 			System.out.println("isChunkMatched() Exception"); 
 			e.printStackTrace();
+		} finally {
+			if(in != null)
+			{
+				try {
+					in.close();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return checkSum;
+	}
+	
+	protected boolean isChunkMatched(String chunkFilePath, String chunkHash) {
+		
+		String checkSum = getFileCheckSum(chunkFilePath);
+		if(checkSum == null)
+		{
 			return false;
 		}
 
+		if(checkSum.equals(chunkHash))
+		{
+			return true;
+		}
 		return false;
 	}
 	
@@ -7208,6 +7231,21 @@ public class BaseController  extends BaseFunction{
 		
 		//Update the value of DB_URL/DB_USER/DB_PASS
 		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";
+		
+		String UserJDBCSettingPath = docSysIniPath + "jdbc.properties";
+		if(isFileExist(UserJDBCSettingPath))
+		{
+			//检查UserJDBCSettingPath是否与JDBCSettingPath一致，如果不一致则直接退出，等待用户重启服务器
+			String checkSum1 = getFileCheckSum(UserJDBCSettingPath);
+			String checkSum2 = getFileCheckSum(JDBCSettingPath);
+			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
+			{
+				System.out.println("docSysInit() 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
+				copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
+				return false;
+			}
+		}
+		
 		getAndSetDBInfoFromFile(JDBCSettingPath);
 		
 		//Get dbName from the DB URL
