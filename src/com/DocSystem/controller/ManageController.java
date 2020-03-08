@@ -40,6 +40,29 @@ public class ManageController extends BaseController{
 	@Autowired
 	private ReposServiceImpl reposService;
 	
+	/********** 系统初始化 ***************/
+	@RequestMapping("/docSysInit.do")
+	public void docSysInit(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("docSysInit()");
+		ReturnAjax rt = new ReturnAjax();
+		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(docSysInit(true) == true)
+		{
+			docSysIniState = 0;
+		}
+		else
+		{
+			docSysErrorLog("系统初始化失败，请检查数据库配置是否正确？", rt);
+		}
+		writeJson(rt, response);
+	}
+	
 	/********** 获取系统邮件配置 ***************/
 	@RequestMapping("/getSystemEmailConfig.do")
 	public void getSystemEmailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)

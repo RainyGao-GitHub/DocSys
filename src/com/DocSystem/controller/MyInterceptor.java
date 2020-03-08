@@ -32,7 +32,8 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"feeback",
 		//系统管理
 		"Manage/getSystemLog", 
-		"Manage/importDBData", 
+		"Manage/importDBData",
+		"Manage/docSysInit",
 		//文件分享
 		"Doc/getDocShare",
 		"Repos/getRepos",
