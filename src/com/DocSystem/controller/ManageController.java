@@ -626,7 +626,7 @@ public class ManageController extends BaseController{
 	public void upgradeSystem(MultipartFile uploadFile, String authCode, 
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
-		System.out.println("importDBData()");
+		System.out.println("upgradeSystem()");
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
