@@ -413,7 +413,7 @@
 	}
 	
 	//系统数据库设置
-	var systemDbConfig = {
+	var systemDbSetting = {
 			url: "",
 			user: "",
 			pwd: "",
@@ -422,9 +422,9 @@
 		$("#btnEnableSystemDBSet").hide();
 		$("#btnCancelSystemDBSet").show();
 		$("#btnSaveSystemDBSet").show();
-		$("#systemDbUrl").val(systemDbConfig.url);
-		$("#systemDbUser").val(systemDbConfig.user);
-		$("#systemDbPwd").val(systemDbConfig.pwd);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
 		
 		$("#systemDbUrl").attr('disabled',false);;
 		$("#systemDbUser").attr('disabled',false);
@@ -439,9 +439,9 @@
 		$("#systemsystemDbUrl").attr('disabled',true);;
 		$("#systemDbUser").attr('disabled',true);
 		$("#systemDbPwd").attr('disabled',true);
-		$("#systemDbUrl").val(systemDbConfig.url);
-		$("#systemDbUser").val(systemDbConfig.user);
-		$("#systemDbPwd").val(systemDbConfig.pwd);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
 	}
 	
 	function saveSystemDBSet(){
@@ -455,7 +455,7 @@
 		var url = $("#systemDbUrl").val();
 		var user = $("#systemDbUser").val();
 		var pwd = $("#systemDbPwd").val();
-		updateSystemDBConfig(url, user, pwd);
+		updatesystemDbSetting(url, user, pwd);
 	}
 	
 	function dbConfigPageInit(){
@@ -470,12 +470,12 @@
 	            if( "ok" == ret.status )
 	            {
 					var config = JSON.parse(ret.data);
-					systemDbConfig.url = config.url;
-					systemDbConfig.user = config.user;
-					systemDbConfig.pwd = config.pwd;
-	            	$("#systemDbUrl").val(systemDbConfig.url);
-	            	$("#systemDbUser").val(systemDbConfig.user);
-	            	$("#systemDbPwd").val(systemDbConfig.pwd);				
+					systemDbSetting.url = config.url;
+					systemDbSetting.user = config.user;
+					systemDbSetting.pwd = config.pwd;
+	            	$("#systemDbUrl").val(systemDbSetting.url);
+	            	$("#systemDbUser").val(systemDbSetting.user);
+	            	$("#systemDbPwd").val(systemDbSetting.pwd);				
 	            }
 	            else 
 	            {
@@ -489,7 +489,7 @@
 	    });
 	}
     
-	function updateSystemDBConfig(url, user, pwd){
+	function updatesystemDbSetting(url, user, pwd){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemDBConfig.do",
 	        type : "post",
