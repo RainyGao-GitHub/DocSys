@@ -23,29 +23,47 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 ### [立即体验](http://dw.gofreeteam.com) [user: guest/guest]
 
 # 系统安装
-## 一、准备工作
-### 1、下载DocSystem.war
+## 一、Windows系统安装步骤
+### 1、准备工作
+#### 下载DocSystem.war
 下载地址： https://gitee.com/RainyGao/DocSys/releases
+#### 下载JDK
+下载地址： https://download.csdn.net/download/highrain/12233906
+#### 下载XAMPP
+下载地址： https://download.csdn.net/download/highrain/12233724
+#### 下载OpenOffice(可选)
+下载地址： https://download.csdn.net/download/highrain/12233900
 
-## 二、Windows系统安装步骤
-### 1、安装JDK
+### 2、安装JDK
 请使用JDK或JRE 1.8版本
 
-### 2、安装XAMPP（tomcat和mysql）
+### 3、安装XAMPP（tomcat和mysql）
 （1）安装完成后启动mysql和tomcat
 （2）点击tomcat的config按键，选择“<Browser>”找到webapps目录，将DocSystem.war放到该目录，点击Start启动
 
-### 3、访问
+### 4、访问
 
 本机访问：http://localhost:8080/DocSystem
 
 远程访问：将localhost改为IP地址即可
 
-## 三、Linux系统安装步骤
-### 1、安装JDK
+## 二、Linux系统安装步骤
+### 1、准备工作
+#### 下载DocSystem.war
+下载地址： https://gitee.com/RainyGao/DocSys/releases
+#### 下载JDK
+下载地址： https://www.oracle.com/java/technologies/javase-jdk8-downloads.html
+#### 下载MYSQL
+下载地址： https://www.mysql.com
+#### 下载TOMCAT
+下载地址： https://tomcat.apache.org/download-70.cgi
+#### 下载OpenOffice(可选)
+下载地址： https://download.csdn.net/download/highrain/12233901
+
+### 2、安装JDK
 请使用JDK或JRE 1.8版本
 
-### 2、安装mysql
+### 3、安装mysql
 
 （1）下载Linux版本的mysql安装包，将其解压到/usr/local/mysql目录即可
 
