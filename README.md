@@ -39,7 +39,7 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 
 ### 3、安装XAMPP（tomcat和mysql）
 （1）安装完成后启动mysql和tomcat
-（2）点击tomcat的config按键，选择“<Browser>”找到webapps目录，将DocSystem.war放到该目录，点击Start启动
+（2）点击tomcat的config按键，选择“Browser”找到webapps目录，将DocSystem.war放到该目录，点击Start启动
 
 ### 4、访问
 
