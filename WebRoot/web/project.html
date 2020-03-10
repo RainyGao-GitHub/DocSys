@@ -1485,6 +1485,7 @@
 	
 	function DocOnClick()
 	{
+		console.log("DocOnClick()");
 		//for pad or phone need to open it
 		if(gIsPC == false)
 		{			
@@ -1495,8 +1496,16 @@
 	//对于直接图标直接点击将尝试打开二进制文件
     function DocOnDblClick()
     {
-    	//show unknown doc in text diaglog
-    	openDocInDialog(gDocInfo, true);
+		if(gDocInfo.type == 1)
+		{
+	    	//show unknown doc in text diaglog
+	    	openDocInDialog(gDocInfo, true);
+		}
+		else
+		{
+			showDocList(gDocInfo);
+			showCenterDiv();			
+		}
     }
 	
     function copyDocInfo(doc)
