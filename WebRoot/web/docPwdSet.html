@@ -1,0 +1,105 @@
+<div class="form-horizontal">
+    <div class="form-group">
+    	<label class="col-sm-2 control-label">访问密码</label>
+        <div class="col-sm-10">
+            <input type="text" id="docAccessPwd" name="docAccessPwd" class="form-control"  maxlength="40"></input>
+        </div>
+    </div>
+	<div class="form-group">
+	    <div class="col-sm-12 text-center">
+	        <button  type="button" class="btn btnPrimary" onclick="setDocPwd();" style="width:300px;height: 42px;">确定</button>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	var shareId = null;
+	var successCallback = null;
+	function DocPwdSetPageInit(_node)
+	{
+		console.log("DocPwdSetPageInit()");
+		DocPwdSet.init(_node);  
+	}
+	
+	function closeDocPwdSetDialog()
+	{
+		closeBootstrapDialog("docPwdSet");
+	}
+
+	function setDocPwd()
+	{
+		DocPwdSet.doSetDocPwd();
+		closeDocPwdSetDialog();	
+	}
+	
+	var DocPwdSet = (function () {
+		var path;
+		var name;
+		var node;
+		
+		function init(_node)
+		{
+			console.log("DocPwdSet.init() " + path + name);
+
+			node = _node;
+			path = node.path;
+			name = node.name;
+		}
+		
+		
+	    function doSetDocPwd()
+	   	{
+	    	console.log("doSetDocPwd() " + path + name);
+	
+	    	var pwd = $("#docAccessPwd").val();
+	    	$.ajax({
+	            url : "/DocSystem/Doc/setDocPwd.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	path: path,
+	            	name: name,
+	            	pwd: pwd,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status )
+	                {
+						bootstrapQ.msg({
+									msg : "设置成功！",
+									type : 'success',
+									time : 2000,
+						});  
+	                }
+	                else 
+	                {
+	                	console.log(ret.msgInfo);
+	                    // 普通消息提示条
+	        			bootstrapQ.msg({
+	        					msg :  "设置失败:" + ret.msgInfo,
+	        					type : 'warning',
+	        					time : 2000,
+	        				    }); 
+	                }
+	            },
+	            error : function () {
+	                // 普通消息提示条
+	    			bootstrapQ.msg({
+	    					msg :  "设置失败: 服务器异常",
+	    					type : 'warning',
+	    					time : 2000,
+	    				    }); 
+	            }
+	        });   
+	   	}
+		//开放给外部的调用接口
+        return {
+			init: function(_node){
+				init(_node);
+			},
+        	doSetDocPwd: function(){
+        		doSetDocPwd();
+            },
+        };
+	})();
+</script>
+
