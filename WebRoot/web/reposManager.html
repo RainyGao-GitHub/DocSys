@@ -1227,6 +1227,22 @@ function showReposSettingPanel(){
 		big: true,
 	}, null);
 }
+
+function showDocPwdSetPanel(){
+	console.log("showDocPwdSetPanel");
+	bootstrapQ.dialog({
+		title: '密码设置',
+		url: 'docPwdSet.html',
+		msg: '页面正在加载，请稍等...',
+		foot: false,
+		big: true,
+		//okbtn: "确定",
+		callback: function(){
+			DocPwdSetPageInit(node);
+		}, 
+	}, null);
+}
+
 </script>
 <script type="text/javascript">
 	
