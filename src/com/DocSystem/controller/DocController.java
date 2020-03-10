@@ -2833,7 +2833,70 @@ public class DocController extends BaseController{
 		unlockDoc(doc,reposAccess.getAccessUser(),docLock);
 		writeJson(rt, response);
 	}
+	
+	/****************   set  Doc Access PWD ******************/
+	@RequestMapping("/setDocPwd.do")
+	public void setDocPwd(Integer reposId, String path, String name,
+			String pwd,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("setDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
 
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//获取并检查用户权限
+		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
+		if(docAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);
+			return;
+		}
+		else
+		{
+			Integer access = docAuth.getAccess();
+			Integer isAdmin = docAuth.getIsAdmin();
+			if(access == null || isAdmin == null || isAdmin.equals(0) || access.equals(0))
+			{
+				rt.setError("您无权访问该文件，请联系管理员");
+				writeJson(rt, response);
+				return;
+			}			
+		}
+		
+		//设置文件密码
+		if(setDocPwd(repos, doc, pwd) == false)
+		{
+			rt.setError("您无权访问该文件，请联系管理员");			
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean setDocPwd(Repos repos, Doc doc, String pwd) {
+		
+		String reposPwdPath = getReposPwdPath(repos);
+		String pwdFileName = doc.getDocId() + ".pwd";
+		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName);
+	}
+	
 	/****************   add a DocShare ******************/
 	@RequestMapping("/addDocShare.do")
 	public void addDocShare(Integer reposId, String path, String name,
