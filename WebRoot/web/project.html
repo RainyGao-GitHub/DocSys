@@ -3093,7 +3093,14 @@ function CompareObj(objA, objB, flag) {
        			{
        				if(node.type == 2)
        				{
-   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';   
+       					if(DocListState == 0)
+       					{
+	   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';   
+       					}
+       					else
+       					{
+	   	        			str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)" class="filename pull-left  nowrap ellipsis" style="width: 60%; color:red">'+iconType + node.name+'</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons folder-open2" onclick="dk(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';          						
+       					}
        				}
        				else
        				{
@@ -3104,7 +3111,14 @@ function CompareObj(objA, objB, flag) {
    	           	{
    	           		if(node.type == 2)
    	           		{
-	   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+       					if(DocListState == 0)
+       					{
+		   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons note" onclick="xs(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';
+       					}
+       					else
+       					{
+		   	           	    str += ' class="second-listBox" onmousedown="docListOnMouseDown(this,event)"><div onclick="DocListOnClick(this)" ondblclick="DocListOnDbClick(this)"  class="filename pull-left  nowrap ellipsis" style="width: 60%;">'+iconType + node.name + '</div><div class="filedate pull-right">'+formatDate(node.latestEditTime)+'</div><div class="handle pull-right"><i class="icons folder-open2" onclick="dk(this,event)"></i><i onclick="showContextMenu(this,event)" class="icons more"></i></div></li>';       						
+       					}
    	           		}
    	           		else
    	           		{
@@ -3427,6 +3441,32 @@ function CompareObj(objA, objB, flag) {
 		getAndShowDoc(node, 1, false);
 
 		showRightDiv();
+	}
+ 	
+ 	//打开目录
+ 	function dk(obj,event){
+		var docListNode = $(obj).parents('li');
+
+ 		var docId = docListNode.attr('dataId');
+   	 	var pid = docListNode.attr('dataPid');
+   	 	var path = docListNode.attr('dataPath');
+   	 	var name = docListNode.attr('dataName');
+   	 	var type = docListNode.attr('dataType');
+   	 	var latestEditTime = docListNode.attr('latestEditTime');
+	 	
+   	 	var node = {};
+   	 	node.vid = gReposInfo.id;
+   	 	node.id = docId;
+   	 	node.pid = pid;
+   		node.path = path;
+   		node.name = name;
+   		node.type = type;
+   		node.latestEditTime = latestEditTime;
+ 		
+ 		console.log("dk() node:", node);
+
+ 		DocListState = 0;
+ 		showDocList(node);		
 	}
  	
  	function fx(obj,event){

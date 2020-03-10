@@ -371,3 +371,8 @@ ul.ztree.zTreeDragUL {margin:0; padding:0; position:absolute; width:auto; height
 	background-position: 0px 0px;
    	background-size: 18px 18px; 
 }
+.icons.folder-open2{
+	background: url("./img/folder_open2.svg") no-repeat; 
+	background-position: 0px 0px;
+   	background-size: 18px 18px; 
+}
