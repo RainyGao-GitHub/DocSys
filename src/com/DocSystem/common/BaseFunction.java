@@ -663,6 +663,14 @@ public class BaseFunction{
 		return reposVPath;
 	}
 	
+	//获取仓库的密码文件的存储路径
+	protected static String getReposPwdPath(Repos repos)
+	{
+		String reposPwdPath = getReposPath(repos) + "data/pwd/";	//实文件系统的存储数据放在data目录下 
+		//System.out.println("getReposPwdPath() " + reposPwdPath);
+		return reposPwdPath;
+	}
+	
 	protected String getVDocName(Doc doc) 
 	{
 		//return doc.getVid() + "_" + doc.getDocId() + "_" + doc.getName();
