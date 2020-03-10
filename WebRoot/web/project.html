@@ -3299,8 +3299,8 @@ function CompareObj(objA, objB, flag) {
 		//显示预览或备注
 		getAndShowDoc(node, 1, false);
 
-		 //docList显示更新
-		if(type == 1)	//For File, show RightDiv
+		//如果是文件或者搜索结构那么在手机上显示详情
+		if(type == 1 || DocListState == 1)
 		{
 		 	showRightDiv();
 		}
@@ -3331,18 +3331,17 @@ function CompareObj(objA, objB, flag) {
  		
  		console.log("DocListOnDbClick node:", node);
  		
-		if(type == 2)
+ 		if(DocListState == 0 && type == 2)
 		{
-			DocListState == 1;
 	 		//更新DocList
 			showDocList(node);
 		}
- 		
+		
 		//显示预览或备注
 		getAndShowDoc(node, 2, false);
 			
-		 //docList显示更新
-		if(type == 1)	//For File, show RightDiv
+		//如果是文件或者搜索结构那么在手机上显示详情
+		if(type == 1 || DocListState == 1)
 		{
 		 	showRightDiv();
 		}
@@ -3428,9 +3427,6 @@ function CompareObj(objA, objB, flag) {
 		getAndShowDoc(node, 1, false);
 
 		showRightDiv();
-		 	
-		 //在zTree上选中该doc
-		 //zTreeSelectDoc(docId, path, name);		
 	}
  	
  	function fx(obj,event){
