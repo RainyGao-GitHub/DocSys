@@ -720,6 +720,25 @@ public class ReposController extends BaseController{
 			doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true, localRootPath, localVRootPath, null, null);
 		}
 		
+		Doc tmpDoc = docSysGetDoc(repos, doc);
+		if(tmpDoc == null)
+		{
+			System.out.println("getSubDocList() 文件 " + doc.getPath() + doc.getName() + " 不存在！");
+			rt.setData("");
+			rt.setMsgInfo("文件 " + doc.getPath() + doc.getName() + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(tmpDoc.getType() == null || tmpDoc.getType() == 1)
+		{
+			System.out.println("getSubDocList() [" + doc.getPath() + doc.getName() + "] 是文件");
+			docList.add(tmpDoc);
+			rt.setData(docList);
+			writeJson(rt, response);			
+			return;			
+		}
+		
 		//get the rootDocAuth
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
