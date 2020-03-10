@@ -3669,6 +3669,21 @@ public class BaseController  extends BaseFunction{
 		return localDoc;
 	}
 	
+	protected Doc docSysGetDoc(Repos repos, Doc doc) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+		case 2:
+			return fsGetDoc(repos, doc);
+		case 3:
+		case 4:
+			return verReposGetDoc(repos, doc, null);
+		}
+		
+		return null;
+	}
+	
 	protected boolean verReposPullPush(Repos repos, boolean isRealDoc, ReturnAjax rt)
 	{
 		Integer isRemote = repos.getIsRemote();
