@@ -178,13 +178,37 @@ public class LuceneUtil2   extends BaseFunction
 
 	private static Document buildDocument(Doc doc, String content) {
 		Document document = new Document();
-        document.add(new IntField("vid", doc.getVid(), Store.YES));
-        document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
-        document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
-        document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
-        document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
-        document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
-        //Size
+		if(doc.getVid() != null)
+		{
+			document.add(new IntField("vid", doc.getVid(), Store.YES));
+		}
+		
+		if(doc.getPid() != null)
+		{
+			document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+		}
+		
+		if(doc.getDocId() != null)
+		{
+			document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+		}
+		
+		if(doc.getPath() != null)
+		{
+			document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		}
+		
+		if(doc.getName() != null)
+		{
+			document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
+		}
+		
+		if(doc.getType() != null)
+		{
+			document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
+		}
+		
+		//Size
         if(doc.getSize() != null)
         {
             document.add(new LongField("size", doc.getSize(), Store.YES));
@@ -542,11 +566,35 @@ public class LuceneUtil2   extends BaseFunction
 	    	String strType = hitDocument.get("type");
 	    	String strSize = hitDocument.get("size");
 	    	String strLatestEditTime = hitDocument.get("latestEditTime");
-	    	Long docId = Long.parseLong(strDocId);
-	    	Long pid = Long.parseLong(strPid);
-	    	Integer type = Integer.parseInt(strType);
-	    	Long size = Long.parseLong(strSize);
-	    	Long latestEditTime = Long.parseLong(strLatestEditTime);
+	    	Long docId = null;
+	    	if(strDocId != null && !strDocId.isEmpty())
+	    	{
+	    		docId = Long.parseLong(strDocId);
+	    	}
+
+	    	Long pid = null;
+	    	if(strPid != null && !strPid.isEmpty())
+	    	{
+	    		pid = Long.parseLong(strPid);
+	    	}
+	    	
+	    	Integer type = null;
+	    	if(strType != null && !strType.isEmpty())
+	    	{
+	    		type = Integer.parseInt(strType);
+	    	}
+	    	
+	    	Long size = null;
+	    	if(strSize != null && !strSize.isEmpty())
+	    	{
+	    		size = Long.parseLong(strSize);
+	    	}
+	    	
+	    	Long latestEditTime = null;
+	    	if(strLatestEditTime != null && !strLatestEditTime.isEmpty())
+	    	{
+	    		Long.parseLong(strLatestEditTime);
+	    	}
 	    	
 	    	Doc doc = new Doc();
 	    	doc.setVid(repos.getId());
