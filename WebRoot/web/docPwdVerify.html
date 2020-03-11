@@ -10,45 +10,45 @@
 	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="setDocPwd();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelSetDocPwd();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="verifyDocPwd();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelVerifyDocPwd();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
 </div>
 
 <script type="text/javascript">
-	function DocPwdSetPageInit(_reposId,_node)
+	function DocPwdVerifyPageInit(_reposId,_node)
 	{
-		console.log("DocPwdSetPageInit()");
-		DocPwdSet.init(_reposId,_node);  
+		console.log("DocPwdVerifyPageInit()");
+		DocPwdVerify.init(_reposId, _node);  
 	}
 	
-	function closeDocPwdSetDialog()
+	function closeDocPwdVerifyDialog()
 	{
-		closeBootstrapDialog("docPwdSet");
+		closeBootstrapDialog("docPwdVerify");
 	}
 
-	function cancelSetDocPwd()
+	function cancelVerifyDocPwd()
 	{
-		closeDocPwdSetDialog();
+		closeDocPwdVerifyDialog();
 	}
 	
-	function setDocPwd()
+	function verifyDocPwd()
 	{
-		DocPwdSet.doSetDocPwd();
-		closeDocPwdSetDialog();	
+		DocPwdVerify.doVerifyDocPwd();
+		closeDocPwdVerifyDialog();	
 	}
 	
-	var DocPwdSet = (function () {
-		var reposId;
+	var DocPwdVerify = (function () {
 		var node;
+		var reposId;
 		var path;
 		var name;
 		
-		function init(_reposId,_node)
+		function init(_reposId, _node)
 		{
-			console.log("DocPwdSet.init() " + path + name);
+			console.log("DocPwdVerify.init()");
 			reposId = _reposId;
 			node = _node;
 			path = node.path;
@@ -56,13 +56,13 @@
 		}
 		
 		
-	    function doSetDocPwd()
+	    function doVerifyDocPwd()
 	   	{
-	    	console.log("doSetDocPwd() " + path + name);
+	    	console.log("doVerifyDocPwd() " + path + name);
 	
 	    	var pwd = $("#docAccessPwd").val();
 	    	$.ajax({
-	            url : "/DocSystem/Doc/setDocPwd.do",
+	            url : "/DocSystem/Doc/verifyDocPwd.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
@@ -75,7 +75,7 @@
 	                if( "ok" == ret.status )
 	                {
 						bootstrapQ.msg({
-									msg : "设置成功！",
+									msg : "验证成功！",
 									type : 'success',
 									time : 2000,
 						});  
@@ -85,7 +85,7 @@
 	                	console.log(ret.msgInfo);
 	                    // 普通消息提示条
 	        			bootstrapQ.msg({
-	        					msg :  "设置失败:" + ret.msgInfo,
+	        					msg :  "验证失败:" + ret.msgInfo,
 	        					type : 'warning',
 	        					time : 2000,
 	        				    }); 
@@ -94,7 +94,7 @@
 	            error : function () {
 	                // 普通消息提示条
 	    			bootstrapQ.msg({
-	    					msg :  "设置失败: 服务器异常",
+	    					msg :  "验证失败: 服务器异常",
 	    					type : 'warning',
 	    					time : 2000,
 	    				    }); 
