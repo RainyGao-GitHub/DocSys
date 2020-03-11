@@ -1,13 +1,18 @@
 <div class="form-horizontal">
-    <div class="form-group">
-    	<label class="col-sm-2 control-label">访问密码</label>
-        <div class="col-sm-10">
-            <input type="text" id="docAccessPwd" name="docAccessPwd" class="form-control"  maxlength="40"></input>
-        </div>
-    </div>
-	<div class="form-group">
-	    <div class="col-sm-12 text-center">
-	        <button  type="button" class="btn btnPrimary" onclick="setDocPwd();" style="width:300px;height: 42px;">确定</button>
+	<div class="modal-body">
+	    <div class="form-group">
+	    	<label class="col-sm-2 control-label">密码</label>
+	        <div class="col-sm-10">
+	            <input type="text" id="docAccessPwd" name="docAccessPwd" class="form-control"  maxlength="16"></input>
+	        </div>
+	    </div>
+	</div>	
+	<div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="setDocPwd();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelSetDocPwd();" style="width: 100px;height: 42px;">取消</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -26,6 +31,11 @@
 		closeBootstrapDialog("docPwdSet");
 	}
 
+	function cancelSetDocPwd()
+	{
+		closeDocPwdSetDialog();
+	}
+	
 	function setDocPwd()
 	{
 		DocPwdSet.doSetDocPwd();
@@ -33,9 +43,9 @@
 	}
 	
 	var DocPwdSet = (function () {
+		var node;
 		var path;
 		var name;
-		var node;
 		
 		function init(_node)
 		{
@@ -57,6 +67,7 @@
 	            type : "post",
 	            dataType : "json",
 	            data : {
+	            	reposId: gReposId,
 	            	path: path,
 	            	name: name,
 	            	pwd: pwd,
