@@ -588,6 +588,20 @@ public class ReposController extends BaseController{
 		}
 		//printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
+		String pwd = getDocPwd(repos, rootDoc);
+		if(pwd != null && !pwd.isEmpty())
+		{
+			//Do check the sharePwd
+			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + rootDoc.getDocId());
+			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+			{
+				docSysErrorLog("访问密码错误！", rt);
+				rt.setMsgData("1"); //访问密码错误或未提供
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		//getReposInitMenu是获取仓库或分享根目录下的文件列表（分享的不是仓库的根目录，那么总是返回分享的文件或目录）
 		List <Doc> docList = new ArrayList<Doc>();
 		if(rootDoc.getDocId() != 0) //不是仓库根目录
