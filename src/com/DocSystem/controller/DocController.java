@@ -2183,6 +2183,20 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		String pwd = getDocPwd(reposId, doc);
+		if(pwd != null && !pwd.isEmpty())
+		{
+			//Do check the sharePwd
+			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+			{
+				docSysErrorLog("访问密码错误！", rt);
+				rt.setMsgData("1"); //访问密码错误或未提供
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		Doc dbDoc = docSysGetDoc(repos, doc);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
@@ -2245,6 +2259,11 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 	}
+	private String getDocPwd(Integer reposId, Doc doc) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
@@ -2882,6 +2901,70 @@ public class DocController extends BaseController{
 			return delFile(reposPwdPath + pwdFileName);
 		}
 		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName);
+	}
+	
+	/****************   verify  Doc Access PWD ******************/
+	@RequestMapping("/verifyDocPwd.do")
+	public void verifyDocPwd(Integer reposId, String path, String name,
+			String pwd,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("verifyDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true,localRootPath,localVRootPath, 0L, "");
+
+		//设置文件密码
+		if(verifyDocPwd(repos, doc, pwd) == false)
+		{
+			rt.setError("密码错误!");			
+		}
+		else
+		{
+			session.setAttribute("docPwd_"+reposId + "_" + doc.getDocId(), pwd);
+		}
+		writeJson(rt, response);
+	}
+	
+	private boolean verifyDocPwd(Repos repos, Doc doc, String pwd) 
+	{
+		if(pwd == null)
+		{
+			return false;
+		}
+		
+		String reposPwdPath = getReposPwdPath(repos);
+		String pwdFileName = doc.getDocId() + ".pwd";
+		if(isFileExist(reposPwdPath + pwdFileName) == false)
+		{
+			return true;
+		}
+		
+		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, false);
+		
+		if(docPwd == null || docPwd.isEmpty())
+		{
+			return true;
+		}
+		
+		return pwd.equals(docPwd);
 	}
 	
 	/****************   add a DocShare ******************/
