@@ -1407,10 +1407,18 @@
 	                
 	                showGDoc(gShowType);
                 }
-                else
+                else 
                 {
-                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);
-                	cleanDocPreview();
+                	console.log(ret.msgInfo);
+                	if(ret.msgData && ret.msgData == "1")	//需要验证访问密码
+                	{
+                		showDocPwdVerifyPanel(node);
+                	}
+                	else
+                	{
+                    	showErrorMessage("获取文件信息失败：" + ret.msgInfo);
+                    	cleanDocPreview();
+                	}
                 }
             },
             error : function () {
@@ -1419,6 +1427,22 @@
             }
         });
     }
+	
+	function showDocPwdVerifyPanel(node)
+	{
+		console.log("showDocPwdVerifyPanel node",node);
+		bootstrapQ.dialog({
+			id: 'docPwdVerify',
+			url: 'docPwdVerify.html',
+			title: '密码验证',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: false,
+			callback: function(){
+				DocPwdVerifyPageInit(node);
+			},
+		});
+	}	
 	
 	//showGDoc根据showType和edit显示gDoc
     function showGDoc(showType)
