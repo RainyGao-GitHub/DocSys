@@ -18,10 +18,10 @@
 </div>
 
 <script type="text/javascript">
-	function DocPwdVerifyPageInit(_reposId,_node)
+	function DocPwdVerifyPageInit(_reposId,_node,_callback)
 	{
 		console.log("DocPwdVerifyPageInit()");
-		DocPwdVerify.init(_reposId, _node);  
+		DocPwdVerify.init(_reposId, _node,_callback);  
 	}
 	
 	function closeDocPwdVerifyDialog()
@@ -42,14 +42,16 @@
 	var DocPwdVerify = (function () {
 		var node;
 		var reposId;
+		var callback;
 		var path;
 		var name;
 		
-		function init(_reposId, _node)
+		function init(_reposId, _node, _callback)
 		{
 			console.log("DocPwdVerify.init()");
 			reposId = _reposId;
 			node = _node;
+			callback = _callback;
 			path = node.path;
 			name = node.name;
 		}
@@ -77,8 +79,9 @@
 									msg : "验证成功！",
 									type : 'success',
 									time : 2000,
-						});  
-						closeDocPwdVerifyDialog();	
+						}); 
+						closeDocPwdVerifyDialog();
+						callback && callback();
 	                }
 	                else 
 	                {
@@ -103,8 +106,8 @@
 	   	}
 		//开放给外部的调用接口
         return {
-			init: function(_reposId,_node){
-				init(_reposId,_node);
+			init: function(_reposId, _node, _callback){
+				init(_reposId, _node, _callback);
 			},
 			doVerifyDocPwd: function(){
 				doVerifyDocPwd();

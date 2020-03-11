@@ -1270,7 +1270,7 @@
 	                			path: parentPath,
 	                			name: docName,
 	                		};
-	                		showDocPwdVerifyPanel(node);
+	                		showDocPwdVerifyPanel(node, refreshPage);
 	                	}
 	                	else
 	                	{
@@ -1283,6 +1283,15 @@
 		        }
 		    });
 	}
+   	
+   	function refreshPage()
+   	{
+   		console.log("refreshPage()");
+        setTimeout(function () 
+        {
+	     	window.location.reload();			        	
+        }, 100);
+   	}
 
 	/******************************** Doc Interfaces***************************************/
 	function updateProjectName()
@@ -1441,7 +1450,7 @@
         });
     }
 	
-	function showDocPwdVerifyPanel(node)
+	function showDocPwdVerifyPanel(node, successCallback)
 	{
 		console.log("showDocPwdVerifyPanel node",node);
 		bootstrapQ.dialog({
@@ -1452,7 +1461,7 @@
 			foot: false,
 			big: false,
 			callback: function(){
-				DocPwdVerifyPageInit(gReposInfo.id, node);
+				DocPwdVerifyPageInit(gReposInfo.id, node, successCallback);
 			},
 		});
 	}	
