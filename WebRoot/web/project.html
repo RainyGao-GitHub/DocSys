@@ -2568,6 +2568,10 @@ function CompareObj(objA, objB, flag) {
 	function asyncDataFilter(treeId, parentNode, responseData) {
 		console.log("asyncDataFilter");
 		var docList = responseData.data;
+		if(!docList)
+		{
+			return docList;
+		}
 		//遍历jason_arry, convert the node type to isParent flag
       	for(var i=0; i<docList.length; i++)
       	{
