@@ -2877,6 +2877,10 @@ public class DocController extends BaseController{
 		
 		String reposPwdPath = getReposPwdPath(repos);
 		String pwdFileName = doc.getDocId() + ".pwd";
+		if(pwd == null || pwd.isEmpty())
+		{
+			return delFile(reposPwdPath + pwdFileName);
+		}
 		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName);
 	}
 	
