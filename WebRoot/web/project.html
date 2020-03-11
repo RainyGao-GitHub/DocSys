@@ -1262,7 +1262,20 @@
 		            }
 		            else
 		           	{
-		           		showErrorMessage("Error:getReposMenu failed" + ret.msgInfo);
+	                	if(ret.msgData && ret.msgData == "1")	//需要验证访问密码
+	                	{
+	                		var node = {
+	                			reposId: gReposInfo.id,
+	                			docId: docId,
+	                			path: parentPath,
+	                			name: docName,
+	                		};
+	                		showDocPwdVerifyPanel(node);
+	                	}
+	                	else
+	                	{
+	                    	showErrorMessage("获取仓库目录失败:" + ret.msgInfo);
+	                	}
 		           	}
 		        },
 		        error : function () {
@@ -3646,7 +3659,15 @@ function CompareObj(objA, objB, flag) {
                 }
                 else
                 {
-                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
+                	console.log(ret.msgInfo);
+                	if(ret.msgData && ret.msgData == "1")	//需要验证访问密码
+                	{
+                		//showDocPwdVerifyPanel(node);
+                	}
+                	else
+                	{
+                    	showErrorMessage("获取子目录错误:" + ret.msgInfo);
+                	}
                 }
             },
             error : function () {
