@@ -44,15 +44,8 @@
     </style>
 
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="static/bootstrap/js/html5shiv.min.js"></script>
-    <script src="static/bootstrap/js/respond.min.js"></script>
-    <![endif]-->
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="static/scripts/jquery.min.js" type="text/javascript"></script>
-
+    <script src="js/DocSys.js" type="text/javascript"></script>
 
 </head>
 <body>
@@ -867,7 +860,7 @@
 			{divider: true},
 			{text: '设置密码', action: function(e){
 						e.preventDefault();
-	        			alert("该功能未开通!");
+	        			showDocPwdSetPanel();
 					}
 			},
 			{divider: true},
@@ -1228,17 +1221,19 @@ function showReposSettingPanel(){
 	}, null);
 }
 
-function showDocPwdSetPanel(){
+function showDocPwdSetPanel()
+{
 	console.log("showDocPwdSetPanel");
 	bootstrapQ.dialog({
-		title: '密码设置',
+		id: 'docPwdSet',
 		url: 'docPwdSet.html',
+		title: '密码设置',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
 		//okbtn: "确定",
 		callback: function(){
-			DocPwdSetPageInit(node);
+			DocPwdSetPageInit(curRightClickedTreeNode);
 		}, 
 	}, null);
 }
