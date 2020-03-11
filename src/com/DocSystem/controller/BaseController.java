@@ -149,6 +149,19 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	/****************************** DocSys 文件访问密码接口 **********************************************/
+	protected String getDocPwd(Repos repos, Doc doc) {
+		String reposPwdPath = getReposPwdPath(repos);
+		String pwdFileName = doc.getDocId() + ".pwd";
+		if(isFileExist(reposPwdPath + pwdFileName) == false)
+		{
+			return null;
+		}
+		
+		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, false);
+		return docPwd;
+	}
+	
 	/****************************** DocSys Doc列表获取接口 **********************************************/
 	//getAccessableSubDocList
 	protected List<Doc> getAccessableSubDocList(Repos repos, Doc doc, DocAuth docAuth, HashMap<Long, DocAuth> docAuthHashMap, ReturnAjax rt) 
