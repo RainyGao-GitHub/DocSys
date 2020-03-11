@@ -37,7 +37,6 @@
 	function verifyDocPwd()
 	{
 		DocPwdVerify.doVerifyDocPwd();
-		closeDocPwdVerifyDialog();	
 	}
 	
 	var DocPwdVerify = (function () {
@@ -79,6 +78,7 @@
 									type : 'success',
 									time : 2000,
 						});  
+						closeDocPwdVerifyDialog();	
 	                }
 	                else 
 	                {
@@ -106,8 +106,8 @@
 			init: function(_reposId,_node){
 				init(_reposId,_node);
 			},
-        	doSetDocPwd: function(){
-        		doSetDocPwd();
+			doVerifyDocPwd: function(){
+				doVerifyDocPwd();
             },
         };
 	})();
