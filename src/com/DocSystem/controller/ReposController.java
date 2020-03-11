@@ -720,6 +720,21 @@ public class ReposController extends BaseController{
 			doc = buildBasicDoc(repos.getId(), docId, null, path, name, null,2, true, localRootPath, localVRootPath, null, null);
 		}
 		
+		Integer reposId = repos.getId();
+		String pwd = getDocPwd(repos, doc);
+		if(pwd != null && !pwd.isEmpty())
+		{
+			//Do check the sharePwd
+			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+			{
+				docSysErrorLog("访问密码错误！", rt);
+				rt.setMsgData("1"); //访问密码错误或未提供
+				writeJson(rt, response);
+				return;
+			}
+		}
+		
 		Doc tmpDoc = docSysGetDoc(repos, doc);
 		if(tmpDoc == null)
 		{

@@ -2259,18 +2259,6 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 	}
-	private String getDocPwd(Repos repos, Doc doc) {
-		String reposPwdPath = getReposPwdPath(repos);
-		String pwdFileName = doc.getDocId() + ".pwd";
-		if(isFileExist(reposPwdPath + pwdFileName) == false)
-		{
-			return null;
-		}
-		
-		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, false);
-		return docPwd;
-	}
-
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
