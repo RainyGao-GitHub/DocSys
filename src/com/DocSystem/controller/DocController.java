@@ -2183,7 +2183,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String pwd = getDocPwd(reposId, doc);
+		String pwd = getDocPwd(repos, doc);
 		if(pwd != null && !pwd.isEmpty())
 		{
 			//Do check the sharePwd
@@ -2259,9 +2259,16 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 	}
-	private String getDocPwd(Integer reposId, Doc doc) {
-		// TODO Auto-generated method stub
-		return null;
+	private String getDocPwd(Repos repos, Doc doc) {
+		String reposPwdPath = getReposPwdPath(repos);
+		String pwdFileName = doc.getDocId() + ".pwd";
+		if(isFileExist(reposPwdPath + pwdFileName) == false)
+		{
+			return null;
+		}
+		
+		String docPwd = readDocContentFromFile(reposPwdPath, pwdFileName, false);
+		return docPwd;
 	}
 
 	/****************   lock a Doc ******************/
