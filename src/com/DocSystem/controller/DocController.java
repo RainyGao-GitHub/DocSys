@@ -2,7 +2,6 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -15,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -2962,6 +2960,116 @@ public class DocController extends BaseController{
 		return pwd.equals(docPwd);
 	}
 	
+	/*
+	 * ***************   add a RemoteDocShare ****************
+	 * 添加远程分享
+	 * 根据请求的IP地址、userId, reposId、path、name、timestamp来创建一个唯一的分享ID，分享类型为远程
+	 * 也许需要将RemoteDocShare和普通DocShare进行合并，增加授权码来进行控制
+	*/
+	@RequestMapping("/addRemoteDocShare.do")
+	public void addRemoteDocShare(Integer reposId, String path, String name, Integer userId,
+			Integer isAdmin, Integer access, Integer editEn,Integer addEn,Integer deleteEn, Integer downloadEn, Integer heritable,
+			String sharePwd,
+			Long shareHours,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		//生成分享信息
+		DocShare docShare = new DocShare();
+		docShare.setVid(reposId);
+		docShare.setPath(path);
+		docShare.setName(name);
+		docShare.setSharedBy(userId);
+		docShare.setSharePwd(sharePwd);
+
+		DocAuth docAuth = new DocAuth();
+		docAuth.setIsAdmin(isAdmin);
+		docAuth.setAccess(access);
+		docAuth.setDownloadEn(downloadEn);
+		docAuth.setAddEn(addEn);
+		docAuth.setDeleteEn(deleteEn);
+		docAuth.setEditEn(editEn);
+		docAuth.setHeritable(heritable);
+		String shareAuth = JSON.toJSONString(docAuth);
+		docShare.setShareAuth(shareAuth);
+		if(shareHours == null)
+		{
+			shareHours = (long) 24; // one Day
+		}	
+		docShare.setValidHours(shareHours);
+		long curTime = new Date().getTime();
+		long expireTime = curTime + shareHours * 60 * 60 * 1000;
+		docShare.setExpireTime(expireTime);	
+
+		String requestIP = getRequestIpAddress(request);
+		docShare.setRequestIP(requestIP);
+
+		String proxyIP = getIpAddress();
+		docShare.setProxyIP(proxyIP);		
+		
+		Integer shareId = buildShareId(docShare);
+		docShare.setShareId(shareId);
+		
+		if(reposService.addDocShare(docShare) == 0)
+		{
+			docSysErrorLog("创建文件分享失败！", rt);
+		}
+		else
+		{
+			rt.setData(docShare);
+		}
+		writeJson(rt, response);
+		
+		//检查远程分享监听线程是否存在？如果不存在则启动远程分享监听进程，等待分享服务器的连接请求
+		
+	}
+	
+	private String getRequestIpAddress(HttpServletRequest request) {
+	    String ip = null;
+
+	    //X-Forwarded-For：Squid 服务代理
+	    String ipAddresses = request.getHeader("X-Forwarded-For");
+	    if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) 
+	    {
+	        //Proxy-Client-IP：apache 服务代理
+	        ipAddresses = request.getHeader("Proxy-Client-IP");
+	    }
+	    
+	    if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) 
+	    {
+	        //WL-Proxy-Client-IP：weblogic 服务代理
+	        ipAddresses = request.getHeader("WL-Proxy-Client-IP");
+	    }
+	    
+	    if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) 
+	    {
+	        //HTTP_CLIENT_IP：有些代理服务器
+	        ipAddresses = request.getHeader("HTTP_CLIENT_IP");
+	    }
+	    
+	    if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) 
+	    {
+	        //X-Real-IP：nginx服务代理
+	        ipAddresses = request.getHeader("X-Real-IP");
+	    }
+
+	    //有些网络通过多层代理，那么获取到的ip就会有多个，一般都是通过逗号（,）分割开来，并且第一个ip为客户端的真实IP
+	    if (ipAddresses != null && ipAddresses.length() != 0) {
+	        ip = ipAddresses.split(",")[0];
+	    }
+
+	    //还是不能获取到，最后再通过request.getRemoteAddr();获取
+	    if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) 
+	    {
+	        ip = request.getRemoteAddr();
+	    }
+	    
+	    return ip.equals("0:0:0:0:0:0:0:1")?"127.0.0.1":ip;
+	}
+
 	/****************   add a DocShare ******************/
 	@RequestMapping("/addDocShare.do")
 	public void addDocShare(Integer reposId, String path, String name,
