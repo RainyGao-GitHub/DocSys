@@ -2,8 +2,14 @@ package com.DocSystem.entity;
 
 public class DocShare {
     private Integer id;
-
+   
     private Integer shareId;
+
+    private Integer type;	//0: 本地  1:远程
+    
+    private String requestIP;	//分享请求IP地址
+    
+    private String proxyIP; //代理服务器IP地址
 
     private String name;
 
@@ -31,6 +37,30 @@ public class DocShare {
         this.id = id;
     }
 
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+    
+    public String getRequestIP() {
+        return requestIP;
+    }
+
+    public void setRequestIP(String requestIP) {
+        this.requestIP = requestIP == null ? null : requestIP.trim();
+    }
+    
+    public String getProxyIP() {
+        return proxyIP;
+    }
+
+    public void setProxyIP(String proxyIP) {
+        this.proxyIP = proxyIP == null ? null : proxyIP.trim();
+    }
+    
     public Integer getShareId() {
         return shareId;
     }
