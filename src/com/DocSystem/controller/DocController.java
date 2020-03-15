@@ -284,7 +284,12 @@ public class DocController extends BaseController{
 		
 		writeJson(rt, response);
 		
-		executeUniqueCommonActionList(actionList, rt);	
+		new Thread(new Runnable() {
+			public void run() {
+				System.out.println("refreshDoc() executeUniqueCommonActionList in new thread");
+				executeUniqueCommonActionList(actionList, rt);
+			}
+		}).start();
 	}
 	
 	/****************   delete a Document ******************/
@@ -590,7 +595,7 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = reposService.getRepos(reposId);
+		Repos repos = getReposInfo(reposId, reposAccess.getDocShare());
 		if(repos == null)
 		{
 			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
@@ -707,6 +712,23 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private Repos getReposInfo(Integer reposId, DocShare docShare) {
+		if(docShare == null || docShare.getType() == null || docShare.getType() == 0)
+		{
+			return reposService.getRepos(reposId);
+		}
+		
+		return getRemoteReposInfo(reposId,docShare);
+	}
+
+	private Repos getRemoteReposInfo(Integer reposId, DocShare docShare) {
+		//根据docShare总保存的信息，从远程来获取仓库信息
+		//根据docShareId从远程连接池中取出socket
+		//在该socket上发送getRepos请求
+		//接受来自
+		return null;
+	}
+
 	private boolean isUploadCanSkip(Repos repos, Doc doc, Doc fsDoc) {
 		//检查checkSum是否相同
 		if(doc.getType() != 1)
@@ -3024,7 +3046,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 		
 		//检查远程分享监听线程是否存在？如果不存在则启动远程分享监听进程，等待分享服务器的连接请求
-		
 	}
 	
 	private String getRequestIpAddress(HttpServletRequest request) {
