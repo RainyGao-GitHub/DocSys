@@ -796,7 +796,13 @@ public class ReposController extends BaseController{
 		//Add doc for AutoSync
 		List<CommonAction> actionList = new ArrayList<CommonAction>();	//For AsyncActions
 		addDocToSyncUpList(actionList, repos, doc, Action.UNDEFINED, null, null);
-		executeUniqueCommonActionList(actionList, rt);
+
+		new Thread(new Runnable() {
+			public void run() {
+				System.out.println("getSubDocList() executeUniqueCommonActionList in new thread");
+				executeUniqueCommonActionList(actionList, rt);
+			}
+		}).start();
 	}
 	
 	/****************   get Repository Menu Info (Directory structure) ******************/
