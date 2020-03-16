@@ -3052,7 +3052,8 @@ public class DocController extends BaseController{
 	}
 	
 	private boolean isProxyThreadRuning(ProxyThread proxyThread) {
-		// TODO Auto-generated method stub
+		//远程分享代理默认并不打开
+		//在收到第一个远程代理请求或者在启动时发现系统中存在有效的远程代理请求时，启动监听线程来等待分享服务器的连接
 		if(proxyThread == null)
 		{
 			return false;
