@@ -39,11 +39,10 @@ import com.DocSystem.common.DocChange;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
-import com.DocSystem.common.CommonAction.ActionType;
-import com.DocSystem.common.CommonAction.DocType;
 import com.DocSystem.controller.BaseController;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.DocSystem.commonService.ProxyThread;
 
 /*
 Something you need to know
@@ -2995,7 +2994,7 @@ public class DocController extends BaseController{
 			Long shareHours,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("addDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
+		System.out.println("addRemoteDocShare reposId:" + reposId + " path:" + path + " name:" + name  + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin  + " access:" + access  + " editEn:" + editEn  + " addEn:" + addEn  + " deleteEn:" + deleteEn +  " downloadEn:"+ downloadEn + " heritable:" + heritable);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -3046,8 +3045,21 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 		
 		//检查远程分享监听线程是否存在？如果不存在则启动远程分享监听进程，等待分享服务器的连接请求
+		if(isProxyThreadRuning(proxyThread) == false)
+		{
+			proxyThread = new ProxyThread();
+		}
 	}
 	
+	private boolean isProxyThreadRuning(ProxyThread proxyThread) {
+		// TODO Auto-generated method stub
+		if(proxyThread == null)
+		{
+			return false;
+		}
+		return true;
+	}
+
 	private String getRequestIpAddress(HttpServletRequest request) {
 	    String ip = null;
 

@@ -57,6 +57,8 @@ import util.FileUtil.CompressPic;
 import util.FileUtil.FileUtils2;
 
 import com.DocSystem.common.CommitAction.CommitType;
+import com.DocSystem.commonService.ProxyThread;
+import com.DocSystem.commonService.ShareThread;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -124,6 +126,11 @@ public class BaseFunction{
 		
 		actionList.add(action);
 	}
+	
+	//分享代理服务线程（一个服务器只允许启动一个）
+	protected static ProxyThread proxyThread = null;
+	//远程分享服务线程（一个服务器只允许启动一个）
+	protected static ShareThread shareThread = null;
 	
 	
 	protected static ConcurrentHashMap<Integer, UniqueAction> uniqueActionHashMap = new ConcurrentHashMap<Integer, UniqueAction>();
