@@ -2677,66 +2677,42 @@ public class BaseController  extends BaseFunction{
 	private boolean rebuildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
 			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
-		System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag + " force:" + force);
+		//System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag + " force:" + force);
 		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
 		{
-			if(force)
+			Doc localDoc = docSysGetDoc(repos, doc);
+			Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
+			if(localDoc == null || localDoc.getType() == 0) //文件不存在则删除索引
 			{
-				//Refresh Index For DocName
-				deleteIndexForDocName(repos, doc, rt);
-				addIndexForDocName(repos, doc, rt);
-				
-				//Refresh Index For RealDoc
-				deleteIndexForRDoc(repos, doc);
-				addIndexForRDoc(repos, doc);
-				
-				//Refresh Index For VDoc
-				deleteIndexForVDoc(repos, doc);
-				addIndexForVDoc(repos, doc);
-			}
-			else	//update the index when local change
-			{
-				Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
-				Doc localDoc = fsGetDoc(repos, doc);
-				if(indexDoc == null)
+				if(indexDoc != null)
 				{
-					if(localDoc == null || localDoc.getType() == 0)
-					{
-						deleteIndexForRDoc(repos, doc);
-						deleteIndexForRDoc(repos, doc);
-					}
-					else
-					{
-						//update the size and editTime
-						doc.setSize(localDoc.getSize());
-						doc.setLatestEditTime(localDoc.getLatestEditTime());
-
-						addIndexForDocName(repos, doc, rt);
-						addIndexForRDoc(repos, doc);
-						addIndexForVDoc(repos, doc);
-					}
+					deleteIndexForDocName(repos, doc, rt);
+					deleteIndexForRDoc(repos, doc);
+					deleteIndexForVDoc(repos, doc);
 				}
-				else
+			}
+			else	//文件存在
+			{
+				//update the size and editTime
+				doc.setType(localDoc.getType());
+				doc.setSize(localDoc.getSize());
+				doc.setLatestEditTime(localDoc.getLatestEditTime());
+
+				if(indexDoc == null)	//索引不存在则添加索引
 				{
-					//文件大小变化了则一定是变化了
-					if(!indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))
-					{
-						//update the size and editTime
-						doc.setSize(localDoc.getSize());
-						doc.setLatestEditTime(localDoc.getLatestEditTime());
-						
-						//Refresh Index For DocName
-						deleteIndexForDocName(repos, doc, rt);
-						addIndexForDocName(repos, doc, rt);
-						
-						//Refresh Index For RealDoc
-						deleteIndexForRDoc(repos, doc);
-						addIndexForRDoc(repos, doc);
-						
-						//Refresh Index For VDoc
-						deleteIndexForVDoc(repos, doc);
-						addIndexForVDoc(repos, doc);
-					}					
+					addIndexForDocName(repos, doc, rt);
+					addIndexForRDoc(repos, doc);
+					addIndexForVDoc(repos, doc);
+				}
+				else if(force || !indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))
+				{
+					deleteIndexForDocName(repos, doc, rt);
+					deleteIndexForRDoc(repos, doc);
+					deleteIndexForVDoc(repos, doc);
+									
+					addIndexForDocName(repos, doc, rt);
+					addIndexForRDoc(repos, doc);
+					addIndexForVDoc(repos, doc);
 				}
 			}
 		}
@@ -7030,7 +7006,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For DocName
 	public boolean addIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
 	{
-		//System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		String indexLib = getIndexLibPath(repos,0);
 
 		return LuceneUtil2.addIndex(doc, doc.getName(), indexLib);
@@ -7072,7 +7048,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For VDoc
 	public boolean addIndexForVDoc(Repos repos, Doc doc)
 	{
-		//System.out.println("addIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("addIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 
 		String content = doc.getContent();
 		if(content == null)
@@ -7122,7 +7098,7 @@ public class BaseController  extends BaseFunction{
 	//Add Index For RDoc
 	public static boolean addIndexForRDoc(Repos repos, Doc doc)
 	{		
-		//System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos, 1);
 
