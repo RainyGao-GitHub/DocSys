@@ -2605,7 +2605,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(action.getAction() == Action.FORCESYNC)
 		{
-			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId());
+			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(doc.getDocId() == 0)
 			{
 				//Delete All Index Lib
@@ -2622,7 +2622,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			System.out.println("**************************** syncupForDocChange() 刷新Index for: " + doc.getDocId());
+			System.out.println("**************************** syncupForDocChange() 刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag, false);	
 		}
 		return realDocSyncResult;
