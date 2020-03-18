@@ -2734,12 +2734,13 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			addToDoneList(doc, doneList);
-		}
-		
-		if(doc.getType() == null || doc.getType() != 2)
-		{
-			System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 不是目录！");
-			return true;
+			
+			if(localDoc.getType() != null && localDoc.getType() == 1)
+			{
+				System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 是文件！");
+				return true;
+			}
+			
 		}
 		
 		//子目录不递归
