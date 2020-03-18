@@ -2618,14 +2618,16 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				rebuildIndexForDoc(repos, doc, null, null, rt, subDocSyncupFlag, true);
+				HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
+				rebuildIndexForDoc(repos, doc, null, null, doneList, rt, subDocSyncupFlag, true);
 			}
 			System.out.println("**************************** syncupForDocChange() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 		}
 		else
 		{
 			System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, rt, subDocSyncupFlag, false);	
+			HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
+			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
 			System.out.println("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 		}
 		return realDocSyncResult;
@@ -2678,11 +2680,16 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean rebuildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
-			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
+			HashMap<Long, DocChange> localChanges, HashMap<Long, Doc> doneList, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
 		//System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag + " force:" + force);
 		if(isDocInChangeList(doc, remoteChanges) || isDocInChangeList(doc, remoteChanges))
 		{
+			if(isDocInDoneList(doc, doneList))
+			{
+				return true;
+			}
+			
 			Doc localDoc = docSysGetDoc(repos, doc);
 			Doc indexDoc = indexGetDoc(repos, doc, INDEX_DOC_NAME, false);
 			if(localDoc == null || localDoc.getType() == 0) //文件不存在则删除索引
@@ -2722,10 +2729,12 @@ public class BaseController  extends BaseFunction{
 					addIndexForVDoc(repos, doc);
 				}
 			}
+			addToDoneList(doc, doneList);
 		}
 		
 		if(doc.getType() == null || doc.getType() != 2)
 		{
+			System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 不是目录！");
 			return true;
 		}
 		
@@ -2740,7 +2749,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc localChangeDoc = docChange.getDoc();
-					rebuildIndexForDoc(repos,localChangeDoc, null, null, rt, subDocSyncupFlag, force);
+					rebuildIndexForDoc(repos,localChangeDoc, null, null, doneList, rt, subDocSyncupFlag, force);
 				}
 			}
 			if(remoteChanges != null)
@@ -2750,7 +2759,7 @@ public class BaseController  extends BaseFunction{
 				{
 					DocChange docChange = entry.getValue();
 					Doc remoteChangeDoc = docChange.getDoc();
-					rebuildIndexForDoc(repos,remoteChangeDoc, null, null, rt, subDocSyncupFlag, force);
+					rebuildIndexForDoc(repos,remoteChangeDoc, null, null, doneList, rt, subDocSyncupFlag, force);
 				}
 			}	
 			return true;
@@ -2773,9 +2782,31 @@ public class BaseController  extends BaseFunction{
     	for(int i=0; i< localEntryList.size(); i++)
     	{
     		Doc subDoc = localEntryList.get(i);
-    		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, rt, subDocSyncupFlag, force);
+    		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, force);
     	}
 		return true;
+	}
+
+	private void addToDoneList(Doc doc, HashMap<Long, Doc> doneList) {
+		if(doneList == null)
+		{
+			return;
+		}
+		
+		doneList.put(doc.getDocId(), doc);
+	}
+
+	private boolean isDocInDoneList(Doc doc, HashMap<Long, Doc> doneList) {
+		if(doneList == null)
+		{
+			return true;
+		}
+		
+		if(doneList.get(doc.getDocId()) != null)
+		{
+			return true;	
+		}
+		return false;
 	}
 
 	private boolean isDocInChangeList(Doc doc, HashMap<Long, DocChange> docChanges) 
