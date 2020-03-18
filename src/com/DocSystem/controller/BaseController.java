@@ -2697,7 +2697,11 @@ public class BaseController  extends BaseFunction{
 				//文件已被删除
 				if(indexDoc != null)
 				{
-					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 不存在，删除索引");
+					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件不存在，索引不存在");					
+				}
+				else
+				{
+					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件不存在，索引存在，删除索引");
 					deleteIndexForDocName(repos, doc, rt);
 					deleteIndexForRDoc(repos, doc);
 					deleteIndexForVDoc(repos, doc);
@@ -2712,7 +2716,7 @@ public class BaseController  extends BaseFunction{
 
 				if(indexDoc == null)	//索引不存在则添加索引
 				{
-					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 存在，添加索引");
+					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件存在，索引不存在，添加索引");
 					addIndexForDocName(repos, doc, rt);
 					addIndexForRDoc(repos, doc);
 					addIndexForVDoc(repos, doc);
