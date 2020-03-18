@@ -258,10 +258,6 @@ public class LuceneUtil2   extends BaseFunction
         {
         	document.add(new Field("revision", doc.getRevision(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));
         }
-		else
-		{
-			System.out.println("buildDocument() pid is null");
-		}
         
         //Content
         if(content != null)
