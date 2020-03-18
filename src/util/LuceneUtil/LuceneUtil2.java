@@ -388,7 +388,6 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
 	        indexWriter = new IndexWriter(directory, config);
 	        
-	        //Query query = new TermQuery(new Term("docId",""+doc.getDocId()));
 	        Query query =NumericRangeQuery.newLongRange("docId", doc.getDocId(), doc.getDocId(), true,true);
 	        indexWriter.deleteDocuments(query);
 	        indexWriter.commit();
@@ -1170,27 +1169,22 @@ public class LuceneUtil2   extends BaseFunction
 		return true;
 	}
 	
-    /**
-     * 	关键字模糊查询， 返回docId List
-     * @param weight 
-     * @param parentPath 
-     * @param <SearchResult>
-     * @param str: 关键字
-     * @param indexLib: 索引库名字
-     */
-	public static List<Doc> multiQueryForDoc(Repos repos, List<String> fileds, List<String> strs, String indexLib)
+	
+    //在IndexLib中根据doc进行搜索
+	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib)
 	{
-		if(fileds == null || strs == null || fileds.size() == 0 || strs.size() == 0)
+		return multiQueryForDoc(repos, doc, indexLib);
+	}
+	
+	public static List<Doc> multiQueryForDoc(Repos repos, Doc doc, String indexLib)
+	{
+		if(doc == null)
 		{
 			System.out.println("multiQuery() 查询条件不能为空！");
 			return null;
 		}
 		
-		if(fileds.size() != strs.size())
-		{
-			System.out.println("multiQuery() 查询字段与条件个数不一致！");
-			return null;
-		}
+		List<Doc> docList = null;
 		
 	    Directory directory = null;
         DirectoryReader ireader = null;
@@ -1208,37 +1202,27 @@ public class LuceneUtil2   extends BaseFunction
 	        ireader = DirectoryReader.open(directory);
 	        isearcher = new IndexSearcher(ireader);
 	
-	        BooleanQuery builder = new BooleanQuery();
-	        for(int i=0; i< fileds.size(); i++)
+	        BooleanQuery builder = buildDocQueryConditions(doc);
+	        if(builder != null)
 	        {
-	        	String field = fileds.get(i);
-	        	String str = strs.get(i);
-    			System.out.println("multiQuery() field:" + field + " value:" + str);
-	        	Query query = new TermQuery(new Term(field,str));
-	        	builder.add( query, Occur.MUST);
+	        	docList = new ArrayList<Doc>();
+	        	TopDocs hits = isearcher.search( builder, 1000);
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		Doc hitDoc = BuildDoc(document);
+	        		docList.add(hitDoc);
+	        	}
 	        }
-	        
-	        List<Doc> docList = new ArrayList<Doc>();
-	        TopDocs hits = isearcher.search( builder, 1000);
-			for ( ScoreDoc scoreDoc : hits.scoreDocs )
-		    {
-		         Document document = isearcher.doc( scoreDoc.doc );
-		         Doc doc = BuildDoc(document);
-		         docList.add(doc);
-		    }
-			
-	        ireader.close();
-	        ireader = null;
-	        directory.close();
-	        directory=null;        
-			return docList;
 		} catch (Exception e) {
+			System.out.println("search() 异常");
+			e.printStackTrace();
+		} finally {
 			if(ireader != null)
 			{
 				try {
 					ireader.close();
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -1248,29 +1232,56 @@ public class LuceneUtil2   extends BaseFunction
 				try {
 					directory.close();
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
-			
-			System.out.println("search() 异常");
-			e.printStackTrace();
-			return null;
-		}
+		}				
+		return docList;
     }
 	
-    //在IndexLib中根据doc进行搜索
-	public static List<Doc> getDocList(Repos repos, Doc doc, String indexLib)
+	private static BooleanQuery buildDocQueryConditions(Doc doc) 
 	{
-		List<String> fields = new ArrayList<String>();
-		List<String> strs = new ArrayList<String>();
+		int count = 0;
+		BooleanQuery builder = new BooleanQuery();
 
-		if(buildDocQueryConditions(doc, fields, strs) == false)
+		if(doc.getVid() != null)
 		{
-			return null;
+	        Query query = NumericRangeQuery.newIntRange("vid", doc.getVid(), doc.getVid(), true,true);
+			builder.add(query, Occur.MUST);
+			count++;
+		}
+		if(doc.getPid() != null)
+		{
+	        Query query = NumericRangeQuery.newLongRange("pid", doc.getPid(), doc.getPid(), true,true);
+			builder.add(query, Occur.MUST);
+			count++;
 		}
 		
-		return multiQueryForDoc(repos, fields, strs, indexLib);
+		if(doc.getDocId() != null)
+		{
+		    Query query = NumericRangeQuery.newLongRange("docId", doc.getDocId(), doc.getDocId(), true,true);
+			builder.add(query, Occur.MUST);
+			count++;
+		}
+		
+		if(doc.getPath() != null)
+		{
+			Query query = new TermQuery(new Term("path", doc.getPath()));
+			builder.add(query, Occur.MUST);
+			count++;
+		}
+		if(doc.getName() != null)
+		{
+			Query query = new TermQuery(new Term("name", doc.getName()));
+			builder.add(query, Occur.MUST);
+			count++;
+		}
+		
+		if(count > 0)
+		{
+			return builder;
+		}
+		return null;
 	}
 	
     public static List<Doc> getDocListByDocId(Repos repos, Doc doc, String indexLib)
@@ -1292,6 +1303,7 @@ public class LuceneUtil2   extends BaseFunction
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
 	        Query query =NumericRangeQuery.newLongRange("docId", doc.getDocId(), doc.getDocId(), true,true);
+
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
 			System.out.println("getDocListByDocId() hitCount:" + hits.length);
 
@@ -1334,40 +1346,6 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		return null;
     }
-	
-	private static boolean buildDocQueryConditions(Doc doc, List<String> fields, List<String> strs) 
-	{
-		if(doc.getVid() != null)
-		{
-			fields.add("vid");
-			strs.add(doc.getVid() + "");
-		}
-		if(doc.getPid() != null)
-		{
-			fields.add("pid");
-			strs.add(doc.getPid() + "");
-		}
-		if(doc.getDocId() != null)
-		{
-			fields.add("docId");
-			strs.add(doc.getDocId() + "");
-		}
-		if(doc.getPath() != null)
-		{
-			fields.add("path");
-			strs.add(doc.getPath());
-		}
-		if(doc.getName() != null)
-		{
-			fields.add("name");
-			strs.add(doc.getName());
-		}
-		if(fields.size() == 0)
-		{
-			return false;
-		}
-		return true;
-	}
 
 	public static boolean deleteDoc(Doc doc, String indexLib) 
 	{
