@@ -3839,7 +3839,7 @@ public class BaseController  extends BaseFunction{
 		qDoc.setDocId(doc.getDocId());
 		
 		String indexLib = getIndexLibPath(repos, IndexLibType);
-		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
+		List<Doc> list = LuceneUtil2.getDocListByDocId(repos, qDoc, indexLib);
 		if(list == null || list.size() == 0)
 		{
 			return null;
@@ -3859,7 +3859,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 		
-		return null;
+		return list.get(0);
 	}
 
 	protected Doc dbGetDoc(Repos repos, Doc doc, boolean dupCheck) 
