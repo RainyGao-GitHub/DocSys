@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -1145,7 +1146,7 @@ public class LuceneUtil2   extends BaseFunction
      */
 	public static List<Doc> multiQueryForDoc(Repos repos, List<String> fileds, List<String> strs, String indexLib)
 	{
-		if(fileds == null || strs == null)
+		if(fileds == null || strs == null || fileds.size() == 0 || strs.size() == 0)
 		{
 			System.out.println("multiQuery() 查询条件不能为空！");
 			return null;
@@ -1153,6 +1154,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		if(fileds.size() != strs.size())
 		{
+			System.out.println("multiQuery() 查询字段与条件个数不一致！");
 			return null;
 		}
 		
@@ -1160,8 +1162,6 @@ public class LuceneUtil2   extends BaseFunction
         DirectoryReader ireader = null;
         IndexSearcher isearcher = null;
 
-       
-        
 		try {
     		File file = new File(indexLib);
     		if(!file.exists())
@@ -1179,6 +1179,7 @@ public class LuceneUtil2   extends BaseFunction
 	        {
 	        	String field = fileds.get(i);
 	        	String str = strs.get(i);
+    			System.out.println("multiQuery() field:" + field + " value:" + str);
 	        	Query query = new TermQuery(new Term(field,str));
 	        	builder.add( query, Occur.MUST);
 	        }
