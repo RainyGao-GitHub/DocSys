@@ -5681,7 +5681,12 @@ public class BaseController  extends BaseFunction{
 		if(authMask.getHeritable() == null || authMask.getHeritable() == 0)
 		{
 			docAuth.setHeritable(0);
-		}		
+		}
+		
+		if(authMask.getDownloadEn() == null || authMask.getDownloadEn() == 0)
+		{
+			docAuth.setDownloadEn(0);
+		}
 	}
 	
 	protected DocAuth getUserDocAuth(Repos repos, Integer userId, Doc doc) 
