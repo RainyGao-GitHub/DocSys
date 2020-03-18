@@ -1239,7 +1239,8 @@ public class LuceneUtil2   extends BaseFunction
 		return multiQueryForDoc(repos, fields, strs, indexLib);
 	}
 	
-	private static boolean buildDocQueryConditions(Doc doc, List<String> fields, List<String> strs) {
+	private static boolean buildDocQueryConditions(Doc doc, List<String> fields, List<String> strs) 
+	{
 		if(doc.getVid() != null)
 		{
 			fields.add("vid");
@@ -1265,7 +1266,11 @@ public class LuceneUtil2   extends BaseFunction
 			fields.add("name");
 			strs.add(doc.getName());
 		}
-		return false;
+		if(fields.size() == 0)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	public static boolean deleteDoc(Doc doc, String indexLib) 
