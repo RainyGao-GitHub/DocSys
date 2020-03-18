@@ -3839,7 +3839,7 @@ public class BaseController  extends BaseFunction{
 		qDoc.setDocId(doc.getDocId());
 		
 		String indexLib = getIndexLibPath(repos, IndexLibType);
-		List<Doc> list = LuceneUtil2.getDocListByDocId(repos, qDoc, indexLib);
+		List<Doc> list = LuceneUtil2.getDocList(repos, qDoc, indexLib);
 		if(list == null || list.size() == 0)
 		{
 			return null;
