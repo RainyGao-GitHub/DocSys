@@ -2695,7 +2695,7 @@ public class BaseController  extends BaseFunction{
 			if(localDoc == null || localDoc.getType() == 0) //文件不存在则删除索引
 			{
 				//文件已被删除
-				if(indexDoc != null)
+				if(indexDoc == null)
 				{
 					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件不存在，索引不存在");					
 				}
