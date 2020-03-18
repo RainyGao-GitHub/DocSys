@@ -183,30 +183,54 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			document.add(new IntField("vid", doc.getVid(), Store.YES));
 		}
+		else
+		{
+			System.out.println("buildDocument() vid is null");
+		}
 		
 		if(doc.getPid() != null)
 		{
 			document.add(new LongField("pid", doc.getPid(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
+		}
+		else
+		{
+			System.out.println("buildDocument() pid is null");
 		}
 		
 		if(doc.getDocId() != null)
 		{
 			document.add(new LongField("docId", doc.getDocId(), Store.YES));	//docId总是可以通过docPath 和 docName计算出来
 		}
+		else
+		{
+			System.out.println("buildDocument() docId is null");
+		}
 		
 		if(doc.getPath() != null)
 		{
 			document.add(new Field("path", doc.getPath(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	
+		}
+		else
+		{
+			System.out.println("buildDocument() path is null");
 		}
 		
 		if(doc.getName() != null)
 		{
 			document.add(new Field("name", doc.getName(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));	//文件名需要用于通配符搜索，因此不能进行切词处理
 		}
+		else
+		{
+			System.out.println("buildDocument() name is null");
+		}
 		
 		if(doc.getType() != null)
 		{
 			document.add(new IntField("type", doc.getType(), Store.YES));	//1: file 2: dir 用来保存Lucene和实际文件的区别
+		}
+		else
+		{
+			System.out.println("buildDocument() type is null");
 		}
 		
 		//Size
@@ -214,16 +238,30 @@ public class LuceneUtil2   extends BaseFunction
         {
             document.add(new LongField("size", doc.getSize(), Store.YES));
         }
+		else
+		{
+			System.out.println("buildDocument() size is null");
+		}
+
         //latestEditTime
         if(doc.getLatestEditTime() != null)
         {
             document.add(new LongField("latestEditTime", doc.getLatestEditTime(), Store.YES));
         }
+		else
+		{
+			System.out.println("buildDocument() pid is null");
+		}
+
         //Revision
         if(doc.getRevision() != null)
         {
         	document.add(new Field("revision", doc.getRevision(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));
         }
+		else
+		{
+			System.out.println("buildDocument() pid is null");
+		}
         
         //Content
         if(content != null)
