@@ -4197,22 +4197,26 @@ public class BaseController  extends BaseFunction{
 	private DocAuth getShareAuth(DocShare docShare) {
 		DocAuth docAuth = new DocAuth();
 		docAuth.setAccess(1);
-		docAuth.setDownloadEn(1);
-		docAuth.setAddEn(1);		
-		docAuth.setEditEn(1);
+		docAuth.setDownloadEn(0);
+		docAuth.setAddEn(0);		
+		docAuth.setEditEn(0);
 		docAuth.setHeritable(1);
 		
 		if(docShare == null)
 		{
+			System.out.println("getShareAuth() docShare is null！");
 			return null;
 		}
 		
 		String shareAuth = docShare.getShareAuth();
 		if(shareAuth == null || shareAuth.isEmpty())
 		{
-			return docAuth;
+			System.out.println("getShareAuth() docShareAuth 未设置！");
+			return null;
 		}
 		
+		System.out.println("getShareAuth() shareAuth:" + shareAuth);
+
 		//解析JsonString
 		JSONObject jobj = JSON.parseObject(shareAuth);
 		docAuth = (DocAuth) convertJsonObjToObj(jobj, docAuth, DOCSYS_DOC_AUTH);		
