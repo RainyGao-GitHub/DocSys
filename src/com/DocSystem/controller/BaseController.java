@@ -2721,7 +2721,7 @@ public class BaseController  extends BaseFunction{
 					addIndexForRDoc(repos, doc);
 					addIndexForVDoc(repos, doc);
 				}
-				else if(force || !indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))
+				else if(force || (localDoc.getType() != null && localDoc.getType() == 1 && (!indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))))
 				{
 					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件变更，更新索引");
 					deleteIndexForDocName(repos, doc, rt);
