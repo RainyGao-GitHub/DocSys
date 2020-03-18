@@ -25,6 +25,6 @@ class DocSysInitTest extends BaseController{
     	//importObjectListFromJsonFile(DOCSYS_DOC_AUTH, "/DocSysTestDir/", "DOC_AUTH.json");
     	
     	//系统初始化测试
-    	docSysInit();
+    	docSysInit(false);
     }
 }
