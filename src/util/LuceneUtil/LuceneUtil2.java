@@ -1329,7 +1329,7 @@ public class LuceneUtil2   extends BaseFunction
 				}
 	        }
 	        
-			System.out.println("getDocumentIdListByHashId() 异常");
+			System.out.println("getDocListByDocId() 异常");
 			e.printStackTrace();
 		}
 		return null;

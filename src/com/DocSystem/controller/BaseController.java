@@ -7183,7 +7183,7 @@ public class BaseController  extends BaseFunction{
 		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix != null)
 		{
-			System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+			//System.out.println("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 			switch(fileSuffix)
 			{
 			case "doc":
