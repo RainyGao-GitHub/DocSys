@@ -4219,7 +4219,9 @@ public class BaseController  extends BaseFunction{
 
 		//解析JsonString
 		JSONObject jobj = JSON.parseObject(shareAuth);
-		docAuth = (DocAuth) convertJsonObjToObj(jobj, docAuth, DOCSYS_DOC_AUTH);		
+		docAuth = (DocAuth) convertJsonObjToObj(jobj, docAuth, DOCSYS_DOC_AUTH);	
+		
+		printObject("getShareAuth() docAuth:",docAuth);
 		return docAuth;
 	}
 	
