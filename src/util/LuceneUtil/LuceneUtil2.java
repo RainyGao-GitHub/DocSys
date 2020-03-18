@@ -1291,7 +1291,7 @@ public class LuceneUtil2   extends BaseFunction
 	    	ireader = DirectoryReader.open(directory);
 	        IndexSearcher isearcher = new IndexSearcher(ireader);
 	
-	        TermQuery query = new TermQuery(new Term("docId", doc.getDocId()+""));	//精确查找
+	        Query query =NumericRangeQuery.newLongRange("docId", doc.getDocId(), doc.getDocId(), true,true);
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
 			System.out.println("getDocListByDocId() hitCount:" + hits.length);
 
