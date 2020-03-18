@@ -1239,6 +1239,68 @@ public class LuceneUtil2   extends BaseFunction
 		return multiQueryForDoc(repos, fields, strs, indexLib);
 	}
 	
+    public static List<Doc> getDocListByDocId(Repos repos, Doc doc, String indexLib)
+	{
+		Directory directory = null;
+    	DirectoryReader ireader = null;
+    	
+    	try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("getDocListByDocId() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+    		directory = FSDirectory.open(file);
+
+	    	ireader = DirectoryReader.open(directory);
+	        IndexSearcher isearcher = new IndexSearcher(ireader);
+	
+	        TermQuery query = new TermQuery(new Term("docId", doc.getDocId()+""));	//精确查找
+	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
+			System.out.println("getDocListByDocId() hitCount:" + hits.length);
+
+	        List<Doc> docList = new ArrayList<Doc>();
+	        for (int i = 0; i < hits.length; i++) 
+	        {
+	            Document hitDocument = isearcher.doc(hits[i].doc);
+		        Doc hitDoc = BuildDoc(hitDocument);
+		        docList.add(hitDoc);
+	        }
+	        
+	        ireader.close();
+	        ireader = null;
+	        directory.close();
+	        directory = null;
+	        return docList;
+		} catch (Exception e) {
+	        if(ireader != null)
+	        {
+				try {
+					ireader.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	        }
+	        
+	        if(directory != null)
+	        {
+		        try {
+					directory.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	        }
+	        
+			System.out.println("getDocumentIdListByHashId() 异常");
+			e.printStackTrace();
+		}
+		return null;
+    }
+	
 	private static boolean buildDocQueryConditions(Doc doc, List<String> fields, List<String> strs) 
 	{
 		if(doc.getVid() != null)
