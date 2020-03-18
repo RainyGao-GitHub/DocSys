@@ -2737,7 +2737,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(localDoc.getType() != null && localDoc.getType() == 1)
 			{
-				System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 是文件！");
+				//System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 是文件！");
 				return true;
 			}
 			
