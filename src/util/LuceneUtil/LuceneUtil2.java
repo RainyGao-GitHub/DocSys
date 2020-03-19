@@ -415,7 +415,12 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-	public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
+    public final static int SEARCH_TYPE_Term = 1;	//精确
+    public final static int SEARCH_TYPE_Fuzzy = 2;	//模糊
+    public final static int SEARCH_TYPE_IKAnalyzer = 3;	//中文切词
+    public final static int SEARCH_TYPE_Prefix = 4;	//前缀
+    public final static int SEARCH_TYPE_Wildcard = 5;	//通配符
+    public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
 		
@@ -438,21 +443,21 @@ public class LuceneUtil2   extends BaseFunction
 	        Query query = null;
 	        switch(searchType)
 	        {
-	        case 1: //精确
+	        case SEARCH_TYPE_Term: //精确
 		        query = new TermQuery(new Term(field,str));
 		        break;
-	        case 2:	//模糊
+	        case SEARCH_TYPE_Fuzzy:	//模糊
 	        	query = new FuzzyQuery(new Term(field,str));
 	        	break;
-	        case 3: //智能 
+	        case SEARCH_TYPE_IKAnalyzer: //智能 
 	        	Analyzer analyzer = new IKAnalyzer();
 	        	QueryParser parser = new QueryParser(Version.LUCENE_46, field,analyzer);
 		        query = parser.parse(str);
 	        	break;
-	        case 4:	//前缀
+	        case SEARCH_TYPE_Prefix:	//前缀
 	        	query = new PrefixQuery(new Term(field, str));
 	        	break;
-	        case 5: //通配
+	        case SEARCH_TYPE_Wildcard: //通配
 	        	query = new WildcardQuery(new Term(field,"*" + str + "*"));
 	        	break;  
 	        }
