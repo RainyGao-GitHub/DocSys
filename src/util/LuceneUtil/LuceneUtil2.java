@@ -618,7 +618,7 @@ public class LuceneUtil2   extends BaseFunction
 	    	Long latestEditTime = null;
 	    	if(strLatestEditTime != null && !strLatestEditTime.isEmpty())
 	    	{
-	    		Long.parseLong(strLatestEditTime);
+	    		latestEditTime = Long.parseLong(strLatestEditTime);
 	    	}
 	    	
 	    	Doc doc = new Doc();
