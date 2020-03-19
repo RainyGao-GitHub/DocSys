@@ -3533,15 +3533,15 @@ public class DocController extends BaseController{
 				if((searchMask & SEARCH_MASK[0]) > 0)
 				{
 					//采用通配符搜索
-					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,0), searchResult, 5, 3); 	//Search By DocName
+					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 10); 	//Search By DocName
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
-					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,1), searchResult, 1, 2);	//Search By FileContent
+					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_R_DOC), searchResult, LuceneUtil2.SEARCH_TYPE_Term, 2);	//Search By FileContent
 				}
 				if((searchMask & SEARCH_MASK[2]) > 0)
 				{	
-					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,2), searchResult, 1, 2);	//Search By VDoc
+					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_V_DOC), searchResult, LuceneUtil2.SEARCH_TYPE_Term, 2);	//Search By VDoc
 				}
 			}
 		}
