@@ -13,10 +13,19 @@
     <!-- CSS: Bootstrap、font-awesome、boostrapQ、 -->
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-
     <link href="static/styles/styles.css" rel="stylesheet">
+    <link href="static/zTree/css/metroStyle/standardStyle.css" rel="stylesheet" id="zTreeCss">
+
     <script src="static/scripts/jquery.min.js"></script>
 
+    <style>
+        /* 大图标 */
+        .bigicon {
+        	background-size:40px 40px !important;
+		    width: 40px;
+		    height: 40px;
+        }
+    </style>
 </head>
 <body>
 <div class="manual-reader">
@@ -120,9 +129,9 @@
 	<ul>
         {{each list as doc i}}
     <li>
-        <a href="project.html?vid={{ doc.vid }}&path={{doc.encodePath}}&name={{doc.encodeName}}" class="box" title="" >
+        <a href="project.html?vid={{doc.vid}}&path={{doc.encodePath}}&name={{doc.encodeName}}" class="box" title="" >
             <div class="pull-left imgbox">
-                <i class="fa fa-desktop"></i>
+                <i class="{{doc.iconStyle}}"></i>
             </div>
             <h4>{{ doc.name }}</h4>
             <span></span>
@@ -351,8 +360,16 @@
 				        	   var iconType = getDiyFileIconType(jsonObj.name);
 				        	   if(iconType && iconType != "")
 				        	   {
-				        		   jsonObj.iconSkin = iconType;
+				        		   jsonObj.iconStyle = "icons bigicon file " + iconType;
 				        	   }
+				        	   else
+				        	   {
+				        		   jsonObj.iconStyle = "icons bigicon file";
+				        	   }
+				           }
+				           else
+				           {
+				        	   jsonObj.iconStyle = "icons bigicon folder";
 				           }
 				       }
 	           			
