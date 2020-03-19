@@ -791,6 +791,7 @@ public class ReposController extends BaseController{
 		{
 			rt.setData(docList);	
 		}
+		System.out.println("getSubDocList() docList ready");
 		writeJson(rt, response);
 		
 		//Add doc for AutoSync
