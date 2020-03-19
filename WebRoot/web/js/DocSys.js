@@ -8,6 +8,20 @@ function showErrorMessage($msg) {
 	qiao.bs.alert($msg);
 }
 
+function getDocLink(doc)
+{
+	var link = "project.html?vid="+doc.vid+"&doc="+doc.docId;
+	if(doc.path && doc.path != "")
+	{
+		link += "&path=" + base64_encode(doc.path);
+	}
+	if(doc.name && doc.name != "")
+	{
+		link += "&name=" + base64_encode(doc.name);
+	}
+	return link;
+}
+
 function getFileSuffix(name)
 {
    var i = name.lastIndexOf(".")
