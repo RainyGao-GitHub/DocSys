@@ -435,7 +435,7 @@ public class BaseController  extends BaseFunction{
 		//文件大小变化了则一定是变化了
 		if(!dbDoc.getSize().equals(localEntry.getSize()))
 		{
-			System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + dbDoc.getSize() + " localEntry.size:" + localEntry.getSize()); 
+			//System.out.println("isDocLocalChanged() local changed: dbDoc.size:" + dbDoc.getSize() + " localEntry.size:" + localEntry.getSize()); 
 			return true;			
 		}
 				
@@ -443,7 +443,7 @@ public class BaseController  extends BaseFunction{
 		if(!dbDoc.getLatestEditTime().equals(localEntry.getLatestEditTime()))
 		{
 			
-			System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
+			//System.out.println("isDocLocalChanged() local changed: dbDoc.lastEditTime:" + dbDoc.getLatestEditTime() + " localEntry.lastEditTime:" + localEntry.getLatestEditTime()); 
 			return true;
 		}
 		
@@ -452,7 +452,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(dbDoc.getRevision() == null || dbDoc.getRevision().isEmpty())
 			{
-				System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
+				//System.out.println("isDocLocalChanged() local changed: dbDoc.revision is null or empty:" + dbDoc.getRevision()); 
 				return true;
 			}
 		}
@@ -478,9 +478,9 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
-		printObject("isDocRemoteChanged() doc:",dbDoc);
-		printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
+		//System.out.println("isDocRemoteChanged() remote changed: dbDoc.revision:" + dbDoc.getRevision() + " remoteEntry.revision:" + remoteEntry.getRevision()); 
+		//printObject("isDocRemoteChanged() doc:",dbDoc);
+		//printObject("isDocRemoteChanged() remoteEntry:",remoteEntry);
 		return true;
 	}
 
@@ -3145,7 +3145,7 @@ public class BaseController  extends BaseFunction{
 			localChange.setRemoteEntry(remoteEntry);
 			localChange.setType(docChangeType);
 			localChanges.put(doc.getDocId(), localChange);
-			System.out.println("syncupScanForDoc_FSM() docChangeType: " + localChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
+			//System.out.println("syncupScanForDoc_FSM() docChangeType: " + localChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		//由于远程同步需要直接修改或删除本地文件，一旦误操作将无法恢复，必须保证删除修改操作的文件的历史已经在版本仓库中
 		case REMOTEDELETE:	//remoteDelete
@@ -3162,7 +3162,7 @@ public class BaseController  extends BaseFunction{
 				localChange1.setRemoteEntry(remoteEntry);
 				localChange1.setType(DocChangeType.LOCALCHANGE);	//LOCALCHANGE才能保证在AutoCommit的时候正常工作
 				localChanges.put(dbDoc.getDocId(), localChange1);
-				System.out.println("syncupScanForDoc_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
+				//System.out.println("syncupScanForDoc_FSM() docChangeType: " + localChange1.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 				return true;
 			}
 		case REMOTEADD:	//remoteAdd
@@ -3173,7 +3173,7 @@ public class BaseController  extends BaseFunction{
 			remoteChange.setRemoteEntry(remoteEntry);
 			remoteChange.setType(docChangeType);
 			remoteChanges.put(doc.getDocId(), remoteChange);
-			System.out.println("syncupScanForDoc_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
+			//System.out.println("syncupScanForDoc_FSM() docChangeType: " + remoteChange.getType() + " docId:" + doc.getDocId() + " docPath:" +doc.getPath() + doc.getName());
 			return true;
 		case NOCHANGE:		//no change
 			if(dbDoc != null && dbDoc.getType() == 2)
