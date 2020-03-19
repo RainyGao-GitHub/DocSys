@@ -129,7 +129,7 @@
 	<ul>
         {{each list as doc i}}
     <li>
-        <a href="project.html?vid={{doc.vid}}&path={{doc.encodePath}}&name={{doc.encodeName}}" class="box" title="" >
+        <a href="{{doc.link}}" class="box" title="" target="_blank">
             <div class="pull-left imgbox">
                 <i class="{{doc.iconStyle}}"></i>
             </div>
@@ -137,7 +137,7 @@
             <span></span>
         </a>
         <p class="summary hidden-xs hidden-sm hidden-md">
-            <a href="project.html?vid={{ doc.vid }}&path={{doc.encodePath}}&name={{doc.encodeName}}" class="text">
+            <a href="{{doc.link}}" class="text" target="_blank">
                 {{ doc.path }}
             </a>
         </p>
@@ -162,6 +162,15 @@
     function pageInit()
     {
     	console.log("pageInit");
+    	
+		//Set the event handler for keydown
+		document.onkeydown=function(event)
+		{
+			//浏览器兼容性处理
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			EnterKeyListenerForSearchDoc(e);	
+		}
+		
     	getDocSysConfig();
     	 	
     	//确定当前登录用户是否已登录
@@ -330,6 +339,20 @@
 		});
 	}
 	
+	//回车键监听函数，该event已经过兼容性处理 
+	function EnterKeyListenerForSearchDoc(event){
+		console.log("enter key listener for SearchDoc");
+		if (event.keyCode == 13)
+		{  
+			var isFocus=$("#searchWord").is(":focus");  
+			if(isFocus)
+			{
+				searchDoc();
+			}
+			return;
+	 	}
+	}
+	
 	function searchDoc()
 	{
 		var searchWord = $("#searchWord").val();
@@ -352,8 +375,8 @@
 				      	for(var i=0; i<docList.length; i++)
 				      	{
 				           var jsonObj = docList[i];
-				           jsonObj.encodePath = base64_encode(jsonObj.path);
-				           jsonObj.encodeName = base64_encode(jsonObj.name);
+				           jsonObj.link = getDocLink(jsonObj);
+				           
 				           //设置用户自定义文件图标（必须在standardStyle中有定义）
 				           if(jsonObj.type == 1)
 				           {
