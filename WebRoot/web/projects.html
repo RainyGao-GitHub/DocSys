@@ -97,18 +97,39 @@
 
 <script type="text/html" id="tmpl-projects">
     <ul>
-        {{each list as value i}}
+        {{each list as repos i}}
     <li>
-        <a href="project.html?vid={{ value.id }}" class="box" title="" >
+        <a href="project.html?vid={{ repos.id }}" class="box" title="" >
             <div class="pull-left imgbox">
                 <i class="fa fa-desktop"></i>
             </div>
-            <h4>{{ value.name }}</h4>
+            <h4>{{ repos.name }}</h4>
             <span></span>
         </a>
         <p class="summary hidden-xs hidden-sm hidden-md">
-            <a href="project.html?vid={{ value.id }}" class="text">
-                {{ value.info }}
+            <a href="project.html?vid={{ repos.id }}" class="text">
+                {{ repos.info }}
+            </a>
+        </p>
+    </li>
+        {{/each}}
+    </ul>
+</script>
+
+<script type="text/html" id="tmpl-searchResults">
+	<ul>
+        {{each list as doc i}}
+    <li>
+        <a href="project.html?vid={{ doc.vid }}&path={{doc.encodePath}}&name={{doc.encodeName}}" class="box" title="" >
+            <div class="pull-left imgbox">
+                <i class="fa fa-desktop"></i>
+            </div>
+            <h4>{{ doc.name }}</h4>
+            <span></span>
+        </a>
+        <p class="summary hidden-xs hidden-sm hidden-md">
+            <a href="project.html?vid={{ doc.vid }}&path={{doc.encodePath}}&name={{doc.encodeName}}" class="text">
+                {{ doc.path }}
             </a>
         </p>
     </li>
@@ -123,6 +144,7 @@
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript">
 	//页面初始化
 	var gDocSysConfig = null;
@@ -316,7 +338,28 @@
 	           		console.log("searchDoc ret:", ret)
 	        		if(ret.status == "ok")
 	           		{
-	           			console.log("文件搜索成功");
+	           			console.log("文件搜索成功", ret);
+						var docList = ret.data;
+				      	for(var i=0; i<docList.length; i++)
+				      	{
+				           var jsonObj = docList[i];
+				           jsonObj.encodePath = base64_encode(jsonObj.path);
+				           jsonObj.encodeName = base64_encode(jsonObj.name);
+				           //设置用户自定义文件图标（必须在standardStyle中有定义）
+				           if(jsonObj.type == 1)
+				           {
+				        	   var iconType = getDiyFileIconType(jsonObj.name);
+				        	   if(iconType && iconType != "")
+				        	   {
+				        		   jsonObj.iconSkin = iconType;
+				        	   }
+				           }
+				       }
+	           			
+		                var html = template('tmpl-searchResults', {
+		                    list : docList,
+		                });
+		                $("#project-box").html(html);
 	               	}
 	               	else
 	               	{
