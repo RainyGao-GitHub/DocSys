@@ -25,7 +25,7 @@
     <!-- 配置数据源 -->  
     <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"  
         destroy-method="close">  
-        <!-- property name="driverClass" value="${db.driver}" /-->  
+        <property name="driverClass" value="${db.driver}" />  
         <property name="jdbcUrl" value="${db.url}" />  
         <property name="user" value="${db.username}" />  
         <property name="password" value="${db.password}" />  
