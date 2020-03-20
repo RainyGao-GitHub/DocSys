@@ -4544,6 +4544,15 @@ function CompareObj(objA, objB, flag) {
 				        			copyUrl(curRightClickedTreeNode);
 								}
 						},
+						//{divider: true},
+						//{text: '本地打开', action: function(e){
+						//		e.preventDefault();
+						//		var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
+						//		console.log("本地打开 localPath:" + localPath);									
+						//		var href="file:///" + localPath;
+						//		window.location.href = href;
+						//	}
+						//},
 						{divider: true},
 						{text: '强制刷新', action: function(e){
 									e.preventDefault();
@@ -4881,6 +4890,15 @@ function CompareObj(objA, objB, flag) {
 					        			copyUrl(curRightClickedDocListNode);
 									}
 							},	
+							//{divider: true},
+							//{text: '本地打开', action: function(e){
+							//		e.preventDefault();
+							//		var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
+							//		console.log("本地打开 localPath:" + localPath);		
+							//		var href="file:///" + localPath;
+							//		window.location.href = href;
+							//	}
+							//},
 							{divider: true},
 							{text: '强制刷新', action: function(e){
 										e.preventDefault();
@@ -4908,6 +4926,27 @@ function CompareObj(objA, objB, flag) {
 			$('.finale h1:first').css({opacity:1});
 		});
 		//右键菜单实现：contextMenu End
+    }
+    
+    function getDocLocalPath(repos, doc)
+    {
+    	var reposStorePath = repos.realPath;
+    	if(!reposStorePath || reposStorePath == "")
+    	{
+    		reposStorePath = repos.path + repos.id + "/data/rdata/";
+    	}
+    	
+    	var docPath = "";
+    	if(doc.path)
+    	{
+        	docPath = doc.path;    		
+    	}
+    	if(doc.name)
+    	{
+    		docPath += doc.name;
+    	}
+    	
+    	return reposStorePath + docPath;
     }
     
  	function shareDoc(node){
