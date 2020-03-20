@@ -155,37 +155,34 @@ public class DocController extends BaseController{
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("feeback reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " content:" + content);
-		
+		ReturnAjax rt = new ReturnAjax();
+
 		//设置跨域访问允许
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
 		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
 		
+		if(name == null)
+		{
+			docSysErrorLog("意见不能为空！", rt);
+			writeJson(rt, response);	
+			return;
+		}
+		
 		if(reposId == null)
 		{
 			reposId = getReposIdForFeeback();		
 		}
-		if(pid == null)
-		{
-			pid = 0L;
-		}
 		if(path == null)
 		{
 			path = "";
-		}
-		if(level == null)
-		{
-			level = 1;
 		}
 		if(type == null)
 		{
 			type = 1;
 		}
 		
-		
-		ReturnAjax rt = new ReturnAjax();
-
 		Repos repos = reposService.getRepos(reposId);
 		if(repos == null)
 		{
@@ -196,12 +193,12 @@ public class DocController extends BaseController{
 		
 		String localRootPath = getReposRealPath(repos);
 		String localVRootPath = getReposVirtualPath(repos);		
-		Doc doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, 0L, "");
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, level, type, true, localRootPath, localVRootPath, 0L, "");
 		doc.setContent(content);
 		
 		String commitMsg = "用户反馈 " + path + name;
 		String commitUser = "游客";
-		User login_user = getLoginUser(session, request, response, rt);
+		User login_user = (User) session.getAttribute("login_user");
 		if(login_user != null)
 		{
 			commitUser = login_user.getName();
