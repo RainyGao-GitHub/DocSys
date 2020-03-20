@@ -7299,10 +7299,28 @@ public class BaseController  extends BaseFunction{
 			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
 			{
 				System.out.println("docSysInit() 用户自定义数据库配置文件与系统数据库配置文件不一致，等待重启生效！");
+				//如果之前的版本号低于V2.0.47则需要更新数据库的驱动和链接
+				UserJDBCSettingUpgrade(UserJDBCSettingPath);
 				copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
 				return false;
 			}
 		}
+		
+		//Update the value of DB_URL/DB_USER/DB_PASS
+		String docSysConfigPath = docSysWebPath + "WEB-INF/classes/docSysConfig.properties";
+		String userDocSysConfigPath = docSysIniPath + "docSysConfig.properties";
+		if(isFileExist(userDocSysConfigPath))
+		{
+			//检查userDocSysConfigPath是否与docSysConfigPath一致，如果不一致则更新
+			String checkSum1 = getFileCheckSum(userDocSysConfigPath);
+			String checkSum2 = getFileCheckSum(docSysConfigPath);
+			if(checkSum1 == null || checkSum2 == null || !checkSum1.equals(checkSum2))
+			{
+				System.out.println("docSysInit() 用户自定义配置文件与系统默认配置文件不一致，更新文件！");
+				copyFile(UserJDBCSettingPath, JDBCSettingPath, true);
+			}
+		}
+				
 		
 		getAndSetDBInfoFromFile(JDBCSettingPath);
 		
@@ -7364,6 +7382,32 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	private static void UserJDBCSettingUpgrade(String userJDBCSettingPath) 
+	{
+		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
+		System.out.println("UserJDBCSettingUpgrade() oldVersion:" + oldVersion);
+		if(oldVersion != null && oldVersion > 20147)
+		{
+			System.out.println("UserJDBCSettingUpgrade() oldVersion larger than 20147, no need upgrage userJDBCSetting");
+			return;
+		}
+		
+		//更新DBUrl
+		String url = ReadProperties.getValue(userJDBCSettingPath, "db.url");
+		String[] urlParts = url.split("\\?");
+		if(urlParts == null || urlParts.length == 0)
+		{
+			return;
+		}
+		String baseUrl = urlParts[0];
+		String newUrl = baseUrl + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
+		System.out.println("UserJDBCSettingUpgrade() newUrl:" + newUrl);
+		ReadProperties.setValue(userJDBCSettingPath, "db.url", newUrl);
+		
+		//更新DBDriver
+		ReadProperties.setValue(userJDBCSettingPath, "db.driver", "com.mysql.cj.jdbc.Driver");
+	}
+
 	private static boolean checkAndAddFirstUser() {
 		//获取用户列表
 		List<Object> list = dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
