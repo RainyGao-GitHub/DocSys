@@ -289,8 +289,13 @@
             		   	{
             		   		url += "&shareId=" + gShareId;
             		   	}
-            	   		window.location.href = url;
-                	   	downloadSuccessHandler(SubContext, ret.msgInfo);
+            		   	
+            		   	//延时3秒启动下载
+            		   	setTimeout(function(){
+            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
+            		   		window.location.href = url;
+            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+                	   	}, 2000);
                 	   	return;
                    }
                    else	//后台报错，结束下载
