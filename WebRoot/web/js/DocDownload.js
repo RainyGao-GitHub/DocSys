@@ -290,12 +290,22 @@
             		   		url += "&shareId=" + gShareId;
             		   	}
             		   	
-            		   	//延时3秒启动下载
-            		   	setTimeout(function(){
+            		   	if(index != 0)
+            		   	{
+            		   		console.log("downloadDocPrepare 延时启动文件下载: " + SubContext.name);
+            		   		//延时2秒启动下载
+	            		   	setTimeout(function(){
+	            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
+	            		   		window.location.href = url;
+	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+	                	   	}, 2000);
+            		   	}
+            		   	else
+            		   	{
             		   		console.log("downloadDocPrepare download start for " + SubContext.name);
             		   		window.location.href = url;
             		   		downloadSuccessHandler(SubContext, ret.msgInfo);
-                	   	}, 2000);
+            		   	}
                 	   	return;
                    }
                    else	//后台报错，结束下载
