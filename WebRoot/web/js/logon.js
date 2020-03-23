@@ -1,6 +1,7 @@
 	function showLoginPanel(){
 		//alert("showLoginPanel");
 		bootstrapQ.dialog({
+			id: "login",
 			title: '登录',
 			url: 'login.html',
 			msg: '页面正在加载，请稍等...',
@@ -12,6 +13,7 @@
 	function showRegisterPanel(){
 		//alert("showRegisterPanel");
 		bootstrapQ.dialog({
+			id: "register",
 			url: 'register.html',
 			title: '注册',
 			msg: '页面正在加载，请稍等...',
