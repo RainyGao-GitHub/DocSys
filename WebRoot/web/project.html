@@ -415,7 +415,7 @@
 	{
 		if(treeNodes == null || treeNodes.length < 1)
 		{
-			bootstrapQ.alert("清选择需要删除的文件或目录");
+			showErrorMessage("清选择需要删除的文件或目录");
 		}
 		else
 		{
@@ -582,7 +582,7 @@
 	function copyDocName(node){
 		if(node == null)
 		{
-			bootstrapQ.alert("请选择文件或目录");
+			showErrorMessage("请选择文件或目录");
 			return false;
 		}
 		
@@ -605,7 +605,7 @@
 	function copyDocPath(node){
 		if(node == null)
 		{
-			bootstrapQ.alert("请选择文件或目录");
+			showErrorMessage("请选择文件或目录");
 			return false;
 		}
 
@@ -628,7 +628,7 @@
 	function copyUrl(node){
 		if(node == null)
 		{
-			bootstrapQ.alert("请选择文件或目录");
+			showErrorMessage("请选择文件或目录");
 			return false;
 		}
 		
@@ -782,7 +782,7 @@
 	    
 	    if(fileName != curCheckInDoc.name)
 	    {
-	    	bootstrapQ.alert("请选择文件：" + curCheckInDoc.name);
+	    	showErrorMessage("请选择文件：" + curCheckInDoc.name);
 		    return false;	
 	    }
 	    
@@ -1210,7 +1210,7 @@
 					//InitMenuAndDoc();
                 }else {
                     $("#projectName").text("仓库名");
-                    alert(ret.msgInfo);
+                    showErrorMessage("获取仓库信息失败:" + ret.msgInfo);
                 }
             },
             error : function () {
@@ -1404,7 +1404,7 @@
 					//当前有打开的文件，还处于编辑状态必须先退出编辑，理论上不应该执行到这里
 	            	if(gDocInfo.docId && gDocInfo.docId != 0 && gDocInfo.docId != doc.docId && gDocInfo.edit == true)
 	            	{
-	            		alert("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
+	            		console.log("getAndShowDoc() 理论上不应该执行到这里，处于编辑状态的文件必须先退出编辑！");
 	            		DocEdit.exitEdit();
 	            		return;
 	            	}
@@ -1773,11 +1773,6 @@
 	
 	function getDialogStyle()
 	{
-		//alert("getDialogStyle() gIsPC:" + gIsPC);
-		//if(gIsPC == false)
-		//{
-		//	return 'width:95%;'
-		//}
 		return 'width:95%;';	
 	}
 	
@@ -2146,30 +2141,30 @@
         var url = new String();
         url= window.location.href;
         strUrl = window.location.href;
-        //alert(strUrl);
+
         if (strUrl.indexOf("?") != -1) {
             strUrl = strUrl.substr(strUrl.indexOf("?") + 1);
-            //alert(strUrl);
+
             if (strUrl.toLowerCase().indexOf(para_name.toLowerCase()) == -1) {
                 strNewUrl = url + "&" + para_name + "=" + para_value;
                 window.location = strNewUrl;
                 //return strNewUrl;
             } else {
                 var aParam = strUrl.split("&");
-                //alert(aParam.length);
+             
                 for (var i = 0; i < aParam.length; i++) {
                     if (aParam[i].substr(0, aParam[i].indexOf("=")).toLowerCase() == para_name.toLowerCase()) {
                         aParam[i] = aParam[i].substr(0, aParam[i].indexOf("=")) + "=" + para_value;
                     }
                 }
                 strNewUrl = url.substr(0, url.indexOf("?") + 1) + aParam.join("&");
-                //alert(strNewUrl);
+                
                 window.location = strNewUrl;
                 //return strNewUrl;
             }
         } else {
             strUrl += "?" + para_name + "=" + para_value;
-            //alert(strUrl);
+           
             window.location=strUrl;
         }
     }
@@ -2369,7 +2364,7 @@ function CompareObj(objA, objB, flag) {
 
 	//This function was used to get the rightClick treeNode,it will be used for contextjs
 	function zTreeBeforeRightClick(treeId, treeNode) {
-		//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
+		
 		curRightClickedTreeNode = treeNode;
     	return true;	
 	};
@@ -2797,7 +2792,7 @@ function CompareObj(objA, objB, flag) {
 	                else 
 	                {
 	                	console.log(ret.msgInfo);
-	                	alert(ret.msgInfo);
+	                	showErrorMessage("获取用户信息失败:" + ret.msgInfo);
 	                	//Jump to index.html
 	                    //window.location.href = "index.html";
 	                    
@@ -3569,7 +3564,7 @@ function CompareObj(objA, objB, flag) {
                    	}
                },
                error : function () {
-                   alert('服务器异常: 搜索文件异常');
+            	   showErrorMessage('服务器异常: 搜索文件异常');
                }
            });
 	}
@@ -4478,7 +4473,7 @@ function CompareObj(objA, objB, flag) {
 					e.preventDefault();
 					if(curRightClickedTreeNode == null)
 					{
-						bootstrapQ.alert("请选择需要文件或目录");
+						showErrorMessage("请选择需要文件或目录");
 						return false;
 					}
 					showDocDetail(curRightClickedTreeNode);
