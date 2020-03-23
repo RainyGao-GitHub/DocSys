@@ -191,11 +191,11 @@
                 	var url = window.location.href;               	
                 	window.location.href = url;	//刷新页面
                 }else {
-                	alert("错误："+ret.msgInfo);
+                	showErrorMessage("错误："+ret.msgInfo);
                 }
             },
             error : function () {
-            	alert("服务器异常:登录失败");
+            	showErrorMessage("服务器异常:登录失败");
             }
         });
     }
