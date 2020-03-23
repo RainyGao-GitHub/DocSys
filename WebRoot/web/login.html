@@ -104,9 +104,14 @@
 	function LoginPageInit()
 	{
 		//console.log($.cookie("dsuser"));
-		//回车键监听函数
-		EnterKeyListener();
-		
+		//Set the event handler for keydown
+		console.log("LoginPageInit() Set the event handler for keydown");
+		document.onkeydown=function(event)
+		{
+			//浏览器兼容性处理
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			EnterKeyListenerForLogin(e);	
+		}	
 	}
 	
 	function showLogin(text){
@@ -119,9 +124,9 @@
 	}
 	
 	//回车键监听函数
-	function EnterKeyListener(){
-		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
-	 	if (event.keyCode == 13){  
+	function EnterKeyListenerForLogin(e){
+		//var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (e.keyCode == 13){  
 	 		login();
 	 	}  
 	}
