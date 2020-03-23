@@ -672,30 +672,36 @@
 			showErrorMessage("请选择需要下载的文件！");
 			return;
 		}
-
-		var fileName = treeNodes[0].name;
-	    console.log("firstFile:"+fileName);
-	  	
-	  	var downloadDispInfo = fileName;
-	  	if(treeNodes.length > 1)
-	  	{
-	  		downloadDispInfo = downloadDispInfo + " 等" + treeNodes.length + "个文件";
-	  	}
-	  	
-		if(downloadType && downloadType == 2)
-		{
-  			downloadDispInfo = downloadDispInfo + " 备注";		
-		}
-		
 		if(needConfirm)
 		{
-			if(confirm("是否下载：" + downloadDispInfo) == false)
+			var fileName = treeNodes[0].name;
+		    console.log("firstFile:"+fileName);
+		  	
+		  	var downloadDispInfo = fileName;
+		  	if(treeNodes.length > 1)
+		  	{
+		  		downloadDispInfo = downloadDispInfo + " 等" + treeNodes.length + "个文件";
+		  	}
+		  	
+			if(downloadType && downloadType == 2)
 			{
-				return;
+	  			downloadDispInfo = downloadDispInfo + " 备注";		
 			}
+						
+			qiao.bs.confirm({
+		        id: 'downloadConfirm',
+		        msg: '是否下载：' + downloadDispInfo,
+		    },function(){
+		        //alert('点击了确定！');
+				DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
+		    },function(){
+		        //alert('点击了取消！');
+		    });
 		}
-		
-		DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
+		else
+		{			
+			DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
+		}
 	}
 		
     /*文件上传实现*/
