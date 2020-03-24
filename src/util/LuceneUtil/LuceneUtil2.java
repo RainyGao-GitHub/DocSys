@@ -547,16 +547,68 @@ public class LuceneUtil2   extends BaseFunction
 			}
 		}
 		
+		if(list.size() == 1)
+		{
+			String searchStr = list.get(0);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, weight);
+			return true;
+		}
+		
+		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
 		int subWeight = list.size() > 0? weight/list.size() : weight;
 		for(int i=0; i<list.size(); i++)
 		{
+			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
 			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, subWeight);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, subSearchResult, searchType, subWeight);
+			if(subSearchResult.size() <= 0)
+			{
+				//subSearchStr Not found
+				return false;
+			}
+			
+			//Add subSearchResult to results
+			subSearcResults.add(subSearchResult);
 		}
+		
+		combineSubSearchResults(subSearcResults, searchResult);		
 		return true;
     }
 	
-    private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
+    private static void combineSubSearchResults(List<HashMap<String, HitDoc>> subSearcResults,
+			HashMap<String, HitDoc> searchResult) {
+
+    	for(int i=0; i<subSearcResults.size(); i++)
+		{
+    		for(HitDoc hitDoc: subSearcResults.get(i).values())
+            {
+    			if(searchResult.get(hitDoc.getDocPath()) == null)
+    			{
+	    			if(isValidHitDoc(subSearcResults, hitDoc, i))
+	    			{
+	    				searchResult.put(hitDoc.getDocPath(), hitDoc);
+	    			}
+    			}
+			}
+		}
+    	
+	}
+
+	private static boolean isValidHitDoc(List<HashMap<String, HitDoc>> subSearcResults, HitDoc hitDoc, int index) {
+		for(int i=0; i<subSearcResults.size(); i++)
+		{
+			if(i != index)
+			{
+				if(subSearcResults.get(i).get(hitDoc.getDocPath()) == null)
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
     {
     	switch(repos.getType())
     	{
