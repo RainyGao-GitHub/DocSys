@@ -555,12 +555,12 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		
 		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
-		int subWeight = list.size() > 0? weight/list.size() : weight;
+		//int subWeight = list.size() > 0? weight/list.size() : weight;
 		for(int i=0; i<list.size(); i++)
 		{
 			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
 			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, subSearchResult, searchType, subWeight);
+			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, subSearchResult, searchType, weight);
 			if(subSearchResult.size() <= 0)
 			{
 				//subSearchStr Not found
@@ -577,35 +577,35 @@ public class LuceneUtil2   extends BaseFunction
 	
     private static void combineSubSearchResults(List<HashMap<String, HitDoc>> subSearcResults,
 			HashMap<String, HitDoc> searchResult) {
-
-    	for(int i=0; i<subSearcResults.size(); i++)
-		{
-    		for(HitDoc hitDoc: subSearcResults.get(i).values())
-            {
-    			if(searchResult.get(hitDoc.getDocPath()) == null)
-    			{
-	    			if(isValidHitDoc(subSearcResults, hitDoc, i))
-	    			{
-	    				searchResult.put(hitDoc.getDocPath(), hitDoc);
-	    			}
-    			}
-			}
-		}
-    	
+    	for(HitDoc hitDoc: subSearcResults.get(0).values())
+        {
+    		HitDoc result = getHitDocFromSearchResults(subSearcResults, hitDoc);
+    		if(result != null)
+    		{
+    			searchResult.put(result.getDocPath(), result);
+    		}
+        }
 	}
+    
+    
 
-	private static boolean isValidHitDoc(List<HashMap<String, HitDoc>> subSearcResults, HitDoc hitDoc, int index) {
-		for(int i=0; i<subSearcResults.size(); i++)
+	private static HitDoc getHitDocFromSearchResults(List<HashMap<String, HitDoc>> subSearcResults, HitDoc hitDoc) 
+	{
+		for(int i=1; i<subSearcResults.size(); i++)
 		{
-			if(i != index)
+			HitDoc tempHitDoc = subSearcResults.get(i).get(hitDoc.getDocPath());
+			if(tempHitDoc == null)
 			{
-				if(subSearcResults.get(i).get(hitDoc.getDocPath()) == null)
-				{
-					return false;
-				}
+				return null;
+			}
+			
+			//总是取最小的hitCount作为搜索结果
+			if(hitDoc.getHitCount() > tempHitDoc.getHitCount())
+			{
+				hitDoc = tempHitDoc;
 			}
 		}
-		return true;
+		return hitDoc;
 	}
 
 	private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
