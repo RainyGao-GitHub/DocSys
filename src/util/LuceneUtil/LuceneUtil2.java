@@ -555,7 +555,6 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		
 		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
-		//int subWeight = list.size() > 0? weight/list.size() : weight;
 		for(int i=0; i<list.size(); i++)
 		{
 			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
@@ -622,7 +621,7 @@ public class LuceneUtil2   extends BaseFunction
  	}
 
 	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, String pathFilter, Document hitDocument) {
-    	System.out.println("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " latestEditTime:" + hitDocument.get("latestEditTime"));
+    	//System.out.println("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " latestEditTime:" + hitDocument.get("latestEditTime"));
 
 		try {
 			String docParentPath = hitDocument.get("path");
