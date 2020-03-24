@@ -984,7 +984,7 @@ public class BaseFunction{
 			{
 				//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, 1);
-				sortIndex = sortIndex + weight*100 + 1;
+				sortIndex += weight*100 + 1;
 				doc.setSortIndex(sortIndex);
 			}
 			else
@@ -992,7 +992,7 @@ public class BaseFunction{
 				hitCount++;	//hitCount++
 				//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is "+ hitCount +"th hit result for searchWord:" + keyWord);	
 				hitInfo.put(keyWord, hitCount+1);
-				sortIndex = sortIndex + 1;
+				sortIndex += weight*100 + 1;
 				doc.setSortIndex(sortIndex);
 			}
 			//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " sortIndex:" + doc.getSortIndex());	
