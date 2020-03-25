@@ -259,20 +259,28 @@ public class Doc  implements Comparable<Doc>{
 	
     public int compareTo(Doc doc) {
     	//Sort By sortIndex
-        int ret = doc.sortIndex - this.sortIndex;
-        if(ret != 0)
-        {
-        	return ret;
-        }
-        
+        int diff = doc.sortIndex - this.sortIndex;
+		if (diff > 0) 
+		{
+			return 1;
+		}
+		else if (diff < 0) 
+		{
+			return -1;
+		}
+		
         //Sort by docType
         if(doc.type != null && this.type != null)
         {
-	        ret = doc.type - this.type;
-	        if(ret != 0)
-	        {
-	        	return ret;
-	        }
+	        diff = doc.type - this.type;
+			if (diff > 0) 
+			{
+				return 1;
+			}
+			else if (diff < 0) 
+			{
+				return -1;
+			}
         }
         
         //Sort by doName
