@@ -3456,6 +3456,10 @@ public class DocController extends BaseController{
 		hitDoc = docSysGetDoc(repos, doc);
 		if(firstSeperator >= 0)	//路径搜索
 		{
+			if(hitDoc == null || hitDoc.getType() == null || hitDoc.getType() == 0)
+			{
+				return null;
+			}
 			List<Doc> docList = new ArrayList<Doc>();
 			docList.add(hitDoc);
 			return docList;
@@ -3468,7 +3472,7 @@ public class DocController extends BaseController{
 		}
 		
 		List<Doc> result = convertSearchResultToDocList(repos, searchResult);	
-		if(hitDoc == null)
+		if(hitDoc == null || hitDoc.getType() == null || hitDoc.getType() == 0)
 		{
 			return result;
 		}
