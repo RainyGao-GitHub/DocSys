@@ -3433,15 +3433,55 @@ public class DocController extends BaseController{
 	
 	private List<Doc> searchInRepos(Repos repos, Integer pDocId, String path, String searchWord, String sort) 
 	{	
-		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
+		if(searchWord == null || searchWord.isEmpty())
+		{
+			return null;
+		}
+
+		//检查文件是否存在
+		Doc hitDoc = null;
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		String docPath = searchWord.replace('\\','/');
+		int firstSeperator = docPath.indexOf('/');
+		if(firstSeperator > 0)	//相对路径查找
+		{
+			if(path != null)
+			{
+				docPath = path + "/" + docPath;
+			}
+			docPath = docPath.replace('\\','/');
+		}
+		Doc doc = buildBasicDoc(repos.getId(), null, null, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
+		hitDoc = docSysGetDoc(repos, doc);
+		if(firstSeperator >= 0)	//路径搜索
+		{
+			List<Doc> docList = new ArrayList<Doc>();
+			docList.add(hitDoc);
+			return docList;
+		}
 		
+		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
 			luceneSearch(repos, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
 		}
 		
-		List<Doc> result = convertSearchResultToDocList(repos, searchResult);
-		return result;
+		List<Doc> result = convertSearchResultToDocList(repos, searchResult);	
+		if(hitDoc == null)
+		{
+			return result;
+		}
+		
+		if(result != null)
+		{
+			result.add(0,hitDoc);
+			return result;
+		}
+		
+		List<Doc> docList = new ArrayList<Doc>();
+		docList.add(hitDoc);
+		return docList;
 	}
 
 	private List<Doc> convertSearchResultToDocList(Repos repos, HashMap<String, HitDoc> searchResult) 
