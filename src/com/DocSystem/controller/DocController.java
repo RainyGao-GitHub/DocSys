@@ -6,6 +6,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -3498,8 +3499,22 @@ public class DocController extends BaseController{
       	    docList.add(doc);
 		}
 	
-		Collections.sort(docList);
-		
+		Collections.sort(docList,
+			new Comparator<Doc>() {
+				public int compare(Doc u1, Doc u2) {
+					int diff = u1.getSortIndex() - u2.getSortIndex();
+					if (diff > 0) 
+					{
+						return 1;
+					}
+					else if (diff < 0) 
+					{
+						return -1;
+					}
+					return 0;
+				}
+			}
+		);		
 		return docList;
 	}
 
