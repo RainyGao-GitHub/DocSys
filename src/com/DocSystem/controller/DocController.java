@@ -3499,6 +3499,8 @@ public class DocController extends BaseController{
       	    docList.add(doc);
 		}
 	
+		Collections.sort(docList);
+		/*
 		Collections.sort(docList,
 			new Comparator<Doc>() {
 				public int compare(Doc u1, Doc u2) {
@@ -3514,7 +3516,7 @@ public class DocController extends BaseController{
 					return 0;
 				}
 			}
-		);		
+		);*/
 		return docList;
 	}
 
