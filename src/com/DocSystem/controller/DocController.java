@@ -3462,6 +3462,7 @@ public class DocController extends BaseController{
 				docList.add(hitDoc);
 				return docList;
 			}
+			return null;
 		}
 		
 		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
@@ -3574,6 +3575,8 @@ public class DocController extends BaseController{
 				{
 					//采用通配符搜索
 					LuceneUtil2.search(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 10000); 	//Search By DocName
+					//切词后通配符搜索
+					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 1);	//Search By FileContent
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
