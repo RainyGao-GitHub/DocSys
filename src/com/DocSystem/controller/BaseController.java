@@ -246,6 +246,20 @@ public class BaseController  extends BaseFunction{
     	return subEntryList;
 	}
 
+	protected List<Doc> docSysGetDocList(Repos repos, Doc doc) 
+	{
+		switch(repos.getType())
+		{
+		case 1:
+		case 2:
+			return getLocalEntryList(repos, doc);
+		case 3:
+		case 4:
+			return getRemoteEntryList(repos, doc);
+		}
+		return null;
+	}
+	
 	private List<Doc> getLocalEntryList(Repos repos, Doc doc) 
 	{
 		//System.out.println("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
