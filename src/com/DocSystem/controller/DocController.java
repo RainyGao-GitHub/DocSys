@@ -3456,13 +3456,12 @@ public class DocController extends BaseController{
 		hitDoc = docSysGetDoc(repos, doc);
 		if(firstSeperator >= 0)	//路径搜索
 		{
-			if(hitDoc == null || hitDoc.getType() == null || hitDoc.getType() == 0)
+			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
 			{
-				return null;
+				List<Doc> docList = new ArrayList<Doc>();
+				docList.add(hitDoc);
+				return docList;
 			}
-			List<Doc> docList = new ArrayList<Doc>();
-			docList.add(hitDoc);
-			return docList;
 		}
 		
 		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
