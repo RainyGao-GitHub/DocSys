@@ -2616,7 +2616,8 @@ public class BaseController  extends BaseFunction{
 			realDocSyncResult = true;
 		}
 		
-		if(action.getAction() == Action.FORCESYNC)
+		//用户手动刷新：总是会触发索引刷新操作
+		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
 		{
 			if(doc.getDocId() == 0)
 			{
@@ -2636,7 +2637,7 @@ public class BaseController  extends BaseFunction{
 			}
 			System.out.println("**************************** syncupForDocChange() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 		}
-		else
+		else	//页面刷新：只在检测到文件有改动的时候才刷新索引
 		{
 			System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
@@ -2733,6 +2734,7 @@ public class BaseController  extends BaseFunction{
 					addIndexForDocName(repos, doc, rt);
 					addIndexForRDoc(repos, doc);
 					addIndexForVDoc(repos, doc);
+					subDocSyncupFlag = 2;	//如果index不存在则强制修改索引递归标记
 				}
 				else if(force || (localDoc.getType() != null && localDoc.getType() == 1 && (!indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))))
 				{
