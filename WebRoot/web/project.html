@@ -4554,16 +4554,16 @@ function CompareObj(objA, objB, flag) {
 						//		window.location.href = href;
 						//	}
 						//},
-						{divider: true},
-						{text: '强制刷新', action: function(e){
-									e.preventDefault();
-									if(curRightClickedTreeNode !== null)
-									{
-										refreshDoc(curRightClickedTreeNode, 1);
-										curRightClickedTreeNode = null;
-					    			}
-								}
-						},
+						//{divider: true},
+						//{text: '强制刷新', action: function(e){
+						//			e.preventDefault();
+						//			if(curRightClickedTreeNode !== null)
+						//			{
+						//				refreshDoc(curRightClickedTreeNode, 1);
+						//				curRightClickedTreeNode = null;
+					    //			}
+						//		}
+						//},
    				]
    			},
 		]);
@@ -4627,13 +4627,13 @@ function CompareObj(objA, objB, flag) {
 			        			showDocHistory(parentNode, 1);
 		        			}
 						},
-						{divider: true},
-						{text: '强制刷新', action: function(e){
-								e.preventDefault();
-								var parentNode = getParentNodeByNodeId(gDocInfo.docId);
-								refreshDoc(parentNode, 1);
-							}
-						},
+						//{divider: true},
+						//{text: '强制刷新', action: function(e){
+						//		e.preventDefault();
+						//		var parentNode = getParentNodeByNodeId(gDocInfo.docId);
+						//		refreshDoc(parentNode, 1);
+						//	}
+						//},
 				]
    			},
 			]
