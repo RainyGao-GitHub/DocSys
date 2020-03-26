@@ -663,6 +663,21 @@
 					time : 1000,
 		});
 	}
+	
+	function copyString(str)
+	{
+		var obj=document.getElementById("copiedText");
+		obj.value=str;	//修改其中的值
+		obj.select(); // 选择对象
+		document.execCommand("Copy"); // 执行浏览器复制命令
+	    // 普通消息提示条
+		bootstrapQ.msg({
+					msg : '复制成功！',
+					type : 'success',
+					time : 1000,
+		});
+	}
+	
 	//文件下载接口 
  	function downloadDoc(treeNodes,needConfirm,downloadType)
 	{
@@ -1205,6 +1220,8 @@
             success : function (ret) {
                 if( "ok" == ret.status ){
                 	gReposInfo = ret.data;
+                	console.log("gReposInfo:", gReposInfo);
+
                 	if(!gRootDoc.showName)
                 	{
 	                	gRootDoc.showName = gReposInfo.name;
@@ -4545,6 +4562,13 @@ function CompareObj(objA, objB, flag) {
 				        			copyUrl(curRightClickedTreeNode);
 								}
 						},
+						{text: '复制本地路径', action: function(e){
+								e.preventDefault();
+								var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
+								console.log("本地路径 localPath:" + localPath);	
+								copyString(localPath);
+							}
+						},
 						//{divider: true},
 						//{text: '本地打开', action: function(e){
 						//		e.preventDefault();
@@ -4891,6 +4915,13 @@ function CompareObj(objA, objB, flag) {
 					        			copyUrl(curRightClickedDocListNode);
 									}
 							},	
+							{text: '复制本地路径', action: function(e){
+									e.preventDefault();
+									var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
+									console.log("本地路径 localPath:" + localPath);	
+									copyString(localPath);
+								}
+							},
 							//{divider: true},
 							//{text: '本地打开', action: function(e){
 							//		e.preventDefault();
@@ -4931,7 +4962,7 @@ function CompareObj(objA, objB, flag) {
     
     function getDocLocalPath(repos, doc)
     {
-    	var reposStorePath = repos.realPath;
+    	var reposStorePath = repos.realDocPath;
     	if(!reposStorePath || reposStorePath == "")
     	{
     		reposStorePath = repos.path + repos.id + "/data/rdata/";
