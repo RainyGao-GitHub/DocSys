@@ -2736,7 +2736,7 @@ public class BaseController  extends BaseFunction{
 					addIndexForVDoc(repos, doc);
 					subDocSyncupFlag = 2;	//如果index不存在则强制修改索引递归标记
 				}
-				else if(force || (localDoc.getType() != null && localDoc.getType() == 1 && (!indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))))
+				else if(force || isDocChanged(localDoc, indexDoc))
 				{
 					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件变更，更新索引");
 					deleteIndexForDocName(repos, doc, rt);
@@ -2805,6 +2805,40 @@ public class BaseController  extends BaseFunction{
     		rebuildIndexForDoc(repos, subDoc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, force);
     	}
 		return true;
+	}
+
+	private boolean isDocChanged(Doc localDoc, Doc indexDoc) {
+		if(localDoc == null || indexDoc == null)
+		{
+			return false;
+		}
+		
+		if(localDoc.getType() == null || localDoc.getSize() == null || localDoc.getLatestEditTime() == null)
+		{
+			//无效localDoc信息
+			return false;
+		}
+		
+		if(localDoc.getType() != 1)
+		{
+			//只有文件才检查是否改动
+			return false;
+		}
+		
+		if(indexDoc.getType() == null || indexDoc.getSize() == null || indexDoc.getLatestEditTime() == null)
+		{
+			//index信息无效
+			return true;
+		}
+		
+		
+		if(indexDoc.getType() != localDoc.getType() || !indexDoc.getSize().equals(localDoc.getSize()) ||  !indexDoc.getLatestEditTime().equals(localDoc.getLatestEditTime()))
+		{
+			//文件有改动
+			return true;
+		}
+		
+		return false;
 	}
 
 	private void addToDoneList(Doc doc, HashMap<Long, Doc> doneList) {
