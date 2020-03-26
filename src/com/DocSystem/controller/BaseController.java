@@ -2619,10 +2619,9 @@ public class BaseController  extends BaseFunction{
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
 		{
+			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(doc.getDocId() == 0)
 			{
-				System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-
 				//Delete All Index Lib
 				deleteDocNameIndexLib(repos);
 				deleteRDocIndexLib(repos);
@@ -2639,10 +2638,13 @@ public class BaseController  extends BaseFunction{
 		}
 		else	//页面刷新：只在检测到文件有改动的时候才刷新索引
 		{
-			System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
-			rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
-			System.out.println("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			if(localChanges.size() > 0 || remoteChanges.size() > 0)
+			{
+				System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+				HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
+				rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
+				System.out.println("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			}
 		}
 		return realDocSyncResult;
 	}
