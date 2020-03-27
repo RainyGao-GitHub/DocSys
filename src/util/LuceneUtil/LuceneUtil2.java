@@ -63,6 +63,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.QueryCondition;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
@@ -563,6 +564,188 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }
+    
+    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int weight)
+	{
+		System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight + " pathFilter:" + pathFilter);
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			System.out.println("multiSearch() indexLib:" + indexLib);
+    			return false;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+
+	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions);
+	        if(builder != null)
+	        {
+	        	TopDocs hits = isearcher.search(builder, 1000);
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document hitDocument = isearcher.doc( scoreDoc.doc );
+		            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
+		            if(hitDoc == null)
+		            {
+		            	continue;
+		            }
+		            AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight);
+	        	}
+	        }
+	        
+	        ireader.close();
+	        ireader = null;
+	        directory.close();
+	        directory=null;        
+			return true;
+		} catch (Exception e) {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+			System.out.println("search() 异常");
+			e.printStackTrace();
+			return false;
+		}
+    }
+    
+
+	private static List<QueryCondition> buildQueryConditionsForDoc(Doc doc) 
+	{
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+		
+		if(doc.getVid() != null)
+		{
+			QueryCondition condition = new QueryCondition();
+	        condition.setField("vid");
+	        condition.setValue(doc.getVid());
+	        condition.setFieldType(1);
+	        conditions.add(condition);
+		}
+		
+		if(doc.getPid() != null)
+		{
+			QueryCondition condition = new QueryCondition();
+	        condition.setField("pid");
+	        condition.setValue(doc.getPid());
+	        condition.setFieldType(2);
+	        conditions.add(condition);
+		}
+		
+		if(doc.getDocId() != null)
+		{
+			QueryCondition condition = new QueryCondition();
+	        condition.setField("docId");
+	        condition.setValue(doc.getDocId());
+	        condition.setFieldType(2);
+	        conditions.add(condition);
+		}
+		
+		if(doc.getPath() != null)
+		{
+			QueryCondition condition = new QueryCondition();
+	        condition.setField("path");
+	        condition.setValue(doc.getPath());
+	        condition.setFieldType(0);
+	        condition.setQueryType(SEARCH_TYPE_Term);	        
+	        conditions.add(condition);
+		}
+		if(doc.getName() != null)
+		{
+			QueryCondition condition = new QueryCondition();
+	        condition.setField("name");
+	        condition.setValue(doc.getName());
+	        condition.setFieldType(0);
+	        condition.setQueryType(SEARCH_TYPE_Term);	        
+	        conditions.add(condition);
+		}
+		return conditions;
+	}
+	
+	private static BooleanQuery buildBooleanQueryForDoc(Doc doc) 
+	{
+		List<QueryCondition> conditions = buildQueryConditionsForDoc(doc);
+		return buildBooleanQueryWithConditions(conditions);
+	}
+	
+    
+    private static BooleanQuery buildBooleanQueryWithConditions(List<QueryCondition> conditions) 
+	{
+		int count = 0;
+		BooleanQuery builder = new BooleanQuery();
+		Query query = null;
+    	for(int i=0; i<conditions.size(); i++)
+    	{
+    		QueryCondition condition = conditions.get(i);
+    		String field = condition.getField();
+    		Object value = condition.getValue();
+    		switch(condition.getFieldType())
+    		{
+    		case 1:
+    	        query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)value, true,true);
+    			builder.add(query, Occur.MUST);
+    			count++;
+    	        break;
+    		case 2:
+    	        query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)value, true,true);   
+    			builder.add(query, Occur.MUST);
+    			count++;
+    			break;
+    		default:
+    			query = buidStringQuery(field, (String)value, condition.getQueryType());
+    			builder.add(query, Occur.MUST);
+    			count++;  
+    			break;
+    		}    		
+    	}
+		if(count > 0)
+		{
+			return builder;
+		}
+		return null;
+	}
+
+	private static Query buidStringQuery(String field, String value, Integer queryType) {
+		Query query = null;
+		switch(queryType)
+		{
+		case SEARCH_TYPE_Term:
+			query = new TermQuery(new Term(field, value)); 
+			break;
+        case SEARCH_TYPE_Wildcard: //通配
+        	query = new WildcardQuery(new Term(field,"*" + value + "*"));
+        	break;  
+        case SEARCH_TYPE_Wildcard_Prefix: //通配(前缀)
+        	query = new WildcardQuery(new Term(field, value + "*"));
+        	break;  
+        case SEARCH_TYPE_Wildcard_Suffix: //通配(后缀)
+        	query = new WildcardQuery(new Term(field,"*" + value));
+        	break;
+		}	
+		return query;
+	}
 
 	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
@@ -1168,7 +1351,7 @@ public class LuceneUtil2   extends BaseFunction
 	        ireader = DirectoryReader.open(directory);
 	        isearcher = new IndexSearcher(ireader);
 	
-	        BooleanQuery builder = buildDocQueryConditions(doc);
+	        BooleanQuery builder = buildBooleanQueryForDoc(doc);
 	        if(builder != null)
 	        {
 	        	docList = new ArrayList<Doc>();
@@ -1204,52 +1387,7 @@ public class LuceneUtil2   extends BaseFunction
 		}				
 		return docList;
     }
-	
-	private static BooleanQuery buildDocQueryConditions(Doc doc) 
-	{
-		int count = 0;
-		BooleanQuery builder = new BooleanQuery();
 
-		if(doc.getVid() != null)
-		{
-	        Query query = NumericRangeQuery.newIntRange("vid", doc.getVid(), doc.getVid(), true,true);
-			builder.add(query, Occur.MUST);
-			count++;
-		}
-		if(doc.getPid() != null)
-		{
-	        Query query = NumericRangeQuery.newLongRange("pid", doc.getPid(), doc.getPid(), true,true);
-			builder.add(query, Occur.MUST);
-			count++;
-		}
-		
-		if(doc.getDocId() != null)
-		{
-		    Query query = NumericRangeQuery.newLongRange("docId", doc.getDocId(), doc.getDocId(), true,true);
-			builder.add(query, Occur.MUST);
-			count++;
-		}
-		
-		if(doc.getPath() != null)
-		{
-			Query query = new TermQuery(new Term("path", doc.getPath()));
-			builder.add(query, Occur.MUST);
-			count++;
-		}
-		if(doc.getName() != null)
-		{
-			Query query = new TermQuery(new Term("name", doc.getName()));
-			builder.add(query, Occur.MUST);
-			count++;
-		}
-		
-		if(count > 0)
-		{
-			return builder;
-		}
-		return null;
-	}
-	
     public static List<Doc> getDocListByDocId(Repos repos, Doc doc, String indexLib)
 	{
     	List<Doc> docList = null;
