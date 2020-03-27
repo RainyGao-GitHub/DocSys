@@ -3439,6 +3439,9 @@ public class DocController extends BaseController{
 			return null;
 		}
 
+		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
+		List<Doc> result = null;
+		
 		//检查文件是否存在
 		Doc hitDoc = null;
 		String localRootPath = getReposRealPath(repos);
@@ -3457,22 +3460,32 @@ public class DocController extends BaseController{
 		hitDoc = docSysGetDoc(repos, doc);
 		if(firstSeperator >= 0)	//路径搜索
 		{
+			//直接找到文件
 			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
 			{
 				List<Doc> docList = new ArrayList<Doc>();
 				docList.add(hitDoc);
 				return docList;
 			}
-			return null;
+			
+			//如果文件不存在但doc.path不为空，那么用doc.path进行后缀搜索，并用doc.name进行模糊匹配
+			if(!doc.getPath().isEmpty())
+			{
+				LuceneUtil2.search(repos, doc.getPath(), path, "path", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard_Suffix, 100);
+				result = convertSearchResultToDocList(repos, searchResult);
+				if(result != null)
+				{
+					return result;
+				}
+			}
 		}
 		
-		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 		if(searchWord!=null&&!"".equals(searchWord))
 		{
 			luceneSearch(repos, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
 		}
 		
-		List<Doc> result = convertSearchResultToDocList(repos, searchResult);	
+		result = convertSearchResultToDocList(repos, searchResult);	
 		if(hitDoc == null || hitDoc.getType() == null || hitDoc.getType() == 0)
 		{
 			return result;
@@ -3591,7 +3604,7 @@ public class DocController extends BaseController{
 				if((searchMask & SEARCH_MASK[0]) > 0)
 				{
 					//采用通配符搜索
-					LuceneUtil2.search(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 10000); 	//Search By DocName
+					LuceneUtil2.search(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 100); 	//Search By DocName
 					//切词后通配符搜索
 					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 1);	//Search By FileContent
 				}
