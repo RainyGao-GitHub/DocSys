@@ -3463,6 +3463,7 @@ public class DocController extends BaseController{
 			//直接找到文件
 			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
 			{
+				System.out.println("searchInRepos() doc found with docPath:" + docPath);
 				List<Doc> docList = new ArrayList<Doc>();
 				docList.add(hitDoc);
 				return docList;
@@ -3471,6 +3472,7 @@ public class DocController extends BaseController{
 			//如果文件不存在但doc.path不为空，那么用doc.path进行后缀搜索，并用doc.name进行模糊匹配
 			if(!doc.getPath().isEmpty())
 			{
+				System.out.println("searchInRepos() doc.path:" + doc.getPath());
 				LuceneUtil2.search(repos, doc.getPath(), path, "path", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard_Suffix, 100);
 				result = convertSearchResultToDocList(repos, searchResult);
 				if(result != null)
