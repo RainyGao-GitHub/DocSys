@@ -2100,7 +2100,7 @@ public class BaseController  extends BaseFunction{
 				}
 				else //直接添加Index
 				{
-					addIndexForDocName(repos, parentDoc, null);
+					addIndexForDocName(repos, parentDoc);
 				}	
 
 				parentDocList.add(0,parentDoc);	//always add to the top
@@ -2631,8 +2631,10 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
-				rebuildIndexForDoc(repos, doc, null, null, doneList, rt, subDocSyncupFlag, true);
+				//deleteAllIndexUnderDoc
+				deleteAllIndexForDoc(repos, doc, 2);
+				//buildAllIndexForDoc
+				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
 			}
 			System.out.println("**************************** syncupForDocChange() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 		}
@@ -2649,6 +2651,13 @@ public class BaseController  extends BaseFunction{
 		return realDocSyncResult;
 	}
 	
+	private void deleteAllIndexForDoc(Repos repos, Doc doc, int deleteFlag) 
+	{
+		deleteIndexForDocName(repos, doc, deleteFlag);
+		deleteIndexForRDoc(repos, doc, deleteFlag);
+		deleteIndexForVDoc(repos, doc, deleteFlag);
+	}
+
 	private boolean buildIndexForDoc(Repos repos, Doc doc, HashMap<Long, DocChange> remoteChanges,
 			HashMap<Long, DocChange> localChanges, ReturnAjax rt, Integer subDocSyncupFlag, boolean force) 
 	{	
@@ -2658,7 +2667,7 @@ public class BaseController  extends BaseFunction{
 		}	
 		
 		//强行添加Index
-		addIndexForDocName(repos, doc, rt);
+		addIndexForDocName(repos, doc);
 		addIndexForRDoc(repos, doc);
 		addIndexForVDoc(repos, doc);			
 		
@@ -2718,9 +2727,7 @@ public class BaseController  extends BaseFunction{
 				else
 				{
 					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件不存在，索引存在，删除索引");
-					deleteIndexForDocName(repos, doc, rt);
-					deleteIndexForRDoc(repos, doc);
-					deleteIndexForVDoc(repos, doc);
+					deleteAllIndexForDoc(repos, doc, 2);
 				}
 			}
 			else	//文件存在
@@ -2733,7 +2740,7 @@ public class BaseController  extends BaseFunction{
 				if(indexDoc == null)	//索引不存在则添加索引
 				{
 					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件存在，索引不存在，添加索引");
-					addIndexForDocName(repos, doc, rt);
+					addIndexForDocName(repos, doc);
 					addIndexForRDoc(repos, doc);
 					addIndexForVDoc(repos, doc);
 					subDocSyncupFlag = 2;	//如果index不存在则强制修改索引递归标记
@@ -2741,11 +2748,8 @@ public class BaseController  extends BaseFunction{
 				else if(force || isDocChanged(localDoc, indexDoc))
 				{
 					System.out.println("rebuildIndexForDoc() " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " 文件变更，更新索引");
-					deleteIndexForDocName(repos, doc, rt);
-					deleteIndexForRDoc(repos, doc);
-					deleteIndexForVDoc(repos, doc);
-									
-					addIndexForDocName(repos, doc, rt);
+					deleteAllIndexForDoc(repos, doc, 1);								
+					addIndexForDocName(repos, doc);
 					addIndexForRDoc(repos, doc);
 					addIndexForVDoc(repos, doc);
 				}
@@ -4437,9 +4441,9 @@ public class BaseController  extends BaseFunction{
 		switch(action.getAction())
 		{
 		case ADD:	//Add Doc Name
-			return addIndexForDocName(repos, doc, rt);
+			return addIndexForDocName(repos, doc);
 		case DELETE: //Delete Doc Name
-			return deleteIndexForDocName(repos, doc, rt);
+			return deleteIndexForDocName(repos, doc, 1);
 		case UPDATE: //Update Doc
 			Doc newDoc = action.getNewDoc();
 			return updateIndexForDocName(repos, doc, newDoc, rt);
@@ -4459,11 +4463,11 @@ public class BaseController  extends BaseFunction{
 		case ADD:	//Add Doc
 			return addIndexForRDoc(repos, doc);
 		case DELETE: //Delete Doc
-			return deleteIndexForRDoc(repos, doc);
+			return deleteIndexForRDoc(repos, doc, 1);
 		case UPDATE: //Update Doc
 			return updateIndexForRDoc(repos, doc);		
 		case MOVE: //Move Doc
-			deleteIndexForRDoc(repos, doc);
+			deleteIndexForRDoc(repos, doc, 1);
 			return addIndexForRDoc(repos, action.getNewDoc());		
 		case COPY: //Copy Doc
 			return addIndexForRDoc(repos, action.getNewDoc());
@@ -4483,11 +4487,11 @@ public class BaseController  extends BaseFunction{
 		case ADD:	//Add Doc
 			return addIndexForVDoc(repos, doc);
 		case DELETE: //Delete Doc
-			return deleteIndexForVDoc(repos, doc);
+			return deleteIndexForVDoc(repos, doc, 1);
 		case UPDATE: //Update Doc
 			return updateIndexForVDoc(repos, doc);	
 		case MOVE: //Move Doc
-			deleteIndexForVDoc(repos, doc);
+			deleteIndexForVDoc(repos, doc, 1);
 			return addIndexForVDoc(repos, action.getNewDoc());		
 		case COPY: //Copy Doc
 			return addIndexForVDoc(repos, action.getNewDoc());
@@ -7109,7 +7113,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Add Index For DocName
-	public boolean addIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
+	public boolean addIndexForDocName(Repos repos, Doc doc)
 	{
 		System.out.println("addIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		String indexLib = getIndexLibPath(repos,0);
@@ -7118,13 +7122,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Delete Indexs For DocName
-	public static boolean deleteIndexForDocName(Repos repos, Doc doc, ReturnAjax rt)
+	public static boolean deleteIndexForDocName(Repos repos, Doc doc, int deleteFlag)
 	{
 		System.out.println("deleteIndexForDocName() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos,0);
 
-		return LuceneUtil2.deleteIndex(doc, indexLib);
+		return LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
 	}
 		
 	//Update Index For DocName
@@ -7173,13 +7177,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//Delete Indexs For VDoc
-	public static boolean deleteIndexForVDoc(Repos repos, Doc doc)
+	public static boolean deleteIndexForVDoc(Repos repos, Doc doc, int deleteFlag)
 	{
 		System.out.println("deleteIndexForVDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos,2);
 		
-		return LuceneUtil2.deleteIndex(doc, indexLib);
+		return LuceneUtil2.deleteIndexEx(doc, indexLib, deleteFlag);
 	}
 	
 	//Update Index For VDoc
@@ -7264,20 +7268,20 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	public static boolean deleteIndexForRDoc(Repos repos, Doc doc)
+	public static boolean deleteIndexForRDoc(Repos repos, Doc doc, int deleteFlag)
 	{
 		System.out.println("deleteIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
 		
 		String indexLib = getIndexLibPath(repos, 1);
 			
-		return LuceneUtil2.deleteIndex(doc,indexLib);
+		return LuceneUtil2.deleteIndexEx(doc,indexLib, deleteFlag);
 	}
 	
 	//Update Index For RDoc
 	public static boolean updateIndexForRDoc(Repos repos, Doc doc)
 	{
 		System.out.println("updateIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());		
-		deleteIndexForRDoc(repos, doc);
+		deleteIndexForRDoc(repos, doc, 1);
 		return addIndexForRDoc(repos, doc);
 	}
 	

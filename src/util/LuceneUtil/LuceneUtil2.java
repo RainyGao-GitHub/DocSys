@@ -370,7 +370,7 @@ public class LuceneUtil2   extends BaseFunction
     /**
      * 	删除索引
      * 
-     * @param id: lucene document id
+     * @param
      * @return 
      * @throws Exception
      */
@@ -406,6 +406,54 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }  
+    
+    /**
+     * 	删除索引
+     * 
+     * @param id: doc
+     * @return 
+     * @throws Exception
+     */
+    public static boolean deleteIndexEx(Doc doc, String indexLib, int deleteFlag)
+    {
+    	deleteIndex(doc, indexLib);
+    	
+    	if(deleteFlag == 2)	//删除该路径下的所有doc的索引
+    	{
+	    	Analyzer analyzer = null;
+	    	Directory directory = null;
+	    	IndexWriter indexWriter = null;
+	    	
+			try {
+				Date date1 = new Date();
+				directory = FSDirectory.open(new File(indexLib));
+			
+		        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+		        indexWriter = new IndexWriter(directory, config);
+		        
+		        String docPath = doc.getPath() + doc.getName() + "/";
+		        Query query = new WildcardQuery(new Term("path", docPath + "*"));
+		        //Query query = new PrefixQuery(new Term("path", docPath));
+		        
+		        indexWriter.deleteDocuments(query);
+		        indexWriter.commit();
+	
+		        indexWriter.close();
+		        indexWriter = null;
+		        directory.close();
+		        directory = null;
+		        
+		        Date date2 = new Date();
+		        //System.out.println("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
+		        return true;
+			} catch (Exception e) {
+				closeResource(indexWriter, directory, analyzer);
+				e.printStackTrace();
+				return false;
+			}
+    	}
+		return false;
+    } 
 
     /**
      * 	关键字模糊查询， 返回docId List
@@ -420,6 +468,9 @@ public class LuceneUtil2   extends BaseFunction
     public final static int SEARCH_TYPE_IKAnalyzer = 3;	//中文切词
     public final static int SEARCH_TYPE_Prefix = 4;	//前缀
     public final static int SEARCH_TYPE_Wildcard = 5;	//通配符
+    public final static int SEARCH_TYPE_Wildcard_Prefix = 6;	//通配符
+    public final static int SEARCH_TYPE_Wildcard_Suffix = 7;	//通配符
+
     public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
@@ -460,6 +511,13 @@ public class LuceneUtil2   extends BaseFunction
 	        case SEARCH_TYPE_Wildcard: //通配
 	        	query = new WildcardQuery(new Term(field,"*" + str + "*"));
 	        	break;  
+	        case SEARCH_TYPE_Wildcard_Prefix: //通配(前缀)
+	        	query = new WildcardQuery(new Term(field,str + "*"));
+	        	break;  
+	        case SEARCH_TYPE_Wildcard_Suffix: //通配(后缀)
+	        	query = new WildcardQuery(new Term(field,"*" + str));
+	        	break;  
+
 	        }
 	        
 	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
