@@ -29,6 +29,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -456,6 +457,74 @@ public class LuceneUtil2   extends BaseFunction
 		return false;
     } 
 
+
+	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
+	{
+		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
+
+		//利用Index的切词器将查询条件切词后进行精确查找
+		Analyzer analyzer = null;
+		TokenStream stream = null;
+		
+		List <String> list = new ArrayList<String>();
+		try {
+			analyzer = new IKAnalyzer();;
+			stream = analyzer.tokenStream("field", new StringReader(str));
+		
+			//保存分词后的结果词汇
+			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
+	
+			stream.reset(); //这句很重要
+	
+			while(stream.incrementToken()) {
+				System.out.println(cta.toString());
+				list.add(cta.toString());
+			}
+	
+			stream.end(); //这句很重要
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if(stream != null)
+			{
+				try {
+					stream.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+			if(analyzer != null)
+			{
+				analyzer.close();
+			}
+		}
+		
+		if(list.size() == 1)
+		{
+			String searchStr = list.get(0);
+			return search(repos, preConditions, field, searchStr, pathFilter, indexLib, searchResult, searchType, weight);
+		}
+		
+		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
+		for(int i=0; i<list.size(); i++)
+		{
+			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
+			String searchStr = list.get(i);
+			search(repos, preConditions, field, searchStr, pathFilter, indexLib, subSearchResult, searchType, weight);
+			if(subSearchResult.size() <= 0)
+			{
+				//subSearchStr Not found
+				return false;
+			}
+			
+			//Add subSearchResult to results
+			subSearcResults.add(subSearchResult);
+		}
+		
+		combineSubSearchResults(subSearcResults, searchResult);		
+		return true;
+    }
+    
     /**
      * 	关键字模糊查询， 返回docId List
      * @param weight 
@@ -464,110 +533,44 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-    public final static int SEARCH_TYPE_Term = 1;	//精确
-    public final static int SEARCH_TYPE_Fuzzy = 2;	//模糊
-    public final static int SEARCH_TYPE_IKAnalyzer = 3;	//中文切词
-    public final static int SEARCH_TYPE_Prefix = 4;	//前缀
-    public final static int SEARCH_TYPE_Wildcard = 5;	//通配符
-    public final static int SEARCH_TYPE_Wildcard_Prefix = 6;	//通配符
-    public final static int SEARCH_TYPE_Wildcard_Suffix = 7;	//通配符
-
-    public static boolean search(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
+    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
 	{
 		System.out.println("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);
 		
-	    Directory directory = null;
-        DirectoryReader ireader = null;
-        IndexSearcher isearcher = null;
-
-		try {
-    		File file = new File(indexLib);
-    		if(!file.exists())
-    		{
-    			System.out.println("search() keyWord:" + str + " indexLib:" + indexLib);
-    			return false;
-    		}
-    		
-	        directory = FSDirectory.open(file);
-	        ireader = DirectoryReader.open(directory);
-	        isearcher = new IndexSearcher(ireader);
-	
-	        Query query = null;
-	        switch(searchType)
-	        {
-	        case SEARCH_TYPE_Term: //精确
-		        query = new TermQuery(new Term(field,str));
-		        break;
-	        case SEARCH_TYPE_Fuzzy:	//模糊
-	        	query = new FuzzyQuery(new Term(field,str));
-	        	break;
-	        case SEARCH_TYPE_IKAnalyzer: //智能 
-	        	Analyzer analyzer = new IKAnalyzer();
-	        	QueryParser parser = new QueryParser(Version.LUCENE_46, field,analyzer);
-		        query = parser.parse(str);
-	        	break;
-	        case SEARCH_TYPE_Prefix:	//前缀
-	        	query = new PrefixQuery(new Term(field, str));
-	        	break;
-	        case SEARCH_TYPE_Wildcard: //通配
-	        	query = new WildcardQuery(new Term(field,"*" + str + "*"));
-	        	break;  
-	        case SEARCH_TYPE_Wildcard_Prefix: //通配(前缀)
-	        	query = new WildcardQuery(new Term(field,str + "*"));
-	        	break;  
-	        case SEARCH_TYPE_Wildcard_Suffix: //通配(后缀)
-	        	query = new WildcardQuery(new Term(field,"*" + str));
-	        	break;  
-
-	        }
-	        
-	        ScoreDoc[] hits = isearcher.search(query, null, 1000).scoreDocs;
-	        for (int i = 0; i < hits.length; i++) 
-	        {
-	            Document hitDocument = isearcher.doc(hits[i].doc);
-	            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
-	            if(hitDoc == null)
-	            {
-	            	continue;
-	            }
-	    		//printObject("search() hitDoc:", hitDoc);
-	            
-	            AddHitDocToSearchResult(searchResult,hitDoc, str, weight);
-	        }
-	        
-	        ireader.close();
-	        ireader = null;
-	        directory.close();
-	        directory=null;        
-			return true;
-		} catch (Exception e) {
-			if(ireader != null)
-			{
-				try {
-					ireader.close();
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-			}
-			
-			if(directory != null)
-			{
-				try {
-					directory.close();
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-			}
-			
-			System.out.println("search() 异常");
-			e.printStackTrace();
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+		if(str != null && !str.isEmpty())
+		{
+			QueryCondition condition = new QueryCondition();
+			condition.setField(field);
+			condition.setValue(str);
+			condition.setQueryType(searchType);
+			conditions.add(condition);
+		}
+		
+		if(pathFilter != null && !pathFilter.isEmpty())
+		{
+			QueryCondition pathFilterCondition = new QueryCondition();
+			pathFilterCondition.setField("path");
+			pathFilterCondition.setValue(pathFilter);
+			pathFilterCondition.setQueryType(QueryCondition.SEARCH_TYPE_Wildcard_Prefix);
+			conditions.add(pathFilterCondition);
+		}
+		
+		if(preConditions != null)
+		{
+			conditions.addAll(preConditions);
+		}
+		
+		if(conditions.size() == 0)
+		{
 			return false;
 		}
+	    return multiSearch(repos, conditions, indexLib, searchResult, weight);
     }
     
-    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int weight)
+    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, HashMap<String, HitDoc> searchResult, int weight)
 	{
-		System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight + " pathFilter:" + pathFilter);
+		System.out.println("multiSearch() indexLib:" + indexLib + " weight:" + weight);
 		
 	    Directory directory = null;
         DirectoryReader ireader = null;
@@ -592,7 +595,7 @@ public class LuceneUtil2   extends BaseFunction
 	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
 	        	{
 	        		Document hitDocument = isearcher.doc( scoreDoc.doc );
-		            HitDoc hitDoc = BuildHitDocFromDocument(repos, pathFilter, hitDocument);
+		            HitDoc hitDoc = BuildHitDocFromDocument(repos, hitDocument);
 		            if(hitDoc == null)
 		            {
 		            	continue;
@@ -641,7 +644,7 @@ public class LuceneUtil2   extends BaseFunction
 			QueryCondition condition = new QueryCondition();
 	        condition.setField("vid");
 	        condition.setValue(doc.getVid());
-	        condition.setFieldType(1);
+	        condition.setFieldType(QueryCondition.FIELD_TYPE_Integer);
 	        conditions.add(condition);
 		}
 		
@@ -650,7 +653,7 @@ public class LuceneUtil2   extends BaseFunction
 			QueryCondition condition = new QueryCondition();
 	        condition.setField("pid");
 	        condition.setValue(doc.getPid());
-	        condition.setFieldType(2);
+	        condition.setFieldType(QueryCondition.FIELD_TYPE_Long);
 	        conditions.add(condition);
 		}
 		
@@ -659,7 +662,7 @@ public class LuceneUtil2   extends BaseFunction
 			QueryCondition condition = new QueryCondition();
 	        condition.setField("docId");
 	        condition.setValue(doc.getDocId());
-	        condition.setFieldType(2);
+	        condition.setFieldType(QueryCondition.FIELD_TYPE_Long);
 	        conditions.add(condition);
 		}
 		
@@ -668,8 +671,6 @@ public class LuceneUtil2   extends BaseFunction
 			QueryCondition condition = new QueryCondition();
 	        condition.setField("path");
 	        condition.setValue(doc.getPath());
-	        condition.setFieldType(0);
-	        condition.setQueryType(SEARCH_TYPE_Term);	        
 	        conditions.add(condition);
 		}
 		if(doc.getName() != null)
@@ -677,8 +678,6 @@ public class LuceneUtil2   extends BaseFunction
 			QueryCondition condition = new QueryCondition();
 	        condition.setField("name");
 	        condition.setValue(doc.getName());
-	        condition.setFieldType(0);
-	        condition.setQueryType(SEARCH_TYPE_Term);	        
 	        conditions.add(condition);
 		}
 		return conditions;
@@ -703,17 +702,17 @@ public class LuceneUtil2   extends BaseFunction
     		Object value = condition.getValue();
     		switch(condition.getFieldType())
     		{
-    		case 1:
+    		case QueryCondition.FIELD_TYPE_Integer:
     	        query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)value, true,true);
     			builder.add(query, Occur.MUST);
     			count++;
     	        break;
-    		case 2:
+    		case QueryCondition.FIELD_TYPE_Long:
     	        query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)value, true,true);   
     			builder.add(query, Occur.MUST);
     			count++;
     			break;
-    		default:
+    		case QueryCondition.FIELD_TYPE_String:
     			query = buidStringQuery(field, (String)value, condition.getQueryType());
     			builder.add(query, Occur.MUST);
     			count++;  
@@ -729,91 +728,39 @@ public class LuceneUtil2   extends BaseFunction
 
 	private static Query buidStringQuery(String field, String value, Integer queryType) {
 		Query query = null;
-		switch(queryType)
-		{
-		case SEARCH_TYPE_Term:
-			query = new TermQuery(new Term(field, value)); 
-			break;
-        case SEARCH_TYPE_Wildcard: //通配
-        	query = new WildcardQuery(new Term(field,"*" + value + "*"));
-        	break;  
-        case SEARCH_TYPE_Wildcard_Prefix: //通配(前缀)
-        	query = new WildcardQuery(new Term(field, value + "*"));
-        	break;  
-        case SEARCH_TYPE_Wildcard_Suffix: //通配(后缀)
-        	query = new WildcardQuery(new Term(field,"*" + value));
-        	break;
-		}	
+        try {
+	
+			switch(queryType)
+			{
+			case QueryCondition.SEARCH_TYPE_Term:
+				query = new TermQuery(new Term(field, value)); 
+				break;
+	        case QueryCondition.SEARCH_TYPE_Wildcard: //通配
+	        	query = new WildcardQuery(new Term(field,"*" + value + "*"));
+	        	break;  
+	        case QueryCondition.SEARCH_TYPE_Wildcard_Prefix: //通配(前缀)
+	        	query = new WildcardQuery(new Term(field, value + "*"));
+	        	break;  
+	        case QueryCondition.SEARCH_TYPE_Wildcard_Suffix: //通配(后缀)
+	        	query = new WildcardQuery(new Term(field,"*" + value));
+	        	break;
+	        case QueryCondition.SEARCH_TYPE_Fuzzy:	//模糊
+	        	query = new FuzzyQuery(new Term(field,value));
+	        	break;
+	        case QueryCondition.SEARCH_TYPE_IKAnalyzer: //智能 
+	        	Analyzer analyzer = new IKAnalyzer();
+	        	QueryParser parser = new QueryParser(Version.LUCENE_46, field,analyzer);
+				query = parser.parse(value);
+				break;
+	        case QueryCondition.SEARCH_TYPE_Prefix:	//前缀
+	        	query = new PrefixQuery(new Term(field, value));
+	        	break;
+			}	
+        } catch (ParseException e) {
+			e.printStackTrace();
+		}
 		return query;
 	}
-
-	public static boolean smartSearch(Repos repos, String str, String pathFilter, String field, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight)
-	{
-		System.out.println("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
-
-		//利用Index的切词器将查询条件切词后进行精确查找
-		Analyzer analyzer = null;
-		TokenStream stream = null;
-		
-		List <String> list = new ArrayList<String>();
-		try {
-			analyzer = new IKAnalyzer();;
-			stream = analyzer.tokenStream("field", new StringReader(str));
-		
-			//保存分词后的结果词汇
-			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
-	
-			stream.reset(); //这句很重要
-	
-			while(stream.incrementToken()) {
-				System.out.println(cta.toString());
-				list.add(cta.toString());
-			}
-	
-			stream.end(); //这句很重要
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if(stream != null)
-			{
-				try {
-					stream.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-			}
-			if(analyzer != null)
-			{
-				analyzer.close();
-			}
-		}
-		
-		if(list.size() == 1)
-		{
-			String searchStr = list.get(0);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, searchResult, searchType, weight);
-			return true;
-		}
-		
-		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
-		for(int i=0; i<list.size(); i++)
-		{
-			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
-			String searchStr = list.get(i);
-			LuceneUtil2.search(repos, searchStr, pathFilter, field, indexLib, subSearchResult, searchType, weight);
-			if(subSearchResult.size() <= 0)
-			{
-				//subSearchStr Not found
-				return false;
-			}
-			
-			//Add subSearchResult to results
-			subSearcResults.add(subSearchResult);
-		}
-		
-		combineSubSearchResults(subSearcResults, searchResult);		
-		return true;
-    }
 	
     private static void combineSubSearchResults(List<HashMap<String, HitDoc>> subSearcResults,
 			HashMap<String, HitDoc> searchResult) {
@@ -848,7 +795,7 @@ public class LuceneUtil2   extends BaseFunction
 		return hitDoc;
 	}
 
-	private static HitDoc BuildHitDocFromDocument(Repos repos, String pathFilter, Document hitDocument) 
+	private static HitDoc BuildHitDocFromDocument(Repos repos, Document hitDocument) 
     {
     	switch(repos.getType())
     	{
@@ -856,32 +803,18 @@ public class LuceneUtil2   extends BaseFunction
     	case 2:
     	case 3:
     	case 4:
-    		return BuildHitDocFromDocument_FS(repos, pathFilter, hitDocument);
+    		return BuildHitDocFromDocument_FS(repos, hitDocument);
     	}
 		return null;
  	}
 
-	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, String pathFilter, Document hitDocument) {
+	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, Document hitDocument) {
     	//System.out.println("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " latestEditTime:" + hitDocument.get("latestEditTime"));
 
 		try {
 			String docParentPath = hitDocument.get("path");
 	    	String docName =  hitDocument.get("name");
-	        
-		    if(pathFilter != null && !pathFilter.isEmpty())
-	        {
-	        	if(docParentPath == null || docParentPath.isEmpty())
-	            {
-	            	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " is empty");
-	        		return null;
-	            }
-	            else if(docParentPath.indexOf(pathFilter) != 0)
-	            {
-	               	System.out.print("BuildHitDocFromDocument_FS() " + docParentPath + " was not under path:" + pathFilter);
-	            	return null;
-	            }    
-	        }
-	        
+	        	        
 	    	//Set Doc 
 	    	String strDocId = hitDocument.get("docId");
 	    	String strPid = hitDocument.get("pid");
