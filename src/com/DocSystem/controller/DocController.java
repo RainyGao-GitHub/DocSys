@@ -3425,6 +3425,8 @@ public class DocController extends BaseController{
 			List<Doc> result =  searchInRepos(queryRepos, pid, path, searchWord, sort);
 			if(result != null && result.size() > 0)
 			{
+				
+				System.out.println("searchDoc() ["+ result.size() +"] hit with " + searchWord + " in reposId:" + queryRepos.getId() + " reposName:" + queryRepos.getName());
 				searchResult.addAll(result);
 			}
 		}
@@ -3456,7 +3458,7 @@ public class DocController extends BaseController{
 		String pathSuffix = temp[0];
 		searchWord = temp[1];	
 		
-		System.out.println("searchInRepos() pathSuffix:" + pathSuffix + " searchWord:" + searchWord);
+		System.out.println("searchInRepos() reposId:" + repos.getId() + " reposName:" + repos.getName() + " pathSuffix:" + pathSuffix + " searchWord:" + searchWord);
 		
 		if(pathSuffix != null && !pathSuffix.isEmpty())
 		{
