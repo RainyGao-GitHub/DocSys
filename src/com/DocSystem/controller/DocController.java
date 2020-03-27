@@ -38,6 +38,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.HitDoc;
+import com.DocSystem.common.QueryCondition;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.controller.BaseController;
@@ -3439,54 +3440,35 @@ public class DocController extends BaseController{
 			return null;
 		}
 
+		List<QueryCondition> preConditions = new ArrayList<QueryCondition>();
 		HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 		List<Doc> result = null;
 		
-		//检查文件是否存在
-		Doc hitDoc = null;
-		String localRootPath = getReposRealPath(repos);
-		String localVRootPath = getReposVirtualPath(repos);
-		String docPath = searchWord.replace('\\','/');
-		int firstSeperator = docPath.indexOf('/');
-		if(firstSeperator > 0)	//相对路径查找
+		//搜索字符预处理
+		searchWord = searchWord.replace('\\','/');
+		
+		//文件直接直接命中
+		Doc hitDoc = getHitDoc(repos, path, searchWord);		
+		
+		//拆分字符串中的路径
+		String[] temp = new String[2]; 
+		seperatePathAndName(searchWord, temp);
+		String pathSuffix = temp[0];
+		searchWord = temp[1];	
+		
+		System.out.println("searchInRepos() pathSuffix:" + pathSuffix + " searchWord:" + searchWord);
+		
+		if(pathSuffix != null && !pathSuffix.isEmpty())
 		{
-			if(path != null)
-			{
-				docPath = path + "/" + docPath;
-			}
-			docPath = docPath.replace('\\','/');
-		}
-		Doc doc = buildBasicDoc(repos.getId(), null, null, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
-		hitDoc = docSysGetDoc(repos, doc);
-		if(firstSeperator >= 0)	//路径搜索
-		{
-			//直接找到文件
-			if(hitDoc != null && hitDoc.getType() != null && hitDoc.getType() != 0)
-			{
-				System.out.println("searchInRepos() doc found with docPath:" + docPath);
-				List<Doc> docList = new ArrayList<Doc>();
-				docList.add(hitDoc);
-				return docList;
-			}
-			
-			//如果文件不存在但doc.path不为空，那么用doc.path进行后缀搜索，并用doc.name进行模糊匹配
-			if(!doc.getPath().isEmpty())
-			{
-				System.out.println("searchInRepos() doc.path:" + doc.getPath());
-				LuceneUtil2.search(repos, doc.getPath(), path, "path", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard_Suffix, 100);
-				result = convertSearchResultToDocList(repos, searchResult);
-				if(result != null)
-				{
-					return result;
-				}
-			}
+			System.out.println("searchInRepos() 路径后缀(doc.path):" + pathSuffix);
+			QueryCondition pathSuffixCondition = new QueryCondition();
+			pathSuffixCondition.setField("path");
+			pathSuffixCondition.setValue(pathSuffix);
+			pathSuffixCondition.setQueryType(QueryCondition.SEARCH_TYPE_Wildcard_Suffix);
+			preConditions.add(pathSuffixCondition);			
 		}
 		
-		if(searchWord!=null&&!"".equals(searchWord))
-		{
-			luceneSearch(repos, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
-		}
-		
+		luceneSearch(repos, preConditions, searchWord, path, searchResult , 7);	//Search RDocName RDoc and VDoc
 		result = convertSearchResultToDocList(repos, searchResult);	
 		if(hitDoc == null || hitDoc.getType() == null || hitDoc.getType() == 0)
 		{
@@ -3499,9 +3481,30 @@ public class DocController extends BaseController{
 			return result;
 		}
 		
-		List<Doc> docList = new ArrayList<Doc>();
-		docList.add(hitDoc);
-		return docList;
+		//hitDoc存在、搜索结果为空
+		result = new ArrayList<Doc>();
+		result.add(hitDoc);
+		return result;
+	}
+
+	private Doc getHitDoc(Repos repos, String path, String searchWord) {
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		String docPath = searchWord + "";
+		
+		int firstSeperator = docPath.indexOf('/');
+		if(firstSeperator > 0)	//相对路径查找
+		{
+			if(path != null)
+			{
+				docPath = path + "/" + docPath;
+			}
+			docPath = docPath.replace('\\','/');
+		}
+		Doc doc = buildBasicDoc(repos.getId(), null, null, docPath, "", null, null, true,localRootPath,localVRootPath, 0L, "");
+		Doc hitDoc = docSysGetDoc(repos, doc);
+		return hitDoc;
 	}
 
 	private List<Doc> convertSearchResultToDocList(Repos repos, HashMap<String, HitDoc> searchResult) 
@@ -3594,10 +3597,16 @@ public class DocController extends BaseController{
 	}
 
 	private static final int[] SEARCH_MASK = { 0x00000001, 0x00000002, 0x00000004};	//DocName RDOC VDOC
-	private boolean luceneSearch(Repos repos, String searchWord, String path, HashMap<String, HitDoc> searchResult, int searchMask) 
+	private boolean luceneSearch(Repos repos, List<QueryCondition> preConditions, String searchWord, String path, HashMap<String, HitDoc> searchResult, int searchMask) 
 	{
+		//文件名通配符搜索（带空格）
+		if((searchMask & SEARCH_MASK[0]) > 0)
+		{
+			LuceneUtil2.search(repos, preConditions, "name", searchWord, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100); 	//Search By DocName
+		}
+		
+		//空格是或条件
 		String [] keyWords = searchWord.split(" ");		
-        
 		for(int i=0; i< keyWords.length; i++)
 		{
 			String searchStr = keyWords[i];
@@ -3605,18 +3614,19 @@ public class DocController extends BaseController{
 			{
 				if((searchMask & SEARCH_MASK[0]) > 0)
 				{
-					//采用通配符搜索
-					LuceneUtil2.search(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 100); 	//Search By DocName
-					//切词后通配符搜索
-					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, LuceneUtil2.SEARCH_TYPE_Wildcard, 1);	//Search By FileContent
+					//文件名通配符搜索（不切词搜索）
+					LuceneUtil2.search(repos, preConditions, "name", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1);	//Search By FileContent
+
+					//文件名通配符搜索（切词搜索）
+					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1);	//Search By FileContent
 				}
 				if((searchMask & SEARCH_MASK[1]) > 0)
 				{
-					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_R_DOC), searchResult, LuceneUtil2.SEARCH_TYPE_Term, 0);	//Search By FileContent
+					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0);	//Search By FileContent
 				}
 				if((searchMask & SEARCH_MASK[2]) > 0)
 				{	
-					LuceneUtil2.smartSearch(repos, searchStr, path, "content", getIndexLibPath(repos,INDEX_V_DOC), searchResult, LuceneUtil2.SEARCH_TYPE_Term, 0);	//Search By VDoc
+					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0);	//Search By VDoc
 				}
 			}
 		}
