@@ -2620,21 +2620,25 @@ public class BaseController  extends BaseFunction{
 		if(action.getAction() == Action.FORCESYNC || action.getAction() == Action.SYNC)
 		{
 			System.out.println("**************************** syncupForDocChange() 强制刷新Index for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-			if(doc.getDocId() == 0)
+			if(docDetect(repos, doc))
 			{
-				//Delete All Index Lib
-				deleteDocNameIndexLib(repos);
-				deleteRDocIndexLib(repos);
-				deleteVDocIndexLib(repos);
-				//Build All Index For Doc
-				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
-			}
-			else
-			{
-				//deleteAllIndexUnderDoc
-				deleteAllIndexForDoc(repos, doc, 2);
-				//buildAllIndexForDoc
-				buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+	
+				if(doc.getDocId() == 0)
+				{
+					//Delete All Index Lib
+					deleteDocNameIndexLib(repos);
+					deleteRDocIndexLib(repos);
+					deleteVDocIndexLib(repos);
+					//Build All Index For Doc
+					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				}
+				else
+				{
+					//deleteAllIndexUnderDoc
+					deleteAllIndexForDoc(repos, doc, 2);
+					//buildAllIndexForDoc
+					buildIndexForDoc(repos, doc, null, null, rt, 2, true);
+				}
 			}
 			System.out.println("**************************** syncupForDocChange() 结束强制刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 		}
@@ -2643,14 +2647,26 @@ public class BaseController  extends BaseFunction{
 			if(localChanges.size() > 0 || remoteChanges.size() > 0)
 			{
 				System.out.println("**************************** syncupForDocChange() 开始刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
-				HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
-				rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
+				if(docDetect(repos, doc))
+				{	
+					HashMap<Long, Doc> doneList = new HashMap<Long, Doc>();
+					rebuildIndexForDoc(repos, doc, remoteChanges, localChanges, doneList, rt, subDocSyncupFlag, false);	
+				}
 				System.out.println("**************************** syncupForDocChange() 结束刷新Index for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			}
 		}
 		return realDocSyncResult;
 	}
 	
+	private boolean docDetect(Repos repos, Doc doc) {
+		System.out.println("docDetect()");
+		if(getLocalEntryList(repos, doc) != null)
+		{
+			return true;
+		}
+		return false;
+	}
+
 	private void deleteAllIndexForDoc(Repos repos, Doc doc, int deleteFlag) 
 	{
 		deleteIndexForDocName(repos, doc, deleteFlag);
