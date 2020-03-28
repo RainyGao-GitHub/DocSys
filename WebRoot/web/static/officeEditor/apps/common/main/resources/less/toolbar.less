@@ -1,0 +1,637 @@
+@height-title: 28px;
+@height-tabs: 32px;
+@height-controls: 67px;
+
+//@tabs-bg-color: #fff;
+
+.toolbar {
+    position: relative;
+
+    &:not(.folded) {
+        height: @height-tabs + @height-controls;
+    }
+
+    &.folded {
+        height: @height-tabs;
+        transition: height .2s;
+        overflow: hidden;
+
+        &.expanded {
+            height: @height-tabs + @height-controls;
+            overflow: visible;
+        }
+
+        &:not(.expanded):not(.cover){
+            .ribtab.active {
+                > a {
+                    font-weight: normal;
+                }
+            }
+        }
+    }
+
+    .box-tabs {
+        height: @height-tabs;
+        font-size: 12px;
+
+        display: flex;
+        align-items: stretch;
+
+        .extra {
+            background-color: @tabs-bg-color;
+        }
+
+    //&::after {
+    //  content: '';
+    //  position: absolute;
+    //  width: 100%;
+    //  border-top: 1px solid @gray-dark;
+    //  top: @height-tabs - 1;
+    //  left: 0;
+    //  z-index: 1;
+    //}
+    }
+
+    .tabs {
+        //flex-grow: 1;
+        background-color: @tabs-bg-color;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+
+        > ul {
+            padding: 4px 0 0;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            list-style: none;
+            font-size: 0;
+        }
+
+        li {
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
+
+            &:hover {
+                background-color: rgba(255,255,255,0.2);
+            }
+
+            &.active {
+                background-color: @gray-light;
+            }
+
+
+            > a {
+                display: inline-block;
+                padding: 0 12px;
+                text-decoration: none;
+                cursor: default;
+                font-size: 12px;
+                text-align: center;
+                color: #fff;
+            }
+
+            &.active {
+                > a {
+                    color: #444;
+                }
+            }
+        }
+
+        &:not(.short) {
+            .scroll {
+                display: none;
+            }
+        }
+
+        .scroll {
+            line-height: @height-tabs;
+            min-width: 20px;
+            z-index: 1;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+
+            &:hover {
+                text-decoration: none;
+            }
+
+            &:not(:hover) {
+                &:after {
+                    opacity: .8;
+                }
+            }
+
+            &.left{
+                box-shadow: 5px 0 20px 5px @tabs-bg-color;
+
+                &:after {
+                    transform: rotate(135deg);
+                    margin-left: 8px;
+                }
+            }
+            &.right{
+                box-shadow: -5px 0 20px 5px @tabs-bg-color;
+
+                &:after {
+                    transform: rotate(-45deg);
+                    margin-left: 4px;
+                }
+            }
+
+            @arrow-length: 8px;
+            &:after {
+                content: ' ';
+                width: @arrow-length;
+                height: @arrow-length;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+            }
+        }
+    }
+
+    .box-controls {
+        //height: @height-controls;         // button has strange offset in IE when odd height
+        padding: 10px 0;
+        display: flex;
+
+        //background-color: #F2CBBF;
+
+        .panel {
+            display: table;
+            height: 100%;
+        }
+        //width: 100%;
+    }
+
+    .box-panels {
+        flex-grow: 1;
+        -ms-flex: 1;
+
+        .panel:not(.active) {
+            display: none;
+        }
+
+        /* ##adopt-panel-width */
+        .panel.compactwidth:not(#plugns-panel) {
+            .btn-group, .btn-toolbar {
+                &.x-huge {
+                    .caption {
+                        display: none;
+                    }
+
+                    .inner-box-caption {
+                        justify-content: center;
+                    }
+                }
+            }
+        }
+        /**/
+    }
+
+    background-color: @gray-light;
+    .box-inner-shadow(0 -1px 0 @gray-dark);
+
+    .group {
+        position: relative;
+        display: table-cell;
+        vertical-align: middle;
+        white-space: nowrap;
+        padding-left: 12px;
+        font-size: 0;
+
+        &:last-child {
+            padding-right: 12px;
+        }
+    }
+
+    .elset {
+        height: 20px;
+        font-size: 0;
+
+        &:not(:first-child) {
+            margin-top: 6px;
+        }
+    }
+
+    .separator {
+        margin-left: 12px;
+
+        &.close {
+            margin-left: 5px;
+        }
+
+        &.long {
+            height: 46px;
+        }
+
+        &.short {
+            height: 20px;
+        }
+    }
+
+    .btn-slot {
+        display: inline-block;
+        width: 20px;
+        height: auto;
+
+        &.split {
+            width: 31px;
+        }
+
+        &.text {
+            width: auto;
+        }
+
+        &.border {
+            border: 1px solid @gray;
+            .border-radius(1px);
+            width: 22px;
+            height: 22px;
+        }
+
+        .checkbox-indeterminate {
+            margin-top: 3px;
+        }
+    }
+
+    .toolbar-mask {
+        position: absolute;
+        top: 32px;
+        left: 48px;
+        right: 0;
+        bottom: 0;
+        opacity: 0;
+        background-color: @gray-light;
+        /* z-index: @zindex-tooltip + 1; */
+    }
+
+    &.toolbar-view .toolbar-mask{
+        left: 0;
+    }
+
+    .top-title > & {
+        &:not(.folded) {
+            height: 28 + @height-controls;
+        }
+
+        &.folded {
+            height: 28px;
+
+            &.expanded {
+                height: 28 + @height-controls;
+            }
+        }
+
+        .tabs > ul {
+            padding-top: 0;
+        }
+
+        .box-tabs {
+            height: 28px;
+        }
+
+        .toolbar-mask {
+            left: 0;
+        }
+    }
+}
+
+.style-off-tabs {
+    .toolbar {
+        @underscore_height: 3px;
+
+        .tabs, .extra {
+            background-color: transparent;
+            box-shadow: inset 0 -1px 0 0 @gray;
+        }
+
+        .tabs {
+            ul {
+                padding: 0;
+            }
+
+            li {
+                position: relative;
+
+                &:after {
+                    //transition: opacity .1s;
+                    //transition: bottom .1s;
+                    border-top: @underscore_height solid @gray-deep;
+                    content: '';
+                    position: absolute;
+                    width: 100%;
+                    bottom: -@underscore_height;
+                    opacity: 0;
+                }
+
+                &.active {
+                    background-color: transparent;
+                    font-weight: bold;
+
+                    &:after {
+                        opacity: 1;
+                        bottom: 0;
+                    }
+                }
+
+                &:hover:not(.active) {
+                    background-color: rgba(0, 0, 0, .05);
+                    //background-color: @secondary;
+                }
+
+                > a {
+                    color: @gray-deep;
+
+                    &::after {
+                        display:block;
+                        content:attr(data-title);
+                        font-weight:bold;
+                        height:1px;
+                        color:transparent;
+                        overflow:hidden;
+                        visibility:hidden;
+                        margin-bottom:-1px;
+                    }
+                }
+            }
+        }
+
+        .extra {
+            #header-logo {
+                i {
+                    .background-ximage-v2('header/dark-logo.png', 86px);
+                }
+            }
+        }
+
+        .tabs .scroll {
+            &.left {
+                box-shadow: 5px 0 20px 5px @gray-light;
+            }
+
+            &.right {
+                box-shadow: -5px 0 20px 5px @gray-light;
+            }
+
+            &:after {
+                border-color: @gray-deep;
+            }
+        }
+
+        // TODO: move to appropriate module
+        .btn-header, .btn-users {
+            &:not(:active) .icon--inverse {
+                background-position-x: 0;
+            }
+
+            svg.icon {
+                fill: @gray-deep;
+            }
+
+            .caption {
+                color: @gray-deep;
+            }
+
+            &:hover:not(.disabled) {
+                background-color: @secondary;
+            }
+
+            &:active, &.active {
+                &:not(.disabled) {
+                    background-color: @primary;
+
+                    svg.icon {
+                        fill: #fff;
+                    }
+
+                    .caption {
+                        color: #fff;
+                    }
+                }
+            }
+        }
+
+        #rib-doc-name {
+            color: @gray-deep;
+        }
+
+        &.editor-native-color {
+            .tabs li:after {
+                border-color: @tabs-bg-color;
+            }
+        }
+    }
+
+    &.style-skip-docname .toolbar {
+        #box-doc-name > input {
+            display: none;
+        }
+    }
+}
+
+.toolbar-fullview-panel {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    z-index: @zindex-navbar + 3;
+}
+
+.toolbar {
+    &.cover {
+        ul {
+            z-index: @zindex-navbar + 4;
+        }
+    }
+
+    &:not(.cover):not(.z-clear) {
+        z-index: @zindex-navbar + 1;
+    }
+}
+
+.btn-toolbar {
+    &:active {
+        svg.icon {
+            fill: #fff;
+        }
+    }
+
+    svg.icon {
+        background-image: none;
+
+        fill: @gray-deep;
+    }
+
+    &.borders--small {
+        border-radius: 2px;
+        background-color: #fff;
+
+        &:not(:active) {
+            box-shadow: inset 0 0 0 1px #cbcbcb;
+        }
+
+        &, .icon {
+            width: 21px;
+            height: 21px;
+        }
+    }
+}
+
+[applang=ru] {
+    .dropdown-menu.toc-menu {
+        --bckgHOffset: -144px;
+    }
+}
+
+
+.item-shape {
+    .icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    svg.icon {
+        display: inline-block;
+        vertical-align: middle;
+        fill: #444444;
+    }
+
+    width: 20px;
+    height: 20px;
+}
+
+// charts
+.menu-insertchart {
+    .group-description {
+        padding-left: 4px;
+    }
+
+    .group-items-container {
+        float: left;
+        position: relative;
+    }
+}
+
+.item-chartlist {
+    .background-ximage-v2('toolbar/charttypes.png', 250px);
+    width: 50px;
+    height: 50px;
+}
+
+.line-normal {
+    background-position: 0 0;
+}
+
+.line-stack {
+    background-position: -50px 0;
+}
+
+.line-pstack {
+    background-position: -100px 0;
+}
+
+.line-3d {
+    background-position: -150px 0;
+}
+
+.column-normal {
+    background-position: 0 -50px;
+}
+
+.column-stack{
+    background-position: -50px -50px;
+}
+
+.column-pstack{
+    background-position: -100px -50px;
+}
+
+.column-3d-normal {
+    background-position: -150px -50px;
+}
+
+.column-3d-stack{
+    background-position: -200px -50px;
+}
+
+.column-3d-pstack{
+    background-position: -150px -100px;
+}
+
+.column-3d-normal-per{
+    background-position: -200px -100px;
+}
+
+.bar-normal {
+    background-position: 0 -100px;
+}
+
+.bar-stack{
+    background-position: -50px -100px;
+}
+
+.bar-pstack{
+    background-position: -100px -100px;
+}
+
+.bar-3d-normal {
+    background-position: -150px -150px;
+}
+
+.bar-3d-stack{
+    background-position: -200px -150px;
+}
+
+.bar-3d-pstack{
+    background-position: -150px -200px;
+}
+
+.area-normal {
+    background-position: 0 -150px;
+}
+
+.area-stack{
+    background-position: -50px -150px;
+}
+
+.area-pstack{
+    background-position: -100px -150px;
+}
+
+.pie-normal {
+    background-position: 0 -200px;
+}
+
+.pie-3d-normal {
+    background-position: -200px -200px;
+}
+
+.point-normal{
+    background-position: -50px -200px;
+}
+
+.stock-normal{
+    background-position: -100px -200px;
+}
+
+.pie-doughnut{
+    background-position: -200px 0;
+}
+
+.surface-normal{
+    background-position: 0px -300px;
+}
+
+.surface-wireframe{
+    background-position: -50px -300px;
+}
+
+.contour-normal{
+    background-position: -100px -300px;
+}
+
+.contour-wireframe{
+    background-position: -150px -300px;
+}

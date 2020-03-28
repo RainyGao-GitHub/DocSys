@@ -1,0 +1,137 @@
+<div class="toolbar">
+    <section class="box-tabs">
+        <div class="extra left"></div>
+        <%= tabsmarkup %>
+        <div class="extra right"></div>
+    </section>
+    <section class="box-controls">
+        <section class="panel static">
+            <div class="group no-mask">
+                <div class="elset">
+                    <span class="btn-slot" id="slot-btn-print"></span>
+                </div>
+                <div class="elset">
+                    <span class="btn-slot" id="slot-btn-save"></span>
+                </div>
+            </div>
+            <div class="separator long"></div>
+            <div class="group">
+                <div class="elset">
+                    <span class="btn-slot split" id="slot-btn-copy"></span>
+                    <span class="btn-slot" id="slot-btn-paste"></span>
+                </div>
+                <div class="elset">
+                    <span class="btn-slot split" id="slot-btn-undo"></span>
+                    <span class="btn-slot" id="slot-btn-redo"></span>
+                </div>
+            </div>
+            <div class="separator long"></div>
+        </section>
+        <section class="box-panels">
+            <section class="panel" data-tab="home">
+                <div class="group">
+                    <span class="btn-slot text x-huge slot-addslide"></span>
+                </div>
+                <div class="group" style="display:none;"></div>
+                <div class="group">
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-changeslide"></span>
+                    </div>
+                    <div class="elset">
+                        <span class="btn-slot" id="slot-btn-preview"></span>
+                    </div>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <div class="elset" style="width:191px;">
+                        <span class="btn-slot" style="float: left; width: 144px;" id="slot-field-fontname"></span>
+                        <span class="btn-slot" style="float: left; width: 45px; margin-left: 2px;" id="slot-field-fontsize"></span>
+                    </div>
+                    <div class="elset font-attr">
+                        <span class="btn-slot" id="slot-btn-bold"></span>
+                        <span class="btn-slot" id="slot-btn-italic"></span>
+                        <span class="btn-slot" id="slot-btn-underline"></span>
+                        <span class="btn-slot" id="slot-btn-strikeout"></span>
+                        <span class="btn-slot split" id="slot-btn-fontcolor"></span>
+                        <span class="btn-slot" id="slot-btn-superscript"></span>
+                        <span class="btn-slot" id="slot-btn-subscript"></span>
+                    </div>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-markers"></span>
+                        <span class="btn-slot split" id="slot-btn-numbering"></span>
+                        <span class="btn-slot split" id="slot-btn-decoffset"></span>
+                        <span class="btn-slot split" id="slot-btn-incoffset"></span>
+                    </div>
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-halign"></span>
+                        <span class="btn-slot split" id="slot-btn-valign"></span>
+                        <span class="btn-slot split" id="slot-btn-linespace"></span>
+                    </div>
+                </div>
+                <div class="separator long close"></div>
+                <div class="group">
+                    <span class="btn-slot text x-huge slot-instext"></span>
+                    <span class="btn-slot text x-huge slot-insertimg"></span>
+                    <span class="btn-slot text x-huge slot-insertshape"></span>
+                </div>
+                <div class="group">
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-arrange-shape"></span>
+                    </div>
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-align-shape"></span>
+                    </div>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-clearstyle"></span>
+                        <span class="btn-slot split" id="slot-btn-colorschemas"></span>
+                    </div>
+                    <div class="elset">
+                        <span class="btn-slot split" id="slot-btn-copystyle"></span>
+                        <span class="btn-slot split" id="slot-btn-slidesize"></span>
+                    </div>
+                </div>
+                <div class="group" id="slot-field-styles" style="width: 100%; min-width: 148px;"></div>
+            </section>
+            <section class="panel" data-tab="ins">
+                <div class="group">
+                    <span class="btn-slot text x-huge slot-addslide"></span>
+                </div>
+                <div class="group" style="display:none;"></div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <span class="btn-slot text x-huge" id="slot-btn-inserttable"></span>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <span class="btn-slot text x-huge slot-instext"></span>
+                    <span class="btn-slot text x-huge" id="slot-btn-instextart"></span>
+                    <span class="btn-slot text x-huge slot-insertimg"></span>
+                    <span class="btn-slot text x-huge slot-insertshape"></span>
+                    <span class="btn-slot text x-huge" id="slot-btn-insertchart"></span>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <span class="btn-slot text x-huge slot-comment"></span>
+                    <span class="btn-slot text x-huge" id="slot-btn-insertlink"></span>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <span class="btn-slot text x-huge" id="slot-btn-editheader"></span>
+                    <span class="btn-slot text x-huge" id="slot-btn-datetime"></span>
+                    <span class="btn-slot text x-huge" id="slot-btn-slidenum"></span>
+                </div>
+                <div class="separator long"></div>
+                <div class="group">
+                    <span class="btn-slot text x-huge" id="slot-btn-insertequation"></span>
+                    <span class="btn-slot text x-huge" id="slot-btn-inssymbol"></span>
+                </div>
+            </section>
+        </section>
+    </section>
+</div>

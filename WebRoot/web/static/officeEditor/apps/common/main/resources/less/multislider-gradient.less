@@ -1,0 +1,64 @@
+.multi-slider-gradient {
+    height: 35px;
+    background-color: transparent;
+
+    .thumb {
+        top: 18px;
+        background: none;
+
+        .thumb-top {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 9px;
+            height: 9px;
+            background-color: #ffffff;
+            -moz-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            -webkit-transform: rotate(45deg);
+            -o-transform: rotate(45deg);
+            transform: rotate(45deg);
+            border-top: solid 1px @gray-darker;
+            border-left: solid 1px @gray-darker;
+            border-radius: 0 3px;
+            box-sizing: content-box;
+        }
+
+        .thumb-bottom {
+            position: absolute;
+            top: 6px;
+            left: 1px;
+            width: 10px;
+            height: 8px;
+            background-color: #ffffff;
+            border: solid 1px @gray-darker;
+            border-top: none;
+            border-radius: 2px;
+            box-sizing: content-box;
+        }
+
+        &.active .thumb-bottom {
+            border-bottom-width: 2px;
+        }
+
+        &.remove {
+            opacity: 0.5;
+        }
+    }
+
+    .track {
+        background: #ededed; /* Old browsers */
+//        background: -webkit-gradient(linear, left top, right top, color-stop(0%,#000000), color-stop(100%,#ffffff)); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(left, #000000 0%,#ffffff 100%); /* Chrome10+,Safari5.1+ */
+        background: -moz-linear-gradient(left, #000000 0%,#ffffff 100%); /* FF3.6+ */
+        background: -o-linear-gradient(left,  #000000 0%,#ffffff 100%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(left,  #000000 0%,#ffffff 100%); /* IE10+ */
+        background: linear-gradient(to right,  #000000 0%,#ffffff 100%); /* W3C */
+//        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#ffffff',GradientType=1 ); /* IE6-9 */
+
+        background-position: 0 0;
+        outline: 1px solid rgba(162, 162, 162, 1);
+    }
+}
+
+

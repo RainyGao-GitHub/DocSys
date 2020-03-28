@@ -1,0 +1,38 @@
+.review-changes {
+
+    .input-row > div {
+        margin-right: 10px;
+
+        button {
+            height: 22px;
+        }
+    }
+
+    #id-review-button-accept,
+    #id-review-button-reject {
+        span.caption {
+            vertical-align: middle;
+            font-size: 12px;
+            margin: 0 6px;
+        }
+    }
+
+    .iconic {
+        width: 45px !important;
+    }
+
+    .prev, .next {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .prev {
+        background-position: @search-dlg-offset-x @search-dlg-offset-y;
+    }
+
+    .next {
+        background-position: @search-dlg-offset-x @search-dlg-offset-y - 16px;
+    }
+}

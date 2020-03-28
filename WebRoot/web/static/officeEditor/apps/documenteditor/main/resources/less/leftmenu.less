@@ -1,0 +1,69 @@
+.tool-menu {
+    height: 100%;
+    display: block;
+
+    &.left {
+        overflow: hidden;
+
+        .tool-menu-btns {
+            border-right: 1px solid @gray-dark;
+        }
+    }
+}
+
+.tool-menu-btns {
+    width: 40px;
+    height: 100%;
+    display: inline-block;
+    position: absolute;
+    padding-top: 15px;
+
+    button {
+        margin-bottom: 8px;
+    }
+}
+
+.left-panel {
+    padding-left: 40px;
+    height: 100%;
+    border-right: 1px solid @gray-dark;
+
+    #left-panel-chat {
+        height: 100%;
+    }
+    #left-panel-comments {
+        height: 100%;
+    }
+     #left-panel-history {
+        height: 100%;
+    }
+}
+
+.left-menu-full-ct {
+    width: 100%;
+    height: 100%;
+    left: 40px;
+    padding-right: 40px;
+    top: 0;
+    position: absolute;
+    z-index: @zindex-dropdown - 5;
+    background-color: @gray-light;
+    overflow: hidden;
+}
+
+#developer-hint {
+    position: absolute;
+    left: 0;
+    padding: 12px 0;
+    background-color: #ffb400;
+    color: #6e4e00 !important;
+    white-space: nowrap;
+    line-height: 20px;
+    writing-mode: tb-rl;
+    -moz-transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    -webkit-transform: rotate(180deg);
+    -o-transform: rotate(180deg);
+    transform: rotate(180deg);
+    cursor: default;
+}

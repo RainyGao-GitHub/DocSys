@@ -1,0 +1,26 @@
+<div id="<%=id%>" class="user-comment-item">
+    <div class="user-name">
+        <div class="color" style="display: inline-block; background-color: <% if (usercolor!==null) { %><%=usercolor%><% } else { %> #cfcfcf <% } %>; " ></div><%= scope.getUserName(username) %>
+    </div>
+    <div class="user-date"><%=date%></div>
+    <div class="user-message limit-height"><%=changetext%></div>
+    <div class="edit-ct">
+        <% if (goto) { %>
+        <div class="btn-goto img-commonctrl"></div>
+        <% } %>
+        <% if (!hint) { %>
+            <% if (scope.appConfig.isReviewOnly) { %>
+                <% if (editable) { %>
+                <div class="btn-delete img-commonctrl"></div>
+                <% } %>
+            <% } else { %>
+            <div class="btn-accept img-commonctrl"></div>
+            <div class="btn-reject img-commonctrl"></div>
+            <% } %>
+        <% } %>
+    </div>
+    <% if (!hint && lock) { %>
+    <div class="lock-area" style="cursor: default;"></div>
+    <div class="lock-author" style="cursor: default;"><%=lockuser%></div>
+    <% } %>
+</div>
