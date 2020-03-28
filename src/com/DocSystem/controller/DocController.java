@@ -602,12 +602,12 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		executeDoc(repos, doc, reposAccess.getAccessUser());
-		
+		String ret = executeDoc(repos, doc, reposAccess.getAccessUser());
+		rt.setData(ret);
 		writeJson(rt, response);
 	}
 	
-	private void executeDoc(Repos repos, Doc doc, User user) {
+	private String executeDoc(Repos repos, Doc doc, User user) {
 		
 		//命令在userTmp目录下运行
 		String runPath = getReposUserTmpPath(repos, user);
@@ -617,8 +617,9 @@ public class DocController extends BaseController{
 		System.out.println("executeDoc cmd:" + cmd);
 		if(cmd != null)
 		{
-			run(cmd, null, dir);
+			return run(cmd, null, dir);
 		}
+		return null;
 	}
 
 	private String buildDocExecuteCmd(Repos repos, Doc doc) {
