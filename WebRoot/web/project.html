@@ -4548,9 +4548,9 @@ function CompareObj(objA, objB, flag) {
 						},
 						{divider: true},
 			           	{text: '复制名字', action: function(e){
-							e.preventDefault();
-		        			copyDocName(curRightClickedTreeNode);
-						}
+								e.preventDefault();
+			        			copyDocName(curRightClickedTreeNode);
+							}
 						},
 						{text: '复制路径', action: function(e){
 									e.preventDefault();
@@ -4567,6 +4567,12 @@ function CompareObj(objA, objB, flag) {
 								var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
 								console.log("本地路径 localPath:" + localPath);	
 								copyString(localPath);
+							}
+						},
+						{divider: true},
+			           	{text: '执行', action: function(e){
+								e.preventDefault();
+			        			executeDoc(curRightClickedTreeNode);
 							}
 						},
 						//{divider: true},
@@ -4922,6 +4928,12 @@ function CompareObj(objA, objB, flag) {
 									copyString(localPath);
 								}
 							},
+							{divider: true},
+				           	{text: '执行', action: function(e){
+									e.preventDefault();
+				        			executeDoc(curRightClickedDocListNode);
+								}
+							},
 							//{divider: true},
 							//{text: '本地打开', action: function(e){
 							//		e.preventDefault();
@@ -4979,6 +4991,40 @@ function CompareObj(objA, objB, flag) {
     	}
     	
     	return reposStorePath + docPath;
+    }
+    
+   	function executeDoc(node)
+   	{
+   		console.log("executeDoc()", node);
+
+    	$.ajax({
+             url : "/DocSystem/Doc/executeDoc.do",
+             type : "post",
+             dataType : "json",
+             data : {
+                reposId : gReposInfo.id, 
+				path: node.path,
+                name : node.name,
+             },
+             success : function (ret) {
+            	console.log("executeDoc ret:", ret);            		
+             	if( "ok" == ret.status && ret.data.docId){             		                    
+             		// 普通消息提示条
+					bootstrapQ.msg({
+								msg : "执行完成！",
+								type : 'success',
+								time : 2000,
+					});         		
+                }
+                else
+                {
+                	showErrorMessage("执行失败:" + ret.msgInfo);
+                }
+            },
+            error : function () {
+                showErrorMessage("执行失败:服务器异常！");
+            }
+        });
     }
     
  	function shareDoc(node){

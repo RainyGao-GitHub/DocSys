@@ -575,6 +575,71 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	/****************   execute a Document ******************/
+	@RequestMapping("/executeDoc.do")
+	public void executeDoc(Integer reposId, String path, String name,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("executeDoc reposId:" + reposId + " path:" + path + " name:" + name);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		executeDoc(repos, doc, reposAccess.getAccessUser());
+		
+		writeJson(rt, response);
+	}
+	
+	private void executeDoc(Repos repos, Doc doc, User user) {
+		
+		//命令在userTmp目录下运行
+		String runPath = getReposUserTmpPath(repos, user);
+		File dir = new File(runPath);
+		
+		String cmd = buildDocExecuteCmd(repos, doc);
+		if(cmd != null)
+		{
+			run(cmd, null, dir);
+		}
+	}
+
+	private String buildDocExecuteCmd(Repos repos, Doc doc) {
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		File file = new File(filePath);
+		if(!file.exists() || !file.isFile())
+		{
+			return null;
+		}
+	
+		String cmd = null;
+		String os = System.getProperty("os.name");
+		if (os.startsWith("Windows")) {
+			cmd = "cmd /c " + filePath;
+		}
+		else
+		{
+			cmd = "sh " + filePath;
+		}
+		return cmd;
+	}
+
 	/****************   Check a Document ******************/
 	@RequestMapping("/checkDocInfo.do")
 	public void checkDocInfo(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, Long size,String checkSum, 
