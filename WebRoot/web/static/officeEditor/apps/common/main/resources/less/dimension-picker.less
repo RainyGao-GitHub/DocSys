@@ -1,0 +1,37 @@
+.dimension-picker {
+    font-size: 18px;
+}
+
+.dimension-picker div {
+    position: relative;
+}
+
+.dimension-picker div.dimension-picker-mousecatcher {
+    left: 0;
+    top: 0;
+    position: absolute !important;
+}
+
+.dimension-picker div.dimension-picker-highlighted {
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    position: absolute;
+}
+
+.dimension-picker-unhighlighted {
+    //background: transparent repeat scroll 0 0;
+    .background-ximage-v2('dimension-picker/dimension-unhighlighted.png', 18px);
+    background-repeat: repeat;
+}
+
+.dimension-picker div.dimension-picker-highlighted {
+    //background: transparent repeat scroll 0 0;
+    .background-ximage-v2('dimension-picker/dimension-highlighted.png', 18px);
+    background-repeat: repeat;
+}
+
+.dimension-picker-status {
+    font-size: 12px;
+    text-align: center;
+}
