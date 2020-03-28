@@ -8821,12 +8821,12 @@ public class BaseController  extends BaseFunction{
     }
     public static boolean shutdownTomcat(String tomcatPath) {
     	String cmd = buildTomcatControlCmd(tomcatPath, "shutdown");
-    	return run(cmd, null, null);
+    	return run(cmd, null, null) != null;
     }
  
     public static boolean startupTomcat(String tomcatPath) {
     	String cmd = buildTomcatControlCmd(tomcatPath, "startup");
-    	return run(cmd, null, null);
+    	return run(cmd, null, null) != null;
     }
     
     protected static String buildTomcatControlCmd(String tomcatPath, String shName) {
@@ -8843,8 +8843,10 @@ public class BaseController  extends BaseFunction{
         return cmd;
     }    
     
-    protected static boolean run(String command, String[] envp, File dir) {
-        Runtime rt = Runtime.getRuntime();
+    protected static String run(String command, String[] envp, File dir) {
+        String result = null;
+
+    	Runtime rt = Runtime.getRuntime();
         try {
         	Process ps = rt.exec(command, envp, dir);
             
@@ -8853,19 +8855,17 @@ public class BaseController  extends BaseFunction{
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line;
             while((line = reader.readLine()) != null) {
-                System.out.println(line);
+            	result += line;
+            	System.out.println(line);
             }
- 
             ps.waitFor();
             is.close();
             reader.close();
             ps.destroy();
         } catch (Exception var8) {
             var8.printStackTrace();
-            return false;
-            
         }
-        return true;
+        return result;
     }
     
     
