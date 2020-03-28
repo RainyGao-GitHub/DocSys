@@ -1,0 +1,134 @@
+.synch-tip-root {
+    position: absolute;
+    z-index: @zindex-navbar + 2;
+    width: 300px;
+
+    &.inc-index {
+        z-index: @zindex-navbar + 4;
+    }
+
+    .tip-arrow {
+        position: absolute;
+        overflow: hidden;
+    }
+
+    &.right {
+        margin: 0 0 0 15px;
+
+        .tip-arrow {
+            left: -15px;
+            top: 0;
+            width: 16px;
+            height: 15px;
+            .box-shadow(0 -5px 8px -5px rgba(0, 0, 0, 0.2));
+
+            &:after {
+                top: -7px;
+                left: 7px;
+                width: 16px;
+            }
+        }
+    }
+
+    &.left {
+        margin: 0 15px 0 0;
+
+        .tip-arrow {
+            right: -15px;
+            top: 0;
+            width: 16px;
+            height: 15px;
+            .box-shadow(0 -5px 8px -5px rgba(0, 0, 0, 0.2));
+
+            &:after {
+                top: -7px;
+                left: -7px;
+                width: 15px;
+            }
+        }
+    }
+
+    &.top {
+        margin: 0 0 15px 0;
+
+        .tip-arrow {
+            right: 0;
+            bottom: -15px;
+            width: 15px;
+            height: 15px;
+            .box-shadow(5px 0 8px -5px rgba(0, 0, 0, 0.2));
+
+            &:after {
+                top: -8px;
+                left: 8px;
+            }
+        }
+    }
+}
+
+.asc-synchronizetip {
+    padding: 15px 8px 15px 15px;
+    border-radius: 5px;
+    background-color: #fcfed7;
+    overflow: visible;
+
+    .right & {
+        border-top-left-radius: 0;
+    }
+
+    .left & {
+        border-top-right-radius: 0;
+    }
+
+    .top & {
+        border-bottom-right-radius: 0;
+    }
+
+    .box-shadow(0 4px 15px -2px rgba(0, 0, 0, 0.5));
+    font-size: 11px;
+}
+
+.asc-synchronizetip .tip-arrow:after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 8px;
+    background-color: #fcfed7;
+    width: 15px;
+    height: 15px;
+
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+
+    .box-shadow(0 4px 8px -1px rgba(0, 0, 0, 0.2));
+}
+
+.asc-synchronizetip .show-link {
+    margin-top: 10px;
+}
+
+.show-link label {
+    border-bottom: 1px dotted #445799;
+    color: #445799;
+    cursor: pointer;
+}
+
+.asc-synchronizetip .close {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    margin: 8px;
+    cursor: pointer;
+
+    background-position: @but-close-offset-x @but-close-offset-y;
+
+    &.over,
+    &:hover {
+        background-position: @but-close-offset-x @but-close-offset-y - 16px;
+    }
+}

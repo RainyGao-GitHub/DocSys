@@ -1,0 +1,442 @@
+{
+    "name": "presentationeditor",
+    "version": "4.3.0",
+    "build": 782,
+    "homepage": "http://www.onlyoffice.com",
+    "private": true,
+    "main": {
+        "clean": [
+            "../deploy/web-apps/apps/presentationeditor/main"
+        ],
+        "js": {
+            "requirejs": {
+                "options": {
+                    "name": "../apps/presentationeditor/main/app.js",
+                    "out": "../deploy/web-apps/apps/presentationeditor/main/app.js",
+                    "baseUrl": "../apps/",
+                    "inlineText": true,
+                    "findNestedDependencies": true,
+                    "preserveLicenseComments": false,
+                    "optimizeAllPluginResources": true,
+                    "paths": {
+                        "jquery": "../vendor/jquery/jquery",
+                        "underscore": "../vendor/underscore/underscore",
+                        "backbone": "../vendor/backbone/backbone",
+                        "text": "../vendor/requirejs-text/text",
+                        "bootstrap": "../vendor/bootstrap/dist/js/bootstrap",
+                        "perfectscrollbar": "common/main/lib/mods/perfect-scrollbar",
+                        "jmousewheel": "../vendor/perfect-scrollbar/src/jquery.mousewheel",
+                        "xregexp": "empty:",
+                        "sockjs": "empty:",
+                        "jszip": "empty:",
+                        "jszip-utils": "empty:",
+                        "coapisettings": "empty:",
+                        "allfonts": "empty:",
+                        "sdk": "empty:",
+                        "api": "empty:",
+                        "core": "common/main/lib/core/application",
+                        "notification": "common/main/lib/core/NotificationCenter",
+                        "keymaster": "common/main/lib/core/keymaster",
+                        "tip": "common/main/lib/util/Tip",
+                        "analytics": "common/Analytics",
+                        "gateway": "common/Gateway",
+                        "locale": "common/locale",
+                        "irregularstack": "common/IrregularStack"
+                    },
+                    "shim": {
+                        "underscore": {
+                            "exports": "_"
+                        },
+                        "backbone": {
+                            "deps": [
+                                "underscore",
+                                "jquery"
+                            ],
+                            "exports": "Backbone"
+                        },
+                        "bootstrap": {
+                            "deps": [
+                                "jquery"
+                            ]
+                        },
+                        "perfectscrollbar": {
+                            "deps": [
+                                "jmousewheel"
+                            ]
+                        },
+                        "notification": {
+                            "deps": [
+                                "backbone"
+                            ]
+                        },
+                        "core": {
+                            "deps": [
+                                "backbone",
+                                "notification"
+                            ]
+                        },
+                        "sdk": {
+                            "deps": [
+                                "jquery",
+                                "underscore",
+                                "coapisettings",
+                                "allfonts",
+                                "xregexp",
+                                "sockjs",
+                                "jszip",
+                                "jszip-utils"
+                            ]
+                        },
+                        "gateway": {
+                            "deps": [
+                                "jquery"
+                            ]
+                        },
+                        "analytics": {
+                            "deps": [
+                                "jquery"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "less": {
+            "files": {
+                "src": "../apps/presentationeditor/main/resources/less/app.less",
+                "dest": "../deploy/web-apps/apps/presentationeditor/main/resources/css/app.css"
+            },
+            "vars": {
+                "app-image-const-path": "'../img'",
+                "common-image-const-path": "'../img'",
+                "app-image-path": "'../../../../../deploy/web-apps/apps/presentationeditor/main/resources/img'",
+                "common-image-path": "'../../../../../deploy/web-apps/apps/presentationeditor/main/resources/img'"
+            }
+        },
+        "imagemin": {
+            "images-app": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/main/resources/img/",
+                    "src": [
+                        "**/*.{png,jpg,gif,ico}",
+                        "!toolbar/*x/**/*"
+                    ],
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/resources/img/"
+                }
+            ],
+            "images-common": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/common/main/resources/img/",
+                    "src": [
+                        "**/*.{png,jpg,gif}",
+                        "!toolbar/*x/**/*"
+                    ],
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/resources/img/"
+                }
+            ]
+        },
+        "jsonmin": {
+            "files": "../deploy/web-apps/apps/presentationeditor/main/**/*.json"
+        },
+        "copy": {
+            "localization": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/main/locale/",
+                    "src": "*",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/locale/"
+                },
+                {
+                    "expand": true,
+                    "cwd": "../apps/common/main/resources/symboltable",
+                    "src": "*",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/resources/symboltable"
+                }
+            ],
+            "help": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/main/resources/help/",
+                    "src": [
+                        "**",
+                        "!*_/**"
+                    ],
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/resources/help/"
+                }
+            ],
+            "index-page": [
+                {
+                    "src": "../apps/presentationeditor/main/index.html.deploy",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/index.html"
+                },
+                {
+                    "src": "../apps/presentationeditor/main/index_loader.html.deploy",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/index_loader.html"
+                }
+            ]
+        },
+        "svgicons": {
+            "common": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/common/main/resources/img",
+                    "src": "**/*.svg",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/main/resources/img"
+                }
+            ],
+            "clean": [
+                "../deploy/web-apps/apps/presentationeditor/main/resources/img/**/*.svg"
+            ]
+        },
+        "reporter": {
+            "uglify": {
+                "src": "../apps/presentationeditor/main/app.reporter.js",
+                "dest": "../deploy/web-apps/apps/presentationeditor/main/app.reporter.js"
+            },
+            "copy": {
+                "../deploy/web-apps/apps/presentationeditor/main/index.reporter.html": "../apps/presentationeditor/main/index.reporter.html.deploy"
+            }
+        }
+    },
+    "mobile": {
+        "clean": {
+            "deploy": [
+                "../deploy/web-apps/apps/presentationeditor/mobile"
+            ],
+            "template-backup": [
+                "../apps/presentationeditor/mobile/app/template/backup"
+            ]
+        },
+        "js": {
+            "requirejs": {
+                "options": {
+                    "name": "../apps/presentationeditor/mobile/app.js",
+                    "out": "../deploy/web-apps/apps/presentationeditor/mobile/app.js",
+                    "baseUrl": "../apps/",
+                    "inlineText": true,
+                    "findNestedDependencies": true,
+                    "preserveLicenseComments": false,
+                    "optimizeAllPluginResources": true,
+                    "paths": {
+                        "jquery": "../vendor/jquery/jquery",
+                        "underscore": "../vendor/underscore/underscore",
+                        "backbone": "../vendor/backbone/backbone",
+                        "framework7": "../vendor/framework7/js/framework7",
+                        "text": "../vendor/requirejs-text/text",
+                        "xregexp": "empty:",
+                        "sockjs": "empty:",
+                        "jszip": "empty:",
+                        "jszip-utils": "empty:",
+                        "coapisettings": "empty:",
+                        "allfonts": "empty:",
+                        "sdk": "empty:",
+                        "api": "empty:",
+                        "core": "common/main/lib/core/application",
+                        "extendes": "common/mobile/utils/extendes",
+                        "notification": "common/main/lib/core/NotificationCenter",
+                        "localstorage": "common/main/lib/util/LocalStorage",
+                        "analytics": "common/Analytics",
+                        "gateway": "common/Gateway",
+                        "locale": "common/locale",
+                        "irregularstack": "common/IrregularStack",
+                        "sharedsettings": "common/mobile/utils/SharedSettings"
+                    },
+                    "shim": {
+                        "framework7": {
+                            "exports": "Framework7"
+                        },
+                        "underscore": {
+                            "exports": "_"
+                        },
+                        "backbone": {
+                            "deps": [
+                                "underscore",
+                                "jquery"
+                            ],
+                            "exports": "Backbone"
+                        },
+                        "notification": {
+                            "deps": [
+                                "backbone"
+                            ]
+                        },
+                        "core": {
+                            "deps": [
+                                "backbone",
+                                "notification",
+                                "irregularstack",
+                                "sharedsettings"
+                            ]
+                        },
+                        "extendes": {
+                            "deps": [
+                                "underscore",
+                                "jquery",
+                                "framework7"
+                            ]
+                        },
+                        "sdk": {
+                            "deps": [
+                                "jquery",
+                                "underscore",
+                                "coapisettings",
+                                "allfonts",
+                                "xregexp",
+                                "sockjs",
+                                "jszip",
+                                "jszip-utils"
+                            ]
+                        },
+                        "gateway": {
+                            "deps": [
+                                "jquery"
+                            ]
+                        },
+                        "analytics": {
+                            "deps": [
+                                "jquery"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "css": {
+            "ios": {
+                "src": [
+                    "../apps/presentationeditor/mobile/resources/css/app-ios.css"
+                ],
+                "dist": "../deploy/web-apps/apps/presentationeditor/mobile/resources/css/app-ios.css"
+            },
+            "material": {
+                "src": [
+                    "../apps/presentationeditor/mobile/resources/css/app-material.css"
+                ],
+                "dist": "../deploy/web-apps/apps/presentationeditor/mobile/resources/css/app-material.css"
+            }
+        },
+        "htmlmin": {
+            "templates": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/mobile/app/template/",
+                    "src": "*.template",
+                    "dest": "../apps/presentationeditor/mobile/app/template/"
+                }
+            ]
+        },
+        "jsonmin": {
+            "files": "../deploy/web-apps/apps/presentationeditor/mobile/**/*.json"
+        },
+        "copy": {
+            "template-backup": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/mobile/app/template/",
+                    "src": "*.template",
+                    "dest": "../apps/presentationeditor/mobile/app/template/backup/",
+                    "filter": "isFile"
+                }
+            ],
+            "template-restore": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/mobile/app/template/backup/",
+                    "src": "*.template",
+                    "dest": "../apps/presentationeditor/mobile/app/template/",
+                    "filter": "isFile"
+                }
+            ],
+            "index-page": {
+                "../deploy/web-apps/apps/presentationeditor/mobile/index.html": "../apps/presentationeditor/mobile/index.html.deploy",
+                "../deploy/web-apps/apps/presentationeditor/mobile/index_loader.html": "../apps/presentationeditor/mobile/index_loader.html.deploy"
+            },
+            "localization": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/mobile/locale/",
+                    "src": "*",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/mobile/locale/"
+                }
+            ],
+            "images-app": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/mobile/resources/img/",
+                    "src": "**",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/mobile/resources/img/"
+                }
+            ],
+            "images-common": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/common/mobile/resources/img/",
+                    "src": "**",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/mobile/resources/img/"
+                }
+            ]
+        }
+    },
+    "embed": {
+        "clean": {
+            "prebuild": [
+                "../deploy/web-apps/apps/presentationeditor/embed"
+            ],
+            "postbuild": [
+                "../deploy/web-apps/apps/presentationeditor/embed/resources/img"
+            ]
+        },
+        "js": {
+            "src": [
+                "../apps/common/locale.js",
+                "../apps/common/Gateway.js",
+                "../apps/common/Analytics.js",
+                "../apps/common/embed/lib/util/utils.js",
+                "../apps/common/embed/lib/view/modals.js",
+                "../apps/common/embed/lib/controller/modals.js",
+                "../apps/presentationeditor/embed/js/ApplicationView.js",
+                "../apps/presentationeditor/embed/js/ApplicationController.js",
+                "../apps/presentationeditor/embed/js/application.js"
+            ],
+            "dist": "../deploy/web-apps/apps/presentationeditor/embed/app-all.js"
+        },
+        "less": {
+            "files": {
+                "src": "../apps/presentationeditor/embed/resources/less/application.less",
+                "dist": "../deploy/web-apps/apps/presentationeditor/embed/resources/css/app-all.css"
+            }
+        },
+        "copy": {
+            "localization": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/presentationeditor/embed/locale/",
+                    "src": "*",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/embed/locale/"
+                }
+            ],
+            "index-page": {
+                "../deploy/web-apps/apps/presentationeditor/embed/index.html": "../apps/presentationeditor/embed/index.html.deploy"
+            },
+            "images-app": [
+                {
+                    "expand": true,
+                    "cwd": "../apps/common/embed/resources/img/",
+                    "src": "**",
+                    "dest": "../deploy/web-apps/apps/presentationeditor/embed/resources/img/"
+                }
+            ]
+        }
+    },
+    "tasks": {
+        "deploy": [
+            "increment-build",
+            "deploy-app-main",
+            "deploy-reporter",
+            "deploy-app-mobile",
+            "deploy-app-embed"
+        ]
+    }
+}

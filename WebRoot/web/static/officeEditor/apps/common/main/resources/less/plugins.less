@@ -1,0 +1,149 @@
+#plugins-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    #plugins-header {
+        position: absolute;
+        height: 20px;
+        left: 0;
+        top: 0;
+        font-weight: bold;
+        margin-top: 10px;
+        margin-left: 12px;
+    }
+
+    #plugins-list {
+        height: 100%;
+        overflow: hidden;
+        padding: 30px 0 10px 0;
+
+        .item {
+            display: block;
+            width: 100%;
+            .box-shadow(none);
+            margin: 0;
+
+            &:hover,
+            &.over {
+                background-color: @secondary;
+            }
+
+            &.selected {
+                background-color: @primary;
+                color: #fff;
+            }
+        }
+
+        .item-plugins {
+            width: 100%;
+            padding: 7px 1px 7px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .plugin-icon {
+            width: 40px;
+            height: 40px;
+            display: inline-block;
+            .box-shadow(0 0 0 1px transparent);
+            vertical-align: middle;
+            background-position: 0 0;
+            background-size: cover;
+            margin-right: 10px;
+            margin-top: -1px;
+
+            .background-ximage-v2('plugin/icon_add_on_default.png', 40px);
+        }
+
+        .plugin-caret {
+            //float: right;
+            width: 16px;
+            height: 16px;
+            background-position: -1px -274px;
+            margin: 7px;
+            display: inline-block;
+            position: absolute;
+            right: 0;
+        }
+    }
+}
+
+#current-plugin-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    #current-plugin-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 38px;
+        padding: 10px 12px;
+        border-bottom: 1px solid @gray-dark;
+        
+        label {
+            width: 100%;
+            padding-right: 20px;
+            font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .plugin-close {
+        position: absolute;
+        top: 9px;
+        right: 7px;
+        width: 16px;
+        height: 16px;
+        background-position: -26px -150px;
+        cursor: pointer;
+    }
+
+    #current-plugin-frame {
+        width: 100%;
+        height: 100%;
+        padding-top: 38px;
+    }
+}
+
+#plugins-mask {
+    position: absolute;
+    top: 0;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+    background-color: @gray-light;
+    z-index: @zindex-tooltip + 1;
+}
+
+#plugins-panel {
+    .x-huge.icon-top {
+        img {
+            height: 26px;
+        }
+
+        .caption {
+            text-overflow: ellipsis;
+            max-width: 60px;
+            overflow: hidden;
+        }
+    }
+
+    .slot:not(:first-child) {
+        margin-left: 2px;
+    }
+
+    .dropdown-menu {
+        min-width: 100px;
+    }
+
+    .separator:first-child {
+        display: none;
+    }
+}
