@@ -614,6 +614,7 @@ public class DocController extends BaseController{
 		File dir = new File(runPath);
 		
 		String cmd = buildDocExecuteCmd(repos, doc);
+		System.out.println("executeDoc cmd:" + cmd);
 		if(cmd != null)
 		{
 			run(cmd, null, dir);
