@@ -8820,37 +8820,37 @@ public class BaseController  extends BaseFunction{
         return false;
     }
     public static boolean shutdownTomcat(String tomcatPath) {
-       return run(tomcatPath, "shutdown");
+    	String cmd = buildTomcatControlCmd(tomcatPath, "shutdown");
+    	return run(cmd, null, null);
     }
  
     public static boolean startupTomcat(String tomcatPath) {
-       return run(tomcatPath, "startup");
+    	String cmd = buildTomcatControlCmd(tomcatPath, "startup");
+    	return run(cmd, null, null);
     }
-    private static boolean run(String tomcatPath, String shName) {
+    
+    protected static String buildTomcatControlCmd(String tomcatPath, String shName) {
+        String shellScriptPath = tomcatPath + File.separator + "bin" + File.separator + shName;               	
+        String os = System.getProperty("os.name");
+        String cmd = null;
+        if (os.startsWith("Windows")) {
+        	cmd = "cmd /c " + shellScriptPath + ".bat";
+        }
+        else
+        {
+        	cmd = "sh " + shellScriptPath + ".sh";
+        }
+        return cmd;
+    }    
+    
+    protected static boolean run(String command, String[] envp, File dir) {
         Runtime rt = Runtime.getRuntime();
-        Process ps = null;
         try {
-            String os = System.getProperty("os.name");
-            String shellScriptPath = tomcatPath + File.separator + "bin" + File.separator + shName;               	
-            if (os.startsWith("Windows")) {
-            	shellScriptPath = shellScriptPath + ".bat";
-            	if(isFileExist(shellScriptPath) == false)
-            	{
-            		return false;
-            	}
-                ps = rt.exec("cmd /c " + shellScriptPath, (String[])null, new File(tomcatPath));
-            } else {
-            	shellScriptPath = shellScriptPath + ".sh";
-               	if(isFileExist(shellScriptPath) == false)
-            	{
-            		return false;
-            	}
-            	ps = rt.exec("sh " + shellScriptPath, (String[])null, new File(tomcatPath));
-            }
- 
-            InputStream is = ps.getInputStream();
+        	Process ps = rt.exec(command, envp, dir);
+            
+        	//printout the command line
+        	InputStream is = ps.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
- 
             String line;
             while((line = reader.readLine()) != null) {
                 System.out.println(line);
@@ -8867,6 +8867,8 @@ public class BaseController  extends BaseFunction{
         }
         return true;
     }
+    
+    
 
 	/****************************DocSys其他接口 *********************************/
 	protected Integer getMaxFileSize() {
