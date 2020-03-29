@@ -578,6 +578,7 @@ public class DocController extends BaseController{
 	/****************   execute a Document ******************/
 	@RequestMapping("/executeDoc.do")
 	public void executeDoc(Integer reposId, String path, String name,
+			String cmdLine,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("executeDoc reposId:" + reposId + " path:" + path + " name:" + name);
@@ -602,18 +603,20 @@ public class DocController extends BaseController{
 		String localVRootPath = getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		String ret = executeDoc(repos, doc, reposAccess.getAccessUser());
+		//repos是本地服务器的目录（远程的暂不支持）
+		String ret = localExecuteDoc(repos, doc, cmdLine, reposAccess.getAccessUser());
+		
 		rt.setData(ret);
 		writeJson(rt, response);
 	}
 	
-	private String executeDoc(Repos repos, Doc doc, User user) {
+	private String localExecuteDoc(Repos repos, Doc doc, String cmdLine, User user) {
 		
 		//命令在userTmp目录下运行
 		String runPath = getReposUserTmpPath(repos, user);
 		File dir = new File(runPath);
 		
-		String cmd = buildDocExecuteCmd(repos, doc);
+		String cmd = buildDocExecuteCmd(repos, doc, cmdLine);
 		System.out.println("executeDoc cmd:" + cmd);
 		if(cmd != null)
 		{
@@ -622,7 +625,7 @@ public class DocController extends BaseController{
 		return null;
 	}
 
-	private String buildDocExecuteCmd(Repos repos, Doc doc) {
+	private String buildDocExecuteCmd(Repos repos, Doc doc, String cmdLine) {
 		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
 		File file = new File(filePath);
 		if(!file.exists() || !file.isFile())
