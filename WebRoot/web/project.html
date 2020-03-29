@@ -4569,12 +4569,13 @@ function CompareObj(objA, objB, flag) {
 								copyString(localPath);
 							}
 						},
-						{divider: true},
-			           	{text: '执行', action: function(e){
-								e.preventDefault();
-			        			executeDoc(curRightClickedTreeNode);
-							}
-						},
+						//{divider: true},
+			           	//{text: '执行', action: function(e){
+			           	//运行需要进行远程登录后实现	
+						//		e.preventDefault();
+			        	//		executeDoc(curRightClickedTreeNode);
+						//	}
+						//},
 						//{divider: true},
 						//{text: '本地打开', action: function(e){
 						//		e.preventDefault();
@@ -4928,12 +4929,13 @@ function CompareObj(objA, objB, flag) {
 									copyString(localPath);
 								}
 							},
-							{divider: true},
-				           	{text: '执行', action: function(e){
-									e.preventDefault();
-				        			executeDoc(curRightClickedDocListNode);
-								}
-							},
+							//{divider: true},
+				           	//{text: '运行', action: function(e){
+				           	//运行需要进行远程登录后实现		
+							//		e.preventDefault();
+				        	//		executeDoc(curRightClickedDocListNode);
+							//	}
+							//},
 							//{divider: true},
 							//{text: '本地打开', action: function(e){
 							//		e.preventDefault();
@@ -5005,6 +5007,13 @@ function CompareObj(objA, objB, flag) {
                 reposId : gReposInfo.id, 
 				path: node.path,
                 name : node.name,
+                //params: params, //执行参数
+                //对于远程的仓库（远程目录/ftp）执行需要远程进行登录后执行
+                //protocol: ssh,
+                //server: server,
+                //port: port,
+                //user: user,
+             	//pwd: pwd,
              },
              success : function (ret) {
             	console.log("executeDoc ret:", ret);            		
