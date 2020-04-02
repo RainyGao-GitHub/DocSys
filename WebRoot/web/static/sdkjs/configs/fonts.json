@@ -1,0 +1,12 @@
+{
+	"js": [
+		"common/libfont/js/engine.js",
+		"common/libfont/js/file.js",
+		"common/libfont/js/manager.js"
+	],
+	"wasm": [
+		"common/libfont/wasm/engine.js",
+		"common/libfont/wasm/file.js",
+		"common/libfont/wasm/manager.js"
+	]
+}
