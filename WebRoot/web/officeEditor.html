@@ -1,14 +1,28 @@
 <div id="placeholder"></div>
-<script type="text/javascript" src="https://documentserver/web-apps/apps/api/documents/api.js"></script>
+<script type="text/javascript" src="static/officeEditor/apps/api/documents/api.js"></script>
 <script>
-//编辑器初始化，并打开文件
-new DocsAPI.DocEditor("placeholder", {
-    "document": {
-        "fileType": "docx",
-        "key": "Khirz6zTPdfd7",
-        "title": "Example Document Title.docx",
-        "url": "https://example.com/url-to-example-document.docx"
-    },
-    "documentType": "text"
-});
+var OfficeEditor = (function () {
+	var editor = null;
+	
+	function officeEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
+	{
+		console.log("officeEditorPageInit InputDoc:", Input_doc);
+		editor = new DocsAPI.DocEditor("placeholder", {
+		    "document": {
+		        "fileType": "docx",
+		        "key": "Khirz6zTPdfd7",
+		        "title": "Example Document Title.docx",
+		        "url": "https://example.com/url-to-example-document.docx"
+		    },
+		    "documentType": "text"
+		});
+	}
+
+    //开放给外部的接口
+    return {
+        officeEditorPageInit: function(docInfo, content, tmpSavedContent){
+        	officeEditorPageInit(docInfo, content, tmpSavedContent);
+        },
+    };
+})();
 </script>
