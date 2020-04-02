@@ -1,0 +1,30 @@
+.idea
+Thumbs.db
+.DS_Store
+/deploy
+build/node_modules
+build/sprites/node_modules/
+apps/documenteditor/embed/resources/less/node_modules
+apps/presentationeditor/embed/resources/less/node_modules
+apps/spreadsheeteditor/embed/resources/less/node_modules
+apps/documenteditor/mobile/resources/sass/.sass-cache
+apps/spreadsheeteditor/mobile/resources/sass/.sass-cache
+apps/presentationeditor/mobile/resources/sass/.sass-cache
+apps/**/main/resources/**/iconssmall*.png
+apps/**/main/resources/**/iconssmall*.less
+apps/**/main/resources/**/iconsbig*.png
+apps/**/main/resources/**/iconsbig*.less
+
+
+# test documents
+apps/presentationeditor/embed/document
+apps/presentationeditor/main/document
+apps/presentationeditor/mobile/document
+apps/spreadsheeteditor/embed/offlinedocs
+apps/spreadsheeteditor/main/offlinedocs
+apps/spreadsheeteditor/mobile/offlinedocs
+
+# tests
+selenium-debug.log
+**/test/bin
+**/test/reports
