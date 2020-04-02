@@ -1619,7 +1619,8 @@
 		else if(isOffice(docInfo.fileSuffix) || isPdf(docInfo.fileSuffix)) //View Only
 		{
 			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
-			showOfficeInDialog(docInfo); //这是个异步调用
+			//showOfficeInDialog(docInfo); //这是个异步调用
+			showDocInOfficeEditor(docInfo, null, null);
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
@@ -1847,6 +1848,23 @@
 			mstyle: getDialogStyle(),
 			callback: function(){
 				TextEditor.textEditorPageInit(docInfo, docText, tmpSavedDocText);
+			},
+		});
+	}
+	
+	function showDocInOfficeEditor(docInfo, docText, tmpSavedDocText)
+	{
+		console.log("showDocInOfficeEditor docInfo.docId:" + docInfo.docId);
+		bootstrapQ.dialog({
+			id: "officeEditor",
+			title: docInfo.name,
+			url: 'officeEditor.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: getDialogStyle(),
+			callback: function(){
+				OfficeEditor.officeEditorPageInit(docInfo, docText, tmpSavedDocText);
 			},
 		});
 	}
