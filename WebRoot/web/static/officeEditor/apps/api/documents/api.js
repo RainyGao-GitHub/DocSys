@@ -1,8 +1,11 @@
-/**
- * Copyright (c) Ascensio System SIA 2013. All rights reserved
+/*
+ * Copyright (c) Ascensio System SIA 2020. All rights reserved
  *
- * http://www.onlyoffice.com
+ * http://www.onlyoffice.com 
+ *
+ * Version: 5.5.0 (build:165)
  */
+
 
 ;(function(DocsAPI, window, document, undefined) {
 
@@ -705,7 +708,7 @@
     };
 
     DocsAPI.DocEditor.version = function() {
-        return '{{PRODUCT_VERSION}}';
+        return '5.5.0';
     };
 
     MessageDispatcher = function(fn, scope) {
@@ -826,7 +829,7 @@
     }
 
     function getAppParameters(config) {
-        var params = "?_dc=0";
+        var params = "?_dc=5.5.0-165";
 
         if (config.editorConfig && config.editorConfig.lang)
             params += "&lang=" + config.editorConfig.lang;
@@ -835,7 +838,7 @@
             if ( (typeof(config.editorConfig.customization) == 'object') && config.editorConfig.customization.loaderName) {
                 if (config.editorConfig.customization.loaderName !== 'none') params += "&customer=" + config.editorConfig.customization.loaderName;
             } else
-                params += "&customer={{APP_CUSTOMER_NAME}}";
+                params += "&customer=ONLYOFFICE";
             if ( (typeof(config.editorConfig.customization) == 'object') && config.editorConfig.customization.loaderLogo) {
                 if (config.editorConfig.customization.loaderLogo !== '') params += "&logo=" + config.editorConfig.customization.loaderLogo;
             } else if ( (typeof(config.editorConfig.customization) == 'object') && config.editorConfig.customization.logo) {
