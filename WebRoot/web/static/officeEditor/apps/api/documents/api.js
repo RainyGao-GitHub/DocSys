@@ -192,7 +192,10 @@
     // TODO: allow several instances on one page simultaneously
 
     DocsAPI.DocEditor = function(placeholderId, config) {
-        var _self = this,
+    	console.log("DocsAPI.DocEditor placeholderId:" + placeholderId);
+    	console.log("DocsAPI.DocEditor config:",config);
+
+    	var _self = this,
             _config = config || {};
 
         extend(_config, DocsAPI.DocEditor.defaultConfig);
@@ -215,10 +218,12 @@
         _config.frameEditorId = placeholderId;
 
         var onMouseUp = function (evt) {
+        	console.log("onMouseUp()");
             _processMouse(evt);
         };
 
         var _attachMouseEvents = function() {
+        	console.log("_attachMouseEvents()");
             if (window.addEventListener) {
                 window.addEventListener("mouseup", onMouseUp, false)
             } else if (window.attachEvent) {
@@ -227,6 +232,7 @@
         };
 
         var _detachMouseEvents = function() {
+        	console.log("_detachMouseEvents()");
             if (window.removeEventListener) {
                 window.removeEventListener("mouseup", onMouseUp, false)
             } else if (window.detachEvent) {
@@ -235,6 +241,7 @@
         };
 
         var _onAppReady = function() {
+        	console.log("_onAppReady()");
             if (_config.type === 'mobile') {
                 document.body.onfocus = function(e) {
                     setTimeout(function(){
@@ -260,6 +267,7 @@
         };
 
         var _callLocalStorage = function(data) {
+        	console.log("_callLocalStorage()");
             if (data.cmd == 'get') {
                 if (data.keys && data.keys.length) {
                     var af = data.keys.split(','), re = af[0];
@@ -290,6 +298,7 @@
         };
 
         var _onMessage = function(msg) {
+        	console.log("_onMessage()");
             if ( msg ) {
                 if ( msg.type === "onExternalPluginMessage" ) {
                     _sendCommand(msg);
@@ -317,6 +326,7 @@
         };
 
         var _checkConfigParams = function() {
+        	console.log("_checkConfigParams()");
             if (_config.document) {
                 if (!_config.document.url || ((typeof _config.document.fileType !== 'string' || _config.document.fileType=='') &&
                                               (typeof _config.documentType !== 'string' || _config.documentType==''))) {
@@ -393,11 +403,16 @@
         var target = document.getElementById(placeholderId),
             iframe;
 
+        console.log("DocsAPI.DocEditor() target:", target);
+        console.log("DocsAPI.DocEditor() iframe:", iframe);
+
         if (target && _checkConfigParams()) {
             iframe = createIframe(_config);
             target.parentNode && target.parentNode.replaceChild(iframe, target);
             var _msgDispatcher = new MessageDispatcher(_onMessage, this);
         }
+        
+        console.log("DocsAPI.DocEditor() iframe:", iframe);       
 
         /*
          cmd = {
@@ -407,6 +422,8 @@
          */
 
         var _destroyEditor = function(cmd) {
+            console.log("_destroyEditor()");       
+
             var target = document.createElement("div");
             target.setAttribute('id', placeholderId);
 
@@ -418,11 +435,15 @@
         };
 
         var _sendCommand = function(cmd) {
-            if (iframe && iframe.contentWindow)
+            console.log("_sendCommand()");       
+
+        	if (iframe && iframe.contentWindow)
                 postMessage(iframe.contentWindow, cmd);
         };
 
         var _init = function(editorConfig) {
+            console.log("_init()");       
+
             _sendCommand({
                 command: 'init',
                 data: {
@@ -432,6 +453,8 @@
         };
 
         var _openDocument = function(doc) {
+            console.log("_openDocument()");       
+
             _sendCommand({
                 command: 'openDocument',
                 data: {
@@ -441,6 +464,8 @@
         };
 
         var _showMessage = function(title, msg) {
+            console.log("_showMessage()");       
+
             msg = msg || title;
             _sendCommand({
                 command: 'showMessage',
@@ -451,6 +476,8 @@
         };
 
         var _applyEditRights = function(allowed, message) {
+            console.log("_applyEditRights()");       
+
             _sendCommand({
                 command: 'applyEditRights',
                 data: {
@@ -461,6 +488,8 @@
         };
 
         var _processSaveResult = function(result, message) {
+            console.log("_processSaveResult()");       
+
             _sendCommand({
                 command: 'processSaveResult',
                 data: {
@@ -472,6 +501,8 @@
 
         // TODO: remove processRightsChange, use denyEditingRights
         var _processRightsChange = function(enabled, message) {
+            console.log("_processRightsChange()");       
+
             _sendCommand({
                 command: 'processRightsChange',
                 data: {
@@ -482,6 +513,8 @@
         };
 
         var _denyEditingRights = function(message) {
+            console.log("_denyEditingRights()");       
+
             _sendCommand({
                 command: 'processRightsChange',
                 data: {
@@ -492,6 +525,8 @@
         };
 
         var _refreshHistory = function(data, message) {
+            console.log("_refreshHistory()");       
+
             _sendCommand({
                 command: 'refreshHistory',
                 data: {
@@ -502,6 +537,8 @@
         };
 
         var _setHistoryData = function(data, message) {
+            console.log("_setHistoryData()");       
+
             _sendCommand({
                 command: 'setHistoryData',
                 data: {
@@ -512,6 +549,8 @@
         };
 
         var _setEmailAddresses = function(data) {
+            console.log("_setEmailAddresses()");       
+
             _sendCommand({
                 command: 'setEmailAddresses',
                 data: {
@@ -521,6 +560,8 @@
         };
 
         var _setActionLink = function (data) {
+            console.log("_setActionLink()");       
+
             _sendCommand({
                 command: 'setActionLink',
                 data: {
@@ -530,6 +571,8 @@
         };
 
         var _processMailMerge = function(enabled, message) {
+            console.log("_processMailMerge()");       
+
             _sendCommand({
                 command: 'processMailMerge',
                 data: {
@@ -540,6 +583,7 @@
         };
 
         var _downloadAs = function(data) {
+        	console.log("_downloadAs()");  
             _sendCommand({
                 command: 'downloadAs',
                 data: data
@@ -547,6 +591,7 @@
         };
 
         var _setUsers = function(data) {
+        	console.log("_setUsers()");  
             _sendCommand({
                 command: 'setUsers',
                 data: data
@@ -554,6 +599,7 @@
         };
 
         var _showSharingSettings = function(data) {
+        	console.log("_showSharingSettings()");  
             _sendCommand({
                 command: 'showSharingSettings',
                 data: data
@@ -561,6 +607,7 @@
         };
 
         var _setSharingSettings = function(data) {
+        	console.log("_setSharingSettings()"); 
             _sendCommand({
                 command: 'setSharingSettings',
                 data: data
@@ -568,6 +615,7 @@
         };
 
         var _insertImage = function(data) {
+        	console.log("_insertImage()"); 
             _sendCommand({
                 command: 'insertImage',
                 data: data
@@ -575,6 +623,7 @@
         };
 
         var _setMailMergeRecipients = function(data) {
+        	console.log("_setMailMergeRecipients()"); 
             _sendCommand({
                 command: 'setMailMergeRecipients',
                 data: data
@@ -582,6 +631,7 @@
         };
 
         var _setRevisedFile = function(data) {
+        	console.log("_setRevisedFile()"); 
             _sendCommand({
                 command: 'setRevisedFile',
                 data: data
@@ -589,6 +639,7 @@
         };
 
         var _processMouse = function(evt) {
+        	console.log("_processMouse()"); 
             var r = iframe.getBoundingClientRect();
             var data = {
                 type: evt.type,
@@ -604,6 +655,7 @@
         };
 
         var _serviceCommand = function(command, data) {
+        	console.log("_serviceCommand()"); 
             _sendCommand({
                 command: 'internalCommand',
                 data: {
@@ -660,10 +712,12 @@
         var _fn     = fn,
             _scope  = scope || window,
             eventFn = function(msg) {
+        		console.log("eventFn()"); 
                 _onMessage(msg);
             };
 
         var _bindEvents = function() {
+        	console.log("_bindEvents()"); 
             if (window.addEventListener) {
                 window.addEventListener("message", eventFn, false)
             }
@@ -673,6 +727,7 @@
         };
 
         var _unbindEvents = function() {
+        	console.log("_unbindEvents()"); 
             if (window.removeEventListener) {
                 window.removeEventListener("message", eventFn, false)
             }
@@ -682,6 +737,7 @@
         };
 
         var _onMessage = function(msg) {
+        	console.log("_onMessage()");
             // TODO: check message origin
             if (msg && window.JSON) {
 
@@ -813,6 +869,8 @@
         var iframe = document.createElement("iframe");
 
         iframe.src = getAppPath(config) + getAppParameters(config);
+        console.log("createIframe() iframe.src:" + iframe.src);
+        
         iframe.width = config.width;
         iframe.height = config.height;
         iframe.align = "top";

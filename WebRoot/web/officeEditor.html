@@ -7,15 +7,16 @@ var OfficeEditor = (function () {
 	function officeEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
 	{
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
-		editor = new DocsAPI.DocEditor("placeholder", {
-		    "document": {
-		        "fileType": "docx",
-		        "key": "Khirz6zTPdfd7",
-		        "title": "Example Document Title.docx",
-		        "url": "https://example.com/url-to-example-document.docx"
-		    },
-		    "documentType": "text"
-		});
+        var config = {
+    		    "document": {
+    		        "fileType": "docx",
+    		        "key": "Khirz6zTPdfd7",
+    		        "title": "Example Document Title.docx",
+    		        "url": "https://example.com/url-to-example-document.docx"
+    		    },
+    		    "documentType": "text"
+    		};
+		editor = new DocsAPI.DocEditor("placeholder", config);
 	}
 
     //开放给外部的接口
