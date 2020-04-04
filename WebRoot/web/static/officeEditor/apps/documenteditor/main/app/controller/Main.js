@@ -146,6 +146,8 @@ define([
             },
 
             onLaunch: function() {
+                console.log("Main.js onLaunch()");
+
                 var me = this;
 
                 this.stackLongActions = new Common.IrregularStack({
@@ -330,6 +332,7 @@ define([
             },
 
             loadConfig: function(data) {
+                console.log("Main.js loadConfig()");
                 this.editorConfig = $.extend(this.editorConfig, data.config);
 
                 this.editorConfig.user          =
@@ -386,6 +389,7 @@ define([
             },
 
             loadDocument: function(data) {
+            	console.log("Main.js loadDocument()");
                 this.permissions = {};
                 this.document = data.doc;
 
@@ -431,6 +435,7 @@ define([
             },
 
             onProcessSaveResult: function(data) {
+            	console.log("Main.js onProcessSaveResult()");
                 this.api.asc_OnSaveEnd(data.result);
                 if (data && data.result === false) {
                     Common.UI.error({
@@ -441,6 +446,7 @@ define([
             },
 
             onProcessRightsChange: function(data) {
+            	console.log("Main.js onProcessRightsChange()");
                 if (data && data.enabled === false) {
                     var me = this,
                         old_rights = this._state.lostEditingRights;
@@ -462,6 +468,7 @@ define([
             },
 
             onDownloadAs: function(format) {
+            	console.log("Main.js onDownloadAs()");
                 if ( !this.appOptions.canDownload && !this.appOptions.canDownloadOrigin) {
                     Common.Gateway.reportError(Asc.c_oAscError.ID.AccessDeny, this.errorAccessDeny);
                     return;
@@ -491,6 +498,7 @@ define([
             },
 
             onProcessMouse: function(data) {
+            	console.log("Main.js onProcessMouse()");
                 if (data.type == 'mouseup') {
                     var e = document.getElementById('editor_sdk');
                     if (e) {
@@ -504,6 +512,7 @@ define([
             },
 
             onRefreshHistory: function(opts) {
+            	console.log("Main.js onRefreshHistory()");
                 if (!this.appOptions.canUseHistory) return;
 
                 this.loadMask && this.loadMask.hide();
@@ -644,11 +653,14 @@ define([
             },
 
             generateUserColor: function(color) {
+              console.log("Main.js generateUserColor()");
               return"#"+("000000"+color.toString(16)).substr(-6);
             },
 
 
             disableEditing: function(disable) {
+            	console.log("Main.js disableEditing()");
+                
                 var app = this.getApplication();
                 if (this.appOptions.canEdit && this.editorConfig.mode !== 'view') {
                     app.getController('RightMenu').getView('RightMenu').clearSelection();
@@ -661,6 +673,7 @@ define([
             },
 
             goBack: function(current) {
+            	console.log("Main.js goBack()");
                 if ( !Common.Controllers.Desktop.process('goback') ) {
                     if (this.appOptions.customization.goback.requestClose && this.appOptions.canRequestClose) {
                         Common.Gateway.requestClose();
@@ -677,6 +690,7 @@ define([
             },
 
             onEditComplete: function(cmp) {
+            	console.log("Main.js onEditComplete()");
 //                this.getMainMenu().closeFullScaleMenu();
                 var application = this.getApplication(),
                     toolbarController = application.getController('Toolbar'),
@@ -707,12 +721,14 @@ define([
             },
 
             onLongActionBegin: function(type, id) {
+            	console.log("Main.js onLongActionBegin()");
                 var action = {id: id, type: type};
                 this.stackLongActions.push(action);
                 this.setLongActionView(action);
             },
 
             onLongActionEnd: function(type, id) {
+            	console.log("Main.js onLongActionEnd()");
                 var action = {id: id, type: type};
                 this.stackLongActions.pop(action);
 
@@ -759,6 +775,7 @@ define([
             },
 
             setLongActionView: function(action) {
+            	console.log("Main.js setLongActionView()");
                 var title = '', text = '', force = false;
 
                 switch (action.id) {
@@ -871,6 +888,7 @@ define([
             },
 
             onApplyEditRights: function(data) {
+            	console.log("Main.js onApplyEditRights()");
                 this.getApplication().getController('Statusbar').setStatusCaption('');
 
                 if (data && !data.allowed) {
@@ -882,6 +900,7 @@ define([
             },
 
             onDocumentContentReady: function() {
+            	console.log("Main.js onDocumentContentReady()");
                 if (this._isDocReady)
                     return;
 
@@ -1096,6 +1115,7 @@ define([
             },
 
             applyLicense: function() {
+            	console.log("Main.js applyLicense()");
                 if (this._state.licenseType) {
                     var license = this._state.licenseType,
                         buttons = ['ok'],
@@ -1146,6 +1166,7 @@ define([
             },
 
             onOpenDocument: function(progress) {
+            	console.log("Main.js onOpenDocument()");
                 var elem = document.getElementById('loadmask-text');
                 var proc = (progress.asc_getCurrentFont() + progress.asc_getCurrentImage())/(progress.asc_getFontsCount() + progress.asc_getImagesCount());
                 proc = this.textLoadingDocument + ': ' + Math.min(Math.round(proc*100), 100) + '%';
@@ -1153,6 +1174,7 @@ define([
             },
 
             onEditorPermissions: function(params) {
+            	console.log("Main.js onEditorPermissions()");
                 var licType = params.asc_getLicenseType();
                 if (Asc.c_oLicenseResult.Expired === licType || Asc.c_oLicenseResult.Error === licType || Asc.c_oLicenseResult.ExpiredTrial === licType) {
                     Common.UI.warning({
@@ -1261,6 +1283,7 @@ define([
             },
 
             applyModeCommonElements: function() {
+            	console.log("Main.js applyModeCommonElements()");
                 window.editor_elements_prepared = true;
 
                 var app             = this.getApplication(),
@@ -1282,6 +1305,7 @@ define([
             },
 
             applyModeEditorElements: function() {
+            	console.log("Main.js applyModeEditorElements()");
                 /** coauthoring begin **/
                 this.contComments.setMode(this.appOptions);
                 this.contComments.setConfig({config: this.editorConfig}, this.api);
@@ -1359,6 +1383,7 @@ define([
             },
 
             onExternalMessage: function(msg) {
+            	console.log("Main.js onExternalMessage()");
                 if (msg && msg.msg) {
                     msg.msg = (msg.msg).toString();
                     this.showTips([msg.msg.charAt(0).toUpperCase() + msg.msg.substring(1)]);
@@ -1368,6 +1393,7 @@ define([
             },
 
             onError: function(id, level, errData) {
+            console.log("Main.js onError()");
                 if (id == Asc.c_oAscError.ID.LoadingScriptError) {
                     this.showTips([this.scriptLoadError]);
                     this.tooltip && this.tooltip.getBSTip().$tip.css('z-index', 10000);
@@ -1617,6 +1643,7 @@ define([
             },
 
             onCoAuthoringDisconnect: function() {
+            	console.log("Main.js onCoAuthoringDisconnect()");
                 this.getApplication().getController('Viewport').getView('Viewport').setMode({isDisconnected:true});
                 appHeader.setCanRename(false);
                 this.appOptions.canRename = false;
@@ -1624,6 +1651,7 @@ define([
             },
 
             showTips: function(strings) {
+            	console.log("Main.js showTips()");
                 var me = this;
                 if (!strings.length) return;
                 if (typeof(strings)!='object') strings = [strings];
@@ -1656,6 +1684,7 @@ define([
             },
 
             updateWindowTitle: function(force) {
+            	console.log("Main.js updateWindowTitle()");
                 var isModified = this.api.isDocumentModified();
                 if (this._state.isDocModified !== isModified || force) {
                     var title = this.defaultTitleText;
@@ -1682,6 +1711,7 @@ define([
             },
 
             onDocumentModifiedChanged: function() {
+            	console.log("Main.js onDocumentModifiedChanged()");
                 var isModified = this.api.asc_isDocumentCanSave();
                 if (this._state.isDocModified !== isModified) {
                     Common.Gateway.setDocumentModified(this.api.isDocumentModified());
