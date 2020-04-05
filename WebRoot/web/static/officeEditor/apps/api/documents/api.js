@@ -894,6 +894,7 @@
     }
 
     function postMessage(wnd, msg) {
+    	console.log("postMessage() msg:",msg);
         if (wnd && wnd.postMessage && window.JSON) {
             // TODO: specify explicit origin
             wnd.postMessage(window.JSON.stringify(msg), "*");
