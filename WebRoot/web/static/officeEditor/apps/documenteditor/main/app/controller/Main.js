@@ -389,7 +389,7 @@ define([
             },
 
             loadDocument: function(data) {
-            	console.log("Main.js loadDocument()");
+            	console.log("Main.js loadDocument() data:",data);
                 this.permissions = {};
                 this.document = data.doc;
 
@@ -432,6 +432,7 @@ define([
                 if (data.doc) {
                     appHeader.setDocumentCaption(data.doc.title);
                 }
+            	console.log("Main.js loadDocument() End");
             },
 
             onProcessSaveResult: function(data) {
@@ -1735,6 +1736,7 @@ define([
             },
 
             onDocumentCanSaveChanged: function (isCanSave) {
+            	console.log("Main.js onDocumentCanSaveChanged()");
                 var toolbarView = this.getApplication().getController('Toolbar').getView();
 
                 if (toolbarView && this.api && !toolbarView._state.previewmode) {
@@ -1746,6 +1748,7 @@ define([
             },
 
             onContextMenu: function(event){
+            	console.log("Main.js onContextMenu()");
                 var canCopyAttr = event.target.getAttribute('data-can-copy'),
                     isInputEl   = (event.target instanceof HTMLInputElement) || (event.target instanceof HTMLTextAreaElement);
 
@@ -1758,6 +1761,7 @@ define([
             },
 
             onBeforeUnload: function() {
+            	console.log("Main.js onBeforeUnload()");
                 Common.localStorage.save();
 
                 if (this.api.isDocumentModified()) {
@@ -1772,10 +1776,12 @@ define([
             },
 
             onUnload: function() {
+            	console.log("Main.js onBeforeUnload()");
                 if (this.continueSavingTimer) clearTimeout(this.continueSavingTimer);
             },
 
             hidePreloader: function() {
+            	console.log("Main.js hidePreloader()");
                 var promise;
                 if (!this._state.customizationDone) {
                     this._state.customizationDone = true;
@@ -1802,12 +1808,15 @@ define([
             },
 
             onDownloadUrl: function(url) {
+            	console.log("Main.js onDownloadUrl()");
                 if (this._state.isFromGatewayDownloadAs)
                     Common.Gateway.downloadAs(url);
                 this._state.isFromGatewayDownloadAs = false;
             },
 
             onUpdateVersion: function(callback) {
+            	console.log("Main.js onUpdateVersion()");
+                
                 var me = this;
                 me.needToUpdateVersion = true;
                 me.onLongActionEnd(Asc.c_oAscAsyncActionType['BlockInteraction'], LoadingDocument);
@@ -1825,6 +1834,7 @@ define([
             },
 
             onServerVersion: function(buildVersion) {
+            	console.log("Main.js onServerVersion()");
                 if (this.changeServerVersion) return true;
 
                 if (DocsAPI.DocEditor.version() !== buildVersion && !window.compareVersions) {
@@ -1854,6 +1864,7 @@ define([
 //            },
 
             onCollaborativeChanges: function() {
+            	console.log("Main.js onCollaborativeChanges()");
                 if (this._state.hasCollaborativeChanges) return;
                 this._state.hasCollaborativeChanges = true;
                 if (this.appOptions.isEdit)
@@ -1862,6 +1873,7 @@ define([
             /** coauthoring end **/
 
             synchronizeChanges: function() {
+            	console.log("Main.js synchronizeChanges()");
                 this.getApplication().getController('Statusbar').synchronizeChanges();
                 this.getApplication().getController('Common.Controllers.ReviewChanges').synchronizeChanges();
                 this.getApplication().getController('DocumentHolder').getView().hideTips();
@@ -1872,6 +1884,7 @@ define([
             },
 
             initNames: function() {
+            	console.log("Main.js initNames()");
                 this.shapeGroupNames = [
                     this.txtBasicShapes,
                     this.txtFiguredArrows,
@@ -1886,6 +1899,7 @@ define([
             },
 
             fillAutoShapes: function(groupNames, shapes){
+            	console.log("Main.js fillAutoShapes()");
                 if (_.isEmpty(shapes) || _.isEmpty(groupNames) || shapes.length != groupNames.length)
                     return;
 
@@ -1929,6 +1943,7 @@ define([
             },
 
             fillTextArt: function(shapes){
+            	console.log("Main.js fillTextArt()");
                 var arr = [],
                     artStore = this.getCollection('Common.Collections.TextArt');
 
@@ -1949,6 +1964,7 @@ define([
             },
 
             updateThemeColors: function() {
+            	console.log("Main.js updateThemeColors()");
                 var me = this;
                 setTimeout(function(){
                     me.getApplication().getController('RightMenu').UpdateThemeColors();
@@ -1959,6 +1975,7 @@ define([
             },
 
             onSendThemeColors: function(colors, standart_colors) {
+            	console.log("Main.js onSendThemeColors()");
                 Common.Utils.ThemeColor.setColors(colors, standart_colors);
                 if (window.styles_loaded) {
                     this.updateThemeColors();
@@ -1970,6 +1987,7 @@ define([
             },
 
             loadLanguages: function(apiLangs) {
+            	console.log("Main.js loadLanguages()");
                 var langs = [], info,
                     allLangs = Common.util.LanguageInfo.getLanguages();
                 for (var code in allLangs) {
@@ -1995,6 +2013,7 @@ define([
             },
 
             setLanguages: function() {
+            	console.log("Main.js setLanguages()");
                 if (!this.languages || this.languages.length<1) {
                     this.loadLanguages([]);
                 }
@@ -2006,26 +2025,32 @@ define([
             },
 
             onInsertTable:  function() {
+            	console.log("Main.js onInsertTable()");
                 this.getApplication().getController('RightMenu').onInsertTable();
             },
 
             onInsertImage:  function() {
+            	console.log("Main.js onInsertImage()");
                 this.getApplication().getController('RightMenu').onInsertImage();
             },
 
             onInsertChart:  function() {
+            	console.log("Main.js onInsertChart()");
                 this.getApplication().getController('RightMenu').onInsertChart();
             },
 
             onInsertShape:  function() {
+            	console.log("Main.js onInsertShape()");
                 this.getApplication().getController('RightMenu').onInsertShape();
             },
 
             onInsertTextArt:  function() {
+            	console.log("Main.js onInsertTextArt()");
                 this.getApplication().getController('RightMenu').onInsertTextArt();
             },
 
             unitsChanged: function(m) {
+            	console.log("Main.js unitsChanged()");
                 var value = Common.localStorage.getItem("de-settings-unit");
                 value = (value!==null) ? parseInt(value) : Common.Utils.Metric.getDefaultMetric();
                 Common.Utils.Metric.setCurrentMetric(value);
@@ -2036,6 +2061,7 @@ define([
             },
 
             onAdvancedOptions: function(type, advOptions, mode, formatOptions) {
+            	console.log("Main.js onAdvancedOptions()");
                 if (this._state.openDlg) return;
 
                 var me = this;
@@ -2095,6 +2121,7 @@ define([
             },
 
             onTryUndoInFastCollaborative: function() {
+            	console.log("Main.js onTryUndoInFastCollaborative()");
                 if (!Common.localStorage.getBool("de-hide-try-undoredo"))
                     Common.UI.info({
                         width: 500,
@@ -2121,6 +2148,7 @@ define([
             },
 
             onAuthParticipantsChanged: function(users) {
+            	console.log("Main.js onAuthParticipantsChanged()");
                 var length = 0;
                 _.each(users, function(item){
                     if (!item.asc_getView())
@@ -2130,6 +2158,7 @@ define([
             },
 
             applySettings: function() {
+            	console.log("Main.js applySettings()");
                 if (this.appOptions.isEdit && !this.appOptions.isOffline && this.appOptions.canCoAuthoring) {
                     var oldval = this._state.fastCoauth;
                     this._state.fastCoauth = Common.localStorage.getBool("de-settings-coauthmode", true);
@@ -2144,11 +2173,13 @@ define([
             },
 
             onDocumentName: function(name) {
+            	console.log("Main.js onDocumentName()");
                 appHeader.setDocumentCaption(name);
                 this.updateWindowTitle(true);
             },
 
             onMeta: function(meta) {
+            	console.log("Main.js onMeta()");
                 appHeader.setDocumentCaption(meta.title);
                 this.updateWindowTitle(true);
                 this.document.title = meta.title;
@@ -2161,6 +2192,7 @@ define([
             },
 
             onPrint: function() {
+            	console.log("Main.js onPrint()");
                 if (!this.appOptions.canPrint || this.isModalShowed) return;
                 
                 if (this.api)
@@ -2169,6 +2201,7 @@ define([
             },
 
             onPrintUrl: function(url) {
+            	console.log("Main.js onPrintUrl()");
                 if (this.iframePrint) {
                     this.iframePrint.parentNode.removeChild(this.iframePrint);
                     this.iframePrint = null;
@@ -2198,20 +2231,24 @@ define([
             },
 
             onClearDummyComment: function() {
+            	console.log("Main.js onClearDummyComment()");
                 this.dontCloseDummyComment = false;
             },
 
             onShowDummyComment: function() {
+            	console.log("Main.js onShowDummyComment()");
                 this.beforeShowDummyComment = true;
             },
 
             DisableMailMerge: function() {
+            	console.log("Main.js DisableMailMerge()");
                 this.appOptions.mergeFolderUrl = "";
                 var toolbarController   = this.getApplication().getController('Toolbar');
                 toolbarController && toolbarController.DisableMailMerge();
             },
 
             DisableVersionHistory: function() {
+            	console.log("Main.js DisableVersionHistory()");
                 this.editorConfig.canUseHistory = false;
                 this.appOptions.canUseHistory = false;
             },
