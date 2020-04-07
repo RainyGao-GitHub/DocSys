@@ -201,7 +201,9 @@
     	var _self = this,
             _config = config || {};
 
+        //_config不存在的参数用默认参数填充
         extend(_config, DocsAPI.DocEditor.defaultConfig);
+        //设置_config的其他参数
         _config.editorConfig.canUseHistory = _config.events && !!_config.events.onRequestHistory;
         _config.editorConfig.canHistoryClose = _config.events && !!_config.events.onRequestHistoryClose;
         _config.editorConfig.canHistoryRestore = _config.events && !!_config.events.onRequestRestore;
@@ -388,10 +390,14 @@
             return true;
         };
 
+        //
         (function() {
             var result = /[\?\&]placement=(\w+)&?/.exec(window.location.search);
+            console.log("DocsAPI.DocEditor() result:", result);
+            
             if (!!result && result.length) {
                 if (result[1] == 'desktop') {
+                	console.log("DocsAPI.DocEditor() result[1]:", result[1]);
                     _config.editorConfig.targetApp = result[1];
                     // _config.editorConfig.canBackToFolder = false;
                     if (!_config.editorConfig.customization) _config.editorConfig.customization = {};
@@ -403,6 +409,7 @@
             }
         })();
 
+        //检查配置并生成iframe来加载对应的编辑器页面
         var target = document.getElementById(placeholderId),
             iframe;
 
@@ -411,9 +418,11 @@
 
         if (target && _checkConfigParams()) {
             iframe = createIframe(_config);
+            //这里应该是动态加载页面的地方
             target.parentNode && target.parentNode.replaceChild(iframe, target);
             var _msgDispatcher = new MessageDispatcher(_onMessage, this);
         }
+        
         
         console.log("DocsAPI.DocEditor() iframe:", iframe);       
 
