@@ -3,16 +3,18 @@
 <script>
 var OfficeEditor = (function () {
 	var editor = null;
+	var doc = null;
 	
 	function officeEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
 	{
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
+		doc = Input_doc;
         var config = {
     		    "document": {
     		        "fileType": "docx",
-    		        "key": "Khirz6zTPdfd7",
-    		        "title": "Example Document Title.docx",
-    		        "url": "https://example.com/url-to-example-document.docx"
+    		        "key": doc.docId+"",
+    		        "title": doc.name,
+    		        "url": "DocSystem/"+doc.path+doc.name
     		    },
     		    "documentType": "text"
     		};
