@@ -145,6 +145,7 @@
     </style>
 
     <script>
+    	console.log("static/officeEditor/apps/documenteditor/main/index.html");
         document.getElementsByTagName('html')[0].setAttribute('style', 'zoom: ' + 1 / (window.devicePixelRatio < 2 ? window.devicePixelRatio : window.devicePixelRatio / 2) + ';');
 
         var userAgent = navigator.userAgent.toLowerCase(),
@@ -194,13 +195,18 @@
                     .replace(/>/g, '&gt;');
         }
 
+    	console.log("getUrlParams()");
         var params = getUrlParams(),
             lang = (params["lang"] || 'en').split(/[\-\_]/)[0],
             logo = params["headerlogo"] ? encodeUrlParam(params["headerlogo"]) : null;
 
-        window.frameEditorId = params["frameEditorId"];
+        console.log("params", params);
 
-        if ( window.AscDesktopEditor ) {
+        //设置frameEditorId
+        window.frameEditorId = params["frameEditorId"];
+		
+    	console.log("window.AscDesktopEditor", window.AscDesktopEditor);
+		if ( window.AscDesktopEditor ) {
             window.on_native_message = function (cmd, param) {
                 !window.native_message_cmd && (window.native_message_cmd = []);
                 window.native_message_cmd[cmd] = param;
@@ -220,6 +226,9 @@
             compact = params["compact"] == 'true',
             view = params["mode"] == 'view';
 
+        console.log("params", params);
+		
+        //调整显示
         (compact || view || notoolbar) && document.querySelector('.brendpanel > :nth-child(2)').remove();
 
         if (compact || view) {
@@ -247,6 +256,7 @@
     </script>
 
     <script>
+    	console.log("设置 window.requireTimeourError");
         window.requireTimeourError = function(){
             var reqerr;
 
@@ -258,18 +268,22 @@
 
             return reqerr;
         };
-
+		
+        //启动超时定时器
         var requireTimeoutID = setTimeout(function(){
             window.alert(window.requireTimeourError());
             window.location.reload();
         }, 30000);
 
+        //require.js用来处理异步加载，如果加载成功则清楚定时器
         var require = {
             waitSeconds: 30,
             callback: function(){
+            	 console.log("clearTimeout(requireTimeoutID)");
                 clearTimeout(requireTimeoutID);
             }
         };
+        console.log("require:",require);
     </script>
 
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="60"><symbol id="svg-btn-comments" viewBox="0 0 20 20"><path d="M16 4H4c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1h2l2 2h1l2-2h5c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zm0 10h-5.414l-2 2h-.172l-2-2H4V5h12v9z"/><path d="M6 7h8v1H6zM6 9h8v1H6zM6 11h8v1H6z"/></symbol><symbol id="svg-btn-goback" viewBox="0 20 20 20"><path d="M17 26h-6v-1c0-.553-.448-1-1-1H3c-.552 0-1 .447-1 1v11c0 .553.448 1 1 1h14c.552 0 1-.447 1-1v-9c0-.553-.448-1-1-1zm0 10H3V25h7v1c0 .553.448 1 1 1h6v9z"/><path d="M13 31l-3-3v2H6v2h4v2z"/></symbol><symbol id="svg-btn-users" viewBox="0 0 20 20"><path d="M7 3.999c1.103 0 2 .897 2 2C9 7.103 8.103 8 7 8s-2-.897-2-2.001c0-1.103.897-2 2-2m0-1c-1.657 0-3 1.344-3 3S5.343 9 7 9s3-1.345 3-3.001-1.343-3-3-3zM7 11.666c4.185 0 4.909 2.268 5 2.642V16H2v-1.688c.1-.407.841-2.646 5-2.646m0-1c-5.477 0-6 3.545-6 3.545V17h12v-2.789s-.523-3.545-6-3.545z"/><circle cx="14.5" cy="8.001" r="2.5"/><path d="M14.5 11.863c-.566 0-1.056.059-1.49.152.599.726.895 1.481.979 2.049l.011.074V17h5v-2.263s-.393-2.874-4.5-2.874z"/></symbol><symbol id="svg-btn-download" viewBox="0 0 20 20"><path d="M4 16h12v1H4zM14.243 7.585L11 10.829V4H9v6.827L5.758 7.585 4.344 9l5.657 5.656L15.657 9z"/></symbol><symbol id="svg-btn-print" viewBox="0 0 20 20"><path d="M4 8h1v1H4z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 4H6v2h8V4zM5 4v2H3c-.5523 0-1 .4477-1 1v6h3v2c0 .5523.4477 1 1 1h8c.5523 0 1-.4477 1-1v-2h3V7c0-.5523-.4477-1-1-1h-2V4c0-.5523-.4477-1-1-1H6c-.5523 0-1 .4477-1 1zm10 8h2V7H3v5h2v-1c0-.5523.4477-1 1-1h8c.5523 0 1 .4477 1 1v1zm-9-1h8v4H6v-4z"/></symbol><symbol id="svg-btn-edit" viewBox="0 0 20 20"><path d="M11.738 7.891l-5.304 5.304-1.414 1.664L4.5 17.5H7l1.555-1.934 5.304-5.429zM15.273 8.598l-2.121-2.121 1.414-1.414a.9989.9989 0 011.414 0l.707.707a.9989.9989 0 010 1.414l-1.414 1.414z"/></symbol><symbol id="svg-btn-save" viewBox="0 0 20 20"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 15H4V4h2v3h6V4h.5858L15 6.4142V15zM11 4h-1v2h1V4zM4 3h9l3 3v9c0 .5523-.4477 1-1 1H4c-.5523 0-1-.4477-1-1V4c0-.5523.4477-1 1-1z"/><path d="M6 10h7v1H6zM6 12h7v1H6z"/></symbol><symbol id="svg-btn-save-coauth" viewBox="0 0 20 20"><path fill="#fff" d="M6 10h3v1H6zM6 12h2v1H6z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16 12.9996c0-1.6569-1.3431-3-3-3s-3 1.3431-3 3c0 1.3062.8348 2.4174 2 2.8293v1.0447c-1.7252-.4441-3-2.0102-3-3.874 0-2.2092 1.7909-4 4-4 2.2091 0 4 1.7908 4 4 0 1.1949-.524 2.2675-1.3547 3.0004H17v1h-3v-3h1v1.2357c.6137-.5493 1-1.3476 1-2.2361z" fill="#fff"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8 15H4V4h2v3h6V4h.5858L15 6.4142V8h1V6l-3-3H4c-.5523 0-1 .4477-1 1v11c0 .5523.4477 1 1 1h4v-1zm2-11h1v2h-1V4z" fill="#fff"/></symbol><symbol id="svg-btn-save-sync" viewBox="0 0 20 20"><path fill="#fff" d="M6 10h3v1H6zM6 12h3v1H6z"/><rect x="10" y="10" width="9" height="7" rx="1" fill="#FFD114"/><path fill="#444" d="M12 12h5v1h-5zM12 14h5v1h-5z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 15h5v1H4c-.5523 0-1-.4477-1-1V4c0-.5523.4477-1 1-1h9l3 3v3h-1V6.4142L12.5858 4H12v3H6V4H4v11zm6-11h1v2h-1V4z" fill="#fff"/></symbol><symbol id="svg-btn-undo" viewBox="0 0 20 20"><path d="M11.355 7.625c-1.965 0-3.864.777-5.151 2.033L4 7.625V14h6.407l-2.091-2.219c.845-1.277 2.313-2.215 3.99-2.215 2.461 0 5.405 1.78 5.694 4.119-.399-3.394-3.034-6.06-6.645-6.06z"/></symbol><symbol id="svg-btn-redo" viewBox="0 0 20 20"><path d="M10.645 7.625c1.965 0 3.863.777 5.15 2.033L18 7.625V14h-6.406l2.09-2.219c-.845-1.277-2.313-2.215-3.989-2.215-2.461 0-5.405 1.78-5.694 4.119.398-3.394 3.033-6.06 6.644-6.06z"/></symbol><symbol id="svg-btn-options" viewBox="0 0 20 20"><path d="M3 6h14v1H3zM3 10h14v1H3zM3 14h14v1H3z"/></symbol><symbol id="svg-btn-undock" viewBox="0 0 20 20"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 7h3v2H3v7h9v-2h1v2c0 .5523-.4477 1-1 1H3c-.5523 0-1-.4477-1-1V8c0-.5523.4477-1 1-1z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M17 5H8v7h9V5zM7 4c0-.5523.4477-1 1-1h9c.5523 0 1 .4477 1 1v8c0 .5523-.4477 1-1 1H8c-.5523 0-1-.4477-1-1V4z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9.6464 10.6464l4.5-4.5.7072.7071-4.5 4.5-.7072-.7071z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14 6h-3v1h3v3h1V6h-1z"/></symbol><symbol id="svg-btn-align-left" viewBox="0 0 20 20"><path d="M16 5H4v1h12V5zM11 7H4v1h7V7zM14 9H4v1h10V9zM11 11H4v1h7v-1zM11 13H4v1h7v-1zM16 15H4v1h12v-1z"/></symbol><symbol id="svg-btn-align-center" viewBox="0 0 20 20"><path d="M16 5H4v1h12V5zM13 7H7v1h6V7zM15 9H5v1h10V9zM13 11H7v1h6v-1zM13 13H7v1h6v-1zM16 15H4v1h12v-1z"/></symbol><symbol id="svg-btn-align-right" viewBox="0 0 20 20"><path d="M16 5H4v1h12V5zM16 7H9v1h7V7zM16 9H6v1h10V9zM16 11H9v1h7v-1zM16 13H9v1h7v-1zM16 15H4v1h12v-1z"/></symbol><symbol id="svg-btn-align-just" viewBox="0 0 20 20"><path d="M16 15H4v1h12v-1zM16 13H4v1h12v-1zM16 11H4v1h12v-1zM16 9H4v1h12V9zM16 7H4v1h12V7zM16 5H4v1h12V5z"/></symbol><symbol id="svg-btn-hidenchars" viewBox="0 0 20 20"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.5 11c.1698 0 .3367-.0121.5-.0354V16h1V5h2v11h1V5h1V4H9v.0354A3.531 3.531 0 008.5 4C6.567 4 5 5.567 5 7.5S6.567 11 8.5 11z"/></symbol><symbol id="svg-btn-setmarkers" viewBox="0 0 20 20"><circle cx="5.5" cy="5.5" r="1.5"/><circle cx="5.5" cy="10.5" r="1.5"/><circle cx="5.5" cy="15.5" r="1.5"/><path d="M16 5H8v1h8V5zM16 10H8v1h8v-1zM16 15H8v1h8v-1z"/></symbol><symbol id="svg-btn-numbering" viewBox="0 0 20 20"><path d="M16 5H8v1h8V5zM16 10H8v1h8v-1zM16 15H8v1h8v-1zM7 12v-1H5l2-2-1-1H4v1h2l-2 2v1h3zM5 7h1V3H4v1h1v3zM6 16H4v1h2l1-1-.5-1 .5-1-1-1H4v1h2l-.5 1 .5 1z"/></symbol><symbol id="svg-btn-multilevels" viewBox="0 0 20 20"><circle cx="4.5" cy="5.5" r="1.5"/><circle cx="6.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="15.5" r="1.5"/><path d="M17 5H7v1h10V5zM17 10H9v1h8v-1zM17 15h-6v1h6v-1z"/></symbol><symbol id="svg-btn-decoffset" viewBox="0 0 20 20"><path d="M16 5H4v1h12V5zM16 7h-6v1h6V7zM16 9h-6v1h6V9zM16 11h-6v1h6v-1zM16 13h-6v1h6v-1zM16 15H4v1h12v-1z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5.7071 10l1.6465-1.6464-.7072-.7071-2.5 2.5-.3535.3535.3535.3536 2.5 2.5.7072-.7071L5.707 11H9v-1H5.7071z"/></symbol><symbol id="svg-btn-incoffset" viewBox="0 0 20 20"><path d="M16 5H4v1h12V5zM16 7h-6v1h6V7zM16 9h-6v1h6V9zM16 11h-6v1h6v-1zM16 13h-6v1h6v-1zM16 15H4v1h12v-1z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M7.2929 11l-1.6465 1.6465.7072.7071 2.5-2.5.3535-.3536-.3536-.3535-2.5-2.5-.707.707L7.2928 10H4v1h3.2929z"/></symbol><symbol id="svg-btn-linespace" viewBox="0 0 20 20"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.6465 6.6465l2.5-2.5L6.5 3.793l.3536.3535 2.5 2.5-.7072.7071L7 5.7072v8.5858l1.6464-1.6465.7072.7071-2.5 2.5-.3536.3536-.3536-.3536-2.5-2.5.7072-.7071L6 14.293V5.7072L4.3536 7.3536l-.7071-.707z"/><path d="M17 5h-7v1h7V5zM17 8h-7v1h7V8zM17 11h-7v1h7v-1zM17 14h-7v1h7v-1z"/></symbol><symbol id="svg-btn-insertimage" viewBox="0 0 28 28"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 5h18v13.2928l-6.5-6.5-6 6-2-2L5 19.2929V5zm0 15.7071V23h18v-3.2929l-6.5-6.5-6 6-2-2-3.5 3.5zM4 5c0-.5523.4477-1 1-1h18c.5523 0 1 .4477 1 1v18c0 .5523-.4477 1-1 1H5c-.5523 0-1-.4477-1-1V5z"/><circle cx="9" cy="9" r="1.5"/></symbol><symbol id="svg-btn-insertchart" viewBox="0 0 28 28"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 24h4v-6H4v6zm4 1c.6 0 1-.4 1-1v-6c0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1v6c0 .6.4 1 1 1h4zM15.9936 24A.4121.4121 0 0016 23.9231V12.0769A.4121.4121 0 0015.9936 12h-3.9872a.4121.4121 0 00-.0064.0769v11.8462c0 .0338.003.0591.0064.0769h3.9872zM16 25c.6 0 1-.4308 1-1.0769V12.0769C17 11.4308 16.6 11 16 11h-4c-.6 0-1 .4308-1 1.0769v11.8462C11 24.5692 11.4 25 12 25h4zM23.9892 24A.4373.4373 0 0024 23.8947V5.1053A.4373.4373 0 0023.9892 5h-3.9784A.4373.4373 0 0020 5.1053v18.7894c0 .0494.0053.0833.0108.1053h3.9784zm-.0123.0335s.0002-.0005.0009-.0014zm-3.9538 0l-.0009-.0014zm0-19.067s-.0002.0005-.0009.0014zm3.9538 0l.0009.0014zM24 25c.6 0 1-.4421 1-1.1053V5.1053C25 4.442 24.6 4 24 4h-4c-.6 0-1 .4421-1 1.1053v18.7894C19 24.5579 19.4 25 20 25h4z"/></symbol><symbol id="svg-btn-insertshape" viewBox="0 0 28 28"><path d="M5 17V5h12v3h1V5c0-.6-.4-1-1-1H5c-.6 0-1 .4-1 1v12c0 .6.4 1 1 1h3v-1H5z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M16.5 23c3.5899 0 6.5-2.9101 6.5-6.5S20.0899 10 16.5 10 10 12.9101 10 16.5s2.9101 6.5 6.5 6.5zm0 1c4.1421 0 7.5-3.3579 7.5-7.5S20.6421 9 16.5 9 9 12.3579 9 16.5s3.3579 7.5 7.5 7.5z"/></symbol><symbol id="svg-btn-inserttable" viewBox="0 0 28 28"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 8c0-1.1046.8954-2 2-2h18c1.1046 0 2 .8954 2 2v12c0 1.1046-.8954 2-2 2H5c-1.1046 0-2-.8954-2-2v-7-5zm1 9h6v-3H4v3zm0 1h6v3H5c-.5523 0-1-.4477-1-1v-2zm13 3h-6v-3h6v3zm1 0h5c.5523 0 1-.4477 1-1v-2h-6v3zm0-4h6v-3h-6v3zm-1-3h-6v3h6v-3zm0-1h-6v-3h6v3zm1 0h6v-3h-6v3zm-8-3v3H4v-3h6z"/></symbol><symbol id="svg-btn-editheader" viewBox="0 0 28 28"><path d="M20 20H8v3h12v-3zM20 5H8v3h12V5z"/><path d="M22 4v20H6V4h16zm0-1H6c-.6 0-1 .4-1 1v20c0 .6.4 1 1 1h16c.6 0 1-.4 1-1V4c0-.6-.5-1-1-1z"/></symbol><symbol id="svg-btn-pagebreak" viewBox="0 0 28 28"><path d="M24 16h-1v-1h1v1zm-2 0h-1v-1h1v1zm-2 0h-1v-1h1v1zm-2 0h-1v-1h1v1zm-2 0h-1v-1h1v1zm-2 0h-1v-1h1v1zm-2 0h-1v-1h1v1zm-2 0H9v-1h1v1zm-2 0H7v-1h1v1zm-2 0H5v-1h1v1zm-2 0H3v-1h1v1zM16 8H8v1h8V8zM20 5H8v1h12V5zM20 22H8v1h12v-1z"/><path d="M22 3v9H6V3H5v9c0 .6.4 1 1 1h16c.6 0 1-.4 1-1V3h-1zM6 19h16v6h1v-6c0-.6-.4-1-1-1H6c-.6 0-1 .4-1 1v6h1v-6z"/></symbol></svg>
