@@ -2186,8 +2186,12 @@ if (process.env.NODE_ENV !== 'production') {
   debug = require('debug')('sockjs-client:sender-receiver');
 }
 
+console.log("sockjs.js debug:", debug);
+
 function SenderReceiver(transUrl, urlSuffix, senderFunc, Receiver, AjaxObject) {
   var pollUrl = urlUtils.addPath(transUrl, urlSuffix);
+  console.log("sockjs.js SenderReceiver() pollUrl:", pollUrl);
+  
   debug(pollUrl);
   var self = this;
   BufferedSender.call(this, transUrl, senderFunc);

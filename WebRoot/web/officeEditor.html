@@ -9,12 +9,13 @@ var OfficeEditor = (function () {
 	{
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
 		doc = Input_doc;
+		var docLink = getDocLink(doc);
         var config = {
     		    "document": {
     		        "fileType": "docx",
     		        "key": doc.docId+"",
     		        "title": doc.name,
-    		        "url": "DocSystem/"+doc.path+doc.name
+    		        "url": docLink,
     		    },
     		    "documentType": "text"
     		};

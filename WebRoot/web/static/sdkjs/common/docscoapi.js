@@ -46,6 +46,7 @@
 
   // Класс надстройка, для online и offline работы
   function CDocsCoApi(options) {
+	  console.log("CDocsCoApi() options:",options);
     this._CoAuthoringApi = new DocsCoApi();
     this._onlineWork = false;
 
@@ -1542,9 +1543,11 @@
     //TODO: Add errors
   };
   DocsCoApi.prototype._onAuthChanges = function(data) {
+	  console.log("DocsCoApi.prototype._onAuthChanges");
     this._authChanges.push(data["changes"]);
   };
   DocsCoApi.prototype._updateAuthChanges = function() {
+	  console.log("DocsCoApi.prototype._updateAuthChanges");
     //todo apply changes with chunk on arrival
     var changesIndex = 0, i, changes, data, indexDiff;
     for (i = 0; i < this._authChanges.length; ++i) {
@@ -1570,7 +1573,8 @@
   };
 
   DocsCoApi.prototype.init = function(user, docid, documentCallbackUrl, token, editorType, documentFormatSave, docInfo) {
-    this._user = user;
+	console.log("DocsCoApi.prototype.init");
+	this._user = user;
     this._docid = null;
     this._documentCallbackUrl = documentCallbackUrl;
     this._token = token;
@@ -1591,15 +1595,18 @@
     this._initSocksJs();
   };
   DocsCoApi.prototype.getDocId = function() {
+	console.log("DocsCoApi.prototype.getDocId");
     return this._docid;
   };
   DocsCoApi.prototype.setDocId = function(docid) {
+	console.log("DocsCoApi.prototype.setDocId");
     //todo возможно надо менять sockjs_url
     this._docid = docid;
     this.sockjs_url = AscCommon.getBaseUrl() + '../../../../doc/' + docid + '/c';
   };
   // Авторизация (ее нужно делать после выставления состояния редактора view-mode)
   DocsCoApi.prototype.auth = function(isViewer, opt_openCmd, opt_isIdle) {
+	console.log("DocsCoApi.prototype.auth");
     this._isViewer = isViewer;
     if (this._locks) {
       this.ownedLockBlocks = [];
@@ -1645,6 +1652,7 @@
   };
 
 	DocsCoApi.prototype._initSocksJs = function () {
+		console.log("DocsCoApi.prototype._initSocksJs");
 		var t = this;
 		var sockjs;
 		if (window['IS_NATIVE_EDITOR']) {
@@ -1671,6 +1679,8 @@
 	};
 
 	DocsCoApi.prototype._onServerOpen = function () {
+		console.log("DocsCoApi.prototype._onServerOpen");
+
 		if (this.reconnectTimeout) {
 			clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = null;
@@ -1681,6 +1691,7 @@
 		this.onFirstConnect();
 	};
 	DocsCoApi.prototype._onServerMessage = function (data) {
+		console.log("DocsCoApi.prototype._onServerMessage");
 		//TODO: add checks and error handling
 		//Get data type
 		var dataObject = JSON.parse(data);
@@ -1756,6 +1767,7 @@
 		}
 	};
 	DocsCoApi.prototype._onServerClose = function (evt) {
+		console.log("DocsCoApi.prototype._onServerClose");
 		if (ConnectionState.SaveChanges === this._state) {
 			// Мы сохраняли изменения и разорвалось соединение
 			this._isReSaveAfterAuth = true;
@@ -1782,10 +1794,12 @@
 		}
 	};
 	DocsCoApi.prototype._reconnect = function () {
+		console.log("DocsCoApi.prototype._reconnect");
 		delete this.sockjs;
 		this._initSocksJs();
 	};
 	DocsCoApi.prototype._tryReconnect = function () {
+		console.log("DocsCoApi.prototype._tryReconnect");
 		var t = this;
 		if (this.reconnectTimeout) {
 			clearTimeout(this.reconnectTimeout);

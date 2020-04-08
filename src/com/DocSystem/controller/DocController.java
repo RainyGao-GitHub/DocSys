@@ -2298,11 +2298,11 @@ public class DocController extends BaseController{
 		if(doc.getType() == 1)
 		{
 			String fileSuffix = getFileSuffix(name);
-			if(isPicture(fileSuffix) || isVideo(fileSuffix))
-			{
-				Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
-				rt.setDataEx(downloadDoc);
-			}
+			//if(isPicture(fileSuffix) || isVideo(fileSuffix))
+			//{
+			Doc downloadDoc = buildDownloadDocInfo(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+			rt.setDataEx(downloadDoc);
+			//}
 			
 			if(docType == 1 || docType == 3)	//docType { 1: get docText only, 2: get content only 3: get docText and content } 
 			{
