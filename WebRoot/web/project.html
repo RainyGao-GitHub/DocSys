@@ -1616,11 +1616,21 @@
 		{
 			//Do nothing
 		}
-		else if(isOffice(docInfo.fileSuffix) || isPdf(docInfo.fileSuffix)) //View Only
+		else if(isPdf(docInfo.fileSuffix))
 		{
-			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()
-			//showOfficeInDialog(docInfo); //这是个异步调用
-			showDocInOfficeEditor(docInfo, null, null);
+			shfiwOfficeInDialog(docInfo); //这是个异步调用
+		}
+		else if(isOffice(docInfo.fileSuffix)) //View Only
+		{
+			if(gOfficeEditorEnable)
+			{
+				showDocInOfficeEditor(docInfo, null, null);				
+			}
+			else
+			{
+				//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
+				showOfficeInDialog(docInfo); //这是个异步调用
+			}
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
