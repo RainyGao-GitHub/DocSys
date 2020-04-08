@@ -139,7 +139,7 @@
 <body class="-webkit-overflow-scrolling:touch;">
 <div class="m-manual manual-reader">
 
-    <header class="navbar navbar-static-top  smart-nav navbar-fixed-top" role="banner">
+    <header class="navbar navbar-static-top  smart-nav navbar-fixed-top" role="banner" style="z-index:300">
         <div class="container-fluid">
             <div class="navbar-header">
   				<a class="navbar-brand" style="font-weight: 600;" href="/DocSystem/web/projects.html"><i class="fa fa-paper-plane"></i> DocSys</a>
@@ -1974,13 +1974,27 @@
 			return;
 		}
 		
-		var docDataEx = gDocInfo.dataEx;
+ 		var docLink = getDocLink(gDocInfo);
+ 		if(docLink == null)
+ 		{
+ 			console.log("showVideoPreview() docLink is null");
+ 			$("#videoPreview").attr('src', "");
+ 			$("#videoPreview").hide();
+ 		}
+ 		else
+ 		{
+			console.log("showImgPreview() docLink:" + docLink);
+			$("#videoPreview").attr('src', docLink);
+			$("#videoPreview").show();
+ 		}
+	}
+	
+	function getDocLink(docInfo)
+	{
+		var docDataEx = docInfo.dataEx;
  		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 		{
-			console.log("showVideoPreview() dataEx is null");
-			$("#videoPreview").attr('src', "");
-			$("#videoPreview").hide();
-			return;
+			return null;
 		}
 		
 		var targetName = docDataEx.name;
@@ -1988,9 +2002,7 @@
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		console.log("showImgPreview() docLink:" + docLink);
-		$("#videoPreview").attr('src', docLink);
-		$("#videoPreview").show();
+		return docLink;
 	}
 	
 	function parseDocContent(content)
