@@ -333,12 +333,14 @@
         var _checkConfigParams = function() {
         	console.log("_checkConfigParams()");
             if (_config.document) {
+            	//文档的url不能为空，fileType、documentType必须是字符串
                 if (!_config.document.url || ((typeof _config.document.fileType !== 'string' || _config.document.fileType=='') &&
                                               (typeof _config.documentType !== 'string' || _config.documentType==''))) {
                     window.alert("One or more required parameter for the config object is not set");
                     return false;
                 }
 
+                //获取文档类型
                 var appMap = {
                         'text': 'docx',
                         'text-pdf': 'pdf',
@@ -346,6 +348,7 @@
                         'presentation': 'pptx'
                     }, app;
 
+                //根据documentType确定fileType
                 if (typeof _config.documentType === 'string' && _config.documentType != '') {
                     app = appMap[_config.documentType.toLowerCase()];
                     if (!app) {
@@ -356,9 +359,13 @@
                     }
                 }
 
+                //根据fileType确定documentType
                 if (typeof _config.document.fileType === 'string' && _config.document.fileType != '') {
-                    var type = /^(?:(xls|xlsx|ods|csv|xlst|xlsy|gsheet|xlsm|xlt|xltm|xltx|fods|ots)|(pps|ppsx|ppt|pptx|odp|pptt|ppty|gslides|pot|potm|potx|ppsm|pptm|fodp|otp)|(doc|docx|doct|odt|gdoc|txt|rtf|pdf|mht|htm|html|epub|djvu|xps|docm|dot|dotm|dotx|fodt|ott))$/
+                    //用正则表达式通过文件尾缀来获取文件类型
+                	var type = /^(?:(xls|xlsx|ods|csv|xlst|xlsy|gsheet|xlsm|xlt|xltm|xltx|fods|ots)|(pps|ppsx|ppt|pptx|odp|pptt|ppty|gslides|pot|potm|potx|ppsm|pptm|fodp|otp)|(doc|docx|doct|odt|gdoc|txt|rtf|pdf|mht|htm|html|epub|djvu|xps|docm|dot|dotm|dotx|fodt|ott))$/
                                     .exec(_config.document.fileType);
+                    
+                 
                     if (!type) {
                         window.alert("The \"document.fileType\" parameter for the config object is invalid. Please correct it.");
                         return false;
@@ -369,14 +376,17 @@
                     }
                 }
 
+                //根据文件类型设置是否能够使用文件历史
                 var type = /^(?:(pdf|djvu|xps))$/.exec(_config.document.fileType);
                 if (type && typeof type[1] === 'string') {
                     _config.editorConfig.canUseHistory = false;
                 }
-
+                
+                //文件未命名的处理
                 if (!_config.document.title || _config.document.title=='')
                     _config.document.title = 'Unnamed.' + _config.document.fileType;
 
+                //文件的key如果没有定义那么使用随机数
                 if (!_config.document.key) {
                     _config.document.key = 'xxxxxxxxxxxxxxxxxxxx'.replace(/[x]/g, function (c) {var r = Math.random() * 16 | 0; return r.toString(16);});
                 } else if (typeof _config.document.key !== 'string') {
@@ -390,20 +400,22 @@
             return true;
         };
 
-        //
         (function() {
+        	//window.location.search表示	从问号 (?) 开始的 URL（查询部分）
             var result = /[\?\&]placement=(\w+)&?/.exec(window.location.search);
             console.log("DocsAPI.DocEditor() result:", result);
             
             if (!!result && result.length) {
-                if (result[1] == 'desktop') {
+                //如果带有desktop参数，那么将targetApp设置成desktop
+            	if (result[1] == 'desktop') {
                 	console.log("DocsAPI.DocEditor() result[1]:", result[1]);
                     _config.editorConfig.targetApp = result[1];
                     // _config.editorConfig.canBackToFolder = false;
                     if (!_config.editorConfig.customization) _config.editorConfig.customization = {};
                     _config.editorConfig.customization.about = false;
                     _config.editorConfig.customization.compactHeader = false;
-
+                    	
+                    //执行AscDesktopEditor的loading命令
                     if ( window.AscDesktopEditor ) window.AscDesktopEditor.execCommand('webapps:events', 'loading');
                 }
             }
@@ -417,12 +429,12 @@
         console.log("DocsAPI.DocEditor() iframe:", iframe);
 
         if (target && _checkConfigParams()) {
+        	//生成iframe页面代码
             iframe = createIframe(_config);
-            //这里应该是动态加载页面的地方
+            //找到target的上层目录，并用Iframe替换target标签里面的内容
             target.parentNode && target.parentNode.replaceChild(iframe, target);
             var _msgDispatcher = new MessageDispatcher(_onMessage, this);
         }
-        
         
         console.log("DocsAPI.DocEditor() iframe:", iframe);       
 
@@ -721,6 +733,8 @@
     };
 
     MessageDispatcher = function(fn, scope) {
+		console.log("MessageDispatcher()"); 
+        
         var _fn     = fn,
             _scope  = scope || window,
             eventFn = function(msg) {
@@ -762,6 +776,7 @@
             }
         };
 
+        console.log("MessageDispatcher() _bindEvents.call"); 
         _bindEvents.call(this);
 
         return {
@@ -834,6 +849,8 @@
             }
         }
         path += index;
+        
+        console.log("getAppPath() path:",path);
         return path;
     }
 
