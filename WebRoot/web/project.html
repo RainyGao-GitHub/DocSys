@@ -1622,7 +1622,9 @@
 		}
 		else if(isOffice(docInfo.fileSuffix)) //View Only
 		{
-			if(gOfficeEditorEnable)
+			//officeEditorEnable是一个临时标记用于区分是否支持office编辑器
+			var officeEditorEnable = true;
+			if(officeEditorEnable)
 			{
 				showDocInOfficeEditor(docInfo, null, null);				
 			}
