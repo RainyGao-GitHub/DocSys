@@ -65,6 +65,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Doc/revertDocHistory",
 		"Doc/searchDoc",
 		"Doc/refreshDoc",
+		"web/static/doc",
 	};
 	
 	
