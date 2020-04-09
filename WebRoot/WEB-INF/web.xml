@@ -41,7 +41,7 @@
 <!-- /rest/* -->
 <servlet-mapping>
 	<servlet-name>springMvc</servlet-name>
-	<url-pattern>/web/static/doc/*</url-pattern>
+	<url-pattern>/DocSystem/web/static/doc/*</url-pattern>
 </servlet-mapping>  
 <filter>  
     <description>字符集过滤器</description>  
