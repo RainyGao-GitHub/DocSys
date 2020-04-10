@@ -95,7 +95,7 @@
 	function login(){
 		//alert("11");
         $.ajax({
-            url : "/DocSystem/login.do",
+            url : "/DocSystem/User/login.do",
             type : "post",
             dataType : "json",
             data : {
@@ -133,7 +133,7 @@
 	{
 		console.log("logout");
         $.ajax({
-            url : "/DocSystem/logout.do",
+            url : "/DocSystem/User/logout.do",
             type : "post",
             dataType : "json",
             data : {},
@@ -157,7 +157,7 @@
     	console.log("pageInit");
     	//确定当前登录用户是否已登录
     	$.ajax({
-            url : "/DocSystem/getLoginUser.do",
+            url : "/DocSystem/User/getLoginUser.do",
             type : "post",
             dataType : "json",
             data : {},

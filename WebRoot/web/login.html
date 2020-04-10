@@ -30,7 +30,7 @@
       
  <div id="smsLogin" class="row" style="display: none;">
      <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').show();$('#smsLogin').hide();"><em class="important">普通方式登录</em></a>用户登录</h4> -->
-     <div class="form-horizontal" id="_form_login_sms" method="POST" action="/DocSystem/smsLogin.do" novalidate="novalidate">
+     <div class="form-horizontal" id="_form_login_sms" method="POST" action="/DocSystem/User/smsLogin.do" novalidate="novalidate">
          <div class="form-group">
              <label class="col-sm-2 control-label">手机号码</label>
              <div class="col-sm-9">
@@ -170,7 +170,7 @@
 	//登录按键处理函数
 	function login(){
         $.ajax({
-            url : "/DocSystem/login.do",
+            url : "/DocSystem/User/login.do",
             type : "post",
             dataType : "json",
             data : {
