@@ -27,7 +27,7 @@
 	{
 		console.log("logout");
         $.ajax({
-            url : "/DocSystem/logout.do",
+            url : "/DocSystem/User/logout.do",
             type : "post",
             dataType : "json",
             data : {},
@@ -69,7 +69,7 @@
 	
 	function getUserImgUrl(imgName)
 	{
-		return "/DocSystem/getUserImg.do?fileName=" + imgName;
+		return "/DocSystem/User/getUserImg.do?fileName=" + imgName;
 	}
 	
 	function UserImgErrHandler()

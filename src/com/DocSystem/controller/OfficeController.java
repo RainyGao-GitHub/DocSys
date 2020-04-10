@@ -1,5 +1,6 @@
 package com.DocSystem.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping("/web/static/doc")
 public class OfficeController extends BaseController{
+	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public @ResponseBody String show(@PathVariable Integer id, HttpServletRequest request,
+            HttpServletResponse response) {
+		System.out.println("show id:" + id);
+		return "test";
+    }
+
+	
 	// get请求
 	//@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
 	@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET)
