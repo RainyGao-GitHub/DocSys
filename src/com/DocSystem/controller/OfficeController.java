@@ -9,28 +9,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
 @Controller
 @RequestMapping("/web/static/doc")
 public class OfficeController extends BaseController{
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public @ResponseBody String show(@PathVariable Integer id, HttpServletRequest request,
-            HttpServletResponse response) {
-		System.out.println("show id:" + id);
-		return "test";
-    }
-
-	
 	// get请求
-	//@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
-	@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET)
-	@ResponseBody
-	public String getInfo(@PathVariable("key") String key, HttpServletResponse response) {
+	@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET, produces="application/json;charset=UTF-8")
+	//@RequestMapping(value="/{key}/c/info", method=RequestMethod.GET)
+	public void getInfo(@PathVariable("key") String key, HttpServletResponse response) {
 		
 		System.out.println("getInfo key:" + key);
-
 		String ret = "{\"websocket\":true,\"origins\":[\"*:*\"],\"cookie_needed\":false,\"entropy\":2782586626}";
-		//writeText(ret, response);
-		return ret;
+		JSONObject jobj = JSON.parseObject(ret);
+		writeJson(jobj, response);
     }
 	
 //	// post请求
