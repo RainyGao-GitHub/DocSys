@@ -45,6 +45,8 @@
 	<url-pattern>*.gif</url-pattern>
 	<url-pattern>*.js</url-pattern>
 	<url-pattern>*.html</url-pattern>
+	<url-pattern>*.template</url-pattern>
+	<url-pattern>*.json</url-pattern>
 </servlet-mapping>
 <filter>  
     <description>字符集过滤器</description>  
