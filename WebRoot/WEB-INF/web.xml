@@ -36,11 +36,14 @@
 </servlet>
 <servlet-mapping>
 	<servlet-name>springMvc</servlet-name>
-    <url-pattern>*.do</url-pattern>
-</servlet-mapping>
-<servlet-mapping>
-	<servlet-name>springMvc</servlet-name>
-    <url-pattern>/web/static/doc/*</url-pattern>
+    <url-pattern>/DocSystem/User/*</url-pattern>
+    <url-pattern>/DocSystem/email/*</url-pattern>
+    <url-pattern>/DocSystem/SMS/*</url-pattern>
+    <url-pattern>/DocSystem/Repos/*</url-pattern>
+    <url-pattern>/DocSystem/Doc/*</url-pattern>
+    <url-pattern>/DocSystem/Manage/*</url-pattern>
+    <url-pattern>/DocSystem/web/static/doc/*</url-pattern>
+    <url-pattern>/DocSystem/pageTo</url-pattern>
 </servlet-mapping>
 <filter>  
     <description>字符集过滤器</description>  

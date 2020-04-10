@@ -214,7 +214,7 @@
 	function UpdateUserInfo(){
 		console.log("UpdateUserInfo");
         $.ajax({
-            url : "/DocSystem/updateLoginUserInfo.do",
+            url : "/DocSystem/User/updateLoginUserInfo.do",
             type : "post",
             dataType : "json",
             data : {
@@ -247,7 +247,7 @@
 	function ModifyPassword(){
 		console.log("ModifyPassword");
         $.ajax({
-            url : "/DocSystem/modifyPwd.do",
+            url : "/DocSystem/User/modifyPwd.do",
             type : "post",
             dataType : "json",
             data : {
@@ -282,7 +282,7 @@
     	console.log("pageInit");
     	//确定当前登录用户是否已登录
     	$.ajax({
-            url : "/DocSystem/getLoginUser.do",
+            url : "/DocSystem/User/getLoginUser.do",
             type : "post",
             dataType : "json",
             data : {},
@@ -381,7 +381,7 @@
     	//Setup the WebUploader for img upload
         var host = window.location.host;	//域名带端口
 		console.log(host);
-    	var serverUrl = "http://" + host + "/DocSystem/uploadUserImg.do";		
+    	var serverUrl = "http://" + host + "/DocSystem/User/uploadUserImg.do";		
     	try {
             var uploader = WebUploader.create({
                 auto: false,
@@ -489,7 +489,7 @@
     
 	function getUserImgUrl(imgName)
 	{
-		return "/DocSystem/getUserImg.do?fileName=" + imgName;
+		return "/DocSystem/User/getUserImg.do?fileName=" + imgName;
 	}
 </script>
 

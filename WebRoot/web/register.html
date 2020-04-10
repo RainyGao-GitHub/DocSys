@@ -83,7 +83,7 @@
 		console.log("register");
 		
         $.ajax({
-            url : "/DocSystem/register.do",
+            url : "/DocSystem/User/register.do",
             type : "post",
             dataType : "json",
             data : {
@@ -113,7 +113,7 @@
 		console.log("checkUserAndSendVerifyCode");
 		
 		$.ajax({
-            url : "/DocSystem/checkUserRegistered.do",
+            url : "/DocSystem/User/checkUserRegistered.do",
             type : "post",
             dataType : "json",
             data : {
@@ -144,7 +144,7 @@
 		remainTime(dom);
 			
 		$.ajax({
-            url : "/DocSystem/sendVerifyCode.do",
+            url : "/DocSystem/User/sendVerifyCode.do",
             type : "post",
             dataType : "json",
             data : {

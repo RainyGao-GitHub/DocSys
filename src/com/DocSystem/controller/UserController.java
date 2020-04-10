@@ -33,6 +33,7 @@ import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.SmsService;
 
 @Controller
+@RequestMapping("/User")
 public class UserController extends BaseController {
 	@Autowired
 	private UserServiceImpl userService;
