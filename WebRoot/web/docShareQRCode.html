@@ -6,7 +6,7 @@
 	var shareLink = null;
 	function DocShareQRCodePageInit(url)
 	{
-		new QRCode(document.getElementById("qrcode"), "http://" + url);  // 设置要生成二维码的链接
+		new QRCode(document.getElementById("qrcode"), url);  // 设置要生成二维码的链接
 		//build QRCode 
 		/*var qrcode = new QRCode("test", {
 		    text: url,

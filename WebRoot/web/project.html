@@ -1905,15 +1905,8 @@
 			return;
 		}
 		
-		var targetName = docDataEx.name;
-		var targetPath = docDataEx.path;
-	    targetName = encodeURI(targetName);
-	   	targetPath = encodeURI(targetPath);
-		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		if(gShareId)
-		{
-			docLink += "&shareId="+gShareId;
-		}
+		var docLink = getDocLink(docInfo);
+
 		console.log("showImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);
 		$("#imgPreview").show();
@@ -2006,8 +1999,53 @@
 	    targetName = encodeURI(targetName);
 	   	targetPath = encodeURI(targetPath);
 		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+		
+		if(gShareId)
+		{
+			docLink += "&shareId="+gShareId;
+		}
 		return docLink;
 	}
+	
+	function getDocFullLink(docInfo)
+	{
+		var docLink = getDocLink(docInfo);
+		
+		var host = window.location.hostname; //域名不带端口  
+	 	var port = window.location.port;
+	 	if(port && port != "")
+	 	{
+	 		host += ":" + port;
+	 	}
+	 	
+	 	var url = "http://" + host + docLink;
+	 	
+	 	return url;
+	}
+	
+	function getDocShareLink(reposId, docShare, IpAddress)
+	{
+		var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
+	 	console.log(href);
+		
+	 	//var host = window.location.host;	//域名带端口
+	 	var host = window.location.hostname; //域名不带端口       	 		
+	 		
+	 	if(host == "localhost" && IpAddress && IpAddress != "")
+	 	{
+	 		host = 	IpAddress;
+	 	}
+	 		
+	 	var port = window.location.port;
+	 	if(port && port != "")
+	 	{
+	 		host += ":" + port;
+	 	}
+	 		
+	 	var url = "http://"+host+href;
+	 	return url;
+	}
+	
 	
 	function parseDocContent(content)
 	{
@@ -5112,25 +5150,8 @@ function CompareObj(objA, objB, flag) {
          		if(ret.status == "ok")
             	{
          			var docShare = ret.data;
-         	 		var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
-         	 		console.log(href);
-					
-         	 		//var host = window.location.host;	//域名带端口
-         	 		var host = window.location.hostname; //域名不带端口       	 		
-         	 		
-         	 		var IpAddress = ret.dataEx;
-         	 		if(host == "localhost" && IpAddress && IpAddress != "")
-         	 		{
-         	 			host = 	IpAddress;
-         	 		}
-         	 		
-         	 		var port = window.location.port;
-         	 		if(port && port != "")
-         	 		{
-         	 			host += ":" + port;
-         	 		}
-         	 		
-         	 		var url = host+href;
+         			var IpAddress = ret.dataEx;
+         			var url = getDocShareLink(reposId,docShare,IpAddress);
          	 		console.log(url);
          	 		
          	 		showDocSharePanel(docShare, name, url);
