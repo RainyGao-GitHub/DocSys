@@ -53,6 +53,8 @@
 	<url-pattern>*.woff</url-pattern>
 	<url-pattern>*.woff2</url-pattern>
 	<url-pattern>*.wasm</url-pattern>
+	<url-pattern>*.pdf</url-pattern>
+	<url-pattern>*.properties</url-pattern>
 </servlet-mapping>
 <filter>  
     <description>字符集过滤器</description>  
