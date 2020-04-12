@@ -380,6 +380,9 @@
 	};	
 	var gDocInfo = {};
 	
+	//office文件是否在officeEditor中显示
+	var officeEditorEnable = false;
+	
 	//当前处于展示状态的内容
 	var gDocContent = "";
 	var gTmpSavedDocContent = "";
@@ -1623,7 +1626,6 @@
 		else if(isOffice(docInfo.fileSuffix)) //View Only
 		{
 			//officeEditorEnable是一个临时标记用于区分是否支持office编辑器
-			var officeEditorEnable = true;
 			if(officeEditorEnable)
 			{
 				showDocInOfficeEditor(docInfo, null, null);				
