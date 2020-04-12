@@ -17,7 +17,39 @@
 	<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/styles/frontpage.css" rel="stylesheet">
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="static/swiper/swiper.min.css" rel="stylesheet">
     <script src="static/scripts/jquery.min.js"></script>
+
+    <style type="text/css">
+        .swiper-container {
+            width: 100%;
+            margin-bottom: 20px;
+
+        }
+        .swiper-slide {
+            text-align: center;
+            font-size: 18px;
+            background: #fff;
+
+            /* Center slide text vertically */
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            -webkit-align-items: center;
+            align-items: center;
+        }
+
+        .swiper-slide>img{
+            width: 100%;
+        }
+    </style>
 </head>
 
 <body>
@@ -66,6 +98,23 @@
     </div>
 </div>
 
+
+<!-- Swiper -->
+<div class="swiper-container">
+    <div class="swiper-wrapper">
+        <div class="swiper-slide"><img src="images/local_banner/1.jpg"/></div>
+        <div class="swiper-slide"><img src="images/local_banner/2.jpg"/></div>
+        <div class="swiper-slide"><img src="images/local_banner/3.jpg"/></div>
+        <div class="swiper-slide"><img src="images/local_banner/4.jpg"/></div>
+        <div class="swiper-slide"><img src="images/local_banner/5.jpg"/></div>
+        <div class="swiper-slide"><img src="images/local_banner/6.jpg"/></div>
+    </div>
+    <!-- Add Pagination -->
+    <div class="swiper-pagination"></div>
+    <!-- Add Arrows -->
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
 
 <div class="banner text-center">
     <div class="container">
@@ -197,6 +246,7 @@
 <script type="text/javascript" src="static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
+<script type="text/javascript" src="static/swiper/swiper.min.js"></script>
 <script type="text/javascript">
 	pageInit();   
 
@@ -232,6 +282,23 @@
             error : function () {
             	showErrorMessage("服务器异常:获取用户信息失败");
             }
+        });
+
+        var swiper = new Swiper('.swiper-container', {
+            spaceBetween: 30,
+            centeredSlides: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
         });
     }
     
