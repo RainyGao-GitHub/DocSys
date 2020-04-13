@@ -120,23 +120,23 @@
 			    </div>
 			</div>
 		</div>
-        <div class="swiper-slide">
-        	<div onclick="enterBannerLink(1);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/1.jpg)"></div>
+        <div class="swiper-slide" onclick="Banner.onclick(1);">
+        	<div id="banner1" class="banner text-center" style="background-image: url(/DocSystem/web/images/local_banner/1.jpg)"></div>
         </div>
-        <div class="swiper-slide">
-        	<div onclick="enterBannerLink(2);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/2.jpg)"></div>
+        <div class="swiper-slide"  onclick="Banner.onclick(2);" >
+        	<div id="banner2" class="banner text-center" style="background-image: url(/DocSystem/web/images/local_banner/2.jpg)"></div>
         </div>
-        <div class="swiper-slide">
-        	<div onclick="enterBannerLink(3);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/3.jpg)"></div>
+        <div class="swiper-slide" onclick="Banner.onclick(3);">
+        	<div id="banner3" class="banner text-center" style="background-image: url(/DocSystem/web/images/local_banner/3.jpg)"></div>
         </div>
-        <div class="swiper-slide">
-        	<div onclick="enterBannerLink(4);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/4.jpg)"></div>
+        <div class="swiper-slide" onclick="Banner.onclick(4);">
+        	<div id="banner4" class="banner text-center" style="background-image: url(/DocSystem/web/images/local_banner/4.jpg)"></div>
         </div>
-        <div class="swiper-slide">
-        	<div onclick="enterBannerLink(5);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/5.jpg)"></div>
+        <div class="swiper-slide" onclick="Banner.onclick(5);">
+        	<div id="banner5" class="banner text-center" style="background-image: url(/DocSystem/web/images/local_banner/5.jpg)"></div>
         </div>
-        <div class="swiper-slide">
-        	<div onclick="enterBannerLink(6);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/6.jpg)"></div>
+        <div class="swiper-slide" onclick="Banner.onclick(6);" >
+        	<div id="banner6" class="banner text-center" style="background-image: url(/DocSystem/web/images/local_banner/6.jpg)"></div>
         </div>
     </div>
     <!-- Add Pagination -->
@@ -267,50 +267,74 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="static/swiper/swiper.min.js"></script>
 <script type="text/javascript">	
-	var BannerImgList = {
-		[{
-			img: "/DocSystem/web/images/banner.jpg",	//系统默认的banner不要修改
-			href: null, 
-		},	
+	var Banner =  (function () {
+		var BannerList = [];
+		init();
+		
+		function init()
 		{
-			img: "/DocSystem/web/images/local_banner/gitee.png",
-			href: "https://gitee.com/RainyGao/DocSys", 
-		},	
-		{
-			img: "/DocSystem/web/images/local_banner/2.jpg",
-			href: null, 
-		},	
-		{
-			img: "/DocSystem/web/images/local_banner/3.jpg",
-			href: null, 
-		},	
-		{
-			img: "/DocSystem/web/images/local_banner/4.jpg",
-			href: null, 
-		},	
-		{
-			img: "/DocSystem/web/images/local_banner/5.jpg",
-			href: null, 
-		},	
-		{
-			img: "/DocSystem/web/images/local_banner/6.jpg",
-			href: null, 
-		},]	
-	};
-	
-	function enterBannerLink(index)
-	{
-		var bannerInfo = BannerImgList[index];
-		if(bannerInfo)
-		{
-			var href = bannerInfo.href;
-			if(href && href != null)
+			console.log("Banner init");
+			//第一个默认banner
+			var defaultBanner = {
+					img: "/DocSystem/web/images/banner.jpg",
+					href: null
+			};
+			BannerList.push(defaultBanner);
+			
+			//系统支持6个自定义轮播广告
+			for( var i = 1 ; i < 7 ; i++ )
 			{
-				console.log("enterBannerLink href:" + href);
-				window.location.href = href; 
+				var bannerInfo = {};
+				bannerInfo.img = "/DocSystem/web/images/local_banner/" + i + ".jpg";
+				bannerInfo.href = null; 
+				BannerList.push(bannerInfo);
+			}
+			
+			//获取官网的轮播图设置，并重新设置banner的背景和跳转链接
+			BannerList[1].img = "/DocSystem/web/images/local_banner/gitee.png";
+			var banner1 = document.getElementById("banner1");
+			banner1.style.backgroundImage = "url("+ BannerList[1].img +")";			
+			BannerList[1].href = "https://gitee.com/RainyGao/DocSys";
+			//BannerList[1].openInNewPage = false;
+
+			BannerList[2].img = "/DocSystem/web/images/local_banner/aliyun.jpg";
+			var banner2 = document.getElementById("banner2");
+			banner2.style.backgroundImage = "url("+ BannerList[2].img +")";
+			BannerList[2].href = "https://account.aliyun.com";	
+			//BannerList[2].openInNewPage = false;
+		}
+				
+		function onclick(index)
+		{
+			console.log("Banner onclick index:" + index);
+			var bannerInfo = BannerList[index];
+			if(bannerInfo)
+			{
+				var href = bannerInfo.href;
+				if(href && href != null)
+				{
+					console.log("Banner onclick href:" + href + " openInNewPage:" + bannerInfo.openInNewPage);
+					if(!bannerInfo.openInNewPage || bannerInfo.openInNewPage != false)
+					{
+						window.open(href);   //新窗口打开						
+					}
+					else
+					{
+						window.location.href = href; //当前窗口打开
+					}
+				}
 			}
 		}
-	}
+		
+        return {
+            init: function(){
+            	init();
+            },
+            onclick: function(index){
+            	onclick(index);
+            },
+        };		
+	})();
 </script>	
 <script type="text/javascript">	
 	pageInit();   
