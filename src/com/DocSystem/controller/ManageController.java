@@ -28,7 +28,9 @@ import com.DocSystem.entity.UserGroup;
 
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.controller.BaseController;
 
 @Controller
@@ -62,6 +64,27 @@ public class ManageController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
+	
+	/********** 获取轮播图配置 ***************/
+	@RequestMapping("/getBannerConfig.do")
+	public void getBannerConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getBannerConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		
+		String BannerConfigPath = docSysIniPath;
+		if(isFileExist(BannerConfigPath) == false)
+		{
+			BannerConfigPath = docSysWebPath + "WEB-INF/classes/";
+		}
+		
+		String s = readDocContentFromFile(BannerConfigPath, "bannerConfig.json", false);
+		JSONObject jobj = JSON.parseObject(s);
+		JSONArray list = jobj.getJSONArray("BannerConfigList");
+		rt.setData(list);
+		writeJson(rt, response);
+	}
+	
 	
 	/********** 获取系统邮件配置 ***************/
 	@RequestMapping("/getSystemEmailConfig.do")
