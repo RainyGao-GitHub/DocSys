@@ -68,6 +68,10 @@
                         <li id="mobileRegisterBtn">
                             <a onclick="showRegisterPanel()" title="用户注册">注册</a>
                         </li>
+                        <li id="mobileEnterSystemBtn">
+                            <a href="projects.html" title="进入系统">进入系统</a>
+                        </li>
+                        
                     </ul>
                 </div>    
 		<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">	
@@ -90,6 +94,9 @@
                 <li>
                     <a target="_blank" href="http://dw.gofreeteam.com">更多</a>
                 </li>
+                <li id="enterSystemLink"  style="display:none">
+                    <a href="projects.html">进入系统>></a>
+                </li>
                 <li style="list-style: none; display: inline">
                     <div class="clear"></div>
                 </li>
@@ -98,34 +105,46 @@
     </div>
 </div>
 
-	<!-- Swiper -->
-	<div class="swiper-container" style="max-height:500px">
-	    <div class="swiper-wrapper">
-	        <div class="swiper-slide">
-				<div class="banner text-center">
-				    <div class="container">
-				        <div class="banner-info">
-				            <h1>文件管理系统</h1>
-				            <p>简单、方便就够了</p>
-				            <a id="loginBannerBtn" class="banner_btn"  onclick="showLoginPanel();">登录</a>
-				            <a id="enterSystemBtn" class="banner_btn"  href="projects.html" style="display:none">进入系统</a>
-				        </div>
-				    </div>
-				</div>
+<!-- Swiper -->
+<div class="swiper-container" style="max-height:500px">
+    <div class="swiper-wrapper">
+        <div class="swiper-slide">
+			<div class="banner text-center">
+			    <div class="container">
+			        <div class="banner-info">
+			            <h1>文件管理系统</h1>
+			            <p>简单、方便就够了</p>
+			            <a id="loginBannerBtn" class="banner_btn"  onclick="showLoginPanel();">登录</a>
+			            <a id="enterSystemBtn" class="banner_btn"  href="projects.html" style="display:none">进入系统</a>
+			        </div>
+			    </div>
 			</div>
-	        <div class="swiper-slide"><img src="images/local_banner/1.jpg"/></div>
-	        <div class="swiper-slide"><img src="images/local_banner/2.jpg"/></div>
-	        <div class="swiper-slide"><img src="images/local_banner/3.jpg"/></div>
-	        <div class="swiper-slide"><img src="images/local_banner/4.jpg"/></div>
-	        <div class="swiper-slide"><img src="images/local_banner/5.jpg"/></div>
-	        <div class="swiper-slide"><img src="images/local_banner/6.jpg"/></div>
-	    </div>
-	    <!-- Add Pagination -->
-	    <div class="swiper-pagination"></div>
-	    <!-- Add Arrows -->
-	    <div class="swiper-button-next"></div>
-	    <div class="swiper-button-prev"></div>
-	</div>
+		</div>
+        <div class="swiper-slide">
+        	<div onclick="enterBannerLink(1);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/1.jpg)"></div>
+        </div>
+        <div class="swiper-slide">
+        	<div onclick="enterBannerLink(2);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/2.jpg)"></div>
+        </div>
+        <div class="swiper-slide">
+        	<div onclick="enterBannerLink(3);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/3.jpg)"></div>
+        </div>
+        <div class="swiper-slide">
+        	<div onclick="enterBannerLink(4);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/4.jpg)"></div>
+        </div>
+        <div class="swiper-slide">
+        	<div onclick="enterBannerLink(5);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/5.jpg)"></div>
+        </div>
+        <div class="swiper-slide">
+        	<div onclick="enterBannerLink(6);" class="banner text-center" style="background: url(/DocSystem/web/images/local_banner/6.jpg)"></div>
+        </div>
+    </div>
+    <!-- Add Pagination -->
+    <div class="swiper-pagination"></div>
+    <!-- Add Arrows -->
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
 
 <div class="main">
     <div class="content_white">
@@ -247,7 +266,53 @@
 <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="static/swiper/swiper.min.js"></script>
-<script type="text/javascript">
+<script type="text/javascript">	
+	var BannerImgList = {
+		{
+			img: "/DocSystem/web/images/banner.jpg",	//系统默认的banner不要修改
+			href: null, 
+		},	
+		{
+			img: "/DocSystem/web/images/local_banner/gitee.png",
+			href: "https://gitee.com/RainyGao/DocSys", 
+		},	
+		{
+			img: "/DocSystem/web/images/local_banner/2.jpg",
+			href: null, 
+		},	
+		{
+			img: "/DocSystem/web/images/local_banner/3.jpg",
+			href: null, 
+		},	
+		{
+			img: "/DocSystem/web/images/local_banner/4.jpg",
+			href: null, 
+		},	
+		{
+			img: "/DocSystem/web/images/local_banner/5.jpg",
+			href: null, 
+		},	
+		{
+			img: "/DocSystem/web/images/local_banner/6.jpg",
+			href: null, 
+		},	
+	};
+	
+	function enterBannerLink(index)
+	{
+		var bannerInfo = BannerImgList[index];
+		if(bannerInfo)
+		{
+			var href = bannerInfo.href;
+			if(href && href != null)
+			{
+				console.log("enterBannerLink href:" + href);
+				window.location.href = href; 
+			}
+		}
+	}
+</script>	
+<script type="text/javascript">	
 	pageInit();   
 
 	//页面初始化
@@ -327,6 +392,7 @@
                            	
         	//显示进入系统按键
         	$('#enterSystemBtn').show();
+        	$('#enterSystemLink').show();
     	}
     	else
     	{
@@ -345,6 +411,7 @@
                            	
         	//显示进入系统按键
         	$('#enterSystemBtn').hide();
+        	$('#enterSystemLink').hide();
     	}
     }
 	//通用函数接口
