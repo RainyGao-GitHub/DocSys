@@ -73,13 +73,26 @@ public class ManageController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		
 		String BannerConfigPath = docSysIniPath;
-		if(isFileExist(BannerConfigPath) == false)
+		if(isFileExist(BannerConfigPath + "bannerConfig.json") == false)
 		{
 			BannerConfigPath = docSysWebPath + "WEB-INF/classes/";
+			if(isFileExist(BannerConfigPath + "bannerConfig.json") == false)
+			{
+				docSysErrorLog("bannerConfig.json文件不存在",rt);
+				writeJson(rt, response);
+				return;	
+			}
 		}
 		
 		String s = readDocContentFromFile(BannerConfigPath, "bannerConfig.json", false);
 		JSONObject jobj = JSON.parseObject(s);
+		if(jobj == null)
+		{
+			docSysErrorLog("解析bannerConfig.json文件失败",rt);
+			writeJson(rt, response);
+			return;	
+		}
+		
 		JSONArray list = jobj.getJSONArray("BannerConfigList");
 		rt.setData(list);
 		writeJson(rt, response);
