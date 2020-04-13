@@ -34,6 +34,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"Manage/getSystemLog", 
 		"Manage/importDBData",
 		"Manage/docSysInit",
+		"Manage/getBannerConfig",
 		//文件分享
 		"Doc/getDocShare",
 		"Repos/getRepos",
