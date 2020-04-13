@@ -287,19 +287,6 @@
 				BannerList.push(bannerInfo);
 			}
 			
-			//banner1和banner2的特殊设置
-			BannerList[1].img = "/DocSystem/web/images/local_banner/gitee.png";
-			var banner1 = document.getElementById("banner1");
-			banner1.style.backgroundImage = "url("+ BannerList[1].img +")";			
-			BannerList[1].href = "https://gitee.com/RainyGao/DocSys";
-			//BannerList[1].openInNewPage = false;
-
-			BannerList[2].img = "/DocSystem/web/images/local_banner/aliyun.jpg";
-			var banner2 = document.getElementById("banner2");
-			banner2.style.backgroundImage = "url("+ BannerList[2].img +")";
-			BannerList[2].href = "https://account.aliyun.com";	
-			//BannerList[2].openInNewPage = false;
-			
 			//获取官网的轮播图设置，并重新设置banner的背景和跳转链接
 			$.ajax({
 	             //url : "http://dw.gofreeteam.com/DocSystem/Manage/getBannerConfig.do",
@@ -319,6 +306,7 @@
 		             		{
 		             			var bannerConfig = bannerConfigList[i];
 		             			var index = bannerConfig.bannerIndex;
+		             			console.log("bannerConfig index:" + index + " img:" + bannerConfig.img);
 		             			if(index && index > 0 && index < 7) //1-6
 		             			{
 		             				var banner = document.getElementById("banner" + index);
