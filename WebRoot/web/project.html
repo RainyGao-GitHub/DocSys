@@ -1628,7 +1628,8 @@
 			//officeEditorEnable是一个临时标记用于区分是否支持office编辑器
 			if(officeEditorEnable)
 			{
-				showDocInOfficeEditor(docInfo, null, null);				
+				//showDocInOfficeEditor(docInfo, null, null);
+				showOfficeInNewPage(docInfo, null, null);
 			}
 			else
 			{
@@ -2019,7 +2020,7 @@
 	 	}
 	 	
 	 	var url = "http://" + host + docLink;
-	 	
+	 	console.log("getDocFullLink() url:" + url);
 	 	return url;
 	}
 	
@@ -3679,11 +3680,34 @@ function CompareObj(objA, objB, flag) {
 		console.log("previewDoc gDocInfo:", gDocInfo);
 		if(gDocInfo != null)
 		{
-			showOfficeInNewPage(gDocInfo);
+			showDocInNewPage(gDocInfo);
 		}
 	}
 	
-	function showOfficeInNewPage(node)
+	function showDocInNewPage(node)
+	{
+		 showOfficeInNewPage(node);
+	}
+	
+	function showOfficeInNewPage(docInfo)
+	{
+		if(!docInfo || docInfo == null)
+		{
+			showErrorMessage("请选择文件!");
+			return;
+		}
+		
+        var fileLink = getDocFullLink(docInfo);
+        //var key = docInfo.docId;
+        //var title = docInfo.name;
+        //var fileType = docInfo.suffix;
+        console.log("fileLink" + fileLink + "");
+		//在新的页面打开
+		//window.open("/DocSystem/web/office.html?key=" + key + "&title=" + title + "&fileType=" + fileType + "&fileLink=" + fileLink);	
+		window.open("/DocSystem/web/office.html?fileLink=" + fileLink);		
+	}
+	
+	function previewOfficeInNewPage(node)
 	{
 		if(!node || node == null)
 		{
@@ -4519,7 +4543,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '打开', action: function(e){
 					e.preventDefault();
-					//showOfficeInNewPage(curRightClickedTreeNode);
+					//showDocInNewPage(curRightClickedTreeNode);
 					openDocInDialog(curRightClickedTreeNode, true);    
 				}
 			},
@@ -4873,7 +4897,7 @@ function CompareObj(objA, objB, flag) {
 				{divider: true},
 				{text: '打开', action: function(e){
 							e.preventDefault();
-							//showOfficeInNewPage(curRightClickedDocListNode);
+							//showDocInNewPage(curRightClickedDocListNode);
 							openDocInDialog(curRightClickedDocListNode, true);    
 						}
 				},
