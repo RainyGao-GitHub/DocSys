@@ -1876,12 +1876,14 @@
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
-			mstyle: getDialogStyle(),
+			mstyle: 'width:95%;',
 			callback: function(){
-				OfficeEditor.officeEditorPageInit(docInfo, docText, tmpSavedDocText);
+				setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
 			},
 		});
 	}
+	
+	
 	
 	function showFileImg(docInfo)
 	{
