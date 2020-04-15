@@ -19,7 +19,7 @@ var OfficeEditor = (function () {
     		    },
     		    "documentType": "text"
     		};
-		editor = new DocsAPI.DocEditor("placeholder", config);
+        window.docEditor = new DocsAPI.DocEditor("placeholder", config);
 	}
 
     //开放给外部的接口
