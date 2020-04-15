@@ -1620,26 +1620,26 @@
 		}
 		else if(isPdf(docInfo.fileSuffix))
 		{
-			showOfficeInDialog(docInfo); //这是个异步调用
+			previewOfficeInDialog(docInfo); //这是个异步调用
 		}
 		else if(isOffice(docInfo.fileSuffix)) //View Only
 		{
 			//officeEditorEnable是一个临时标记用于区分是否支持office编辑器
 			if(officeEditorEnable)
 			{
-				//showDocInOfficeEditor(docInfo, null, null);
-				showOfficeInNewPage(docInfo, null, null);
+				showOfficeInDialog(docInfo);
+				//showOfficeInNewPage(docInfo);
 			}
 			else
 			{
 				//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
-				showOfficeInDialog(docInfo); //这是个异步调用
+				previewOfficeInDialog(docInfo); //这是个异步调用
 			}
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
 			//文本文件
-			showDocInTextDialog(docInfo); //这是个异步调用
+			showTextInDialog(docInfo); //这是个异步调用
 		}
 		else if(isBinary(docInfo.fileSuffix))
 		{
@@ -1650,12 +1650,12 @@
 			if(showUnknownFile && showUnknownFile == true)
 			{
 				//文本文件
-				showDocInTextDialog(docInfo); //这是个异步调用
+				showTextInDialog(docInfo); //这是个异步调用
 			}
 		}
 	}
 	
-	function showOfficeInDialog(docInfo)
+	function previewOfficeInDialog(docInfo)
 	{
 		if(!docInfo || docInfo == null)
 		{
@@ -1679,21 +1679,21 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
 	                var fileLink = ret.data;
-	                console.log("showOfficeInDialog fileLink" + fileLink);
+	                console.log("previewOfficeInDialog fileLink" + fileLink);
 	    			//在新的页面打开
 	    			showPdfInDialog(docInfo, fileLink);	
 	            }
 	            else
 	            {
-	            	console.log("showOfficeInDialog DocToPdf Failed");
+	            	console.log("previewOfficeInDialog DocToPdf Failed");
 	    			//showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
-	            	showDocInTextDialog(docInfo); //ReadOnly 方式显示文件内容
+	            	showTextInDialog(docInfo); //ReadOnly 方式显示文件内容
 	            }
 	        },
 	        error : function () {
 	            //showErrorMessage("文件预览失败：服务器异常");
-	            console.log("showOfficeInDialog DocToPdf Failed 服务器异常");
-	            showDocInTextDialog(docInfo); //ReadOnly 方式显示文件内容
+	            console.log("previewOfficeInDialog DocToPdf Failed 服务器异常");
+	            showTextInDialog(docInfo); //ReadOnly 方式显示文件内容
 	        }
 	    });
 	}
@@ -1730,9 +1730,9 @@
 			},
 		});
     }
-	function showDocInTextDialog(docInfo)
+	function showTextInDialog(docInfo)
 	{
-		console.log("showDocInTextDialog()  docInfo:", docInfo);
+		console.log("showTextInDialog()  docInfo:", docInfo);
 	    if(!docInfo || docInfo == null || docInfo.id == 0)
 	    {
 	    	//未定义需要显示的文件
@@ -1755,12 +1755,12 @@
 	                shareId: gShareId,
 	            },
 	            success : function (ret1) {
-	            	//console.log("showDocInTextDialog ret1",ret1);
+	            	//console.log("showTextInDialog ret1",ret1);
 	            	var status = ret1.substring(0,2);
 	            	if("ok" == status)
 	            	{
 		            	var docText = ret1.substring(2);
-		            	//console.log("showDocInTextDialog docText",docText);
+		            	//console.log("showTextInDialog docText",docText);
 		            	
 		            	//Try to get tmpSavedDocContent
 		            	$.ajax({
@@ -1866,9 +1866,9 @@
 		});
 	}
 	
-	function showDocInOfficeEditor(docInfo, docText, tmpSavedDocText)
+	function showOfficeInDialog(docInfo)
 	{
-		console.log("showDocInOfficeEditor docInfo.docId:" + docInfo.docId);
+		console.log("showOfficeInDialog docInfo.docId:" + docInfo.docId);
 		bootstrapQ.dialog({
 			id: "officeEditor",
 			title: docInfo.name,
