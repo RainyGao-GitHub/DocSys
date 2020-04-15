@@ -1,11 +1,13 @@
-<div id="placeholder"></div>
+<div id="officePlayer" class="officePlayer" style="width: 100%; height:1200px;">
+	<div id="placeholder"></div>
+</div>
 <script type="text/javascript" src="http://localhost/web-apps/apps/api/documents/api.js"></script>
-<script>
+<script type="text/javascript">
 var OfficeEditor = (function () {
 	var editor = null;
 	var doc = null;
 	
-	function officeEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
+	function officeEditorPageInit(Input_doc)
 	{
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
 		doc = Input_doc;
@@ -24,8 +26,8 @@ var OfficeEditor = (function () {
 
     //开放给外部的接口
     return {
-        officeEditorPageInit: function(docInfo, content, tmpSavedContent){
-        	officeEditorPageInit(docInfo, content, tmpSavedContent);
+        officeEditorPageInit: function(docInfo){
+        	officeEditorPageInit(docInfo);
         },
     };
 })();
