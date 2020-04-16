@@ -1713,7 +1713,7 @@
     function showImgInNewPage(docInfo)
     {
 		console.log("showImgInDialog docInfo.docId:" + docInfo.docId);
-		var url = getFullDocLink(docInfo);
+		var url = getDocDownloadFullLink(docInfo);
 		window.open("/DocSystem/web/image.html?url=" + url);
     }
     
@@ -1746,7 +1746,7 @@
 		var pdfLink = url;
 		if(pdfLink || pdfLink == "")
 		{
-			pdfLink = getFullDocLink(docInfo);
+			pdfLink = getDocDownloadFullLink(docInfo);
 		}
         console.log("pdfLink" + pdfLink);
 		//在新的页面打开
@@ -1773,7 +1773,7 @@
 	{
 		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
 		
-		var url = getFullDocLink(docInfo);
+		var url = getDocDownloadFullLink(docInfo);
 		window.open("/DocSystem/web/markdown.html?url=" + url);
 	}
 	
@@ -1798,7 +1798,7 @@
 	function showTextInNewPage(docInfo, openType)
 	{
 		console.log("showTextInDialog docInfo.docId:" + docInfo.docId);
-		var url = getFullDocLink(docInfo);
+		var url = getDocDownloadFullLink(docInfo);
 		if(openType && openType == "textViewer")
 		{
 			window.open("/DocSystem/web/text.html?url=" + url);
@@ -1850,7 +1850,7 @@
 
 		if(officeEditorEnable && officeEditorEnable == true)
 		{
-	        var fileLink = getDocFullLink(docInfo);
+	        var fileLink = getDocDownloadFullLink(docInfo);
 	        //var key = docInfo.docId;
 	        //var title = docInfo.name;
 	        //var fileType = docInfo.suffix;
@@ -1880,7 +1880,7 @@
 				big: true,
 				mstyle: getDialogStyle(),
 				callback: function(){
-					OfficeEditor.officeEditorPageInit(docInfo);
+					setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
 				},
 			});
 		}
