@@ -41,7 +41,7 @@ function getDocText(docInfo, successCallback, errorCallback)
             	if("ok" == status)
             	{
 	            	docText = ret1.substring(2);
-	            	console.log("getDocText docText",docText);
+	            	//console.log("getDocText docText",docText);
 	            	
 	            	//Try to get tmpSavedDocContent
 	            	$.ajax({
@@ -58,7 +58,7 @@ function getDocText(docInfo, successCallback, errorCallback)
 	            	                shareId: gShareId,
 	            	            },
 	            	            success : function (ret2) {
-	            	            	console.log("getDocText ret2",ret2);
+	            	            	//console.log("getDocText ret2",ret2);
 	            	            	tmpSavedDocText = ret2;
 	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
 	            	            },
