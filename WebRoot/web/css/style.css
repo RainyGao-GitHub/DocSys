@@ -127,3 +127,12 @@
 .editormd{
 	border:none;
 }
+
+.editormd-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border: none;
+    margin: 0 auto;
+    z-index: 999;
+}
