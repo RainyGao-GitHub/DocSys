@@ -1,16 +1,95 @@
-//根据id关闭对话框
-function closeBootstrapDialog(id){ 
-	$("#"+id + "div").remove();	//删除全屏遮罩
-	$("#"+id).remove();	//删除对话框
+/*
+ ** 文件内容获取接口 **
+ ** 文件链接获取接口 **
+ ** 文件尾缀获取与文件类型判断接口 **
+ ** 对话框操作接口 **
+ ** 提示对话框接口 **
+ * */
+
+//文件文本内容获取接口
+function getDocText(docInfo, successCallback, errorCallback)
+{
+	var docText = "";
+	var tmpSavedDocText = "";
+	var errorInfo = "";
+	console.log("getDocText()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	//showErrorMessage("请选择文件");
+    	return;
+    }
+      	
+    $.ajax({
+           url : "/DocSystem/Doc/getDocContent.do",
+           type : "post",
+           dataType : "text",
+           data : {
+            	reposId: gReposInfo.id,
+                docId : docInfo.id,
+                pid: docInfo.pid,
+                path: docInfo.path,
+                name: docInfo.name,
+                docType: 1, //取回文件内容
+                shareId: gShareId,
+            },
+            success : function (ret1) {
+            	//console.log("getDocText ret1",ret1);
+            	var status = ret1.substring(0,2);
+            	if("ok" == status)
+            	{
+	            	docText = ret1.substring(2);
+	            	console.log("getDocText docText",docText);
+	            	
+	            	//Try to get tmpSavedDocContent
+	            	$.ajax({
+	            	           url : "/DocSystem/Doc/getTmpSavedDocContent.do",
+	            	           type : "post",
+	            	           dataType : "text",
+	            	           data : {
+	            	            	reposId: gReposInfo.id,
+	            	                docId : docInfo.id,
+	            	                pid: docInfo.pid,
+	            	                path: docInfo.path,
+	            	                name: docInfo.name,
+	            	                docType: 1, //取回文件内容
+	            	                shareId: gShareId,
+	            	            },
+	            	            success : function (ret2) {
+	            	            	console.log("getDocText ret2",ret2);
+	            	            	tmpSavedDocText = ret2;
+	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+	            	            },
+	            	            error : function () {	            	            	
+	            	            	successCallback &&successCallback(docText, tmpSavedDocText);
+
+	            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
+	            	            	errorCallback && errorCallback(errorInfo);
+	            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
+	            	            }
+	            	        });
+            	}
+            	else
+            	{
+            		errorInfo = "获取文件内容失败：" + ret1
+            		errorCallback && errorCallback(errorInfo);
+            		//showErrorMessage("获取文件内容失败：" + ret1);
+            	}
+            },
+            error : function () {
+            	errorInfo = "获取文件内容失败：服务器异常";
+        		errorCallback && errorCallback(errorInfo);
+                //showErrorMessage("获取文件内容失败：服务器异常");
+            }
+        });
 }
 
-function showErrorMessage($msg) {
-	qiao.bs.alert($msg);
-}
-
+//文件链接获取接口
 function getDocLink(doc)
 {
-	var link = "project.html?vid="+doc.vid+"&doc="+doc.docId;
+	var link = "/DocSystem/web/project.html?vid="+doc.vid+"&doc="+doc.docId;
 	if(doc.path && doc.path != "")
 	{
 		link += "&path=" + base64_encode(doc.path);
@@ -22,6 +101,67 @@ function getDocLink(doc)
 	return link;
 }
 
+function getDocShareLink(reposId, docShare, IpAddress)
+{
+	var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
+ 	console.log(href);
+	
+ 	//var host = window.location.host;	//域名带端口
+ 	var host = window.location.hostname; //域名不带端口       	 		
+ 		
+ 	if(host == "localhost" && IpAddress && IpAddress != "")
+ 	{
+ 		host = 	IpAddress;
+ 	}
+ 		
+ 	var port = window.location.port;
+ 	if(port && port != "")
+ 	{
+ 		host += ":" + port;
+ 	}
+ 		
+ 	var url = "http://"+host+href;
+ 	return url;
+}
+
+function getDocDownloadLink(docInfo)
+{
+	var docDataEx = docInfo.dataEx;
+		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+	{
+		return null;
+	}
+	
+	var targetName = docDataEx.name;
+	var targetPath = docDataEx.path;
+    targetName = encodeURI(targetName);
+   	targetPath = encodeURI(targetPath);
+	var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
+	
+	if(gShareId)
+	{
+		docLink += "&shareId="+gShareId;
+	}
+	return docLink;
+}
+
+function getDocDownloadFullLink(docInfo)
+{
+	var docLink = getDocLink(docInfo);
+	
+	var host = window.location.hostname; //域名不带端口  
+ 	var port = window.location.port;
+ 	if(port && port != "")
+ 	{
+ 		host += ":" + port;
+ 	}
+ 	
+ 	var url = "http://" + host + docLink;
+ 	console.log("getDocDownloadFullLink() url:" + url);
+ 	return url;
+}
+
+//文件类型获取与判断接口
 function getFileSuffix(name)
 {
    var i = name.lastIndexOf(".")
@@ -254,4 +394,15 @@ function getDiyFileIconType(name)
 	}
 	
 	return iconType;
+}
+
+//弹出对话框操作接口
+function closeBootstrapDialog(id){ 
+	$("#"+id + "div").remove();	//删除全屏遮罩
+	$("#"+id).remove();	//删除对话框
+}
+
+//提示对话框
+function showErrorMessage($msg) {
+	qiao.bs.alert($msg);
 }

@@ -1540,7 +1540,7 @@
     	if(gDocInfo.openMode == 2)
     	{
 			//Open Doc in Dialog
-			openDocInDialog(gDocInfo);
+			openDoc(gDocInfo, false, false);
 		}
     }
 	
@@ -1573,8 +1573,8 @@
     {
 		if(gDocInfo.type == 1)
 		{
-	    	//show unknown doc in text diaglog
-	    	openDocInDialog(gDocInfo, true);
+	    	//open doc in dialog
+	    	openDoc(gDocInfo, true, false);
 		}
 		else
 		{
@@ -1598,7 +1598,21 @@
     	}
     	return null;
     }
-	function openDocInDialog(doc, showUnknownFile)
+    
+    function openDoc(doc, showUnknownFile, openInNewPage)
+    {
+    	if(openInNewPage && openInNewPage == true)
+    	{
+    		openDocInNewPage(doc, showUnknownFile)
+    	}
+    	else
+    	{
+    		openDocInDialog(doc, showUnknownFile)    		
+    	}
+    }
+    
+    //注意文件内容的获取都需要在新窗口或新页面中获取，本页面只负责传递仓库id,docId,文件路径和文件名
+    function openDocInNewPage(doc, showUnknownFile)
 	{
 		if(doc == null || doc.type == 2)
 		{
@@ -1616,11 +1630,11 @@
 		var url = null;
 		if(isPicture(docInfo.fileSuffix))
 		{
-			showPictureInDialog(docInfo);
+			showImgInNewPage(docInfo);
 		}
 		else if(isVideo(docInfo.fileSuffix))
 		{
-			//Do nothing
+			showVideoInNewPage(docInfo);
 		}
 		else if(isPdf(docInfo.fileSuffix))
 		{
@@ -1639,6 +1653,61 @@
 				//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
 				previewOfficeInDialog(docInfo); //这是个异步调用
 			}
+			showPdfInNewPage(docInfo);
+		}
+		else if(isOffice(docInfo.fileSuffix)) //View Only
+		{
+			showOfficeInNewPage(docInfo);
+		}
+		else if(isText(docInfo.fileSuffix))
+		{
+			//文本文件
+			showTextInDialog(docInfo); //这是个异步调用
+		}
+		else if(isBinary(docInfo.fileSuffix))
+		{
+			//Do nothing	
+		}
+		else	//UnknownFile
+		{
+			if(showUnknownFile && showUnknownFile == true)
+			{
+				//文本文件
+			}
+		}
+	}
+    
+	function openDocInDialog(doc, showUnknownFile)
+	{
+		if(doc == null || doc.type == 2)
+		{
+			//Folder do nothing
+			return;
+		}
+		
+		//copy do to docInfo
+		var docInfo = copyDocInfo(doc);
+		if(!docInfo.fileSuffix)
+		{
+			docInfo.fileSuffix = getFileSuffix(docInfo.name);
+		}
+		
+		var url = null;
+		if(isPicture(docInfo.fileSuffix))
+		{
+			showImgInDialog(docInfo);
+		}
+		else if(isVideo(docInfo.fileSuffix))
+		{
+			showVideoInDialog(docInfo);
+		}
+		else if(isPdf(docInfo.fileSuffix))
+		{
+			showPdfInDialog(docInfo);
+		}
+		else if(isOffice(docInfo.fileSuffix)) //View Only
+		{
+			showOfficeInDialog(docInfo);
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
@@ -1659,14 +1728,65 @@
 		}
 	}
 	
+	function showOfficeInNewPage(docInfo)
+	{	
+		if(officeEditorEnable && officeEditorEnable == true)
+		{
+	        var fileLink = getDocFullLink(docInfo);
+	        //var key = docInfo.docId;
+	        //var title = docInfo.name;
+	        //var fileType = docInfo.suffix;
+	        console.log("fileLink" + fileLink + "");
+			//在新的页面打开
+			//window.open("/DocSystem/web/office.html?key=" + key + "&title=" + title + "&fileType=" + fileType + "&fileLink=" + fileLink);	
+			window.open("/DocSystem/web/office.html?fileLink=" + fileLink);	
+		}
+		else
+		{
+			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
+			previewOfficeInNewPage(docInfo);
+		}
+	}
+	
+	function previewOfficeInNewPage(docInfo)
+	{
+		//Convert doc to PDF and return the link, then show the pdf 
+	    $.ajax({
+	        url : "/DocSystem/Doc/DocToPDF.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: gReposInfo.id,
+	            docId : docInfo.docId,
+	            pid: docInfo.pid,
+	            path: docInfo.path,
+	            name: docInfo.name,
+                shareId: gShareId,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+	                var pdfLink = ret.data;
+	                console.log("showOfficeInDialog fileLink" + fileLink);
+	    			//在新的页面打开
+	    			showPdfInNewPage(docInfo, pdfLink);	
+	            }
+	            else
+	            {
+	            	console.log("showOfficeInDialog DocToPdf Failed");
+	    			//showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
+	            	showTextInNewPage(docInfo); //ReadOnly 方式显示文件内容
+	            }
+	        },
+	        error : function () {
+	            //showErrorMessage("文件预览失败：服务器异常");
+	            console.log("showOfficeInDialog DocToPdf Failed 服务器异常");
+	            showTextInNewPage(docInfo); //ReadOnly 方式显示文件内容
+	        }
+	    });
+	}
+	
 	function previewOfficeInDialog(docInfo)
 	{
-		if(!docInfo || docInfo == null)
-		{
-			showErrorMessage("请选择文件!");
-			return;
-		}
-		
 		//Convert doc to PDF and return the link, then show the pdf 
 	    $.ajax({
 	        url : "/DocSystem/Doc/DocToPDF.do",
@@ -1702,6 +1822,18 @@
 	    });
 	}
 	
+	function showPdfInNewPage(docInfo, url)
+	{
+		var pdfLink = url;
+		if(pdfLink || pdfLink == "")
+		{
+			pdfLink = getFullDocLink(docInfo);
+		}
+        console.log("pdfLink" + pdfLink);
+		//在新的页面打开
+		window.open("/DocSystem/web/pdf.html?url=" + url);
+	}
+	
     function showPdfInDialog(docInfo, url)
    	{
 		bootstrapQ.dialog({
@@ -1713,14 +1845,21 @@
 			big: true,
 			mstyle: getDialogStyle(),
 			callback: function(){
-				PdfViewer.pdfViewerPageInit(url);
+				PdfViewer.pdfViewerPageInit(docInfo, url);
 			},
 		});
    	}
 	
-    function showPictureInDialog(docInfo)
+    function showImgInNewPage(docInfo)
     {
-		console.log("showPictureInDialog docInfo.docId:" + docInfo.docId);
+		console.log("showImgInDialog docInfo.docId:" + docInfo.docId);
+		var url = getFullDocLink(docInfo);
+		window.open("/DocSystem/web/image.html?url=" + url);
+    }
+    
+    function showImgInDialog(docInfo)
+    {
+		console.log("showImgInDialog docInfo.docId:" + docInfo.docId);
 		bootstrapQ.dialog({
 			id: "ImgViewer",
 			title: docInfo.name,
@@ -1818,6 +1957,14 @@
 		return 'width:95%;';	
 	}
 	
+	function showMarkdownInNewPage(docInfo)
+	{
+		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
+		
+		var url = getFullDocLink(docInfo);
+		window.open("/DocSystem/web/markdown.html?url=" + url);
+	}
+	
 	function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 	{
 		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
@@ -1836,38 +1983,39 @@
 		});
 	}
 	
-	function showTextInDialog(docInfo, docText, tmpSavedDocText)
+	function showTextInDialog(docInfo, openType)
 	{
 		console.log("showTextInDialog docInfo.docId:" + docInfo.docId);
-		bootstrapQ.dialog({
-			id: "textViewer",
-			title: docInfo.name,
-			url: 'textViewer.html',
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-			big: true,
-			mstyle: getDialogStyle(),
-			callback: function(){
-				TextViewer.textViewerPageInit(docInfo, docText, tmpSavedDocText);
-			},
-		});
-	}
-	
-	function showTextInEditor(docInfo, docText, tmpSavedDocText)
-	{
-		console.log("showTextInEditor docInfo.docId:" + docInfo.docId);
-		bootstrapQ.dialog({
-			id: "textEditor",
-			title: docInfo.name,
-			url: 'textEditor.html',
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-			big: true,
-			mstyle: getDialogStyle(),
-			callback: function(){
-				TextEditor.textEditorPageInit(docInfo, docText, tmpSavedDocText);
-			},
-		});
+		if(openType && openType == "textViewer")
+		{
+			bootstrapQ.dialog({
+				id: "textViewer",
+				title: docInfo.name,
+				url: 'textViewer.html',
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+				big: true,
+				mstyle: getDialogStyle(),
+				callback: function(){
+					TextViewer.textViewerPageInit(docInfo);
+				},
+			});
+		}
+		else
+		{
+			bootstrapQ.dialog({
+				id: "textEditor",
+				title: docInfo.name,
+				url: 'textEditor.html',
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+				big: true,
+				mstyle: getDialogStyle(),
+				callback: function(){
+					TextEditor.textEditorPageInit(docInfo);
+				},
+			});
+		}
 	}
 	
 	function showOfficeInDialog(docInfo)
@@ -1991,67 +2139,6 @@
 			$("#videoPreview").show();
  		}
 	}
-	
-	function getDocLink(docInfo)
-	{
-		var docDataEx = docInfo.dataEx;
- 		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
-		{
-			return null;
-		}
-		
-		var targetName = docDataEx.name;
-		var targetPath = docDataEx.path;
-	    targetName = encodeURI(targetName);
-	   	targetPath = encodeURI(targetPath);
-		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		
-		if(gShareId)
-		{
-			docLink += "&shareId="+gShareId;
-		}
-		return docLink;
-	}
-	
-	function getDocFullLink(docInfo)
-	{
-		var docLink = getDocLink(docInfo);
-		
-		var host = window.location.hostname; //域名不带端口  
-	 	var port = window.location.port;
-	 	if(port && port != "")
-	 	{
-	 		host += ":" + port;
-	 	}
-	 	
-	 	var url = "http://" + host + docLink;
-	 	console.log("getDocFullLink() url:" + url);
-	 	return url;
-	}
-	
-	function getDocShareLink(reposId, docShare, IpAddress)
-	{
-		var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
-	 	console.log(href);
-		
-	 	//var host = window.location.host;	//域名带端口
-	 	var host = window.location.hostname; //域名不带端口       	 		
-	 		
-	 	if(host == "localhost" && IpAddress && IpAddress != "")
-	 	{
-	 		host = 	IpAddress;
-	 	}
-	 		
-	 	var port = window.location.port;
-	 	if(port && port != "")
-	 	{
-	 		host += ":" + port;
-	 	}
-	 		
-	 	var url = "http://"+host+href;
-	 	return url;
-	}
-	
 	
 	function parseDocContent(content)
 	{
@@ -2702,7 +2789,7 @@ function CompareObj(objA, objB, flag) {
     	  
     	  if(gDocInfo.docId == treeNode.id)
     	  {
-    		  openDocInDialog(gDocInfo);
+    		  openDoc(gDocInfo, false, false);
     		  return;
     	  }
     	  
@@ -3680,83 +3767,6 @@ function CompareObj(objA, objB, flag) {
            });
 	}
 	
-	function previewDoc()
-	{
-		console.log("previewDoc gDocInfo:", gDocInfo);
-		if(gDocInfo != null)
-		{
-			showDocInNewPage(gDocInfo);
-		}
-	}
-	
-	function showDocInNewPage(node)
-	{
-		 showOfficeInNewPage(node);
-	}
-	
-	function showOfficeInNewPage(docInfo)
-	{
-		if(!docInfo || docInfo == null)
-		{
-			showErrorMessage("请选择文件!");
-			return;
-		}
-		
-        var fileLink = getDocFullLink(docInfo);
-        //var key = docInfo.docId;
-        //var title = docInfo.name;
-        //var fileType = docInfo.suffix;
-        console.log("fileLink" + fileLink + "");
-		//在新的页面打开
-		//window.open("/DocSystem/web/office.html?key=" + key + "&title=" + title + "&fileType=" + fileType + "&fileLink=" + fileLink);	
-		window.open("/DocSystem/web/office.html?fileLink=" + fileLink);		
-	}
-	
-	function previewOfficeInNewPage(node)
-	{
-		if(!node || node == null)
-		{
-			showErrorMessage("请选择文件!");
-			return;
-		}
-		
-		var docId = node.id;
-		var pid = node.pid;
-		var path = node.path;
-		var name = node.name;
-		
-		//Convert doc to PDF and return the link, then show the pdf 
-	    $.ajax({
-	        url : "/DocSystem/Doc/DocToPDF.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	        	reposId: gReposInfo.id,
-	            docId : docId,
-	            pid: pid,
-	            path: path,
-	            name: name,
-	            shareId: gShareId,
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status ){
-	                var fileLink = ret.data;
-	                console.log("fileLink" + fileLink);
-	    			//在新的页面打开
-	    			window.open("/DocSystem/web/viewDoc.html?fileLink=" + fileLink);	
-	            }
-	            else
-	            {
-	            	showErrorMessage("文件预览失败：" + ret.msgInfo);           	
-	            }
-	        },
-	        error : function () {
-	            showErrorMessage("文件预览失败：服务器异常");
-	        }
-	    });
-	}
-	
-	
 	function WikiEditBtnCtrl(edit)
 	{
 		 if(edit == true)
@@ -4548,8 +4558,7 @@ function CompareObj(objA, objB, flag) {
 			{divider: true},
 			{text: '打开', action: function(e){
 					e.preventDefault();
-					//showDocInNewPage(curRightClickedTreeNode);
-					openDocInDialog(curRightClickedTreeNode, true);    
+					openDoc(curRightClickedTreeNode, true, true);  
 				}
 			},
 			{text: '下载', action: function(e){
@@ -4902,8 +4911,7 @@ function CompareObj(objA, objB, flag) {
 				{divider: true},
 				{text: '打开', action: function(e){
 							e.preventDefault();
-							//showDocInNewPage(curRightClickedDocListNode);
-							openDocInDialog(curRightClickedDocListNode, true);    
+							openDoc(curRightClickedDocListNode, true, true);    
 						}
 				},
 				{text: '下载', action: function(e){
