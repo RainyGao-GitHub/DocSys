@@ -1,3 +1,5 @@
+<div id="textPlayer" class="textPlayer" style="width: 100%; min-height:1200px; word-wrap: break-word; white-space: pre-wrap;"></div>
+
 <script type="text/javascript">
 var TextViewer = (function () {
 	var docInfo = {};
@@ -10,27 +12,19 @@ var TextViewer = (function () {
 		console.log("textViewerPageInit InputDoc:", Input_doc);
 		console.log("textViewerPageInit Input_docText:", Input_docText);
 		docInfo = Input_doc;		
-		docText = Input_docText;
-		tmpSavedDocText = Input_tmpSavedDocText;
-		
-		showText(docText);
+		getDocText(docInfo, showText, showErrorMessage);
   	}
-    
 	
-	function showText(content)
+	function showText(docText, tmpSavedDocText)
 	{
 		//$('#textPlayer').html(content); //html的标签会被解析
-		$('#textPlayer').text(content); //html标签会被当做字符串
+		$('#textPlayer').text(docText); //html标签会被当做字符串
 	}
 	
     return {
-        textViewerPageInit: function(docInfo, content, tmpSavedContent){
-        	textViewerPageInit(docInfo, content, tmpSavedContent);
+        textViewerPageInit: function(docInfo){
+        	textViewerPageInit(docInfo);
         },
     };
 })();
-
 </script>
-
-
-<div id="textPlayer" class="textPlayer" style="width: 100%; min-height:1200px; word-wrap: break-word; white-space: pre-wrap;"></div>
