@@ -59,28 +59,24 @@ var TextEditor = (function () {
 	var tmpSavedDocText = "";
 	var isContentChanged = false;
 	
-	function textEditorPageInit(Input_doc, Input_docText, Input_tmpSavedDocText)
+	function textEditorPageInit(Input_doc)
 	{
 		console.log("textEditorPageInit InputDoc:", Input_doc);
 		//console.log("textEditorPageInit Input_docText:", Input_docText);
 		docInfo = Input_doc;		
-		docText = Input_docText;
-		tmpSavedDocText = Input_tmpSavedDocText;		
-
+	
+		getDocText(docInfo, showText, showErrorMessage);
+  	}
+    
+	function showText(docText, tmpSavedDocText)
+	{
 		checkAndSetFileShowMode(docInfo);
+		checkAndSetEditBtn(docInfo);	
 		
-		checkAndSetEditBtn(docInfo);
-		
-		showText(docText);
-		
+		editor.setValue(docText);
 		editor.getSession().on('change', function(e) {
 			isContentChanged = true;
 		});
-  	}
-    
-	function showText(content)
-	{
-		editor.setValue(docText);
 	}
 	    
     function saveDoc()
@@ -499,8 +495,8 @@ var TextEditor = (function () {
 
     //开放给外部的接口
     return {
-        textEditorPageInit: function(docInfo, content, tmpSavedContent){
-        	textEditorPageInit(docInfo, content, tmpSavedContent);
+        textEditorPageInit: function(docInfo){
+        	textEditorPageInit(docInfo);
         },
         saveDoc: function(){
         	saveDoc();
