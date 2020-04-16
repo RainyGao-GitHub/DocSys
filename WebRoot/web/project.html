@@ -1730,6 +1730,8 @@
 	
 	function showOfficeInNewPage(docInfo)
 	{	
+		console.log("showOfficeInNewPage docInfo:", docInfo);
+
 		if(officeEditorEnable && officeEditorEnable == true)
 		{
 	        var fileLink = getDocFullLink(docInfo);
@@ -1745,6 +1747,31 @@
 		{
 			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
 			previewOfficeInNewPage(docInfo);
+		}
+	}
+	
+	function showOfficeInDialog(docInfo)
+	{
+		console.log("showOfficeInDialog docInfo:", docInfo);
+		if(officeEditorEnable && officeEditorEnable == true)
+		{
+			bootstrapQ.dialog({
+				id: "officeEditor",
+				title: docInfo.name,
+				url: 'officeEditor.html',
+				msg: '页面正在加载，请稍等...',
+				foot: false,
+				big: true,
+				mstyle: getDialogStyle(),
+				callback: function(){
+					OfficeEditor.officeEditorPageInit(docInfo);
+				},
+			});
+		}
+		else
+		{
+			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
+			previewOfficeInDialog(docInfo);
 		}
 	}
 	
@@ -1766,20 +1793,20 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
 	                var pdfLink = ret.data;
-	                console.log("showOfficeInDialog fileLink" + fileLink);
+	                console.log("previewOfficeInNewPage fileLink" + fileLink);
 	    			//在新的页面打开
 	    			showPdfInNewPage(docInfo, pdfLink);	
 	            }
 	            else
 	            {
-	            	console.log("showOfficeInDialog DocToPdf Failed");
+	            	console.log("previewOfficeInNewPage DocToPdf Failed");
 	    			//showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
 	            	showTextInNewPage(docInfo); //ReadOnly 方式显示文件内容
 	            }
 	        },
 	        error : function () {
 	            //showErrorMessage("文件预览失败：服务器异常");
-	            console.log("showOfficeInDialog DocToPdf Failed 服务器异常");
+	            console.log("previewOfficeInNewPage DocToPdf Failed 服务器异常");
 	            showTextInNewPage(docInfo); //ReadOnly 方式显示文件内容
 	        }
 	    });
