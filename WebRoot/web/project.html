@@ -1724,16 +1724,74 @@
 		}
 	}
 	
+	//ShowDocInNewPage
     function showImgInNewPage(docInfo)
     {
-		console.log("showImgInDialog docInfo.docId:" + docInfo.docId);
-		var url = getDocDownloadFullLink(docInfo);
-		window.open("/DocSystem/web/image.html?url=" + url);
+		console.log("showImgInDialog docInfo:", docInfo);
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		window.open("/DocSystem/web/image.html?" + urlParamStr);
     }
     
+    function showVideoInNewPage(docInfo){
+		console.log("showVideoInNewPage docInfo:", docInfo);
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		window.open("/DocSystem/web/video.html?" + urlParamStr);
+    }
+    
+	function showMarkdownInNewPage(docInfo)
+	{
+		console.log("showMarkdownInNewPage docInfo:", docInfo);
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		window.open("/DocSystem/web/markdown.html?" + urlParamStr);
+	}
+	
+	function showTextInNewPage(docInfo, openType)
+	{
+		console.log("showTextInNewPage docInfo:", docInfo);
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		if(openType && openType == "textViewer")
+		{
+			window.open("/DocSystem/web/text.html?" + urlParamStr);
+		}
+		else
+		{
+			window.open("/DocSystem/web/ace.html?" + urlParamStr);			
+		}
+	}
+    
+	function showPdfInNewPage(docInfo, pdfLink)
+	{
+		console.log("showPdfInNewPage docInfo:", docInfo);
+		if(pdfLink && pdfLink != "")
+		{
+			docInfo.fileLink = pdfLink;
+		}
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		window.open("/DocSystem/web/pdf.html?" + urlParamStr);
+	}
+    
+	function showOfficeInNewPage(docInfo)
+	{	
+		console.log("showOfficeInNewPage docInfo:", docInfo);
+
+		if(officeEditorEnable && officeEditorEnable == true)
+		{
+	        var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	        console.log("urlParamStr=" + urlParamStr);
+			var link = "/DocSystem/web/office.html?" + urlParamStr;
+	        window.open(link);	
+		}
+		else
+		{
+			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
+			previewOfficeInNewPage(docInfo);
+		}
+	}
+    
+	//ShowDocInDialog
     function showImgInDialog(docInfo)
     {
-		console.log("showImgInDialog docInfo.docId:" + docInfo.docId);
+		console.log("showImgInDialog docInfo:", docInfo);
 		bootstrapQ.dialog({
 			id: "ImgViewer",
 			title: docInfo.name,
@@ -1747,27 +1805,12 @@
 			},
 		});
     }
-    
-    function showVideoInNewPage(docInfo){
-    	//TODO
-    }
+
     function showVideoInDialog(docInfo){
     	//TODO
     }
-    
-	function showPdfInNewPage(docInfo, url)
-	{
-		var pdfLink = url;
-		if(pdfLink || pdfLink == "")
-		{
-			pdfLink = getDocDownloadFullLink(docInfo);
-		}
-        console.log("pdfLink" + pdfLink);
-		//在新的页面打开
-		window.open("/DocSystem/web/pdf.html?url=" + url);
-	}
 	
-    function showPdfInDialog(docInfo, url)
+    function showPdfInDialog(docInfo, pdfLink)
    	{
 		bootstrapQ.dialog({
 			id: "PdfViewer",
@@ -1778,18 +1821,10 @@
 			big: true,
 			mstyle: getDialogStyle(),
 			callback: function(){
-				PdfViewer.pdfViewerPageInit(docInfo, url);
+				PdfViewer.pdfViewerPageInit(docInfo, pdfLink);
 			},
 		});
    	}
-    
-	function showMarkdownInNewPage(docInfo)
-	{
-		console.log("showMarkdownInDialog docInfo.docId:" + docInfo.docId);
-		
-		var url = getDocDownloadFullLink(docInfo);
-		window.open("/DocSystem/web/markdown.html?url=" + url);
-	}
 	
 	function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 	{
@@ -1807,20 +1842,6 @@
 				MdViewer.mdViewerPageInit(docInfo);
 			},
 		});
-	}
-		
-	function showTextInNewPage(docInfo, openType)
-	{
-		console.log("showTextInDialog docInfo.docId:" + docInfo.docId);
-		var url = getDocDownloadFullLink(docInfo);
-		if(openType && openType == "textViewer")
-		{
-			window.open("/DocSystem/web/text.html?url=" + url);
-		}
-		else
-		{
-			window.open("/DocSystem/web/ace.html?url=" + url);			
-		}
 	}
 	
 	function showTextInDialog(docInfo, openType)
@@ -1855,24 +1876,6 @@
 					TextEditor.textEditorPageInit(docInfo);
 				},
 			});
-		}
-	}
-    
-	function showOfficeInNewPage(docInfo)
-	{	
-		console.log("showOfficeInNewPage docInfo:", docInfo);
-
-		if(officeEditorEnable && officeEditorEnable == true)
-		{
-	        var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	        console.log("urlParamStr=" + urlParamStr);
-			var link = "/DocSystem/web/office.html?" + urlParamStr;
-	        window.open(link);	
-		}
-		else
-		{
-			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
-			previewOfficeInNewPage(docInfo);
 		}
 	}
 	
@@ -1955,10 +1958,10 @@
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
-	                var fileLink = ret.data;
-	                console.log("previewOfficeInDialog fileLink" + fileLink);
+	                var pdfLink = ret.data;
+	                console.log("previewOfficeInDialog pdfLink" + pdfLink);
 	    			//在新的页面打开
-	    			showPdfInDialog(docInfo, fileLink);	
+	    			showPdfInDialog(docInfo, pdfLink);	
 	            }
 	            else
 	            {
