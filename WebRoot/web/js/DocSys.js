@@ -91,6 +91,51 @@ function getDocInfoFromRequestParamStr()
 	return docInfo;
 }
 
+//获取文件链接接口
+function getDocFileLink(docInfo, successCallback, errorCallback)
+{	
+	var fileLink = "";
+	var errorInfo = "";
+	console.log("getDocFileLink()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	return;
+    }
+  	
+	$.ajax({
+        url : "/DocSystem/Doc/getDocFileLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.reposId,
+            path: docInfo.path,
+            name: docInfo.name,
+            shareId: docInfo.shareId,
+        },
+        success : function (ret) {
+        	console.log("getDocFileLink ret",ret);
+        	if( "ok" == ret.status )
+        	{
+        		fileLink = ret.data;
+        		successCallback &&successCallback(fileLink);
+            }
+            else 
+            {
+            	console.log(ret.msgInfo);
+            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+            	errorCallback && errorCallback(errorInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        	errorCallback && errorCallback(errorInfo);
+        }
+    });
+}
+
 //文件文本内容获取接口
 function getDocText(docInfo, successCallback, errorCallback)
 {
@@ -479,6 +524,60 @@ function getDiyFileIconType(name)
 	}
 	
 	return iconType;
+}
+
+//这个接口是给OfficeEditor使用的
+function getDocumentType(fileType)
+{
+	var documentTypeMap = {
+	        doc		:	"text",
+	        docm 	:	"text",
+	        docx	:	"text",
+	        dot 	:	"text",
+	        dotm	:	"text",
+	        dotx 	:	"text",
+	        doc		:	"text",
+			docx 	:	"text",	
+			epub	:	"text",
+			fodt 	:	"text",
+			htm		:	"text",
+			htmk 	:	"text",
+	        mht		:	"text",
+	        odt		:	"text",
+	        pdf		:	"text",
+			rtf 	:	"text",	
+			txt 	:	"text",	
+			djvu 	:	"text",	
+			xps 	:	"text",	
+			fodp 	: 	"presentation",
+		    odp 	: 	"presentation",
+		    potm	:	"presentation",
+		    pot 	: 	"presentation",
+		    potx 	:	"presentation",
+		    pps 	: 	"presentation",
+		    ppsm 	: 	"presentation",
+		    ppsx 	: 	"presentation",
+		    ppt 	: 	"presentation",
+		    pptm 	: 	"presentation",
+		    pptx 	: 	"presentation",
+		    csv 	: 	"spreadsheet",
+		    fods 	: 	"spreadsheet",
+		    ods 	: 	"spreadsheet",
+			xls 	: 	"spreadsheet",
+			xlsm 	: 	"spreadsheet",
+	        xlsx 	: 	"spreadsheet",
+	        xlt 	: 	"spreadsheet",
+			xltm 	: 	"spreadsheet",
+			xltx 	: 	"spreadsheet",
+	};
+	
+    var type = documentTypeMap[fileType];
+	if ( undefined == type )
+	{
+		return ""
+	}
+	
+	return type;
 }
 
 //弹出对话框操作接口

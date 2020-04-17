@@ -1616,6 +1616,7 @@
     
     function openDoc(doc, showUnknownFile, openInNewPage)
     {
+		doc.fileLink = 
     	if(openInNewPage && openInNewPage == true)
     	{
     		openDocInNewPage(doc, showUnknownFile)
@@ -1726,18 +1727,37 @@
 	}
 	
 	//ShowDocInNewPage
-    function showImgInNewPage(docInfo)
+    function showImgInNewPage(docInfo, fileLink)
     {
 		console.log("showImgInDialog docInfo:", docInfo);
+		if(fileLink && fileLink != "")
+		{
+			docInfo.fileLink = fileLink;
+		}
 		var urlParamStr = buildRequestParamStrForDoc(docInfo);
 		window.open("/DocSystem/web/image.html?" + urlParamStr);
     }
     
-    function showVideoInNewPage(docInfo){
+    function showVideoInNewPage(docInfo, fileLink){
 		console.log("showVideoInNewPage docInfo:", docInfo);
+		if(fileLink && fileLink != "")
+		{
+			docInfo.fileLink = fileLink;
+		}
 		var urlParamStr = buildRequestParamStrForDoc(docInfo);
 		window.open("/DocSystem/web/video.html?" + urlParamStr);
     }
+    
+	function showPdfInNewPage(docInfo, fileLink)
+	{
+		console.log("showPdfInNewPage docInfo:", docInfo);
+		if(fileLink && fileLink != "")
+		{
+			docInfo.fileLink = fileLink;
+		}
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		window.open("/DocSystem/web/pdf.html?" + urlParamStr);
+	}
     
 	function showMarkdownInNewPage(docInfo)
 	{
@@ -1758,17 +1778,6 @@
 		{
 			window.open("/DocSystem/web/ace.html?" + urlParamStr);			
 		}
-	}
-    
-	function showPdfInNewPage(docInfo, pdfLink)
-	{
-		console.log("showPdfInNewPage docInfo:", docInfo);
-		if(pdfLink && pdfLink != "")
-		{
-			docInfo.fileLink = pdfLink;
-		}
-		var urlParamStr = buildRequestParamStrForDoc(docInfo);
-		window.open("/DocSystem/web/pdf.html?" + urlParamStr);
 	}
     
 	function showOfficeInNewPage(docInfo)

@@ -5,23 +5,34 @@
 <script type="text/javascript">
 var OfficeEditor = (function () {
 	var editor = null;
-	var doc = null;
+	var docInfo = null;
 	
 	function officeEditorPageInit(Input_doc)
 	{
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
-		doc = Input_doc;
-		var docLink = getDocDownloadFullLink(doc);
-        var config = {
+		docInfo = Input_doc;
+		var fileLink = getDocDownloadFullLink(docInfo);
+	    var fileType = getFileSuffix(docInfo.name);
+	    var documentType = getDocumentType(fileType);
+	    var title = docInfo.name;
+	    var key = docInfo.docId + "";
+	    
+		var config = {
     		    "document": {
-    		        "fileType": "docx",
-    		        "key": doc.docId+"",
-    		        "title": doc.name,
-    		        "url": docLink,
+    		        "fileType": fileType,
+    		        "key": key,
+    		        "title": title,
+    		        "url": fileLink,
     		    },
-    		    "documentType": "text"
-    		};
-        window.docEditor = new DocsAPI.DocEditor("placeholder", config);
+    		    "documentType": documentType,
+                //"editorConfig": {
+                //    "callbackUrl": saveUrl,
+                //    "lang": "zh-CN",
+                //},
+                "height": "100%",
+                "width": "100%",
+    	};
+        editor = new DocsAPI.DocEditor("placeholder", config);
 	}
 
     //开放给外部的接口
