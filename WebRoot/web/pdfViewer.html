@@ -13,7 +13,7 @@ var PdfViewer = (function () {
 	    var fileLink = docInfo.fileLink;	    
 	    if(!fileLink || fileLink != null)
 	    {
-	    	getDocFileLink(docInfo, showPDF, showErrorMessage);    	
+	    	getDocFileLink(docInfo, showPDF, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink    	
 	    }
 	    else
 	    {
@@ -23,6 +23,7 @@ var PdfViewer = (function () {
 		
 	function showPDF(url)
 	{
+		//注意：pdfjs会把url中的参数部分去掉，所以传入的方式需要使用REST风格的路径
 		$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
 		'" style="width:100%; height:100%;"></iframe>');
 	}

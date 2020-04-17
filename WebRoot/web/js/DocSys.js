@@ -92,7 +92,7 @@ function getDocInfoFromRequestParamStr()
 }
 
 //获取文件链接接口
-function getDocFileLink(docInfo, successCallback, errorCallback)
+function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -114,6 +114,7 @@ function getDocFileLink(docInfo, successCallback, errorCallback)
             path: docInfo.path,
             name: docInfo.name,
             shareId: docInfo.shareId,
+            urlStyle: urlStyle,
         },
         success : function (ret) {
         	console.log("getDocFileLink ret",ret);
