@@ -119,7 +119,18 @@ function getDocFileLink(docInfo, successCallback, errorCallback)
         	console.log("getDocFileLink ret",ret);
         	if( "ok" == ret.status )
         	{
-        		fileLink = ret.data;
+        		var docLink = ret.data;
+        		fileLink = buildDocFullPath
+        		var host = window.location.hostname; //域名不带端口  
+        	 	var port = window.location.port;
+        	 	if(port && port != "")
+        	 	{
+        	 		host += ":" + port;
+        	 	}
+        	 	
+        	 	var url = "http://" + host + docLink;
+        	 	console.log("getDocDownloadFullLink() url:" + url);
+        	 	return url;
         		successCallback &&successCallback(fileLink);
             }
             else 
@@ -217,6 +228,25 @@ function getDocText(docInfo, successCallback, errorCallback)
 }
 
 //文件链接获取接口
+function buildFullLink(docLink)
+{
+	if(docLink == null)
+	{
+		return null;
+	}
+	
+	var host = window.location.hostname; //域名不带端口  
+ 	var port = window.location.port;
+ 	if(port && port != "")
+ 	{
+ 		host += ":" + port;
+ 	}
+ 	
+ 	var url = "http://" + host + docLink;
+ 	console.log("buildFullLink() url:" + url);
+ 	return url;
+}
+
 function getDocLink(doc)
 {
 	var link = "/DocSystem/web/project.html?vid="+doc.vid+"&doc="+doc.docId;
@@ -278,17 +308,8 @@ function getDocDownloadLink(docInfo)
 function getDocDownloadFullLink(docInfo)
 {
 	var docLink = getDocDownloadLink(docInfo);
-	
-	var host = window.location.hostname; //域名不带端口  
- 	var port = window.location.port;
- 	if(port && port != "")
- 	{
- 		host += ":" + port;
- 	}
- 	
- 	var url = "http://" + host + docLink;
- 	console.log("getDocDownloadFullLink() url:" + url);
- 	return url;
+	var url =  buildFullLink(docLink);
+	return url;
 }
 
 //文件类型获取与判断接口
