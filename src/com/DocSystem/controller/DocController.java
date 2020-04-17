@@ -16,7 +16,9 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -1685,6 +1687,45 @@ public class DocController extends BaseController{
 			delFileOrDir(targetPath+targetName);
 		}
 	}
+	
+	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}", method=RequestMethod.GET)
+	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+		if(reposAccess == null)
+		{
+			return;	
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			docSysErrorLog("目标路径不能为空！", rt);
+			return;
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			docSysErrorLog("目标路径解码失败！", rt);
+			return;
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = base64Decode(targetName);
+		if(targetName == null)
+		{
+			docSysErrorLog("目标文件名解码失败！", rt);
+			return;
+		}
+	
+		System.out.println("downloadHistoryDoc  targetPath:" + targetPath + " targetName:" + targetName);		
+		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
+	}
+	
 	/**************** get Tmp File ******************/
 	@RequestMapping("/doGetTmpFile.do")
 	public void doGetTmp(Integer reposId,String path, String fileName,
@@ -2350,6 +2391,7 @@ public class DocController extends BaseController{
 	@RequestMapping("/getDocFileLink.do")
 	public void getDocFileLink(Integer reposId, String path, String name,
 			Integer shareId,
+			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
@@ -2399,7 +2441,17 @@ public class DocController extends BaseController{
 			return;
 		}	
 		
-		String fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;
+		String fileLink = null;
+		
+		if(urlStyle != null && urlStyle.equals("REST"))
+		{
+			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName;
+		}
+		else
+		{
+			fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;			
+		}
+		
 		rt.setData(fileLink);
 		writeJson(rt, response);
 	}
