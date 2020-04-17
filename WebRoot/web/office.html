@@ -2,29 +2,41 @@
 <html style="height: 100%;">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>ONLYOFFICE Api Documentation</title>
+    <title>Office Editor</title>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/DocSys.js"></script>
+    <script type="text/javascript" src="http://localhost/web-apps/apps/api/documents/api.js"></script>
 </head>
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>
-    <script type="text/javascript" src="http://localhost/web-apps/apps/api/documents/api.js"></script>
-
     <script type="text/javascript">
-		//var  fileType = getQueryString("fileType");
-	    var fileLink = getQueryString("fileLink");
-	    //var title = getQueryString("title");
-	    //var key = getQueryString("key");
+	    var docInfo = {};
+	    docInfo.reposId = getQueryString("reposId");
+	    docInfo.docId = getQueryString("docId");
+	    docInfo.path = getQueryString("path");
+	    docInfo.name = getQueryString("name");
 	    
-	    console.log("showOffice() fileLink:"+fileLink);
+	    var title = docInfo.name;
+	    var key = docInfo.docId + "";
+	    var fileLink = getQueryString("fileLink");	    
+	    if(!fileLink || fileLink == "")
+	    {
+	    	fileLink = getDocDownloadFullLink(docInfo);
+	    }
+	    var fileType = getFileSuffix(name);
+	    var documentType = getDocumentType(fileType);
+	    
+	    console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
 	    
         window.docEditor = new DocsAPI.DocEditor("placeholder",
             {
                 "document": {
-                    "fileType": "docx",
-                    "key": "5545252352352",
-                    "title": "test.docx",
+                    "fileType": fileType,
+                    "key": key,
+                    "title": title,
                     "url": fileLink,
                 },
-                "documentType": "text",
+                "documentType": documentType,
                 //"editorConfig": {
                 //    "callbackUrl": "<?php cbUrl(); ?>",
                 //    "lang": "zh-CN",
@@ -32,15 +44,50 @@
                 "height": "100%",
                 "width": "100%"
             });
-
-        // 从 url 中获取参数
-        function getQueryString(name) {
-            var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
-            var r = window.location.search.substr(1).match(reg);
-            if (r != null) {
-                return unescape(r[2]);
-            }
-            return null;
+        
+        function getDocumentType(fileType)
+        {
+        	var documentTypeMap = {
+        	        doc		:	"text",
+        	        docm 	:	"text",
+        	        docx	:	"text",
+        	        dot 	:	"text",
+        	        dotm	:	"text",
+        	        dotx 	:	"text",
+        	        doc		:	"text",
+        			docx 	:	"text",	
+        			epub	:	"text",
+        			fodt 	:	"text",
+        			htm		:	"text",
+        			htmk 	:	"text",
+        	        mht		:	"text",
+        	        odt		:	"text",
+        	        pdf		:	"text",
+        			rtf 	:	"text",	
+        			txt 	:	"text",	
+        			djvu 	:	"text",	
+        			xps 	:	"text",	
+        			fodp 	: 	"presentation",
+        		    odp 	: 	"presentation",
+        		    potm	:	"presentation",
+        		    pot 	: 	"presentation",
+        		    potx 	:	"presentation",
+        		    pps 	: 	"presentation",
+        		    ppsm 	: 	"presentation",
+        		    ppsx 	: 	"presentation",
+        		    ppt 	: 	"presentation",
+        		    pptm 	: 	"presentation",
+        		    pptx 	: 	"presentation",
+        		    csv 	: 	"spreadsheet",
+        		    fods 	: 	"spreadsheet",
+        		    ods 	: 	"spreadsheet",
+        			xls 	: 	"spreadsheet",
+        			xlsm 	: 	"spreadsheet",
+        	        xlsx 	: 	"spreadsheet",
+        	        xlt 	: 	"spreadsheet",
+        			xltm 	: 	"spreadsheet",
+        			xltx 	: 	"spreadsheet",
+        	};
         }
     </script>
 </body>

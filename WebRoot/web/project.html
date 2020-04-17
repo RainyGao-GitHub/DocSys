@@ -1864,14 +1864,10 @@
 
 		if(officeEditorEnable && officeEditorEnable == true)
 		{
-	        var fileLink = getDocDownloadFullLink(docInfo);
-	        //var key = docInfo.docId;
-	        //var title = docInfo.name;
-	        //var fileType = docInfo.suffix;
-	        console.log("fileLink" + fileLink + "");
-			//在新的页面打开
-			//window.open("/DocSystem/web/office.html?key=" + key + "&title=" + title + "&fileType=" + fileType + "&fileLink=" + fileLink);	
-			window.open("/DocSystem/web/office.html?fileLink=" + fileLink);	
+	        var urlParamStr = buildUrlParamStrForDoc(docInfo);
+	        console.log("urlParamStr=" + urlParamStr);
+			var link = "/DocSystem/web/office.html?" + urlParamStr;
+	        window.open(link);	
 		}
 		else
 		{
