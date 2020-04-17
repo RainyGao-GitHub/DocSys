@@ -2039,7 +2039,7 @@
 			return;
 		}
 		
-		var docLink = getDocLink(docInfo);
+		var docLink = getDocDownloadLink(docInfo);
 
 		console.log("showImgPreview() docLink:" + docLink);
 		$("#imgPreview").attr('src', docLink);
@@ -2093,7 +2093,7 @@
 			return;
 		}
 		
- 		var docLink = getDocLink(gDocInfo);
+ 		var docLink = getDocDownloadLink(gDocInfo);
  		if(docLink == null)
  		{
  			console.log("showVideoPreview() docLink is null");

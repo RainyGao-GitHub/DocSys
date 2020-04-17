@@ -110,7 +110,7 @@ function getDocFileLink(docInfo, successCallback, errorCallback)
         type : "post",
         dataType : "json",
         data : {
-        	reposId: docInfo.reposId,
+        	reposId: docInfo.vid,
             path: docInfo.path,
             name: docInfo.name,
             shareId: docInfo.shareId,

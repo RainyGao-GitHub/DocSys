@@ -2352,7 +2352,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getDoc reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+		System.out.println("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
 
 		ReturnAjax rt = new ReturnAjax();
 		
