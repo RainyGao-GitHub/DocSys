@@ -59,6 +59,7 @@
 	    
 	    function showPDF(url)
 	   	{
+	    	console.log("showPDF() url:", url);
 	        $('.tmPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
 	            '" style="width:100%; height:100%;"></iframe>');
 	   	}
