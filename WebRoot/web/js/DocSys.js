@@ -17,9 +17,9 @@ function buildRequestParamStrForDoc(docInfo)
 	
 	var urlParamStr = "";
 	var andFlag = "";
-	if(docInfo.reposId)
+	if(docInfo.vid)
 	{
-		urlParamStr = "reposId=" + docInfo.reposId;
+		urlParamStr = "reposId=" + docInfo.vid;
 		andFlag = "&";
 	}
 
@@ -56,7 +56,7 @@ function getDocInfoFromRequestParamStr()
 	var reposId = getQueryString("reposId");
 	if(reposId && reposId != null)
 	{
-		docInfo.reposId = reposId;
+		docInfo.vid = reposId;
 	}
 	
 	var docId = getQueryString("docId");
@@ -277,7 +277,7 @@ function getDocDownloadLink(docInfo)
 
 function getDocDownloadFullLink(docInfo)
 {
-	var docLink = getDocLink(docInfo);
+	var docLink = getDocDownloadLink(docInfo);
 	
 	var host = window.location.hostname; //域名不带端口  
  	var port = window.location.port;
