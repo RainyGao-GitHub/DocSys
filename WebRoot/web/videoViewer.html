@@ -1,0 +1,38 @@
+<div align=center style="margin-top:20px" >
+	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none;max-width:60%; max-height:60%;"></video>
+</div>  
+
+<script type="text/javascript">
+var VideoViewer = (function () {
+	var docInfo = {};
+	
+	function videoViewerPageInit(Input_doc)
+	{
+		console.log("videoViewerPageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink != null)
+	    {
+	    	getDocFileLink(docInfo, showVideo, showErrorMessage);    	
+	    }
+	    else
+	    {
+	    	showVideo(fileLink);
+	    }
+  	}
+    
+	function showVideo(fileLink)
+	{	
+		$("#videoPlayer").attr('src', fileLink);
+		$("#videoPlayer").show();
+	}
+	
+    return {
+        videoViewerPageInit: function(docInfo){
+        	videoViewerPageInit(docInfo);
+        },
+    };
+})();
+
+</script>

@@ -6,35 +6,25 @@
 var ImgViewer = (function () {
 	var docInfo = {};
 	
-	var docText = "";
-	var tmpSavedDocText = "";
-	
 	function imgViewerPageInit(Input_doc)
 	{
 		console.log("imgViewerPageInit InputDoc:", Input_doc);
 		docInfo = Input_doc;
 		
-		showImgPreview(docInfo);
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink != null)
+	    {
+	    	getDocFileLink(docInfo, showImage, showErrorMessage);    	
+	    }
+	    else
+	    {
+	    	showImage(fileLink);
+	    }
   	}
     
-	function showImgPreview(docInfo)
+	function showImage(fileLink)
 	{	
-		var docDataEx = docInfo.dataEx;
-		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
-		{
-			console.log("showImgPreview() dataEx is null");
-			showFileImg(docInfo);
-			return;
-		}
-		
-		var targetName = docDataEx.name;
-		var targetPath = docDataEx.path;
-		
-		targetName = encodeURI(targetName);
-	   	targetPath = encodeURI(targetPath);
-		var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-		console.log("showImgPreview() docLink:" + docLink);
-		$("#imgPlayer").attr('src', docLink);
+		$("#imgPlayer").attr('src', fileLink);
 		$("#imgPlayer").show();
 	}
 	

@@ -1828,10 +1828,22 @@
     }
 
     function showVideoInDialog(docInfo){
-    	//TODO
+		console.log("showVideoInDialog docInfo:", docInfo);
+		bootstrapQ.dialog({
+			id: "VideoViewer",
+			title: docInfo.name,
+			url: 'videoViewer.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: getDialogStyle(),
+			callback: function(){
+				VideoViewer.videoViewerPageInit(docInfo);
+			},
+		});
     }
 	
-    function showPdfInDialog(docInfo, pdfLink)
+    function showPdfInDialog(docInfo)
    	{
 		bootstrapQ.dialog({
 			id: "PdfViewer",
@@ -1842,7 +1854,7 @@
 			big: true,
 			mstyle: getDialogStyle(),
 			callback: function(){
-				PdfViewer.pdfViewerPageInit(docInfo, pdfLink);
+				PdfViewer.pdfViewerPageInit(docInfo);
 			},
 		});
    	}
@@ -1982,7 +1994,8 @@
 	                var pdfLink = ret.data;
 	                console.log("previewOfficeInDialog pdfLink" + pdfLink);
 	    			//在新的页面打开
-	    			showPdfInDialog(docInfo, pdfLink);	
+	    			docInfo.fileLink = pdfLink;
+	    			showPdfInDialog(docInfo);	
 	            }
 	            else
 	            {
