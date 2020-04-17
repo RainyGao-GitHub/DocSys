@@ -1603,7 +1603,7 @@
     	if(doc)
     	{
     		var docInfo = {};
-        	docInfo.reposId = doc.reposId;
+        	docInfo.vid = doc.vid;
     		docInfo.docId = doc.docId;
     		docInfo.path = doc.path;
     		docInfo.name = doc.name;
@@ -1616,7 +1616,6 @@
     
     function openDoc(doc, showUnknownFile, openInNewPage)
     {
-		doc.fileLink = 
     	if(openInNewPage && openInNewPage == true)
     	{
     		openDocInNewPage(doc, showUnknownFile)
@@ -1638,6 +1637,8 @@
 		
 		//copy do to docInfo
 		var docInfo = copyDocInfo(doc);
+		docInfo.fileLink = getDocDownloadFullLink(docInfo);
+
 		if(!docInfo.fileSuffix)
 		{
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -1687,6 +1688,8 @@
 		
 		//copy do to docInfo
 		var docInfo = copyDocInfo(doc);
+		docInfo.fileLink = getDocDownloadFullLink(docInfo);
+		
 		if(!docInfo.fileSuffix)
 		{
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);

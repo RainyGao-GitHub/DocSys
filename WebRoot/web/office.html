@@ -3,6 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Office Editor</title>
+    <script src="static/scripts/jquery.min.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
@@ -13,6 +14,10 @@
     <script type="text/javascript">
     	var editor;
 	    var docInfo = getDocInfoFromRequestParamStr();	    
+	    var fileType = getFileSuffix(docInfo.name);
+	    var documentType = getDocumentType(fileType);
+	    var title = docInfo.name;
+	    var key = docInfo.docId + "";
 	    
 	    var fileLink = getQueryString("fileLink");	    
 	    if(!fileLink || fileLink != null)
@@ -28,10 +33,7 @@
 	    
 	    function showOffice(fileLink)
 	   	{
-		    var fileType = getFileSuffix(docInfo.name);
-		    var documentType = getDocumentType(fileType);
-		    var title = docInfo.name;
-		    var key = docInfo.docId + "";
+
 		    
 	        window.docEditor = new DocsAPI.DocEditor("placeholder",
 	            {
