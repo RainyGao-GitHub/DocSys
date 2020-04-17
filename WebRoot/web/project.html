@@ -1637,8 +1637,12 @@
 		
 		//copy do to docInfo
 		var docInfo = copyDocInfo(doc);
-		docInfo.fileLink = getDocDownloadFullLink(docInfo);
-
+		var fileLink = getDocDownloadFullLink(docInfo);
+		if(fileLink && fileLink != null)
+		{
+			docInfo.fileLink = fileLink;
+		}
+			
 		if(!docInfo.fileSuffix)
 		{
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -1688,8 +1692,12 @@
 		
 		//copy do to docInfo
 		var docInfo = copyDocInfo(doc);
-		docInfo.fileLink = getDocDownloadFullLink(docInfo);
-		
+		var fileLink = getDocDownloadFullLink(docInfo);
+		if(fileLink && fileLink != null)
+		{
+			docInfo.fileLink = fileLink;
+		}
+
 		if(!docInfo.fileSuffix)
 		{
 			docInfo.fileSuffix = getFileSuffix(docInfo.name);
