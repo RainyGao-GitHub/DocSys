@@ -6,6 +6,48 @@
  ** 提示对话框接口 **
  * */
 
+//构造Doc的UrlParamStr
+function buildUrlParamStrForDoc(docInfo)
+{
+	if(!docInfo)
+	{
+		return "";
+	}
+	
+	var urlParamStr = "";
+	var andFlag = "";
+	if(docInfo.reposId)
+	{
+		urlParamStr = "reposId=" + docInfo.reposId;
+		andFlag = "&";
+	}
+
+	if(docInfo.docId)
+	{
+		urlParamStr += andFlag + "docId=" + docInfo.docId;
+		andFlag = "&";
+	}
+	
+	if(docInfo.path)
+	{
+		urlParamStr += andFlag + "path=" + docInfo.path;
+		andFlag = "&";
+	}
+	
+	if(docInfo.name)
+	{
+		urlParamStr += andFlag + "name=" + docInfo.name;
+		andFlag = "&";
+	}
+
+	if(docInfo.fileLink)
+	{
+		urlParamStr += andFlag + "fileLink=" + docInfo.fileLink;
+		andFlag = "&";
+	}
+	return urlParamStr;
+}
+
 //文件文本内容获取接口
 function getDocText(docInfo, successCallback, errorCallback)
 {
