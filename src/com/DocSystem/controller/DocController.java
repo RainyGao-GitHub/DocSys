@@ -2346,6 +2346,63 @@ public class DocController extends BaseController{
 
 		writeJson(rt, response);
 	}
+	
+	@RequestMapping("/getDocFileLink.do")
+	public void getDocFileLink(Integer reposId, String path, String name,
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getDoc reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+
+		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		if(doc.getType() != 1)
+		{
+			docSysErrorLog("不是文件", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String encTargetName = base64Encode(doc.getName());
+		if(encTargetName == null)
+		{
+			docSysErrorLog("getDocFileLink() get encTargetName Failed", rt);
+			writeJson(rt, response);			
+			return;
+		}	
+		String encTargetPath = base64Encode(doc.getLocalRootPath() + doc.getPath());
+		if(encTargetPath == null)
+		{
+			docSysErrorLog("getDocFileLink() get encTargetPath Failed", rt);
+			writeJson(rt, response);			
+			return;
+		}	
+		
+		String fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;
+		rt.setData(fileLink);
+		writeJson(rt, response);
+	}
+	
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
