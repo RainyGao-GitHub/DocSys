@@ -2376,8 +2376,8 @@ public class DocController extends BaseController{
 
 		Doc doc = buildBasicDoc(reposId, null, null, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		doc = docSysGetDoc(repos, doc);
-		if(doc.getType() != 1)
+		Doc localDoc = docSysGetDoc(repos, doc);
+		if(localDoc.getType() != 1)
 		{
 			docSysErrorLog("不是文件", rt);
 			writeJson(rt, response);			
