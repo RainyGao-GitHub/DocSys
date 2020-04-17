@@ -24,6 +24,7 @@ var ImgViewer = (function () {
     
 	function showImage(fileLink)
 	{	
+		console.log("showImage() fileLink:", fileLink);
 		$("#imgPlayer").attr('src', fileLink);
 		$("#imgPlayer").show();
 	}
