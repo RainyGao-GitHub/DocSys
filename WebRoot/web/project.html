@@ -1457,11 +1457,11 @@
             		$('#filetitle').html(doc.name);
 	                //Reset gDocInfo
                 	gDocInfo = {};
+	                gDocInfo.vid = gReposInfo.id;
                 	gDocInfo.docId = doc.docId;
 	            	gDocInfo.path = doc.path;
 	            	gDocInfo.name = doc.name;
 	            	gDocInfo.type = doc.type;
-                	//gDocInfo.doc = doc;
                 	gDocInfo.dataEx = ret.dataEx;
 	                
                 	gDocInfo.openMode = openMode;
@@ -2102,7 +2102,7 @@
  		}
  		else
  		{
-			console.log("showImgPreview() docLink:" + docLink);
+			console.log("showVideoPreview() docLink:" + docLink);
 			$("#videoPreview").attr('src', docLink);
 			$("#videoPreview").show();
  		}
