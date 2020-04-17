@@ -6,8 +6,9 @@
  ** 提示对话框接口 **
  * */
 
-//构造Doc的UrlParamStr
-function buildUrlParamStrForDoc(docInfo)
+//构造 buildRequestParamStrForDoc 和 getDocInfoFromRequestParamStr 需要成对使用，用于前端页面之间传递参数
+//如果是传给后台的url需要用base64_urlsafe_encode
+function buildRequestParamStrForDoc(docInfo)
 {
 	if(!docInfo)
 	{
@@ -30,13 +31,13 @@ function buildUrlParamStrForDoc(docInfo)
 	
 	if(docInfo.path)
 	{
-		urlParamStr += andFlag + "path=" + docInfo.path;
+		urlParamStr += andFlag + "path=" + base64_encode(docInfo.path);
 		andFlag = "&";
 	}
 	
 	if(docInfo.name)
 	{
-		urlParamStr += andFlag + "name=" + docInfo.name;
+		urlParamStr += andFlag + "name=" + base64_encode(docInfo.name);
 		andFlag = "&";
 	}
 
@@ -46,6 +47,48 @@ function buildUrlParamStrForDoc(docInfo)
 		andFlag = "&";
 	}
 	return urlParamStr;
+}
+
+function getDocInfoFromRequestParamStr()
+{
+	var docInfo = {};
+
+	var reposId = getQueryString("reposId");
+	if(reposId && reposId != null)
+	{
+		docInfo.reposId = reposId;
+	}
+	
+	var docId = getQueryString("docId");
+	if(docId && docId != null)
+	{
+		docInfo.docId = docId;
+	}
+	
+	var path = getQueryString("path");
+	if(path && path != null)
+	{
+		path = base64_decode(path);
+	}
+	else
+	{
+		path = "";
+	}
+	docInfo.path = path;
+
+		
+	var name = getQueryString("name");
+	if(name && name != null)
+	{
+		name = base64_decode(name);
+	}
+	else
+	{
+		name = "";
+	}
+	docInfo.name = name;
+
+	return docInfo;
 }
 
 //文件文本内容获取接口
