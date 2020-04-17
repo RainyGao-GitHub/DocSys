@@ -139,6 +139,20 @@
     <script src="static/markdown/plugins/preformatted-text-dialog/preformatted-text-dialog.js" type="text/javascript"></script>
     <script src="static/pdfjs/build/pdf.js"></script>
     <script src="static/pdfjs/build/pdf.worker.js"></script>
+    <script type="text/javascript">
+    	//这里的接口会在body元素加载时被调用，因此需要放到header这里
+	    function FileLogoErrHandler()
+		{
+			console.log("FileLogoErrHandler");
+			$("#fileLogo").attr('src',"images/file_icon/icon_file/file.png"); 
+		}
+		
+		function FileImgErrHandler()
+		{
+			console.log("FileImgErrHandler");
+			$("#imgPreview").attr('src',"images/file_icon/icon_file/file.png"); 
+		}
+    </script>
 </head>
 <body class="-webkit-overflow-scrolling:touch;">
 <div class="m-manual manual-reader">
@@ -2035,18 +2049,6 @@
 		}
 		$("#fileLogo").attr('src', logoLink);
 		$("#fileLogo").show();
-	}
-	
-	function FileLogoErrHandler()
-	{
-		console.log("FileLogoErrHandler");
-		$("#fileLogo").attr('src',"images/file_icon/icon_file/file.png"); 
-	}
-	
-	function FileImgErrHandler()
-	{
-		console.log("FileImgErrHandler");
-		$("#imgPreview").attr('src',"images/file_icon/icon_file/file.png"); 
 	}
 	
 	function showVideoPreview(showFlag)
