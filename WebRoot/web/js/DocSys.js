@@ -120,17 +120,7 @@ function getDocFileLink(docInfo, successCallback, errorCallback)
         	if( "ok" == ret.status )
         	{
         		var docLink = ret.data;
-        		fileLink = buildDocFullPath
-        		var host = window.location.hostname; //域名不带端口  
-        	 	var port = window.location.port;
-        	 	if(port && port != "")
-        	 	{
-        	 		host += ":" + port;
-        	 	}
-        	 	
-        	 	var url = "http://" + host + docLink;
-        	 	console.log("getDocDownloadFullLink() url:" + url);
-        	 	return url;
+        		var fileLink = buildFullLink(docLink);
         		successCallback &&successCallback(fileLink);
             }
             else 

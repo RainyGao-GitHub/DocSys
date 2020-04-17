@@ -3,13 +3,22 @@
 <script type="text/javascript">
 //PdfViewer类
 var PdfViewer = (function () {
-	var url;
+	var docInfo = {};
 	
-	function pdfViewerPageInit(Input_url)
+	function pdfViewerPageInit(Input_doc)
 	{
-		console.log("pdfViewerPageInit Input_url:" + Input_url);
-		url = Input_url;
-		showPDF(url);
+		console.log("pdfViewerPageInit InputDoc:", Input_doc);
+		docInfo = Input_doc;
+		
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink != null)
+	    {
+	    	getDocFileLink(docInfo, showPDF, showErrorMessage);    	
+	    }
+	    else
+	    {
+	    	showPDF(fileLink);
+	    }
 	}
 		
 	function showPDF(url)
@@ -20,8 +29,8 @@ var PdfViewer = (function () {
 	
 	//开放给外部的调用接口
     return {
-    	pdfViewerPageInit: function(url){
-    		pdfViewerPageInit(url);
+    	pdfViewerPageInit: function(docInfo){
+    		pdfViewerPageInit(docInfo);
         },
     };
 })();
