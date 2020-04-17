@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>ImageViewer</title>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/DocSys.js"></script>
+</head>
+<body style="height: 100%; margin: 0;">
+	<div align="center" style="margin-top:20px; min-height:500px;">
+		<img id="imgPlayer" name="imgPlayer" src="" style="display:none; max-width:100%; max-height:100%;"></img>
+	</div>    
+	<script type="text/javascript">
+	    var fileLink = getQueryString("fileLink");	    
+	    if(!fileLink || fileLink != null)
+	    {
+		    var docInfo = getDocInfoFromRequestParamStr();	    
+	    	getDocFileLink(docInfo, showImage);    	
+	    }
+	    else
+	    {
+	    	showImage(fileLink);
+	    }
+		
+	    function showImage(fileLink)
+	    {
+			$("#imgPlayer").attr('src', fileLink);
+			$("#imgPlayer").show();
+	    }
+    </script>
+</body>
+</html>

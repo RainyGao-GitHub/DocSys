@@ -11,89 +11,45 @@
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>
     <script type="text/javascript">
+    	var editor;
 	    var docInfo = getDocInfoFromRequestParamStr();	    
 	    
 	    var fileLink = getQueryString("fileLink");	    
 	    if(!fileLink || fileLink != null)
 	    {
-	    	fileLink = getDocDownloadFullLink(docInfo);
+	    	getDocFileLink(docInfo, showOffice);
 	    }
-	    var fileType = getFileSuffix(name);
-	    var documentType = getDocumentType(fileType);
-	    var title = docInfo.name;
-	    var key = docInfo.docId + "";
+	    else
+	    {
+	    	showOffice(fileLink);
+	    }
 	    
 	    console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
 	    
-        window.docEditor = new DocsAPI.DocEditor("placeholder",
-            {
-                "document": {
-                    "fileType": fileType,
-                    "key": key,
-                    "title": title,
-                    "url": fileLink,
-                },
-                "documentType": documentType,
-                //"editorConfig": {
-                //    "callbackUrl": "<?php cbUrl(); ?>",
-                //    "lang": "zh-CN",
-                //},
-                "height": "100%",
-                "width": "100%"
-            });
-        
-        function getDocumentType(fileType)
-        {
-        	var documentTypeMap = {
-        	        doc		:	"text",
-        	        docm 	:	"text",
-        	        docx	:	"text",
-        	        dot 	:	"text",
-        	        dotm	:	"text",
-        	        dotx 	:	"text",
-        	        doc		:	"text",
-        			docx 	:	"text",	
-        			epub	:	"text",
-        			fodt 	:	"text",
-        			htm		:	"text",
-        			htmk 	:	"text",
-        	        mht		:	"text",
-        	        odt		:	"text",
-        	        pdf		:	"text",
-        			rtf 	:	"text",	
-        			txt 	:	"text",	
-        			djvu 	:	"text",	
-        			xps 	:	"text",	
-        			fodp 	: 	"presentation",
-        		    odp 	: 	"presentation",
-        		    potm	:	"presentation",
-        		    pot 	: 	"presentation",
-        		    potx 	:	"presentation",
-        		    pps 	: 	"presentation",
-        		    ppsm 	: 	"presentation",
-        		    ppsx 	: 	"presentation",
-        		    ppt 	: 	"presentation",
-        		    pptm 	: 	"presentation",
-        		    pptx 	: 	"presentation",
-        		    csv 	: 	"spreadsheet",
-        		    fods 	: 	"spreadsheet",
-        		    ods 	: 	"spreadsheet",
-        			xls 	: 	"spreadsheet",
-        			xlsm 	: 	"spreadsheet",
-        	        xlsx 	: 	"spreadsheet",
-        	        xlt 	: 	"spreadsheet",
-        			xltm 	: 	"spreadsheet",
-        			xltx 	: 	"spreadsheet",
-        	};
-        	
-            var type = documentTypeMap[fileType];
-        	if ( undefined == type )
-        	{
-        		return ""
-        	}
-        	
-        	return type;
-        }
+	    function showOffice(fileLink)
+	   	{
+		    var fileType = getFileSuffix(docInfo.name);
+		    var documentType = getDocumentType(fileType);
+		    var title = docInfo.name;
+		    var key = docInfo.docId + "";
+		    
+	        window.docEditor = new DocsAPI.DocEditor("placeholder",
+	            {
+	                "document": {
+	                    "fileType": fileType,
+	                    "key": key,
+	                    "title": title,
+	                    "url": fileLink,
+	                },
+	                "documentType": documentType,
+	                //"editorConfig": {
+	                //    "callbackUrl": saveUrl,
+	                //    "lang": "zh-CN",
+	                //},
+	                "height": "100%",
+	                "width": "100%"
+	            });
+	   	}
     </script>
 </body>
 </html>
