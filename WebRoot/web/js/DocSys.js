@@ -159,13 +159,13 @@ function getDocText(docInfo, successCallback, errorCallback)
            type : "post",
            dataType : "text",
            data : {
-            	reposId: gReposInfo.id,
+            	reposId: docInfo.vid,
                 docId : docInfo.id,
                 pid: docInfo.pid,
                 path: docInfo.path,
                 name: docInfo.name,
                 docType: 1, //取回文件内容
-                shareId: gShareId,
+                shareId: docInfo.shareId,
             },
             success : function (ret1) {
             	//console.log("getDocText ret1",ret1);
@@ -181,13 +181,13 @@ function getDocText(docInfo, successCallback, errorCallback)
 	            	           type : "post",
 	            	           dataType : "text",
 	            	           data : {
-	            	            	reposId: gReposInfo.id,
+	            	            	reposId: docInfo.vid,
 	            	                docId : docInfo.id,
 	            	                pid: docInfo.pid,
 	            	                path: docInfo.path,
 	            	                name: docInfo.name,
 	            	                docType: 1, //取回文件内容
-	            	                shareId: gShareId,
+	            	                shareId: docInfo.shareId,
 	            	            },
 	            	            success : function (ret2) {
 	            	            	//console.log("getDocText ret2",ret2);
