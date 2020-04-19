@@ -96,13 +96,13 @@ var TextEditor = (function () {
             type : "post",
             dataType : "json",
             data : {
-                reposId: gReposInfo.id,
+                reposId: docInfo.vid,
             	docId : docInfo.docId,
             	path: docInfo.path,
                 name: docInfo.name,
             	content : content,
             	docType: 1, //RealDoc
-                shareId: gShareId,
+                shareId: docInfo.shareId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -140,12 +140,12 @@ var TextEditor = (function () {
 			dataType : "json",
 			data : {
 				lockType : 3, //LockType: Online Edit
-				reposId : gReposInfo.id, 
+				reposId : docInfo.vid, 
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
 				docType: 1,
-                shareId: gShareId,
+                shareId: docInfo.shareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status)
@@ -187,12 +187,12 @@ var TextEditor = (function () {
 			dataType : "json",
 			data : {
 				lockType : 0, //unlock the doc
-				reposId : gReposInfo.id, 
+				reposId : docInfo.vid, 
 				docId : docInfo.docId,
 				path: docInfo.path,
 				name: docInfo.name,
 				docType: 1,
-                shareId: gShareId,
+                shareId: docInfo.shareId,
 			},
 			success : function (ret) {
 				if( "ok" == ret.status)
