@@ -36,6 +36,7 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.HitDoc;
@@ -1636,7 +1637,7 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax();
 		if(authCode != null)
 		{
-			if(checkAuthCode(authCode,"docSysInit") == false)
+			if(checkAuthCode(authCode, null) == false)
 			{
 				rt.setError("无效授权码或授权码已过期！");
 				writeJson(rt, response);			
@@ -1688,16 +1689,30 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}", method=RequestMethod.GET)
-	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName, HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}/{authCode}", method=RequestMethod.GET)
+	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+			@PathVariable("targetPath") String authCode,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
-		if(reposAccess == null)
+		if(authCode != null)
 		{
-			return;	
+			if(checkAuthCode(authCode, null) == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+		}
+		else
+		{
+			ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+			if(reposAccess == null)
+			{
+				return;	
+			}
 		}
 		
 		if(targetPath == null || targetName == null)
@@ -1813,7 +1828,20 @@ public class DocController extends BaseController{
 		String OfficeEditorApi = getOfficeEditorApi();
 		if(OfficeEditorApi != null && !OfficeEditorApi.isEmpty())
 		{
+			//add authCode to authCodeMap
+			AuthCode authCode = new AuthCode();
+			String usage = "officeEdit";
+			Long curTime = new Date().getTime();
+			Long expTime = curTime + 7*24*60*60*1000;
+			String officeEditAuthCode = usage.hashCode() + "" + doc.getDocId();	//用docId和usage作为authCode
+			authCode.setUsage(usage);
+			authCode.setCode(officeEditAuthCode);
+			authCode.setExpTime(expTime);
+			authCode.setRemainCount(1000);
+			authCodeMap.put(officeEditAuthCode, authCode);
+			
 			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
+			fileLink += "&authCode=" + officeEditAuthCode;
 			rt.setData(fileLink);
 			rt.setDataEx(OfficeEditorApi);
 			writeJson(rt, response);
