@@ -7460,7 +7460,7 @@ public class BaseController  extends BaseFunction{
 		String clientIp = getIpAddress(request);
 		Date accessDate = new Date();
 		
-		String accessInfo = "IP:" + clientIp + ",TimeStamp:" +  accessDate.getTime() + ",TimeString:" +  accessDate.toString() + "/r/n";		
+		String accessInfo = "IP:" + clientIp + ",TimeStamp:" +  accessDate.getTime() + ",TimeString:" +  accessDate.toString() + "\r\n";		
 		String filePath = docSysIniPath + "access.log";
 		appendContentToFile(filePath, accessInfo);
 	}
