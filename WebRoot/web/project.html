@@ -1654,58 +1654,23 @@
 		
 		if(isPicture(docInfo.fileSuffix))
 		{
-	    	if(openInNewPage)
-	    	{
-	    		showImgInNewPage(docInfo);
-	    	}
-	    	else
-	    	{
-				showImgInDialog(docInfo);
-	    	}
+			showImage(docInfo, openInNewPage);
 		}
 		else if(isVideo(docInfo.fileSuffix))
 		{
-	    	if(openInNewPage)
-	    	{
-	    		showVideoInNewPage(docInfo);
-	    	}
-	    	else
-	    	{
-	    		showVideoInDialog(docInfo);
-	    	}
+			showVideo(docInfo, openInNewPage);
 		}
 		else if(isPdf(docInfo.fileSuffix))
 		{
-	    	if(openInNewPage)
-	    	{
-	    		showPdfInNewPage(docInfo);
-	    	}
-	    	else
-	    	{
-	    		showPdfInDialog(docInfo);
-	    	}
+			showPdf(docInfo, openInNewPage);
 		}
 		else if(isOffice(docInfo.fileSuffix)) //View Only
 		{
-	    	if(openInNewPage)
-	    	{
-	    		showOfficeInNewPage(docInfo);
-	    	}
-	    	else
-	    	{
-	    		showOfficeInDialog(docInfo);
-	    	}
+			openOffice(docInfo, openInNewPage);
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
-	    	if(openInNewPage)
-	    	{
-	    		showTextInNewPage(docInfo);
-	    	}
-	    	else
-	    	{
-	    		showTextInDialog(docInfo);
-	    	}
+			showText(docInfo, openInNewPage);
 		}
 		else if(isBinary(docInfo.fileSuffix))
 		{
@@ -1715,17 +1680,113 @@
 		{
 			if(showUnknownFile && showUnknownFile == true)
 			{
-		    	if(openInNewPage)
-		    	{
-		    		showTextInNewPage(docInfo);
-		    	}
-		    	else
-		    	{
-		    		showTextInDialog(docInfo);
-		    	}
+				showText(docInfo, openInNewPage);
 			}
 		}
     }
+    
+	function openOffice(docInfo, openInNewPage)
+	{
+	    $.ajax({
+	        url : "/DocSystem/Doc/getDocOfficeLink.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: gReposInfo.id,
+	            docId : docInfo.docId,
+	            pid: docInfo.pid,
+	            path: docInfo.path,
+	            name: docInfo.name,
+                shareId: gShareId,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status ){
+                	console.log("openOffice ret" + ret);
+	            	if(ret.dataEx == "pdf")
+	                {
+	    				docInfo.fileLink = ret.data;
+	    				openPdf(docInfo, openInNewPage);
+	                }
+	            	else
+	                {
+	            		docInfo.fileLink = ret.data;
+	            		docInfo.officeEditorUrl = ret.dataEx; //officeEditor的地址
+	                	showOffice(docInfo, openInNewPage);
+	                }
+	            }
+	            else
+	            {
+	            	console.log("previewOfficeInDialog getDocOfficeLink Failed");
+	            	openText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+	            }
+	        },
+	        error : function () {
+	            //showErrorMessage("文件预览失败：服务器异常");
+	            console.log("previewOfficeInDialog getDocOfficeLink Failed 服务器异常");
+	            openText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+	        }
+	    });
+	}
+    
+    function showImage(docInfo, openInNewPage)
+    {
+    	if(openInNewPage)
+    	{
+    		showImgInNewPage(docInfo);
+    	}
+    	else
+    	{
+			showImgInDialog(docInfo);
+    	}
+    }
+    
+    function showVideo(docInfo, openInNewPage)
+    {
+		if(openInNewPage)
+		{
+			showVideoInNewPage(docInfo);
+		}
+		else
+		{
+			showVideoInDialog(docInfo);
+		}
+    }
+    
+    function showPdf(docInfo, openInNewPage)
+    {
+		if(openInNewPage)
+		{
+			showPdfInNewPage(docInfo);
+		}
+		else
+		{
+			showPdfInDialog(docInfo);
+		}
+    }
+    
+    function showText(docInfo, openInNewPage)
+	{
+    	if(openInNewPage)
+		{
+			showTextInNewPage(docInfo);
+		}
+		else
+		{
+			showTextInDialog(docInfo);
+		}
+	}
+    
+    function showOffice(docInfo, openInNewPage)
+	{
+    	if(openInNewPage)
+		{
+			showOfficeInNewPage(docInfo);
+		}
+		else
+		{
+			showOfficeInDialog(docInfo);
+		}
+	}
 	
 	//ShowDocInNewPage
     function showImgInNewPage(docInfo, fileLink)
@@ -1780,23 +1841,15 @@
 			window.open("/DocSystem/web/ace.html?" + urlParamStr);			
 		}
 	}
-    
+	
 	function showOfficeInNewPage(docInfo)
 	{	
 		console.log("showOfficeInNewPage docInfo:", docInfo);
 
-		if(officeEditorEnable && officeEditorEnable == true)
-		{
-	        var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	        console.log("urlParamStr=" + urlParamStr);
-			var link = "/DocSystem/web/office.html?" + urlParamStr;
-	        window.open(link);	
-		}
-		else
-		{
-			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
-			previewOfficeInNewPage(docInfo);
-		}
+	    var urlParamStr = buildRequestParamStrForDoc(docInfo);
+	    console.log("urlParamStr=" + urlParamStr);
+		var link = "/DocSystem/web/office.html?" + urlParamStr;
+	    window.open(link);
 	}
     
 	//ShowDocInDialog
@@ -1905,101 +1958,18 @@
 	function showOfficeInDialog(docInfo)
 	{
 		console.log("showOfficeInDialog docInfo:", docInfo);
-		if(officeEditorEnable && officeEditorEnable == true)
-		{
-			bootstrapQ.dialog({
-				id: "OfficeEditor",
-				title: docInfo.name,
-				url: 'officeEditor.html',
-				msg: '页面正在加载，请稍等...',
-				foot: false,
-				big: true,
-				mstyle: getDialogStyle(),
-				callback: function(){
-					setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
-				},
-			});
-		}
-		else
-		{
-			//预览Office文件，如果生成pdf文件失败，则显示showGDocTextInMdEditor()			
-			previewOfficeInDialog(docInfo);
-		}
-	}
-	
-	function previewOfficeInNewPage(docInfo)
-	{
-		//Convert doc to PDF and return the link, then show the pdf 
-	    $.ajax({
-	        url : "/DocSystem/Doc/DocToPDF.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	        	reposId: gReposInfo.id,
-	            docId : docInfo.docId,
-	            pid: docInfo.pid,
-	            path: docInfo.path,
-	            name: docInfo.name,
-                shareId: gShareId,
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status ){
-	                var pdfLink = ret.data;
-	                console.log("previewOfficeInNewPage fileLink" + fileLink);
-	    			//在新的页面打开
-	    			showPdfInNewPage(docInfo, pdfLink);	
-	            }
-	            else
-	            {
-	            	console.log("previewOfficeInNewPage DocToPdf Failed");
-	    			//showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
-	            	showTextInNewPage(docInfo); //ReadOnly 方式显示文件内容
-	            }
-	        },
-	        error : function () {
-	            //showErrorMessage("文件预览失败：服务器异常");
-	            console.log("previewOfficeInNewPage DocToPdf Failed 服务器异常");
-	            showTextInNewPage(docInfo); //ReadOnly 方式显示文件内容
-	        }
-	    });
-	}
-	
-	function previewOfficeInDialog(docInfo)
-	{
-		//Convert doc to PDF and return the link, then show the pdf 
-	    $.ajax({
-	        url : "/DocSystem/Doc/DocToPDF.do",
-	        type : "post",
-	        dataType : "json",
-	        data : {
-	        	reposId: gReposInfo.id,
-	            docId : docInfo.docId,
-	            pid: docInfo.pid,
-	            path: docInfo.path,
-	            name: docInfo.name,
-                shareId: gShareId,
-	        },
-	        success : function (ret) {
-	            if( "ok" == ret.status ){
-	                var pdfLink = ret.data;
-	                console.log("previewOfficeInDialog pdfLink" + pdfLink);
-	    			//在新的页面打开
-	    			docInfo.fileLink = pdfLink;
-	    			showPdfInDialog(docInfo);	
-	            }
-	            else
-	            {
-	            	console.log("previewOfficeInDialog DocToPdf Failed");
-	    			//showErrorMessage("文件预览生成失败：" + ret.msgInfo);   
-	            	showTextInDialog(docInfo); //ReadOnly 方式显示文件内容
-	            }
-	        },
-	        error : function () {
-	            //showErrorMessage("文件预览失败：服务器异常");
-	            console.log("previewOfficeInDialog DocToPdf Failed 服务器异常");
-	            showTextInDialog(docInfo); //ReadOnly 方式显示文件内容
-	        }
-	    });
+		bootstrapQ.dialog({
+			id: "OfficeEditor",
+			title: docInfo.name,
+			url: 'officeEditor.html',
+			msg: '页面正在加载，请稍等...',
+			foot: false,
+			big: true,
+			mstyle: getDialogStyle(),
+			callback: function(){
+				setTimeout(function (){OfficeEditor.officeEditorPageInit(docInfo)}, 2000); 
+			},
+		});
 	}
 
 	function getDialogStyle()

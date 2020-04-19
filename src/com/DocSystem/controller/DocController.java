@@ -1808,8 +1808,18 @@ public class DocController extends BaseController{
 			System.out.println("getDocOfficeLink() you have no access right on doc:" + doc.getName());
 			writeJson(rt, response);	
 			return;
-		}	
+		}
 		
+		String OfficeEditorUrl = getOfficeEditorUrl();
+		if(OfficeEditorUrl != null && !OfficeEditorUrl.isEmpty())
+		{
+			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
+			rt.setDataEx(OfficeEditorUrl);
+			writeJson(rt, response);
+			return;
+		}
+		
+		//转换成pdf进行预览
 		String officeLink = convertOfficeToPdf(repos, doc, rt);
 		if(officeLink == null)
 		{
@@ -1823,6 +1833,10 @@ public class DocController extends BaseController{
 		return;	
 	}
 	
+	private String getOfficeEditorUrl() {
+		return ReadProperties.read("docSysConfig.properties", "officeEditorUrl");
+	}
+
 	private String convertOfficeToPdf(Repos repos, Doc doc, ReturnAjax rt) {
 		switch(repos.getType())
 		{
@@ -2418,24 +2432,33 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-
+		
+		String fileLink = buildDocFileLink(doc, urlStyle, rt);
+		if(fileLink == null)
+		{
+			System.out.println("getDocFileLink() buildDocFileLink failed");
+			return;
+		}
+		
+		rt.setData(fileLink);
+		writeJson(rt, response);
+	}
+	
+	private String buildDocFileLink(Doc doc, String urlStyle, ReturnAjax rt) {
 		String encTargetName = base64Encode(doc.getName());
 		if(encTargetName == null)
 		{
 			docSysErrorLog("getDocFileLink() get encTargetName Failed", rt);
-			writeJson(rt, response);			
-			return;
+			return null;
 		}	
 		String encTargetPath = base64Encode(doc.getLocalRootPath() + doc.getPath());
 		if(encTargetPath == null)
 		{
 			docSysErrorLog("getDocFileLink() get encTargetPath Failed", rt);
-			writeJson(rt, response);			
-			return;
+			return null;
 		}	
 		
 		String fileLink = null;
-		
 		if(urlStyle != null && urlStyle.equals("REST"))
 		{
 			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName;
@@ -2444,11 +2467,9 @@ public class DocController extends BaseController{
 		{
 			fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;			
 		}
-		
-		rt.setData(fileLink);
-		writeJson(rt, response);
+		return fileLink;
 	}
-	
+
 	/****************   lock a Doc ******************/
 	@RequestMapping("/lockDoc.do")  //lock Doc主要用于用户锁定doc
 	public void lockDoc(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
