@@ -1607,8 +1607,30 @@
     		docInfo.docId = doc.docId;
     		docInfo.path = doc.path;
     		docInfo.name = doc.name;
-    		docInfo.fileSuffix = doc.fileSuffix;	
-    		docInfo.dataEx = doc.dataEx;
+    		if(doc.fileSuffix)
+    		{
+    			docInfo.fileSuffix = doc.fileSuffix;	
+    		}
+    		else
+    		{
+    			docInfo.fileSuffix = getFileSuffix(docInfo.name);    			
+    		}
+    		
+    		if(doc.dataEx)
+    		{
+    			docInfo.dataEx = doc.dataEx;
+    			var fileLink = getDocDownloadFullLink(docInfo);
+    			if(fileLink && fileLink != null)
+    			{
+    				docInfo.fileLink = fileLink;
+    			}
+    		}
+    		
+    		if(gShareId)
+    		{
+    			docInfo.shareId = gShareId;
+    		}
+    		
     		return docInfo;
     	}
     	return null;
@@ -1616,126 +1638,94 @@
     
     function openDoc(doc, showUnknownFile, openInNewPage)
     {
-    	if(openInNewPage && openInNewPage == true)
-    	{
-    		openDocInNewPage(doc, showUnknownFile)
-    	}
-    	else
-    	{
-    		openDocInDialog(doc, showUnknownFile)    		
-    	}
+		if(doc == null || doc.type == 2)
+		{
+			//Folder do nothing
+			return;
+		}
+		
+		//copy do to docInfo
+		var docInfo = copyDocInfo(doc);
+		
+		if(!openInNewPage || openInNewPage != true)
+		{
+			openInNewPage = false;
+		}
+		
+		if(isPicture(docInfo.fileSuffix))
+		{
+	    	if(openInNewPage)
+	    	{
+	    		showImgInNewPage(docInfo);
+	    	}
+	    	else
+	    	{
+				showImgInDialog(docInfo);
+	    	}
+		}
+		else if(isVideo(docInfo.fileSuffix))
+		{
+	    	if(openInNewPage)
+	    	{
+	    		showVideoInNewPage(docInfo);
+	    	}
+	    	else
+	    	{
+	    		showVideoInDialog(docInfo);
+	    	}
+		}
+		else if(isPdf(docInfo.fileSuffix))
+		{
+	    	if(openInNewPage)
+	    	{
+	    		showPdfInNewPage(docInfo);
+	    	}
+	    	else
+	    	{
+	    		showPdfInDialog(docInfo);
+	    	}
+		}
+		else if(isOffice(docInfo.fileSuffix)) //View Only
+		{
+	    	if(openInNewPage)
+	    	{
+	    		showOfficeInNewPage(docInfo);
+	    	}
+	    	else
+	    	{
+	    		showOfficeInDialog(docInfo);
+	    	}
+		}
+		else if(isText(docInfo.fileSuffix))
+		{
+	    	if(openInNewPage)
+	    	{
+	    		showTextInNewPage(docInfo);
+	    	}
+	    	else
+	    	{
+	    		showTextInDialog(docInfo);
+	    	}
+		}
+		else if(isBinary(docInfo.fileSuffix))
+		{
+			//Do nothing	
+		}
+		else	//UnknownFile
+		{
+			if(showUnknownFile && showUnknownFile == true)
+			{
+		    	if(openInNewPage)
+		    	{
+		    		showTextInNewPage(docInfo);
+		    	}
+		    	else
+		    	{
+		    		showTextInDialog(docInfo);
+		    	}
+			}
+		}
     }
-    
-    //注意文件内容的获取都需要在新窗口或新页面中获取，本页面只负责传递仓库id,docId,文件路径和文件名
-    function openDocInNewPage(doc, showUnknownFile)
-	{
-		if(doc == null || doc.type == 2)
-		{
-			//Folder do nothing
-			return;
-		}
-		
-		//copy do to docInfo
-		var docInfo = copyDocInfo(doc);
-		var fileLink = getDocDownloadFullLink(docInfo);
-		if(fileLink && fileLink != null)
-		{
-			docInfo.fileLink = fileLink;
-		}
-			
-		if(!docInfo.fileSuffix)
-		{
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}
-		
-		var url = null;
-		if(isPicture(docInfo.fileSuffix))
-		{
-			showImgInNewPage(docInfo);
-		}
-		else if(isVideo(docInfo.fileSuffix))
-		{
-			showVideoInNewPage(docInfo);
-		}
-		else if(isPdf(docInfo.fileSuffix))
-		{
-			showPdfInNewPage(docInfo); //这是个异步调用
-		}
-		else if(isOffice(docInfo.fileSuffix)) //View Only
-		{
-			showOfficeInNewPage(docInfo);
-		}
-		else if(isText(docInfo.fileSuffix))
-		{
-			showTextInNewPage(docInfo); //这是个异步调用
-		}
-		else if(isBinary(docInfo.fileSuffix))
-		{
-			//Do nothing	
-		}
-		else	//UnknownFile
-		{
-			if(showUnknownFile && showUnknownFile == true)
-			{
-				showTextInNewPage(docInfo);
-			}
-		}
-	}
-    
-	function openDocInDialog(doc, showUnknownFile)
-	{
-		if(doc == null || doc.type == 2)
-		{
-			//Folder do nothing
-			return;
-		}
-		
-		//copy do to docInfo
-		var docInfo = copyDocInfo(doc);
-		var fileLink = getDocDownloadFullLink(docInfo);
-		if(fileLink && fileLink != null)
-		{
-			docInfo.fileLink = fileLink;
-		}
-
-		if(!docInfo.fileSuffix)
-		{
-			docInfo.fileSuffix = getFileSuffix(docInfo.name);
-		}
-		
-		var url = null;
-		if(isPicture(docInfo.fileSuffix))
-		{
-			showImgInDialog(docInfo);
-		}
-		else if(isVideo(docInfo.fileSuffix))
-		{
-			showVideoInDialog(docInfo);
-		}
-		else if(isPdf(docInfo.fileSuffix))
-		{
-			showPdfInDialog(docInfo);
-		}
-		else if(isOffice(docInfo.fileSuffix)) //View Only
-		{
-			showOfficeInDialog(docInfo);
-		}
-		else if(isText(docInfo.fileSuffix))
-		{
-			showTextInDialog(docInfo); //这是个异步调用
-		}
-		else if(isBinary(docInfo.fileSuffix))
-		{
-			//Do nothing	
-		}
-		else	//UnknownFile
-		{
-			if(showUnknownFile && showUnknownFile == true)
-			{
-				showTextInDialog(docInfo); //这是个异步调用
-			}
-		}
-	}
 	
 	//ShowDocInNewPage
     function showImgInNewPage(docInfo, fileLink)
@@ -1898,7 +1888,7 @@
 		else
 		{
 			bootstrapQ.dialog({
-				id: "aceEditor",
+				id: "AceEditor",
 				title: docInfo.name,
 				url: 'aceEditor.html',
 				msg: '页面正在加载，请稍等...',
@@ -1918,7 +1908,7 @@
 		if(officeEditorEnable && officeEditorEnable == true)
 		{
 			bootstrapQ.dialog({
-				id: "officeEditor",
+				id: "OfficeEditor",
 				title: docInfo.name,
 				url: 'officeEditor.html',
 				msg: '页面正在加载，请稍等...',
