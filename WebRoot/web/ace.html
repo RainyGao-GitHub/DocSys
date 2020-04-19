@@ -64,14 +64,9 @@
 		</div>
     </div>   
 	<script type="text/javascript">
-		var editor = ace.edit("editor");
-		editor.setTheme("ace/theme/twilight");
-		//editor.setTheme("ace/theme/chrome");
-		//editor.setTheme("ace/theme/tomorrow_night");
-		editor.session.setMode("ace/mode/text");
-		editor.setReadOnly(true); // false to make it editable
-	
-	    var docInfo = getDocInfoFromRequestParamStr();	    
+	    var docInfo = getDocInfoFromRequestParamStr();
+	    document.title = docInfo.name;
+	    
 	    if(!docInfo.fileSuffix)
 	    {
 	    	docInfo.fileSuffix = getFileSuffix(docInfo.name);
@@ -81,10 +76,18 @@
 		var tmpSavedDocText = "";
 		var isContentChanged = false;
 		
+		var editor = ace.edit("editor");
+		editor.setTheme("ace/theme/twilight");
+		//editor.setTheme("ace/theme/chrome");
+		//editor.setTheme("ace/theme/tomorrow_night");
+		editor.session.setMode("ace/mode/text");
+		editor.setReadOnly(true); // false to make it editable
+	
 		getDocText(docInfo, showText, showErrorMessage);
 	  	
 		function showText(docText, tmpSavedDocText)
 		{
+			
 			checkAndSetFileShowMode(docInfo);
 			checkAndSetEditBtn(docInfo);	
 			
