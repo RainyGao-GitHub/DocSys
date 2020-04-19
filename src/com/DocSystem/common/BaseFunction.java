@@ -7,8 +7,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,6 +77,39 @@ import info.monitorenter.cpdetector.io.UnicodeDetector;
 public class BaseFunction{	
 	protected String ROWS_PER_PAGE;// 每页显示的记录数
 	protected String curPage;// 当前第几页
+
+	/******************************** 获取服务器、访问者IP地址 *************************************/
+	protected String getIpAddress() {
+		String IP = null;
+		try {
+			InetAddress ip4 = Inet4Address.getLocalHost();
+			IP = ip4.getHostAddress();
+			System.out.println(ip4.getHostAddress());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
+		return IP;
+	}
+	
+	protected String getIpAddress(HttpServletRequest request) {
+		String ip = request.getHeader("x-forwarded-for");
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		ip = request.getHeader("Proxy-Client-IP");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		ip = request.getHeader("WL-Proxy-Client-IP");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		ip = request.getHeader("HTTP_CLIENT_IP");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+		}
+		if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+		ip = request.getRemoteAddr();
+		}
+		return ip;
+	}
 
 	/******************************** Basic Interface for docSys *************************************/
 	protected void docSysDebugLog(String logStr, ReturnAjax rt) {
@@ -2050,6 +2086,22 @@ public class BaseFunction{
 		return fileName;
 	}
 	
+	//向文件末尾追加内容
+    public static void appendContentToFile(String filePath, String content) {
+        try {
+            // 打开一个随机访问文件流，按读写方式
+            RandomAccessFile randomFile = new RandomAccessFile(filePath, "rw");
+            // 文件长度，字节数
+            long fileLength = randomFile.length();
+            //将写文件指针移到文件尾。
+            randomFile.seek(fileLength);
+            randomFile.writeBytes(content);
+            randomFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public static String getFileSuffix(String filePath)
     {
     	String suffix = filePath.substring(filePath.lastIndexOf(".") + 1);
