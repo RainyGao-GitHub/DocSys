@@ -4,18 +4,23 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>TextEditor</title>
     <script src="static/scripts/jquery.min.js"></script>
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+    <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+    <link href="static/markdown/css/editormd.min.css" rel="stylesheet">
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
     <script type="text/javascript" src="js/aceEditor.js"></script>
     <script src="static/ace-builds/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
+    
     <style type="text/css" media="screen">
 	  body {
 	      overflow: hidden;
 	  }
 	
 	  #editor {
-	      margin: 39px 0 0 0;
+	      margin: 40px 0 0 0;
 	      position: absolute;
 	      top: 0;
 	      bottom: 0;
@@ -25,13 +30,13 @@
 	</style>
 </head>
 <body style="height: 100%; margin: 0;">
-    <div align=center style="margin-top:20px" >
+    <div>
 		<div id="textEditor">
 			<div id="textEditorToolBar" style="height:40px;">
 				<div class="editormd-toolbar" style="display: block;">
 					<div class="editormd-toolbar-container">
 						<ul id="toolBarMenu" class="editormd-menu" style="display:none;">
-							<li><a href="javascript:;" onclick="TextEditor.saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
+							<li><a href="javascript:;" onclick="saveDoc();" title="保存（Ctrl+S）" unselectable="on"><i class="fa fa-save" name="save" unselectable="on"></i></a></li>
 							<li class="divider" unselectable="on">|</li>
 							<li><a href="javascript:;" title="撤销（Ctrl+Z）" unselectable="on"><i class="fa fa-undo" name="undo" unselectable="on"></i></a></li>
 							<li><a href="javascript:;" title="反撤销（Ctrl+Y）" unselectable="on"><i class="fa fa-repeat" name="redo" unselectable="on"></i></a></li>
@@ -39,12 +44,12 @@
 						</ul>
 						<ul id="switchEditMode" class="editormd-menu" style="position:absolute; right:5px;">
 							<li id="textEditorCloseBtn" style="display:none;">
-								<a href="javascript:;" onclick="TextEditor.exitEdit()" title="退出编辑" unselectable="on">
+								<a href="javascript:;" onclick="exitEdit()" title="退出编辑" unselectable="on">
 									<i class="fa fa-close" name="exitEdit" unselectable="on"></i>
 								</a>
 							</li>
 							<li id="textEditorEditBtn" style="display:none;">
-								<a href="javascript:;" onclick="TextEditor.enableEdit()" title="编辑" unselectable="on">
+								<a href="javascript:;" onclick="enableEdit()" title="编辑" unselectable="on">
 									<i class="fa fa-edit" name="edit" unselectable="on"></i>
 								</a>
 							</li>
@@ -67,6 +72,11 @@
 		editor.setReadOnly(true); // false to make it editable
 	
 	    var docInfo = getDocInfoFromRequestParamStr();	    
+	    if(!docInfo.fileSuffix)
+	    {
+	    	docInfo.fileSuffix = getFileSuffix(docInfo.name);
+	    }
+	    
 		var docText = "";
 		var tmpSavedDocText = "";
 		var isContentChanged = false;
@@ -106,7 +116,7 @@
 	                name: docInfo.name,
 	            	content : content,
 	            	docType: 1, //RealDoc
-	                shareId: gShareId,
+	                shareId: docInfo.shareId,
 	            },
 	            success : function (ret) {
 	                if( "ok" == ret.status ){
@@ -279,6 +289,13 @@
 		    		break;
 				}
 			}
+		}
+		
+		function checkAndSetFileShowMode(docInfo)
+		{
+			var showMode = getFileShowMode(docInfo.name, docInfo.fileSuffix);
+			console.log("checkAndSetFileShowMode() showMode:" + showMode);
+			editor.session.setMode("ace/mode/" + showMode);
 		}
     </script>
 </body>
