@@ -1810,11 +1810,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String OfficeEditorUrl = getOfficeEditorUrl();
-		if(OfficeEditorUrl != null && !OfficeEditorUrl.isEmpty())
+		String OfficeEditorApi = getOfficeEditorApi();
+		if(OfficeEditorApi != null && !OfficeEditorApi.isEmpty())
 		{
 			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
-			rt.setDataEx(OfficeEditorUrl);
+			rt.setData(fileLink);
+			rt.setDataEx(OfficeEditorApi);
 			writeJson(rt, response);
 			return;
 		}
@@ -1833,8 +1834,8 @@ public class DocController extends BaseController{
 		return;	
 	}
 	
-	private String getOfficeEditorUrl() {
-		return ReadProperties.read("docSysConfig.properties", "officeEditorUrl");
+	private String getOfficeEditorApi() {
+		return ReadProperties.read("docSysConfig.properties", "officeEditorApi");
 	}
 
 	private String convertOfficeToPdf(Repos repos, Doc doc, ReturnAjax rt) {

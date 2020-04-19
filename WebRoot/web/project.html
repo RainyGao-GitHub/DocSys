@@ -398,9 +398,6 @@
 	};	
 	var gDocInfo = {};
 	
-	//office文件是否在officeEditor中显示
-	var officeEditorEnable = true;
-	
 	//当前处于展示状态的内容
 	var gDocContent = "";
 	var gTmpSavedDocContent = "";
@@ -1710,20 +1707,20 @@
 	            	else
 	                {
 	            		docInfo.fileLink = ret.data;
-	            		docInfo.officeEditorUrl = ret.dataEx; //officeEditor的地址
+	            		docInfo.officeEditorApi = ret.dataEx; //officeEditorApi link
 	                	showOffice(docInfo, openInNewPage);
 	                }
 	            }
 	            else
 	            {
 	            	console.log("previewOfficeInDialog getDocOfficeLink Failed");
-	            	openText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+	            	showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
 	            }
 	        },
 	        error : function () {
 	            //showErrorMessage("文件预览失败：服务器异常");
 	            console.log("previewOfficeInDialog getDocOfficeLink Failed 服务器异常");
-	            openText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+	            showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
 	        }
 	    });
 	}
