@@ -7454,6 +7454,17 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	
+	protected void collectDocSysInstallationInfo(HttpServletRequest request) 
+	{
+		String clientIp = getIpAddress(request);
+		Date accessDate = new Date();
+		
+		String accessInfo = "IP:" + clientIp + ",TimeStamp:" +  accessDate.getTime() + ",TimeString:" +  accessDate.toString() + "/r/n";		
+		String filePath = docSysIniPath + "access.log";
+		appendContentToFile(filePath, accessInfo);
+	}
+	
 	private static void UserJDBCSettingUpgrade(String userJDBCSettingPath) 
 	{
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");

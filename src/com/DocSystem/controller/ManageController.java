@@ -70,6 +70,7 @@ public class ManageController extends BaseController{
 	public void getBannerConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getBannerConfig()");
+		
 		ReturnAjax rt = new ReturnAjax();
 		
 		String BannerConfigPath = docSysIniPath;
@@ -96,9 +97,10 @@ public class ManageController extends BaseController{
 		JSONArray list = jobj.getJSONArray("BannerConfigList");
 		rt.setData(list);
 		writeJson(rt, response);
+		
+		collectDocSysInstallationInfo(request);
 	}
-	
-	
+
 	/********** 获取系统邮件配置 ***************/
 	@RequestMapping("/getSystemEmailConfig.do")
 	public void getSystemEmailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
