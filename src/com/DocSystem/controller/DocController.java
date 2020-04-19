@@ -3369,18 +3369,6 @@ public class DocController extends BaseController{
 		}
 		writeJson(rt, response);
 	}
-	
-	private String getIpAddress() {
-		String IP = null;
-		try {
-			InetAddress ip4 = Inet4Address.getLocalHost();
-			IP = ip4.getHostAddress();
-			System.out.println(ip4.getHostAddress());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-		return IP;
-	}
 
 	private Integer buildShareId(DocShare docShare) {
 		return docShare.hashCode();
