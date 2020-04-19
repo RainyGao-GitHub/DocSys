@@ -1768,13 +1768,13 @@ public class DocController extends BaseController{
 		sendFileToWebPage(localParentPath,fileName,rt, response, request); 
 	}
 
-	/**************** convert Doc To PDF ******************/
-	@RequestMapping("/DocToPDF.do")
-	public void DocToPDF(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	/**************** getDocOfficeLink ******************/
+	@RequestMapping("/getDocOfficeLink.do")
+	public void getDocOfficeLink(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
-		System.out.println("DocToPDF reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
+		System.out.println("getDocOfficeLink reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
 
 		if(path == null)
 		{
@@ -1805,46 +1805,57 @@ public class DocController extends BaseController{
 		//检查用户是否有文件读取权限
 		if(checkUseAccessRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == false)
 		{
-			System.out.println("DocToPDF() you have no access right on doc:" + doc.getName());
+			System.out.println("getDocOfficeLink() you have no access right on doc:" + doc.getName());
 			writeJson(rt, response);	
 			return;
 		}	
 		
+		String officeLink = convertOfficeToPdf(repos, doc, rt);
+		if(officeLink == null)
+		{
+			System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
+			writeJson(rt, response);	
+			return;
+		}
+		rt.setData(officeLink);
+		rt.setDataEx("pdf");
+		writeJson(rt, response);
+		return;	
+	}
+	
+	private String convertOfficeToPdf(Repos repos, Doc doc, ReturnAjax rt) {
 		switch(repos.getType())
 		{
 		case 1:
 		case 2:
-			DocToPDF_FSM(repos, doc, response, request, session, rt);
+			return DocToPDF_FSM(repos, doc, rt);
 		case 3:
 		case 4:
-			DocToPDF_VRP(repos, doc, response, request, session, rt);
-			break;
+			return DocToPDF_VRP(repos, doc, rt);
 		}
+		return null;
 	}
-	
-	public void DocToPDF_VRP(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session, ReturnAjax rt) throws Exception
+
+	public String DocToPDF_VRP(Repos repos, Doc doc, ReturnAjax rt)
 	{		
 		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix == null)
 		{
 			docSysErrorLog("未知文件类型", rt);
-			writeJson(rt, response);
-			return;
+			return null;
 		}
 		
 		Doc localEntry = docSysGetDoc(repos, doc);
 		if(localEntry == null)
 		{
 			docSysErrorLog("文件不存在！", rt);
-			writeJson(rt, response);
-			return;
+			return null;
 		}
 		
 		if(localEntry.getType() == 2)
 		{
 			docSysErrorLog("目录无法预览", rt);
-			writeJson(rt, response);
-			return;
+			return null;
 		}
 		
 		//Do checkout to local
@@ -1852,7 +1863,7 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("远程下载失败", rt);
 			docSysDebugLog("DocToPDF() verReposCheckOut Failed path:" + doc.getPath() + " name:" + doc.getName() + " targetPath:" + doc.getLocalRootPath() + doc.getPath() + " targetName:" + doc.getName(), rt);
-			return;
+			return null;
 		}
 
 		String webTmpPath = getWebTmpPathForPreview();
@@ -1876,30 +1887,23 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("预览失败", rt);
 				docSysDebugLog("Failed to copy " + localEntryPath + " to " + dstPath, rt);
-				writeJson(rt, response);
-				return;					
+				return null;					
 			}
-			rt.setData(fileLink);
-			writeJson(rt, response);
-			return;
+			return fileLink;
 		}
 		
 		if(isOffice(fileSuffix) || isText(fileSuffix) || isPicture(fileSuffix))
 		{
 			if(convertToPdf(localEntryPath, dstPath, rt) == false)
 			{
-				writeJson(rt, response);
-				return;
+				return null;
 			}
-			rt.setData(fileLink);
-			writeJson(rt, response);
-			return;
+			return fileLink;
 		}	
 		
 		docSysErrorLog("该文件类型不支持预览", rt);
 		docSysDebugLog("srcPath:"+localEntryPath, rt);
-		writeJson(rt, response);
-		return;
+		return null;
 	}
 
 	private boolean convertToPdf(String localEntryPath, String dstPath, ReturnAjax rt) {
@@ -1926,36 +1930,32 @@ public class DocController extends BaseController{
 		return true;
 	}
 
-	public void DocToPDF_FSM(Repos repos, Doc doc, HttpServletResponse response,HttpServletRequest request,HttpSession session, ReturnAjax rt) throws Exception
+	public String DocToPDF_FSM(Repos repos, Doc doc, ReturnAjax rt)
 	{
 		String fileSuffix = getFileSuffix(doc.getName());
 		if(fileSuffix == null)
 		{
 			docSysErrorLog("未知文件类型", rt);
-			writeJson(rt, response);
-			return;
+			return null;
 		}
 			
 		Doc localEntry = fsGetDoc(repos, doc);
 		if(localEntry == null)
 		{
 			docSysErrorLog("文件不存在！", rt);
-			writeJson(rt, response);
-			return;
+			return null;
 		}
 		
 		if(localEntry.getType() == 2)
 		{
 			docSysErrorLog("目录无法预览", rt);
-			writeJson(rt, response);
-			return;
-		}
-		
+			return null;
+		}		
 
 		String webTmpPath = getWebTmpPathForPreview();
 		String dstName = repos.getId() + "_" + doc.getDocId() + ".pdf";
 		String dstPath = webTmpPath + dstName;
-		System.out.println("DocToPDF() dstPath:" + dstPath);
+		System.out.println("DocToPDF_FSM() dstPath:" + dstPath);
 
 		String fileLink = "/DocSystem/tmp/preview/" + dstName;
 		
@@ -1966,8 +1966,7 @@ public class DocController extends BaseController{
 			if(isUpdateNeeded(repos, doc) == false)
 			{
 				rt.setData(fileLink);
-				writeJson(rt, response);
-				return;				
+				return fileLink;				
 			}
 		}
 		else
@@ -1987,31 +1986,25 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("预览失败", rt);
 				docSysDebugLog("Failed to copy " + localEntryPath + " to " + dstPath, rt);
-				writeJson(rt, response);
-				return;					
+				return null;					
 			}
 			
 			rt.setData(fileLink);
-			writeJson(rt, response);
-			return;
+			return fileLink;
 		}
 		
 		if(isOffice(fileSuffix) || isText(fileSuffix) || isPicture(fileSuffix))
 		{
 			if(convertToPdf(localEntryPath,dstPath,rt) == false)
 			{
-				writeJson(rt, response);
-				return;
+				return null;
 			}
-			rt.setData(fileLink);
-			writeJson(rt, response);
-			return;
+			return fileLink;
 		}
 		
 		docSysErrorLog("该文件类型不支持预览", rt);
 		docSysDebugLog("srcPath:"+localEntryPath, rt);
-		writeJson(rt, response);
-		return;
+		return null;
 	}
 
 	private boolean isUpdateNeeded(Repos repos, Doc doc) {
