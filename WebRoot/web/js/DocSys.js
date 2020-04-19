@@ -277,6 +277,11 @@ function getDocShareLink(reposId, docShare, IpAddress)
 
 function getDocDownloadLink(docInfo)
 {
+	if(docInfo.fileLink)
+	{
+		return docInfo.fileLink;
+	}
+	
 	var docDataEx = docInfo.dataEx;
 		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 	{
