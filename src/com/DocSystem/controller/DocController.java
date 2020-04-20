@@ -1689,30 +1689,17 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}/{authCode}", method=RequestMethod.GET)
+	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
-			@PathVariable("targetPath") String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
 		
 		ReturnAjax rt = new ReturnAjax();
-		if(authCode != null)
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+		if(reposAccess == null)
 		{
-			if(checkAuthCode(authCode, null) == false)
-			{
-				rt.setError("无效授权码或授权码已过期！");
-				writeJson(rt, response);			
-				return;
-			}
-		}
-		else
-		{
-			ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
-			if(reposAccess == null)
-			{
-				return;	
-			}
+			return;	
 		}
 		
 		if(targetPath == null || targetName == null)
@@ -1827,21 +1814,8 @@ public class DocController extends BaseController{
 		}
 		
 		if(preview == null && isOfficeEditorApiConfiged())
-		{
-			//add authCode to authCodeMap
-			AuthCode authCode = new AuthCode();
-			String usage = "officeEdit";
-			Long curTime = new Date().getTime();
-			Long expTime = curTime + 7*24*60*60*1000;
-			String officeEditAuthCode = usage.hashCode() + "" + doc.getDocId();	//用docId和usage作为authCode
-			authCode.setUsage(usage);
-			authCode.setCode(officeEditAuthCode);
-			authCode.setExpTime(expTime);
-			authCode.setRemainCount(1000);
-			authCodeMap.put(officeEditAuthCode, authCode);
-			
+		{	
 			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
-			fileLink += "&authCode=" + officeEditAuthCode;
 			rt.setData(fileLink);
 			rt.setDataEx("office");
 			writeJson(rt, response);
