@@ -516,6 +516,7 @@ function getDiyFileIconType(name)
 			mkv 	: 	"video",
 			rmvb 	: 	"video",
 			avi 	: 	"video",
+			mov 	: 	"video",
 			wav 	: 	"audio",
 			html 	: 	"html",
 	        htm 	: 	"html",
