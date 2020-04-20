@@ -587,11 +587,13 @@ public class ManageController extends BaseController{
 		
 		String tomcatPath = getTomcatPath();
 		String openOfficePath = getOpenOfficePath();
+		String officeEditorApi = getOfficeEditorApi();
 
 		String config = "{" 
 				+"\"version\":\"" + version + "\"," 
 				+ "\"tomcatPath\":\"" + tomcatPath + "\"," 
-				+ "\"openOfficePath\":\"" + openOfficePath + "\"" 
+				+ "\"openOfficePath\":\"" + openOfficePath + "\"," 
+				+ "\"officeEditorApi\":\"" + officeEditorApi+ "\"" 
 				+ "}";
 		rt.setData(config);
 		writeJson(rt, response);
@@ -602,6 +604,7 @@ public class ManageController extends BaseController{
 	public void setSystemInfo(String authCode, 
 			String tomcatPath, 
 			String openOfficePath, 
+			String officeEditorApi,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("setSystemDBConfig() tomcatPath:" + tomcatPath + " openOfficePath:" + openOfficePath);
@@ -646,6 +649,11 @@ public class ManageController extends BaseController{
 		if(openOfficePath != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "openOfficePath", openOfficePath);
+		}
+		
+		if(officeEditorApi != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "officeEditorApi", officeEditorApi);
 		}
 		
 		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)

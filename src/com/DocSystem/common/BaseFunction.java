@@ -576,6 +576,11 @@ public class BaseFunction{
         
         return null;
     }
+    
+	//获取OfficeEditorApi的配置
+	protected static String getOfficeEditorApi() {
+		return ReadProperties.read("docSysConfig.properties", "officeEditorApi");
+	}
 	
 	//正确格式化仓库根路径
 	protected String dirPathFormat(String path) {
@@ -791,11 +796,6 @@ public class BaseFunction{
         String webParentPath = webPath + "../";
         System.out.println("getWebAppPath() webParentPath:" + webParentPath);
 		return webPath;
-	}
-
-	//获取OfficeServer的配置
-	protected static String getOfficeEditorApi() {
-		return ReadProperties.read("docSysConfig.properties", "officeEditorApi");
 	}
 	
 	//WebPath was 
