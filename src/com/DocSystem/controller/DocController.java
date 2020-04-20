@@ -1825,7 +1825,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(officeServer != null && !officeServer.isEmpty())
+		if(isOfficeEditorApiConfiged())
 		{
 			//add authCode to authCodeMap
 			AuthCode authCode = new AuthCode();
@@ -1859,6 +1859,19 @@ public class DocController extends BaseController{
 		rt.setDataEx("pdf");
 		writeJson(rt, response);
 		return;	
+	}
+
+	private boolean isOfficeEditorApiConfiged() {
+		System.out.println("isOfficeEditorApiConfiged() officeEditorApi:" + officeEditorApi);
+		if(officeEditorApi == null)
+		{
+			return false;
+		}
+		if(officeEditorApi.isEmpty())
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private String convertOfficeToPdf(Repos repos, Doc doc, ReturnAjax rt) {
