@@ -72,6 +72,12 @@ public class ManageController extends BaseController{
 		System.out.println("getBannerConfig()");
 		
 		ReturnAjax rt = new ReturnAjax();
+
+		//设置跨域访问允许
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", " GET,POST,OPTIONS,HEAD");
+		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Accept,Authorization");
+		response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
 		
 		String BannerConfigPath = docSysIniPath;
 		if(isFileExist(BannerConfigPath + "bannerConfig.json") == false)
