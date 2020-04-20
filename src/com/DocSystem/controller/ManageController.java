@@ -607,7 +607,7 @@ public class ManageController extends BaseController{
 			String officeEditorApi,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("setSystemDBConfig() tomcatPath:" + tomcatPath + " openOfficePath:" + openOfficePath);
+		System.out.println("setSystemInfo() tomcatPath:" + tomcatPath + " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
