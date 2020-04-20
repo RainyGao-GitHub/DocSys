@@ -7348,6 +7348,11 @@ public class BaseController  extends BaseFunction{
 		return docSysIniState;
 	}
 	
+	public static String getOfficeEditor()
+	{
+		return officeEditorApi;
+	}
+	
 	public static String getDocSysInitAuthCode()
 	{
 		return docSysInitAuthCode;

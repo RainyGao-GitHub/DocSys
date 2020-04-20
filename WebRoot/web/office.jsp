@@ -1,3 +1,8 @@
+<%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%
+String officeEditorApi = BaseController.getOfficeEditor();
+%>
+
 <!DOCTYPE html>
 <html style="height: 100%;">
 <head>
@@ -7,7 +12,7 @@
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
-    <script type="text/javascript" src="static/officeEditor/apps/api/documents/api.js"></script>
+    <script type="text/javascript" src="<%=officeEditorApi%>"></script>
 </head>
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>

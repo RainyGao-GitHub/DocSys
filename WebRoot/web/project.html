@@ -1600,7 +1600,14 @@
     	if(doc)
     	{
     		var docInfo = {};
-        	docInfo.vid = doc.vid;
+        	if(doc.vid)
+        	{
+    			docInfo.vid = doc.vid;
+        	}
+        	else
+        	{
+        		docInfo.vid = gReposInfo.id;
+        	}
     		docInfo.docId = doc.docId;
     		docInfo.path = doc.path;
     		docInfo.name = doc.name;
@@ -1707,7 +1714,6 @@
 	            	else
 	                {
 	            		docInfo.fileLink = ret.data;
-	            		docInfo.officeEditorApi = ret.dataEx; //officeEditorApi link
 	                	showOffice(docInfo, openInNewPage);
 	                }
 	            }
@@ -1845,7 +1851,7 @@
 
 	    var urlParamStr = buildRequestParamStrForDoc(docInfo);
 	    console.log("urlParamStr=" + urlParamStr);
-		var link = "/DocSystem/web/office.html?" + urlParamStr;
+		var link = "/DocSystem/web/office.jsp?" + urlParamStr;
 	    window.open(link);
 	}
     
@@ -1958,7 +1964,7 @@
 		bootstrapQ.dialog({
 			id: "OfficeEditor",
 			title: docInfo.name,
-			url: 'officeEditor.html',
+			url: 'officeEditor.jsp',
 			msg: '页面正在加载，请稍等...',
 			foot: false,
 			big: true,
