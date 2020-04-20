@@ -18,22 +18,20 @@
 	    var documentType = getDocumentType(fileType);
 	    var title = docInfo.name;
 	    var key = docInfo.docId + "";
-	    var fileLink = getQueryString("fileLink");	   
-	    console.log("office() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
 	    
+	    var fileLink = getQueryString("fileLink");	   
 	    if(!fileLink || fileLink == null || fileLink == "")
 	    {
-	    	getDocFileLink(docInfo, showOffice, showErrorMessage);
+	    	getDocOfficeLink(docInfo, showOffice, showErrorMessage);
 	    }
 	    else
 	    {
 	    	showOffice(fileLink);
 	    }
 	    
-	    console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
-	    
 	    function showOffice(fileLink)
 	   	{
+	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
 	        window.docEditor = new DocsAPI.DocEditor("placeholder",
 	            {
 	                "document": {

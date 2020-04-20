@@ -1813,9 +1813,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(preview == null && isOfficeEditorApiConfiged())
+		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
 			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
+			fileLink += "&authCode=" + getAuthCodeForOfficeEditor(doc);
 			rt.setData(fileLink);
 			rt.setDataEx("office");
 			writeJson(rt, response);
@@ -1834,6 +1835,21 @@ public class DocController extends BaseController{
 		rt.setDataEx("pdf");
 		writeJson(rt, response);
 		return;	
+	}
+
+	private String getAuthCodeForOfficeEditor(Doc doc) {
+		//add authCode to authCodeMap
+		AuthCode authCode = new AuthCode();
+		String usage = "officeEditor";
+		Long curTime = new Date().getTime();
+		Long expTime = curTime + 1*24*60*60*1000;
+		String officeEditAuthCode = usage.hashCode() + "" + doc.getDocId();	//用docId和usage作为authCode
+		authCode.setUsage(usage);
+		authCode.setCode(officeEditAuthCode);
+		authCode.setExpTime(expTime);
+		authCode.setRemainCount(1000);
+		authCodeMap.put(officeEditAuthCode, authCode);
+		return officeEditAuthCode;
 	}
 
 	private boolean isOfficeEditorApiConfiged() {
