@@ -26,7 +26,7 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    var fileLink = getQueryString("fileLink");	 
 	    console.log("office() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
 	    
-	    if(!fileLink || fileLink != null)
+	    if(!fileLink || fileLink == null || fileLink == "")
 	    {
 	    	getDocFileLink(docInfo, showOffice, showErrorMessage);
 	    }
