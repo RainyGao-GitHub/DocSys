@@ -1786,6 +1786,7 @@ public class DocController extends BaseController{
 	/**************** getDocOfficeLink ******************/
 	@RequestMapping("/getDocOfficeLink.do")
 	public void getDocOfficeLink(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String preview,
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
@@ -1825,7 +1826,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(isOfficeEditorApiConfiged())
+		if(preview == null && isOfficeEditorApiConfiged())
 		{
 			//add authCode to authCodeMap
 			AuthCode authCode = new AuthCode();

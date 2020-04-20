@@ -1640,7 +1640,7 @@
     	return null;
     }
     
-    function openDoc(doc, showUnknownFile, openInNewPage)
+    function openDoc(doc, showUnknownFile, openInNewPage, preview)
     {
 		if(doc == null || doc.type == 2)
 		{
@@ -1670,7 +1670,7 @@
 		}
 		else if(isOffice(docInfo.fileSuffix)) //View Only
 		{
-			openOffice(docInfo, openInNewPage);
+			openOffice(docInfo, openInNewPage, preview);
 		}
 		else if(isText(docInfo.fileSuffix))
 		{
@@ -1689,7 +1689,7 @@
 		}
     }
     
-	function openOffice(docInfo, openInNewPage)
+	function openOffice(docInfo, openInNewPage, preview)
 	{
 	    $.ajax({
 	        url : "/DocSystem/Doc/getDocOfficeLink.do",
@@ -1702,6 +1702,7 @@
 	            path: docInfo.path,
 	            name: docInfo.name,
                 shareId: gShareId,
+                preview: preview,  //preview表示是否是预览，预览则是转成pdf
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
@@ -4329,6 +4330,11 @@
 				]
 			},
 			{divider: true},
+			{text: '预览', action: function(e){
+					e.preventDefault();
+					openDoc(curRightClickedTreeNode, true, true, "pdf");  
+				}
+			},
 			{text: '打开', action: function(e){
 					e.preventDefault();
 					openDoc(curRightClickedTreeNode, true, true);  
@@ -4682,6 +4688,11 @@
 					]
 				},
 				{divider: true},
+				{text: '预览', action: function(e){
+							e.preventDefault();
+							openDoc(curRightClickedDocListNode, true, true, "pdf");    
+						}
+				},
 				{text: '打开', action: function(e){
 							e.preventDefault();
 							openDoc(curRightClickedDocListNode, true, true);    
