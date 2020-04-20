@@ -6,19 +6,34 @@
 var OfficeEditor = (function () {
 	var editor = null;
 	var docInfo = null;
-	
+    var fileType = null;
+    var documentType = null;
+    var title = null;
+    var key = null;
+    
 	function officeEditorPageInit(Input_doc)
 	{
 		console.log("officeEditorPageInit InputDoc:", Input_doc);
 		docInfo = Input_doc;
-		var fileLink = getDocDownloadFullLink(docInfo);
-	    var fileType = getFileSuffix(docInfo.name);
-	    var documentType = getDocumentType(fileType);
-	    var title = docInfo.name;
-	    var key = docInfo.docId + "";
+	    fileType = getFileSuffix(docInfo.name);
+	    documentType = getDocumentType(fileType);
+	    title = docInfo.name;
+	    key = docInfo.docId + "";
 	    
-	    console.log("officeEditorPageInit() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
-		   
+	    var fileLink = docInfo.fileLink;
+		if(!fileLink || fileLink == null || fileLink == "")
+		{
+			getDocOfficeLink(docInfo, showOffice, showErrorMessage);
+		}
+		else
+		{
+			showOffice(fileLink);
+		}
+	}
+	
+    function showOffice(fileLink)
+   	{
+    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
 		var config = {
     		    "document": {
     		        "fileType": fileType,
@@ -35,7 +50,7 @@ var OfficeEditor = (function () {
                 "width": "100%",
     	};
         editor = new DocsAPI.DocEditor("placeholder", config);
-	}
+   	}
 
     //开放给外部的接口
     return {

@@ -138,6 +138,53 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
     });
 }
 
+//获取文件链接接口(链接带officeEditorAuthCode)
+function getDocOfficeLink(docInfo, successCallback, errorCallback)
+{	
+	var fileLink = "";
+	var errorInfo = "";
+	console.log("getDocOfficeLink()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	return;
+    }
+  	
+	$.ajax({
+        url : "/DocSystem/Doc/getDocOfficeLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            shareId: docInfo.shareId,
+            preview: "office",
+        },
+        success : function (ret) {
+        	console.log("getDocOfficeLink ret",ret);
+        	if( "ok" == ret.status )
+        	{
+        		var docLink = ret.data;
+        		var fileLink = buildFullLink(docLink);
+        		successCallback &&successCallback(fileLink);
+            }
+            else 
+            {
+            	console.log(ret.msgInfo);
+            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+            	errorCallback && errorCallback(errorInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        	errorCallback && errorCallback(errorInfo);
+        }
+    });
+}
+
 //文件文本内容获取接口
 function getDocText(docInfo, successCallback, errorCallback)
 {
