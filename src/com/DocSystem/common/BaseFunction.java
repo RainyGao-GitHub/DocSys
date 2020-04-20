@@ -793,6 +793,10 @@ public class BaseFunction{
 		return webPath;
 	}
 
+	//获取OfficeServer的配置
+	protected static String getOfficeServer() {
+		return ReadProperties.read("docSysConfig.properties", "officeServer");
+	}
 	
 	//WebPath was 
 	protected static String getWebPath() {
