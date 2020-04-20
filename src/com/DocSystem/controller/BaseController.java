@@ -7309,6 +7309,8 @@ public class BaseController  extends BaseFunction{
     static String DB_PASS = "";
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
+    protected static String officeServer = null;
+    
 	
     //定义数据库的ObjType
     protected final static int DOCSYS_REPOS			=0;
@@ -7357,7 +7359,11 @@ public class BaseController  extends BaseFunction{
 		{
 			docSysWebPath = getWebPath();
 			docSysIniPath = docSysWebPath + "../docSys.ini/";
-		}	
+		}
+		if(officeServer == null)
+		{
+			officeServer = getOfficeServer();
+		}
 		
 		//Update the value of DB_URL/DB_USER/DB_PASS
 		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";

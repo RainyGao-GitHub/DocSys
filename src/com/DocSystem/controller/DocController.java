@@ -1825,8 +1825,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String OfficeEditorApi = getOfficeEditorApi();
-		if(OfficeEditorApi != null && !OfficeEditorApi.isEmpty())
+		if(officeServer != null && !officeServer.isEmpty())
 		{
 			//add authCode to authCodeMap
 			AuthCode authCode = new AuthCode();
@@ -1843,7 +1842,7 @@ public class DocController extends BaseController{
 			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
 			fileLink += "&authCode=" + officeEditAuthCode;
 			rt.setData(fileLink);
-			rt.setDataEx(OfficeEditorApi);
+			rt.setDataEx("office");
 			writeJson(rt, response);
 			return;
 		}
@@ -1860,10 +1859,6 @@ public class DocController extends BaseController{
 		rt.setDataEx("pdf");
 		writeJson(rt, response);
 		return;	
-	}
-	
-	private String getOfficeEditorApi() {
-		return ReadProperties.read("docSysConfig.properties", "officeEditorApi");
 	}
 
 	private String convertOfficeToPdf(Repos repos, Doc doc, ReturnAjax rt) {
