@@ -938,6 +938,7 @@
 			version: "",
 			tomcatPath: "",
 			openOfficePath:"",
+			officeEditorApi:"",
 	}
 	function enableSystemInfoSet(){
 		$("#btnEnableSystemInfoSet").hide();
@@ -945,8 +946,11 @@
 		$("#btnSaveSystemInfoSet").show();
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
+		$("#officeEditorApi").val(systemInfo.officeEditorApi);
+		
 		$("#tomcatPath").attr('disabled',false);
 		$("#openOfficePath").attr('disabled',false);
+		$("#officeEditorApi").attr('disabled',false);
 	}
 	
 	function cancelSystemInfoSet(){
@@ -956,8 +960,11 @@
 		//revert the value
 		$("#tomcatPath").attr('disabled',true);
 		$("#openOfficePath").attr('disabled',true);
+		$("#officeEditorApi").attr('disabled',true);
+
 		$("#tomcatPath").val(systemInfo.tomcatPath);
 		$("#openOfficePath").val(systemInfo.openOfficePath);
+		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 	}
 	
 	function saveSystemInfoSet(){
@@ -967,12 +974,16 @@
 		//revert the value
 		$("#tomcatPath").attr('disabled',true);
 		$("#openOfficePath").attr('disabled',true);
+		$("#officeEditorApi").attr('disabled',true);
+
 		var tomcatPath = $("#tomcatPath").val();
 		var openOfficePath = $("#openOfficePath").val();
-		updateSystemInfo(tomcatPath, openOfficePath);
+		var officeEditorApi = $("#officeEditorApi").val();
+		
+		updateSystemInfo(tomcatPath, openOfficePath, officeEditorApi);
 	}
 	
-	function updateSystemInfo(tomcatPath, openOfficePath){
+	function updateSystemInfo(tomcatPath, openOfficePath, officeEditorApi){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemInfo.do",
 	        type : "post",
@@ -980,12 +991,14 @@
 	        data : {
 	        	tomcatPath: tomcatPath,
 	        	openOfficePath: openOfficePath,
+	        	officeEditorApi: officeEditorApi,
 	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {	        		
 	        		systemInfo.tomcatPath = tomcatPath;
 	        		systemInfo.openOfficePath = openOfficePath;
+	        		systemInfo.officeEditorApi = officeEditorApi;
 	            }
 	            else 
 	            {
@@ -994,6 +1007,7 @@
 	        		//restore the setting
 	        		$("#tomcatPath").val(systemInfo.tomcatPath);
 	        		$("#openOfficePath").val(systemInfo.openOfficePath);
+	        		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 		        }
 	        },
 	        error : function () {
@@ -1001,6 +1015,7 @@
         		//restore the setting
         		$("#tomcatPath").val(systemInfo.tomcatPath);
         		$("#openOfficePath").val(systemInfo.openOfficePath);
+        		$("#officeEditorApi").val(systemInfo.officeEditorApi);
 	        }
 	    });
 	}
@@ -1019,6 +1034,7 @@
 	            	systemInfo.version = config.version;
 	            	systemInfo.tomcatPath = config.tomcatPath;
 	            	systemInfo.openOfficePath = config.openOfficePath;
+	            	systemInfo.officeEditorApi = config.officeEditorApi;
 	            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
 	            }
 	            else 
