@@ -654,6 +654,7 @@ public class ManageController extends BaseController{
 		if(officeEditorApi != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "officeEditorApi", officeEditorApi);
+			setOfficeEditor(officeEditorApi);
 		}
 		
 		if(copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
