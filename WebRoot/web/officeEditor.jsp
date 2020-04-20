@@ -1,7 +1,12 @@
+<%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%
+String officeEditorApi = BaseController.getOfficeEditor();
+%>
+
 <div id="officePlayer" class="officePlayer" style="width: 100%; height:1200px;">
 	<div id="placeholder"></div>
 </div>
-<script type="text/javascript" src="static/officeEditor/apps/api/documents/api.js"></script>
+<script type="text/javascript" src="<%=officeEditorApi%>"></script>
 <script type="text/javascript">
 var OfficeEditor = (function () {
 	var editor = null;
