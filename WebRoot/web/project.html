@@ -1714,8 +1714,11 @@
 	                }
 	            	else
 	                {
-	            		docInfo.fileLink = ret.data;
-	                	showOffice(docInfo, openInNewPage);
+	            		if(openInNewPage == false)
+	            		{
+	            			docInfo.fileLink = ret.data;
+	            		}
+	            		showOffice(docInfo, openInNewPage);
 	                }
 	            }
 	            else
