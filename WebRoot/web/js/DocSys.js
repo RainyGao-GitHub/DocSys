@@ -504,6 +504,7 @@ function getDiyFileIconType(name)
 			xls 	: 	"excel",
 			xlsx 	: 	"excel",
 			ppt		:	"ppt",
+			pptx	:	"ppt",
 			pdf 	: 	"pdf",
 			jpg 	:	"picture",
 	        jpeg 	: 	"picture",
