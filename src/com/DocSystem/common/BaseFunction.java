@@ -794,8 +794,8 @@ public class BaseFunction{
 	}
 
 	//获取OfficeServer的配置
-	protected static String getOfficeServer() {
-		return ReadProperties.read("docSysConfig.properties", "officeServer");
+	protected static String getOfficeEditorApi() {
+		return ReadProperties.read("docSysConfig.properties", "officeEditorApi");
 	}
 	
 	//WebPath was 
