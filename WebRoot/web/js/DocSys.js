@@ -322,7 +322,7 @@ function getDocShareLink(reposId, docShare, IpAddress)
  	return url;
 }
 
-function getDocDownloadLink(docInfo)
+function getDocDownloadLink(docInfo, urlStyle)
 {
 	if(docInfo.fileLink)
 	{
@@ -330,7 +330,7 @@ function getDocDownloadLink(docInfo)
 	}
 	
 	var docDataEx = docInfo.dataEx;
-		if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+	if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
 	{
 		return null;
 	}
@@ -339,18 +339,22 @@ function getDocDownloadLink(docInfo)
 	var targetPath = docDataEx.path;
     targetName = encodeURI(targetName);
    	targetPath = encodeURI(targetPath);
+   	if(urlStyle && urlStyle == "REST")
+   	{
+   		return "/DocSystem/Doc/downloadDoc/"+targetPath+"/"+targetName;   		
+   	}
+   	
 	var docLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName;
-	
-	if(gShareId)
+	if(docInfo.shareId)
 	{
-		docLink += "&shareId="+gShareId;
+		docLink += "&shareId="+docInfo.shareId;
 	}
 	return docLink;
 }
 
-function getDocDownloadFullLink(docInfo)
+function getDocDownloadFullLink(docInfo, urlStyle)
 {
-	var docLink = getDocDownloadLink(docInfo);
+	var docLink = getDocDownloadLink(docInfo, urlStyle);
 	var url =  buildFullLink(docLink);
 	return url;
 }
