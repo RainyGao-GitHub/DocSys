@@ -311,6 +311,19 @@
 	<p>文件上传中...</p>
 </div>
 
+<!-- 将错就错：历史版本的还原用了这个对话框，而且这是非标bootstrapdialog后期需要删除 -->
+<div id="downloadConfirmDialog" style="display:none">
+    <div class="modal-body">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">文件名：</label>
+            <div class="col-sm-10">
+                <input type="text" value="" class="form-control" name="entryPath" title="rename">
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
 <div  style="opacity: 0;position: absolute;">
 	<textarea id="copiedText"></textarea>
 </div>	
