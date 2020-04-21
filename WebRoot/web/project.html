@@ -1631,6 +1631,12 @@
         	{
         		docInfo.vid = gReposInfo.id;
         	}
+        	
+        	if(gShareId)
+        	{
+        		docInfo.shareId = gShareId;
+        	}
+        	
     		docInfo.docId = doc.docId;
     		docInfo.path = doc.path;
     		docInfo.name = doc.name;
@@ -1651,11 +1657,6 @@
     			{
     				docInfo.fileLink = fileLink;
     			}
-    		}
-    		
-    		if(gShareId)
-    		{
-    			docInfo.shareId = gShareId;
     		}
     		
     		return docInfo;
@@ -1705,9 +1706,10 @@
 		}
 		else if(isPdf(docInfo.fileSuffix))
 		{
+			docInfo.fileLink = ""; //copyDocInfo的fileLink不是RESTLink，因此需要清空，保证showPdf接口重新获取RESTLINK
 			showPdf(docInfo, openInNewPage);
 		}
-		else if(isOffice(docInfo.fileSuffix)) //View Only
+		else if(isOffice(docInfo.fileSuffix))
 		{
 			openOffice(docInfo, openInNewPage, preview);
 		}
