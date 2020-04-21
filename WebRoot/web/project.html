@@ -1665,6 +1665,9 @@
     
     function openDoc(doc, showUnknownFile, openInNewPage, preview)
     {
+    	console.log("openDoc() showUnknownFile:" + showUnknownFile + " openInNewPage:" + openInNewPage + " preview:" + preview);
+    	console.log("openDoc() doc:",doc);
+    	
 		if(doc == null || doc.type == 2)
 		{
 			//Folder do nothing
@@ -1674,7 +1677,20 @@
 		//copy do to docInfo
 		var docInfo = copyDocInfo(doc);
 		
-		if(!openInNewPage || openInNewPage != true)
+		if(showUnknownFile && (showUnknownFile == true || showUnknownFile == "showUnknownFile")
+		{
+			showUnknownFile = true;
+		}
+		else
+		{
+			showUnknownFile = false;
+		}
+		
+		if(openInNewPage && (openInNewPage == true || openInNewPage == "openInNewPage")
+		{
+			openInNewPage = true;
+		}
+		else
 		{
 			openInNewPage = false;
 		}
