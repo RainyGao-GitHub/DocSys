@@ -46,10 +46,10 @@
 	   	{
 	    	var fileLink = getQueryString("fileLink");
 		    console.log("viewDoc() fileLink:"+fileLink);
-		    if(!fileLink || fileLink == null || fileLink == "")
+		    if(!fileLink || fileLink != null)
 		    {
 			    var docInfo = getDocInfoFromRequestParamStr();	    
-		    	getDocOfficeLink(docInfo, showPDF, showErrorMessage, "pdf");   	
+		    	getDocFileLink(docInfo, showPDF, showErrorMessage, "REST"); //RESTFUL URL    	
 		    }
 		    else
 		    {
