@@ -139,7 +139,7 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 }
 
 //获取文件链接接口(链接带officeEditorAuthCode)
-function getDocOfficeLink(docInfo, successCallback, errorCallback, type)
+function getDocOfficeLink(docInfo, successCallback, errorCallback)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -152,11 +152,6 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback, type)
     	return;
     }
   	
-    if(!type)
-    {
-    	type = "office";
-    }
-    
 	$.ajax({
         url : "/DocSystem/Doc/getDocOfficeLink.do",
         type : "post",
@@ -166,7 +161,7 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback, type)
             path: docInfo.path,
             name: docInfo.name,
             shareId: docInfo.shareId,
-            preview: type,
+            preview: "office",
         },
         success : function (ret) {
         	console.log("getDocOfficeLink ret",ret);
