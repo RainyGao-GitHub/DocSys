@@ -43,8 +43,10 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	                    "key": key,
 	                    "title": title,
 	                    "url": fileLink,
+	                    "permissions":{"edit":false,"review":true},
 	                },
 	                "documentType": documentType,
+	                "editorConfig":{"mode":"view"},
 	                //"editorConfig": {
 	                //    "callbackUrl": saveUrl,
 	                //    "lang": "zh-CN",
@@ -52,6 +54,7 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	                "height": "100%",
 	                "width": "100%"
 	            });
+
 	   	}
     </script>
 </body>

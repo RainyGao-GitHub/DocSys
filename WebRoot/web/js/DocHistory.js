@@ -52,8 +52,8 @@
 			var title = "下载确认";
 			//Show dialog
 		    qiao.bs.dialog({
-		        id: "dialog-downloadConfirmDialog",
-		        url: '#downloadConfirmDialog',
+		        id: "dialog-revertConfirmDialog",
+		        url: '#revertConfirmDialog',
 		        title: title,
 		        okbtn: "确定",
 		        callback: function () {
@@ -61,23 +61,23 @@
 		            	console.log("showDownloadConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
 		                if(historyType == 0)
 		                {
-		                	$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
+		                	$("#dialog-revertConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
 		                }
 		                else
 		                {
 		                	if(docId == 0)
 		                	{
-		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/");	             
+		                		$("#dialog-revertConfirmDialog input[name='entryPath']").val("/");	             
 		                	}
 		                	else
 		                	{
-		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
+		                		$("#dialog-revertConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
 		                	}
 		                }
 		            },100);
 		        }
 		    },function () {
-				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
+				var entryPath = $("#dialog-revertConfirmDialog input[name='entryPath']").val();
 				console.log("showDownloadConfirm() download commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
                 downloadHistory(index, entryPath);
 		    	return true;   
@@ -155,8 +155,8 @@
 			var title = "恢复确认";
 			//Show dialog
 		    qiao.bs.dialog({
-		        id: "dialog-downloadConfirmDialog",
-		        url: '#downloadConfirmDialog',
+		        id: "dialog-revertConfirmDialog",
+		        url: '#revertConfirmDialog',
 		        title: title,
 		        okbtn: "确定",
 		        callback: function () {
@@ -164,23 +164,23 @@
 		            	console.log("showRevertConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
 		                if(historyType == 0)
 		                {
-		                	$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
+		                	$("#dialog-revertConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
 		                }
 		                else
 		                {
 		                	if(docId == 0)
 		                	{
-		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/");	             
+		                		$("#dialog-revertConfirmDialog input[name='entryPath']").val("/");	             
 		                	}
 		                	else
 		                	{
-		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
+		                		$("#dialog-revertConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
 		                	}
 		                }
 		            },100);
 		        }
 		    },function () {
-				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
+				var entryPath = $("#dialog-revertConfirmDialog input[name='entryPath']").val();
 				console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
 				revertHistory(index, entryPath);
 		    	return true;   
