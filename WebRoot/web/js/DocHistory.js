@@ -52,8 +52,8 @@
 			var title = "下载确认";
 			//Show dialog
 		    qiao.bs.dialog({
-		        id: "dialog-revertConfirmDialog",
-		        url: '#revertConfirmDialog',
+		        id: "dialog-downloadConfirmDialog",
+		        url: '#downloadConfirmDialog',
 		        title: title,
 		        okbtn: "确定",
 		        callback: function () {
@@ -61,23 +61,23 @@
 		            	console.log("showDownloadConfirm() callback commitId:" + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			         	
 		                if(historyType == 0)
 		                {
-		                	$("#dialog-revertConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
+		                	$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+parentPath+docName);
 		                }
 		                else
 		                {
 		                	if(docId == 0)
 		                	{
-		                		$("#dialog-revertConfirmDialog input[name='entryPath']").val("/");	             
+		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/");	             
 		                	}
 		                	else
 		                	{
-		                		$("#dialog-revertConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
+		                		$("#dialog-downloadConfirmDialog input[name='entryPath']").val("/"+docId + "_" + docName);	             		                		
 		                	}
 		                }
 		            },100);
 		        }
 		    },function () {
-				var entryPath = $("#dialog-revertConfirmDialog input[name='entryPath']").val();
+				var entryPath = $("#dialog-downloadConfirmDialog input[name='entryPath']").val();
 				console.log("showDownloadConfirm() download commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
                 downloadHistory(index, entryPath);
 		    	return true;   
