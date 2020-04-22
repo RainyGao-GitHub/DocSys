@@ -1760,12 +1760,12 @@ public class DocController extends BaseController{
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
 	@RequestMapping("/saveDoc.do")
-	protected void saveDoc(Integer reposId, String path, String name, 
+	protected void saveDoc(Integer reposId, String filePath, 
 			Integer shareId,
 			String authCode,		
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
 
-		System.out.println("saveDoc reposId:" + reposId + " path:" + path + " name:"+ name + " shareId:" + shareId +" authCode:" + authCode);
+		System.out.println("saveDoc reposId:" + reposId + " filePath:" + filePath + " shareId:" + shareId +" authCode:" + authCode);
 
 		PrintWriter writer = null;
 		try {
@@ -1773,46 +1773,22 @@ public class DocController extends BaseController{
 			ReturnAjax rt = new ReturnAjax();
 			
 			//Decode Path and Name
-			if(path == null && name == null)
+			if(filePath == null)
 			{
 				docSysErrorLog("文件路径未设置！", rt);
 				writer.write("文件路径未设置");
 				return;
 			}
 			
-			if(path == null)
+			filePath = new String(filePath.getBytes("ISO8859-1"),"UTF-8");	
+			filePath = base64Decode(filePath);
+			if(filePath == null)
 			{
-				path = "";
-			}
-			else
-			{
-				path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
-				path = base64Decode(path);
-				if(path == null)
-				{
-					docSysErrorLog("目标路径解码失败！", rt);
-					writer.write("目标路径解码失败");			
-					return;
-				}			
-			}
-			
-			if(name == null)
-			{
-				name = "";
-			}
-			else
-			{
-				name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
-				name = base64Decode(name);
-				if(name == null)
-				{
-					docSysErrorLog("目标文件名解码失败！", rt);
-					writer.write("目标文件名解码失败");			
-					return;
-				}
-			}
+				docSysErrorLog("文件路径解码失败！", rt);
+				writer.write("文件路径解码失败");			
+				return;
+			}			
 		
-
 			//Check authCode or reposAccess
 			ReposAccess reposAccess = null;
 			if(authCode != null)
@@ -1847,22 +1823,21 @@ public class DocController extends BaseController{
 			
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
+			Doc doc = buildBasicDoc(reposId, null, null, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
 
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-			String localParentPath = localRootPath + path;
+			String localParentPath = localRootPath + doc.getPath();
 			File localParentDir = new File(localParentPath);
 			if(false == localParentDir.exists())
 			{
 				localParentDir.mkdirs();
 			}
 			
-			Doc doc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
-			
 			//Check user permission
 			Doc localDoc = docSysGetDoc(repos, doc);
 			if(localDoc == null || localDoc.getType() == 0)	//0: add  1: update
 			{
-				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
 				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有新增权限", rt);
@@ -1881,7 +1856,6 @@ public class DocController extends BaseController{
 			}
 			
 			//Check and getDownloadDoc
-
             String body = "";
             try
             {
@@ -1922,7 +1896,7 @@ public class DocController extends BaseController{
 	            }
 	            
 	            Long chunkSize = new File(chunkParentPath + chunkName).length();
-				String commitMsg = "保存 " + path + name;
+				String commitMsg = "保存 " + filePath;
 				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				if(localDoc == null || localDoc.getType() == 0)
@@ -1935,7 +1909,7 @@ public class DocController extends BaseController{
 					{
 						writer.write("{\"error\":0}");
 						executeCommonActionList(actionList, rt);
-						deleteChunks(name,1, 1,chunkParentPath);
+						deleteChunks(doc.getName(),1, 1,chunkParentPath);
 					}					
 				}
 				else
@@ -1948,7 +1922,7 @@ public class DocController extends BaseController{
 					{
 						writer.write("{\"error\":0}");
 						executeCommonActionList(actionList, rt);
-						deleteChunks(name,1, 1,chunkParentPath);
+						deleteChunks(doc.getName(),1, 1,chunkParentPath);
 						deletePreviewFile(doc);
 					}
 				}
@@ -1967,12 +1941,12 @@ public class DocController extends BaseController{
     }
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
-	@RequestMapping("/saveDoc/{reposId}/{path}/{name}/{authCode}")
-	protected void saveDoc(@PathVariable("reposId") Integer reposId, @PathVariable("path") String path, @PathVariable("name") String name,
+	@RequestMapping("/saveDoc/{reposId}/{filePpath}/{authCode}")
+	protected void saveDoc(@PathVariable("reposId") Integer reposId, @PathVariable("filePath") String filePath,
 			@PathVariable("authCode") String authCode,
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
 
-		System.out.println("saveDoc reposId:" + reposId + " path:" + path + " name:"+ name +" authCode:" + authCode);
+		System.out.println("saveDoc reposId:" + reposId + " path:" + filePath +" authCode:" + authCode);
 
 		PrintWriter writer = null;
 		try {
@@ -1980,44 +1954,21 @@ public class DocController extends BaseController{
 			ReturnAjax rt = new ReturnAjax();
 			
 			//Decode Path and Name
-			if(path == null && name == null)
+			if(filePath == null)
 			{
 				docSysErrorLog("文件路径未设置！", rt);
 				writer.write("文件路径未设置");
 				return;
 			}
 			
-			if(path == null)
+			filePath = new String(filePath.getBytes("ISO8859-1"),"UTF-8");	
+			filePath = base64Decode(filePath);
+			if(filePath == null)
 			{
-				path = "";
-			}
-			else
-			{
-				path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
-				path = base64Decode(path);
-				if(path == null)
-				{
-					docSysErrorLog("目标路径解码失败！", rt);
-					writer.write("目标路径解码失败");			
-					return;
-				}			
-			}
-			
-			if(name == null)
-			{
-				name = "";
-			}
-			else
-			{
-				name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
-				name = base64Decode(name);
-				if(name == null)
-				{
-					docSysErrorLog("目标文件名解码失败！", rt);
-					writer.write("目标文件名解码失败");			
-					return;
-				}
-			}
+				docSysErrorLog("文件路径解码失败！", rt);
+				writer.write("文件路径解码失败");			
+				return;
+			}	
 		
 
 			//Check authCode or reposAccess
@@ -2054,22 +2005,22 @@ public class DocController extends BaseController{
 			
 			String localRootPath = getReposRealPath(repos);
 			String localVRootPath = getReposVirtualPath(repos);
+			Doc doc = buildBasicDoc(reposId, null, null, filePath, "", null, 1, true, localRootPath, localVRootPath, null, null);
 
 			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-			String localParentPath = localRootPath + path;
+			String localParentPath = localRootPath + doc.getPath();
 			File localParentDir = new File(localParentPath);
 			if(false == localParentDir.exists())
 			{
 				localParentDir.mkdirs();
 			}
 			
-			Doc doc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
 			
 			//Check user permission
 			Doc localDoc = docSysGetDoc(repos, doc);
 			if(localDoc == null || localDoc.getType() == 0)	//0: add  1: update
 			{
-				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, doc.getPath(), "", null, 2, true, localRootPath, localVRootPath, null, null);
 				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有新增权限", rt);
@@ -2129,7 +2080,7 @@ public class DocController extends BaseController{
 	            }
 	            
 	            Long chunkSize = new File(chunkParentPath + chunkName).length();
-				String commitMsg = "保存 " + path + name;
+				String commitMsg = "保存 " + filePath;
 				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
 				if(localDoc == null || localDoc.getType() == 0)
@@ -2142,7 +2093,7 @@ public class DocController extends BaseController{
 					{
 						writer.write("{\"error\":0}");
 						executeCommonActionList(actionList, rt);
-						deleteChunks(name,1, 1,chunkParentPath);
+						deleteChunks(doc.getName(),1, 1,chunkParentPath);
 					}					
 				}
 				else
@@ -2155,7 +2106,7 @@ public class DocController extends BaseController{
 					{
 						writer.write("{\"error\":0}");
 						executeCommonActionList(actionList, rt);
-						deleteChunks(name,1, 1,chunkParentPath);
+						deleteChunks(doc.getName(),1, 1,chunkParentPath);
 						deletePreviewFile(doc);
 					}
 				}
@@ -2982,16 +2933,10 @@ public class DocController extends BaseController{
 	}
 	
 	private String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
-		String encName = base64Encode(doc.getName());
-		if(encName == null)
+		String encFilePath = base64Encode(doc.getPath() + doc.getName());
+		if(encFilePath == null)
 		{
-			docSysErrorLog("buildSaveDocLink() get encName Failed", rt);
-			return null;
-		}	
-		String encPath = base64Encode(doc.getPath());
-		if(encPath == null)
-		{
-			docSysErrorLog("buildSaveDocLink() get encPath Failed", rt);
+			docSysErrorLog("buildSaveDocLink() get encFilePath Failed", rt);
 			return null;
 		}	
 		
@@ -3002,11 +2947,11 @@ public class DocController extends BaseController{
 			{
 				authCode = "0";
 			}
-			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encPath +  "/" + encName + "/" + authCode;;
+			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encFilePath + "/" + authCode;;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&path=" + encPath + "&name="+encName;		
+			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&filePath=" + encFilePath;		
 			if(authCode != null)
 			{
 				fileLink += "&authCode=" + authCode;
