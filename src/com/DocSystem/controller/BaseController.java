@@ -1904,7 +1904,7 @@ public class BaseController  extends BaseFunction{
 	//底层addDoc接口
 	protected boolean addDoc(Repos repos, Doc doc, 
 			MultipartFile uploadFile, //For upload
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
+			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		System.out.println("addDoc() docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName());
@@ -1926,7 +1926,7 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean addDoc_FSM(Repos repos, Doc doc,	//Add a empty file
 			MultipartFile uploadFile, //For upload
-			Integer chunkNum, Integer chunkSize, String chunkParentPath, //For chunked upload combination
+			Integer chunkNum, Long chunkSize, String chunkParentPath, //For chunked upload combination
 			String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		System.out.println("addDoc_FSM()  docId:" + doc.getDocId() + " pid:" + doc.getPid() + " parentPath:" + doc.getPath() + " docName:" + doc.getName() + " type:" + doc.getType());
@@ -4550,7 +4550,7 @@ public class BaseController  extends BaseFunction{
 		case UPDATE: //Update Doc
 			MultipartFile uploadFile = action.getUploadFile();
 			Integer chunkNum = action.getChunkNum();
-			Integer chunkSize = action.getChunkSize();
+			Long chunkSize = action.getChunkSize();
 			String chunkParentPath = action.getChunkParentPath();
 			return updateRealDoc(repos, doc, uploadFile, chunkNum, chunkSize, chunkParentPath, rt);
 		case MOVE: //Move Doc
@@ -4641,7 +4641,7 @@ public class BaseController  extends BaseFunction{
 	//底层updateDoc接口
 	protected boolean updateDoc(Repos repos, Doc doc,
 								MultipartFile uploadFile,
-								Integer chunkNum, Integer chunkSize, String chunkParentPath, 
+								Integer chunkNum, Long chunkSize, String chunkParentPath, 
 								String commitMsg,String commitUser,User login_user, ReturnAjax rt, List<CommonAction> actionList) 
 	{
 		switch(repos.getType())
@@ -4660,7 +4660,7 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean updateDoc_FSM(Repos repos, Doc doc,
 				MultipartFile uploadFile,
-				Integer chunkNum, Integer chunkSize, String chunkParentPath, 
+				Integer chunkNum, Long chunkSize, String chunkParentPath, 
 				String commitMsg,String commitUser,User login_user, ReturnAjax rt,
 				List<CommonAction> actionList) 
 	{	
@@ -6211,7 +6211,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean updateRealDoc(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Integer chunkSize, String chunkParentPath, ReturnAjax rt) 
+	protected boolean updateRealDoc(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Long chunkSize, String chunkParentPath, ReturnAjax rt) 
 	{
 		String parentPath = doc.getPath();
 		String name = doc.getName();
@@ -6254,7 +6254,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Integer cutSize, String chunkParentPath) {
+	protected String combineChunks(String targetParentPath,String fileName, Integer chunkNum,Long chunkSize, String chunkParentPath) {
 		try {
 			String targetFilePath = targetParentPath + fileName;
 			FileOutputStream out;
