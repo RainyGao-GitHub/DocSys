@@ -2734,27 +2734,27 @@ public class DocController extends BaseController{
 	}
 	
 	private String buildSaveDocLink(Doc doc, String urlStyle, ReturnAjax rt) {
-		String encTargetName = base64Encode(doc.getName());
-		if(encTargetName == null)
+		String encName = base64Encode(doc.getName());
+		if(encName == null)
 		{
-			docSysErrorLog("buildSaveDocLink() get encTargetName Failed", rt);
+			docSysErrorLog("buildSaveDocLink() get encName Failed", rt);
 			return null;
 		}	
-		String encTargetPath = base64Encode(doc.getPath());
-		if(encTargetPath == null)
+		String encPath = base64Encode(doc.getPath());
+		if(encPath == null)
 		{
-			docSysErrorLog("buildSaveDocLink() get encTargetPath Failed", rt);
+			docSysErrorLog("buildSaveDocLink() get encPath Failed", rt);
 			return null;
 		}	
 		
 		String fileLink = null;
 		if(urlStyle != null && urlStyle.equals("REST"))
 		{
-			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encTargetPath +  "/" + encTargetName;
+			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encPath +  "/" + encName;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&targetPath=" + encTargetPath + "&targetName="+encTargetName;			
+			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&path=" + encPath + "&name="+encName;			
 		}
 		return fileLink;
 	}
