@@ -2246,6 +2246,7 @@ public class DocController extends BaseController{
 	public void getDocOfficeLink(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String preview,
 			Integer shareId,
+			String urlStyle,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{	
 		System.out.println("getDocOfficeLink reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type+ " shareId:" + shareId);
@@ -2287,8 +2288,8 @@ public class DocController extends BaseController{
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
 			String authCode = getAuthCodeForOfficeEditor(doc, reposAccess);
-			String fileLink = buildDocFileLink(doc, authCode, null, rt); //返回not RESTFUL style link
-			String saveFileLink = buildSaveDocLink(doc, authCode, null, rt);
+			String fileLink = buildDocFileLink(doc, authCode, urlStyle, rt);
+			String saveFileLink = buildSaveDocLink(doc, authCode, urlStyle, rt);
 			
 			rt.setData(fileLink);
 			rt.setDataEx(saveFileLink);

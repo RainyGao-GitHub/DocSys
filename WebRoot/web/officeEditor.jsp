@@ -25,7 +25,7 @@ var OfficeEditor = (function () {
 	    title = docInfo.name;
 	    key = docInfo.docId + "";
 	    
-	    getDocOfficeLink(docInfo, showOffice, showErrorMessage);
+	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
 	}
 	
     function showOffice(fileLink, saveFileLink)

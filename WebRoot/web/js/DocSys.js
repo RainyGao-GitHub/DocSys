@@ -165,7 +165,7 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 }
 
 //获取文件链接接口(链接带officeEditorAuthCode)
-function getDocOfficeLink(docInfo, successCallback, errorCallback)
+function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -188,6 +188,7 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback)
             name: docInfo.name,
             shareId: docInfo.shareId,
             preview: "office",
+            urlStyle: urlStyle,
         },
         success : function (ret) {
         	console.log("getDocOfficeLink ret",ret);
