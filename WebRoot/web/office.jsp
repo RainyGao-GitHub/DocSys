@@ -23,19 +23,12 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    var documentType = getDocumentType(fileType);
 	    var title = docInfo.name;
 	    var key = docInfo.docId + "";
-	    var fileLink = getQueryString("fileLink");	 
-	    if(!fileLink || fileLink == null || fileLink == "")
-	    {
-	    	getDocOfficeLink(docInfo, showOffice, showErrorMessage);
-	    }
-	    else
-	    {
-	    	showOffice(fileLink);
-	    }
 	    
-	    function showOffice(fileLink)
+	    getDocOfficeLink(docInfo, showOffice, showErrorMessage);
+	    	    
+	    function showOffice(fileLink, saveFileLink)
 	   	{
-	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
+	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 	        window.docEditor = new DocsAPI.DocEditor("placeholder",
 	            {
 	                "document": {
@@ -46,11 +39,10 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	                    "permissions":{"edit":false,"review":true},
 	                },
 	                "documentType": documentType,
-	                "editorConfig":{"mode":"view"},
-	                //"editorConfig": {
-	                //    "callbackUrl": saveUrl,
-	                //    "lang": "zh-CN",
-	                //},
+	                "editorConfig": {
+	                    "callbackUrl": saveFileLink,
+	                    "lang": "zh-CN",
+	                },
 	                "height": "100%",
 	                "width": "100%"
 	            });

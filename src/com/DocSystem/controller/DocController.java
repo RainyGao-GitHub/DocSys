@@ -2,14 +2,21 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -44,6 +51,7 @@ import com.DocSystem.common.QueryCondition;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.controller.BaseController;
+import com.alibaba.druid.support.json.JSONParser;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.commonService.ProxyThread;
@@ -1728,6 +1736,96 @@ public class DocController extends BaseController{
 		sendTargetToWebPage(targetPath, targetName, targetPath, rt, response, request,false);
 	}
 	
+	/****************   this interface is for onlyoffice edit callback ******************/
+	@RequestMapping("/saveDoc.do")
+	protected void saveDoc(String targetPath, String targetName, String authCode, 
+			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
+
+		PrintWriter writer = null;
+		Scanner scanner = null;
+		try {
+			writer = response.getWriter();
+			ReturnAjax rt = new ReturnAjax();
+			if(authCode != null)
+			{
+				if(checkAuthCode(authCode, null) == false)
+				{
+					writer.write("{\"error\":0}");			
+					return;
+				}
+			}
+			else
+			{
+				ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+				if(reposAccess == null)
+				{
+					writer.write("{\"error\":0}");			
+					return;
+				}
+			}
+			
+			if(targetPath == null || targetName == null)
+			{
+				docSysErrorLog("目标路径不能为空！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+			targetPath = base64Decode(targetPath);
+			if(targetPath == null)
+			{
+				docSysErrorLog("目标路径解码失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+		
+			targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+			targetName = base64Decode(targetName);
+			if(targetName == null)
+			{
+				docSysErrorLog("目标文件名解码失败！", rt);
+				writeJson(rt, response);			
+				return;
+			}
+			
+			scanner = new Scanner(request.getInputStream()).useDelimiter("\\A");
+	        String body = scanner.hasNext() ? scanner.next() : "";
+	
+	        JSONObject jsonObj = (JSONObject) new JSONParser(body).parse();
+	        
+	        if((long) jsonObj.get("status") == 2)
+	        {
+	            String downloadUri = (String) jsonObj.get("url");
+	
+	            URL url = new URL(downloadUri);
+	            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+	            InputStream stream = connection.getInputStream();
+	
+	            File savedFile = new File(targetPath + targetName);
+	            try (FileOutputStream out = new FileOutputStream(savedFile)) {
+	                int read;
+	                final byte[] bytes = new byte[1024];
+	                while ((read = stream.read(bytes)) != -1) {
+	                    out.write(bytes, 0, read);
+	                }
+	
+	                out.flush();
+	            }
+	            connection.disconnect();
+	        }
+	        
+	        writer.write("{\"error\":0}");
+		} catch (Exception e) {
+			e.printStackTrace();			
+		} finally {
+			if(scanner != null)
+			{
+				scanner.close();
+			}
+		}
+    }
+	
 	/**************** get Tmp File ******************/
 	@RequestMapping("/doGetTmpFile.do")
 	public void doGetTmp(Integer reposId,String path, String fileName,
@@ -1815,23 +1913,27 @@ public class DocController extends BaseController{
 		
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
+			String authCode = getAuthCodeForOfficeEditor(doc);
 			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
-			fileLink += "&authCode=" + getAuthCodeForOfficeEditor(doc);
+			fileLink += "&authCode=" + authCode;
+			String saveDocLink = buildSaveDocLink(doc, null, rt);
+			saveDocLink +=  "&authCode=" + authCode;
+			
 			rt.setData(fileLink);
-			rt.setDataEx("office");
+			rt.setDataEx(saveDocLink);
 			writeJson(rt, response);
 			return;
 		}
 		
 		//转换成pdf进行预览
-		String officeLink = convertOfficeToPdf(repos, doc, rt);
-		if(officeLink == null)
+		String pdfLink = convertOfficeToPdf(repos, doc, rt);
+		if(pdfLink == null)
 		{
 			System.out.println("getDocOfficeLink() convertOfficeToPdf failed");
 			writeJson(rt, response);	
 			return;
 		}
-		rt.setData(officeLink);
+		rt.setData(pdfLink);
 		rt.setDataEx("pdf");
 		writeJson(rt, response);
 		return;	
@@ -2476,13 +2578,13 @@ public class DocController extends BaseController{
 		String encTargetName = base64Encode(doc.getName());
 		if(encTargetName == null)
 		{
-			docSysErrorLog("getDocFileLink() get encTargetName Failed", rt);
+			docSysErrorLog("buildDocFileLink() get encTargetName Failed", rt);
 			return null;
 		}	
 		String encTargetPath = base64Encode(doc.getLocalRootPath() + doc.getPath());
 		if(encTargetPath == null)
 		{
-			docSysErrorLog("getDocFileLink() get encTargetPath Failed", rt);
+			docSysErrorLog("buildDocFileLink() get encTargetPath Failed", rt);
 			return null;
 		}	
 		
@@ -2494,6 +2596,32 @@ public class DocController extends BaseController{
 		else
 		{
 			fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;			
+		}
+		return fileLink;
+	}
+	
+	private String buildSaveDocLink(Doc doc, String urlStyle, ReturnAjax rt) {
+		String encTargetName = base64Encode(doc.getName());
+		if(encTargetName == null)
+		{
+			docSysErrorLog("buildSaveDocLink() get encTargetName Failed", rt);
+			return null;
+		}	
+		String encTargetPath = base64Encode(doc.getLocalRootPath() + doc.getPath());
+		if(encTargetPath == null)
+		{
+			docSysErrorLog("buildSaveDocLink() get encTargetPath Failed", rt);
+			return null;
+		}	
+		
+		String fileLink = null;
+		if(urlStyle != null && urlStyle.equals("REST"))
+		{
+			fileLink = "/DocSystem/Doc/saveDoc/" + encTargetPath +  "/" + encTargetName;
+		}
+		else
+		{
+			fileLink = "/DocSystem/Doc/saveDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;			
 		}
 		return fileLink;
 	}
