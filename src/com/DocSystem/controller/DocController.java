@@ -1941,7 +1941,7 @@ public class DocController extends BaseController{
     }
 	
 	/****************   this interface is for onlyoffice edit callback ******************/
-	@RequestMapping("/saveDoc/{reposId}/{filePpath}/{authCode}")
+	@RequestMapping("/saveDoc/{reposId}/{filePath}/{authCode}")
 	protected void saveDoc(@PathVariable("reposId") Integer reposId, @PathVariable("filePath") String filePath,
 			@PathVariable("authCode") String authCode,
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
