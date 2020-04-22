@@ -43,6 +43,9 @@ import com.DocSystem.entity.DocShare;
 import com.DocSystem.entity.LogEntry;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
+import com.alibaba.druid.support.json.JSONParser;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.AuthCode;
 import com.DocSystem.common.CommonAction;
 import com.DocSystem.common.DocChange;
@@ -51,9 +54,6 @@ import com.DocSystem.common.QueryCondition;
 import com.DocSystem.common.ReposAccess;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.controller.BaseController;
-import com.alibaba.druid.support.json.JSONParser;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.commonService.ProxyThread;
 
 /*
@@ -1795,10 +1795,11 @@ public class DocController extends BaseController{
 			
 			scanner = new Scanner(request.getInputStream()).useDelimiter("\\A");
 	        String body = scanner.hasNext() ? scanner.next() : "";
-	
-	        JSONObject jsonObj = (JSONObject) new JSONParser(body).parse();
+	        System.out.println("saveDoc body:" + body);
 	        
-	        if((long) jsonObj.get("status") == 2)
+	        JSONObject jsonObj = JSON.parseObject(body);
+	        
+	        if((Integer) jsonObj.get("status") == 2)
 	        {
 	            String downloadUri = (String) jsonObj.get("url");
 	
