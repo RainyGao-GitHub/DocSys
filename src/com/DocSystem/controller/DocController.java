@@ -2740,7 +2740,7 @@ public class DocController extends BaseController{
 			docSysErrorLog("buildSaveDocLink() get encTargetName Failed", rt);
 			return null;
 		}	
-		String encTargetPath = base64Encode(doc.getLocalRootPath() + doc.getPath());
+		String encTargetPath = base64Encode(doc.getPath());
 		if(encTargetPath == null)
 		{
 			docSysErrorLog("buildSaveDocLink() get encTargetPath Failed", rt);
@@ -2750,11 +2750,11 @@ public class DocController extends BaseController{
 		String fileLink = null;
 		if(urlStyle != null && urlStyle.equals("REST"))
 		{
-			fileLink = "/DocSystem/Doc/saveDoc/" + encTargetPath +  "/" + encTargetName;
+			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encTargetPath +  "/" + encTargetName;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/saveDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;			
+			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&targetPath=" + encTargetPath + "&targetName="+encTargetName;			
 		}
 		return fileLink;
 	}
