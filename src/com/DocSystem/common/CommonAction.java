@@ -54,7 +54,7 @@ public class CommonAction {
     //For localAction
 	MultipartFile uploadFile = null;
 	private String chunkParentPath = null;
-	private Integer chunkSize = null;
+	private Long chunkSize = null;
 	private Integer chunkNum = null;
 	
     //For subAction
@@ -164,11 +164,11 @@ public class CommonAction {
 		this.chunkNum = chunkNum;	
 	}
 	
-	public Integer getChunkSize() {
+	public Long getChunkSize() {
 		return chunkSize;
 	}
 	
-	public void setChunkSize(Integer chunkSize) {
+	public void setChunkSize(Long chunkSize) {
 		this.chunkSize = chunkSize;	
 	}
 
