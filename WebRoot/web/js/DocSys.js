@@ -6,6 +6,32 @@
  ** 提示对话框接口 **
  * */
 
+var gIsPC = isPC();
+
+function isPC() {
+    var userAgentInfo = navigator.userAgent;
+    var Agents = ["Android", "iPhone",
+                "SymbianOS", "Windows Phone",
+                "iPad", "iPod"];
+
+    for (var v = 0; v < Agents.length; v++) {
+        if (userAgentInfo.indexOf(Agents[v]) > 0) {
+            return false;
+        }
+    }
+   	return true;
+}
+
+function isWeiXin(){ 
+    var ua = navigator.userAgent.toLowerCase(); 
+    if(ua.indexOf('micromessenger') != -1) { 
+        return true; 
+    } else { 
+        return false; 
+    } 
+}
+    
+
 //构造 buildRequestParamStrForDoc 和 getDocInfoFromRequestParamStr 需要成对使用，用于前端页面之间传递参数
 //如果是传给后台的url需要用base64_urlsafe_encode
 function buildRequestParamStrForDoc(docInfo)

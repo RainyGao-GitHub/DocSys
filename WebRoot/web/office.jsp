@@ -29,7 +29,14 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    function showOffice(fileLink, saveFileLink)
 	   	{
 	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
-			var config = {
+			var type = 'desktop';
+	    	if(gIsPC == false)
+			{
+				type = 'mobile';
+			}
+			
+	    	var config = {
+					"type": type,
 	    		    "document": {
 	    		        "fileType": fileType,
 	    		        "key": key,
