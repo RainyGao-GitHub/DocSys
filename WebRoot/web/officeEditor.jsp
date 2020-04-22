@@ -31,7 +31,16 @@ var OfficeEditor = (function () {
     function showOffice(fileLink, saveFileLink)
    	{
     	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
-		var config = {
+		var type = 'desktop';
+    	var width = "100%";
+		if(gIsPC == false)
+		{
+			type = 'mobile';
+			width = "90%";
+		}
+    	
+    	var config = {
+				"type" : type,
     		    "document": {
     		        "fileType": fileType,
     		        "key": key,
@@ -54,7 +63,7 @@ var OfficeEditor = (function () {
                     "lang": "zh-CN",
                 },
                 "height": "100%",
-                "width": "100%",
+                "width": width,
     	};
         editor = new DocsAPI.DocEditor("placeholder", config);
    	}
