@@ -1748,7 +1748,6 @@ public class DocController extends BaseController{
 		System.out.println("saveDoc reposId:" + reposId + " path:" + path + " name:"+ name + " shareId:" + shareId +" authCode:" + authCode);
 
 		PrintWriter writer = null;
-		Scanner scanner = null;
 		try {
 			writer = response.getWriter();
 			ReturnAjax rt = new ReturnAjax();
@@ -1757,7 +1756,7 @@ public class DocController extends BaseController{
 			if(path == null && name == null)
 			{
 				docSysErrorLog("文件路径未设置！", rt);
-				writer.write("{\"error\":0}");				
+				writer.write("文件路径未设置");
 				return;
 			}
 			
@@ -1772,7 +1771,7 @@ public class DocController extends BaseController{
 				if(path == null)
 				{
 					docSysErrorLog("目标路径解码失败！", rt);
-					writer.write("{\"error\":0}");				
+					writer.write("目标路径解码失败");			
 					return;
 				}			
 			}
@@ -1788,7 +1787,7 @@ public class DocController extends BaseController{
 				if(name == null)
 				{
 					docSysErrorLog("目标文件名解码失败！", rt);
-					writer.write("{\"error\":0}");			
+					writer.write("目标文件名解码失败");			
 					return;
 				}
 			}
@@ -1801,7 +1800,7 @@ public class DocController extends BaseController{
 				if(checkAuthCode(authCode, null) == false)
 				{
 					System.out.println("saveDoc checkAuthCode Failed");
-					writer.write("{\"error\":0}");			
+					writer.write("授权码校验失败");
 					return;
 				}
 				reposAccess = authCodeMap.get(authCode).getReposAccess();
@@ -1813,7 +1812,7 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				System.out.println("saveDoc reposAccess is null");
-				writer.write("{\"error\":0}");			
+				writer.write("reposAccess is null");			
 				return;
 			}
 		
@@ -1822,7 +1821,7 @@ public class DocController extends BaseController{
 			if(repos == null)
 			{
 				docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
-				writer.write("{\"error\":0}");			
+				writer.write("仓库 " + reposId + " 不存在！");				
 				return;
 			}
 			
@@ -1847,7 +1846,7 @@ public class DocController extends BaseController{
 				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有新增权限", rt);
-					writer.write("{\"error\":0}");		
+					writer.write("用户没有新增权限");	
 					return;
 				}
 			}
@@ -1856,19 +1855,39 @@ public class DocController extends BaseController{
 				if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 				{
 					docSysErrorLog("用户没有修改权限", rt);
-					writer.write("{\"error\":0}");		
+					writer.write("用户没有修改权限");		
 					return;
 				}
 			}
 			
 			//Check and getDownloadDoc
-			scanner = new Scanner(request.getInputStream()).useDelimiter("\\A");
-	        String body = scanner.hasNext() ? scanner.next() : "";
+
+            String body = "";
+            try
+            {
+                Scanner scanner = new Scanner(request.getInputStream());
+                scanner.useDelimiter("\\A");
+                body = scanner.hasNext() ? scanner.next() : "";
+                scanner.close();
+            }
+            catch (Exception ex)
+            {
+                writer.write("get request.getInputStream error:" + ex.getMessage());
+                return;
+            }
+            
+            if (body.isEmpty())
+            {
+                writer.write("empty request.getInputStream");
+                return;
+            }
+	        
 	        System.out.println("saveDoc body:" + body);
 	        
 	        JSONObject jsonObj = JSON.parseObject(body);
 	        
-	        if((Integer) jsonObj.get("status") == 2)
+            int status = (Integer) jsonObj.get("status");
+	        if(status == 2 || status == 3)
 	        {
 	            String downloadUri = (String) jsonObj.get("url");
 	            
@@ -1877,11 +1896,10 @@ public class DocController extends BaseController{
 	            if(downloadFileFromUrl(downloadUri, chunkParentPath, chunkName) == null)
 	            {
 					docSysErrorLog("下载文件失败 downloadUri="+downloadUri, rt);
-					writer.write("{\"error\":0}");		
-					scanner.close();
+					//writer.write("下载文件失败 downloadUri="+downloadUri);	
+					writer.write("{\"error\":1}");
 					return;
 	            }
-	            scanner.close();
 	            
 	            Long chunkSize = new File(chunkParentPath + chunkName).length();
 				String commitMsg = "保存 " + path + name;
@@ -1893,10 +1911,9 @@ public class DocController extends BaseController{
 							null,
 							1, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
 					
-					writer.write("{\"error\":0}");
-					
 					if(ret == true)
 					{
+						writer.write("{\"error\":0}");
 						executeCommonActionList(actionList, rt);
 						deleteChunks(name,1, 1,chunkParentPath);
 					}					
@@ -1907,10 +1924,9 @@ public class DocController extends BaseController{
 							null,  
 							1, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
 				
-					writer.write("{\"error\":0}");	
-					
 					if(ret == true)
 					{
+						writer.write("{\"error\":0}");
 						executeCommonActionList(actionList, rt);
 						deleteChunks(name,1, 1,chunkParentPath);
 						deletePreviewFile(doc);
@@ -1920,15 +1936,13 @@ public class DocController extends BaseController{
 	           
 	        }
 	        
+	        System.out.println("这是打开文件的调用，返回error:0表示可以编辑");
 	        writer.write("{\"error\":0}");
+	        
 		} catch (Exception e) {
 			System.out.println("saveDoc saveFile Failed");
-			e.printStackTrace();			
-		} finally {
-			if(scanner != null)
-			{
-				scanner.close();
-			}
+			writer.write("{\"error\":-1}");
+			e.printStackTrace();		
 		}
     }
 	
