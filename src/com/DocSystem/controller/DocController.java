@@ -1741,6 +1741,8 @@ public class DocController extends BaseController{
 	protected void saveDoc(String targetPath, String targetName, String authCode, 
 			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
 
+		System.out.println("saveDoc targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode);
+
 		PrintWriter writer = null;
 		Scanner scanner = null;
 		try {
@@ -1750,6 +1752,7 @@ public class DocController extends BaseController{
 			{
 				if(checkAuthCode(authCode, null) == false)
 				{
+					System.out.println("saveDoc checkAuthCode Failed");
 					writer.write("{\"error\":0}");			
 					return;
 				}
@@ -1759,6 +1762,7 @@ public class DocController extends BaseController{
 				ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
 				if(reposAccess == null)
 				{
+					System.out.println("saveDoc checkAndGetAccessInfo Failed");
 					writer.write("{\"error\":0}");			
 					return;
 				}
@@ -1817,6 +1821,7 @@ public class DocController extends BaseController{
 	        
 	        writer.write("{\"error\":0}");
 		} catch (Exception e) {
+			System.out.println("saveDoc saveFile Failed");
 			e.printStackTrace();			
 		} finally {
 			if(scanner != null)
