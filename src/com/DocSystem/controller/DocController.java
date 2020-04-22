@@ -1645,6 +1645,8 @@ public class DocController extends BaseController{
 		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = null;
+		
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null) == false)
@@ -1653,15 +1655,16 @@ public class DocController extends BaseController{
 				writeJson(rt, response);			
 				return;
 			}
+			reposAccess = authCodeMap.get(authCode).getReposAccess();
 		}
 		else
 		{
-			ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
-			if(reposAccess == null)
-			{
-				writeJson(rt, response);			
-				return;	
-			}
+			reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+		}
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);
+			return;	
 		}
 		
 		if(targetPath == null || targetName == null)
@@ -1699,16 +1702,33 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}", method=RequestMethod.GET)
+	@RequestMapping(value="/downloadDoc/{targetPath}/{targetName}/{authCode}", method=RequestMethod.GET)
 	public void downloadDoc(@PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+			@PathVariable("authCode") String authCode,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
-		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName);
+		System.out.println("downloadDoc  targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+		
+		ReposAccess reposAccess = null;
+		if(authCode != null && !authCode.equals("0"))
+		{
+			if(checkAuthCode(authCode, null) == false)
+			{
+				rt.setError("无效授权码或授权码已过期！");
+				writeJson(rt, response);			
+				return;
+			}
+			reposAccess = authCodeMap.get(authCode).getReposAccess();
+		}
+		else
+		{
+			reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+		}
 		if(reposAccess == null)
 		{
+			writeJson(rt, response);
 			return;	
 		}
 		
@@ -1808,6 +1828,213 @@ public class DocController extends BaseController{
 			else
 			{
 				reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
+			}
+			if(reposAccess == null)
+			{
+				System.out.println("saveDoc reposAccess is null");
+				writer.write("reposAccess is null");			
+				return;
+			}
+		
+			
+			Repos repos = reposService.getRepos(reposId);
+			if(repos == null)
+			{
+				docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+				writer.write("仓库 " + reposId + " 不存在！");				
+				return;
+			}
+			
+			String localRootPath = getReposRealPath(repos);
+			String localVRootPath = getReposVirtualPath(repos);
+
+			//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
+			String localParentPath = localRootPath + path;
+			File localParentDir = new File(localParentPath);
+			if(false == localParentDir.exists())
+			{
+				localParentDir.mkdirs();
+			}
+			
+			Doc doc = buildBasicDoc(reposId, null, null, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
+			
+			//Check user permission
+			Doc localDoc = docSysGetDoc(repos, doc);
+			if(localDoc == null || localDoc.getType() == 0)	//0: add  1: update
+			{
+				Doc parentDoc = buildBasicDoc(reposId, doc.getPid(), null, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+				if(checkUserAddRight(repos,reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
+				{
+					docSysErrorLog("用户没有新增权限", rt);
+					writer.write("用户没有新增权限");	
+					return;
+				}
+			}
+			else
+			{
+				if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+				{
+					docSysErrorLog("用户没有修改权限", rt);
+					writer.write("用户没有修改权限");		
+					return;
+				}
+			}
+			
+			//Check and getDownloadDoc
+
+            String body = "";
+            try
+            {
+                Scanner scanner = new Scanner(request.getInputStream());
+                scanner.useDelimiter("\\A");
+                body = scanner.hasNext() ? scanner.next() : "";
+                scanner.close();
+            }
+            catch (Exception ex)
+            {
+                writer.write("get request.getInputStream error:" + ex.getMessage());
+                return;
+            }
+            
+            if (body.isEmpty())
+            {
+                writer.write("empty request.getInputStream");
+                return;
+            }
+	        
+	        System.out.println("saveDoc body:" + body);
+	        
+	        JSONObject jsonObj = JSON.parseObject(body);
+	        
+            int status = (Integer) jsonObj.get("status");
+	        if(status == 2 || status == 3)
+	        {
+	            String downloadUri = (String) jsonObj.get("url");
+	            
+	            String chunkParentPath = getReposUserTmpPathForUpload(repos,reposAccess.getAccessUser());
+	            String chunkName = doc.getName() + "_0";
+	            if(downloadFileFromUrl(downloadUri, chunkParentPath, chunkName) == null)
+	            {
+					docSysErrorLog("下载文件失败 downloadUri="+downloadUri, rt);
+					//writer.write("下载文件失败 downloadUri="+downloadUri);	
+					writer.write("{\"error\":1}");
+					return;
+	            }
+	            
+	            Long chunkSize = new File(chunkParentPath + chunkName).length();
+				String commitMsg = "保存 " + path + name;
+				String commitUser = reposAccess.getAccessUser().getName();
+				List<CommonAction> actionList = new ArrayList<CommonAction>();
+				if(localDoc == null || localDoc.getType() == 0)
+				{
+					boolean ret = addDoc(repos, doc, 
+							null,
+							1, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+					
+					if(ret == true)
+					{
+						writer.write("{\"error\":0}");
+						executeCommonActionList(actionList, rt);
+						deleteChunks(name,1, 1,chunkParentPath);
+					}					
+				}
+				else
+				{
+					boolean ret = updateDoc(repos, doc, 
+							null,  
+							1, chunkSize, chunkParentPath,commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);					
+				
+					if(ret == true)
+					{
+						writer.write("{\"error\":0}");
+						executeCommonActionList(actionList, rt);
+						deleteChunks(name,1, 1,chunkParentPath);
+						deletePreviewFile(doc);
+					}
+				}
+				return;
+	           
+	        }
+	        
+	        System.out.println("这是打开文件的调用，返回error:0表示可以编辑");
+	        writer.write("{\"error\":0}");
+	        
+		} catch (Exception e) {
+			System.out.println("saveDoc saveFile Failed");
+			writer.write("{\"error\":-1}");
+			e.printStackTrace();		
+		}
+    }
+	
+	/****************   this interface is for onlyoffice edit callback ******************/
+	@RequestMapping("/saveDoc/{reposId}/{path}/{name}/{authCode}")
+	protected void saveDoc(@PathVariable("reposId") Integer reposId, @PathVariable("path") String path, @PathVariable("name") String name,
+			@PathVariable("authCode") String authCode,
+			HttpServletRequest request, HttpServletResponse response,HttpSession session) {
+
+		System.out.println("saveDoc reposId:" + reposId + " path:" + path + " name:"+ name +" authCode:" + authCode);
+
+		PrintWriter writer = null;
+		try {
+			writer = response.getWriter();
+			ReturnAjax rt = new ReturnAjax();
+			
+			//Decode Path and Name
+			if(path == null && name == null)
+			{
+				docSysErrorLog("文件路径未设置！", rt);
+				writer.write("文件路径未设置");
+				return;
+			}
+			
+			if(path == null)
+			{
+				path = "";
+			}
+			else
+			{
+				path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+				path = base64Decode(path);
+				if(path == null)
+				{
+					docSysErrorLog("目标路径解码失败！", rt);
+					writer.write("目标路径解码失败");			
+					return;
+				}			
+			}
+			
+			if(name == null)
+			{
+				name = "";
+			}
+			else
+			{
+				name = new String(name.getBytes("ISO8859-1"),"UTF-8");	
+				name = base64Decode(name);
+				if(name == null)
+				{
+					docSysErrorLog("目标文件名解码失败！", rt);
+					writer.write("目标文件名解码失败");			
+					return;
+				}
+			}
+		
+
+			//Check authCode or reposAccess
+			ReposAccess reposAccess = null;
+			if(authCode != null && !authCode.equals("0"))
+			{
+				if(checkAuthCode(authCode, null) == false)
+				{
+					System.out.println("saveDoc checkAuthCode Failed");
+					writer.write("授权码校验失败");
+					return;
+				}
+				reposAccess = authCodeMap.get(authCode).getReposAccess();
+			}
+			else
+			{
+				reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
 			}
 			if(reposAccess == null)
 			{
@@ -2060,13 +2287,11 @@ public class DocController extends BaseController{
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
 			String authCode = getAuthCodeForOfficeEditor(doc, reposAccess);
-			String fileLink = buildDocFileLink(doc, null, rt); //返回not RESTFUL style link
-			fileLink += "&authCode=" + authCode;
-			String saveDocLink = buildSaveDocLink(doc, null, rt);
-			saveDocLink +=  "&authCode=" + authCode;
+			String fileLink = buildDocFileLink(doc, authCode, null, rt); //返回not RESTFUL style link
+			String saveFileLink = buildSaveDocLink(doc, authCode, null, rt);
 			
 			rt.setData(fileLink);
-			rt.setDataEx(saveDocLink);
+			rt.setDataEx(saveFileLink);
 			writeJson(rt, response);
 			return;
 		}
@@ -2710,7 +2935,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		String fileLink = buildDocFileLink(doc, urlStyle, rt);
+		String fileLink = buildDocFileLink(doc, null, urlStyle, rt);
 		if(fileLink == null)
 		{
 			System.out.println("getDocFileLink() buildDocFileLink failed");
@@ -2721,7 +2946,7 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	private String buildDocFileLink(Doc doc, String urlStyle, ReturnAjax rt) {
+	private String buildDocFileLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
 		String encTargetName = base64Encode(doc.getName());
 		if(encTargetName == null)
 		{
@@ -2738,16 +2963,24 @@ public class DocController extends BaseController{
 		String fileLink = null;
 		if(urlStyle != null && urlStyle.equals("REST"))
 		{
-			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName;
+			if(authCode == null)
+			{
+				authCode = "0";
+			}
+			fileLink = "/DocSystem/Doc/downloadDoc/" + encTargetPath +  "/" + encTargetName +"/" + authCode;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;			
+			fileLink = "/DocSystem/Doc/downloadDoc.do?targetPath=" + encTargetPath + "&targetName="+encTargetName;	
+			if(authCode != null)
+			{
+				fileLink += "&authCode=" + authCode;
+			}
 		}
 		return fileLink;
 	}
 	
-	private String buildSaveDocLink(Doc doc, String urlStyle, ReturnAjax rt) {
+	private String buildSaveDocLink(Doc doc, String authCode, String urlStyle, ReturnAjax rt) {
 		String encName = base64Encode(doc.getName());
 		if(encName == null)
 		{
@@ -2764,11 +2997,19 @@ public class DocController extends BaseController{
 		String fileLink = null;
 		if(urlStyle != null && urlStyle.equals("REST"))
 		{
-			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encPath +  "/" + encName;
+			if(authCode == null)
+			{
+				authCode = "0";
+			}
+			fileLink = "/DocSystem/Doc/saveDoc/"+ doc.getVid() + "/" + encPath +  "/" + encName + "/" + authCode;;
 		}
 		else
 		{
-			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&path=" + encPath + "&name="+encName;			
+			fileLink = "/DocSystem/Doc/saveDoc.do?reposId=" + doc.getVid() + "&path=" + encPath + "&name="+encName;		
+			if(authCode != null)
+			{
+				fileLink += "&authCode=" + authCode;
+			}
 		}
 		return fileLink;
 	}
