@@ -37,9 +37,19 @@ var OfficeEditor = (function () {
     		        "key": key,
     		        "title": title,
     		        "url": fileLink,
+    		        "permissions": {
+    		            "comment": true,
+    		            "download": true,
+    		            "edit": true,
+    		            "fillForms": true,
+    		            "modifyContentControl": true,
+    		            "modifyFilter": true,
+    		            "print": true,
+    		            "review": true
+    		        },
     		    },
     		    "documentType": documentType,
-                "editorConfig": {
+    		    "editorConfig": {
                     "callbackUrl": saveFileLink,
                     "lang": "zh-CN",
                 },

@@ -29,24 +29,32 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    function showOffice(fileLink, saveFileLink)
 	   	{
 	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
-	        window.docEditor = new DocsAPI.DocEditor("placeholder",
-	            {
-	                "document": {
-	                    "fileType": fileType,
-	                    "key": key,
-	                    "title": title,
-	                    "url": fileLink,
-	                    "permissions":{"edit":false,"review":true},
-	                },
-	                "documentType": documentType,
-	                "editorConfig": {
+			var config = {
+	    		    "document": {
+	    		        "fileType": fileType,
+	    		        "key": key,
+	    		        "title": title,
+	    		        "url": fileLink,
+	    		        "permissions": {
+	    		            "comment": true,
+	    		            "download": true,
+	    		            "edit": true,
+	    		            "fillForms": true,
+	    		            "modifyContentControl": true,
+	    		            "modifyFilter": true,
+	    		            "print": true,
+	    		            "review": true
+	    		        },
+	    		    },
+	    		    "documentType": documentType,
+	    		    "editorConfig": {
 	                    "callbackUrl": saveFileLink,
 	                    "lang": "zh-CN",
 	                },
 	                "height": "100%",
-	                "width": "100%"
-	            });
-
+	                "width": "100%",
+	    	};
+	        editor = new DocsAPI.DocEditor("placeholder", config);
 	   	}
     </script>
 </body>
