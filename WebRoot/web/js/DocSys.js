@@ -168,8 +168,10 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback)
         	if( "ok" == ret.status )
         	{
         		var docLink = ret.data;
+        		var saveDocLink = ret.dataEx;
         		var fileLink = buildFullLink(docLink);
-        		successCallback &&successCallback(fileLink);
+        		var saveFileLink = buildFullLink(saveDocLink)
+        		successCallback &&successCallback(fileLink, saveFileLink);
             }
             else 
             {

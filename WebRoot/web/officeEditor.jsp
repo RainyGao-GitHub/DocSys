@@ -25,20 +25,12 @@ var OfficeEditor = (function () {
 	    title = docInfo.name;
 	    key = docInfo.docId + "";
 	    
-	    var fileLink = docInfo.fileLink;
-		if(!fileLink || fileLink == null || fileLink == "")
-		{
-			getDocOfficeLink(docInfo, showOffice, showErrorMessage);
-		}
-		else
-		{
-			showOffice(fileLink);
-		}
+	    getDocOfficeLink(docInfo, showOffice, showErrorMessage);
 	}
 	
-    function showOffice(fileLink)
+    function showOffice(fileLink, saveFileLink)
    	{
-    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink);
+    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 		var config = {
     		    "document": {
     		        "fileType": fileType,
@@ -47,10 +39,10 @@ var OfficeEditor = (function () {
     		        "url": fileLink,
     		    },
     		    "documentType": documentType,
-                //"editorConfig": {
-                //    "callbackUrl": saveUrl,
-                //    "lang": "zh-CN",
-                //},
+                "editorConfig": {
+                    "callbackUrl": saveFileLink,
+                    "lang": "zh-CN",
+                },
                 "height": "100%",
                 "width": "100%",
     	};
