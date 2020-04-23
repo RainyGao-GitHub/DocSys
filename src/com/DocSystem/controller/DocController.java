@@ -2241,17 +2241,28 @@ public class DocController extends BaseController{
 			writeJson(rt, response);	
 			return;
 		}
-		
+				
 		if((preview == null && isOfficeEditorApiConfiged()) || (preview != null && preview.equals("office")))
 		{	
+			JSONObject jobj = new JSONObject();
 			String authCode = getAuthCodeForOfficeEditor(doc, reposAccess);
 			String fileLink = buildDocFileLink(doc, authCode, urlStyle, rt);
-			String saveFileLink = buildSaveDocLink(doc, authCode, urlStyle, rt);
-			
-			JSONObject jobj = new JSONObject();
 			jobj.put("fileLink", fileLink);
-			jobj.put("saveFileLink", saveFileLink);
-			jobj.put("key", doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime());
+			
+			Doc localDoc = docSysGetDoc(repos, doc);
+			//检查用户是否有文件编辑权限
+			if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, null, rt) == true)
+			{
+				String saveFileLink = buildSaveDocLink(doc, authCode, urlStyle, rt);
+				jobj.put("saveFileLink", saveFileLink);
+				jobj.put("key", doc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime());				
+			}
+			else
+			{
+				jobj.put("saveFileLink", ""); //不允许保存
+				jobj.put("key", doc.getDocId() + "_" + localDoc.getSize() + "_" + localDoc.getLatestEditTime() + "_" + reposAccess.getAccessUser().getId());	
+			}
+			
 			rt.setData(jobj);
 			rt.setDataEx("office");
 			writeJson(rt, response);
