@@ -6227,7 +6227,15 @@ public class BaseController  extends BaseFunction{
 			{
 				retName = saveFile(uploadFile, localDocParentPath,name);
 			}
-			else
+			else if(chunkNum == 1)	//单个文件直接复制
+			{
+				if(copyFile(chunkParentPath+name+"_0", localDocParentPath+name, true) == false)
+				{
+					return false;
+				}
+				retName = name;
+			}
+			else	//多个则需要进行合并
 			{
 				retName = combineChunks(localDocParentPath,name,chunkNum,chunkSize,chunkParentPath);
 			}

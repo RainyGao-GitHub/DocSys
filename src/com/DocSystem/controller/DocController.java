@@ -1896,6 +1896,9 @@ public class DocController extends BaseController{
 	            }
 	            
 	            Long chunkSize = new File(chunkParentPath + chunkName).length();
+	            System.out.println("saveDoc() chunkSize:" + chunkSize);
+	            doc.setSize(chunkSize); //设置docSize避免addDoc和updateDoc的检查报错
+
 				String commitMsg = "保存 " + filePath;
 				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
@@ -2080,6 +2083,9 @@ public class DocController extends BaseController{
 	            }
 	            
 	            Long chunkSize = new File(chunkParentPath + chunkName).length();
+	            System.out.println("saveDoc() chunkSize:" + chunkSize);
+	            doc.setSize(chunkSize); //设置docSize避免addDoc和updateDoc的检查报错
+	            
 				String commitMsg = "保存 " + filePath;
 				String commitUser = reposAccess.getAccessUser().getName();
 				List<CommonAction> actionList = new ArrayList<CommonAction>();
@@ -2509,7 +2515,7 @@ public class DocController extends BaseController{
 		return false;
 	}
 
-	public String getCheckSum(File localEntry, int chunkSize) 
+	public String getCheckSum(File localEntry, Long chunkSize) 
 	{
 		String hash = null;
 		try {
