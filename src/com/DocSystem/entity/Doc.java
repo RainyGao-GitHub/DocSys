@@ -284,7 +284,19 @@ public class Doc  implements Comparable<Doc>{
         }
         
         //Sort by doName
-        return doc.name.compareTo(this.name);   
+        diff = doc.name.compareTo(this.name);
+        if(diff == 0)
+        {
+        	return 0;
+        }
+        if(diff > 0)
+        {
+        	return -1;
+        }
+        else 
+        {
+        	return 1;
+        }
     }
     
 
