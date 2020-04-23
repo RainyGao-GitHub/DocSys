@@ -3,7 +3,7 @@
 String officeEditorApi = BaseController.getOfficeEditor();
 %>
 
-<div id="officePlayer" class="officePlayer" style="width: 100%; height:1200px;">
+<div id="officePlayer" class="officePlayer" style="width: 100%; height: 100%;">
 	<div id="placeholder"></div>
 </div>
 <script type="text/javascript" src="<%=officeEditorApi%>"></script>
@@ -23,13 +23,16 @@ var OfficeEditor = (function () {
 	    fileType = getFileSuffix(docInfo.name);
 	    documentType = getDocumentType(fileType);
 	    title = docInfo.name;
-	    key = docInfo.docId + "";
 	    
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
 	}
 	
-    function showOffice(fileLink, saveFileLink)
+    function showOffice(data, dataEx)
    	{
+		var fileLink = buildFullLink(data.fileLink);
+		var saveFileLink = buildFullLink(data.saveFileLink);
+		var key = data.key;
+    	
     	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 		var type = 'desktop';
     	var width = "100%";

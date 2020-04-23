@@ -26,8 +26,12 @@ String officeEditorApi = BaseController.getOfficeEditor();
 	    
 	    getDocOfficeLink(docInfo, showOffice, showErrorMessage, "REST");
 	    	    
-	    function showOffice(fileLink, saveFileLink)
+	    function showOffice(data, dataEx)
 	   	{
+			var fileLink = buildFullLink(data.fileLink);
+			var saveFileLink = buildFullLink(data.saveFileLink);
+			var key = data.key;
+			
 	    	console.log("showOffice() title=" + title + " key=" + key + " fileType=" + fileType + " documentType=" + documentType + " fileLink="+fileLink + " saveFileLink:" + saveFileLink);
 			var type = 'desktop';
 	    	if(gIsPC == false)
