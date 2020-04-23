@@ -2248,8 +2248,12 @@ public class DocController extends BaseController{
 			String fileLink = buildDocFileLink(doc, authCode, urlStyle, rt);
 			String saveFileLink = buildSaveDocLink(doc, authCode, urlStyle, rt);
 			
-			rt.setData(fileLink);
-			rt.setDataEx(saveFileLink);
+			JSONObject jobj = new JSONObject();
+			jobj.put("fileLink", fileLink);
+			jobj.put("saveFileLink", saveFileLink);
+			jobj.put("key", doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime());
+			rt.setData(jobj);
+			rt.setDataEx("office");
 			writeJson(rt, response);
 			return;
 		}
