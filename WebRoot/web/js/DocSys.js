@@ -194,11 +194,7 @@ function getDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle)
         	console.log("getDocOfficeLink ret",ret);
         	if( "ok" == ret.status )
         	{
-        		var docLink = ret.data;
-        		var saveDocLink = ret.dataEx;
-        		var fileLink = buildFullLink(docLink);
-        		var saveFileLink = buildFullLink(saveDocLink)
-        		successCallback &&successCallback(fileLink, saveFileLink);
+        		successCallback &&successCallback(ret.data, ret.dataEx);
             }
             else 
             {
