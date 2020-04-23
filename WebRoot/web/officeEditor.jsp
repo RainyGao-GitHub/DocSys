@@ -3,7 +3,7 @@
 String officeEditorApi = BaseController.getOfficeEditor();
 %>
 
-<div id="officePlayer" class="officePlayer" style="width: 100%; height: 100%;">
+<div id="officePlayer" class="officePlayer" style="width: 100%; height: 1000px;">
 	<div id="placeholder"></div>
 </div>
 <script type="text/javascript" src="<%=officeEditorApi%>"></script>
