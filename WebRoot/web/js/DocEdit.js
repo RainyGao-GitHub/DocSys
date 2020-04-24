@@ -111,7 +111,7 @@
 	                lockAndEditWiki();
 	            },
 	            onload : function () {
-	                console.log("DocEdit onload gDocInfo.edit:" + gDocInfo.edit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+	                console.log("DocEdit onload gDocInfo.edit:" + gDocInfo.edit + " editState:" + editState);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
 		    		   this.previewing(); 		  //加载成默认是预览
 		    		   this.setMarkdown(docText); //内容需要在onload的时候进行加载，会触发onchange事件
 		    		   isOnLoadTriggerChange = true;
