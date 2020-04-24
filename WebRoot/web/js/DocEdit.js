@@ -2,98 +2,15 @@
 	//TODO: Markdown编辑器不只是针对于vDoc，也可以用于realDoc，因此涉及后台接口的需要区分是VDOC还是RDOC
     var DocEdit = (function () {
     	var md;	//mdeditor对象
+    	
+    	var docText = "";
+    	var editState = false;
+    	
       	//自动保存定时器
       	var autoSaveTimer;
       	var timerState = 0;
       	var isOnLoadTriggerChange = false;
     
-      	function editorInit(content, edit)
-      	{
-      		console.log("DocEdit editorInit edit:" + edit);
-
-      		var watchEnable = true;
-      		if(gIsPC && gIsPC == false)
-      		{
-      			watchEnable = false;
-      		}
-      		console.log("DocEdit watchEnable:" + watchEnable);
-      		
-    		var path = base64_urlsafe_encode(gDocInfo.path);
-    		var name = base64_urlsafe_encode(gDocInfo.name);
-    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name; 
-      		console.log("DocEdit imageUploadURL:" + imageUploadURL);
-      			
-      		var params = {
-               width: "100%",
-               height: $(document).height()-70,
-               path : 'static/markdown/lib/',
-               markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
-               //toolbar  : false,             // 关闭工具栏
-               codeFold : true,
-               searchReplace : true,
-               watch : watchEnable,                // 关闭实时预览
-               saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
-               htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
-               emoji : true,
-               taskList : true,
-               tocm: true,          			// Using [TOCM]
-               tex : true,                      // 开启科学公式 TeX 语言支持，默认关闭
-               //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
-               flowChart : true,
-               sequenceDiagram : true,
-               //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
-               //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
-               //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
-               dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
-               dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
-               imageUpload : true,
-               imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
-               imageUploadURL : imageUploadURL,
-               onchange : function () {
-                   console.log("DocEdit onchange gDocInfo.edit:" + gDocInfo.edit);                  
-               },
-               onpreviewing : function () {
-                   console.log("DocEdit onpreviewing gDocInfo.edit:" + gDocInfo.edit);
-                   exitEditWiki();
-               },
-               onpreviewed :function () {
-                   console.log("DocEdit onpreviewed gDocInfo.edit:" + gDocInfo.edit);
-                   lockAndEditWiki();
-               },
-               onload : function () {
-                   console.log("DocEdit onload gDocInfo.edit:" + gDocInfo.edit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
-   	    		   this.previewing(); 		  //加载成默认是预览
-   	    		   this.setMarkdown(content); //内容需要在onload的时候进行加载，会触发onchange事件
-   	    		   isOnLoadTriggerChange = true;
-   	    		   if(!edit || edit == false)
-	    		   {
-   	    			   console.log("DocEdit onload edit is false");
-	    		   }
-   	    		   else
-   	    		   {
-   	    			   console.log("DocEdit onload edit is true");
-   	    			   lockAndEditWiki();
-	    		   }
-               },
-               onresize: function(){
-            	   console.log("DocEdit onresize");
-               }
-       		};
-       		
-      		//editormd was defined in editormd.js
-       		md = editormd("vdocPreview",params);
-      	}
-        
-    	function editorLoadmd(content) 
-    	{
-    		console.log("DocEdit editorLoadmd() gDocInfo.edit:" + gDocInfo.edit);
-    		md.setMarkdown(content);
-    		
-    		var path = base64_urlsafe_encode(gDocInfo.path);
-    		var name = base64_urlsafe_encode(gDocInfo.name);
-    		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name); 
-        }
-        
         function loadmd(content, edit, initFlag)
         {
     		if(!content)
@@ -119,12 +36,108 @@
 				editorInit(content, edit);	
     		}
         }
-		      		
-		function editorSwitch(edit)
+        
+      	function editorInit(content, edit, isPC)
+      	{
+      		console.log("DocEdit editorInit edit:" + edit);
+      		docText = content;
+      		if(edit)
+      		{
+      			editState = edit;
+      		}
+      		
+      		var params = getParams(isPC);
+       		md = editormd("vdocPreview",params);
+      	}
+    	
+      	function editorLoadmd(content) 
     	{
-    		console.log("DocEdit editorSwitch() edit:"+edit + " gDocInfo.edit:" + gDocInfo.edit);
+    		console.log("DocEdit editorLoadmd() gDocInfo.edit:" + gDocInfo.edit);
+    		docText = content;
+    		md.setMarkdown(docText);
     		
-    		gDocInfo.edit = edit;
+    		var path = base64_urlsafe_encode(gDocInfo.path);
+    		var name = base64_urlsafe_encode(gDocInfo.name);
+    		md.setImageUploadURL("/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name); 
+        }
+      	
+      	function getParams(isPC)
+      	{
+      		if(!isPC)
+      		{
+      			isPC = true;
+      		}
+      		
+    		var path = base64_urlsafe_encode(gDocInfo.path);
+    		var name = base64_urlsafe_encode(gDocInfo.name);
+    		var imageUploadURL = "/DocSystem/Doc/uploadMarkdownPic.do?reposId=" + gReposInfo.id + "&docId=" + gDocInfo.docId + "&path="+ path + "&name="+ name; 
+      		console.log("getParams imageUploadURL:" + imageUploadURL);
+
+	      	var params = {
+	            width: "100%",
+	            height: $(document).height()-70,
+	            path : 'static/markdown/lib/',
+	            markdown : "",	//markdown的内容默认务必是空，否则会出现当文件内容是空的时候显示默认内容
+	            //toolbar  : false,             // 关闭工具栏
+	            codeFold : true,
+	            searchReplace : isPC?true:false,
+	            watch : isPC?true:false,                // 关闭实时预览
+	            saveHTMLToTextarea : true,      // 保存 HTML 到 Textarea
+	            htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+	            emoji : isPC?true:false,
+	            taskList : isPC?true:false,
+	            tocm: isPC?true:false,          			// Using [TOCM]
+	            tex : isPC?true:false,                      // 开启科学公式 TeX 语言支持，默认关闭
+	            //previewCodeHighlight : false,  // 关闭预览窗口的代码高亮，默认开启
+	            flowChart : true,
+	            sequenceDiagram : true,
+	            //dialogLockScreen : false,      // 设置弹出层对话框不锁屏，全局通用，默认为 true
+	            //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为 true
+	            //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为 true
+	            dialogMaskOpacity : 0.2,    // 设置透明遮罩层的透明度，全局通用，默认值为 0.1
+	            dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为 #fff
+	            imageUpload : true,
+	            imageFormats : ["jpg","JPG", "jpeg","JPEG","gif","GIF","png", "PNG","bmp","BMP", "webp","WEBP",],
+	            imageUploadURL : imageUploadURL,
+	            onchange : function () {
+	                console.log("DocEdit onchange gDocInfo.edit:" + gDocInfo.edit);                  
+	            },
+	            onpreviewing : function () {
+	                console.log("DocEdit onpreviewing gDocInfo.edit:" + gDocInfo.edit);
+	                exitEditWiki();
+	            },
+	            onpreviewed :function () {
+	                console.log("DocEdit onpreviewed gDocInfo.edit:" + gDocInfo.edit);
+	                lockAndEditWiki();
+	            },
+	            onload : function () {
+	                console.log("DocEdit onload gDocInfo.edit:" + gDocInfo.edit + " edit:" + edit);	//这是markdown初始化完毕的回调（此时才可以访问makdown的接口）
+		    		   this.previewing(); 		  //加载成默认是预览
+		    		   this.setMarkdown(docText); //内容需要在onload的时候进行加载，会触发onchange事件
+		    		   isOnLoadTriggerChange = true;
+		    		   if(!editState || editState == false)
+		    		   {
+		    			   console.log("DocEdit onload edit is false");
+		    		   }
+		    		   else
+		    		   {
+		    			   console.log("DocEdit onload edit is true");
+		    			   lockAndEditWiki();
+		    		   }
+	            },
+	            onresize: function(){
+	         	   console.log("DocEdit onresize");
+	            }
+	    	};
+	      	return params;
+      	}
+		      		
+		function editorSwitch(newEditState)
+    	{
+    		console.log("DocEdit editorSwitch() editState:"+editState + " newEditState:" + newEditState);
+    		
+    		editState = newEditState;
+    		gDocInfo.edit = editState;
     		
     		if(!md)
        		{
@@ -132,7 +145,7 @@
        			return;
        		}
        		
-    		if(edit == false)
+    		if(editState == false)
 	    	{
 	    		md.previewing();
 	    	}
