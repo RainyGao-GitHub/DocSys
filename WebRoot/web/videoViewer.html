@@ -1,8 +1,14 @@
 <div align=center style="margin-top:20px" >
-	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none;max-width:100%; max-height:100%;"></video>
+	<video id="videoPlayer" name="videoPlayer" src="" controls="controls" style="display:none; width:100%;"></video>
 </div>  
 
 <script type="text/javascript">
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('videoPlayer').style.height = height + "px";
+
 var VideoViewer = (function () {
 	var docInfo = {};
 	
