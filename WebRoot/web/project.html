@@ -4589,11 +4589,15 @@
 		if(gIsPC == false)
 		{
 			context.attach('#secondList', [
-
-				{text: '分享', action: function(e){
-							e.preventDefault();
-							shareDoc(curRightClickedDocListNode);    
-						}
+				{text: '预览', action: function(e){
+						e.preventDefault();
+						openDoc(curRightClickedTreeNode, true, false, "pdf");  
+					}
+				},
+				{text: '打开', action: function(e){
+						e.preventDefault();
+						openDoc(curRightClickedTreeNode, true, true);  
+					}
 				},
 				{text: '下载', action: function(e){
 						e.preventDefault();
@@ -4601,6 +4605,11 @@
 						treeNodes.push(curRightClickedDocListNode);
 						downloadDoc(treeNodes,true,1);
 					}
+				},
+				{text: '分享', action: function(e){
+							e.preventDefault();
+							shareDoc(curRightClickedDocListNode);    
+						}
 				},
 				{text: '重命名', action: function(e){
 							e.preventDefault();
