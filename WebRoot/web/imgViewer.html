@@ -3,6 +3,12 @@
 </div>
 
 <script type="text/javascript">
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('imgPlayer').style.height = height + "px";
+
 var ImgViewer = (function () {
 	var docInfo = {};
 	

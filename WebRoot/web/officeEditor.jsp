@@ -8,6 +8,12 @@ String officeEditorApi = BaseController.getOfficeEditor();
 </div>
 <script type="text/javascript" src="<%=officeEditorApi%>"></script>
 <script type="text/javascript">
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('officePlayer').style.height = height + "px";
+
 var OfficeEditor = (function () {
 	var editor = null;
 	var docInfo = null;

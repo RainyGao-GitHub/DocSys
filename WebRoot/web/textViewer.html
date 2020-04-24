@@ -1,6 +1,12 @@
-<div id="textPlayer" class="textPlayer" style="width: 100%; min-height:1200px; word-wrap: break-word; white-space: pre-wrap;"></div>
+<div id="textPlayer" class="textPlayer" style="width: 100%; word-wrap: break-word; white-space: pre-wrap;"></div>
 
 <script type="text/javascript">
+var height =  window.screen.height;
+console.log("window height=" + height)
+height *= 0.95;
+console.log("dialog height=" + height)
+document.getElementById('textPlayer').style.height = height + "px";
+
 var TextViewer = (function () {
 	var docInfo = {};
 	
