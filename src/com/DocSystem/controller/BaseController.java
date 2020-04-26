@@ -7711,7 +7711,7 @@ public class BaseController  extends BaseFunction{
 			}
 			return defaultDBUrl;
 		case "sqlite":
-			return "jdbc:mysql:data/DocSystem";
+			return "jdbc:sqlite::resource:data/sql.db";
 		}
 		return null;
 	}
