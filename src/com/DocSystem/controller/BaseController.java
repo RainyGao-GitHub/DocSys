@@ -7310,8 +7310,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/****************************DocSys系统初始化接口 *********************************/
-    static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
-    //static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+	static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
+    static String DB_TYPE = "mysql";  
+    //static String DB_URL = "jdbc:sqlite:data/DocSystem";
     static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
     static String DB_USER = "root";
     static String DB_PASS = "";
@@ -7447,7 +7448,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//自动创建数据库
-				createDB(dbName, DB_URL, DB_USER, DB_PASS);
+				createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
 				if(initDB(DB_URL, DB_USER, DB_PASS) == false)
 				{
 					System.out.println("docSysInit() 新建数据库失败");
@@ -7625,7 +7626,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	protected static boolean createDB(String dbName,String url, String user, String pwd) 
+	protected static boolean createDB(String dbType, String dbName,String url, String user, String pwd) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -7635,7 +7636,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
-        String defaultDBUrl = getDefaultDBUrl(user, pwd);
+        String defaultDBUrl = getDefaultDBUrl(dbType, user, pwd);
         
 		boolean ret = false;
 		Connection conn = null;
@@ -7691,25 +7692,31 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	private static String getDefaultDBUrl(String user, String pwd) {
-		//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-		//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";
-		String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
-		if(testDB(defaultDBUrl, user, pwd) == false)
+	private static String getDefaultDBUrl(String dbType, String user, String pwd) {
+		switch(dbType)
 		{
-		    //defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-			defaultDBUrl = "jdbc:mysql://localhost:3306/sys?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
-		    if(testDB(defaultDBUrl, user, pwd) == false)
-		    {
-		    	//defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
-				defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
-		    }
+		case "mysql":
+			//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+			//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";
+			String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
+			if(testDB(defaultDBUrl, user, pwd) == false)
+			{
+			    //defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
+				defaultDBUrl = "jdbc:mysql://localhost:3306/sys?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
+			    if(testDB(defaultDBUrl, user, pwd) == false)
+			    {
+			    	//defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
+					defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
+			    }
+			}
+			return defaultDBUrl;
+		case "sqlite":
+			return "jdbc:mysql:data/DocSystem";
 		}
-
-		return defaultDBUrl;
+		return null;
 	}
 
-	protected static boolean deleteDB(String dbName, String url, String user, String pwd) 
+	protected static boolean deleteDB(String dbType, String dbName, String url, String user, String pwd) 
     {
         try {
 			Class.forName(JDBC_DRIVER);
@@ -7719,7 +7726,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
-        String defaultDBUrl = getDefaultDBUrl(user, pwd);
+        String defaultDBUrl = getDefaultDBUrl(dbType, user, pwd);
         
 		boolean ret = false;
 		Connection conn = null;
@@ -7803,6 +7810,7 @@ public class BaseController  extends BaseFunction{
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
     
         // 打开链接
@@ -7827,13 +7835,20 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
-
+		
 		String jdbcDriver = ReadProperties.getValue(JDBCSettingPath, "db.url");
 		if(jdbcDriver == null || "".equals(jdbcDriver))
 		{
 			return false;
 		}
 		JDBC_DRIVER = jdbcDriver;
+		
+		String dbType = ReadProperties.getValue(JDBCSettingPath, "db.type");
+		if(dbType == null || "".equals(dbType))
+		{
+			dbType = "mysql";
+		}
+		DB_TYPE = dbType;
 		
 		String jdbcUrl = ReadProperties.getValue(JDBCSettingPath, "db.url");
 		if(jdbcUrl == null || "".equals(jdbcUrl))
