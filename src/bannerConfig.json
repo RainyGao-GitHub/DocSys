@@ -1,13 +1,13 @@
 {BannerConfigList:[
 		{
 			"bannerIndex":1,
-			"img":"http://dw.gofreeteam.com/DocSystem/web/images/local_banner/gitee.png",
+			"img":"/DocSystem/web/images/local_banner/gitee.png",
 			"href":"https://gitee.com/RainyGao/DocSys",
 			"openInNewPage":true,
 		},
 		{
 			"bannerIndex":2,
-			"img":"http://dw.gofreeteam.com/DocSystem/web/images/local_banner/aliyun.jpg",
+			"img":"/DocSystem/web/images/local_banner/aliyun.jpg",
 			"href":"https://account.aliyun.com",
 			"openInNewPage":true,
 		},
