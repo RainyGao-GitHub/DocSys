@@ -7836,7 +7836,7 @@ public class BaseController  extends BaseFunction{
 	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
 		
-		String jdbcDriver = ReadProperties.getValue(JDBCSettingPath, "db.url");
+		String jdbcDriver = ReadProperties.getValue(JDBCSettingPath, "db.driver");
 		if(jdbcDriver == null || "".equals(jdbcDriver))
 		{
 			return false;
