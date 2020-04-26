@@ -25,14 +25,14 @@ class LuceneTest
         	HashMap<String, HitDoc> searchResult = new HashMap<String, HitDoc>();
 			int searchType = 5; //
 			int weight = 1;
-			LuceneUtil2.search(repos, "国家" , "", "content", "doc", searchResult, searchType, weight);
+			LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchResult, searchType, weight);
         	
         	System.out.println("*********** Delete Index Test *********** ");
            	//LuceneUtil2.deleteIndexForDoc(1,"doc");
            	LuceneUtil2.deleteDoc(doc, "doc");
            	LuceneUtil2.deleteDoc(doc, "doc");
            	System.out.println("************* Search Test after delete****************");
-           	LuceneUtil2.search(repos, "国家" , "", "content", "doc", searchResult, searchType, weight);
+           	LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchResult, searchType, weight);
         } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

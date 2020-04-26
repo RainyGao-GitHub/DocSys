@@ -424,7 +424,7 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
-		if(deleteDB(dbName, url, user, pwd) == false)
+		if(deleteDB(DB_TYPE, dbName, url, user, pwd) == false)
 		{
 			System.out.println("deleteDatabase() 删除数据库失败");
 			docSysErrorLog("数据库初始化失败", rt);
@@ -451,7 +451,7 @@ public class ManageController extends BaseController{
 			System.out.println("resetDatabase() 连接数据库:" + url + " 失败");
 			String dbName = getDBNameFromUrl(url);
 
-			createDB(dbName, url, user, pwd);
+			createDB(DB_TYPE, dbName, url, user, pwd);
 			if(initDB(url, user, pwd) == false)
 			{
 				System.out.println("resetDatabase() 新建数据库失败");
