@@ -7868,7 +7868,7 @@ public class BaseController  extends BaseFunction{
 		{
 			DB_PASS = jdbcPwd;
 		}
-		System.out.println("getAndSetDBInfoFromFile DB_URL:" + DB_URL + " DB_USER:" + DB_USER + " DB_PASS:" + DB_PASS);
+		System.out.println("getAndSetDBInfoFromFile JDBC_DRIVER:" + JDBC_DRIVER + " DB_TYPE:" + DB_TYPE + " DB_URL:" + DB_URL + " DB_USER:" + DB_USER + " DB_PASS:" + DB_PASS);
 		return true;
 	}
 
