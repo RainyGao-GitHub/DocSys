@@ -7310,7 +7310,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/****************************DocSys系统初始化接口 *********************************/
-    static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
+    static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
     //static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
     static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
     static String DB_USER = "root";
@@ -7828,6 +7828,13 @@ public class BaseController  extends BaseFunction{
 	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
 
+		String jdbcDriver = ReadProperties.getValue(JDBCSettingPath, "db.url");
+		if(jdbcDriver == null || "".equals(jdbcDriver))
+		{
+			return false;
+		}
+		JDBC_DRIVER = jdbcDriver;
+		
 		String jdbcUrl = ReadProperties.getValue(JDBCSettingPath, "db.url");
 		if(jdbcUrl == null || "".equals(jdbcUrl))
 		{
