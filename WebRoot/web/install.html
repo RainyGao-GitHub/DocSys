@@ -484,7 +484,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-					var config = JSON.parse(ret.data);
+					var config = ret.data;
 					systemDbSetting.type = config.type;
 					systemDbSetting.url = config.url;
 					systemDbSetting.user = config.user;
