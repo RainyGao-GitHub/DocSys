@@ -7641,6 +7641,28 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
+        switch(dbType)
+        {
+        case "mysql":
+        	return createDBForMysql(dbType, dbName, url, user, pwd);
+        case "sqlite":
+        	return createDBForSqlite(dbType, dbName, url, user, pwd);
+        }
+        return false;
+	}
+	
+	private static boolean createDBForSqlite(String dbType, String dbName, String url, String user, String pwd) {
+		
+		String dbPath = docSysWebPath + "WEB-INF/classes/data";
+		File dbFile = new File(dbPath, dbName);
+		if(dbFile.exists())
+		{
+			return true;
+		}
+		return createFile(dbPath, dbName);
+	}
+
+	private static boolean createDBForMysql(String dbType, String dbName, String url, String user, String pwd) {
         String defaultDBUrl = getDefaultDBUrl(dbType, user, pwd);
         
 		boolean ret = false;
@@ -7693,7 +7715,7 @@ public class BaseController  extends BaseFunction{
         }
 		return ret;
 	}
-	
+
 	private static String getDefaultDBUrl(String dbType, String user, String pwd) {
 		switch(dbType)
 		{
@@ -7728,6 +7750,29 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
         
+        switch(dbType)
+        {
+        case "mysql":
+        	return deleteDBForMysql(dbType, dbName, url, user, pwd);
+        case "sqlite":
+        	return deleteDBForSqlite(dbType, dbName, url, user, pwd);
+        }
+        return false;
+	}
+
+
+	private static boolean deleteDBForSqlite(String dbType, String dbName, String url, String user, String pwd) {
+		String dbPath = docSysWebPath + "WEB-INF/classes/data";
+		File dbFile = new File(dbPath, dbName);
+		if(!dbFile.exists())
+		{
+			return true;
+		}
+		
+		return delFile(dbPath + "/" + dbName);
+	}
+
+	private static boolean deleteDBForMysql(String dbType, String dbName, String url, String user, String pwd) {
         String defaultDBUrl = getDefaultDBUrl(dbType, user, pwd);
         
 		boolean ret = false;
@@ -7781,7 +7826,6 @@ public class BaseController  extends BaseFunction{
         }
 		return ret;
 	}
-
 
 	protected static String getDBNameFromUrl(String type, String url) 
 	{
