@@ -344,7 +344,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	var config = JSON.parse(ret.data);
+	            	var config = ret.data;
 	            	systemInfo.version = config.version;
 	            	systemInfo.tomcatPath = config.tomcatPath;
 	            	systemInfo.openOfficePath = config.openOfficePath;	            	
