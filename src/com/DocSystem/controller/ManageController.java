@@ -422,7 +422,7 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabase(backUpPath, url, user, pwd, true) == false)
+		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
 			System.out.println("deleteDatabase() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
@@ -469,7 +469,7 @@ public class ManageController extends BaseController{
 			String dbName = getDBNameFromUrl(type, url);
 
 			createDB(type, dbName, url, user, pwd);
-			if(initDB(url, user, pwd) == false)
+			if(initDB(type, url, user, pwd) == false)
 			{
 				System.out.println("resetDatabase() 新建数据库失败");
 				docSysErrorLog("新建数据库失败", rt);
@@ -484,7 +484,7 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabase(backUpPath, url, user, pwd, true) == false)
+		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
 			System.out.println("resetDatabase() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
@@ -493,7 +493,7 @@ public class ManageController extends BaseController{
 		}
 		
 		deleteDBTabs(type, url, user, pwd);
-		if(initDB(url, user, pwd) == false)
+		if(initDB(type, url, user, pwd) == false)
 		{
 			System.out.println("resetDatabase() reset database failed: initDB error");
 			docSysErrorLog("数据库初始化失败", rt);
@@ -526,7 +526,7 @@ public class ManageController extends BaseController{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabase(backUpPath, url, user, pwd, true) == false)
+		if(backupDatabase(backUpPath, type, url, user, pwd, true) == false)
 		{
 			System.out.println("exportDBData() 数据库备份失败!");
 			docSysErrorLog("备份数据库失败", rt);
@@ -581,7 +581,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		if(importDatabase(null, suffix, webTmpPathForImportDBData, fileName, url, user, pwd) == false)
+		if(importDatabase(null, suffix, webTmpPathForImportDBData, fileName, type, url, user, pwd) == false)
 		{
 			System.out.println("importDBData() 数据库导入失败");
 			docSysErrorLog("数据库导入失败", rt);
