@@ -7935,6 +7935,34 @@ public class BaseController  extends BaseFunction{
 
 	public static boolean testDB(String type, String url, String user, String pwd)
     {
+		if(type == null)
+		{
+			type = "mysql";
+		}
+		
+		switch(type)
+		{
+		case "mysql":
+			return testDBForMysql(type, url, user, pwd);
+		case "sqlite":
+			return testDBForSqlite(type, url, user, pwd);
+		}
+		return false;
+    }	
+	
+	private static boolean testDBForSqlite(String type, String url, String user, String pwd) {
+		String dbPath = getDbPathFromUrl(url);
+		String dbName = getDBNameFromUrl(type, url);
+		File dbFile = new File(dbPath, dbName);
+		if(dbFile.exists() && dbFile.length() > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean testDBForMysql(String type, String url, String user, String pwd)
+	{
         Connection conn = null;
         try {
 			Class.forName(getJdbcDriverName(type));
