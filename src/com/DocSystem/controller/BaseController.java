@@ -7946,13 +7946,13 @@ public class BaseController  extends BaseFunction{
 		}
     
         // 打开链接
+        boolean ret = false;
         System.out.println("连接数据库...");
         try {
 			conn = getDBConnection(type, url, user, pwd);
-            conn.close();
     		System.out.println("连接数据库成功");
-            return true;
-		} catch (SQLException e) {
+            ret = true;
+		} catch (Exception e) {
 			System.out.println("连接数据库失败");
 			e.printStackTrace();
 		} finally{
@@ -7962,7 +7962,7 @@ public class BaseController  extends BaseFunction{
                 se.printStackTrace();
             }
         }
-        return false;        
+        return ret;        
     }
 
 	private static Connection getDBConnection(String type, String url, String user, String pwd) {
