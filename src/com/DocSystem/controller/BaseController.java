@@ -7514,7 +7514,7 @@ public class BaseController  extends BaseFunction{
 		ReadProperties.setValue(userJDBCSettingPath, "db.url", newUrl);
 		
 		//更新DBDriver
-		ReadProperties.setValue(userJDBCSettingPath, "db.driver", "com.mysql.cj.jdbc.Driver");
+		//ReadProperties.setValue(userJDBCSettingPath, "db.driver", "com.mysql.cj.jdbc.Driver");
 	}
 
 	private static boolean checkAndAddFirstUser() {
