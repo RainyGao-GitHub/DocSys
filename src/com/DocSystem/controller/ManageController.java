@@ -430,7 +430,7 @@ public class ManageController extends BaseController{
 			return;
 		}		
 		
-		String dbName = getDBNameFromUrl(url);
+		String dbName = getDBNameFromUrl(type, url);
 		String tmpDbName = dbName.toLowerCase();
 		System.out.println("deleteDatabase() dbName:" + dbName + " tmpDbName:" + tmpDbName);
 		if(!tmpDbName.equals("docsystem"))
@@ -453,7 +453,7 @@ public class ManageController extends BaseController{
 	
 	//强制复位数据库
 	@RequestMapping("/resetDatabase.do")
-	public void resetDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	public void resetDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		System.out.println("resetDatabase()");
 		ReturnAjax rt = new ReturnAjax();
@@ -463,12 +463,12 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		if(testDB(url, user, pwd) == false)	//数据库不存在
+		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("resetDatabase() 连接数据库:" + url + " 失败");
-			String dbName = getDBNameFromUrl(url);
+			String dbName = getDBNameFromUrl(type, url);
 
-			createDB(DB_TYPE, dbName, url, user, pwd);
+			createDB(type, dbName, url, user, pwd);
 			if(initDB(url, user, pwd) == false)
 			{
 				System.out.println("resetDatabase() 新建数据库失败");
@@ -492,7 +492,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		deleteDBTabs(url, user, pwd);
+		deleteDBTabs(type, url, user, pwd);
 		if(initDB(url, user, pwd) == false)
 		{
 			System.out.println("resetDatabase() reset database failed: initDB error");
@@ -504,7 +504,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/exportDBData.do")
-	public void exportDBData(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	public void exportDBData(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		System.out.println("exportDBData()");
 		ReturnAjax rt = new ReturnAjax();
@@ -514,7 +514,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		if(testDB(url, user, pwd) == false)	//数据库不存在
+		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("exportDBData() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
@@ -550,7 +550,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/importDBData.do")
-	public void importDBData(MultipartFile uploadFile, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	public void importDBData(MultipartFile uploadFile, String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		System.out.println("importDBData()");
 		ReturnAjax rt = new ReturnAjax();
@@ -573,7 +573,7 @@ public class ManageController extends BaseController{
 		String webTmpPathForImportDBData = getWebTmpPath() + "importDBData/";
 		saveFile(uploadFile, webTmpPathForImportDBData, fileName);
 		
-		if(testDB(url, user, pwd) == false)	//数据库不存在
+		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("importDBData() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
