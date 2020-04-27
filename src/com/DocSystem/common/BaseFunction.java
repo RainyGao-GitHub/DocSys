@@ -1959,7 +1959,7 @@ public class BaseFunction{
     }
     
     //Create File
-    public boolean createFile(String path,String filename){
+    public static boolean createFile(String path,String filename){
         File dir = new File(path);
         if(!dir.exists())
         {
