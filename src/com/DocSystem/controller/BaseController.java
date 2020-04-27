@@ -7310,9 +7310,14 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/****************************DocSys系统初始化接口 *********************************/
+	//static String JDBC_DRIVER = "org.sqlite.JDBC";  
+    //static String DB_TYPE = "sqlite";
+	//static String DB_URL = "jdbc:sqlite::resource:data/DocSystem"
+	//static String DB_USER = "";
+    //static String DB_PASS = "";
+    
 	static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";  
-    static String DB_TYPE = "mysql";  
-    //static String DB_URL = "jdbc:sqlite:data/DocSystem";
+    static String DB_TYPE = "mysql";
     static String DB_URL = "jdbc:mysql://localhost:3306/DocSystem?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
     static String DB_USER = "root";
     static String DB_PASS = "";
