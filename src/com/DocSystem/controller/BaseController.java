@@ -7680,7 +7680,7 @@ public class BaseController  extends BaseFunction{
 		
 		String prefix = urlParts[urlParts.length-2];
 		String rootPath = "";
-		if(prefix.equals("classspath") || (prefix.equals("resource")))
+		if(prefix.equals("classpath") || (prefix.equals("resource")))
 		{
 			rootPath = docSysWebPath;
 		}
@@ -7690,22 +7690,36 @@ public class BaseController  extends BaseFunction{
 		}
 
 		String dbFilePath = urlParts[urlParts.length-1];
+		System.out.println("getDbPathFromUrl dbFilePath:" + dbFilePath);
+		
 		String[] subStrs = dbFilePath.split("/");
 		String relativePath = "";
 		if(subStrs.length > 1)
 		{
-			if(subStrs[0].equals("${catalina.home}"))
-			{
-				relativePath = System.getProperty("catalina.home");
-			}
-			else
-			{
-				relativePath = subStrs[0];
-			}
-				
-			for(int i=1; i< subStrs.length-1; i++)
-			{				
-				relativePath += subStrs[i] + "/";
+			System.out.println("getDbPathFromUrl subStrs[0]:" + subStrs[0]);
+			boolean firstFlag = true;	
+			for(int i=0; i< subStrs.length-1; i++)
+			{	
+				if(subStrs[i].isEmpty())
+				{
+					continue;
+				}
+				if(firstFlag)
+				{
+					firstFlag = false;
+					if(subStrs[i].equals("${catalina.home}"))
+					{
+						relativePath = System.getProperty("catalina.home");
+					}
+					else
+					{
+						relativePath = subStrs[i];
+					}
+				}	
+				else
+				{
+					relativePath += subStrs[i] + "/";
+				}
 			}
 		}
 		
