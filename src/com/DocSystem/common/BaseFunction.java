@@ -2663,6 +2663,21 @@ public class BaseFunction{
 		return false;
 	}
 	
+	protected static boolean isWinDiskChar(String Str) 
+	{
+		if(Str.length() != 1)
+		{
+			return false;
+		}
+
+		char diskChar = Str.charAt(0);
+		if((diskChar >= 'C' && diskChar <= 'Z') ||(diskChar >= 'c' && diskChar <= 'z') ) 
+		{
+			return true;
+		}
+		return false;
+	}
+	
 	/*根据变量名对变量进行设置*/
 	public static boolean setFieldValue(Object object,String field,Object value){
 	    boolean ret = false;
