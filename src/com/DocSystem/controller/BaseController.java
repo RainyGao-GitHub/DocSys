@@ -7422,7 +7422,7 @@ public class BaseController  extends BaseFunction{
 		getAndSetDBInfoFromFile(JDBCSettingPath);
 		
 		//Get dbName from the DB URL
-		String dbName = getDBNameFromUrl(DB_URL);
+		String dbName = getDBNameFromUrl(DB_TYPE, DB_URL);
 		
 		File docSysIniDir = new File(docSysIniPath);
 		if(docSysIniDir.exists() == false)
@@ -7438,7 +7438,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//测试数据库连接
-		if(testDB(DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
+		if(testDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)	//数据库不存在
 		{
 			if(force == false)
 			{
@@ -7558,7 +7558,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		System.out.println("checkAndUpdateDB() from " + oldVersion + " to " + newVersion);		
-		if(DBUpgrade(oldVersion, newVersion, DB_URL, DB_USER, DB_PASS, skipDocTab) == true)
+		if(DBUpgrade(oldVersion, newVersion, DB_TYPE, DB_URL, DB_USER, DB_PASS, skipDocTab) == true)
 		{
 			//更新版本号，避免重复升级数据库
 			copyFile(docSysWebPath + "version", docSysIniPath + "version", true);
@@ -7629,7 +7629,7 @@ public class BaseController  extends BaseFunction{
 	protected static boolean createDB(String dbType, String dbName,String url, String user, String pwd) 
     {
         try {
-			Class.forName(JDBC_DRIVER);
+			Class.forName(getJdbcDriverName(dbType));
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -7641,10 +7641,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		Connection conn = null;
         Statement stmt = null;
-        try{
-            // 注册 JDBC 驱动
-            Class.forName(JDBC_DRIVER);
-        
+        try{        
             conn = (Connection) DriverManager.getConnection(defaultDBUrl ,user, pwd);
         
             stmt = (Statement) conn.createStatement();
@@ -7699,11 +7696,11 @@ public class BaseController  extends BaseFunction{
 			//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
 			//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";
 			String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
-			if(testDB(defaultDBUrl, user, pwd) == false)
+			if(testDB(dbType, defaultDBUrl, user, pwd) == false)
 			{
 			    //defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
 				defaultDBUrl = "jdbc:mysql://localhost:3306/sys?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
-			    if(testDB(defaultDBUrl, user, pwd) == false)
+			    if(testDB(dbType, defaultDBUrl, user, pwd) == false)
 			    {
 			    	//defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
 					defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
@@ -7719,7 +7716,7 @@ public class BaseController  extends BaseFunction{
 	protected static boolean deleteDB(String dbType, String dbName, String url, String user, String pwd) 
     {
         try {
-			Class.forName(JDBC_DRIVER);
+			Class.forName(getJdbcDriverName(dbType));
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -7731,10 +7728,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		Connection conn = null;
         Statement stmt = null;
-        try{
-            // 注册 JDBC 驱动
-            Class.forName(JDBC_DRIVER);
-        
+        try{        
             //利用系统默认的数据库进行删除操作
             conn = (Connection) DriverManager.getConnection(defaultDBUrl ,user, pwd);
         
@@ -7784,29 +7778,54 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	protected static String getDBNameFromUrl(String url) 
+	protected static String getDBNameFromUrl(String type, String url) 
 	{
-		String[] urlParts = url.split("\\?");
-		if(urlParts == null || urlParts.length == 0)
+		if(type == null)
 		{
-			return null;
+			type = "mysql";
 		}
 		
-		String baseUrl = urlParts[0];
-		String[] subStrs = baseUrl.split("/");
-		if(subStrs == null || subStrs.length < 2)
+		String[] urlParts = null;
+		String[] subStrs = null;
+
+		switch(type)
 		{
-			return null;
+		case "mysql":
+			urlParts = url.split("\\?");
+			if(urlParts == null || urlParts.length == 0)
+			{
+				return null;
+			}
+			
+			String baseUrl = urlParts[0];
+			subStrs = baseUrl.split("/");
+			if(subStrs == null || subStrs.length < 2)
+			{
+				return null;
+			}
+			
+			return subStrs[subStrs.length-1];
+		case "sqlite":
+			urlParts = url.split(":");
+			if(urlParts == null || urlParts.length == 0)
+			{
+				return null;
+			}
+			
+			
+			String dbPath = urlParts[urlParts.length-1];
+			subStrs = dbPath.split("/");
+			return subStrs[subStrs.length-1];
 		}
-		
-		return subStrs[subStrs.length-1];
+		return null;
 	}
 
-	public static boolean testDB(String url, String user, String pwd)
+	public static boolean testDB(String type, String url, String user, String pwd)
     {
         Connection conn = null;
         try {
-			Class.forName(JDBC_DRIVER);
+			Class.forName(getJdbcDriverName(type));
+			
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -7832,6 +7851,20 @@ public class BaseController  extends BaseFunction{
         }
         return false;        
     }
+
+	private static String getJdbcDriverName(String type) {
+		if(type == null)
+		{
+			return JDBC_DRIVER;
+		}
+		switch(type)
+		{
+		case "sqlite":
+			return "org.sqlite.JDBC";
+		}
+		
+		return JDBC_DRIVER;
+	}
 
 	private static boolean getAndSetDBInfoFromFile(String JDBCSettingPath) {
 		System.out.println("getAndSetDBInfoFromFile " + JDBCSettingPath );
@@ -7932,7 +7965,7 @@ public class BaseController  extends BaseFunction{
 		return version;
 	}
 
-	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String url, String user, String pwd, boolean skipDocTab)
+	protected static boolean DBUpgrade(Integer oldVersion, Integer newVersion, String type, String url, String user, String pwd, boolean skipDocTab)
 	{
 		System.out.println("DBUpgrade() from " + oldVersion + " to " + newVersion);
 		List<Integer> dbTabsNeedToUpgrade = getDBTabListForUpgarde(oldVersion, newVersion);
@@ -7968,7 +8001,7 @@ public class BaseController  extends BaseFunction{
 				continue;
 			}
 			//delete tab
-			deleteDBTab(dbTabName, url, user, pwd);
+			deleteDBTab(dbTabName, type, url, user, pwd);
 			//init tab
 			executeSqlScript(sqlScriptPath, url, user, pwd);
 		}
@@ -8007,13 +8040,13 @@ public class BaseController  extends BaseFunction{
 		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, url, user, pwd);
 	}
 
-	private static boolean deleteDBTab(String tabName, String url, String user, String pwd) {
+	private static boolean deleteDBTab(String tabName, String type, String url, String user, String pwd) {
 		boolean ret = false;
 		Connection conn = null;
         Statement stmt = null;
         try{
             // 注册 JDBC 驱动
-            Class.forName(JDBC_DRIVER);
+            Class.forName(getJdbcDriverName(type));
         
             // 打开链接
             //System.out.println("连接数据库...");
@@ -8179,13 +8212,13 @@ public class BaseController  extends BaseFunction{
         }
 	}
 
-	protected static boolean deleteDBTabs(String url, String user, String pwd) 
+	protected static boolean deleteDBTabs(String type, String url, String user, String pwd) 
 	{
 		System.out.println("deleteDBTabs()");
 
 		for(int i=0; i< DBTabNameMap.length; i++)
 		{
-			deleteDBTab(DBTabNameMap[i], url, user, pwd);
+			deleteDBTab(DBTabNameMap[i], type, url, user, pwd);
 		}	
 		return true;
 	}

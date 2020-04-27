@@ -260,8 +260,11 @@ public class ManageController extends BaseController{
 		{
 			apikey = "";
 		}
-
-		String config = "{\"apikey\":\"" + apikey + "\"}";
+		
+		JSONObject config = new JSONObject();
+		//config.put("smsServer", smsServer);
+		config.put("apikey", apikey);
+		
 		rt.setData(config);
 		writeJson(rt, response);
 	}
@@ -277,6 +280,11 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		String type = ReadProperties.read("jdbc.properties", "db.type");
+		if(type == null)
+		{
+			type = "";
+		}
 		String url = ReadProperties.read("jdbc.properties", "db.url");
 		if(url == null)
 		{
@@ -293,17 +301,22 @@ public class ManageController extends BaseController{
 		{
 			pwd = "";
 		}
+		
+		JSONObject config = new JSONObject();
+		config.put("type", type);
+		config.put("url", url);
+		config.put("user", user);
+		config.put("pwd", pwd);
 
-		String config = "{\"url\":\"" + url + "\", \"user\":\"" + user + "\", \"pwd\":\"" + pwd + "\"}";
 		rt.setData(config);
 		writeJson(rt, response);
 	}
 	
 	/********** 设置系统数据库配置 ***************/
 	@RequestMapping("/setSystemDBConfig.do")
-	public void setSystemDBConfig(String authCode, String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void setSystemDBConfig(String authCode, String type, String url, String user, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("setSystemDBConfig() url:" + url + " user:" + user  + " pwd:" + pwd);
+		System.out.println("setSystemDBConfig() type:"  + type + " url:" + url + " user:" + user  + " pwd:" + pwd);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(authCode, "docSysInit", session, rt) == false)
 		{
@@ -338,6 +351,10 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		if(type != null)
+		{
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.type", type);
+		}
 		if(url != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "db.url", url);
@@ -363,7 +380,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/testDatabase.do")
-	public void testDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void testDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("testDatabase()");
 		ReturnAjax rt = new ReturnAjax();
@@ -373,7 +390,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		if(testDB(url, user, pwd) == false)	//数据库不存在
+		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("testDatabase() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
@@ -383,7 +400,7 @@ public class ManageController extends BaseController{
 	
 	//强制复位数据库
 	@RequestMapping("/deleteDatabase.do")
-	public void deleteDatabase(String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
+	public void deleteDatabase(String type, String url, String user, String pwd, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		System.out.println("deleteDatabase()");
 		ReturnAjax rt = new ReturnAjax();
@@ -393,7 +410,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		if(testDB(url, user, pwd) == false)	//数据库不存在
+		if(testDB(type, url, user, pwd) == false)	//数据库不存在
 		{
 			System.out.println("deleteDatabase() 连接数据库:" + url + " 失败");
 			docSysErrorLog("连接数据库失败", rt);
@@ -424,7 +441,7 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
-		if(deleteDB(DB_TYPE, dbName, url, user, pwd) == false)
+		if(deleteDB(type, dbName, url, user, pwd) == false)
 		{
 			System.out.println("deleteDatabase() 删除数据库失败");
 			docSysErrorLog("数据库初始化失败", rt);
