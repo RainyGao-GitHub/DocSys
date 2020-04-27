@@ -7454,7 +7454,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//自动创建数据库
 				createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
-				if(initDB(DB_URL, DB_USER, DB_PASS) == false)
+				if(initDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
 				{
 					System.out.println("docSysInit() 新建数据库失败");
 					return false;
@@ -7524,13 +7524,13 @@ public class BaseController  extends BaseFunction{
 
 	private static boolean checkAndAddFirstUser() {
 		//获取用户列表
-		List<Object> list = dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
+		List<Object> list = dbQuery(null, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS);
 		if(list == null)
 		{
 			//Add admin User
 			User adminUser = buildAdminUser();
-			dbInsert(adminUser, DOCSYS_USER, DB_URL, DB_USER, DB_PASS);
-			if(dbQuery(null, DOCSYS_USER, DB_URL, DB_USER, DB_PASS) == null)
+			dbInsert(adminUser, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS);
+			if(dbQuery(null, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS) == null)
 			{
 				return false;
 			}
@@ -7589,7 +7589,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-    protected static boolean executeSqlScript(String filePath, String url, String user, String pwd) 
+    protected static boolean executeSqlScript(String filePath, String type, String url, String user, String pwd) 
     {
     	boolean ret = false;
     	Connection conn = null;
@@ -7598,7 +7598,7 @@ public class BaseController  extends BaseFunction{
         Reader read = null;
     	
         try {
-            conn = (Connection) DriverManager.getConnection(url ,user, pwd);
+            conn = getDBConnection(type, url,user,pwd);
             runner = new ScriptRunner(conn);
             runner.setLogWriter(null);//设置是否输出日志
             
@@ -7662,6 +7662,14 @@ public class BaseController  extends BaseFunction{
 		return createFile(dbPath, dbName);
 	}
 
+	private static String getAbsoluteSqliteUrl(String jdbcUrl) {
+		String dbPath = getDbPathFromUrl(jdbcUrl);
+		String dbName = getDBNameFromUrl("sqlite", jdbcUrl);
+		String absSqliteUrl = "jdbc:sqlite:/"+ dbPath + dbName;
+		System.out.println("getAbsoluteSqliteUrl absSqliteUrl:" + absSqliteUrl);
+		return absSqliteUrl;
+	}
+	
 	private static String getDbPathFromUrl(String url) {
 		System.out.println("getDbPathFromUrl url:" + url);
 		String[] urlParts = url.split(":");
@@ -7711,8 +7719,7 @@ public class BaseController  extends BaseFunction{
 		Connection conn = null;
         Statement stmt = null;
         try{        
-            conn = (Connection) DriverManager.getConnection(defaultDBUrl ,user, pwd);
-        
+            conn = getDBConnection(dbType, defaultDBUrl,user,pwd);        
             stmt = (Statement) conn.createStatement();
             String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
 	    	String createdatabase="create  database  " + dbName;	//创建数据库     
@@ -7822,7 +7829,7 @@ public class BaseController  extends BaseFunction{
         Statement stmt = null;
         try{        
             //利用系统默认的数据库进行删除操作
-            conn = (Connection) DriverManager.getConnection(defaultDBUrl ,user, pwd);
+            conn = getDBConnection(dbType, defaultDBUrl ,user, pwd);
         
             stmt = (Statement) conn.createStatement();
             String checkdatabase="show databases like \"" + dbName+ "\""; //判断数据库是否存在
@@ -7926,7 +7933,7 @@ public class BaseController  extends BaseFunction{
         // 打开链接
         System.out.println("连接数据库...");
         try {
-			conn = (Connection) DriverManager.getConnection(url, user, pwd);
+			conn = getDBConnection(type, url, user, pwd);
             conn.close();
     		System.out.println("连接数据库成功");
             return true;
@@ -7942,6 +7949,22 @@ public class BaseController  extends BaseFunction{
         }
         return false;        
     }
+
+	private static Connection getDBConnection(String type, String url, String user, String pwd) {
+		String dbUrl = url;
+		if(type != null && type.equals("sqlite"))
+		{
+			dbUrl = getAbsoluteSqliteUrl(url);
+		}
+		
+		try {
+			return DriverManager.getConnection(dbUrl, user, pwd);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 	private static String getJdbcDriverName(String type) {
 		if(type == null)
@@ -7978,6 +8001,10 @@ public class BaseController  extends BaseFunction{
 		if(jdbcUrl == null || "".equals(jdbcUrl))
 		{
 			return false;
+		}
+		if(dbType.equals("sqlite"))
+		{
+			jdbcUrl = getAbsoluteSqliteUrl(jdbcUrl);
 		}
 		DB_URL = jdbcUrl;
 		
@@ -8070,7 +8097,7 @@ public class BaseController  extends BaseFunction{
 		Date date = new Date();
 		String backUpTime = DateFormat.dateTimeFormat2(date);
 		String backUpPath = docSysIniPath + "backup/" + backUpTime + "/";
-		if(backupDatabase(backUpPath, url, user, pwd, skipDocTab) == false)
+		if(backupDatabase(backUpPath, type, url, user, pwd, skipDocTab) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -8094,11 +8121,11 @@ public class BaseController  extends BaseFunction{
 			//delete tab
 			deleteDBTab(dbTabName, type, url, user, pwd);
 			//init tab
-			executeSqlScript(sqlScriptPath, url, user, pwd);
+			executeSqlScript(sqlScriptPath, type, url, user, pwd);
 		}
 		
 		//导入数据
-		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, backUpPath, "docsystem_data.json", url, user, pwd);
+		importDatabaseFromJsonFile(dbTabsNeedToUpgrade, backUpPath, "docsystem_data.json", type, url, user, pwd);
 		return true;
 	}
 
@@ -8115,12 +8142,12 @@ public class BaseController  extends BaseFunction{
 		return tabList;
 	}
 	
-	protected static boolean backupDatabase(String backUpPath, String url, String user, String pwd, boolean skipDocTab) {		
+	protected static boolean backupDatabase(String backUpPath, String type, String url, String user, String pwd, boolean skipDocTab) {		
 		List<Integer> backupTabList = buildBackUpTabList(skipDocTab);
 		
 		String backUpName = "docsystem_data";
 		
-		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", "UTF-8", url, user, pwd) == false)
+		if(exportDatabaseAsSql(backupTabList, backUpPath, backUpName + ".sql", "UTF-8", type, url, user, pwd) == false)
 		{
 			System.out.println("DBUpgrade() 数据库备份失败!");
 			return true;
@@ -8128,7 +8155,7 @@ public class BaseController  extends BaseFunction{
 		
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, url, user, pwd);
+		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, type, url, user, pwd);
 	}
 
 	private static boolean deleteDBTab(String tabName, String type, String url, String user, String pwd) {
@@ -8141,7 +8168,7 @@ public class BaseController  extends BaseFunction{
         
             // 打开链接
             //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(url,user,pwd);
+            conn = getDBConnection(type, url,user,pwd);
         
             // 执行查询
             //System.out.println(" 实例化Statement对象...");
@@ -8177,7 +8204,7 @@ public class BaseController  extends BaseFunction{
 		
 	}
 	
-	protected static boolean exportDatabaseAsSql(List<Integer> exportTabList, String path, String name, String encode, String url, String user, String pwd) 
+	protected static boolean exportDatabaseAsSql(List<Integer> exportTabList, String path, String name, String encode, String type, String url, String user, String pwd) 
 	{
 		System.out.println("backupDB() encode:" + encode + " backup to file:" + path+name);
 		
@@ -8185,7 +8212,7 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i< exportTabList.size(); i++)
 		{
 			int objId = exportTabList.get(i);
-			List<Object> list = dbQuery(null, objId, url, user, pwd);
+			List<Object> list = dbQuery(null, objId, type, url, user, pwd);
 			if(list != null)
 			{
 				sqlStr += convertListToInertSqls(objId, list, encode);
@@ -8208,7 +8235,7 @@ public class BaseController  extends BaseFunction{
 		return sqlStr;
 	}
 	
-	protected static boolean exportDatabaseAsJson(List<Integer> exportTabList, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
+	protected static boolean exportDatabaseAsJson(List<Integer> exportTabList, String filePath, String fileName, Integer srcVersion, Integer dstVersion, String type, String url, String user, String pwd) 
 	{
 		System.out.println("exportDatabaseAsJson() " + " filePath:" + filePath + " srcVersion:" + srcVersion + " dstVersion:" + dstVersion);
 
@@ -8219,11 +8246,11 @@ public class BaseController  extends BaseFunction{
 			List<Object> list = null;
 			if(objType == DOCSYS_DOC_AUTH)
 	    	{
-	    		list = queryDocAuth(null, srcVersion, dstVersion, url, user, pwd);
+	    		list = queryDocAuth(null, srcVersion, dstVersion, type, url, user, pwd);
 	    	}
 			else
 			{	
-				list = dbQuery(null, objType, url, user, pwd);
+				list = dbQuery(null, objType, type, url, user, pwd);
 			}
 			
 			//Convert list to jsonStr
@@ -8240,7 +8267,7 @@ public class BaseController  extends BaseFunction{
 		return saveDocContentToFile(jsonStr, filePath, fileName);
 	}
 
-	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String url, String user, String pwd)
+	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String type, String url, String user, String pwd)
 	{
 		System.out.println("importDatabase() importType:" + importType);
 		if(importTabList == null)
@@ -8254,21 +8281,21 @@ public class BaseController  extends BaseFunction{
 		
 		if(importType.equals("sql"))
 		{
-			return importDatabaseFromSqlFile(importTabList, filePath, fileName, url, user, pwd);
+			return importDatabaseFromSqlFile(importTabList, filePath, fileName, type, url, user, pwd);
 		}
 		else if(importType.equals("json"))
 		{
-			return importDatabaseFromJsonFile(importTabList, filePath, fileName, url, user, pwd);
+			return importDatabaseFromJsonFile(importTabList, filePath, fileName, type, url, user, pwd);
 		}
 		return false;
 	}
 	
 	private static boolean importDatabaseFromSqlFile(List<Integer> importTabList, String filePath, String fileName,
-			String url, String user, String pwd) {
-		return executeSqlScript(filePath+fileName, url, user, pwd);
+			String type, String url, String user, String pwd) {
+		return executeSqlScript(filePath+fileName, type, url, user, pwd);
 	}
 
-	protected static boolean importDatabaseFromJsonFile(List<Integer> importTabList, String filePath, String fileName, String url, String user, String pwd)
+	protected static boolean importDatabaseFromJsonFile(List<Integer> importTabList, String filePath, String fileName, String type, String url, String user, String pwd)
 	{
 		System.out.println("importDatabaseFromJsonFile() filePath:" + filePath + " fileName:" + fileName);
 
@@ -8286,20 +8313,20 @@ public class BaseController  extends BaseFunction{
 	        	continue;
 	        }
 	
-	        importJsonObjListToDataBase(objType, list, url, user, pwd);
+	        importJsonObjListToDataBase(objType, list, type, url, user, pwd);
 	    	System.out.println("importObjectListFromJsonFile() import OK");
 		}
 		return true;
 	}
 	
-	private static void importJsonObjListToDataBase(int objType, JSONArray list, String url, String user, String pwd) {
+	private static void importJsonObjListToDataBase(int objType, JSONArray list, String type, String url, String user, String pwd) {
         for (int i = 0 ; i < list.size();i++)
         {
             JSONObject jsonObj = (JSONObject)list.get(i);
             
             Object obj = buildObjectFromJsonObj(jsonObj, objType);
             
-            dbInsert(obj, objType, url, user, pwd);
+            dbInsert(obj, objType, type, url, user, pwd);
         }
 	}
 
@@ -8314,7 +8341,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected static boolean initDB(String url, String user, String pwd) 
+	protected static boolean initDB(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDB()");
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
@@ -8323,7 +8350,7 @@ public class BaseController  extends BaseFunction{
 			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
 			return false;
 		}
-		return executeSqlScript(sqlScriptPath, url, user, pwd);
+		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
 	
 	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
@@ -8485,9 +8512,9 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 
-	protected static List<Object> queryDocAuth(DocAuth qDocAuth, Integer srcVersion, Integer dstVersion, String url, String user, String pwd) 
+	protected static List<Object> queryDocAuth(DocAuth qDocAuth, Integer srcVersion, Integer dstVersion, String type, String url, String user, String pwd) 
 	{
-		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH, url, user, pwd);
+		List<Object> docAuthList = dbQuery(qDocAuth, DOCSYS_DOC_AUTH, type, url, user, pwd);
     	if(docAuthList == null || docAuthList.size() == 0)
     	{
     		return docAuthList;
@@ -8511,7 +8538,7 @@ public class BaseController  extends BaseFunction{
 		    			e.printStackTrace();
 		    			continue;
 		    		}
-		    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC, url, user, pwd);
+		    		List<Object> docList = dbQuery(qDoc, DOCSYS_DOC, type, url, user, pwd);
 		    		if(docList != null && docList.size() == 1)
 		    		{
 		    			Doc doc = (Doc) docList.get(0);
@@ -8526,7 +8553,7 @@ public class BaseController  extends BaseFunction{
     	return docAuthList;
 	}
 	
-	protected static List<Object> dbQuery(Object qObj, int objType, String url, String user, String pwd) 
+	protected static List<Object> dbQuery(Object qObj, int objType, String type, String url, String user, String pwd) 
 	{
 		System.out.println("dbQuery() objType:" + objType);
 		
@@ -8540,7 +8567,7 @@ public class BaseController  extends BaseFunction{
         
             // 打开链接
             //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(url,user,pwd);
+            conn = getDBConnection(type, url,user,pwd);
         
             // 执行查询
             //System.out.println(" 实例化Statement对象...");
@@ -8584,7 +8611,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	public static boolean dbInsert(Object obj, int objType,String url, String user, String pwd)
+	public static boolean dbInsert(Object obj, int objType, String type, String url, String user, String pwd)
 	{
 		boolean ret = false;
 		Connection conn = null;
@@ -8595,7 +8622,7 @@ public class BaseController  extends BaseFunction{
         
             // 打开链接
             //System.out.println("连接数据库...");
-            conn = (Connection) DriverManager.getConnection(url,user,pwd);
+            conn = getDBConnection(type, url,user,pwd);
         
             // 执行查询
             //System.out.println(" 实例化Statement对象...");
