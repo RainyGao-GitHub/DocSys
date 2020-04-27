@@ -685,3 +685,13 @@ function closeBootstrapDialog(id){
 function showErrorMessage($msg) {
 	qiao.bs.alert($msg);
 }
+
+//提示框
+function showSuccessMsg(msg)
+{
+    bootstrapQ.msg({
+			msg : msg,
+			type : 'success',
+			time : 1000,
+	});
+}
