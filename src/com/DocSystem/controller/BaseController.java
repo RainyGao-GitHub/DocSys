@@ -7696,7 +7696,7 @@ public class BaseController  extends BaseFunction{
 		String relativePath = "";
 		if(subStrs.length > 1)
 		{
-			System.out.println("getDbPathFromUrl subStrs[0]:" + subStrs[0]);
+			//System.out.println("getDbPathFromUrl subStrs[0]:" + subStrs[0]);
 			boolean firstFlag = true;	
 			for(int i=0; i< subStrs.length-1; i++)
 			{	
