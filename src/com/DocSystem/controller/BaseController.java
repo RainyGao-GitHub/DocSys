@@ -7312,7 +7312,7 @@ public class BaseController  extends BaseFunction{
 	/****************************DocSys系统初始化接口 *********************************/
 	//static String JDBC_DRIVER = "org.sqlite.JDBC";  
     //static String DB_TYPE = "sqlite";
-	//static String DB_URL = "jdbc:sqlite::resource:data/DocSystem"
+	//static String DB_URL = "jdbc:sqlite::resource:data/DocSystem"; //classess目录下在eclipse下会导致重启 
 	//static String DB_USER = "";
     //static String DB_PASS = "";
     
@@ -7653,13 +7653,55 @@ public class BaseController  extends BaseFunction{
 	
 	private static boolean createDBForSqlite(String dbType, String dbName, String url, String user, String pwd) {
 		
-		String dbPath = docSysWebPath + "WEB-INF/classes/data";
+		String dbPath = getDbPathFromUrl(url);
 		File dbFile = new File(dbPath, dbName);
 		if(dbFile.exists())
 		{
 			return true;
 		}
 		return createFile(dbPath, dbName);
+	}
+
+	private static String getDbPathFromUrl(String url) {
+		System.out.println("getDbPathFromUrl url:" + url);
+		String[] urlParts = url.split(":");
+		if(urlParts == null || urlParts.length == 0)
+		{
+			return null;
+		}
+		
+		String prefix = urlParts[urlParts.length-2];
+		String rootPath = "";
+		if(prefix.equals("classspath") || (prefix.equals("resource")))
+		{
+			rootPath = docSysWebPath;
+		}
+		else if(isWinDiskChar(prefix))
+		{
+			rootPath = prefix + ":";
+		}
+
+		String dbFilePath = urlParts[urlParts.length-1];
+		String[] subStrs = dbFilePath.split("/");
+		String relativePath = "";
+		if(subStrs.length > 1)
+		{
+			if(subStrs[0].equals("${catalina.home}"))
+			{
+				relativePath = System.getProperty("catalina.home");
+			}
+			else
+			{
+				relativePath = subStrs[0];
+			}
+				
+			for(int i=1; i< subStrs.length-1; i++)
+			{				
+				relativePath += subStrs[i] + "/";
+			}
+		}
+		
+		return rootPath + relativePath;
 	}
 
 	private static boolean createDBForMysql(String dbType, String dbName, String url, String user, String pwd) {
@@ -7762,7 +7804,7 @@ public class BaseController  extends BaseFunction{
 
 
 	private static boolean deleteDBForSqlite(String dbType, String dbName, String url, String user, String pwd) {
-		String dbPath = docSysWebPath + "WEB-INF/classes/data";
+		String dbPath = getDbPathFromUrl(url);
 		File dbFile = new File(dbPath, dbName);
 		if(!dbFile.exists())
 		{
