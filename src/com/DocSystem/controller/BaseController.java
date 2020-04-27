@@ -7694,33 +7694,30 @@ public class BaseController  extends BaseFunction{
 		
 		String[] subStrs = dbFilePath.split("/");
 		String relativePath = "";
-		if(subStrs.length > 1)
-		{
-			//System.out.println("getDbPathFromUrl subStrs[0]:" + subStrs[0]);
-			boolean firstFlag = true;	
-			for(int i=0; i< subStrs.length-1; i++)
-			{	
-				if(subStrs[i].isEmpty())
+		//System.out.println("getDbPathFromUrl subStrs[0]:" + subStrs[0]);
+		boolean firstFlag = true;	
+		for(int i=0; i< subStrs.length-1; i++)
+		{	
+			if(subStrs[i].isEmpty())
+			{
+				continue;
+			}
+			if(firstFlag)
+			{
+				firstFlag = false;
+				if(subStrs[i].equals("${catalina.home}"))
 				{
-					continue;
+					relativePath = System.getProperty("catalina.home");
+					relativePath = relativePath.replace('\\','/') + "/";
 				}
-				if(firstFlag)
-				{
-					firstFlag = false;
-					if(subStrs[i].equals("${catalina.home}"))
-					{
-						relativePath = System.getProperty("catalina.home");
-						relativePath = relativePath.replace('\\','/') + "/";
-					}
-					else
-					{
-						relativePath = subStrs[i];
-					}
-				}	
 				else
 				{
-					relativePath += subStrs[i] + "/";
+					relativePath = subStrs[i];
 				}
+			}	
+			else
+			{
+				relativePath += subStrs[i] + "/";
 			}
 		}
 		
