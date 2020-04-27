@@ -7710,6 +7710,7 @@ public class BaseController  extends BaseFunction{
 					if(subStrs[i].equals("${catalina.home}"))
 					{
 						relativePath = System.getProperty("catalina.home");
+						relativePath = relativePath.replace('\\','/') + "/";
 					}
 					else
 					{

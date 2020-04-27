@@ -68,6 +68,10 @@
                 <div class="box-body" style="padding-right: 200px;">
                     <div id="dbConfigForm">
                         <div class="form-group">
+                            <label for="systemDbUrl">数据库类型</label>
+                            <input type="text" name="systemDbType" id="systemDbType" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
+                        </div>
+                        <div class="form-group">
                             <label for="systemDbUrl">数据库链接</label>
                             <input type="text" name="systemDbUrl" id="systemDbUrl" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
                         </div>
@@ -414,6 +418,7 @@
 	
 	//系统数据库设置
 	var systemDbSetting = {
+			type: "",
 			url: "",
 			user: "",
 			pwd: "",
@@ -422,10 +427,13 @@
 		$("#btnEnableSystemDBSet").hide();
 		$("#btnCancelSystemDBSet").show();
 		$("#btnSaveSystemDBSet").show();
+		
+		$("#systemDbType").val(systemDbSetting.type);
 		$("#systemDbUrl").val(systemDbSetting.url);
 		$("#systemDbUser").val(systemDbSetting.user);
 		$("#systemDbPwd").val(systemDbSetting.pwd);
 		
+		$("#systemDbType").attr('disabled',false);;
 		$("#systemDbUrl").attr('disabled',false);;
 		$("#systemDbUser").attr('disabled',false);
 		$("#systemDbPwd").attr('disabled',false);
@@ -435,10 +443,14 @@
 		$("#btnEnableSystemDBSet").show();
 		$("#btnCancelSystemDBSet").hide();
 		$("#btnSaveSystemDBSet").hide();
+		
 		//revert the value
-		$("#systemsystemDbUrl").attr('disabled',true);;
+		$("#systemDbType").attr('disabled',true);;
+		$("#systemDbUrl").attr('disabled',true);;
 		$("#systemDbUser").attr('disabled',true);
 		$("#systemDbPwd").attr('disabled',true);
+		
+		$("#systemDbType").val(systemDbSetting.type);
 		$("#systemDbUrl").val(systemDbSetting.url);
 		$("#systemDbUser").val(systemDbSetting.user);
 		$("#systemDbPwd").val(systemDbSetting.pwd);
@@ -449,13 +461,16 @@
 		$("#btnCancelSystemDBSet").hide();
 		$("#btnSaveSystemDBSet").hide();
 		//revert the value
+		$("#systemDbType").attr('disabled',true);;
 		$("#systemDbUrl").attr('disabled',true);;
 		$("#systemDbUser").attr('disabled',true);
 		$("#systemDbPwd").attr('disabled',true);
+		
+		var type = $("#systemDbType").val();
 		var url = $("#systemDbUrl").val();
 		var user = $("#systemDbUser").val();
 		var pwd = $("#systemDbPwd").val();
-		updatesystemDbSetting(url, user, pwd);
+		updatesystemDbSetting(type, url, user, pwd);
 	}
 	
 	function dbConfigPageInit(){
@@ -470,10 +485,12 @@
 	            if( "ok" == ret.status )
 	            {
 					var config = JSON.parse(ret.data);
+					systemDbSetting.type = config.type;
 					systemDbSetting.url = config.url;
 					systemDbSetting.user = config.user;
 					systemDbSetting.pwd = config.pwd;
-	            	$("#systemDbUrl").val(systemDbSetting.url);
+	            	$("#systemDbType").val(systemDbSetting.type);
+					$("#systemDbUrl").val(systemDbSetting.url);
 	            	$("#systemDbUser").val(systemDbSetting.user);
 	            	$("#systemDbPwd").val(systemDbSetting.pwd);				
 	            }
@@ -489,12 +506,13 @@
 	    });
 	}
     
-	function updatesystemDbSetting(url, user, pwd){
+	function updatesystemDbSetting(type, url, user, pwd){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemDBConfig.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
+	        	type: type,
 	        	url: url,
 	        	user: user,
 	        	pwd: pwd,
@@ -503,15 +521,18 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {	        		
-	        		systemDbSetting.url = url;
+	        		systemDbSetting.type = type;
+	            	systemDbSetting.url = url;
 	        		systemDbSetting.user = user;
 	        		systemDbSetting.pwd = pwd;
+	        		showSuccessMsg("更新成功")
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
 	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
 	        		//restore the setting
+	        		$("#systemDbType").val(systemDbSetting.type);
 	        		$("#systemDbUrl").val(systemDbSetting.url);
 	        		$("#systemDbUser").val(systemDbSetting.user);
 	        		$("#systemDbPwd").val(systemDbSetting.pwd);
@@ -520,7 +541,8 @@
 	        error : function () {
 	        	showErrorMessage("服务器异常:更新数据库配置信息失败");
         		//restore the setting
-	    		$("#systemDbUrl").val(systemDbSetting.url);
+	    		$("#systemDbType").val(systemDbSetting.type);
+        		$("#systemDbUrl").val(systemDbSetting.url);
 	    		$("#systemDbUser").val(systemDbSetting.user);
 	    		$("#systemDbPwd").val(systemDbSetting.pwd);
 	        }
@@ -528,6 +550,7 @@
 	}
 	
 	function testDatabase(){
+		var dbType = $("#systemDbType").val();
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
 		var dbPwd = $("#systemDbPwd").val();
@@ -537,6 +560,7 @@
 	        type : "post",
 	        dataType : "json",
 	        data : {
+	        	type: dbType,
 	        	url: dbUrl,
 	        	user: dbUser,
 	        	pwd: dbPwd,
@@ -582,6 +606,7 @@
 	}
 	
 	function resetDatabase(){
+		var dbType = $("#systemDbType").val();
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
 		var dbPwd = $("#systemDbPwd").val();
@@ -591,6 +616,7 @@
 	        type : "post",
 	        dataType : "json",
 	        data : {
+	        	type: dbType,
 	        	url: dbUrl,
 	        	user: dbUser,
 	        	pwd: dbPwd,
@@ -615,6 +641,7 @@
 	}
 	
 	function exportDBData(){
+		var dbType = $("#systemDbType").val();
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
 		var dbPwd = $("#systemDbPwd").val();
@@ -624,6 +651,7 @@
 	        type : "post",
 	        dataType : "json",
 	        data : {
+	        	type: dbType,
 	        	url: dbUrl,
 	        	user: dbUser,
 	        	pwd: dbPwd,
@@ -665,6 +693,7 @@
 	{
 		console.log("importDBData()");
 		
+		var dbType = $("#systemDbType").val();
 		var dbUrl = $("#systemDbUrl").val();
 		var dbUser = $("#systemDbUser").val();
 		var dbPwd = $("#systemDbPwd").val();
@@ -708,7 +737,7 @@
 	    	},function () {
 		    	//alert("点击了确定");
 				//开始上传
-				startImportDBData(firstFile, dbUrl, dbUser, dbPwd);
+				startImportDBData(firstFile, dbType, dbUrl, dbUser, dbPwd);
 		    	return true;   //close dialog
 	    	},function()
 	    	{
@@ -718,10 +747,11 @@
 	    );
 	}
 	
-	function startImportDBData(file, dbUrl, dbUser, dbPwd)
+	function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 	{
 		//新建文件上传表单
 		var form = new FormData();
+		form.append("type", dbType);
 		form.append("url", dbUrl);
 		form.append("user", dbUser);
 		form.append("pwd", dbPwd);
