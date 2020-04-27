@@ -8002,10 +8002,6 @@ public class BaseController  extends BaseFunction{
 		{
 			return false;
 		}
-		if(dbType.equals("sqlite"))
-		{
-			jdbcUrl = getAbsoluteSqliteUrl(jdbcUrl);
-		}
 		DB_URL = jdbcUrl;
 		
 		String jdbcUser = ReadProperties.getValue(JDBCSettingPath, "db.username");
