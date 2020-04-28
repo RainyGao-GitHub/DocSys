@@ -135,7 +135,11 @@ public class ManageController extends BaseController{
 		{
 			pwd = "";
 		}
-		String config = "{\"host\":\"" + host + "\", \"email\":\"" + email + "\", \"pwd\":\""+ pwd +"\"}";
+		
+		JSONObject config = new JSONObject();
+		config.put("host", host);
+		config.put("email", email);
+		config.put("pwd", pwd);
 		rt.setData(config);
 		writeJson(rt, response);
 	}
@@ -255,6 +259,12 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		String smsServer = ReadProperties.read("docSysConfig.properties", "smsServer");
+		if(smsServer == null)
+		{
+			smsServer = "";
+		}
+		
 		String apikey = ReadProperties.read("docSysConfig.properties", "apikey");
 		if(apikey == null)
 		{
@@ -262,7 +272,7 @@ public class ManageController extends BaseController{
 		}
 		
 		JSONObject config = new JSONObject();
-		//config.put("smsServer", smsServer);
+		config.put("smsServer", smsServer);
 		config.put("apikey", apikey);
 		
 		rt.setData(config);
@@ -613,12 +623,11 @@ public class ManageController extends BaseController{
 		String openOfficePath = getOpenOfficePath();
 		String officeEditorApi = getOfficeEditorApi();
 
-		String config = "{" 
-				+"\"version\":\"" + version + "\"," 
-				+ "\"tomcatPath\":\"" + tomcatPath + "\"," 
-				+ "\"openOfficePath\":\"" + openOfficePath + "\"," 
-				+ "\"officeEditorApi\":\"" + officeEditorApi+ "\"" 
-				+ "}";
+		JSONObject config = new JSONObject();
+		config.put("version", version);
+		config.put("tomcatPath", tomcatPath);
+		config.put("openOfficePath", openOfficePath);
+		config.put("officeEditorApi", officeEditorApi);
 		rt.setData(config);
 		writeJson(rt, response);
 	}
