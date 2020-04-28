@@ -8194,6 +8194,52 @@ public class BaseController  extends BaseFunction{
 		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, type, url, user, pwd);
 	}
 
+	private static boolean createDBTab(String tabName, String type, String url, String user, String pwd) {
+		boolean ret = false;
+		Connection conn = null;
+        Statement stmt = null;
+        try{
+            // 注册 JDBC 驱动
+            Class.forName(getJdbcDriverName(type));
+        
+            // 打开链接
+            //System.out.println("连接数据库...");
+            conn = getDBConnection(type, url,user,pwd);
+        
+            // 执行查询
+            //System.out.println(" 实例化Statement对象...");
+            stmt = (Statement) conn.createStatement();
+            
+            String sql = "CREATE TABLE " + tabName + "(ID INT PRIMARY KEY      NOT NULL)";
+            System.out.println("sql:" + sql);
+            ret = stmt.execute(sql);
+            System.out.println("ret:" + ret);
+            // 完成后关闭
+            stmt.close();
+            conn.close();
+            return ret;
+        }catch(SQLException se){
+            // 处理 JDBC 错误
+            se.printStackTrace();
+        }catch(Exception e){
+            // 处理 Class.forName 错误
+            e.printStackTrace();
+        }finally{
+            // 关闭资源
+            try{
+                if(stmt!=null) stmt.close();
+            }catch(SQLException se2){
+            }// 什么都不做
+            try{
+                if(conn!=null) conn.close();
+            }catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
+		return ret;
+		
+	}
+	
 	private static boolean deleteDBTab(String tabName, String type, String url, String user, String pwd) {
 		boolean ret = false;
 		Connection conn = null;
@@ -8380,6 +8426,31 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initDB(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDB()");
+		if(type == null)
+		{
+			type = "mysql";
+		}
+		
+		switch(type)
+		{
+		case "mysql":
+			return initDBForMysql(type, url, user, pwd);
+		case "sqlite":
+			return initDBForMysql(type, url, user, pwd);			
+		}
+		return false;
+	}
+
+	protected static boolean initDBForSqlite(String type, String url, String user, String pwd) 
+	{
+		System.out.println("initDBForSqlite()");
+		createDBTab("test", type, url, user, pwd);
+		return true;
+	}
+	
+	protected static boolean initDBForMysql(String type, String url, String user, String pwd) 
+	{
+		System.out.println("initDBForMysql()");
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/docsystem.sql";
 		if(isFileExist(sqlScriptPath) == false)
 		{
@@ -8388,7 +8459,7 @@ public class BaseController  extends BaseFunction{
 		}
 		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
-	
+
 	private static List<Integer> getDBTabListForUpgarde(Integer oldVersion, Integer newVersion) 
 	{
 		if(oldVersion == null || newVersion == null || newVersion == oldVersion)
