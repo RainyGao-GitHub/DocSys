@@ -8436,7 +8436,7 @@ public class BaseController  extends BaseFunction{
 		case "mysql":
 			return initDBForMysql(type, url, user, pwd);
 		case "sqlite":
-			return initDBForMysql(type, url, user, pwd);			
+			return initDBForSqlite(type, url, user, pwd);			
 		}
 		return false;
 	}
