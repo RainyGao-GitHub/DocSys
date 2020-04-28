@@ -442,7 +442,7 @@
 	            if( "ok" == ret.status )
 	            {
 	            	//console.log("getSystemEmailConfig ret", ret);
-					var config = JSON.parse(ret.data); 	
+					var config = ret.data; 	
 					systemEmailConfig.host = config.host;
 	            	systemEmailConfig.email = config.email;
 	            	systemEmailConfig.pwd = config.pwd;
@@ -512,7 +512,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-					var config = JSON.parse(ret.data); 	
+					var config = ret.data; 	
 	            	systemSmsSetting.apikey = config.apikey;
 	            	$Func.render($("#container"),"systemSmsConfig",{"value":systemSmsSetting});
 	            }
@@ -593,7 +593,7 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-					var config = JSON.parse(ret.data); 	
+					var config = ret.data; 	
 					systemDbSetting.type = config.type;
 					systemDbSetting.url = config.url;
 					systemDbSetting.user = config.user;
@@ -1056,7 +1056,7 @@
 	            console.log("showSystemUpgrade() ret", ret);
 	        	if( "ok" == ret.status )
 	            {
-	            	var config = JSON.parse(ret.data); 	
+	            	var config = ret.data; 	
 	            	systemInfo.version = config.version;
 	            	systemInfo.tomcatPath = config.tomcatPath;
 	            	systemInfo.openOfficePath = config.openOfficePath;
