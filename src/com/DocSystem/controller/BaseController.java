@@ -7591,14 +7591,6 @@ public class BaseController  extends BaseFunction{
 	
     protected static boolean executeSqlScript(String filePath, String type, String url, String user, String pwd) 
     {
-        try {
-			Class.forName(getJdbcDriverName(type));
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-    	
     	boolean ret = false;
     	Connection conn = null;
     	ScriptRunner runner = null;
@@ -7606,7 +7598,8 @@ public class BaseController  extends BaseFunction{
         Reader read = null;
     	
         try {
-            conn = getDBConnection(type, url,user,pwd);
+        	Class.forName(getJdbcDriverName(type));
+        	conn = getDBConnection(type, url,user,pwd);
             runner = new ScriptRunner(conn);
 			//runner.setAutoCommit(true);//自动提交
 			//runner.setFullLineDelimiter(false);
@@ -8450,8 +8443,6 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initDBForSqlite(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDBForSqlite()");
-		
-		//return createDBTab("doc", type, url, user, pwd);
 		
 		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/sqlite_docsystem.sql";
 		if(isFileExist(sqlScriptPath) == false)
