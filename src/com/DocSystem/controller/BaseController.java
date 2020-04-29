@@ -8217,10 +8217,8 @@ public class BaseController  extends BaseFunction{
             System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
             System.out.println("ret:" + ret);
-            // 完成后关闭
-            stmt.close();
-            conn.close();
-            return ret;
+ 
+            ret = true;
         }catch(SQLException se){
             // 处理 JDBC 错误
             se.printStackTrace();
@@ -8263,10 +8261,7 @@ public class BaseController  extends BaseFunction{
             System.out.println("sql:" + sql);
             ret = stmt.execute(sql);
             System.out.println("ret:" + ret);
-            // 完成后关闭
-            stmt.close();
-            conn.close();
-            return ret;
+            ret = true;
         }catch(SQLException se){
             // 处理 JDBC 错误
             se.printStackTrace();
