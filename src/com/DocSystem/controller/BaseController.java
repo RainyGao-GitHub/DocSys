@@ -8444,8 +8444,16 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initDBForSqlite(String type, String url, String user, String pwd) 
 	{
 		System.out.println("initDBForSqlite()");
-		createDBTab("test", type, url, user, pwd);
-		return true;
+		
+		return createDBTab("doc", type, url, user, pwd);
+		
+//		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/sqlite_docsystem.sql";
+//		if(isFileExist(sqlScriptPath) == false)
+//		{
+//			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
+//			return false;
+//		}
+//		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
 	
 	protected static boolean initDBForMysql(String type, String url, String user, String pwd) 
