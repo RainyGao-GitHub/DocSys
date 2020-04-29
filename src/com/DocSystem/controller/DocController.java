@@ -1659,7 +1659,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			reposAccess = checkAndGetAccessInfo(null, session, request, response, null, null, null, false, rt);
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 		}
 		if(reposAccess == null)
 		{
