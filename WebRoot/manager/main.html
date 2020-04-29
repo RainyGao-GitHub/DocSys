@@ -501,6 +501,7 @@
 	
 	//系统短信服务设置
 	var systemSmsSetting = {
+			server: "",
 			apikey: "",
 	}
 	function showSystemSmsConfig(){
@@ -513,6 +514,7 @@
 	            if( "ok" == ret.status )
 	            {
 					var config = ret.data; 	
+					systemSmsSetting.server = config.server;
 	            	systemSmsSetting.apikey = config.apikey;
 	            	$Func.render($("#container"),"systemSmsConfig",{"value":systemSmsSetting});
 	            }
@@ -612,7 +614,7 @@
 	    });
 	}
 	
-	function updateSystemDBConfig(url, user, pwd){
+	function updateSystemDBConfig(type, url, user, pwd){
 		$.ajax({
 	        url : "/DocSystem/Manage/setSystemDBConfig.do",
 	        type : "post",
@@ -630,7 +632,7 @@
 	        		systemDbSetting.url = url;
 	        		systemDbSetting.user = user;
 	        		systemDbSetting.pwd = pwd;
-	        		showSuccessMsg("更新成功");
+	        		showErrorMessage("更新成功");
 	            }
 	            else 
 	            {
@@ -1020,11 +1022,13 @@
 	        	officeEditorApi: officeEditorApi,
 	        },
 	        success : function (ret) {
+	        	console.log("setSystemInfo ret:",ret);
 	            if( "ok" == ret.status )
 	            {	        		
 	        		systemInfo.tomcatPath = tomcatPath;
 	        		systemInfo.openOfficePath = openOfficePath;
 	        		systemInfo.officeEditorApi = officeEditorApi;
+	        		showErrorMessage("更新成功！");
 	            }
 	            else 
 	            {
