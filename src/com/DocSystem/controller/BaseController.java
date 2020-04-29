@@ -7605,6 +7605,15 @@ public class BaseController  extends BaseFunction{
             // 从class目录下直接读取
             in = new FileInputStream(filePath);
             read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
+            
+            //下面配置不要随意更改，否则会出现各种问题
+			runner.setAutoCommit(true);//自动提交
+			runner.setFullLineDelimiter(false);
+			runner.setDelimiter(";");////每条命令间的分隔符
+			runner.setSendFullScript(false);
+			runner.setStopOnError(false);
+		//	runner.setLogWriter(null);//设置是否输出日志
+	
             runner.runScript(read);
             
             runner.closeConnection();
@@ -8445,15 +8454,15 @@ public class BaseController  extends BaseFunction{
 	{
 		System.out.println("initDBForSqlite()");
 		
-		return createDBTab("doc", type, url, user, pwd);
+		//return createDBTab("doc", type, url, user, pwd);
 		
-//		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/sqlite_docsystem.sql";
-//		if(isFileExist(sqlScriptPath) == false)
-//		{
-//			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
-//			return false;
-//		}
-//		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
+		String sqlScriptPath = docSysWebPath + "WEB-INF/classes/config/sqlite_docsystem.sql";
+		if(isFileExist(sqlScriptPath) == false)
+		{
+			System.out.println("initDB sqlScriptPath:" + sqlScriptPath + " not exists");
+			return false;
+		}
+		return executeSqlScript(sqlScriptPath, type, url, user, pwd);
 	}
 	
 	protected static boolean initDBForMysql(String type, String url, String user, String pwd) 
