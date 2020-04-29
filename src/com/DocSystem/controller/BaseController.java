@@ -7456,12 +7456,16 @@ public class BaseController  extends BaseFunction{
 				createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
 				if(initDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
 				{
-					System.out.println("docSysInit() 新建数据库失败");
+					System.out.println("docSysInit() initDB failed");
 					return false;
 				}
-				System.out.println("docSysInit() 新建数据库成功");
+				System.out.println("docSysInit() initDB success");
 				
-				checkAndAddFirstUser();
+				if(checkAndAddFirstUser() == false)
+				{
+					System.out.println("docSysInit() checkAndAddFirstUser failed");
+					return false;
+				}
 				
 				//更新版本号
 				copyFile(docSysWebPath + "version", docSysIniPath + "version", true);	
@@ -7470,11 +7474,15 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//有些情况下这个接口未必会成功，因此不进行错误检查
-		checkAndAddFirstUser();
+		if(checkAndAddFirstUser() == false)
+		{
+			System.out.println("docSysInit() checkAndAddFirstUser failed");
+			return false;
+		}
 			
 		if(checkAndUpdateDB(true) == false)
 		{
-			System.out.println("docSysInit() 数据库升级失败");
+			System.out.println("docSysInit() checkAndUpdateDB failed");
 			return false;
 		}
 		else
@@ -7525,13 +7533,20 @@ public class BaseController  extends BaseFunction{
 	private static boolean checkAndAddFirstUser() {
 		//获取用户列表
 		List<Object> list = dbQuery(null, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS);
-		if(list == null)
+		if(list == null) //数据库异常
+		{
+			System.out.println("checkAndAddFirstUser() 异常");
+			return false;
+		}
+		
+		if(list.size() == 0)
 		{
 			//Add admin User
 			User adminUser = buildAdminUser();
 			dbInsert(adminUser, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS);
 			if(dbQuery(null, DOCSYS_USER, DB_TYPE, DB_URL, DB_USER, DB_PASS) == null)
 			{
+				System.out.println("checkAndAddFirstUser() 新增用户失败");
 				return false;
 			}
 		}
