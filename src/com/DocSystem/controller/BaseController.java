@@ -7591,6 +7591,14 @@ public class BaseController  extends BaseFunction{
 	
     protected static boolean executeSqlScript(String filePath, String type, String url, String user, String pwd) 
     {
+        try {
+			Class.forName(getJdbcDriverName(type));
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+    	
     	boolean ret = false;
     	Connection conn = null;
     	ScriptRunner runner = null;
