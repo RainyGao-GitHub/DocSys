@@ -259,20 +259,20 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String smsServer = ReadProperties.read("docSysConfig.properties", "smsServer");
-		if(smsServer == null)
+		String server = ReadProperties.read("docSysConfig.properties", "smsServer");
+		if(server == null)
 		{
-			smsServer = "";
+			server = "";
 		}
 		
-		String apikey = ReadProperties.read("docSysConfig.properties", "apikey");
+		String apikey = ReadProperties.read("docSysConfig.properties", "smsApikey");
 		if(apikey == null)
 		{
 			apikey = "";
 		}
 		
 		JSONObject config = new JSONObject();
-		config.put("smsServer", smsServer);
+		config.put("server", server);
 		config.put("apikey", apikey);
 		
 		rt.setData(config);

@@ -4,9 +4,9 @@
             <div class="widget-head">
               <div class="pull-left">短信服务</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemEmailSet" onclick="enableSystemEmailSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">编辑</button>
-                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">保存</button>                
-                <button id="btnCancelSystemEmailSet" onclick="cancelSystemEmailSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
+                <button id="btnEnableSystemSmsSet" onclick="enableSystemSmsSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">编辑</button>
+                <button id="btnSaveSystemSmsSet" onclick="saveSystemSmsSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">保存</button>                
+                <button id="btnCancelSystemSmsSet" onclick="cancelSystemSmsSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -14,7 +14,13 @@
             <div class="widget-content">
                   <div class="form-horizontal" style="margin-top: 20px;">
                     <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">APIKEY</label>
+                      <label class="control-label col-lg-3" for="name">服务器</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemSmsServer" name="systemSmsServer" value="{{value.server}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">授权码</label>
                       <div class="col-lg-9">
                         <input type="text" class="form-control" id="systemSmsApiKey" name="systemSmsApiKey" value="{{value.apikey}}" disabled="disabled" >
                       </div>
