@@ -7600,28 +7600,22 @@ public class BaseController  extends BaseFunction{
         try {
             conn = getDBConnection(type, url,user,pwd);
             runner = new ScriptRunner(conn);
-            runner.setLogWriter(null);//设置是否输出日志
-            
-            // 从class目录下直接读取
-            in = new FileInputStream(filePath);
-            read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
-            
-            //下面配置不要随意更改，否则会出现各种问题
 			//runner.setAutoCommit(true);//自动提交
 			//runner.setFullLineDelimiter(false);
 			//runner.setDelimiter(";");////每条命令间的分隔符
 			//runner.setSendFullScript(false);
 			//runner.setStopOnError(false);
 			//runner.setLogWriter(null);//设置是否输出日志
-	
+            
+            // 从class目录下直接读取
+            in = new FileInputStream(filePath);
+            read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
+            
             runner.runScript(read);
             
             runner.closeConnection();
-            conn.close();
-            in.close();
-            read.close();
             System.out.println("sql脚本执行完毕");
-            return true;
+            ret = true;
         } catch (Exception e) {
             System.out.println("sql脚本执行发生异常");
             e.printStackTrace();
