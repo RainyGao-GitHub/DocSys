@@ -7607,12 +7607,12 @@ public class BaseController  extends BaseFunction{
             read = new InputStreamReader(in, "UTF-8"); //设置字符集,不然中文乱码插入错误
             
             //下面配置不要随意更改，否则会出现各种问题
-			runner.setAutoCommit(true);//自动提交
-			runner.setFullLineDelimiter(false);
-			runner.setDelimiter(";");////每条命令间的分隔符
-			runner.setSendFullScript(false);
-			runner.setStopOnError(false);
-		//	runner.setLogWriter(null);//设置是否输出日志
+			//runner.setAutoCommit(true);//自动提交
+			//runner.setFullLineDelimiter(false);
+			//runner.setDelimiter(";");////每条命令间的分隔符
+			//runner.setSendFullScript(false);
+			//runner.setStopOnError(false);
+			//runner.setLogWriter(null);//设置是否输出日志
 	
             runner.runScript(read);
             
