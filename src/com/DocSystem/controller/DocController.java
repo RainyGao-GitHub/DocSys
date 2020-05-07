@@ -3848,10 +3848,10 @@ public class DocController extends BaseController{
 		DocAuth docAuth = new DocAuth();
 		docAuth.setIsAdmin(isAdmin);
 		docAuth.setAccess(access);
-		docAuth.setDownloadEn(downloadEn);
 		docAuth.setAddEn(addEn);
 		docAuth.setDeleteEn(deleteEn);
 		docAuth.setEditEn(editEn);
+		docAuth.setDownloadEn(downloadEn);
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
 		docShare.setShareAuth(shareAuth);
@@ -3917,7 +3917,7 @@ public class DocController extends BaseController{
 		docAuth.setAddEn(addEn);
 		docAuth.setDeleteEn(deleteEn);
 		docAuth.setEditEn(editEn);
-		docAuth.setAddEn(downloadEn);
+		docAuth.setDownloadEn(downloadEn);
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
 				
