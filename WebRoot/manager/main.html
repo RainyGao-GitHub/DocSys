@@ -231,10 +231,7 @@
 	        url : "/DocSystem/User/getLoginUser.do",
 	        type : "post",
 	        dataType : "json",
-	        data : {
-                pageIndex: gPageIndex,
-            	pageSize: gPageSize,
-	        },
+	        data : {},
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
@@ -1252,7 +1249,10 @@
 	        url : "/DocSystem/Manage/getUserList.do",
 	        type : "post",
 	        dataType : "json",
-	        data : {},
+	        data : {
+	        	pageIndex: gPageIndex,
+	        	pageSize: gPageSize,
+	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
