@@ -2,7 +2,9 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -794,13 +796,53 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		HashMap<String, String> param = buildQueryParamForObj(null, DOCSYS_USER, pageIndex, pageSize);
+		
 		//获取All UserList
 		List <User> UserList = getAllUsers();
 		
 		Integer total = UserList.size();
+		
 		rt.setData(UserList);
 		rt.setDataEx(total);
 		writeJson(rt, response);
+	}
+
+	private HashMap<String, String> buildQueryParamForObj(Object obj, int objType, Integer pageIndex, Integer pageSize) {
+		HashMap<String, String> param = new HashMap<String,String>();
+		if(obj == null)
+		{
+			return param;
+		}
+		
+		JSONArray ObjMemberList = getObjMemberList(objType);
+		if(ObjMemberList == null)
+		{
+			return param;
+		}
+			
+		for(int i=0; i<ObjMemberList.size(); i++)
+		{
+            JSONObject objMember = (JSONObject)ObjMemberList.get(i);
+        	String name = (String) objMember.get("name");
+              
+ 			Object value = null;
+			try {
+				value = getFieldValue(obj, name);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return param;
+			}
+			
+			if(value != null)
+			{
+				param.put(name, value + "");
+			}			
+		}
+		
+		
+		
+		return param;
 	}
 
 	private List<User> getAllUsers() {
