@@ -839,9 +839,9 @@ public class ManageController extends BaseController{
 			}			
 		}
 		
-		if(pageIndex != null)
+		if(pageIndex != null && pageSize != null)
 		{
-			param.put("start", (pageIndex-1)*pageSize+"");
+			param.put("start", pageIndex*pageSize+"");
 			param.put("number", pageSize+"");
 		}
 		return param;
