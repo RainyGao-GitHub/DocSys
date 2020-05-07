@@ -1,6 +1,7 @@
 package com.DocSystem.service.impl;  
   
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;  
   
 import org.springframework.beans.factory.annotation.Autowired;  
@@ -51,6 +52,14 @@ public class UserServiceImpl implements UserService {
 
 	public List<User> geAllUsers() {
 		return userDao.selectAll();
+	}
+
+	public Integer getCountWithParam(HashMap<String, String> param) {
+		return userDao.getCountWithParam(param);
+	}
+		
+	public List<User> getUserListWithParam(HashMap<String, String> param) {
+		return userDao.queryUserWithParam(param);
 	}
 
 	public User getUser(Integer userID) {

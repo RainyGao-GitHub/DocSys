@@ -796,12 +796,11 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		
+		//List <User> UserList = userService.geAllUsers();
 		HashMap<String, String> param = buildQueryParamForObj(null, DOCSYS_USER, pageIndex, pageSize);
-		
-		//获取All UserList
-		List <User> UserList = getAllUsers();
-		
-		Integer total = UserList.size();
+		Integer total = userService.getCountWithParam(param);
+		List <User> UserList = userService.getUserListWithParam(param);
 		
 		rt.setData(UserList);
 		rt.setDataEx(total);
@@ -840,16 +839,13 @@ public class ManageController extends BaseController{
 			}			
 		}
 		
-		
-		
+		if(pageIndex != null)
+		{
+			param.put("start", (pageIndex-1)*pageSize+"");
+			param.put("number", pageSize+"");
+		}
 		return param;
 	}
-
-	private List<User> getAllUsers() {
-		List <User> UserList = userService.geAllUsers();
-		return UserList;
-	}
-
 	
 	@RequestMapping(value="addUser")
 	public void addUser(User user, HttpSession session,HttpServletResponse response)
