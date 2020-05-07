@@ -216,12 +216,9 @@
 </script>
 
 <script type="application/javascript">
-  var curPage = 1;
-  
-</script>
+	var gPageIndex = 0;
+	var gPageSize = 20;
 
-
-<script type="application/javascript">
 	pageInit();
 	
 	//页面初始化
@@ -234,13 +231,18 @@
 	        url : "/DocSystem/User/getLoginUser.do",
 	        type : "post",
 	        dataType : "json",
-	        data : {},
+	        data : {
+                pageIndex: gPageIndex,
+            	pageSize: gPageSize,
+	        },
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
 	            	//Get用户信息
 					var user = ret.data;
-					loginUser = user;
+					var total = ret.dataEx; //查询结果总数
+					
+	            	loginUser = user;
 					console.log("user",user);
 					if(!user.type || user.type < 1)
 					{
