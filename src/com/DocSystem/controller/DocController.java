@@ -3917,6 +3917,7 @@ public class DocController extends BaseController{
 		docAuth.setAddEn(addEn);
 		docAuth.setDeleteEn(deleteEn);
 		docAuth.setEditEn(editEn);
+		docAuth.setAddEn(downloadEn);
 		docAuth.setHeritable(heritable);
 		String shareAuth = JSON.toJSONString(docAuth);
 				
