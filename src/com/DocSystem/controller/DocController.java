@@ -4069,10 +4069,11 @@ public class DocController extends BaseController{
 	@RequestMapping("/searchDoc.do")
 	public void searchDoc(Integer reposId,Integer pid, String path, 
 			String searchWord,String sort,
+			Integer pageIndex, Integer pageSize,
 			Integer shareId,
 			HttpSession session, HttpServletRequest request, HttpServletResponse response)
 	{
-		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId);
+		System.out.println("searchDoc reposId:" + reposId + " pid:" + pid + " path:" + path + " searchWord:" + searchWord + " sort:" + sort+ " shareId:" + shareId + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		
 		ReturnAjax rt = new ReturnAjax();
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, null, null, false, rt);
@@ -4124,7 +4125,9 @@ public class DocController extends BaseController{
 			}
 		}
 		
+		Integer total = searchResult.size();
 		rt.setData(searchResult);
+		rt.setDataEx(total);
 		writeJson(rt, response);
 	}
 	

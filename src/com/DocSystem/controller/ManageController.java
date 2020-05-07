@@ -784,9 +784,9 @@ public class ManageController extends BaseController{
 	}
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
-	public void getUserList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getUserList(Integer pageIndex, Integer pageSize, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getUserList()");
+		System.out.println("getUserList() pageIndex:" + pageIndex + " pageSize:" + pageSize);
 		ReturnAjax rt = new ReturnAjax();
 		if(mamageAccessCheck(null, null, session, rt) == false)
 		{
@@ -797,7 +797,9 @@ public class ManageController extends BaseController{
 		//获取All UserList
 		List <User> UserList = getAllUsers();
 		
+		Integer total = UserList.size();
 		rt.setData(UserList);
+		rt.setDataEx(total);
 		writeJson(rt, response);
 	}
 

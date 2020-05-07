@@ -161,7 +161,10 @@
 	var gDocSysConfig = null;
 	var login_user = "";
 	var gShareId;
-    function pageInit()
+	var gPageIndex = 0;
+	var gPageSize = 20;
+	
+	function pageInit()
     {
     	console.log("pageInit");
     	
@@ -368,6 +371,8 @@
                data : {
                    searchWord:searchWord,
                    sort:sort,
+                   pageIndex: gPageIndex,
+               	   pageSize: gPageSize,
                },
                success : function (ret) {
 	           		console.log("searchDoc ret:", ret)
@@ -375,6 +380,8 @@
 	           		{
 	           			console.log("文件搜索成功", ret);
 						var docList = ret.data;
+						var total = ret.dataEx; //搜索结果总数
+		            	
 				      	for(var i=0; i<docList.length; i++)
 				      	{
 				           var jsonObj = docList[i];
