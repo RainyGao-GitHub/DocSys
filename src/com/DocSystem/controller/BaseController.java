@@ -8551,7 +8551,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}	
 	
-	private static JSONArray getObjMemberList(int objType) {
+	protected static JSONArray getObjMemberList(int objType) {
 		return ObjMemberListMap[objType];
 	}	
 	

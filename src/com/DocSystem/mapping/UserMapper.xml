@@ -279,7 +279,7 @@
     <include refid="Blob_Column_List" />
     from user
     where 1 = 1
-    <if test="name != null">
+      <if test="name != null">
         and NAME = #{name,jdbcType=VARCHAR}
       </if>
       <if test="pwd != null">
@@ -348,6 +348,65 @@
     select 
     <include refid="Base_Column_List" />
     from user
+  </select>
+  
+  <select id="queryUserList" resultType="HashMap" parameterType="HashMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user
+    where 1 = 1
+      <if test="name != null">
+        and NAME = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="pwd != null">
+        and PWD = #{pwd,jdbcType=VARCHAR}
+      </if>
+      <if test="type != null">
+        and TYPE = #{type,jdbcType=INTEGER}
+      </if>
+      <if test="role != null">
+        and ROLE = #{role,jdbcType=INTEGER}
+      </if>
+      <if test="realName != null">
+        and REAL_NAME = #{realName,jdbcType=VARCHAR}
+      </if>
+      <if test="nickName != null">
+        and NICK_NAME = #{nickName,jdbcType=VARCHAR}
+      </if>
+      <if test="img != null">
+        and IMG = #{img,jdbcType=VARCHAR}
+      </if>
+      <if test="email != null">
+        and EMAIL = #{email,jdbcType=VARCHAR}
+      </if>
+      <if test="emailValid != null">
+        and EMAIL_VALID = #{emailValid,jdbcType=INTEGER}
+      </if>
+      <if test="tel != null">
+        and TEL = #{tel,jdbcType=VARCHAR}
+      </if>
+      <if test="telValid != null">
+        and TEL_VALID = #{telValid,jdbcType=INTEGER}
+      </if>
+      <if test="lastLoginTime != null">
+        and LAST_LOGIN_TIME = #{lastLoginTime,jdbcType=VARCHAR}
+      </if>
+      <if test="lastLoginIp != null">
+        and LAST_LOGIN_IP = #{lastLoginIp,jdbcType=VARCHAR}
+      </if>
+      <if test="lastLoginCity != null">
+        and LAST_LOGIN_CITY = #{lastLoginCity,jdbcType=VARCHAR}
+      </if>
+      <if test="createType != null">
+        and CREATE_TYPE = #{createType,jdbcType=INTEGER}
+      </if>
+      <if test="createTime != null">
+        and CREATE_TIME = #{createTime,jdbcType=VARCHAR}
+      </if>
+      <if test="intro != null">
+        and INTRO = #{intro,jdbcType=LONGVARCHAR}
+      </if>
+  	  limit ${start},${end}
   </select>
    
   <select id="getReposAuthForAllUsers" parameterType="java.lang.Integer" resultType="com.DocSystem.entity.ReposAuth">
