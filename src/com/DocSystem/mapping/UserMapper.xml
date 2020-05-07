@@ -407,7 +407,7 @@
       </if>
   </select>
   
-  <select id="queryUserWithParam" parameterType="HashMap" resultType="BaseResultMap">
+  <select id="queryUserWithParam" parameterType="HashMap" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from user
