@@ -19,16 +19,16 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `docsystem`
+-- Database: `DocSystem`
 --
 
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc`
+-- 表的结构 `DOC`
 --
 
-CREATE TABLE `doc` (
+CREATE TABLE `DOC` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
@@ -50,10 +50,10 @@ CREATE TABLE `doc` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_auth`
+-- 表的结构 `DOC_AUTH`
 --
 
-CREATE TABLE `doc_auth` (
+CREATE TABLE `DOC_AUTH` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
@@ -75,10 +75,10 @@ CREATE TABLE `doc_auth` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_share`
+-- 表的结构 `DOC_SHARE`
 --
 
-CREATE TABLE `doc_share` (
+CREATE TABLE `DOC_SHARE` (
   `ID` int(11) NOT NULL,
   `SHARE_ID` int(11) NOT NULL COMMENT '分享ID',
   `NAME` varchar(200) DEFAULT NULL COMMENT '分享的文件或目录名称',
@@ -94,10 +94,10 @@ CREATE TABLE `doc_share` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_lock`
+-- 表的结构 `DOC_LOCK`
 --
 
-CREATE TABLE `doc_lock` (
+CREATE TABLE `DOC_LOCK` (
   `ID` int(11) NOT NULL,
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
   `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
@@ -114,10 +114,10 @@ CREATE TABLE `doc_lock` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `group_member`
+-- 表的结构 `GROUP_MEMBER`
 --
 
-CREATE TABLE `group_member` (
+CREATE TABLE `GROUP_MEMBER` (
   `ID` int(11) NOT NULL COMMENT 'GroupMember ID',
   `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
   `USER_ID` int(11) DEFAULT NULL COMMENT 'USER ID'
@@ -126,10 +126,10 @@ CREATE TABLE `group_member` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `repos`
+-- 表的结构 `REPOS`
 --
 
-CREATE TABLE `repos` (
+CREATE TABLE `REPOS` (
   `ID` int(8) NOT NULL COMMENT '主键',
   `NAME` varchar(255) DEFAULT NULL COMMENT '项目名',
   `TYPE` int(10) DEFAULT '1' COMMENT '文件系统类型',
@@ -161,10 +161,10 @@ CREATE TABLE `repos` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `repos_auth`
+-- 表的结构 `REPOS_AUTH`
 --
 
-CREATE TABLE `repos_auth` (
+CREATE TABLE `REPOS_AUTH` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
@@ -183,10 +183,10 @@ CREATE TABLE `repos_auth` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `role`
+-- 表的结构 `ROLE`
 --
 
-CREATE TABLE `role` (
+CREATE TABLE `ROLE` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(50) NOT NULL,
   `ROLE_ID` int(11) NOT NULL
@@ -195,10 +195,10 @@ CREATE TABLE `role` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `sys_config`
+-- 表的结构 `SYS_CONFIG`
 --
 
-CREATE TABLE `sys_config` (
+CREATE TABLE `SYS_CONFIG` (
   `ID` int(11) NOT NULL,
   `REG_ENABLE` int(2) NOT NULL DEFAULT '1',
   `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'
@@ -207,10 +207,10 @@ CREATE TABLE `sys_config` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `user`
+-- 表的结构 `USER`
 --
 
-CREATE TABLE `user` (
+CREATE TABLE `USER` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(40) DEFAULT NULL,
   `PWD` varchar(40) NOT NULL,
@@ -234,10 +234,10 @@ CREATE TABLE `user` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `user_group`
+-- 表的结构 `USER_GROUP`
 --
 
-CREATE TABLE `user_group` (
+CREATE TABLE `USER_GROUP` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL COMMENT 'GroupName',
   `TYPE` int(1) DEFAULT NULL COMMENT 'Group Type: reserved',
@@ -252,71 +252,71 @@ CREATE TABLE `user_group` (
 --
 
 --
--- Indexes for table `doc`
+-- Indexes for table `DOC`
 --
-ALTER TABLE `doc`
+ALTER TABLE `DOC`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `doc_auth`
+-- Indexes for table `DOC_AUTH`
 --
-ALTER TABLE `doc_auth`
+ALTER TABLE `DOC_AUTH`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `doc_lock`
+-- Indexes for table `DOC_LOCK`
 --
-ALTER TABLE `doc_lock`
+ALTER TABLE `DOC_LOCK`
   ADD PRIMARY KEY (`ID`);
 
   --
--- Indexes for table `doc_share`
+-- Indexes for table `DOC_SHARE`
 --
-ALTER TABLE `doc_share`
+ALTER TABLE `DOC_SHARE`
   ADD PRIMARY KEY (`ID`);
 
 
 --
--- Indexes for table `group_member`
+-- Indexes for table `GROUP_MEMBER`
 --
-ALTER TABLE `group_member`
+ALTER TABLE `GROUP_MEMBER`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `repos`
+-- Indexes for table `REPOS`
 --
-ALTER TABLE `repos`
+ALTER TABLE `REPOS`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `repos_auth`
+-- Indexes for table `REPOS_AUTH`
 --
-ALTER TABLE `repos_auth`
+ALTER TABLE `REPOS_AUTH`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `role`
+-- Indexes for table `ROLE`
 --
-ALTER TABLE `role`
+ALTER TABLE `ROLE`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `sys_config`
+-- Indexes for table `SYS_CONFIG`
 --
-ALTER TABLE `sys_config`
+ALTER TABLE `SYS_CONFIG`
   ADD PRIMARY KEY (`ID`);
 
 --
--- Indexes for table `user`
+-- Indexes for table `USER`
 --
-ALTER TABLE `user`
+ALTER TABLE `USER`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `id` (`ID`);
 
 --
--- Indexes for table `user_group`
+-- Indexes for table `USER_GROUP`
 --
-ALTER TABLE `user_group`
+ALTER TABLE `USER_GROUP`
   ADD PRIMARY KEY (`ID`);
 
 --
@@ -324,69 +324,69 @@ ALTER TABLE `user_group`
 --
 
 --
--- 使用表AUTO_INCREMENT `doc`
+-- 使用表AUTO_INCREMENT `DOC`
 --
-ALTER TABLE `doc`
+ALTER TABLE `DOC`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 使用表AUTO_INCREMENT `doc_auth`
+-- 使用表AUTO_INCREMENT `DOC_AUTH`
 --
-ALTER TABLE `doc_auth`
+ALTER TABLE `DOC_AUTH`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 使用表AUTO_INCREMENT `doc_lock`
+-- 使用表AUTO_INCREMENT `DOC_LOCK`
 --
-ALTER TABLE `doc_lock`
+ALTER TABLE `DOC_LOCK`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
  --
--- 使用表AUTO_INCREMENT `doc_share`
+-- 使用表AUTO_INCREMENT `DOC_SHARE`
 --
-ALTER TABLE `doc_share`
+ALTER TABLE `DOC_SHARE`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
   
 --
--- 使用表AUTO_INCREMENT `group_member`
+-- 使用表AUTO_INCREMENT `GROUP_MEMBER`
 --
-ALTER TABLE `group_member`
+ALTER TABLE `GROUP_MEMBER`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT COMMENT 'GroupMember ID';
 
 --
--- 使用表AUTO_INCREMENT `repos`
+-- 使用表AUTO_INCREMENT `REPOS`
 --
-ALTER TABLE `repos`
+ALTER TABLE `REPOS`
   MODIFY `ID` int(8) NOT NULL AUTO_INCREMENT COMMENT '主键';
 
 --
--- 使用表AUTO_INCREMENT `repos_auth`
+-- 使用表AUTO_INCREMENT `REPOS_AUTH`
 --
-ALTER TABLE `repos_auth`
+ALTER TABLE `REPOS_AUTH`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 使用表AUTO_INCREMENT `role`
+-- 使用表AUTO_INCREMENT `ROLE`
 --
-ALTER TABLE `role`
+ALTER TABLE `ROLE`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 使用表AUTO_INCREMENT `sys_config`
+-- 使用表AUTO_INCREMENT `SYS_CONFIG`
 --
-ALTER TABLE `sys_config`
+ALTER TABLE `SYS_CONFIG`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 使用表AUTO_INCREMENT `user`
+-- 使用表AUTO_INCREMENT `USER`
 --
-ALTER TABLE `user`
+ALTER TABLE `USER`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- 使用表AUTO_INCREMENT `user_group`
+-- 使用表AUTO_INCREMENT `USER_GROUP`
 --
-ALTER TABLE `user_group`
+ALTER TABLE `USER_GROUP`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
