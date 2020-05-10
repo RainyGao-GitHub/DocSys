@@ -7994,8 +7994,11 @@ public class BaseController  extends BaseFunction{
         System.out.println("连接数据库...");
         try {
 			conn = getDBConnection(type, url, user, pwd);
-    		System.out.println("连接数据库成功");
-            ret = true;
+			if(conn != null)
+			{
+				System.out.println("连接数据库成功");
+				ret = true;
+			}
 		} catch (Exception e) {
 			System.out.println("连接数据库失败");
 			e.printStackTrace();
