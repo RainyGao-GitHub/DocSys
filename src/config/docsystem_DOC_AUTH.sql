@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_auth`
+-- 表的结构 `DOC_AUTH`
 --
 
-CREATE TABLE `doc_auth` (
+CREATE TABLE `DOC_AUTH` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
@@ -54,16 +54,16 @@ CREATE TABLE `doc_auth` (
 --
 
 --
--- Indexes for table `doc_auth`
+-- Indexes for table `DOC_AUTH`
 --
-ALTER TABLE `doc_auth`
+ALTER TABLE `DOC_AUTH`
   ADD PRIMARY KEY (`ID`);
 
 
 --
--- 使用表AUTO_INCREMENT `doc_auth`
+-- 使用表AUTO_INCREMENT `DOC_AUTH`
 --
-ALTER TABLE `doc_auth`
+ALTER TABLE `DOC_AUTH`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 
