@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `repos`
+-- 表的结构 `REPOS`
 --
 
-CREATE TABLE `repos` (
+CREATE TABLE `REPOS` (
   `ID` int(8) NOT NULL COMMENT '主键',
   `NAME` varchar(255) DEFAULT NULL COMMENT '项目名',
   `TYPE` int(10) DEFAULT '1' COMMENT '文件系统类型',
@@ -64,15 +64,15 @@ CREATE TABLE `repos` (
 --
 
 --
--- Indexes for table `repos`
+-- Indexes for table `REPOS`
 --
-ALTER TABLE `repos`
+ALTER TABLE `REPOS`
   ADD PRIMARY KEY (`ID`);
 
 --
--- 使用表AUTO_INCREMENT `repos`
+-- 使用表AUTO_INCREMENT `REPOS`
 --
-ALTER TABLE `repos`
+ALTER TABLE `REPOS`
   MODIFY `ID` int(8) NOT NULL AUTO_INCREMENT COMMENT '主键';
 
 

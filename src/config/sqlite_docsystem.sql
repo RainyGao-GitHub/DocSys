@@ -5,9 +5,9 @@
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc`
+-- 表的结构 `DOC`
 --
-CREATE TABLE `doc` (
+CREATE TABLE `DOC` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL,
   `TYPE` int(10) DEFAULT NULL,
@@ -29,10 +29,10 @@ CREATE TABLE `doc` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_auth`
+-- 表的结构 `DOC_AUTH`
 --
 
-CREATE TABLE `doc_auth` (
+CREATE TABLE `DOC_AUTH` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL,
@@ -54,10 +54,10 @@ CREATE TABLE `doc_auth` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_share`
+-- 表的结构 `DOC_SHARE`
 --
 
-CREATE TABLE `doc_share` (
+CREATE TABLE `DOC_SHARE` (
   `ID` int(11) NOT NULL,
   `SHARE_ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL,
@@ -73,10 +73,10 @@ CREATE TABLE `doc_share` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc_lock`
+-- 表的结构 `DOC_LOCK`
 --
 
-CREATE TABLE `doc_lock` (
+CREATE TABLE `DOC_LOCK` (
   `ID` int(11) NOT NULL,
   `TYPE` int(10) DEFAULT NULL,
   `NAME` varchar(200) DEFAULT NULL,
@@ -93,10 +93,10 @@ CREATE TABLE `doc_lock` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `group_member`
+-- 表的结构 `GROUP_MEMBER`
 --
 
-CREATE TABLE `group_member` (
+CREATE TABLE `GROUP_MEMBER` (
   `ID` int(11) NOT NULL,
   `GROUP_ID` int(11) DEFAULT NULL,
   `USER_ID` int(11) DEFAULT NULL
@@ -105,10 +105,10 @@ CREATE TABLE `group_member` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `repos`
+-- 表的结构 `REPOS`
 --
 
-CREATE TABLE `repos` (
+CREATE TABLE `REPOS` (
   `ID` int(8) NOT NULL,
   `NAME` varchar(255) DEFAULT NULL,
   `TYPE` int(10) DEFAULT '1',
@@ -140,10 +140,10 @@ CREATE TABLE `repos` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `repos_auth`
+-- 表的结构 `REPOS_AUTH`
 --
 
-CREATE TABLE `repos_auth` (
+CREATE TABLE `REPOS_AUTH` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL,
@@ -162,10 +162,10 @@ CREATE TABLE `repos_auth` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `role`
+-- 表的结构 `ROLE`
 --
 
-CREATE TABLE `role` (
+CREATE TABLE `ROLE` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(50) NOT NULL,
   `ROLE_ID` int(11) NOT NULL
@@ -174,10 +174,10 @@ CREATE TABLE `role` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `sys_config`
+-- 表的结构 `SYS_CONFIG`
 --
 
-CREATE TABLE `sys_config` (
+CREATE TABLE `SYS_CONFIG` (
   `ID` int(11) NOT NULL,
   `REG_ENABLE` int(2) NOT NULL DEFAULT '1',
   `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'
@@ -186,10 +186,10 @@ CREATE TABLE `sys_config` (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `user`
+-- 表的结构 `USER`
 --
 
-CREATE TABLE user (
+CREATE TABLE `USER` (
     ID              INTEGER       NOT NULL
                                   PRIMARY KEY AUTOINCREMENT,
     NAME            VARCHAR (40)  DEFAULT NULL,
@@ -218,10 +218,10 @@ CREATE TABLE user (
 -- --------------------------------------------------------
 
 --
--- 表的结构 `user_group`
+-- 表的结构 `USER_GROUP`
 --
 
-CREATE TABLE `user_group` (
+CREATE TABLE `USER_GROUP` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL,
   `TYPE` int(1) DEFAULT NULL,

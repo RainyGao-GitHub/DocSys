@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `sys_config`
+-- 表的结构 `SYS_CONFIG`
 --
 
-CREATE TABLE `sys_config` (
+CREATE TABLE `SYS_CONFIG` (
   `ID` int(11) NOT NULL,
   `REG_ENABLE` int(2) NOT NULL DEFAULT '1',
   `PRIVATE_REPOS_ENABLE` int(2) NOT NULL DEFAULT '1'
@@ -41,15 +41,15 @@ CREATE TABLE `sys_config` (
 --
 
 --
--- Indexes for table `sys_config`
+-- Indexes for table `SYS_CONFIG`
 --
-ALTER TABLE `sys_config`
+ALTER TABLE `SYS_CONFIG`
   ADD PRIMARY KEY (`ID`);
 
 --
--- 使用表AUTO_INCREMENT `sys_config`
+-- 使用表AUTO_INCREMENT `SYS_CONFIG`
 --
-ALTER TABLE `sys_config`
+ALTER TABLE `SYS_CONFIG`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 
