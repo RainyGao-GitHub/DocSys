@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `doc`
+-- 表的结构 `DOC`
 --
 
-CREATE TABLE `doc` (
+CREATE TABLE `DOC` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
@@ -52,16 +52,16 @@ CREATE TABLE `doc` (
 --
 
 --
--- Indexes for table `doc`
+-- Indexes for table `DOC`
 --
-ALTER TABLE `doc`
+ALTER TABLE `DOC`
   ADD PRIMARY KEY (`ID`);
 
 
 --
--- 使用表AUTO_INCREMENT `doc`
+-- 使用表AUTO_INCREMENT `DOC`
 --
-ALTER TABLE `doc`
+ALTER TABLE `DOC`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 
