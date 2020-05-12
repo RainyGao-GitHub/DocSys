@@ -7499,16 +7499,19 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	
-	protected void collectDocSysInstallationInfo(HttpServletRequest request) 
+	protected void collectDocSysInstallationInfo(String serverIP, HttpServletRequest request) 
 	{
-		String clientIp = getIpAddress(request);
+		String clientIP = getIpAddress(request);
 		Date accessDate = new Date();
 		
-		
-		String accessInfo = "{IP:" + clientIp + ",TimeStamp:" +  accessDate.getTime() + ",TimeString:" +  accessDate.toString() + "},\r\n";		
+		JSONObject accessInfo = new JSONObject();
+		accessInfo.put("serverIP", serverIP);
+		accessInfo.put("clientIP", clientIP);
+		accessInfo.put("TimeStamp", accessDate.getTime());
+		accessInfo.put("Time", accessDate.toString());
+		String accessInfoStr = "{" + JSON.toJSONStringWithDateFormat(accessInfo, "yyy-MM-dd HH:mm:ss") + "},\r\n";		
 		String filePath = docSysIniPath + "access.log";
-		appendContentToFile(filePath, accessInfo);
+		appendContentToFile(filePath, accessInfoStr);
 	}
 	
 	private static void UserJDBCSettingUpgrade(String userJDBCSettingPath) 
