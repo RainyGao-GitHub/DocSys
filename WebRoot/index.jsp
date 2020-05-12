@@ -12,15 +12,17 @@
 <%
 Integer docSysInitState = BaseController.getDocSysInitState();
 String docSysInitAuthCode = BaseController.getDocSysInitAuthCode();
+String serverIP = BaseController.getServerIP();
 System.out.println("index.jsp: docSysInitState:" + docSysInitState + " docSysInitAuthCode:" + docSysInitAuthCode);
 %>
 
 var docSysInitState=<%=docSysInitState%>;
 var docSysInitAuthCode=<%=docSysInitAuthCode%>;
+var serverIP=<%=serverIP%>;
 if(docSysInitState == null || docSysInitState == 0)
 {
 	// 以下方式直接跳转
-	window.location.href='/DocSystem/web/index.html';
+	window.location.href='/DocSystem/web/index.html?serverIP='+serverIP';
 	// 以下方式定时跳转
 	//setTimeout("javascript:location.href='index.html'", 5000);
 }

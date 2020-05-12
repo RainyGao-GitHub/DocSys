@@ -68,9 +68,9 @@ public class ManageController extends BaseController{
 	
 	/********** 获取轮播图配置 ***************/
 	@RequestMapping("/getBannerConfig.do")
-	public void getBannerConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getBannerConfig(String serverIP, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getBannerConfig()");
+		System.out.println("getBannerConfig() serverIP:" + serverIP);
 		
 		ReturnAjax rt = new ReturnAjax();
 

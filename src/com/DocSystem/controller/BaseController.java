@@ -7324,6 +7324,7 @@ public class BaseController  extends BaseFunction{
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
     protected static String officeEditorApi = null;
+    protected static String serverIP = null;
     
 	
     //定义数据库的ObjType
@@ -7371,6 +7372,10 @@ public class BaseController  extends BaseFunction{
 		officeEditorApi = editor;
 	}
 
+	public static String getServerIP()
+	{
+		return serverIP;
+	}
 	
 	public static String getDocSysInitAuthCode()
 	{
@@ -7388,6 +7393,8 @@ public class BaseController  extends BaseFunction{
 		{
 			officeEditorApi = getOfficeEditorApi();
 		}
+		
+		serverIP = getIpAddress();
 		
 		//Update the value of DB_URL/DB_USER/DB_PASS
 		String JDBCSettingPath = docSysWebPath + "WEB-INF/classes/jdbc.properties";

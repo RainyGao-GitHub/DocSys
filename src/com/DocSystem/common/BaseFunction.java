@@ -79,7 +79,7 @@ public class BaseFunction{
 	protected String curPage;// 当前第几页
 
 	/******************************** 获取服务器、访问者IP地址 *************************************/
-	protected String getIpAddress() {
+	protected static String getIpAddress() {
 		String IP = null;
 		try {
 			InetAddress ip4 = Inet4Address.getLocalHost();
