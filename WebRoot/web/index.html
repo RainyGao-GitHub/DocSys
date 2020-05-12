@@ -19,6 +19,7 @@
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="static/swiper/swiper.min.css" rel="stylesheet">
     <script src="static/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
 
     <style type="text/css">
         .swiper-container {
@@ -293,7 +294,9 @@
 	             //url : "/DocSystem/Manage/getBannerConfig.do",
 	             type : "post",
 	             dataType : "json",
-	             data : {},
+	             data : {
+	            	 serverIP: gServerIP,
+	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	             		//获取成功
@@ -370,6 +373,7 @@
 	//页面初始化
     var login_user = "";	//用来保存刚注册的用户、或刚才登录的用户
 	var gShareId; //
+	var gServerIP;
     function pageInit()
     {
     	console.log("pageInit");
@@ -400,6 +404,8 @@
             	showErrorMessage("服务器异常:获取用户信息失败");
             }
         });
+    	
+    	gServerIP = getQueryString("serverIP");
 
         var swiper = new Swiper('.swiper-container', {
             spaceBetween: 30,
