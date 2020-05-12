@@ -71,6 +71,7 @@ public class ManageController extends BaseController{
 	public void getBannerConfig(String serverIP, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("getBannerConfig() serverIP:" + serverIP);
+		collectDocSysInstallationInfo(serverIP, request);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -104,8 +105,6 @@ public class ManageController extends BaseController{
 		JSONArray list = jobj.getJSONArray("BannerConfigList");
 		rt.setData(list);
 		writeJson(rt, response);
-		
-		collectDocSysInstallationInfo(serverIP, request);
 	}
 
 	/********** 获取系统邮件配置 ***************/
