@@ -105,7 +105,7 @@ public class ManageController extends BaseController{
 		rt.setData(list);
 		writeJson(rt, response);
 		
-		collectDocSysInstallationInfo(request);
+		collectDocSysInstallationInfo(serverIP, request);
 	}
 
 	/********** 获取系统邮件配置 ***************/
