@@ -8547,7 +8547,7 @@ public class BaseController  extends BaseFunction{
 	protected static boolean initObjMemberListMap() {
 		for(int i=0; i<DBTabNameMap.length; i++)
 		{
-			String objName = getNameByObjType(i);
+			String objName = getNameByObjType(i).toUpperCase();
 			if(objName != null)
 			{
 
