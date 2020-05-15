@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `REPOS_AUTH`
+-- 表的结构 `repos_auth`
 --
 
-CREATE TABLE `REPOS_AUTH` (
+CREATE TABLE `repos_auth` (
   `ID` int(11) NOT NULL,
   `USER_ID` int(11) DEFAULT NULL,
   `GROUP_ID` int(11) DEFAULT NULL COMMENT 'GROUP ID',
@@ -51,15 +51,15 @@ CREATE TABLE `REPOS_AUTH` (
 --
 
 --
--- Indexes for table `REPOS_AUTH`
+-- Indexes for table `repos_auth`
 --
-ALTER TABLE `REPOS_AUTH`
+ALTER TABLE `repos_auth`
   ADD PRIMARY KEY (`ID`);
 
 --
--- 使用表AUTO_INCREMENT `REPOS_AUTH`
+-- 使用表AUTO_INCREMENT `repos_auth`
 --
-ALTER TABLE `REPOS_AUTH`
+ALTER TABLE `repos_auth`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 
