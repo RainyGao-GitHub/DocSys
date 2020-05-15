@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `DOC_SHARE`
+-- 表的结构 `doc_share`
 --
 
-CREATE TABLE `DOC_SHARE` (
+CREATE TABLE `doc_share` (
   `ID` int(11) NOT NULL,
   `SHARE_ID` int(11) NOT NULL COMMENT '分享ID',
   `NAME` varchar(200) DEFAULT NULL COMMENT '分享的文件或目录名称',
@@ -46,16 +46,16 @@ CREATE TABLE `DOC_SHARE` (
 --
 
 --
--- Indexes for table `DOC_SHARE`
+-- Indexes for table `doc_share`
 --
-ALTER TABLE `DOC_SHARE`
+ALTER TABLE `doc_share`
   ADD PRIMARY KEY (`ID`);
 
 
 --
--- 使用表AUTO_INCREMENT `DOC_SHARE`
+-- 使用表AUTO_INCREMENT `doc_share`
 --
-ALTER TABLE `DOC_SHARE`
+ALTER TABLE `doc_share`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 

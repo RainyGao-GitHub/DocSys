@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `USER`
+-- 表的结构 `user`
 --
 
-CREATE TABLE `USER` (
+CREATE TABLE `user` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(40) DEFAULT NULL,
   `PWD` varchar(40) NOT NULL,
@@ -56,16 +56,16 @@ CREATE TABLE `USER` (
 --
 
 --
--- Indexes for table `USER`
+-- Indexes for table `user`
 --
-ALTER TABLE `USER`
+ALTER TABLE `user`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `id` (`ID`);
 
 --
--- 使用表AUTO_INCREMENT `USER`
+-- 使用表AUTO_INCREMENT `user`
 --
-ALTER TABLE `USER`
+ALTER TABLE `user`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

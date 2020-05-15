@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `USER_GROUP`
+-- 表的结构 `user_group`
 --
 
-CREATE TABLE `USER_GROUP` (
+CREATE TABLE `user_group` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(200) DEFAULT NULL COMMENT 'GroupName',
   `TYPE` int(1) DEFAULT NULL COMMENT 'Group Type: reserved',
@@ -45,15 +45,15 @@ CREATE TABLE `USER_GROUP` (
 --
 
 --
--- Indexes for table `USER_GROUP`
+-- Indexes for table `user_group`
 --
-ALTER TABLE `USER_GROUP`
+ALTER TABLE `user_group`
   ADD PRIMARY KEY (`ID`);
   
 --
--- 使用表AUTO_INCREMENT `USER_GROUP`
+-- 使用表AUTO_INCREMENT `user_group`
 --
-ALTER TABLE `USER_GROUP`
+ALTER TABLE `user_group`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;  
 
