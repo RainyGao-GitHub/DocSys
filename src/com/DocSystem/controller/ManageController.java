@@ -443,7 +443,7 @@ public class ManageController extends BaseController{
 		String dbName = getDBNameFromUrl(type, url);
 		String tmpDbName = dbName.toLowerCase();
 		System.out.println("deleteDatabase() dbName:" + dbName + " tmpDbName:" + tmpDbName);
-		if(!tmpDbName.equals("docsystem"))
+		if(!tmpDbName.contains("docsystem")) //只能删除docsystem相关的数据库
 		{
 			System.out.println("deleteDatabase() 非法删除操作");
 			docSysErrorLog("非法删除操作：" + dbName, rt);
