@@ -8449,6 +8449,19 @@ public class BaseController  extends BaseFunction{
 		}	
 		return true;
 	}
+	
+	//删除数据库表（包括小写的）
+	protected static boolean deleteDBTabsEx(String type, String url, String user, String pwd) 
+	{
+		System.out.println("deleteDBTabs()");
+
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			deleteDBTab(DBTabNameMap[i].toUpperCase(), type, url, user, pwd);
+			deleteDBTab(DBTabNameMap[i].toLowerCase(), type, url, user, pwd); //删除小写的数据库			
+		}	
+		return true;
+	}
 
 	protected static boolean initDB(String type, String url, String user, String pwd) 
 	{
