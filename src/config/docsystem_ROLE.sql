@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `ROLE`
+-- 表的结构 `role`
 --
 
-CREATE TABLE `ROLE` (
+CREATE TABLE `role` (
   `ID` int(11) NOT NULL,
   `NAME` varchar(50) NOT NULL,
   `ROLE_ID` int(11) NOT NULL
@@ -41,15 +41,15 @@ CREATE TABLE `ROLE` (
 --
 
 --
--- Indexes for table `ROLE`
+-- Indexes for table `role`
 --
-ALTER TABLE `ROLE`
+ALTER TABLE `role`
   ADD PRIMARY KEY (`ID`);
 
 --
--- 使用表AUTO_INCREMENT `ROLE`
+-- 使用表AUTO_INCREMENT `role`
 --
-ALTER TABLE `ROLE`
+ALTER TABLE `role`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
   
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

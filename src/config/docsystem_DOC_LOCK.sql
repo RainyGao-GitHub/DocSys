@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- 表的结构 `DOC_LOCK`
+-- 表的结构 `doc_lock`
 --
 
-CREATE TABLE `DOC_LOCK` (
+CREATE TABLE `doc_lock` (
   `ID` int(11) NOT NULL,
   `TYPE` int(10) DEFAULT NULL COMMENT '1：目录 2：文件',
   `NAME` varchar(200) DEFAULT NULL COMMENT '文件或目录名称',
@@ -47,16 +47,16 @@ CREATE TABLE `DOC_LOCK` (
 --
 
 --
--- Indexes for table `DOC_LOCK`
+-- Indexes for table `doc_lock`
 --
-ALTER TABLE `DOC_LOCK`
+ALTER TABLE `doc_lock`
   ADD PRIMARY KEY (`ID`);
   
 
 --
--- 使用表AUTO_INCREMENT `DOC_LOCK`
+-- 使用表AUTO_INCREMENT `doc_lock`
 --
-ALTER TABLE `DOC_LOCK`
+ALTER TABLE `doc_lock`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
