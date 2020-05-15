@@ -502,7 +502,7 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		deleteDBTabs(type, url, user, pwd);
+		deleteDBTabsEx(type, url, user, pwd);
 		if(initDB(type, url, user, pwd) == false)
 		{
 			System.out.println("resetDatabase() reset database failed: initDB error");
