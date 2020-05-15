@@ -7754,7 +7754,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static boolean createDBForMysql(String dbType, String dbName, String url, String user, String pwd) {
-        String defaultDBUrl = getDefaultDBUrl(dbType, user, pwd);
+        String defaultDBUrl = getDefaultDBUrl(dbType, dbName, url, user, pwd);
         
 		boolean ret = false;
 		Connection conn = null;
@@ -7806,21 +7806,17 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	private static String getDefaultDBUrl(String dbType, String user, String pwd) {
+	private static String getDefaultDBUrl(String dbType, String dbName, String url, String user, String pwd) {
 		switch(dbType)
 		{
 		case "mysql":
-			//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-			//String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT";
-			String defaultDBUrl = "jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
+			String defaultDBUrl = url.replace(dbName, "test");
 			if(testDB(dbType, defaultDBUrl, user, pwd) == false)
 			{
-			    //defaultDBUrl = "jdbc:mysql://localhost:3306/sys?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8";
-				defaultDBUrl = "jdbc:mysql://localhost:3306/sys?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
+			    defaultDBUrl = url.replace(dbName, "sys");
 			    if(testDB(dbType, defaultDBUrl, user, pwd) == false)
 			    {
-			    	//defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8"; 
-					defaultDBUrl = "jdbc:mysql://localhost:3306/mysql?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC";
+			    	defaultDBUrl = url.replace(dbName, "mysql");
 			    }
 			}
 			return defaultDBUrl;
@@ -7863,7 +7859,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private static boolean deleteDBForMysql(String dbType, String dbName, String url, String user, String pwd) {
-        String defaultDBUrl = getDefaultDBUrl(dbType, user, pwd);
+        String defaultDBUrl = getDefaultDBUrl(dbType, dbName, url, user, pwd);
         
 		boolean ret = false;
 		Connection conn = null;
@@ -8028,6 +8024,8 @@ public class BaseController  extends BaseFunction{
 		{
 			dbUrl = getAbsoluteSqliteUrl(url);
 		}
+		System.out.println("getDBConnection() dbUrl:" + dbUrl);
+
 		
 		try {
 			return DriverManager.getConnection(dbUrl, user, pwd);
@@ -8465,7 +8463,7 @@ public class BaseController  extends BaseFunction{
 
 	protected static boolean initDB(String type, String url, String user, String pwd) 
 	{
-		System.out.println("initDB()");
+		System.out.println("initDB() type:" + type + " url:" + url);
 		if(type == null)
 		{
 			type = "mysql";
