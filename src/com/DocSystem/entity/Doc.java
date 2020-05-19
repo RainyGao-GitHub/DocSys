@@ -52,6 +52,8 @@ public class Doc  implements Comparable<Doc>{
     private String localVRootPath;
     
     private boolean isRealDoc = true;
+    
+    private String charset;
 
     public Integer getId() {
         return id;
@@ -256,6 +258,14 @@ public class Doc  implements Comparable<Doc>{
 	public int getSortIndex() {
 		return sortIndex;
 	}
+	
+    public String getCharset() {
+        return charset;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
 	
     public int compareTo(Doc doc) {
     	//Sort By sortIndex
