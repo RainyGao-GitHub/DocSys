@@ -3617,7 +3617,7 @@ public class DocController extends BaseController{
 		{
 			return delFile(reposPwdPath + pwdFileName);
 		}
-		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName);
+		return saveDocContentToFile(pwd, reposPwdPath, pwdFileName, null);
 	}
 	
 	/****************   verify  Doc Access PWD ******************/

@@ -1,5 +1,6 @@
 package com.DocSystem.common;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -1386,6 +1387,65 @@ public class BaseFunction{
 		return null;
     }
 	
+	//This interface was supplied by 寞寞柒柒
+	public static String getCharset(String path) {
+		String charset = "GBK";
+		byte[] first3Bytes = new byte[3];
+		try {
+			boolean checked = false;
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path));
+			bis.mark(0); // 注： bis.mark(0);修改为 bis.mark(100);我用过这段代码，需要修改上面标出的地方。
+			// 注：不过暂时使用正常，遂不改之
+			int read = bis.read(first3Bytes, 0, 3);
+			if (read == -1) {
+				bis.close();
+				return charset; // 文件编码为 ANSI
+			} else if (first3Bytes[0] == (byte) 0xFF && first3Bytes[1] == (byte) 0xFE) {
+				charset = "UTF-16LE"; // 文件编码为 Unicode
+				checked = true;
+			} else if (first3Bytes[0] == (byte) 0xFE && first3Bytes[1] == (byte) 0xFF) {
+				charset = "UTF-16BE"; // 文件编码为 Unicode big endian
+				checked = true;
+			} else if (first3Bytes[0] == (byte) 0xEF && first3Bytes[1] == (byte) 0xBB && first3Bytes[2] == (byte) 0xBF) {
+				charset = "UTF-8"; // 文件编码为 UTF-8
+				checked = true;
+			}
+			bis.reset();
+			if (!checked) {
+				while ((read = bis.read()) != -1) {
+					if (read >= 0xF0)
+						break;
+					if (0x80 <= read && read <= 0xBF) // 单独出现BF以下的，也算是GBK
+						break;
+					if (0xC0 <= read && read <= 0xDF) {
+						read = bis.read();
+						if (0x80 <= read && read <= 0xBF) // 双字节 (0xC0 - 0xDF)
+							// (0x80 - 0xBF),也可能在GB编码内
+							continue;
+						else
+							break;
+					} else if (0xE0 <= read && read <= 0xEF) { // 也有可能出错，但是几率较小
+						read = bis.read();
+						if (0x80 <= read && read <= 0xBF) {
+							read = bis.read();
+							if (0x80 <= read && read <= 0xBF) {
+								charset = "UTF-8";
+								break;
+							} else
+								break;
+						} else
+							break;
+					}
+				}
+			}
+			bis.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("charset:" + charset);
+		return charset;
+	}
+	
     public boolean compressExe(String srcPathName,String finalFile) {
     	File zipFile = new File(finalFile);	//finalFile
     	
@@ -1414,7 +1474,7 @@ public class BaseFunction{
         return false;
     }
     
-	protected static boolean saveDocContentToFile(String content, String path, String name)
+	protected static boolean saveDocContentToFile(String content, String path, String name,  String encode)
 	{	
 		if(content == null)
 		{
@@ -1445,6 +1505,14 @@ public class BaseFunction{
 		}
 		try {
 			byte[] buff = content.getBytes();
+			if(encode != null)
+			{
+				System.out.println("saveDocContentToFile " +path+ " encode:" + encode);
+				//Convert content to dedicated encode
+				content = new String(buff, encode);
+				buff = content.getBytes();
+			}
+			
 			out.write(buff, 0, buff.length);
 			//关闭输出流
 			out.close();
@@ -1487,7 +1555,8 @@ public class BaseFunction{
 			String content = null;
 			if(encodeDetectEnable)
 			{
-				encode = getEncodeOfBuffer(buffer, fileSize);
+				//encode = getEncodeOfBuffer(buffer, fileSize);
+				encode = getCharset(filePath);
 				System.out.println("readDocContentFromFile " +filePath+ " encode:" + encode);
 			}	
 			if(encode == null)
@@ -2272,7 +2341,7 @@ public class BaseFunction{
     	    fis.close();
     	    fis = null;
     		
-    	    return saveDocContentToFile(content.toString().trim(), path, name);
+    	    return saveDocContentToFile(content.toString().trim(), path, name, null);
 		} catch (Exception e) {
 			if(doc1 != null)
 			{
@@ -2322,7 +2391,7 @@ public class BaseFunction{
         	fis.close();
         	fis = null;
         	
-    	    return saveDocContentToFile(str.toString().trim(), path, name);
+    	    return saveDocContentToFile(str.toString().trim(), path, name, null);
 		} catch (Exception e) {			
 			if(extractor != null)
 			{
@@ -2382,7 +2451,7 @@ public class BaseFunction{
             is.close();
             is = null;
               
-            return saveDocContentToFile( text.toString().trim(), path, name);
+            return saveDocContentToFile( text.toString().trim(), path, name, null);
         } catch(Exception e) {
 			if(extractor != null)
 			{
@@ -2438,7 +2507,7 @@ public class BaseFunction{
             is.close();
             is = null;
             
-            return saveDocContentToFile( text.toString().trim(), path, name);
+            return saveDocContentToFile( text.toString().trim(), path, name, null);
 		} catch (Exception e) { 
 			if(extractor != null)
 			{
@@ -2490,7 +2559,7 @@ public class BaseFunction{
             is.close();      
             is = null;
             
-            return saveDocContentToFile( text.toString().trim(), path, name);
+            return saveDocContentToFile( text.toString().trim(), path, name, null);
 		} catch (Exception e) {  
 			if(extractor != null)
 			{
@@ -2535,7 +2604,7 @@ public class BaseFunction{
             is.close();
             is = null;
             
-            return saveDocContentToFile( text.toString().trim(), path, name);
+            return saveDocContentToFile( text.toString().trim(), path, name, null);
         } catch (Exception e) {  
 			if(extractor != null)
 			{
@@ -2591,7 +2660,7 @@ public class BaseFunction{
 			document.close();
 			document = null;
 			
-            return saveDocContentToFile( content.toString().trim(), path, name);
+            return saveDocContentToFile( content.toString().trim(), path, name, null);
 	   }
 	   catch(Exception e)
 	   {

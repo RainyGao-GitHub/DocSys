@@ -6481,7 +6481,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean saveRealDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
-		return saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		return saveDocContentToFile(doc.getContent(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), doc.getCharset());
 	}
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
@@ -6491,7 +6491,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveTmpRealDocContent(Repos repos, Doc doc, User login_user, ReturnAjax rt) 
 	{	
 		String userTmpDir = getReposUserTmpPathForRDOC(repos,login_user);
-		return saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName());
+		return saveDocContentToFile(doc.getContent(), userTmpDir, doc.getDocId() + "_" + doc.getName(), doc.getCharset());
 	}
 	
 	protected String readTmpRealDocContent(Repos repos, Doc doc, User login_user) 
@@ -6503,7 +6503,7 @@ public class BaseController  extends BaseFunction{
 	protected boolean saveVirtualDocContent(Repos repos, Doc doc, ReturnAjax rt) 
 	{	
 		String docVName = getVDocName(doc);
-		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md");
+		return saveDocContentToFile(doc.getContent(), doc.getLocalVRootPath() + docVName + "/", "content.md", null);
 	}
 	protected String readVirtualDocContent(Repos repos, Doc doc) 
 	{
@@ -6515,7 +6515,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		String docVName = getVDocName(doc);
 		String userTmpDir = getReposUserTmpPathForVDOC(repos,login_user);
-		return saveDocContentToFile(doc.getContent(),  userTmpDir + docVName + "/", "content.md");
+		return saveDocContentToFile(doc.getContent(),  userTmpDir + docVName + "/", "content.md", null);
 	}
 	protected String readTmpVirtualDocContent(Repos repos, Doc doc, User login_user) 
 	{
@@ -8325,7 +8325,7 @@ public class BaseController  extends BaseFunction{
 				sqlStr += convertListToInertSqls(objId, list, encode);
 			}
 		}
-		boolean ret = saveDocContentToFile(sqlStr, path, name);
+		boolean ret = saveDocContentToFile(sqlStr, path, name, "UTF-8");
 		System.out.println("backupDB() End with ret:" + ret);
 		return ret;
 	}
@@ -8371,7 +8371,7 @@ public class BaseController  extends BaseFunction{
 			jsonStr += name + ":" + tmpJsonStr + ",\r\n";		
 		}
 		jsonStr += "}";
-		return saveDocContentToFile(jsonStr, filePath, fileName);
+		return saveDocContentToFile(jsonStr, filePath, fileName, null);
 	}
 
 	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String type, String url, String user, String pwd)
