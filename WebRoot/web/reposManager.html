@@ -120,6 +120,7 @@
 							<i class="cell delete w7">删除权限</i>
 							<i class="cell download w7">下载权限</i>
 							<i class="cell heritable w7">可继承</i>
+							<i class="cell selectAll w7"></i>
 							<i class="cell operation w10">操作</i>						
 						</li>
 					</div>
@@ -975,6 +976,9 @@ function showDocAuthList(){
 			var deleteChecked = d.deleteEn == 1? "checked":"";
 			var downloadChecked = d.downloadEn == 1? "checked":"";
 			var heritableChecked = d.heritable == 1? "checked":"";
+			//var selectAllChecked = d.selectAll == 1? "checked":"";
+			var selectAllChecked = "";
+			
 			var opBtn = "";
 			var docAuthId = "";
 			if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
@@ -1033,6 +1037,9 @@ function showDocAuthList(){
 				+"	<i class='cell heritable w7'>"
 				+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>可继承</input>"
 				+"	</i>"
+				+"	<i class='cell selectAll w7'>"
+				+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllAuth(" +i+")' onchange='EnableUserConfig("+i+");'>全部</input>"
+				+"	</i>"
 				+"	<i class='cell operation w10'>"
 				+ 		opBtn
 				+"	</i>"
@@ -1050,6 +1057,32 @@ function EnableUserConfig(index){
 	if($("#DocAuth"+index).prop("checked") == false)
 	{
 		$("#DocAuth"+index).prop("checked",true);
+	}
+}
+
+function selectAllAuth(index)
+{
+	if($("#SelectAll"+index).prop("checked") == true)
+	{
+		//SelectAll
+		$("#IsAdmin"+index).prop("checked",true);
+		$("#Access"+index).prop("checked",true);
+		$("#EditEn"+index).prop("checked",true);
+		$("#AddEn"+index).prop("checked",true);
+		$("#DeleteEn"+index).prop("checked",true);
+		$("#DownloadEn"+index).prop("checked",true);
+		$("#Heritable"+index).prop("checked",true);
+	}
+	else
+	{
+		//UnselectAll
+		$("#IsAdmin"+index).prop("checked",false);
+		$("#Access"+index).prop("checked",false);
+		$("#EditEn"+index).prop("checked",false);
+		$("#AddEn"+index).prop("checked",false);
+		$("#DeleteEn"+index).prop("checked",false);
+		$("#DownloadEn"+index).prop("checked",false);
+		$("#Heritable"+index).prop("checked",false);
 	}
 }
 
