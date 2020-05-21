@@ -1065,7 +1065,7 @@ function selectAllAuth(index)
 	if($("#SelectAll"+index).prop("checked") == true)
 	{
 		//SelectAll
-		$("#IsAdmin"+index).prop("checked",true);
+		$(".IsAdmin"+index).prop("checked",true);
 		$("#Access"+index).prop("checked",true);
 		$("#EditEn"+index).prop("checked",true);
 		$("#AddEn"+index).prop("checked",true);
@@ -1076,7 +1076,7 @@ function selectAllAuth(index)
 	else
 	{
 		//UnselectAll
-		$("#IsAdmin"+index).prop("checked",false);
+		$(".IsAdmin"+index).prop("checked",false);
 		$("#Access"+index).prop("checked",false);
 		$("#EditEn"+index).prop("checked",false);
 		$("#AddEn"+index).prop("checked",false);
