@@ -1504,13 +1504,16 @@ public class BaseFunction{
 			return false;
 		}
 		try {
-			byte[] buff = content.getBytes();
-			if(encode != null)
+			byte[] buff = null;
+			System.out.println("saveDocContentToFile " +path+ " encode:" + encode);	
+
+			if(encode == null)
 			{
-				System.out.println("saveDocContentToFile " +path+ " encode:" + encode);
-				//Convert content to dedicated encode
-				content = new String(buff, encode);
 				buff = content.getBytes();
+			}
+			else
+			{
+				buff = content.getBytes(encode); //将String转成指定charset的字节内容
 			}
 			
 			out.write(buff, 0, buff.length);
