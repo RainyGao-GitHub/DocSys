@@ -61,8 +61,8 @@ DocSys是基于Web的文件管理系统，支持文件权限管理和历史版�
 下载地址： https://tomcat.apache.org/download-70.cgi
 #### 下载OpenOffice(可选)
 下载地址： https://download.csdn.net/download/highrain/12233901
-#### 下载并安装OnlyOffice(用于Office在线编辑)
-下载地址： https://blog.csdn.net/highrain/article/details/105443177
+#### 安装OnlyOffice(用于Office在线编辑)
+安装说明：https://helpcenter.onlyoffice.com/server/linux/document/index.aspx
 
 ### 2、安装JDK
 请使用JDK或JRE 1.8版本
