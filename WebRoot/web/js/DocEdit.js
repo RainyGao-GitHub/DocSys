@@ -191,28 +191,16 @@
 	    function tmpSaveDoc(docId, content){
 			console.log("tmpSaveDoc: docId:" + docId);
 			
-			var node = getNodeById(docId);
-			if(node && node == null)
-			{
-	            console.log("临时保存失败 :" , (new Date()).toLocaleDateString());
-	            bootstrapQ.msg({
-					msg : "临时保存失败 : 文件不存在",
-					type : 'danger',
-					time : 1000,
-				});	
-	            return;
-			}
-			
 	        $.ajax({
 	            url : "/DocSystem/Doc/tmpSaveDocContent.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
 	            	reposId: gReposInfo.id,
-	                docId : docId,
-	                pid: node.pid,
-	                path: node.path,
-	                name: node.name,
+	                docId : gDocInfo.docId,
+	                pid: gDocInfo.pid,
+	                path: gDocInfo.path,
+	                name: gDocInfo.name,
 	                content : content,
 	                docType : gDocInfo.contentType,
 	                shareId: gShareId,
@@ -370,11 +358,11 @@
 		function lockAndEditWiki()
 		{
 			console.log("lockAndEditWiki()");
-			if(!gDocInfo.docId || gDocInfo.docId == 0)
-			{
-				showErrorMessage("请选择文件!");
-				return;
-			}
+			//if(!gDocInfo.docId || gDocInfo.docId == 0)
+			//{
+			//	showErrorMessage("请选择文件!");
+			//	return;
+			//}
 
 			$.ajax({
 				url : "/DocSystem/Doc/lockDoc.do",
@@ -462,12 +450,12 @@
 		function unlockAndExitEditWiki(newNode)
 		{
 			console.log("unlockAndExitEditWiki()  gDocInfo.docId:" + gDocInfo.docId);
-			if(!gDocInfo.docId || gDocInfo.docId == 0)
-			{
-				showErrorMessage("文件不存在");
-				exitEditWiki();
-				return;
-			}
+			//if(!gDocInfo.docId || gDocInfo.docId == 0)
+			//{
+			//	showErrorMessage("文件不存在");
+			//	exitEditWiki();
+			//	return;
+			//}
 			
 			$.ajax({
 				url : "/DocSystem/Doc/lockDoc.do",
