@@ -3631,7 +3631,8 @@ public class DocController extends BaseController{
 		System.out.println("verifyDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		//密码验证的时候不检查是否进行了非法路径访问，因此path设置为null
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, null, name, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
