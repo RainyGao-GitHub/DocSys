@@ -597,6 +597,7 @@ public class ReposController extends BaseController{
 			{
 				docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
+				rt.setData(rootDoc);
 				writeJson(rt, response);
 				return;
 			}
@@ -639,6 +640,21 @@ public class ReposController extends BaseController{
 		{
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 			//printObject("getReposInitMenu() doc:", doc);
+			pwd = getDocPwd(repos, doc);
+			if(pwd != null && !pwd.isEmpty())
+			{
+				//Do check the sharePwd
+				String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+				if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+				{
+					docSysErrorLog("访问密码错误！", rt);
+					rt.setMsgData("1"); //访问密码错误或未提供
+					rt.setData(doc);
+					writeJson(rt, response);
+					return;
+				}
+			}
+		
 		}
 		
 		List <Doc> subDocList = null;

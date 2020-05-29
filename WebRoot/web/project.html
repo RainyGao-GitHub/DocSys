@@ -1295,7 +1295,7 @@
    	}
 
 	//从后台获取zTree数据: callback1是成功后的回调函数1，需要后续处理的话加在这里处理
-	function getInitMenu(docId, parentPath, docName) 
+	function getInitMenu(docId, parentPath, docName, callback) 
    	{
 		console.log("getInitMenu docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
 		
@@ -1322,17 +1322,13 @@
 		        			//select this node in zTree
 		        		 	zTree.selectNode(treeNode);
 		        		}
+		        		callback && callback();
 		            }
 		            else
 		           	{
 	                	if(ret.msgData && ret.msgData == "1")	//需要验证访问密码
 	                	{
-	                		var node = {
-	                			reposId: gReposInfo.id,
-	                			docId: docId,
-	                			path: parentPath,
-	                			name: docName,
-	                		};
+	                		var node = ret.data;
 	                		showDocPwdVerifyPanel(node, refreshPage);
 	                	}
 	                	else
@@ -2842,9 +2838,13 @@
 			gInitDocInfo.name = gRootDoc.name;
 		}
 		
-		getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name);
+		getInitMenu(gInitDocInfo.docId, gInitDocInfo.path, gInitDocInfo.name, showInitDocAndSubDocList);
+	}
+	
+	function showInitDocAndSubDocList()
+	{
 		showDocList(gInitDocInfo);		
-		getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);		
+		getAndShowDoc(gInitDocInfo, 1, gInitDocInfo.edit);
 	}
 	
     function userLogout()
