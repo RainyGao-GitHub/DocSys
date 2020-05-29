@@ -48,7 +48,7 @@
 		
 		function init(_reposId, _node, _callback)
 		{
-			console.log("DocPwdVerify.init()");
+			console.log("DocPwdVerify.init() _callback:",_callback);
 			reposId = _reposId;
 			node = _node;
 			callback = _callback;
@@ -83,7 +83,7 @@
 						}); 
 						closeDocPwdVerifyDialog();
 						callback && callback();
-	                }
+					}
 	                else 
 	                {
 	                	console.log(ret.msgInfo);
