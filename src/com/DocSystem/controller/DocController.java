@@ -2802,6 +2802,7 @@ public class DocController extends BaseController{
 			{
 				docSysErrorLog("访问密码错误！", rt);
 				rt.setMsgData("1"); //访问密码错误或未提供
+				rt.setData(doc);
 				writeJson(rt, response);
 				return;
 			}
