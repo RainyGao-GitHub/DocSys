@@ -3624,12 +3624,13 @@ public class DocController extends BaseController{
 	@RequestMapping("/verifyDocPwd.do")
 	public void verifyDocPwd(Integer reposId, String path, String name,
 			String pwd,
+			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		System.out.println("verifyDocPwd reposId:" + reposId + " path:" + path + " name:" + name  + " pwd:" + pwd);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
