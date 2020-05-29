@@ -586,20 +586,25 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		
 		//printObject("getReposInitMenu() rootDocAuth:", rootDocAuth);
 		
-		String pwd = getDocPwd(repos, rootDoc);
-		if(pwd != null && !pwd.isEmpty())
+		//不对文件分享的根目录进行密码检查(用户只有在输入了密码后才能分享根目录)
+		if(shareId == null)
 		{
-			//Do check the sharePwd
-			String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + rootDoc.getDocId());
-			if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+			String pwd = getDocPwd(repos, rootDoc);
+			if(pwd != null && !pwd.isEmpty())
 			{
-				docSysErrorLog("访问密码错误！", rt);
-				rt.setMsgData("1"); //访问密码错误或未提供
-				rt.setData(rootDoc);
-				writeJson(rt, response);
-				return;
+				//Do check the sharePwd
+				String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + rootDoc.getDocId());
+				if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+				{
+					docSysErrorLog("访问密码错误！", rt);
+					rt.setMsgData("1"); //访问密码错误或未提供
+					rt.setData(rootDoc);
+					writeJson(rt, response);
+					return;
+				}
 			}
 		}
 		
@@ -639,22 +644,28 @@ public class ReposController extends BaseController{
 		if(path != null && name != null)
 		{
 			doc = buildBasicDoc(reposId, docId, pid, path, name, level, type, true, localRootPath, localVRootPath, null, null);
-			//printObject("getReposInitMenu() doc:", doc);
-			pwd = getDocPwd(repos, doc);
-			if(pwd != null && !pwd.isEmpty())
+			if(doc.getDocId() == rootDoc.getDocId())
 			{
-				//Do check the sharePwd
-				String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
-				if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+				doc = null;
+			}
+			else
+			{
+				//printObject("getReposInitMenu() doc:", doc);
+				String pwd = getDocPwd(repos, doc);
+				if(pwd != null && !pwd.isEmpty())
 				{
-					docSysErrorLog("访问密码错误！", rt);
-					rt.setMsgData("1"); //访问密码错误或未提供
-					rt.setData(doc);
-					writeJson(rt, response);
-					return;
+					//Do check the sharePwd
+					String docPwd = (String) session.getAttribute("docPwd_" + reposId + "_" + doc.getDocId());
+					if(docPwd == null || docPwd.isEmpty() || !docPwd.equals(pwd))
+					{
+						docSysErrorLog("访问密码错误！", rt);
+						rt.setMsgData("1"); //访问密码错误或未提供
+						rt.setData(doc);
+						writeJson(rt, response);
+						return;
+					}
 				}
 			}
-		
 		}
 		
 		List <Doc> subDocList = null;
