@@ -1497,7 +1497,14 @@
                 	console.log(ret.msgInfo);
                 	if(ret.msgData && ret.msgData == "1")	//需要验证访问密码
                 	{
-                		showDocPwdVerifyPanel(node);
+                		if(gDocInfo.docId || gDocInfo.docId == 0)
+                		{
+                			showDocPwdVerifyPanel(node, refreshPage);	//rootDoc need refreshPage
+                		}
+                		else
+                		{
+                			showDocPwdVerifyPanel(node);                			
+                		}
                 	}
                 	else
                 	{
