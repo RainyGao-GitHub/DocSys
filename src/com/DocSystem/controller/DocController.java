@@ -3632,7 +3632,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax();
 		//密码验证的时候不检查是否进行了非法路径访问，因此path设置为null
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, null, name, true, rt);
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, null, name, false, rt);
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
