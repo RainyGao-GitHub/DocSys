@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>VideoPlayer</title>
+    <script src="static/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/DocSys.js"></script>
+</head>
+<body style="height: 100%; margin: 0;">
+    <div align=center style="margin-top:20px" >
+		<div id="zipPlayer" class="zipPlayer" style="width: 100%; min-height:1200px; word-wrap: break-word; white-space: pre-wrap;"></div>
+    </div>   
+	<script type="text/javascript">
+
+		var docInfo = getDocInfoFromRequestParamStr();	 
+		function getInitMenu(docInfo) 
+		{
+			console.log("getInitMenu docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+				
+			$.ajax({
+			    url : "/DocSystem/Repos/getZipInitMenu.do",
+			    type : "post",
+			    dataType : "json",
+			    data : {
+			        reposId : docInfo.vid,  
+			    	docId:  docInfo.docId,
+			    	path: docInfo.path,
+			    	name: docInfo.name,
+			    	shareId: docInfo.shareId,
+			    },
+			    success : function (ret) {
+			        	if( "ok" == ret.status ){
+			        		console.log("getMenu() ret",ret);
+			                drawMenu(ret.data);
+			            }
+			            else
+			           	{
+		                	showErrorMessage("获取压缩文件列表失败:" + ret.msgInfo);
+			           	}
+			    },
+			    error : function () {
+			            showErrorMessage("获取压缩文件列表失败:服务器异常");
+			    }
+			});
+		}			
+		
+		function reDrawMenu(data)
+		{
+		   drawMenu(data);
+		}
+		
+		//绘制zTree with the data:强制绘制，判断的东西不应该放在这里
+		function drawMenu(data) {
+			console.log("drawMenu");
+			window.menu = data;
+		    var menu = data;
+		    //遍历jason_arry
+	      	for(var i=0; i<menu.length; i++)
+	      	{
+	           var jsonObj = menu[i];
+	           jsonObj.id = jsonObj.docId;
+	           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+	           jsonObj.isParent = jsonObj.type == 1? false: true;
+	           jsonObj.Level = jsonObj.level;
+	           //设置用户自定义文件图标（必须在standardStyle中有定义）
+	           if(jsonObj.type == 1)
+	           {
+	        	   var iconType = getDiyFileIconType(jsonObj.name);
+	        	   if(iconType && iconType != "")
+	        	   {
+	        		   jsonObj.iconSkin = iconType;
+	        	   }
+	           }
+	       }
+		   zTreeInit(menu);
+		}
+		
+		function zTreeInit(data) {
+		    console.log("zTreeInit");
+		    var doctree = zTree.init($("#zipPlayer"), setting, data);
+		}
+		
+		//zTree's setting
+		var setting = {
+		   	//可编辑功能设置
+			edit: {},
+	           //zTree数据格式
+		   	data: {
+		   			//使用简单数据模式
+		            simpleData: {
+		                enable: true,
+		            },
+		            //不允许修改leaf node and parent node的isParent属性
+		            keep: {
+		            	leaf: true,
+		            	parent: true,
+		            },
+		    },
+	        //设置异步加载的参数
+	        async : {  
+	    		enable : true,//设置 zTree 是否开启异步加载模式  
+	            url : "/DocSystem/Repos/getZipSubDocList.do",
+	            type : "post",
+	    		autoParam : ["id","Level","path","name"],//异步加载时需要自动提交父节点属性的参数  
+	    		otherParam:{
+	    			"reposId": docInfo.vid,
+			    	"docPath": docInfo.path, //zipFile的路径
+			    	"docName": docInfo.name, //zipFile的名字
+	                "shareId": docInfo.shareId,
+	    		},
+	    		dataFilter: asyncDataFilter, 
+			};
+		    //zTree各种操作的回调函数定义
+		    callback: {
+		            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
+	                onAsyncSuccess: zTreeOnAsyncSuccess, //异步加载完成后的回调
+		            onClick: zTreeOnClick,
+		            onDblClick: zTreeOnDbClick,
+		            beforeRightClick: zTreeBeforeRightClick
+		            //onRightClick: zTreeOnRightClick, //定义该回调将会屏蔽系统右击事件
+		    },
+		    view: {
+	        	//showLine: false,	//不显示文件下面的下划线
+	        	//addDiyDom: addDiyDom         //设置zTree的自定义图标
+	        }
+		};
+		
+	      //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
+	      function zTreeOnClick(event, treeId, treeNode) 
+	      {
+	    	  //手机端上点击则打开
+	      }
+	      
+	      //Double Click 对于文件应该是编辑，对于目录应该是打开
+	      function zTreeOnDbClick(event, treeId, treeNode) 
+	      {
+				//打开文件
+	      }
+    </script>
+</body>
+</html>
