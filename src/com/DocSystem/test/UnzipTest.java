@@ -20,11 +20,16 @@ class UnzipTest
 {  
     public static void main(String[] args)    
     {  
-        System.out.println("This is test app");
+        System.out.println("解压缩测试，使用7-Zip压缩后的文件解压后中文乱码");
         ZipFile zipFile;
 		try {
 			zipFile = new ZipFile(new File("C:\\DocSysTest\\压缩测试.zip"));
-	        unZip("C:\\DocSysTest\\解压缩测试", zipFile);
+	        
+			unZip("C:\\DocSysTest\\解压缩测试", zipFile);
+	        
+	        File srcFile = new File("C:\\DocSysTest\\压缩测试");
+	        File dstFile = new File("C:\\DocSysTest\\压缩测试.zip");
+	        zip(srcFile, dstFile);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -52,6 +57,7 @@ class UnzipTest
 				ZipEntry entry = entries.nextElement();
 				
 				System.out.println(path + "/" + entry.getName());
+	        	
 				file = new File(path + "/" + entry.getName());
  
 				if (entry.isDirectory()) {
@@ -102,6 +108,48 @@ class UnzipTest
  
 	}
  
+	public static boolean zip(File src, File dest) {
+		 
+		try {
+ 
+			Project prj = new Project();
+ 
+			org.apache.tools.ant.taskdefs.Zip zip = new org.apache.tools.ant.taskdefs.Zip();
+ 
+			zip.setProject(prj);
+ 
+			zip.setDestFile(dest);
+ 
+			FileSet fileSet = new FileSet();
+ 
+			fileSet.setProject(prj);
+ 
+			if (src.isFile()) {
+ 
+				fileSet.setFile(src);
+ 
+			} else {
+ 
+				fileSet.setDir(src);
+ 
+			}
+ 
+			zip.addFileset(fileSet);
+ 
+			zip.execute();
+ 
+			return true;
+ 
+		} catch (Exception e) {
+ 
+			e.printStackTrace();
+ 
+			return false;
+ 
+		}
+ 
+	}
+
 	public static void close(AutoCloseable... autoCloseables) {
  
 		try {
