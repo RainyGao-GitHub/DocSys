@@ -517,6 +517,25 @@ function isText(suffix)
 	return true;
 }
 
+function isZip(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return false;
+	}
+	var fileTypeMap = {
+			zip : true,
+		};
+	
+	var type = fileTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return false;
+	}
+	
+	return true;
+}
+
 function isOffice(suffix)
 {
 	if(!suffix || suffix == "")
