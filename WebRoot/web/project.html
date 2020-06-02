@@ -1719,6 +1719,10 @@
 		{
 			showText(docInfo, openInNewPage);
 		}
+		else if(isZip(docInfo.fileSuffix))
+		{
+			showZip(docInfo, openInNewPage);
+		}
 		else if(isBinary(docInfo.fileSuffix))
 		{
 			//Do nothing	
@@ -1802,6 +1806,18 @@
 		}
     }
     
+    function showZip(docInfo, openInNewPage)
+    {
+		if(openInNewPage)
+		{
+			showZipInNewPage(docInfo);
+		}
+		else
+		{
+			showZipInDialog(docInfo);
+		}
+    }
+    
     function showPdf(docInfo, openInNewPage)
     {
 		if(openInNewPage)
@@ -1859,6 +1875,13 @@
 		var urlParamStr = buildRequestParamStrForDoc(docInfo);
 		window.open("/DocSystem/web/video.html?" + urlParamStr);
     }
+    
+	function showZipInNewPage(docInfo)
+	{
+		console.log("showZipInNewPage docInfo:", docInfo);
+		var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		window.open("/DocSystem/web/zip.html?" + urlParamStr);
+	}
     
 	function showPdfInNewPage(docInfo, fileLink)
 	{
