@@ -4378,7 +4378,7 @@ public class DocController extends BaseController{
 				
 		List <Doc> docList = new ArrayList<Doc>();
 		
-		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 1, true, localRootPath, localVRootPath, null, null);
+		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
 		docList.add(rootDoc);
 		
 		List <Doc> subDocList = null;

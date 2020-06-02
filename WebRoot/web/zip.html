@@ -3,24 +3,32 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>ZipPlayer</title>
-    <script src="static/scripts/jquery.min.js"></script>
+    
+    <link href="static/zTree/css/metroStyle/standardStyle.css" rel="stylesheet" id="zTreeCss">
+    <script type="text/javascript" src="static/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="static/zTree/js/jquery.ztree.all.min.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
 </head>
 <body style="height: 100%; margin: 0;">
     <div align=center style="margin-top:20px" >
-		<div id="zipPlayer" class="zipPlayer" style="width: 100%; min-height:1200px; word-wrap: break-word; white-space: pre-wrap;"></div>
+		<ul id="zipPlayer" class="ztree" style="margin-bottom: 120px;"></ul>
     </div>   
 	<script type="text/javascript">
 
-		var docInfo = getDocInfoFromRequestParamStr();	 
-		function getInitMenu(docInfo) 
+		var docInfo = getDocInfoFromRequestParamStr();
+		$(document).ready(function()
+	    {
+			getAndShowZipInitMenu(docInfo);
+	    });
+		
+		function getAndShowZipInitMenu(docInfo) 
 		{
-			console.log("getInitMenu docId:" + docId + " parentPath:" + parentPath + " docName:" + docName);
+			console.log("getAndShowZipInitMenu docId:" + docInfo.docId + " parentPath:" + docInfo.path + " docName:" + docInfo.name);
 				
 			$.ajax({
-			    url : "/DocSystem/Repos/getZipInitMenu.do",
+			    url : "/DocSystem/Doc/getZipInitMenu.do",
 			    type : "post",
 			    dataType : "json",
 			    data : {
@@ -79,7 +87,7 @@
 		
 		function zTreeInit(data) {
 		    console.log("zTreeInit");
-		    var doctree = zTree.init($("#zipPlayer"), setting, data);
+		    var doctree = $.fn.zTree.init($("#zipPlayer"), setting, data);
 		}
 		
 		//zTree's setting
@@ -111,7 +119,7 @@
 	                "shareId": docInfo.shareId,
 	    		},
 	    		dataFilter: asyncDataFilter, 
-			};
+			},
 		    //zTree各种操作的回调函数定义
 		    callback: {
 		            beforeAsync: zTreeBeforeAsync, //异步加载前的回调函数， 可以用来判断是否需要异步加载
@@ -127,17 +135,59 @@
 	        }
 		};
 		
-	      //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
-	      function zTreeOnClick(event, treeId, treeNode) 
-	      {
+	    //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
+	    function zTreeOnClick(event, treeId, treeNode) 
+	    {
 	    	  //手机端上点击则打开
-	      }
+	    }
 	      
 	      //Double Click 对于文件应该是编辑，对于目录应该是打开
-	      function zTreeOnDbClick(event, treeId, treeNode) 
-	      {
+	    function zTreeOnDbClick(event, treeId, treeNode) 
+	    {
 				//打开文件
-	      }
+	    }
+		
+	      //This function was used to get the rightClick treeNode,it will be used for contextjs
+		function zTreeBeforeRightClick(treeId, treeNode) {
+			
+			curRightClickedTreeNode = treeNode;
+	    	return true;	
+		};
+	      
+	    function zTreeBeforeAsync(treeId, treeNode) {  
+	      	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
+	    }  
+	        
+	    function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
+	      	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
+	    }
+	  	function asyncDataFilter(treeId, parentNode, responseData) {
+			console.log("asyncDataFilter");
+			var docList = responseData.data;
+			if(!docList)
+			{
+				return docList;
+			}
+			//遍历jason_arry, convert the node type to isParent flag
+	      	for(var i=0; i<docList.length; i++)
+	      	{
+	           var jsonObj = docList[i];
+	           jsonObj.id = jsonObj.docId;
+	           jsonObj.pId = jsonObj.pid != 0? jsonObj.pid : "root",
+	           jsonObj.isParent = jsonObj.type == 1? false: true;
+	           //设置用户自定义文件图标（必须在standardStyle中有定义）
+	           if(jsonObj.type == 1)
+	           {
+	        	   var iconType = getDiyFileIconType(jsonObj.name);
+	        	   if(iconType && iconType != "")
+	        	   {
+	        		   jsonObj.iconSkin = iconType;
+	        	   }
+	           }
+	       }
+	       console.log(docList);
+		   return docList;
+		}
     </script>
 </body>
 </html>
