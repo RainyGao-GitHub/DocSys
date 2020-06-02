@@ -4344,5 +4344,56 @@ public class DocController extends BaseController{
 		
 		return true;
 	}
+	
+	/****************   get Zip InitMenu ******************/
+	@RequestMapping("/getZipInitMenu.do")
+	public void getZipInitMenu(Integer reposId, String docPath, String docName, //zip File Info
+			String path, String name,	//relative path in zipFile
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		System.out.println("getReposInitMenu reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, docPath, docName, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//Get Repos
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		//printObject("getReposInitMenu() repos:", repos);
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+				
+		List <Doc> docList = new ArrayList<Doc>();
+		
+		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 1, true, localRootPath, localVRootPath, null, null);
+		docList.add(rootDoc);
+		
+		List <Doc> subDocList = null;
+		subDocList = getZipSubDocList(repos, rootDoc, rt);
+		if(subDocList != null)
+		{
+			docList.addAll(subDocList);
+		}	
+		rt.setData(docList);	
+		writeJson(rt, response);
+	}
+
+	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, ReturnAjax rt) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
 	
