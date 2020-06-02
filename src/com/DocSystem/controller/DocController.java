@@ -4352,7 +4352,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
-		System.out.println("getReposInitMenu reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
+		System.out.println("getZipInitMenu reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
 
@@ -4382,7 +4382,7 @@ public class DocController extends BaseController{
 		docList.add(rootDoc);
 		
 		List <Doc> subDocList = null;
-		subDocList = getZipSubDocList(repos, rootDoc, rt);
+		subDocList = getZipSubDocList(repos, rootDoc, "", "", rt);
 		if(subDocList != null)
 		{
 			docList.addAll(subDocList);
@@ -4391,9 +4391,72 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, ReturnAjax rt) {
+	private List<Doc> getZipSubDocList(Repos repos, Doc rootDoc, String path, String name, ReturnAjax rt) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	/****************   get Zip SubDocList ******************/
+	@RequestMapping("/getZipSubDocList.do")
+	public void getZipSubDocList(Integer reposId, String docPath, String docName, //zip File Info
+			String path, String name,	//relative path in zipFile
+			Integer shareId,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{		
+		System.out.println("getZipSubDocList reposId: " + reposId + " docPath: " + docPath  + " docName:" + docName + " path:" + path + " name:"+ name + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, docPath, docName, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		//Get Repos
+		Repos repos = reposService.getRepos(reposId);
+		if(repos == null)
+		{
+			rt.setError("仓库 " + reposId + " 不存在！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String localRootPath = getReposRealPath(repos);
+		String localVRootPath = getReposVirtualPath(repos);
+		
+		Doc rootDoc = buildBasicDoc(reposId, null, null, docPath, docName, null, 2, true, localRootPath, localVRootPath, null, null);
+		
+		String relativePath = getZipRelativePath(path, rootDoc);
+		System.out.println("getZipSubDocList relativePath: " + relativePath);
+		
+		List <Doc> subDocList = getZipSubDocList(repos, rootDoc, relativePath, name, rt);
+
+		if(subDocList == null)
+		{
+			rt.setData("");
+		}
+		else
+		{
+			rt.setData(subDocList);	
+		}
+		writeJson(rt, response);
+	}
+
+	private String getZipRelativePath(String path, Doc rootDoc) {
+		if(rootDoc.getPath().equals(""))
+		{
+			return path;
+		}
+		
+		if(path.indexOf(rootDoc.getPath()) != 0)
+		{
+			return null; //非法path
+		}
+		
+		return path.substring(rootDoc.getPath().length());
+	}
+	
 }
 	
